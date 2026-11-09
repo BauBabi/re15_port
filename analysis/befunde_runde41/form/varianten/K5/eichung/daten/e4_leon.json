@@ -1,0 +1,1109 @@
+{
+ "fuss_welt": [
+  -17993,
+  0,
+  -14623
+ ],
+ "ex_farbe_md": [
+  0.935,
+  0.887,
+  0.908
+ ],
+ "laeufe": {
+  "tiefe-1000_gier1024": {
+   "abstand_e": 62.59,
+   "clip": 0,
+   "bild": 10,
+   "versatz": [
+    14,
+    14
+   ],
+   "ex": [
+    0.9992,
+    0.7095,
+    0.5528
+   ],
+   "gesamt": {
+    "pixel": 4198,
+    "dE76_median": 19.83,
+    "dE76_p90": 50.28,
+    "dE76_der_mediane": 7.37,
+    "video_median": [
+     46.0,
+     33.0,
+     49.0
+    ],
+    "modell_median": [
+     33.0,
+     28.0,
+     52.0
+    ]
+   },
+   "gesamt_ex_farbe_md": {
+    "pixel": 4198,
+    "dE76_median": 32.27,
+    "dE76_p90": 62.47,
+    "dE76_der_mediane": 29.53,
+    "video_median": [
+     46.0,
+     33.0,
+     49.0
+    ],
+    "modell_median": [
+     28.0,
+     45.0,
+     104.0
+    ]
+   },
+   "klassen": {
+    "Uniform": {
+     "pixel": 3037,
+     "dE76_median": 16.88,
+     "dE76_p90": 46.1,
+     "dE76_der_mediane": 4.94,
+     "video_median": [
+      38.7,
+      37.0,
+      59.0
+     ],
+     "modell_median": [
+      33.0,
+      30.0,
+      57.0
+     ]
+    },
+    "dunkel": {
+     "pixel": 912,
+     "dE76_median": 32.61,
+     "dE76_p90": 58.81,
+     "dE76_der_mediane": 32.19,
+     "video_median": [
+      91.0,
+      28.0,
+      31.2
+     ],
+     "modell_median": [
+      27.0,
+      13.0,
+      28.0
+     ]
+    },
+    "Haut_Haar": {
+     "pixel": 249,
+     "dE76_median": 29.21,
+     "dE76_p90": 39.04,
+     "dE76_der_mediane": 31.69,
+     "video_median": [
+      19.0,
+      15.0,
+      24.0
+     ],
+     "modell_median": [
+      98.0,
+      47.0,
+      52.0
+     ]
+    }
+   },
+   "schattierung_median": [
+    88,
+    87,
+    87
+   ],
+   "lage": [
+    -18980,
+    0,
+    -14784
+   ]
+  },
+  "tiefe-1000_gier1536": {
+   "abstand_e": 59.92,
+   "clip": 2,
+   "bild": 0,
+   "versatz": [
+    14,
+    14
+   ],
+   "ex": [
+    0.9983,
+    0.7306,
+    0.5689
+   ],
+   "gesamt": {
+    "pixel": 4783,
+    "dE76_median": 17.97,
+    "dE76_p90": 48.99,
+    "dE76_der_mediane": 9.62,
+    "video_median": [
+     44.0,
+     33.9,
+     47.0
+    ],
+    "modell_median": [
+     31.0,
+     29.0,
+     54.0
+    ]
+   },
+   "gesamt_ex_farbe_md": {
+    "pixel": 4783,
+    "dE76_median": 34.14,
+    "dE76_p90": 60.51,
+    "dE76_der_mediane": 32.54,
+    "video_median": [
+     44.0,
+     33.9,
+     47.0
+    ],
+    "modell_median": [
+     26.0,
+     44.0,
+     105.0
+    ]
+   },
+   "klassen": {
+    "Uniform": {
+     "pixel": 3707,
+     "dE76_median": 15.9,
+     "dE76_p90": 39.2,
+     "dE76_der_mediane": 3.58,
+     "video_median": [
+      32.0,
+      32.0,
+      53.0
+     ],
+     "modell_median": [
+      30.0,
+      31.0,
+      57.0
+     ]
+    },
+    "dunkel": {
+     "pixel": 961,
+     "dE76_median": 37.58,
+     "dE76_p90": 58.03,
+     "dE76_der_mediane": 35.59,
+     "video_median": [
+      103.2,
+      33.9,
+      34.0
+     ],
+     "modell_median": [
+      31.0,
+      15.0,
+      30.0
+     ]
+    },
+    "Haut_Haar": {
+     "pixel": 115,
+     "dE76_median": 23.29,
+     "dE76_p90": 30.26,
+     "dE76_der_mediane": 24.39,
+     "video_median": [
+      207.0,
+      77.0,
+      58.3
+     ],
+     "modell_median": [
+      145.0,
+      57.0,
+      50.0
+     ]
+    }
+   },
+   "schattierung_median": [
+    88,
+    87,
+    87
+   ],
+   "lage": [
+    -18980,
+    0,
+    -14784
+   ]
+  },
+  "tiefe-1000_gier2048": {
+   "abstand_e": 57.9,
+   "clip": 0,
+   "bild": 20,
+   "versatz": [
+    14,
+    14
+   ],
+   "ex": [
+    0.9986,
+    0.7173,
+    0.5594
+   ],
+   "gesamt": {
+    "pixel": 4090,
+    "dE76_median": 16.5,
+    "dE76_p90": 46.88,
+    "dE76_der_mediane": 8.53,
+    "video_median": [
+     40.0,
+     31.0,
+     44.2
+    ],
+    "modell_median": [
+     30.0,
+     28.0,
+     52.0
+    ]
+   },
+   "gesamt_ex_farbe_md": {
+    "pixel": 4090,
+    "dE76_median": 35.08,
+    "dE76_p90": 55.61,
+    "dE76_der_mediane": 32.63,
+    "video_median": [
+     40.0,
+     31.0,
+     44.2
+    ],
+    "modell_median": [
+     26.0,
+     43.0,
+     104.0
+    ]
+   },
+   "klassen": {
+    "Uniform": {
+     "pixel": 2997,
+     "dE76_median": 14.33,
+     "dE76_p90": 32.52,
+     "dE76_der_mediane": 4.98,
+     "video_median": [
+      29.0,
+      28.0,
+      47.0
+     ],
+     "modell_median": [
+      30.0,
+      29.0,
+      55.0
+     ]
+    },
+    "dunkel": {
+     "pixel": 936,
+     "dE76_median": 38.13,
+     "dE76_p90": 64.89,
+     "dE76_der_mediane": 37.84,
+     "video_median": [
+      106.1,
+      34.0,
+      34.2
+     ],
+     "modell_median": [
+      28.0,
+      13.0,
+      27.0
+     ]
+    },
+    "Haut_Haar": {
+     "pixel": 157,
+     "dE76_median": 29.13,
+     "dE76_p90": 46.47,
+     "dE76_der_mediane": 24.37,
+     "video_median": [
+      170.0,
+      60.0,
+      53.0
+     ],
+     "modell_median": [
+      115.0,
+      52.0,
+      48.0
+     ]
+    }
+   },
+   "schattierung_median": [
+    86,
+    85,
+    85
+   ],
+   "lage": [
+    -18980,
+    0,
+    -14784
+   ]
+  },
+  "tiefe+0_gier1024": {
+   "abstand_e": 45.71,
+   "clip": 0,
+   "bild": 0,
+   "versatz": [
+    6,
+    2
+   ],
+   "ex": [
+    0.9499,
+    0.8569,
+    0.7698
+   ],
+   "gesamt": {
+    "pixel": 2875,
+    "dE76_median": 15.8,
+    "dE76_p90": 32.9,
+    "dE76_der_mediane": 2.68,
+    "video_median": [
+     41.0,
+     43.0,
+     77.0
+    ],
+    "modell_median": [
+     40.0,
+     43.0,
+     81.0
+    ]
+   },
+   "gesamt_ex_farbe_md": {
+    "pixel": 2875,
+    "dE76_median": 19.21,
+    "dE76_p90": 39.58,
+    "dE76_der_mediane": 14.4,
+    "video_median": [
+     41.0,
+     43.0,
+     77.0
+    ],
+    "modell_median": [
+     38.0,
+     46.0,
+     102.0
+    ]
+   },
+   "klassen": {
+    "Uniform": {
+     "pixel": 1986,
+     "dE76_median": 15.79,
+     "dE76_p90": 29.51,
+     "dE76_der_mediane": 3.41,
+     "video_median": [
+      42.1,
+      47.0,
+      83.0
+     ],
+     "modell_median": [
+      40.0,
+      46.0,
+      87.0
+     ]
+    },
+    "dunkel": {
+     "pixel": 646,
+     "dE76_median": 8.01,
+     "dE76_p90": 41.09,
+     "dE76_der_mediane": 1.96,
+     "video_median": [
+      33.0,
+      21.0,
+      45.9
+     ],
+     "modell_median": [
+      28.0,
+      19.0,
+      43.0
+     ]
+    },
+    "Haut_Haar": {
+     "pixel": 243,
+     "dE76_median": 31.27,
+     "dE76_p90": 40.76,
+     "dE76_der_mediane": 32.77,
+     "video_median": [
+      50.7,
+      55.2,
+      104.8
+     ],
+     "modell_median": [
+      116.0,
+      72.0,
+      85.0
+     ]
+    }
+   },
+   "schattierung_median": [
+    93,
+    91,
+    91
+   ],
+   "lage": [
+    -17993,
+    0,
+    -14623
+   ]
+  },
+  "tiefe+0_gier1536": {
+   "abstand_e": 46.82,
+   "clip": 0,
+   "bild": 10,
+   "versatz": [
+    0,
+    2
+   ],
+   "ex": [
+    0.968,
+    0.836,
+    0.7487
+   ],
+   "gesamt": {
+    "pixel": 3209,
+    "dE76_median": 13.67,
+    "dE76_p90": 35.17,
+    "dE76_der_mediane": 4.84,
+    "video_median": [
+     35.0,
+     41.5,
+     74.0
+    ],
+    "modell_median": [
+     35.0,
+     39.0,
+     78.0
+    ]
+   },
+   "gesamt_ex_farbe_md": {
+    "pixel": 3209,
+    "dE76_median": 18.87,
+    "dE76_p90": 43.93,
+    "dE76_der_mediane": 16.9,
+    "video_median": [
+     35.0,
+     41.5,
+     74.0
+    ],
+    "modell_median": [
+     32.0,
+     44.0,
+     102.0
+    ]
+   },
+   "klassen": {
+    "Uniform": {
+     "pixel": 2478,
+     "dE76_median": 13.85,
+     "dE76_p90": 34.68,
+     "dE76_der_mediane": 4.37,
+     "video_median": [
+      32.0,
+      44.0,
+      80.0
+     ],
+     "modell_median": [
+      35.0,
+      41.0,
+      82.0
+     ]
+    },
+    "dunkel": {
+     "pixel": 633,
+     "dE76_median": 13.54,
+     "dE76_p90": 44.79,
+     "dE76_der_mediane": 6.14,
+     "video_median": [
+      44.8,
+      19.1,
+      46.0
+     ],
+     "modell_median": [
+      32.0,
+      20.0,
+      45.0
+     ]
+    },
+    "Haut_Haar": {
+     "pixel": 98,
+     "dE76_median": 11.47,
+     "dE76_p90": 22.26,
+     "dE76_der_mediane": 11.25,
+     "video_median": [
+      169.0,
+      75.0,
+      89.0
+     ],
+     "modell_median": [
+      140.5,
+      70.0,
+      74.0
+     ]
+    }
+   },
+   "schattierung_median": [
+    91,
+    90,
+    90
+   ],
+   "lage": [
+    -17993,
+    0,
+    -14623
+   ]
+  },
+  "tiefe+0_gier2048": {
+   "abstand_e": 41.01,
+   "clip": 0,
+   "bild": 10,
+   "versatz": [
+    5,
+    0
+   ],
+   "ex": [
+    0.9505,
+    0.8678,
+    0.8029
+   ],
+   "gesamt": {
+    "pixel": 2620,
+    "dE76_median": 12.09,
+    "dE76_p90": 25.67,
+    "dE76_der_mediane": 1.72,
+    "video_median": [
+     36.0,
+     39.0,
+     79.0
+    ],
+    "modell_median": [
+     35.0,
+     42.0,
+     83.0
+    ]
+   },
+   "gesamt_ex_farbe_md": {
+    "pixel": 2620,
+    "dE76_median": 14.51,
+    "dE76_p90": 31.11,
+    "dE76_der_mediane": 9.26,
+    "video_median": [
+     36.0,
+     39.0,
+     79.0
+    ],
+    "modell_median": [
+     33.0,
+     44.0,
+     98.0
+    ]
+   },
+   "klassen": {
+    "Uniform": {
+     "pixel": 1854,
+     "dE76_median": 12.43,
+     "dE76_p90": 25.67,
+     "dE76_der_mediane": 2.26,
+     "video_median": [
+      35.0,
+      45.0,
+      87.0
+     ],
+     "modell_median": [
+      36.0,
+      44.0,
+      89.0
+     ]
+    },
+    "dunkel": {
+     "pixel": 630,
+     "dE76_median": 8.23,
+     "dE76_p90": 25.44,
+     "dE76_der_mediane": 3.01,
+     "video_median": [
+      34.0,
+      18.0,
+      44.3
+     ],
+     "modell_median": [
+      29.0,
+      20.0,
+      46.0
+     ]
+    },
+    "Haut_Haar": {
+     "pixel": 136,
+     "dE76_median": 16.16,
+     "dE76_p90": 25.72,
+     "dE76_der_mediane": 11.48,
+     "video_median": [
+      166.5,
+      81.4,
+      95.0
+     ],
+     "modell_median": [
+      134.0,
+      69.0,
+      73.5
+     ]
+    }
+   },
+   "schattierung_median": [
+    90,
+    89,
+    89
+   ],
+   "lage": [
+    -17993,
+    0,
+    -14623
+   ]
+  },
+  "tiefe+1000_gier1024": {
+   "abstand_e": 48.5,
+   "clip": 0,
+   "bild": 20,
+   "versatz": [
+    -14,
+    8
+   ],
+   "ex": [
+    0.9606,
+    0.9595,
+    0.8402
+   ],
+   "gesamt": {
+    "pixel": 1975,
+    "dE76_median": 18.61,
+    "dE76_p90": 47.04,
+    "dE76_der_mediane": 5.92,
+    "video_median": [
+     48.0,
+     54.0,
+     82.0
+    ],
+    "modell_median": [
+     38.0,
+     50.0,
+     86.0
+    ]
+   },
+   "gesamt_ex_farbe_md": {
+    "pixel": 1975,
+    "dE76_median": 22.42,
+    "dE76_p90": 57.04,
+    "dE76_der_mediane": 17.76,
+    "video_median": [
+     48.0,
+     54.0,
+     82.0
+    ],
+    "modell_median": [
+     36.0,
+     43.0,
+     96.0
+    ]
+   },
+   "klassen": {
+    "Uniform": {
+     "pixel": 1333,
+     "dE76_median": 23.18,
+     "dE76_p90": 52.95,
+     "dE76_der_mediane": 11.88,
+     "video_median": [
+      60.0,
+      68.3,
+      94.0
+     ],
+     "modell_median": [
+      39.0,
+      52.0,
+      91.0
+     ]
+    },
+    "dunkel": {
+     "pixel": 460,
+     "dE76_median": 9.04,
+     "dE76_p90": 26.97,
+     "dE76_der_mediane": 4.98,
+     "video_median": [
+      33.0,
+      21.8,
+      50.8
+     ],
+     "modell_median": [
+      26.0,
+      24.0,
+      49.0
+     ]
+    },
+    "Haut_Haar": {
+     "pixel": 182,
+     "dE76_median": 18.57,
+     "dE76_p90": 32.68,
+     "dE76_der_mediane": 18.05,
+     "video_median": [
+      55.0,
+      49.0,
+      65.0
+     ],
+     "modell_median": [
+      106.5,
+      83.0,
+      98.5
+     ]
+    }
+   },
+   "schattierung_median": [
+    91,
+    90,
+    90
+   ],
+   "lage": [
+    -17006,
+    0,
+    -14462
+   ]
+  },
+  "tiefe+1000_gier1536": {
+   "abstand_e": 49.42,
+   "clip": 0,
+   "bild": 0,
+   "versatz": [
+    -14,
+    5
+   ],
+   "ex": [
+    0.9974,
+    0.9517,
+    0.8374
+   ],
+   "gesamt": {
+    "pixel": 2267,
+    "dE76_median": 17.67,
+    "dE76_p90": 39.5,
+    "dE76_der_mediane": 4.85,
+    "video_median": [
+     44.6,
+     48.0,
+     77.0
+    ],
+    "modell_median": [
+     39.0,
+     47.0,
+     83.0
+    ]
+   },
+   "gesamt_ex_farbe_md": {
+    "pixel": 2267,
+    "dE76_median": 23.06,
+    "dE76_p90": 48.69,
+    "dE76_der_mediane": 16.62,
+    "video_median": [
+     44.6,
+     48.0,
+     77.0
+    ],
+    "modell_median": [
+     34.0,
+     41.0,
+     94.0
+    ]
+   },
+   "klassen": {
+    "Uniform": {
+     "pixel": 1725,
+     "dE76_median": 19.01,
+     "dE76_p90": 44.78,
+     "dE76_der_mediane": 6.1,
+     "video_median": [
+      50.0,
+      58.0,
+      88.0
+     ],
+     "modell_median": [
+      40.0,
+      50.0,
+      87.0
+     ]
+    },
+    "dunkel": {
+     "pixel": 464,
+     "dE76_median": 9.43,
+     "dE76_p90": 32.27,
+     "dE76_der_mediane": 5.63,
+     "video_median": [
+      35.0,
+      18.0,
+      43.0
+     ],
+     "modell_median": [
+      30.0,
+      25.0,
+      51.5
+     ]
+    },
+    "Haut_Haar": {
+     "pixel": 78,
+     "dE76_median": 29.32,
+     "dE76_p90": 38.34,
+     "dE76_der_mediane": 29.38,
+     "video_median": [
+      62.9,
+      32.4,
+      45.0
+     ],
+     "modell_median": [
+      143.5,
+      92.5,
+      99.0
+     ]
+    }
+   },
+   "schattierung_median": [
+    89,
+    87,
+    87
+   ],
+   "lage": [
+    -17006,
+    0,
+    -14462
+   ]
+  },
+  "tiefe+1000_gier2048": {
+   "abstand_e": 48.23,
+   "clip": 0,
+   "bild": 10,
+   "versatz": [
+    -14,
+    -1
+   ],
+   "ex": [
+    0.9728,
+    0.8937,
+    0.7383
+   ],
+   "gesamt": {
+    "pixel": 1807,
+    "dE76_median": 18.2,
+    "dE76_p90": 33.29,
+    "dE76_der_mediane": 6.51,
+    "video_median": [
+     45.0,
+     42.0,
+     63.3
+    ],
+    "modell_median": [
+     36.0,
+     43.0,
+     73.0
+    ]
+   },
+   "gesamt_ex_farbe_md": {
+    "pixel": 1807,
+    "dE76_median": 25.99,
+    "dE76_p90": 44.09,
+    "dE76_der_mediane": 23.68,
+    "video_median": [
+     45.0,
+     42.0,
+     63.3
+    ],
+    "modell_median": [
+     33.0,
+     42.0,
+     99.0
+    ]
+   },
+   "klassen": {
+    "Uniform": {
+     "pixel": 1269,
+     "dE76_median": 19.63,
+     "dE76_p90": 32.46,
+     "dE76_der_mediane": 7.05,
+     "video_median": [
+      47.0,
+      53.0,
+      76.0
+     ],
+     "modell_median": [
+      37.0,
+      46.0,
+      78.0
+     ]
+    },
+    "dunkel": {
+     "pixel": 448,
+     "dE76_median": 9.58,
+     "dE76_p90": 32.96,
+     "dE76_der_mediane": 5.83,
+     "video_median": [
+      37.0,
+      19.0,
+      42.3
+     ],
+     "modell_median": [
+      28.0,
+      21.0,
+      40.0
+     ]
+    },
+    "Haut_Haar": {
+     "pixel": 90,
+     "dE76_median": 25.6,
+     "dE76_p90": 39.74,
+     "dE76_der_mediane": 28.05,
+     "video_median": [
+      53.5,
+      20.5,
+      32.5
+     ],
+     "modell_median": [
+      128.5,
+      74.0,
+      76.5
+     ]
+    }
+   },
+   "schattierung_median": [
+    88,
+    87,
+    87
+   ],
+   "lage": [
+    -17006,
+    0,
+    -14462
+   ]
+  }
+ },
+ "ex_streuung": {
+  "min": [
+   0.9499,
+   0.7095,
+   0.5528
+  ],
+  "max": [
+   0.9992,
+   0.9595,
+   0.8402
+  ],
+  "median": [
+   0.9728,
+   0.8569,
+   0.7487
+  ]
+ },
+ "gewaehlt": {
+  "tiefe": 0,
+  "gier": 2048,
+  "regel": "kleinster Abstand Umkehr(Video) - Render ueber die Figurpixel (e)"
+ },
+ "gegenprobe_klasse_ausgelassen": {
+  "Uniform": {
+   "ex": [
+    0.9999,
+    0.8498,
+    0.834
+   ],
+   "test": {
+    "pixel": 1854,
+    "dE76_median": 13.54,
+    "dE76_p90": 27.76,
+    "dE76_der_mediane": 6.51,
+    "video_median": [
+     35.0,
+     45.0,
+     87.0
+    ],
+    "modell_median": [
+     38.0,
+     43.0,
+     94.0
+    ]
+   },
+   "test_mit_ex_farbe_md": {
+    "pixel": 1854,
+    "dE76_median": 15.64,
+    "dE76_p90": 31.65,
+    "dE76_der_mediane": 11.12,
+    "video_median": [
+     35.0,
+     45.0,
+     87.0
+    ],
+    "modell_median": [
+     33.0,
+     47.0,
+     106.0
+    ]
+   }
+  },
+  "dunkel": {
+   "ex": [
+    0.9506,
+    0.8682,
+    0.8026
+   ],
+   "test": {
+    "pixel": 630,
+    "dE76_median": 8.26,
+    "dE76_p90": 25.56,
+    "dE76_der_mediane": 3.41,
+    "video_median": [
+     34.0,
+     18.0,
+     44.3
+    ],
+    "modell_median": [
+     28.0,
+     20.0,
+     46.0
+    ]
+   },
+   "test_mit_ex_farbe_md": {
+    "pixel": 630,
+    "dE76_median": 9.58,
+    "dE76_p90": 27.32,
+    "dE76_der_mediane": 7.23,
+    "video_median": [
+     34.0,
+     18.0,
+     44.3
+    ],
+    "modell_median": [
+     27.0,
+     21.0,
+     56.0
+    ]
+   }
+  },
+  "Haut_Haar": {
+   "ex": [
+    0.9477,
+    0.8677,
+    0.8
+   ],
+   "test": {
+    "pixel": 136,
+    "dE76_median": 16.6,
+    "dE76_p90": 25.97,
+    "dE76_der_mediane": 11.91,
+    "video_median": [
+     166.5,
+     81.4,
+     95.0
+    ],
+    "modell_median": [
+     133.0,
+     69.5,
+     74.0
+    ]
+   },
+   "test_mit_ex_farbe_md": {
+    "pixel": 136,
+    "dE76_median": 18.87,
+    "dE76_p90": 28.45,
+    "dE76_der_mediane": 13.5,
+    "video_median": [
+     166.5,
+     81.4,
+     95.0
+    ],
+    "modell_median": [
+     131.0,
+     72.0,
+     87.0
+    ]
+   }
+  }
+ }
+}
