@@ -1,5 +1,5 @@
 {
- "quelle": "ruecken_r4 Lauf h (rs4h.json, Koordinatensuche Schritt <= 20 ab rs4h_start) + Ecke 41 z +10 aus dem Raster sfv8/r4 gj3/gj4 (S2b 1,7 statt 2,3)",
+ "quelle": "ruecken_r4 Lauf h (rs4h.json, Koordinatensuche Schritt <= 20 ab rs4h_start) + Ecke 41 z +10 aus dem Raster sfv8/r4 gj3/gj4 (S2b 1,7 statt 2,3); Runde 5: Ecken 38 und 41 je x -20 E. (sfv8/r5 j8.py/j15.py, Koordinatensuche S2c mit geschlossener Wurzelkappe: S2c 5 -> 4, S10 Takt F323 1 -> 0 px, S3 Kuppe 4,0 -> 3,0)",
  "ecken": {
   "3": [
    5,
@@ -57,12 +57,12 @@
    30
   ],
   "38": [
-   -112,
+   -132,
    -50,
    0
   ],
   "41": [
-   -81,
+   -101,
    5,
    -10
   ],

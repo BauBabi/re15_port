@@ -154,5 +154,13 @@
   ]
  },
  "kosten": 21.8642,
- "quelle": "kette_r4.py (Start kr4a.json = kette_r4.py 500 Schritte ab kette_v8.json Runde 3 mit Ruecken rs4a.json, frei: Biegungen; dann Start kr4a.json, Ruecken rs4a.json, 400 Schritte, Saat 7; frei: Biegungen und Radius Wurzel/Gelenk 17) auf kette_fein.py"
+ "quelle": "kette_r4.py (Start kr4a.json = kette_r4.py 500 Schritte ab kette_v8.json Runde 3 mit Ruecken rs4a.json, frei: Biegungen; dann Start kr4a.json, Ruecken rs4a.json, 400 Schritte, Saat 7; frei: Biegungen und Radius Wurzel/Gelenk 17) auf kette_fein.py",
+ "ring1_versatz": {
+  "17": [
+   4.5,
+   14.5,
+   -7.2
+  ]
+ },
+ "ring1_versatz_quelle": "Runde 5 (Zahlen-Pruefer r4 S2c): Ring-1-Ecke 17 um (4,5 / 14,5 / -7,2) E. im Raum von Knochen 16 = 1 px nach links in PV, tangential zur Haut, Tiefe 15 E. gehalten; Koordinatensuche sfv8/r5 j15.py (Kosten S2c 7 Halbpixel-Varianten, S2b, S2a, S1, S3, S10 Takt F323/F328/F329): S2b 2,3 -> 1,9"
 }
