@@ -355,9 +355,11 @@ static int tod_lage(int32_t gx, int32_t gz, int16_t gier, int32_t px, int32_t pz
 /* FG-E7 Option (a): ueber das ganze Becken (Raster schritt, vier Gieren, Leon an der Leiter und mitten im Suedbecken) zeigt die Lagewahl den Schluessel
  * mit mindestens 10,4 Bildpunkten; die Stufen zaehlen, wie oft sie weitersuchen musste. Voller Lauf (Raster 1000, Werkzeug schluessel_scan): 1688 Lagen,
  * Stufe 0: 1595, 1: 48, 2: 33, 3: 12, 4: 0, unter 10,4: 0. */
+int re15_gatorszene_r41_key_durchgang(void);   /* Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 3): 0 = Lage im Gebiet ihrer Kamera, 1 = Rueckfall */
 static void schluessel_scan(int schritt, int zeigen, int *lagen, int *klein, int st[5], int32_t *d_max)
 {
     static const int32_t sp[2][2] = { { -8200, -25550 }, { 1325, -25550 } };
+    int gebiet = 0;
     *lagen = 0; *klein = 0; *d_max = 0;
     for (int i = 0; i < 5; i++) st[i] = 0;
     for (int p = 0; p < 2; p++)
@@ -370,6 +372,7 @@ static void schluessel_scan(int schritt, int zeigen, int *lagen, int *klein, int
                     const int px = tod_lage(x, z, (int16_t)(gi * 1024), sp[p][0], sp[p][1], 0, &c, &stf, &dm);
                     if (c < 0) continue;
                     (*lagen)++;
+                    if (re15_gatorszene_r41_key_durchgang() == 0) gebiet++;
                     if (stf >= 0 && stf < 5) st[stf]++;
                     if (px < 104) (*klein)++;
                     if (dm > *d_max) *d_max = dm;
@@ -378,6 +381,7 @@ static void schluessel_scan(int schritt, int zeigen, int *lagen, int *klein, int
                                (int)x, (int)z, gi * 1024, c, stf, px / 10, px % 10, (int)dm);
                 }
             }
+    printf("    Scan Raster %d: davon im Gebiet ihrer Kamera (Nutzerbefund 2026-11-09 Punkt 3) %d, Rueckfall wie 0b86e36c6 %d\n", schritt, gebiet, *lagen - gebiet);
     printf("    Scan Raster %d: %d Lagen, Stufe 0: %d, 1: %d, 2: %d, 3: %d, 4: %d, unter 10,4: %d, groesster Abstand zur Leiche %d\n", schritt, *lagen, st[0], st[1],
            st[2], st[3], st[4], *klein, (int)*d_max);
 }
@@ -797,6 +801,10 @@ static void teil_erreichbar(void)
 static void weg_eine(int32_t x, int32_t z, int gier, int32_t lx, int32_t lz, int *ok, int *n)
 {
     int c, stf; int32_t dm;
+    /* Integration Runde 41 (Nutzerbefunde 2026-11-09, gemessen): tod_lage bootet je Lage dieselbe ROOM2090, der Boss-Zustand des vorigen Laufs (s_gb, Reset nur beim
+     * Raumwechsel) lief in den naechsten - die "Leiche" (state 7) biss im Lauf weiter. Lage 4 nach Lage 2 war damit rot, auch mit der Lagewahl von 0b86e36c6
+     * (DBG-Lauf: Phase 3, Spieler 2/2 -> 3/0). Jede Lage startet jetzt mit frischem Boss-Zustand wie nach einem Raumwechsel. */
+    re15_gator_boss_zustand_frisch();
     (void)tod_lage(x, z, (int16_t)gier, lx, lz, 0, &c, &stf, &dm);
     const int ks = prop_von(RE15_GSZ_KEY_OBJ);
     if (ks < 0 || c < 0) return;

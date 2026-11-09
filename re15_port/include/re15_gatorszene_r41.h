@@ -214,6 +214,9 @@ void re15_gatorszene_r41_g2_alt_setzen(int an);
 /* Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 3): die Schluessel-Lage wird nur im Gebiet der jeweiligen Zonenkamera gesucht (FUN_80014230:
  * Eintritts-/Austritts-Vierecke der RVD). Pruefhaken der Gegenprobe: 1 = Stand 0b86e36c6 (jede Zonenkamera ueberall). */
 void re15_gatorszene_r41_key_gebiet_alt_setzen(int an);
+/* Messhaken: 0 = die letzte Schluessel-Lage liegt im Gebiet ihrer Kamera (Durchgang 1), 1 = Rueckfall wie 0b86e36c6 (keine Kamera erreicht dort die
+ * Bildschwelle), -1 = keine Wahl */
+int  re15_gatorszene_r41_key_durchgang(void);
 /* Runde 41 Spur G2 (Punkte 3/4): Mesh-Gier von (x,z) zur Leiter-Ankunft in ROOM2080/2081 (Montage-Parkplatz, ROOM2090 Tuer 0 @0x00996). */
 int  re15_gatorszene_r41_gier_zur_leiter(int32_t x, int32_t z);
 

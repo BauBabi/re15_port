@@ -74,7 +74,7 @@ endforeach()
 foreach(_teil kletterbiss kletterbiss_elza)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 900)
+    set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 1800)   # 1226 Kampf-Aufbauten; unter Fremdlast gemessen 16 min (allein 3 min)
 endforeach()
 foreach(_teil nb4 nb4_elza)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)

@@ -2083,6 +2083,9 @@ static int wasser_huelle(int32_t *px0, int32_t *px1, int32_t *pz0, int32_t *pz1)
 static struct { uint8_t *m; int32_t x0, z0; int nx, nz, cut; } s_geb = { NULL, 0, 0, 0, 0, -1 };
 static int s_key_gebiet_alt = 0;
 void re15_gatorszene_r41_key_gebiet_alt_setzen(int an) { s_key_gebiet_alt = an; }
+static int s_gebiet_an = 0;      /* 1 = Durchgang 1 der Lagewahl (nur im Gebiet), 0 = Durchgang 2 (Rueckfall wie 0b86e36c6) */
+static int s_key_durchgang = -1; /* Messhaken: 0 = Lage im Gebiet seiner Kamera, 1 = Rueckfall, -1 = keine Wahl */
+int re15_gatorszene_r41_key_durchgang(void) { return s_key_durchgang; }
 static void gebiet_frei(void) { free(s_geb.m); s_geb.m = NULL; s_geb.cut = -1; s_geb.nx = s_geb.nz = 0; }
 static int zone_viereck(int i, int32_t x, int32_t z)
 {
@@ -2141,7 +2144,7 @@ static int gebiet_rechnen(int cut, int32_t x0, int32_t x1, int32_t z0, int32_t z
 /* 1 = der Rasterpunkt (x, z) liegt im Gebiet von cut (oder es gibt kein Raster / Pruefhaken alt) */
 static int kamera_gebiet(int cut, int32_t x, int32_t z)
 {
-    if (s_key_gebiet_alt || !s_geb.m || s_geb.cut != cut) return 1;
+    if (s_key_gebiet_alt || !s_gebiet_an || !s_geb.m || s_geb.cut != cut) return 1;
     const int ix = (int)((x - s_geb.x0) / GSZ_RASTER), iz = (int)((z - s_geb.z0) / GSZ_RASTER);
     if (ix < 0 || iz < 0 || ix >= s_geb.nx || iz >= s_geb.nz) return 0;
     return (s_geb.m[iz * s_geb.nx + ix] & GEB_IN) != 0;
@@ -2155,7 +2158,7 @@ static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t
     const int nsp = spieler_punkte(sp);
     int32_t x0, x1, z0, z1;
     if (!wasser_huelle(&x0, &x1, &z0, &z1)) return 0;
-    if (!s_key_gebiet_alt) (void)gebiet_rechnen(cut, x0, x1, z0, z1);
+    if (!s_key_gebiet_alt && s_gebiet_an) (void)gebiet_rechnen(cut, x0, x1, z0, z1);
     int gefunden = 0;
     for (int32_t z = z0; z <= z1; z += GSZ_RASTER)
         for (int32_t x = x0; x <= x1; x += GSZ_RASTER) {
@@ -2276,7 +2279,15 @@ static void key_lage_bei_tod(void)
     /* Runde 41 Spur P (FG-E7 Option (a), s. GSZ_KEY_BILD_MIN10): ab Stufe 0 (Naehe wie bisher) weiter, bis die beste Zonenkamera mindestens
      * 10,4 Bildpunkte zeigt. Die Gleichheit der Stufe 0 mit dem bisherigen Ablauf haelt unit_r41_gatorszene_tod fest. */
     int stufe = 0;
-    for (; stufe <= GSZ_SUCH_STUFEN; stufe++) {
+    /* Nutzerbefund 2026-11-09 Punkt 3 (s. kamera_gebiet): Durchgang 1 sucht nur im Gebiet der jeweiligen Kamera - Bild und Ort stimmen ueberein. Erreicht dort keine
+     * Kamera die Bildschwelle GSZ_KEY_BILD_MIN10 (Nutzerentscheid FG-E7 Option (a)), sucht Durchgang 2 wie bisher (Stand 0b86e36c6): die Gebiete der Zonenkameras
+     * liegen meist weit vor ihrer Kamera (Cut 6/7 im Westkanal), dort waeren die Schluessel sonst kleiner als die Schwelle (gemessen unit_r41_alligator2_schluessel
+     * nur mit Gebiet: 126 von 208 Lagen unter 10,4 Bildpunkten) - diesen Zielkonflikt entscheidet der Nutzer (Bericht INT_gator_nutzerbefunde.md "Offen"). */
+    s_key_durchgang = -1;
+    for (int durchgang = s_key_gebiet_alt ? 1 : 0; durchgang < 2; durchgang++) {
+    s_gebiet_an = (durchgang == 0);
+    memset(&l, 0, sizeof l); cut = -1;
+    for (stufe = 0; stufe <= GSZ_SUCH_STUFEN; stufe++) {
         const int32_t r = r_nah + (r_nah * stufe) / GSZ_SUCH_STUFEN;
         for (int c = 0; c < g_room_rdt.cut_count; c++) {
             if (!zonenkamera(c) || !key_suche(c, pk, npk, r, &b)) continue;
@@ -2292,6 +2303,10 @@ static void key_lage_bei_tod(void)
         re15_camera_view_t kv;
         if (cut >= 0 && kam_sicht(cut, &kv) && l.vz > 0 && (20 * GSZ_KEY_HALB * (int64_t)kv.fov_screen_dist) / l.vz >= GSZ_KEY_BILD_MIN10) break;
     }
+    if (stufe <= GSZ_SUCH_STUFEN) { s_key_durchgang = durchgang; break; }   /* Schwelle erreicht */
+    if (durchgang == 1) s_key_durchgang = 1;
+    }
+    s_gebiet_an = 0;
     if (cut < 0) {                                          /* keine Kamera: der naechste begehbare Wasserpunkt am Kopf (Spur P, Nachbesserung 1; vorher Kopf in eine Wasserzone gezogen) */
         int64_t best = INT64_MAX;
         for (int32_t z = (kopf[2] / GSZ_RASTER - 40) * GSZ_RASTER; z <= (kopf[2] / GSZ_RASTER + 40) * GSZ_RASTER; z += GSZ_RASTER)

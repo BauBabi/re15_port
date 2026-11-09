@@ -483,6 +483,10 @@ static int gb_seg_hits_ramp(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int3
  * (Abnahme 7). Zeile "BISSLAUF" in gator_boss.log. Kein Spielverhalten. */
 static re15_gb_bisslauf_t s_gb_bl = { 0, 0, 0, 0, -1, -1, -1, -1, -1 };
 void re15_gator_boss_bisslauf_reset(void) { const re15_gb_bisslauf_t z = { 0, 0, 0, 0, -1, -1, -1, -1, -1 }; s_gb_bl = z; }
+/* Messhaken der Riegel (kein Spielweg): Boss-Zustand frisch wie beim Raumwechsel (gb_takt "Raumwechsel: Boss-Zustand frisch"). Harness-Laeufe booten denselben
+ * Raum mehrfach, ohne dass die Raum-ID wechselt - der Zustand des vorigen Laufs (Phase, Biss) lief sonst in den naechsten hinein (Integration Runde 41,
+ * unit_r41_alligator2_weg: Lage 4 nach Lage 2 rot, auch mit der Lagewahl von 0b86e36c6). */
+void re15_gator_boss_zustand_frisch(void) { s_gb_room = 0xFFFFFFFFu; }
 void re15_gator_boss_bisslauf_info(re15_gb_bisslauf_t *out) { if (out) *out = s_gb_bl; }
 static void gb_lauf_ende(gb_state_t *g)
 {

@@ -692,7 +692,7 @@ static void tod_fall(const char *name, uint16_t raum, int32_t gx, int32_t gz, in
  * wieder runter (ROOM2090 Ankunft (-8200,0,-25550) Cut 0), die Figur geht in Bildern (echter RVD-Wechsel FUN_80014230 im Port) einen L-Weg ueber x -7000
  * zum Schluessel. Riegel: angezeigter Cut am Schluessel == Schluessel-Kamera (re15_gatorszene_r41_key_kamera) und die Aktionstaste dort startet die Aufnahme
  * (re15_item_modal_active). Gegenprobe Pruefhaken re15_gatorszene_r41_key_gebiet_alt_setzen(1) = Stand 0b86e36c6: Nutzer-Leiche Cut 7 gegen 0 = rot. */
-static int32_t s_tg_kx, s_tg_ky, s_tg_kz; static int s_tg_kc;
+static int32_t s_tg_kx, s_tg_ky, s_tg_kz; static int s_tg_kc, s_tg_durchgang;
 static int tg_tod_legen(uint16_t raum, int32_t gx, int32_t gz, int16_t gier)
 {
     re15_game_state_init(); re15_inv_load_briefing();
@@ -709,7 +709,7 @@ static int tg_tod_legen(uint16_t raum, int32_t gx, int32_t gz, int16_t gier)
     frame(0, 0);
     const int ks = prop_von(RE15_GSZ_KEY_OBJ);
     if (ks < 0) return -1;
-    s_tg_kx = g_scd.props[ks].x; s_tg_ky = g_scd.props[ks].y; s_tg_kz = g_scd.props[ks].z; s_tg_kc = re15_gatorszene_r41_key_kamera();
+    s_tg_kx = g_scd.props[ks].x; s_tg_ky = g_scd.props[ks].y; s_tg_kz = g_scd.props[ks].z; s_tg_kc = re15_gatorszene_r41_key_kamera(); s_tg_durchgang = re15_gatorszene_r41_key_durchgang();
     for (int f = 0; f < 200; f++) frame(0, 0);   /* Einstellung zu Ende (Halt 90) */
     return 0;
 }
@@ -766,8 +766,13 @@ static int tg_fall(const char *name, int elza, int32_t gx, int32_t gz, int16_t g
     }
     printf("    %s: Leiche (%d,%d) Gier %d -> Schluessel (%d,%d) Kamera %d; nach Leiter + Weg am Schluessel angezeigt Cut %d (Schluessel dort %d.%d Bildpunkte), "
            "Aufnahme %s\n", name, (int)gx, (int)gz, (int)gier, (int)kx, (int)kz, kc, am, px10 / 10, px10 % 10, auf ? "ja" : "NEIN");
+    const int durchgang = s_tg_durchgang;
     if (pruef) {
-        PRUEF(am == kc, "%s: am Schluessel zeigt das Spiel die Kamera der Einstellung (angezeigt Cut %d, Schluessel-Kamera %d)", name, am, kc);
+        if (durchgang == 0)
+            PRUEF(am == kc, "%s: am Schluessel zeigt das Spiel die Kamera der Einstellung (angezeigt Cut %d, Schluessel-Kamera %d)", name, am, kc);
+        else
+            printf("    %s: Rueckfall wie 0b86e36c6 (keine Kamera erreicht in ihrem Gebiet die Bildschwelle 10,4) - Kamera-Gleichheit nur dokumentiert (%d / %d)\n",
+                   name, am, kc);
         PRUEF(auf, "%s: die Aktionstaste am Schluessel startet die Aufnahme", name);
     }
     return am != kc;
@@ -779,7 +784,10 @@ static void teil_tod_gebiet(int elza)
     static const struct { const char *n; int32_t x, z; int16_t g; } L[4] = {
         { "nutzer", -5485, -23074, 800 }, { "todesrolle", -5416, -22578, 1024 }, { "r1", 3413, -25001, 2048 }, { "lauf_a", -5500, -8900, 800 } };
     re15_gatorszene_r41_key_gebiet_alt_setzen(0);
-    for (int i = 0; i < 4; i++) (void)tg_fall(L[i].n, elza, L[i].x, L[i].z, L[i].g, 1);
+    for (int i = 0; i < 4; i++) {
+        (void)tg_fall(L[i].n, elza, L[i].x, L[i].z, L[i].g, 1);
+        if (i == 0) PRUEF(s_tg_durchgang == 0, "Nutzer-Leiche: die Lage liegt im Gebiet ihrer Kamera (Durchgang 1, kein Rueckfall: %d)", s_tg_durchgang);
+    }
     printf("  -- Gegenprobe Stand 0b86e36c6 (Pruefhaken key_gebiet_alt) --\n");
     re15_gatorszene_r41_key_gebiet_alt_setzen(1);
     const int rot = tg_fall("nutzer_alt", elza, L[0].x, L[0].z, L[0].g, 0);
