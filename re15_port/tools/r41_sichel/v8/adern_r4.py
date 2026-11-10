@@ -466,7 +466,8 @@ def herkunft_r4(blob, ref_blob):
     nutzt keine Original-Flaeche"): (1) Zeilen 480 .. 480 + n(V7) - 1 bytegleich V7; (2) neue Zeilen = Original-EM30-Zeile 480 + k (15 Bit),
     hoechstens 3; (3) alle Texel bytegleich V7; (4) jede Flaeche der Meshes 8/13/14 auf einer neuen Zeile: alle Texel unter ihr = Original-Texel
     UND von einer Original-Flaeche mit derselben Original-Zeile benutzt; (5) keine Flaeche auf einer neuen Zeile in Feld C; (6) Flaechen mit
-    geaenderter UV nur auf neuen Zeilen."""
+    geaenderter UV nur auf neuen Zeilen. Runde 5d: Flaechen ohne Gegenstueck in V7 (Einsatz, nacken_r5.py) zaehlen als geaendert
+    und fallen damit unter (4) und (6)."""
     _d, _o, ms, tim = KB.teile(blob); _d2, _o2, mr, timr = KB.teile(ref_blob)
     t, tr = KB.tim_teile(tim), KB.tim_teile(timr)
     _MO, TO = original()
@@ -476,11 +477,15 @@ def herkunft_r4(blob, ref_blob):
     neu_ok = len(neu) <= 3 and all(np.array_equal(neu[k] & 0x7FFF, TO['clut'][k] & 0x7FFF) for k in range(len(neu)))
     pix_ok = bool(np.array_equal(t['pix'], tr['pix']))
     nutz = {k: nutzung(None, 480 + k) for k in range(len(neu))}
-    n_fl = n_tex = n_fremd = n_anders = 0
+    n_fl = n_tex = n_fremd = n_anders = n_zusatz = 0
     tex_ok, c_fehler, uv_fehler = True, 0, 0
     for b in (8, 13, 14):
         for key, uv in keys(ms[b]):
-            ur = AV.flaeche(mr[b], key)
+            i = int(key[1:])                       # Runde 5d: Flaechen, die es in V7 nicht gibt (Einsatz nacken_r5.py), gelten als geaendert
+            if i >= len(mr[b]['tuv' if key[0] == 'd' else 'quv']):
+                ur, n_zusatz = [], n_zusatz + 1
+            else:
+                ur = AV.flaeche(mr[b], key)
             anders = [uv[i] for i in range(len(uv)) if i % 3 != 2] != [ur[i] for i in range(len(ur)) if i % 3 != 2]
             z = (uv[2] >> 6) & 0x1FF
             if anders:
@@ -499,7 +504,7 @@ def herkunft_r4(blob, ref_blob):
             n_fremd += int((mk & ~nutz[z - 480 - nr]).sum())
     return dict(alte_zeilen_gleich=zeilen_ok, neue_zeilen_original=bool(neu_ok), neue_zeilen=int(len(neu)), texel_bytegleich_v7=pix_ok,
                 flaechen_neue_zeilen=n_fl, texel_unter_neuen=n_tex, texel_original=tex_ok, texel_ohne_original_flaeche=n_fremd,
-                uv_geaenderte_flaechen=n_anders, uv_fehler=uv_fehler, feld_c_fehler=c_fehler,
+                uv_geaenderte_flaechen=n_anders, zusatz_flaechen=n_zusatz, uv_fehler=uv_fehler, feld_c_fehler=c_fehler,
                 ok=bool(zeilen_ok and neu_ok and pix_ok and tex_ok and c_fehler == 0 and uv_fehler == 0 and n_fremd == 0))
 
 

@@ -64,6 +64,9 @@ S16 Luecke      (a) Luecken-Bildpunkte zwischen Ruecken (Knochen 8 oberhalb des 
                 <= 21 px UND Bildpunkte tiefer als 1,5 px <= 7 UND groesste Tiefe <= 3,2 px (= groesste Kerbe der Vorlage n1433-n1441 am Uebergang
                 Huegel/Kopf, luecke_r5.SOLL_*; das fruehere Soll 0 war strenger als die Vorlage);
                 (b) Gesichts-Bildpunkte (Knochen 9, lok x >= 150) je Ansicht (Variante 0, wo V7 >= 150 zeigt) >= V7 - 2 % (Mesh 8 verdeckt das Gesicht nicht)
+                (c) Runde 5d: Bildpunkte, in denen eine Flaeche von Mesh 8 ohne Gegenstueck in V7 (Einsatz nacken_r5.py) dort gezeichnet wird, wo
+                V7 das Gesicht zeigt (Knochen 9, lok x >= 150), in allen 177 Ansichten (Variante 0) = 0 (Auftrag Runde 5: "der Einsatz darf in
+                KEINER Ansicht ueber das Gesicht gezeichnet werden")
 Szene (Optionen --mk-a/--mk-b/--gr/--gr-v7, echte Framedumps mit Marker-Assets, szene_marker.py): S10s Wurzel F328-F346 = 0; S9s Schlitz
                 F344-F378 Ueberschuss gegen V7 <= SCHLITZ_SZENE_SOLL
 """
@@ -685,13 +688,24 @@ def s16(blob, ref_blob):
     res = L.messen_parallel(pfad, 'alle', 7, 12)
     z = L.zusammen(res)
     mo, mo7 = V.modell(blob), V.modell(ref_blob)
-    ge = []
+    m8, m87 = KB.teile(blob)[2][8], KB.teile(ref_blob)[2][8]
+    einsatz = (['d%d' % i for i in range(len(m87['tuv']), len(m8['tuv']))] + ['v%d' % i for i in range(len(m87['quv']), len(m8['quv']))])
+    ge, ue, n_ein, n_sicht = [], [], 0, 0
     for nm, p in L.ansichten('alle'):
-        g, g7 = RR5.gesicht_px(L.zeichne(mo, p, L.VARIANTEN[0])), RR5.gesicht_px(L.zeichne(mo7, p, L.VARIANTEN[0]))
+        A, A7 = L.zeichne(mo, p, L.VARIANTEN[0]), L.zeichne(mo7, p, L.VARIANTEN[0])
+        g, g7 = RR5.gesicht_px(A), RR5.gesicht_px(A7)
         if g7 >= S16_GESICHT_MIN and g < g7 * (1.0 - S16_GESICHT_RAND):
             ge.append((nm, g, g7))
+        if einsatz:
+            ein = (A['bone'][:480] == 8) & np.isin(A['flaeche'][:480], einsatz)
+            n = int((ein & (A7['bone'][:480] == 9) & (A7['lok'][:480][..., 0] >= RR5.GESICHT_X)).sum())
+            n_ein += int(ein.sum())
+            n_sicht += int(ein.any())
+            if n:
+                ue.append((nm, n))
     return dict(luecke_summe=z['summe'], luecke_tief=z['summe_tief'], ansichten_mit=z['ansichten_mit'], ueber_soll=z['ueber_soll'],
-                ansichten=len(res), b_gesicht_weniger=ge, ok=z['ok'] and not ge)
+                ansichten=len(res), b_gesicht_weniger=ge, c_einsatz_flaechen=len(einsatz), c_einsatz_px=n_ein,
+                c_einsatz_ansichten=n_sicht, c_einsatz_ueber_gesicht=ue, ok=z['ok'] and not ge and not ue)
 
 
 def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None):
@@ -813,9 +827,11 @@ def zeilen(r):
         import luecke_r5 as L_
         z.append('S16 Luecke Ruecken/Kopf (P5): (a) je Ansicht und Halbpixel-Variante Luecke <= %d px UND tiefer als %.1f px <= %d UND groesste Tiefe '
                  '<= %.1f px (Vorlage n1433-n1441); ueber dem Soll %d von %d Ansichten %s; Summe %d px, davon tief %d, in %d Ansichten (Info); '
-                 '(b) Ansichten mit weniger Gesicht als V7 - %d %%: %s -> %s'
+                 '(b) Ansichten mit weniger Gesicht als V7 - %d %%: %s; (c) Einsatz (%d Flaechen von Mesh 8 ohne Gegenstueck in V7, sichtbar in '
+                 '%d Ansichten, zusammen %d px) ueber Gesichts-Bildpunkten von V7 (Soll 0): %s -> %s'
                  % (L_.SOLL_SUMME, L_.TIEF_AB, L_.SOLL_TIEF, L_.SOLL_MAXTIEFE, len(s_['ueber_soll']), s_['ansichten'], s_['ueber_soll'][:40],
                     s_['luecke_summe'], s_['luecke_tief'], len(s_['ansichten_mit']), int(S16_GESICHT_RAND * 100), s_['b_gesicht_weniger'][:20],
+                    s_['c_einsatz_flaechen'], s_['c_einsatz_ansichten'], s_['c_einsatz_px'], s_['c_einsatz_ueber_gesicht'][:20],
                     'GRUEN' if s_['ok'] else 'ROT'))
         z.append('   S16 (a) alle Ansichten mit Luecke (Ansicht, px, tief, groesste Tiefe; je groesster Wert der 7 Varianten): %s' % s_['ansichten_mit'])
     if 'S14s' in r:

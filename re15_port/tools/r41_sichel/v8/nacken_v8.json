@@ -1,0 +1,6 @@
+{
+ "mitte": [350, -820, -370],
+ "radius": [65, 65, 65],
+ "wirt": "d65",
+ "quelle": "SF V8 Runde 5d: Rueckprojektion des Keils F332 (sfv8/r5p6/scan2.py), kleinste Lage (scan4.py), Probe in allen 7 Halbpixel-Lagen (scan5.py: Halbmesser 50 um (350, -860, -370) schliesst F332 nur in 4 von 7 Lagen, 81 px / 46 tief / 6,1 px) und Probe gegen das Gesicht (scan6.py, 450 Lagen: (350, -860, -370) Halbmesser 65 wird in PV ueber 4 und in P2 ueber 7 Gesichts-Bildpunkte von V7 gezeichnet; (350, -820, -370) Halbmesser 65: 0 in allen Ansichten, F332 hoechstens 8 px / 1 tief / 2,0 px ueber die 7 Lagen); PORT-WAHL aus Messung, kein RE-Wert"
+}
