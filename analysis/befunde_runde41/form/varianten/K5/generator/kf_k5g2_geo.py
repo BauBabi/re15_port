@@ -439,3 +439,177 @@ def kralle_drehpunkt(form, links, rechts, R_bild, verschub):
     form['meshes'][rechts]['ecken'] = [[int(x) for x in np.rint(v)] for v in V]
     return dict(drehpunkt_ausgleich=[round(float(x), 1) for x in c], verschub=[int(x) for x in verschub],
                 winkel_kralle_zur_hand_bild2=round(float(np.degrees(np.arccos(np.clip((np.trace(Rr) - 1) / 2, -1, 1)))), 1))
+
+
+# ------------------------------------------------------------------ Runde 2: Geometrie-Stufe in EINEM Aufruf (O2 Krallen + O1 Mulden-Tabelle)
+# Aufruf:   python kf_k5g2_geo.py bauen [<ziel.EMD>]     -> K5/k5g/K5g2/geo/BAHNSTEIG_FORM.EMD (laeuft mit der TIM von K5e_f1)
+#           python kf_k5g2_geo.py pruef                  -> baut zweimal im Speicher, vergleicht die Bytes mit der Datei (Exit 1 bei Unterschied)
+# Eingaenge (alle versioniert): K5/ruhe/K5e_f1/BAHNSTEIG_FORM.EMD, generator/k5g2_krallen.json (Krallen-Rezept),
+# generator/k5g2_mulde_tabelle.json (fertige Netze 10, 16, 21, 22 mit Mulde, aus kf_k5g2_mulde.py tabelle).
+# Reihenfolge: ERST die Krallen (das Rezept spiegelt die linken Krallen 14, 15, 28, 30 so, wie sie in K5e_f1 stehen; 28 vorher auf K5c-Form),
+# DANN die Netze der Tabelle. Beide Schritte fassen verschiedene Teile an (Krallen 19, 20, 28, 29, 31 / Tabelle 10, 16, 21, 22).
+# Keine Gleitkommazahl, kein Zufall, keine Uhr: zweiter Lauf ergibt dieselben Bytes. EDD/EMR/Clips (Sektionen 0-6) bleiben die Bytes von K5e_f1.
+GEO_BASIS = os.path.join(K5, 'ruhe', 'K5e_f1', 'BAHNSTEIG_FORM.EMD')
+GEO_BASIS_TIM = os.path.join(K5, 'ruhe', 'K5e_f1', 'BAHNSTEIG_FORM.TIM')
+GEO_BASIS_SHA = 'f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1'
+GEO_KRALLEN = os.path.join(HIER, 'k5g2_krallen.json')
+GEO_TABELLE = os.path.join(HIER, 'k5g2_mulde_tabelle.json')
+GEO_ZIEL = os.path.join(K5, 'k5g', 'K5g2', 'geo', 'BAHNSTEIG_FORM.EMD')
+KRALLEN_LINKS, KRALLEN_RECHTS = (14, 15, 28, 30), (19, 20, 29, 31)
+KRALLEN_TEILE = (19, 20, 28, 29, 31)          # was die Krallen-Stufe anfasst
+MULDEN_TEILE = (10, 16, 21, 22)               # was die Mulden-Tabelle setzt (16 steht unveraendert darin)
+
+
+def _q12(M, v):
+    """Ganzzahlige Drehung: (M * v + 2048) >> 12, M in Q12 (4096 = 1,0)."""
+    x, y, z = int(v[0]), int(v[1]), int(v[2])
+    return [(int(M[i][0]) * x + int(M[i][1]) * y + int(M[i][2]) * z + 2048) >> 12 for i in range(3)]
+
+
+def kralle_spiegelnetz(links, M):
+    """Spiegelbild des linken Krallennetzes im Krallenraum (z -> -z, Wurzel = Ursprung, also an der EIGENEN Wurzel der rechten Kralle),
+    danach die feste Drehung M (Q12) um die Wurzel. Normalen genauso. Umlauf gedreht (Dreieck 0,2,1 / Viereck 0,2,1,3), UV/CLUT/Seite je Ecke
+    mitgenommen. Reine Ganzzahlen."""
+    ecken = [_q12(M, (e[0], e[1], -e[2])) for e in links['ecken']]
+    normalen = [_q12(M, (n[0], n[1], -n[2])) for n in links['normalen']]
+    dr, vi = [], []
+    for d in links['dreiecke']:
+        o = (0, 2, 1)
+        dr.append(dict(e=[d['e'][k] for k in o], n=[d['n'][k] for k in o], uv=[list(d['uv'][k]) for k in o], clut=int(d['clut']), page=int(d['page'])))
+    for q in links['vierecke']:
+        o = (0, 2, 1, 3)
+        vi.append(dict(e=[q['e'][k] for k in o], n=[q['n'][k] for k in o], uv=[list(q['uv'][k]) for k in o], clut=int(q['clut']), page=int(q['page'])))
+    return dict(ecken=ecken, normalen=normalen, dreiecke=dr, vierecke=vi)
+
+
+def krallen_form(form, rezept):
+    """O2 / E2 in der Form (aus FE.lese_emd von K5e_f1), an Ort und Stelle:
+    28 = Ecken und Normalen der K5c-Form (rezept kralle28, Flaechen/UV wie K5e_f1); 19, 20, 29, 31 = Spiegelnetze der linken 14, 15, 28, 30
+    mit je einer festen Drehung um die Wurzel (rezept rechts/<teil>/matrix_q12). Knochen und Versaetze bleiben."""
+    k28 = rezept['kralle28']
+    m = form['meshes'][28]
+    if len(m['ecken']) != len(k28['ecken']) or len(m['normalen']) != len(k28['normalen']):
+        raise SystemExit('Kralle 28: Eckenzahl passt nicht zur K5c-Form')
+    m['ecken'] = [[int(x) for x in e] for e in k28['ecken']]
+    m['normalen'] = [[int(x) for x in e] for e in k28['normalen']]
+    for links, rechts in rezept['paare']:
+        form['meshes'][int(rechts)] = kralle_spiegelnetz(form['meshes'][int(links)], rezept['rechts'][str(rechts)]['matrix_q12'])
+    return form
+
+
+def geometrie_form(emd0=None, krallen=GEO_KRALLEN, tabelle=GEO_TABELLE, stufen=('krallen', 'mulde')):
+    """K5e_f1 -> Form mit der fertigen Geometrie. stufen erlaubt Teilstaende fuer Gegenproben (nur krallen / nur mulde)."""
+    import hashlib
+    import json
+    if emd0 is None:
+        emd0 = open(GEO_BASIS, 'rb').read()
+    ist = hashlib.sha256(emd0).hexdigest()
+    if ist != GEO_BASIS_SHA:
+        raise SystemExit('Basis ist nicht K5e_f1: sha256 %s, erwartet %s' % (ist, GEO_BASIS_SHA))
+    form = FE.lese_emd(emd0)
+    if 'krallen' in stufen:
+        rezept = json.load(open(krallen, encoding='utf-8'))
+        if rezept['basis']['sha256'] != GEO_BASIS_SHA:
+            raise SystemExit('Krallen-Rezept gehoert zu einer anderen Basis')
+        if tuple(tuple(p) for p in rezept['paare']) != KRALLEN_PAARE:
+            raise SystemExit('Krallen-Rezept: andere Paare als %s' % (KRALLEN_PAARE,))
+        krallen_form(form, rezept)
+    if 'mulde' in stufen:
+        tab = json.load(open(tabelle, encoding='utf-8'))
+        if tab['basis']['sha256'] != GEO_BASIS_SHA:
+            raise SystemExit('Mulden-Tabelle gehoert zu einer anderen Basis')
+        if tuple(sorted(int(t) for t in tab['teile'])) != MULDEN_TEILE:
+            raise SystemExit('Mulden-Tabelle: andere Teile als %s' % (MULDEN_TEILE,))
+        for t in sorted(tab['teile'], key=int):
+            form['meshes'][int(t)] = tab['teile'][t]
+    return emd0, form
+
+
+def geometrie_bytes(stufen=('krallen', 'mulde'), krallen=GEO_KRALLEN, tabelle=GEO_TABELLE):
+    emd0, form = geometrie_form(krallen=krallen, tabelle=tabelle, stufen=stufen)
+    return emd_mit_md1(emd0, form)
+
+
+def geometrie_bauen(ziel=None, log=print):
+    """EIN Aufruf: K5e_f1 + Krallen-Rezept + Mulden-Tabelle -> Geometrie-EMD. Gibt (Pfad, sha256) zurueck."""
+    import hashlib
+    aus = geometrie_bytes()
+    ziel = ziel or GEO_ZIEL
+    os.makedirs(os.path.dirname(ziel), exist_ok=True)
+    with open(ziel, 'wb') as f:
+        f.write(aus)
+    h = hashlib.sha256(aus).hexdigest()
+    log('EMD %s  %d Byte  sha256 %s' % (ziel.replace(chr(92), '/'), len(aus), h))
+    return ziel, h
+
+
+def mulde_auf_form(form, tabelle=GEO_TABELLE):
+    """Fuer die Textur-Stufe (laeuft NACH der Geometrie): form = K5e_f1-Flaechen der Teile 10, 16, 21, 22 (Schluessel wie zonen_v2), aber mit
+    NEUER Textur-Zuordnung je Flaeche (clut, page, uv verschoben, z. B. Fleck-Kopien). Setzt die Netze der Mulden-Tabelle ein und laesst jede
+    Tabellenflaeche von ihrer Mutter erben: clut und Seite der Mutter, UV = Tabellen-UV + Verschiebung der Mutter (neu gegen K5e_f1, in Texeln
+    der ganzen Textur: x = u + (page & 15) * 128). Wurde eine Mutter nicht rein verschoben (gedreht, gestreckt), bricht es ab.
+    Rueckgabe: Bericht (verschobene Muetter, Kinder, Kinder mit UV ausserhalb des Mutter-Rechtecks - die lesen nach einer Kopie fremde Texel)."""
+    import json
+    tab = json.load(open(tabelle, encoding='utf-8'))
+    basis = FE.lese_emd(open(GEO_BASIS, 'rb').read())
+    art = ('dreiecke', 'vierecke')
+
+    def gx(f):
+        return [(int(u) + (int(f['page']) & 15) * 128, int(v)) for u, v in f['uv']]
+
+    ber = dict(muetter_verschoben=0, kinder_verschoben=0, kinder_clut_neu=0, kinder_ausserhalb=[])
+    delta = {}
+    for t in MULDEN_TEILE:
+        for a in (0, 1):
+            alt, neu = basis['meshes'][t][art[a]], form['meshes'][t][art[a]]
+            if len(alt) != len(neu):
+                raise SystemExit('Teil %d: Flaechenzahl ist nicht die von K5e_f1 (erst texturieren, dann mulde_auf_form)' % t)
+            for i, (fa, fn) in enumerate(zip(alt, neu)):
+                if fa['e'] != fn['e']:
+                    raise SystemExit('Teil %d Flaeche %d/%d: Ecken sind nicht die von K5e_f1' % (t, a, i))
+                d = set((xn - xa, yn - ya) for (xa, ya), (xn, yn) in zip(gx(fa), gx(fn)))
+                if len(d) != 1:
+                    raise SystemExit('Teil %d Flaeche %d/%d: UV nicht rein verschoben (%s)' % (t, a, i, sorted(d)))
+                delta[(t, a, i)] = (d.pop(), int(fn['clut']), int(fn['page']), int(fa['clut']), gx(fa))
+                if delta[(t, a, i)][0] != (0, 0):
+                    ber['muetter_verschoben'] += 1
+    netze = {int(t): json.loads(json.dumps(n)) for t, n in tab['teile'].items()}
+    for t, a, i, mt, ma, mi in tab['herkunft']:
+        (dx, dy), clut, page, clut_alt, mxy = delta[(mt, ma, mi)]
+        f = netze[t][art[a]][i]
+        if int(f['clut']) != clut_alt:
+            raise SystemExit('Tabelle: Kind %d|%d|%d hat nicht die CLUT-Zeile der Mutter' % (t, a, i))
+        if clut != clut_alt:
+            ber['kinder_clut_neu'] += 1
+        if (dx, dy) != (0, 0) or page != int(f['page']):
+            xy = gx(f)
+            x0, x1 = min(x for x, _y in mxy) - 1, max(x for x, _y in mxy) + 1
+            y0, y1 = min(y for _x, y in mxy) - 1, max(y for _x, y in mxy) + 1
+            if any(not (x0 <= x <= x1 and y0 <= y <= y1) for x, y in xy):
+                ber['kinder_ausserhalb'].append('%d|%d|%d' % (t, a, i))
+            uv = [[x + dx - (page & 15) * 128, y + dy] for x, y in xy]
+            if min(u for u, _v in uv) < 0 or max(u for u, _v in uv) > 255 or min(v for _u, v in uv) < 0 or max(v for _u, v in uv) > 255:
+                raise SystemExit('Kind %d|%d|%d: UV ausserhalb der Seite nach Verschiebung' % (t, a, i))
+            f['uv'] = uv
+            f['page'] = page
+            ber['kinder_verschoben'] += 1
+        f['clut'] = clut
+    for t in MULDEN_TEILE:
+        form['meshes'][t] = netze[t]
+    return ber
+
+
+if __name__ == '__main__':
+    import hashlib
+    sys.dont_write_bytecode = True
+    was = sys.argv[1] if len(sys.argv) > 1 else ''
+    if was == 'bauen':
+        geometrie_bauen(sys.argv[2] if len(sys.argv) > 2 else None)
+    elif was == 'pruef':
+        a, b = geometrie_bytes(), geometrie_bytes()
+        d = open(GEO_ZIEL, 'rb').read() if os.path.exists(GEO_ZIEL) else bytes()
+        gleich = a == b == d
+        print('zwei Laeufe und Datei byte-gleich: %s  sha256 %s' % ('JA' if gleich else 'NEIN', hashlib.sha256(a).hexdigest()))
+        sys.exit(0 if gleich else 1)
+    else:
+        raise SystemExit('Aufruf: python kf_k5g2_geo.py bauen [<ziel.EMD>] | pruef')
