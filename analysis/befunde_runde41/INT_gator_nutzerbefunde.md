@@ -381,3 +381,160 @@ Bau `RE15_BUILD_DIR=.../r41_integration/re15_port/build bash re15_port/tools/loc
 - Kein exe-Lauf der ganzen natuerlichen Kette Tod -> Leiter -> Fussweg -> Aufnahme -> Leiter mit der neuen Lage; die Kette ist im Harness-Riegel
   tod_gebiet (6 Leichen, Leon/Elza) und die Aufnahme am echten Weg im exe-Riegel alligator2_schluessel(_elza, _west_elza) abgedeckt.
 - Kein master-Merge, kein Paket.
+
+## Nachbesserung zu Abnahme 2
+
+Abnahme 2 (`dd5010b5d`, `INT_gator_nutzerbefunde_abnahme_2.md`): NICHT BESTANDEN wegen B1; dazu K-1, K-2 (klein), H-1, H-2 (Hinweise).
+Laufordner (nicht im Baum): `<SP>/nb2` =
+`C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/gator_nb/nb2`
+(bau9.log, riegel_key_2.log, riegel_key_3.log, riegel_unit_3.log, gruppe_nb2_2.log, scan_*.txt, vgl.py).
+
+| Commit | Befund | Kern |
+|---|---|---|
+| `61aeffeb8` | B1 | Verdeckung an der Endlage pruefen - erste Fassung mit Mitte und vier Ecken (in `cceb11646` zurueckgenommen) |
+| `190c4b1da` | B1 | Riegel `tod` in drei Staenden, Becken-Scan mit Gegenprobe Stand `ae9e17c9e` |
+| `04aa0e7db` | B1 | Bildschranke des Schluessels wieder groesser als 0 x 0 (2 x 2, am Ort der Endlage, gleiche Kamera) |
+| `cceb11646` | B1 | Endlagen-Pruefung auf die Mitte zurueckgenommen (Ecken gemessen zu streng) |
+| `3a532ee7e` | B1 | Messwerte im Kommentar der Bildschranke nachgezogen |
+
+### B1 - Schluessel an der Endlage hinter der Leiche (`61aeffeb8`, `cceb11646`)
+
+**Ursache (gemessen):** `key_suche()` pruefte die Verdeckung am KANDIDATEN auf der Wasserflaeche (y -1620). `key_neigung()` hebt und kippt den
+Schluessel danach (Endlage y -1739 bis -1781). Fuer die Todesrolle lag der Kandidat (-7500,-1620,-25900) im Bild der Kamera 0 frei, die Endlage
+(-7500,-1742,-25900) aber hinter einer Knochen-Kugel der Leiche. Am echten Weg blieb ein Bildpunkt bei (75,94).
+
+**Fix:** `key_endlage_frei()` prueft einen Kandidaten, der die bisher beste Lage schlagen wuerde, noch einmal an der ENDLAGE - mit derselben Pruefung
+wie am Kandidaten: Mitte im Bildfenster, nicht hinter einer Kugel der Leiche (Radius 800, @0x80118b98), nicht hinter der Figur. Keine neue Konstante
+(Abnahme 2: "Dafuer ist keine neue Zahl noetig."). Wirkt nur im K2-Pfad (naechster Punkt an der Leiche); die Pruefhaken-Staende `b29263046`,
+`f8c71298a`, `0b86e36c6` bleiben bitgleich. Neuer Pruefhaken `re15_gatorszene_r41_key_endlage_alt_setzen(1)` = Stand `ae9e17c9e`.
+
+**Erste Fassung verworfen:** `61aeffeb8` pruefte zusaetzlich die vier Ecken des gekippten Quadrats gegen die Kugeln. Am echten Weg gemessen war das
+zu streng: im Lauf alligator2 k3 lehnte es die Lage (600,-1775,-25900) ab, an der der Schluessel im Bild nachweislich zu sehen ist (7 x 5), und legte
+ihn weiter weg und kleiner. Im Becken-Scan lag der Schluessel damit in 172 von 208 Lagen weiter von der Leiche, in keiner naeher. `cceb11646`
+nimmt die Ecken heraus; es bleibt die Pruefung der Mitte.
+
+**Echter Weg (exe, Bild-Unterschied mit/ohne Schluessel ueber die Bilder der Einstellung):**
+
+| Lauf | Abnahme 2 (Stand `ae9e17c9e`) | erste Fassung `61aeffeb8` | jetzt `cceb11646` |
+|---|---|---|---|
+| tod, tod_elza (Todesrolle) | Lage (-7500,-1742,-25900), Kamera 0, Tiefe 9625, 773 von der Leiche, **1 x 1** bei (75,94) | (-6000,-1781,-26000), Tiefe 8252, 817, 4 x 5 | (-2200,-1779,-19700), Kamera 0, Tiefe 7283, **789** von der Leiche, 43 von 43 Bildern, Kasten (271,102)-(278,106) = **8 x 5** |
+| tod_r1, tod_r1_elza | (1800,-1775,-20500), Kamera 1, Tiefe 10839, 851, 3 x 2 | gleich | gleich; 44 von 44 Bildern, Kasten (114,98)-(116,99) = 3 x 2 |
+| alligator2 k3, k3_elza | (600,-1775,-25900), Kamera 1, Tiefe 8113, 819, 7 x 5 | (2500,-1759,-21300), Tiefe 11253, 879, 2 x 4 | wie Abnahme 2; 44 von 44 Bildern, Kasten (220,107)-(226,111) = 7 x 5 |
+
+Der Schluessel der Todesrolle liegt jetzt 16 weiter von der Leiche als in Abnahme 2 (789 gegen 773) und ist statt eines Bildpunkts 8 x 5 gross.
+Die Laeufe, die in Abnahme 2 in Ordnung waren, sind unveraendert. Die Kaesten von tod, tod_r1 und k3 stammen aus `riegel_key_3.log`; fuer die
+Elza-Laeufe ist Lage, Kamera und Ecken-Kasten im debug.log gleich, ihr Riegel ist gruen (`riegel_key_2.log`).
+
+**Becken-Scan** (`test_r41_alligator2 schluessel_scan`, Raster 3000, 208 Lagen aus Leiche, Gier und Figur):
+
+| Stand | mittlerer Abstand zur Leiche | groesster | mittleres Bild (Bildpunkte) | kleinstes Bild |
+|---|---|---|---|---|
+| `b29263046` (groesstes Bild, vor K2) | 3808 | 6036 | 9,9 | 6,3 |
+| `ae9e17c9e` (K2, Verdeckung nur am Kandidaten) | 823 | 1348 | 4,9 | 2,9 |
+| `61aeffeb8` (Endlage mit Ecken, verworfen) | 876 | 2560 | 4,7 | 2,8 |
+| `cceb11646` (Endlage, Mitte) | 834 | 2560 | 4,9 | 2,9 |
+
+Gegen Stand `ae9e17c9e` aendern sich 20 von 208 Lagen (dort lag die Endlage verdeckt). In 19 davon liegt der Schluessel 3 bis 89 weiter von der
+Leiche. Keine Lage liegt weiter als im Stand `b29263046`.
+
+**Ein Ausreisser (offen, s. unten):** Leon (1325,-25550), Leiche (-5000,-26000) Gier 2048: 2560 von der Leiche statt 938 (Stand `b29263046` dort
+2623). Mit einer Diagnose am echten Suchlauf nachgesehen: die elf naeheren Kandidaten (938 bis 1093, dann 2482 bis 2572) liegen nach der Hebung in der
+Kamera 0 hinter der FIGUR, nicht hinter der Leiche. Die Figur-Pruefung an der Endlage ist dieselbe Regel wie am Kandidaten; sie ist nicht gelockert.
+
+### B1 - Riegel `unit_r41_gatorszene_tod` (`190c4b1da`)
+
+Abnahme 2 zaehlte sechs Fehler. Zwei waren der echte Fehler ("von der Leiche nicht verdeckt", Todesrolle Leon und Elza), vier die alte
+Groessen-Erwartung "Quadrat >= Nachbesserung 1". Der Riegel faehrt jede Todeslage jetzt in drei Staenden:
+
+- **Stand des Baums:** alle bisherigen Pruefungen. Die Verdeckung wird ungelockert an der Endlage geprueft. Neu: "naeher an der Leiche als Stand
+  `b29263046`".
+- **Stand `b29263046` (Pruefhaken):** dort gilt die Schranke "Quadrat >= Nachbesserung 1" unveraendert weiter. Sie ist nicht entfernt, sondern dem
+  Stand zugeordnet, fuer den sie gemessen wurde.
+- **Gegenprobe Stand `ae9e17c9e` (Pruefhaken):** fuer die Todesrolle (Leon und Elza) muss die Endlage dort verdeckt sein.
+
+Begruendung des Nachzugs: Nutzer woertlich "na er soll näher bei der Leiche liegen, immerhin hat der Aligator ja den Schlüssel samt Zombie gefressen."
+Die naehere Lage ist mit Absicht kleiner (Abnahme 2: 5,1 gegen 9,7 und 4,6 gegen 7,5). Die Groesse wird weiter gemeldet.
+
+Gemessen (`riegel_unit_3.log`): `tod: 0 Fehler`.
+
+| Lage | Abstand jetzt | Stand `b29263046` | Quadrat jetzt | Stand `b29263046` | Nachbesserung 1 |
+|---|---|---|---|---|---|
+| todesrolle, todesrolle_elza | 789 | 3718 | 6,2 | 11,5 | 9,7 |
+| r1, r1_sprung | 846 | 1459 | 4,6 | 11,6 | 7,5 |
+
+Gegenprobe Stand `ae9e17c9e`: "Endlage (-5100,-1773,-26500) von der Leiche verdeckt, naechster Knochen 757 entfernt -> rot" (Leon und Elza) - das
+ist der Fehler der Abnahme 2.
+
+Beobachtung am Harness (kein Spielfehler): der Harness-Alligator hat keine Boss-Phase GBP_DEAD. In spaeteren Laeufen desselben Prozesses schneidet
+sein Modul um Bild 69/70 der Einstellung selbst und ueberschreibt den gemerkten Cut. Deshalb laufen die Staende `b29263046` und `ae9e17c9e` als
+Kurzlauf (Lage, Bild, Verdeckung) nach den vier vollen Laeufen. Am echten Weg prueft der exe-Riegel `integration_r41_gatorszene_tod*` jede Einstellung.
+
+`unit_r41_alligator2_schluessel` faehrt den Becken-Scan zusaetzlich im Stand `ae9e17c9e`: "20 von 208 Lagen lagen dort an einer Endlage, die die
+Endlagen-Pruefung ablehnt"; "keine Lage weiter von der Leiche als Stand b29263046 (0 von 208 weiter ...)". Werkzeug-Option
+`schluessel_scan <raster> endlage_alt`.
+
+### B1 - Bildschranke groesser als 0 x 0 (`04aa0e7db`, `3a532ee7e`)
+
+`test_r41_gatorszene.cmake` und `test_r41_alligator2.cmake` verlangen fuer den Bild-Unterschied des Schluessels wieder:
+
+- Kasten mindestens **2 x 2** Bildpunkte (mehr als ein Bildpunkt in jeder Richtung). Der eine Bildpunkt der Abnahme 2 faellt damit durch.
+- Der Kasten liegt im Ecken-Kasten der Endlage (neue Zeile `[gatorszene] Schluessel-Bild: Kamera ..., Ecken-Kasten ...` im debug.log, ein Bildpunkt
+  Rasterrand), und die Kamera dieser Zeile ist die Kamera der Einstellung. Ein Unterschied an anderer Stelle im Bild zaehlt nicht.
+
+Warum 2 x 2 und nicht mehr: die Textur des Schluessels ist ein duenner Umriss. Gemessen decken 313 der 2092 Texel im UV-Viereck (MD1 ROOM7040
+@0x354C+0x7C, TIM @0x033844) = 15,0 %. Der sichtbare Kasten ist deshalb kleiner als der Ecken-Kasten (tod 8 x 5 in 12 x 11, tod_r1 3 x 2 in 8 x 8,
+k3 7 x 5 in 10 x 10). Die alte Schranke 10 x 9 gehoert zum Stand `b29263046` und ist durch den Nutzer-Wortlaut zu K2 abgeloest. Welche Mindestgroesse
+gelten soll, ist der Nutzer-Entscheid K-2; 2 x 2 ist nur die Untergrenze "nicht ein einzelner Bildpunkt".
+
+Grenze der Pruefung: der Riegel zeigt, dass der Schluessel in jedem Bild der Einstellung an seiner Endlage zu sehen ist. Er zeigt nicht, dass er
+als Schluessel erkennbar ist.
+
+### K-1 - Vorbeischwimmen an der Westwand (nicht geaendert)
+
+Das Aufnahmefenster ist 3466 breit (`|quer| < 1733`), der Kanal 7200. Schliessen laesst sich der Fall nur mit einem breiteren Fenster. Die Vorgabe
+lautet "Aufnahmefenster bleibt RE2". Kein Eingriff; ein breiteres Fenster braucht den Entscheid des Nutzers.
+
+### K-2 - Schluessel klein (nicht geaendert)
+
+Folge des Nutzer-Wortlauts zu K2 (naeher an der Leiche). Die Endlagen-Pruefung aendert die Groesse im Mittel nicht (Becken-Scan 4,9 gegen 4,9
+Bildpunkte, kleinstes Bild 2,9). Braucht Spieltest oder Entscheid des Nutzers.
+
+### H-1 - Kanister faellt hinter Kopf und Schulter (nicht geaendert)
+
+Folge der Wurfrichtung 3342 aus K1 (Lage aus der Messung der Kanalmitte). Eine andere Richtung wuerde die Landung in der Kanalmitte aendern. Kein
+Eingriff.
+
+### H-2 - Suedwurf am echten Weg (kein Eingriff, Beleg nachgetragen)
+
+Die Auswahl selbst ist im Harness-Riegel `unit_r41_kanister2080_landung` belegt (`re15_k2080_wurf_gier_wahl` mit drei Sued- und zwei Nord-Lagen des
+Alligators). Im Gruppenlauf nachgesehen: der exe-Riegel `integration_r41_kanister2080_kampf` loescht den Messhaken (`unset(ENV{RE15_K2080_WURF_GIER})`)
+und waehlt in zwei seiner fuenf Laeufe von selbst den Suedwurf, weil der Alligator beim Ausloesen im Norden steht:
+
+| Lauf | Alligator beim Ausloesen | Zeile im debug.log | Landung | Kanister beim R1 |
+|---|---|---|---|---|
+| nordost_leon | (-5432,-8413) | `F284 Wurfrichtung 888 (Suedbecken, ...) -> Nennlandung (-5192,-21513)` | (-5255,-21505), 45 neben der Kanalmitte -5300 | (-4862,-2005,-22369) |
+| plattform_leon | (-2748,-9547) | `F761 Wurfrichtung 888 (Suedbecken, ...) -> Nennlandung (-5192,-21513)` | (-5255,-21505) | (-3510,-2150,-22290) |
+
+Beide Laeufe enden mit dem R1 (Zeile `Kanister Stufe 13`), der Riegel ist gruen (`Passed 1220.44 sec`). Einschraenkung: die Startlage der Figur und
+die Lage nach der Rueckkehr setzt der Riegel per Messhaken (`RE15_K2080_RUECK_KANISTER`). Ein Lauf ganz ohne Messhaken mit Suedwurf fehlt weiter.
+
+### Testlaeufe der Nachbesserung zu Abnahme 2
+
+Bau `RE15_BUILD_DIR=.../r41_integration/re15_port/build bash re15_port/tools/local_build.sh build` -> `=== LOCAL-BUILD-OK (build)`, 0 Warnungen
+(`bau9.log`). Alle Laeufe auf dem Stand `cceb11646` (Spielcode) / `3a532ee7e`.
+
+1. Schluessel-Riegel einzeln (`riegel_key_2.log`):
+   `ctest -R "integration_r41_gatorszene_tod|integration_r41_alligator2_k3|unit_r41_gatorszene_tod|unit_r41_alligator2_schluessel|unit_r41_alligator2_weg" -j 4`:
+   `100% tests passed, 0 tests failed out of 14`.
+2. Gator-Riegelgruppe nach dem letzten Code-Commit (`gruppe_nb2_2.log`, Start 2026-11-10 17:18:50, HEAD `3a532ee7e`):
+   `ctest -R "gator|kanister|alligator|2090|2080|re2gator" -j 4 --timeout 2400`:
+   `100% tests passed, 0 tests failed out of 154` (`Total Test time (real) = 4451.95 sec`, Ende 18:33:02, kein Riegel nachgefahren).
+
+### Offen nach der Nachbesserung zu Abnahme 2
+
+- **K-1:** Vorbeischwimmen an der Westwand in 5 von 28 Wandlaeufen der Abnahme 2. Nur mit breiterem Fenster zu schliessen; Nutzer-Entscheid.
+- **K-2:** Schluessel 2 bis 8 Bildpunkte breit. Spieltest oder Entscheid des Nutzers zur Mindestgroesse.
+- **Ausreisser Endlage:** steht die Figur zwischen Kamera und Leiche (Leon (1325,-25550), Leiche (-5000,-26000) Gier 2048), liegt der Schluessel
+  2560 von der Leiche statt 938. Naeher laege er im Bild hinter der Figur. Eine Lage von 208; im Stand `b29263046` waren es dort 2623.
+- **H-1:** unveraendert (s. oben). **H-2:** Suedwurf mit eigener Auswahl in zwei exe-Laeufen belegt; ein Lauf ganz ohne Messhaken fehlt.
+- Kein master-Merge, kein Paket.
