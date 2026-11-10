@@ -17,6 +17,11 @@
  *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22), 484 (Sichel, Mesh 15), 485 (Kopf, Mesh 9),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  *
+ * V8 Runde 6a (P6, Nutzer 2026-11-10 "Die Vorlage hat eine breite Hand mit breiten Unterarmt. [...] Bei uns ist die Hand ganz klein und
+ * zierlich und wirkt dadurch verkümmert."): Klauenhand Mesh 12 und Unterarm Mesh 11 neu geformt (tools/r41_sichel/v8/hand_r6.py, Stufe h,
+ * hand_v8.json; Messblatt analysis/befunde_runde41/SF_MESSBLATT_HAND.md): nur Ecken und Normalen, Flaechen / UV / CLUT-Zeilen wie zuvor.
+ * Gemessen am Asset 7a65e3f0 (sfv8/r6h): Mesh 12 Spanne x / y / z 484 / 716 / 433, Wurzelring y -22; Mesh 11 Spanne x / z 444 / 407.
+ * Gegenprobe V8 r5d c4976c62 und V7: rot (Mesh 12 Spanne 343 / 594 / 235, Wurzelring y 16-19; Mesh 11 Spanne 516 / 472).
  * V8 Runde 5d (P5, Nutzer 2026-11-09 "es gibt immer noch eine Lücke zwischen Rücken und Kopf beim 2 beiner Birkin"): Mesh 8 traegt
  * hinter seinen EM30-Elementen einen geschlossenen Einsatz (tools/r41_sichel/v8/nacken_r5.py: 14 Ecken, 12 Dreiecke, 6 Vierecke,
  * alle auf Zeile 494 mit Texeln der Wirtsflaeche Dreieck 65); gemessen am Asset c4976c62 (sfv8/r5p6). Gegenprobe V8 Runde 4
@@ -88,6 +93,16 @@ typedef struct {
 static modell_t s_basis, s_form;
 
 #define KETTE 7                  /* Schwanzglieder, birkin_formen.py FORMEN['hangar'] schwanz_kette glieder */
+static int spanne(const re15_md1_mesh_t *b, int achse)   /* V8 Runde 6a: groesste minus kleinste Ecken-Koordinate (0 x, 1 y, 2 z) */
+{
+    int lo = 32767, hi = -32768;
+    for (int v = 0; v < b->tri_vertex_count; v++) {
+        int w = achse == 0 ? b->tri_vertices[v].x : achse == 1 ? b->tri_vertices[v].y : b->tri_vertices[v].z;
+        if (w < lo) lo = w;
+        if (w > hi) hi = w;
+    }
+    return hi - lo;
+}
 static int umtexturiert(int m)   /* birkin_formen.py FORMEN['hangar'] umtexturieren (1-6, 9, 15); V7: dazu 8, 12, 13 (V5 wie Foto b) */
 {
     return (m >= 1 && m <= 6) || m == 8 || m == 9 || m == 12 || m == 13 || m == 14 || m == 15;   /* V8 Runde 2: dazu 14 (X3) */
@@ -386,6 +401,20 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                       zeile_zahl(b, 492));
                 CHECK(zeile_zahl(b, 490) == b->quad_count + b->triangle_count - 24, "%s: Klauenhand (Mesh 12) %d Flaechen auf 490 statt %d",
                       name, zeile_zahl(b, 490), b->quad_count + b->triangle_count - 24);
+                /* V8 Runde 6a (P6, hand_r6.py / hand_v8.json Variante "0.93 0.72 / 118"): breite Hand - Spanne der 52 Ecken und
+                 * Wurzelring (Ecken 1-4) hinter dem Gelenk; gemessen am Asset 7a65e3f0, Gegenprobe r5d / V7: 343 / 594 / 235, y 16-19 */
+                CHECK(b->tri_vertex_count == 52 && spanne(b, 0) == 484 && spanne(b, 1) == 716 && spanne(b, 2) == 433,
+                      "%s: Klauenhand (Mesh 12) %d Ecken, Spanne %d / %d / %d statt 52, 484 / 716 / 433", name, b->tri_vertex_count,
+                      spanne(b, 0), spanne(b, 1), spanne(b, 2));
+                for (int v = 1; v <= 4 && v < b->tri_vertex_count; v++)
+                    CHECK(b->tri_vertices[v].y == -22, "%s: Klauenhand (Mesh 12) Wurzelring-Ecke %d y %d statt -22", name, v,
+                          b->tri_vertices[v].y);
+            }
+            if (m == 11) {               /* V8 Runde 6a (P6): Unterarm nach dem Breitenprofil der Vorlage (hand_v8.json unterarm verlauf);
+                                          * gemessen am Asset 7a65e3f0, Gegenprobe r5d / V7: Spanne x / z 516 / 472 */
+                CHECK(b->tri_vertex_count == 18 && spanne(b, 0) == 444 && spanne(b, 1) == 640 && spanne(b, 2) == 407,
+                      "%s: Unterarm (Mesh 11) %d Ecken, Spanne %d / %d / %d statt 18, 444 / 640 / 407", name, b->tri_vertex_count,
+                      spanne(b, 0), spanne(b, 1), spanne(b, 2));
             }
             if (m == 9) {                /* N1.10: Kopf auf eigener CLUT-Zeile; V7: 486 (V6 Kopf) */
                 int kopf = 0, ecken = 0;

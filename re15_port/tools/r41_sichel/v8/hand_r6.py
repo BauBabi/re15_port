@@ -12,6 +12,8 @@ aus dem Messblatt (Breitenprofil der Vorlage birkin20-24) bzw. aus hand_suche.py
 Was die Stufe tut (nur Ecken und Normalen von Mesh 11 und 12; Flaechen, UV, CLUT-Zeilen 490 / 491 / 492, Skelett und Clips bleiben):
   Mesh 12 = ORIGINAL-Klauenhand des RE1.5-Birkin (CDEMD0.EMS Typ 0x30, Mesh 12) je Achse skaliert ("skala"), um die Handachse y gedreht
      ("dreh_grad": der Handruecken +z zeigt danach auf Azimut dreh_grad um y, x -> (cos, 0, -sin)), entlang y verschoben ("schub_y").
+     Vor dem Skalieren: Krallenspitzen ("krallen"), Handansatz Ecken 1-4 ("wurzelring": Hoehe y, Radialfaktor) und "ebnen" (eine Ecke in
+     ihrer Hoehe y in die Ebene dreier Ecken - gegen den Schlitz eines windschiefen Vierecks, Riegel S9 (b); Quelle in hand_v8.json).
      Die bisherige Hand war das Original x 0,55 / 0,54 / 0,55 (tools/birkin_formen.py FORMEN hangar skal 12) mit in V7 verlaengerten
      Krallenspitzen; die Original-Krallen sind in der neuen Groesse laenger als diese (Messblatt Abschnitt 6).
   Mesh 11 = Original-Unterarm x "grund" (1,229 / 0,80 / 1,229 wie bisher, birkin_formen.py), danach je Ecke ein Radialfaktor f(y) und eine
@@ -91,6 +93,12 @@ def hand_ecken(om, c):
         P[sp] = m + k['faktor'] * a
     for i, (y, f) in sorted((int(k), v) for k, v in c.get('wurzelring', {}).items()):   # Ecken des Handansatzes: neue Hoehe y, Radialfaktor f
         P[i] = (P[i, 0] * f, y, P[i, 2] * f)
+    for e in c.get('ebnen', []):                                   # Ecke auf dem kuerzesten Weg in ihrer Hoehe y in die Ebene dreier Ecken
+        a, b, d = (P[j] for j in e['ebene'])
+        n = np.cross(b - a, d - a)
+        n /= np.linalg.norm(n)
+        nh = np.array([n[0], 0.0, n[2]])
+        P[e['ecke']] = P[e['ecke']] - np.dot(P[e['ecke']] - a, n) / np.dot(nh, n) * nh
     S = np.array(c['skala'], float)
     R = ry(c['dreh_grad'])
     return (P * S) @ R.T + np.array([0.0, c.get('schub_y', 0.0), 0.0]), _norm((N / S) @ R.T)

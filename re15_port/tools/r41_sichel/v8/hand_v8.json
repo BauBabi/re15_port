@@ -6,7 +6,8 @@
   "dreh_grad": "PORT-WAHL: 118 Grad = gemessener Azimut der Kamera im Handraum in P1 (Messblatt Abschnitt 4), die Handflaeche steht in der Pose der Vorlage quer zum Blick",
   "krallen": "PORT-WAHL: A x 1.33, B x 2.0 heben die kurzen Original-Fingerkrallen in die Streuung der Vorlage 15.0 .. 23.1 px (V7-Messblatt); B zur Haelfte in Richtung C, sonst kreuzt B die Kralle C in P2 und PV",
   "wurzelring": "PORT-WAHL: Handansatz (Ecken 1-4) von Original y 30 auf y -30, die Unterarmspitze (15 E. hinter dem Gelenk) steckt dann in jeder Handstellung im Handkoerper (Riegel S17 b)",
-  "unterarm": "grund = Stand V4 bis V8 r5d; verlauf: Messblatt Abschnitt 2, Faktor Vorlage / Modell an den Ringen y 236 (36.6 / 42.5 = 0.86) und y 442 (33.5 / 36.5 = 0.92)"
+  "unterarm": "grund = Stand V4 bis V8 r5d; verlauf: Messblatt Abschnitt 2, Faktor Vorlage / Modell an den Ringen y 236 (36.6 / 42.5 = 0.86) und y 442 (33.5 / 36.5 = 0.92)",
+  "ebnen": "PORT-WAHL: Ecke 1 des Handansatzes in ihrer Hoehe y auf dem kuerzesten Weg (28 E. im Original-Mass) in die Ebene der Ecken 6, 9, 4 gelegt - das Original-Viereck 5 (6, 9, 4, 1) ist windschief; der Port verwirft ein Viereck am Dreieck seiner ersten drei Ecken (Culling wie BB._mac0), in der neuen Groesse und Drehung erschien es in der Szene von vorn als Schlitz: Riegel S9 (b) 49 px ohne, 5 px mit Ebnen (V8 r5d 0); Ecke 4 statt 1 ergibt 8 px"
  },
  "hand": {
   "skala": [
@@ -43,7 +44,17 @@
     -30,
     1.0
    ]
-  }
+  },
+  "ebnen": [
+   {
+    "ecke": 1,
+    "ebene": [
+     6,
+     9,
+     4
+    ]
+   }
+  ]
  },
  "unterarm": {
   "grund": [
