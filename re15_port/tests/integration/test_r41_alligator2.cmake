@@ -311,11 +311,37 @@ if(TEIL MATCHES "^k3")
     if(_b1_rest)
         math(EXPR _b1 "${_b1} - 1")
     endif()
-    execute_process(COMMAND "${RE15_TOOL}" gsz bilddiff "${_dir}/mit" "${_dir}/ohne" ${_b0} ${_b1} 2 0 0   # Nachtrag K2: Kasten nur gemessen
+    execute_process(COMMAND "${RE15_TOOL}" gsz bilddiff "${_dir}/mit" "${_dir}/ohne" ${_b0} ${_b1} 2 2 2   # Nachbesserung zu Abnahme 2 (B1), s. unten
                     RESULT_VARIABLE _br OUTPUT_VARIABLE _bo ERROR_VARIABLE _be)
     string(REGEX MATCH "bilddiff: [^\n]*" _bz "${_bo}")
     if(NOT _br EQUAL 0)
         r41p_fehler("Schluessel in der Einstellung nicht sichtbar/pulsierend/zu klein: ${_bz}")
+    endif()
+    # Nachbesserung zu Abnahme 2 (B1 "Am echten Weg ... zeigt die Einstellung genau EINEN Bildpunkt ... der Integrations-Riegel laesst das durch, weil
+    # ae9e17c9e die Bildschranke von 10 x 9 auf 0 x 0 gesetzt hat"; verlangt: "wieder eine Bildschranke groesser als 0 x 0 setzen, damit ein Schluessel mit
+    # einem Bildpunkt nicht als OK gilt"): der Kasten aller Unterschiede ist mindestens 2 x 2 Bildpunkte (mehr als EIN Bildpunkt in jeder Richtung) UND
+    # liegt im Ecken-Kasten der ENDLAGE (debug.log "Schluessel-Bild", gekipptes Quadrat der Halbseite 135 = 90 x 6144/4096, MD1 ROOM7040 @0x354C+0x38;
+    # ein Bildpunkt Rasterrand). Die alte Schranke 10 x 9 gilt dem Stand b29263046 (groesstes Bild) und ist durch den Nutzer-Wortlaut "na er soll
+    # naeher bei der Leiche liegen" abgeloest; gemessen ist die Textur des Quadrats ein Umriss (15,0 % der 2092 Texel im UV-Viereck @0x354C+0x7C decken),
+    # die naehere Lage zeigt deshalb wenige Bildpunkte (tod 5 in 4 x 5, tod_r1 4 in 3 x 2, k3 Kasten 2 x 4) - die Groesse selbst ist Befund K-2 (Nutzerentscheid).
+    file(STRINGS "${_dir}/mit/debug.log" _kb REGEX "\\[gatorszene\\] Schluessel-Bild: Kamera [0-9]+, Ecken-Kasten ")
+    if(NOT _kb)
+        r41p_fehler("keine Zeile 'Schluessel-Bild' (Ecken-Kasten der Endlage) in ${_dir}/mit/debug.log")
+    endif()
+    list(GET _kb 0 _kb0)
+    if(NOT _kb0 MATCHES "Kamera ([0-9]+), Ecken-Kasten [(]([-0-9]+),([-0-9]+)[)]-[(]([-0-9]+),([-0-9]+)[)]")
+        r41p_fehler("Zeile 'Schluessel-Bild' unlesbar: ${_kb0}")
+    endif()
+    set(_eb_kam "${CMAKE_MATCH_1}")
+    math(EXPR _ex0 "${CMAKE_MATCH_2} - 1")
+    math(EXPR _ey0 "${CMAKE_MATCH_3} - 1")
+    math(EXPR _ex1 "${CMAKE_MATCH_4} + 1")
+    math(EXPR _ey1 "${CMAKE_MATCH_5} + 1")
+    if(NOT _bz MATCHES "Kasten [(]([0-9]+),([0-9]+)[)]-[(]([0-9]+),([0-9]+)[)]")
+        r41p_fehler("bilddiff-Zeile unlesbar: ${_bz}")
+    endif()
+    if(NOT _eb_kam EQUAL _kam OR CMAKE_MATCH_1 LESS _ex0 OR CMAKE_MATCH_2 LESS _ey0 OR CMAKE_MATCH_3 GREATER _ex1 OR CMAKE_MATCH_4 GREATER _ey1)
+        r41p_fehler("Schluessel-Unterschied nicht an der Endlage: ${_bz} gegen ${_kb0} (Einstellung Cut ${_kam})")
     endif()
     foreach(_v mit ohne)
         file(GLOB _fd "${_dir}/${_v}/fd_*.ppm")
@@ -323,7 +349,7 @@ if(TEIL MATCHES "^k3")
             file(REMOVE ${_fd})
         endif()
     endforeach()
-    message(STATUS "r41_alligator2: Lauf ${TEIL}: Wandlage mit Kopf-Klemme, Kamera ${_kam}, Tiefe ${_tiefe} = ${_quad10}/10 Bildpunkte, Einstellung F${_es}-F${_ee}; ${_bz}")
+    message(STATUS "r41_alligator2: Lauf ${TEIL}: Wandlage mit Kopf-Klemme, Kamera ${_kam}, Tiefe ${_tiefe} = ${_quad10}/10 Bildpunkte, Einstellung F${_es}-F${_ee}; ${_bz}; ${_kb0}")
     return()
 endif()
 if(TEIL MATCHES "^tragen")
