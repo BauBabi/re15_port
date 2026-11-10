@@ -226,7 +226,9 @@ def ringe_bild(mo, pose=V.PV):
         Rb = R[b].astype(float) / 4096.0; Tb = T[b].astype(float)
         a0 = V.proj(pose, (np.array([[0, 0, 0], [0, 400, 0]], float) @ Rb.T) + Tb)
         ax = a0[1] - a0[0]; ax /= max(np.linalg.norm(ax), 1e-9); q = np.array([-ax[1], ax[0]])
-        nr = len(P) // 11
+        nb = 3 if b in (16, 18) else 2            # Ringe des Baus (v8_bau.glied_mesh): 3 bzw. 2 Ringe zu 11 Ecken + 2 Achs-Ecken; Runde 6b: die
+        nr = nb if len(P) >= nb * 11 + 2 else len(P) // 11   # Teilungs-Ecken der Grenze 110 / 120 (unterseite_r5.teilen) stehen dahinter und sind
+                                                  # kein Ring (gemessen an den Assets 382bbfe7 und 95a783a6: Mesh 18 mit 47 Ecken gab einen "Ring" mit 10,8 px)
         for r in range(nr):
             Q = V.proj(pose, (P[r * 11:(r + 1) * 11] @ Rb.T) + Tb)
             w = (Q - Q.mean(0)) @ q
@@ -392,7 +394,9 @@ def s10(blob):
     """Runde 3 (O5) Wurzel von hinten: sichtbare Bildpunkte der Mesh-16-Flaechen ohne Ecke auf Ring 2 (Kegel + Rohr); Runde 4: Takt F314-F345."""
     mo = V.modell(blob)
     m = mo.meshes[16]
-    ring2 = set(range(22, 33)) | {33}
+    ring2 = set(range(22, 33)) | {33} | set(range(35, len(m.tv)))   # Runde 6b: Teilungs-Ecken (ab Ecke 35) liegen auf Ring 1 / Ring 2 des Bands
+                                                                    # Ring 1 -> Ring 2, nie in der Wurzel (wie szene_marker.wurzel_flaechen;
+                                                                    # ohne sie zaehlte das Bandstueck v22 als Wurzel: 1318 px in Takt F314-F345)
     wurzel = set(['d%d' % i for i, f in enumerate(m.tf) if not (set(f[1::2]) & ring2)] +
                  ['v%d' % i for i, f in enumerate(m.qf) if not (set(f[1::2]) & ring2)])
     sp = R3.szene_posen()

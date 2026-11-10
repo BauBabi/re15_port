@@ -155,6 +155,12 @@ def _ecken(m, key):
     return list((m['tf'] if key[0] == 'd' else m['qf'])[int(key[1:])][1::2])
 
 
+def fd_bild(ordner, f):
+    """Framedump-Bild f: --fd / --fd-v7 nennen wie bei S14s den Framedump-Ordner selbst (.../fd); ein Laufordner (mit Unterordner fd) geht auch."""
+    p = os.path.join(ordner, 'f%06d.ppm' % f)
+    return p if os.path.exists(p) else os.path.join(ordner, 'fd', 'f%06d.ppm' % f)
+
+
 def hell(pfad):
     from PIL import Image
     x0, y0, x1, y1 = S18_KASTEN
@@ -207,8 +213,8 @@ def s18(blob, ref_blob, r4, fd=None):
     ok = not a1 and not a3
     if fd and fd[0] and fd[1]:
         f0, f1 = S18_BILDER
-        hn = [hell(os.path.join(fd[0], 'fd', 'f%06d.ppm' % f)) for f in range(f0, f1 + 1)]
-        h7 = [hell(os.path.join(fd[1], 'fd', 'f%06d.ppm' % f)) for f in range(f0, f1 + 1)]
+        hn = [hell(fd_bild(fd[0], f)) for f in range(f0, f1 + 1)]
+        h7 = [hell(fd_bild(fd[1], f)) for f in range(f0, f1 + 1)]
         soll = max(h7) + (max(h7) - min(h7))
         ueb = [(f0 + i, x) for i, x in enumerate(hn) if x > soll]
         out['b'] = dict(v7=(min(h7), max(h7)), soll=soll, neu=(min(hn), max(hn)), ueber=len(ueb), ueber_bilder=ueb, ok=not ueb)
