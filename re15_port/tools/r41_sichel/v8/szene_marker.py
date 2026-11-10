@@ -26,7 +26,10 @@ GRUEN = 0x03E0
 
 
 def wurzel_flaechen(m):
-    ring2 = set(range(22, 34))
+    # Runde 6b: die an der Grenze 110 / 120 geteilten Flaechen (unterseite_r5.teilen) haengen ihre neuen Ecken hinter die 35 Ecken des
+    # Glieds (3 Ringe zu 11 + 2 Achs-Ecken); sie liegen auf Ring 1 / Ring 2 des Bands Ring 1 -> Ring 2 und der Deckel, nie in der Wurzel
+    # (gemessen am Asset 382bbfe7: ohne diese Zeile 23 statt 22 Wurzelflaechen)
+    ring2 = set(range(22, 34)) | set(range(35, len(m['v'])))
     return (['d%d' % i for i, f in enumerate(m['tf']) if not (set(f[1::2]) & ring2)] +
             ['v%d' % i for i, f in enumerate(m['qf']) if not (set(f[1::2]) & ring2)])
 
@@ -48,6 +51,33 @@ def bauen(emd, ziel):
                     AV.setze_zeile(AV.flaeche(ms[16], k), 480)
         open(os.path.join(ziel, name + '.EMD'), 'wb').write(KB.packen(blob, d, ms, KB.tim_packen(t)))
     print('MK_A/MK_B/GR in', ziel, 'Wurzelflaechen', len(wurzel_flaechen(KB.teile(blob)[2][16])))
+
+
+def bauen_ko(emd, ziel_datei):
+    """Runde 6b (S16 b/c an den Szenenbildern): Marker-Asset KO = <emd> mit magenta Gesicht. Gesichtsflaechen von Mesh 9 (Schwerpunkt lokales
+    x >= 150 = ruecken_r5.GESICHT_X) bleiben auf ihrer CLUT-Zeile 486, die deckend magenta wird; die uebrigen Flaechen von Mesh 9 (Hinterkopf)
+    wandern auf Zeile 480. Ein Bildpunkt, der im V7-Lauf magenta ist und im Lauf des Prueflings nicht, ist ein verdeckter Gesichts-Bildpunkt."""
+    blob = open(emd, 'rb').read()
+    d, _o, ms, tim = KB.teile(blob)
+    t = KB.tim_teile(tim)
+    c = t['clut']
+    for b, m in enumerate(ms):
+        if b != 9:
+            assert not any((uv[2] >> 6) & 0x1FF == 486 for uv in list(m['tuv']) + list(m['quv'])), ('Zeile 486 ausserhalb von Mesh 9', b)
+    m = ms[9]
+    ng = nh = 0
+    for kind, F in (('d', m['tf']), ('v', m['qf'])):
+        for i, f in enumerate(F):
+            if np.mean([m['v'][j][0] for j in f[1::2]]) >= 150:
+                ng += 1
+            else:
+                AV.setze_zeile(AV.flaeche(m, '%s%d' % (kind, i)), 480)
+                nh += 1
+    z = 486 - 480
+    c[z] = np.where(c[z] == 0, 0, (c[z] & 0x8000) | MAGENTA)
+    os.makedirs(os.path.dirname(os.path.abspath(ziel_datei)), exist_ok=True)
+    open(ziel_datei, 'wb').write(KB.packen(blob, d, ms, KB.tim_packen(t)))
+    print('KO', ziel_datei, 'Gesichtsflaechen', ng, 'Hinterkopf', nh)
 
 
 def bild(p):
@@ -115,5 +145,7 @@ if __name__ == '__main__':
         bauen(a[1], a[2])
     elif a[0] == 'wurzel':
         wurzel(a[1], a[2], *(int(x) for x in a[3:5]))
+    elif a[0] == 'ko':
+        bauen_ko(a[1], a[2])
     elif a[0] == 'schlitz':
         schlitz(a[1], a[2], *(int(x) for x in a[3:5]))

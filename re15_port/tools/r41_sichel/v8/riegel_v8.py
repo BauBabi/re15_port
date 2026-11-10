@@ -74,6 +74,11 @@ S17 Hand links  (a) Breitenprofil des linken Arms in P1 an den acht Stationen de
                 (c) Runde 5d: Bildpunkte, in denen eine Flaeche von Mesh 8 ohne Gegenstueck in V7 (Einsatz nacken_r5.py) dort gezeichnet wird, wo
                 V7 das Gesicht zeigt (Knochen 9, lok x >= 150), in allen 177 Ansichten (Variante 0) = 0 (Auftrag Runde 5: "der Einsatz darf in
                 KEINER Ansicht ueber das Gesicht gezeichnet werden")
+Runde 6b P5-neu / P4-neu (riegel_r6.py, dort die Regeln im Wortlaut): S15 um Grenze 110-120 / Ring-Deckel / graue Texelzeilen erweitert;
+                S16 (a) mit Entscheid E3 "GELB - Einzelbild"; S16 (b)/(c) NEU = 0 verdeckte Bildpunkte des V7-Gesichts durch Flaechen ausser
+                Mesh 9 in allen 177 Ansichten und (Optionen --ko-v7 / --ko, Marker-Laeufe szene_marker.bauen_ko) in den Szenenbildern F225-F450;
+                S18 "vorn ohne Kragen" (gegen V8 r4, Option --r4; helle Bildpunkte am Szenenlauf --fd / --fd-v7); S19 Texeldichte und Streckung;
+                S3 (f) Huegel-Rot >= 50 % (r4 und Vorlage 58,3 %; r5d 45,8 %). Gegenproben: V8 r5d ROT in S15, S18, S19; V8 r4 ROT in S16 (a).
 Szene (Optionen --mk-a/--mk-b/--gr/--gr-v7, echte Framedumps mit Marker-Assets, szene_marker.py): S10s Wurzel F328-F346 = 0; S9s Schlitz
                 F344-F378 Ueberschuss gegen V7 <= SCHLITZ_SZENE_SOLL
 """
@@ -177,7 +182,7 @@ def s2_s3(mo, bone):
     return r2, r3, om
 
 
-S3F_MIN = 40.0                         # Runde 3 (O2): Vorlage 58,3 % (Zahlen-Pruefer r2 huegel_rot.txt); Groessenordnung der Vorlage
+S3F_MIN = 50.0                         # Runde 6b (Auftrag: "Buckel-Rot (Huegel) mindestens 50 %"; r4 und Vorlage 58,3 %, r5d 45,8 %); Runde 3: 40
 
 
 def huegel_rot(A):
@@ -715,7 +720,7 @@ def s16(blob, ref_blob):
                 c_einsatz_ansichten=n_sicht, c_einsatz_ueber_gesicht=ue, ok=z['ok'] and not ge and not ue)
 
 
-def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None):
+def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None, r4=None, ko=None):
     mo, A = render(blob)
     bone = A['bone'][:480]
     out = dict(sha256=V.sha(blob))
@@ -746,6 +751,9 @@ def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None):
     out['S16'] = s16(blob, ref_blob)
     import riegel_hand as RH
     out['S17'] = RH.s17(blob, ref_blob)
+    if r4 is not None:
+        import riegel_r6 as R6
+        R6.einbauen(out, blob, ref_blob, r4, ko, fd)
     if fd:
         out['S14s'] = s14s(*fd)
     if marker:
@@ -841,11 +849,15 @@ def zeilen(r):
                  % (L_.SOLL_SUMME, L_.TIEF_AB, L_.SOLL_TIEF, L_.SOLL_MAXTIEFE, len(s_['ueber_soll']), s_['ansichten'], s_['ueber_soll'][:40],
                     s_['luecke_summe'], s_['luecke_tief'], len(s_['ansichten_mit']), int(S16_GESICHT_RAND * 100), s_['b_gesicht_weniger'][:20],
                     s_['c_einsatz_flaechen'], s_['c_einsatz_ansichten'], s_['c_einsatz_px'], s_['c_einsatz_ueber_gesicht'][:20],
-                    'GRUEN' if s_['ok'] else 'ROT'))
+                    ('Runde-5-Regel ' + ('GRUEN' if s_['ok_r5'] else 'ROT') + ' (Urteil: Zeile "S16 Runde 6")') if 'ok_r5' in s_
+                    else ('GRUEN' if s_['ok'] else 'ROT')))
         z.append('   S16 (a) alle Ansichten mit Luecke (Ansicht, px, tief, groesste Tiefe; je groesster Wert der 7 Varianten): %s' % s_['ansichten_mit'])
     if 'S17' in r:
         import riegel_hand as RH
         z += RH.zeilen(r['S17'])
+    if 'S18' in r:
+        import riegel_r6 as R6
+        z += R6.zeilen(r)
     if 'S14s' in r:
         z.append('S14s fast weisse Bildpunkte in echten Framedumps F344-F372, Fenster x 560-690 / y 260-330 (960x720): neu %d, V7 %d (<= V7 + %d) -> %s'
                  % (r['S14s']['neu'], r['S14s']['v7'], S14S_RAND, 'GRUEN' if r['S14s']['ok'] else 'ROT'))
@@ -854,10 +866,12 @@ def zeilen(r):
     if 'S9s' in r:
         z.append('S9s Schlitz in echten Framedumps F344-F378 (gruene Silhouette, Ueberschuss gegen V7): %d (Soll <= %d) -> %s'
                  % (r['S9s']['ueberschuss'], SCHLITZ_SZENE_SOLL, 'GRUEN' if r['S9s']['ok'] else 'ROT'))
-    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S10s', 'S9s', 'S14s')
+    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18', 'S19', 'S10s', 'S9s', 'S14s')
            if k in r and not r[k]['ok']]
-    z.append('SUMME: %d von %d gruen%s' % (len([k for k in r if k.startswith('S')]) - len(rot), len([k for k in r if k.startswith('S')]),
-                                           ('; ROT: ' + ', '.join(rot)) if rot else ''))
+    gelb = ['S16'] if r.get('S16', {}).get('status', '').startswith('GELB') else []
+    z.append('SUMME: %d von %d gruen%s%s' % (len([k for k in r if k.startswith('S')]) - len(rot) - len(gelb), len([k for k in r if k.startswith('S')]),
+                                             ('; GELB - Einzelbild (E3): ' + ', '.join(gelb)) if gelb else '',
+                                             ('; ROT: ' + ', '.join(rot)) if rot else ''))
     return z, rot
 
 
@@ -868,15 +882,21 @@ def main():
     ap.add_argument('--szene'); ap.add_argument('--aus'); ap.add_argument('--json')
     ap.add_argument('--mk-a'); ap.add_argument('--mk-b'); ap.add_argument('--gr'); ap.add_argument('--gr-v7')
     ap.add_argument('--fd', help='Runde 5: Framedump-Ordner der Szene (neu) fuer S14s'); ap.add_argument('--fd-v7', help='Framedump-Ordner der V7-Szene')
+    ap.add_argument('--r4', help='Runde 6b: V8 r4 fuer S18 / S19 (Standard: git show 282e4d594:EM30_HANGAR.EMD)')
+    ap.add_argument('--ko-v7', help='Runde 6b: Marker-Lauf KO (Gesicht magenta) von V7 fuer S16 (b)/(c) an den Szenenbildern F225-F450')
+    ap.add_argument('--ko', help='Marker-Lauf KO des Prueflings')
     a = ap.parse_args()
     v7 = a.v7 or os.path.join(V.SFV8, 'emd', 'EM30_V7.EMD')
     ref = open(v7, 'rb').read()
     assert V.sha(ref) == V.V7_SHA, 'Referenz V7 %s hat sha256 %s' % (v7, V.sha(ref))
     blob = open(a.emd, 'rb').read()
     mk = (a.mk_a, a.mk_b, a.gr, a.gr_v7) if (a.mk_a or a.gr) else None
-    r = alles(blob, ref, a.szene, marker=mk, fd=(a.fd, a.fd_v7) if (a.fd and a.fd_v7) else None)
+    import riegel_r6 as R6
+    r = alles(blob, ref, a.szene, marker=mk, fd=(a.fd, a.fd_v7) if (a.fd and a.fd_v7) else None, r4=R6.r4_blob(a.r4),
+              ko=(a.ko_v7, a.ko) if (a.ko_v7 and a.ko) else None)
     z, rot = zeilen(r)
-    kopf = ['Riegel V8 (Messblatt V8 Abschnitt 7) fuer %s' % a.emd, 'sha256 %s' % r['sha256'], 'Referenz V7 %s' % V.V7_SHA]
+    kopf = ['Riegel V8 (Messblatt V8 Abschnitt 7) fuer %s' % a.emd, 'sha256 %s' % r['sha256'], 'Referenz V7 %s' % V.V7_SHA,
+            'Referenz V8 r4 %s' % r.get('r4_sha256')]
     txt = '\n'.join(kopf + z)
     print(txt)
     if a.aus:
