@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# gdigrab des ECHTEN Spielfensters (Runde 5, wie runde4/suche/gdi.sh): eigene exe-Kopie aus lauf_v4.sh; das Fenster wird ueber die EIGENE PID
+# gdigrab des ECHTEN Spielfensters (Runde 5d, wie runde4/suche/gdi.sh): eigene exe-Kopie aus lauf_v4.sh; das Fenster wird ueber die EIGENE PID
 # gesucht (Prozessname re15_sfv4_<PID des lauf_v4.sh-Prozesses>, Sicht-Pruefer r4) und per SetWindowPos ganz nach oben gelegt.
 # Kein AUTOSHOT, kein SOFTWARE_RENDER. Fremde re15-Prozesse werden nicht angefasst.
 S=/c/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8
-O=$S/r5/gdi
+O=$S/r5p6/gdi
 mkdir -p $O
-D=$S/szene_gdi_r5
+D=$S/szene_gdi_r5d
 export BAUM=C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8
 FD=1100-1100/1 bash $BAUM/re15_port/tools/r41_sichel/v4/lauf_v4.sh $D - 1110 > $O/gdi_lauf.txt 2>&1 &
 LPID=$!
@@ -28,6 +28,6 @@ done
 echo "Fenster (Prozess re15_sfv4_$LPID): $R" > $O/gdi_fenster.txt
 set -- $R
 W=$(( $4 / 2 * 2 )); H=$(( $5 / 2 * 2 ))
-ffmpeg -y -loglevel error -f gdigrab -framerate 30 -offset_x $2 -offset_y $3 -video_size ${W}x${H} -t 50 -i desktop -c:v libx264 -pix_fmt yuv420p $O/gdi_szene_v8r5.mp4 2> $O/gdi_err.txt
+ffmpeg -y -loglevel error -f gdigrab -framerate 30 -offset_x $2 -offset_y $3 -video_size ${W}x${H} -t 50 -i desktop -c:v libx264 -pix_fmt yuv420p $O/gdi_szene_v8r5d.mp4 2> $O/gdi_err.txt
 wait $LPID
 echo fertig >> $O/gdi_fenster.txt
