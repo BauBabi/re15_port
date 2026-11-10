@@ -469,9 +469,9 @@ def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None
     if 'u' in stufen:                 # Runde 5 (P4, Nutzer 2026-11-09 "Die Unterseite des großen Schwanzes ist fleischig ... Nur die oberseite ist
         import unterseite_r5 as U5    # durchweg grau"): Unterseite auf den Haut/Fleisch-Verlauf des Original-Unterarms (unterseite_r5.py)
         U5.anwenden(ms, t, unterseite or _p('unterseite_v8.json'), prot)
-    if 'n' in stufen:                 # Runde 5d (P5, Auftrag (iii)): kleiner geschlossener Einsatz an Mesh 8 gegen den Keil in F332,
-        import nacken_r5 as N5        # Haut = Texel der Wirtsflaeche (nacken_r5.py, nacken_v8.json); nach a/u, damit Zeile und Seite stehen
-        N5.anwenden(ms, t, nacken or _p('nacken_v8.json'), prot)
+    if 'n' in stufen:                 # Runde 6 (P5-neu): geschlossenes Nackenstueck an Mesh 8 zwischen Buckel-Vorderkante und Hinterkopf, vorderes
+        import nacken_r6 as N6        # Ende im Kopf (nacken_r6.py, nacken_v8.json); ersetzt den Einsatz der Runde 5d (nacken_r5.py); nach a/u
+        N6.anwenden(ms, t, nacken or _p('nacken_v8.json'), prot)
     if 'h' in stufen:                 # Runde 6a (P6, Nutzer 2026-11-10 "Die Vorlage hat eine breite Hand mit breiten Unterarmt ... Bei uns ist die
         import hand_r6 as H6          # Hand ganz klein und zierlich"): Original-Klauenhand und Original-Unterarm in der Groesse des Messblatts
         H6.anwenden(ms, t, hand or _p('hand_v8.json'), prot)   # (hand_r6.py, hand_v8.json); aendert nur Ecken und Normalen von Mesh 11 und 12
