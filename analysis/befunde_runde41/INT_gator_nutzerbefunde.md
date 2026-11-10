@@ -246,3 +246,138 @@ Bau `RE15_BUILD_DIR=.../r41_integration/re15_port/build bash re15_port/tools/loc
   Leiche (natuerlich 4579-4910, vorher 1021-1214). Will der Nutzer den Schluessel naeher an der Leiche, waere der naechste Weg die Lage der Stufe 0 im Gebiet
   (kleineres Bild). Das ist ein Nutzerentscheid.
 - Restfall K1 (seitliche Kanister-Passagen) und H1/H3 der Abnahme 0 bleiben offen (nicht blockierend).
+
+## Nachtrag K1/H3 (nach Abnahme 1, mit K2)
+
+Offene Punkte aus Abnahme 1 (b29263046): K1 Kanister-Restfall, K2 Nutzer-Antwort zur Schluessel-Lage, H3 Dash-Abbruch. Commits `e5cd784dc` (K1),
+`ae9e17c9e` (K2), `3061fe397` (H3). Laufordner (nicht im Baum): `<SP>/k1n` =
+`C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/gator_nb/k1n`
+(runs/, sicht/, weg_0b86/, weg_neu/, wurfscan_*.txt, vorbei.py, klassen.py, ctest_k12.log, ctest_gruppe.log).
+
+### K1 - Behaelter in die Mitte (`e5cd784dc`)
+
+Nutzer 2026-11-09 Punkt 2 (woertlich): "Wenn das so nicht so einfach ist, lege den Behälter zentraler in die Mitte, damit er ihn auf jeden Fall aufnehmen
+muss, sobald der Spieler den Aligator dort hingelockt hat." PORT-WAHL, Beleg ist dieser Wortlaut.
+
+**Messung Kanalmitte (Kollision):** ROOM2090.RDT SCA @0x6DC, Westwand Kasten [0] @0x6F4 x -10900..-8900 (Innenkante -8900), Plattform-Block
+Kasten [4] @0x724 x -1700..1850 z -20000..-12450. Kanalmitte x = -5300 (Werkzeug `test_r41_kanister2080 wurfscan`, liest die SCA selbst).
+
+**Lage:** Der Kanister liegt, wo er aufschlaegt (FG-E3). Die Wurfrichtung dreht nur die RE2-Bahn (v (25,20,10) / a (5,20,0) @0x088E-08A2). Weil die
+gedrehten Vektoren ganze Zahlen sind, liegen die Landestellen auf einem Gitter (Nennbahn, `<SP>/k1n/wurfscan_nord2.txt`, `wurfscan_sued2.txt`):
+
+| Richtung | Gier vorher -> jetzt | Nennlandung vorher -> jetzt | Abstand zur Kanalmitte | Fall-Bilder in Cut 12 |
+|---|---|---|---|---|
+| Nord | 3072 -> 3342 (Bereich 3341..3344) | (-6808,-12658) -> (-5022,-13323) | 1508 -> 278 (naechste Gitterstelle; Nachbar 3320..3340 = (-5725), 425) | 13 -> 12 von 39 |
+| Sued | 1024 -> 888 (Bereich 886..891) | (-6048,-21588) -> (-5193,-21512) | 107 | 18 -> 18 von 39 |
+
+Nord liegt 873 im Westkanal (Plattform-Nordkante z -12450), Sued an der Suedmuendung des Kanals. Laufzeit-Landung (Haende von Marvin/John):
+Leon (-5084,-13316), Elza (-5056,-13306). Fall/Wurf, Kamera und Szenen bleiben dieselben Ablaeufe (Cut 12 von unten, Cut 7 in 2080); Spur P
+(Kanister im Maul) und Spur kanister2080 bleiben unveraendert gruen (Gruppe unten: tragen, kanister2080*, re2gator). Aufnahmefenster
+(8601/0x18f @0x80100ae4-e8), Vorhalt, Stufen und die Nord/Sued-Wahl sind unveraendert. Pruefhaken `re15_k2080_wurf_alt_setzen(1)`.
+
+**Laeufe (exe, `<SP>/k1n/runs`, Rezepte der Abnahme 1):** Vorbeischwimmen = die Schnauze (Wurzel + 5400) zieht mit |quer| < 3000 am liegenden
+Kanister vorbei, vor der Aufnahme (Werkzeug `vorbei.py`, im Riegel `test_r41_gatorfix kanvorbei`).
+
+| Lauf | Aufnahme | Vorbeischwimmen davor |
+|---|---|---|
+| pendel_west / pendel_mitte / pendel_innen (Leon) | F809 / F131 / F553 | 0 / 0 / 0 |
+| elza_pendel_west / _mitte / _innen | F484 / F131 / F608 | 0 / 0 / 0 |
+| lane_mitte / elza_lane_mitte | F131 / F131 | 0 / 0 |
+| Gegenprobe alte Lage (Messhaken RE15_K2080_WURF_GIER=3072): pendel_mitte, k_pendel_mitte, k_lane_mitte, k_elza_pendel_mitte | F180 / F180 / F196 / F174 | je 1 bei F141 (quer 2102..2126) - **rot** |
+
+Der K1-Fall der Abnahme 1 (k_alt_pendel_west F803-F805 "quer 1755") war beim Nachmessen kein Vorbeischwimmen: dort lag der Kanister 6409..6580
+voraus (laengs ausserhalb des Fensters), der Alligator drehte zum Kanister ein und nahm ihn F812 auf. Neu: pendel_west nimmt ihn F809 auf.
+
+**Riegel:** `integration_r41_gatorfix_kanister_mitte(_elza)` (neu): Pendel West/Mitte/innen, Aufnahme und 0 Vorbeischwimmen; Gegenprobe (Leon)
+pendel_mitte mit der alten Lage muss rot sein - gemessen `Vorbeischwimmen davor 1 ... F141 Phase 2 laengs 5161 quer 2109 -> ROT`.
+`unit_r41_kanister2080_landung`: Landung = mittigste Gitterstelle (Gier +-400), Nord im Westkanal, Gegenprobe alte Gier 1508 von der Mitte.
+`integration_r41_gatorfix_kanister_vorbei(_elza)`: Lauf b steht jetzt 2070 oestlich der neuen Liegestelle (-2952,-13323).
+
+### K2 - Schluessel naeher an der Leiche (`ae9e17c9e`)
+
+Nutzer 2026-11-09 (woertlich): "na er soll näher bei der Leiche liegen, immerhin hat der Aligator ja den Schlüssel samt Zombie gefressen." PORT-WAHL.
+
+**Regel:** Von allen Punkten, die die bestehenden Bedingungen erfuellen (Wasserquadrat, fuer die Figur begehbar = aufnehmbar, im Gebiet UND im Bild der
+Zonenkamera nach FUN_80014230, nicht von Leiche/Figur verdeckt, Naehe-Ring bis zur doppelten Naehe), gilt jetzt der dem naechsten Knochen der Leiche
+naechste (vorher: das groesste Bild bis zur Bildschwelle). Die Einstellung zeigt weiter die Kamera, in deren Gebiet er liegt (Befund 3). Die
+Bildschwelle FG-E7 entscheidet nichts mehr. Bildgroesse und Durchgang werden nur gemessen. Keine neue Zahl. Pruefhaken
+`re15_gatorszene_r41_key_naehe_alt_setzen(1)` = Stand b29263046.
+
+| Messung | jetzt | Stand b29263046 |
+|---|---|---|
+| Raster 3000, 208 Todeslagen: Abstand zum naechsten Knochen max / Mittel | **1348 / 823** | 6036 / 3808 |
+| je Lage | 208 naeher, 0 weiter | - |
+| im Gebiet seiner Kamera / ohne Kamera | 208 / 0 | 208 / 0 |
+| Bildgroesse (Quadrat) min / Mittel; ueber 10,4 | 2,9 / 4,9 Bildpunkte; 3 von 208 | 6,3 / 9,8; 82 von 208 |
+| Nutzer-Leiche (-5485,-23074) | (-2900,-26400) Cut 0, 786, 7,0 Bildpunkte am Schluessel | 3061 |
+| natuerliche Kampfenden Abnahme 0 (-7328,-8628) / (-7038,-8628) | (-5400,-5900) / (-5000,-6000) Cut 5, 735 / 746, 5,0 / 5,2 Bildpunkte | 4910 / 4579 |
+| todesrolle / r1 / lauf_a | 819 / 812 / 812 (Cut 0 / 1 / 5; 5,9 / 4,7 / 5,1 Bildpunkte) | 3788 / 2442 / 4283 |
+
+In allen sechs Leichen des Riegels tod_gebiet (Leon und Elza): Tod -> Einstellung -> Leiter hoch (2080) und runter (2090) -> zu Fuss mit dem
+RVD-Wechsel zum Schluessel: angezeigter Cut = Kamera der Einstellung, Aktionstaste nimmt ihn auf. Vor bf345ea49 lag er natuerlich 1021-1214 vom
+naechsten Knochen; jetzt 735-819 in diesen Lagen, im Raster hoechstens 1348 (dort liegt kein naeherer zulaessiger Punkt). **Bildgroesse:** der
+Schluessel ist jetzt klein (Mittel 4,9, kleinstes 2,9 Bildpunkte; an der Nutzer-Leiche 7,0) - nur gemessen, wie beauftragt.
+
+**Riegel:** `unit_r41_alligator2_schluessel` (je Lage nie weiter als b29263046, jede Lage im Gebiet; Gegenprobe rot), `unit_r41_gatorszene_tod_gebiet(_elza)`
+(<= 1214, Kamera-Gleichheit, Aufnahme nach dem Leitergang; Gegenproben b29263046, f8c71298a, 0b86e36c6 rot). Die exe-Riegel `test_r41_alligator2.cmake`
+(k3) und `test_r41_gatorszene.cmake` (tod*) lesen beide Log-Formen ("an der Leiche" / "groesstes Bild"); die Schwelle 10,4 und der bilddiff-Kasten
+10 x 9 sind dort nur noch Messung (Sichtbarkeit in jedem Bild der Einstellung und Puls bleiben Pflicht). `unit_r41_alligator2_weg`: 5 von 5 Lagen
+zu Fuss aufgehoben. Das Wiedererscheinen nach dem Leitergang (genau einmal) haengt nicht an der Lagewahl; geaendert ist nur die Lage.
+
+### H3 - Dash-Abbruch (`3061fe397`)
+
+RE2 EM23_OVL_0000.BIN Sub 3 (0x80100d30-0x80100ee8, selbst disassembliert mit Capstone, md5 0293e099bbeae989776264eb14c81bc9):
+- `80100ea8 0f000012 beqz s0,0x80100ee8` (s0 = Clip-3-Endflag von FUN_8001a330), `80100eb0 76002296 lhu v0,0x76(s1)`, `80100eb8 250220a2 sb zero,0x225(s1)`,
+  `80100ebc 00044224 addiu v0,v0,0x400`, `80100ec0 760022a6 sh v0,0x76(s1)`, `80100ecc 01010224 addiu v0,zero,0x101` / `80100ee4 040022ae sw v0,4(s1)`.
+- Sub 3 hat keinen anderen Ausgang (Phase +6: 0 -> Clip 2 Blend 0x10 @0x80100dac-db4, 1 -> Clip 3 @0x80100e20-e28; kein Fenster, kein Abbruch).
+- **Ergebnis:** yaw += 1024 gehoert nur zum normalen Ende. Der Abbruch (PORT-WAHL Punkt 2) bleibt ohne Drehung - nicht geaendert.
+
+**gdigrab des eigenen Fensters** (hwnd der eigenen exe-Kopie, 30 Bilder/s; Abbruch der alten Lage im Dash, Clip 2 Bild 39 -> Clip 0, F253, Rueckschnitt
+Cut 6 -> Zonenkamera 5): `<SP>/k1n/sicht/dash_abbruch_vergleich.png` (oben vorher, unten nachher), Einzelbilder `sicht/dash_alt_cut6`, `sicht/dash_neu_cut6`.
+Die Blickrichtung bleibt; die POSE sprang in einem Bild vom Anlauf (Kopf hoch, Maul offen) ins flache Schwimmen (mittlerer Bildunterschied 2,1 gegen
+sonst 0,6-1,1). Eine Drehung um 1024 haette den Koerper zusaetzlich um 90 Grad gedreht.
+
+**Fix (RE2-belegt):** RE2 betritt nach dem Dash-Ende Sub 1 (Routine 0x101), Sub 1 setzt Clip 0 mit Blend 0x20: `80100c38 20000624 addiu a2,zero,0x20`,
+`80100c3c cc68000c jal 0x8001a330`. Der Abbruch setzt jetzt Clip 0 mit Blend 32 (anim_frac 32, Rate 4096/33, Form der Lauerpause). Nachher: der Kopf
+senkt sich ueber mehrere Bilder (Bildunterschied 1,3-1,5 je Bild, kein Sprung). gator_trag.log vorher/nachher bitgleich (nur die Darstellung aendert
+sich). Messhaken `RE15_G2_DASH_BLEND_ALT=1`. Das normale Dash-Ende (Clip 3 -> Clip 0) bleibt unveraendert (gelobter Kampf, s. Offen).
+
+**Riegel alligator2_weg gegen 0b86e36c6 nachgefahren** (Messhaken des Riegels R41_WEG_LECK=1 = ohne frischen Boss-Zustand, R41_WEG_LAGEWAHL=0b86 =
+Lagewahl 0b86e36c6, R41_WEG_FOLGE):
+
+| Lauf | Ergebnis |
+|---|---|
+| master-exe 0b86e36c6 (`re15_port/build/tests/unit/test_r41_alligator2.exe`, md5 d77f2ac915a9b395edd7a41dd8836bdd), Folge 12345 | 5 von 5 |
+| Baum, Lagewahl 0b86e36c6, Leck, Folge 12345 | 5 von 5 (dieselben Schluessel wie master) |
+| Baum, Lagewahl 0b86e36c6, **Leck, Folge 2 -> 4** | **1 von 2 - rot** (Lage 4: -1 Bilder) |
+| Baum, Lagewahl 0b86e36c6, frisch, Folge 2 -> 4 | 2 von 2 |
+| Baum (K2), Leck, Folge 12345 | 3 von 5 - rot (Lagen 4/5) |
+| Baum (K2), frisch, Folge 12345 (ctest) | 5 von 5 |
+
+Die Behauptung aus f8c71298a stimmt: auch mit der Lagewahl von 0b86e36c6 ist der Riegel ohne frischen Boss-Zustand bei der Folge 2 -> 4 rot. Die
+Riegelaenderung behebt ein Harness-Leck, sie verdeckt keinen Fehler der Lagewahl.
+
+### Testlaeufe Nachtrag
+
+Bau `RE15_BUILD_DIR=.../r41_integration/re15_port/build bash re15_port/tools/local_build.sh configure|build` -> `=== LOCAL-BUILD-OK`. Unter Fremdlast (Spur form).
+1. Teilmenge K1/K2 (Stand vor H3): `ctest -R "^(unit_r41_gatorszene_tod_gebiet(_elza)?|unit_r41_alligator2_weg|unit_r41_kanister2080_.*|integration_r41_gatorfix_kanister_(mitte|vorbei)(_elza)?)$" -j 4`:
+   `100% tests passed, 0 tests failed out of 27`. Dazu einzeln unit_r41_alligator2_schluessel Passed (184 s).
+2. Gator-Riegelgruppe nach allen drei Commits: `ctest -R "gator|kanister|alligator|2090|2080|re2gator" -j 4 --timeout 2400` (154 Riegel) lief nur bis 17 von 154,
+   dann endete der Fixer am Wochenlimit (kein Testfehler): 16 Passed, 1 Failed. Rot war `integration_r41_kanister2080_kampf` (268,28 s): der Riegel
+   erwartete noch die alten Wurfrichtungen 3072/1024. In `05c8851e6` an 3342/888 angepasst (nur der Riegel, kein Spielcode) und einzeln nachgefahren:
+   `1/1 Test #1273: integration_r41_kanister2080_kampf ... Passed 1151.66 sec`. Der vollstaendige Gruppenlauf nach dem letzten Commit steht noch aus;
+   er ist Aufgabe der unabhaengigen Abnahme 2.
+
+### Offen nach dem Nachtrag
+
+- **K1 Geometrie:** Das Fenster ist 2 x 1733 = 3466 breit, die erreichbare Wurzelbahn im Kanal 4268 (Klemme 1466 an Westwand und Plattform). Schwimmt der
+  Alligator dicht an einer Wand ganz geradeaus durch den Kanal, liegt der Kanister in der Mitte 2134 neben ihm. In den 8 Laeufen kam das nicht vor
+  (0 Vorbeischwimmen); ausgeschlossen ist es geometrisch nicht. Das Fenster selbst bleibt RE2 (Auftrag).
+- **K2 Bildgroesse:** der Schluessel ist jetzt meist 3-7 Bildpunkte gross (vorher bis 10+). Im Spieltest abnehmen, ob er so noch gut zu sehen ist.
+- **H3:** Auch das normale Dash-Ende wechselt im Port ohne Blend 32 auf Clip 0 (RE2 Sub 1 @0x80100c38 blendet). Nicht geaendert (gelobter Kampf);
+  im gdigrab nicht vermessen.
+- Der Harness-Teil K von `unit_r41_gatorfix_nb4` legt den Kanister weiter an die alte Liegestelle (-6870,-12651) als feste Testlage (Mechanik-Riegel);
+  nicht umgestellt.
+- Kein exe-Lauf der ganzen natuerlichen Kette Tod -> Leiter -> Fussweg -> Aufnahme -> Leiter mit der neuen Lage; die Kette ist im Harness-Riegel
+  tod_gebiet (6 Leichen, Leon/Elza) und die Aufnahme am echten Weg im exe-Riegel alligator2_schluessel(_elza, _west_elza) abgedeckt.
+- Kein master-Merge, kein Paket.
