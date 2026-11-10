@@ -1,0 +1,27 @@
+Vorlage (Median | min .. max), Videopixel:
+  Stationen        34.8|34.0..40.8 33.5|32.5..39.1 21.1|20.0..25.5 31.4|26.6..34.8 44.5|37.8..50.6 43.5|37.8..50.6 21.8|18.2..29.1 6.9|5.1..9.0
+  Unterarm-Profil  35.6|34.5..40.8 36.6|35.1..40.8 36.6|35.1..41.2 35.6|35.0..41.8 33.5|32.5..39.1 30.0|29.2..35.6 27.0|26.1..32.6 24.1|23.5..30.1 22.5|21.5..27.1 22.0|20.5..25.6
+  Hand-Profil      21.8|20.1..25.6 25.8|21.2..27.9 31.4|26.6..34.8 36.4|30.6..42.2 40.5|33.9..46.8 43.5|36.9..49.8 44.5|37.8..49.2 31.1|25.9..37.4 20.2|17.6..27.6 12.6|11.9..20.6
+  Handlaenge       59.5|56.9..68.5    Handbreite/Handlaenge 0.739|0.655..0.783
+A 0.80 / 90        ausser 7 (Krallen 2, Groesse 0)  Summe  86.5  kreuzt {'P1': [], 'P2': [], 'PV': []}  | Hand 58.0 lang 43.5 breit B/L 0.750 | Spitze 0.208 H ueber Boden
+     stationen        Summe  22.4 ausser 1  [33.5, 36.5, 20.5, 28.8, 43.5, 39.8, 17.5, 1.0]
+     unterarm_profil  Summe  35.8 ausser 2  [34.5, 39.5, 42.5, 40.5, 36.5, 33.2, 30.5, 27.5, 24.2, 28.2]
+     hand_profil      Summe  28.3 ausser 2  [14.5, 22.5, 28.8, 36.5, 42.0, 43.8, 41.8, 39.5, 18.5, 13.0]
+     Krallenlaenge P1 {'A': 13.9, 'B': 7.2, 'C': 17.9, 'T': 13.5}
+B 0.80 / 105       ausser 6 (Krallen 0, Groesse 1)  Summe  79.2  kreuzt {'P1': [], 'P2': [], 'PV': []}  | Hand 65.5 lang 42.2 breit B/L 0.644 | Spitze 0.194 H ueber Boden
+     stationen        Summe  20.1 ausser 1  [33.5, 33.0, 21.0, 29.5, 42.2, 39.2, 18.0, 1.0]
+     unterarm_profil  Summe  20.7 ausser 1  [33.5, 37.5, 39.5, 36.5, 33.0, 30.2, 28.2, 26.2, 25.2, 29.2]
+     hand_profil      Summe  38.4 ausser 3  [17.5, 23.8, 29.5, 36.8, 40.2, 41.2, 39.0, 21.2, 17.8, 3.2]
+     Krallenlaenge P1 {'A': 18.5, 'B': 16.9, 'C': 17.9, 'T': 13.7}
+C 0.93 / 118       ausser 5 (Krallen 0, Groesse 0)  Summe  82.9  kreuzt {'P1': [], 'P2': [], 'PV': []}  | Hand 66.2 lang 44.0 breit B/L 0.665 | Spitze 0.19 H ueber Boden
+     stationen        Summe  14.9 ausser 1  [33.5, 33.0, 23.0, 35.2, 44.0, 43.5, 24.0, 2.2]
+     unterarm_profil  Summe  32.3 ausser 2  [33.5, 37.5, 39.5, 36.5, 33.0, 30.2, 28.2, 26.2, 31.5, 34.5]
+     hand_profil      Summe  35.7 ausser 2  [21.2, 27.8, 35.2, 40.0, 43.0, 43.0, 43.5, 41.2, 24.0, 4.8]
+     Krallenlaenge P1 {'A': 19.1, 'B': 17.6, 'C': 18.5, 'T': 14.1}
+D 0.93 0.72 / 118  ausser 5 (Krallen 0, Groesse 0)  Summe  73.5  kreuzt {'P1': [], 'P2': [], 'PV': []}  | Hand 60.2 lang 45.5 breit B/L 0.756 | Spitze 0.211 H ueber Boden
+     stationen        Summe  14.9 ausser 1  [33.5, 33.0, 23.0, 33.8, 45.5, 45.2, 23.2, 2.2]
+     unterarm_profil  Summe  32.3 ausser 2  [33.5, 37.5, 39.5, 36.5, 33.0, 30.2, 28.2, 26.2, 31.5, 34.5]
+     hand_profil      Summe  26.3 ausser 2  [21.5, 27.5, 33.8, 38.0, 41.5, 43.0, 43.2, 39.5, 21.5, 4.8]
+     Krallenlaenge P1 {'A': 17.6, 'B': 16.3, 'C': 17.1, 'T': 12.8}
+GEWAEHLT: D 0.93 0.72 / 118
+hand_v8.json gleicht der gewaehlten Variante: ja

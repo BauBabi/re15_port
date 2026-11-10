@@ -35,6 +35,7 @@ P2 = dict(clip=12, bild=48, gier=861, x=-8182, z=-21330)          # Foto 2
 POSEN = dict(P1=P1, P2=P2, PV=dict(V.PV))
 STATIONEN = ('ellbogen', 'unterarm_mitte', 'handgelenk', 'handwurzel', 'hand_breit', 'krallenwurzel', 'krallen_mitte', 'spitzen')
 ZOOM = 4
+SPITZE_NAME = {20: 'T', 47: 'A', 29: 'B', 42: 'C'}                # Spitzen-Ecken der vier Krallen von Mesh 12 (hand_gemein.krallen)
 H1 = 302.0                                                        # Figurhoehe Foto 1 (SF_MESSBLATT_FOTO.md, G.H_ORIG[1])
 
 
@@ -171,8 +172,23 @@ def daumen_messen(p2, skala):
 
     def mi(r):
         return 0.5 * (r[0] + r[1])
-    g0, d0 = teil(p2[min(gab + int(ZOOM / skala), ende)])          # ein Videopixel unter der Gabel
-    g1, d1 = teil(p2[ende])
+    start = min(gab + int(ZOOM / skala), ende)                    # ein Videopixel unter der Gabel
+    g0, d0 = teil(p2[start])
+
+    def ueb(r, s):
+        return min(r[1], s[1]) - max(r[0], s[0])
+    g1, d1 = g0, d0                                                # Nachtrag r6a: der Daumen-Lauf wird Zeile fuer Zeile VERFOLGT (sonst springt
+    for i in range(start + 1, ende + 1):                           # das Mass am Modell auf eine Fingerkralle, sobald sich die Krallen trennen)
+        kand = [r for r in p2[i][5] if ueb(r, d1) > 0 and ueb(r, d1) >= ueb(r, g1)]
+        if not kand:
+            ende = i - 1
+            break
+        dn = max(kand, key=lambda r: ueb(r, d1))
+        rest = [r for r in p2[i][5] if r != dn]
+        if not rest:
+            ende = i - 1
+            break
+        g1, d1 = max(rest, key=lambda r: (ueb(r, g1), r[1] - r[0])), dn
     dx, dy = (mi(d1) - mi(d0)) / ZOOM, (ende - gab) / ZOOM
     return dict(gabel_ab_handgelenk=round(gab / ZOOM * skala, 1), laenge=round(math.hypot(dx, dy) * skala, 1),
                 dicke_wurzel=round((d0[1] - d0[0]) / ZOOM * skala, 1), winkel_zur_handachse=round(math.degrees(math.atan2(dx, dy)), 1),
@@ -269,9 +285,18 @@ def modell(mo, pose):
     d = np.hypot(px - W[0], py - W[1])
     T = np.array([float(px[np.argmax(d)]), float(py[np.argmax(d)])])
     kr = HG.krallen(dict(v=[list(x) for x in me.tv], tf=me.tf, qf=me.qf))
+    for k in kr:                                                   # Namen nach der Spitzen-Ecke (HG.krallen nennt den Daumen nach dem
+        k['name'] = SPITZE_NAME[k['spitze']]                       # groessten Ring-x; das gilt nach einer Drehung um die Handachse nicht mehr)
     ax = (T - W) / np.linalg.norm(T - W)
-    wurz = float(np.mean([(pp[k['ring']].mean(0) - W) @ ax for k in kr if k['name'] != 'T']))
-    out = arm_messen(arm, E, W, T, 1.0, wurzel_ab=max(wurz, 0.0), daumen=False, m_hand=(bone == 12))
+    # Station Krallenwurzeln wie in der Vorlage = Beginn der roten Zone entlang der Handachse: erste Stelle, ab der 2 Videopixel lang
+    # mindestens die Haelfte des groessten Laufs auf der Finger-Zeile 492 liegt; ohne solche Stelle die Ringmitten der Fingerkrallen.
+    rot = (bone == 12) & (A['zeile'][:480] == HG.Z_FINGER)
+    r2, M2, (e2,), _w = drehen(bone == 12, W, T, extra=[rot.astype(float)])
+    yW = int(round(punkt(M2, W)[1]))
+    ant = [float(e2[yW + i, groesster(p[5])[0]:groesster(p[5])[1]].mean()) if p else 0.0 for i, p in enumerate(zeilen_profil(r2, yW))]
+    ir = next((i for i in range(max(len(ant) - 2 * ZOOM, 0)) if min(ant[i:i + 2 * ZOOM]) >= 0.5), None)
+    wurz = ir / ZOOM if ir is not None else float(np.mean([(pp[k['ring']].mean(0) - W) @ ax for k in kr if k['name'] != 'T']))
+    out = arm_messen(arm, E, W, T, 1.0, wurzel_ab=max(wurz, 0.0), daumen=True, m_hand=(bone == 12))
     kl = {}
     for k in kr:
         ring = pp[k['ring']]
@@ -279,7 +304,7 @@ def modell(mo, pose):
         v = s - c
         kl[k['name']] = dict(wurzel=c.round(1).tolist(), spitze=s.round(1).tolist(), laenge=round(float(np.linalg.norm(v)), 1),
                              dicke_wurzel=round(max(float(np.linalg.norm(ring[i] - ring[j])) for i in range(3) for j in range(i)), 1),
-                             winkel_zur_handachse=round(math.degrees(math.atan2(ax[0] * v[1] - ax[1] * v[0], float(ax @ v))), 1),
+                             winkel_zur_handachse=round(-math.degrees(math.atan2(ax[0] * v[1] - ax[1] * v[0], float(ax @ v))), 1),   # < 0 = Bild-links wie daumen_messen
                              px=int(((bone == 12) & np.isin(A['flaeche'][:480], k['flaechen'])).sum()))
     nm = sorted(kl)
     kreuz = [nm[j] + nm[i] for i in range(len(nm)) for j in range(i)
@@ -309,8 +334,10 @@ def zeige(name, v):
              v['bis_krallenwurzel'], v['krallen_zone'], v['hand_ohne_daumen'], v['ellbogen_ueber_boden'], v['handgelenk_ueber_boden'],
              v['spitze_ueber_boden'], v['winkel_unterarm'], v['winkel_hand']))
     print('     Profil Unterarm 10-100 %%: %s | Hand 0-90 %%: %s | Hand groesster Lauf: %s' % (v['profil_unterarm'], v['profil_hand'], v['profil_hand_lauf']))
-    if 'daumen' in v:
-        print('     Oberarm %.1f, am Rand %s, Daumen %s' % (v['oberarm_breite'], v['am_rand'], v['daumen']))
+    if 'oberarm_breite' in v:
+        print('     Oberarm %.1f, am Rand %s' % (v['oberarm_breite'], v['am_rand']))
+    if v.get('daumen'):
+        print('     Daumen %s' % v['daumen'])
     if 'krallen' in v:
         print('     Krallen (Laenge, Dicke, Winkel, px) %s | kreuzen %s | Abstand Wurzeln %s Spitzen %s | px Hand %d (sichtbar %d) Unterarm %d (sichtbar %d)'
               % ({n: (k['laenge'], k['dicke_wurzel'], k['winkel_zur_handachse'], k['px']) for n, k in v['krallen'].items()}, v['kreuzen'],

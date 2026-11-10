@@ -30,6 +30,9 @@ Stufe w) Runde 4 (S10/O5, wurzel_r4.py): Ring 1 von Mesh 16 entlang der Gliedach
 Stufe u) Runde 5 (P4, unterseite_r5.py + unterseite_v8.json): Flaechen der Schwanz-Unterseite (Ringecke |theta| < 125 Grad gegen die
    Innenrichtung des Bogens) auf die Original-Zeile 482 (Spiel-Asset 495) mit UV auf den Haut/Fleisch-Verlauf des Original-Unterarms (Seite 2,
    u 6-31, v 50-106); Oberseite bleibt Zeile 487. Bau Runde 5: --stufen srwaun (n = Einsatz an Mesh 8, nacken_r5.py).
+Stufe h) Runde 6a (P6, hand_r6.py + hand_v8.json): linke Hand (Mesh 12) = Original-Klauenhand des RE1.5-Birkin in der Groesse und Drehung um
+   die Handachse, die das Messblatt Hand verlangt (hand_suche.py waehlt nach Zahl), linker Unterarm (Mesh 11) = Original mit Ringverlauf.
+   Nur Ecken und Normalen, Flaechen/UV/CLUT-Zeilen (490 Hand, 491 Daumenkralle, 492 Fingerkrallen) bleiben. Bau Runde 6: --stufen srwaunh.
 Stufe a) Runde 4 (adern_r4.py, modus "original_r4"): wie Runde 3, dazu ganz Mesh 8 ausser der Brust auf den Original-Zeilen (Naht rosa/grau)
    und ganze UV-Gruppen mit einem Schub (Feld C von Mesh 13, Unterarmband von Mesh 14, Huegel und Wurzelstreifen von Mesh 8) auf Texel, die
    Original-Flaechen derselben Zeile benutzen.
@@ -444,7 +447,7 @@ def einbetten(blob, ms, prot):
 
 
 # ------------------------------------------------------------------ Bau
-def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None, blob=None, unterseite=None, nacken=None):
+def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None, blob=None, unterseite=None, nacken=None, hand=None):
     blob = open(basis, 'rb').read() if blob is None else blob
     prot = dict(basis=basis, basis_sha256=V.sha(blob), stufen=stufen)
     d, _do, ms, tim = KB.teile(blob)
@@ -469,6 +472,9 @@ def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None
     if 'n' in stufen:                 # Runde 5d (P5, Auftrag (iii)): kleiner geschlossener Einsatz an Mesh 8 gegen den Keil in F332,
         import nacken_r5 as N5        # Haut = Texel der Wirtsflaeche (nacken_r5.py, nacken_v8.json); nach a/u, damit Zeile und Seite stehen
         N5.anwenden(ms, t, nacken or _p('nacken_v8.json'), prot)
+    if 'h' in stufen:                 # Runde 6a (P6, Nutzer 2026-11-10 "Die Vorlage hat eine breite Hand mit breiten Unterarmt ... Bei uns ist die
+        import hand_r6 as H6          # Hand ganz klein und zierlich"): Original-Klauenhand und Original-Unterarm in der Groesse des Messblatts
+        H6.anwenden(ms, t, hand or _p('hand_v8.json'), prot)   # (hand_r6.py, hand_v8.json); aendert nur Ecken und Normalen von Mesh 11 und 12
     tim_neu = KB.tim_packen(t)
     neu = KB.packen(blob, d, ms, tim_neu)
     prot['tim'] = dict(clut_zeilen=int(t['clut'].shape[0]), port_texturhoehe=int(t['ih'] * t['clut'].shape[0]))
@@ -482,7 +488,7 @@ def main():
     ap.add_argument('--aus', default=os.path.join(V.SFV8, 'emd'))
     ap.add_argument('--name', default='EM30_V8.EMD')
     ap.add_argument('--json')
-    ap.add_argument('--stufen', default='srwaun')
+    ap.add_argument('--stufen', default='srwaunh')
     a = ap.parse_args()
     neu, prot = bauen(a.basis, a.stufen)
     os.makedirs(a.aus, exist_ok=True)

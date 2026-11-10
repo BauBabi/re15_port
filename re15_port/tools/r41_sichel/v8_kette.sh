@@ -14,7 +14,9 @@
 #
 # Schritte:
 #   1-6 v7_kette.sh (Stufe 6 = V7, sha256 319bbd17; dessen Pin-Pruefung wird hier durch V7_SOLL ersetzt, weil der Pin jetzt V8 ist)
-#   7   v8/v8_bau.py --stufen srwaun  + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, v8/unterseite_v8.json, v8/nacken_v8.json, Original-EM30 (CDEMD0.EMS)
+#   7   v8/v8_bau.py --stufen srwaunh  + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, v8/unterseite_v8.json, v8/nacken_v8.json, Original-EM30 (CDEMD0.EMS)
+#       (Runde 6a P6: Stufe h = hand_r6.py + v8/hand_v8.json: linke Hand (Mesh 12) und linker Unterarm (Mesh 11) aus dem Original-EM30
+#        in der Groesse des Messblatts Hand; Stufenfolge s r w a u n h)
 #       (Runde 4: Stufe w = wurzel_r4.py statt e, Texturen adern_r4.py modus original_r4;
 #        Runde 5: Geometrie wie Runde 4, Texturen adern_r5.py modus original_r5 - Brust auf Original-Zeile 481, fast weisse Texel
 #        ersetzt, blass_r5; P4 Stufe u = unterseite_r5.py: Schwanz-Unterseite fleischig auf dem Haut/Fleisch-Verlauf des
@@ -44,8 +46,8 @@ grep -E "^   [1-5] " "$ZIEL/v7_kette.txt"
 
 T="$ZIEL/baum/re15_port/tools/r41_sichel/v8"
 [ -f "$T/v8_bau.py" ] || { echo "FEHLER: $T/v8_bau.py fehlt im Schattenbaum"; exit 2; }
-echo "-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwaun"
-( cd "$T" && python v8_bau.py --basis "$ZIEL/emd/EM30_V7.EMD" --aus "$ZIEL/emd" --name EM30_V8.EMD --stufen srwaun \
+echo "-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwaunh"
+( cd "$T" && python v8_bau.py --basis "$ZIEL/emd/EM30_V7.EMD" --aus "$ZIEL/emd" --name EM30_V8.EMD --stufen srwaunh \
       --json "$ZIEL/prot/7_v8.json" ) > "$ZIEL/prot/7_v8.txt" 2>&1 || { echo "FEHLER: Schritt 7_v8 (Protokoll $ZIEL/prot/7_v8.txt)"; tail -5 "$ZIEL/prot/7_v8.txt"; exit 1; }
 rc=0
 v8="$(sha256sum "$ZIEL/emd/EM30_V8.EMD" | awk '{print $1}')"

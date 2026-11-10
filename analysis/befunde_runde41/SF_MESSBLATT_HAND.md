@@ -142,3 +142,28 @@ die Endhoehe der Spitzen und die Durchdringungs-Keyframes als Zahl (Riegel S17 g
 - Auswahl nach Zahl: Abweichung des Breitenprofils S1-S8 in P1 gegen die Vorlage-Mediane, Handbreite/Handlaenge, Kreuzungen, danach
   Endhoehe und Durchdringung.
 - Riegel S17: Toleranz je Mass = Streuung der fuenf Vorlagebilder (Spalte "Vorlage px", kleinster bis groesster Wert) +- 1 px Rasterkante.
+
+## 7. Nachtrag (Runde 6a, beim Bau): Messregel am Modell nachgezogen
+
+Die Vorlage-Zahlen der Abschnitte 2 und 3 sind unveraendert (nach dem Nachtrag neu gerechnet, alle fuenf Bilder gleich bis auf die
+letzte Stelle). Geaendert ist nur, wie `hand_mass.py` das MODELL misst - vier Stellen, an denen Modell und Vorlage vorher nicht
+mit derselben Regel gemessen waren:
+
+1. **Station 6 (Krallenwurzel)** lag am Modell auf den Ringmitten der Krallen, an der Vorlage auf dem Beginn der roten Zone. Jetzt
+   an beiden: erste Stelle entlang der Handachse, ab der fuer 2 Videopixel mindestens die Haelfte des groessten Laufs rot ist (am
+   Modell: CLUT-Zeile 492). Stand r5d in P1 damit: Krallenwurzel 13.5 px (vorher 12.0), Krallen-Mitte 7.8, Zone 18.0.
+2. **Krallennamen** haengen jetzt an der Spitzenecke (20 = Daumenkralle T, 47 = A, 29 = B, 42 = C). `hand_gemein.krallen` benennt
+   den Daumen nach dem groessten Ring-x - das kippt, sobald die Hand um ihre Achse gedreht ist.
+3. **Winkel der Krallen zur Handachse** hat jetzt dasselbe Vorzeichen wie beim Daumen der Vorlage (negativ = Bild-links, zum Koerper).
+4. **Daumen am Modell**: dieselbe Gabel-Regel wie an der Vorlage; der Daumen-Lauf wird ab der Gabel Zeile fuer Zeile verfolgt (ohne
+   das springt das Mass am Modell auf eine Fingerkralle, sobald sich die Krallen trennen). An der Vorlage aendert das keine Zahl.
+
+**Krallen einzeln** sind in der Vorlage nicht aufloesbar (Abschnitt 3). Als Vorlagemass der Krallenlaenge gilt deshalb weiter das
+V7-Messblatt (`SF_sichel.md`, "V7 Hand"): rote Fingerkralle Median 19.0 px, Streuung 15.0 .. 23.1 px (7 Bilder), graue
+Daumenkralle 12.7 px, Streuung 6.7 .. 22.6 px (3 Bilder).
+
+**Neuer Widerspruch, beim Bau gemessen:** die Hand ist im Clip der Pose P1 gegen den Unterarm um 42.5 Grad abgeknickt (Unterarm
++9.2, Hand -33.3 Grad im Bild), in der Vorlage um 9 bis 14 Grad (Unterarm +0.7 .. +5.9, Hand -5.3 .. -9.5). Der Knick steht im
+Clip (Knochen 12), nicht im Mesh - Clips und Skelett sind in dieser Runde gesperrt. Folge: quer zur Unterarmachse gemessen ragt
+der Handansatz bei 90 % und 100 % der Unterarmlaenge seitlich heraus (31.5 und 34.5 px gegen 22.5 und 22.0 der Vorlage),
+obwohl das Handgelenk quer zur Handachse passt (23.0 px gegen 21.1).
