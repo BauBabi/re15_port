@@ -1998,10 +1998,10 @@ typedef struct { int32_t x, y, z, vz; int64_t d2; } gsz_lage_t;
  * "verdeckt immer": an der K3-Wandlage (Leiche (3413,-23942), Lauf K3/KW) sperrte ein Knochen dicht vor Cut 0/Cut 2, aber ausserhalb ihres Bildes,
  * die ganze Kamera - es blieb Cut 1 mit 6,3 Bildpunkten (tests:FGM). Ebenso die Spielfigur an der Leiter-Ankunft unter Cut 1 (Tiefe 365, 3132
  * unter der Kamera, Bildlage weit unterhalb des Bildes). */
-static int kugeln_verdeckt(const re15_camera_view_t *v, int32_t pk[][3], int npk, int32_t radius, int sx, int sy, int32_t vz_key, int mit_halb)
+static int kugeln_verdeckt(const re15_camera_view_t *v, int32_t pk[][3], int npk, int32_t radius, int sx, int sy, int32_t vz_key)
 {
     const int64_t h = v->fov_screen_dist;
-    const int64_t halb = (mit_halb && vz_key > 0) ? (GSZ_KEY_HALB * h) / vz_key : 0;   /* mit_halb 0 = ein Punkt (Ecke der Endlage, key_endlage_frei) */
+    const int64_t halb = vz_key > 0 ? (GSZ_KEY_HALB * h) / vz_key : 0;
     for (int i = 0; i < npk; i++) {
         const int64_t px = pk[i][0], py = pk[i][1], pz = pk[i][2];
         const int32_t vx = (int32_t)(((int64_t)v->rot[0]*px + (int64_t)v->rot[1]*py + (int64_t)v->rot[2]*pz) >> 12) + v->trans[0];
@@ -2171,13 +2171,17 @@ static int kamera_gebiet(int cut, int32_t x, int32_t z)
  * in der Einstellung pulsiert genau EIN Bildpunkt bei (75,94), der Rest liegt hinter der Leiche; unit_r41_gatorszene_tod "von der Leiche nicht verdeckt" rot.
  * Ursache: key_suche prueft die Verdeckung am Kandidaten auf der Wasserflaeche (y -1620), key_neigung hebt und kippt ihn danach (Endlage y -1742 bis -1779);
  * die Regel des Nachtrags K2 (der Leiche NAECHSTER nicht verdeckter Punkt) waehlt Randpunkte des verdeckten Bereichs, die nach der Hebung im Bild hinter der
- * Leiche liegen. Jetzt gilt ein Punkt nur, wenn auch seine ENDLAGE (Mitte und die vier Ecken des gekippten Quadrats, Matrix und Hoehe aus key_neigung -
- * dieselbe Rechnung, mit der er danach gelegt wird) im Bild weder von der Leiche noch von der Figur verdeckt ist. Keine neue Zahl: dieselben Kugeln
- * (800 @0x80118b98, GSZ_SPIELER_RADIUS), derselbe Bildrand, dieselbe Quadrat-Halbseite GSZ_KEY_HALB. Nur im Nachtrag-K2-Pfad (s_wahl_naehe); die Pruefhaken-
- * Staende b29263046 / f8c71298a / 0b86e36c6 bleiben, wie sie waren. Pruefhaken re15_gatorszene_r41_key_endlage_alt_setzen(1) = Stand ae9e17c9e.
- * Gemessen (Becken-Scan Raster 3000, 208 Lagen, test_r41_alligator2 schluessel_scan): gegen Stand ae9e17c9e 176 Lagen mit anderer Lage, mittlerer Abstand
- * zur Leiche 823 -> 876. Die Pruefung gegen die FIGUR an der Endlage aendert davon 8 Lagen; eine einzige liegt deutlich weiter (Leon (1325,-25550), Leiche
- * (-5000,-26000) Gier 2048: 2560 statt 1031 ohne die Figur-Pruefung; Stand b29263046 dort 2623) - die naeheren Punkte liegen dort im Bild hinter der Figur. */
+ * Leiche liegen. Jetzt gilt ein Punkt nur, wenn auch seine ENDLAGE (Mitte des gekippten Quadrats, Hoehe aus key_neigung - dieselbe Rechnung, mit der er
+ * danach gelegt wird) im Bild liegt und weder von der Leiche noch von der Figur verdeckt ist: DIESELBE Pruefung wie am Kandidaten (kugeln_verdeckt, Bildkreis
+ * der Kugel + halbe Quadrat-Bildgroesse), nur an der Stelle, an der der Schluessel wirklich liegt. Keine neue Zahl: dieselben Kugeln (800 @0x80118b98,
+ * GSZ_SPIELER_RADIUS), dieselbe Quadrat-Halbseite GSZ_KEY_HALB. Nur im Nachtrag-K2-Pfad (s_wahl_naehe); die Pruefhaken-Staende b29263046 / f8c71298a /
+ * 0b86e36c6 bleiben, wie sie waren. Pruefhaken re15_gatorszene_r41_key_endlage_alt_setzen(1) = Stand ae9e17c9e.
+ * Verworfen (erste Fassung 61aeffeb8): zusaetzlich die vier ECKEN des gekippten Quadrats gegen die Kugeln. Gemessen am echten Weg: das lehnte Lagen ab, die
+ * im Bild nachweislich zu sehen sind (alligator2 k3: Lage (600,-1775,-25900), Bild-Unterschied 7 x 5 - die Ecken-Pruefung legte den Schluessel nach
+ * (2500,-1759,-21300), 2 x 4), und lag in 172 von 208 Scan-Lagen weiter von der Leiche, in keiner naeher (mittlerer Abstand 876 gegen 834).
+ * Gemessen mit der Mitte allein (Becken-Scan Raster 3000, 208 Lagen, test_r41_alligator2 schluessel_scan): 20 Lagen anders als Stand ae9e17c9e (dort lag
+ * die Endlage verdeckt), Abstand zur Leiche dort +3 bis +89, mittlerer ueber alle 823 -> 834; eine einzige Lage liegt deutlich weiter (Leon (1325,-25550),
+ * Leiche (-5000,-26000) Gier 2048: 2560 statt 938; Stand b29263046 dort 2623) - die naeheren Punkte liegen dort im Bild hinter der FIGUR. */
 static int s_key_endlage_alt = 0;
 static int s_key_kasten_b = 0, s_key_kasten_h = 0;   /* Messhaken: Bild-Kasten der letzten Endlage (Breite, Hoehe in Bildpunkten; 0 = keine Wahl) */
 void re15_gatorszene_r41_key_bildkasten(int *b, int *h) { if (b) *b = s_key_kasten_b; if (h) *h = s_key_kasten_h; }
@@ -2205,15 +2209,8 @@ static int key_endlage_frei(int cut, const re15_camera_view_t *v, int32_t x, int
     int sx = 0, sy = 0; int32_t vz;
     if (!kam_proj(v, m, &sx, &sy, &vz)) return 0;
     if (sx < GSZ_BILD_X0 || sx > GSZ_BILD_X1 || sy < GSZ_BILD_Y0 || sy > GSZ_BILD_Y1) return 0;
-    if (kugeln_verdeckt(v, pk, npk, GSZ_GATOR_HALBBREITE, sx, sy, vz, 1)) return 0;
-    if (kugeln_verdeckt(v, sp, nsp, GSZ_SPIELER_RADIUS, sx, sy, vz, 1)) return 0;
-    int32_t ek[4][3];
-    key_ecken(m, rx, rz, ek);
-    for (int e = 0; e < 4; e++) {
-        if (!kam_proj(v, ek[e], &sx, &sy, &vz)) return 0;
-        if (kugeln_verdeckt(v, pk, npk, GSZ_GATOR_HALBBREITE, sx, sy, vz, 0)) return 0;
-        if (kugeln_verdeckt(v, sp, nsp, GSZ_SPIELER_RADIUS, sx, sy, vz, 0)) return 0;
-    }
+    if (kugeln_verdeckt(v, pk, npk, GSZ_GATOR_HALBBREITE, sx, sy, vz)) return 0;
+    if (kugeln_verdeckt(v, sp, nsp, GSZ_SPIELER_RADIUS, sx, sy, vz)) return 0;
     return 1;
 }
 /* Beste Lage fuer Kamera cut (s. Kopf); r_nah = hoechster Abstand zum naechsten Knochen; 0 = keine. */
@@ -2245,8 +2242,8 @@ static int key_suche(int cut, int32_t pk[GSZ_LEICHE_PUNKTE][3], int npk, int32_t
             if (!kam_proj(&v, p, &sx, &sy, &vz)) continue;
             if (sx < GSZ_BILD_X0 + GSZ_BILD_RAND || sx > GSZ_BILD_X1 - GSZ_BILD_RAND || sy < GSZ_BILD_Y0 + GSZ_BILD_RAND ||
                 sy > GSZ_BILD_Y1 - GSZ_BILD_RAND) continue;
-            if (kugeln_verdeckt(&v, pk, npk, GSZ_GATOR_HALBBREITE, sx, sy, vz, 1)) continue;   /* nicht von der Leiche verdeckt (Nachbesserung 2) */
-            if (kugeln_verdeckt(&v, sp, nsp, GSZ_SPIELER_RADIUS, sx, sy, vz, 1)) continue;     /* Spur P: nicht von der Spielfigur verdeckt */
+            if (kugeln_verdeckt(&v, pk, npk, GSZ_GATOR_HALBBREITE, sx, sy, vz)) continue;   /* nicht von der Leiche verdeckt (Nachbesserung 2) */
+            if (kugeln_verdeckt(&v, sp, nsp, GSZ_SPIELER_RADIUS, sx, sy, vz)) continue;     /* Spur P: nicht von der Spielfigur verdeckt */
             int32_t wy;
             if (!wasser_quadrat(x, z, &wy)) continue;
             if (!key_begehbar(x, z)) continue;                               /* Spur P (Nachbesserung 1): nur, wo die Figur hinkommt */
