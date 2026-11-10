@@ -17,7 +17,8 @@
 #   7   v8/v8_bau.py --stufen srwaunh  + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, v8/unterseite_v8.json, v8/nacken_v8.json, Original-EM30 (CDEMD0.EMS)
 #       (Runde 6b: Stufe r mit ruecken_v8.json ohne Kragen (Ecken um den Kopf auf Stand Runde 4), Stufe n = nacken_r6.py (ein geschlossenes
 #        Nackenstueck, 7 Ecken / 10 Dreiecke, Zeile 493), Stufe u = unterseite_r5.py Runde 6: Grenze 110 / 120 Grad, Mantel, Dorn und
-#        Ring-Deckel an der Grenze geteilt, Fleisch-Verlauf v 98-108; Asset sha256 382bbfe7)
+#        Ring-Deckel an der Grenze geteilt, Fleisch-Verlauf v 98-108; Asset sha256 95a783a6 -
+#        gegen den ersten Stand 382bbfe7 zwei Flaechen anders: Mesh 8 v24 ohne Schub (nacken_v8.json), Mesh 16 v22 auf Zeile 495)
 #       (Runde 6a P6: Stufe h = hand_r6.py + v8/hand_v8.json: linke Hand (Mesh 12) und linker Unterarm (Mesh 11) aus dem Original-EM30
 #        in der Groesse des Messblatts Hand; Stufenfolge s r w a u n h)
 #       (Runde 4: Stufe w = wurzel_r4.py statt e, Texturen adern_r4.py modus original_r4;

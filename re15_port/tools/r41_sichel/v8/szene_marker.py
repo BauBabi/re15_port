@@ -28,7 +28,9 @@ GRUEN = 0x03E0
 def wurzel_flaechen(m):
     # Runde 6b: die an der Grenze 110 / 120 geteilten Flaechen (unterseite_r5.teilen) haengen ihre neuen Ecken hinter die 35 Ecken des
     # Glieds (3 Ringe zu 11 + 2 Achs-Ecken); sie liegen auf Ring 1 / Ring 2 des Bands Ring 1 -> Ring 2 und der Deckel, nie in der Wurzel
-    # (gemessen am Asset 382bbfe7: ohne diese Zeile 23 statt 22 Wurzelflaechen)
+    # (gemessen an den Assets 382bbfe7 und 95a783a6: ohne diese Zeile 23 statt 22 Wurzelflaechen). Die Liste ist auch Eingabe des Baus
+    # (unterseite_r5.wurzel_keys): seit dieser Zeile ist das Bandstueck v22 von Mesh 16 (Ecken 35, 37, 36, 38) keine Wurzelflaeche mehr
+    # und liegt wie die uebrige Unterseite auf der Fleisch-Zeile 495 (Asset 382bbfe7: noch Zeile 487; ab 95a783a6: Zeile 495)
     ring2 = set(range(22, 34)) | set(range(35, len(m['v'])))
     return (['d%d' % i for i, f in enumerate(m['tf']) if not (set(f[1::2]) & ring2)] +
             ['v%d' % i for i, f in enumerate(m['qf']) if not (set(f[1::2]) & ring2)])
