@@ -222,6 +222,10 @@ void re15_gatorszene_r41_key_rueckfall_alt_setzen(int an);   /* Pruefhaken (Abna
  * gefressen."): die Lage ist der der Leiche NAECHSTE Punkt (statt des groessten Bildes), weiter nur im Gebiet der Kamera, die ihn zeigt. Pruefhaken der
  * Gegenprobe: 1 = Stand b29263046 (groesstes Bild bis zur Bildschwelle). Messhaken: Bildgroesse x 10 der letzten Lage (0 = keine). */
 void re15_gatorszene_r41_key_naehe_alt_setzen(int an);
+/* Nachbesserung zu Abnahme 2 (B1): Pruefhaken 1 = Stand ae9e17c9e (Verdeckung nur am Kandidaten auf der Wasserflaeche, nicht an der Endlage);
+ * Messhaken Bild-Kasten der Endlage (vier Ecken des gekippten Quadrats in der Kamera der Lage). */
+void re15_gatorszene_r41_key_endlage_alt_setzen(int an);
+void re15_gatorszene_r41_key_bildkasten(int *b, int *h);
 int  re15_gatorszene_r41_key_bild10(void);
 int32_t re15_gatorszene_r41_key_abstand(void);   /* Messhaken: Abstand der letzten Lage zum naechsten Knochen der Leiche (-1 = keine Wahl) */
 /* Runde 41 Spur G2 (Punkte 3/4): Mesh-Gier von (x,z) zur Leiter-Ankunft in ROOM2080/2081 (Montage-Parkplatz, ROOM2090 Tuer 0 @0x00996). */
