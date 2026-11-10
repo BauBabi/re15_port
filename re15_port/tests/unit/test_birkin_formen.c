@@ -17,11 +17,12 @@
  *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22), 484 (Sichel, Mesh 15), 485 (Kopf, Mesh 9),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  *
- * V8 Runde 6b (P5-neu / P4-neu nach Pruefung V8 r5d "Kragen", "graue Reifen"; gemessen am Asset 382bbfe7, sfv8/r6b pins.py / pins2.py):
+ * V8 Runde 6b (P5-neu / P4-neu nach Pruefung V8 r5d "Kragen", "graue Reifen"; gemessen am Asset 95a783a6, sfv8/r6b pins.py / pins2.py,
+ * Ausgabe sfv8/r6c/pins.out; erster Stand der Runde 6b 382bbfe7: Mesh 16 noch 20 Flaechen auf 495, sonst gleiche Zahlen):
  * Mesh 8 traegt statt des Einsatzes der Runde 5d (14 Ecken, 12 Dreiecke, 6 Vierecke, Zeile 494) EIN geschlossenes Nackenstueck
  * (tools/r41_sichel/v8/nacken_r6.py, nacken_v8.json: 7 Ecken ab Index 69, 10 Dreiecke ab Index 77, kein Viereck, Zeile 493, Textur-Seite 0,
  * UV im Rechteck u 43-53 / v 88-101); 29 EM30-Flaechen mit anderer UV (Runde 5: 28, dazu d53). Schwanz (unterseite_r5.py Runde 6):
- * Mantel, Dorn und Ring-Deckel an den Grenzen theta 110 / 120 geteilt, Flaechen auf Zeile 495 je Glied 20 / 30 / 41 / 31 / 30 / 30 / 30
+ * Mantel, Dorn und Ring-Deckel an den Grenzen theta 110 / 120 geteilt, Flaechen auf Zeile 495 je Glied 21 / 30 / 41 / 31 / 30 / 30 / 30
  * (Runde 5d: 8 / 8 / 16 / 8 / 8 / 8 / 16). Gegenprobe V8 r6a 7a65e3f0 und V8 r5d c4976c62: rot (Mesh 8 83 Ecken / 89 Dreiecke / 33 Vierecke,
  * Schwanz 72 Flaechen auf 495).
  * V8 Runde 6a (P6, Nutzer 2026-11-10 "Die Vorlage hat eine breite Hand mit breiten Unterarmt. [...] Bei uns ist die Hand ganz klein und
@@ -167,7 +168,7 @@ static int geteilt(int m)        /* birkin_formen.py FORMEN['hangar'] teilen (ku
 #define EINSATZ_D 10              /* V8 Runde 6b: Nackenstueck an Mesh 8 (nacken_r6.py, nacken_v8.json koerper "rechts") - Dreiecke */
 #define EINSATZ_V 0               /* ... Vierecke (Runde 5d: 12 / 6 / 14) */
 #define EINSATZ_E 7               /* ... Ecken */
-#define EINSATZ_U0 43             /* UV-Rechteck des Nackenstuecks, gemessen am Asset 382bbfe7 (sfv8/r6b pins.py): u 43-53, v 88-101, */
+#define EINSATZ_U0 43             /* UV-Rechteck des Nackenstuecks, gemessen am Asset 95a783a6 (sfv8/r6b pins.py): u 43-53, v 88-101, */
 #define EINSATZ_U1 53             /* Textur-Seite 0, Zeile 493 (= Original-EM30-Zeile 480, Rueckenhaut) */
 #define EINSATZ_V0 88
 #define EINSATZ_V1 101
@@ -433,9 +434,11 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
              * Original-Unterarms (Textur-Seite 2); alle uebrigen (Oberseite, V6-Deckel) bleiben auf der Schwanzzeile 487. Gemessen am Asset
              * (v8_bau.py Protokoll "unterseite"): 16: 8, 17: 8, 18: 16, 19: 8, 20: 8, 21: 8, 22: 16 = 72 Flaechen.
              * V8 Runde 6b (P4-neu, Pruefung r5d "graue Reifen"): Grenze 110 / 120 Grad, Mantel / Dorn / Ring-Deckel an ihr geteilt, auch
-             * die Deckel-Haelften der Unterseite auf 495; gemessen am Asset 382bbfe7: 20 / 30 / 41 / 31 / 30 / 30 / 30 = 212 Flaechen,
+             * die Deckel-Haelften der Unterseite auf 495; gemessen am Asset 95a783a6: 21 / 30 / 41 / 31 / 30 / 30 / 30 = 213 Flaechen
+             * (erster Stand 382bbfe7: Glied 16 nur 20 - das Bandstueck v22 zwischen 110 und 120 Grad galt dem Bau noch als Wurzelflaeche
+             * und blieb auf 487; szene_marker.wurzel_flaechen kennt seit 118fad898 die Teilungs-Ecken),
              * Ecken je Glied 43 / 32 / 47 / 32 / 32 / 32 / 32 (Runde 5d: 35 / 24 / 35 / 24 / 24 / 24 / 24). */
-            static const int UNTEN[7] = {20, 30, 41, 31, 30, 30, 30};
+            static const int UNTEN[7] = {21, 30, 41, 31, 30, 30, 30};
             static const int ECKEN[7] = {43, 32, 47, 32, 32, 32, 32};
             CHECK(b->tri_vertex_count == ECKEN[m - 16], "%s: Schwanzglied %d: %d Ecken statt %d (V8 Runde 6b Teilung)", name, m,
                   b->tri_vertex_count, ECKEN[m - 16]);
