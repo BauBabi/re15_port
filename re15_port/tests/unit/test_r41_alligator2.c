@@ -363,6 +363,7 @@ typedef struct { int lagen, klein, st[5], dg[4], dg_klein[4], ohne_kamera; int32
  * Abstand zum naechsten Knochen der Leiche und das Bild x 10. */
 #define SCHL_SCAN_MAX 4096
 void re15_gatorszene_r41_key_naehe_alt_setzen(int an);   /* Nachtrag K2: Pruefhaken 1 = Stand b29263046 (groesstes Bild bis zur Bildschwelle) */
+void re15_gatorszene_r41_key_endlage_alt_setzen(int an); /* Nachbesserung zu Abnahme 2 (B1): Pruefhaken 1 = Stand ae9e17c9e (Verdeckung nur am Kandidaten) */
 static void schluessel_scan(int schritt, int zeigen, schl_scan_t *S, int32_t *d_out, int *px_out)
 {
     static const int32_t sp[2][2] = { { -8200, -25550 }, { 1325, -25550 } };
@@ -434,26 +435,43 @@ static void teil_schluessel_p(void)
            c, (int)dm, px / 10, px % 10, ca, (int)dma, pxa / 10, pxa % 10);
     PRUEF(c >= 0 && (dg == 0 || dg == 1) && dm >= 0 && dm <= dma, "Fall r1 (3413,-25001): im Gebiet (Cut %d, Durchgang %d), %d von der Leiche (Stand b29263046 %d)",
           c, dg, (int)dm, (int)dma);
-    static int32_t dn[SCHL_SCAN_MAX], da[SCHL_SCAN_MAX]; static int pn[SCHL_SCAN_MAX];
-    schl_scan_t S, A;
-    for (int k = 0; k < SCHL_SCAN_MAX; k++) { dn[k] = -1; da[k] = -1; pn[k] = -1; }   /* Eintraege hinter dem Raster bleiben -1 */
+    static int32_t dn[SCHL_SCAN_MAX], da[SCHL_SCAN_MAX], de[SCHL_SCAN_MAX]; static int pn[SCHL_SCAN_MAX];
+    schl_scan_t S, A, E;
+    for (int k = 0; k < SCHL_SCAN_MAX; k++) { dn[k] = -1; da[k] = -1; de[k] = -1; pn[k] = -1; }   /* Eintraege hinter dem Raster bleiben -1 */
     schluessel_scan(3000, 0, &S, dn, pn);
     re15_gatorszene_r41_key_naehe_alt_setzen(1);
     schluessel_scan(3000, 0, &A, da, NULL);
     re15_gatorszene_r41_key_naehe_alt_setzen(0);
-    int weiter = 0, naeher = 0, gleich = 0, n = 0; int32_t w_max = 0;
+    /* Nachbesserung zu Abnahme 2 (B1): dritter Scan im Stand ae9e17c9e (Pruefhaken key_endlage_alt: Verdeckung nur am Kandidaten auf der Wasserflaeche).
+     * Seit der Pruefung an der ENDLAGE (gekipptes, gehobenes Quadrat - Abnahme 2 B1: an der Todesrolle 1 Bildpunkt) faellt der naechste Punkt weg, wenn
+     * ihn die Leiche dort verdeckt; die Lage darf dann weiter liegen als im Stand b29263046, der die Endlage nicht prueft. "Weiter" gilt deshalb nur
+     * noch als Fehler, wenn es NICHT an der Endlagen-Pruefung liegt (im Stand ae9e17c9e ebenfalls weiter); die uebrigen Faelle werden gezaehlt. */
+    re15_gatorszene_r41_key_endlage_alt_setzen(1);
+    schluessel_scan(3000, 0, &E, de, NULL);
+    re15_gatorszene_r41_key_endlage_alt_setzen(0);
+    int weiter = 0, naeher = 0, gleich = 0, n = 0, weiter_endlage = 0, endlage_anders = 0; int32_t w_max = 0, we_max = 0;
     for (int k = 0; k < SCHL_SCAN_MAX; k++) {
         if (dn[k] < 0 || da[k] < 0) continue;
         n++;
-        if (dn[k] > da[k]) { weiter++; if (dn[k] - da[k] > w_max) w_max = dn[k] - da[k]; }
+        if (de[k] >= 0 && de[k] != dn[k]) endlage_anders++;
+        if (dn[k] > da[k]) {
+            if (de[k] >= 0 && de[k] <= da[k]) { weiter_endlage++; if (dn[k] - da[k] > we_max) we_max = dn[k] - da[k]; }   /* nur wegen der Endlage */
+            else { weiter++; if (dn[k] - da[k] > w_max) w_max = dn[k] - da[k]; }
+        }
         else if (dn[k] < da[k]) naeher++;
         else gleich++;
     }
+    printf("    Endlagen-Pruefung (Abnahme 2 B1) gegen Stand ae9e17c9e: %d von %d Lagen mit anderer Lage; groesster Abstand jetzt %d (Stand ae9e17c9e %d), "
+           "mittlerer %d (Stand ae9e17c9e %d); weiter als Stand b29263046 nur wegen der Endlage: %d (bis %d)\n", endlage_anders, n, (int)S.d_max, (int)E.d_max,
+           S.lagen ? (int)(S.d_sum / S.lagen) : 0, E.lagen ? (int)(E.d_sum / E.lagen) : 0, weiter_endlage, (int)we_max);
     printf("    Je Lage gegen Stand b29263046: %d Lagen, naeher %d, gleich %d, weiter %d; groesster Abstand jetzt %d (vorher %d), mittlerer %d (vorher %d)\n", n, naeher,
            gleich, weiter, (int)S.d_max, (int)A.d_max, S.lagen ? (int)(S.d_sum / S.lagen) : 0, A.lagen ? (int)(A.d_sum / A.lagen) : 0);
     PRUEF(S.lagen > 100 && S.dg[2] == 0 && S.ohne_kamera == 0, "Becken-Scan: %d Lagen, jede im Gebiet ihrer Kamera (ohne Gebiet: %d, ohne Kamera: %d)", S.lagen,
           S.dg[2], S.ohne_kamera);
-    PRUEF(n == S.lagen && weiter == 0, "Becken-Scan: keine Lage weiter von der Leiche als Stand b29263046 (%d von %d weiter, bis %d)", weiter, n, (int)w_max);
+    PRUEF(n == S.lagen && weiter == 0, "Becken-Scan: keine Lage weiter von der Leiche als Stand b29263046 (%d von %d weiter, bis %d; dazu %d nur wegen der "
+          "Endlagen-Pruefung, bis %d)", weiter, n, (int)w_max, weiter_endlage, (int)we_max);
+    PRUEF(E.lagen == S.lagen && endlage_anders > 0, "Gegenprobe Stand ae9e17c9e: %d von %d Lagen lagen dort an einer Endlage, die die Endlagen-Pruefung ablehnt (Leiche, Figur oder Bildrand) "
+          "(jetzt die naechste freie)", endlage_anders, n);
     PRUEF(S.d_max <= 2 * 3100, "Becken-Scan: Schluessel hoechstens %d von der Leiche (Naehe-Ring bis zur doppelten Naehe)", (int)S.d_max);
     /* Gegenprobe Stand b29263046 (Pruefhaken): dort liegen Schluessel weiter weg - rot ohne den Bau */
     PRUEF(naeher > 0 && A.d_max > S.d_max, "Gegenprobe Stand b29263046: %d Lagen dort weiter von der Leiche, groesster Abstand %d gegen jetzt %d (rot ohne den Bau)",
@@ -1218,6 +1236,7 @@ int main(int argc, char **argv)
         re15_door_seq_setze_laeufer(fang);
         if (argc > 3 && !strcmp(argv[3], "alt")) re15_gatorszene_r41_key_rueckfall_alt_setzen(1);
         if (argc > 3 && !strcmp(argv[3], "naehe_alt")) re15_gatorszene_r41_key_naehe_alt_setzen(1);   /* Nachtrag K2: Stand b29263046 */
+        if (argc > 3 && !strcmp(argv[3], "endlage_alt")) re15_gatorszene_r41_key_endlage_alt_setzen(1);   /* Nachbesserung zu Abnahme 2: Stand ae9e17c9e */
         schluessel_scan(argc > 2 ? atoi(argv[2]) : 1000, 1, &S, NULL, NULL);
         return 0;
     }
