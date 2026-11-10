@@ -1,5 +1,5 @@
 {
- "quelle": "unterseite_r5.py json EM30_HANGAR.EMD (sha256 823f4f277b0ace20e95a967a4b9fa7b174fd1c21d18c9d43ea4971b03d8726de), Pose PV",
+ "quelle": "unterseite_r5.py json EM30_HANGAR.EMD (sha256 823f4f277b0ace20e95a967a4b9fa7b174fd1c21d18c9d43ea4971b03d8726de), Pose PV | Runde 6: deckel = teilen (gemessen gegen schwerpunkt: Deckel-Kanten da* 7,04 gegen 18,06; Szenenposen mit grauem Deckel unten 0 gegen 44 von 144)",
  "innen_phi": {
   "16": 26.459,
   "17": 26.433,
@@ -8,5 +8,6 @@
   "20": 26.403,
   "21": 26.401,
   "22": 26.46
- }
+ },
+ "deckel": "teilen"
 }

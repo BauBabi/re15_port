@@ -77,6 +77,44 @@ U0, U1 = 6.0, 31.0                    # Texelspalten entlang der Gliedachse: die
                                       # v 50 von u 5 bis 32, bei v 51-106 von u <= 4 bis >= 32 (gemessen, Ausgabe in unterseite_messung.txt)
 
 
+# ------------------------------------------------------------------ Runde 6 (P4-neu) - ueberschreibt die Grenzen der Runde 5 oben
+# Auftrag nach der Pruefung der Runde 5 (Zahlen-Pruefer p4kante / p4b, Sicht-Pruefer F315-F324): "(a) RING-DECKEL: Deckel-Dreiecke an den
+# Segmentgrenzen (heute Zeile 487, grau) folgen derselben Grenze wie der Mantel ... (b) GRENZE etwa 10 Grad tiefer: rot bis theta 110,
+# Uebergang 110-120, grau ab 120; im Band 120-130 hoechstens 5 % Zeile 495 (heute 35,6 / 53,7 %)". Die Ringecken liegen alle 32,7 Grad
+# (|theta| der Normalen ~105 / 137 und ~92 / 125): keine Zuordnung ganzer Flaechen trifft 110 / 120. Deshalb werden die Flaechen, die eine
+# Grenze kreuzen, an ihr GETEILT (teilen()): neue Ecken auf den Ringsehnen dort, wo die interpolierte Normale (dasselbe Mass wie theta_bild
+# je Bildpunkt) genau 110 bzw. 120 Grad hat. Danach liegt jede Flaeche ganz in einem der Baender < 110 (Fleisch, laengs), 110-120
+# (Uebergang, v folgt theta) oder >= 120 (grau, Zeile 487, UV der Oberseite linear weitergefuehrt).
+GRAU_AB = 120.0                       # Auftrag (b) "grau ab 120" (Vorlage: ab 120 a* <= 4,2 und 0 % rot, Messung im Kopf dieser Datei)
+KLASSE_AB = 120.0                     # Flaeche grau, wenn das Mittel ihrer Ring-Ecken |theta| >= 120 (nach dem Teilen eindeutig)
+FLEISCH_AB = 110.0                    # Auftrag (b) "rot bis theta 110" (Vorlage: 70-110 rot 28-58 %, 110-120 Uebergang a* 4,5)
+FLEISCH_KL = 110.0                    # Flaeche laengs im Fleisch, wenn ihr Mittel < 110
+TEIL_GRENZEN = (FLEISCH_AB, GRAU_AB)  # an diesen |theta| wird geteilt
+TEIL_MIN = 1.0                        # Grad: naeher als 1 Grad an einer Ring-Ecke wird nicht geteilt (kein Splitter; gemessen kommt das nicht vor:
+                                      # die Ring-Ecken liegen 5-17 Grad von den Grenzen entfernt)
+TEIL_FANG = 10.0                      # Grad: kreuzt eine Grenze nur EINE der zwei Ringkanten eines Vierecks (gemessen: Ring 2 von Mesh 16 / 18 und
+                                      # Ring 0 von Mesh 19, Ecke 8 bei -119 statt -125), laeuft sie am anderen Ring durch die naechste Ring-Ecke;
+                                      # die darf hoechstens so weit von der Grenze liegen (gemessen 1 Grad)
+DECKEL = 'teilen'                     # Ring-Deckel: 'teilen' (an der Grenze geteilt, unten Fleisch / oben grau) oder 'schwerpunkt' (ungeteilt, nach
+                                      # dem Mittel der Ring-Ecken); beide gemessen (kanten_mass, s15_deckel) - Zahlen im Dossier "V8 Runde 6", P4
+VF0, VF1 = 98.0, 108.0                # v entlang der Gliedachse im Fleisch. Runde 5 nahm v 90-100 "ab der gewellten Kante": die Texelzeilen 90-92 sind
+                                      # aber noch Haut (a* 4-13 bei u 10-33, gemessen tex_u.py), und weil die Glieder abwechselnd gespiegelt sind, lagen
+                                      # an jedem zweiten Gelenk zwei solche Zeilen aneinander = grauer Reifen auf dem MANTEL der Unterseite (F311, alle
+                                      # Bildpunkte dort Klasse 'unten', Zeile 495). Ab v 98 ist jede Texelzeile bei u 4-36 Fleisch (a* >= 15); die
+                                      # Nutzungsmaske der Original-Flaechen reicht bei u >= 4 bis v 108. Gleiche Texeldichte wie Runde 5 (10 Zeilen je
+                                      # Glied). Keine Farbwahl am Video (Entscheid E4): die Runde-5-Proben U7 / U8 unterschieden sich in PV ohnehin nur
+                                      # um L* 0,2.
+V_KAPPE = 0.5 * (VF0 + VF1)           # Deckel im Fleisch: Texelzeile der Mittel-Ecke = Mitte von VF0 / VF1 (der Deckel bekommt eine echte Texelflaeche
+                                      # zwischen der Ringkante und der Mitte, alles Original-Fleisch)
+U_KAPPE = 5.0                         # Deckel im Uebergang: Texelspalte der Mittel-Ecke 5 Texel neben der Ringkante (zur Mitte von U0 / U1 hin)
+S15_BAND = (120.0, 130.0)             # Riegel S15 (e): Band direkt ueber der Grenze
+S15_BAND_SOLL = 5.0                   # Auftrag (b): "im Band 120-130 hoechstens 5 % Zeile 495"
+S15_REIFEN_MIN = 50.0                 # Riegel S15 (g): "grauer Reifen auf dem Mantel" = eine Texelzeile quer zur Gliedachse (v fest) unter den laengs
+                                      # belegten Fleischflaechen, in der weniger als die Haelfte der Texel Fleisch ist (a* >= FLEISCH_A)
+S15_DECKEL_RAND = 2.0                 # Riegel S15 (f): grauer Deckel "auf der Unterseite" = Bildpunkt einer Deckel-Flaeche auf Zeile 487 mit
+                                      # theta < 120 - 2 (2 Grad fuer die Rundung der Teilungs-Ecken und -Normalen auf ganze Zahlen)
+
+
 def kreis_mitte(P):
     """Mittelpunkt des Kreises durch die Punkte P (Ausgleich in ihrer Hauptebene)."""
     c = P.mean(0)
@@ -147,32 +185,229 @@ def wurzel_keys(m):
     return set(SM.wurzel_flaechen(m))
 
 
+def ring_ecke(b, i):
+    """Ecke i von Mesh b liegt auf einem Ring: die Ring-Ecken des Baus (v8_bau.glied_mesh) und die in Runde 6 eingefuegten Teilungs-Ecken, die
+    hinter den zwei Achs-Ecken (Deckel-Mitten bzw. Dorn-Spitze) stehen."""
+    nr = 3 if b in (16, 18) else 2
+    return i < nr * S_ or i >= nr * S_ + 2
+
+
+def theta_normale(n, phi_k):
+    """Signiertes theta (Grad) einer Ecken-Normale gegen die Innenrichtung - dasselbe Mass wie theta_bild je Bildpunkt (interpolierte Normale,
+    senkrecht zur Gliedachse)."""
+    if abs(n[0]) + abs(n[2]) < 1:
+        return None
+    return float((np.degrees(np.arctan2(n[2], n[0])) - phi_k + 180.0) % 360.0 - 180.0)
+
+
+def _wickel(x):
+    return (x + 180.0) % 360.0 - 180.0
+
+
+def ecken_theta(m, b, f, phi):
+    """Signiertes theta je Ecke der Flaeche f ([Normale, Ecke] abwechselnd); None fuer Achs-Ecken."""
+    return [theta_normale(m['n'][f[2 * k]], phi) if ring_ecke(b, f[2 * k + 1]) else None for k in range(len(f) // 2)]
+
+
+def _ring_y(m, b):
+    nr = 3 if b in (16, 18) else 2
+    ys = [m['v'][i][1] for i in range(nr * S_)]
+    return float(min(ys)), float(max(ys))
+
+
+def ist_kappe(m, b, key, f, y0, y1):
+    """Deckel/Kappe: Dreieck mit einer Achs-Ecke innerhalb des Glieds (v8_bau.glied_mesh). Dorn (Spitze hinter dem letzten Ring von Mesh 22)
+    und Wurzelkegel zaehlen nicht dazu."""
+    return key[0] == 'd' and any((not ring_ecke(b, i)) and y0 - 1.0 <= m['v'][i][1] <= y1 + 1.0 for i in f[1::2])
+
+
 def flaechen_klassen(ms, par):
-    """-> {b: [(key, 'grau'|'unten'|'kappe', [theta je Ecke])]} fuer Knochen 16-22; Wurzelflaechen von Mesh 16 (Rohr/Kegel, im Rumpf; Marker S10s)
-    bleiben ausgenommen."""
+    """-> {b: [(key, klasse, [|theta| je Ecke])]} fuer Knochen 16-22. klasse: 'unten' (Mantel/Dorn, Mittel der Ring-Ecken < KLASSE_AB), 'grau'
+    (>= KLASSE_AB; dazu die Wurzelflaechen von Mesh 16 - Rohr/Kegel im Rumpf, Marker S10s), 'kappe_unten' / 'kappe' (Ring-Deckel unter /
+    ueber der Grenze). theta = Normalen-theta der Ecken (Runde 6; Runde 5 nahm den Ort der Ecke, 0-5 Grad daneben)."""
     out = {}
     for b in V.SCHWANZ:
         m = ms[b]
-        P = np.array([v[:3] for v in m['v']], float)
         phi = float(par['innen_phi'][str(b)])
-        nr = 3 if b in (16, 18) else 2
         ausn = wurzel_keys(m) if b == 16 else set()
-        y0, y1 = float(P[:nr * S_, 1].min()), float(P[:nr * S_, 1].max())
+        y0, y1 = _ring_y(m, b)
         res = []
         for key, f in [('d%d' % i, f) for i, f in enumerate(m['tf'])] + [('v%d' % i, f) for i, f in enumerate(m['qf'])]:
-            ie = list(f[1::2])
-            th = [theta_ecke(P[i], phi) if i < nr * S_ else None for i in ie]
+            th = [None if x is None else abs(x) for x in ecken_theta(m, b, f, phi)]
             tr = [t for t in th if t is not None]
-            if key[0] == 'd' and any(i >= nr * S_ and y0 - 1.0 <= P[i][1] <= y1 + 1.0 for i in ie):
-                # Deckel/Kappe (Mittelpunkt auf der Achse innerhalb des Glieds, v8_bau.glied_mesh): liegt auf der Gehrung im Nachbarglied,
-                # bleibt wie gebaut (Zeile 487). Dorn (Spitze hinter Ring 2 von Mesh 22) und Wurzelkegel (vor Ring 0) zaehlen nicht dazu.
-                res.append((key, 'kappe', th))
-            elif key in ausn or not tr or float(np.mean(tr)) >= KLASSE_AB:
+            if key in ausn or not tr:
+                res.append((key, 'grau', th))
+            elif ist_kappe(m, b, key, f, y0, y1):
+                res.append((key, 'kappe_unten' if float(np.mean(tr)) < KLASSE_AB else 'kappe', th))
+            elif float(np.mean(tr)) >= KLASSE_AB:
                 res.append((key, 'grau', th))
             else:
                 res.append((key, 'unten', th))
         out[b] = res
     return out
+
+
+def teilen(ms, par):
+    """Runde 6 (P4-neu b): Mantel-Vierecke, Dorn- und (Modus 'teilen') Deckel-Dreiecke, deren Ringkante eine Grenze TEIL_GRENZEN kreuzt, an ihr
+    teilen. Neue Ecke = Punkt der Ringsehne, an dem die linear interpolierte Normale das Grenz-theta hat (Ort, Normale und UV linear
+    interpoliert, auf ganze Zahlen gerundet; Normale auf Laenge 4096). Kreuzt die Grenze nur eine der zwei Ringkanten eines Vierecks, laeuft
+    sie am anderen Ring durch die naechstliegende Ring-Ecke (Teilstueck = Dreieck). Das erste Viereck-Teilstueck ersetzt die Flaeche an ihrem
+    Index, die weiteren stehen am Ende der Listen (die Indizes der Wurzelflaechen von Mesh 16 - Marker S10s - bleiben). -> Zaehlung je Mesh."""
+    modus = par.get('deckel', DECKEL)
+    assert modus in ('teilen', 'schwerpunkt'), modus
+    zahl = {}
+    for b in V.SCHWANZ:
+        m = ms[b]
+        assert len(m['v']) == len(m['n']), b
+        phi = float(par['innen_phi'][str(b)])
+        ausn = wurzel_keys(m) if b == 16 else set()
+        y0, y1 = _ring_y(m, b)
+        cache = {}
+        n0 = (len(m['v']), len(m['tf']), len(m['qf']))
+
+        def th(i):
+            return theta_normale(m['n'][i], phi)
+
+        def ecke_auf(lo, hi, g):
+            """Neue Ecke auf der Ringkante lo -> hi (lo < hi) beim Normalen-theta g -> (Index, t von lo aus)."""
+            if (lo, hi, g) not in cache:
+                na = np.array(m['n'][lo][:3], float); nc = np.array(m['n'][hi][:3], float)
+                f0 = _wickel(theta_normale(na, phi) - g)
+                a_, b_ = 0.0, 1.0
+                for _ in range(48):
+                    mi = 0.5 * (a_ + b_)
+                    fm = _wickel(theta_normale((1 - mi) * na + mi * nc, phi) - g)
+                    if (fm > 0) == (f0 > 0):
+                        a_ = mi
+                    else:
+                        b_ = mi
+                t = 0.5 * (a_ + b_)
+                nn = (1 - t) * na + t * nc
+                nn = nn / np.linalg.norm(nn) * 4096.0
+                pa = np.array(m['v'][lo][:3], float); pc = np.array(m['v'][hi][:3], float)
+                pp = (1 - t) * pa + t * pc
+                m['v'].append([int(round(float(x_))) for x_ in pp] + [0])
+                m['n'].append([int(round(float(x_))) for x_ in nn] + [0])
+                cache[(lo, hi, g)] = (len(m['v']) - 1, t)
+            return cache[(lo, hi, g)]
+
+        def lage(ia, ic, g):
+            """Grenze g auf der Ringkante ia -> ic: None (kreuzt nicht), 0.0 / 1.0 (naeher als TEIL_MIN an ia / ic: laeuft durch die Ecke)
+            oder t in (0, 1)."""
+            ta = th(ia); d = _wickel(th(ic) - ta); x = _wickel(g - ta)
+            if d == 0 or not (0.0 < x / d < 1.0):
+                return None
+            if abs(x) < TEIL_MIN:
+                return 0.0
+            if abs(d - x) < TEIL_MIN:
+                return 1.0
+            return x / d
+
+        def punkt(ia, uva, ic, uvc, g, lg):
+            """(Ecke, UV) der Grenze g auf der Kante ia -> ic bei Lage lg (0.0 / 1.0 = Ring-Ecke selbst)."""
+            if lg == 0.0:
+                return (ia, uva)
+            if lg == 1.0:
+                return (ic, uvc)
+            lo, hi = (ia, ic) if ia < ic else (ic, ia)
+            idx, t = ecke_auf(lo, hi, g)
+            if ia > ic:
+                t = 1.0 - t
+            return (idx, (int(round(uva[0] + t * (uvc[0] - uva[0]))), int(round(uva[1] + t * (uvc[1] - uva[1])))))
+
+        def grenzen(ia, ic):
+            """Signierte Grenzen in der Reihenfolge, in der die Kante ia -> ic sie trifft."""
+            d = _wickel(th(ic) - th(ia))
+            gs = [g for g0 in TEIL_GRENZEN for g in (g0, -g0)]
+            return sorted(gs, key=lambda g: _wickel(g - th(ia)) * (1 if d >= 0 else -1))
+
+        for qi in range(n0[2]):
+            if ('v%d' % qi) in ausn:
+                continue
+            f, uv = m['qf'][qi], m['quv'][qi]
+            ie = list(f[1::2])
+            assert list(f[0::2]) == ie, ('Normalen-Index != Ecken-Index', b, qi)
+            if not all(ring_ecke(b, i) for i in ie):
+                continue
+            c = [(uv[3 * k], uv[3 * k + 1]) for k in range(4)]
+            oben, unten = [(ie[0], c[0])], [(ie[2], c[2])]
+            for g in grenzen(ie[0], ie[1]):
+                lo_, lu_ = lage(ie[0], ie[1], g), lage(ie[2], ie[3], g)
+                if lo_ is None and lu_ is None:
+                    continue
+                if lo_ is None or lu_ is None:    # nur eine Ringkante kreuzt: am anderen Ring durch die naechstliegende Ring-Ecke
+                    ka, kc = (ie[0], ie[1]) if lo_ is None else (ie[2], ie[3])
+                    da, dc = abs(_wickel(th(ka) - g)), abs(_wickel(th(kc) - g))
+                    assert min(da, dc) <= TEIL_FANG, ('Grenze kreuzt nur eine Ringkante und liegt weit von der anderen', b, qi, g, da, dc)
+                    ers = 0.0 if da <= dc else 1.0
+                    lo_, lu_ = (ers, lu_) if lo_ is None else (lo_, ers)
+                if lo_ == lu_ and lo_ in (0.0, 1.0):
+                    continue                      # Grenze laeuft durch zwei Ring-Ecken derselben Seite: Flaechenkante, nichts zu teilen
+                oben.append(punkt(ie[0], c[0], ie[1], c[1], g, lo_))
+                unten.append(punkt(ie[2], c[2], ie[3], c[3], g, lu_))
+            oben.append((ie[1], c[1])); unten.append((ie[3], c[3]))
+            if len(oben) == 2:
+                continue
+            erstes = True
+            for j in range(len(oben) - 1):
+                o0, o1, u0, u1 = oben[j], oben[j + 1], unten[j], unten[j + 1]
+                if o0[0] == o1[0] and u0[0] == u1[0]:
+                    continue
+                if o0[0] == o1[0] or u0[0] == u1[0]:      # Dreieck (Umlaufsinn wie die Viereck-Haelften 0-1-2 bzw. 1-3-2)
+                    e = [o0, o1, u0] if u0[0] == u1[0] else [o1, u1, u0]
+                    fn = []
+                    for i_, _uv in e:
+                        fn += [i_, i_]
+                    un = [0] * 9
+                    un[2], un[5], un[8] = uv[2], uv[5], uv[8]
+                    for k, (_i, (u_, v_)) in enumerate(e):
+                        un[3 * k], un[3 * k + 1] = u_, v_
+                    m['tf'].append(fn); m['tuv'].append(un)
+                    continue
+                e = [o0, o1, u0, u1]
+                fn = []
+                for i_, _uv in e:
+                    fn += [i_, i_]
+                un = list(uv)
+                for k, (_i, (u_, v_)) in enumerate(e):
+                    un[3 * k], un[3 * k + 1] = u_, v_
+                if erstes:
+                    m['qf'][qi], m['quv'][qi] = fn, un
+                    erstes = False
+                else:
+                    m['qf'].append(fn); m['quv'].append(un)
+            assert not erstes, ('kein Viereck-Teilstueck', b, qi)
+        for di in range(n0[1]):
+            key = 'd%d' % di
+            if key in ausn:
+                continue
+            f, uv = m['tf'][di], m['tuv'][di]
+            ie = list(f[1::2])
+            ring = [k for k in range(3) if ring_ecke(b, ie[k])]
+            if len(ring) != 2 or list(f[0::2]) != ie:
+                continue
+            if modus == 'schwerpunkt' and ist_kappe(m, b, key, f, y0, y1):
+                continue
+            ka, kc = ring
+            c = [(uv[3 * k], uv[3 * k + 1]) for k in range(3)]
+            kt = [(ie[ka], c[ka])]
+            for g in grenzen(ie[ka], ie[kc]):
+                lg = lage(ie[ka], ie[kc], g)
+                if lg is None or lg in (0.0, 1.0):
+                    continue
+                kt.append(punkt(ie[ka], c[ka], ie[kc], c[kc], g, lg))
+            kt.append((ie[kc], c[kc]))
+            for j in range(len(kt) - 1):
+                fn, un = list(f), list(uv)
+                for k, (i_, (u_, v_)) in ((ka, kt[j]), (kc, kt[j + 1])):
+                    fn[2 * k] = fn[2 * k + 1] = i_
+                    un[3 * k], un[3 * k + 1] = u_, v_
+                if j == 0:
+                    m['tf'][di], m['tuv'][di] = fn, un
+                else:
+                    m['tf'].append(fn); m['tuv'].append(un)
+        zahl[str(b)] = dict(ecken=len(m['v']) - n0[0], dreiecke=len(m['tf']) - n0[1], vierecke=len(m['qf']) - n0[2])
+    return zahl
 
 
 def zeile_index(t):
@@ -186,23 +421,24 @@ def zeile_index(t):
 
 
 def anwenden(ms, t, par, prot):
-    """Bau-Stufe u: Flaechen der Unterseite (mindestens eine Ringecke |theta| < GRAU_AB) -> Zeile = Original-Zeile 482, Seite 2, UV = Verlauf
-    Haut/Fleisch des Original-Unterarms (v aus theta, u entlang der Gliedachse, je Glied gespiegelt). Oberseite unveraendert."""
+    """Bau-Stufe u: (Runde 6) Flaechen an den Grenzen 110 / 120 teilen, dann die Flaechen der Unterseite (Mantel, Dorn und Ring-Deckel mit
+    Mittel |theta| < KLASSE_AB) -> Zeile = Original-Zeile 482, Seite 2, UV = Verlauf Haut/Fleisch des Original-Unterarms (Fleisch laengs unter
+    110, Uebergang 110-120 mit v aus theta, u entlang der Gliedachse, je Glied gespiegelt). Oberseite: Zeile 487, UV linear weitergefuehrt."""
     zeile = zeile_index(t)
     nutz = A4.nutzung(None, ORIG_ZEILE)
+    teilung = teilen(ms, par)
     kl = flaechen_klassen(ms, par)
-    zahl, fehl = {}, []
+    zahl, deckel, fehl = {}, {}, []
     for b in V.SCHWANZ:
         m = ms[b]
         P = np.array([v[:3] for v in m['v']], float)
-        nr = 3 if b in (16, 18) else 2
-        y0, y1 = float(P[:nr * S_, 1].min()), float(P[:nr * S_, 1].max())
+        y0, y1 = _ring_y(m, b)
         spiegel = (b - 16) % 2 == 1
         faces = {('d%d' % i): (f, m['tuv'][i]) for i, f in enumerate(m['tf'])}
         faces.update({('v%d' % i): (f, m['quv'][i]) for i, f in enumerate(m['qf'])})
-        n = 0
+        n = nd = 0
         for key, klasse, th in kl[b]:
-            if klasse != 'unten':
+            if klasse not in ('unten', 'kappe_unten'):
                 continue
             f, uv = faces[key]
             ie = list(f[1::2])
@@ -210,7 +446,7 @@ def anwenden(ms, t, par, prot):
             th_m = float(np.mean(tr))
             phi = float(par['innen_phi'][str(b)])
             laengs = LAENGS and th_m < FLEISCH_KL
-            ts_l = [theta_signiert(P[i], phi) for i in ie]
+            ts_l = [theta_signiert(P[i], phi) if ring_ecke(b, i) else None for i in ie]
             ts_r = [x for x in ts_l if x is not None]
             for k, i in enumerate(ie):
                 tt = th[k] if th[k] is not None else th_m
@@ -224,6 +460,17 @@ def anwenden(ms, t, par, prot):
                 else:
                     uv[3 * k] = int(round(U0 + s * (U1 - U0)))
                     uv[3 * k + 1] = int(round(v_von(tt)))
+            if klasse == 'kappe_unten':   # Ring-Deckel: an der Ringkante dieselben Texel wie der Mantel, die Mittel-Ecke daneben im selben Material
+                kz = [k for k, i in enumerate(ie) if not ring_ecke(b, i)][0]
+                kr = [k for k in range(3) if k != kz]
+                if laengs:
+                    uv[3 * kz] = int(round(np.mean([uv[3 * k] for k in kr])))
+                    uv[3 * kz + 1] = int(round(V_KAPPE))
+                else:
+                    ur = uv[3 * kr[0]]
+                    uv[3 * kz] = int(round(ur + (U_KAPPE if ur < 0.5 * (U0 + U1) else -U_KAPPE)))
+                    uv[3 * kz + 1] = int(round(np.mean([uv[3 * k + 1] for k in kr])))
+                nd += 1
             AV.setze_zeile(uv, zeile)
             uv[5] = (uv[5] & ~0xF) | SEITE
             mk = KB.raster(uv, 3 if len(uv) == 9 else 4, SEITE * 128)
@@ -231,9 +478,11 @@ def anwenden(ms, t, par, prot):
                 fehl.append('%d:%s' % (b, key))
             n += 1
         zahl[str(b)] = n
+        deckel[str(b)] = nd
     assert not fehl, ('Texel ausserhalb der Original-Nutzung', fehl)
-    prot['unterseite'] = dict(zeile=zeile, flaechen=zahl, summe=int(sum(zahl.values())), grau_ab=GRAU_AB, fleisch_ab=FLEISCH_AB,
-                              v=(V_GRAU, V_FLEISCH_AB, V_TIEF), u=(U0, U1), innen_phi=par['innen_phi'])
+    prot['unterseite'] = dict(zeile=zeile, flaechen=zahl, summe=int(sum(zahl.values())), deckel_unten=deckel, deckel=par.get('deckel', DECKEL),
+                              teilung=teilung, grau_ab=GRAU_AB, fleisch_ab=FLEISCH_AB, v=(V_GRAU, V_FLEISCH_AB, V_TIEF), u=(U0, U1),
+                              innen_phi=par['innen_phi'])
 
 
 # ------------------------------------------------------------------ Messung / Riegel-Helfer
@@ -361,7 +610,11 @@ def s15_flaechen(blob, ref_blob, par=None):
     """(a) Herkunft: jede Schwanzflaeche (Mesh 16-22) ausserhalb Zeile 487 liegt auf der Zeile = Original-Zeile 482, Seite 2, alle Texel unter
     ihr = Original-Texel UND von Original-Flaechen der Zeile 482 benutzt (0 fremde Texel); (b) Klassen nach der gemessenen Grenze: jede
     Unterseiten-Flaeche (Mittel |theta| < KLASSE_AB) auf dieser Zeile und mit Fleisch-Texeln, wenn ihr Mittel < FLEISCH_KL; jede Oberseiten-
-    Flaeche auf Zeile 487 mit der UV des Baus ohne Stufe u (= V8 Runde 4/5 vor P4; 0 Fleisch-Texel). ref_blob = V7."""
+    Flaeche auf Zeile 487 ohne Fleisch-Texel und mit der UV des Baus ohne Stufe u (ungeteilte Flaeche: gleiche UV; in Runde 6 geteilte
+    Flaeche: alle ihre Texel in den Texeln, die die Oberseite desselben Glieds im Bau ohne u benutzt, 1 Texel Rundung). Runde 6: Ring-Deckel
+    unter der Grenze ('kappe_unten') muessen auf der Fleisch-Zeile liegen (deckel_grau_unten = 0), Deckel darueber auf Zeile 487.
+    ref_blob = V7."""
+    from scipy import ndimage
     par = par or json.load(open(os.path.join(HIER, 'unterseite_v8.json')))
     _d, _o, ms, tim = KB.teile(blob); _d2, _o2, mr, _t2 = KB.teile(ohne_u(ref_blob))
     t = KB.tim_teile(tim)
@@ -374,10 +627,19 @@ def s15_flaechen(blob, ref_blob, par=None):
     nutz = A4.nutzung(None, ORIG_ZEILE)
     kl = flaechen_klassen(ms, par)
     fremd = falsch_zeile = 0
-    n_unten = n_oben = unten_ohne_fleisch = oben_fehler = n_fl_tex = 0
+    n_unten = n_oben = unten_ohne_fleisch = oben_fehler = n_fl_tex = n_deckel_unten = deckel_grau_unten = 0
     for b in V.SCHWANZ:
+        alt = np.zeros(t['pix'].shape, bool)
+        ref = {}
+        for k2, f2, u2 in [('d%d' % i, f, mr[b]['tuv'][i]) for i, f in enumerate(mr[b]['tf'])] + \
+                          [('v%d' % i, f, mr[b]['quv'][i]) for i, f in enumerate(mr[b]['qf'])]:
+            ref[k2] = (list(f2[1::2]), u2)
+            alt |= KB.raster(u2, 3 if len(u2) == 9 else 4, (u2[5] & 0xF) * 128)
+        alt = ndimage.binary_dilation(alt, iterations=1)
+        ecken = {('d%d' % i): list(f[1::2]) for i, f in enumerate(ms[b]['tf'])}
+        ecken.update({('v%d' % i): list(f[1::2]) for i, f in enumerate(ms[b]['qf'])})
         for key, klasse, th in kl[b]:
-            uv = AV.flaeche(ms[b], key); ur = AV.flaeche(mr[b], key)
+            uv = AV.flaeche(ms[b], key)
             z = (uv[2] >> 6) & 0x1FF
             tr = [x for x in th if x is not None]
             mk = KB.raster(uv, 3 if len(uv) == 9 else 4, (uv[5] & 0xF) * 128)
@@ -394,17 +656,28 @@ def s15_flaechen(blob, ref_blob, par=None):
                 elif float(np.mean(tr)) < FLEISCH_KL and nf == 0:
                     unten_ohne_fleisch += 1
                 n_fl_tex += nf
+            elif klasse == 'kappe_unten':
+                n_deckel_unten += 1
+                if not ist_fleisch:
+                    deckel_grau_unten += 1
+                n_fl_tex += nf
             elif klasse == 'kappe':
                 if z != SCHWANZ_ZEILE:
                     oben_fehler += 1
             else:
                 n_oben += 1
-                gleich = [uv[i] for i in range(len(uv)) if i % 3 != 2] == [ur[i] for i in range(len(ur)) if i % 3 != 2]
+                if key in ref and ref[key][0] == ecken[key]:
+                    ur = ref[key][1]
+                    gleich = [uv[i] for i in range(len(uv)) if i % 3 != 2] == [ur[i] for i in range(len(ur)) if i % 3 != 2]
+                else:
+                    gleich = not (mk & ~alt).any()
                 if z != SCHWANZ_ZEILE or not gleich or nf:
                     oben_fehler += 1
     return dict(zeile=zeile, unten=n_unten, oben=n_oben, unten_ohne_fleisch=unten_ohne_fleisch, oben_fehler=oben_fehler,
+                deckel_unten=n_deckel_unten, deckel_grau_unten=deckel_grau_unten,
                 fleisch_texel=n_fl_tex, fremde_texel=fremd, falsche_zeile=falsch_zeile,
-                ok=bool(zeile is not None and fremd == 0 and falsch_zeile == 0 and unten_ohne_fleisch == 0 and oben_fehler == 0 and n_unten > 0))
+                ok=bool(zeile is not None and fremd == 0 and falsch_zeile == 0 and unten_ohne_fleisch == 0 and oben_fehler == 0 and n_unten > 0
+                        and deckel_grau_unten == 0))
 
 
 def s15_bild(blob, posen=('PV', 'P2')):
@@ -468,3 +741,169 @@ def s15_ruhe(blob, posen=('PV', 'P2')):
         ok = ok and r['ok']
         out[pn] = r
     return dict(ansichten=out, ok=bool(ok))
+
+
+# ------------------------------------------------------------------ Runde 6: Grenze, Ring-Deckel, Kanten (Riegel S15 e/f, Mass des Zahlen-Pruefers)
+def _zeile_oder_none(t):
+    try:
+        return zeile_index(t)
+    except AssertionError:
+        return None
+
+
+def s15_grenze(blob, posen=('PV', 'P2')):
+    """(e) Auftrag Runde 6 (b): Anteil Zeile 495 an den Schwanz-Bildpunkten im Band theta 120-130 (Soll <= S15_BAND_SOLL %), dazu (Info) in
+    den Baendern 100-110 und 110-120. Spielkamera, theta je Bildpunkt aus der interpolierten Normale (theta_bild)."""
+    import f_rast as FR
+    mo = V.modell(blob)
+    _d, _o, _ms, tim = KB.teile(blob)
+    zeile = _zeile_oder_none(KB.tim_teile(tim))
+    out = {}
+    for pn in posen:
+        pose = pose_von(pn)
+        A = FR.zeichne(mo, pose, None, licht=False)
+        ys, xs, _bb, th = theta_bild(mo, pose, A)
+        z = A['zeile'][ys, xs]
+        r = {}
+        for nm, (lo, hi) in (('band', S15_BAND), ('uebergang', (FLEISCH_AB, GRAU_AB)), ('fleisch', (FLEISCH_AB - 10.0, FLEISCH_AB))):
+            m = (th >= lo) & (th < hi)
+            r[nm + '_px'] = int(m.sum())
+            r[nm] = round(float((z[m] == zeile).mean() * 100), 1) if (zeile is not None and m.any()) else 0.0
+        out[pn] = r
+    return dict(ansichten=out, ok=bool(all(v['band'] <= S15_BAND_SOLL for v in out.values())))
+
+
+def deckel_theta(m, b, f, phi, lok):
+    """|theta| eines Bildpunkts (Ort lok im Knochenraum) auf dem Deckel-Dreieck f: Strahl von der Achs-Ecke durch den Punkt auf die Ringkante,
+    dort die Normale zwischen den zwei Ring-Ecken interpoliert. (Die interpolierte Bild-Normale taugt auf dem Deckel nicht: an der Achs-Ecke
+    zeigt sie laengs der Achse, ihr Rest quer dazu ist Rauschen - gemessen 6 Bildpunkte mit "theta 14-17" auf Deckeln der Oberseite.)"""
+    ie = list(f[1::2])
+    kz = [k for k in range(3) if not ring_ecke(b, ie[k])][0]
+    ka, kc = [k for k in range(3) if k != kz]
+    Z = np.array(m['v'][ie[kz]][:3], float)
+    M = np.stack([np.array(m['v'][ie[ka]][:3], float) - Z, np.array(m['v'][ie[kc]][:3], float) - Z], 1)
+    w = np.linalg.lstsq(M, np.asarray(lok, float) - Z, rcond=None)[0]
+    t = float(np.clip(w[1] / (w[0] + w[1]), 0.0, 1.0)) if (w[0] + w[1]) > 1e-6 else 0.5
+    n = (1 - t) * np.array(m['n'][f[2 * ka]][:3], float) + t * np.array(m['n'][f[2 * kc]][:3], float)
+    return abs(theta_normale(n, phi))
+
+
+def s15_deckel(blob, par=None, posen=None):
+    """(f) Auftrag Runde 6 (a) "in keinem Szenenbild grauer Ring/Schlitz auf der Unterseite": Bildpunkte von Ring-Deckeln (Klasse kappe /
+    kappe_unten) auf Zeile 487 mit theta < KLASSE_AB - S15_DECKEL_RAND (theta je Bildpunkt: deckel_theta) in den Posen der Szene
+    (r3_gemein.szene_posen, F235-F378) -> Zahl der Posen mit mindestens einem solchen Bildpunkt (Soll 0) und Summe der Bildpunkte."""
+    import f_rast as FR
+    import r3_gemein as R3
+    par = par or json.load(open(os.path.join(HIER, 'unterseite_v8.json')))
+    mo = V.modell(blob)
+    _d, _o, ms, _tim = KB.teile(blob)
+    kl = flaechen_klassen(ms, par)
+    kap = {b: set(k for k, c, _t in kl[b] if c in ('kappe', 'kappe_unten')) for b in V.SCHWANZ}
+    P = R3.szene_posen()
+    namen = sorted(P) if posen is None else list(posen)
+    bilder, summe, groesst = 0, 0, (0, None)
+    for k in namen:
+        A = FR.zeichne(mo, P[k], None, licht=False)
+        bone = A['bone'][:480]
+        ys, xs = np.nonzero((bone >= 16) & (bone <= 22) & (A['zeile'][:480] == SCHWANZ_ZEILE))
+        n = 0
+        for y, x in zip(ys, xs):
+            b = int(bone[y, x]); key = str(A['flaeche'][y, x])
+            if key in kap[b]:
+                f = ms[b]['tf'][int(key[1:])]
+                if deckel_theta(ms[b], b, f, float(par['innen_phi'][str(b)]), A['lok'][y, x]) < KLASSE_AB - S15_DECKEL_RAND:
+                    n += 1
+        if n:
+            bilder += 1; summe += n
+            if n > groesst[0]:
+                groesst = (n, 'F%s' % k)
+    return dict(posen=len(namen), bilder=bilder, px=summe, groesst=groesst, ok=bool(bilder == 0))
+
+
+def kanten_mass(blob):
+    """Mass des Zahlen-Pruefers (Runde 5, p4kante.py) nachgebaut: jede Kante, an der im selben Mesh eine Schwanz-Flaeche der Fleisch-Zeile an
+    eine der Zeile 487 stoesst (gleiche Ecken-Orte): 9 Proben je Kante, 1 Texel nach innen, unbeleuchtet; dL / da* (Fleisch-Zeile minus 487),
+    mit der Kantenlaenge gewichtet; getrennt nach grauer Nachbarflaeche Viereck (Mantel) / Dreieck (Ring-Deckel, Dorn)."""
+    _d, _o, ms, tim = KB.teile(blob)
+    t = KB.tim_teile(tim)
+    zeile = _zeile_oder_none(t)
+    H, W = t['pix'].shape
+
+    def probe(z, a, b, mitte):
+        ein = mitte - (a + b) / 2.0
+        ein = ein / (np.linalg.norm(ein) + 1e-9)
+        c = []
+        for s_ in np.linspace(0.1, 0.9, 9):
+            q = a + (b - a) * s_ + ein
+            u = int(np.clip(round(q[0]), 0, W - 1)); v = int(np.clip(round(q[1]), 0, H - 1))
+            c.append(int(t['clut'][z - 480][t['pix'][v, u]]))
+        return AV.lab15(np.array(c))
+    res = []
+    for b in V.SCHWANZ:
+        m = ms[b]
+        kanten = {}
+        for kind, F, U in (('d', m['tf'], m['tuv']), ('v', m['qf'], m['quv'])):
+            for k, (fc, uv) in enumerate(zip(F, U)):
+                po = (uv[5] & 0xF) * 128; z = (uv[2] >> 6) & 0x1FF
+                nk = len(fc) // 2
+                tx = [(uv[3 * i] + po, uv[3 * i + 1]) for i in range(nk)]
+                Pk = [tuple(m['v'][i][:3]) for i in fc[1::2]]
+                if kind == 'v':
+                    Pk = [Pk[0], Pk[1], Pk[3], Pk[2]]; tx = [tx[0], tx[1], tx[3], tx[2]]
+                tx = np.array(tx, float)
+                for i in range(nk):
+                    a, c = Pk[i], Pk[(i + 1) % nk]
+                    if a == c:
+                        continue
+                    key = (a, c) if a < c else (c, a)
+                    ta, tc = (tx[i], tx[(i + 1) % nk]) if a < c else (tx[(i + 1) % nk], tx[i])
+                    art = 'd' if (kind == 'd' and not all(ring_ecke(b, i_) for i_ in fc[1::2])) else 'v'
+                    kanten.setdefault(key, []).append((art + str(k), z, ta, tc, tx.mean(0)))
+        for key, lst in sorted(kanten.items()):
+            f5 = [x for x in lst if x[1] == zeile]; f7 = [x for x in lst if x[1] == SCHWANZ_ZEILE]
+            if f5 and f7:
+                A = probe(zeile, f5[0][2], f5[0][3], f5[0][4]); B = probe(SCHWANZ_ZEILE, f7[0][2], f7[0][3], f7[0][4])
+                lang = float(np.linalg.norm(np.array(key[0], float) - np.array(key[1], float)))
+                res.append((b, f5[0][0], f7[0][0], lang, float(A[:, 0].mean() - B[:, 0].mean()), float(A[:, 1].mean() - B[:, 1].mean())))
+    out = {}
+    for art, sel in (('alle', res), ('mantel', [r for r in res if r[2][0] == 'v']), ('deckel', [r for r in res if r[2][0] == 'd'])):
+        l = sum(r[3] for r in sel)
+        out[art] = dict(kanten=len(sel), laenge=round(l), da=round(sum(r[3] * r[5] for r in sel) / l, 2) if l else 0.0,
+                        dL=round(sum(r[3] * r[4] for r in sel) / l, 2) if l else 0.0,
+                        da_max=round(max([abs(r[5]) for r in sel]), 1) if sel else 0.0)
+    return out
+
+
+def s15_reifen(blob, par=None):
+    """(g) Runde 6: kein grauer Reifen auf dem MANTEL der Unterseite. Die Fleischflaechen (Klasse unten / kappe_unten, Mittel |theta| <
+    FLEISCH_KL) sind laengs belegt: v laeuft entlang der Gliedachse, eine Texelzeile (v fest) liegt als Ring um das Glied. Je Texelzeile unter
+    diesen Flaechen der Anteil Fleisch-Texel (a* >= FLEISCH_A, unbeleuchtet aus der CLUT) -> Zeilen unter S15_REIFEN_MIN % (Soll 0)."""
+    par = par or json.load(open(os.path.join(HIER, 'unterseite_v8.json')))
+    _d, _o, ms, tim = KB.teile(blob)
+    t = KB.tim_teile(tim)
+    zeile = _zeile_oder_none(t)
+    if zeile is None:
+        return dict(zeilen=0, grau=[], kleinst=0.0, ok=False)
+    fl = fleisch_eintraege(t['clut'][zeile - 480])
+    kl = flaechen_klassen(ms, par)
+    mk = np.zeros(t['pix'].shape, bool)
+    for b in V.SCHWANZ:
+        for key, klasse, th in kl[b]:
+            tr = [x for x in th if x is not None]
+            if klasse not in ('unten', 'kappe_unten') or float(np.mean(tr)) >= FLEISCH_KL:
+                continue
+            uv = AV.flaeche(ms[b], key)
+            if ((uv[2] >> 6) & 0x1FF) != zeile:
+                continue
+            mk |= KB.raster(uv, 3 if len(uv) == 9 else 4, (uv[5] & 0xF) * 128)
+    grau, kleinst, n = [], 100.0, 0
+    for v in np.nonzero(mk.any(1))[0]:
+        px = t['pix'][v][mk[v]]
+        if len(px) < 4:
+            continue
+        n += 1
+        a = float(fl[px].mean() * 100)
+        kleinst = min(kleinst, a)
+        if a < S15_REIFEN_MIN:
+            grau.append((int(v), round(a, 1)))
+    return dict(zeilen=n, grau=grau, kleinst=round(kleinst, 1), ok=bool(n > 0 and not grau))
