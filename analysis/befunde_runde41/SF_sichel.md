@@ -3485,3 +3485,160 @@ Zahl ist PORT-WAHL (Nutzer-Wortlaut oder Messung), keine @0x-Adresse.
    unveraendert); ohne Rohr kann dabei nichts mehr aus dem Rumpf stechen, Ring 1 dreht aber mit - nicht gemessen.
 6. Ruhige Ruecken-Ecken (ruecken_v8.json) stammen aus Koordinatensuche plus zwei Rasterschritten (Ecke 49 (0,-35,+40), Ecke 41 z +10;
    Protokolle runde4/suche/raster_49.*, grid_j*.txt, gj*.py).
+
+## V8 Runde 5 nach Pruefung V8 r4 und zwei Nutzer-Befunden (Bauer, Zweig r41/sichel_v8, 2026-11-10)
+
+### Wortlaut (bindend, unveraendert)
+- (A), (B) wie Runde 4 (Koerperbau nach Darstellung.png; rechte Seite mit Adern aus Original-EM30-Texeln).
+- (P4) Nutzer 2026-11-09 nach der V8-Vorschau: "Der 2 Beiner Birkin sieht in der Vorschau schon mal super aus. Nur eine Sache passt noch
+  nicht so ganz. Die Unterseite des großen Schwanzes ist fleischig wenn man in die Vorlagen Bilder schaut. Nur die oberseite ist
+  durchweg grau."
+- (P5) Nutzer 2026-11-09 kurz darauf: "Das einzige was mir noch auffällt, es gibt immer noch eine Lücke zwischen Rücken und Kopf beim
+  2 beiner Birkin. Das ist in der Vorlage so wie es aussieht nicht so." Frueher dazu: "Auch der obere Rücken geht im original screenshot
+  direkt mehr oder weniger in den Kopf über."
+- (P1)-(P3) aus den Pruefberichten V8 r4 (SF_PRUEFUNG_V8_r4_sicht.md, SF_PRUEFUNG_V8_r4_zahlen.md, beide NICHT BESTANDEN, Commit
+  c29e05f4d): P1 Brust von vorn als graue Platte mit weissen Keilen; P2 Naht Schwanz/Rumpf S2c 8,0 px; P3 gelbe Punkte, wenn ohne Risiko.
+Zu halten: Gesicht/Kopf (Mesh 9 und seine CLUT-Zeilen bytegleich V7), linke Hand V7, Beine/Hose, Clips, KI; Koerperbau, Bogen, Huegel,
+Adern rechts. Kein RE-Befund: die Form gibt es auf keiner Disc; jede Zahl ist PORT-WAHL (Nutzer-Wortlaut oder Messung), keine
+@0x-Adresse. Texturen nur Original-EM30-Texel (CDEMD0.EMS Typ 0x30).
+
+### Ergebnis
+- Spiel-Asset EMD/EM30_HANGAR.EMD = **V8 Runde 5d, sha256 c4976c6214c74fb1ac341fc0ed4ec0768e15c34b0b1939c53b68e04aabd9526a**
+  (271 716 Byte), Pin release/em30_hangar.sha256 (Commit 06a1e1be1). v8_kette.sh (Stufe 7 --stufen srwaun) dreimal gelaufen
+  (sfv8/kette_r5d_a vor dem Pin, _b und _c danach): EM30_V8.EMD jedes Mal dieselbe Summe; Protokolle runde5/kette_r5d_a.txt,
+  kette_r5d_b.txt je "V8-KETTE-OK".
+- Riegel (riegel_v8.py mit Szene, Markern und echten Framedumps, SF_belege/v8/riegel_v8.txt): **18 von 19 gruen, ROT S16** - nur Teil
+  (a), nur Szenentakt **F311: 63 px / 37 tiefer als 1,5 px / groesste Tiefe 6,3 px** gegen das Soll 21 / 7 / 3,2 (1 von 177 Ansichten;
+  V8 r4 und 91885ed8c: 69 von 177). Das Soll ist nicht verbogen, keine Ausnahme je Bild. Siehe Offen 1.
+- Szene Hangar 50A0 (lauf_v4.sh FD 200-1100, Ende F1110): EXIT 0, 901 Bilder, state.log 1131 Zeilen **bytegleich** zum freigegebenen
+  V7-Lauf, "[hangar] ROOM50A0 Szene Ende: Cut 4, Birkin Zustand 0". Schwanz: 144 Takte, tiefstes Gelenk y -122, Gelenk max 25,2 Grad,
+  0 Takte > 30 Grad (runde5/szene_mass.txt).
+
+### Vorgaben P1-P5 -> Umsetzung (Werkzeuge re15_port/tools/r41_sichel/v8)
+1. **P1 Brust von vorn** (Commits 7adafeb6e, 7f596ef19, 1a8ca8ac5; frueherer Bauer) - adern_r5.py: die 34 Brust-Flaechen von der
+   V7-Zeile 488 auf die Original-Zeile 481 (Spiel-Asset 494) mit ihrer Original-UV; fast weisse Original-Eintraege (L* > 75, Chroma
+   < 12) unter von vorn sichtbaren Flaechen von Mesh 8 durch Abbildungen auf Original-Haut ohne Weiss ersetzt. Am Asset gemessen
+   (Riegel S14): Kanten-Sprung Brust/Flanke dL / da* P1 2,68 / 2,57 (V7 2,18 / 2,95), F344 2,90 / 2,58 (2,30 / 3,02), F354 2,76 / 2,36
+   (2,20 / 3,15), F364 2,56 / 2,54 (2,11 / 2,93); fast weisse Texel 0; echte Framedumps F344-F372 fast weisse Bildpunkte 22 (V7 22;
+   V8 r4 4089). V8 r4 dL 13,3 ROT. Der Riegel laesst dL bis V7 + 1,5 zu; die strenge Lesart "hoechstens wie V7" ist fuer dL NICHT
+   erfuellt (0,45-0,60 ueber V7), fuer da* erfuellt - Offen 4. Tafel 13.
+2. **P2 Naht Schwanz/Rumpf** (Commits 7adafeb6e, 82828ad9b, 6d0d6da88, 4f2dd7bfa) - S2c wird seit Runde 5 mit Culling in 7 Halbpixel-
+   Lagen gemessen (wie Zahlen-Pruefer r4). Am Asset: **2 px bei x 367, alle 7 Lagen [2,2,2,2,2,2,2]** (Soll <= 3; V8 r4 und
+   91885ed8c 8 px bei x 376, ROT). S1 2,2 / 6,0; S2a 2,2 / 5; S2b 1,7 bei x 333; S3 Kuppe 3,0, H 8,0 bei x 429, Sattel Kopf 0,9, K 3,0,
+   Huegel rot 45,8 % - gruen.
+3. **P3 gelbe Punkte** - erledigt: Beleg-Kommentare W_SCHLITZ / W_BEDECKT / SCHRITTE (ruecken_r4.py, 7adafeb6e); Szenenkontur von vorn
+   (S9): P1 2 px, F344 / F354 / F364 0 px ueber V7, keine neue Ecke, Schlitz 0; echte Framedumps S9s 11 (Soll <= 20). NICHT bearbeitet:
+   Farbkante olivgrau/rosa an der Wurzel und Giebelform ueber dem Kopf (keine eigene Messung; Offen 5).
+4. **P4 Schwanz-Unterseite** (Commits a33b8b99a, 91885ed8c, 500998f51; frueherer Bauer; Messblatt Abschnitt 10) - unterseite_r5.py
+   (Stufe u): Flaechen mit |theta| < 130 um die Gliedachse (72 Flaechen der Meshes 16-22) auf die Original-Zeile 482 (Asset 495), UV auf
+   dem Haut/Fleisch-Verlauf des Original-Unterarms; Oberseite, Deckel, Wurzel bleiben grau (Zeile 487). Am Asset (Riegel S15): fremde
+   Texel 0; Unterseite 72 Flaechen, ohne Fleisch 0, Fleisch-Texel 2285; Oberseite 38 Flaechen, Fehler 0; Fleisch-Texel-Anteil
+   |theta| <= 100 / >= 135: PV 53,1 / 0,0 %, P2 52,5 / 0,0 %; L*-Sprung PV 4,8 (Vorlage 6,8), P2 4,3 (8,3). V8 r4 ROT (72 Flaechen ohne
+   Fleisch). Tafel 14, gdigrab t 10,25.
+5. **P5 Luecke Ruecken/Kopf** (Commits b276c0fe6, 82828ad9b, 6d0d6da88, 4f2dd7bfa, 06a1e1be1, 3022778f2; Messblatt Abschnitte 11, 11a,
+   11b):
+   - Mass luecke_r5.py (Kerbe = Huelle aus Kopf und nahem Ruecken minus Umriss, Spalt = Schliessung; Tiefe = Abstand zum freien
+     Hintergrund), Riegel S16 ueber 177 Ansichten (PV, P1, P2, Szene F235-F378, rundum) in je 7 Halbpixel-Lagen.
+   - **Soll aus der Vorlage, selbst nachgemessen** (vorlage_luecke_r5.py, runde5/vorlage_luecke.txt/.png): dE > 9, n-1..n+1, Stuecke
+     "am Kopf": 21 px / 7 tiefer als 1,5 px / groesste Tiefe 3,2 px (n1439 PV (448,206) 21 / 7 / 2,8; n1433 14 / 6 / 3,2; n1435 10 / 3 /
+     2,2); dE > 6: 15 / 6 / 3,2; dE > 12: 11 / 3 / 2,8. Gleich der Messung des Orchestrators. Soll je Ansicht und Lage: Summe <= 21 px
+     UND tief <= 7 UND groesste Tiefe <= 3,2 px. Fuer die schnelle Drehung F310-F314 gibt es KEINE Vorlagen-Messung dieser Haltung
+     (n1433-n1441 zeigen die stehende Haltung von der Seite) - es gilt dasselbe Soll.
+   - **Ausgang**: Suchlauf i gegen Suchlauf h am Vollbau mit riegel_v8.py (sfv8/r5p6/riegel_i.txt): h 14 von 16 gruen (rot S7, S16),
+     i 15 von 16 (rot S16: F311, F332, Gesicht P2+3840 161 statt 165 Bildpunkte). Ausgang i (ruecken_v8.json). Keine weitere globale
+     Suche.
+   - **Gesicht P2+3840**: Ecke 65 x 60 -> 50; keine der 177 Ansichten mehr unter V7 - 2 % (S16 b leer).
+   - **F332, drei gezielte Versuche** (Kachel runde5/versuch_F332.png): (1) Nacken-Volumen hinter dem Kopfgelenk - auch der groesste
+     Koerper laesst den Keil, verworfen; (2) Rueckprojektion der Keil-Bildpunkte: der Keil liegt rund 350 E. vom Kopfgelenk zwischen der
+     Unterkante der Rueckenflaechen und der Kopfunterseite ueber der (W)-rechten Schulter; (3) kleinste Lage, in 7 Halbpixel-Lagen und
+     gegen das Gesicht geprueft: **Einsatz Halbmesser 65 um (350, -820, -370)** (nacken_r5.py, Stufe n, nacken_v8.json; 14 Ecken, 12
+     Dreiecke, 6 Vierecke an Mesh 8, Haut = Texel der Wirtsflaeche 8 d65, Zeile 494, winkeltreu). **F332 vorher 108 px / 72 / 6,3, jetzt
+     8 / 1 / 2,0.** S16 (c): Einsatz in keiner der 177 Ansichten ueber Gesichts-Bildpunkten von V7.
+   - **F311, drei gezielte Versuche** (Kachel runde5/versuch_F311.png): (1) einzelne Kragen-Ecken 65 / 67 / 68 / 16 um +-40 / +-80 E.:
+     bestes ohne neuen Fehler 49 / 25 / 5,4; (2) +-120 / +-160 E.: 38 / 14 / 3,6; (3) kleiner Koerper Halbmesser 130 um
+     (350, -1140, -410): 28 / 8 / 2,8, oeffnet aber F332 wieder und steht neben dem Gesicht - verworfen. Bester Stand behalten:
+     **F311 63 / 37 / 6,3** (V8 r4 120 / 90 / 12,5). Offen 1.
+   - **Stand am Asset**: Luecke Summe 484 px (tief 51) in 73 von 177 Ansichten (V8 r4 und 91885ed8c 4570 / 2880 in 78; V7 3494 / 1719
+     in 63); PV 8 / 0 / 1,0 (91885ed8c 33 / 17 / 18,4); P2 6 / 1 / 2,2 (43 / 17 / 3,6); P1 0; F278 8 / 1 / 2,0 (V8 r4 Lage 0: 187 / 138 /
+     9,2); F310 8 / 1 / 2,0 (179 / 126 / 9,2); rundum hoechstens PV+1280 19 / 0 / 1,0 und P2+2048 11 / 3 / 2,2.
+   - Kopf: Mesh 9, Zeile 486 und 6501 Texel bytegleich V7 (S5 gruen).
+
+### Riegel Soll/Ist (riegel_v8.py; Gegenproben SF_belege/v8/runde5/riegel_V8r5p4_gegenprobe.txt, _V8r4_, _V7_; Exit je 1)
+| Riegel | Soll | V8 Runde 5d (c4976c62) | 91885ed8c (5fd35ff1) | V8 r4 (10d02173) | V7 |
+|---|---|---|---|---|---|
+| S1 Kontur T | <= 4 / <= 8 | **2,2 / 6,0 gruen** | gruen | gruen | rot |
+| S2 J | (a) <= 4/6 (b) <= 2 (c) <= 3 in 7 Lagen | **2,2/5; 1,7; (c) 2 px gruen** | **rot** ((c) 8 px) | **rot** ((c) 8 px) | rot |
+| S3 + (f) | wie Runde 4 | **3,0; 8,0 bei x 429; 0,9; 3,0; 45,8 % gruen** | gruen | gruen | rot |
+| S4 | wie Runde 4 | **59,2; 40,4/38,2/37,9; 31,3/30,9; 18,8..11,0; 5,6 gruen** | gruen | gruen | rot |
+| S5 Gesicht | bytegleich V7 | **gruen** (6501 Texel) | gruen | gruen | gruen |
+| S6 Boden + Szene | 0 / y <= 0 / <= 25,5 | **0 von 912; y -122; 25,2 gruen** | gruen | gruen | rot |
+| S7 | Herkunft; 35-59; <= Original | **ok (0 fremde Texel); 48,6 %; 48,2 % / Unterarm 1,0 %; 6,03 / 4,90 gruen** | gruen | gruen | rot |
+| S8 Technik | <= 16, <= 4096 | **16, 4096 gruen** | gruen | gruen | gruen |
+| S9 + Schlitz | <= 2 px, keine Ecke, 0 | **P1 2, 0, 0, 0; Schlitz 0 gruen** | gruen | gruen | (Referenz) |
+| S10 Takt F314-F345 | 0 | **0 gruen** | gruen | gruen | rot |
+| S11 Kappe/Kacheln | 0 / <= Original | **0 / 0; 95 <= 234, 105 <= 296 gruen** | gruen | gruen | gruen |
+| S12 Band | <= V7 + 20 | **0 gruen** | gruen | gruen | gruen |
+| S13 Naht | 0 | **0 gruen** | gruen | gruen | rot |
+| S14 Brust vorn (P1) | dL <= V7 + 1,5, da* <= V7, weiss 0 | **dL 2,56-2,90, da* 2,36-2,58, weiss 0 gruen** | gruen | **rot** (dL 13,3) | gruen |
+| S15 Unterseite (P4) | Herkunft 0; Fleisch unten, grau oben | **0; 72 / 0; 53,1 / 0,0 %; 4,8 / 4,3 gruen** | gruen | **rot** (72 ohne Fleisch) | rot |
+| S16 Luecke (P5) | je Ansicht und Lage <= 21 px UND <= 7 tief UND <= 3,2 px; Gesicht; Einsatz | **ROT: 1 von 177 (F311 63 / 37 / 6,3); (b) leer; (c) leer** | **rot** (69 von 177) | **rot** (69 von 177) | rot (52 von 177) |
+| S14s echte Framedumps | <= V7 + 29 | **22 (V7 22) gruen** | gruen | **rot** (4089) | gruen |
+| S10s echte Framedumps | 0 | **0 gruen** | gruen | gruen | - |
+| S9s echte Framedumps | <= 20 | **11 gruen** | gruen (9) | gruen | - |
+| Summe | | **18 von 19** | 17 von 19 | 14 von 19 | 7 von 17 |
+
+### Tests
+- configure + build: "=== LOCAL-BUILD-OK (configure)", "=== LOCAL-BUILD-OK (build)" (keine C-Aenderung am Spiel; nur
+  tests/unit/test_birkin_formen.c).
+- ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  "100% tests passed, 0 tests failed out of 8" (421 s, SF_belege/v8/runde5/ctest_gruppe.txt).
+- ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)":
+  "100% tests passed, 0 tests failed out of 1013" (351 s, SF_belege/v8/runde5/ctest_unit.txt).
+- test_birkin_formen (Commit 06a1e1be1): Mesh 8 = EM30-Elemente + Einsatz (12 Dreiecke, 6 Vierecke, 14 Ecken), Zeile 494 48 + 18
+  Flaechen, Einsatz auf Zeile/Seite und im UV-Rechteck der Wirtsflaeche (u 37-50, v 0-22). Gegenprobe (Asset getauscht, danach
+  zurueck, sha256 geprueft; runde5/gegenprobe_test_*.txt): V7 -> "0% tests passed, 2 tests failed out of 2"; V8 r4 und 91885ed8c ->
+  "50% tests passed, 1 tests failed out of 2" (unit_birkin_formen).
+
+### Spiel
+- Szene sfv8/szene_v8r5d (lauf_v4.sh, BAUM r41_sichel_v8, EMD "-"); Video **sfv8/spiderman_szene_v8_r5d.mp4** (F225-F450, 226 Bilder,
+  30 fps, 960 x 720, sha256 6682730a...); Tafeln 06/07/08/12.
+- Marker-Laeufe (szene_marker.py; sfv8/r5p6/mk/lauf_MK_A, _MK_B, _GR): Wurzel F328-F346 0 px, Schlitz-Ueberschuss gegen V7 11
+  (runde5/szene_marker.txt).
+- **gdigrab des echten Fensters** (runde5/gdi.sh: eigene exe-Kopie, Fenster per eigener PID gefunden und per SetWindowPos nach oben
+  gelegt, Client 960 x 720 bei (480,180), state.log bytegleich V7): Video sfv8/r5p6/gdi/gdi_szene_v8r5d.mp4 (50 s, 1459 Bilder), Tafel
+  11_gdigrab_echtes_fenster.jpg - seitlich t 10,25/11,75, hinten t 12,50/12,75, vorn t 13,25/14,00. Kein AUTOSHOT/SOFTWARE_RENDER.
+- Labor 50E0: nicht neu gelaufen (der Kampf laeuft in integration_r41_birkin_pistole, gruen).
+
+### Tafeln (SF_belege/v8, roh, selbst angesehen)
+Alle 15 angesehen. 01-12 wie Runde 4 (neu gerechnet am Asset; 09/10/12 mit V8 r4 als Vergleich), 13_brust_vorn.png (Foto 1 | V7 | V8 r4 | neu; P1, Takt
+F354 offline, echter Framedump F354), 14_schwanz_unterseite.png (Vorlagen mit gemessener Grenze | V8 r4 | neu), 15_ruecken_kopf.png
+(Vorlagen mit eingezeichnetem Mass | V8 r4 | neu in PV / P2 / P1; Szenen-Takte F278, F309, F310, F311, F332; unten der Einsatz gruen).
+Was ich sehe: Koerperbau, Bogen und Huegel wie Runde 4; Schwanz unten dunkelrot-fleischig, oben grau (Tafel 02, 14, gdigrab t 10,25);
+die Brust ist keine graue Platte mehr, keine weissen Keile (Tafel 13); zwischen Ruecken und Kopf ist in PV / P2 / P1 und in F278 / F309 /
+F310 kein Hintergrund-Keil mehr (Tafel 15). Was dafuer NEU zu sehen ist, steht unter Offen 2 und 3.
+
+### Offen
+1. **F311 ueber dem Soll: 63 px / 37 tiefer als 1,5 px / groesste Tiefe 6,3 px** (Soll 21 / 7 / 3,2; Lage 0: 55 / 31 / 5,8; V8 r4
+   120 / 90 / 12,5). Kacheln: SF_belege/v8/runde5/versuch_F311.png, Tafel 15 Zeile "Takt F311". Es ist ein Keil von 47 Bildpunkten bei
+   (386,192) links vom Gesichtsprofil zwischen Kinn/Wange und der (W)-rechten Schulter und ein kleines Stueck ueber dem Scheitel. Drei
+   gezielte Versuche (oben) schliessen ihn nicht ohne neuen Fehler. Riegel S16 bleibt ROT; keine Vorlage dieser Haltung.
+2. **Kragen bleibt sichtbar.** Der Suchlauf i schliesst die Kerbe durch gehobene Ruecken-/Schulterflaechen. Selbst gesehen: in PV / P2
+   liegt rechts oben am Kopf eine helle, spitz zulaufende Dreiecksflaeche (Tafel 02, 15); von vorn (P1, Framedump F354, gdigrab t
+   13,25) steht der Kopf in einer kantigen Haube aus grossen, flachen Flaechen mit gestreckter Textur (Tafel 13); von hinten (F322-F340,
+   Tafel 08, 12, versuch_F332.png) liegen oben rechts lange, faecherartig gestreift texturierte Flaechen - die gab es schon in V8 r4
+   (Tafel 12 links), sie sind nicht neu, aber auch nicht entfernt; in der (W)-rechten Flanke in PV steht eine helle Spitze zwischen
+   Rippen und Schulter, staerker als in V8 r4 (Tafel 05, 10). Spitze / Segel / Verzerrung
+   (Beobachtungen des Orchestrators) sind damit NICHT gezielt entfernt; entfernt sind der Keil F332 und die Flaeche ueber dem Gesicht
+   (P2+3840). Die Riegel S3 (Huegel/Kamm) und S9 (neue Ecken von vorn) sind gruen, fassen diese Flaechen also nicht. Am Nutzerbild zu
+   pruefen; bei Ablehnung waere der Weg ein neu modellierter Nackenuebergang statt der Eckensuche.
+3. **Der Einsatz sitzt nicht im Nacken**, sondern rund 350 E. vom Kopfgelenk unter dem Kiefer ueber der (W)-rechten Schulter (dort liegt
+   der Keil F332); sichtbar als kleiner Knoten: PV 59, P2 59, P1 67 Bildpunkte (Tafel 15 unten, gruen). Auftrag (iii) "im Nacken" ist
+   damit dem Wortlaut nach nicht erfuellt; "nicht vor dem Gesicht" ist erfuellt (S16 c: 0 in 177 Ansichten).
+4. S14 strenge Lesart ("Kanten-Sprung hoechstens wie V7"): dL 2,56-2,90 gegen V7 2,11-2,30, also 0,45-0,60 ueber V7; der Riegel laesst
+   + 1,5 zu (gruen). da* liegt unter V7.
+5. P3 Rest: Farbkante olivgrau/rosa mit dunkelrotem Saum an der Wurzel und Giebelform ueber dem Kopf nicht eigens gemessen und nicht
+   bearbeitet; die Giebelform ist durch den Kragen eher staerker geworden (Offen 2).
+6. Knappe Werte: S3 H bei x 429 (Fenster x 428-445), Huegel rot 45,8 % (Runde 4 58,3 %; Soll >= 40); S9 P1 2 px (Soll <= 2); rundum PV+1280 19 px
+   (Soll 21).
+7. Die Luecken-Messung zaehlt 177 feste Ansichten; Zwischenbilder der schnellen Drehung (F310-F314) koennen den Keil von F311 ebenfalls
+   zeigen (F310 8 / 1 / 2,0 und F312 10 / 3 / 2,2 liegen im Soll).

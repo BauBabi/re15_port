@@ -358,3 +358,88 @@ PV 16 px bei (447,201), P2 38 px bei (447,196). Foto 1 (n1485): Maske im Kasten 
 Oberkontur PV (m13b oben_vorlage_maske) x 441-453: Vorlage 197 197 205 211 215, Modell 195 197 203 206 208 - im Umriss gleich; die
 Luecke des Modells ist der scharfe Keil Hintergrund zwischen Buckelende und Kopfkante, den die Vorlage nicht zeigt (Nutzer: "in der Vorlage so
 wie es aussieht nicht so"). Deshalb Soll S16 = 0 (Orchestrator P5 (d)), nicht "wie Vorlage".
+
+### 11a Soll neu (Bauer, 2026-11-10; ersetzt den Satz "Soll S16 = 0")
+
+Das Soll "= 0" war strenger als die Vorlage (Orchestrator 2026-11-10; Memory reai-v2-schranke-strenger-als-befund). Auftrag Runde 5:
+"Der Bauer misst die Vorlage selbst nach (eigener Lauf, Schwellen 6/9/12, Nachbarbilder) und schreibt Messung und Soll ins Messblatt".
+
+**Eigener Lauf: re15_port/tools/r41_sichel/v8/vorlage_luecke_r5.py** (Ausgabe SF_belege/v8/runde5/vorlage_luecke.txt, Bild
+vorlage_luecke.png; Tafel 15 Zeile 1). Kastenmass: Figurmaske = dE (CIELAB) gegen den Konsens-Hintergrund m4_bgT > Schwelle (6 / 9 / 12),
+je Bild gemittelt ueber n-1..n+1 und mit Gauss 1,0 geglaettet, zur Probe das Einzelbild; Kasten = Kopf (Knochen 9) der Referenz V7 in
+derselben Pose + 22 px (PV fuer n1437-n1441: (408,179)-(483,251); P2 fuer n1433-n1437: (410,173)-(483,243)); Kerbe = konvexe Huelle der
+Maske im Kasten ohne die Maske, nur Stuecke in der oberen Kastenhaelfte; Tiefe = Abstand zum freien Hintergrund ausserhalb der Kerbe
+(wie luecke_r5.tiefe). Je Stueck der Abstand zum Kopf der Referenz: "am Kopf" = beruehrt den um 2 px geweiteten Kopf; "nah" = innerhalb
+12 px (luecke_r5.NAH); sonst Huegel.
+
+| Maske | "am Kopf": px / tiefer als 1,5 px / groesste Tiefe | groesstes Stueck | "nah" (<= 12 px, Stuecke auf dem Huegel) |
+|---|---|---|---|
+| dE > 6, n-1..n+1 | 15 / 6 / 3,2 | | 74 / 45 / 5,4 |
+| **dE > 9, n-1..n+1** | **21 / 7 / 3,2** | n1439 PV (448,206) | 55 / 27 / 4,0 (n1434 P2, Sattel bei (422,189)) |
+| dE > 12, n-1..n+1 | 11 / 3 / 2,8 | | 37 / 13 / 3,0 |
+| dE > 6 / 9 / 12, Einzelbild | 15 / 6 / 3,2; 14 / 6 / 3,2; 20 / 6 / 3,2 | | |
+
+Je Bild, dE > 9, Stuecke am Kopf (px / tief / groesste Tiefe @ Ort): n1433 14 / 6 / 3,2 @ (441,195); n1434 12 / 4 / 2,8; n1435 10 / 3 /
+2,2 @ (441,195); n1436 9 / 2 / 2,2; n1437 10 / 2 / 2,0; n1438 9 / 3 / 2,2; n1439 21 / 7 / 2,8 @ (448,206); n1440 9 / 1 / 2,0 @ (446,206)
+und 10 / 0 / 1,4 @ (440,196); n1441 10 / 1 / 2,0. Dieselbe Messung an der Referenz V7 selbst (Modell statt Vorlage): PV 59 / 32 / 5,0 @
+(436,196) und Spalt 7 / 7 / 15,3 @ (430,205); P2 95 / 51 / 6,3 @ (433,190) - das Kastenmass fasst also die Luecke, die der Nutzer meint.
+
+**Vergleich mit der Messung des Orchestrators** (sfv8/r5p5/vorlage_tiefe2.py: n1439 21 px / 7 / 2,8; n1435 10 / 3 / 2,2; n1433 14 / 6 /
+3,2): **gleich**. Soll des Riegels S16 je Ansicht und Halbpixel-Variante: **Summe <= 21 px UND tiefer als 1,5 px <= 7 UND groesste
+Tiefe <= 3,2 px** (luecke_r5.SOLL_SUMME / SOLL_TIEF / SOLL_MAXTIEFE). Zwei Lesarten wurden gemessen und NICHT genommen:
+- "nah" statt "am Kopf" (55 / 27 / 4,0): das sind Stuecke weiter hinten auf dem Huegel (mehr als 10 px links vom Kopf), nicht der
+  Uebergang zum Kopf; im Zweifel gilt die strengere Zahl. Auch unter dieser Lesart waere Takt F311 (63 / 37 / 6,3) rot.
+- Das Riegelmass luecke_aus direkt auf der Vorlagenmaske (Knochen vom naechsten Bildpunkt der Referenz): die Maske der Vorlage fehlt am
+  dunklen Gesicht vor dunklem Hintergrund, die Huelle zaehlt dann den Raum vor dem Gesicht (n1435 dE > 9: 15 352 px; 2 712-15 605 px je
+  Bild). Nicht brauchbar; im Kopf von vorlage_luecke_r5.py belegt.
+Was das Bild zeigt (vorlage_luecke.png, selbst angesehen): die Kerben der Vorlage sind flache Mulden des unscharfen Umrisses (1-3 px
+tief), kein Keil Hintergrund. Foto 1 (n1485): Maske im Kasten nicht brauchbar (Abschnitt oben).
+**Schnelle Drehung Takt F310-F314:** die vermessenen Vorlagenbilder n1433-n1441 zeigen die stehende Haltung von der Seite (PV, Foto 2),
+nicht den nach oben greifenden, sich drehenden Birkin von vorn. Fuer F310-F314 gibt es damit keine Vorlagen-Messung dieser Haltung; es
+gilt das Soll oben (Auftrag Runde 5, Punkt 3). Keine Ausnahme je Bild.
+
+### 11b Runde 5d: Ausgang, gezielte Versuche, Stand (Bauer, 2026-11-10)
+
+**Ausgang (riegel_v8.py am vollen Bau, sfv8/r5p6/riegel_i.txt):** Suchlauf h (ruecken_v8.json Stand 82828ad9b) 14 von 16 gruen, rot S7
+(Unterarm / Flecken ueber dem Original) und S16; Suchlauf i 15 von 16 gruen, S7 gruen, rot S16 (F311 63 px / 37 tief / 6,3; F332 112 /
+75 / 6,7; Gesicht P2 gier+3840 161 statt 165 Bildpunkte von V7). Ausgang = i. Keine weitere globale Suche.
+
+**Gesicht P2+3840 (Riegel S16 b):** Flaeche 8 v24 wurde ueber 4 Gesichts-Bildpunkte gezeichnet. Ecke 65 x 60 -> 50: keine der 177
+Ansichten mehr unter V7 - 2 % (sfv8/r5p6/voll2_b.txt).
+
+**F332 (drei Versuche; Kacheln SF_belege/v8/runde5/versuch_F332.png, Tafel 15):**
+1. Nacken-Volumen im Nacken hinter dem Kopfgelenk (111, -971, -133) (Auftrag (iii) woertlich; Raster scan1.py: Mitten x -160 / -90 /
+   -20, y -1180 / -1250, z -160 / -60, Halbmesser (150,110,170), (200,140,220), (260,160,260)): auch mit dem groessten Koerper in 4 von 16
+   Probe-Ansichten ueber dem Soll; der Keil von F332 bleibt. Verworfen.
+2. Rueckprojektion der Keil-Bildpunkte von F332 in den Raum von Knochen 8 (scan2.py): der Keil liegt zwischen der Unterkante der
+   Rueckenflaechen 8 v24 / 8 v4 und der Kopfunterseite ueber der (W)-rechten Schulter, rund 350 E. vom Kopfgelenk. Geschlossener Koerper
+   Halbmesser 80 um (350, -860, -410): F332 2 px / 0 tief / 1,0 px, keine der 16 Probe-Ansichten veraendert.
+3. Kleinste Lage (scan4.py 108 Lagen, scan5.py 144 Lagen in 7 Halbpixel-Lagen, scan6.py 450 Lagen gegen das Gesicht): Halbmesser 50
+   haelt nur in 4 von 7 Lagen (81 px / 46 tief / 6,1 px); Halbmesser 65 um (350, -860, -370) wird in PV ueber 4 und in P2 ueber 7
+   Gesichts-Bildpunkte gezeichnet. **Gesetzt: Halbmesser 65 um (350, -820, -370)** (nacken_v8.json, Stufe n): F332 vorher 108 / 72 /
+   6,3, jetzt hoechstens **8 px / 1 tief / 2,0 px** ueber die 7 Lagen; in keiner der 177 Ansichten ueber Gesichts-Bildpunkten von V7
+   (Riegel S16 c); sichtbar PV 59, P1 67, P2 59 Bildpunkte (Tafel 15 unten, gruen).
+   Haut: Texel der Wirtsflaeche 8 d65 (Zeile 494, Original-EM30), winkeltreu, UV im Rechteck u 37-50 / v 0-22.
+
+**F311 (drei Versuche; Kachel SF_belege/v8/runde5/versuch_F311.png, Tafel 15):** vorher (Variante 0) 55 px / 31 tief / 5,8 px.
+1. Einzelne Ecken des Kragens (65 / 67 / 68 / 16) je Achse um +-40 / +-80 E. (scan3_a.txt, scan3_b.txt): bestes ohne neuen Fehler
+   Ecke 67 x +80: 49 / 25 / 5,4. Ecke 65 x +80 bringt 44 / 20 / 4,1, oeffnet aber F332 (114 / 87 / 10,8) und F262.
+2. Groessere Schritte +-120 / +-160 E. (scan3_c.txt): bestes Ecke 67 y -160: 38 / 14 / 3,6 - weiter ueber dem Soll. Ecke 67
+   x +160 oeffnet F332 (110 / 81 / 10,0).
+3. Kleiner geschlossener Koerper an der Stelle der Luecke (Rueckprojektion wie bei F332, Rasterlauf in sfv8/r5p6): bestes Halbmesser 130
+   um (350, -1140, -410):
+   28 / 8 / 2,8 - ueber dem Soll, oeffnet F332 wieder und steht in PV / P2 als Knoten neben dem Gesicht. Verworfen.
+Was die Luecke in F311 ist (Tafel 15, Zeile "Takt F311"): ein Keil von 47 Bildpunkten bei (386,192) LINKS vom Gesichtsprofil, zwischen
+Kinn / Wange und der (W)-rechten Schulter, den das Mass zaehlt, weil schmale Streifen von Knochen 8 an ihn grenzen, und ein kleines Stueck
+ueber dem Scheitel. V8 r4 hatte in F311 120 / 90 / 12,5. **Stand: F311 63 px / 37 tief / 6,3 px (groesster Wert der 7 Halbpixel-Lagen;
+Lage 0: 55 / 31 / 5,8) - ueber dem Soll, offen gemeldet; Riegel S16 bleibt ROT.**
+
+**Stand am Asset c4976c62 (riegel_v8.py, SF_belege/v8/riegel_v8.txt):** Luecke Summe 484 px (tiefer als 1,5 px: 51) in 73 von 177
+Ansichten (V8 r4 / 91885ed8c Lage 0: 4233 px, tief 2671); ueber dem Soll 1 Ansicht (F311). PV 8 / 0 / 1,0; P2 6 / 1 / 2,2; P1 0;
+F278 8 / 1 / 2,0 (vorher 187 / 138 / 9,2); F310 8 / 1 / 2,0 (179 / 126 / 9,2); F332 8 / 1 / 2,0; rundum hoechstens PV+1280 19 / 0 / 1,0
+und P2+2048 11 / 3 / 2,2.
+
+**Was vom Kragen bleibt (ehrlich, Tafel 15 und gdigrab):** der Suchlauf i schliesst die Kerbe weiter durch gehobene Ruecken-/
+Schulterflaechen (Kragen). In PV / P2 liegt rechts oben am Kopf eine helle dreieckige Flaeche; in F332 (von hinten) lange, gestreckt
+texturierte Flaechen; der Einsatz ist unter dem Kiefer als kleiner Knoten zu sehen (59-67 Bildpunkte) und sitzt NICHT im Nacken. Entfernt
+sind der Keil in F332 und die Flaeche ueber dem Gesicht (P2+3840). Mesh 9 und seine CLUT-Zeilen: bytegleich V7 (Riegel S5).
