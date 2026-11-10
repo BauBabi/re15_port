@@ -127,7 +127,7 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
             "ROOM${_r90} RUECKKEHR: .*Zone-7-Tot-Bits 236\\.\\.238 gesetzt: 3 von 3"   # Runde 41 Spur G2 (Punkt 4): 3 statt 8
             "Aufschlag im Wasser bei "
             "ROOM${_r90} Kanister im Becken \\(-?[0-9]+,-1200,-?[0-9]+\\) = Aufschlagstelle"
-            "Wurfrichtung (3072|1024) \\((Nord|Sued)becken, Alligator beim Ausloesen"
+            "Wurfrichtung (3342|888) \\((Nord|Sued)becken, Alligator beim Ausloesen"   # Nachtrag K1 (Kanalmitte): vorher 3072/1024
             "MESSHAKEN RE15_K2080_RUECK_KANISTER: Rueckkehr hinter den Kanister")
         file(STRINGS "${WORKDIR}/debug.log" _z REGEX "\\[k2080\\] F[0-9]+ ${_muster}")
         if(NOT _z)
@@ -204,13 +204,13 @@ foreach(_lauf "leon|-6000,-17500,3072|kampf" "elza|-6000,-17500,3072|kampf" "leo
     if(_vabw LESS -12 OR _vabw GREATER 12 OR _fr LESS 4023)
         r41gk_fehler("Lauf ${_lname}_${_wer}: Werfer nicht wie Ada der Kamera zugewandt (Versatz ${_vers}, frontal ${_fr}; RE2 -111 / 4034)")
     endif()
-    file(STRINGS "${WORKDIR}/debug.log" _wb REGEX "\\[k2080\\] F[0-9]+ Wurf: Start .* v=\\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\) .* Wurfrichtung (1024|3072)")
+    file(STRINGS "${WORKDIR}/debug.log" _wb REGEX "\\[k2080\\] F[0-9]+ Wurf: Start .* v=\\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\) .* Wurfrichtung (888|3342)")   # Nachtrag K1
     if(NOT _wb)
         r41gk_fehler("Lauf ${_lname}_${_wer}: keine Wurf-Zeile mit Wurfrichtung (M2)")
     endif()
     list(GET _wb 0 _wbl)
     string(REGEX MATCH "v=\\(-?[0-9]+,-?[0-9]+,(-?[0-9]+)\\) .* Wurfrichtung ([0-9]+)" _m "${_wbl}")
-    if((CMAKE_MATCH_2 EQUAL 1024 AND NOT CMAKE_MATCH_1 LESS 0) OR (CMAKE_MATCH_2 EQUAL 3072 AND NOT CMAKE_MATCH_1 GREATER 0))
+    if((CMAKE_MATCH_2 EQUAL 888 AND NOT CMAKE_MATCH_1 LESS 0) OR (CMAKE_MATCH_2 EQUAL 3342 AND NOT CMAKE_MATCH_1 GREATER 0))   # Sued -z, Nord +z
         r41gk_fehler("Lauf ${_lname}_${_wer}: Bahn nicht in der Wurfrichtung (v_z ${CMAKE_MATCH_1}, Wurfrichtung ${CMAKE_MATCH_2}): '${_wbl}'")
     endif()
     # ---- Nachbesserung 3, M3 (Nachtrag 28): Raum-ESP ROOM40A0 registriert, Explosions-Quads gezeichnet ----
