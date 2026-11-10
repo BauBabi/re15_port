@@ -64,6 +64,13 @@ S16 Luecke      (a) Luecken-Bildpunkte zwischen Ruecken (Knochen 8 oberhalb des 
                 <= 21 px UND Bildpunkte tiefer als 1,5 px <= 7 UND groesste Tiefe <= 3,2 px (= groesste Kerbe der Vorlage n1433-n1441 am Uebergang
                 Huegel/Kopf, luecke_r5.SOLL_*; das fruehere Soll 0 war strenger als die Vorlage);
                 (b) Gesichts-Bildpunkte (Knochen 9, lok x >= 150) je Ansicht (Variante 0, wo V7 >= 150 zeigt) >= V7 - 2 % (Mesh 8 verdeckt das Gesicht nicht)
+Runde 6a P6 (Nutzer 2026-11-10: "Die Vorlage hat eine breite Hand mit breiten Unterarmt. Dadurch wirkt es natürlich. Bei uns ist die Hand ganz
+                klein und zierlich und wirkt dadurch verkümmert."; Mass hand_mass.py, Regel riegel_hand.py; Gegenproben V7 und V8 r5d rot in a-c):
+S17 Hand links  (a) Breitenprofil des linken Arms in P1 an den acht Stationen des Messblatts in der Streuung der fuenf Vorlagebilder (+- 1 px);
+                P2 / PV (Arm in der Vorlage verdeckt): Handgelenk durch Unterarm-Mitte >= kleinstes Verhaeltnis der Vorlage; (b) Handgelenkbreite
+                und Unterarmspitze in allen Keyframes im Handkoerper; (c) Handbreite / Handlaenge und Handlaenge; (d) Laenge und Wurzeldicke je
+                Kralle, Daumen; (e) Krallen kreuzen nicht in P1, P2, PV; (f) Daumenkralle Zeile 491, Fingerkrallen 492, 0 fremde Texel;
+                (g) Keyframes aller Clips mit Kralle oder Hand im Koerper <= V7 und V8 r5d
                 (c) Runde 5d: Bildpunkte, in denen eine Flaeche von Mesh 8 ohne Gegenstueck in V7 (Einsatz nacken_r5.py) dort gezeichnet wird, wo
                 V7 das Gesicht zeigt (Knochen 9, lok x >= 150), in allen 177 Ansichten (Variante 0) = 0 (Auftrag Runde 5: "der Einsatz darf in
                 KEINER Ansicht ueber das Gesicht gezeichnet werden")
@@ -737,6 +744,8 @@ def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None):
     out['S14'] = s14(blob, ref_blob)
     out['S15'] = s15(blob, ref_blob)
     out['S16'] = s16(blob, ref_blob)
+    import riegel_hand as RH
+    out['S17'] = RH.s17(blob, ref_blob)
     if fd:
         out['S14s'] = s14s(*fd)
     if marker:
@@ -834,6 +843,9 @@ def zeilen(r):
                     s_['c_einsatz_flaechen'], s_['c_einsatz_ansichten'], s_['c_einsatz_px'], s_['c_einsatz_ueber_gesicht'][:20],
                     'GRUEN' if s_['ok'] else 'ROT'))
         z.append('   S16 (a) alle Ansichten mit Luecke (Ansicht, px, tief, groesste Tiefe; je groesster Wert der 7 Varianten): %s' % s_['ansichten_mit'])
+    if 'S17' in r:
+        import riegel_hand as RH
+        z += RH.zeilen(r['S17'])
     if 'S14s' in r:
         z.append('S14s fast weisse Bildpunkte in echten Framedumps F344-F372, Fenster x 560-690 / y 260-330 (960x720): neu %d, V7 %d (<= V7 + %d) -> %s'
                  % (r['S14s']['neu'], r['S14s']['v7'], S14S_RAND, 'GRUEN' if r['S14s']['ok'] else 'ROT'))
@@ -842,7 +854,7 @@ def zeilen(r):
     if 'S9s' in r:
         z.append('S9s Schlitz in echten Framedumps F344-F378 (gruene Silhouette, Ueberschuss gegen V7): %d (Soll <= %d) -> %s'
                  % (r['S9s']['ueberschuss'], SCHLITZ_SZENE_SOLL, 'GRUEN' if r['S9s']['ok'] else 'ROT'))
-    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S10s', 'S9s', 'S14s')
+    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S10s', 'S9s', 'S14s')
            if k in r and not r[k]['ok']]
     z.append('SUMME: %d von %d gruen%s' % (len([k for k in r if k.startswith('S')]) - len(rot), len([k for k in r if k.startswith('S')]),
                                            ('; ROT: ' + ', '.join(rot)) if rot else ''))
