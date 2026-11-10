@@ -323,7 +323,7 @@ if(TEIL MATCHES "^k3")
     # liegt im Ecken-Kasten der ENDLAGE (debug.log "Schluessel-Bild", gekipptes Quadrat der Halbseite 135 = 90 x 6144/4096, MD1 ROOM7040 @0x354C+0x38;
     # ein Bildpunkt Rasterrand). Die alte Schranke 10 x 9 gilt dem Stand b29263046 (groesstes Bild) und ist durch den Nutzer-Wortlaut "na er soll
     # naeher bei der Leiche liegen" abgeloest; gemessen ist die Textur des Quadrats ein Umriss (15,0 % der 2092 Texel im UV-Viereck @0x354C+0x7C decken),
-    # die naehere Lage zeigt deshalb wenige Bildpunkte (tod 5 in 4 x 5, tod_r1 4 in 3 x 2, k3 Kasten 2 x 4) - die Groesse selbst ist Befund K-2 (Nutzerentscheid).
+    # die naehere Lage zeigt deshalb wenige Bildpunkte (Kasten am echten Weg: tod 8 x 5, tod_r1 3 x 2, k3 7 x 5) - die Groesse selbst ist Befund K-2 (Nutzerentscheid).
     file(STRINGS "${_dir}/mit/debug.log" _kb REGEX "\\[gatorszene\\] Schluessel-Bild: Kamera [0-9]+, Ecken-Kasten ")
     if(NOT _kb)
         r41p_fehler("keine Zeile 'Schluessel-Bild' (Ecken-Kasten der Endlage) in ${_dir}/mit/debug.log")
