@@ -22,7 +22,10 @@ Mass (je Ansicht, Maler-Reihenfolge und Rueckseiten-Culling wie im Port, f_rast.
       zusammenhaengendes Stueck, das an H UND an R grenzt (8er-Nachbarschaft).
   (b) Spalt: Bildpunkte, die das Schliessen von S (Quadrat SPALT px) fuellt und die nicht in S liegen, je Stueck, das an R grenzt und
       hoechstens NAH px von H entfernt ist (Risse durch den Buckel neben dem Kopf).
-  Luecke = (a) + (b) in Bildpunkten. Riegel S16: in allen Ansichten und allen 7 Halbpixel-Varianten (riegel_v8.S2C_VARIANTEN) = 0.
+  Luecke = (a) + (b) in Bildpunkten; Tiefe eines Luecken-Bildpunkts = Abstand zum freien Hintergrund ausserhalb der Luecke (tiefe()).
+  Riegel S16 (Soll an der Vorlage verankert, Messblatt V8 Abschnitt 11 "Soll neu"; "= 0" war strenger als die Vorlage, die am Uebergang
+  Huegel/Kopf selbst eine flache Kerbe hat): je Ansicht und je Halbpixel-Variante (riegel_v8.S2C_VARIANTEN)
+  Luecke <= SOLL_SUMME px UND Bildpunkte mit Tiefe >= TIEF_AB px <= SOLL_TIEF UND groesste Tiefe <= SOLL_MAXTIEFE px.
 Ansichten: PV, P1 (Foto 1), P2 (Foto 2), Szene alle 144 Takte F235-F378 (die Birkin-Posen der Szene F200-F1100, r3_gemein.szene_posen),
   rundum: Pose PV und P2 mit Gier + k x 256 (k 1..15, 22,5-Grad-Schritte, gleiche Kamera).
 """
@@ -43,6 +46,12 @@ NAH = 12               # px: Umkreis um den Kopf (184 E. am Koerper in PV bei 65
 SPALT = 5              # px: Schliessen mit 5 x 5 fuellt Risse bis 4 px Breite
 VARIANTEN = ((0.375, 0, 0), (0.375, 0.5, 0), (0.375, -0.5, 0), (0.375, 0, 0.5), (0.375, 0, -0.5), (0.0, 0, 0), (0.75, 0, 0))  # = S2C_VARIANTEN
 K3 = np.ones((3, 3), np.uint8)
+# Soll S16 = groesste Kerbe der Vorlage am Uebergang Huegel/Kopf (vorlage_luecke_r5.py, Figurmaske dE > 9 gegen m4_bgT, Bilder n1433-n1441;
+# Messblatt V8 Abschnitt 11 "Soll neu"): PV n1439 21 px / 7 tiefer als 1,5 px / groesste Tiefe 2,8; P2 n1435 10 / 3 / 2,2; n1433 14 / 6 / 3,2.
+SOLL_SUMME = 21        # px: groesstes Stueck der Vorlage (n1439 bei (448,206))
+TIEF_AB = 1.5          # px: ab hier sieht man in die Kerbe hinein (1 px = Kantenrauschen der Huelle)
+SOLL_TIEF = 7          # Bildpunkte mit Tiefe >= 1,5 px (n1439)
+SOLL_MAXTIEFE = 3.2    # px: groesste Tiefe (n1433)
 
 
 def ansichten(art='alle'):
@@ -153,6 +162,20 @@ def statisch(mo, pose):
     return _vorbereiten(FR.dreiecke(mo, pose, False, knochen=[k for k in range(mo.skel.bone_count) if k not in DYN]))
 
 
+def tiefe(b, G):
+    """-> (Luecken-Bildpunkte mit Tiefe >= TIEF_AB, groesste Tiefe in px). Tiefe = Abstand eines Luecken-Bildpunkts zum freien Hintergrund
+    ausserhalb der Luecke (Bildpunkte ohne Silhouette und ohne Luecke)."""
+    if not G.any():
+        return 0, 0.0
+    frei = (b < 0) & ~G
+    d = ndimage.distance_transform_edt(~frei)[G]
+    return int((d >= TIEF_AB).sum()), round(float(d.max()), 1)
+
+
+def im_soll(summe, n_tief, max_tiefe):
+    return summe <= SOLL_SUMME and n_tief <= SOLL_TIEF and max_tiefe <= SOLL_MAXTIEFE
+
+
 def tief(b, G, ab=1.5):
     """Luecken-Bildpunkte mit Abstand >= ab px zum freien Hintergrund (ohne Silhouette und ohne Luecke): eine 1 px schmale Sichel an der
     Huellkante zaehlt nicht, eine Kerbe/ein Spalt, in den man hineinsieht, schon (Suche ruecken_r5: Gewicht W_TIEF)."""
@@ -183,13 +206,16 @@ def schnell(mo, pose, fest=None, gesicht=False):
 def messen(mo, liste, varianten=VARIANTEN):
     out = []
     for nm, pose in liste:
-        w, st = [], []
+        w, st, tf = [], [], []
         for var in varianten:
-            r, _G = luecke(zeichne(mo, pose, var))
+            A = zeichne(mo, pose, var)
+            r, G = luecke(A)
             w.append(r['kerbe'] + r['spalt'])
+            tf.append(tiefe(A['bone'][:480], G))
             if not st and r['stuecke']:
                 st = r['stuecke']
-        out.append(dict(ansicht=nm, max=max(w), varianten=w, stuecke=st))
+        out.append(dict(ansicht=nm, max=max(w), varianten=w, stuecke=st, tief=[t[0] for t in tf], max_tiefe=[t[1] for t in tf],
+                        ok=all(im_soll(w[i], tf[i][0], tf[i][1]) for i in range(len(w)))))
     return out
 
 
@@ -210,8 +236,11 @@ def messen_parallel(pfad, art='alle', nv=7, jobs=8):
 
 
 def zusammen(res):
-    return dict(summe=int(sum(r['max'] for r in res)), ansichten_mit=[(r['ansicht'], r['max']) for r in res if r['max']],
-                ok=all(r['max'] == 0 for r in res))
+    """Summe (Info) und die Ansichten ueber dem Soll: (Ansicht, groesste Luecke, meiste tiefe Bildpunkte, groesste Tiefe) ueber die Varianten."""
+    ueber = [(r['ansicht'], r['max'], max(r['tief']), max(r['max_tiefe'])) for r in res if not r['ok']]
+    return dict(summe=int(sum(r['max'] for r in res)), summe_tief=int(sum(max(r['tief']) for r in res)),
+                ansichten_mit=[(r['ansicht'], r['max'], max(r['tief']), max(r['max_tiefe'])) for r in res if r['max']],
+                ueber_soll=ueber, ok=not ueber)
 
 
 def main():
@@ -227,9 +256,11 @@ def main():
         res = messen_parallel(p, a.ansichten, a.varianten, a.jobs)
         z = zusammen(res)
         alles[p] = dict(sha256=V.sha(open(p, 'rb').read()), **z, je_ansicht=res)
-        print('%s sha %s: Luecke Summe %d in %d Ansichten -> %s' % (os.path.basename(p), alles[p]['sha256'][:8], z['summe'],
-              len(z['ansichten_mit']), 'GRUEN' if z['ok'] else 'ROT'))
-        print('   ', z['ansichten_mit'])
+        print('%s sha %s: Luecke Summe %d px (tiefer als %.1f px: %d) in %d Ansichten; ueber dem Soll (<= %d px / <= %d tief / <= %.1f px): %d -> %s'
+              % (os.path.basename(p), alles[p]['sha256'][:8], z['summe'], TIEF_AB, z['summe_tief'], len(z['ansichten_mit']), SOLL_SUMME, SOLL_TIEF,
+                 SOLL_MAXTIEFE, len(z['ueber_soll']), 'GRUEN' if z['ok'] else 'ROT'))
+        print('    ueber dem Soll (Ansicht, px, tief, groesste Tiefe):', z['ueber_soll'])
+        print('    alle mit Luecke:', z['ansichten_mit'])
     if a.aus:
         json.dump(alles, open(a.aus, 'w'), indent=1)
 

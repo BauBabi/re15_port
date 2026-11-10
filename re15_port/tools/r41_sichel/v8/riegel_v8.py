@@ -60,7 +60,9 @@ Runde 5 P5 (Nutzer 2026-11-09: "es gibt immer noch eine Lücke zwischen Rücken 
                 es aussieht nicht so."; Mass luecke_r5.py; Gegenproben V8 r4 und 91885ed8c muessen rot sein):
 S16 Luecke      (a) Luecken-Bildpunkte zwischen Ruecken (Knochen 8 oberhalb des Kopfgelenks) und Kopf (Knochen 9): Kerbe (konvexe Huelle Kopf +
                 Knochen 8 im Umkreis 12 px ohne Silhouette, Stuecke an Kopf UND Ruecken) und Spalt (Schliessen 5 x 5, an Ruecken, <= 12 px vom Kopf)
-                in PV, P1, P2, allen 144 Szenen-Takten F235-F378 und rundum (PV/P2, Gier + k x 256), je 7 Halbpixel-Varianten: 0;
+                in PV, P1, P2, allen 144 Szenen-Takten F235-F378 und rundum (PV/P2, Gier + k x 256), je Ansicht und je Halbpixel-Variante
+                <= 21 px UND Bildpunkte tiefer als 1,5 px <= 7 UND groesste Tiefe <= 3,2 px (= groesste Kerbe der Vorlage n1433-n1441 am Uebergang
+                Huegel/Kopf, luecke_r5.SOLL_*; das fruehere Soll 0 war strenger als die Vorlage);
                 (b) Gesichts-Bildpunkte (Knochen 9, lok x >= 150) je Ansicht (Variante 0, wo V7 >= 150 zeigt) >= V7 - 2 % (Mesh 8 verdeckt das Gesicht nicht)
 Szene (Optionen --mk-a/--mk-b/--gr/--gr-v7, echte Framedumps mit Marker-Assets, szene_marker.py): S10s Wurzel F328-F346 = 0; S9s Schlitz
                 F344-F378 Ueberschuss gegen V7 <= SCHLITZ_SZENE_SOLL
@@ -688,8 +690,8 @@ def s16(blob, ref_blob):
         g, g7 = RR5.gesicht_px(L.zeichne(mo, p, L.VARIANTEN[0])), RR5.gesicht_px(L.zeichne(mo7, p, L.VARIANTEN[0]))
         if g7 >= S16_GESICHT_MIN and g < g7 * (1.0 - S16_GESICHT_RAND):
             ge.append((nm, g, g7))
-    return dict(luecke_summe=z['summe'], ansichten_mit=z['ansichten_mit'], ansichten=len(res), b_gesicht_weniger=ge,
-                ok=z['ok'] and not ge)
+    return dict(luecke_summe=z['summe'], luecke_tief=z['summe_tief'], ansichten_mit=z['ansichten_mit'], ueber_soll=z['ueber_soll'],
+                ansichten=len(res), b_gesicht_weniger=ge, ok=z['ok'] and not ge)
 
 
 def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None):
@@ -808,9 +810,14 @@ def zeilen(r):
                  % '; '.join('%s %s | %s' % (p, v['modell'], v['vorlage']) for p, v in d.items()))
     if 'S16' in r:
         s_ = r['S16']
-        z.append('S16 Luecke Ruecken/Kopf (P5): (a) Summe %d px in %d von %d Ansichten (je max. ueber 7 Halbpixel-Varianten; Soll 0) %s; (b) Ansichten mit '
-                 'weniger Gesicht als V7 - %d %%: %s -> %s' % (s_['luecke_summe'], len(s_['ansichten_mit']), s_['ansichten'],
-                 s_['ansichten_mit'][:40], int(S16_GESICHT_RAND * 100), s_['b_gesicht_weniger'][:20], 'GRUEN' if s_['ok'] else 'ROT'))
+        import luecke_r5 as L_
+        z.append('S16 Luecke Ruecken/Kopf (P5): (a) je Ansicht und Halbpixel-Variante Luecke <= %d px UND tiefer als %.1f px <= %d UND groesste Tiefe '
+                 '<= %.1f px (Vorlage n1433-n1441); ueber dem Soll %d von %d Ansichten %s; Summe %d px, davon tief %d, in %d Ansichten (Info); '
+                 '(b) Ansichten mit weniger Gesicht als V7 - %d %%: %s -> %s'
+                 % (L_.SOLL_SUMME, L_.TIEF_AB, L_.SOLL_TIEF, L_.SOLL_MAXTIEFE, len(s_['ueber_soll']), s_['ansichten'], s_['ueber_soll'][:40],
+                    s_['luecke_summe'], s_['luecke_tief'], len(s_['ansichten_mit']), int(S16_GESICHT_RAND * 100), s_['b_gesicht_weniger'][:20],
+                    'GRUEN' if s_['ok'] else 'ROT'))
+        z.append('   S16 (a) alle Ansichten mit Luecke (Ansicht, px, tief, groesste Tiefe; je groesster Wert der 7 Varianten): %s' % s_['ansichten_mit'])
     if 'S14s' in r:
         z.append('S14s fast weisse Bildpunkte in echten Framedumps F344-F372, Fenster x 560-690 / y 260-330 (960x720): neu %d, V7 %d (<= V7 + %d) -> %s'
                  % (r['S14s']['neu'], r['S14s']['v7'], S14S_RAND, 'GRUEN' if r['S14s']['ok'] else 'ROT'))

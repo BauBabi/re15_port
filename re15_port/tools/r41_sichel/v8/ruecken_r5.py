@@ -34,7 +34,8 @@ import riegel_v8 as RG       # noqa: E402
 SCHRITTE = (80.0, 40.0, 20.0, 10.0, 5.0)  # wie ruecken_r3/r4 (2,6 / 1,3 / 0,65 / 0,33 px in PV), dazu 80 E. (5,2 px): die Kerben in der Szene
                                     # sind bis 12 px breit (Takt F278, gemessen luecke_r5)
 W_LUECKE = 1.0                      # je Luecken-Bildpunkt: 1 px Kerbe so teuer wie 1 px Ueberschreitung der Vorderkontur (ruecken_r3 vorn 1,0)
-W_GESICHT = 0.5                     # je verlorenem Gesichts-Bildpunkt (halb so teuer wie ein Luecken-Bildpunkt: hinter dem Kopf darf die Haut
+W_GESICHT = float(os.environ.get('RUECKEN_W_GESICHT', '0.5'))  # Lauf i (Reparatur S16 (b)): 2
+#                    # je verlorenem Gesichts-Bildpunkt (halb so teuer wie ein Luecken-Bildpunkt: hinter dem Kopf darf die Haut
                                     # den Hinterkopf decken, das Gesicht nicht; Riegel S16 (c) prueft das Gesicht danach streng)
 GESICHT_X = 150                     # Mesh 9 lok x >= 150 = vordere Haelfte des Kopfes (Mesh 9 x -156..353, Gesicht vorn; gemessen geo.py)
 W_RIEGEL = float(os.environ.get('RUECKEN_W_RIEGEL', '0'))   # Lauf g (Reparatur): Strafe je Ueberschreitung der Riegel S2a/S2b/S3 (mit Abstand
@@ -62,6 +63,7 @@ class Ruecken5(RR4.Ruecken4):
         super().__init__(basis, kette)
         av = dict(L.ansichten('alle'))
         self.such = [(n, av[n]) for n in list(SUCH_ANSICHTEN) + [z for z in zusatz if z not in SUCH_ANSICHTEN]]
+        self.ref7 = basis
         self.schnell = bool(int(os.environ.get('RUECKEN_SCHNELL', '0')))
         if self.schnell:                      # alle 177 Ansichten mit dem schnellen Raster (luecke_r5.schnell); Gesicht weiter exakt in such
             self.alle = L.ansichten('alle')
@@ -109,7 +111,10 @@ class Ruecken5(RR4.Ruecken4):
                       + h(5.5 - H) + h(H - 9.5) + (0 if 429 <= Hx <= 444 else 1 + min(abs(Hx - 429), abs(Hx - 444)))
                       + 3 * len(s3['c_weitere']) + 4 * h(s3['d_sattel_kopf'][0] - 1.8) + h(s3['e_K'] - 2.8) + 0.2 * h(45.0 - s3f)
                       + sum(3 * len(v['neue_ecken']) + h(v['ueber_max'] - 1.8) for v in m['vorn']) + 2 * sum(v for _n, v in m['schlitz']))
-            m['riegel_s2s3'] = dict(S2a=s2['a'], S2b=s2['b'], S3=s3, S3f=s3f)
+            s7 = RG.s7_r4(voll, A, self.ref7)        # Lauf i: Riegel S7 (Rotanteile/Flecken haengen an der sichtbaren Flaeche)
+            n7, o7, d7 = s7['neu'], s7['original'], s7['d']
+            strafe += (0 if s7['a']['ok'] else 10) + h(n7['r8z'] - (o7['r8z'] - 0.5)) + h(n7['o13'] - (o7['o13'] - 0.5))                 + sum(10 * h(d7[k]['dichte'] - (d7[k]['dichte_original'] - 0.1)) for k in ('v8_13', 'v8_13_14'))
+            m['riegel_s2s3'] = dict(S2a=s2['a'], S2b=s2['b'], S3=s3, S3f=s3f, S7c=n7['r8z'], S7d=[d7[k]['dichte'] for k in ('v8_13', 'v8_13_14')])
         m['gesicht_verlust'] = verlust
         m['s2c_r5'] = s2c
         return (c + W_RIEGEL * strafe + W_LUECKE * sum(v * (W_VORLAGE if _n in ('PV', 'P1', 'P2') else 1.0) for _n, v in lu) + W_GESICHT * verlust + W_S2C * max(0.0, s2c - 2.5)), m
