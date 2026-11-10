@@ -1,0 +1,8 @@
+   4 V5 wie Foto (V5f): EM30_V5f.EMD sha256 784c8f05dfc4ac57dfdf3ac52127ac2a4e900603043aafa0c6bada897a2d3019 OK
+   5 V6 drei Punkte: EM30_V6.EMD sha256 9e0e58ef09322b51213eaa4e55f6d04d980478cce4fe940f0f9b841c9e78c626 OK
+-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwaunh
+   7 V8: EM30_V8.EMD sha256 7a65e3f0befa0c42c1b67a3136593e5272777f3caf507c33b061348065ee2c71 OK (= Pin release/em30_hangar.sha256)
+   Spiel-Asset EM30_HANGAR.EMD = Pin (7a65e3f0befa0c42c1b67a3136593e5272777f3caf507c33b061348065ee2c71)
+   EM30_V8.EMD bytegleich Spiel-Asset
+V8-KETTE-OK sha256 7a65e3f0befa0c42c1b67a3136593e5272777f3caf507c33b061348065ee2c71
+rc 0

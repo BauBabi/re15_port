@@ -3642,3 +3642,59 @@ F310 kein Hintergrund-Keil mehr (Tafel 15). Was dafuer NEU zu sehen ist, steht u
    (Soll 21).
 7. Die Luecken-Messung zaehlt 177 feste Ansichten; Zwischenbilder der schnellen Drehung (F310-F314) koennen den Keil von F311 ebenfalls
    zeigen (F310 8 / 1 / 2,0 und F312 10 / 3 / 2,2 liegen im Soll).
+
+## V8 Runde 6a - Hand (Hand-Bauer, Zweig r41/sichel_v8, 2026-11-10)
+
+Nutzer-Befund P6 (2026-11-10, bindend): "Die Vorlage hat eine breite Hand mit breiten Unterarmt. Dadurch wirkt es natürlich. Bei uns
+ist die Hand ganz klein und zierlich und wirkt dadurch verkümmert." Umfang nur linke Hand (Mesh 12) und linker Unterarm (Mesh 11).
+Commits a43dc024c (Messblatt), 2102d06e7 (Werkzeug, Varianten), 68e3f0e60 (Riegel S17), 1005b126c (Asset, Pin, Test), 854d7bea3 (Tafel).
+
+- **Asset** sha256 7a65e3f0befa0c42c1b67a3136593e5272777f3caf507c33b061348065ee2c71; Stufenfolge der Kette jetzt **s r w a u n h**
+  (h = hand_r6.py + hand_v8.json). Zweimal gebaut = bytegleich (v8_kette.sh: "V8-KETTE-OK", runde6a/kette_r6a.txt). Gegen V8 r5d
+  aendern sich nur Mesh 11 und 12; Mesh 9 bytegleich V7; TIM, Flaechen, UV, CLUT-Zeilen (490 / 491 / 492) unveraendert.
+- **Messblatt** SF_MESSBLATT_HAND.md, Bild SF_belege/v8/16a_hand_messblatt.png. **Varianten** (SF_belege/v8/16b_hand_varianten.png,
+  runde6a/hand_suche.txt), Wahl nach Zahl "ausser der Vorlage-Spanne von 34 Massen / Summe der Abweichung":
+  A 0,80 / 90 Grad: 7 / 86,5 px; B 0,80 / 105: 6 / 79,2; C 0,93 / 118 (Hoehe 0,80): 5 / 82,9; **D 0,93 / 0,72 / 118: 5 / 73,5** (gewaehlt).
+  Hand: Skala 0,93 / 0,72 / 0,93, Drehung 118 Grad um die Handachse, Krallen A x 1,33, B x 2,0, Wurzelring y -30; Unterarm Grund
+  1,229 / 0,80 / 1,229 mit Verlauf. Spanne Mesh 12 343 / 594 / 235 -> 484 / 716 / 433 E., Mesh 11 516 / 640 / 472 -> 444 / 640 / 407 E.
+  Handflaeche im Bild P1 500 -> 1654 px, P2 276 -> 762, PV 296 -> 766.
+- **Schritt ebnen** (nach der Variantenwahl): Ecke 1 des Handansatzes in die Ebene der Ecken 6, 9, 4. Ursache: das Original-Viereck 5
+  ist windschief, der Port verwirft ein Viereck am Dreieck seiner ersten drei Ecken; in neuer Groesse und Drehung stand es von vorn als
+  Schlitz offen (S9 b 49 px). Mit Ebnen 5 px (V8 r5d 0). Nicht gebaut aus dem Bauplan: "Handgelenk-Ring breiter (287 statt 248 E.)" -
+  das Handgelenk misst schon 22,0 px gegen Vorlage-Median 21,1.
+- **Riegel S17** (riegel_hand.py; runde6a/s17_neu.txt): ROT in (a) und (g).
+  (a) P1 Breitenprofil 7 von 8 Stationen in der Vorlage-Spanne: Ellbogen 33,5 (34,0..40,8 +- 1), Unterarm-Mitte 33,0 (32,5..39,1),
+  Handgelenk 22,0 (20,0..25,5), Handwurzel 33,0 (26,6..34,8), Hand breit 45,5 (37,8..50,6), Krallenwurzel 45,2, Krallen-Mitte 23,2
+  (18,2..29,1); **Spitzen 2,2 gegen 5,1..9,0 = rot**. (b) gruen: Unterarmspitze in 0 von 912 Keyframes ausserhalb des Handkoerpers.
+  (c) gruen: Breite/Laenge 0,756 (0,655..0,783), Handlaenge 60,2 px (56,9..68,5). (d) gruen: Krallen nicht kuerzer / duenner als V7 im
+  Soll. (e) gruen: keine Kreuzung in P1, P2, PV. (f) gruen: Zeilen 490: 34, 491: 6, 492: 18 Flaechen, 0 fremde Texel.
+  (g) **rot: Hand im Koerper 96 von 912 Keyframes (V7 und r5d 68), Krallenachse 44 (26)**; neu dazu vor allem Clip 15 (10 Bilder,
+  Bild 94-107), Clip 10 (9, Bild 10-26), Clip 3 (6, Bild 23-31). Zwei Kacheln: runde6a/durchdringung_kacheln.png (Clip 15 Bild 105
+  Hand in Huefte / Oberschenkel, Clip 10 Bild 18 Hand an Oberarm / Brust) - der Pruefer entscheidet.
+  Gegenproben V7 und V8 r5d: ROT in (a, b, c, d, e) - Handgelenk 12,2, Hand breit 14,5, B/L 0,336, Unterarmspitze 912 von 912 aussen,
+  Kreuzungen AB, BC / AC, BC / AC (runde6a/s17_v7.txt, s17_r5d.txt).
+- **Riegel gesamt** (statisch, runde6a/riegel_v8r6a.txt): 14 von 17 gruen; ROT S9, S16, S17. V8 r5d mit demselben Riegel: 15 von 17;
+  ROT S16, S17. Gegen r5d aendern sich in S1-S16 nur S9 und S16:
+  S9 (b) Schlitz 5 px statt 0 (F338 1, F360 1, F366 1, F372 2; vier Randpunkte der Hand am verdrehten Original-Daumenviereck 1, ein
+  Punkt Oberarm-Rueckseite, den der schlankere Unterarm freigibt) = **schlechter als r5d**.
+  S16 (rot wie r5d): (a) F311 21 / 9 / 3,6 statt 63 / 37 / 6,3 (Soll 21 / 7 / 3,2) - die groessere Hand deckt einen Teil des Keils;
+  (b) neu F311 und F312, weil die Hand 21 bzw. 32 Gesichtspunkte verdeckt (426 / 391 statt 447 / 423 sichtbar) = **schlechter als r5d**.
+- **Tests**: ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  "100% tests passed, 0 tests failed out of 8", "Total Test time (real) = 305.40 sec" (runde6a/ctest_gruppe.txt).
+  test_birkin_formen.c prueft Mesh 12 (52 Ecken, Spanne 484 / 716 / 433, Ring 1-4 y -22) und Mesh 11 (18 Ecken, 444 / 640 / 407).
+- **Spiel**: runde6a/gdi.sh (lauf_v4.sh, eigene exe-Kopie re15_sfv4_997, Hangar 50A0, gdigrab 30 fps vom echten Fenster 960 x 720);
+  debug.log "EM30: Ersatzmodell EMD/EM30_HANGAR.EMD (Raum 50A0)"; Bilder runde6a/gdi_fenster_neu_t13.0.png, _t13.5.png.
+- **Tafel** SF_belege/v8/16_hand.png (roh, selbst angesehen): Die Hand ist nicht mehr klein und zierlich - in P1 rund 3,3-fache
+  Flaeche, das Handgelenk ist nicht mehr eingeschnuert, die Krallen sitzen gefaechert am breiten Ende. **Natuerlich wie die Vorlage
+  wirkt sie noch nicht**: (1) die Original-Textur der Hand (Zeile 490) ist dunkel grauviolett mit roten Sprenkeln, die Vorlage hellgrau;
+  im echten Fenster liest sich die Hand als dunkles Paddel vor dunklem Grund und faellt kaum breiter auf als in r5d; (2) die Hand
+  knickt im Clip von P1 rund 42 Grad gegen den Unterarm (Vorlage 9-14 Grad), der Handansatz steht am Gelenk seitlich ueber;
+  (3) die Krallen sind duenne spitze Dornen, die Vorlage hat dicke stumpfe, eng liegende Finger; (4) der Unterarm ist nach Mass an der
+  Vorlage (Mitte 33,0 px, Median 33,5), aber 14 % schmaler als r5d und braun gebaendert statt grau - "breiter Unterarm" entsteht so
+  dem Auge nach nicht; (5) der Arm haengt tiefer als in der Vorlage, daher die zusaetzliche Durchdringung.
+- **Helligkeit der Hand** (Knochen 12, 0-255, mit / ohne Licht): P1 28,2 / 37,2 -> 26,8 / 30,8; P2 27,8 / 35,6 -> 21,2 / 30,0;
+  PV 27,1 / 34,7 -> 19,8 / 29,5. Die Dunkelheit kommt aus der Textur selbst; Drehung und Licht machen 1-8 Einheiten aus. Keine
+  Farbkorrektur (Regel) - Punkt fuer den Nutzer.
+- **Offen**: S17 (a) Spitzen und (g); S9 (b) 5 px; S16 (b); Hand-Textur dunkel; Knickwinkel der Hand im Clip; Krallen stumpfer und
+  dicker (Probe ausserhalb der vier Varianten: Krallen A x 1,6 / C x 1,2 hebt das Handprofil bei 90 % von 4,8 auf 17,8 px ohne
+  Kreuzung, die Station Spitzen bleibt 2,2); linke Hand in P2 / PV der Vorlage verdeckt (dort kein Vorlage-Mass).
