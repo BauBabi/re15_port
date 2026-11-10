@@ -1,20 +1,22 @@
 #!/usr/bin/env python3
-"""K5g2 Runde 2, Orchestrator-Entscheid O1: MULDE in Buckel 10 / Hals 21 / Schulterkugel 16 fuer Kopf 22 / Unterkiefer 23.
+"""K5g2 Runde 2, Orchestrator-Entscheid O1: MULDE in Buckel 10 / Hals 21 fuer Kopf 22 / Unterkiefer 23 (Mulden-Bauer).
 
 Das Spiel malt Dreiecke nach mittlerer Tiefe ohne Tiefenpuffer (render_pc.c Einfuegesortierung nach s_textri_depth). Wo der Kopf in
-irgendeinem Bild irgendeines Clips durch eine Flaeche von 10/21/16 geht, wird diese Flaeche feiner geteilt (kf_k5g2_unterteil.unterteilen)
+irgendeinem Bild irgendeines Clips durch eine Flaeche von 10/21 geht, wird diese Flaeche feiner geteilt (kf_k5g2_unterteil.unterteilen)
 und ihre Ecken auf der Geraden zum Teil-Schwerpunkt zurueckgenommen, bis sie in ALLEN 799 Bildern mindestens `rand` ausserhalb der
 Kopf-/Kieferflaechen liegen (kf_k5g2_geo.zuruecknehmen). Clips, EDD/EMR und KI bleiben unberuehrt; kein Tiefenpuffer, kein Engine-Eingriff.
 
-Stufen (jede schreibt eine JSON-Datei mit den vollstaendigen Netzen; die naechste liest sie):
-  stufe1  Netze 10, 21 (Mulde, 3 Runden) und 22 (Hinterkopf-Ecken zurueckgenommen, Runde 1) - Orchestrator-Messung mulde2.py, uebernommen
-          als k5g2_mulde_stufe1.json (Rechenzeit 77 min, hier NICHT neu gerechnet; `stufe1_rechnen` haelt den Rechenweg fest).
-  stufe2  Schulterkugel 16 dazu (dieselbe Rechnung, nur Teil 16)                      -> k5g2_mulde_stufe2.json
-  tabelle Textur auf der Mulde (O1 vii) + fertige Netze 10, 16, 21, 22 (+23)           -> k5g2_mulde_tabelle.json
-  emd     K5e_f1 + nur diese Netze                                                    -> k5g/K5g2/geo/MULDE.EMD
+Quelle und Schritte:
+  Stufe 1 Netze 10, 21 (Mulde, 3 Runden) und 22 (Hinterkopf-Ecken zurueckgenommen, Runde 1) - Orchestrator-Messung mulde2.py Lauf a,
+          uebernommen als k5g2_mulde_stufe1.json (Rechenzeit 77 min, hier NICHT neu gerechnet; `mulde_runden` haelt denselben Rechenweg
+          fest: Auswahl -> Unterteilung -> Zuruecknehmen). `pruef huelle` rechnet die Huell-Bedingung der Datei ueber alle 799 Bilder nach.
+  tabelle Textur auf der Mulde (O1 vii, `textur_neu`) + fertige Netze 10, 16, 21, 22          -> k5g2_mulde_tabelle.json
+  emd     K5e_f1 + nur diese Netze                                                          -> k5g/K5g2/geo/MULDE.EMD
+  pruef   Tabelle und EMD ein zweites Mal bauen und byteweise vergleichen; Netze ausserhalb der Tabelle gleich K5e_f1.
 
-Unabhaengig von den Krallen: die Netze 19, 20, 28, 29, 31 werden nie angefasst (Basis ist K5e_f1).
-Aufruf: python kf_k5g2_mulde.py stufe2 | tabelle | emd | pruef
+Schulterkugel 16 und Unterkiefer 23 bleiben die Netze von K5e_f1 (gemessen und begruendet in k5g/K5g2/GEOMETRIE.md): 16 steht
+unveraendert in der Tabelle, 23 steht nicht darin. Unabhaengig von den Krallen: die Netze 19, 20, 28, 29, 31 werden nie angefasst.
+Aufruf: python kf_k5g2_mulde.py tabelle | emd | pruef [huelle]
 """
 import copy
 import hashlib
@@ -37,7 +39,6 @@ EMD0 = os.path.join(K5E, 'BAHNSTEIG_FORM.EMD')
 TIM0 = os.path.join(K5E, 'BAHNSTEIG_FORM.TIM')
 EMD0_SHA = 'f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1'
 STUFE1 = os.path.join(HIER, 'k5g2_mulde_stufe1.json')
-STUFE2 = os.path.join(HIER, 'k5g2_mulde_stufe2.json')
 TABELLE = os.path.join(HIER, 'k5g2_mulde_tabelle.json')
 ZIEL = os.path.join(K5, 'k5g', 'K5g2', 'geo')
 KOPF = (22, 23)
@@ -410,20 +411,16 @@ def dehnung_bericht(mesh0, mesh, hk, teil):
 
 # ------------------------------------------------------------------ Tabelle, EMD, Pruefung
 TEILE_TAB = (10, 16, 21, 22)   # 23 (Unterkiefer) bleibt K5e_f1 und steht deshalb nicht in der Tabelle (GEOMETRIE.md Abschnitt Unterkiefer)
-TEILE_TEXTUR = (10, 21)        # Teile mit Mulde; 16 nur, wenn eine Stufe 2 vorliegt
+TEILE_TEXTUR = (10, 21)        # Teile mit Mulde (16 und 23 bleiben K5e_f1)
 
 
 def arbeitsform():
-    """K5e_f1 + Stufe 1 (+ Stufe 2, wenn die Datei vorliegt). Rueckgabe (emd0, form0, form, hk, Quellen)."""
+    """K5e_f1 + Stufe 1. Rueckgabe (emd0, form0, form, hk, Quellen)."""
     emd0, form0 = grundform()
     form = copy.deepcopy(form0)
     kopf, hk = stufe_lesen(STUFE1, form)
     quellen = [dict(datei=os.path.basename(STUFE1), sha256_lf=sha_lf(STUFE1))]
-    if os.path.exists(STUFE2):
-        k2, hk2 = stufe_lesen(STUFE2, form)
-        hk.update(hk2)
-        quellen.append(dict(datei=os.path.basename(STUFE2), sha256_lf=sha_lf(STUFE2)))
-    # Flaechen ohne Eintrag sind ihre eigene Mutter (Teil 16 ohne Stufe 2, ungeteilte Teile)
+    # Flaechen ohne Eintrag sind ihre eigene Mutter (Teil 16, ungeteilte Flaechen)
     for t in TEILE_TAB:
         for vi, fi in flaechen_liste(form['meshes'][t]):
             hk.setdefault((t, vi, fi), (t, vi, fi))
@@ -433,7 +430,7 @@ def arbeitsform():
 def tabelle_bauen(log=print):
     """Die fertigen Netze: Stufen einsetzen, Textur auf der Mulde neu verteilen. Rueckgabe: Tabelle als Woerterbuch (ohne Zeit, ohne Pfade)."""
     emd0, form0, form, hk, quellen = arbeitsform()
-    teile_tex = [t for t in TEILE_TAB if t in TEILE_TEXTUR or (t == 16 and len(quellen) > 1)]
+    teile_tex = [t for t in TEILE_TAB if t in TEILE_TEXTUR]
     tab = dict(zweck='K5g2 Runde 2 O1: Mulde in 10/21 fuer Kopf 22/Unterkiefer 23 - fertige Netze, unabhaengig von den Krallen',
                basis=dict(emd='K5/ruhe/K5e_f1/BAHNSTEIG_FORM.EMD', sha256=EMD0_SHA), rand=RAND, runden=RUNDEN, quellen=quellen,
                uv_neu={}, textur={}, dehnung={})
