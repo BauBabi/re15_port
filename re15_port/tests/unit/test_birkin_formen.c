@@ -17,6 +17,10 @@
  *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22), 484 (Sichel, Mesh 15), 485 (Kopf, Mesh 9),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  *
+ * V8 Runde 5d (P5, Nutzer 2026-11-09 "es gibt immer noch eine Lücke zwischen Rücken und Kopf beim 2 beiner Birkin"): Mesh 8 traegt
+ * hinter seinen EM30-Elementen einen geschlossenen Einsatz (tools/r41_sichel/v8/nacken_r5.py: 14 Ecken, 12 Dreiecke, 6 Vierecke,
+ * alle auf Zeile 494 mit Texeln der Wirtsflaeche Dreieck 65); gemessen am Asset c4976c62 (sfv8/r5p6). Gegenprobe V8 Runde 4
+ * 10d02173, Stand 91885ed8c (5fd35ff1) und V7: rot (Mesh 8 ohne Einsatz).
  * Zweig r41/sichel_v8 (V8 Runde 5 nach Pruefung V8 r4: Brust auf Original-Zeile 481 mit eigener UV, fast weisse Texel durch Abbildungen
  * auf Original-Haut ersetzt; dazu P4 Schwanz-Unterseite fleischig auf Zeile 495 (72 Flaechen der Meshes 16-22, Oberseite 487); Gegenprobe
  * V8 Runde 4 10d02173: rot, Brust 34 Flaechen auf 488, Schwanz 0 Flaechen auf 495).
@@ -138,6 +142,10 @@ static int geteilt(int m)        /* birkin_formen.py FORMEN['hangar'] teilen (ku
 #define CLUT_KOPF    (486u << 6)  /* V7 (V6 Kopf Schritt 1/3: Original-Kopf auf Zeile 486 = EM30-Zeile 0; Referenz 2: 485). Gemessen 486:91 */
 #define CLUT_ZEILEN  16           /* V8 Runde 2 Adern: 16 Zeilen 480-495 = V7 (13) + X1 493 / X2 494 / X3 495 (gemessen: 4096 Eintraege,
                                    * Port-Texturhoehe 256 x 16 = 4096 = TEX_H_MAX); V7 13, V8 Runde 1 15 (Gegenprobe: hier rot) */
+#define EINSATZ_D 12              /* V8 Runde 5d: Einsatz an Mesh 8 (nacken_r5.py koerper: Pol, 2 Ringe zu 6 Ecken, Pol) - Dreiecke */
+#define EINSATZ_V 6               /* ... Vierecke */
+#define EINSATZ_E 14              /* ... Ecken */
+#define EINSATZ_WIRT 65           /* Wirtsflaeche: Dreieck 65 von Mesh 8 (nacken_v8.json "wirt": "d65"; UV (37,19) (42,0) (50,22)) */
 #define Z_X1 493u                 /* V8: Ader-Zeile X1 = V7-Zeile 480 + 62 Original-EM30-Ader-Eintraege (a* >= 15, L* <= 38) */
 #define Z_X2 494u                 /* V8: Ader-Zeile X2 = V7-Zeile 481 + 50 Original-EM30-Ader-Eintraege */
 #define Z_X3 495u                 /* V8 Runde 2: Ader-Zeile X3 = V7-Zeile 482 + 88 Original-EM30-Ader-Eintraege (Unterarm-Wulst Mesh 14) */
@@ -283,10 +291,13 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                     geaendert += memcmp(&a->tri_vertices[v], &b->tri_vertices[v], sizeof *a->tri_vertices) != 0;
                 continue;
             }
-            CHECK(b->triangle_count == a->triangle_count && b->quad_count == a->quad_count &&
-                  b->tri_vertex_count == a->tri_vertex_count && b->quad_vertex_count == a->quad_vertex_count,
-                  "%s: Mesh %d Elementzahlen weichen von EM30 ab", name, m);
-            if (b->triangle_count != a->triangle_count || b->quad_count != a->quad_count) continue;
+            const int zd = m == 8 ? EINSATZ_D : 0, zv = m == 8 ? EINSATZ_V : 0, ze = m == 8 ? EINSATZ_E : 0;   /* V8 Runde 5d */
+            CHECK(b->triangle_count == a->triangle_count + zd && b->quad_count == a->quad_count + zv &&
+                  b->tri_vertex_count == a->tri_vertex_count + ze && b->quad_vertex_count == a->quad_vertex_count + ze,
+                  "%s: Mesh %d Elementzahlen %d/%d/%d/%d weichen von EM30 %d/%d/%d/%d + Einsatz %d/%d/%d ab", name, m, b->triangle_count,
+                  b->quad_count, b->tri_vertex_count, b->quad_vertex_count, a->triangle_count, a->quad_count, a->tri_vertex_count,
+                  a->quad_vertex_count, zd, zv, ze);
+            if (b->triangle_count != a->triangle_count + zd || b->quad_count != a->quad_count + zv) continue;
             if (a->triangle_count > 0)
                 CHECK(!memcmp(a->triangles, b->triangles, sizeof *a->triangles * (size_t)a->triangle_count),
                       "%s: Mesh %d Dreieckstopologie weicht ab", name, m);
@@ -309,8 +320,48 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                                           * (rueckenfleisch 2, huegel 1, blass_rechts 3, weiss 20, blass_r5 2) */
                 CHECK(zeile_zahl(b, 488) == 0, "%s: Brust (Mesh 8) %d Flaechen noch auf CLUT 488 (Soll 0, Runde 5: Original-Zeile 481)", name,
                       zeile_zahl(b, 488));
-                CHECK(zeile_zahl(b, Z_X1) == 56 && zeile_zahl(b, Z_X2) == 48, "%s: Mesh 8 Zeilen 493/494 %d/%d Flaechen statt 56/48 (V8 Runde 5)",
-                      name, zeile_zahl(b, Z_X1), zeile_zahl(b, Z_X2));
+                CHECK(zeile_zahl(b, Z_X1) == 56 && zeile_zahl(b, Z_X2) == 48 + EINSATZ_D + EINSATZ_V,
+                      "%s: Mesh 8 Zeilen 493/494 %d/%d Flaechen statt 56/%d (V8 Runde 5d: 48 + Einsatz)", name, zeile_zahl(b, Z_X1),
+                      zeile_zahl(b, Z_X2), 48 + EINSATZ_D + EINSATZ_V);
+                /* V8 Runde 5d: jede Flaeche des Einsatzes zeigt nur auf die 14 angehaengten Ecken (die EM30-Ecken und -Flaechen bleiben an
+                 * ihrem Platz), liegt auf Zeile 494 und der Texturseite der Wirtsflaeche, und ihre UV-Ecken liegen im Rechteck der
+                 * Wirts-UV (u 37-50, v 0-22; nacken_r5.py prueft je Texel, dass sie IN der Wirtsflaeche liegen) */
+                {
+                    const re15_md1_tri_uv_t *w = &b->triangle_uvs[EINSATZ_WIRT];
+                    int u_lo = w->u0, u_hi = w->u0, v_lo = w->v0, v_hi = w->v0, fehl = 0;
+                    if (w->u1 < u_lo) u_lo = w->u1;
+                    if (w->u1 > u_hi) u_hi = w->u1;
+                    if (w->u2 < u_lo) u_lo = w->u2;
+                    if (w->u2 > u_hi) u_hi = w->u2;
+                    if (w->v1 < v_lo) v_lo = w->v1;
+                    if (w->v1 > v_hi) v_hi = w->v1;
+                    if (w->v2 < v_lo) v_lo = w->v2;
+                    if (w->v2 > v_hi) v_hi = w->v2;
+                    CHECK(w->clut == (uint16_t)(Z_X2 << 6) && u_lo == 37 && u_hi == 50 && v_lo == 0 && v_hi == 22,
+                          "%s: Wirtsflaeche Mesh 8 Dreieck %d: Zeile %d, UV-Rechteck u %d-%d v %d-%d (Soll 494, 37-50, 0-22)", name, EINSATZ_WIRT,
+                          w->clut >> 6, u_lo, u_hi, v_lo, v_hi);
+#define IM_WIRT(u, v) ((u) >= u_lo && (u) <= u_hi && (v) >= v_lo && (v) <= v_hi)
+                    for (int t = a->triangle_count; t < b->triangle_count; t++) {
+                        const re15_md1_triangle_t *f = &b->triangles[t];
+                        const re15_md1_tri_uv_t *u = &b->triangle_uvs[t];
+                        fehl += !(f->v0 >= a->tri_vertex_count && f->v1 >= a->tri_vertex_count && f->v2 >= a->tri_vertex_count &&
+                                  f->v0 < b->tri_vertex_count && f->v1 < b->tri_vertex_count && f->v2 < b->tri_vertex_count);
+                        fehl += !(u->clut == w->clut && u->page == w->page && IM_WIRT(u->u0, u->v0) && IM_WIRT(u->u1, u->v1) &&
+                                  IM_WIRT(u->u2, u->v2));
+                    }
+                    for (int q = a->quad_count; q < b->quad_count; q++) {
+                        const re15_md1_quad_t *f = &b->quads[q];
+                        const re15_md1_quad_uv_t *u = &b->quad_uvs[q];
+                        fehl += !(f->v0 >= a->quad_vertex_count && f->v1 >= a->quad_vertex_count && f->v2 >= a->quad_vertex_count &&
+                                  f->v3 >= a->quad_vertex_count && f->v0 < b->quad_vertex_count && f->v1 < b->quad_vertex_count &&
+                                  f->v2 < b->quad_vertex_count && f->v3 < b->quad_vertex_count);
+                        fehl += !(u->clut == w->clut && u->page == w->page && IM_WIRT(u->u0, u->v0) && IM_WIRT(u->u1, u->v1) &&
+                                  IM_WIRT(u->u2, u->v2) && IM_WIRT(u->u3, u->v3));
+                    }
+#undef IM_WIRT
+                    CHECK(fehl == 0, "%s: Einsatz an Mesh 8: %d Verstoesse (Ecken ausserhalb der 14 neuen, Zeile/Seite oder UV ausserhalb der "
+                          "Wirtsflaeche)", name, fehl);
+                }
                 CHECK(zeile_zahl(b, 480) == 0 && zeile_zahl(b, 481) == 0, "%s: Mesh 8 %d/%d Flaechen noch auf V7-Zeile 480/481 (Naht, Runde 4)",
                       name, zeile_zahl(b, 480), zeile_zahl(b, 481));
                 CHECK(uv_ohne_clut_anders(a, b) == 28, "%s: Mesh 8 %d Flaechen mit anderer UV (Soll 28, V8 Runde 5)", name,
