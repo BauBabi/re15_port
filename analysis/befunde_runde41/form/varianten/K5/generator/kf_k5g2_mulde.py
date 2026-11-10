@@ -53,6 +53,11 @@ def sha(pfad):
     return hashlib.sha256(open(pfad, 'rb').read()).hexdigest()
 
 
+def sha_lf(pfad):
+    """sha256 einer Textdatei mit LF-Zeilenenden (core.autocrlf legt sie im Arbeitsbaum mit CRLF ab - der Inhalt ist derselbe)."""
+    return hashlib.sha256(open(pfad, 'rb').read().replace(bytes([13, 10]), bytes([10]))).hexdigest()
+
+
 def grundform():
     """K5e_f1 als form-Woerterbuch (Basis aller Stufen; Krallen bleiben K5e_f1)."""
     emd0 = open(EMD0, 'rb').read()
@@ -130,12 +135,14 @@ def kopf_in(form, R, T, teile):
     return aus
 
 
-def mulde_runden(form, hk, R, T, teile, runden=RUNDEN, rand=RAND, log=print, zwischen=None, bilder=None, weg_max=None):
+def mulde_runden(form, hk, R, T, teile, runden=RUNDEN, rand=RAND, log=print, zwischen=None, bilder=None, weg_max=None, anker_fest=None):
     """Die Rechnung aus mulde2.py fuer beliebige Teile: je Runde Auswahl -> Unterteilung -> Zuruecknehmen zum Schwerpunkt des Teils (Anker
     = Mittel der Ecken VOR der ersten Runde). `bilder`: Bildindizes der Bedingung (None = alle). `weg_max`: Ecken, deren Weg groesser
     waere, bleiben stehen (None = keine Grenze). Veraendert `form`; Rueckgabe (hk, Anker, Protokoll)."""
     t0 = time.time()
     anker = {t: np.array(form['meshes'][t]['ecken'], float).mean(0) for t in teile}
+    if anker_fest:
+        anker.update({t: np.asarray(v, float) for t, v in anker_fest.items()})   # Anker ausserhalb des Kopf-Schwenks (Teil 16)
     log('Anker %s' % {t: anker[t].round(1).tolist() for t in teile})
     if bilder is not None:
         R, T = R[bilder], T[bilder]
@@ -399,3 +406,126 @@ def dehnung_bericht(mesh0, mesh, hk, teil):
                    verzug=q([x[3] for x in d1 if x[0] in geteilt]), laengste=q([x[1] for x in d1 if x[0] in geteilt]),
                    gegen_mutter_laengste=q(rel[:, 0]), gegen_mutter_ueber=dict((str(g), int((rel[:, 0] > g).sum())) for g in (1.5, 2, 4, 8)),
                    gegen_mutter_kuerzeste_min=round(float(rel[:, 1].min()), 3) if len(rel) else None))
+
+
+# ------------------------------------------------------------------ Tabelle, EMD, Pruefung
+TEILE_TAB = (10, 16, 21, 22)   # 23 (Unterkiefer) bleibt K5e_f1 und steht deshalb nicht in der Tabelle (GEOMETRIE.md Abschnitt Unterkiefer)
+TEILE_TEXTUR = (10, 21)        # Teile mit Mulde; 16 nur, wenn eine Stufe 2 vorliegt
+
+
+def arbeitsform():
+    """K5e_f1 + Stufe 1 (+ Stufe 2, wenn die Datei vorliegt). Rueckgabe (emd0, form0, form, hk, Quellen)."""
+    emd0, form0 = grundform()
+    form = copy.deepcopy(form0)
+    kopf, hk = stufe_lesen(STUFE1, form)
+    quellen = [dict(datei=os.path.basename(STUFE1), sha256_lf=sha_lf(STUFE1))]
+    if os.path.exists(STUFE2):
+        k2, hk2 = stufe_lesen(STUFE2, form)
+        hk.update(hk2)
+        quellen.append(dict(datei=os.path.basename(STUFE2), sha256_lf=sha_lf(STUFE2)))
+    # Flaechen ohne Eintrag sind ihre eigene Mutter (Teil 16 ohne Stufe 2, ungeteilte Teile)
+    for t in TEILE_TAB:
+        for vi, fi in flaechen_liste(form['meshes'][t]):
+            hk.setdefault((t, vi, fi), (t, vi, fi))
+    return emd0, form0, form, hk, quellen
+
+
+def tabelle_bauen(log=print):
+    """Die fertigen Netze: Stufen einsetzen, Textur auf der Mulde neu verteilen. Rueckgabe: Tabelle als Woerterbuch (ohne Zeit, ohne Pfade)."""
+    emd0, form0, form, hk, quellen = arbeitsform()
+    teile_tex = [t for t in TEILE_TAB if t in TEILE_TEXTUR or (t == 16 and len(quellen) > 1)]
+    tab = dict(zweck='K5g2 Runde 2 O1: Mulde in 10/21 fuer Kopf 22/Unterkiefer 23 - fertige Netze, unabhaengig von den Krallen',
+               basis=dict(emd='K5/ruhe/K5e_f1/BAHNSTEIG_FORM.EMD', sha256=EMD0_SHA), rand=RAND, runden=RUNDEN, quellen=quellen,
+               uv_neu={}, textur={}, dehnung={})
+    for t in teile_tex:
+        vor = dehnung_bericht(form0['meshes'][t], form['meshes'][t], hk, t)
+        ber = textur_neu(form0['meshes'][t], form['meshes'][t], hk, t, log=log)
+        nach = dehnung_bericht(form0['meshes'][t], form['meshes'][t], hk, t)
+        tab['uv_neu'][str(t)] = ber.pop('flaechen_uv_neu')
+        tab['textur'][str(t)] = ber
+        tab['dehnung'][str(t)] = dict(k5e_f1=nach['k5e_f1'], ungeteilt=nach['ungeteilt'], mulde_geerbt=vor['mulde'], mulde_neu=nach['mulde'])
+    tab['teile'] = {str(t): netz_json(form['meshes'][t]) for t in TEILE_TAB}
+    tab['herkunft'] = [[int(a), int(b), int(c)] + [int(x) for x in hk[(a, b, c)]] for (a, b, c) in sorted(k for k in hk if k[0] in TEILE_TAB)]
+    tab['zahl'] = {str(t): dict(ecken=len(form['meshes'][t]['ecken']), dreiecke=len(form['meshes'][t]['dreiecke']),
+                                vierecke=len(form['meshes'][t]['vierecke']),
+                                port_dreiecke=len(form['meshes'][t]['dreiecke']) + 2 * len(form['meshes'][t]['vierecke'])) for t in TEILE_TAB}
+    return tab
+
+
+def tabelle_text(tab):
+    return json.dumps(tab, ensure_ascii=True, sort_keys=True, separators=(',', ':')) + '\n'
+
+
+def tabelle_schreiben(log=print):
+    txt = tabelle_text(tabelle_bauen(log))
+    with open(TABELLE, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(txt)
+    log('Tabelle %s  %d Byte  sha256 (LF) %s' % (TABELLE.replace(chr(92), '/'), len(txt), sha_lf(TABELLE)))
+
+
+def emd_aus_tabelle(ziel=None, log=print):
+    """K5e_f1 + nur die Netze der Tabelle -> MULDE.EMD (laeuft mit der TIM von K5e_f1; Clips/EDD/EMR byte-gleich K5e_f1)."""
+    emd0, form = grundform()
+    tab = json.load(open(TABELLE, encoding='utf-8'))
+    assert tab['basis']['sha256'] == EMD0_SHA
+    for t, netz in tab['teile'].items():
+        form['meshes'][int(t)] = netz
+    aus = G.emd_mit_md1(emd0, form)
+    ziel = ziel or os.path.join(ZIEL, 'MULDE.EMD')
+    os.makedirs(os.path.dirname(ziel), exist_ok=True)
+    with open(ziel, 'wb') as f:
+        f.write(aus)
+    log('EMD %s  %d Byte  sha256 %s' % (ziel.replace(chr(92), '/'), len(aus), sha(ziel)))
+    return ziel
+
+
+def huelle_pruefen(log=print, teile=(10, 21)):
+    """Bedingung der Mulde nachrechnen: jede Ecke der Teile liegt in allen 799 Bildern mindestens RAND ausserhalb von Kopf/Unterkiefer."""
+    emd0, form = grundform()
+    tab = json.load(open(TABELLE, encoding='utf-8'))
+    for t, netz in tab['teile'].items():
+        form['meshes'][int(t)] = netz
+    cb, R, T = posen_von(emd0, form)
+    HK = G.Huellen(form, R, T, teile=KOPF)
+    gut = True
+    for t in teile:
+        D = G.eindringen(form, R, T, t, huellen=HK)
+        mx = float(D.max()); i, j = np.unravel_index(int(D.argmax()), D.shape)
+        gut &= mx <= -RAND
+        log('Teil %d: %d Ecken, groesste Tiefe im Kopf %.1f (Clip %d Bild %d, Ecke %d) -> %s' % (
+            t, D.shape[1], mx, cb[i][0], cb[i][1], j, 'ausserhalb mit Rand' if mx <= -RAND else 'NICHT ausserhalb'))
+    return gut
+
+
+def pruefen(log=print, mit_huelle=False):
+    """Zweiter Lauf byte-gleich? Tabelle und EMD neu erzeugen und mit den Dateien vergleichen."""
+    txt = tabelle_text(tabelle_bauen(lambda *a: None))
+    alt = open(TABELLE, encoding='utf-8', newline='').read().replace(chr(13) + chr(10), chr(10))
+    g1 = txt == alt
+    log('Tabelle neu erzeugt: %s (sha256 LF %s)' % ('byte-gleich' if g1 else 'WEICHT AB', sha_lf(TABELLE)))
+    ziel = os.path.join(ZIEL, 'MULDE.EMD')
+    alt_emd = open(ziel, 'rb').read()
+    emd0, form = grundform()
+    for t, netz in json.loads(txt)['teile'].items():
+        form['meshes'][int(t)] = netz
+    neu = G.emd_mit_md1(emd0, form)
+    g2 = neu == alt_emd
+    log('MULDE.EMD neu erzeugt: %s (sha256 Datei %s)' % ('byte-gleich' if g2 else 'WEICHT AB', sha(ziel)))
+    # Clips unveraendert: alles ausser dem MD1-Abschnitt ist K5e_f1
+    f0 = FE.lese_emd(emd0); f1 = FE.lese_emd(alt_emd)
+    g3 = all(f0['meshes'][t] == f1['meshes'][t] for t in range(len(f0['meshes'])) if t not in TEILE_TAB)
+    log('Netze ausserhalb %s gleich K5e_f1: %s' % (list(TEILE_TAB), g3))
+    g4 = huelle_pruefen(log) if mit_huelle else True
+    return g1 and g2 and g3 and g4
+
+
+if __name__ == '__main__':
+    was = sys.argv[1] if len(sys.argv) > 1 else ''
+    if was == 'tabelle':
+        tabelle_schreiben()
+    elif was == 'emd':
+        emd_aus_tabelle()
+    elif was == 'pruef':
+        sys.exit(0 if pruefen(mit_huelle='huelle' in sys.argv[2:]) else 1)
+    else:
+        print(__doc__)
