@@ -1,0 +1,10 @@
+C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/analysis/befunde_runde41/SF_belege/v8/16_hand.png (1954, 1920, 3)
+P1 V7 319bbd17: Hand  500 px, Helligkeit mit Licht  28.2, ohne Licht  37.2
+P1 V8 r5d c4976c62: Hand  500 px, Helligkeit mit Licht  28.2, ohne Licht  37.2
+P1 NEU 7a65e3f0: Hand 1654 px, Helligkeit mit Licht  26.8, ohne Licht  30.8
+P2 V7 319bbd17: Hand  276 px, Helligkeit mit Licht  27.8, ohne Licht  35.6
+P2 V8 r5d c4976c62: Hand  276 px, Helligkeit mit Licht  27.8, ohne Licht  35.6
+P2 NEU 7a65e3f0: Hand  762 px, Helligkeit mit Licht  21.2, ohne Licht  30.0
+PV V7 319bbd17: Hand  296 px, Helligkeit mit Licht  27.1, ohne Licht  34.7
+PV V8 r5d c4976c62: Hand  296 px, Helligkeit mit Licht  27.1, ohne Licht  34.7
+PV NEU 7a65e3f0: Hand  766 px, Helligkeit mit Licht  19.8, ohne Licht  29.5
