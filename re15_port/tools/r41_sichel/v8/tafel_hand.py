@@ -1,41 +1,30 @@
-#!/usr/bin/env python3
-"""R41 Spur SF, V8 Runde 6a (P6): Tafel 16_hand.png - linke Hand und linker Unterarm.
+"""R41 Spur SF, V8 Runde 6c (P7): Tafel 16_hand.png - linker Arm vom Ellbogen bis zur Krallenspitze in den ECHTEN Szenenposen.
 
-Zeilen P1, P2, PV: Vorlage | V7 | V8 r5d | NEU, gleicher Ausschnitt um den linken Arm (KANTE x KANTE Videopixel um die Mitte von
-Ellbogen / Handgelenk / fernstem Handpunkt des neuen Modells), gleicher Zoom, roh (naechster Nachbar), Spielkamera 50A0 mit RDT-Licht.
-Vorlagen: P1 = Nutzerbild birkin20 (Version_80%, freigestellt; 2 Bildpunkte je Videopixel wie im Messblatt Hand, deshalb 2-fach statt
-4-fach vergroessert = gleicher Zoom je Videopixel; Ausschnitt um Ellbogen / Handgelenk / fernsten Handpunkt der Vorlage-Messung),
-Foto 2 (Beschreibung2_Vorlage, P2), Darstellung_Vorlage (PV); in P2 und PV zeigt die Vorlage den linken Arm nicht (hinter dem Rumpf).
-Darunter: Bilder aus dem ECHTEN Fenster (gdigrab, runde6a/gdi.sh): V8 r5d und zweimal NEU, gleicher Ausschnitt; daneben die
-Helligkeitsmessung der Hand (Mittel der Bildpunkte von Knochen 12, mit und ohne Licht) - Angabe fuer den Punkt "Hand dunkel".
+Je Paar eine Zeile: Vorlage (Nutzerbild birkin20/22/23/21/24, Version_80%, freigestellt, 2 Bildpunkte je Videopixel) | V7 | V8 r5d |
+V8 r6b (Hand um 118 Grad verdreht, Beuge 60) | NEU - jedes Modell in der Pose SEINES Spielbilds (hand_szene.PAARE: h125, h126, h128,
+h130, h132), frei gezeichnet, roh (naechster Nachbar, 2,5 Bildpunkte je Videopixel). Eingezeichnet: Ellbogen (gelb), Handgelenk (gruen),
+Spitze (magenta) und die acht Stationslinien des Messblatts mit ihrer Breite in Videopixeln (hand_mass.kachel).
+Darunter als Zahlenleiste das Breitenprofil je Paar: Vorlage gegen NEU an den acht Stationen, Zahlen ausserhalb der Streuung der fuenf
+Vorlagebilder (+- 1 px, Regel S17 a) rot.
 
-  python tafel_hand.py --r5d <EM30 r5d> --gdi-alt <png> --gdi-neu <png> <png> --aus <16_hand.png>
+Aufruf: python tafel_hand.py --r5d <EMD> --r6b <EMD> [--neu <EMD>] [--v7 <EMD>] [--aus <png>]
+PORT-WAHL: nur Darstellung, keine Verhaltens-Zahl.
 """
 import os, sys, argparse
-import numpy as np, cv2
+import numpy as np
+import cv2
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import v8_gemein as V                  # noqa: E402
+import hand_mass as HM                 # noqa: E402
+import hand_szene as SZ                # noqa: E402
+import riegel_hand as RH               # noqa: E402
 
-HIER = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, HIER)
-import v8_gemein as V                 # noqa: E402
-import hand_mass as HM                # noqa: E402
-import tafeln_v8 as TV                # noqa: E402
-import f_rast as FR                   # noqa: E402
-
-KANTE, ZOOM = 120, 4                  # Ausschnitt 120 x 120 Videopixel, 4-fach (Darstellung; kein Messwert)
-VORLAGEN = dict(P1='Beschreibung1_Vorlage.png', P2='Beschreibung2_Vorlage.png', PV='Darstellung_Vorlage.png')
-VORLAGE_P1, VORLAGE_SKALA = 20, 0.5   # Nutzerbild birkin20; 0.5 Videopixel je Bildpunkt (hand_suche.tafel / Messblatt Hand)
-GDI_BOX = (380, 200, 780, 680)        # Fenster 960 x 720: Ausschnitt um die Figur im Takt "steht frontal" (x0, y0, x1, y1)
+KANTE, F = 136, 2.5                    # Ausschnitt 136 Videopixel, 2,5-fach
 
 
-def hell(mo, pose):
-    """Mittlere Helligkeit (0.299 R + 0.587 G + 0.114 B) der Bildpunkte von Knochen 12, mit und ohne Licht; Zahl der Bildpunkte."""
-    out = []
-    for licht in (True, False):
-        A = FR.zeichne(mo, pose, licht=licht)
-        m = A['bone'][:480] == 12
-        px = A['img'][:480][m].astype(float)
-        out.append(float((px @ np.array([0.299, 0.587, 0.114])).mean()) if len(px) else 0.0)
-    return out[0], out[1], int(m.sum())
+def text(img, s, x, y, farbe=(255, 255, 255), gr=0.45):
+    cv2.putText(img, s, (x, y), cv2.FONT_HERSHEY_SIMPLEX, gr, (0, 0, 0), 3, cv2.LINE_AA)
+    cv2.putText(img, s, (x, y), cv2.FONT_HERSHEY_SIMPLEX, gr, farbe, 1, cv2.LINE_AA)
 
 
 def main():
@@ -43,58 +32,42 @@ def main():
     ap.add_argument('--neu', default=V.ASSET)
     ap.add_argument('--v7', default=os.path.join(V.SFV8, 'emd', 'EM30_V7.EMD'))
     ap.add_argument('--r5d', required=True)
-    ap.add_argument('--gdi-alt'); ap.add_argument('--gdi-neu', nargs='*', default=[])
-    ap.add_argument('--aus', required=True)
+    ap.add_argument('--r6b', required=True)
+    ap.add_argument('--aus', default=os.path.join(V.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v8', '16_hand.png'))
     a = ap.parse_args()
-    blobs = [('V7 319bbd17', open(a.v7, 'rb').read()), ('V8 r5d c4976c62', open(a.r5d, 'rb').read()), ('NEU ' + V.sha(open(a.neu, 'rb').read())[:8], open(a.neu, 'rb').read())]
-    mos = [V.modell(b) for _n, b in blobs]
-    zeilen, text = [], []
-    for pn in ('P1', 'P2', 'PV'):
-        pose = HM.POSEN[pn]
-        v = HM.modell(mos[2], pose)
-        P = np.array([v['E'], v['W'], v['T']], float)
-        cx, cy = P[:, 0].mean(), P[:, 1].mean()
-        x0 = int(min(max(cx - KANTE / 2, 0), 640 - KANTE)); y0 = int(min(max(cy - KANTE / 2, 0), 480 - KANTE))
-        box = (x0, y0, x0 + KANTE, y0 + KANTE)
-        vl = TV.bild(V.V80 + VORLAGEN[pn])
-        ks = [TV.kachel(vl, box, ZOOM, 'Vorlage %s (Arm verdeckt)' % pn)]
-        if pn == 'P1':
-            vv = HM.vorlage(VORLAGE_P1)
-            Q = np.array([vv['E'], vv['W'], vv['T']], float)
-            n = int(KANTE / VORLAGE_SKALA)
-            im = vv['_bild']
-            qx = int(min(max(Q[:, 0].mean() - n / 2, 0), im.shape[1] - n)); qy = int(min(max(Q[:, 1].mean() - n / 2, 0), im.shape[0] - n))
-            aus = im[qy:qy + n, qx:qx + n]
-            al = aus[..., 3:4].astype(float) / 255.0
-            rgb = (aus[..., 2::-1] * al + 96 * (1 - al)).astype(np.uint8)
-            k = np.ascontiguousarray(cv2.resize(rgb, (KANTE * ZOOM, KANTE * ZOOM), interpolation=cv2.INTER_NEAREST))
-            TV.schrift(k, 'Vorlage P1: Nutzerbild birkin%d' % VORLAGE_P1, 6, 22)
-            ks = [k]
-        for (nm, blob), mo in zip(blobs, mos):
-            ks.append(TV.kachel(TV.render(blob, pose), box, ZOOM, '%s %s' % (nm, pn)))
-            h = hell(mo, pose)
-            text.append('%s %s: Hand %4d px, Helligkeit mit Licht %5.1f, ohne Licht %5.1f' % (pn, nm, h[2], h[0], h[1]))
-        zeilen.append(TV.reihe(ks))
-    g = KANTE * ZOOM
-    unten = []
-    x0, y0, x1, y1 = GDI_BOX
-    for titel, p in [('echtes Fenster V8 r5d', a.gdi_alt)] + [('echtes Fenster NEU %d' % (i + 1), p) for i, p in enumerate(a.gdi_neu)]:
-        if not p:
-            continue
-        im = cv2.cvtColor(cv2.imread(p), cv2.COLOR_BGR2RGB)[y0:y1, x0:x1]
-        k = np.zeros((g, im.shape[1], 3), np.uint8)
-        k[:im.shape[0]] = im[:g]
-        TV.schrift(k, titel, 6, 22)
-        unten.append(k)
-    breite = zeilen[0].shape[1]
-    rest = breite - sum(k.shape[1] for k in unten)
-    tk = np.full((g, rest, 3), 24, np.uint8)
-    for i, t in enumerate(['Helligkeit der Hand (Knochen 12), Angabe:'] + text):
-        cv2.putText(tk, t, (8, 24 + 20 * i), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (255, 255, 255), 1, cv2.LINE_AA)
-    unten.append(tk)
-    im = np.vstack(zeilen + [np.hstack(unten)])
-    TV.speichern(TV.kopf(im, 'SF V8 16: linke Hand / Unterarm (P6) - Vorlage | V7 | V8 r5d | NEU je Pose P1, P2, PV (roh, x%d); unten echtes Fenster (gdigrab)' % ZOOM), a.aus)
-    print('\n'.join(text))
+    staende = [('V7', a.v7), ('V8 r5d', a.r5d), ('V8 r6b (verdreht)', a.r6b), ('NEU', a.neu)]
+    mo = {n: V.modell(open(p, 'rb').read()) for n, p in staende}
+    vor = RH._vorlage()
+    zeilen, leiste = [], []
+    for k, h, pose in SZ.PAARE:
+        pn = 'h%d' % h
+        v = HM.vorlage(k)
+        reihe = [HM.kachel(v['_bild'], v, 0.5, KANTE, F, 'Vorlage %s (%s)' % (v['bild'], v['video']))]
+        for n, _ in staende:
+            m = HM.modell(mo[n], pose)
+            reihe.append(HM.kachel(m['_bild'], m, 1.0, KANTE, F, '%s  %s (Clip %d Bild %d)' % (n, pn, pose['clip'], pose['bild'])))
+        zeilen.append(np.hstack(reihe))
+        leiste.append((v['bild'], pn, v['stationen'], m['stationen'], v['hand_laenge'], m['hand_laenge'], v['unterarm_laenge'], m['unterarm_laenge']))
+    bild = np.vstack(zeilen)
+    L = np.full((30 + 44 * len(leiste) + 30, bild.shape[1], 3), 24, np.uint8)
+    text(L, 'Breitenprofil quer zur Finger-Achse in Videopixeln, Stationen 1-8: ' + ', '.join('%d %s' % (i + 1, s) for i, s in enumerate(HM.STATIONEN))
+         + ' | Hand-Laenge | Unterarm-Laenge', 8, 20)
+    for j, (b, pn, sv, sm, hv, hm, uv, um) in enumerate(leiste):
+        y = 30 + 44 * j + 18
+        text(L, '%s Vorlage:' % b, 8, y, (200, 200, 200))
+        text(L, '%s NEU:' % pn, 8, y + 20, (255, 255, 255))
+        for i, s in enumerate(HM.STATIONEN):
+            ok = RH._in(sm[s], vor['st'][s])
+            text(L, '%5.1f' % sv[s], 200 + 150 * i, y, (200, 200, 200))
+            text(L, '%5.1f' % sm[s], 200 + 150 * i, y + 20, (120, 255, 120) if ok else (80, 80, 255))
+        text(L, '%5.1f' % hv, 200 + 150 * 8, y, (200, 200, 200))
+        text(L, '%5.1f' % hm, 200 + 150 * 8, y + 20)
+        text(L, '%5.1f' % uv, 200 + 150 * 9, y, (200, 200, 200))
+        text(L, '%5.1f' % um, 200 + 150 * 9, y + 20)
+    text(L, 'Streuung der fuenf Vorlagebilder min..max: ' + '  '.join('%d: %.1f..%.1f' % (i + 1, vor['st'][s][0], vor['st'][s][2]) for i, s in enumerate(HM.STATIONEN))
+         + '   (gruen = innerhalb +- 1 px, rot = ausserhalb)', 8, L.shape[0] - 10)
+    cv2.imwrite(a.aus, np.vstack([bild, L]))
+    print('geschrieben', a.aus, bild.shape)
 
 
 if __name__ == '__main__':

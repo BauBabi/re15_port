@@ -3787,3 +3787,238 @@ Test-Pins), 09932af5d (Riegel-Helfer laeuft wieder an V7).
   Kopf-Fenster sichtbar und Ecken bis 6,4 px neben r4 (S18 a); heller Keil 81-112 (S18 b); drei Dreiecke knapp ausserhalb der
   Texeldichte (S19); S9 (b) 5 px und S16 (b) durch die Hand (Runde 6a / P7); S17. Tafeln 14b_tonne.png und 17_kragen_weg.png zeigen
   den alten Stand 382bbfe7 und sind nicht committet - sie entstehen mit der Abgabe neu.
+
+## V8 Runde 6c (P7) - linke Hand richtig herum, Arm haengt (Hand-Bauer, Zweig r41/sichel_v8, 2026-11-11)
+
+**Anlass.** Nutzer 2026-11-10 abends: "Bei dem 2 beinigen Birkin in der Vorschau sieht es so aus als waere die linke Hand verkehrt
+herum gedreht, Kann das sein=?" - ja. Dazu weiter P6: "Die Vorlage hat eine breite Hand mit breiten Unterarmt. Dadurch wirkt es
+natuerlich. Bei uns ist die Hand ganz klein und zierlich und wirkt dadurch verkuemmert."
+
+**Umfang.** Nur der linke Arm: Mesh 11 (Unterarm), Mesh 12 (Hand), Knochen 11 (Ellbogen) und - mit Beleg, siehe unten - Knochen 10
+(Oberarm) in den Keyframes. Nacken, Schwanz, Kopf, Sichel-Arm, Textur unberuehrt. Kein Eingriff in Ablauf oder KI, keine Sonder-Pose.
+Alle Zahlen sind PORT-WAHL aus Messungen an der Vorlage (die Form steht auf keiner Disc, es gibt keine @0x-Adresse).
+
+### Ursache
+
+Runde 6a hatte die Hand um 118 Grad um ihre Laengsachse gedreht (`hand_v8.json` `dreh_grad 118`), begruendet mit dem Azimut der Kamera
+in der Ersatz-Pose P1. In den Ersatz-Posen P1/P2/PV liegt der Arm anders als im Spiel; dort sah die gedrehte Hand breit aus. In den
+echten Szenenposen zeigt sie der Kamera die Kante. Nachmessung ueber alle 912 Keyframes gegen Capcoms Original-EM30
+(Verhaeltnis Hand <-> Unterarm, `hand_szene.verdrehung`):
+
+| Stand | Verdrehung (Median, Grad) | Handruecken vorn (% der KF) | Daumen zur Koerpermitte (% der KF) | Handruecken zur Kamera in den Paar-Posen (Grad) | breite Stelle (px) |
+|---|---|---|---|---|---|
+| Original-EM30 | 0 | 86.7 | 91.0 | - | - |
+| V7 319bbd17 | 3.10 | 62.3 | 91.4 | -3.7 | 34.6 |
+| V8 r5d c4976c62 | 3.10 | 62.3 | 91.4 | -3.7 | 34.6 |
+| V8 r6b 95a783a6 | 118.03 | 28.0 | 28.3 | -111.4 | 22.2 |
+| NEU e9e71bca | -0.02 | 82.8 | 88.8 | -4.2 | 45.7 |
+
+Zweiter Fehler, schon in V7: der Ellbogen war um 60 Grad gebeugt (`ducken()` `ellbogen_links`), der Unterarm zeigte zur Kamera und war
+im Bild 13.4 px lang (Vorlage 42.4 .. 49.8). Dadurch stand die Hand auf Hoehe 0.58 der Figur statt 0.48 - der Arm hing nicht.
+
+### Messung umgestellt (E-c)
+
+`hand_szene.py` (neu), `hand_mass.py`: fuenf Paar-Posen mit Vorlagenbild (birkin20 <-> h125, birkin22 <-> h126, birkin23 <-> h128,
+birkin21 <-> h130, birkin24 <-> h132; Clip 1 Bild 35, 36, 38, 40, 42; Spielbild F = h + 243) und drei Kontroll-Posen (h100, h110,
+h135). Takt-Protokoll des Szenenlaufs: `SF_belege/v8/runde6c/takt.txt`. Tabellen: `SF_MESSBLATT_HAND.md` Abschnitt 8.
+
+### Reihe C1 - Verdrehung der Hand (Beuge 20, alle 912 Keyframes)
+
+| Dreh (Grad) | Handruecken vorn % | Daumen innen % |
+|---|---|---|
+| -15 | 79.7 | 80.4 |
+| -5 | 86.3 | 88.5 |
+| 0 | 86.0 | 89.3 |
+| +5 | 85.3 | 90.2 |
+| 10 | 84.6 | 91.3 |
+| +15 | 83.6 | 90.4 |
+| 20 | 82.1 | 89.5 |
+| 30 | 80.3 | 88.0 |
+| 60 | 70.1 | 78.0 |
+| 90 | 60.4 | 61.5 |
+| 110 | 35.9 | 36.2 |
+| 120 | 31.5 | 27.9 |
+| 180 | 11.1 | 9.6 |
+| 270 | 37.9 | 38.7 |
+| 350 | 85.9 | 82.9 |
+
+Zwischen -5 und +10 liegt die Reihe flach (Unterschiede unter 3 Prozentpunkten); kein Wert schlaegt Capcoms 0 in beiden Massen deutlich.
+**Wahl: 0 Grad** (E-a, Capcoms Verhaeltnis).
+
+### Reihe C2 - Ellbogen-Beuge (Verdrehung 0)
+
+Zielgroesse: mittlere Abweichung der fuenf Ketten-Masse (Unterarm-Laenge, Hand-Laenge, Hoehe Ellbogen, Handgelenk, Krallenspitze, je in
+Figurhoehen) von der Vorlage ueber die fuenf Paare, in Prozent der Figurhoehe.
+
+| Beuge (Grad) | 0 | 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Ziel | 1.94 | 1.80 | 1.57 | 1.37 | 1.25 | 1.32 | 1.84 | 2.94 | 4.06 | 5.29 | 6.59 | 8.00 | 9.54 |
+
+**Wahl: 20 Grad** (Minimum; V7 60).
+
+### Reihe Oberarm (Knochen 10) - Beleg fuer den Eingriff
+
+Mit Beuge 20 allein steckt die Hand in den Szenen-Keyframes im Koerper (Durchdringung "Szene-DD" = Zahl der 104 Szenen-Keyframes mit
+Hand-Ecke oder Krallenachse in einem fremden Mesh). `ducken()` zieht den Oberarm um 20 Grad zur Koerpermitte (`arm_innen`).
+
+| Oberarm innen (Grad) | Szene-DD | Ketten-Ziel | Winkel Unterarm | Winkel Hand | seitlich |
+|---|---|---|---|---|---|
+| 20 (V7) | 31 | 1.17 | -5.7 | -11.3 | 0.058 |
+| 10 | 22 | 1.30 | -2.8 | -6.9 | 0.030 |
+| 5 | 8 | 1.36 | -1.3 | -4.7 | 0.015 |
+| 0 | 6 | 1.45 | +0.3 | -2.3 | 0.009 |
+| -5 | 4 | 1.54 | +1.9 | 0.0 | 0.016 |
+| -7 | 0 | 1.56 | +2.5 | +0.9 | |
+| -8 | 0 | 1.58 | +2.9 | +1.4 | |
+| -10 | 0 | 1.61 | +3.5 | +2.4 | 0.023 |
+| -15 | 0 | 1.80 | +5.2 | +4.8 | 0.033 |
+
+Vorlage: Unterarm-Winkel im Mittel +4.0 Grad. **Wahl: -8** (erster Wert mit 0 Durchdringungen und 1 Grad Abstand zur Kante -7; der
+Unterarm-Winkel +2.9 liegt naeher an der Vorlage als bei 20). Preis: das Ketten-Ziel steigt von 1.17 auf 1.58, und das Lage-Mass
+"seitlich" allein spraeche fuer 0 .. 5 - der Oberarm steht sichtbar weiter vom Rumpf ab als bei V7 (siehe "Offen").
+
+### Reihen Form (P6)
+
+| Krallen-Wurzelring x | Krallenwurzel (px) | Krallen-Mitte (px) |
+|---|---|---|
+| 1.0 | 32.1 | 17.8 |
+| 1.3 | 37.6 | 19.2 |
+| 1.6 | 44.4 | 21.4 |
+| 2.0 | 44.2 | 23.5 |
+| Vorlage (Median) | 43.5 | 21.8 |
+
+**Wahl: 1.6.** Unterarm-Verlauf (Radialfaktor bei y 0 / 90 / 236): 1.0/1.0/0.86 -> Ellbogen im Mittel 30.6 px; 1.1/1.1/0.86 -> 32.0 ..
+33.2; 1.15/1.12/0.9 -> 32.2 .. 34.2; **1.2/1.15/0.9 -> 33.0 .. 34.2 (gewaehlt;** Vorlage 34.0 .. 40.8). Hand quer: 0.78 -> Handwurzel
+in h130 36.0 px (ausserhalb 26.6 .. 34.8 + 1); **0.77 gewaehlt** (breite Stelle 45.0 .. 47.0); 0.76 -> breite Stelle 44.0 .. 45.0.
+
+### Bau-Angaben alt -> neu (`v8/hand_v8.json`, `hand_r6.py`, `hand_szene.stufe_b`)
+
+| Angabe | alt (V8 r6b) | neu |
+|---|---|---|
+| Hand Verdrehung `dreh_grad` | 118 | 0 |
+| Ellbogen-Beuge (Knochen 11) | 60 (V7 `ducken`) | 20 |
+| Oberarm zur Koerpermitte (Knochen 10) | 20 (V7 `ducken`) | -8 |
+| Hand-Skala quer / laengs / quer | 0.93 / 0.72 / 0.93 | 0.77 / 0.72 / 0.77 |
+| Krallen-Wurzelring A, B, C | 1.0 | 1.6 |
+| Unterarm Radialfaktor y 0 / 90 / 236 | 1.0 / 1.0 / 0.86 | 1.2 / 1.15 / 0.9 |
+| Unterarm Grund-Skala | 1.229 / 0.8 / 1.229 | unveraendert |
+| Krallen-Laengen A 1.33, B 2.0 (nach C, Anteil 0.5), C 1.0 | | unveraendert |
+| Daumenkralle CLUT 491 grau, Fingerkrallen 492 rot (V7) | | unveraendert |
+
+Stufe b rechnet Knochen 11 als `Rz(-beuge * w) @ Original11` und Knochen 10 als `Rx((20 - innen) * w) @ lokal_basis` mit dem Gewicht w
+von `ducken()`; Selbstprobe: Beuge 60 und innen 20 ergeben die Basis bytegleich.
+
+### Paar-Tabelle Vorlage gegen NEU (Videopixel)
+
+| Paar | Ellbogen | Unterarm-Mitte | Handgelenk | Handwurzel | breite Stelle | Krallenwurzel | Krallen-Mitte | Spitzen | Handlaenge | Unterarm |
+|---|---|---|---|---|---|---|---|---|---|---|
+| birkin20 | 34.0 | 32.5 | 20.5 | 26.6 | 37.8 | 37.8 | 19.6 | 9.0 | 56.9 | 43.2 |
+| h125 NEU | 34.0 | 34.0 | 22.0 | 34.0 | 45.0 | 43.0 | 20.0 | **1.0** | 64.8 | 51.3 |
+| birkin22 | 34.1 | 33.5 | 20.0 | 26.8 | 38.0 | 37.9 | 18.2 | 6.9 | 58.0 | 42.4 |
+| h126 NEU | 33.0 | 33.0 | 21.0 | 33.0 | 45.0 | 44.0 | 22.0 | **1.0** | 66.0 | 50.6 |
+| birkin23 | 34.8 | 33.1 | 21.5 | 31.4 | 44.5 | 43.5 | 21.8 | 5.1 | 59.8 | 46.5 |
+| h128 NEU | 34.0 | 35.0 | 22.0 | 33.0 | 47.0 | 45.0 | 22.0 | **1.0** | 65.5 | 49.4 |
+| birkin21 | 36.1 | 34.5 | 21.1 | 34.5 | 46.6 | 46.1 | 23.9 | 6.2 | 59.5 | 49.8 |
+| h130 NEU | 34.0 | 34.0 | 21.2 | 34.0 | 45.2 | 44.0 | 21.0 | **2.0** | 65.2 | 49.6 |
+| birkin24 | 40.8 | 39.1 | 25.5 | 34.8 | 50.6 | 50.6 | 29.1 | 8.5 | 68.5 | 44.7 |
+| h132 NEU | 34.2 | 35.2 | 21.2 | 33.2 | 46.2 | 44.2 | 21.2 | **1.0** | 65.5 | 51.1 |
+
+Fett = ausserhalb der Streuung der fuenf Vorlagebilder (+- 1 px): nur Station "Spitzen". Die Streuung gilt ueber alle fuenf Bilder,
+nicht je Paar: gegen das eigene Paarbild liegt NEU bei birkin20 und birkin22 an Handwurzel und breiter Stelle 6 bis 7 px drueber, bei
+birkin24 am Ellbogen 6.6 px und an der breiten Stelle 4.4 px drunter. Kette: Vorlage E 0.631 / W 0.484 / T 0.290, NEU 0.638 / 0.482 /
+0.280 (V7 0.623 / 0.581 / 0.482; r6b 0.624 / 0.583 / 0.411).
+
+### Alle 912 Keyframes
+
+| Mass | V7 | V8 r6b | NEU |
+|---|---|---|---|
+| Krallenspitze ueber der Sohle, kleinster Wert / Median (Einheiten) | 320 / 1750 | 125 / 1577 | -27 / 1166 |
+| Abstand Hand - Koerper, kleinster Wert | 11 | 7 | 19 (Median 491) |
+| Keyframes mit Abstand unter 30 | 8 | 13 | 3 |
+| Durchdringung: KF mit Krallenachse im Koerper | 26 | - | 24 |
+| Durchdringung: KF mit Hand-Ecke im Koerper | 68 | - | 30 |
+| Durchdringung zusammen | 68 | 96 | 30 |
+| davon Szenen-KF (104) | 1 | 1 | 0 |
+
+NEU je Clip: Clip 9: 2, Clip 14: 1, Clip 20: 27. Neu gegenueber V7: Clip 14 Bild 18. Tiefste Stelle Clip 20 Bild 18. In 1 Keyframe
+(Clip 4) liegt eine Krallenspitze 27 Einheiten unter der Sohle (kein Szenen-Clip), in 3 Keyframes unter 100 Einheiten.
+
+### Versuche, die verworfen wurden
+
+- Verdrehung 118 behalten und nur die Beuge aendern: Handruecken vorn 28 %, Kante zur Kamera (-111 Grad) - das ist der Befund P7.
+- Beuge 20 ohne Oberarm-Eingriff: 31 der 104 Szenen-Keyframes mit Durchdringung.
+- Hand quer 0.78: Handwurzel in h130 36.0 px, ausserhalb der Vorlage.
+- Daumenkralle kuerzen (Daumenlaenge 20.7 .. 23.5 gegen 16.9 .. 19.4): die Gabel-Messung springt auf eine Fingerkralle, die Zahl
+  wird instabil - nicht eingebaut.
+- "ebnen" der Ecke 1 abschalten: Schlitz-Summe S9 (b) unveraendert (70 mit und ohne, Zwischenstand c9e0862c) - wirkungslos, bleibt an.
+
+### Riegel
+
+S17 (linke Hand und Unterarm) misst jetzt in den Paar- und Kontroll-Posen, S20 (Handstellung) ist neu:
+(a) Verdrehung gegen Capcoms Original ueber 912 Keyframes (Median <= 5 Grad), Handruecken vorn >= 57.3 %, Daumen zur Koerpermitte
+>= 86.0 %; (b) Handruecken zur Kamera |Winkel| <= 30 Grad in jeder Paar-Pose; (c) Hoehe Handgelenk und Krallenspitze ueber der Sohle
+in der Streuung der Vorlage.
+
+| Riegel | NEU e9e71bca | Gegenprobe V8 r6b 95a783a6 | Gegenprobe V7 319bbd17 |
+|---|---|---|---|
+| S17 | ROT in (a) Spitzen, (d) Daumen; (b) (c) (e) (f) (g) gruen | ROT in (a, b, c, d, e, g) | ROT in (a, b, c, d, e) |
+| S20 | GRUEN: (a) -0.02 Grad, 82.8 %, 88.8 %; (b) -5.1 .. -3.5; (c) W 0.475 .. 0.487, T 0.274 .. 0.285 | ROT in (a, b, c): 118.03 Grad, 28.0 %, 28.3 %; -111.0 .. -113.6; W 0.576 .. 0.589, T 0.400 .. 0.421 | ROT in (b, c); (a) gruen 3.10 Grad; W 0.574 .. 0.587, T 0.467 .. 0.494 |
+
+Soll / Ist S17 am Endstand: (a) Handgelenk / Unterarm-Mitte 0.602 .. 0.647 (Soll >= 0.597), Spitzen 1 .. 2 px (Soll 5.1 .. 9.0) ROT;
+(b) Handgelenk 21 .. 22 px (20.0 .. 25.5), Gelenk offen in 0 von 912 KF; (c) B/L 0.682 .. 0.718 (0.655 .. 0.783), Handlaenge
+64.8 .. 66.0 (56.9 .. 68.5); (d) Krallen A 18.3 .. 19.0, B 15.9 .. 17.0, C 18.1 .. 18.6, T 14.3 .. 14.4 px gruen, Daumen-Gabel
+18.2 .. 20.0 (22.4 .. 30.5) und Daumenlaenge 20.7 .. 23.5 (16.9 .. 19.4) ROT; (e) kein Kreuzen; (f) CLUT 491: 6, 492: 18, 490: 34
+Flaechen, 0 fremde Texel; (g) 30 KF (V7 68), Szene 0 von 104. Gegenproben: `SF_belege/v8/runde6c/gegenproben.txt`.
+
+Schwaeche von S20 (a): die Schwelle "Handruecken vorn >= 57.3 %" ist durch V7 (62.3 %) gesetzt und damit weit; r6b (28.0 %) faellt
+klar durch, ein Stand zwischen 57 und 80 % ginge durch. Die Verdrehung selbst (Median <= 5 Grad) ist die scharfe Schranke.
+
+**Voller Lauf S1 - S20** (`SF_belege/v8/runde6c/riegel_v8r6c.txt`): `SUMME: 17 von 23 gruen; ROT: S3, S9, S16, S17, S18, S19`.
+Stand Rest-Bauer war: 17 von 22 gruen; ROT: S9, S16, S17, S18, S19. Neu gruen: S20. Neu rot durch diese Runde:
+
+- **S3 (e)** K 3.39 (Soll <= 3; r6b 2.97). Diagnose `runde6c/s3_diagnose.txt`: im Mess-Fenster y 212 .. 243 der Ersatz-Pose PV bilden
+  in 10 bis 11 der 32 Zeilen Oberarm-Pixel (Knochen 10) die gemessene "Kopf-Vorderkante"; die Kopf-Zeilen sind bei r6b und NEU
+  gleich; ohne Knochen 10 - 12 gerastert K 5.91 bei beiden. Der Kopf ist unveraendert (Mesh 9 bytegleich), der Riegel misst den Arm mit.
+  Riegel nicht angefasst.
+- **S9 (a)** neue Ecken ueber der V7-Oberkontur: P1 1 px, F344 0 px (Ecken 493, 494), F354 5 px, F364 2 px. Diagnose
+  `runde6c/s9_diagnose.txt`, Bild `runde6c/s9_oberkontur.png`: alle neuen Ecken liegen auf Knochen 10 (Oberarm weiter aussen); ohne
+  Knochen 10 - 12 sind es 0 px und keine neue Ecke. Der Vergleich laeuft gegen die V7-Armhaltung, die diese Runde ersetzt.
+- **S9 (b)** Schlitz 73 px (r6b 5), verteilt auf 12 Ansichten, groesste F356 12 und F370 11; Bild `runde6c/schlitz_neu.png`
+  (Innenkante Unterarm und Daumenwurzel). In den echten Framedumps F344 - F378 (S9s) 10 px, Soll <= 20, gruen (r6b 13).
+
+S16, S18, S19 rot wie beim Rest-Bauer (nicht Auftrag dieser Runde).
+
+### Nachweis, Kette, Tests, Spiellauf
+
+- Asset `re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD` sha256 e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83;
+  Kette zweimal bytegleich (`V8-KETTE-OK`), Pin `release/em30_hangar.sha256` nachgezogen.
+- `runde6c/nachweis.txt`: gegen den Stand Rest-Bauer 95a783a6 sind nur Mesh 11 und 12 anders (21 von 23 bytegleich, Mesh 9 gleich),
+  in den Keyframes nur Knochen 10 (888 KF) und 11 (889 KF); Byte-Abschnitte: Keyframes 5432 Bytes, Meshes 575 Bytes, Textur und
+  alle uebrigen Abschnitte 0. Gegen V7: Mesh 9 bytegleich.
+- Tests (`runde6c/ctest.txt`): `100% tests passed, 0 tests failed out of 8`, 307.88 s. Die Spannen-Pins von Mesh 11 und 12 in
+  `tests/unit/test_birkin_formen.c` sind am Asset nachgezogen (Mesh 12 453 / 716 / 241, Mesh 11 464 / 640 / 426).
+- Spiellauf (Szene bis Exit-Bild 1110, echtes Fenster): state.log sha256 e48e1cad143cc5776401bc6a415652d694aaba972c1c23235cd18a5cc1ece349,
+  1131 Zeilen, bytegleich zur V7-Referenz - Ablauf und KI unberuehrt. Framedumps nur F200 - F460.
+
+### Tafeln und Sicht-Urteil (selbst angesehen)
+
+- `SF_belege/v8/16_hand.png` (neu gefasst): je Paar Vorlage | V7 | V8 r5d | V8 r6b | NEU, darunter die Zahlenleiste.
+- `SF_belege/v8/18_handstellung.png` (neu): Zeile 1 echte Spielfenster F368, F369, F371, F373, F375 am Endstand je neben dem
+  Vorlagebild; Zeile 2 dieselben vom Stand Rest-Bauer; Zeilen 3 und 4 ganze Figur von vorn, links, hinten im Stand und im Gang.
+- `SF_belege/v8/runde6c/f368_nah.png`: F368 r6b | F368 NEU | birkin20 | F375 NEU | birkin24.
+
+Was zu sehen ist: Der Handruecken zeigt zur Kamera, die graue Daumenkralle sitzt auf der Koerperseite, die drei roten Krallen zeigen
+nach unten - wie in der Vorlage. Der Arm haengt seitlich, die Krallen enden auf Oberschenkelhoehe. Der Unterarm ist breit, am
+Handgelenk eingeschnuert, die Hand wieder breit; der Stummel von V7 / r5d und die schmale Kante von r6b sind weg.
+
+Was abweicht: (1) Hand und unteres Unterarm-Drittel sind dunkelrot bis violett-schwarz, in der Vorlage grau mit roten
+Fingerspitzen und einem hellen Band am Ellbogen - das ist die Original-Textur (CLUT-Zeile 490), nicht nachgemalt (E4). (2) Das
+Handende ist in der Vorlage rund wie ein Faeustling, am Modell stehen einzelne spitze Krallen. (3) Der Arm ist etwas laenger als in vier
+der fuenf Vorlagebilder. (4) In den Ansichten von vorn steht der Oberarm sichtbar weiter vom Rumpf ab als bei V7. (5) In der Vorlage
+knickt die Hand um 7 bis 14 Grad zum Koerper ein, am Modell um 1 bis 2 Grad - die Hand wirkt steifer. (6) In der Seitenansicht
+der Tafel 18 laeuft der Schwanz aus der Kachel; der Arm ist dort klein.
+
+### Offen
+
+S3 (e) und S9 (a, b) neu rot durch die Arm-Haltung; Oberarm -8 (Entscheid erbeten); S17 (a) Spitzen und (d) Daumen; Hand-Textur;
+Knick der Hand (Knochen 12); Kralle in Clip 4 unter der Sohle; 1 neuer Durchdringungs-Keyframe in Clip 14; S16, S18, S19 unveraendert rot.

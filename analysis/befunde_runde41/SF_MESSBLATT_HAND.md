@@ -167,3 +167,69 @@ Daumenkralle 12.7 px, Streuung 6.7 .. 22.6 px (3 Bilder).
 Clip (Knochen 12), nicht im Mesh - Clips und Skelett sind in dieser Runde gesperrt. Folge: quer zur Unterarmachse gemessen ragt
 der Handansatz bei 90 % und 100 % der Unterarmlaenge seitlich heraus (31.5 und 34.5 px gegen 22.5 und 22.0 der Vorlage),
 obwohl das Handgelenk quer zur Handachse passt (23.0 px gegen 21.1).
+
+## 8. Echte Szenenposen (P7, Runde 6c, 2026-11-11)
+
+Anlass: Nutzer 2026-11-10 abends - "Bei dem 2 beinigen Birkin in der Vorschau sieht es so aus als waere die linke Hand verkehrt herum
+gedreht, Kann das sein=?" Ja. Die Abschnitte 2 bis 7 massen in den Ersatz-Posen P1/P2/PV; dort liegt der Arm anders als im Spiel.
+Ab hier gilt: gemessen wird in den Posen, die das Spiel im Bild der Vorlage wirklich zeigt (`hand_szene.py`, `hand_mass.py`).
+
+**Paare Vorlage <-> Spiel** (Videobild f = h + 1351, Spielbild F = h + 243; Takt-Protokoll `SF_belege/v8/runde6c/takt.txt`):
+birkin20 <-> h125 (Clip 1 Bild 35, F368), birkin22 <-> h126 (Bild 36, F369), birkin23 <-> h128 (Bild 38, F371),
+birkin21 <-> h130 (Bild 40, F373), birkin24 <-> h132 (Bild 42, F375). Kontroll-Posen ohne Vorlage: h100, h110, h135.
+
+### 8.1 Vorlage je Bild (Videopixel; Stationen quer zur Finger-Achse)
+
+| Bild | Ellbogen | Unterarm-Mitte | Handgelenk | Handwurzel | breite Stelle | Krallenwurzel | Krallen-Mitte | Spitzen | Handlaenge | Unterarm | Figur | B/L | E | W | T | Winkel Unterarm | Winkel Hand |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| birkin20 | 34.0 | 32.5 | 20.5 | 26.6 | 37.8 | 37.8 | 19.6 | 9.0 | 56.9 | 43.2 | 299.5 | 0.664 | 0.634 | 0.490 | 0.302 | +0.7 | -6.3 |
+| birkin22 | 34.1 | 33.5 | 20.0 | 26.8 | 38.0 | 37.9 | 18.2 | 6.9 | 58.0 | 42.4 | 303.5 | 0.655 | 0.629 | 0.490 | 0.301 | +3.8 | -8.3 |
+| birkin23 | 34.8 | 33.1 | 21.5 | 31.4 | 44.5 | 43.5 | 21.8 | 5.1 | 59.8 | 46.5 | 319.0 | 0.744 | 0.647 | 0.503 | 0.318 | +5.6 | -8.7 |
+| birkin21 | 36.1 | 34.5 | 21.1 | 34.5 | 46.6 | 46.1 | 23.9 | 6.2 | 59.5 | 49.8 | 303.5 | 0.783 | 0.626 | 0.462 | 0.270 | +4.0 | -9.5 |
+| birkin24 | 40.8 | 39.1 | 25.5 | 34.8 | 50.6 | 50.6 | 29.1 | 8.5 | 68.5 | 44.7 | 310.0 | 0.739 | 0.619 | 0.476 | 0.256 | +5.9 | -5.3 |
+
+B/L = breite Stelle / Handlaenge. E, W, T = Hoehe von Ellbogen, Handgelenk, Krallenspitze ueber der Sohle in Figurhoehen.
+Streuung (kleinster .. groesster Wert) = Toleranz der Riegel S17 und S20, bei Pixelmassen + 1 px Rasterkante.
+
+### 8.2 Modell in denselben Posen: V7 | V8 r5d | V8 r6b | NEU (Mittel der fuenf Paar-Posen)
+
+| Mass | Vorlage (Mittel; Streuung) | V7 319bbd17 | V8 r5d c4976c62 | V8 r6b 95a783a6 | NEU e9e71bca |
+|---|---|---|---|---|---|
+| Unterarm sichtbar lang (px) | 45.3; 42.4 .. 49.8 | 13.4 | 13.4 | 13.4 | 50.4 |
+| Handlaenge (px) | 60.5; 56.9 .. 68.5 | 34.9 | 34.9 | 55.2 | 65.4 |
+| Handgelenk (px) | 21.7; 20.0 .. 25.5 | 17.5 | 17.5 | 16.6 | 21.5 |
+| breite Stelle (px) | 43.5; 37.8 .. 50.6 | 34.6 | 34.6 | 22.2 | 45.7 |
+| Krallenwurzel (px) | 43.2; 37.8 .. 50.6 | 34.5 | 34.5 | 16.6 | 44.0 |
+| B/L | 0.717; 0.655 .. 0.783 | 0.909 .. 1.069 | 0.909 .. 1.069 | 0.375 .. 0.440 | 0.682 .. 0.718 |
+| E (Ellbogen ueber Sohle) | 0.631; 0.619 .. 0.647 | 0.623 | 0.623 | 0.624 | 0.638 |
+| W (Handgelenk ueber Sohle) | 0.484; 0.462 .. 0.503 | 0.581 | 0.582 | 0.583 | 0.482 |
+| T (Krallenspitze ueber Sohle) | 0.290; 0.256 .. 0.318 | 0.482 | 0.482 | 0.411 | 0.280 |
+| Ketten-Ziel (mittl. Abweichung, % Figurhoehe) | 0 | 9.89 | 9.89 | 7.21 | 1.58 |
+| Handruecken zur Kamera (Grad, 0 = frontal) | - | -3.7 | -3.7 | -111.4 | -4.2 |
+| Verdrehung Hand gegen Unterarm, gegen Capcoms Original (912 KF, Median) | 0 | 3.10 | 3.10 | 118.03 | -0.02 |
+
+### 8.3 NEU je Pose
+
+| Pose | Ellbogen | Unterarm-Mitte | Handgelenk | Handwurzel | breite Stelle | Krallenwurzel | Krallen-Mitte | Spitzen | Handlaenge | Unterarm | B/L | E | W | T | Winkel Unterarm | Winkel Hand | Kamera |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| h125 | 34.0 | 34.0 | 22.0 | 34.0 | 45.0 | 43.0 | 20.0 | 1.0 | 64.8 | 51.3 | 0.694 | 0.636 | 0.475 | 0.275 | +0.2 | -0.7 | -5.1 |
+| h126 | 33.0 | 33.0 | 21.0 | 33.0 | 45.0 | 44.0 | 22.0 | 1.0 | 66.0 | 50.6 | 0.682 | 0.636 | 0.478 | 0.274 | +0.8 | -0.1 | -4.7 |
+| h128 | 34.0 | 35.0 | 22.0 | 33.0 | 47.0 | 45.0 | 22.0 | 1.0 | 65.5 | 49.4 | 0.718 | 0.638 | 0.485 | 0.283 | +2.7 | +1.4 | -4.1 |
+| h130 | 34.0 | 34.0 | 21.2 | 34.0 | 45.2 | 44.0 | 21.0 | 2.0 | 65.2 | 49.6 | 0.693 | 0.640 | 0.487 | 0.285 | +4.7 | +3.0 | -3.5 |
+| h132 | 34.2 | 35.2 | 21.2 | 33.2 | 46.2 | 44.2 | 21.2 | 1.0 | 65.5 | 51.1 | 0.705 | 0.641 | 0.484 | 0.282 | +6.0 | +4.0 | -3.6 |
+| h100 (Kontrolle) | 18.0 | 26.0 | 16.0 | 28.0 | 36.0 | 18.0 | 8.0 | 2.0 | 49.2 | 50.7 | 0.732 | 0.637 | 0.469 | 0.308 | +0.9 | -1.5 | -0.5 |
+| h110 (Kontrolle) | 28.0 | 28.0 | 18.0 | 29.0 | 40.0 | 22.0 | 17.0 | 2.0 | 56.5 | 53.3 | 0.708 | 0.617 | 0.442 | 0.258 | +1.4 | 0.0 | -3.2 |
+| h135 (Kontrolle) | 33.2 | 34.2 | 21.0 | 32.2 | 44.2 | 43.2 | 21.2 | 1.2 | 64.0 | 53.5 | 0.691 | 0.646 | 0.483 | 0.284 | +7.4 | +5.1 | -3.8 |
+
+In h100 und h110 (Auftritt, Clip 11) ist der Arm teils vom Rumpf verdeckt; die Stationen dort sind Sichtmasse, keine Formmasse.
+
+### 8.4 Was ausserhalb der Vorlage bleibt (fuer "offen")
+
+1. **Spitzen** (Station 8, 2 Videopixel vor dem Handende): Modell 1 .. 2 px, Vorlage 5.1 .. 9.0 px. Die Vorlage endet rund
+   (faeustlingsartig), das Modell in einzelnen spitzen Krallen.
+2. **Handlaenge** 64.8 .. 66.0 px liegt in der Streuung (56.9 .. 68.5), aber ueber vier der fuenf Bilder (56.9 .. 59.8); nur
+   birkin24 ist laenger (68.5).
+3. **Daumen**: Gabel ab Handgelenk 18.2 .. 20.0 px (Vorlage 22.4 .. 30.5), Daumenlaenge 20.7 .. 23.5 px (Vorlage 16.9 .. 19.4).
+   Kuerzen der Daumenkralle wurde versucht und verworfen (die Gabel-Messung springt dann auf eine Fingerkralle).
+4. **Knick Hand gegen Unterarm**: Vorlage 7.0 .. 14.3 Grad zum Koerper hin (Mittel 11.6), Modell 0.9 .. 2.0 Grad.
+   Der Knick steht im Clip (Knochen 12), nicht im Mesh; Knochen 12 gehoert nicht zum Umfang dieser Runde.
