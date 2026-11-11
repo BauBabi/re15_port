@@ -66,11 +66,19 @@ S16 Luecke      (a) Luecken-Bildpunkte zwischen Ruecken (Knochen 8 oberhalb des 
                 (b) Gesichts-Bildpunkte (Knochen 9, lok x >= 150) je Ansicht (Variante 0, wo V7 >= 150 zeigt) >= V7 - 2 % (Mesh 8 verdeckt das Gesicht nicht)
 Runde 6a P6 (Nutzer 2026-11-10: "Die Vorlage hat eine breite Hand mit breiten Unterarmt. Dadurch wirkt es natürlich. Bei uns ist die Hand ganz
                 klein und zierlich und wirkt dadurch verkümmert."; Mass hand_mass.py, Regel riegel_hand.py; Gegenproben V7 und V8 r5d rot in a-c):
-S17 Hand links  (a) Breitenprofil des linken Arms in P1 an den acht Stationen des Messblatts in der Streuung der fuenf Vorlagebilder (+- 1 px);
-                P2 / PV (Arm in der Vorlage verdeckt): Handgelenk durch Unterarm-Mitte >= kleinstes Verhaeltnis der Vorlage; (b) Handgelenkbreite
+S17 Hand links  seit Runde 6c (P7) in den ECHTEN Szenenposen (hand_szene.py: Paar-Posen h125/h126/h128/h130/h132 mit Vorlagenbild birkin20/22/23/21/24,
+                Kontroll-Posen h100/h110/h135) statt in den Ersatz-Posen P1/P2/PV:
+                (a) Breitenprofil des linken Arms in JEDER Paar-Pose an den acht Stationen des Messblatts in der Streuung der fuenf Vorlagebilder
+                (+- 1 px); in allen acht Posen Handgelenk durch Unterarm-Mitte >= kleinstes Verhaeltnis der Vorlage; (b) Handgelenkbreite
                 und Unterarmspitze in allen Keyframes im Handkoerper; (c) Handbreite / Handlaenge und Handlaenge; (d) Laenge und Wurzeldicke je
-                Kralle, Daumen; (e) Krallen kreuzen nicht in P1, P2, PV; (f) Daumenkralle Zeile 491, Fingerkrallen 492, 0 fremde Texel;
-                (g) Keyframes aller Clips mit Kralle oder Hand im Koerper <= V7 und V8 r5d
+                Kralle, Daumen; (e) Krallen kreuzen nicht in den acht Posen; (f) Daumenkralle Zeile 491, Fingerkrallen 492, 0 fremde Texel;
+                (g) Keyframes aller Clips mit Kralle oder Hand im Koerper <= V7 und V8 r5d; in den Szenen-Keyframes <= r5d (1)
+Runde 6c P7 (Nutzer 2026-11-10: "Bei dem 2 beinigen Birkin in der Vorschau sieht es so aus als wäre die linke Hand verkehrt herum gedreht";
+                Regel riegel_hand.s20; Gegenproben: Stand Rest-Bauer 95a783a6 ROT in S20 (a), (b), (c) und S17 (a), (c); V7 ROT in S17 (a), (c)):
+S20 Handstellung (a) Verdrehung Hand gegen Unterarm, verglichen mit Capcoms Original, ueber alle 912 Keyframes: Median <= 5 Grad, alle <= 10 Grad;
+                Anteil Handruecken nach vorn und Daumen zur Koerpermitte nicht mehr als 5 Punkte unter V7 / Original;
+                (b) Paar-Posen: Winkel Handruecken zur Kamera <= 30 Grad, breite Stelle in der Streuung der Vorlage (+- 1 px);
+                (c) Paar-Posen: Hoehe von Handgelenk und Krallenspitze ueber der Sohle in Figurhoehen in der Streuung der Vorlage (+- 0,01)
                 (c) Runde 5d: Bildpunkte, in denen eine Flaeche von Mesh 8 ohne Gegenstueck in V7 (Einsatz nacken_r5.py) dort gezeichnet wird, wo
                 V7 das Gesicht zeigt (Knochen 9, lok x >= 150), in allen 177 Ansichten (Variante 0) = 0 (Auftrag Runde 5: "der Einsatz darf in
                 KEINER Ansicht ueber das Gesicht gezeichnet werden")
@@ -755,6 +763,7 @@ def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None, r4=None
     out['S16'] = s16(blob, ref_blob)
     import riegel_hand as RH
     out['S17'] = RH.s17(blob, ref_blob)
+    out['S20'] = RH.s20(blob, ref_blob)
     if r4 is not None:
         import riegel_r6 as R6
         R6.einbauen(out, blob, ref_blob, r4, ko, fd)
@@ -862,6 +871,9 @@ def zeilen(r):
     if 'S18' in r:
         import riegel_r6 as R6
         z += R6.zeilen(r)
+    if 'S20' in r:
+        import riegel_hand as RH
+        z += RH.zeilen20(r['S20'])
     if 'S14s' in r:
         z.append('S14s fast weisse Bildpunkte in echten Framedumps F344-F372, Fenster x 560-690 / y 260-330 (960x720): neu %d, V7 %d (<= V7 + %d) -> %s'
                  % (r['S14s']['neu'], r['S14s']['v7'], S14S_RAND, 'GRUEN' if r['S14s']['ok'] else 'ROT'))
@@ -870,7 +882,7 @@ def zeilen(r):
     if 'S9s' in r:
         z.append('S9s Schlitz in echten Framedumps F344-F378 (gruene Silhouette, Ueberschuss gegen V7): %d (Soll <= %d) -> %s'
                  % (r['S9s']['ueberschuss'], SCHLITZ_SZENE_SOLL, 'GRUEN' if r['S9s']['ok'] else 'ROT'))
-    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18', 'S19', 'S10s', 'S9s', 'S14s')
+    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18', 'S19', 'S20', 'S10s', 'S9s', 'S14s')
            if k in r and not r[k]['ok']]
     gelb = ['S16'] if r.get('S16', {}).get('status', '').startswith('GELB') else []
     z.append('SUMME: %d von %d gruen%s%s' % (len([k for k in r if k.startswith('S')]) - len(rot) - len(gelb), len([k for k in r if k.startswith('S')]),
