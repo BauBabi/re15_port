@@ -211,6 +211,9 @@ def ecken_theta(m, b, f, phi):
 
 def _ring_y(m, b):
     nr = 3 if b in (16, 18) else 2
+    nr = min(nr, (len(m['v']) - 2) // S_)        # Staende vor V8 (Gegenprobe V7: Mesh 16 hat 24 Ecken = 2 Ringe zu 11 + 2 Achs-Ecken,
+                                                 # gemessen sfv8/r6c/riegel_v7.out: IndexError); im V8-Bau (35 / 24 Ecken, mit Teilung
+                                                 # 43 / 32 / 47) bleibt es bei 3 bzw. 2 Ringen
     ys = [m['v'][i][1] for i in range(nr * S_)]
     return float(min(ys)), float(max(ys))
 
