@@ -91,6 +91,8 @@ def hand_ecken(om, c):
             e = (1.0 - k['anteil']) * a / np.linalg.norm(a) + k['anteil'] * b / np.linalg.norm(b)
             a = e / np.linalg.norm(e) * np.linalg.norm(a)
         P[sp] = m + k['faktor'] * a
+        if k.get('ring', 1.0) != 1.0:                              # Runde 6c: Wurzelring der Kralle um seine Mitte geweitet (Dicke an der Wurzel)
+            P[ring] = m + k['ring'] * (P0[ring] - m)
     for i, (y, f) in sorted((int(k), v) for k, v in c.get('wurzelring', {}).items()):   # Ecken des Handansatzes: neue Hoehe y, Radialfaktor f
         P[i] = (P[i, 0] * f, y, P[i, 2] * f)
     for e in c.get('ebnen', []):                                   # Ecke auf dem kuerzesten Weg in ihrer Hoehe y in die Ebene dreier Ecken

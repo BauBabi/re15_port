@@ -14,11 +14,13 @@
 #
 # Schritte:
 #   1-6 v7_kette.sh (Stufe 6 = V7, sha256 319bbd17; dessen Pin-Pruefung wird hier durch V7_SOLL ersetzt, weil der Pin jetzt V8 ist)
-#   7   v8/v8_bau.py --stufen srwaunh  + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, v8/unterseite_v8.json, v8/nacken_v8.json, Original-EM30 (CDEMD0.EMS)
+#   7   v8/v8_bau.py --stufen srwaunhb  + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, v8/unterseite_v8.json, v8/nacken_v8.json, Original-EM30 (CDEMD0.EMS)
 #       (Runde 6b: Stufe r mit ruecken_v8.json ohne Kragen (Ecken um den Kopf auf Stand Runde 4), Stufe n = nacken_r6.py (ein geschlossenes
 #        Nackenstueck, 7 Ecken / 10 Dreiecke, Zeile 493), Stufe u = unterseite_r5.py Runde 6: Grenze 110 / 120 Grad, Mantel, Dorn und
 #        Ring-Deckel an der Grenze geteilt, Fleisch-Verlauf v 98-108; Asset sha256 95a783a6 -
 #        gegen den ersten Stand 382bbfe7 zwei Flaechen anders: Mesh 8 v24 ohne Schub (nacken_v8.json), Mesh 16 v22 auf Zeile 495)
+#       (Runde 6c P7: Stufe b = v8/hand_szene.py + v8/hand_v8.json "ellbogen": Ellbogen-Beuge des linken Arms (Knochen 11 je Keyframe),
+#        letzte Stufe; Hand ohne Verdrehung (dreh_grad 0); Stufenfolge s r w a u n h b)
 #       (Runde 6a P6: Stufe h = hand_r6.py + v8/hand_v8.json: linke Hand (Mesh 12) und linker Unterarm (Mesh 11) aus dem Original-EM30
 #        in der Groesse des Messblatts Hand; Stufenfolge s r w a u n h)
 #       (Runde 4: Stufe w = wurzel_r4.py statt e, Texturen adern_r4.py modus original_r4;
@@ -50,8 +52,8 @@ grep -E "^   [1-5] " "$ZIEL/v7_kette.txt"
 
 T="$ZIEL/baum/re15_port/tools/r41_sichel/v8"
 [ -f "$T/v8_bau.py" ] || { echo "FEHLER: $T/v8_bau.py fehlt im Schattenbaum"; exit 2; }
-echo "-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwaunh"
-( cd "$T" && python v8_bau.py --basis "$ZIEL/emd/EM30_V7.EMD" --aus "$ZIEL/emd" --name EM30_V8.EMD --stufen srwaunh \
+echo "-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwaunhb"
+( cd "$T" && python v8_bau.py --basis "$ZIEL/emd/EM30_V7.EMD" --aus "$ZIEL/emd" --name EM30_V8.EMD --stufen srwaunhb \
       --json "$ZIEL/prot/7_v8.json" ) > "$ZIEL/prot/7_v8.txt" 2>&1 || { echo "FEHLER: Schritt 7_v8 (Protokoll $ZIEL/prot/7_v8.txt)"; tail -5 "$ZIEL/prot/7_v8.txt"; exit 1; }
 rc=0
 v8="$(sha256sum "$ZIEL/emd/EM30_V8.EMD" | awk '{print $1}')"
