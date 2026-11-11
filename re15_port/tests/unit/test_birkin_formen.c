@@ -391,19 +391,23 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                       zeile_zahl(b, 492));
                 CHECK(zeile_zahl(b, 490) == b->quad_count + b->triangle_count - 24, "%s: Klauenhand (Mesh 12) %d Flaechen auf 490 statt %d",
                       name, zeile_zahl(b, 490), b->quad_count + b->triangle_count - 24);
-                /* V8 Runde 6a (P6, hand_r6.py / hand_v8.json Variante "0.93 0.72 / 118"): breite Hand - Spanne der 52 Ecken und
-                 * Wurzelring (Ecken 1-4) hinter dem Gelenk; gemessen am Asset 7a65e3f0, Gegenprobe r5d / V7: 343 / 594 / 235, y 16-19 */
-                CHECK(b->tri_vertex_count == 52 && spanne(b, 0) == 484 && spanne(b, 1) == 716 && spanne(b, 2) == 433,
-                      "%s: Klauenhand (Mesh 12) %d Ecken, Spanne %d / %d / %d statt 52, 484 / 716 / 433", name, b->tri_vertex_count,
+                /* V8 Runde 6c (P7, Nutzer 2026-11-10: "sieht es so aus als waere die linke Hand verkehrt herum gedreht"; hand_r6.py /
+                 * hand_v8.json skala 0.77 0.72 0.77, dreh_grad 0, Krallen-Wurzelring 1.6): breite Hand in Capcoms Lage - Spanne der
+                 * 52 Ecken und Wurzelring (Ecken 1-4) hinter dem Gelenk; gemessen am Asset e9e71bca. Gegenproben: der um 118 Grad
+                 * verdrehte Stand 95a783a6 hatte 484 / 716 / 433 (Spanne z = Dicke der Hand fast so gross wie x), r5d / V7
+                 * 343 / 594 / 235, y 16-19 */
+                CHECK(b->tri_vertex_count == 52 && spanne(b, 0) == 453 && spanne(b, 1) == 716 && spanne(b, 2) == 241,
+                      "%s: Klauenhand (Mesh 12) %d Ecken, Spanne %d / %d / %d statt 52, 453 / 716 / 241", name, b->tri_vertex_count,
                       spanne(b, 0), spanne(b, 1), spanne(b, 2));
                 for (int v = 1; v <= 4 && v < b->tri_vertex_count; v++)
                     CHECK(b->tri_vertices[v].y == -22, "%s: Klauenhand (Mesh 12) Wurzelring-Ecke %d y %d statt -22", name, v,
                           b->tri_vertices[v].y);
             }
-            if (m == 11) {               /* V8 Runde 6a (P6): Unterarm nach dem Breitenprofil der Vorlage (hand_v8.json unterarm verlauf);
-                                          * gemessen am Asset 7a65e3f0, Gegenprobe r5d / V7: Spanne x / z 516 / 472 */
-                CHECK(b->tri_vertex_count == 18 && spanne(b, 0) == 444 && spanne(b, 1) == 640 && spanne(b, 2) == 407,
-                      "%s: Unterarm (Mesh 11) %d Ecken, Spanne %d / %d / %d statt 18, 444 / 640 / 407", name, b->tri_vertex_count,
+            if (m == 11) {               /* V8 Runde 6c (P7): Unterarm nach dem Breitenprofil der Vorlage in den echten Szenenposen
+                                          * (hand_v8.json unterarm verlauf, Ellbogen-Ende 1.2 / 1.15); gemessen am Asset e9e71bca,
+                                          * Gegenproben: Stand 95a783a6 444 / 640 / 407, r5d / V7 Spanne x / z 516 / 472 */
+                CHECK(b->tri_vertex_count == 18 && spanne(b, 0) == 464 && spanne(b, 1) == 640 && spanne(b, 2) == 426,
+                      "%s: Unterarm (Mesh 11) %d Ecken, Spanne %d / %d / %d statt 18, 464 / 640 / 426", name, b->tri_vertex_count,
                       spanne(b, 0), spanne(b, 1), spanne(b, 2));
             }
             if (m == 9) {                /* N1.10: Kopf auf eigener CLUT-Zeile; V7: 486 (V6 Kopf) */
