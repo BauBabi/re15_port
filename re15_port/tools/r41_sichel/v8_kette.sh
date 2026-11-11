@@ -20,7 +20,9 @@
 #        Ring-Deckel an der Grenze geteilt, Fleisch-Verlauf v 98-108; Asset sha256 95a783a6 -
 #        gegen den ersten Stand 382bbfe7 zwei Flaechen anders: Mesh 8 v24 ohne Schub (nacken_v8.json), Mesh 16 v22 auf Zeile 495)
 #       (Runde 6c P7: Stufe b = v8/hand_szene.py + v8/hand_v8.json "ellbogen": Ellbogen-Beuge des linken Arms (Knochen 11 je Keyframe),
-#        letzte Stufe; Hand ohne Verdrehung (dreh_grad 0); Stufenfolge s r w a u n h b)
+#        und Einwaertsdrehung des linken Oberarms (Knochen 10), letzte Stufe; Hand ohne Verdrehung (dreh_grad 0), Hand quer 0.77,
+#        Krallen-Wurzelring x 1.6, Unterarm am Ellbogen-Ende weiter; Stufenfolge s r w a u n h b; Asset sha256 e9e71bca -
+#        gegen 95a783a6 nur Mesh 11 und 12 und in den Keyframes nur Knochen 10 und 11 anders)
 #       (Runde 6a P6: Stufe h = hand_r6.py + v8/hand_v8.json: linke Hand (Mesh 12) und linker Unterarm (Mesh 11) aus dem Original-EM30
 #        in der Groesse des Messblatts Hand; Stufenfolge s r w a u n h)
 #       (Runde 4: Stufe w = wurzel_r4.py statt e, Texturen adern_r4.py modus original_r4;
