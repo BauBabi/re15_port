@@ -3698,3 +3698,92 @@ Commits a43dc024c (Messblatt), 2102d06e7 (Werkzeug, Varianten), 68e3f0e60 (Riege
 - **Offen**: S17 (a) Spitzen und (g); S9 (b) 5 px; S16 (b); Hand-Textur dunkel; Knickwinkel der Hand im Clip; Krallen stumpfer und
   dicker (Probe ausserhalb der vier Varianten: Krallen A x 1,6 / C x 1,2 hebt das Handprofil bei 90 % von 4,8 auf 17,8 px ohne
   Kreuzung, die Station Spitzen bleibt 2,2); linke Hand in P2 / PV der Vorlage verdeckt (dort kein Vorlage-Mass).
+
+## V8 Runde 6b - Nacken ohne Kragen, Schwanz-Unterseite (Bauer 6b abgebrochen; Bau-Abschluss durch Folge-Bauer, Zweig r41/sichel_v8, 2026-11-11)
+
+Auftrag nach der Pruefung V8 r5d ("Kragen", "graue Reifen") und den Nutzer-Befunden vom 2026-11-09 ("es gibt immer noch eine Lücke
+zwischen Rücken und Kopf beim 2 beiner Birkin"; "Die Unterseite des großen Schwanzes ist fleischig ... Nur die oberseite ist durchweg
+grau."): P5-neu (Kragen weg, echter Nacken) und P4-neu (Schwanz-Unterseite fertig). Dieser Absatz ist KEINE Abgabe: Tafeln,
+Szenenvideo und Fensterbilder macht der naechste Bauer. Meshes 11 und 12 (linke Hand, Befund P7) sind hier nicht angefasst.
+Commits 6b: 5cbfdb7d8 (P5-neu Werkzeuge), 0bc534825 (P4-neu Werkzeuge), 03ecd15c5 (erstes Asset 382bbfe7), 118fad898 (Riegel 6b).
+Commits Abschluss: 3781efb4e (Riegel-Korrektur S4 / S10), 886f84a69 (v24 ohne Schub, tafeln_r6.py), bcb192258 (Asset, Pin,
+Test-Pins), 09932af5d (Riegel-Helfer laeuft wieder an V7).
+
+- **Asset** sha256 95a783a62e75ed2bd792094373ce0a27b8ad71ad508be21f4261400ef42aa7cc (274644 Bytes), Kette s r w a u n h, dreimal
+  gebaut = bytegleich (v8_kette.sh "V8-KETTE-OK"; sfv8/r6c/kette_a, kette_b, kette_c). Gegen den Stand des Hand-Bauers (7a65e3f0)
+  aendern sich nur Mesh 8 (Nacken) und die Meshes 16-22 (Schwanz); Mesh 9 bytegleich V7, Meshes 11 / 12 bytegleich 7a65e3f0,
+  16 CLUT-Zeilen unveraendert (sfv8/r6c/kopf.out).
+- **P5-neu, gebaut von 6b** (ruecken_v8.json, nacken_r6.py, nacken_v8.json):
+  (a) Kragen zurueck: die in Runde 5 angehobenen Ecken 0, 16, 17, 29, 30, 45-50, 64, 65, 67, 68 von Mesh 8 stehen wieder auf dem Stand
+  der Runde 4. **Versuch 0** (alle Ecken auf r4): Naht S2c steigt von 2 auf 8 px - deshalb bleiben 5, 6, 7, 20, 35, 38, 41, 42, 43, 58
+  auf r5d. (b) **Versuch 1 (gebaut)**: EIN geschlossenes Nackenstueck rechts statt des Einsatzes der Runde 5 (18 Flaechen): 7 Ecken ab
+  Index 69, 10 Dreiecke ab Index 77, Zeile 493, UV u 43-53 / v 88-101, vorderes Ende im Hinterkopf. Offline (PV): S3 gruen (Huegel
+  7,6 px bei x 429), Huegel-Rot 57,6 % (r4 58,3, r5d 45,8). **Versuch 2** (Sattel): Huegel-Rot 39,6 % - verworfen. **Versuche 3a / 3b**
+  (linkes Stueck, kein Anker im Kopf): PV-Profil bei x 445 von 201 auf 199, S3 (b) rot (H 6,5 bei x 425) - verworfen. Die drei
+  erlaubten Versuche sind damit verbraucht.
+  (d) Heller Keil links neben dem Gesicht: Ursache sind Texel, nicht Normalen (Licht-Faktor 1,00). d26 lag seit Runde 5 auf der Gruppe
+  blass_r5_d26 (Lab-Abstand zu den Nachbarn 13,41), neuer Ort mit Abstand 0,38; dazu d53, v4, v20 (und zunaechst v24) um hoechstens
+  1,5 (Lab) verschoben. Groessere Schuebe (d8 1,52, d49 2,07, d66 2,84, v15 3,92) brachen S14 (a) bei Takt 364 (dL 3,69-3,83, Soll
+  3,61) und blieben aus; d60 hat keinen farbtreuen Ort.
+- **P4-neu, gebaut von 6b** (unterseite_r5.py Stufe u, unterseite_v8.json): Grenze 10 Grad tiefer (Fleisch bis |theta| 110, Uebergang
+  110-120, grau ab 120); Mantel-Vierecke, Dorn- und Deckel-Dreiecke werden an 110 und 120 geteilt (je Glied +8 Ecken, Mesh 18 +12:
+  43 / 32 / 47 / 32 / 32 / 32 / 32). Ring-Deckel, beide Wege gebaut und gemessen: r5d 106 Kanten, da* 14,66, grauer Ring in 86 von 144
+  Posen (8114 Bildpunkte); "schwerpunkt" 32 Kanten, da* 18,06, 44 Posen (97 px); **"teilen" 32 Kanten, da* 7,04, 0 Posen** (gewaehlt;
+  Original-EM30 Haut / Fleisch 7,81). Reifen auf dem Mantel: Laengsbelegung jetzt Texelzeilen v 98-108 statt ab v 90 (v 90-92 sind
+  noch Haut, a* 4-13); Deckel-Kanten damit da* 9,12. Fleisch bis zur Spitze (Dorn von Mesh 22 mit geteilt).
+- **Abbruch**: 6b wurde am 2026-11-10 vom Kontingent-Ende abgebrochen. Sein letzter voller Riegel-Lauf am ersten Asset 382bbfe7:
+  "13 von 22 gruen; ROT: S4, S7, S9, S10, S15, S16, S17, S18, S19". Nicht committet waren riegel_v8.py, riegel_r6.py und
+  nacken_v8.json; nicht mehr gelaufen Kette, Pin, Test-Pins, Riegel am Endstand.
+- **Pruefung und Korrekturen des Folge-Bauers** (Skripte und Ausgaben sfv8/r6c/pruef1-3, pruef3b, v24c, pins.out):
+  1. Riegel-Korrektur S4 / S10 ist eine echte Fehlerkorrektur, kein blinder Riegel. Der alte Code zaehlte die hinter den Ringen
+     angehaengten Teilungs-Ecken als Ring (Mesh 18: Phantom-Ring 10,8 px -> S4 rot) bzw. als Wurzel (Mesh 16: 23 statt 22 Flaechen,
+     1318 px -> S10 rot). Alt gegen neu Zahl fuer Zahl gleich an V7, V8 r2, r3, r4, r5d. Rot bleibt: S4 an V7 (Wurzel 44,3; Mitte
+     34,3 / 24,1 / 28,1) und V8 r2; S10 an V7 3186 px, V8 r2 23133 px, V8 r3 20471 px. Kuenstliche Gegenproben am Endstand: ein Ring
+     von Mesh 18 auf das 0,7-fache -> S4 rot (28,8 / 28,3 / 26,8 px); Wurzel-Ecken aus V8 r3 eingesetzt -> S10 rot (14473 px).
+  2. S15 (b) "ohne Fleisch 1" war weder Riegel- noch Formfehler, sondern ein veraltetes Asset: 382bbfe7 war gebaut, bevor
+     szene_marker.wurzel_flaechen (auch Bau-Eingabe) die Teilungs-Ecken kannte; das Bandstueck v22 von Mesh 16 blieb grau (Zeile 487).
+     Der Bau am heutigen Werkzeugstand legt es auf Zeile 495: Unterseite 90 Flaechen, ohne Fleisch 0, Fleisch-Texel 5352; Mantel-Kanten
+     19 / da* 4,98 (groesster Sprung 7,8) statt 20 / 6,01 (21,6).
+  3. v24 ohne Schub (nacken_v8.json): S7 (c) Rumpf 8 lok z<0 46,3 % statt 50,9 % (Soll <= 49,3) = wieder gruen; S19 mit und ohne
+     gleich (3 Ausreisser, v24 nicht dabei). **Der helle Keil ist ohne den Schub etwas heller, nicht gleich**: offline F346 / F354 /
+     F360 / F366 13 / 14 / 23 / 21 = 71 statt 11 / 13 / 21 / 20 = 65 (r4 73, r5d 92, V7 25); in den Szenenbildern F344-F378 81-112 statt
+     76-108 helle Bildpunkte (Soll <= 87; darueber 32 statt 30 von 35 Bildern). Kein farbtreuer Schub rettet beides: 20 Kandidaten,
+     die fuenf mildesten gebaut - S7 (c) 49,7 / 49,8 / 49,9 / 50,1 / 50,4 %, alle ueber 49,3, Keil je 65. Die Ruecknahme bleibt
+     (S18 (b) war mit dem Schub ebenfalls rot).
+  4. Gegen 382bbfe7 sind am Endstand genau zwei Flaechen anders (Mesh 8 v24 UV, Mesh 16 v22 Zeile). Test-Pin nachgezogen:
+     Flaechen auf Zeile 495 je Glied 21 / 30 / 41 / 31 / 30 / 30 / 30 = 213 (vorher 20 / ... = 212); alle uebrigen Pins nachgemessen gleich.
+  5. Die Gegenprobe V7 stuerzte seit 0bc534825 in S15 ab (unterseite_r5._ring_y nahm an Mesh 16 fest drei Ringe an; V7 hat dort
+     24 Ecken). Ringzahl jetzt hoechstens (Ecken - 2) / 11; an Endstand, r4 und r5d dieselbe Ringzahl wie vorher (sfv8/r6c/ringy.out),
+     Kette danach bytegleich, Voll-Riegel am Endstand danach wiederholt = Ausgabe bytegleich (sfv8/r6c/riegel_end2.txt).
+  6. Marker-Assets (MK_A, MK_B, GR, KO) und Szenenlauf vom Endstand neu (sfv8/r6c/mk, sfv8/r6c/szene); die Laeufe von 6b zeigten 382bbfe7.
+- **Riegel am Endstand** (SF_belege/v8/runde6b/riegel_v8r6b.txt, Exit 1): **"SUMME: 17 von 22 gruen; ROT: S9, S16, S17, S18, S19"**.
+  Die Forderung "S1-S16, S18 und S19 gruen" ist NICHT erfuellt; kein Riegel wurde dafuer aufgeweicht.
+  Gruen u. a.: S2 (c) Naht 2 px; S3 Huegel 7,6 px bei x 429, Huegel-Rot 57,6 %; S4 Wurzel 59,2, Mitte 40,4 / 38,2 / 37,9; S5 Mesh 9
+  bytegleich V7; S7 (c) 46,3 %; S10 0 px; S15: Band 120-130 PV 0,0 / P2 3,1 % (Soll <= 5), grauer Ring-Deckel in 0 von 144 Posen,
+  graue Texelzeilen im Fleisch-Feld 0, Fleisch-Anteil Unterseite PV 99,4 / P2 99,2 %, Oberseite 0,0 / 0,0.
+  ROT, mit Zahl:
+  S9 (b) Schlitz Summe 5 px (F338 1, F360 1, F366 1, F372 2) - unveraendert vom Hand-Bauer (Runde 6a), nicht aus 6b.
+  S16 (a) Luecke: 62 von 177 Ansichten ueber dem Soll, Summe 4190 px, davon tief 2651 (V8 r4 69 Ansichten, 4570 / 2880; V8 r5d
+  1 Ansicht, 484 / 51 = GELB nach E3). Ohne Kragen ist die Luecke im Mass fast wieder auf dem Stand r4; das Nackenstueck holt nur
+  326 px (4516 -> 4190). S16 (b)/(c): 59 verdeckte Gesichts-Bildpunkte in 4 Ansichten (F311 21 und F312 32 durch die Hand, Knochen 12;
+  F253 4 und PV+1024 2 durch Mesh 8), in den Szenenbildern F225-F450 222 (F311 57, F312 64, sonst 1-5 je Bild; r5d 448).
+  S18 vorn ohne Kragen: (a1) Ecken von Mesh 8 im Kopf-Fenster mehr als 2 px neben r4 in 79 Vorderansichten, groesste 6,4 px
+  (r5d 136 Ansichten, 22,6 px); (a3) die 10 Flaechen des Nackenstuecks im Kopf-Fenster sichtbar in 116 Ansichten, groesste 116 px
+  (Soll 0; r5d 18 Flaechen, 136 Ansichten, 98 px); (a2, Info) Umriss ueber r4 > 2 px in 12 Ansichten, groesste 6,1 px (r5d 40 / 9,0);
+  (b) helle Bildpunkte 81-112 gegen V7 69-78, Soll <= 87, darueber 32 von 35 Bildern (r5d 95-130, 35 von 35).
+  S19 Texeldichte: 3 Dreiecke ausserhalb (r5d 62): d10 Dichte 2,00 (r4 1,97), d65 Dichte 0,49 (r4 1,15), v13 Seitenverhaeltnis 2,42
+  (r4 2,00); groesster Normalen-Winkel 27,1 Grad (r5d 39,2).
+  S17 (Hand) rot in (a) und (g) wie in Runde 6a - hier nicht angefasst.
+- **Gegenproben** (je Exit 1): V8 r5d SF_belege/v8/runde6b/riegel_V8r5d_gegenprobe.txt "14 von 20 gruen; ROT: S3, S15, S16, S17, S18,
+  S19" (S15 erweitert: Band 38,2 / 43,3 %, grauer Ring-Deckel 86 Posen / 8114 px; S18 (a1) 136 Ansichten / 22,6 px; S19 62 ausserhalb).
+  V8 r4 riegel_V8r4_gegenprobe.txt "14 von 19 gruen; ROT: S2, S14, S15, S16, S17" (S16 (a) 69 von 177 Ansichten). V7
+  riegel_V7_gegenprobe.txt "6 von 19 gruen; ROT: S1, S2, S3, S4, S6, S7, S10, S13, S15, S16, S17, S18, S19" (S4 Wurzel 44,3; S10 3186 px).
+- **Tests**: ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  "100% tests passed, 0 tests failed out of 8", "Total Test time (real) = 305.11 sec" (SF_belege/v8/runde6b/ctest_gruppe.txt).
+- **Spiel**: lauf_v4.sh (BAUM = dieser Arbeitsbaum, eigene exe-Kopie, Spiel-Asset, FD 200-1100, Ende F1110): EXIT=0, 901 Bilder,
+  debug.log "EM30: Ersatzmodell EMD/EM30_HANGAR.EMD (Raum 50A0)"; state.log bytegleich V7 (1131 Zeilen, sha256 e48e1cad143cc577...,
+  cmp gegen sfv4/r/V7_szene/state.log).
+- **Offen** (Gestaltung, fuer den naechsten Bauer / Pruefer): Luecke Ruecken / Kopf (S16 a) fast wie r4; Nackenstueck von vorn im
+  Kopf-Fenster sichtbar und Ecken bis 6,4 px neben r4 (S18 a); heller Keil 81-112 (S18 b); drei Dreiecke knapp ausserhalb der
+  Texeldichte (S19); S9 (b) 5 px und S16 (b) durch die Hand (Runde 6a / P7); S17. Tafeln 14b_tonne.png und 17_kragen_weg.png zeigen
+  den alten Stand 382bbfe7 und sind nicht committet - sie entstehen mit der Abgabe neu.
