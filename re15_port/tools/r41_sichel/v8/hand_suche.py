@@ -19,6 +19,11 @@ PORT-WAHL: die Form steht auf keiner Disc, es gibt keine @0x-Adresse; jede Zahl 
 (Verhaeltnis Vorlage zu Modell) oder ist ein Raster der Suche (Drehung 90 / 105 / 118 Grad: 118 = gemessener Azimut der Kamera
 im Handraum in P1, 90 = Handflaeche quer, 105 = Mitte).
 
+RUNDE 6c (P7): gemessen wird nicht mehr in den Ersatz-Posen P1 / P2 / PV, sondern in den echten Szenenposen (hand_szene.py):
+Profil, Groesse und Krallenlaengen als MITTEL ueber die fuenf Paar-Posen h125, h126, h128, h130, h132 (Zahl "ausser" und Summe je Pose,
+dann gemittelt), Kreuzen in allen acht Paar- und Kontroll-Posen. Die Wahl der Runde 6a ("D 0.93 0.72 / 118") stammte aus P1 und ist
+abgeloest (hand_v8.json "quelle.wahl"); die Varianten-Liste bleibt als Protokoll der Runde 6a stehen.
+
 Aufruf:  python hand_suche.py [--emd <EMD>] [--json <Protokoll>] [--bild <Tafel>] [--pruefe hand_v8.json]
 """
 import os, sys, json, argparse
@@ -87,30 +92,38 @@ def vorlage_streuung(vor=None):
 
 
 def messen(mo, streu):
-    """Masse einer Variante: Profil in P1 gegen die Vorlage, Krallen und Kreuzen in P1 / P2 / PV."""
+    """Masse einer Variante in den echten Szenenposen: Profil gegen die Vorlage je Paar-Pose (Mittel), Krallen und Kreuzen in allen acht Posen."""
     out = dict(posen={})
-    for pn in ('P1', 'P2', 'PV'):
+    for pn in HM.POSEN:
         v = HM.modell(mo, HM.POSEN[pn])
         out['posen'][pn] = dict(HM.roh(v), kreuzen=v['kreuzen'])
         out['_' + pn] = v
-    v = out['_P1']
-    summe, ausser, teile = 0.0, 0, {}
-    for nm, r, (med, lo, hi) in zip(('stationen', 'unterarm_profil', 'hand_profil'), _reihen(v), streu[:3]):
-        a = np.array(r, float)
-        s, n = float(np.abs(a - med).sum()), int(((a < lo - 1) | (a > hi + 1)).sum())
-        teile[nm] = dict(werte=[round(float(x), 1) for x in a], summe=round(s, 1), ausser=n)
-        summe, ausser = summe + s, ausser + n
-    kl = {n: k['laenge'] for n, k in sorted(v['krallen'].items())}
-    k_aus = sum(1 for n, L in kl.items() if not ((DAUMEN_VORLAGE if n == 'T' else FINGER_VORLAGE)[0] - 1 <= L <= (DAUMEN_VORLAGE if n == 'T' else FINGER_VORLAGE)[2] + 1))
-    kreuz = {pn: out['posen'][pn]['kreuzen'] for pn in ('P1', 'P2', 'PV')}
-    hl, bl = v['hand_laenge'], v['stationen']['hand_breit'] / v['hand_laenge']
-    g_aus = int(not (streu[3][1] - 1 <= hl <= streu[3][2] + 1)) + int(not (streu[4][1] <= bl <= streu[4][2]))
-    out.update(groesse_ausser=g_aus, vorlage_handlaenge=[round(x, 1) for x in streu[3]], vorlage_breite_durch_laenge=[round(x, 3) for x in streu[4]])
-    ausser += g_aus
-    out.update(teile=teile, summe=round(summe, 1), ausser=ausser + k_aus, krallen_ausser=k_aus, krallen_laenge_p1=kl, kreuzen=kreuz,
-               kreuzt=any(kreuz.values()), hand_laenge=v['hand_laenge'], hand_breit=v['stationen']['hand_breit'],
-               breite_durch_laenge=round(bl, 3),
-               spitze_ueber_boden_H=round(v['spitze_ueber_boden'] / v['figur_hoehe'], 3) if v.get('figur_hoehe') else None)
+    n_p = float(len(HM.PAARE))
+    summe, ausser, k_aus, g_aus, teile = 0.0, 0.0, 0.0, 0.0, {}
+    for pn in HM.PAARE:
+        v = out['_' + pn]
+        for nm, r, (med, lo, hi) in zip(('stationen', 'unterarm_profil', 'hand_profil'), _reihen(v), streu[:3]):
+            a = np.array(r, float)
+            s, n = float(np.abs(a - med).sum()), int(((a < lo - 1) | (a > hi + 1)).sum())
+            d = teile.setdefault(nm, dict(werte={}, summe=0.0, ausser=0.0))
+            d['werte'][pn] = [round(float(x), 1) for x in a]
+            d['summe'] += s / n_p; d['ausser'] += n / n_p
+            summe, ausser = summe + s / n_p, ausser + n / n_p
+        for n, k in v['krallen'].items():
+            sp = DAUMEN_VORLAGE if n == 'T' else FINGER_VORLAGE
+            k_aus += (not (sp[0] - 1 <= k['laenge'] <= sp[2] + 1)) / n_p
+        hl, bl = v['hand_laenge'], v['stationen']['hand_breit'] / v['hand_laenge']
+        g_aus += (int(not (streu[3][1] - 1 <= hl <= streu[3][2] + 1)) + int(not (streu[4][1] <= bl <= streu[4][2]))) / n_p
+    for d in teile.values():
+        d['summe'], d['ausser'] = round(d['summe'], 1), round(d['ausser'], 1)
+    P = [out['_' + pn] for pn in HM.PAARE]
+    kl = {n: round(float(np.mean([v['krallen'][n]['laenge'] for v in P])), 1) for n in sorted(P[0]['krallen'])}
+    kreuz = {pn: out['posen'][pn]['kreuzen'] for pn in HM.POSEN}
+    hl = float(np.mean([v['hand_laenge'] for v in P])); hb = float(np.mean([v['stationen']['hand_breit'] for v in P]))
+    out.update(groesse_ausser=round(g_aus, 1), vorlage_handlaenge=[round(x, 1) for x in streu[3]], vorlage_breite_durch_laenge=[round(x, 3) for x in streu[4]])
+    out.update(teile=teile, summe=round(summe, 1), ausser=round(ausser + k_aus + g_aus, 1), krallen_ausser=round(k_aus, 1), krallen_laenge_p1=kl, kreuzen=kreuz,
+               kreuzt=any(kreuz.values()), hand_laenge=round(hl, 1), hand_breit=round(hb, 1), breite_durch_laenge=round(hb / hl, 3),
+               spitze_ueber_boden_H=round(float(np.mean([v['spitze_ueber_boden'] / v['figur_hoehe'] for v in P])), 3))
     return out
 
 
@@ -119,14 +132,14 @@ def wahl(erg):
 
 
 def tafel(erg, vor, gew, pfad, kante=110, f=3):
-    """Zeile 1: die fuenf Nutzerbilder (Messkachel). Darunter je Variante P1 / P2 / PV, jeweils Szene und frei gezeichnet."""
+    """Zeile 1: die fuenf Nutzerbilder (Messkachel). Darunter je Variante h125 / h130 / h100 (echte Szenenposen), jeweils Szene und frei gezeichnet."""
     g = kante * f
     oben = [cv2.resize(HM.kachel(v['_bild'], v, 0.5, kante, float(f), 'Vorlage %s' % v['bild']), (g, g)) for v in vor.values()]
     oben.append(np.full((g, g, 3), 40, np.uint8))
     zeilen = [np.hstack(oben)]
     for nm, e in erg.items():
         ks = []
-        for pn in ('P1', 'P2', 'PV'):
+        for pn in ('h125', 'h130', 'h100'):
             v = e['_' + pn]
             for img in (v['_voll'], v['_bild']):
                 c = (np.array(v['W']) + np.array(v['T'])) / 2
@@ -136,7 +149,7 @@ def tafel(erg, vor, gew, pfad, kante=110, f=3):
                 k = cv2.cvtColor(k, cv2.COLOR_RGB2BGR)
                 cv2.putText(k, '%s %s%s' % (nm, pn, '  GEWAEHLT' if nm == gew else ''), (4, 14), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (0, 255, 255), 1, cv2.LINE_AA)
                 ks.append(k)
-        cv2.putText(ks[1], 'ausser %d  Summe %.1f  kreuzt %s' % (e['ausser'], e['summe'], 'JA' if e['kreuzt'] else 'nein'), (4, g - 22),
+        cv2.putText(ks[1], 'ausser %.1f  Summe %.1f  kreuzt %s' % (e['ausser'], e['summe'], 'JA' if e['kreuzt'] else 'nein'), (4, g - 22),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.42, (255, 255, 255), 1, cv2.LINE_AA)
         cv2.putText(ks[1], 'Hand %.1f lang, %.1f breit, B/L %.2f' % (e['hand_laenge'], e['hand_breit'], e['breite_durch_laenge']), (4, g - 8),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.42, (255, 255, 255), 1, cv2.LINE_AA)
@@ -162,11 +175,11 @@ def main():
         e = messen(V.modell(bau(blob, cfg)), streu)
         e['cfg'] = cfg
         erg[nm] = e
-        print('%-18s ausser %d (Krallen %d, Groesse %d)  Summe %5.1f  kreuzt %s  | Hand %.1f lang %.1f breit B/L %.3f | Spitze %s H ueber Boden' % (
+        print('%-18s ausser %.1f (Krallen %.1f, Groesse %.1f)  Summe %5.1f  kreuzt %s  | Hand %.1f lang %.1f breit B/L %.3f | Spitze %s H ueber Boden' % (
             nm, e['ausser'], e['krallen_ausser'], e['groesse_ausser'], e['summe'], e['kreuzen'], e['hand_laenge'], e['hand_breit'], e['breite_durch_laenge'], e['spitze_ueber_boden_H']))
         for t, d in e['teile'].items():
-            print('     %-16s Summe %5.1f ausser %d  %s' % (t, d['summe'], d['ausser'], d['werte']))
-        print('     Krallenlaenge P1 %s' % e['krallen_laenge_p1'])
+            print('     %-16s Summe %5.1f ausser %.1f  %s' % (t, d['summe'], d['ausser'], d['werte']))
+        print('     Krallenlaenge Mittel der Paar-Posen %s' % e['krallen_laenge_p1'])
     gew = wahl(erg)
     print('GEWAEHLT: %s' % gew)
     if a.pruefe:

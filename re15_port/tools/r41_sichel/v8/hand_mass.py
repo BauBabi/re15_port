@@ -16,6 +16,12 @@ den abgespreizten Daumen). Unterarm-Stationen im Achsensystem Ellbogen -> Handge
 Farbe dient nur zur ORTS-Bestimmung (Beginn der roten Zone = Krallenwurzeln), nie als Farbsoll.
 Modell: f_rast (Spielkamera 50A0 Cut 12, RDT-Licht), Knochen 11 + 12 frei gezeichnet (ohne Verdeckung durch den Koerper), Ellbogen und
 Handgelenk = die projizierten Gelenkpunkte, Krallenwurzeln = Ringmitten der Fingerkrallen A/B/C (hand_gemein.krallen).
+
+Runde 6c (Befund P7, Nutzer 2026-11-10 abends: "... sieht es so aus als waere die linke Hand verkehrt herum gedreht"): gemessen wird
+nicht mehr in den Ersatz-Posen P1 / P2 / PV (Keyframes einer Umriss-Suche, die das Spiel in der Szene nie zeigt), sondern in den ECHTEN
+Szenenposen: jedes Vorlagenbild gegen die Modell-Pose SEINES Spielbilds (hand_szene.PAARE: birkin20/22/23/21/24 <-> h125/h126/h128/
+h130/h132) und drei Kontroll-Posen ohne Vorlage (h100, h110, h135). Die Handachse des Modells ist die WAHRE Finger-Achse (Handgelenk ->
+Mitte der Krallenwurzeln A, B, C), nicht mehr "fernster Bildpunkt": bei einer verdrehten Hand lief die alte Achse zur Daumenkralle.
 """
 import os, sys, json, math, argparse
 import numpy as np, cv2
@@ -28,11 +34,15 @@ import f_analyse as FA                # noqa: E402
 import hand_gemein as HG              # noqa: E402
 import v4_gemein as G                 # noqa: E402
 import b2                             # noqa: E402
+import hand_szene as SZ               # noqa: E402
 
 VORLAGE_BILDER = (20, 21, 22, 23, 24)
 P1 = dict(clip=20, bild=139, gier=1422, x=-8420, z=-21908)        # Foto 1 (SF_MESSBLATT_FOTO.md)
 P2 = dict(clip=12, bild=48, gier=861, x=-8182, z=-21330)          # Foto 2
-POSEN = dict(P1=P1, P2=P2, PV=dict(V.PV))
+ERSATZ = dict(P1=P1, P2=P2, PV=dict(V.PV))                        # bis Runde 6b die Mess-Posen; seit 6c nur noch Blickpunkt fuer Kacheln
+POSEN = dict(SZ.POSEN)                                            # Runde 6c: echte Szenenposen (Paare + Kontrolle), hand_szene.py
+PAARE = SZ.PAAR_NAMEN                                             # Posen mit Vorlagenbild
+KONTROLLE = SZ.KONTROLL_NAMEN
 STATIONEN = ('ellbogen', 'unterarm_mitte', 'handgelenk', 'handwurzel', 'hand_breit', 'krallenwurzel', 'krallen_mitte', 'spitzen')
 ZOOM = 4
 SPITZE_NAME = {20: 'T', 47: 'A', 29: 'B', 42: 'C'}                # Spitzen-Ecken der vier Krallen von Mesh 12 (hand_gemein.krallen)
@@ -274,20 +284,35 @@ def modell(mo, pose):
     Av = FR.mit_bg(mo, pose)
     bone = A['bone'][:480]
     arm = bone >= 0
-    figur = Av['bone'][:480] >= 0
-    ys = np.where(figur.any(1))[0]
+    # Runde 6c: Scheitel und Sohle der Figur aus den projizierten Ecken ALLER Meshes, nicht aus der Bildmaske - in den Szenenposen
+    # (Gang auf die Kamera zu) stehen die Fuesse am unteren Bildrand oder darunter, die Maske waere dort abgeschnitten
+    # (gemessen h125: Maske endet in Bildzeile 479 von 480).
+    alle = np.concatenate([np.asarray(FA.welt(mo, pose, b, np.array([x[:3] for x in list(m_.tv) + list(m_.qv)], float)), float)[:, 1]
+                           for b, m_ in enumerate(mo.meshes) if len(m_.tv) + len(m_.qv)])
+    ys = np.array([float(alle.min()), float(alle.max())])
     E = np.asarray(FA.welt(mo, pose, 11, np.zeros((1, 3)))[0], float)[:2]
     W = np.asarray(FA.welt(mo, pose, 12, np.zeros((1, 3)))[0], float)[:2]
     me = mo.meshes[12]
     P = np.array([x[:3] for x in list(me.tv) + list(me.qv)], float)
     pp = np.asarray(FA.welt(mo, pose, 12, P), float)[:, :2]
     py, px = np.nonzero(bone == 12)
-    d = np.hypot(px - W[0], py - W[1])
-    T = np.array([float(px[np.argmax(d)]), float(py[np.argmax(d)])])
     kr = HG.krallen(dict(v=[list(x) for x in me.tv], tf=me.tf, qf=me.qf))
     for k in kr:                                                   # Namen nach der Spitzen-Ecke (HG.krallen nennt den Daumen nach dem
         k['name'] = SPITZE_NAME[k['spitze']]                       # groessten Ring-x; das gilt nach einer Drehung um die Handachse nicht mehr)
-    ax = (T - W) / np.linalg.norm(T - W)
+    # Runde 6c: wahre Finger-Achse = Handgelenk -> Mitte der Krallenwurzeln A, B, C (projiziert); die Spitze T ist der fernste Bildpunkt
+    # der Hand ENTLANG dieser Achse. Liegt die Achse fast in Blickrichtung (unter 4 Videopixel), gilt die alte Regel (fernster Bildpunkt).
+    Cw = np.mean([pp[k['ring']].mean(0) for k in kr if k['name'] != 'T'], axis=0)
+    achse_px = float(np.linalg.norm(Cw - W))
+    if achse_px >= 4.0 and len(px):
+        ax = (Cw - W) / achse_px
+        t = (px - W[0]) * ax[0] + (py - W[1]) * ax[1]
+        T = W + ax * float(t.max())
+        Tp = np.array([float(px[np.argmax(t)]), float(py[np.argmax(t)])])       # der Bildpunkt der Spitze selbst (fuer die Hoehe ueber der Sohle)
+    else:
+        d = np.hypot(px - W[0], py - W[1])
+        T = np.array([float(px[np.argmax(d)]), float(py[np.argmax(d)])])
+        ax = (T - W) / np.linalg.norm(T - W)
+        Tp = T
     # Station Krallenwurzeln wie in der Vorlage = Beginn der roten Zone entlang der Handachse: erste Stelle, ab der 2 Videopixel lang
     # mindestens die Haelfte des groessten Laufs auf der Finger-Zeile 492 liegt; ohne solche Stelle die Ringmitten der Fingerkrallen.
     rot = (bone == 12) & (A['zeile'][:480] == HG.Z_FINGER)
@@ -313,9 +338,10 @@ def modell(mo, pose):
     def ab(a, b, was):
         return round(float(np.linalg.norm(np.array(kl[a][was]) - np.array(kl[b][was]))), 1)
     out.update(figur_hoehe=float(ys[-1] - ys[0] + 1), E=E.round(1).tolist(), W=W.round(1).tolist(), T=T.round(1).tolist(),
+               achse_px=round(achse_px, 1), sohle_y=float(ys[-1]),
                krallen=kl, kreuzen=kreuz, px_hand=int((bone == 12).sum()), px_unterarm=int((bone == 11).sum()),
                px_hand_sichtbar=int((Av['bone'][:480] == 12).sum()), px_unterarm_sichtbar=int((Av['bone'][:480] == 11).sum()),
-               spitze_ueber_boden=round(float(ys[-1] - T[1]), 1), handgelenk_ueber_boden=round(float(ys[-1] - W[1]), 1),
+               spitze_ueber_boden=round(float(ys[-1] - Tp[1]), 1), handgelenk_ueber_boden=round(float(ys[-1] - W[1]), 1),
                ellbogen_ueber_boden=round(float(ys[-1] - E[1]), 1),
                abstand_wurzeln=[ab('A', 'C', 'wurzel'), ab('C', 'B', 'wurzel')], abstand_spitzen=[ab('A', 'C', 'spitze'), ab('C', 'B', 'spitze')])
     out['_maske'], out['_bild'], out['_voll'] = arm, A['img'][:480], Av['img'][:480]
@@ -380,10 +406,10 @@ def kachel(img, v, skala, kante, f=6.0, titel=''):
 
 
 def bild(vor, mod, pfad, weitere=None):
-    """Messblatt-Bild: oben die fuenf Vorlagebilder, unten das Modell in P1, P2, PV (frei gezeichnet) + P1 in der Szene."""
+    """Messblatt-Bild: oben die fuenf Vorlagebilder, unten das Modell in den Paar-Posen (frei gezeichnet, Reihenfolge wie oben)."""
     oben = [kachel(v['_bild'], v, 0.5, 136, 3.0, '%s (%s)' % (v['bild'], v['video'])) for v in vor.values()]
-    unten = [kachel(v['_bild'], v, 1.0, 136, 3.0, 'Modell %s frei' % pn) for pn, v in mod.items()]
-    unten += [kachel(v['_voll'], v, 1.0, 136, 3.0, 'Modell %s Szene' % pn) for pn, v in mod.items()][:2]
+    nach_bild = {SZ.PAAR_VON[pn]: pn for pn in PAARE}
+    unten = [kachel(mod[nach_bild[k]]['_bild'], mod[nach_bild[k]], 1.0, 136, 3.0, 'Modell %s frei' % nach_bild[k]) for k in vor if k in nach_bild]
     for extra in (weitere or []):
         unten.append(extra)
     n = max(len(oben), len(unten))

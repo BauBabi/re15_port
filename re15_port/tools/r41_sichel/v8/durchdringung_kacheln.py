@@ -30,7 +30,7 @@ def main():
         c, b = (int(x) for x in kf.split('/'))
         ks = []
         for dg in (0, 1024):
-            pose = dict(HM.POSEN['P1'], clip=c, bild=b, gier=(HM.POSEN['P1']['gier'] + dg) % 4096)
+            pose = dict(HM.ERSATZ['P1'], clip=c, bild=b, gier=(HM.ERSATZ['P1']['gier'] + dg) % 4096)
             box = None
             for nm, blob in blobs:
                 A = FR.mit_bg(V.modell(blob), pose)
