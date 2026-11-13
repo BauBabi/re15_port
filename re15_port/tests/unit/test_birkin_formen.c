@@ -395,9 +395,11 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                  * hand_v8.json skala 0.77 0.72 0.77, dreh_grad 0, Krallen-Wurzelring 1.6): breite Hand in Capcoms Lage - Spanne der
                  * 52 Ecken und Wurzelring (Ecken 1-4) hinter dem Gelenk; gemessen am Asset e9e71bca. Gegenproben: der um 118 Grad
                  * verdrehte Stand 95a783a6 hatte 484 / 716 / 433 (Spanne z = Dicke der Hand fast so gross wie x), r5d / V7
-                 * 343 / 594 / 235, y 16-19 */
-                CHECK(b->tri_vertex_count == 52 && spanne(b, 0) == 453 && spanne(b, 1) == 716 && spanne(b, 2) == 241,
-                      "%s: Klauenhand (Mesh 12) %d Ecken, Spanne %d / %d / %d statt 52, 453 / 716 / 241", name, b->tri_vertex_count,
+                 * 343 / 594 / 235, y 16-19.
+                 * V8 Runde 7a (K3, hand_v8.json quelle.krallen_r7a / daumen_r7a: Krallenspitzen A/C an der B-Spitze, Daumen entlang
+                 * seiner Achse laengs 0.75 quer 1.25): Spanne x 453 -> 462, z 241 -> 261, y bleibt 716; gemessen am Asset a474188a */
+                CHECK(b->tri_vertex_count == 52 && spanne(b, 0) == 462 && spanne(b, 1) == 716 && spanne(b, 2) == 261,
+                      "%s: Klauenhand (Mesh 12) %d Ecken, Spanne %d / %d / %d statt 52, 462 / 716 / 261", name, b->tri_vertex_count,
                       spanne(b, 0), spanne(b, 1), spanne(b, 2));
                 for (int v = 1; v <= 4 && v < b->tri_vertex_count; v++)
                     CHECK(b->tri_vertices[v].y == -22, "%s: Klauenhand (Mesh 12) Wurzelring-Ecke %d y %d statt -22", name, v,
