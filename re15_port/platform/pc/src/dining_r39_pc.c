@@ -134,5 +134,5 @@ void re15_pc_dining_r39_init(void)
 {
     re15_dining_r39_se_hook = spielen;
     re15_dining_r39_rbj_hook = rbj_1171;
-    { extern void re15_pc_zws114_r41_init(void); re15_pc_zws114_r41_init(); }   /* Runde 41 ZWS114: Gorilla-Schrei + Film 1141 */
+    { extern void re15_pc_zws_r41_init(void); re15_pc_zws_r41_init(); }   /* Runde 41 ZWS114/ZWS11C: Gorilla-Schrei + Filme 1141/11C0 */
 }

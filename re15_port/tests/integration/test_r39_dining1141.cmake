@@ -226,7 +226,7 @@ if(_pm GREATER -1)
     endif()
 endif()
 pruef_wahr(_b5 "Nachtrag 10: erste Nachricht in 1141 = msg 13 (Gemaelde), keine Reaktion davor")
-# Punkt 6 seit Runde 41 ZWS114 (include/re15_zws114_r41.h): vor "What was that?!" (msg 6) der Gorilla-Schrei (ROOM11C0
+# Punkt 6 seit Runde 41 ZWS114 (include/re15_zws_r41.h): vor "What was that?!" (msg 6) der Gorilla-Schrei (ROOM11C0
 # snd1) statt des Glasbruchs; zwischen msg 6 und msg 7 der Film R114GORI.STR (zeigt das Zerspringen der Scheiben).
 string(FIND "${_r}" "Schrei ROOM11C0 snd1" _pg REVERSE)
 string(FIND "${_r}" "[msg] room=1141 id=6 " _p6)

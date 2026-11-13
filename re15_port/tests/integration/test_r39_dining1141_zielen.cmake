@@ -115,7 +115,7 @@ if(NOT AUSWERTEN)
         # M2.5667 = R1 bis F4079, MA0.1 = Abzug mit leerem Magazin F4080 (Druck-Flanke @0x80033338 -> Nachladen @0x80033378),
         # M10 = R1 bis ~F4383. Messhaken F4056, Sperre F4083 (Nachtrag 17: das Szenenende wartet auf Johns laufende Salve,
         # die jetzt am Kampfbeginn steht - Lauf 14:19 "Kampfende 4056, Sperre ab 4083"), Schnitt F4113.
-        # Runde 41 ZWS114 (include/re15_zws114_r41.h): die Szene ist 33 Spielbilder laenger (Schrei 37 Takte statt Glasbruch
+        # Runde 41 ZWS114 (include/re15_zws_r41.h): die Szene ist 33 Spielbilder laenger (Schrei 37 Takte statt Glasbruch
         # mit Sleep 5, Film-Zeile 1 Takt; der Film selbst laeuft zwischen zwei Spielbildern) - gemessen Lauf lauf_331d38e2
         # "Kampfende 4089, Sperre ab 4116, Schnitt 4146". Deshalb Schuss F4033 (M34.4333 = R1 3000..4032), Abzug mit leerem
         # Magazin F4113 = wieder 3 Bilder vor der Sperre.

@@ -1,5 +1,5 @@
 # Runde 41 (2026-11-13), Zwischensequenz Raum 114 (ROOM1141, John und Elza) — Riegel, zaehlen zur Suite.
-# Herleitung include/re15_zws114_r41.h, Code engine/src/zws114_r41.c + platform/pc/src/zws114_r41_pc.c, Zeilen im Programm
+# Herleitung include/re15_zws_r41.h, Code engine/src/zws_r41.c + platform/pc/src/zws_r41_pc.c, Zeilen im Programm
 # ENTRIEGELN39 (tools/r39_dining/programme_bauen.py), Film shared_assets/PSX/MOVIE/R114GORI.STR (tools/r41_zws114/film_bauen.py).
 #
 #   unit_r41_zws114_datei     R114GORI.STR: Form wie CAPCOM.STR, 367 Bilder 320x240 mit den Port-Dekodern, CD-XA-Ton = Filmlaenge

@@ -5,7 +5,7 @@
  * analysis/befunde_runde39/J_dining1141.md. Baut auf Runde 38 Spur F auf (dining_r38.c ruft die Haken unten).
  */
 #include "re15_dining_r39.h"
-#include "re15_zws114_r41.h"   /* Runde 41 ZWS114 (Installer-Haken) */
+#include "re15_zws_r41.h"   /* Runde 41 ZWS114/ZWS11C (Installer-Haken) */
 #include "re15_dining_r38.h"
 
 #include <stdio.h>
@@ -490,7 +490,7 @@ int re15_dining_r39_waffe_waehlen(void)
  * hinter der Kamera von Cut 7 innen vor die Dachtuer (Pos_set), waehrend der Tuer-Ton laeuft. */
 void re15_dining_r39_install(uint16_t room_id, int phase_h)
 {
-    re15_zws114_r41_install(room_id);   /* Runde 41 ZWS114: Schrei-/Film-Zustand je Raum zuruecksetzen */
+    re15_zws_r41_install(room_id);   /* Runde 41 ZWS114/ZWS11C: Schrei-/Film-Zustand je Raum zuruecksetzen */
     s_w_clip = -1;
     s_phase_h = 0; s_sperre_gesehen = 0;   /* Nachbesserung 3: Senken unter der Sperre nur in ROOM1141 Phase H */
     s_leihe_an = 0; s_leihe_slot = -1;

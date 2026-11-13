@@ -50,7 +50,7 @@ SATZ_HILFE0 = 0x31              # RE15_R39J_SATZ_HILFE0   0x31..0x35 = help01..0
 SATZ_TUERTON = 0x36             # RE15_R39J_SATZ_TUERTON  Nachtrag 17 Punkt 5: door_sound.wav (Sprach-Id 59)
 MSG_REAKTION, MSG_PUH, MSG_FOLGEN = 50, 51, 52
 MSG_STIMME_WARTEN = 58          # RE15_R39J_MSG_STIMME_WARTEN (Port-Warte-Zeile, Punkt 6)
-MSG_ZWS_FILM = 60               # RE15_ZWS114_MSG_FILM   (Runde 41 ZWS114, include/re15_zws114_r41.h)
+MSG_ZWS_FILM = 60               # RE15_ZWS114_MSG_FILM   (Runde 41 ZWS114, include/re15_zws_r41.h)
 MSG_ZWS_SCHREI = 61             # RE15_ZWS114_MSG_SCHREI (Runde 41 ZWS114)
 BIT_REAKTION = 94               # RE15_R39J_BIT_REAKTION (Bank 9, VERTRAG 1.1)
 MIX = (3, 1, 4, 2, 5)           # PORT-WAHL "im Mix": Reihenfolge der help-Dateien je Durchlauf; die erste Runde ruft
@@ -377,14 +377,14 @@ def baue_entriegeln39():
     R.ersetze_bei("1141", 0x00E80, [0x29, 0x00], [0x29, 0x05], "Cut_chg 5 (wie @0x00D08)")
     # Punkt 6: vor "What was that?!" (msg 6 @0x00DCA), vor dem Original-Sleep 20 @0x00DC6. Runde 39: Glasbruch
     # Se_on(0x3E,0x21) x2 (RE2 ROOM1090 sub15 @0x02BB0/@0x02BC0). Seit Runde 41 ZWS114 (NUTZER-VORGABE 2026-11-13, include/
-    # re15_zws114_r41.h): der Gorilla-Schrei statt des Glasbruchs - der Film vor msg 7 zeigt das Zerspringen der Scheiben.
+    # re15_zws_r41.h): der Gorilla-Schrei statt des Glasbruchs - der Film vor msg 7 zeigt das Zerspringen der Scheiben.
     einfuegen_vor("1141", 0x00DC6, [
         (bytes([0x2B, MSG_STIMME_WARTEN, 0x00, 0x00]), "Message_on 58 = Port-Warte-Zeile ohne Text: op_message_on parkt, "
                                                        "bis Johns Sprachzeile zu msg 5 endet (Stimmen-Riegel scd_vm.c), dann "
                                                        "verbraucht re15_dining_r39_message_on sie (Form sub02 @0x00D9E `2b 05 00 00`)"),
         (bytes([0x2B, MSG_ZWS_SCHREI, 0x00, 0x00]), "Message_on 61 = Port-Zeile ohne Text (Runde 41 ZWS114): Gorilla-Schrei "
-                                                    "ROOM11C0 snd1 Satz RE15_ZWS114_SCHREI_SATZ, op_message_on parkt bis zum "
-                                                    "Tonende (zws114_r41.c); danach Sleep 20 @0x00DC6 = kurze Pause vor msg 6"),
+                                                    "ROOM11C0 snd1 Satz RE15_ZWS_SCHREI_SATZ, op_message_on parkt bis zum "
+                                                    "Tonende (zws_r41.c); danach Sleep 20 @0x00DC6 = kurze Pause vor msg 6"),
     ])
     # Runde 41 ZWS114: der Film des Nutzers zwischen msg 6 und msg 7 - nach dem Drehen zum Fenster und Sleep 86 @0x00E10
     # ("kurz warten"), direkt vor msg 7 @0x00E14 "Shit! that is what I was talking about!".

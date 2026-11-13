@@ -52,7 +52,7 @@
 #include "re15_tim.h"
 #include "re15_dining_r38.h"
 #include "re15_dining_r39.h"
-#include "re15_zws114_r41.h"   /* Runde 41 ZWS114: Punkt 6 = Gorilla-Schrei statt Glasbruch */
+#include "re15_zws_r41.h"   /* Runde 41 ZWS114: Punkt 6 = Gorilla-Schrei statt Glasbruch */
 #include "re15_damage.h"   /* re15_player_equipped_weapon (Nachbesserung 1 N4.2) */
 
 #include <math.h>
@@ -410,7 +410,7 @@ static void teil_programme(void)
         static const uint8_t schleife[4] = { 0x21, 0x04, 0xC3, 0x00 };
         PRUEF(nh > 14 && !memcmp(h + 14, schleife, 4), "HAEMMERN39 N4.1: While Ck(4,0xC3)==0 (main00 @0x00A76) statt bis zum Rolladen");
     }
-    {   /* Punkt 6 (seit Runde 41 ZWS114, include/re15_zws114_r41.h): vor `09 0a 14 00` + Message_on 6 steht statt des
+    {   /* Punkt 6 (seit Runde 41 ZWS114, include/re15_zws_r41.h): vor `09 0a 14 00` + Message_on 6 steht statt des
          * Glasbruchs (Se_on(0x3E,0x21) x2) die Port-Zeile 61 = Gorilla-Schrei; der Film vor msg 7 zeigt die Scheiben. */
         const uint8_t g[12] = { 0x2B, RE15_R39J_MSG_STIMME_WARTEN, 0x00, 0x00, 0x2B, RE15_ZWS114_MSG_SCHREI, 0x00, 0x00,
                                 0x09, 0x0A, 0x14, 0x00 };
@@ -742,9 +742,9 @@ static void teil_phase_h(void)
           bild_zu, bild_cut6);
     PRUEF(john_in_cut6, "Punkt 2: John steht im ersten Bild von Cut 6 schon im Bild (innen vor der Dachtuer)");
     PRUEF(john_sichtbar_vor_cut6 == 0, "Punkt 2: John vor Cut 6 in keinem angezeigten Bild (%d Bilder)", john_sichtbar_vor_cut6);
-    PRUEF(bild_glas2 < 0 && g_re15_zws114_schreie > 0 && bild_msg6 > 0,
+    PRUEF(bild_glas2 < 0 && g_re15_zws_schreie > 0 && bild_msg6 > 0,
           "Punkt 6 / Runde 41 ZWS114: kein Glasbruch mehr (Bild %ld), Gorilla-Schrei-Zeile gelaufen (%u), danach \"What was "
-          "that?!\" (Bild %ld)", bild_glas2, g_re15_zws114_schreie, bild_msg6);
+          "that?!\" (Bild %ld)", bild_glas2, g_re15_zws_schreie, bild_msg6);
     PRUEF(blick9 == 1, "Punkt 7: John blickt beim Oeffnen von msg 9 zu Elza (Kegel 128, re15_ai_arc_test)");
     PRUEF(blick_n > 0 && blick_fehl == 0, "Punkt 7: John blickt waehrend msg 9..11 zu Elza (%d von %d Bildern daneben, Kegel 160)",
           blick_fehl, blick_n);

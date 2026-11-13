@@ -201,7 +201,7 @@ static const uint8_t k_r39j_p_haemmern[322] = {
  *   +01C6 09 0a 32 00                          ROOM1141 @0x00DBE Sleep
  *   +01CA 3f 00 17 00                          ROOM1141 @0x00DC2 Plc_motion
  *   +01CE 2b 3a 00 00                          Message_on 58 = Port-Warte-Zeile ohne Text: op_message_on parkt, bis Johns Sprachzeile zu msg 5 endet (Stimmen-Riegel scd_vm.c), dann verbraucht re15_dining_r39_message_on sie (Form sub02 @0x00D9E `2b 05 00 00`)
- *   +01D2 2b 3d 00 00                          Message_on 61 = Port-Zeile ohne Text (Runde 41 ZWS114): Gorilla-Schrei ROOM11C0 snd1 Satz RE15_ZWS114_SCHREI_SATZ, op_message_on parkt bis zum Tonende (zws114_r41.c); danach Sleep 20 @0x00DC6 = kurze Pause vor msg 6
+ *   +01D2 2b 3d 00 00                          Message_on 61 = Port-Zeile ohne Text (Runde 41 ZWS114): Gorilla-Schrei ROOM11C0 snd1 Satz RE15_ZWS_SCHREI_SATZ, op_message_on parkt bis zum Tonende (zws_r41.c); danach Sleep 20 @0x00DC6 = kurze Pause vor msg 6
  *   +01D6 09 0a 14 00                          ROOM1141 @0x00DC6 Sleep
  *   +01DA 2b 06 00 00                          ROOM1141 @0x00DCA Message_on
  *   +01DE 2e 01 00                             ROOM1141 @0x00DCE Work_set
