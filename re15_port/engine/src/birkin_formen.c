@@ -23,7 +23,7 @@
 #include "re15_math.h"         /* Runde 41 SF N2: re15_squareroot0 (Schrittgrenze Spider-Man) */
 #include "re15_enemy_ai.h"     /* Runde 41 Spur H: re15_player_is_grabbed */
 #include "re15_schwanz_r41.h"  /* Runde 41 SF N1.9: Schwanz-Kette */
-#include "re15_esp.h"          /* Neuaufbau ab NB2 (aus NB3/NB5): gruenes Blut (re15_esp_fx_spawn_ex, abr_port) */
+#include "re15_esp.h"          /* gruenes Blut: re15_esp_fx_spawn_ex (Bodenspritzer), re15_esp_fx_reset */
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -693,19 +693,6 @@ static int bf_video_welt(const bf_schwanzpunkt_t *q, const re15_actor_t *b, int3
 }
 
 
-/* NB4: Weltpunkt p um (dx, dy) Bildpunkte (640x480) in der Szenenkamera verschieben (in seiner Blicktiefe). */
-static void bf_bild_versatz(int32_t p[3], int dx, int dy)
-{
-    const re15_camera_cut_t *c = bf_szenenkamera();
-    re15_camera_view_t v;
-    if (!c || re15_camera_build_view(c, &v) != 0 || v.fov_screen_dist <= 0 || (dx == 0 && dy == 0)) return;
-    const double vz = ((double)v.rot[6] * p[0] + (double)v.rot[7] * p[1] + (double)v.rot[8] * p[2]) / 4096.0 + v.trans[2];
-    if (vz <= 1.0) return;
-    const double sx = dx / 2.0 * vz / v.fov_screen_dist, sy = dy / 2.079 * vz / v.fov_screen_dist;
-    for (int k = 0; k < 3; k++) p[k] += (int32_t)((v.rot[k] * sx + v.rot[3 + k] * sy) / 4096.0);
-}
-
-
 /* Schwanzziel je Videobild: zwischen den Tabellenpunkten im Weltraum linear (Spitze und Durchgangspunkt), Startform in die
  * Blickrichtung der Szenenkamera gebogen (NB4, Kopf k_schwanz_bahn). */
 static void bf_schwanz_ziel(const re15_actor_t *b, int h)
@@ -742,72 +729,47 @@ static void bf_schwanz_ziel(const re15_actor_t *b, int h)
     re15_schwanz_r41_verdeckt(s_h.birkin, (h >= 60 && h <= 70) ? p0->v.h : 0);   /* NB5 B1: Huefte -> Austritt verdeckt */
 }
 
-/* Gruenes Blut (Abnahme 1 Mangel 5, Video 4): Wolke am Griff h18-h71 (Maximum h53, 750 Bildpunkte), schmale Fontaene
- * h56-h68 ueber der Hand, Spritzer am Boden bei der Flucht h84-h89, keine Lache. Effekt = RE1.5-Spinnenblut 0x00082000
- * (STAGE2 `lui a0,0x8` @0x80113b10, `ori a0,a0,0x2000` @0x80113b30, `jal 0x80019700` @0x80113b50; Sub 8 -> CLUT-Zeile
- * 486 gruen, Spur S Nachbesserung 1). Zeitplan PORT-WAHL nach dem Video. */
-#define BF_BLUT_GRUEN 0x00082000u
-/* Skala Q12 der Wolke (NB4 0x2400, s. bf_gruenes_blut; Lauf nb4/N4L mit 0x3000: h28-h48 1202-1324 Bildpunkte, Video 149-468).
- * NB5 (ABR3): Lauf nb5/T2 mit 0x2400 jedes 4. Bild h28-h48 ~0 gruene Bildpunkte -> 0x4000. */
-#define BF_BLUT_WOLKE 0x3400                 /* Schritt 3 nach Referenz 2: Saeule/Spritzer jetzt auf Video-Staerke -> Wolke
-                                              * kleiner, Summe h18-h92 nahe am Video (Lauf R13 mit 0x4000: 20144, Video 12417) */
-#define BF_BLUT_BODEN 0x3000                 /* Skala Q12 der Bodenspritzer (NB4: halbe Menge) */
-/* Schritt 3 nach Referenz 2: Bodenspritzer h84/h86 Ref2 21/363 gruene Bildpunkte, Video 779/1151 -> groessere Skala; Saeule
- * Skala (Ref2 0x1000). GESTALTUNG nach dem Video. */
-#define BF_BLUT_BODEN2  0x4000                /* Lauf R11 mit 0x5000: h84/h86 897/2630 */
-#define BF_BLUT_SAEULE  0x1800
-/* NB5 (Abnahme 3 B4 "matter Nebel statt gesaettigter scharfer Quadrate"; gruen-Maske Farbe Median Video (33-42,48-58,21-37), Port
- * NB4 (29-32,50-56,14-16) bei ABR0 50/50): Mischart B + F/4 (ABR3, abr_port 4) - der Hintergrund bleibt, der gruene Anteil liegt als
- * schwacher Schleier darueber (Rechnung: Decke ~(35,45,30) + Sprite/4 ~(6,15,0) = (41,60,30)). PORT-WAHL nach dem Video. */
-#define BF_BLUT_MISCH 4
+/* Gruenes Blut des Spider-Man (Kopf "Gruenes Blut"). Nutzer 2026-11-13: "was da raus kommt beim Spiderman waehrend Birkin ihn
+ * hoch haelt oder auf den Boden wirft sieht aus wie gruenes Gas oder sowas. Aber EIGENTLICH ist es gruenes Blut. So wie jedes
+ * andere Blut im Spiel auch". Jeder Spawn ist jetzt der Original-Treffer der Spinne 0x25 (STAGE2.BIN, Overlay @0x80100000,
+ * selbst disassembliert mit re15_disasm.py, Treffer-Phase 0 @0x80113b08-54, dieselbe Form im Tod @0x8011463c-58):
+ *   80113b10: lui   a0,0x8            Effekt 0, Sub 8 (CLUT-Zeile 486 gruen, Spur S Nachbesserung 1)
+ *   80113b30: ori   a0,a0,0x2000      Skala 0x2000
+ *   80113b40: lui   a3,0x8012
+ *   80113b44: addiu a3,a3,-28904      a3 = 0x80118f18 = Nullen (STAGE2.BIN Datei 0x18f18: 16 x 00) -> kein Versatz
+ *   80113b48: lw    v1,392(v0)        Teile-Block des BLUTENDEN (+0x188)
+ *   80113b4c: lh    a1,106(v0)        Winkel = Gier des BLUTENDEN (+0x6a)
+ *   80113b50: jal   0x80019700
+ *   80113b54: addiu a2,v1,64          a2 = Matrix von Teil 0 des BLUTENDEN (+0x188 + 64)
+ * = re15_enemy_fx19700(blutender, 0x00082000, Teil 0, Nullen) wie spinnengore_r41.c und enemy_ai_common.c (Spinne HURT).
+ * Mischart: kein abr_port, also derselbe Zeichenweg wie jedes andere Blut aus re15_enemy_fx19700 (Spinne @0x80113b50, Zombie
+ * @0x80106ad8; platform/pc/main.c BLEND).
+ * Vorher (NB4/NB5, PORT-WAHL nach dem Video): Skala 0x3400 (Wolke) / 0x1800 (Saeule) / 0x3000 und 0x4000 (Boden), Mischart
+ * ABR3 B+F/4 (abr_port 4) und Anker Sichelhand (Knochen 15) + Bildversatz -> ein matter gruener Schleier, den der Nutzer als
+ * "Gas" las. Der ZEITPLAN bleibt die vom Nutzer abgenommene Port-Wahl nach Video 4 (die Szene gibt es nur im Video): Wolke
+ * h24-BF_H_BLUT_ENDE jedes 3. Bild, Saeule h50-h54 jedes Bild und h55-h59 jedes 2., Boden h82/h84 an den Videopunkten, h88
+ * alle Effekte der Szene weg. */
+#define BF_BLUT_GRUEN 0x00082000u            /* a0 @0x80113b10 (`lui a0,0x8`) + @0x80113b30 (`ori a0,a0,0x2000`) */
+#define BF_BLUT_TEIL  0                      /* a2 = +0x188 + 64 = Teil 0 @0x80113b54 (`addiu a2,v1,64`) */
 #define BF_H_BLUT_ENDE   64                  /* letzter Wolken-Spawn: Lauf nb3/r3 mit Ende h71 hatte bei h72 noch 665 gruene
                                               * Bildpunkte (Effekt steht ~8 Bilder), Video h72 0 */
 
-/* Gruenes Blut des Spider-Man (Kopf "Gruenes Blut").
- * Runde 41 SF NB4 (Abnahme 2 B6: "Wolke UEBER dem Spider-Man (nicht darunter), Nebel statt Quadrate, Fontaene als Saeule,
- * Bodenspritzer ~100 px weiter rechts, halbe Menge, weg bei h89"). Video 4 (gruene Bildpunkte g > r+14, g > b+6, g > 45,
- * Lage 5-95 %): h28 x 222-324 y 59-98, h40 243-339 / 61-84, h48 241-331 / 63-118, h53-h58 328-359 / 103-142, h66-h70
- * 312-349 / 117-137 = am Griff (Sichelhand) und darueber, rechts vom Spider-Man; Port (Lauf nb4/t7, Spawn am Spider-Man-Rumpf)
- * x 111-308 y 51-148. Jetzt: Wolke an der Sichelhand (Knochen 15) + Bildversatz (+20, -40), groessere Sprites (Skala 0x4800,
- * jedes 2. Bild - ABR0 50/50 des Spinnenbluts wie bisher), Saeule h52-h68 ueber der Hand. Boden: Video h84 x 311-380 y 371-422
- * (779 Bildpunkte), h86 405-562 (1151), h88 457-476 (170), h90 0; Port t7 h84 296-428 (1484), h86 288-444 (974), h88 315-486
- * (530), h90 27 -> Spawn unter dem fliehenden Spider-Man selbst (h81-h83), kleinere Skala, und h88 alle Effekte der Szene
- * weg (re15_esp_fx_reset; ein Blut-Effekt steht sonst ~10 Bilder, NB3). PORT-WAHL nach dem Video. */
 static void bf_gruenes_blut(re15_actor_t *b, re15_actor_t *m, int h)
 {
-    const re15_esp_t *bank = re15_esp_room_bank();
-    if (b && m && m->active && h >= 24 && h <= BF_H_BLUT_ENDE) {
-        int32_t p[3];
-        re15_enemy_bone_world_pos(b, BF_KLAUE, p);
-        if (h % 3 == 0) {                                /* NB5: Lauf nb5/T3 jedes 2. Bild (0x4000, ABR3): Summe h18-h92 47882 gruene
-                                                          * Bildpunkte, T4 jedes 4.: 5272, Video 13145 -> jedes 3.; Lauf nb4/t8 (jedes 2. Bild, 0x4800, Versatz (20,-40)): 1259-3131 Bildpunkte
-                                                          * bei x 186-309 y 78-190 - Video 136-753 bei x 222-359 y 59-142 */
-            int32_t q[3] = { p[0], p[1], p[2] };
-            re15_esp_fx_t *fx;
-            bf_bild_versatz(q, 60, -85);
-            fx = re15_esp_fx_spawn_ex(bank, 0, 8, BF_BLUT_WOLKE, q[0], q[1], q[2], m->rot_y);
-            if (fx) fx->abr_port = BF_BLUT_MISCH;
-        }
-        if (h >= 50 && h <= 60 && (h & 1 || h <= 54)) {                  /* schmale Saeule ueber der Hand (Video h53-h58; Lauf R12 bis h68: Summe 23724) */
-            /* Schritt 3 nach Referenz 2: Video h53/h56/h58 im Kasten x 320-365 y 95-150 753/558/453 gruene Bildpunkte, Ref2 12/37/31
-             * bei x 271-344 (Hand im NB2-Halten bei x ~252-264). Jetzt 85 statt 60 Bildpunkte rechts der Hand, ab h50, h50-h54 jedes
-             * Bild, Skala BF_BLUT_SAEULE statt 0x1000 (Lauf R11 mit h52-h58 jedem Bild und 0x2800: h56/h58 1395/1822, Summe 45043).
-             * GESTALTUNG nach dem Video. */
-            int32_t q[3] = { p[0], p[1], p[2] };
-            re15_esp_fx_t *fx;
-            bf_bild_versatz(q, 85, -30 - 6 * (h - 52));
-            fx = re15_esp_fx_spawn_ex(bank, 0, 8, BF_BLUT_SAEULE, q[0], q[1], q[2], m->rot_y);
-            if (fx) fx->abr_port = BF_BLUT_MISCH;
-        }
+    static const int32_t null3[3] = { 0, 0, 0 };         /* a3 = 0x80118f18 @0x80113b40-44 (Nullen) */
+    if (m && m->active && h >= 24 && h <= BF_H_BLUT_ENDE) {
+        if (h % 3 == 0)                                  /* Wolke: Zeitplan Port-Wahl (NB5, Lauf nb5/T3/T4) */
+            re15_enemy_fx19700(m, BF_BLUT_GRUEN, BF_BLUT_TEIL, null3);    /* @0x80113b50 am Spider-Man, Teil 0 */
+        if (h >= 50 && h <= 60 && (h & 1 || h <= 54))    /* Saeule: Zeitplan Port-Wahl (Schritt 3 nach Referenz 2) */
+            re15_enemy_fx19700(m, BF_BLUT_GRUEN, BF_BLUT_TEIL, null3);    /* @0x80113b50 am Spider-Man, Teil 0 */
     }
-    if (b && (h == 82 || h == 84)) {                     /* Schritt 3 (Ref2: Bild 83/85, h84 21 Bildpunkte, Video 779): ein Bild frueher */
+    if (b && (h == 82 || h == 84)) {                     /* Bodenspritzer: Ort und Bild Port-Wahl nach Video 4 (h84/h86) */
         static const bf_schwanzpunkt_t sp1 = { 0, 345, 405, 0, 0 }, sp2 = { 0, 480, 415, 0, 0 };   /* Video h84 / h86 */
         int32_t q[3];
-        if (bf_video_welt(h == 82 ? &sp1 : &sp2, b, q)) {
-            /* Neuaufbau ab NB2: Bodenspritzer im Original-Mischweg (ABR0 50/50) - mit dem NB5-Schleier ABR3 waren sie unsichtbar
-             * (Abnahme 4: h84/h86/h88 0 Bildpunkte, Video 779/1151/170); die Wolke bleibt der matte Schleier (Nutzerwunsch c). */
-            (void)re15_esp_fx_spawn_ex(bank, 0, 8, h == 82 ? BF_BLUT_BODEN2 : BF_BLUT_BODEN, q[0], -80, q[2], 0);   /* R12 h86 1706 (Video 1151) */
-        }
+        if (bf_video_welt(h == 82 ? &sp1 : &sp2, b, q))  /* Effekt 0 / Sub 8 / Skala 0x2000 @0x80113b10/30, Winkel +0x6a des
+                                                          * Blutenden @0x80113b4c, Mischart Original (kein abr_port) */
+            (void)re15_esp_fx_spawn_ex(re15_esp_room_bank(), (uint8_t)(BF_BLUT_GRUEN >> 24), (uint8_t)((BF_BLUT_GRUEN >> 16) & 0xffu),
+                                       (uint16_t)(BF_BLUT_GRUEN & 0xffffu), q[0], -80, q[2], (int16_t)(m ? m->rot_y : 0));
     }
     if (h == 88) re15_esp_fx_reset();                    /* Video h89: kein Spritzer mehr */
 }
@@ -875,7 +837,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         const int hb = h + BF_BILD_VERSATZ;
         bf_schwanz_ziel(b, hb);
         re15_schwanz_r41_dicke(s_h.birkin, bf_tab(k_schwanz_dicke, BF_N(k_schwanz_dicke), hb));
-        bf_gruenes_blut(b, m, hb);                       /* Neuaufbau ab NB2: gruenes Blut als matter Schleier (NB5) */
+        bf_gruenes_blut(b, m, hb);                       /* gruenes Blut = Original-Spinnenblut (@0x80113b08-54) */
     }
     /* --- Birkin: Clip, Gier ------------------------------------------------------------------------------------- */
     if (h < BF_H_GANG) {

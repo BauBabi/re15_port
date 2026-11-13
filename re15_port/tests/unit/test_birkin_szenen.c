@@ -28,6 +28,7 @@
 #include "re15_birkin_formen.h"
 #include "re2_ems.h"
 #include "re15_g5auftritt_r41.h"   /* Runde 41: G5-Auftritt nach RE2 room7040 sub06 */
+#include "re15_esp.h"              /* gruenes Blut der Hangar-Szene: Plaetze pruefen */
 
 extern int re15_g5_boss_zustand(int *sub, int *ph, int *timer);
 extern int re15_g5_blut_zaehler(int idx);
@@ -188,8 +189,28 @@ static void test_hangar(unsigned raum)
     int griff_max = 0, griff_n = 0;
     uint64_t kb = pose_kennung(b), km = pose_kennung(m);
     int32_t mx = m->x, my = m->y, mz = m->z;
+    /* Gruenes Blut (Nutzer 2026-11-13 "sieht aus wie gruenes Gas"): jeder Spawn der Szene ist der Original-Treffer der Spinne
+     * STAGE2 @0x80113b08-54 - Effekt 0 / Sub 8 / Skala 0x2000 (`lui a0,0x8` @0x80113b10, `ori a0,a0,0x2000` @0x80113b30), Mischart
+     * Original (abr_port 0), im Halten an Teil 0 des Spider-Man (`addiu a2,v1,64` @0x80113b54, a3 = 0x80118f18 Nullen). Zeitplan
+     * (Port-Wahl nach Video 4): Wolke h24-h63 jedes 3. Bild = 14, Saeule h50-h54 + h55/57/59 = 8, Boden h82/h84 = 2 (y -80).
+     * Vorher: Skala 0x3400/0x1800/0x3000/0x4000, abr_port 4 (ABR3), Anker Sichelhand + Bildversatz. */
+    int blut_teil0 = 0, blut_boden = 0, blut_falsch = 0, blut_art = 0;
+    unsigned char fx_vorher[RE15_ESP_FX_MAX];
+    re15_esp_fx_reset();
     for (int f = 0; f < 200 && ende < 0; f++) {
+        static const int32_t null3[3] = { 0, 0, 0 };
+        int32_t t0[3];
+        const int t0_ok = m->active && re15_enemy_part_point(m, 0, null3, t0);   /* Stand, den der Takt beim Spawn sieht */
+        for (int i = 0; i < RE15_ESP_FX_MAX; i++) fx_vorher[i] = re15_esp_fx_get(i) != NULL;
         re15_enemy_ai_run_all(0);
+        for (int i = 0; i < RE15_ESP_FX_MAX; i++) {
+            const re15_esp_fx_t *fx = re15_esp_fx_get(i);
+            if (!fx || fx_vorher[i]) continue;
+            if (fx->effect_id != 0 || fx->sub_index != 8 || fx->scale16 != 0x2000 || fx->abr_port != 0) blut_art++;
+            if (t0_ok && fx->x == t0[0] && fx->y == t0[1] && fx->z == t0[2]) blut_teil0++;
+            else if (fx->y == -80) blut_boden++;
+            else blut_falsch++;
+        }
         const int ph = re15_bf_hangar_phase();
         if (ph >= 0 && ph < 8) ph_seen[ph] = 1;
         const int sm_da = (re15_bf_hangar_slot(0) == ms) && m->active;
@@ -225,6 +246,12 @@ static void test_hangar(unsigned raum)
     for (int p = 1; p <= 7; p++) CHECK(ph_seen[p], "Phase %d nie erreicht", p);
     CHECK(max_hoehe > 2500, "Spider-Man nie hochgehalten (max %d)", max_hoehe);
     CHECK(sm_am_boden, "Spider-Man nie am Boden aufgeschlagen");
+    CHECK(blut_art == 0, "gruenes Blut: %d Plaetze nicht Effekt 0 / Sub 8 / Skala 0x2000 / abr_port 0 (@0x80113b10/30)", blut_art);
+    CHECK(blut_teil0 == 22 && blut_boden == 2 && blut_falsch == 0,
+          "gruenes Blut: %d an Teil 0 des Spider-Man (Soll 22, @0x80113b54), %d am Boden (Soll 2), %d anderswo (Soll 0)",
+          blut_teil0, blut_boden, blut_falsch);
+    fprintf(stderr, "Gruenes Blut: %d Spawns an Teil 0, %d am Boden, %d anderswo, %d mit falscher Art\n", blut_teil0, blut_boden,
+            blut_falsch, blut_art);
     CHECK(griff_n >= 40 && griff_max < 150, "Griff nicht synchron: Griffknochen bis %d Einheiten von der Sichelhand (Soll < 150, %d Haltetakte)", griff_max, griff_n);
     fprintf(stderr, "Griff: Abstand Sichelhand - Griffknochen im Halten hoechstens %d Einheiten\n", griff_max);
     CHECK(sprung_max <= 700, "Ansprung/Halten springt: %d Einheiten in einem Takt (Video h4..8 hoechstens 485)", sprung_max);

@@ -553,7 +553,7 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
          * Routine 3 flags:=0x13, TPAGE bleibt hdr-Seed 0x001F) = ABR0 50/50.
          * Legacy-Fx (ohne Row-VM, flags==0) behalten den alten Pfad (Global 2/3 = 50/50). */
         int abe, abr;
-        if (f->abr_port) {                            /* Runde 41 SF Neuaufbau ab NB2 (NB5): Mischart-Vorgabe des gruenen Blutes */
+        if (f->abr_port) {                            /* Runde 41 SF NB5: Mischart-Vorgabe des Ports (derzeit setzt sie niemand, re15_esp.h) */
             abe = 1;
             abr = (f->abr_port - 1) & 3;
         } else if (f->rows_base) {
