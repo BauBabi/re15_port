@@ -447,7 +447,7 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
              * V8 Runde 7b (K1 "Unterseite wie Fleisch, nicht wie eine glatte rote Flaeche", K2 "7 graue Deckel-Dreiecke";
              * tools/r41_sichel/v8/unterseite_r7b.py, unterseite_v8.json fleisch_r7b): je Glied 3 Abschnitte (neue Ringe auf den
              * Laengskanten, Form gleich), Fleisch in Original-Dichte; die 7 Kegel-Dreiecke und die Rohr-Vierecke der Wurzel unter der
-             * Grenze auf 495. Gemessen am Asset 5a358bc9 (sfv8/r7b): 55 / 50 / 51 / 51 / 50 / 50 / 50 = 357 Flaechen auf 495, Ecken
+             * Grenze auf 495. Gemessen am Asset f3e1ceff (sfv8/r7b): 55 / 50 / 51 / 51 / 50 / 50 / 50 = 357 Flaechen auf 495, Ecken
              * 75 / 62 / 63 / 64 / 62 / 62 / 62. Gegenprobe Stand a474188a: rot (213 Flaechen, Ecken wie Runde 6b). */
             static const int UNTEN[7] = {55, 50, 51, 51, 50, 50, 50};
             static const int ECKEN[7] = {75, 62, 63, 64, 62, 62, 62};
