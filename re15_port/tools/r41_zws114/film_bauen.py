@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Runde 41, Zwischensequenz Raum 114 (ROOM1141, John und Elza): der Gorilla-Film des Nutzers als STR fuer den Port.
+"""Runde 41, Zwischensequenzen: die Gorilla-Filme des Nutzers als STR fuer den Port (include/re15_zws_r41.h).
 
-  python re15_port/tools/r41_zws114/film_bauen.py [--quelle <mp4>] [--ziel <STR>] [--budget <Sektoren>]
+  python re15_port/tools/r41_zws114/film_bauen.py [--film 114|11C] [--quelle <mp4>] [--ziel <STR>] [--budget <Sektoren>]
 
-QUELLE (unveraendert gelesen, nie geschrieben): Cutscenes/Rooms/114/Nachbau_Blender/Raum114_Gorillas_v3_Ton.mp4
-  (Nutzer-Film, 640x480, 30 Bilder/s, 367 Bilder = 12,233 s, AAC-Ton 44,1 kHz Stereo).
-ZIEL: re15_port/shared_assets/PSX/MOVIE/R114GORI.STR (+ R114GORI.TXT mit der Herkunft).
+FILME (--film, Vorgabe 114; Tabelle FILME unten). Die Quelle wird unveraendert gelesen, nie geschrieben:
+  114  Cutscenes/Rooms/114/Nachbau_Blender/Raum114_Gorillas_v3_Ton.mp4 (Raum 114, ROOM1141 John und Elza; 640x480,
+       30 Bilder/s, 367 Bilder = 12,233 s, AAC-Ton 44,1 kHz Stereo) -> MOVIE/R114GORI.STR (+ R114GORI.TXT Herkunft)
+  11C  Cutscenes/Rooms/11C/Nachbau_Blender/Raum11C_Gorillas_v9_Ton.mp4 (Raum 11C, ROOM11C0 Leon und Ada; 640x480,
+       30 Bilder/s, 362 Bilder = 12,067 s, AAC-Ton 44,1 kHz Stereo) -> MOVIE/R11CGORI.STR (+ R11CGORI.TXT Herkunft)
 
 FORMAT = das der einzigen Film-Datei des Spiels, MOVIE/CAPCOM.STR, damit der Port den Film mit seinen vorhandenen
 Dekodern abspielt (engine/src/re15_str.c Demux, bss_vlc.c/bss_mdec.c MDEC, re15_xa.c CD-XA; Vertrag in
@@ -51,16 +53,22 @@ import numpy as np
 HIER = os.path.dirname(os.path.abspath(__file__))
 PORT = os.path.dirname(os.path.dirname(HIER))
 REPO = os.path.dirname(PORT)
-QUELLE_REL = os.path.join("Cutscenes", "Rooms", "114", "Nachbau_Blender", "Raum114_Gorillas_v3_Ton.mp4")
+# Je Film: Quelle (relativ zum Hauptbaum), Zieldatei in shared_assets/PSX/MOVIE, Titel der Herkunftsdatei.
+FILME = {
+    "114": dict(quelle=("Cutscenes", "Rooms", "114", "Nachbau_Blender", "Raum114_Gorillas_v3_Ton.mp4"),
+                ziel="R114GORI.STR", titel="Zwischensequenz Raum 114, ROOM1141 John und Elza"),
+    "11C": dict(quelle=("Cutscenes", "Rooms", "11C", "Nachbau_Blender", "Raum11C_Gorillas_v9_Ton.mp4"),
+                ziel="R11CGORI.STR", titel="Zwischensequenz Raum 11C, ROOM11C0 Leon und Ada"),
+}
 
 
-def quelle_finden():
+def quelle_finden(teile):
     """Cutscenes/ ist der unversionierte Arbeitsordner des Nutzers: er liegt nur im Hauptbaum, nicht in einem Worktree."""
-    kand = [os.path.join(REPO, QUELLE_REL)]
+    kand = [os.path.join(REPO, *teile)]
     try:
         gemeinsam = subprocess.run(["git", "-C", REPO, "rev-parse", "--path-format=absolute", "--git-common-dir"],
                                    check=True, stdout=subprocess.PIPE, text=True).stdout.strip()
-        kand.append(os.path.join(os.path.dirname(gemeinsam), QUELLE_REL))
+        kand.append(os.path.join(os.path.dirname(gemeinsam), *teile))
     except (OSError, subprocess.CalledProcessError):
         pass
     for k in kand:
@@ -69,7 +77,7 @@ def quelle_finden():
     return kand[0]
 
 
-ZIEL =os.path.join(PORT, "shared_assets", "PSX", "MOVIE", "R114GORI.STR")
+MOVIE = os.path.join(PORT, "shared_assets", "PSX", "MOVIE")
 
 W, H = 320, 240
 FPS = 30
@@ -388,14 +396,17 @@ def md5(p):
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.add_argument("--film", choices=sorted(FILME), default="114", help="welcher Film (Tabelle FILME)")
     ap.add_argument("--quelle", default=None)
-    ap.add_argument("--ziel", default=ZIEL)
+    ap.add_argument("--ziel", default=None)
     ap.add_argument("--budget", type=int, default=10, help="Sektoren je Bild (re15_str.c STR_MAX_FRAME_SEC = 16)")
     ap.add_argument("--pruefen-jedes", type=int, default=1, help="jedes n-te Bild zuruecklesen (0 = aus)")
     a = ap.parse_args()
     if not 1 <= a.budget <= 16:
         sys.exit("--budget 1..16 (re15_str.c STR_MAX_FRAME_SEC)")
-    a.quelle = a.quelle or quelle_finden()
+    film = FILME[a.film]
+    a.quelle = a.quelle or quelle_finden(film["quelle"])
+    a.ziel = a.ziel or os.path.join(MOVIE, film["ziel"])
     bilder = bilder_lesen(a.quelle)
     pcm = ton_lesen(a.quelle)
     print("Quelle %s: %d Bilder %dx%d, Ton %d Proben (%.4f s) bei %d Hz" % (os.path.basename(a.quelle), len(bilder), W, H,
@@ -413,15 +424,16 @@ def main():
     print("Ziel %s: %d B = %d Sektoren, md5 %s" % (a.ziel, len(daten), len(daten) // SEKTOR, md5(a.ziel)))
     txt = os.path.splitext(a.ziel)[0] + ".TXT"
     with open(txt, "w", encoding="ascii", newline="\n") as f:
-        f.write("R114GORI.STR - Herkunft (Runde 41, Zwischensequenz Raum 114, ROOM1141 John und Elza)\n"
-                "Quelle: Cutscenes/Rooms/114/Nachbau_Blender/%s (Film des Nutzers, md5 %s,\n"
+        f.write("%s - Herkunft (Runde 41, %s)\n"
+                "Quelle: %s (Film des Nutzers, md5 %s,\n"
                 "        %d Bilder 30/s, Ton %.3f s). Datei unveraendert gelesen.\n"
-                "Werkzeug: re15_port/tools/r41_zws114/film_bauen.py --budget %d\n"
+                "Werkzeug: re15_port/tools/r41_zws114/film_bauen.py --film %s --budget %d\n"
                 "Format wie MOVIE/CAPCOM.STR: 2336-Byte-Sektoren, MDEC BS v2 320x240, CD-XA 37800 Hz 4 Bit Stereo,\n"
                 "EDC/ECC = 0 (nur fuer den PC-Port; der Port prueft sie nicht).\n"
                 "Ergebnis: %d Bilder, qscale %d..%d (Mittel %.2f), %d Ton-Sektoren, %d B, md5 %s\n"
-                "Abspielen: engine/src/zws114_r41.c + platform/pc/src/zws114_r41_pc.c (include/re15_zws114_r41.h).\n"
-                % (os.path.basename(a.quelle), md5(a.quelle), len(bilder), len(pcm) / XA_RATE, a.budget, len(rahmen),
+                "Abspielen: engine/src/zws_r41.c + platform/pc/src/zws_r41_pc.c (include/re15_zws_r41.h).\n"
+                % (os.path.basename(a.ziel).upper(), film["titel"], "/".join(film["quelle"][:-1] + (os.path.basename(a.quelle),)),
+                   md5(a.quelle), len(bilder), len(pcm) / XA_RATE, a.film, a.budget, len(rahmen),
                    min(qss), max(qss), sum(qss) / len(qss), len(ton), len(daten), md5(a.ziel)))
     print("Herkunft: %s" % txt)
 

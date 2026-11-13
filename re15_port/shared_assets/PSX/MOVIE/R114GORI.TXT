@@ -1,8 +1,8 @@
 R114GORI.STR - Herkunft (Runde 41, Zwischensequenz Raum 114, ROOM1141 John und Elza)
 Quelle: Cutscenes/Rooms/114/Nachbau_Blender/Raum114_Gorillas_v3_Ton.mp4 (Film des Nutzers, md5 2bec2a42fd5c7ac5ed619b948183b9f0,
         367 Bilder 30/s, Ton 12.237 s). Datei unveraendert gelesen.
-Werkzeug: re15_port/tools/r41_zws114/film_bauen.py --budget 10
+Werkzeug: re15_port/tools/r41_zws114/film_bauen.py --film 114 --budget 10
 Format wie MOVIE/CAPCOM.STR: 2336-Byte-Sektoren, MDEC BS v2 320x240, CD-XA 37800 Hz 4 Bit Stereo,
 EDC/ECC = 0 (nur fuer den PC-Port; der Port prueft sie nicht).
 Ergebnis: 367 Bilder, qscale 1..3 (Mittel 2.17), 230 Ton-Sektoren, 7669088 B, md5 1790d8de682609d597598322c1f8b6d9
-Abspielen: engine/src/zws114_r41.c + platform/pc/src/zws114_r41_pc.c (include/re15_zws114_r41.h).
+Abspielen: engine/src/zws_r41.c + platform/pc/src/zws_r41_pc.c (include/re15_zws_r41.h).
