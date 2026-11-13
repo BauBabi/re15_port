@@ -450,7 +450,6 @@ def anwenden(ms, t, par, prot):
         abb = U7.konfig(par['fleisch_r7b'])
         mitte = U7.mitte_teilen(ms, wurzel_keys)
     kl = flaechen_klassen(ms, par)
-    wk16 = set(wurzel_keys(ms[16]))
     zahl, deckel, fehl = {}, {}, []
     for b in V.SCHWANZ:
         m = ms[b]
@@ -469,10 +468,10 @@ def anwenden(ms, t, par, prot):
             th_m = float(np.mean(tr))
             phi = float(par['innen_phi'][str(b)])
             laengs = LAENGS and th_m < FLEISCH_KL
-            if laengs and par.get('fleisch_r7b') and b == 16 and key in wk16 and max(tr) > FLEISCH_AB:
-                laengs = False                # Runde 7b (K2): Kegel-Dreieck d14 (Ecken 87 / 113 Grad) ueber der Fleischgrenze 110 bekommt den
-                                              # Haut/Fleisch-Uebergang wie die Mantel-Flaechen 110-120 daneben; laengs stiess es mit da* 28,3 an
-                                              # das graue d15 (k2_kanten.py am Stand 5a358bc9: einzige 495/487-Kante mit da* >= 15)
+            # Runde 7b (K2), verworfen (Commit d73c04008 -> zurueckgenommen): das Kegel-Dreieck d14 (Ecken 87 / 113 Grad) mit der Uebergangs-
+            # Abbildung statt laengs nahm zwar die letzte 495/487-Kante mit da* >= 15 (d14/d15, da* 28,3, im Rumpf) weg, legte aber ein
+            # Fleisch-Dreieck (Mittel < 110) auf die Texelzeilen 83-91 -> Riegel S15 (g) "graue Texelzeilen im Fleisch-Feld" ROT
+            # (Zeilen 85-89 mit 0-33 % Fleisch, gemessen am Asset f3e1ceff). d14 bleibt laengs.
             ts_l = [theta_signiert(P[i], phi) if ring_ecke(b, i) else None for i in ie]
             ts_r = [x for x in ts_l if x is not None]
             if laengs and par.get('fleisch_r7b'):  # Runde 7b (K1): Fleisch in Original-Dichte (unterseite_r7b.py); ohne Schluessel wie Runde 6
