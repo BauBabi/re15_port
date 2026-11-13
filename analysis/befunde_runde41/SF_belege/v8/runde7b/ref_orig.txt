@@ -1,0 +1,3 @@
+ORIG {'rumpf': (16, 0.3298), 'unterseite': (6, 0.1538), 'beinhaut': (9, 0.2329)}
+VOR7B {'unterseite': (13, 0.1694), 'rumpf': (16, 0.2416), 'beinhaut': (16, 0.2072)}
+NEU {'unterseite': (13, 0.2025), 'rumpf': (16, 0.2416), 'beinhaut': (16, 0.207)}

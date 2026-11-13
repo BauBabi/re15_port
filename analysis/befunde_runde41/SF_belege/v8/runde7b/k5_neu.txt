@@ -1,0 +1,27 @@
+innen_phi PV {'16': 26.459, '17': 26.433, '18': 26.418, '19': 26.425, '20': 26.403, '21': 26.401, '22': 26.46}
+innen_phi P2 {'16': 26.96, '17': 27.192, '18': 27.164, '19': 27.17, '20': 27.136, '21': 27.137, '22': 27.177}
+Differenz P2-PV je Glied {'16': 0.5, '17': 0.8, '18': 0.7, '19': 0.7, '20': 0.7, '21': 0.7, '22': 0.7}
+PV Kette: Singulaerwerte [3.3383e+03 5.8430e+02 9.0000e-01] Ebenen-Rest s3/s1 0.000
+   Band 100-110 px   306 Anteil 495 100.0 %
+   Band 110-120 px   415 Anteil 495 97.8 %
+   Band 120-130 px   275 Anteil 495 0.0 %
+   Band 130-140 px   226 Anteil 495 0.0 %
+     Knochen 16 Band 120-130 px   82 Anteil 495 0.0 %
+     Knochen 17 Band 120-130 px   57 Anteil 495 0.0 %
+     Knochen 18 Band 120-130 px   76 Anteil 495 0.0 %
+     Knochen 19 Band 120-130 px   31 Anteil 495 0.0 %
+     Knochen 20 Band 120-130 px    8 Anteil 495 0.0 %
+     Knochen 21 Band 120-130 px   21 Anteil 495 0.0 %
+   495-Bildpunkte im Band 120-130 nach Flaeche: 
+P2 Kette: Singulaerwerte [3350.8  567.    11.1] Ebenen-Rest s3/s1 0.003
+   Band 100-110 px   428 Anteil 495 100.0 %
+   Band 110-120 px   360 Anteil 495 98.6 %
+   Band 120-130 px   424 Anteil 495 3.5 %
+   Band 130-140 px   266 Anteil 495 0.0 %
+     Knochen 16 Band 120-130 px  101 Anteil 495 1.0 %
+     Knochen 17 Band 120-130 px  109 Anteil 495 6.4 %
+     Knochen 18 Band 120-130 px   94 Anteil 495 2.1 %
+     Knochen 19 Band 120-130 px   64 Anteil 495 0.0 %
+     Knochen 20 Band 120-130 px   18 Anteil 495 27.8 %
+     Knochen 21 Band 120-130 px   38 Anteil 495 0.0 %
+   495-Bildpunkte im Band 120-130 nach Flaeche: 17:v13(unten,[120, 110, 120, 110])=7 20:v28(unten,[110, 110, 120, 120])=3 20:v13(unten,[120, 120, 110, 110])=2 16:v19(unten,[120, 110, 119, 110])=1 18:v24(unten,[120, 110, 120, 110])=1 18:v19(unten,[120, 110, 119, 110])=1

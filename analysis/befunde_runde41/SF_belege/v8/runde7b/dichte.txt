@@ -1,0 +1,33 @@
+== emd/VOR7B.EMD
+Schwanz Zeile 495                  n  279  Dichte Median 0.0232 (gew. 0.0299, p10 0.0162 p90 0.1256)  Streckung Median 2.05 p90 29.19 max 61.80
+  Mesh 16 495                      n   31  Dichte Median 0.0180 (gew. 0.0257, p10 0.0139 p90 0.1153)  Streckung Median 1.66 p90 9.70 max 32.55
+  Mesh 17 495                      n   38  Dichte Median 0.0177 (gew. 0.0246, p10 0.0147 p90 0.0895)  Streckung Median 2.06 p90 16.68 max 32.81
+  Mesh 18 495                      n   61  Dichte Median 0.0186 (gew. 0.0259, p10 0.0167 p90 0.1202)  Streckung Median 1.88 p90 12.60 max 29.73
+  Mesh 19 495                      n   39  Dichte Median 0.0209 (gew. 0.0283, p10 0.0176 p90 0.1010)  Streckung Median 1.89 p90 29.08 max 29.94
+  Mesh 20 495                      n   40  Dichte Median 0.0286 (gew. 0.0348, p10 0.0215 p90 0.1450)  Streckung Median 1.91 p90 21.01 max 29.53
+  Mesh 21 495                      n   40  Dichte Median 0.0370 (gew. 0.0469, p10 0.0288 p90 0.1925)  Streckung Median 2.91 p90 30.10 max 32.05
+  Mesh 22 495                      n   30  Dichte Median 0.0511 (gew. 0.0608, p10 0.0367 p90 0.2434)  Streckung Median 4.80 p90 31.05 max 61.80
+  Anteil Flaeche mit Dichte 0,5-2 x 0,0714: 12.1 %; Streckung <= 2: 59.5 %; Dreiecke ausserhalb Dichte 195, Streckung > 2 147 (von 279)
+== emd/NEU.EMD
+Schwanz Zeile 495                  n  378  Dichte Median 0.0497 (gew. 0.0503, p10 0.0382 p90 0.1302)  Streckung Median 2.11 p90 24.85 max 61.98
+  Mesh 16 495                      n   38  Dichte Median 0.0385 (gew. 0.0425, p10 0.0323 p90 0.0878)  Streckung Median 2.30 p90 9.75 max 32.55
+  Mesh 17 495                      n   40  Dichte Median 0.0378 (gew. 0.0423, p10 0.0333 p90 0.0820)  Streckung Median 3.64 p90 13.93 max 32.81
+  Mesh 18 495                      n   61  Dichte Median 0.0471 (gew. 0.0513, p10 0.0417 p90 0.1202)  Streckung Median 2.14 p90 12.60 max 29.73
+  Mesh 19 495                      n   61  Dichte Median 0.0490 (gew. 0.0535, p10 0.0434 p90 0.1294)  Streckung Median 2.14 p90 13.23 max 29.94
+  Mesh 20 495                      n   60  Dichte Median 0.0506 (gew. 0.0580, p10 0.0467 p90 0.1513)  Streckung Median 2.22 p90 16.58 max 29.53
+  Mesh 21 495                      n   60  Dichte Median 0.0523 (gew. 0.0632, p10 0.0456 p90 0.2052)  Streckung Median 1.84 p90 25.76 max 30.65
+  Mesh 22 495                      n   58  Dichte Median 0.0585 (gew. 0.0707, p10 0.0469 p90 0.2543)  Streckung Median 2.03 p90 34.38 max 61.98
+  Anteil Flaeche mit Dichte 0,5-2 x 0,0714: 82.8 %; Streckung <= 2: 38.9 %; Dreiecke ausserhalb Dichte 54, Streckung > 2 226 (von 378)
+== emd/VOR7B.EMD
+  kappe_unten/fleisch    Dreiecke  96  Streckung>2  40  Dichte ausserhalb  68  Flaeche  1946685  Dichte gew 0.0192
+  kappe_unten/uebergang  Dreiecke  27  Streckung>2  27  Dichte ausserhalb   8  Flaeche   177015  Dichte gew 0.0885
+  unten/fleisch          Dreiecke 136  Streckung>2  60  Dichte ausserhalb 119  Flaeche  3974766  Dichte gew 0.0212
+  unten/uebergang        Dreiecke  34  Streckung>2  34  Dichte ausserhalb  14  Flaeche   394809  Dichte gew 0.1412
+== emd/NEU.EMD
+  kappe_unten/fleisch    Dreiecke 102  Streckung>2  33  Dichte ausserhalb   8  Flaeche  2283025  Dichte gew 0.0419
+  kappe_unten/uebergang  Dreiecke  28  Streckung>2  28  Dichte ausserhalb   9  Flaeche   233573  Dichte gew 0.0750
+  unten/fleisch          Dreiecke 200  Streckung>2 117  Dichte ausserhalb  13  Flaeche  3975015  Dichte gew 0.0447
+  unten/uebergang        Dreiecke  50  Streckung>2  50  Dichte ausserhalb  26  Flaeche   395019  Dichte gew 0.1413
+Original-Flaechen im Fleischfeld v 92-125: n 54 Meshes [12, 14, 15]
+Dichte sqrt(Texel/Flaeche) Median 0.0714 gew 0.0872 p10 0.0598 p90 0.1387
+Texel u je Einheit Median 0.0618, Texel v je Einheit Median 0.0900 (gew 0.0740 / 0.1100)
