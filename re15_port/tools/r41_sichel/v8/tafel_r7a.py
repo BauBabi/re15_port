@@ -26,7 +26,8 @@ import tafel_handstellung as TS        # noqa: E402
 
 VIDEO = os.path.join(os.path.dirname(V.BAUM), 'r41_sichel', 'analysis', 'befunde_runde41', 'SF_belege', 'roh', 'alle')
 ARM_F = list(range(311, 325)) + [528, 552, 576, 600]
-ARM_SCHNITT = (300, 820, 150, 690)     # x0, x1, y0, y1 im Framedump 960 x 720 (Figur in F311-F324 und im Seitengang F528-F600)
+ARM_SCHNITT = (300, 820, 150, 690)     # x0, x1, y0, y1 im Framedump 960 x 720 (Figur in F311-F324)
+ARM_SCHNITT_GANG = (0, 520, 120, 660)  # Seitengang F528-F600 (Kamera 4, Figur am linken Bildrand), gleiche Groesse
 
 
 def hand(a):
@@ -101,10 +102,10 @@ def stellung(a):
 
 
 def arm(a):
-    x0, x1, y0, y1 = ARM_SCHNITT
     f = 0.5
     zeilen = []
     for F in ARM_F:
+        x0, x1, y0, y1 = ARM_SCHNITT if F < 500 else ARM_SCHNITT_GANG
         teile = []
         pv = os.path.join(VIDEO, 'f%04d.png' % (F + 1108))
         if os.path.exists(pv):

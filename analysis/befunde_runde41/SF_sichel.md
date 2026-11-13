@@ -4248,3 +4248,110 @@ sfv8/r6d, Rest-Bauer aus sfv8/r6c (Laeufe am Stand 95a783a6), V8 r5d aus sfv8/pr
     Sohle; 1 Durchdringungs-Keyframe gegenueber V7 dazu (Clip 14 Bild 18; insgesamt 30 statt 68 Keyframes, S17 (g) gruen).
 12. Entscheide fuer den Nutzer nach den zwei Pruefern: (a) Luecke oder Kragen bei P5 - der jetzige Stand hat die Luecke;
     (b) Oberarm -8 Grad behalten; (c) Hand-Grau aus einer Original-Zeile.
+
+## V8 Runde 7a - Hand-Rest: Krallenspitzen, Daumen, Armhaltung (Bauer, Zweig r41/sichel_v8, 2026-11-13)
+
+Auftrag Runde 7, Teil a (K3 Krallenspitzen und Daumen, K4 Armhaltung). Meshes 8 und 9 bytegleich Stand 6d (Kopf, Nacken, Ruecken,
+Huegel = P5, nicht Teil dieser Spur). Kein RE-Befund: die Sichel-Form steht auf keiner Disc, jede Zahl ist PORT-WAHL mit Messung
+(hand_v8.json quelle.krallen_r7a, quelle.daumen_r7a). Gemessen in den fuenf echten Paar-Posen h125/h126/h128/h130/h132 (Clip 1 Bild
+35/36/38/40/42 = F368/F369/F371/F373/F375) gegen birkin20/22/23/21/24 und ueber alle 912 Keyframes; Belege SF_belege/v8/runde7a/.
+
+### Stand
+- Commits: 98d262ada (Werkzeuge: hand_r6.py rueckwaertsvertraeglich erweitert, hand_v8.json, tafel_r7a.py), 023f46e95 (Spiel-Asset,
+  Pin, Unit-Test).
+- Spiel-Asset EM30_HANGAR.EMD sha256 a474188a2a06fb181df8acdea64be48c29af9f527efbe66aacf8f41b1cc657ec (Stand 6d e9e71bca);
+  gegen 6d nur der Mesh-Abschnitt anders und darin nur Ecken und Normalen von Mesh 12; Meshes 8, 9, 11, Textur, UV, CLUT und
+  EMR-Keyframes bytegleich (abschnittsweise verglichen).
+- Kette v8_kette.sh zweimal (runde7a/kette_a.txt, kette_b.txt): V8-KETTE-OK a474188a, A/B bytegleich, Spiel-Asset = Pin.
+
+### K3 Diagnose am Stand 6d (runde7a/diag_6d.txt)
+Die "Nadel" ist EINE ueberlange Kralle: B endet 1,9-3,1 px allein vor dem Handende, A und C enden 3,5-6,1 px davor; 2 px vor dem
+Ende steht daher nur eine Spitze (Station Spitzen 1-2 px, Vorlage 5,1-9,0). Nicht "alle drei zu duenn". Daumen: die Kerbe Daumen /
+Fingerblock (Ecken 8, 9 gegen 13, 14) liegt zu nah am Handgelenk (Gabel 18,2-20,0 statt 22,4-30,5), der Daumen ist zu lang
+(20,8-25,5 statt 16,9-19,4) und endet in der duennen hellen Daumenkralle.
+
+### K3 Versuche (runde7a/versuche_k3.txt; je Punkt drei)
+Fingerkrallen:
+1. Spitzen A und C neben die B-Spitze ("ziel"): Spitzen 7/7/9/6/7 px in der Streuung, aber A 26,4-27,0 px lang (Streuung
+   15,0-23,1 +- 1) und A in h130 duenner als V7.
+2. dazu Wurzelring A nach vorn ("wurzel_schub"), Reihe w 30/40/45/50/60 mit Ring 1,6-1,8: A 25,1 -> 23,5 px; w 50/60 verschieben die
+   Station Krallenwurzel in h125/h126 auf 26-27 px; w 45 / Ring 1,7 / A-Spitze dy -45: alles in der Streuung, aber Handgelenk durch
+   Unterarm-Mitte in h132 0,5966 < 0,5973 (die A-Verschiebung dreht die Finger-Achse, Handgelenk 21,2 -> 21,0 px).
+3. dazu Wurzelring B um y -25 (gleicht die Achse aus, B wird laenger): Handgelenk-Verhaeltnis h132 0,602 wie 6d -> gewaehlt.
+Daumen:
+1. Gruppe Daumen je lokale Achse um die Daumenkralle skaliert (y 0,75 / 0,65) + Kerbe 8/9 geschoben: Gabel 22,5-26,8, aber Daumen
+   spreizt auf -34..-37 Grad (Vorlage -22..-26); bei Skalierung um die Daumenmitte faellt die Station Krallenwurzel auf 26-28 px.
+2. Daumen um seine Wurzel nach innen gedreht (+6..+10 Grad): Winkel stimmt, aber Hand zu schmal (Breite/Laenge 0,636-0,675 < 0,655,
+   S17 c rot) - verworfen.
+3. Daumen entlang SEINER Achse (Ring 13-16 -> Spitze 20) laengs 0,75 / quer 1,25 um die Spitze 20, Kerbe 8/9 um [30, 90, 0] -> gewaehlt.
+
+### K3 Alt -> Neu (runde7a/riegel_hand_a474188a.txt; Vorlage = Streuung birkin20-24)
+| Mass | Stand 6d | NEU | Vorlage |
+|---|---|---|---|
+| Spitzen (2 px vor Ende) h125/h126/h128/h130/h132 | 1,0 1,0 1,0 2,0 1,0 | 7,0 7,0 10,0 8,0 7,0 (Mittel 7,8) | 5,1-9,0 (+- 1) |
+| Krallen-Mitte (Mittel) | 21,2 | 22,4 | 18,2-29,1 |
+| Krallenwurzel (Mittel) | 44,0 | 44,8 | 37,8-50,6 |
+| breite Stelle | 45,0 45,0 47,0 45,2 46,2 | 46,0 46,0 48,0 48,2 48,2 | 37,8-50,6 |
+| Breite / Laenge | 0,682-0,718 | 0,697-0,739 | 0,655-0,783 |
+| Kralle A / B / C Laenge | 18,2-18,9 / 15,9-17,0 / 18,1-18,5 | 23,4-24,0 / 17,7-18,8 / 23,1-23,8 (keine kuerzer) | 15,0-23,1 (+- 1) |
+| Wurzeldicke A (V7 12,4-12,9) | 11,7-11,9 (h130 duenner als V7) | 12,5-12,8 | - |
+| Daumenkralle T Laenge / Dicke | 14,3 / 5,0-5,1 | 10,9-11,0 / 6,1-6,3 | 6,7-22,6 |
+| Daumen Gabel ab Handgelenk | 18,2-20,0 | 24,0-25,0 | 22,4-30,5 |
+| Daumen Laenge | 20,8-25,5 | 16,7-19,4 | 16,9-19,4 (+- 1) |
+| Daumen Wurzeldicke | 11,0-13,0 | 12,0-15,0 | 10,0-16,1 |
+| Daumen Winkel zur Handachse | -26,3..-29,3 | -26,2..-31,8 | -22,1..-26,0 |
+| Kreuzen (acht Posen) | keins | keins | - |
+
+Farbe nach E9 unveraendert (Mesh 12: 491 = 6 Flaechen Daumenkralle, 492 = 18 Fingerkrallen, Rest 490; 0 fremde Texel; S17 f).
+
+### K4 Armhaltung - Varianten (runde7a/k4_tabelle.txt, k4_mass.py; Szenenposen Kamera Cut 12 offline, Hand-Riegel ueber 912 Keyframes)
+| Variante | S20 | S17(g) KF zusammen / Krallen / Szene | S9 P1,F344,F354,F364 px (neue Ecken) | S3(e) K | Gesicht verdeckt F311-F314 px | F315-F324 Unterarm-Winkel Grad | F315-F324 Spitze-Koerper px |
+|---|---|---|---|---|---|---|---|
+| V7 (Oberarm 20, kleine Hand) | ROT | 68 / 26 / 1 | 0, 0, 0, 0 | 3,0 | 0/0/0/0 | -2,6..21,4 | 0,1..21,1 |
+| Stand 6d (Oberarm -8) | GRUEN | 30 / 24 / 0 | 1, 0(2), 5(5), 2(6) | 3,4 | 0/18/0/0 | 33,2..50,1 | 48,5..66,8 |
+| NEU K3, Oberarm -8 = gewaehlt | GRUEN | 30 / 24 / 0 | 1, 0(2), 5(5), 2(6) | 3,4 | 0/18/0/0 | 33,2..50,1 | 48,5..66,8 |
+| NEU K3, Oberarm 0 | GRUEN | 46 / 38 / 6 | 1, 5(1), 3(3), 2(3) | 3,3 | 0/6/0/0 | 30,7..47,5 | 40,7..56,9 |
+| NEU K3, Oberarm 10 | GRUEN | 153 / 129 / 23 | 1, 3, 4(1), 1 | 3,2 | 0/5/0/0 | 27,3..44,1 | 30,2..45,1 |
+| NEU K3, Oberarm 20 (Knochen 10 wie V7) | GRUEN | 293 / 237 / 34 | 1, 0, 0, 0 | 3,0 | 0/0/0/0 | 23,6..40,3 | 19,2..33,2 |
+
+Wahl: **Stand 6d bleibt (Oberarm -8, Beuge 20).** Jede Variante, die den Arm in F315-F324 weniger abstehen laesst, schiebt die nun
+breite Hand in Oberschenkel und Rumpf: Durchdringung 46 / 153 / 293 statt 30 Keyframes, in der Szene 6 / 23 / 34 statt 0. Das
+verletzt die Bedingung "Durchdringung nicht schlechter als 6d". Arm-Anteil an S3 (e): mit Knochen 10 wie V7 sinkt K von 3,4 auf 3,0
+bei bytegleichen Meshes 8 und 9 - der Ueberschuss 0,4 ist vollstaendig der Oberarm, nicht der Sattel bei x 445 (P5). Ebenso
+S9 F354 5 px und die 18 verdeckten Gesichts-Bildpunkte in F312: beide verschwinden nur mit Oberarm 20. Knick der Hand (iii) nicht
+geaendert. F528-F600 (Kamera 4, Seitengang): kein Videobild vorhanden (Video endet bei f1538 = F430); im echten Fenster baumelt die
+Hand in 6d und NEU gleich hinter der Huefte, V7 verdeckt sie.
+
+### Riegel am neuen Stand (runde7a/riegel_v8r7a.txt, Szene und Marker-Laeufe r7a; Gegenprobe Stand 6d mit denselben Werkzeugen)
+SUMME 18 von 23 gruen; ROT: S3, S9, S16, S18, S19 (Stand 6d: 17 von 23, ROT S3, S9, S16, S17, S18, S19).
+Stand 6d -> neu je Riegel: S1, S2, S4-S8, S10-S15, S14s, S10s, S9s (10 px), S20 gleich und gruen; S17 ROT (a, d) -> GRUEN;
+S3 ROT (e: K 3,4) -> ROT (3,4, Arm-Anteil siehe K4); S9 ROT (a: F354 5 px; b Schlitz offline 73) -> ROT (a gleich; b 74, +1 px durch
+die Hand-Geometrie); S16 ROT (62 von 177 Ansichten, Szene 117 verdeckt) -> gleich; S18 ROT -> gleich; S19 ROT -> gleich.
+Gegenprobe Stand 6d (riegel_V8r6d_gegenprobe.txt) = Abgabe 6d (runde6d/riegel_v8r6d.txt) bis auf die Kopfzeile (Pfad).
+Gegenprobe V7 (riegel_V7_gegenprobe.txt): SUMME 6 von 20 gruen, ab Zeile 2 identisch mit runde6d/riegel_V7_gegenprobe.txt
+(Riegel-Werkzeuge unveraendert wirksam).
+
+### Tests und Spiel
+- Bau ueber local_build.sh (RE15_BUILD_DIR dieses Baums): LOCAL-BUILD-OK. ctest -R "unit_birkin|unit_schwanz_r41|
+  integration_r41_sichel_form|integration_r41_birkin_pistole": "100% tests passed, 0 tests failed out of 8" (runde7a/ctest_gruppe.txt).
+  test_birkin_formen.c: Spanne Mesh 12 auf 462 / 716 / 261 nachgezogen (6d 453 / 716 / 241).
+- Szenenlauf am Spiel-Asset (FD 200-1100, Ende F1110): state.log bytegleich V7 (sfv4/r/V7_szene/state.log).
+
+### Tafeln (roh, selbst angesehen)
+- 16_hand.png (Vorlage | V7 | Stand 6d | NEU, fuenf Paar-Posen): Daumen kuerzer und breiter, Gabel tiefer, Fingerende stumpfer.
+- 18_handstellung.png (echte Fenster F368-F375, je V7 / 6d / NEU mit Nutzerbild; ganze Figur): Hand richtig herum und breit wie 6d;
+  der Daumen ist jetzt ein kurzer Stummel mit kleiner heller Spitze statt der langen hellen Nadel; die drei roten Krallen enden
+  dichter beieinander. Ehrlich: es bleiben drei erkennbare Spitzen, kein runder Faeustling wie in der Vorlage; die Hand bleibt
+  dunkel rot-violett gesprenkelt (E9). Nahaufnahme runde7a/hand_zoom.png (Zeilen V7 / 6d / NEU, F368 F371 F375).
+- 19_armhaltung_r7a.png (Video | V7 | 6d | NEU, F311-F324 und F528/F552/F576/F600): NEU = 6d; in F315-F324 steht der Unterarm wie
+  in 6d ab (Winkel 33-50 Grad, V7 -3..21), das Video zeigt den Arm naeher am Koerper.
+
+### Offen
+1. K4 Abstehen F315-F324 (Unterarm 33-50 Grad gegen V7 -3..21): mit der breiten Hand nicht ohne neue Durchdringung loesbar
+   (Reihe oben); eine eigene Beuge nur fuer Clip 11 waere ein Eingriff fuer einen einzelnen Moment (E-d) und ist nicht gemacht.
+2. S3 (e) K 3,4, S9 (a) F354 5 px und F312 18 verdeckte Gesichts-Bildpunkte: Ursache Oberarm -8 (gemessen), bleiben mit K4.
+3. S9 (b) offline 73 -> 74 px (+1); S9s im echten Fenster unveraendert 10 (gruen).
+4. Hand-Knick (iii) 1-2 Grad gegen Vorlage 7-14 Grad: nicht angefasst.
+5. Clip 4 Bild 42 (Keyframe 230): Hand 27,2 Einheiten unter der tiefsten Koerperecke, in 6d und NEU gleich (kein Szenen-Clip).
+6. Daumen-Winkel -26..-32 Grad etwas weiter gespreizt als die Vorlage (-22..-26); kein Riegel-Mass.
+7. Fingerende: drei Spitzen statt Faeustling (Sicht); Hand-Farbe (E9) - Entscheid des Nutzers.

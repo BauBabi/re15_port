@@ -1,0 +1,2 @@
+Stand Runde 7a: HEAD vor Beleg-Commit 023f46e95, Asset a474188a2a06fb181df8acdea64be48c29af9f527efbe66aacf8f41b1cc657ec
+Szene: /c/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7a/szene (state.log bytegleich V7)
