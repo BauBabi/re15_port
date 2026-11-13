@@ -4355,3 +4355,144 @@ Gegenprobe V7 (riegel_V7_gegenprobe.txt): SUMME 6 von 20 gruen, ab Zeile 2 ident
 5. Clip 4 Bild 42 (Keyframe 230): Hand 27,2 Einheiten unter der tiefsten Koerperecke, in 6d und NEU gleich (kein Szenen-Clip).
 6. Daumen-Winkel -26..-32 Grad etwas weiter gespreizt als die Vorlage (-22..-26); kein Riegel-Mass.
 7. Fingerende: drei Spitzen statt Faeustling (Sicht); Hand-Farbe (E9) - Entscheid des Nutzers.
+
+## V8 Runde 7b - Schwanz-Rest: Unterseite, Schwanzwurzel, Grenze (Bauer, Zweig r41/sichel_v8, 2026-11-13)
+
+Auftrag: Orchestrator Runde 7, Teil b (K1 Unterseite wie Fleisch, K2 Schwanzwurzel F315-F324 und die 7 grauen Deckel-Dreiecke,
+K5 Grenze in P2). Nur Meshes 16-22; Meshes 0-15, Keyframes, Textur und CLUT bytegleich zum Stand vor 7b (a474188a, Teil 7a).
+Belege: SF_belege/v8/runde7b/ (Werkzeug-Kopien unter werkzeug/, Bilder unter bilder/); Arbeitsnotiz sfv8/r7b/NOTIZ.md.
+Keine Zahl ist eine @0x-Konstante: die Sichel-Form gibt es auf keiner Disc; jede Zahl ist PORT-WAHL mit Messung.
+
+### Stand
+- vor 7b: a474188a (Commit 023f46e95). NEU: 87b026816352c9987e9ceace2afbcb2dc8ff9827351e87b0a1693b20c8029b10 (277572 Bytes),
+  Commit db62602be, Werkzeuge 46537dad7. v8_kette.sh zweimal bytegleich (runde7b/kette_a.txt, kette_b.txt: V8-KETTE-OK).
+- vgl_vor7b_neu.txt: Sektionen 0-6 (EDD/EMR/Keyframes) und TIM bytegleich, Meshes 0-15 gleich, anders nur 16-22.
+- Zwischenstaende, die verworfen sind: 5a358bc9 (Commit 4a5e11caf, Riegel S2 ROT), f3e1ceff (e33aaa24e, Riegel S15 g ROT).
+
+### K1 Unterseite - Ursache der Glaette (gemessen, dichte.txt)
+- Die Fleischflaechen der Runde 6 bilden je Glied das Feld u 4-36 (um 220 Grad Umfang) x v 98-108 ab (10 Texelzeilen laengs auf
+  541-710 E.). Texeldichte (Wurzel aus Texelflaeche / Flaeche) der Unterseite: Median 0,023 Texel je E., Meshes 16-19 0,018-0,021.
+- Original-Dichte desselben Fleischs: die Original-Flaechen, die das Fleischfeld benutzen (Original-EM30 Meshes 12/14/15, Zeile 482,
+  Texel v 92-125, 54 Dreiecke): 0,071 (u 0,062 / v 0,090). Runde 6 = 0,25- bis 0,30-fach, unter der Grenze 0,5 (E4); Flaechenanteil
+  im Band 0,5-2-fach: 12,1 %. Jeder Texel war rund 3,5-fach vergroessert: aus den Laengsstreifen des Original-Fleischs wurden breite
+  glatte Baender ("glatte rote Klinge").
+- Das Feld selbst (feld_zoom.png, L*-Karte in werkzeug/diag2.py): dunkelrotes Fleisch mit Lichtstreifen (u 7, 24-25, 34-35, L* 27-32)
+  und einer Furche (u 14-16, L* 9), alle entlang v. Entlang v aendert sich das Feld kaum; die Zeichnung steckt quer (in u).
+  Capcoms Original-Birkin zeigt dieselbe Zeichnung als langes rotes Laengsband am rechten Unterarm (bilder/orig.png).
+- Das Profil des Riegels S15 (d) (Modell 26,1..26,1 gegen Vorlage 11,4..36,8) misst den Verlauf QUER ueber den Schwanz (grau oben ->
+  rot unten), nicht die Zeichnung in der Flaeche. Es zeigt die Glaette nicht.
+
+### K1 neues Mass (glaette_r7b.py)
+Klassen-Marker-Lauf (jede Flaeche auf eine deckende Klassen-Zeile; Figur nur, wo Marker- und Normal-Lauf sich unterscheiden) und im
+normalen Lauf die relative oertliche Streuung von L* (sd / mittleres L*) in 5 x 5-Fenstern, die ganz in einer Klasse liegen. Geeicht
+am eigenen Fleisch des Modells in denselben Framedumps: Rumpf (Mesh 8) und Haut der Beine (Meshes 1-6, Zeile 480). Soll = im Band
+[min, max] von Rumpf/Beinhaut, festgelegt nach der Probe F260-F280 am Stand a474188a und VOR den Varianten. Ausgewertet in den Bildern,
+in denen die Unterseite beleuchtet sichtbar ist (Median-L* >= 10: F263-F398, jedes 3. Bild; im ganzen Lauf liegt sie meist im
+Dunkeln, Median L* 3,8). glaette_beleuchtet.txt:
+
+| Stand | Unterseite rel. Streuung | sd L* | Rumpf | Beinhaut |
+|---|---|---|---|---|
+| a474188a (vor 7b) | 0,079 | 1,27 | 0,197 | 0,171 |
+| U4 (3 Flaechen je Durchgang, Mittelring in allen Gliedern) | 0,116 | 1,86 | 0,197 | 0,171 |
+| U5 (Feld u 17-37 ohne Furche, 2 je Durchgang) | 0,087 | 1,47 | 0,197 | 0,171 |
+| U7 (2 je Durchgang, 3 Abschnitte in allen Gliedern) | 0,141 | 2,48 | 0,199 | 0,171 |
+| NEU 87b02681 | 0,145 | 2,47 | 0,196 | 0,171 |
+
+Soll-Band 0,171-0,196: NICHT erreicht (NEU 0,145 = +84 % gegen 0,079). Offline (ref_orig.txt, 16 Ansichten PV/P2 x Gier, RDT-Licht):
+Original-Birkin Fleischfeld 0,154, a474188a 0,169, NEU 0,203, Rumpf 0,242, Beinhaut 0,207.
+
+### K1 Aenderung (unterseite_r7b.py, Haken in unterseite_r5.anwenden, unterseite_v8.json "fleisch_r7b")
+- Feld: Seite 2, Zeile 495 (= Original-Zeile 482), u 4-37 x v 96-106. Alle Texel von Original-Flaechen der Zeile 482 benutzt, jede
+  Zeile >= 86 % Fleisch, jeder Streifen laeuft durch. Texturbild und CLUT bytegleich, 16 Zeilen.
+- Um den Umfang: Dreieckswelle ueber die Ringecken, Umkehr alle 2 Ecken ab j 9 (theta ~ -92), gespiegelt nur an Ringecken, Breite
+  je Ring = 0,066 x 2 x Ringradius x 2 pi / 11 (gleiche Dichte auf jedem Ring, gleiche Breite an jedem Gelenk). 0,066 = 0,93-fach
+  Original 0,071.
+- Laengs: v je Abschnitt 96 <-> 106, an jedem Gelenk und jeder Abschnittsgrenze dieselbe Zeile. Neue Abschnitts-Ringe nur in den
+  Meshes 19-22 (Mittelpunkt der Laengskanten, Form bleibt); Mesh 18 hat seinen Mittelring; 16/17 ungeteilt.
+- Deckel und Dorn: Achs-Ecke um 0,066 x Abstand ins Feld; reicht das Feld nicht, wird die Ringkante gestaucht (Streckung <= 2).
+- E4 am Endstand (dichte.txt): Flaeche im Dichte-Band 0,5-2 x 0,071: 12,1 % -> 82,8 %; Dreiecke ausserhalb 195 -> 54 (von 279 -> 378).
+  Streckung <= 2: 59,5 % -> 38,9 % der Flaeche. Die Streckung liegt laengs: Meshes 16/17 haben 11 Zeilen auf 516-710 E. (Median-Streckung
+  2,3 / 3,6), das Uebergangsband 110-120 (Runde 6, unveraendert) ist quer gestaucht. Entlang v ist das Feld gleich; sichtbar ist nur
+  die Dichte quer.
+
+### K1 Versuche (je Punkt hoechstens drei im Spiel gemessen)
+1. U4: Feld v 96-106, 3 Flaechen je Durchgang, Mittelring in 16, 17, 19-22 -> 0,116. Sichtbar: duenne dunkle Linien (Furche) laengs.
+2. U5: Feld u 17-37 (ohne Furche), 2 je Durchgang -> 0,087, flacher. Verworfen.
+3. U7: Feld u 4-37, 2 je Durchgang, 3 Abschnitte in allen Gliedern -> 0,141; als Asset 5a358bc9 gebaut. Voll-Riegel: S2 ROT
+   ((b) Sattel PV 1,7 -> 3,0 px, (c) 3 px in 3 von 7 Varianten). Ursache: neue Ecken auf der Silhouette werden auf ganze Bildpunkte
+   gerundet; die Rueckseiten-Pruefung der Vierecke (Ecken 0-1-2, platform/pc/main.c ~2310) faellt an den Teilstuecken anders aus;
+   Oberkontur x 342-361 1-2 px tiefer (Meshes 16/17). Endstand = U7 ohne Abschnitts-Ringe in 16/17 (Messung 0,145, S1/S2 wie a474188a).
+Offline-Vorproben ohne Spiellauf: U1 (Feld bis v 116: Texel im unbenutzten Schlitz u 18-33 / v 110-117, Bau bricht ab), U3 (v 95-109:
+die Furche endet vor jedem Abschnitts-Ring -> Strichelreihe laengs, bilder/nah_g2.png), U6 (2 je Durchgang ohne Abschnitte: 245 von 418
+Dreiecken Streckung > 2, sieht aus wie ein gestreifter Schlauch, bilder/nah_u6.png), Teilung an der gezeichneten Diagonale 0-3 (haelt
+die Flaeche, aber 84 Loch-Bildpunkte in 50 Ansichten; quer geteilt 3; loecher.txt).
+
+### K2 Schwanzwurzel F315-F324 und die 7 grauen Deckel-Dreiecke
+- Ursache je Flaeche (k2_flaechen_F312_F324.txt: Offline-ID mit szene_posen, geprueft gegen den echten Klassen-Marker-Lauf, IoU der
+  Unterseite F316-F324 0,46-0,57; die Feder-Kette im Spiel weicht ab): Der "Kasten" sind die Unterseiten-Vierecke des Wurzelglieds
+  Mesh 16 v12 / v13 / v14 (theta 6-105, je rund 250 E. breit, 230-350 Bildpunkte je Bild), die Anfangsdeckel von Mesh 17 d11-d14
+  (kappe_unten, im 20-Grad-Knick zwischen 16 und 17 sichtbar, 50-113 Bildpunkte), Mantel 17 v1-v3, dazu der Uebergang 16 v22 und das
+  graue 16 v23 (theta 120-137) als harte rot/grau-Kante oben. Aus der Kamera hinter Birkin sieht man an der aufsteigenden Wurzel die
+  Innenseite des Bogens (= Unterseite nach E1).
+- Video f1423-f1432 (F315-F324, Tafel 14b, bilder/zoom_k2b.png): Ruecken von hinten, unscharf; ueber dem Ruecken ist kein Fortsatz
+  und keine Wurzel lesbar. Vorlage an der Stelle NICHT lesbar -> die Form bleibt.
+- Eingriff: die glatte Flaeche ist dieselbe Ursache wie K1 (16 v12-v14 und 17 d11-d14 tragen jetzt das Fleisch in Original-Dichte quer);
+  die 7 grauen Deckel-Dreiecke = Wurzelkegel von Mesh 16 d11-d14, d19-d21 (Mittel |theta| < 120; k2_wurzelkegel.txt) tragen jetzt
+  Zeile 495 und die Texel ihrer Nachbarn (laengs bzw. Uebergang), ebenso die Rohr-Vierecke darunter (Laenge 0). szene_marker.py setzt
+  die Wurzelflaechen im Marker MK_A auf 487, damit S10s sie weiter zaehlt (fuer alle frueheren Assets ohne Wirkung, gemessen).
+- Kanten 495/487 mit da* >= 15 (k2_kanten.txt, Mass des Zahlen-Pruefers): a474188a 6 (alle Mesh 16, Band gegen Kegel) -> NEU 1
+  (Kegel d14 gegen d15, da* 28,3, im Rumpf). Versuch, d14 mit dem Uebergang zu belegen (Commit d73c04008): 0 Kanten, aber S15 (g) ROT
+  (Fleisch-Dreieck auf Hautzeilen 83-91) -> zurueckgenommen (c12910e26).
+
+### K5 Grenze in P2 - Messartefakt (k5_neu.txt, k5_vor7b.txt)
+- Innenrichtung je Glied in P2 gegen PV: 0,5-0,8 Grad verschoben (innen_phi wird in PV gesetzt). Bild-Anteil Zeile 495 im Band
+  120-130: PV 0,0 %, P2 a474188a 3,1 %, NEU 3,5 % (Riegel S15 e Soll <= 5, gruen). Alle 495-Bildpunkte im Band 120-130 liegen auf
+  Uebergangsflaechen, deren Ecken-Normalen genau 110 und 120 Grad haben (17 v13 / v41 / v42, 20 v42, 18 v24, 22 v42); die Grenze liegt
+  auf dem Netz bei 120. Die Ueberschreitung im Bild kommt aus der Normalen-Interpolation je Bildpunkt und der um 0,5-0,8 Grad anderen
+  Innenrichtung in P2. Die 8,8-10,8 % des Zahlen-Pruefers stammen aus seinen 7 Halbpixel-Varianten, die ich nicht nachgestellt habe.
+  Nicht behoben (kein echter Fehler).
+- Waehrend der Arbeit gefunden: Teilstuecke der grauen TEIL_FANG-Dreiecke (Ecken 118,8-122) fielen bei 3 Abschnitten mit Mittel < 120
+  auf die Fleisch-Zeile (P2 6,2 %); flaechen_klassen haelt sie seither grau (R7B_FANG_ZONE 1,5 Grad).
+
+### Riegel am neuen Stand (runde7b/riegel_v8r7b.txt; Szene und Marker-Laeufe r7b; Gegenproben mit denselben Werkzeugen)
+SUMME: 18 von 23 gruen; ROT: S3, S9, S16, S18, S19 (vor 7b a474188a: 18 von 23, dieselben; Stand 6d: 17 von 23, dazu S17).
+Vor 7b -> neu je Riegel (Stand 6d in Klammern, wo anders):
+- S1 GRUEN -> GRUEN: Mittel 2,2 -> 2,3, Max 6,0 -> 6,0 (Stationen 18/19/21: -2/5/0 -> -3/4/1).
+- S2 GRUEN -> GRUEN, unveraendert (a 2,2 / 5; b Sattel 1,7 bei x 333; c 2 px in 7 von 7). Am Zwischenstand 5a358bc9 ROT (b 3,0).
+- S15 GRUEN -> GRUEN: (a) 0 fremde Texel, 0 falsche Zeile; (b) Unterseite 90 -> 137 Flaechen, ohne Fleisch 0, Fleisch-Texel 5352 ->
+  16330, Oberseite 70 -> 77, Fehler 0; (c) PV 99,4 -> 97,9 %, P2 99,2 -> 97,9 % (Soll >= 30) / Oberseite 0,0 %; (d) groesster Sprung
+  PV 5,6 -> 6,6 (Vorlage 7,4), P2 5,4 -> 6,8 (8,4); (e) Band 120-130 PV 0,0 / P2 3,1 -> 3,5 % (Soll <= 5); Ring-Deckel mit grauem Ring
+  0 Bilder; graue Texelzeilen im Fleisch-Feld keine; Kanten Info alle 51 -> 55, groesster da* 26,8 -> 28,3 (mantel 7,8 -> 8,1).
+- S3 ROT -> ROT gleich (e: K 3,4); S9 ROT -> ROT gleich (F354 5 px, Schlitz 74); S16 ROT -> ROT gleich (62 von 177, Szene 117
+  verdeckt); S18 ROT -> ROT gleich; S19 ROT -> ROT gleich (3 Dreiecke in Mesh 8). Nicht schlechter als 6d.
+- S4-S8, S10-S14, S14s, S10s (0), S9s (10), S17, S20: GRUEN -> GRUEN, Zeilen bytegleich zur Runde 7a.
+Gegenproben (runde7b/riegel_alle.sh; mit dem neuen unterseite_v8.json):
+- vor 7b a474188a (Laeufe r7a): ab Zeile 3 identisch mit runde7a/riegel_v8r7a.txt bis auf S15 (b): "Unterseite 97 Flaechen, davon
+  ohne Fleisch 7" -> S15 ROT (die 7 grauen Kegel-Dreiecke; gewollt, der Riegel sieht K2). SUMME 17 von 23.
+- Stand 6d e9e71bca (Laeufe r6d): ab Zeile 3 identisch mit runde7a/riegel_V8r6d_gegenprobe.txt bis auf dieselbe S15 (b)-Zeile; SUMME
+  16 von 23 (ROT S3, S9, S15, S16, S17, S18, S19).
+- V7: SUMME 6 von 20 gleich; nur die S15 (b)-Zahlen anders (Wurzelflaechen anders eingeteilt).
+
+### Tests und Spiel
+- local_build.sh LOCAL-BUILD-OK; ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole":
+  "100% tests passed, 0 tests failed out of 8" (432,35 s; runde7b/ctest_gruppe.txt). test_birkin_formen.c: Flaechen auf 495 je Glied
+  35/30/41/41/40/40/40, Ecken 43/32/47/48/47/47/47.
+- Szenenlauf am Spiel-Asset (FD 200-1100, Ende F1110): state.log bytegleich V7. Marker-Laeufe KO, MK_A, MK_B, GR, KL_NEU nacheinander.
+
+### Tafeln (roh, selbst angesehen)
+- 14_schwanz_unterseite.png (Video | V7 | Stand 6d | NEU an F264, F276 und Seitwaertsgang F528/F564/F600; offline von unten, von vorn,
+  andere Seite, PV, P2): Die Unterseite zeigt jetzt die feinen Laengsstreifen des Original-Fleischs statt breiter glatter Baender.
+  Ehrlich: sie bleibt satt dunkelrot und ist von vorn weiter eine rote Klinge (Form und E1); das Video zeigt dort helleres,
+  rosa-rotes Fleisch mit hellen Flecken - Farbe wird nicht geeicht (E4). Seitwaertsgang: Grenze und Oberseite wie 6d.
+- 14b_tonne.png (F312-F324): Der Kasten traegt Fleischstreifen statt glattem Rot; die harten Kanten (11-Eck der Wurzel) bleiben.
+  F312/F313: kein grauer Deckel-Ring mehr an der Wurzel sichtbar.
+
+### Offen
+1. K1-Mass nicht im Soll: 0,145 gegen 0,171-0,196 (eigenes Fleisch). Das Feld des Original-Fleischs ist laengs gestreift; mehr Zeichnung
+   ginge nur mit Texeln anderer Zeilen (z. B. Augen-Fleisch Zeile 480) - S15 (a) schreibt Zeile 482 vor; nicht gemacht.
+2. E4 Streckung: Meshes 16/17 laengs 11 Zeilen auf 516-710 E. (Streckung bis 3,6); jede Teilung dort machte S2 rot.
+   Das Uebergangsband 110-120 (Runde 6) ist quer gestaucht (Dichte bis 14-fach), unveraendert.
+3. K2: eine Kante 495/487 mit da* 28,3 (Kegel d14/d15) im Rumpf; die harten Kanten des Wurzel-Kastens sind Geometrie (Vorlage nicht lesbar).
+4. K5: Bildmass in P2 bleibt Messartefakt; die 7-Varianten-Zahl des Zahlen-Pruefers ist nicht nachgestellt.
+5. Gegenproben mit dem neuen unterseite_v8.json: an a474188a und Stand 6d ist S15 jetzt ROT (die 7 grauen Kegel-Dreiecke gelten als
+   Deckel der Unterseite) - gewollt, siehe Riegel-Abschnitt.
