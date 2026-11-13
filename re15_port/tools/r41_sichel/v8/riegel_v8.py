@@ -882,11 +882,15 @@ def zeilen(r):
     if 'S9s' in r:
         z.append('S9s Schlitz in echten Framedumps F344-F378 (gruene Silhouette, Ueberschuss gegen V7): %d (Soll <= %d) -> %s'
                  % (r['S9s']['ueberschuss'], SCHLITZ_SZENE_SOLL, 'GRUEN' if r['S9s']['ok'] else 'ROT'))
-    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18', 'S19', 'S20', 'S10s', 'S9s', 'S14s')
+    if 'R7c' in r:                    # Runde 7c (riegel_r7c.py, Entscheide E9-E13): Urteile S16/S18/S3/S9 nach E9-E13, neu S21
+        import riegel_r7c as R7C
+        z += R7C.zeilen(r)
+    rot = [k for k in ('S1', 'S2', 'S3', 'S4', 'S5', 'S6', 'S7', 'S8', 'S9', 'S10', 'S11', 'S12', 'S13', 'S14', 'S15', 'S16', 'S17', 'S18', 'S19', 'S20', 'S21',
+                       'S10s', 'S9s', 'S14s')
            if k in r and not r[k]['ok']]
-    gelb = ['S16'] if r.get('S16', {}).get('status', '').startswith('GELB') else []
+    gelb = [k for k in ('S3', 'S9', 'S16', 'S18', 'S21') if k in r and str(r[k].get('status', '')).startswith('GELB')]
     z.append('SUMME: %d von %d gruen%s%s' % (len([k for k in r if k.startswith('S')]) - len(rot) - len(gelb), len([k for k in r if k.startswith('S')]),
-                                             ('; GELB - Einzelbild (E3): ' + ', '.join(gelb)) if gelb else '',
+                                             (('; GELB: ' if 'R7c' in r else '; GELB - Einzelbild (E3): ') + ', '.join(gelb)) if gelb else '',
                                              ('; ROT: ' + ', '.join(rot)) if rot else ''))
     return z, rot
 
@@ -901,6 +905,13 @@ def main():
     ap.add_argument('--r4', help='Runde 6b: V8 r4 fuer S18 / S19 (Standard: git show 282e4d594:EM30_HANGAR.EMD)')
     ap.add_argument('--ko-v7', help='Runde 6b: Marker-Lauf KO (Gesicht magenta) von V7 fuer S16 (b)/(c) an den Szenenbildern F225-F450')
     ap.add_argument('--ko', help='Marker-Lauf KO des Prueflings')
+    # Runde 7c (riegel_r7c.py, Entscheide E9-E13): Laeufe mit lauf_v4.sh, Marker LM = riegel_r7c.py lm (F225-F450 ausser --r7c-plain-r4)
+    ap.add_argument('--r7c-lm', help='Runde 7c: Marker-Lauf LM des Prueflings'); ap.add_argument('--r7c-plain', help='Runde 7c: Szenenlauf des Prueflings')
+    ap.add_argument('--r7c-lm-v7'); ap.add_argument('--r7c-plain-v7')
+    ap.add_argument('--r7c-lm-ein', help='Runde 7c: LM-Lauf des Eingangs (Stand 7b)'); ap.add_argument('--r7c-plain-ein')
+    ap.add_argument('--r7c-plain-r4', help='Runde 7c: Szenenlauf V8 r4 (helle Bildpunkte E12, F344-F378)')
+    ap.add_argument('--r7c-ein', help='Runde 7c: Eingang (Standard git show db62602be = Stand 7b 87b02681)')
+    ap.add_argument('--r7c', action='store_true', help='Runde 7c: Urteile nach E9-E13 (auch ohne Laeufe: dann nur offline)')
     a = ap.parse_args()
     v7 = a.v7 or os.path.join(V.SFV8, 'emd', 'EM30_V7.EMD')
     ref = open(v7, 'rb').read()
@@ -910,6 +921,9 @@ def main():
     import riegel_r6 as R6
     r = alles(blob, ref, a.szene, marker=mk, fd=(a.fd, a.fd_v7) if (a.fd and a.fd_v7) else None, r4=R6.r4_blob(a.r4),
               ko=(a.ko_v7, a.ko) if (a.ko_v7 and a.ko) else None)
+    if a.r7c or a.r7c_lm:
+        import riegel_r7c as R7C
+        R7C.einbauen(r, blob, ref, R6.r4_blob(a.r4), a)
     z, rot = zeilen(r)
     kopf = ['Riegel V8 (Messblatt V8 Abschnitt 7) fuer %s' % a.emd, 'sha256 %s' % r['sha256'], 'Referenz V7 %s' % V.V7_SHA,
             'Referenz V8 r4 %s' % r.get('r4_sha256')]
