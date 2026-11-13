@@ -238,7 +238,12 @@ def flaechen_klassen(ms, par):
         for key, f in [('d%d' % i, f) for i, f in enumerate(m['tf'])] + [('v%d' % i, f) for i, f in enumerate(m['qf'])]:
             th = [None if x is None else abs(x) for x in ecken_theta(m, b, f, phi)]
             tr = [t for t in th if t is not None]
-            if key in ausn or not tr:
+            if key in ausn and tr and par.get('fleisch_r7b') and key[0] == 'd' and float(np.mean(tr)) < KLASSE_AB:
+                # Runde 7b (K2, Zahlen-Pruefer r6 "(D) graue Deckel ... 7 graue Dreiecke, alle Wurzel-Deckel in Mesh 16"): die Dreiecke des
+                # Wurzelkegels (Spitze = Achs-Ecke 34, Ringecken auf Ring 0 = Ort von Ring 1) unter der Grenze sind Deckel der Unterseite und
+                # bekommen Zeile und Texel ihrer Nachbarn (Mittel |theta| < 120: d11-d14, d19-d21, gemessen sfv8/r7b/deckel7.py)
+                res.append((key, 'kappe_unten', th))
+            elif key in ausn or not tr:
                 res.append((key, 'grau', th))
             elif ist_kappe(m, b, key, f, y0, y1):
                 res.append((key, 'kappe_unten' if float(np.mean(tr)) < KLASSE_AB else 'kappe', th))
@@ -430,6 +435,11 @@ def anwenden(ms, t, par, prot):
     zeile = zeile_index(t)
     nutz = A4.nutzung(None, ORIG_ZEILE)
     teilung = teilen(ms, par)
+    mitte = None
+    if par.get('fleisch_r7b'):                # Runde 7b (K1): Mittelring je Glied fuer die Fleisch-Abbildung in Original-Dichte (unterseite_r7b.py)
+        import unterseite_r7b as U7
+        abb = U7.konfig(par['fleisch_r7b'])
+        mitte = U7.mitte_teilen(ms, wurzel_keys)
     kl = flaechen_klassen(ms, par)
     zahl, deckel, fehl = {}, {}, []
     for b in V.SCHWANZ:
@@ -451,6 +461,19 @@ def anwenden(ms, t, par, prot):
             laengs = LAENGS and th_m < FLEISCH_KL
             ts_l = [theta_signiert(P[i], phi) if ring_ecke(b, i) else None for i in ie]
             ts_r = [x for x in ts_l if x is not None]
+            if laengs and par.get('fleisch_r7b'):  # Runde 7b (K1): Fleisch in Original-Dichte (unterseite_r7b.py); ohne Schluessel wie Runde 6
+                import unterseite_r7b as U7
+                for k, (u_, v_) in enumerate(U7.uv_flaeche(m, b, ie)):
+                    uv[3 * k], uv[3 * k + 1] = u_, v_
+                if klasse == 'kappe_unten':
+                    nd += 1
+                AV.setze_zeile(uv, zeile)
+                uv[5] = (uv[5] & ~0xF) | SEITE
+                mk = KB.raster(uv, 3 if len(uv) == 9 else 4, SEITE * 128)
+                if (mk & ~nutz).any():
+                    fehl.append('%d:%s' % (b, key))
+                n += 1
+                continue
             for k, i in enumerate(ie):
                 tt = th[k] if th[k] is not None else th_m
                 s = np.clip((P[i][1] - y0) / max(y1 - y0, 1.0), 0.0, 1.0)
@@ -486,6 +509,8 @@ def anwenden(ms, t, par, prot):
     prot['unterseite'] = dict(zeile=zeile, flaechen=zahl, summe=int(sum(zahl.values())), deckel_unten=deckel, deckel=par.get('deckel', DECKEL),
                               teilung=teilung, grau_ab=GRAU_AB, fleisch_ab=FLEISCH_AB, v=(V_GRAU, V_FLEISCH_AB, V_TIEF), u=(U0, U1),
                               innen_phi=par['innen_phi'])
+    if mitte is not None:
+        prot['unterseite']['fleisch_r7b'] = dict(mittelring=mitte, abbildung=abb)
 
 
 # ------------------------------------------------------------------ Messung / Riegel-Helfer

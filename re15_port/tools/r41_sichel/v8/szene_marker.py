@@ -48,6 +48,10 @@ def bauen(emd, ziel):
         else:
             z = 487 - 480
             c[z] = np.where(c[z] == 0, 0, (c[z] & 0x8000) | MAGENTA)
+            # Runde 7b (K2): die Wurzelflaechen liegen bis Runde 7a alle auf Zeile 487 (dann aendert diese Zeile nichts); seit 7b tragen die 7
+            # Kegel-Dreiecke unter der Grenze die Fleisch-Zeile - im Marker kommen sie auf 487 (magenta), damit S10s sie weiter zaehlt
+            for k in wurzel_flaechen(ms[16]):
+                AV.setze_zeile(AV.flaeche(ms[16], k), 487)
             if name == 'MK_B':
                 for k in wurzel_flaechen(ms[16]):
                     AV.setze_zeile(AV.flaeche(ms[16], k), 480)
