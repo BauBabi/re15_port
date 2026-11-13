@@ -443,14 +443,19 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
              * die Deckel-Haelften der Unterseite auf 495; gemessen am Asset 95a783a6: 21 / 30 / 41 / 31 / 30 / 30 / 30 = 213 Flaechen
              * (erster Stand 382bbfe7: Glied 16 nur 20 - das Bandstueck v22 zwischen 110 und 120 Grad galt dem Bau noch als Wurzelflaeche
              * und blieb auf 487; szene_marker.wurzel_flaechen kennt seit 118fad898 die Teilungs-Ecken),
-             * Ecken je Glied 43 / 32 / 47 / 32 / 32 / 32 / 32 (Runde 5d: 35 / 24 / 35 / 24 / 24 / 24 / 24). */
-            static const int UNTEN[7] = {21, 30, 41, 31, 30, 30, 30};
-            static const int ECKEN[7] = {43, 32, 47, 32, 32, 32, 32};
-            CHECK(b->tri_vertex_count == ECKEN[m - 16], "%s: Schwanzglied %d: %d Ecken statt %d (V8 Runde 6b Teilung)", name, m,
+             * Ecken je Glied 43 / 32 / 47 / 32 / 32 / 32 / 32 (Runde 5d: 35 / 24 / 35 / 24 / 24 / 24 / 24).
+             * V8 Runde 7b (K1 "Unterseite wie Fleisch, nicht wie eine glatte rote Flaeche", K2 "7 graue Deckel-Dreiecke";
+             * tools/r41_sichel/v8/unterseite_r7b.py, unterseite_v8.json fleisch_r7b): je Glied 3 Abschnitte (neue Ringe auf den
+             * Laengskanten, Form gleich), Fleisch in Original-Dichte; die 7 Kegel-Dreiecke und die Rohr-Vierecke der Wurzel unter der
+             * Grenze auf 495. Gemessen am Asset 5a358bc9 (sfv8/r7b): 55 / 50 / 51 / 51 / 50 / 50 / 50 = 357 Flaechen auf 495, Ecken
+             * 75 / 62 / 63 / 64 / 62 / 62 / 62. Gegenprobe Stand a474188a: rot (213 Flaechen, Ecken wie Runde 6b). */
+            static const int UNTEN[7] = {55, 50, 51, 51, 50, 50, 50};
+            static const int ECKEN[7] = {75, 62, 63, 64, 62, 62, 62};
+            CHECK(b->tri_vertex_count == ECKEN[m - 16], "%s: Schwanzglied %d: %d Ecken statt %d (V8 Runde 7b Abschnitte)", name, m,
                   b->tri_vertex_count, ECKEN[m - 16]);
             int auf487 = zeile_zahl(b, 487), auf495 = zeile_zahl(b, Z_X3);
             CHECK(auf495 == UNTEN[m - 16] && auf487 + auf495 == b->quad_count + b->triangle_count,
-                  "%s: Schwanzglied %d: %d Flaechen auf 495 (Soll %d), %d auf 487, %d gesamt (V8 Runde 6b Unterseite)", name, m, auf495,
+                  "%s: Schwanzglied %d: %d Flaechen auf 495 (Soll %d), %d auf 487, %d gesamt (V8 Runde 7b Unterseite)", name, m, auf495,
                   UNTEN[m - 16], auf487, b->quad_count + b->triangle_count);
             for (int q = 0; q < b->quad_count; q++)
                 if (b->quad_uvs[q].clut == (uint16_t)(Z_X3 << 6))
