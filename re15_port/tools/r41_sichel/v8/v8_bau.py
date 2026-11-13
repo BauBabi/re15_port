@@ -37,6 +37,9 @@ Stufe b) Runde 6c (P7, hand_szene.py + hand_v8.json "ellbogen"): Ellbogen-Beuge 
    NB3 60 Grad x w an Knochen 11 (birkin_formen.ducken, ellbogen_links); die Stufe rechnet die lokale Drehung von Knochen 11 je Keyframe aus
    Capcoms Original-EM30 mit dem neuen Winkel und demselben Gewicht w neu. Sie laeuft als LETZTE Stufe auf dem fertig gepackten Stand und
    fasst nur die 36 Bit von Knochen 11 je Keyframe an (alle anderen Knochen, Meshes, Textur bytegleich). Bau Runde 6c: --stufen srwaunhb.
+Stufe p) Runde 7c (P5, p5_stufe.py): Luecke Ruecken/Kopf ohne Kragen = Kandidat R3 des P5-Ablaufs (Nackenstueck r6 weg, Ecken 6/43 auf r4,
+   Ecken 17/30/46 nach E10, Viereck-Ergaenzungen d77-d80 nach E11, UV-Rueckbau auf r4) und die Pflicht-Korrekturen K-a..K-e der Pruefer R3.
+   Laeuft als letzte Stufe auf dem gepackten Stand, aendert nur Mesh 8 (Mesh 9 bleibt der V7-Kopf). Bau Runde 7c: --stufen srwaunhbp.
 Stufe a) Runde 4 (adern_r4.py, modus "original_r4"): wie Runde 3, dazu ganz Mesh 8 ausser der Brust auf den Original-Zeilen (Naht rosa/grau)
    und ganze UV-Gruppen mit einem Schub (Feld C von Mesh 13, Unterarmband von Mesh 14, Huegel und Wurzelstreifen von Mesh 8) auf Texel, die
    Original-Flaechen derselben Zeile benutzen.
@@ -484,6 +487,11 @@ def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None
     if 'b' in stufen:                 # Runde 6c (P7, Nutzer 2026-11-10 abends "... sieht es so aus als waere die linke Hand verkehrt herum gedreht"):
         import hand_szene as SZ       # Ellbogen-Beuge des linken Arms nach hand_v8.json "ellbogen" (Reihe und Wahl: SF_sichel.md "V8 Runde 6c")
         neu = SZ.stufe_b(neu, (hand or _p('hand_v8.json'))['ellbogen'], prot)
+    if 'p' in stufen:                 # Runde 7c (P5, Nutzer: "smooth straight to head without further hills...."; Luecke Ruecken/Kopf ohne Kragen):
+        import p5_stufe as P5         # Kandidat R3 des P5-Ablaufs + Pflicht-Korrekturen K-a..K-e (p5_stufe.py); letzte Stufe, aendert nur Mesh 8
+        vor = V.sha(neu)              # (Mesh 9 = V7-Kopf wird nur geprueft)
+        neu = P5.stufe(neu)
+        prot['p5'] = dict(eingang_sha256=vor, korr_uv=P5.KORR_UV, korr_ecken=P5.KORR_ECKEN)
     prot['tim'] = dict(clut_zeilen=int(t['clut'].shape[0]), port_texturhoehe=int(t['ih'] * t['clut'].shape[0]))
     prot['emd'] = dict(bytes=len(neu), sha256=V.sha(neu))
     return neu, prot
@@ -495,7 +503,7 @@ def main():
     ap.add_argument('--aus', default=os.path.join(V.SFV8, 'emd'))
     ap.add_argument('--name', default='EM30_V8.EMD')
     ap.add_argument('--json')
-    ap.add_argument('--stufen', default='srwaunhb')
+    ap.add_argument('--stufen', default='srwaunhbp')
     a = ap.parse_args()
     neu, prot = bauen(a.basis, a.stufen)
     os.makedirs(a.aus, exist_ok=True)

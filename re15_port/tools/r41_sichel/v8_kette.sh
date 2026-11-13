@@ -14,7 +14,7 @@
 #
 # Schritte:
 #   1-6 v7_kette.sh (Stufe 6 = V7, sha256 319bbd17; dessen Pin-Pruefung wird hier durch V7_SOLL ersetzt, weil der Pin jetzt V8 ist)
-#   7   v8/v8_bau.py --stufen srwaunhb  + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, v8/unterseite_v8.json, v8/nacken_v8.json, Original-EM30 (CDEMD0.EMS)
+#   7   v8/v8_bau.py --stufen srwaunhbp  + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, v8/unterseite_v8.json, v8/nacken_v8.json, Original-EM30 (CDEMD0.EMS)
 #       (Runde 6b: Stufe r mit ruecken_v8.json ohne Kragen (Ecken um den Kopf auf Stand Runde 4), Stufe n = nacken_r6.py (ein geschlossenes
 #        Nackenstueck, 7 Ecken / 10 Dreiecke, Zeile 493), Stufe u = unterseite_r5.py Runde 6: Grenze 110 / 120 Grad, Mantel, Dorn und
 #        Ring-Deckel an der Grenze geteilt, Fleisch-Verlauf v 98-108; Asset sha256 95a783a6 -
@@ -32,6 +32,8 @@
 #        durchweg grau")
 #       (Runde 5 P5: Ruecken ruecken_r5.py Suchlauf i + Ecke 65, Stufe n = nacken_r5.py: kleiner geschlossener Einsatz an Mesh 8 gegen den
 #        Keil in Szenentakt F332 - Nutzer 2026-11-09 "es gibt immer noch eine Lücke zwischen Rücken und Kopf beim 2 beiner Birkin")
+#       (Runde 7c P5: Stufe p = v8/p5_stufe.py: Kandidat R3 des P5-Ablaufs (scratchpad sfv8/p5/kand_r3, sha256 9860f6bd auf r6) und die
+#        Pflicht-Korrekturen K-a..K-e (UV t60/q15/t8, Ecken 17 und 25); letzte Stufe, aendert nur Mesh 8; Stufenfolge s r w a u n h b p)
 #                                    -> EM30_V8.EMD = Pin (V8)
 set -u
 HIER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -54,8 +56,8 @@ grep -E "^   [1-5] " "$ZIEL/v7_kette.txt"
 
 T="$ZIEL/baum/re15_port/tools/r41_sichel/v8"
 [ -f "$T/v8_bau.py" ] || { echo "FEHLER: $T/v8_bau.py fehlt im Schattenbaum"; exit 2; }
-echo "-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwaunhb"
-( cd "$T" && python v8_bau.py --basis "$ZIEL/emd/EM30_V7.EMD" --aus "$ZIEL/emd" --name EM30_V8.EMD --stufen srwaunhb \
+echo "-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwaunhbp"
+( cd "$T" && python v8_bau.py --basis "$ZIEL/emd/EM30_V7.EMD" --aus "$ZIEL/emd" --name EM30_V8.EMD --stufen srwaunhbp \
       --json "$ZIEL/prot/7_v8.json" ) > "$ZIEL/prot/7_v8.txt" 2>&1 || { echo "FEHLER: Schritt 7_v8 (Protokoll $ZIEL/prot/7_v8.txt)"; tail -5 "$ZIEL/prot/7_v8.txt"; exit 1; }
 rc=0
 v8="$(sha256sum "$ZIEL/emd/EM30_V8.EMD" | awk '{print $1}')"
