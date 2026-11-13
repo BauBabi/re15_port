@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "re15_rdt.h"          /* Runde 41 Spur H: re15_rdt_get_region_quad (Anker-Viereck = FUN_80014324) */
-#include "re15_math.h"         /* Runde 41 SF N2: re15_squareroot0 (Schrittgrenze Spider-Man) */
+#include "re15_math.h"         /* re15_atan2_q12 / re15_sin_q12 */
 #include "re15_enemy_ai.h"     /* Runde 41 Spur H: re15_player_is_grabbed */
 #include "re15_schwanz_r41.h"  /* Runde 41 SF N1.9: Schwanz-Kette */
 #include "re15_esp.h"          /* gruenes Blut: re15_esp_fx_spawn_ex (Bodenspritzer), re15_esp_fx_reset */
@@ -195,7 +195,7 @@ void re15_bf_morph_zu_g5(int slot)
 #define BF_HANGAR_CUT    12          /* Video: die Szene laeuft vollstaendig in Cut 12 */
 
 /* Clips. Birkin EM30: 0x0B = GRAB-THROW (ACT[5] @0x80117d30), Wurf bei Bild 0x2C; 1 = Gang (WALK @0x80117220); 0 = Stand
- * (INIT @0x8011683c). Spider-Man EM2B (Bank 0): 0x16 = Sprung (B[11] @0x80113560 `+0x94 = 0x16`), 7 = gekruemmte Reaktion
+ * (INIT @0x8011683c). Spider-Man EM2B (Bank 0): 0x17 = ATTACK2 (B[14] @0x80113eac `+0x94 = 0x17`, Kopf "Ansprung"), 7 = gekruemmte Reaktion
  * (HURT @0x801148e8), 0x0B = Rueckenlage mit Aufstehen (Katalog tools/r41_hangar/clipkatalog.py: B0..30 liegt, B31..39
  * richtet sich auf). Die Rollen in der Szene sind Gestaltung. Voraussetzung an jedes EM30-Ersatzmodell: Knochen 15 =
  * haltende Hand (im Sichel-Modell die Sichelhand), Clips 0/1/0x0B wie EM30; Spider-Man EM2B: Knochen 20 = Griffpunkt. */
@@ -206,7 +206,6 @@ void re15_bf_morph_zu_g5(int slot)
  * den Spider-Man ab h16 bis zum Wurf mit dem erhobenen Bild-linken = rechten Arm; das rot-weisse Glied, das h18-h28
  * Bild-links bis zum Boden haengt, ist der Schwanz (wandert h30-h34 zwischen die Knie, h38-h70 nach Bild-rechts). */
 #define BF_KLAUE         15
-#define BF_SM_SPRUNG     0x16
 #define BF_SM_GRIFF      7
 #define BF_SM_LIEGT      0x0B
 /* Griffpunkt am Spider-Man (PORT-WAHL nach Videomessung, Dossier SF_sichel.md N1.3): die Sichelhand haelt ihn am Bein -
@@ -216,14 +215,39 @@ void re15_bf_morph_zu_g5(int slot)
  * (110..140, 40..65)); mit dem Becken auf der Hand (Rumpf ~1370 tiefer) lag er 30..40 Bildpunkte zu tief.
  * Vorher (Spur H): Aktor-y = Klaue + 1200 und 1000 seitlich (BF_HALTE_SEITE) - der Spider-Man hing neben der Hand. */
 #define BF_SM_GRIFF_KNOCHEN 20
-/* Ansprung (Gestaltung nach Videomessung N1.4, Bahn tools/r41_sichel/bahn.py): Video h2->h3 hebt der Spider-Man in EINEM
- * Bild ab (Mitte Bild-y 131 -> 110), fliegt dann fast eben und gleich schnell (Bild-x 35, 43, 59, 74, 92, 111 je Bild h3..h8)
- * und prallt bei h10..11 an. Waagerecht: kurzes Anlaufen (erste 30 % quadratisch), dann gleichmaessig bis zur Hand
- * (kein Abbremsen vor dem Aufprall, vorher smoothstep; Lauf n1 mit 20 %: Bild-x h4 57 statt 43, zu frueh -> 30 %);
- * senkrecht: Bogen mit fruehem Scheitel bei 1/3 der Bahn. */
-#define BF_SM_SCHRITT     600        /* Gestaltung (N2): groesster Schritt des gehaltenen Spider-Man je Takt bis zum Wurf (h66),
-                                       * Video-Ansprung h4..8 ~600 je Bild (N1.4) */
-#define BF_BOGEN         1000        /* Gestaltung: Scheitel ueber der Geraden (Video h3..h8 Mitte ~25 Bildpunkte ueber h0) */
+/* Ansprung (Nutzer 2026-11-13: "Im Original Video gleitet der Spiderman mit gehobenen Armen zum Angriff Linear auf Birkin zu,
+ * und wird dann von Birkin abgefangen und hochgehoben. Bei uns springt er ... mehr oder weniger direkt hoch auf Birkins Arm").
+ * Video 4 Bild fuer Bild (Laufordner gruenblut/video, Bogen z_video_h0-8 / z_video_h9-17, PSX-Bildpunkte): h0..h1 hockt, ein
+ * Glied vorn oben; h2 richtet sich auf; h3 ein Arm im Bogen ueber dem Kopf, zwei Glieder nach vorn; h3..h8 gleitet er nach
+ * rechts, Rumpf Bild-y 105..120, der hintere Fuss am Boden (h3..h6) bzw. ~10 Bildpunkte darueber (h7/h8), Fleckmitte
+ * (bahn.py) x 35, 43, 59, 74, 92, 111 bei y 110, 110, 115, 118, 117, 114 = eben; h9 erste Ueberdeckung mit Birkins Schulter
+ * (x 130..140, y 75..100), Rumpf bleibt bei x 100..105 bis h17; h11/h12 Fuss am Boden, h12 gekruemmt; ab h13 hochgehoben
+ * (Rumpf y 115, 110, 95, 80, 65, 55 bei h12..h17). Vorher (Bogen BF_BOGEN 1000 auf die Sichelhand, Sprung-Clip 0x16 B2..14):
+ * Unterkante h3..h8 ~150 statt ~190, Rumpf stieg bis h11 auf y 65 ueber die Faust, h12 Ruecksprung um 25/35 Bildpunkte. */
+/* Clips des Ansprungs (Rollen = Gestaltung nach dem Video, 1 Clipbild je Takt bzw. 15 Bilder auf 7 Takte; alle aus der
+ * Zustandsmaschine des Spider-Man, STAGE5.BIN = Hangar-Overlay, STAGE4-Zwilling in Klammern):
+ *   0x17 = ATTACK2 (B[14]: `ori v0,zero,0x17` @0x8011402c / `sb v0,148(v1)` @0x80114030; STAGE4 @0x80113eac/b0) fuer h0..h4:
+ *     B8/B9 Hocke (Glied 4 vorn oben) = Video h0/h1, B10 richtet sich auf = h2, B11/B12 aufrecht (-16/-14 Grad), ein Arm
+ *     ueber dem Kopf (Spitze 1600 ueber der Schulter) = Video h3/h4 "aufrecht, Arm im Bogen ueber dem Kopf".
+ *   0x0E = GRIFF 1 vorn, Zugriff (P0: `ori v0,zero,0xe` @0x80112c40 / `sb v0,148(v1)` @0x80112c44; STAGE4 @0x80112ac0/c4) fuer
+ *     h5..h11, B0..B14: aufrecht stehend (Wurzel -1912..-2046), um 38 -> 11 Grad vorgeneigt, die Arme heben sich nach vorn
+ *     oben = Video h5..h8 "vorgeneigt, Arme vorn oben", h9..h11 an Birkins Schulter. Wechsel mit Ueberblendung (bf_bild). */
+#define BF_SM_ANGRIFF       0x17
+#define BF_SM_ANGRIFF_H0    8          /* Clipbild bei h0 */
+#define BF_SM_ZUGRIFF       0x0E
+#define BF_H_ZUGRIFF        5          /* Video h5: neigt sich vor */
+#define BF_SM_ZUGRIFF_LETZT 14         /* letztes Bild von Clip 0x0E (15 Bilder) bei h11 */
+/* Gleitbahn: waagerecht durch die Schattenpunkte des Videos (Rueckprojektion H_hangar.md Abschnitt 3: h0..2 (29..31,190),
+ * h4 (49,194), h6 (71,193), h8 (100,192)), zwischen ihnen linear = 448 / 358 / 485 Einheiten je Bild; ab h8 steht er (Video
+ * Rumpf x 100..105 h8..h12) bis zum Heben. Hoehe: Video tiefster Punkt (Bogen z_video_h0-8 / z_video_h9-17, zwei Lesungen)
+ * h3..h5 am Boden (197..200), h6..h10 5..10 Bildpunkte darueber (Mittel 7 = Weltabstand 245 in Blicktiefe ~7850,
+ * tools/r41_hangar/rueck.py), h11/h12 wieder am Boden (194..197) -> Aktor-y 0 bis h5, -245 h6..h10, 0 ab h11 (Clip 0x0E steht
+ * mit den Fuessen auf y 0). */
+static const int32_t k_sm_gleit[][3] = { { 2, BF_SM_X, BF_SM_Z }, { 4, -11974, -18287 }, { 6, -11342, -18623 }, { 8, -10497, -19102 } };
+#define BF_SM_GLEIT_Y    (-245)
+#define BF_H_GLEIT_AB    6
+#define BF_H_GLEIT_BIS   10
+#define BF_H_HEBEN_AB     12         /* Video h12 Fuss am Boden, Rumpf y 115; h13 110, h14 95, h15 80, h16 65: Heben h13..h16 */
 /* Zeitplan, h = Videobild (0 = erstes Bild in Cut 12). */
 #define BF_H_SPRUNG_AB    2
 #define BF_H_BERUEHRUNG  12
@@ -397,9 +421,9 @@ static struct {
     int16_t  gier0;                /* Birkins Blick auf den Spider-Man-Start (Bezug von k_birkin_gier) */
     int32_t  lx, lz;               /* Spider-Man: Aufschlagstelle */
     int32_t  ex, ez;               /* Spider-Man: Fluchtziel neben der Kamera */
-    int32_t  ziel[3];              /* geglaettetes Klauenziel des Ansprungs */
     int32_t  w0[3], wv[3], wvor[3]; /* Neuaufbau ab NB2: Loslassen (Lage, Handtempo je Takt), Lage im Takt davor */
-} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
+    int32_t  heben0[3], heben1[3]; /* Heben h12 -> h16: Lage beim Fangen, vorausberechnete Lage am Griff bei h16 */
+} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
 static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_rs_kam_halt = 0;  /* Nachbesserung 4: Haltezeit nach einem Szenenschnitt */
@@ -592,7 +616,7 @@ static void bf_hangar_starten(void)
     b->rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, 4, 0)) & 0x0fff);
     m->rot_y = bf_blick(m, b->x, b->z);
     m->hp = 100;
-    bf_clip(m, BF_SM_SPRUNG); m->anim_frac = 0;          /* hockt: Bild 0 des Sprungs (Video h0) */
+    bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0); m->anim_frac = 0;     /* hockt: Angriffs-Clip 0x17 B8 (Video h0) */
     s_h.cut_zurueck = (int)g_scd.cam_id;                 /* der Schnitt, den der RVD-Scan gerade angefordert hat */
     bf_riegel(1);
     /* Cut_chg-Zwilling (LAB_800402a0) auf den Szenenschnitt */
@@ -774,23 +798,6 @@ static void bf_gruenes_blut(re15_actor_t *b, re15_actor_t *m, int h)
     if (h == 88) re15_esp_fx_reset();                    /* Video h89: kein Spritzer mehr */
 }
 
-/* Waagerechter Bahnanteil des Ansprungs (Q12): erste 30 % quadratisch anlaufen, dann gleich schnell (Kopf BF_BOGEN). */
-static int32_t bf_anlauf(int32_t lin)
-{
-    const int32_t a = 1229;                              /* 0.3 in Q12: Video h2..h4 nur 15 % des Wegs (Bild-x 28 -> 43 von 28..125) */
-    if (lin <= 0) return 0;
-    if (lin >= 4096) return 4096;
-    if (lin < a) return (int32_t)(((int64_t)lin * lin / (2 * a)) * 4096 / (4096 - a / 2));
-    return (int32_t)((int64_t)(lin - a / 2) * 4096 / (4096 - a / 2));
-}
-/* Hoehenbogen des Ansprungs (Q12, 0..4096): 27/4 * u * (1-u)^2, Scheitel bei u = 1/3 (frueher Hochsprung wie Video h2->h3). */
-static int32_t bf_bogen(int32_t lin)
-{
-    const int64_t r = 4096 - lin;
-    if (lin <= 0 || lin >= 4096) return 0;
-    return (int32_t)(27 * (int64_t)lin * r / 4096 * r / 4096 / 4);
-}
-
 /* Ein Takt der Hangar-Szene (Zeitplan nach dem Video, Kopf "Hangar-Szene"). */
 /* Runde 41 SF Neuaufbau ab NB2, Nutzer 2026-11-03: "Und die Spiderman springt auch nicht oder sowas. Er wirft sie auf den Boden in
  * Richtung Kamera wo sie fliegt." Der Spider-Man bewegt sich nach dem Loslassen NICHT selbst: er verlaesst die Sichelhand im
@@ -894,42 +901,47 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     /* --- Spider-Man ------------------------------------------------------------------------------------------- */
     if (!m) return;
     if (h < BF_H_SPRUNG_AB) {                                             /* hockt (Video h0..1) */
-        bf_bild(m, BF_SM_SPRUNG, h < 0 ? 0 : h);
+        bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0 + (h < 0 ? 0 : h));
         m->rot_y = bf_blick(m, b->x, b->z);
-    } else if (h < BF_H_BERUEHRUNG) {                                     /* Ansprung h2..11: Bahn auf die Sichelhand */
-        const int32_t lin = (int32_t)((h - BF_H_SPRUNG_AB + 1) * 4096 / (BF_H_BERUEHRUNG - BF_H_SPRUNG_AB));
-        const int32_t u = bf_anlauf(lin);
-        bf_bild(m, BF_SM_SPRUNG, BF_H_SPRUNG_AB + (h - BF_H_SPRUNG_AB) * 12 / 10);   /* Sprung-Clip B2..14 ueber 10 Bilder */
+    } else if (h < BF_H_BERUEHRUNG) {                                     /* Gleiten h2..h11 (Kopf "Ansprung") */
+        int i = 0;
+        if (h < BF_H_ZUGRIFF) bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0 + h);              /* B10 h2 .. B12 h4 */
+        else bf_bild(m, BF_SM_ZUGRIFF, (h - BF_H_ZUGRIFF) * BF_SM_ZUGRIFF_LETZT / (BF_H_BERUEHRUNG - 1 - BF_H_ZUGRIFF));   /* B0 h5 .. B14 h11 */
         m->rot_y = bf_blick(m, b->x, b->z);
-        /* Das Handziel springt beim Clipwechsel Birkins (Clip 0 -> 0x0B bei h7, Lauf Unit-Test: 1246 Einheiten in einem
-         * Takt); die Bahn zielt deshalb auf ein geglaettetes Ziel (halber Abstand je Takt). */
-        bf_klauenziel(b, m, k);
-        if (h == BF_H_SPRUNG_AB) { s_h.ziel[0] = k[0]; s_h.ziel[1] = k[1]; s_h.ziel[2] = k[2]; }
-        for (int i = 0; i < 3; i++) s_h.ziel[i] = bf_mix(s_h.ziel[i], k[i], 2048);
-        m->x = bf_mix(BF_SM_X, s_h.ziel[0], u);
-        m->z = bf_mix(BF_SM_Z, s_h.ziel[2], u);
-        m->y = bf_mix(0, s_h.ziel[1], u) - (int32_t)(((int64_t)BF_BOGEN * bf_bogen(lin)) >> 12);
+        while (i < BF_N(k_sm_gleit) - 2 && h >= k_sm_gleit[i + 1][0]) i++;
+        {
+            const int32_t span = k_sm_gleit[i + 1][0] - k_sm_gleit[i][0];
+            const int32_t u = h >= k_sm_gleit[i + 1][0] ? 4096 : (h - k_sm_gleit[i][0]) * 4096 / span;
+            m->x = bf_mix(k_sm_gleit[i][1], k_sm_gleit[i + 1][1], u);
+            m->z = bf_mix(k_sm_gleit[i][2], k_sm_gleit[i + 1][2], u);
+            m->y = (h >= BF_H_GLEIT_AB && h <= BF_H_GLEIT_BIS) ? BF_SM_GLEIT_Y : 0;
+        }
     } else if (h < BF_H_LOS) {                                            /* gehalten bis zum Loslassen (NB2-Kopplung) */
         if (h == BF_H_BERUEHRUNG) bf_clip(m, BF_SM_GRIFF);
         else re15_r38_birkin_anim(m);                                     /* Zappeln: Clip 7 laeuft im Kreis */
         s_h.wvor[0] = m->x; s_h.wvor[1] = m->y; s_h.wvor[2] = m->z;       /* Neuaufbau: Lage vor dem Takt (Handtempo) */
         m->rot_y = bf_blick(m, b->x, b->z);
         bf_klauenziel(b, m, k);
-        {   /* folgt der Hand geglaettet (halber Abstand je Takt). Runde 41 SF N2: bis zum Wurf hoechstens BF_SM_SCHRITT je
-             * Takt - mit der geduckten Haltung wandert die Sichelhand beim Zugreifen (Clip 0x0B B3->B5) 860 statt 750 und der
-             * Griffknochen wechselt mit Clip 7 die Lage; ohne Grenze sprang der Spider-Man bei h13 803 Einheiten zurueck. */
-            int32_t d[3] = { (int32_t)(((int64_t)(k[0] - m->x) * 2048) >> 12), (int32_t)(((int64_t)(k[1] - m->y) * 2048) >> 12),
-                             (int32_t)(((int64_t)(k[2] - m->z) * 2048) >> 12) };
-            const int64_t q = (int64_t)d[0] * d[0] + (int64_t)d[1] * d[1] + (int64_t)d[2] * d[2];
-            if (h < k_birkin_bild[4][0] && q > (int64_t)BF_SM_SCHRITT * BF_SM_SCHRITT) {
-                const int32_t l = (int32_t)re15_squareroot0((uint32_t)(q > 0xFFFFFFFFll ? 0xFFFFFFFFll : q));
-                for (int i = 0; i < 3; i++) d[i] = (int32_t)((int64_t)d[i] * BF_SM_SCHRITT / (l > 0 ? l : 1));
-            }
-            m->x += d[0]; m->y += d[1]; m->z += d[2];
-            /* Runde 41 SF Neuaufbau ab NB2 (Nutzer 2026-11-03: Fangen und Wurf "vollkommen asynchron"): ab dem 4. Haltetakt
-             * (Video h16) haengt der Griffknochen JEDEN Takt genau auf der Sichelhand - keine Glaettung, keine eigene Spur. NB2
-             * glaettete auch im Wurf (halber Abstand je Takt) und lief der schnellen Hand h66-h71 bis 1419 Einheiten nach
-             * (unit_birkin_szenen); vorher (h12-h15) zieht der Griff ihn geglaettet heran (Clipwechsel Birkins). */
+        /* Heben h13..h16 (Kopf "Ansprung", Video Rumpf y 122 -> 73, je Bild 9..13 Bildpunkte): geradlinig und gleich schnell
+         * von der Lage beim Fangen (h12) zur Lage, in der der Griffknochen bei h16 auf der Sichelhand liegt (bei h12 aus Birkins
+         * Bild bei h16, k_birkin_bild, vorausberechnet); ab dem 4. Haltetakt (Video h16) haengt der Griffknochen JEDEN Takt genau
+         * auf der Sichelhand (Runde 41 SF Neuaufbau ab NB2, Nutzer 2026-11-03: Fangen und Wurf "vollkommen asynchron").
+         * Vorher zog ein geglaetteter Schritt (halber Abstand, hoechstens 600 je Takt) ihn ab h12 heran - von der neuen Fanglage
+         * am Boden aus waere er bei h16 noch ~300 von der Hand entfernt gewesen und dann gesprungen; ein Bruchteil der Strecke
+         * zur mitsteigenden Hand (Laeufe T2 v1/v2) hob immer schneller (421 .. 953 je Takt, Bild h13/h14 noch unten). */
+        if (h == BF_H_HEBEN_AB) {                                         /* Endlage des Hebens vorausberechnen */
+            re15_actor_t bb = *b, mm = *m;                                /* Kopien: nur Abfrage, keine Zustandsaenderung */
+            const int h16 = BF_H_BERUEHRUNG + 4;
+            bb.motion = BF_CLIP_GRIFF; bb.anim_frame = (uint8_t)bf_tab(k_birkin_bild, BF_BILD_N, h16);   /* Birkin-Bild bei h16 */
+            bb.rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, 4, h16)) & 0x0fff);
+            mm.anim_frame = (uint8_t)(m->anim_frame + (h16 - h));        /* Halte-Clip laeuft 1 Bild je Takt weiter */
+            s_h.heben0[0] = m->x; s_h.heben0[1] = m->y; s_h.heben0[2] = m->z;
+            bf_klauenziel(&bb, &mm, s_h.heben1);
+        }
+        if (h > BF_H_HEBEN_AB) {
+            const int32_t w = (h - BF_H_HEBEN_AB) * 4096 / (BF_H_BERUEHRUNG + 4 - BF_H_HEBEN_AB);
+            m->x = bf_mix(s_h.heben0[0], s_h.heben1[0], w); m->y = bf_mix(s_h.heben0[1], s_h.heben1[1], w);
+            m->z = bf_mix(s_h.heben0[2], s_h.heben1[2], w);
             if (h >= BF_H_BERUEHRUNG + 4) { m->x = k[0]; m->y = k[1]; m->z = k[2]; }
         }
         if (m->y > 0) m->y = 0;                                           /* Hand tief im Wurf: nicht unter den Boden */

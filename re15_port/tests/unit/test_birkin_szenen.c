@@ -195,6 +195,10 @@ static void test_hangar(unsigned raum)
      * (Port-Wahl nach Video 4): Wolke h24-h63 jedes 3. Bild = 14, Saeule h50-h54 + h55/57/59 = 8, Boden h82/h84 = 2 (y -80).
      * Vorher: Skala 0x3400/0x1800/0x3000/0x4000, abr_port 4 (ABR3), Anker Sichelhand + Bildversatz. */
     int blut_teil0 = 0, blut_boden = 0, blut_falsch = 0, blut_art = 0;
+    /* Ansprung (Nutzer 2026-11-13 "gleitet ... mit gehobenen Armen ... Linear auf Birkin zu"): in Phase 2 (h0..h11) steht der Aktor
+     * auf dem Boden bzw. gleitet knapp darueber (y 0 .. -245, Video h6-h10 5..10 Bildpunkte) und spielt ATTACK2 0x17 (@0x8011402c) bzw. den Zugriff 0x0E (@0x80112c40);
+     * vorher Bogen bis y -1641 mit dem Sprung-Clip 0x16. */
+    int gleit_n = 0, gleit_falsch = 0;
     unsigned char fx_vorher[RE15_ESP_FX_MAX];
     re15_esp_fx_reset();
     for (int f = 0; f < 200 && ende < 0; f++) {
@@ -217,6 +221,7 @@ static void test_hangar(unsigned raum)
         if (sm_da) {
             if (-m->y > max_hoehe) max_hoehe = -m->y;
             if (ph == 5 && m->y == 0) sm_am_boden = 1;
+            if (ph == 2) { gleit_n++; if (m->y < -245 || m->y > 0 || (m->motion != 0x17 && m->motion != 0x0E)) gleit_falsch++; }
             if (ph == 2 || (ph == 3 && ++griff_takte < 54)) {   /* Ansprung + Halten bis Video h66 (Wurf ab h66 ist schnell) */
                 double dx = m->x - mx, dy = m->y - my, dz = m->z - mz;
                 int32_t d = (int32_t)sqrt(dx * dx + dy * dy + dz * dz);
@@ -246,6 +251,7 @@ static void test_hangar(unsigned raum)
     for (int p = 1; p <= 7; p++) CHECK(ph_seen[p], "Phase %d nie erreicht", p);
     CHECK(max_hoehe > 2500, "Spider-Man nie hochgehalten (max %d)", max_hoehe);
     CHECK(sm_am_boden, "Spider-Man nie am Boden aufgeschlagen");
+    CHECK(gleit_n >= 10 && gleit_falsch == 0, "Ansprung: %d von %d Takten hoeher als 245 ueber dem Boden oder nicht Clip 0x17/0x0E", gleit_falsch, gleit_n);
     CHECK(blut_art == 0, "gruenes Blut: %d Plaetze nicht Effekt 0 / Sub 8 / Skala 0x2000 / abr_port 0 (@0x80113b10/30)", blut_art);
     CHECK(blut_teil0 == 22 && blut_boden == 2 && blut_falsch == 0,
           "gruenes Blut: %d an Teil 0 des Spider-Man (Soll 22, @0x80113b54), %d am Boden (Soll 2), %d anderswo (Soll 0)",
