@@ -34,6 +34,26 @@ def ry(grad):
     return np.array([[c, 0, s], [0, 1, 0], [-s, 0, c]])
 
 
+def rz(grad):
+    c, s = math.cos(math.radians(grad)), math.sin(math.radians(grad))
+    return np.array([[c, -s, 0], [s, c, 0], [0, 0, 1]])
+
+
+def om_flaechen(_c=None):
+    """Flaechen der Original-Hand (Mesh 12) als Liste (Normalen-Indizes, Ecken-Indizes)."""
+    om = original()[HAND]
+    return [(list(f[0::2]), list(f[1::2])) for f in list(om['tf']) + list(om['qf'])]
+
+
+def _normalen_nur(fl, ecken):
+    """Normalen-Indizes, die ausschliesslich an Ecken aus <ecken> haengen (Runde 7a)."""
+    an, fremd = set(), set()
+    for ns, vs in fl:
+        for n, v in zip(ns, vs):
+            (an if v in ecken else fremd).add(n)
+    return sorted(an - fremd)
+
+
 def original():
     return KB.teile(BF.lade_em30())[2]
 
@@ -91,8 +111,23 @@ def hand_ecken(om, c):
             e = (1.0 - k['anteil']) * a / np.linalg.norm(a) + k['anteil'] * b / np.linalg.norm(b)
             a = e / np.linalg.norm(e) * np.linalg.norm(a)
         P[sp] = m + k['faktor'] * a
+        if k.get('ziel') is not None:                              # Runde 7a (K3): Spitze an einen festen Ort (Original-Mass, vor "skala"),
+            P[sp] = np.array(k['ziel'], float)                     # damit die drei Fingerkrallen als gemeinsamer Keil enden
         if k.get('ring', 1.0) != 1.0:                              # Runde 6c: Wurzelring der Kralle um seine Mitte geweitet (Dicke an der Wurzel)
             P[ring] = m + k['ring'] * (P0[ring] - m)
+        if k.get('wurzel_schub') is not None:                      # Runde 7a (K3): Wurzelring und innere Spitze der Doppelpyramide verschoben
+            innen = sorted({v for f in om['tf'] for v in f[1::2] if set(f[1::2]) & set(ring)} - set(ring) - {sp})
+            P[list(ring) + innen] += np.array(k['wurzel_schub'], float)
+    for g in c.get('gruppen', []):                                 # Runde 7a (K3): eine Eckengruppe (z.B. der Daumen) um einen Punkt "um"
+        idx = list(g['ecken'])                                     # (Original-Mass) je Achse skaliert, um z gedreht (Ebene x/y = Handflaeche)
+        L = rz(g.get('dreh_z', 0.0)) @ np.diag(np.array(g.get('skala', [1.0, 1.0, 1.0]), float))   # und verschoben; Normalen, die nur
+        if g.get('achse') is not None:                             # Runde 7a (K3): statt je Achse entlang einer eigenen Achse "achse" (Original-
+            a_ = np.array(g['achse'], float) / np.linalg.norm(g['achse'])   # Mass, z.B. Daumen-Wurzel -> Daumenspitze) mit "laengs" und quer
+            L = g.get('laengs', 1.0) * np.outer(a_, a_) + g.get('quer', 1.0) * (np.eye(3) - np.outer(a_, a_))   # dazu mit "quer" skaliert
+        um = np.array(g['um'], float)                              # an Ecken der Gruppe haengen, mit der Inverstransponierten
+        P[idx] = (P[idx] - um) @ L.T + um + np.array(g.get('schub', [0.0, 0.0, 0.0]), float)
+        for n in _normalen_nur(om_flaechen(c), set(idx)):
+            N[n] = np.linalg.inv(L).T @ N[n]
     for i, (y, f) in sorted((int(k), v) for k, v in c.get('wurzelring', {}).items()):   # Ecken des Handansatzes: neue Hoehe y, Radialfaktor f
         P[i] = (P[i, 0] * f, y, P[i, 2] * f)
     for e in c.get('ebnen', []):                                   # Ecke auf dem kuerzesten Weg in ihrer Hoehe y in die Ebene dreier Ecken

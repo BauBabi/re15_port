@@ -13,7 +13,9 @@
   "oberarm": "GESTALTUNG nach dem Video (PORT-WAHL, keine Disc-Adresse): linker Oberarm (Knochen 10) -8 statt 20 Grad zur Koerpermitte (ducken() arm_innen der V7-Basis, gleiches Gewicht w; nur der linke Arm). Beleg 1, Vorlagen-Mass in den fuenf Paar-Posen: Unterarm-Winkel im Bild Vorlage +4.0 Grad (Hand aussen vom Ellbogen), Modell bei 20: -5.7, bei 0: +0.3, bei -8: +2.9; seitliche Lage von Ellbogen, Handgelenk und Spitze ab Rumpfmitte (Betrag-Mittel der Abweichung in Figurhoehen): 20: 0.058, 10: 0.030, 5: 0.015, 0: 0.009, -5: 0.016, -8: etwa 0.02, -10: 0.023. Beleg 2, Durchdringung in den 86 Szenen-Keyframes (Hand im linken Oberschenkel): 20: 31, 10: 22, 5: 8, 0: 6, -5: 4, -7: 0, -8: 0, -10: 0; Stand r5d/V7: 1. Gewaehlt ist der erste Wert ohne Durchdringung (-7) plus 1 Grad Abstand; das Lage-Mass allein laege bei 0 bis 5 Grad am besten. Reihe: SF_sichel.md, Abschnitt V8 Runde 6c (P7).",
   "krallen_ring": "PORT-WAHL Runde 6c (P6, Nutzer: 'Bei uns ist die Hand ganz klein und zierlich'; frueher: 'Sind die Krallen zu duenn?'): Wurzelring der drei Fingerkrallen um seine Mitte x 1.6. Reihe in den fuenf Paar-Posen (Mittel), Faktor | Krallenwurzel px | Krallen-Mitte px: 1.0 | 32.1 | 17.8; 1.3 | 37.6 | 19.2; 1.6 | 44.4 | 21.4; 2.0 | 44.2 | 23.5. Vorlage (birkin20-24) Krallenwurzel 37.8..50.6 Median 43.5, Krallen-Mitte 18.2..29.1 Median 21.8 - 1.6 liegt beiden Medianen am naechsten. Die Daumenkralle bleibt (Wurzeldicke in der Vorlage 10.0..16.1, Modell 11.0..13.2).",
   "skala_r6c": "PORT-WAHL Runde 6c: Hand quer 0.77 (Runde 6b 0.93, Zwischenstand 0.78). Gemessen in den fuenf Paar-Posen h125/h126/h128/h130/h132 nach Verdrehung 0, Beuge 20, Oberarm -8: breite Stelle 45.0 45.0 47.0 45.2 46.2 px (Vorlage birkin20-24: 37.8..50.6, Median 44.5), Handwurzel 34.0 33.0 33.0 34.0 33.2 px (Vorlage 26.6..34.8; bei 0.78 in h130 36.0 px = ausserhalb). Der Wert 0.93 war an den Ersatz-Posen mit verdrehter Hand geeicht.",
-  "unterarm_r6c": "PORT-WAHL Runde 6c (P6, Nutzer: 'Die Vorlage hat eine breite Hand mit breiten Unterarmt'): Radialfaktor des Unterarms am Ellbogen-Ende 1.0 -> 1.2 (y 0), 1.0 -> 1.15 (y 90), in der Mitte 0.86 -> 0.9 (y 236). Reihe in den fuenf Paar-Posen, Faktoren | Station Ellbogen px | Unterarm-Mitte px: 1.0/1.0/0.86 | 30.0 31.0 30.2 30.2 31.2 | 32.0 33.0 33.0 33.0 31.2; 1.1/1.1/0.86 | 32.0 33.0 33.2 32.2 32.2 | 32.0 33.0 33.0 33.0 31.2; 1.15/1.12/0.9 | 33.0 33.0 33.2 32.2 34.2 | 34.0 33.0 35.0 34.0 35.2; 1.2/1.15/0.9 | 34.0 33.0 34.0 34.0 34.2 | 34.0 33.0 35.0 34.0 35.2. Vorlage Ellbogen 34.0..40.8 Median 34.8, Unterarm-Mitte 32.5..39.1 Median 33.5 - erst 1.2/1.15/0.9 liegt in allen fuenf Posen in der Streuung (+- 1 px)."
+  "unterarm_r6c": "PORT-WAHL Runde 6c (P6, Nutzer: 'Die Vorlage hat eine breite Hand mit breiten Unterarmt'): Radialfaktor des Unterarms am Ellbogen-Ende 1.0 -> 1.2 (y 0), 1.0 -> 1.15 (y 90), in der Mitte 0.86 -> 0.9 (y 236). Reihe in den fuenf Paar-Posen, Faktoren | Station Ellbogen px | Unterarm-Mitte px: 1.0/1.0/0.86 | 30.0 31.0 30.2 30.2 31.2 | 32.0 33.0 33.0 33.0 31.2; 1.1/1.1/0.86 | 32.0 33.0 33.2 32.2 32.2 | 32.0 33.0 33.0 33.0 31.2; 1.15/1.12/0.9 | 33.0 33.0 33.2 32.2 34.2 | 34.0 33.0 35.0 34.0 35.2; 1.2/1.15/0.9 | 34.0 33.0 34.0 34.0 34.2 | 34.0 33.0 35.0 34.0 35.2. Vorlage Ellbogen 34.0..40.8 Median 34.8, Unterarm-Mitte 32.5..39.1 Median 33.5 - erst 1.2/1.15/0.9 liegt in allen fuenf Posen in der Streuung (+- 1 px).",
+  "krallen_r7a": "PORT-WAHL Runde 7a (K3; Nutzer P6: 'Sind die Krallen zu duenn?', frueher: 'JEDE der Krallen im Original laenger'): Diagnose am Stand 6d in den fuenf Paar-Posen: das Handende ist EINE ueberlange Kralle B (Spitze 1.9-3.1 px allein vor dem Ende), A und C enden 3.5-6.1 px davor -> Station Spitzen 1-2 px. Neu: Spitzen von A und C an feste Orte neben der B-Spitze (B-Spitze im Original-Mass [186, 963, -149]; A [96, 918, -130] = B -90/-45, C [116, 938, -135] = B -70/-25); Wurzelring A um y +45 und Ring x 1.7 (sonst A 26.4-27.0 px lang, Streuung 15.0-23.1 +- 1; Reihe (Wurzelschub w, Ring r, A-Spitze dy) -> A-Laenge min-max px: w0 r1.6 dy-35 26.4-27.0; w30 r1.8 dy-35 24.8-25.4; w40 r1.6 dy-35 24.3-24.9; w45 r1.8 dy-35 24.0-24.6; w45 r1.7 dy-45 23.4-24.0 (gewaehlt); w50 r1.8 dy-45 23.2-23.8 und w60 r1.6 dy-35 23.2-23.8 verschieben die Station Krallenwurzel in h126 bzw. h125/h126 auf 26-27 px (Vorlage 37.8-50.6)); Wurzelring B um y -25 (die Verschiebung von A drehte die Finger-Achse Cw: Handgelenk / Unterarm-Mitte h132 0.5966 unter der Vorlage 0.5973; mit B -25 wieder 0.602 wie 6d; B wird dabei laenger, 17.7-18.8 px statt 15.9-17.0). Gemessen (r7a/exp14 z2): Spitzen 7.0 7.0 10.0 8.0 7.0 px (Vorlage 5.1-9.0 +- 1), Laengen A 23.4-24.0, B 17.7-18.8, C 23.1-23.8 px (6d 18.2-18.9 / 15.9-17.0 / 18.1-18.5: keine kuerzer), Wurzeldicke A 12.5-12.8 (V7 12.4-12.9, 6d 11.7-11.9), kein Kreuzen",
+  "daumen_r7a": "PORT-WAHL Runde 7a (K3; Sicht-Pruefer r6: 'Daumen als duenne blassgraue Nadel statt kurzem dickem Daumen'): Daumen (Ecken 13-16, 18-26) entlang SEINER Achse (Mitte Ring 13-16 [282, 351, -104] -> Spitze der Daumenkralle 20 [415, 635, -178], Original-Mass) um die Spitze 20 laengs x 0.75, quer x 1.25; Kerbe Daumen/Fingerblock (Ecken 8, 9) um [30, 90, 0] in Richtung Fingerblock. Versuche: (1) je lokale Achse um Ecke 20 (y 0.75/0.65) - Gabel 20.5-23.8, Daumen spreizt auf -34..-37 Grad (Vorlage -22..-26); (2) Daumen um die Wurzel nach innen gedreht (+6..+10 Grad) - Hand zu schmal, Breite/Laenge 0.636-0.675 < 0.655, S17 (c) rot, verworfen; (3) diese Wahl: Gabel 24.0-25.0 px (Vorlage 22.4-30.5), Laenge 16.7-19.4 (16.9-19.4 +- 1), Wurzeldicke 12.0-15.0 (10.0-16.1), Winkel -26.2..-31.8 Grad (6d -26.3..-29.3); 6d: Gabel 18.2-20.0, Laenge 20.8-25.5, Dicke 11.0-13.0"
  },
  "hand": {
   "skala": [
@@ -26,17 +28,37 @@
   "krallen": {
    "A": {
     "faktor": 1.33,
-    "ring": 1.6
+    "ring": 1.7,
+    "ziel": [
+     96,
+     918,
+     -130
+    ],
+    "wurzel_schub": [
+     0,
+     45,
+     0
+    ]
    },
    "B": {
     "faktor": 2.0,
     "nach": "C",
     "anteil": 0.5,
-    "ring": 1.6
+    "ring": 1.6,
+    "wurzel_schub": [
+     0,
+     -25,
+     0
+    ]
    },
    "C": {
     "faktor": 1.0,
-    "ring": 1.6
+    "ring": 1.6,
+    "ziel": [
+     116,
+     938,
+     -135
+    ]
    }
   },
   "wurzelring": {
@@ -64,6 +86,53 @@
      6,
      9,
      4
+    ]
+   }
+  ],
+  "gruppen": [
+   {
+    "ecken": [
+     13,
+     14,
+     15,
+     16,
+     23,
+     24,
+     25,
+     26,
+     18,
+     19,
+     20,
+     21,
+     22
+    ],
+    "um": [
+     415,
+     635,
+     -178
+    ],
+    "achse": [
+     133,
+     284,
+     -74
+    ],
+    "laengs": 0.75,
+    "quer": 1.25
+   },
+   {
+    "ecken": [
+     8,
+     9
+    ],
+    "um": [
+     0,
+     0,
+     0
+    ],
+    "schub": [
+     30,
+     90,
+     0
     ]
    }
   ]
