@@ -10,13 +10,13 @@
  *   programme  Programm-Bytes je Punkt: HAEMMERN39 ohne Zombie-Stoehnen 0x3C/0x0B und ohne "Help me out." 0x3D (1, 3),
  *              Klopfen dreifach + help01..05 je Runde im Mix (4), KEINE Reaktion msg 50 mehr (Nutzer-Nachtrag 10;
  *              vorher Punkt 5/M1), Schleife bis Ck(4,0xC3) (N4.1); ENTRIEGELN39 = sub05 + Rennen + Cut 7 + Waffe heben (N4.2) +
- *              Tuer-Auftritt (2), Glasbruch vor msg 6 (6), Gosub sub04 nach Johns Drehung vor msg 9 (7), msg 51/52 mit
+ *              Tuer-Auftritt (2), vor msg 6 (6) seit Runde 41 ZWS114 die Schrei-Zeile 61 statt Glas, Gosub sub04 nach Johns Drehung vor msg 9 (7), msg 51/52 mit
  *              Gesten nach dem Kampf, Heranwinken (0,2) statt (2,6) (8, M2, Nachtrag 7), John im Schnittbild (M3); ROLLTOR39
  *   stamm      Sprach-Stamm: ROOM1141 Id 53..57 -> help01..05, alles andere unveraendert
  *   phase_h    ROOM1141 mit Elza am VM: John ab Bild 0 nicht im Raum; Klopfen/Hilferufe als Ton (Takt), keine Nachricht
  *              (Nachtrag 10: Elzas Reaktion entfaellt in 1141); Gemaelde -> Rolladen -> frei laufen, Klopfen weiter (N4.1); Riegel -> msg 12, Elza rennt,
  *              Cut 7, Waffe heben (Pistole aus dem Inventar), Tuer auf, John innen vor der Tuer, Tuer zu, Cut 6 mit John,
- *              Waffe senken (N4.2); Szene mit Glasbruch vor msg 6 und Johns Blick zu Elza ab msg 9; Sperre msg 41; John
+ *              Waffe senken (N4.2); Szene mit Schrei-Zeile (Runde 41 ZWS114) vor msg 6 und Johns Blick zu Elza ab msg 9; Sperre msg 41; John
  *              schiesst, Treffer, Aufmerksamkeit (N4.3); Gorillas tot -> Cut 8, msg 51 (Gesten 15/23) und msg 52
  *              (Heranwinken ROOM1171 RBJ rec1 Clip 2, 96 Bilder, geliehen; M2/Nachtrag 7), kein Sprung (M3), Abgang
  *   fenster    Gemaelde gleich nach dem ersten Ruf: Rolladen, frei laufen, keine Reaktion (Nachtrag 10); Wiederbetreten mit
@@ -52,6 +52,7 @@
 #include "re15_tim.h"
 #include "re15_dining_r38.h"
 #include "re15_dining_r39.h"
+#include "re15_zws114_r41.h"   /* Runde 41 ZWS114: Punkt 6 = Gorilla-Schrei statt Glasbruch */
 #include "re15_damage.h"   /* re15_player_equipped_weapon (Nachbesserung 1 N4.2) */
 
 #include <math.h>
@@ -409,15 +410,16 @@ static void teil_programme(void)
         static const uint8_t schleife[4] = { 0x21, 0x04, 0xC3, 0x00 };
         PRUEF(nh > 14 && !memcmp(h + 14, schleife, 4), "HAEMMERN39 N4.1: While Ck(4,0xC3)==0 (main00 @0x00A76) statt bis zum Rolladen");
     }
-    {   /* Punkt 6: zwei Se_on(0x3E,0x21) mit Sleep 5 dazwischen unmittelbar vor `09 0a 14 00` + Message_on 6 */
-        const uint8_t g[24] = { 0x36, RE15_R39J_SE_BANK, RE15_R39J_SATZ_GLAS, 0,0,0,0,0,0,0,0,0, 0x09, 0x0A, 0x05, 0x00,
-                                0x36, RE15_R39J_SE_BANK, RE15_R39J_SATZ_GLAS, 0,0,0,0,0 };
+    {   /* Punkt 6 (seit Runde 41 ZWS114, include/re15_zws114_r41.h): vor `09 0a 14 00` + Message_on 6 steht statt des
+         * Glasbruchs (Se_on(0x3E,0x21) x2) die Port-Zeile 61 = Gorilla-Schrei; der Film vor msg 7 zeigt die Scheiben. */
+        const uint8_t g[12] = { 0x2B, RE15_R39J_MSG_STIMME_WARTEN, 0x00, 0x00, 0x2B, RE15_ZWS114_MSG_SCHREI, 0x00, 0x00,
+                                0x09, 0x0A, 0x14, 0x00 };
         const uint8_t m6[8] = { 0x09, 0x0A, 0x14, 0x00, 0x2B, 0x06, 0x00, 0x00 };
-        const int ig = finde(b, nb, g, 24, 0), i6 = finde(b, nb, m6, 8, 0);
-        PRUEF(ig > 0 && i6 == ig + 28, "ENTRIEGELN39 Punkt 6: Glasbruch x2 (RE2 ROOM1090 @0x02BB0..@0x02BC0) direkt vor Sleep 20 + "
-                                       "msg 6 \"What was that?!\" (@+%04X, msg 6 @+%04X)", ig, i6 + 4);
-        PRUEF(ig >= 4 && b[ig - 4] == 0x2B && b[ig - 3] == RE15_R39J_MSG_STIMME_WARTEN && b[ig - 2] == 0 && b[ig - 1] == 0,
-              "ENTRIEGELN39 Punkt 6: davor Message_on 58 = Warten auf das Ende von Johns Sprachzeile (msg 5)");
+        const uint8_t glas[3] = { 0x36, RE15_R39J_SE_BANK, RE15_R39J_SATZ_GLAS };
+        const int ig = finde(b, nb, g, 12, 0), i6 = finde(b, nb, m6, 8, 0);
+        PRUEF(ig > 0 && i6 == ig + 8, "ENTRIEGELN39 Punkt 6 / ZWS114: Message_on 58 (Johns Stimme ausreden), Message_on 61 (Schrei), "
+                                      "Sleep 20 + msg 6 \"What was that?!\" (@+%04X, msg 6 @+%04X)", ig, i6 + 4);
+        PRUEF(finde(b, nb, glas, 3, 0) < 0, "ENTRIEGELN39: kein Glasbruch Se_on(0x3E,0x21) mehr (Runde 41 ZWS114: Glas im Film)");
         static const uint8_t pc58[4] = { 0x2B, RE15_R39J_MSG_STIMME_WARTEN, 0x00, 0x00 }, pc6[4] = { 0x2B, 0x06, 0x00, 0x00 };
         const unsigned alt_raum = g_current_room_id;
         g_current_room_id = 0x1141u;
@@ -740,8 +742,9 @@ static void teil_phase_h(void)
           bild_zu, bild_cut6);
     PRUEF(john_in_cut6, "Punkt 2: John steht im ersten Bild von Cut 6 schon im Bild (innen vor der Dachtuer)");
     PRUEF(john_sichtbar_vor_cut6 == 0, "Punkt 2: John vor Cut 6 in keinem angezeigten Bild (%d Bilder)", john_sichtbar_vor_cut6);
-    PRUEF(bild_glas2 > 0 && bild_msg6 > bild_glas2, "Punkt 6: Glasbruch (letzter Satz Bild %ld) vor \"What was that?!\" (Bild %ld)",
-          bild_glas2, bild_msg6);
+    PRUEF(bild_glas2 < 0 && g_re15_zws114_schreie > 0 && bild_msg6 > 0,
+          "Punkt 6 / Runde 41 ZWS114: kein Glasbruch mehr (Bild %ld), Gorilla-Schrei-Zeile gelaufen (%u), danach \"What was "
+          "that?!\" (Bild %ld)", bild_glas2, g_re15_zws114_schreie, bild_msg6);
     PRUEF(blick9 == 1, "Punkt 7: John blickt beim Oeffnen von msg 9 zu Elza (Kegel 128, re15_ai_arc_test)");
     PRUEF(blick_n > 0 && blick_fehl == 0, "Punkt 7: John blickt waehrend msg 9..11 zu Elza (%d von %d Bildern daneben, Kegel 160)",
           blick_fehl, blick_n);

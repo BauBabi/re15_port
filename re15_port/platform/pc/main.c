@@ -5412,6 +5412,10 @@ re_title:;
             re15_menu_request_box();
         }
 
+        /* Runde 41 ZWS114 (platform/pc/src/zws114_r41_pc.c): steht in ROOM1141 die Film-Zeile (msg 60) an, laeuft der Film
+         * HIER, zwischen zwei Spielbildern (eigene Bild-/Ton-Schleife wie der Vorspann CAPCOM.STR). */
+        { extern void re15_zws114_r41_pc_bild(void); re15_zws114_r41_pc_bild(); }
+
         re15_render_begin_frame();
         /* R1-UMSCHALTER des Touch-Overlays (Runde 30, Thema C; touch_r1_toggle_pc.h,
          * Dossier analysis/befunde_runde30/android-r1-toggle.md Schritt 4): EIN-TICK-Freigabe

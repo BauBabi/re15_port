@@ -21,7 +21,8 @@ PROGRAMME (Nachbesserung 1: Ablauf nach Nutzer-Nachtrag 4)
   ENTRIEGELN39 ROOM1141 Ereignis 5 (Riegel der Dachtuer) in Phase H: sub05 (msg 12 "You've opened the lock."), dann
                Elza rennt zur Kamera Cut 7, dreht sich zur Tuer, hebt die Waffe (N4.2), Tuer auf, John innen vor die Tuer,
                Tuer zu, Kamera auf die Tuer (Cut 6, John steht schon da), Cut 5, Elza senkt die Waffe, John laeuft heraus;
-               Szene der Runde 38 mit Punkt 6 (Glasbruch vor msg 6) und Punkt 7 (Skript wartet auf Johns Drehung vor msg 9);
+               Szene der Runde 38 mit Punkt 6 (vor msg 6 seit Runde 41 ZWS114 der Gorilla-Schrei statt des Glasbruchs, Film
+               vor msg 7) und Punkt 7 (Skript wartet auf Johns Drehung vor msg 9);
                nach dem Tod der Gorillas Balken + Pad-Sperre + Sleep 30 vor dem Schnitt (Nachbesserung 3, Form ROOM11C0 sub03
                @0x01B06..@0x01B18: wer noch zielt, senkt die Waffe), im Schnitt-Takt Elzas Plc_dest TURN zu John
                (Nachbesserung 4, Form ROOM11C0 sub03 @0x01B1A..@0x01B26: das Kommandowort wechselt im Schnittbild, ein Rest
@@ -49,6 +50,8 @@ SATZ_HILFE0 = 0x31              # RE15_R39J_SATZ_HILFE0   0x31..0x35 = help01..0
 SATZ_TUERTON = 0x36             # RE15_R39J_SATZ_TUERTON  Nachtrag 17 Punkt 5: door_sound.wav (Sprach-Id 59)
 MSG_REAKTION, MSG_PUH, MSG_FOLGEN = 50, 51, 52
 MSG_STIMME_WARTEN = 58          # RE15_R39J_MSG_STIMME_WARTEN (Port-Warte-Zeile, Punkt 6)
+MSG_ZWS_FILM = 60               # RE15_ZWS114_MSG_FILM   (Runde 41 ZWS114, include/re15_zws114_r41.h)
+MSG_ZWS_SCHREI = 61             # RE15_ZWS114_MSG_SCHREI (Runde 41 ZWS114)
 BIT_REAKTION = 94               # RE15_R39J_BIT_REAKTION (Bank 9, VERTRAG 1.1)
 MIX = (3, 1, 4, 2, 5)           # PORT-WAHL "im Mix": Reihenfolge der help-Dateien je Durchlauf; die erste Runde ruft
                                 #   help03 (1,57 s) - die Reaktion kommt nach Sleep 90 (3 s) sicher hinter dem Ruf
@@ -372,15 +375,22 @@ def baue_entriegeln39():
     R.ersetze_bei("1141", 0x00D0A, [0x2B, 0x02, 0x00, 0x00], [0x2B, R.MSG_1141_FRAGE, 0x00, 0x00],
                   "Port-Nachricht 40 = msg 2 ohne \"Same here...\" (Runde 38)")
     R.ersetze_bei("1141", 0x00E80, [0x29, 0x00], [0x29, 0x05], "Cut_chg 5 (wie @0x00D08)")
-    # Punkt 6: Glasbruch vor "What was that?!" (msg 6 @0x00DCA), vor dem Original-Sleep 20 @0x00DC6
+    # Punkt 6: vor "What was that?!" (msg 6 @0x00DCA), vor dem Original-Sleep 20 @0x00DC6. Runde 39: Glasbruch
+    # Se_on(0x3E,0x21) x2 (RE2 ROOM1090 sub15 @0x02BB0/@0x02BC0). Seit Runde 41 ZWS114 (NUTZER-VORGABE 2026-11-13, include/
+    # re15_zws114_r41.h): der Gorilla-Schrei statt des Glasbruchs - der Film vor msg 7 zeigt das Zerspringen der Scheiben.
     einfuegen_vor("1141", 0x00DC6, [
         (bytes([0x2B, MSG_STIMME_WARTEN, 0x00, 0x00]), "Message_on 58 = Port-Warte-Zeile ohne Text: op_message_on parkt, "
                                                        "bis Johns Sprachzeile zu msg 5 endet (Stimmen-Riegel scd_vm.c), dann "
                                                        "verbraucht re15_dining_r39_message_on sie (Form sub02 @0x00D9E `2b 05 00 00`)"),
-        (bytes([0x36, BANK, SATZ_GLAS] + [0] * 9), "Se_on(0x3E,0x21) Glasbruch = RE2 ROOM1090 sub15 @0x02BB0 (Satz 0x21, "
-                                                   "GLAS1090) - NUTZER-VORGABE Punkt 6"),
-        (bytes([0x09, 0x0A, 0x05, 0x00]), "Sleep 5 = RE2 ROOM1090 sub15 @0x02BBC"),
-        (bytes([0x36, BANK, SATZ_GLAS] + [0] * 9), "Se_on(0x3E,0x21) Glasbruch = RE2 ROOM1090 sub15 @0x02BC0 (zwei Scheiben)"),
+        (bytes([0x2B, MSG_ZWS_SCHREI, 0x00, 0x00]), "Message_on 61 = Port-Zeile ohne Text (Runde 41 ZWS114): Gorilla-Schrei "
+                                                    "ROOM11C0 snd1 Satz RE15_ZWS114_SCHREI_SATZ, op_message_on parkt bis zum "
+                                                    "Tonende (zws114_r41.c); danach Sleep 20 @0x00DC6 = kurze Pause vor msg 6"),
+    ])
+    # Runde 41 ZWS114: der Film des Nutzers zwischen msg 6 und msg 7 - nach dem Drehen zum Fenster und Sleep 86 @0x00E10
+    # ("kurz warten"), direkt vor msg 7 @0x00E14 "Shit! that is what I was talking about!".
+    einfuegen_vor("1141", 0x00E14, [
+        (bytes([0x2B, MSG_ZWS_FILM, 0x00, 0x00]), "Message_on 60 = Port-Zeile ohne Text (Runde 41 ZWS114): Film "
+                                                  "MOVIE/R114GORI.STR, op_message_on parkt, bis die Plattform ihn gespielt hat"),
     ])
     # Punkt 7: das Skript wartet auf Johns Drehung zu Elza, bevor msg 9 seine Geste startet (Form @0x00CFE/@0x00D06)
     einfuegen_nach("1141", 0x00E94, [

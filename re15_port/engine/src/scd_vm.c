@@ -86,6 +86,7 @@
 #include "re15_tuersperre_r39.h" /* Runde 39 Spur P: Tuersperren 1041/1051 (Panikphase), Kanaldeckel 10B1 (tuersperre_r39.c) */
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: ROOM2090/2091 ohne Spinnen, Ankunftsszene (gatorszene_r41.c) */
 #include "re15_annette_r41.h"   /* Runde 41 Spur AN: Annette-Szene ROOM5090 (annette_r41.c) */
+#include "re15_zws114_r41.h"   /* Runde 41 ZWS114: Gorilla-Schrei + Film im Dialog John/Elza ROOM1141 (zws114_r41.c) */
 
 scd_vm_t g_scd;
 
@@ -1933,6 +1934,8 @@ static int op_message_on(scd_thread_t *t)
       if (re15_dining_r39_message_on(t->pc)) { t->pc += 4; return 1; } }
     { const int jr = re15_johnruf_r39_message_on(t->pc);   /* Runde 39 Spur P: Rufe 1041/1131 (nur Stimme), Karte 1041 (parkt) */
       if (jr == 2) return 2; if (jr == 1) { t->pc += 4; return 1; } }
+    { const int zw = re15_zws114_r41_message_on(t->pc);   /* Runde 41 ZWS114: 1141 msg 61 Gorilla-Schrei / msg 60 Film (parkt) */
+      if (zw == 2) return 2; if (zw == 1) { t->pc += 4; return 1; } }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text
