@@ -17,6 +17,13 @@
  *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22), 484 (Sichel, Mesh 15), 485 (Kopf, Mesh 9),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  *
+ * V8 Runde 7c (P5, Stufe p = tools/r41_sichel/v8/p5_stufe.py: Kandidat R3 des P5-Ablaufs + Pflicht-Korrekturen K-a..K-e; Nutzer
+ * "smooth straight to head without further hills...."): das Nackenstueck der Runde 6b ist wieder weg (Mesh 8 = 69 Ecken wie EM30); an
+ * Mesh 8 haengen 4 Ergaenzungsdreiecke d77-d80 = die Haelften (0,1,3) / (0,3,2) der Vierecke v8 und v17 mit gleichen Ecken, Normalen,
+ * Texeln und Zeile (Entscheid E11: der Port verwirft ein verdrehtes Viereck nach dem Testdreieck, engine/src/nclip_r38.c). Zeilen 493/494
+ * 60/48 Flaechen, 31 EM30-Flaechen mit anderer UV (Runde 6b 29; neu d48 v2 v15 v17 v18 aus der UV-Mitfuehrung von R3, wieder Original
+ * d26 d66 v4 durch den UV-Rueckbau auf r4). Gemessen am Asset 0c307f80 (sfv8/r7c/w,
+ * Abschnitt "Unit-Test" der NOTIZ). Gegenprobe Stand 7b 87b02681: rot (87 Dreiecke, 76 Ecken, Nackenstueck).
  * V8 Runde 6b (P5-neu / P4-neu nach Pruefung V8 r5d "Kragen", "graue Reifen"; gemessen am Asset 95a783a6, sfv8/r6b pins.py / pins2.py,
  * Ausgabe sfv8/r6c/pins.out; erster Stand der Runde 6b 382bbfe7: Mesh 16 noch 20 Flaechen auf 495, sonst gleiche Zahlen):
  * Mesh 8 traegt statt des Einsatzes der Runde 5d (14 Ecken, 12 Dreiecke, 6 Vierecke, Zeile 494) EIN geschlossenes Nackenstueck
@@ -165,9 +172,12 @@ static int geteilt(int m)        /* birkin_formen.py FORMEN['hangar'] teilen (ku
 #define CLUT_KOPF    (486u << 6)  /* V7 (V6 Kopf Schritt 1/3: Original-Kopf auf Zeile 486 = EM30-Zeile 0; Referenz 2: 485). Gemessen 486:91 */
 #define CLUT_ZEILEN  16           /* V8 Runde 2 Adern: 16 Zeilen 480-495 = V7 (13) + X1 493 / X2 494 / X3 495 (gemessen: 4096 Eintraege,
                                    * Port-Texturhoehe 256 x 16 = 4096 = TEX_H_MAX); V7 13, V8 Runde 1 15 (Gegenprobe: hier rot) */
-#define EINSATZ_D 10              /* V8 Runde 6b: Nackenstueck an Mesh 8 (nacken_r6.py, nacken_v8.json koerper "rechts") - Dreiecke */
+#define EINSATZ_D 4               /* V8 Runde 7c: 4 Ergaenzungsdreiecke an Mesh 8 (p5_stufe.py ERGAENZEN, Haelften von v8 und v17) - Dreiecke
+                                   * (Runde 6b: Nackenstueck nacken_r6.py 10) */
 #define EINSATZ_V 0               /* ... Vierecke (Runde 5d: 12 / 6 / 14) */
-#define EINSATZ_E 7               /* ... Ecken */
+#define EINSATZ_E 0               /* ... Ecken (Runde 7c: keine neuen; Runde 6b 7) */
+#define ERG_QUAD_A 8              /* V8 Runde 7c: d77/d78 = Haelften von v8 [30,0,50,49], d79/d80 = Haelften von v17 [51,17,50,30] */
+#define ERG_QUAD_B 17
 #define EINSATZ_U0 43             /* UV-Rechteck des Nackenstuecks, gemessen am Asset 95a783a6 (sfv8/r6b pins.py): u 43-53, v 88-101, */
 #define EINSATZ_U1 53             /* Textur-Seite 0, Zeile 493 (= Original-EM30-Zeile 480, Rueckenhaut) */
 #define EINSATZ_V0 88
@@ -347,30 +357,35 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                 CHECK(zeile_zahl(b, 488) == 0, "%s: Brust (Mesh 8) %d Flaechen noch auf CLUT 488 (Soll 0, Runde 5: Original-Zeile 481)", name,
                       zeile_zahl(b, 488));
                 CHECK(zeile_zahl(b, Z_X1) == 56 + EINSATZ_D + EINSATZ_V && zeile_zahl(b, Z_X2) == 48,
-                      "%s: Mesh 8 Zeilen 493/494 %d/%d Flaechen statt %d/48 (V8 Runde 6b: 56 + Nackenstueck)", name, zeile_zahl(b, Z_X1),
+                      "%s: Mesh 8 Zeilen 493/494 %d/%d Flaechen statt %d/48 (V8 Runde 7c: 56 + Ergaenzungsdreiecke)", name, zeile_zahl(b, Z_X1),
                       zeile_zahl(b, Z_X2), 56 + EINSATZ_D + EINSATZ_V);
-                /* V8 Runde 6b: jede Flaeche des Nackenstuecks zeigt nur auf die 7 angehaengten Ecken (die EM30-Ecken und -Flaechen bleiben an
-                 * ihrem Platz), liegt auf Zeile 493 und Textur-Seite 0, und ihre UV-Ecken liegen im gemessenen Rechteck u 43-53, v 88-101
-                 * (nacken_r6.py prueft je Texel, dass sie in der Original-Nutzung der Rueckenhaut liegen) */
+                /* V8 Runde 7c (E11): die angehaengten Dreiecke sind genau die Haelften (0,1,3) und (0,3,2) der Vierecke v8 und v17 - gleiche
+                 * Ecken- und Normalen-Indizes, gleiche UV, CLUT und Seite; keine eigene Geometrie, keine eigenen Texel (Runde 6b: Nackenstueck) */
                 {
                     int fehl = 0;
-#define IM_NACKEN(u, v) ((u) >= EINSATZ_U0 && (u) <= EINSATZ_U1 && (v) >= EINSATZ_V0 && (v) <= EINSATZ_V1)
+                    static const int H[2][3] = {{0, 1, 3}, {0, 3, 2}};
                     for (int t = a->triangle_count; t < b->triangle_count; t++) {
+                        const int k = t - a->triangle_count, qi = k < 2 ? ERG_QUAD_A : ERG_QUAD_B;
+                        if (k >= 4 || qi >= b->quad_count) { fehl++; continue; }
+                        const re15_md1_quad_t *q = &b->quads[qi];
+                        const re15_md1_quad_uv_t *qu = &b->quad_uvs[qi];
+                        const uint16_t qv[4] = {q->v0, q->v1, q->v2, q->v3}, qn[4] = {q->n0, q->n1, q->n2, q->n3};
+                        const uint8_t uu[4] = {qu->u0, qu->u1, qu->u2, qu->u3}, vv[4] = {qu->v0, qu->v1, qu->v2, qu->v3};
+                        const int *h = H[k & 1];
                         const re15_md1_triangle_t *f = &b->triangles[t];
                         const re15_md1_tri_uv_t *u = &b->triangle_uvs[t];
-                        fehl += !(f->v0 >= a->tri_vertex_count && f->v1 >= a->tri_vertex_count && f->v2 >= a->tri_vertex_count &&
-                                  f->v0 < b->tri_vertex_count && f->v1 < b->tri_vertex_count && f->v2 < b->tri_vertex_count);
-                        fehl += !(u->clut == (uint16_t)(Z_X1 << 6) && (u->page & 0xF) == 0 && IM_NACKEN(u->u0, u->v0) &&
-                                  IM_NACKEN(u->u1, u->v1) && IM_NACKEN(u->u2, u->v2));
+                        fehl += !(f->v0 == qv[h[0]] && f->v1 == qv[h[1]] && f->v2 == qv[h[2]] &&
+                                  f->n0 == qn[h[0]] && f->n1 == qn[h[1]] && f->n2 == qn[h[2]]);
+                        fehl += !(u->u0 == uu[h[0]] && u->v0 == vv[h[0]] && u->u1 == uu[h[1]] && u->v1 == vv[h[1]] &&
+                                  u->u2 == uu[h[2]] && u->v2 == vv[h[2]] && u->clut == qu->clut && u->page == qu->page);
                     }
-#undef IM_NACKEN
-                    CHECK(fehl == 0, "%s: Nackenstueck an Mesh 8: %d Verstoesse (Ecken ausserhalb der 7 neuen, Zeile/Seite oder UV ausserhalb "
-                          "u 43-53 / v 88-101)", name, fehl);
+                    CHECK(fehl == 0, "%s: Ergaenzungsdreiecke an Mesh 8: %d Verstoesse (nicht die Haelften von v8/v17 mit gleichen Ecken, "
+                          "Normalen, UV, CLUT und Seite)", name, fehl);
                 }
                 CHECK(zeile_zahl(b, 480) == 0 && zeile_zahl(b, 481) == 0, "%s: Mesh 8 %d/%d Flaechen noch auf V7-Zeile 480/481 (Naht, Runde 4)",
                       name, zeile_zahl(b, 480), zeile_zahl(b, 481));
-                CHECK(uv_ohne_clut_anders(a, b) == 29, "%s: Mesh 8 %d Flaechen mit anderer UV (Soll 29, V8 Runde 6b: Runde 5 + d53)", name,
-                      uv_ohne_clut_anders(a, b));
+                CHECK(uv_ohne_clut_anders(a, b) == 31, "%s: Mesh 8 %d Flaechen mit anderer UV (Soll 31, V8 Runde 7c: 29 + 5 - 3)",
+                      name, uv_ohne_clut_anders(a, b));
             }
             if (m == 14) {               /* V8 Runde 4: alle 37 Flaechen auf 495 (= Original-Zeile 482); Band v9/v10/d19/d22 mit Schub */
                 CHECK(zeile_zahl(b, Z_X3) == 37 && zeile_zahl(b, 482) == 0, "%s: Unterarm (Mesh 14) %d Flaechen auf X3 (Soll 37), %d auf 482 (Soll 0)",
