@@ -9,5 +9,16 @@
   "21": 26.401,
   "22": 26.46
  },
- "deckel": "teilen"
+ "deckel": "teilen",
+ "fleisch_r7b": {
+  "feld": [
+   4,
+   37,
+   96,
+   106
+  ],
+  "je_durchgang": 2,
+  "abschnitte": 3,
+  "quelle": "Runde 7b K1/K2 (unterseite_r7b.py): Fleisch der Unterseite in Original-Dichte; Proben im Spiel U4 0,116 / U5 0,087 / U7 0,141 (relative oertliche Streuung, glaette_r7b.py; Stand a474188a 0,079)"
+ }
 }

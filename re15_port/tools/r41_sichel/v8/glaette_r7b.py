@@ -19,8 +19,9 @@ Klassen aus einem Marker-Lauf (gleiche Szene, gleiche Posen; state.log bytegleic
   485 weiss    sonst
 Unter den Flaechen des Assets liegen 0 transparente Texel (gemessen sfv8/r7b/zeilen.py), die Silhouette bleibt also gleich.
 Eichung (Auftrag Runde 7b K1 (3)): am EIGENEN Fleisch des Modells - Rumpf und Beine in DENSELBEN Framedumps (vom Sicht-Pruefer nicht
-beanstandet), nicht an der Farbe der Videobilder. Soll: Median der oertlichen Streuung der Unterseite >= dem kleineren der Mediane von Rumpf
-und Beinhaut und <= dem groesseren (zweiseitig: nicht flacher als das eigene Fleisch, nicht unruhiger).
+beanstandet), nicht an der Farbe der Videobilder. Soll: Median der RELATIVEN oertlichen Streuung (sd / mittleres L* des Fensters) der
+Unterseite >= dem kleineren der Mediane von Rumpf und Beinhaut und <= dem groesseren (zweiseitig: nicht flacher als das eigene Fleisch,
+nicht unruhiger). Festgelegt nach der Probe F260-F280 am Stand a474188a und VOR der Messung der Varianten.
 Kein RE-Wert; Fenster 5 x 5 und Rand-Erosion 2 px sind PORT-WAHL (Fenster = kleinste Flaeche, die in den Szenenbildern in die Unterseite passt).
 """
 import os, sys, json, argparse
@@ -151,9 +152,13 @@ def mass(dl, dm, von=200, bis=1100, schritt=1):
                        kante=round(float(np.median([x['kante'] for _f, x in v])), 3))
     soll = None
     if 'rumpf' in zus and 'beinhaut' in zus and 'unterseite' in zus:
-        lo = min(zus['rumpf']['sd'], zus['beinhaut']['sd']); hi = max(zus['rumpf']['sd'], zus['beinhaut']['sd'])
-        u = zus['unterseite']['sd']
-        soll = dict(sd_lo=lo, sd_hi=hi, unterseite=u, ok=bool(lo <= u <= hi))
+        # Soll auf der RELATIVEN Streuung (sd / L*): die Flaechen sind verschieden hell (Unterseite L* 16 gegen Rumpf 35 in F260-F280),
+        # Helligkeit wirkt multiplikativ (Memory Texturregel Nachtrag 2026-11-09); die absolute Streuung steht daneben (nur Info)
+        lo = min(zus['rumpf']['rel'], zus['beinhaut']['rel']); hi = max(zus['rumpf']['rel'], zus['beinhaut']['rel'])
+        u = zus['unterseite']['rel']
+        soll = dict(rel_lo=lo, rel_hi=hi, unterseite_rel=u, ok=bool(lo <= u <= hi),
+                    sd_lo=min(zus['rumpf']['sd'], zus['beinhaut']['sd']), sd_hi=max(zus['rumpf']['sd'], zus['beinhaut']['sd']),
+                    unterseite_sd=zus['unterseite']['sd'])
     return dict(von=von, bis=bis, klassen=zus, soll=soll, je_bild={str(f): r for f, r in rows.items()})
 
 

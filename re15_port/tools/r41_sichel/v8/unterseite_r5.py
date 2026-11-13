@@ -108,6 +108,7 @@ V_KAPPE = 0.5 * (VF0 + VF1)           # Deckel im Fleisch: Texelzeile der Mittel
                                       # zwischen der Ringkante und der Mitte, alles Original-Fleisch)
 U_KAPPE = 5.0                         # Deckel im Uebergang: Texelspalte der Mittel-Ecke 5 Texel neben der Ringkante (zur Mitte von U0 / U1 hin)
 S15_BAND = (120.0, 130.0)             # Riegel S15 (e): Band direkt ueber der Grenze
+R7B_FANG_ZONE = 1.5                   # Runde 7b: Grad unter KLASSE_AB, in denen die TEIL_FANG-Ring-Ecken liegen (gemessen 118,8-119,4)
 S15_BAND_SOLL = 5.0                   # Auftrag (b): "im Band 120-130 hoechstens 5 % Zeile 495"
 S15_REIFEN_MIN = 50.0                 # Riegel S15 (g): "grauer Reifen auf dem Mantel" = eine Texelzeile quer zur Gliedachse (v fest) unter den laengs
                                       # belegten Fleischflaechen, in der weniger als die Haelfte der Texel Fleisch ist (a* >= FLEISCH_A)
@@ -238,12 +239,20 @@ def flaechen_klassen(ms, par):
         for key, f in [('d%d' % i, f) for i, f in enumerate(m['tf'])] + [('v%d' % i, f) for i, f in enumerate(m['qf'])]:
             th = [None if x is None else abs(x) for x in ecken_theta(m, b, f, phi)]
             tr = [t for t in th if t is not None]
-            if key in ausn and tr and par.get('fleisch_r7b') and key[0] == 'd' and float(np.mean(tr)) < KLASSE_AB:
+            if key in ausn and tr and par.get('fleisch_r7b') and float(np.mean(tr)) < KLASSE_AB:
                 # Runde 7b (K2, Zahlen-Pruefer r6 "(D) graue Deckel ... 7 graue Dreiecke, alle Wurzel-Deckel in Mesh 16"): die Dreiecke des
                 # Wurzelkegels (Spitze = Achs-Ecke 34, Ringecken auf Ring 0 = Ort von Ring 1) unter der Grenze sind Deckel der Unterseite und
-                # bekommen Zeile und Texel ihrer Nachbarn (Mittel |theta| < 120: d11-d14, d19-d21, gemessen sfv8/r7b/deckel7.py)
-                res.append((key, 'kappe_unten', th))
+                # bekommen Zeile und Texel ihrer Nachbarn (Mittel |theta| < 120: d11-d14, d19-d21, gemessen sfv8/r7b/deckel7.py); ebenso die
+                # Vierecke des Wurzelrohrs darunter (Laenge 0 seit Runde 4, unsichtbar), sonst stuenden ihre Kanten als 495/487-Kanten am Kegel
+                res.append((key, 'kappe_unten' if key[0] == 'd' else 'unten', th))
             elif key in ausn or not tr:
+                res.append((key, 'grau', th))
+            elif (par.get('fleisch_r7b') and len(tr) == len(th) and min(tr) >= KLASSE_AB - R7B_FANG_ZONE and max(tr) >= KLASSE_AB + 0.5
+                  and float(np.mean(tr)) < KLASSE_AB):
+                # Runde 7b: Teilstuecke der Abschnitts-Teilung (unterseite_r7b.mitte_teilen) aus einem grauen TEIL_FANG-Dreieck (Runde 6: die Grenze
+                # laeuft dort durch die Ring-Ecke bei 118,8-119,4 statt 120) bleiben grau wie ihr Ausgangsdreieck; gemessen an der Probe U7
+                # (3 Abschnitte): 18:d23 [119,4 118,8 121,7] und 19:d23 [120,8 118,8 119,2] fielen mit Mittel < 120 auf die Fleisch-Zeile und
+                # zeigten in P2 Fleisch bis theta 121,7 (S15 e 6,2 %). Am Stand a474188a und am 2-Abschnitt-Bau gibt es solche Flaechen nicht.
                 res.append((key, 'grau', th))
             elif ist_kappe(m, b, key, f, y0, y1):
                 res.append((key, 'kappe_unten' if float(np.mean(tr)) < KLASSE_AB else 'kappe', th))
