@@ -195,8 +195,8 @@ void re15_bf_morph_zu_g5(int slot)
 #define BF_HANGAR_CUT    12          /* Video: die Szene laeuft vollstaendig in Cut 12 */
 
 /* Clips. Birkin EM30: 0x0B = GRAB-THROW (ACT[5] @0x80117d30), Wurf bei Bild 0x2C; 1 = Gang (WALK @0x80117220); 0 = Stand
- * (INIT @0x8011683c). Spider-Man EM2B (Bank 0): 0x17 = ATTACK2 (B[14] @0x80113eac `+0x94 = 0x17`, Kopf "Ansprung"), 7 = gekruemmte Reaktion
- * (HURT @0x801148e8), 0x0B = Rueckenlage mit Aufstehen (Katalog tools/r41_hangar/clipkatalog.py: B0..30 liegt, B31..39
+ * (INIT @0x8011683c). Spider-Man EM2B (Bank 0): 0x17/0x0E = Angriff/Zugriff (Kopf "Ansprung"), 4 = HURT, 9 = DEATH
+ * (Kopf BF_SM_WEH), 0x0B = Rueckenlage mit Aufstehen (Katalog tools/r41_hangar/clipkatalog.py: B0..30 liegt, B31..39
  * richtet sich auf). Die Rollen in der Szene sind Gestaltung. Voraussetzung an jedes EM30-Ersatzmodell: Knochen 15 =
  * haltende Hand (im Sichel-Modell die Sichelhand), Clips 0/1/0x0B wie EM30; Spider-Man EM2B: Knochen 20 = Griffpunkt. */
 #define BF_CLIP_GRIFF    0x0B
@@ -206,7 +206,33 @@ void re15_bf_morph_zu_g5(int slot)
  * den Spider-Man ab h16 bis zum Wurf mit dem erhobenen Bild-linken = rechten Arm; das rot-weisse Glied, das h18-h28
  * Bild-links bis zum Boden haengt, ist der Schwanz (wandert h30-h34 zwischen die Knie, h38-h70 nach Bild-rechts). */
 #define BF_KLAUE         15
-#define BF_SM_GRIFF      7
+/* Halten (Nutzer 2026-11-13: "Außerdem struggled der Spiderman im Original Video viel mehr oben auf den Arm bis er letztendlich
+ * tot ist. Bei uns bleibt er aktuell mehr oder weniger statisch."). Video 4, Formwechsel je Bild im Feld x 60..170, y 20..140
+ * (PSX-Bildpunkte, Vordergrund gegen h112 ohne gruenes Blut, Werkzeug halt_bew.py, Mittel je Fenster): h17-h24 1378,
+ * h25-h36 1142, h37-h52 782, h53-h62 445, h63-h70 685 (Birkin holt zum Wurf aus). Vorher (Clip 7 = HURT bei +0x1dc,
+ * `ori v0,zero,0x7` @0x80114a68, im Kreis; Bild-zu-Bild 45 Einheiten um den Griffknochen): 819 / 643 / 416 / 432 / 689.
+ * Jetzt die Treffer-Reaktion des Spider-Man, dann sein Tod (beide aus seiner Zustandsmaschine, STAGE5.BIN = Hangar-Overlay):
+ *   Clip 4 = HURT Phase 0: `ori v0,zero,0x4` @0x80114a44 / `sb v0,148(v1)` @0x80114a48 (STAGE4 @0x801148c4/c8), 10 Bilder,
+ *     Bild-zu-Bild 161 Einheiten um den Griffknochen; HURT setzt den Clip bei jedem Treffer neu, mit Ueberblendung (+0x8f = 7,
+ *     bf_clip). In der Szene neu bei jedem Clip-Ende (h12, h22, h32) = Gestaltung (die Klaue drueckt ihn, Blut ab h24).
+ *   Clip 9 = DEATH Phase 0 bei +0x93 & 0x80: `andi v0,v0,0x80` @0x80114ec0, `ori v0,zero,0x9` @0x80114ecc / `sb v0,148(v1)`
+ *     @0x80114ed0 (STAGE4 @0x80114d40/4c/50). B0..B5 sackt er aufrecht zusammen (Neigung 29 -> 17 Grad, Glieder sinken: Spitzen
+ *     528 -> 667 unter der Schulter, B5 = tiefster Wert von B0..B19), ab B11 kippt er um (Neigung 20 -> 115 Grad, B30 liegt).
+ *   Zeitplan (1 Clipbild je Takt): Treffer-Reaktion h12..h36, Tod ab BF_H_STIRBT = h37 (Video: die Bewegung faellt ab h37,
+ *     h25-h36 1142 -> h37-h52 782; Sichtpruefung "deutlich schwaecher ab h36"), B0..B5 h37..h42, danach haengt er tot in B5 bis
+ *     zum Wurf (Video h48-h70: senkrecht haengende Masse, Glieder nach unten). Ergebnis je Fenster: 1040 / 1030 / 663 / 437 /
+ *     988 (Video 1378 / 1142 / 782 / 445 / 685; h63-h70 hoeher, weil Birkins Drehung h66-h72 die haengenden Glieder mitnimmt -
+ *     Birkin dreht im Video nicht, unveraendert). Gemessene Gegenprobe: den ganzen Tod B0..B30 ab h25 (B30 = Clip 0x0B B0, der
+ *     Wurf schloesse ohne Posensprung an) trifft die Fenster besser (1040 / 1196 / 832 / 403 / 671), liegt aber h55..h70
+ *     waagerecht mit abstehenden Gliedern in der Hand (Sichtpruefung: "steif, nicht schlaff"; Video senkrecht) - verworfen.
+ *     Wurf ab BF_H_LOS: Clip 9 B5 -> 0x0B B0 = 1250 Einheiten (vorher Clip 7 -> 0x0B B0 = 1039), die Ueberblendung von bf_clip
+ *     (+0x8f = 7) laeuft wie bisher. Neue Treffer-Reaktion alle 5 bzw. 3 Takte (statt je Clip-Ende) gab h17-h24 1019 bzw. 912;
+ *     von den beiden HURT-Clips bewegt Clip 4 am meisten um den Griffknochen (Bild-zu-Bild 161, Clip 7 45). */
+#define BF_SM_WEH        4
+#define BF_SM_TOD        9
+#define BF_SM_TOD_SCHLAFF 5        /* Clip 9 B5: aufrecht zusammengesackt, Glieder am tiefsten (s. Kopf) */
+#define BF_SM_WEH_BILDER 10        /* Laenge von Clip 4 (EM2B Bank 0): neue Treffer-Reaktion bei jedem Clip-Ende */
+#define BF_H_STIRBT      37        /* Video: Bewegung faellt ab h37 (s. Kopf) */
 #define BF_SM_LIEGT      0x0B
 /* Griffpunkt am Spider-Man (PORT-WAHL nach Videomessung, Dossier SF_sichel.md N1.3): die Sichelhand haelt ihn am Bein -
  * EM2B-Knochen 20 (Knie der Beinkette 19-20-21 an der Wurzel; Clip 7 rel (859,-1045,-369): ~750 unter dem Becken, ~860 vor
@@ -917,8 +943,10 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
             m->y = (h >= BF_H_GLEIT_AB && h <= BF_H_GLEIT_BIS) ? BF_SM_GLEIT_Y : 0;
         }
     } else if (h < BF_H_LOS) {                                            /* gehalten bis zum Loslassen (NB2-Kopplung) */
-        if (h == BF_H_BERUEHRUNG) bf_clip(m, BF_SM_GRIFF);
-        else re15_r38_birkin_anim(m);                                     /* Zappeln: Clip 7 laeuft im Kreis */
+        if (h >= BF_H_STIRBT)                                             /* Tod: Clip 9 B0..B5, dann haengt er tot (Kopf BF_SM_WEH) */
+            bf_bild(m, BF_SM_TOD, h - BF_H_STIRBT > BF_SM_TOD_SCHLAFF ? BF_SM_TOD_SCHLAFF : h - BF_H_STIRBT);
+        else if ((h - BF_H_BERUEHRUNG) % BF_SM_WEH_BILDER == 0) bf_clip(m, BF_SM_WEH);   /* neue Treffer-Reaktion */
+        else re15_r38_birkin_anim(m);
         s_h.wvor[0] = m->x; s_h.wvor[1] = m->y; s_h.wvor[2] = m->z;       /* Neuaufbau: Lage vor dem Takt (Handtempo) */
         m->rot_y = bf_blick(m, b->x, b->z);
         bf_klauenziel(b, m, k);
