@@ -450,6 +450,7 @@ def anwenden(ms, t, par, prot):
         abb = U7.konfig(par['fleisch_r7b'])
         mitte = U7.mitte_teilen(ms, wurzel_keys)
     kl = flaechen_klassen(ms, par)
+    wk16 = set(wurzel_keys(ms[16]))
     zahl, deckel, fehl = {}, {}, []
     for b in V.SCHWANZ:
         m = ms[b]
@@ -468,6 +469,10 @@ def anwenden(ms, t, par, prot):
             th_m = float(np.mean(tr))
             phi = float(par['innen_phi'][str(b)])
             laengs = LAENGS and th_m < FLEISCH_KL
+            if laengs and par.get('fleisch_r7b') and b == 16 and key in wk16 and max(tr) > FLEISCH_AB:
+                laengs = False                # Runde 7b (K2): Kegel-Dreieck d14 (Ecken 87 / 113 Grad) ueber der Fleischgrenze 110 bekommt den
+                                              # Haut/Fleisch-Uebergang wie die Mantel-Flaechen 110-120 daneben; laengs stiess es mit da* 28,3 an
+                                              # das graue d15 (k2_kanten.py am Stand 5a358bc9: einzige 495/487-Kante mit da* >= 15)
             ts_l = [theta_signiert(P[i], phi) if ring_ecke(b, i) else None for i in ie]
             ts_r = [x for x in ts_l if x is not None]
             if laengs and par.get('fleisch_r7b'):  # Runde 7b (K1): Fleisch in Original-Dichte (unterseite_r7b.py); ohne Schluessel wie Runde 6
