@@ -44,6 +44,28 @@
  * Cutscenes/Rooms/114/Nachbau_Blender/Raum114_Gorillas_v3_Ton.mp4 (unveraendert), Format wie MOVIE/CAPCOM.STR (MDEC BS v2
  * 320x240 + CD-XA 37800 Hz 4 Bit Stereo), 367 Bilder = 12,23 s. Die PC-Plattform spielt ihn mit dem Weg des Vorspanns
  * (re15_str.c + re15_xa.c, Ton = Takt, START ueberspringt), zwischen zwei Spielbildern (platform/pc/src/zws114_r41_pc.c).
+ *
+ * UEBERBLENDUNG WIE RE2 (Nutzer 2026-11-13: "Wie ist es in Resident Evil 2 gemacht, wenn die Filmsequenzen starten? So machen
+ * wir das auch."). RE2 Leon (info/re2leon/PSX.EXE, ghidra_re2_Leon.txt), selbst disassembliert:
+ *   START = harter Schnitt. Movie_on = Opcode 0x6F, Tabelle @0x800a7684 -> LAB_80058d64: `lbu a0,1(v0)` @0x80058d7c,
+ *     `jal FUN_80032150` @0x80058d80 (setzt nur DAT_800cfb74 |= 0x200, kein Fade). Der Film laeuft im Bildwechsel FUN_8002b968
+ *     (@0x8002b450 im Hauptloop): `andi v0,v0,0x200` @0x8002ba1c, `jal FUN_80032340` @0x8002ba28 - NACH PutDispEnv des
+ *     vorigen Bilds und VOR DrawOTag des aktuellen: kein abgeblendetes Spielbild vor dem Film.
+ *   ENDE = Einblenden aus Schwarz, vom SKRIPT vorbereitet. Der Filmspieler selbst blendet die In-Game-Filme nicht ab
+ *     (FUN_80032984: Kachel nur bei Flag 0x40 schwarz / 0x80 weiss; Filme 4/8/9 tragen 0x0008, Tabelle @0x800a2184 + n*0x20).
+ *     Alle Movie_on in RE2 Leon PL0: ROOM1080 sub14 @0x0252A `53 02 02 07 00 f8` Sce_fade_set + @0x02530 `6f 09` (Film mitten in
+ *     einer laufenden Szene, danach Plc_motion/Sleep/Plc_neck) -> hier VORBILD; ROOM1080 sub02 @0x01C4C `53 02 02 07 00 fe 6f 08
+ *     74 02 ff 7f` (eigenes Ereignis, Einblenden aus 255 in 64 Bildern); ROOM10B0 sub12 `6f 04` ohne Fade.
+ *     Sce_fade_set LAB_80057ef0 (Tabelle @0x800a7614 = 0x53): Kanal pc[1] (`lbu s0,1(s2)` @0x80057f18), ABR pc[2] (@0x80057f38,
+ *     FUN_8002c1a0 SetDrawMode abr<<5), RGB-Maske pc[3] (@0x80057f3c), Wert = lhu pc[4] (@0x80057f1c) = Schritt je Bild,
+ *     Ebene 7 (`li a3,0x7` @0x80057f14); Wert < 0 -> Pegel = Wert + 0x8000 (`ori v0,zero,0x8000` @0x80057f94, `addu` @0x80057f98,
+ *     `sh` @0x80057fa0). Takt FUN_8002c378 (`jal` @0x8002b448, zwischen Spieltakt @0x8002b440 und Bildwechsel @0x8002b450):
+ *     Helligkeit = Pegel >> 7 (`sra a0,v0,0x17` @0x8002c3b8), Kachel-RGB = Maske & Helligkeit, Pegel += Schritt (@0x8002c404-14),
+ *     Halt bei gesetztem Bit 15 (`bltz` @0x8002c3b4) - dieselbe Mechanik wie RE1.5 FUN_80021880 (engine/src/fade_common.c).
+ *     Folge ROOM1080 sub14: Pegel 0x7800 -> nach dem Film Helligkeit 240, 224, ..., 16, 0 = 15 Bilder subtraktiv (ABR 2) aus
+ *     Schwarz zurueck ins Spiel. Der Port setzt genau das, wenn die Plattform den Film beendet (re15_zws114_r41_film_gespielt).
+ *   TON: RE2 schaltet nur die Musik per Skript (sub14 Sce_bgm_control vor/nach dem Film); in ENTRIEGELN39 ist sie schon aus
+ *     (Sce_bgm_control MAIN Stop, Port-Zeile +0x80) und startet wie im Original nach msg 7 (@0x00E5C).
  */
 #ifndef RE15_ZWS114_R41_H
 #define RE15_ZWS114_R41_H
@@ -66,6 +88,15 @@
 
 #define RE15_ZWS114_TAKTE_JE_S   30       /* scd_vm.c op_sleep: SCD-VM laeuft mit 30 Hz */
 
+/* Einblenden nach dem Film = RE2 ROOM1080 sub14 @0x0252A `53 02 02 07 00 f8` (Sce_fade_set, Handler LAB_80057ef0). */
+#define RE15_ZWS114_BLENDE_KANAL 2        /* pc[1] @0x0252B (`lbu s0,1(s2)` @0x80057f18)                          */
+#define RE15_ZWS114_BLENDE_ABR   2        /* pc[2] @0x0252C: B - F subtraktiv (@0x80057f38 -> FUN_8002c1a0 abr<<5)  */
+#define RE15_ZWS114_BLENDE_RGB   7        /* pc[3] @0x0252D: R, G, B (@0x80057f3c -> FUN_8002c1a0 Masken 0xff)     */
+#define RE15_ZWS114_BLENDE_WERT  (-0x800) /* pc[4..5] @0x0252E `00 f8` = Schritt je Bild (@0x80057f1c lhu)          */
+#define RE15_ZWS114_BLENDE_EBENE 7        /* `li a3,0x7` @0x80057f14                                               */
+/* Startpegel bei Wert < 0: Wert + 0x8000 (@0x80057f94-@0x80057fa0) = 0x7800 -> Helligkeit 240 (@0x8002c3b8 >> 7). */
+#define RE15_ZWS114_BLENDE_PEGEL ((uint16_t)(RE15_ZWS114_BLENDE_WERT + 0x8000))
+
 /* Zustand des Films (Riegel/Plattform). */
 enum { RE15_ZWS114_FILM_AUS = 0, RE15_ZWS114_FILM_OFFEN = 1, RE15_ZWS114_FILM_GESPIELT = 2 };
 
@@ -81,7 +112,8 @@ void re15_zws114_r41_install(uint16_t room_id);
 extern int (*re15_zws114_r41_schrei_hook)(int satz);
 extern int re15_zws114_r41_film_spieler;
 int  re15_zws114_r41_film_offen(void);      /* 1 = Film angefordert, Skript parkt */
-void re15_zws114_r41_film_gespielt(void);   /* Plattform: Film zu Ende (oder uebersprungen/fehlt) */
+void re15_zws114_r41_film_gespielt(void);   /* Plattform: Film zu Ende (oder uebersprungen) -> RE2-Einblenden */
+void re15_zws114_r41_film_fehlt(void);      /* Plattform: Film nicht abspielbar -> weiter ohne Einblenden */
 int  re15_zws114_r41_film_zustand(void);
 
 /* Laenge des Satzes `satz` einer Raumbank in SCD-Takten (laengste Lage, aufgerundet), < 0 = Satz leer/Bank defekt. */

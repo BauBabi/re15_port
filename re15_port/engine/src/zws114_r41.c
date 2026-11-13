@@ -5,6 +5,7 @@
  */
 #include "re15_zws114_r41.h"
 #include "re15_vab.h"
+#include "re15_fade.h"   /* RE2-Einblenden nach dem Film (Kanal-Engine fade_common.c) */
 
 #include <stdlib.h>
 #include <string.h>
@@ -46,9 +47,24 @@ int  re15_zws114_r41_film_offen(void)    { return s_film == RE15_ZWS114_FILM_OFF
 int  re15_zws114_r41_film_zustand(void)  { return s_film; }
 int  re15_zws114_r41_schrei_rest(void)   { return s_schrei_laeuft ? s_schrei_rest : 0; }
 
+/* Film zu Ende: RE2 ROOM1080 sub14 hat VOR seinem Movie_on das Einblenden gesetzt (Sce_fade_set @0x0252A); in RE2 laeuft der
+ * Fade-Takt FUN_8002c378 (@0x8002b448) dabei einmal vor dem Bildwechsel, dessen Kachel (Helligkeit 240) erst NACH dem Film
+ * gezeichnet wird. Der Port setzt den Kanal deshalb hier, unmittelbar nach dem Film: das naechste gezeichnete Bild zeigt 240,
+ * dann 224 ... 16, 0 (re15_fade_tick in re15_render_end_frame) - dieselbe Bildfolge. */
 void re15_zws114_r41_film_gespielt(void)
 {
-    if (s_film == RE15_ZWS114_FILM_OFFEN) s_film = RE15_ZWS114_FILM_GESPIELT;
+    if (s_film != RE15_ZWS114_FILM_OFFEN) return;
+    s_film = RE15_ZWS114_FILM_GESPIELT;
+    re15_fade_config(RE15_ZWS114_BLENDE_KANAL, RE15_ZWS114_BLENDE_ABR, RE15_ZWS114_BLENDE_RGB,
+                     (int16_t)RE15_ZWS114_BLENDE_WERT, RE15_ZWS114_BLENDE_EBENE);   /* FUN_8002c1a0 */
+    g_fade_ch[RE15_ZWS114_BLENDE_KANAL].level = RE15_ZWS114_BLENDE_PEGEL;                /* @0x80057fa0 */
+    meldung("Film zu Ende: Einblenden wie RE2 ROOM1080 sub14 (Kanal, Pegel)", RE15_ZWS114_BLENDE_KANAL,
+            RE15_ZWS114_BLENDE_PEGEL);
+}
+
+void re15_zws114_r41_film_fehlt(void)
+{
+    if (s_film == RE15_ZWS114_FILM_OFFEN) s_film = RE15_ZWS114_FILM_GESPIELT;   /* kein Bild gezeigt -> kein Einblenden */
 }
 
 /* Message_on 61: Ton starten, dann je VM-Takt einmal hier vorbei (op_message_on parkt mit `return 2`, der pc bleibt

@@ -12,7 +12,10 @@
  *   programm  ENTRIEGELN39: msg 58, msg 61, Sleep 20, msg 6 und Sleep 86, msg 60, msg 7 hintereinander, kein Glasbruch;
  *             Haken: Schrei parkt n Takte, Film parkt bis "gespielt", andere Raeume/Nachrichten unberuehrt
  *   ablauf    ROOM1141 Phase H am VM: Gemaelde, Riegel -> Szene; Schrei-Takt, msg 6 genau Tonlaenge + 20 Takte danach,
- *             Film erst nach Drehen + Sleep 86, waehrend des Films keine msg 7, msg 7 im Takt nach dem Film, dann msg 8
+ *             Film erst nach Drehen + Sleep 86, waehrend des Films keine msg 7, msg 7 im Takt nach dem Film, dann msg 8;
+ *             vor dem Film kein Abblenden (harter Schnitt), danach Einblenden 240, 224 ... 16, 0 (RE2 ROOM1080 sub14)
+ *   blende    RE2-Einblenden nach dem Film: Kanal 2, ABR 2, RGB 7, Schritt -0x800, Pegel 0x7800 -> 15 Bilder bis 16,
+ *             dann 0 und Halt; ohne gezeigten Film (re15_zws114_r41_film_fehlt) kein Einblenden
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -39,6 +42,7 @@
 #include "re15_zws114_r41.h"
 #include "re15_str.h"
 #include "re15_xa.h"
+#include "re15_fade.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -415,6 +419,8 @@ static void teil_ablauf(void)
     long b_msg[64]; int msgs[64], n_msg = 0, last = -1;
     long b_film_an = -1, b_film_aus = -1, b_msg6 = -1, b_msg7 = -1, b_msg8 = -1, b_schrei_ende = -1;
     int msg7_im_film = 0, halte = 0;
+    int blende[32], n_blende = 0, vorher_blende = 0;
+    re15_fade_kill(RE15_ZWS114_BLENDE_KANAL);
     for (int f = 0; f < 6000 && b_msg8 < 0; f++) {
         uint16_t h = 0, e = 0;
         if (f == 0) e = RE15_PAD_BIT_SQUARE;
@@ -430,6 +436,10 @@ static void teil_ablauf(void)
             if (last == 8 && b_msg8 < 0) b_msg8 = s_bild;
         }
         if (!g_scd.message_active) last = -1;
+        re15_fade_tick();   /* wie re15_render_end_frame (render_pc.c) je gezeichnetem Bild */
+        if (b_film_an < 0 && g_fade_ch[RE15_ZWS114_BLENDE_KANAL].drawn) vorher_blende++;
+        if (b_film_aus >= 0 && n_blende < 32 && s_bild > b_film_aus)
+            blende[n_blende++] = g_fade_ch[RE15_ZWS114_BLENDE_KANAL].drawn ? g_fade_ch[RE15_ZWS114_BLENDE_KANAL].out_r : -1;
         /* Plattform-Ersatz Film: angefordert -> FILM_HALTEN Bilder "laufen lassen" (die echte Plattform spielt ihn
          * zwischen zwei Spielbildern; hier tickt das Spiel weiter, damit das Parken sichtbar wird), dann gespielt. */
         if (re15_zws114_r41_film_offen()) {
@@ -469,18 +479,64 @@ static void teil_ablauf(void)
     PRUEF(b_msg7 - b_film_aus >= 0 && b_msg7 - b_film_aus <= 2,
           "msg 7 \"Shit! that is what I was talking about!\" direkt nach dem Film (%ld Takte)", b_msg7 - b_film_aus);
     PRUEF(glas == 0, "kein Glasbruch Se_on(0x3E,0x21) in der Szene (%d)", glas);
+    {   /* RE2 ROOM1080 sub14: harter Schnitt in den Film, danach Einblenden 240 -> 0 in Schritten von 16 */
+        int ok = n_blende >= 17 && vorher_blende == 0;
+        for (int i = 0; ok && i < 16; i++) if (blende[i] != 240 - 16 * i) ok = 0;
+        if (ok && blende[16] != -1) ok = 0;
+        printf("    Blende nach dem Film:"); for (int i = 0; i < n_blende && i < 18; i++) printf(" %d", blende[i]); printf("\n");
+        PRUEF(ok, "Ueberblendung wie RE2: vor dem Film kein Abblenden (%d Bilder), danach %d, %d ... %d, %d, Halt (15 Bilder "
+                  "aus Schwarz, ROOM1080 sub14 @0x0252A)", vorher_blende, n_blende > 0 ? blende[0] : -9,
+              n_blende > 1 ? blende[1] : -9, n_blende > 14 ? blende[14] : -9, n_blende > 15 ? blende[15] : -9);
+    }
     PRUEF(b_msg8 > b_msg7, "danach wie bisher: msg 8 \"what the hell is that?!\" (Bild %ld)", b_msg8);
     re15_zws114_r41_schrei_hook = NULL;
     re15_zws114_r41_film_spieler = 0;
 }
 
+/* ---- Teil: blende ---------------------------------------------------------------------------------------------- */
+static void teil_blende(void)
+{
+    printf("== blende ==\n");
+    const unsigned alt = g_current_room_id;
+    static const uint8_t z60[4] = { 0x2B, RE15_ZWS114_MSG_FILM, 0, 0 };
+    g_current_room_id = RE15_ZWS114_RAUM;
+    re15_fade_init();
+    re15_zws114_r41_install(RE15_ZWS114_RAUM);
+    re15_zws114_r41_film_spieler = 1;
+    (void)re15_zws114_r41_message_on(z60);                       /* Film angefordert */
+    PRUEF(re15_fade_done(RE15_ZWS114_BLENDE_KANAL), "vor/waehrend des Films kein Blendkanal aktiv (harter Schnitt wie RE2 "
+                                                     "@0x8002ba28 vor DrawOTag)");
+    re15_zws114_r41_film_gespielt();
+    const re15_fade_ch_t *c = &g_fade_ch[RE15_ZWS114_BLENDE_KANAL];
+    PRUEF(c->abr == 2 && c->mask_r == 0xFF && c->mask_g == 0xFF && c->mask_b == 0xFF && c->step == -0x800 &&
+          c->ot_bucket == 7 && c->level == 0x7800,
+          "nach dem Film: Kanal %d ABR %d RGB %02x%02x%02x Schritt %d Ebene %d Pegel 0x%04x (RE2 Sce_fade_set 53 02 02 07 00 f8)",
+          RE15_ZWS114_BLENDE_KANAL, c->abr, c->mask_r, c->mask_g, c->mask_b, (int)c->step, c->ot_bucket, (unsigned)c->level);
+    int folge[20], n = 0, ok = 1;
+    for (int i = 0; i < 20; i++) { re15_fade_tick(); folge[n++] = c->drawn ? c->out_r : -1; }
+    for (int i = 0; i < 16; i++) if (folge[i] != 240 - 16 * i) ok = 0;
+    for (int i = 16; i < 20; i++) if (folge[i] != -1) ok = 0;
+    printf("    Folge:"); for (int i = 0; i < n; i++) printf(" %d", folge[i]); printf("\n");
+    PRUEF(ok, "Helligkeit 240, 224 ... 16 (15 Bilder), 0, dann Halt - FUN_8002c378 sra 0x17 @0x8002c3b8 / bltz @0x8002c3b4");
+    PRUEF(re15_zws114_r41_message_on(z60) == 1, "Skript laeuft nach dem Film weiter");
+    /* ohne gezeigten Film: kein Einblenden */
+    re15_fade_init();
+    (void)re15_zws114_r41_message_on(z60);
+    re15_zws114_r41_film_fehlt();
+    PRUEF(re15_fade_done(RE15_ZWS114_BLENDE_KANAL) && re15_zws114_r41_message_on(z60) == 1,
+          "Film fehlt: kein Einblenden, Skript laeuft weiter");
+    re15_zws114_r41_film_spieler = 0;
+    g_current_room_id = alt;
+}
+
 int main(int argc, char **argv)
 {
-    if (argc < 2) { printf("Aufruf: test_r41_zws114 <datei|schrei|programm|ablauf>\n"); return 2; }
+    if (argc < 2) { printf("Aufruf: test_r41_zws114 <datei|schrei|programm|ablauf|blende>\n"); return 2; }
     if (!strcmp(argv[1], "datei")) teil_datei();
     else if (!strcmp(argv[1], "schrei")) teil_schrei();
     else if (!strcmp(argv[1], "programm")) teil_programm();
     else if (!strcmp(argv[1], "ablauf")) teil_ablauf();
+    else if (!strcmp(argv[1], "blende")) teil_blende();
     else { printf("unbekannter Teil %s\n", argv[1]); return 2; }
     printf("%s: %d Fehler\n", argv[1], g_fail);
     return g_fail ? 1 : 0;

@@ -11,7 +11,8 @@
  *     ueber re15_fmv_audio_start (CD->SPU 100/128 wie FUN_8002acac), Ton = Takt (Bild f bei f/30 s), ohne Audiogeraet 30 Bilder/s
  *     nach SDL_GetTicks, START ueberspringt (FUN_80029cd8:24, rohes Bit), Vollbild-Ebene re15_render_pc_show_fmv. Danach
  *     re15_zws114_r41_film_gespielt -> das Skript laeuft im naechsten Takt mit msg 7 weiter. Fehlt die Datei, laeuft es sofort
- *     weiter (Meldung auf stderr).
+ *     weiter (Meldung auf stderr). Der Einstieg ist ein harter Schnitt, nach dem Film blendet das Spielbild in 15 Bildern aus
+ *     Schwarz ein - beides wie RE2 (Belege include/re15_zws114_r41.h "UEBERBLENDUNG WIE RE2").
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -147,8 +148,9 @@ static int film_spielen(const char *rel)
 void re15_zws114_r41_pc_bild(void)
 {
     if (!re15_zws114_r41_film_offen()) return;
-    if ((g_current_room_id & 0xFFFFu) == RE15_ZWS114_RAUM) (void)film_spielen(RE15_ZWS114_FILM);
-    re15_zws114_r41_film_gespielt();
+    const int gezeigt = ((g_current_room_id & 0xFFFFu) == RE15_ZWS114_RAUM) ? film_spielen(RE15_ZWS114_FILM) : -1;
+    if (gezeigt > 0) re15_zws114_r41_film_gespielt();   /* RE2-Einblenden (re15_zws114_r41.h "UEBERBLENDUNG WIE RE2") */
+    else re15_zws114_r41_film_fehlt();
 }
 
 void re15_pc_zws114_r41_init(void)
