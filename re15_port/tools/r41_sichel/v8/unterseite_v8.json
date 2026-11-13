@@ -18,7 +18,16 @@
    106
   ],
   "je_durchgang": 2,
-  "abschnitte": 3,
-  "quelle": "Runde 7b K1/K2 (unterseite_r7b.py): Fleisch der Unterseite in Original-Dichte; Proben im Spiel U4 0,116 / U5 0,087 / U7 0,141 (relative oertliche Streuung, glaette_r7b.py; Stand a474188a 0,079)"
+  "abschnitte": [
+   1,
+   1,
+   2,
+   2,
+   2,
+   2,
+   2
+  ],
+  "diagonale": false,
+  "quelle": "Runde 7b K1/K2 (unterseite_r7b.py): Fleisch der Unterseite in Original-Dichte um den Umfang (0,066 je E.); Abschnitts-Ringe nur in den Meshes 19-22 (Mesh 18 hat seinen Mittelring), Meshes 16/17 ungeteilt: jede Teilung dort hob Riegel S2 b (Sattel 1,7 -> 2,4 / 3,0 px; Probe U4K2 / U7c). Proben im Spiel (relative oertliche Streuung, glaette_r7b.py): Stand a474188a 0,079 | U4 0,116 | U5 0,087 | U7 0,141"
  }
 }

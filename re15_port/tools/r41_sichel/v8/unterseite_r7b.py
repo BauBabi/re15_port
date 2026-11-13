@@ -27,10 +27,17 @@ Abbildung hier (keine Farbe, keine Helligkeit am Video geeicht; Texturbild und C
         Umkehr alle JE_DURCHGANG Ecken ab j = 9 (theta ~ -92); gespiegelt wird nur AN Ringecken (je Dreieck affin), an der Spiegelkante
         stossen gleiche Texel aneinander. W(Ring) = DICHTE x JE_DURCHGANG x Ringradius x 2 pi / 11: gleiche Dichte auf jedem Ring, an einem
         Gelenk gleiche Breite auf beiden Seiten (gleicher Radius). DICHTE = Feldbreite / Breite des Wurzelrings (konfig).
-  Gewaehlt (unterseite_v8.json): JE_DURCHGANG 2, ABSCHNITTE 3 -> Dichte um den Umfang 0,066, laengs 0,045-0,059 (Mantel Median 0,061 =
-        0,85-fach Original 0,071). Proben im Spiel (echte Framedumps F262-F398 mit beleuchteter Unterseite, glaette_r7b.py, relative oertliche
-        Streuung): Stand a474188a 0,079; U4 (3 je Durchgang, 2 Abschnitte, Mantel 0,041) 0,116; U5 (Feld u 17-37 ohne Furche, 2 je Durchgang)
-        0,087; U7 (gewaehlt) 0,141; Eichband am eigenen Fleisch (Rumpf 0,197, Beinhaut 0,171).
+  Gewaehlt (unterseite_v8.json): Feld u 4-37 x v 96-106, JE_DURCHGANG 2 (Dichte um den Umfang 0,066 = 0,93-fach Original 0,071),
+        ABSCHNITTE [1, 1, 2, 2, 2, 2, 2] (neue Ringe nur in den Meshes 19-22), Vierecke quer geteilt (diagonale false).
+        Warum so (gemessen): jede Abschnittsteilung in den Meshes 16/17 hob Riegel S2 b (Sattel der Oberkontur PV 1,7 -> 2,4 px bei U4K2,
+        3,0 px bei U7c, Soll <= 2): neue Ecken auf der Silhouette werden auf ganze Bildpunkte gerundet, die Rueckseiten-Pruefung der Vierecke
+        (Ecken 0-1-2, platform/pc/main.c ~2310) faellt an den Teilstuecken anders aus; mit Teilung nur in 19-22 bleiben S1/S2 wie a474188a.
+        Die Zerlegung an der gezeichneten Diagonale 0-3 (diagonale true) haelt die Flaeche exakt, liess aber Teilstuecke der zweiten
+        Haelfte einzeln wegfallen: 84 Loch-Bildpunkte in 50 Ansichten (quer geteilt: 3; loecher.py). Laengs bleibt die Dichte in 16/17
+        unter dem Soll (11 Zeilen auf 516-710 E.); die Laengsstreifen des Feldes sind entlang v gleich, sichtbar ist nur die Dichte quer.
+        Proben im Spiel (echte Framedumps F262-F398 mit beleuchteter Unterseite, glaette_r7b.py, relative oertliche Streuung): Stand
+        a474188a 0,079; U4 (3 je Durchgang, Mittelring in allen) 0,116; U5 (Feld u 17-37 ohne Furche) 0,087; U7 (2 je Durchgang, 3 Abschnitte
+        in allen) 0,141; Eichband am eigenen Fleisch Rumpf 0,197 / Beinhaut 0,171.
   Ring-Deckel und Dorn (Achs-Ecke): u = Mittel ihrer Ring-Ecken, v um DICHTE x Abstand zur Ringebene ins Feld hinein (Runde 6: alle drei
         Ecken auf einer Zeile = Strich-Abbildung, Streckung bis 62); reicht das Feld nicht, wird die Ringkante in u gestaucht (Streckung <= 2).
 Teilungs-Ecken der Runde 6 (Grenzen 110 / 120 auf einer Ringsehne) bekommen p linear zwischen ihren zwei Ring-Ecken (Lage auf der Sehne).
@@ -58,17 +65,24 @@ P_J = {9: -1.0, 10: -1.0 / 3, 0: 1.0 / 3, 1: 1.0, 2: 1.0 / 3, 3: -1.0 / 3, 4: -1
 # Mesh 18 hat einen Mittelring (Ring 1; Baender 222-282 / 317-402 E.): bei 2 Abschnitten bleibt er der einzige, bei 3 bekommt das laengere
 # Band Ring 1 -> 2 einen weiteren.
 ABSCHNITTE = 2
+DIAGONALE = True                      # Vierecke zuerst an der gezeichneten Diagonale 0-3 zerlegen (konfig "diagonale")
 V_SCHWANZ = tuple(range(16, 23))
 
 
+def _abschnitte(b):
+    return ABSCHNITTE[b - 16] if isinstance(ABSCHNITTE, (list, tuple)) else ABSCHNITTE
+
+
 def _plan(b):
-    """-> (sigma je Ring relativ zum Gliedanfang, [(Band ka, kb, Teile)]) fuer ABSCHNITTE."""
-    a = ABSCHNITTE
+    """-> (sigma je Ring relativ zum Gliedanfang, [(Band ka, kb, Teile)]) fuer die Abschnittszahl des Glieds (Mesh 18 mindestens 2: es hat
+    seinen Mittelring)."""
+    a = _abschnitte(b)
     if b == 16:
-        return [0, 0, a], [(1, 2, a)]
+        return [0, 0, a], ([(1, 2, a)] if a > 1 else [])
     if b == 18:
+        assert a >= 2, a
         return ([0, 1, 2], []) if a == 2 else ([0, 1, a], [(1, 2, a - 1)])
-    return [0, a], [(0, 1, a)]
+    return [0, a], ([(0, 1, a)] if a > 1 else [])
 
 
 def p_welle(j, n):
@@ -87,11 +101,13 @@ WURZEL_R = 437.5                      # Radius Mesh 16 Ring 1 am Stand a474188a 
 def konfig(cfg):
     """unterseite_v8.json "fleisch_r7b": 1 (Standard oben) oder {"feld": [u_lo, u_hi, v_a, v_b], "je_durchgang": n, "abschnitte": k}. Die
     Dichte um den Umfang folgt aus dem Feld: Feldbreite / (n x Flaechenbreite des Wurzelrings, r WURZEL_R)."""
-    global U_LO, U_HI, V_A, V_B, UC, DICHTE, JE_DURCHGANG, P_J, ABSCHNITTE
+    global U_LO, U_HI, V_A, V_B, UC, DICHTE, JE_DURCHGANG, P_J, ABSCHNITTE, DIAGONALE
     if isinstance(cfg, dict):
+        DIAGONALE = bool(cfg.get('diagonale', True))
         U_LO, U_HI, V_A, V_B = [float(x) for x in cfg.get('feld', (U_LO, U_HI, V_A, V_B))]
         JE_DURCHGANG = int(cfg.get('je_durchgang', JE_DURCHGANG))
-        ABSCHNITTE = int(cfg.get('abschnitte', ABSCHNITTE))
+        ab = cfg.get('abschnitte', ABSCHNITTE)
+        ABSCHNITTE = [int(x) for x in ab] if isinstance(ab, (list, tuple)) else int(ab)
         DICHTE = round((U_HI - U_LO) / (JE_DURCHGANG * WURZEL_R * 2.0 * np.pi / S_), 4)
         P_J = {j: p_welle(j, JE_DURCHGANG) for j in range(S_)}
     UC = 0.5 * (U_LO + U_HI)
@@ -103,7 +119,7 @@ def ring_zahl(b):
 
 
 def sigma0(b):
-    return (b - 16) * ABSCHNITTE
+    return sum(_abschnitte(k) for k in range(16, b))
 
 
 def ring_radius(m, b, k):
@@ -260,14 +276,34 @@ def mitte_teilen(ms, wurzel_keys):
             ie = list(f[1::2])
             assert list(f[0::2]) == ie
             poly = [(ie[0], (uv[0], uv[1])), (ie[1], (uv[3], uv[4])), (ie[3], (uv[9], uv[10])), (ie[2], (uv[6], uv[7]))]
-            st = zerlegen(poly)
-            if len(st) == 1:
+            if teile(poly) is None:
                 continue
+            if not DIAGONALE:                   # Probe: Viereck quer geteilt (Teilstuecke mit eigener Diagonale)
+                st = zerlegen(poly)
+                alt = list(uv)
+                schreiben(st[0], alt, qi, 'v')
+                for x in st[1:]:
+                    schreiben(x, alt, None, 'v')
+                continue
+            # Die Form bleibt: der Port zeichnet ein Viereck als Dreiecke 0-1-3 und 0-3-2 (Diagonale Ecke 0 - Ecke 3; platform/pc/main.c
+            # ~2327 re15_render_textured_tri_lit, ebenso f_rast.dreiecke); ein nicht ebenes Viereck quer zu teilen verschob die Flaeche
+            # (Probe 5a358bc9: Riegel S2 b Sattel 1,7 -> 3,0 px, S1 Max 6 -> 7; Umriss PV 135 px anders). Deshalb wird zuerst an dieser
+            # Diagonale in die zwei gezeichneten Dreiecke zerlegt und jedes fuer sich geteilt (neue Ecken auch auf der Diagonale); jedes
+            # Teilstueck liegt in der Ebene seines Dreiecks.
+            d1 = [poly[0], poly[1], poly[2]]                # Ecken 0, 1, 3
+            d2 = [poly[0], poly[2], poly[3]]                # Ecken 0, 3, 2
+            st = zerlegen(d1) + zerlegen(d2)
             alt = list(uv)
-            assert len(st[0]) == 4, ('Viereck-Stueck ist kein Viereck', b, qi)
-            schreiben(st[0], alt, qi, 'v')
-            for x in st[1:]:
-                schreiben(x, alt, None, 'v')
+            erst = [x for x in st if len(x) == 4]
+            assert erst, ('kein Viereck-Teilstueck', b, qi)
+            schreiben(erst[0], alt, qi, 'v')
+            for x in st:
+                if x is erst[0]:
+                    continue
+                if len(x) == 4:
+                    schreiben(x, alt, None, 'v')
+                else:
+                    schreiben(x, [alt[0], alt[1], alt[2], alt[3], alt[4], alt[5], alt[6], alt[7], alt[8]], None, 'd')
         for di in range(n0[1]):
             if ('d%d' % di) in ausn:
                 continue
