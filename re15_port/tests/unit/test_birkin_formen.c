@@ -445,12 +445,12 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
              * und blieb auf 487; szene_marker.wurzel_flaechen kennt seit 118fad898 die Teilungs-Ecken),
              * Ecken je Glied 43 / 32 / 47 / 32 / 32 / 32 / 32 (Runde 5d: 35 / 24 / 35 / 24 / 24 / 24 / 24).
              * V8 Runde 7b (K1 "Unterseite wie Fleisch, nicht wie eine glatte rote Flaeche", K2 "7 graue Deckel-Dreiecke";
-             * tools/r41_sichel/v8/unterseite_r7b.py, unterseite_v8.json fleisch_r7b): je Glied 3 Abschnitte (neue Ringe auf den
-             * Laengskanten, Form gleich), Fleisch in Original-Dichte; die 7 Kegel-Dreiecke und die Rohr-Vierecke der Wurzel unter der
-             * Grenze auf 495. Gemessen am Asset 5a358bc9 (sfv8/r7b): 55 / 50 / 51 / 51 / 50 / 50 / 50 = 357 Flaechen auf 495, Ecken
-             * 75 / 62 / 63 / 64 / 62 / 62 / 62. Gegenprobe Stand a474188a: rot (213 Flaechen, Ecken wie Runde 6b). */
-            static const int UNTEN[7] = {55, 50, 51, 51, 50, 50, 50};
-            static const int ECKEN[7] = {75, 62, 63, 64, 62, 62, 62};
+             * tools/r41_sichel/v8/unterseite_r7b.py, unterseite_v8.json fleisch_r7b): Fleisch in Original-Dichte um den Umfang,
+             * Abschnitts-Ringe (neue Ecken auf den Laengskanten, Form gleich) in den Gliedern 19-22, die 7 Kegel-Dreiecke und die
+             * Rohr-Vierecke der Wurzel unter der Grenze auf 495. Gemessen am Asset 87b02681 (sfv8/r7b): 35 / 30 / 41 / 41 / 40 / 40 / 40
+             * = 267 Flaechen auf 495, Ecken 43 / 32 / 47 / 48 / 47 / 47 / 47. Gegenprobe Stand a474188a: rot (213 Flaechen, Ecken 32 in 19-22). */
+            static const int UNTEN[7] = {35, 30, 41, 41, 40, 40, 40};
+            static const int ECKEN[7] = {43, 32, 47, 48, 47, 47, 47};
             CHECK(b->tri_vertex_count == ECKEN[m - 16], "%s: Schwanzglied %d: %d Ecken statt %d (V8 Runde 7b Abschnitte)", name, m,
                   b->tri_vertex_count, ECKEN[m - 16]);
             int auf487 = zeile_zahl(b, 487), auf495 = zeile_zahl(b, Z_X3);
