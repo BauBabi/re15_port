@@ -300,10 +300,17 @@ static const int32_t k_sm_gleit[][3] = { { 2, BF_SM_X, BF_SM_Z }, { 4, -11974, -
  * Runde 41 SF N1.3: Pendel nur noch B10..28. Die Sichelhand liegt bei Gier Bezug-1270 in B10..24 bei Bild-x 131..136,
  * B28 143, B34 154, B37 158 (Rechnung tools/r41_sichel/hand.py); das Video haelt den Spider-Man bei x 113 (h40) -> 136
  * (h60), also links und nach rechts wandernd -> B10->28 (h17..35), zurueck ->12 (h51), wieder ->27 (h66). */
-#define BF_BILD_N 8
+/* Nachbesserung 2026-11-14 (Pruefer Maengel 2 und 7): vorher lief Clip 0x0B h66..h76 mit 3 Bildern je Takt B27 -> B44 -> B55;
+ * Kopfneigung (EM30_HANGAR Knochen 9 gegen Becken, Grad) h69 13, h70 52, h71..h82 79..81 = ganz zusammengeklappt, Kopf auf
+ * Kniehoehe; die Hand trug den Spider-Man h66..h70 nach rechts (Clip-Bilder B29..B41). Video 4: Birkin bleibt bis h73
+ * aufrecht und still (Umriss h62..h73 unveraendert), der Spider-Man haengt h64..h70 still (Mitte der orangen Teile x 270 ->
+ * 260, 640er), faellt h71..h74 und liegt h74..h79 vor ihm. Jetzt: Pendel weiter zurueck B27 (h66) -> B20 (h73), Hand Bild-x
+ * 131 -> 124 (hand.py), Neigung 16 Grad; ab BF_H_STEHEN Stand-Clip 0 (INIT @0x8011683c) mit Ueberblendung (bf_clip, +0x8f = 7):
+ * der erhobene Arm sinkt, Birkin richtet sich auf; der tiefe Schlag B41..B70 entfaellt. */
+#define BF_BILD_N 6
 static const int16_t k_birkin_bild[BF_BILD_N][2] = {
-    {   7,  0 }, {  17, 10 }, {  35, 28 }, {  51, 12 }, {  66, 27 }, { BF_H_WURF, BF_WURF_BILD }, { BF_H_AUFSCHLAG, 55 },   /* Schritt 4: Takt = Bild, wieder die NB2-Takte */
-    { BF_H_GANG, 70 } };
+    {   7,  0 }, {  17, 10 }, {  35, 28 }, {  51, 12 }, {  66, 27 }, {  73, 20 } };
+#define BF_H_STEHEN      74         /* Video: Birkin aufrecht bis h73, ab h74 lehnt er sich vor */
 /* Schritt 2 nach Referenz 2 (Loslassen): Video 4 h66-h70 haelt Birkin den Spider-Man noch oben links (Rumpf x ~100-170, y ~60-250),
  * h71 sinkt er links herab, h72 kopfueber links (x 60-150), h73/h74 unten links. Ref2 (84e8a4d97) schwang die Hand schon ab Bild 68
  * nach unten (Clip 0x0B B38 -> B44 Takt 70 -> 72) und liess bei Bild 70 los (3041 Einheiten von der Hand). Jetzt der Abschwung
@@ -885,9 +892,30 @@ static void bf_gruenes_blut(re15_actor_t *b, re15_actor_t *m, int h)
  * rechten Rand. Lauf R7 (Tiefe 3800 -> 1300, x 380-820): h81-h85 fuellte er das GANZE Bild -> Tiefe 4600 -> 2200 und weiter
  * rechts (x 370-940), so dass vor allem Glieder in der rechten Bildhaelfte stehen; Lauf R8 damit h84/h85 noch kleiner als das
  * Video-Glied -> h84-h87 Tiefe 2500 -> 1900. Weltweg Richtung Kameraposition Cut 12. */
-static const int16_t k_wurf_bahn[][4] = { { 74, 230, 340, 4800 }, { 76, 250, 390, 4600 }, { 78, 270, 505, 0 }, { 80, 330, 500, 0 },
+/* Nachbesserung 2026-11-14 (Pruefer Maengel 2 und 9): h74/h76 lagen auf dem Sehstrahl in Blicktiefe 4800/4600 (vor Birkin, zur
+ * Kamera: Maske h73..h75 20235..28274 Bildpunkte = riesig), h78/h80 Bodenpunkte bei Bild-y 505/500 = unter dem unteren Rand (der
+ * Port-Rahmen endet bei Zeile 431, das Video bei 452; Pruefer h76..h79 unsichtbar). Video 4 (orange Teile ohne Schatten, 640er):
+ * h74 Mitte (232, 380) unten 409, h76 (259, 389) unten 404, h77/h78 (204..220, 397..400) unten 413..422, h79 (231, 385); er
+ * liegt vor Birkin auf dem Boden. Fall: Pruefer-Mass (Mitte mit Schatten) h72 229 -> h73 280 -> h74 337 -> h75 387 -> h76 409 =
+ * 4 Bilder; Lauf "w" mit erstem Bodenpunkt bei h74 fiel er h72 -> h73 um 103 Zeilen. Jetzt Flug vom Loslassen (h71) zum ersten
+ * Bodenpunkt in 5 Takten (h71..h75), Bodenpunkte h76 (245,400) (Mittel h74..h76: x 232/259), h78 (215,405), h80 (250,400); ab
+ * h81 wie bisher. */
+static const int16_t k_wurf_bahn[][4] = { { 76, 245, 400, 0 }, { 78, 215, 405, 0 }, { 80, 250, 400, 0 },
                                           { 81, 370, 450, 4600 }, { 82, 450, 380, 3800 }, { 83, 560, 340, 3200 }, { 84, 640, 290, 2500 },
                                           { 85, 720, 290, 2200 }, { 86, 820, 320, 2000 }, { 87, 940, 330, 1900 } };
+/* Gier im Wurf: zur Bewegungsrichtung hin, hoechstens BF_WURF_DREH je Takt. Pruefer Mangel 8: vorher folgte sie ihr sofort und
+ * schnappte h74 -> h75 um 1312 (115 Grad) zurueck (Gier 2229 / 909 / 21 / 3775 bei h73..h76). Koordinator: die Enddrehung ueber
+ * h73..h76 einblenden = 4 Takte fuer hoechstens eine halbe Drehung -> 2048 / 4 = 512 je Takt. */
+#define BF_WURF_DREH 512
+static int16_t bf_gier_zu(int16_t ist, int16_t soll)
+{
+    int d = (soll - ist) & 0x0fff;
+    if (d > 0x800) d -= 0x1000;
+    if (d > BF_WURF_DREH) d = BF_WURF_DREH;
+    if (d < -BF_WURF_DREH) d = -BF_WURF_DREH;
+    return (int16_t)((ist + d) & 0x0fff);
+}
+
 static int bf_wurf_punkt(const re15_actor_t *b, int i, int32_t out[3])
 {
     bf_schwanzpunkt_t q = { 0, k_wurf_bahn[i][1], k_wurf_bahn[i][2], k_wurf_bahn[i][3] > 0 ? 3 : 0, k_wurf_bahn[i][3] };
@@ -910,7 +938,9 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     /* --- Birkin: Clip, Gier ------------------------------------------------------------------------------------- */
     if (h < BF_H_GANG) {
         if (h < k_birkin_bild[0][0]) re15_r38_birkin_anim(b);             /* Stand, Clip 0 laeuft */
-        else bf_bild(b, BF_CLIP_GRIFF, bf_tab(k_birkin_bild, BF_BILD_N, h));
+        else if (h < BF_H_STEHEN) bf_bild(b, BF_CLIP_GRIFF, bf_tab(k_birkin_bild, BF_BILD_N, h));
+        else if (h == BF_H_STEHEN) bf_clip(b, 0);                         /* Stand-Clip 0 wie INIT @0x8011683c, Ueberblendung */
+        else re15_r38_birkin_anim(b);
         b->rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, 4, h)) & 0x0fff);
         if (h > BF_H_AUFSCHLAG) {                                         /* Video h77..90: richtet sich auf, dreht zur Kamera */
             const re15_camera_cut_t *c = bf_szenenkamera();
@@ -1020,7 +1050,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
                     p[k_] = bf_mix(a_, e_, u);
                 }
                 if (p[1] > 0) p[1] = 0;
-                if (p[0] != m->x || p[2] != m->z) m->rot_y = bf_blick(m, p[0], p[2]);
+                if (p[0] != m->x || p[2] != m->z) m->rot_y = bf_gier_zu(m->rot_y, bf_blick(m, p[0], p[2]));
                 m->x = p[0]; m->y = p[1]; m->z = p[2];
             }
         } else {                                                          /* am Boden und an der Kamera vorbei */
@@ -1031,7 +1061,10 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
                 const int span = k_wurf_bahn[i + 1][0] - k_wurf_bahn[i][0];
                 const int32_t u = hz <= k_wurf_bahn[i][0] ? 0 : hz >= k_wurf_bahn[i + 1][0] ? 4096 : (hz - k_wurf_bahn[i][0]) * 4096 / span;
                 const int32_t x = bf_mix(p[0], z[0], u), y = bf_mix(p[1], z[1], u), zz = bf_mix(p[2], z[2], u);
-                if (z[0] != x || z[2] != zz) m->rot_y = bf_blick(m, z[0], z[2]);
+                /* liegend (Bodenpunkte bis BF_H_AUFSPRINGEN) bleibt die Gier der Landung - die kleinen Verschiebungen am Boden sind
+                 * kein Laufweg (Lauf "w": dort drehte er sich h76..h80 je Takt um 512 im Kreis); erst beim Aufspringen wieder zur
+                 * Bewegungsrichtung */
+                if ((z[0] != x || z[2] != zz) && hz > BF_H_AUFSPRINGEN) m->rot_y = bf_gier_zu(m->rot_y, bf_blick(m, z[0], z[2]));
                 m->x = x; m->y = y > 0 ? 0 : y; m->z = zz;
             }
         }
