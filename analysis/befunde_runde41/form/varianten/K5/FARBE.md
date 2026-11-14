@@ -1786,3 +1786,79 @@ weniger ab. Mit Videofilter ist der Buckel in Bild 2 heller und roeter als die V
 5. Rechte Hand: Die Posen-Datei fehlt noch (G2, Nutzer-Entscheid). Danach Geometrie und Textur neu bauen; die Textur haengt nur an den
    Flaechen, nicht an den Posen.
 6. Netz 22 hat 1463 UV-entartete Port-Dreiecke aus dem Spalt (GEOMETRIE.md 7): Farbstreifen statt Texturstueck, im Texelraum nicht heilbar.
+
+## K5g3 Runde 2 - Befunde der Pruefung r1 behoben (2026-11-14)
+
+Auftrag K5g3 Textur-Bauer Runde 2 von 2. Grundlage: PRUEFUNG_K5G3_r1_zahlen.md (2 ROT, 4 Gelb) und PRUEFUNG_K5G3_r1_sicht.md (Augen
+verschwunden, schwarzer Fleck rechts), Geometrie Runde 2 des Einbau-Bauers (geo/BAHNSTEIG_FORM.EMD db9404a1, Stufe uvfein). Spiel-Asset
+bleibt K5e_f1 (G5, Riegel G5 gruen). Arbeitswerkzeuge der Messungen: scratchpad k5g2/t3r2/w/ (auge1.py, schwarz.py, feld*.py, dunkel.py,
+ana2.py, augmess.py, dichte.py, rtest.py).
+
+### K5g3R2.0 Abgabe
+
+| Datei (k5g/K5g3/) | sha256 |
+|---|---|
+| BAHNSTEIG_FORM.EMD (28 Clips) | 482bd63fa93dfd5a008c4c4837029f313a40e2b09ea2ee278877e6afb2fd38ef |
+| BAHNSTEIG_FORM.TIM = FORM.TIM (15 Zeilen, Port-Hoehe 3840) | ce9a1dc9285a05196a750d1b34e8b7ef6b73e351c5a481e7dd291a9a599b83ce |
+| FORM.EMD (3 Keys) | 9eab983e22154c630da02a851d321db21797977226109d0100b8a2cfcfa062f1 |
+| generator/k5g3_augen_mitten.json (Augen-Tabelle) | 8546521e687c0acc55eadd010e22ad9ab8bc890777c60a06df4c49e91ea39027 |
+
+Aufruf `python generator/kf_k5g3.py bauen` (Stufe Geometrie kf_k5g3_geo unveraendert, Stufe Textur kf_k5g3_tex, dann Spalt mit uvfein-UV,
+dann Augen kf_k5g3_auge.dekal). `python generator/kf_k5g3.py pruef`: "zwei Laeufe und Abgabe byte-gleich: JA".
+Zeilen: maul0, maul1, zahn0, f12, haut0-2, tausch0-2, fleck_f12_0, fleck_haut1_1, fleck_haut1_2, fleck_haut2_3, auge (die Zone-29-Fleckzeile
+fleck_tausch0_4 der Runde 1 entfaellt). 150 Kopien, 81 Muetter verschoben, 1544 Kinder verschoben, 0 Kinder ausserhalb des Mutter-Rechtecks.
+
+### K5g3R2.1 Befund fuer Befund
+
+| Befund (Pruefer r1) | Ursache (gemessen) | Behebung | Ergebnis (Riegel) |
+|---|---|---|---|
+| ROT 2 weisser Strich 10/1/76 | Kopie-Maske = Polygon (0,1,3,2); bei der "Fliege" 10/1/76 bleibt ein Streifen der Render-Dreiecke leer (Index 0 = 0x7FFF), GEOMETRIE.md 9.3 | Maske = konvexe Huelle aller UV-Ecken (deckt beide Zerlegungen) vereinigt mit den UV-Dreiecken der Spalt-Kinder, 3x3 gedehnt (kf_k5g3_tex.lese_maske); der Bau bricht ab, wenn ein Zugriff einen ungeschriebenen Texel trifft | K1: 0 von 457031 Zugriffen auf Index 0 (Runde 1: 11 auf 10/0/342-344); bau.json zugriffe_ungeschrieben 0 |
+| ROT 1 weisse Musterung so bunt wie Fleisch | C' = s_haut x L' (s 0,5225) auch fuer "weiss" | nur helle G4-Gelenk-Eintraege mit Quell-C* <= 6 (Obergrenze Eichung (a)), Buntheit der Quelle (k 1), Helligkeit f_s der Seite | W6: C* 0,0 (Haut 12,0), L* 38,3 (Haut-P75 31,6); Runde 1 C* 18,5 |
+| Gelb braeunlich = beige | braeunliche G4-Eintraege sind auf Seite 2 2,7-mal heller als die Haut (L* 24,7 gegen 9,3) | nur braeunliche Eintraege bis P90 der Haut ihrer Seite, eine Rampe aus allen Seiten (Seite 2 allein: 2 Eintraege) | B1: L* 31,9 (Haut 23,3), C* 6,4, Ton 71,3 Grad; Runde 1 L* 72,6 |
+| Gelb reinweiss auf der Haut (76 Zugriffe) | Faktor 4,54 auf hellen Seite-0-Eintraegen; die 15-Bit-Wahl traf 0x7FFF | nie_weiss in allen Haut- und Fleck-Worten (Rangfolge bleibt) | K2: 0 Zugriffe auf 0x7FFF ausser Zahn-Zeile (Runde 1: 128) |
+| Sicht: schwarzer Fleck rechte Augenhoehle | 22/0/28-35 (der Augenwulst) lesen G4-Seite 1, Eintraege 204 (L* 1,7), 213 (2,4), 255 (0x8000) - ein schwarzes G4-Detail; multiplikativ bleibt es schwarz (K5e_f1 zeigte dort L* 22,9) | Flaechen mit >= 50 % Texeln unter dem 1-%-Quantil der Haut ihrer Seite (gemessen: genau diese 8; naechste 16/0/23 mit 0,32) bekommen eigene Texel mit Haut (Rang-Tausch auf die Hautzeile, E3 "Rest des Augenfelds wird Haut") | A2: weisses Licht von vorn 5 nahezu schwarze Netz-22-Pixel (K5e_f1 6, Runde 1 57) |
+| Sicht: Augen verschwunden | Zone-29-Traeger 22/0/82 und 83 sind schon in K5e_f1 UV-entartet (v = 72), 22/1/152 liest einen Augen-Texel; in Bild 2 trafen 5 Pixel; Augen-Material L* 16-38 x 1,98 zu dunkel | eigene Augen-Texel (kf_k5g3_auge.py): Mitte und Groesse aus den Nutzerpunkten (zonen_v2 augen.nutzerpunkte, punkt_px_vorlage 6,5 / 12,3) auf die fertige Geometrie zurueckgerechnet (Tabelle generator/k5g3_augen_mitten.json, Radius 17,5 / 18,8 Einheiten); jedes Dreieck, das die Augenscheibe beruehrt (7 + 4), bekommt eine eigene laengentreue UV (4 Texel je Augenradius; alte UV 0,03-0,09 Texel je Einheit), innen G4-Augen-Material per Rang, aussen Rueckabtastung der alten Farbe; f_auge 2,6972 per Bisektion | A1 Bild 2: 8 px (Nutzer 6,5) und 12 px (12,3), Mitte 0,4 / 0,2 px vom Punkt, Median L* 17,5 / 20,5 gegen Kopfhaut 5,7; A3 Spielfenster 5080 von vorn: 9 px Median 15,5 gegen 4,7 und 15 px Median 17,3 gegen 4,1 (mit f der Runde 1: 10,1 / 11,2) |
+| Sicht: gestreckte Farbstreifen | B4-UV (GEOMETRIE.md 9.2) | Spalt mit den uvfein-UV der Geometrie-Stufe | UV1: 0 Flaechen weichen von uvfein + Kopie-Versatz ab (Runde 1: 3715) |
+
+Aufruf `kf_k5g3.py --auge 1,98 3,0 6`, Protokoll [f, Median1, Ring1, Median2, Ring2]: 3,0 20,21/5,74 23,21/5,74; 2,49 15,63 18,11; 2,745
+18,18 20,54; 2,6175 17,0 19,5; 2,6813 17,0 20,02; 2,7131 18,18 20,54; 2,6972 17,52 20,54 -> 2,6972 (Schwelle 3 x 5,74 = 17,22). Augen-Rampe
+L* 45-95 (oberster Eintrag 0x77BF, nicht 0x7FFF).
+
+### K5g3R2.2 Riegel
+
+Aufruf `python generator/riegel_k5g3.py textur` (Protokoll k5g/K5g3/riegel_k5g3_textur.txt/.json): **"RIEGEL K5g3 TEXTUR: 43 von 43 gruen,
+37 von 37 Gegenproben rot wie verlangt"**, Exit 0. Neu: UV1, K1, K2, W6, B1, A1 (neu definiert: Groesse 0,5-2 x Nutzerflaeche, Abstand
+<= 2 px, Median >= 3 x Kopfhaut), A2, A3 (Spielfenster, generator/kf_k5g3_augen_spiel.py mit Markierungslauf). V3.1/V3.1b ohne Zone 29 (Augen
+ueber A1-A3) und mit den Loch-Flaechen als Traeger. Gegenproben der neuen Riegel: die Abgabe der Runde 1 aus git (Commit da6560372) bzw.
+derselbe Bau mit f_auge der Runde 1.
+
+Spiel 5080 Bild-1-Lage (neues Normal-/Schluessel-Paar): Z1 7,79 / Z2 0,708 / Z3 0,363 / Z4 4,84 / Z5 3,19 / Z6 0,517 / Z7 0,290 / Z8 13,73 /
+Z9 6,57 (Grenze 6,53). Ruhe R1-R4 1 / 0,0 / 1,1 / 1,1. Hautton Albedo 22,1 Grad.
+
+### K5g3R2.3 Tests und Spiellauf
+
+- local_build.sh build: "no work to do" (keine C-Aenderung in dieser Runde).
+- ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3 mit RE15_RE2_ASSET_ROOT=k5g/K5g3: "100% tests passed, 0 tests failed out of 12"
+  (277,3 s; integration_r41_form_dreiecke 277,2 s).
+- RE15_SOFTWARE_RENDER=1, 5090 Schnitt 11, Form Clip 12, bis Bild 1300 (kf_k5g3_spiel.sh): "[render] SDL-Renderer software", "EXIT_AT: Bild
+  1300", "[tri-liste] ENDE hoechststand=7318 verworfen=0" - kein Absturz.
+- Fensterbilder neu (kf_k5g3_fenster.sh, gdigrab nur auf das eigene Fenster): k5g/K5g3/spiel/k5g_*.png; Augen-Laeufe unter scratchpad
+  k5g2/t3r2/augen_spiel/ (Ergebnis k5g/K5g3/spiel_augen.json).
+
+### K5g3R2.4 Tafeln (k5g/K5g3/tafeln/, roh, neu gerendert)
+
+01-09 wie Runde 1. Neu: 04_spiel mit einer Zeile "Kopf von vorn x4" (Ihr Bild "Gesicht vorne" | K5e | K5g3, echtes Spielfenster), 09_zonen
+mit einer dritten Kachel je Fleck, in der das Fleck-Material tuerkis umrandet ist (Sicht-Pruefer r1: die Nahkacheln zeigten keine Markierung).
+Selbst angesehen: 02 (Form wie Runde 1, Augen als kleine helle Punkte), 04 unterste Zeile (zwei kleine helle Augenpunkte auf den Wuelsten,
+kein schwarzer Fleck mehr; K5e zeigt grosse dunkle gemalte Augen mit rotem Rand), 09 unten (Umrandungen auf Buckel, Augen, Schulter, Beinen).
+
+### K5g3R2.5 Offen
+
+1. V1 "eine Transformation je Material" (Zahlen-Pruefer Gelb 1): die Haut behaelt drei Seitenfaktoren f_s 4,54 / 1,86 / 2,55 - ohne sie faellt
+   Huefte/Ruecken auf L* 9,5 unter die Haut-P25 14,7 (Riegel S1, Gegenprobe "ohne Seitenangleich"). Entscheid beim Orchestrator.
+2. Augen: im Spielfenster kleine helle Punkte (9 und 15 Pixel) an den Stellen Ihrer Punkte, aber deutlich unauffaelliger als die grossen
+   gemalten Augen von K5e. Groesser wuerden sie nur gegen die Nutzerpunkte (E3).
+3. Unter weissem Licht ist die Haut weiter rostbraun mit rosa Adern (O3 gegen V2, Runde 1 Offen 1) - unveraendert.
+4. Leuchtstelle F1 "lila-grau mit grauen Bloecken" (Sicht-Pruefer r1, klein): nicht bearbeitet.
+5. Zone 44 (Hals-Unterseite) traegt auf 5 Flaechen Zone-27-Fleisch (Zahlen-Pruefer r1 Hinweis): unveraendert, Vorrang Zone 27 bitte bestaetigen.
+6. Rechte Hand: Posen-Datei (G2) fehlt weiter; Geometrie-Riegel R8 bleibt deshalb rot (GEOMETRIE.md 9.7).
