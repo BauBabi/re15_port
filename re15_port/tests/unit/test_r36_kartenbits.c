@@ -80,6 +80,7 @@
 #include <string.h>
 #include "re15_kanister2080_r41.h"   /* Runde 41 Spur G: Bits 114-117 */
 #include "re15_story80_r41.h"        /* Runde 41 Spur ST80 Nachbesserung 1: Bit 128 */
+#include "re15_story_r42.h"          /* Runde 42 Story v0.8.31: Bits 118-124, 129-132, 23-33, 17 (VERTRAG Runde 42) */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -543,6 +544,29 @@ static const port_bit_t k_port[] = {
     { RE15_K2080_BANK, RE15_K2080_BIT_SUEDWURF, "RE15_K2080_BIT_SUEDWURF", "Kanister-Wurf ins Suedbecken (sonst Nord), kanister2080_r41.c (Runde 41 G NB2)" },
     { RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG, "RE15_S80_BIT_NACHTRAG", "6030 Sherry-Nachtrag offen (Fuehrerstand vor dem Wagen), gen/story80_szenen.inc Set (Runde 41 ST80 NB1)" },
     { RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT, "RE15_AN_ZUG_BIT", "Zugstart 6030 gesehen, annette_r41.c Zugstart-Programm Set (Runde 41 AN NB1/NB2)" },
+    { RE15_R42_BANK, RE15_R42_BIT_2080_SZENE, "RE15_R42_BIT_2080_SZENE", "Nachgespraech 2080/2081 gesehen (Runde 42 Story, L1/E1)" },
+    { RE15_R42_BANK, RE15_R42_BIT_2080_TOR, "RE15_R42_BIT_2080_TOR", "Tor 2080/2081 mit dem Schluessel offen (Runde 42 Story, L1 K-01)" },
+    { RE15_R42_BANK, RE15_R42_BIT_LEITER, "RE15_R42_BIT_LEITER", "Szene vor der Leiter 11A0/11A1 gesehen (Runde 42 Story, L3/E2 K-07)" },
+    { RE15_R42_BANK, RE15_R42_BIT_TUER_11A, "RE15_R42_BIT_TUER_11A", "Tuer 11A0/11A1-2070/2071 von der 11A-Seite offen (Runde 42 Story, L1b K-02)" },
+    { RE15_R42_BANK, RE15_R42_BIT_TUER_2040, "RE15_R42_BIT_TUER_2040", "Tuer 2040/2041-2070/2071 aus dem Belohnungsraum offen (Runde 42 Story, L1b K-03)" },
+    { RE15_R42_BANK, RE15_R42_BIT_3020_SCHUESSE, "RE15_R42_BIT_3020_SCHUESSE", "3020 Leon hoert die Schuesse, gesehen (Runde 42 Story, L5)" },
+    { RE15_R42_BANK, RE15_R42_BIT_3060_UEBERGABE, "RE15_R42_BIT_3060_UEBERGABE", "Wiedersehen 3060 mit Uebergabe gesehen (Runde 42 Story, L5-L7)" },
+    { RE15_R42_BANK, RE15_R42_BIT_FINALE_ENDE, "RE15_R42_BIT_FINALE_ENDE", "Finale beendet, Abspann frei (Runde 42 Story, T-07)" },
+    { RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA, "RE15_R42_BIT_ZUG_ELZA", "Zugstart 6031 Elza gesehen (Runde 42 Story, E9)" },
+    { RE15_R42_BANK, RE15_R42_BIT_ALARM, "RE15_R42_BIT_ALARM", "Alarm/Durchsage 5060/5061 (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_IMPFUNG, "RE15_R42_BIT_IMPFUNG", "Begleiter geimpft 4010/5011 (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_SCHUTZRAUM, "RE15_R42_BIT_SCHUTZRAUM", "Schutzraum-Szene 6020/6021 (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_HANGAR, "RE15_R42_BIT_HANGAR", "Hangar-Tor 5140/5141 offen (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_IDKARTE, "RE15_R42_BIT_IDKARTE", "Research Center ID Card genommen (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_ENZYM_DRIN, "RE15_R42_BIT_ENZYM_DRIN", "Enzym in der Truhe 4090/4091 (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_KARTE_OK, "RE15_R42_BIT_KARTE_OK", "ID-Karte am Tastenfeld 4090/4091 (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_CODE_OK, "RE15_R42_BIT_CODE_OK", "Code eingegeben 4090/4091 (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_PROBE, "RE15_R42_BIT_PROBE", "Virusprobe genommen 4090/4091 (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_PROBE_DRIN, "RE15_R42_BIT_PROBE_DRIN", "Probe im Geraet 5060/5061 (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_ZETTEL, "RE15_R42_BIT_ZETTEL", "Laborzettel 40B0/40B1 genommen (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_DOK_P4, "RE15_R42_BIT_DOK_P4", "Dokument P-4 Lab Incident Report 5021 (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_DOK_VAKZIN, "RE15_R42_BIT_DOK_VAKZIN", "Dokument Vaccine Synthesis 5011 (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_R42_BANK, RE15_R42_BIT_ENZYM, "RE15_R42_BIT_ENZYM", "Enzym = Disc-Bit ROOM40A1 @0x00ED0 pc[18] (Runde 42 Story, reserviert v0.8.32)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 
@@ -558,7 +582,7 @@ static int kollisionen(const unsigned *bits, int n, unsigned *treffer, int max_t
 static void teil_p(void)
 {
     printf("=== P: Bank-9-Bits des Ports gegen den Original-Satz ===\n");
-    unsigned alle[64]; int n = 0;
+    unsigned alle[128]; int n = 0;   /* Runde 42: 57 + 23 Port-Bits + Lageplaene > 64 (frueher 64 = Ueberlauf) */
     for (int i = 0; i < N_PORT; i++) {
         PRUEFE(k_port[i].bank == 9, "%s steht in Bank 9 (%u)", k_port[i].makro, k_port[i].bank);
         int im_original = k_port[i].bit < 256 && s_z.belegt[k_port[i].bit];

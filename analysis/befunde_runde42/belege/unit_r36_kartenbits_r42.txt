@@ -1,0 +1,50 @@
+610:   ok:   RE15_R42_BIT_2080_SZENE steht in Bank 9 (9)
+610:   ok:   Bit 118 RE15_R42_BIT_2080_SZENE        Nachgespraech 2080/2081 gesehen (Runde 42 Story, L1/E1) — im Original frei
+610:   ok:   RE15_R42_BIT_2080_TOR steht in Bank 9 (9)
+610:   ok:   Bit 119 RE15_R42_BIT_2080_TOR          Tor 2080/2081 mit dem Schluessel offen (Runde 42 Story, L1 K-01) — im Original frei
+610:   ok:   RE15_R42_BIT_LEITER steht in Bank 9 (9)
+610:   ok:   Bit 120 RE15_R42_BIT_LEITER            Szene vor der Leiter 11A0/11A1 gesehen (Runde 42 Story, L3/E2 K-07) — im Original frei
+610:   ok:   RE15_R42_BIT_TUER_11A steht in Bank 9 (9)
+610:   ok:   Bit 121 RE15_R42_BIT_TUER_11A          Tuer 11A0/11A1-2070/2071 von der 11A-Seite offen (Runde 42 Story, L1b K-02) — im Original frei
+610:   ok:   RE15_R42_BIT_TUER_2040 steht in Bank 9 (9)
+610:   ok:   Bit 122 RE15_R42_BIT_TUER_2040         Tuer 2040/2041-2070/2071 aus dem Belohnungsraum offen (Runde 42 Story, L1b K-03) — im Original frei
+610:   ok:   RE15_R42_BIT_3020_SCHUESSE steht in Bank 9 (9)
+610:   ok:   Bit 123 RE15_R42_BIT_3020_SCHUESSE     3020 Leon hoert die Schuesse, gesehen (Runde 42 Story, L5) — im Original frei
+610:   ok:   RE15_R42_BIT_3060_UEBERGABE steht in Bank 9 (9)
+610:   ok:   Bit 124 RE15_R42_BIT_3060_UEBERGABE    Wiedersehen 3060 mit Uebergabe gesehen (Runde 42 Story, L5-L7) — im Original frei
+610:   ok:   RE15_R42_BIT_FINALE_ENDE steht in Bank 9 (9)
+610:   ok:   Bit 129 RE15_R42_BIT_FINALE_ENDE       Finale beendet, Abspann frei (Runde 42 Story, T-07) — im Original frei
+610:   ok:   RE15_R42_BIT_ZUG_ELZA steht in Bank 9 (9)
+610:   ok:   Bit 130 RE15_R42_BIT_ZUG_ELZA          Zugstart 6031 Elza gesehen (Runde 42 Story, E9) — im Original frei
+610:   ok:   RE15_R42_BIT_ALARM steht in Bank 9 (9)
+610:   ok:   Bit 131 RE15_R42_BIT_ALARM             Alarm/Durchsage 5060/5061 (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_IMPFUNG steht in Bank 9 (9)
+610:   ok:   Bit 132 RE15_R42_BIT_IMPFUNG           Begleiter geimpft 4010/5011 (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_SCHUTZRAUM steht in Bank 9 (9)
+610:   ok:   Bit  23 RE15_R42_BIT_SCHUTZRAUM        Schutzraum-Szene 6020/6021 (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_HANGAR steht in Bank 9 (9)
+610:   ok:   Bit  24 RE15_R42_BIT_HANGAR            Hangar-Tor 5140/5141 offen (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_IDKARTE steht in Bank 9 (9)
+610:   ok:   Bit  25 RE15_R42_BIT_IDKARTE           Research Center ID Card genommen (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_ENZYM_DRIN steht in Bank 9 (9)
+610:   ok:   Bit  26 RE15_R42_BIT_ENZYM_DRIN        Enzym in der Truhe 4090/4091 (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_KARTE_OK steht in Bank 9 (9)
+610:   ok:   Bit  27 RE15_R42_BIT_KARTE_OK          ID-Karte am Tastenfeld 4090/4091 (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_CODE_OK steht in Bank 9 (9)
+610:   ok:   Bit  28 RE15_R42_BIT_CODE_OK           Code eingegeben 4090/4091 (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_PROBE steht in Bank 9 (9)
+610:   ok:   Bit  29 RE15_R42_BIT_PROBE             Virusprobe genommen 4090/4091 (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_PROBE_DRIN steht in Bank 9 (9)
+610:   ok:   Bit  30 RE15_R42_BIT_PROBE_DRIN        Probe im Geraet 5060/5061 (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_ZETTEL steht in Bank 9 (9)
+610:   ok:   Bit  31 RE15_R42_BIT_ZETTEL            Laborzettel 40B0/40B1 genommen (Runde 42 Story, reservi[scd] thread start slot=0 first_op=0x54
+610:   ok:   RE15_R42_BIT_DOK_P4 steht in Bank 9 (9)
+610:   ok:   Bit  32 RE15_R42_BIT_DOK_P4            Dokument P-4 Lab Incident Report 5021 (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_DOK_VAKZIN steht in Bank 9 (9)
+610:   ok:   Bit  33 RE15_R42_BIT_DOK_VAKZIN        Dokument Vaccine Synthesis 5011 (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   RE15_R42_BIT_ENZYM steht in Bank 9 (9)
+610:   ok:   Bit  17 RE15_R42_BIT_ENZYM             Enzym = Disc-Bit ROOM40A1 @0x00ED0 pc[18] (Runde 42 Story, reserviert v0.8.32) — im Original frei
+610:   ok:   85 Port-Bits gegen 85 Original-Bits: 0 Kollision(en)
+1/1 Test #610: unit_r36_kartenbits ..............   Passed    0.15 sec
+The following tests passed:
+100% tests passed, 0 tests failed out of 1

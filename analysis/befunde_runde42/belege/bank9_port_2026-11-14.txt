@@ -1,0 +1,189 @@
+== PORT: Bank-9-Zugriffe im Quelltext (re15_port/include, engine/src, platform/pc) ==
+Makros mit Wert 9 und BANK/ZONE im Namen: RE15_ADARUF_GESEHEN_BANK, RE15_AN_ZUG_BANK, RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_FENSTER_BANK, RE15_FUNK10F1_GESEHEN_BANK, RE15_GSZ_BANK, RE15_IT_BANK, RE15_IT_K_BANK, RE15_K2080_BANK, RE15_R36K_BANK, RE15_R39P_BIT_BANK, RE15_R39Q_BANK, RE15_R39Q_PANIK_BANK, RE15_R39R_PANIK_BANK, RE15_R41C_BANK, RE15_ROLLTOR_EINGESETZT_BANK, RE15_S80_BIT_BANK, RE15_SZL_BANK_ZU, RE15_TAGEBUCH_R38_BANK, RE15_TAGEBUCH_R38_ZIEL1_ERREICHT_BANK, RE15_TUER1060_K_BANK, RE15_TUER1060_TOD_BANK
+
+Zugriffsstellen (re15_game_flag_get/set mit Bank 9; SCD-Port-Programme 0x21/0x22/OP_SET mit Bank 9):
+  include/re15_item_discard.h:98  flag_set(9, s_taken)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/adaruf_1050.c:29  SCD 0x22 Bank 0x09 Bit 0x41  = Bit 65
+  engine/src/adaruf_1050.c:232  flag_get(RE15_ADARUF_GESEHEN_BANK, RE15_ADARUF_GESEHEN_BIT)  = Bit 65
+  engine/src/adaruf_1050.c:248  flag_get(RE15_ADARUF_GESEHEN_BANK, RE15_ADARUF_GESEHEN_BIT)  = Bit 65
+  engine/src/adaruf_1050.c:272  flag_get(RE15_ADARUF_GESEHEN_BANK, RE15_ADARUF_GESEHEN_BIT)  = Bit 65
+  engine/src/annette_r41.c:272  SCD 0x22 Bank RE15_AN_ZUG_BANK Bit RE15_AN_ZUG_BIT  = Bit 133
+  engine/src/annette_r41.c:536  flag_get(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT)  = Bit 133
+  engine/src/annette_r41.c:564  flag_get(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT)  = Bit 133
+  engine/src/annette_r41.c:668  flag_get(RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG)  = Bit 128
+  engine/src/cut_10f0.c:202  flag_get(RE15_CUT10F0_GESEHEN_BANK, RE15_CUT10F0_GESEHEN_BIT)  = Bit 71
+  engine/src/cut_10f0.c:237  flag_get(RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT)  = Bit 72
+  engine/src/cut_10f0.c:238  flag_set(RE15_CUT10F0_ZIEL2_BESUCHT_BANK, RE15_CUT10F0_ZIEL2_BESUCHT_BIT)  = Bit 72
+  engine/src/cut_10f0.c:286  flag_get(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT)  = Bit 73
+  engine/src/cut_10f0.c:365  flag_get(RE15_CUT10F0_BGM_START_BANK, RE15_CUT10F0_BGM_START_BIT)  = Bit 73
+  engine/src/dining_r38.c:171  flag_get(9, RE15_R38F_BIT_GENOMMEN)  = Bit 64
+  engine/src/dining_r38.c:214  flag_get(9, RE15_R38F_BIT_TUER)  = Bit 66
+  engine/src/dining_r38.c:215  flag_get(9, RE15_R38F_BIT_JOHN_WEG)  = Bit 67
+  engine/src/dining_r38.c:216  flag_set(9, RE15_R38F_BIT_JOHN_WEG)  = Bit 67
+  engine/src/dining_r38.c:220  flag_get(9, RE15_R38F_BIT_TUER)  = Bit 66
+  engine/src/dining_r38.c:323  flag_set(9, RE15_R38F_BIT_TUER)  = Bit 66
+  engine/src/dining_r39.c:595  flag_get(9, RE15_R39J_BIT_REAKTION)  = Bit 94
+  engine/src/dining_r39.c:595  flag_get(9, 67)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/dokumente_r34.c:74  flag_get(9, d->bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/dokumente_r34.c:156  flag_get(9, d->bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/elzazombies_r39.c:686  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/elzazombies_r39.c:687  flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060)  = Bit 96
+  engine/src/elzazombies_r39.c:693  flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)  = Bit 95
+  engine/src/elzazombies_r39.c:756  flag_set(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)  = Bit 95
+  engine/src/elzazombies_r39.c:776  flag_set(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060)  = Bit 96
+  engine/src/elzazombies_r39.c:786  flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/elzazombies_r39.c:1080  flag_get(RE15_R39Q_PANIK_BANK, RE15_R39Q_PANIK_BIT)  = Bit 97
+  engine/src/elzazombies_r39.c:1081  flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)  = Bit 95
+  engine/src/elzazombies_r39.c:1151  flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)  = Bit 95
+  engine/src/elzazombies_r39.c:1173  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/elzazombies_r39.c:1177  flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_LEON_1060)  = Bit 96
+  engine/src/elzazombies_r39.c:1199  flag_get(RE15_R39Q_BANK, RE15_R39Q_BIT_MONTAGE)  = Bit 95
+  engine/src/elzazombies_r39.c:1204  flag_get(RE15_R39Q_PANIK_BANK, RE15_R39Q_PANIK_BIT)  = Bit 97
+  engine/src/elzazombies_r39.c:1265  flag_get(RE15_R39Q_PANIK_BANK, RE15_R39Q_PANIK_BIT)  = Bit 97
+  engine/src/enemy_ai_boss_g5.c:1738  SCD 0x21 Bank 9 Bit Gewicht
+  engine/src/fenster_1120.c:62  SCD 0x22 Bank RE15_FENSTER_BANK Bit RE15_FENSTER_BIT  = Bit 79
+  engine/src/fenster_1120.c:144  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_TOR_BIT)  = Bit 73
+  engine/src/fenster_1120.c:145  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_BIT)  = Bit 79
+  engine/src/fenster_1120.c:165  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_TOR_BIT)  = Bit 73
+  engine/src/fenster_1120.c:166  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_BIT)  = Bit 79
+  engine/src/fenster_1120.c:202  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_BIT)  = Bit 79
+  engine/src/fenster_1120.c:255  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_BIT)  = Bit 79
+  engine/src/fenster_1120.c:284  flag_get(RE15_FENSTER_BANK, RE15_FENSTER_BIT)  = Bit 79
+  engine/src/feuerloescher_r37.c:106  flag_get(9, RE15_FL37_TAKEN_BIT)  = Bit 134
+  engine/src/feuerloescher_r37.c:228  flag_get(9, RE15_FL37_TAKEN_BIT)  = Bit 134
+  engine/src/funk10f1_r39.c:31  flag_get(RE15_FUNK10F1_GESEHEN_BANK, RE15_FUNK10F1_GESEHEN_BIT)  = Bit 70
+  engine/src/gatorszene_r41.c:511  flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GENOMMEN)  = Bit 112
+  engine/src/gatorszene_r41.c:595  flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN)  = Bit 110
+  engine/src/gatorszene_r41.c:597  flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT)  = Bit 111
+  engine/src/gatorszene_r41.c:2538  flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN)  = Bit 110
+  engine/src/gatorszene_r41.c:2538  flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT)  = Bit 111
+  engine/src/gatorszene_r41.c:2544  flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT)  = Bit 111
+  engine/src/gatorszene_r41.c:2610  flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_LIEGT)  = Bit 111
+  engine/src/gatorszene_r41.c:2750  flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_TOR)  = Bit 113
+  engine/src/gatorszene_r41.c:2796  flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_TOR)  = Bit 113
+  engine/src/gatorszene_r41.c:2851  flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN)  = Bit 110
+  engine/src/granate_1150.c:75  flag_get(9, RE15_GRANATE_TAKEN_BIT)  = Bit 56
+  engine/src/granate_1150.c:120  flag_get(9, RE15_GRANATE_TAKEN_BIT)  = Bit 56
+  engine/src/granate_1150.c:144  flag_get(9, RE15_GRANATE_TAKEN_BIT)  = Bit 56
+  engine/src/hund1121_r39.c:139  flag_get(RE15_R39R_PANIK_BANK, RE15_R39R_PANIK_BIT)  = Bit 97
+  engine/src/hund1121_r39.c:141  flag_get(RE15_R39R_PANIK_BANK, RE15_R39R_PANIK_BIT)  = Bit 97
+  engine/src/inhalt_r35.c:56  flag_get(9, g->bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/inventar_r39.c:56  flag_get(9, RE15_R39C_MUNITION_BIT)  = Bit 69
+  engine/src/irons_tisch_1150.c:55  flag_get(9, g->taken_bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/irons_tod_1150.c:103  SCD OP_SET Bank RE15_IT_BANK Bit RE15_IT_BIT_GESEHEN  = Bit 73
+  engine/src/irons_tod_1150.c:842  flag_set(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:843  flag_set(RE15_IT_BANK, RE15_IT_BIT_1040)  = Bit 75
+  engine/src/irons_tod_1150.c:844  flag_set(RE15_IT_BANK, RE15_IT_BIT_1030)  = Bit 76
+  engine/src/irons_tod_1150.c:1060  flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:1085  flag_get(RE15_IT_BANK, RE15_IT_BIT_1030)  = Bit 76
+  engine/src/irons_tod_1150.c:1097  flag_get(RE15_IT_BANK, RE15_IT_BIT_1030)  = Bit 76
+  engine/src/irons_tod_1150.c:1127  flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:1132  flag_get(RE15_IT_BANK, RE15_IT_BIT_1040)  = Bit 75
+  engine/src/irons_tod_1150.c:1138  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/irons_tod_1150.c:1141  flag_get(RE15_IT_BANK, RE15_IT_BIT_1030)  = Bit 76
+  engine/src/irons_tod_1150.c:1173  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/irons_tod_1150.c:1396  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/irons_tod_1150.c:1401  flag_get(RE15_IT_K_BANK, RE15_IT_K_BIT)  = Bit 71
+  engine/src/irons_tod_1150.c:1415  flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:1422  flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:1427  flag_get(RE15_IT_BANK, RE15_IT_BIT_1130)  = Bit 74
+  engine/src/irons_tod_1150.c:1434  flag_get(RE15_IT_BANK, RE15_IT_BIT_1040)  = Bit 75
+  engine/src/irons_tod_1150.c:1446  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/item_modal_common.c:342  flag_set(9, s_taken)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/johnruf_r39.c:233  flag_set(RE15_R39P_BIT_BANK, RE15_R39P_BIT_PANIK)  = Bit 97
+  engine/src/kanister2080_r41.c:166  flag_get(RE15_K2080_BANK, (uint8_t)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/kanister2080_r41.c:167  flag_set(RE15_K2080_BANK, (uint8_t)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/kartenitems_r36.c:79  flag_get(RE15_R36K_BANK, g->bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/kartenitems_r36.c:144  SCD 0x22 Bank RE15_R36K_BANK Bit 0xEE  = Bit 238  (Platzhalter: PRG_BIT wird beim Ausloesen mit k_r36k_lage[k].bit ueberschrieben)
+  engine/src/kartenitems_r36.c:195  flag_get(RE15_R36K_BANK, k_r36k_lage[k].bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/kartenitems_r36.c:232  flag_get(RE15_R36K_BANK, k_r36k_lage[k].bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/kartenitems_r36.c:241  flag_get(RE15_R36K_BANK, k_r36k_lage[k].bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/keyitems_r41.c:193  flag_get(9, RE15_SICHERUNG_TAKEN_BIT)  = Bit 53
+  engine/src/keyitems_r41.c:194  flag_get(RE15_ROLLTOR_EINGESETZT_BANK, RE15_ROLLTOR_EINGESETZT_BIT)  = Bit 63
+  engine/src/leiche_1110_1230.c:157  flag_get(9, l->bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/leiche_1110_1230.c:206  flag_get(9, s_bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/leiche_1110_1230.c:239  flag_get(9, s_bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/menu_common.c:2023  flag_set(9, s_doc_taken)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/rolltor_1050.c:108  SCD 0x22 Bank 0x09 Bit 0x3f  = Bit 63
+  engine/src/rolltor_1050.c:166  flag_get(RE15_ROLLTOR_EINGESETZT_BANK, RE15_ROLLTOR_EINGESETZT_BIT)  = Bit 63
+  engine/src/scd_vm.c:4253  flag_get(9, tk_bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/schluessel_r36.c:150  flag_get(9, bit)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/schluessel_r36.c:197  flag_get(9, RE15_R36Q_TUER_BIT)  = Bit 93
+  engine/src/schluessel_r36.c:260  flag_set(9, RE15_R36Q_TUER_BIT)  = Bit 93
+  engine/src/sicherung_1150.c:106  flag_get(9, RE15_SICHERUNG_TAKEN_BIT)  = Bit 53
+  engine/src/sicherung_1150.c:152  flag_get(9, RE15_SICHERUNG_TAKEN_BIT)  = Bit 53
+  engine/src/sicherung_1150.c:169  flag_get(9, RE15_SICHERUNG_TAKEN_BIT)  = Bit 53
+  engine/src/sicherung_1150.c:196  flag_get(9, RE15_SICHERUNG_TAKEN_BIT)  = Bit 53
+  engine/src/sperre1050_r37.c:65  flag_get(9, 73)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/sperre1050_r37.c:66  flag_get(9, 71)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/szenenleon_r36.c:375  flag_get(RE15_IT_BANK, RE15_IT_BIT_GESEHEN)  = Bit 73
+  engine/src/szenenleon_r36.c:400  flag_get(RE15_SZL_BANK_ZU, RE15_SZL_BIT_ZU)  = Bit 84
+  engine/src/tagebuch_r38.c:50  flag_get(RE15_TAGEBUCH_R38_BANK, RE15_TAGEBUCH_R38_BIT)  = Bit 68
+  engine/src/tagebuch_r38.c:65  flag_get(RE15_TAGEBUCH_R38_BANK, RE15_TAGEBUCH_R38_BIT)  = Bit 68
+  engine/src/tagebuch_r38.c:93  flag_get(RE15_TAGEBUCH_R38_BANK, RE15_TAGEBUCH_R38_BIT)  = Bit 68
+  engine/src/tuer1060_1040.c:46  flag_get(RE15_TUER1060_TOD_BANK, RE15_TUER1060_TOD_BIT)  = Bit 73
+  engine/src/tuer1060_1040.c:47  flag_get(RE15_TUER1060_K_BANK, RE15_TUER1060_K_BIT)  = Bit 71
+  engine/src/tuer1060_1040.c:78  flag_get(9, 73)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/tuer1060_1040.c:78  flag_get(9, 71)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/tuersperre_r39.c:102  flag_get(RE15_R39P_BIT_BANK, RE15_R39P_BIT_PANIK)  = Bit 97
+  engine/src/ventilkette_r41.c:100  flag_get(RE15_R41C_BANK, (uint8_t)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/ventilkette_r41.c:101  flag_set(RE15_R41C_BANK, (uint8_t)  (Bit aus Tabelle/Satz, s.u.)
+  engine/src/wasserlauf_r41.c:57  flag_get(RE15_R41C_BANK, RE15_R41C_BIT_LEITER_FREI)  = Bit 100
+  engine/src/wasserlauf_r41.c:58  flag_get(RE15_R41C_BANK, RE15_R41C_BIT_FLUT_GELAUFEN)  = Bit 103
+  engine/src/gen/cut10f0_szene.inc:6  SCD 0x22 Bank 0x09 Bit 0x47  = Bit 71
+  engine/src/gen/dining_r38_programme.inc:666  SCD 0x22 Bank 0x09 Bit 0x43  = Bit 67
+  engine/src/gen/dining_r38_schluessel.inc:1841  SCD 0x21 Bank 0x09 Bit 0x0f  = Bit 15
+  engine/src/gen/dining_r38_schluessel.inc:1905  SCD 0x21 Bank 0x09 Bit 0x0f  = Bit 15
+  engine/src/gen/dining_r38_schluessel.inc:1913  SCD 0x21 Bank 0x09 Bit 0x0f  = Bit 15
+  engine/src/gen/dining_r38_schluessel.inc:2017  SCD 0x21 Bank 0x09 Bit 0x67  = Bit 103
+  engine/src/gen/feuerloescher_r37.inc:1361  SCD 0x22 Bank 0x09 Bit 0x06  = Bit 6
+  engine/src/gen/funk10f1_r39_szene.inc:67  SCD 0x22 Bank 0x09 Bit 0x46  = Bit 70
+  engine/src/gen/johnruf_r39_programme.inc:51  SCD 0x22 Bank 0x09 Bit 0x61  = Bit 97
+  engine/src/gen/schluessel_r36.inc:3940  SCD 0x22 Bank 0x09 Bit 0x05  = Bit 5
+  engine/src/gen/schluessel_r36.inc:4027  SCD 0x22 Bank 0x09 Bit 0x06  = Bit 6
+  engine/src/gen/story80_szenen.inc:208  SCD 0x22 Bank 0x09 Bit 0x80  = Bit 128
+  engine/src/gen/story80_szenen.inc:262  SCD 0x22 Bank 0x09 Bit 0x80  = Bit 128
+  engine/src/gen/story80_szenen.inc:297  SCD 0x22 Bank 0x09 Bit 0x80  = Bit 128
+  engine/src/gen/szl11b0_szene.inc:81  SCD 0x22 Bank 0x09 Bit 0x54  = Bit 84
+  engine/src/gen/ventilkette_r41_hebel.inc:1271  SCD 0x22 Bank 0x09 Bit 0x05  = Bit 5
+  engine/src/gen/ventilkette_r41_plakat.inc:361  SCD 0x21 Bank 0x09 Bit 0x0c  = Bit 12
+  engine/src/gen/ventilkette_r41_plakat.inc:3303  SCD 0x21 Bank 0x09 Bit 0x11  = Bit 17
+  engine/src/gen/ventilkette_r41_programme.inc:47  SCD 0x22 Bank 0x09 Bit 0x66  = Bit 102
+  engine/src/gen/ventilkette_r41_programme.inc:466  SCD 0x22 Bank 0x09 Bit 0x7d  = Bit 125
+  engine/src/gen/ventilkette_r41_programme.inc:495  SCD 0x22 Bank 0x09 Bit 0x7d  = Bit 125
+  platform/pc/main.c:5610  flag_get(9, RE15_IRONS_DIARY_TAKEN_BIT)  = Bit 54
+  platform/pc/main.c:5611  flag_get(9, RE15_IRONS_KARTE_TAKEN_BIT)  = Bit 55
+
+Bank-9-Zugriffe mit Bit aus einer Tabelle/einem Satz - die *_BIT-Makros, die dieselbe Datei verwendet:
+  engine/src/dokumente_r34.c  [d->bit]
+      RE15_DOK1_BIT=57, RE15_DOK2_BIT=58, RE15_DOK3_BIT=59, RE15_DOK4_BIT=60
+  engine/src/inhalt_r35.c  [g->bit]
+      RE15_R35I_KARTE_BIT=80, RE15_R35I_SCHROT_BIT=81
+  engine/src/irons_tisch_1150.c  [g->taken_bit]
+      RE15_IRONS_DIARY_TAKEN_BIT=54, RE15_IRONS_KARTE_TAKEN_BIT=55
+  engine/src/item_modal_common.c  [s_taken]
+      (keine *_BIT-Makros: das Bit stammt aus dem Item_aot_set-/Item-Satz = Original- bzw. Installer-Bit)
+  engine/src/kanister2080_r41.c  [(uint8_t]
+      RE15_K2080_BIT_ANKUNFT=114, RE15_K2080_BIT_F_SZENE=110, RE15_K2080_BIT_KANISTER=116, RE15_K2080_BIT_SUEDWURF=117, RE15_K2080_BIT_SZENE=115
+  engine/src/kartenitems_r36.c  [g->bit, k_r36k_lage[k].bit]
+      (keine *_BIT-Makros: das Bit stammt aus dem Item_aot_set-/Item-Satz = Original- bzw. Installer-Bit)
+  engine/src/leiche_1110_1230.c  [l->bit, s_bit]
+      RE15_LEICHE_1110_BIT=61, RE15_LEICHE_1230_BIT=62
+  engine/src/menu_common.c  [s_doc_taken]
+      (keine *_BIT-Makros: das Bit stammt aus dem Item_aot_set-/Item-Satz = Original- bzw. Installer-Bit)
+  engine/src/scd_vm.c  [tk_bit]
+      (keine *_BIT-Makros: das Bit stammt aus dem Item_aot_set-/Item-Satz = Original- bzw. Installer-Bit)
+  engine/src/schluessel_r36.c  [bit]
+      RE15_R36Q_PARK_BIT=82, RE15_R36Q_PRISON_BIT=83, RE15_R36Q_STROM_BIT=243, RE15_R36Q_TUER_BIT=93, RE15_R36Q_ZELLE_BIT=236
+  engine/src/ventilkette_r41.c  [(uint8_t]
+      RE15_R41C_BIT_BRUECKE_UNTEN=102, RE15_R41C_BIT_DOKUMENT=107, RE15_R41C_BIT_DRUCK80=101, RE15_R41C_BIT_FLUT_GELAUFEN=103, RE15_R41C_BIT_KASTEN=125, RE15_R41C_BIT_LEITER_FREI=100, RE15_R41C_BIT_PULT2050=106, RE15_R41C_GENERATOR_BIT=144, RE15_R41C_SICHERUNG_BIT=108, RE15_R41C_STROM_BIT=126
+  include/re15_item_discard.h  [s_taken]
+      (keine *_BIT-Makros: das Bit stammt aus dem Item_aot_set-/Item-Satz = Original- bzw. Installer-Bit)
+
+Spur-N-Tabelle engine/src/gen/kartenitems_r36.inc (k_r36k_lage, Feld 3 = Bank-9-Bit):
+  ROOM1140 Blatt 4 -> Bit 87
+  ROOM10D0 Blatt 3 -> Bit 88
+  ROOM1030 Blatt 2 -> Bit 89
+  ROOM1200 Blatt 1 -> Bit 77
+  ROOM11D0 Blatt 0 -> Bit 78
+
