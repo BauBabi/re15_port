@@ -232,13 +232,22 @@ void re15_bf_morph_zu_g5(int slot)
  *     (Nachlassen), Tod Clip 9 B0..B5 h44..h49, danach haengt er tot in B5. h61-65 liegt bei jeder Variante bei ~12 (Blut-
  *     Spritzer bis h64 und Birkins Pendel; ein Nachzucken nach dem Tod wuerde das Fenster weiter ueber das Video treiben).
  *     Wurf ab BF_H_LOS: Clip 9 B5 -> 0x0B B0 = 1250 Einheiten (vorher Clip 7 -> 0x0B B0 = 1039), Ueberblendung von bf_clip. */
+/* Runde 3 (Pruefer Runde 2 N3 "der Tote spreizt h47..h71 drei lange Beine weit nach links, im Video haengt er kompakt"):
+ *     Clip 9 (Tod) spreizt die Glieder in jedem Bild B0..B12 (mittlere waagerechte Ausdehnung der Glied- und Fussspitzen um das
+ *     Becken 1162..1389, groesste 2167..2271); die kompakteste aufrechte haengende Haltung der Maschine ist Clip 7 (HURT bei
+ *     +0x1dc, s. o.) B5: Ausdehnung 821 / 1044, Spitzen 678 unter der Schulter (nach unten fallend), 40 Grad gekruemmt (Suche
+ *     ueber alle 30 Clips, Neigung < 25 Grad oder Clip 4/7/9). Jetzt: Clip 4 h12..h36, Clip 7 ab h37 (Nachlassen), ab h52 bleibt
+ *     er in Clip 7 B5 stehen (tot; h52 = Clip 7 erreicht B5 von selbst, (52 - 37) % 10 = 5, kein Sprung). Gemessen (Pruefer-
+ *     Maske, Fenster h44-50 / 51-60 / 61-70): linker Rand x05 (640er) 217.6 / 218.6 / 232.3 (Video 225.7 / 237.8 / 240.8;
+ *     vorher mit Clip 9 168 / 103 / 122); Bewegung h37-47 / 48-60 / 61-65 / 66-70 7.2 / 6.4 / 6.3 / 6.1 (Video 8.4 / 5.4 / 4.5 /
+ *     8.6; vorher 9.8 / 11.9 / 10.8 / 11.0). Clip 9 wird nicht mehr gespielt. Wurf ab BF_H_LOS: Clip 7 B5 -> 0x0B B0 wie vor
+ *     Runde 41 Aufgabe 3. */
 #define BF_SM_WEH        4
-#define BF_SM_TOD        9
-#define BF_SM_TOD_SCHLAFF 5        /* Clip 9 B5: aufrecht zusammengesackt, Glieder am tiefsten (s. Kopf) */
 #define BF_SM_WEH_BILDER 10        /* Laenge von Clip 4 (EM2B Bank 0): neue Treffer-Reaktion bei jedem Clip-Ende */
 #define BF_SM_ZUCK       7         /* HURT bei +0x1dc (s. Kopf) */
 #define BF_H_ZUCKT       37        /* Video: Bewegung faellt ab h37 (h25-36 12.7 -> h37-47 8.4) */
-#define BF_H_STIRBT      44        /* Wahl nach der Messung oben */
+#define BF_H_STIRBT      52        /* tot ab h52: Clip 7 steht dann auf BF_SM_TOT_BILD (s. Kopf) */
+#define BF_SM_TOT_BILD   5         /* Clip 7 B5: kompakteste haengende Haltung (s. Kopf) */
 #define BF_SM_LIEGT      0x0B
 /* Griffpunkt am Spider-Man (PORT-WAHL nach Videomessung, Dossier SF_sichel.md N1.3): die Sichelhand haelt ihn am Bein -
  * EM2B-Knochen 20 (Knie der Beinkette 19-20-21 an der Wurzel; Clip 7 rel (859,-1045,-369): ~750 unter dem Becken, ~860 vor
@@ -498,7 +507,8 @@ static struct {
     int32_t  lx, lz;               /* Spider-Man: Aufschlagstelle */
     int32_t  ex, ez;               /* Spider-Man: Fluchtziel neben der Kamera */
     int32_t  w0[3], wv[3], wvor[3]; /* Neuaufbau ab NB2: Loslassen (Lage, Handtempo je Takt), Lage im Takt davor */
-} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
+    int32_t  kvor[3];              /* Griff-Lage im Takt davor (Glaettung der paarweisen Hand-Stufen, N4) */
+} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
 static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_rs_kam_halt = 0;  /* Nachbesserung 4: Haltezeit nach einem Szenenschnitt */
@@ -1071,8 +1081,8 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
             m->y = (h >= BF_H_GLEIT_AB && h <= BF_H_GLEIT_BIS) ? BF_SM_GLEIT_Y : 0;
         }
     } else if (h < BF_H_LOS) {                                            /* gehalten bis zum Loslassen (NB2-Kopplung) */
-        if (h >= BF_H_STIRBT) {                                           /* Tod (Kopf BF_SM_WEH) */
-            bf_bild(m, BF_SM_TOD, h - BF_H_STIRBT > BF_SM_TOD_SCHLAFF ? BF_SM_TOD_SCHLAFF : h - BF_H_STIRBT);
+        if (h >= BF_H_STIRBT) {                                           /* tot: Haltung erstarrt (Kopf BF_SM_WEH) */
+            bf_bild(m, BF_SM_ZUCK, BF_SM_TOT_BILD);
         } else if (h >= BF_H_ZUCKT) {                                     /* nachlassendes Zucken (Kopf BF_SM_WEH) */
             if (h == BF_H_ZUCKT) bf_clip(m, BF_SM_ZUCK); else re15_r38_birkin_anim(m);
         } else if ((h - BF_H_BERUEHRUNG) % BF_SM_WEH_BILDER == 0) bf_clip(m, BF_SM_WEH);   /* neue Treffer-Reaktion */
@@ -1092,7 +1102,16 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
             bf_heben_basis(h, g);
             bf_heben_ziel(b, m, h, z);                                    /* Lage am Griff bei h18, je Takt neu */
             m->x = bf_mix(g[0], z[0], w); m->y = bf_mix(g[1], z[1], w); m->z = bf_mix(g[2], z[2], w);
-        } else { m->x = k[0]; m->y = k[1]; m->z = k[2]; }
+        } else {
+            /* Pruefer Runde 2 N4: die Halte-Bilder von Clip 0x0B liegen paarweise gleich (B10 = B11, B12 = B13 ...; hand.py), im
+             * Pendel mit 1 Bild je Takt springt die Hand deshalb nur jeden zweiten Takt - der Spider-Man sprang mit (Schritt je Takt
+             * h51..h70 vorher 45 / 41 / 117 / 42 / 116 ... 14 / 129). Jetzt Mittel der Griff-Lage dieses und des vorigen Takts: eine
+             * Hand-Stufe verteilt sich auf zwei gleiche Schritte, der Griffpunkt liegt hoechstens eine halbe Stufe neben der Hand
+             * (halber Abstand je Takt: Lauf n4a 37..81 im Wechsel). */
+            if (h == BF_H_GEHALTEN) { s_h.kvor[0] = k[0]; s_h.kvor[1] = k[1]; s_h.kvor[2] = k[2]; }
+            m->x = (k[0] + s_h.kvor[0]) / 2; m->y = (k[1] + s_h.kvor[1]) / 2; m->z = (k[2] + s_h.kvor[2]) / 2;
+            s_h.kvor[0] = k[0]; s_h.kvor[1] = k[1]; s_h.kvor[2] = k[2];
+        }
         if (m->y > 0) m->y = 0;                                           /* Hand tief im Wurf: nicht unter den Boden */
     } else if (h < BF_H_WEG) {                                            /* Neuaufbau ab NB2: passiv geworfen (Kopf k_wurf_bahn) */
         const int hb = h + BF_BILD_VERSATZ;

@@ -200,7 +200,7 @@ static void test_hangar(unsigned raum)
      * vorher Bogen bis y -1641 mit dem Sprung-Clip 0x16. */
     int gleit_n = 0, gleit_falsch = 0;
     /* Halten (Nutzer 2026-11-13 "struggled ... viel mehr ... bis er letztendlich tot ist"): erst HURT Clip 4 (@0x80114a44), dann
-     * nachlassend HURT Clip 7 (@0x80114a68), dann DEATH Clip 9 (@0x80114ecc) B0..B5, danach haengt er tot in Clip 9 B5. */
+     * nachlassend HURT Clip 7 (@0x80114a68), ab h52 tot in Clip 7 B5 (kompakteste haengende Haltung, Runde 3). */
     int halt_weh = 0, halt_zuck = 0, halt_tod = 0, halt_clip = -1, halt_bild = -1;
     unsigned char fx_vorher[RE15_ESP_FX_MAX];
     re15_esp_fx_reset();
@@ -259,8 +259,8 @@ static void test_hangar(unsigned raum)
     for (int p = 1; p <= 7; p++) CHECK(ph_seen[p], "Phase %d nie erreicht", p);
     CHECK(max_hoehe > 2500, "Spider-Man nie hochgehalten (max %d)", max_hoehe);
     CHECK(sm_am_boden, "Spider-Man nie am Boden aufgeschlagen");
-    CHECK(halt_weh >= 20 && halt_zuck >= 5 && halt_tod >= 20 && halt_clip == 9 && halt_bild == 5,
-          "Halten: %d Takte Clip 4, %d Takte Clip 7, %d Takte Clip 9, letzter Haltetakt Clip %d B%d (Soll >= 20, >= 5, >= 20, Clip 9 B5)",
+    CHECK(halt_weh >= 20 && halt_zuck >= 30 && halt_tod == 0 && halt_clip == 7 && halt_bild == 5,
+          "Halten: %d Takte Clip 4, %d Takte Clip 7, %d Takte Clip 9, letzter Haltetakt Clip %d B%d (Soll >= 20, >= 30, 0, Clip 7 B5)",
           halt_weh, halt_zuck, halt_tod, halt_clip, halt_bild);
     CHECK(gleit_n >= 10 && gleit_falsch == 0, "Ansprung: %d von %d Takten hoeher als 245 ueber dem Boden oder nicht Clip 0x17/0x12", gleit_falsch, gleit_n);
     CHECK(blut_art == 0, "gruenes Blut: %d Plaetze nicht Effekt 0 / Sub 8 / Skala 0x2000 / abr_port 0 (@0x80113b10/30)", blut_art);
