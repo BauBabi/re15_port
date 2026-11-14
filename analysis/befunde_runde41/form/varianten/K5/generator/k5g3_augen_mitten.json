@@ -1,0 +1,53 @@
+{
+ "_doc": "Augenmitten (Knochenraum Teil 22) und Radien aus den Nutzerpunkten in Bild 2 (zonen_v2.json augen.nutzerpunkte: punkt_vorlage, punkt_px_vorlage), zurueckgerechnet auf die fertige Geometrie (kf_k5g3_geo, FORM.EMD Key 1 = Bild 2) mit dem Buehnen-Renderer v4f.dreiecke_id/szene_id. Radius: Augenscheibe deckt in Bild 2 genau die Flaeche des Nutzerpunkts (pi r^2 x Bild/Raum = punkt_px_vorlage). Erzeugt mit kf_k5g3_auge.py mitten.",
+ "geo_form_emd_sha256": "d84d4762965e8b0f4b6feb7a587212ae3f106b2de0853aceb13b97b9d801fd8a",
+ "geo_emd_sha256": "db9404a18368f420050cddbc45f06fca11c24c80a0d315082668280576590e00",
+ "zonen_v2_sha256": "4b961ea03a20965538a88dfc48ad33a65bef3a1f3b20b8e7d671427958e7276b",
+ "teil": 22,
+ "augen": [
+  {
+   "name": "Auge rechts (vom Wesen aus; links im Bild)",
+   "punkt_vorlage": [
+    217.4,
+    274.3
+   ],
+   "punkt_px_vorlage": 6.5,
+   "dreieck": 288,
+   "bary": [
+    0.607247,
+    0.060385,
+    0.332368
+   ],
+   "mitte": [
+    994.315,
+    -477.6483,
+    -341.1884
+   ],
+   "radius": 17.5468,
+   "bild_je_raum": 0.00672,
+   "radius_px_bild2": 1.4384
+  },
+  {
+   "name": "Auge links (vom Wesen aus; rechts im Bild)",
+   "punkt_vorlage": [
+    280.2,
+    275.1
+   ],
+   "punkt_px_vorlage": 12.3,
+   "dreieck": 4082,
+   "bary": [
+    0.101745,
+    0.704904,
+    0.193351
+   ],
+   "mitte": [
+    973.0149,
+    -452.0151,
+    410.4697
+   ],
+   "radius": 18.7619,
+   "bild_je_raum": 0.011122,
+   "radius_px_bild2": 1.9787
+  }
+ ]
+}

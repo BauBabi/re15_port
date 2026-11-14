@@ -23,7 +23,15 @@ Wiederverwendet: riegel_k5g2.py (Stand, v3, v4, v3_fleisch, v5, v1, v6, h1, weis
  S1   kein Sattel (O3): Median L* der Teile 0/7 im Band P25-P75 der Haut                                                   | Bau ohne Seitenangleich
  V1   Adern multiplikativ                                                                                                  | K5f
  V6   F1-Kern bytegleich K5c-Zeile 5, kein schwarzer Ring                                                                  | K5e
- A1   Augen (O4): Bild 2 an beiden Nutzerpunkten L*-max >= 2 x Kopfhaut daneben                                          | K5e_f1
+ Runde 2 (Befunde PRUEFUNG_K5G3_r1_zahlen/_sicht; Gegenprobe meist die Abgabe der Runde 1 aus git, Commit da6560372):
+ UV1  UV = Geometrie-Stufe uvfein + ein Kopie-Versatz je Flaeche (ausser Augen-Dreiecken)                                  | Runde 1 (B4-UV)
+ K1   kein Zugriff auf Index 0 (leerer Kopie-Texel), abgetastet im Inneren aller Render-Dreiecke                           | Runde 1 (10|0|342-344)
+ K2   kein Zugriff auf 0x7FFF ausser der Zahn-Zeile                                                                       | Runde 1
+ W6   weisse Musterung fast unbunt (C* <= 0,5 x Haut) und hell (L* >= Haut-P75)                                           | Runde 1
+ B1   braeunliche Musterung braun statt beige (L* <= 2 x Haut, Ton 35-80)                                                  | Runde 1
+ A1   Augen (O4/E3): Bild 2, beide Nutzerpunkte, 0,5-2 x Nutzerflaeche, Mitte <= 2 px, Median >= 3 x Kopfhaut              | f_auge Runde 1
+ A2   kein schwarzes Loch am Kopf (weisses Licht von vorn, RGB-Max <= 16 <= 2 x K5e_f1)                                   | Runde 1
+ A3   Augen im echten Spielfenster 5080 von vorn (kf_k5g3_augen_spiel.py): 2 Augen, je >= 5 px, Median >= 2,5 x Haut      | f_auge Runde 1
  W1-W4, R1-R4 weisses Licht im Band der Originale, Ruhe                                                                     | K5e_f1
  Z1-Z9 Spiel 5080 im Zielband der Original-Gegner (bindend, O3)                                                            | K5e_f1 (eigener Lauf)
  T1   Zeilen <= 16, Port-Texturhoehe <= 4096 | T5 jede Flaeche liest eine gueltige Zeile | G5 Spiel-Asset = K5e_f1
@@ -99,14 +107,18 @@ def tb(R, var):
 
 # ------------------------------------------------------------------ V3.1b Spalt-Kinder im Asset
 def v31b(R, var, bau):
-    tab = json.load(open(G3.GEO3_SPALT, encoding='utf-8'))
+    # Runde 2: Tabelle mit den uvfein-UV (GEOMETRIE.md 9.6); die Augen-Dreiecke (eigene Zeile/UV, Riegel UV1/A1) sind ausgenommen
+    tab = json.load(open(G3.GEO3_SPALT_UV, encoding='utf-8'))
+    augen = set((22, 0, i) for i in bau['textur'].get('augen_dekal', {}).get('dreiecke', []))
     P = FE.lese_emd(open(os.path.join(var, 'pruef', 'BAHNSTEIG_FORM.EMD'), 'rb').read())
     A = FE.lese_emd(open(os.path.join(var, 'BAHNSTEIG_FORM.EMD'), 'rb').read())
     art = ('dreiecke', 'vierecke')
     namen = bau['textur']['zeilen']
     cy = FE.tim_lesen(open(os.path.join(var, 'BAHNSTEIG_FORM.TIM'), 'rb').read())['clut_y']
     tj = json.load(open(TX.TRAEGER, encoding='utf-8'))['zonen']
-    traeger = set(TX.schluessel(k) for nr in tj if nr in TX.FLECK_ART for k in tj[nr])
+    traeger = set(TX.schluessel(k) for nr in tj if nr in TX.FLECK_ART and nr != '29' for k in tj[nr])
+    # Runde 2: die Loch-Flaechen (Fleck 'L', Haut auf eigenen Texeln) sind Traeger einer Fleck-Zeile
+    traeger |= set(TX.schluessel(k) for k in bau['textur']['flecken'].get('loch_flaechen', {}))
 
     def gx(f):
         return [(int(u) + (int(f['page']) & 15) * 128, int(v)) for u, v in f['uv']]
@@ -114,6 +126,8 @@ def v31b(R, var, bau):
     def pruefen(P_, A_):
         falsch, ausser, fremd = 0, 0, 0
         for t, a, i, mt, ma, mi in tab['herkunft']:
+            if (t, a, i) in augen:
+                continue
             k, m = A_['meshes'][t][art[a]][i], P_['meshes'][mt][art[ma]][mi]
             if int(k['clut']) != int(m['clut']) or (int(k['page']) & 15) != (int(m['page']) & 15):
                 falsch += 1
@@ -135,8 +149,8 @@ def v31b(R, var, bau):
     del Ae
     f2, a2, r2 = pruefen(P, Ag)
     ok = f1 == 0 and a1 == 0 and r1 == 0
-    R.zeile('V3.1b', 'Asset: %d Spalt-Kinder lesen Zeile/Seite der Mutter, UV im Texturstueck der Mutter, keine Fleck-Zeile ohne Traeger-Mutter'
-            % len(tab['herkunft']), 'falsche Zeile/Seite %d, ausserhalb %d, fremde Fleck-Leser %d' % (f1, a1, r1), ok,
+    R.zeile('V3.1b', 'Asset: %d Spalt-Kinder (ohne %d Augen-Dreiecke) lesen Zeile/Seite der Mutter, UV im Texturstueck der Mutter (+-1), keine Fleck-Zeile '
+            'ohne Traeger-Mutter' % (len(tab['herkunft']) - len(augen), len(augen)), 'falsche Zeile/Seite %d, ausserhalb %d, fremde Fleck-Leser %d' % (f1, a1, r1), ok,
             gegen=('Tabellen-Netze ohne Erbe (K5e_f1-Zeilen)', 'falsch %d, ausserhalb %d, fremd %d' % (f2, a2, r2), f2 == 0 and a2 == 0 and r2 == 0))
 
 
@@ -177,16 +191,43 @@ def v44(R, var, bau):
 
 
 # ------------------------------------------------------------------ eigene Fassungen (K5g3) der K5g2-Riegel, wo deren Definition nicht passt
+_LOCH = {}
+
+
+def loch_je(S):
+    """Runde 2: Loch-Flaechen des Generators (bau.json textur.flecken.loch_flaechen) als Fleck 'L' mit allen gelesenen Texeln (kf_k5g3_tex.lese_maske
+    auf der K5e_f1-UV samt Spalt-Kindern) - genau wie der Generator."""
+    bj = os.path.join(S.ordner, 'bau.json')
+    if not os.path.exists(bj):
+        bj = os.path.join(os.path.dirname(S.ordner), 'bau.json')
+    lf = json.load(open(bj, encoding='utf-8'))['textur']['flecken'].get('loch_flaechen', {})
+    if not lf:
+        return {}
+    if 'k' not in _LOCH:
+        _LOCH['k'] = K3.kinder_uv(G3.GEO3_SPALT_UV)
+        _LOCH['f'] = R2.Stand(K5E).fl
+    aus = {}
+    for ks in lf:
+        k = TX.schluessel(ks)
+        ys, xs = np.nonzero(T3.lese_maske(_LOCH['f'][k], S.T['pixel'].shape, _LOCH['k'].get(k)))
+        aus[k] = {(int(x), int(y)): 'L' for y, x in zip(ys, xs)}
+    return aus
+
+
 def je_mit_kern(S, plan):
-    """Fleck-Texel je Traeger wie der Generator: kf_k5g2_tex.fleck_zuordnung + F1-Kern-Vorrang (V6)."""
+    """Fleck-Texel je Traeger wie der Generator: kf_k5g2_tex.fleck_zuordnung + F1-Kern-Vorrang (V6). Runde 2: ohne Zone 29 (Augen ueber eigene
+    Augen-Texel, Riegel A1-A3), dazu die Loch-Flaechen als Fleck 'L'."""
     je, _k = TX.fleck_zuordnung(TX.lade_zonen(), S.form, S.T['pixel'].shape)
     kern = E.f1_masken()['kern']
     for k in list(je):
+        for xy in [xy for xy, nr in je[k].items() if nr == '29']:
+            del je[k][xy]
         if plan[k][0] == 'f1':
             for xy in [xy for xy in je[k] if kern[xy[1], xy[0]]]:
                 del je[k][xy]
         if not je[k]:
             del je[k]
+    je.update(loch_je(S))
     return je
 
 
@@ -195,9 +236,9 @@ def v3(R, S, bau, plan):
     namen = S.namen
     tj = json.load(open(TX.TRAEGER, encoding='utf-8'))['zonen']
     fleck_z = [i for i, n in enumerate(namen) if n.startswith('fleck_')]
-    traeger = set(TX.schluessel(k) for nr in tj if nr in TX.FLECK_ART for k in tj[nr])
-    fremd = [k for k, z in S.zeile.items() if z in fleck_z and k not in traeger]
     je = je_mit_kern(S, plan)
+    traeger = set(TX.schluessel(k) for nr in tj if nr in TX.FLECK_ART and nr != '29' for k in tj[nr]) | set(je)
+    fremd = [k for k, z in S.zeile.items() if z in fleck_z and k not in traeger]
     kopien = {c['flaeche']: c for c in bau['textur']['kopien']}
     zu_viel, fehlt, n_ok, gleich_wort = 0, 0, 0, 0
     for k, d in je.items():
@@ -416,16 +457,6 @@ def s1(R, S, var):
             gegen=('Bau ohne Seitenangleich (K5g2-Weg)', 'Teile 0/7 %.1f, Haut %.1f-%.1f' % (mg, g25, g75), g25 <= mg <= g75))
 
 
-# ------------------------------------------------------------------ A1 Augen
-def a1(R, var):
-    w = K3.auge_mass(var)
-    g = K3.auge_mass(K5E)
-    ok = all(m >= 2.0 * r for m, r in w)
-    R.zeile('A1', 'Augen (O4): Bild 2 (Licht der Szene), an beiden Nutzerpunkten L*-max 9x9 >= 2 x Median Kopfhaut daneben',
-            '; '.join('max %.1f / Kopfhaut %.1f' % t for t in w), ok,
-            gegen=('K5e_f1', '; '.join('max %.1f / Kopfhaut %.1f' % t for t in g), all(m >= 2.0 * r for m, r in g)))
-
-
 # ------------------------------------------------------------------ Z Spiel
 def spiel(R, var, pfad):
     if not pfad or not os.path.exists(pfad):
@@ -461,6 +492,171 @@ def spiel_messen(var, aus):
     return aus
 
 
+# ================================================================== Runde 2 (Befunde PRUEFUNG_K5G3_r1_zahlen / _sicht)
+R1_COMMIT = 'da6560372'     # Abgabe K5g3 Runde 1 (EMD 37407afd, TIM 2f7b2444) - Gegenprobe fuer die Befunde der Runde 1
+R1_PFAD = 'analysis/befunde_runde41/form/varianten/K5/k5g/K5g3'
+
+
+def r1_stand():
+    """Abgabe der Runde 1 aus git (Commit da6560372) in den Scratchpad holen (einmal)."""
+    import subprocess
+    d = os.path.join(K3.SCR, 'gegen_r1_' + R1_COMMIT)
+    if os.path.exists(os.path.join(d, 'bau.json')):
+        return d
+    os.makedirs(os.path.join(d, 'pruef'), exist_ok=True)
+    for n in K3.DATEIEN + ('bau.json',):
+        b = subprocess.run(['git', '-C', E.WT, 'show', '%s:%s/%s' % (R1_COMMIT, R1_PFAD, n)], capture_output=True, check=True).stdout
+        open(os.path.join(d, n), 'wb').write(b)
+    return d
+
+
+def _zeilen_namen(o):
+    return json.load(open(os.path.join(o, 'bau.json'), encoding='utf-8'))['textur']['zeilen']
+
+
+def uv1(R, var, bau):
+    """UV des Assets = UV der Geometrie-Stufe (uvfein, geo/BAHNSTEIG_FORM.EMD) + EIN Kopie-Versatz je Flaeche; ausgenommen die Augen-Dreiecke."""
+    g = FE.lese_emd(open(G3.GEO3_ZIEL, 'rb').read())
+    aus = set((22, 0, i) for i in bau['textur'].get('augen_dekal', {}).get('dreiecke', []))
+
+    def n_falsch(o):
+        a = FE.lese_emd(open(os.path.join(o, 'BAHNSTEIG_FORM.EMD'), 'rb').read())
+        return len(K3.uv_gegen_geo(a, g, aus))
+    nv, ng = n_falsch(var), n_falsch(r1_stand())
+    R.zeile('UV1', 'UV aller Flaechen = Geometrie-Stufe uvfein (sha %s) + ein Kopie-Versatz je Flaeche (ausser %d Augen-Dreiecken mit eigener UV)'
+            % (sha_d(G3.GEO3_ZIEL)[:8], len(aus)), '%d Flaechen abweichend' % nv, nv == 0,
+            gegen=('Runde 1 (Commit %s, B4-UV)' % R1_COMMIT, '%d Flaechen abweichend' % ng, ng == 0))
+
+
+def zugriffe(o):
+    """Abtastung (kf_k5g3.abtasten: 16 x 16 Proben je Render-Dreieck, Vierecke in beiden Zerlegungen) des Assets: (Zugriffe, Index-0-Zugriffe,
+    0x7FFF-Zugriffe ausser Zahn-Zeile, Flaechen mit Index-0-Zugriff)."""
+    A = FE.lese_emd(open(os.path.join(o, 'BAHNSTEIG_FORM.EMD'), 'rb').read())
+    T = FE.tim_lesen(open(os.path.join(o, 'BAHNSTEIG_FORM.TIM'), 'rb').read())
+    cl = [[int(x) for x in z] for z in T['cluts']]
+    nam = _zeilen_namen(o)
+    z = K3.abtasten(A, T['pixel'], int(T['clut_y']))
+    i0 = [t for t in z if t[4] == 0]
+    w7 = [t for t in z if 0 <= t[1] < len(cl) and not nam[t[1]].startswith('zahn') and (cl[t[1]][t[4]] & 0x7FFF) == 0x7FFF]
+    return len(z), len(i0), len(w7), sorted(set('%d|%d|%d' % t[0] for t in i0))
+
+
+def kopie(R, var):
+    n, i0, w7, f0 = zugriffe(var)
+    gn, gi0, gw7, gf0 = zugriffe(r1_stand())
+    R.zeile('K1', 'Kopie-Maske (Zahlen-Pruefer r1 ROT 2): kein Zugriff auf Index 0 (= ungeschriebener Kopie-Texel, 0x7FFF) in irgendeiner Flaeche, '
+            'abgetastet im Inneren aller Render-Dreiecke', '%d von %d Zugriffen (%s)' % (i0, n, f0[:6] or '-'), i0 == 0,
+            gegen=('Runde 1 (Commit %s)' % R1_COMMIT, '%d Zugriffe, Flaechen %s' % (gi0, gf0[:6]), gi0 == 0))
+    R.zeile('K2', 'kein Zugriff auf reinweiss 0x7FFF ausser der Zahn-Zeile (K5c bytegleich), ganzes Asset (Zahlen-Pruefer r1 Gelb 4)',
+            '%d von %d Zugriffen' % (w7, n), w7 == 0, gegen=('Runde 1 (Commit %s)' % R1_COMMIT, '%d Zugriffe' % gw7, gw7 == 0))
+
+
+def _zonen_texel(S, bau, je, zonen):
+    """Lab der Material-Texelzugriffe der Zonen (Pruef-Stand; Kopie-Versatz aus bau.json)."""
+    kopien = {c['flaeche']: c for c in bau['textur']['kopien']}
+    out = []
+    for k, d in je.items():
+        zs = set(nr for nr in d.values() if nr in zonen)
+        if not zs:
+            continue
+        c = kopien.get('%d|%d|%d' % k)
+        if c is None:
+            continue
+        dx, dy = c['nach'][0] - c['von'][0], c['nach'][1] - c['von'][1]
+        ys, xs, idx = S.texel(k)
+        m = np.array([d.get((int(x) - dx, int(y) - dy)) in zonen for y, x in zip(ys, xs)])
+        out.append(S.lab[S.zeile[k]][idx[m]])
+    return np.vstack(out) if out else np.zeros((0, 3))
+
+
+def _haut_werte(S):
+    hz = [i for i, n in enumerate(S.namen) if n.startswith('haut')]
+    Lh, _ = S.farben([k for k in S.fl if S.zeile[k] in hz])
+    return Lh
+
+
+def weiss_braun(R, S, bau, plan):
+    def mess(St, b, pl):
+        je = je_mit_kern(St, pl)
+        Lw = _zonen_texel(St, b, je, ('14', '15', '18', '24'))
+        Lb = _zonen_texel(St, b, je, ('16', '19'))
+        Lh = _haut_werte(St)
+        Ch = float(np.median(np.hypot(Lh[:, 1], Lh[:, 2])))
+        return (float(np.median(Lw[:, 0])), float(np.median(np.hypot(Lw[:, 1], Lw[:, 2]))), float(np.median(Lb[:, 0])),
+                float(np.median(np.hypot(Lb[:, 1], Lb[:, 2]))), float(np.degrees(np.arctan2(np.median(Lb[:, 2]), np.median(Lb[:, 1])))),
+                float(np.median(Lh[:, 0])), float(np.percentile(Lh[:, 0], 75)), Ch, len(Lw), len(Lb))
+    v = mess(S, bau, plan)
+    g1 = r1_stand()
+    Sg = stand_mit_namen(os.path.join(g1, 'pruef'), _zeilen_namen(g1))
+    g = mess(Sg, json.load(open(os.path.join(g1, 'bau.json'), encoding='utf-8')), plan)
+
+    def ok_w(t):
+        return t[1] <= 0.5 * t[7] and t[0] >= t[6]
+
+    def ok_b(t):
+        return t[2] <= 2.0 * t[5] and 35 <= t[4] <= 80
+    R.zeile('W6', 'weisse Musterung (Zonen 14/15/18/24) fast unbunt und hell: Median C* <= 0,5 x Median C* der Haut, Median L* >= P75 der Haut '
+            '(Zahlen-Pruefer r1 ROT 1)', 'C* %.1f (Haut %.1f), L* %.1f (Haut P75 %.1f), %d Zugriffe' % (v[1], v[7], v[0], v[6], v[8]), ok_w(v),
+            gegen=('Runde 1 (Commit %s)' % R1_COMMIT, 'C* %.1f (Haut %.1f), L* %.1f' % (g[1], g[7], g[0]), ok_w(g)))
+    R.zeile('B1', 'braeunliche Musterung (Zonen 16/19) braun statt beige: Median L* <= 2 x Median L* der Haut, Farbton 35-80 Grad '
+            '(Zahlen-Pruefer r1 Gelb 2)', 'L* %.1f (Haut %.1f), C* %.1f, Ton %.1f Grad, %d Zugriffe' % (v[2], v[5], v[3], v[4], v[9]), ok_b(v),
+            gegen=('Runde 1 (Commit %s)' % R1_COMMIT, 'L* %.1f (Haut %.1f), Ton %.1f' % (g[2], g[5], g[4]), ok_b(g)))
+
+
+def augen(R, var):
+    """A1 (O4, E3; Sicht-Pruefer r1 (5)): beide Augen in Bild 2 an den Nutzerpunkten, so gross wie die Nutzerpunkte (0,5-2-fach), Mitte <= 2 px
+    vom Punkt, Median >= kf_k5g3.AUGE_FAKTOR x Kopfhaut daneben. Gegenprobe: derselbe Bau mit f_auge der Runde 1 (1,9844)."""
+    def ok(a):
+        return all(t['px'] and 0.5 <= t['px'] / t['nutzer_px'] <= 2.0 and t['mitte_abstand'] <= 2.0 for t in a) and K3.auge_ok(a)
+
+    def txt(a):
+        return '; '.join('%d px (Nutzer %.1f), Abstand %.1f px, Median %.1f / Haut %.1f' % (t['px'], t['nutzer_px'], t['mitte_abstand'] or -1,
+                                                                                        t['L_median'], t['ring_median']) for t in a)
+    a = K3.auge_mass(var)
+    par = json.load(open(os.path.join(var, 'bau.json'), encoding='utf-8'))['par']
+    p2 = json.loads(json.dumps(par))
+    p2['textur']['auge']['f'] = 1.9844
+    d = os.path.join(K3.SCR, 'riegel_a1_gegen')
+    shutil.rmtree(d, ignore_errors=True)
+    K3.bauen(p2, d, log=lambda *x: None)
+    g = K3.auge_mass(d)
+    R.zeile('A1', 'Augen (O4): Bild 2 (Licht der Szene), je Nutzerpunkt Augen-Pixel 0,5-2 x Nutzerflaeche, Mitte <= 2 px, Median >= %.0f x Kopfhaut'
+            % K3.AUGE_FAKTOR, txt(a), ok(a), gegen=('f_auge der Runde 1 (1,9844)', txt(g), ok(g)))
+
+
+def loch(R, var):
+    """A2 (Sicht-Pruefer r1 (5): schwarzer Fleck an der rechten Augenhoehle): weisses Licht von vorn (Clip 2, Az 90, El 10, 760 px), Pixel von
+    Netz 22 mit RGB-Max <= 16 hoechstens doppelt so viele wie bei K5e_f1."""
+    sys.path.insert(0, os.path.join(K5, 'ruhe', 'skripte'))
+    import rl
+
+    def n(o):
+        img, K = rl.weiss_id(rl.fl.lade_var(o), 2, 90, 10, 760)
+        return int(((K['mesh'] == 22) & (img.max(2) <= 16)).sum())
+    nv, ne, ng = n(var), n(K5E), n(r1_stand())
+    R.zeile('A2', 'kein schwarzes Loch am Kopf: weisses Licht von vorn, Netz-22-Pixel mit RGB-Max <= 16 <= 2 x K5e_f1',
+            '%d (K5e_f1 %d)' % (nv, ne), nv <= 2 * ne, gegen=('Runde 1 (Commit %s)' % R1_COMMIT, '%d' % ng, ng <= 2 * ne))
+
+
+def augen_spiel(R, var, pfad):
+    """A3: Augen im echten Spielfenster (5080 von vorn, Clip 12 Bild 0; eigene Laeufe mit Markierungs-Variante, kf_k5g3_augen_spiel.py)."""
+    if not pfad or not os.path.exists(pfad):
+        R.zeile('A3', 'Augen im Spielfenster', 'keine Messung', False)
+        return
+    d = json.load(open(pfad, encoding='utf-8'))
+    if d.get('tim_sha256') != sha_d(os.path.join(var, 'BAHNSTEIG_FORM.TIM')):
+        R.zeile('A3', 'Augen im Spielfenster', 'Messung gehoert nicht zu dieser Variante', False)
+        return
+
+    def ok(a):
+        return len(a) == 2 and all(t['px'] >= 5 and t['L_median'] >= 2.5 * t['ring_median'] for t in a)
+
+    def txt(a):
+        return '; '.join('%d px bei %s, Median L* %.1f / Haut %.1f' % (t['px'], t['mitte'], t['L_median'], t['ring_median']) for t in a) or 'keins'
+    R.zeile('A3', 'Augen im echten Spielfenster 5080 von vorn (gdigrab, eigenes Fenster): 2 Augen, je >= 5 px, Median L* >= 2,5 x Haut daneben',
+            txt(d['augen']), ok(d['augen']), gegen=('f_auge der Runde 1 (1,9844), gleicher Lauf', txt(d['gegen']), ok(d['gegen'])))
+
+
 # ------------------------------------------------------------------ Technik
 def technik(R, var, bau):
     t = FE.tim_lesen(open(os.path.join(var, 'BAHNSTEIG_FORM.TIM'), 'rb').read())
@@ -484,6 +680,7 @@ def main(argv):
     ap.add_argument('variante', nargs='?', default=K3.AUS)
     ap.add_argument('--spiel')
     ap.add_argument('--neu_spiel', action='store_true', help='Spielmessung neu laufen lassen (sonst <Variante>/spiel_z.json)')
+    ap.add_argument('--augen_spiel', help='Augen im Spielfenster (Vorgabe <Variante>/spiel_augen.json)')
     a = ap.parse_args(argv)
     var = os.path.abspath(a.variante)
     bau = json.load(open(os.path.join(var, 'bau.json'), encoding='utf-8'))
@@ -498,7 +695,9 @@ def main(argv):
         zeilen_alt(nr, text, ist, ok, art, gegen)
     R.zeile = zeile
     tg(R, var)
+    uv1(R, var, bau)
     tb(R, var)
+    kopie(R, var)
     s_haut = float(bau['textur']['haut']['s'])
     je = v3(R, S, bau, plan)
     v31b(R, var, bau)
@@ -506,12 +705,15 @@ def main(argv):
     v4(R, S, plan, s_haut)
     v44(R, var, bau)
     v2(R, S, plan)
+    weiss_braun(R, S, bau, plan)
     v5(R, S, s_haut)
     R2.h1(R, S)
     s1(R, S, var)
     v1(R, S, bau)
     v6(R, S, plan)
-    a1(R, var)
+    augen(R, var)
+    loch(R, var)
+    augen_spiel(R, var, a.augen_spiel or os.path.join(var, 'spiel_augen.json'))
     R2.weiss(R, var)
     sp = a.spiel or os.path.join(var, 'spiel_z.json')
     if a.neu_spiel or not os.path.exists(sp):

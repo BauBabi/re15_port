@@ -5,7 +5,7 @@
     python kf_k5g3.py pruef                      zweimal bauen (Scratchpad) und mit K5/k5g/K5g3 vergleichen (Exit 1 bei Unterschied)
     python kf_k5g3.py --f <lo> <hi> <schritte>   haut.f per Bisektion im Spiel (P L* = Median der Original-Gegner 7,71, O3) in k5g3_par.json schreiben
     python kf_k5g3.py --s <lo> <hi> <schritte>   haut.s per Bisektion im Spiel (Zielband Z4/Z8, O3) in k5g3_par.json schreiben
-    python kf_k5g3.py --auge <lo> <hi> <schritte> auge.f per Bisektion (O4 Augen sichtbar heller als die Kopfhaut daneben) in k5g3_par.json
+    python kf_k5g3.py --auge <lo> <hi> <schritte> auge.f per Bisektion (O4: Median der Augen-Pixel in Bild 2 >= 3 x Kopfhaut daneben) in k5g3_par.json
     python kf_k5g3.py --fleisch <lo> <hi> <schritte>  fleisch.k per Bisektion (Median C* Zone 27 = 24, Eichung b) in k5g3_par.json
     python kf_k5g3.py --w6                       Bild 2 Video gegen Vorlage (W6, Pruefung des globalen f; schreibt nichts)
 
@@ -15,6 +15,9 @@ Stufe 1 Geometrie = kf_k5g3_geo (Einbau-Bauer, unveraendert aufgerufen): Posen (
            CLUT, Seite und UV-Verschiebung der Mutter; die Kopfkugel 21 ist weg). Danach wird geprueft, dass Ecken/Normalen/Flaechen-Ecken
            des Ergebnisses genau die der Geometrie-Stufe sind (sonst Abbruch).
 Stufe 2 Textur = kf_k5g3_tex.textur (E3, V1-V6, O3-O5), Parameter K5/k5g/K5g3/k5g3_par.json (Quelle je Wert).
+Runde 2 (Befunde PRUEFUNG_K5G3_r1): Spalt mit den UV der Stufe uvfein (geo/spalt_uv_tabelle.json, GEOMETRIE.md 9.6); Kopie-Maske = konvexe Huelle der
+           UV samt Spalt-Kindern (kf_k5g3_tex.lese_maske); danach die Augen als eigene Texel an den Nutzerpunkten (kf_k5g3_auge.dekal, Tabelle
+           generator/k5g3_augen_mitten.json); Pruefungen im Bau: UV == Geometrie-Stufe + Kopie-Versatz, kein Zugriff auf einen ungeschriebenen Texel.
 Ausgabe: BAHNSTEIG_FORM.EMD/.TIM (28 Clips), FORM.EMD/.TIM/form.json (3 Keys, Tafeln/Riegel), pruef/ (Textur auf den Flaechen VOR dem
 Spalt, fuer die Textur-Riegel), bau.json.
 """
@@ -33,6 +36,7 @@ import kf_k5g2_geo as GG  # noqa: E402
 import kf_k5g2_tex as TX  # noqa: E402
 import kf_k5g3_geo as G3  # noqa: E402
 import kf_k5g3_tex as T3  # noqa: E402
+import kf_k5g3_auge as AU  # noqa: E402
 
 FE = E.FE
 K5 = E.K5
@@ -66,6 +70,59 @@ def form_json(aus, name):
     json.dump(fj, open(os.path.join(aus, 'form.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
 
 
+def kinder_uv(tabelle):
+    """{Mutterflaeche (t, a, i): [UV-Dreieck je Spalt-Kind, global (u + 128 x Seite, v)]} aus der Spalt-Tabelle (Runde 2: uvfein-UV)."""
+    tab = json.load(open(tabelle, encoding='utf-8'))
+    art = ('dreiecke', 'vierecke')
+    aus = {}
+    for t, a, i, mt, ma, mi in tab['herkunft']:
+        f = tab['teile'][str(t)][art[a]][i]
+        po = (int(f['page']) & 15) * 128
+        aus.setdefault((mt, ma, mi), []).append([[int(u) + po, int(v)] for u, v in f['uv']])
+    return aus
+
+
+def gx(f):
+    po = (int(f['page']) & 15) * 128
+    return [(int(u) + po, int(v)) for u, v in f['uv']]
+
+
+def uv_gegen_geo(form, form_v, ausnahmen):
+    """Runde 2 (GEOMETRIE.md 9.6): jede Flaeche liest die UV der Geometrie-Stufe (uvfein), hoechstens um eine Kopie verschoben (EIN Versatz je
+    Flaeche). Ausnahmen: Augen-Dreiecke (eigene UV). Rueckgabe Liste der Abweichungen."""
+    falsch = []
+    for t, (m, mv) in enumerate(zip(form['meshes'], form_v['meshes'])):
+        for a, art in enumerate(('dreiecke', 'vierecke')):
+            for i, (f, fv) in enumerate(zip(m[art], mv[art])):
+                if (t, a, i) in ausnahmen:
+                    continue
+                d = set((x - xv, y - yv) for (x, y), (xv, yv) in zip(gx(f), gx(fv)))
+                if len(d) != 1:
+                    falsch.append('%d|%d|%d' % (t, a, i))
+    return falsch
+
+
+def abtasten(form, px, cy, n=16):
+    """Texel-Zugriffe im Inneren jedes Render-Dreiecks (n x n baryzentrische Proben, floor wie der Renderer; Vierecke (0,1,2)+(1,3,2) UND
+    (0,1,3)+(0,3,2)). Rueckgabe Liste (flaeche, zeile, x, y, index)."""
+    ws = [(i + 0.5) / n for i in range(n)]
+    W = np.array([(a, b, 1 - a - b) for a in ws for b in ws if a + b < 1], float)
+    aus = []
+    for t, m in enumerate(form['meshes']):
+        for a, art in enumerate(('dreiecke', 'vierecke')):
+            for i, f in enumerate(m[art]):
+                g = np.array(gx(f), float)
+                z = ((int(f['clut']) >> 6) & 0x1FF) - cy
+                tris = [(0, 1, 2)] if a == 0 else [(0, 1, 2), (1, 3, 2), (0, 1, 3), (0, 3, 2)]
+                for tr in tris:
+                    P = W @ g[list(tr)]
+                    xs = np.clip(np.floor(P[:, 0]).astype(int), 0, px.shape[1] - 1)
+                    ys = np.clip(np.floor(P[:, 1]).astype(int), 0, px.shape[0] - 1)
+                    for x, y in sorted(set(zip(xs.tolist(), ys.tolist()))):
+                        aus.append(((t, a, i), z, x, y, int(px[y, x])))
+    return aus
+
+
 def bauen(par, aus, log=log):
     emd_a = open(os.path.join(K5E, 'BAHNSTEIG_FORM.EMD'), 'rb').read()
     tim_a = open(os.path.join(K5E, 'BAHNSTEIG_FORM.TIM'), 'rb').read()
@@ -79,23 +136,50 @@ def bauen(par, aus, log=log):
     Z = TX.lade_zonen()
     X = E.eingaenge()
     # ---- Stufe 2: Textur
-    px, reihen, ber_t, plan, _fz, _zw, _je = T3.textur(form, par, X, Z)
+    kinder = kinder_uv(G3.GEO3_SPALT_UV)
+    px, reihen, ber_t, plan, _fz, _zw, _je, belegt = T3.textur(form, par, X, Z, kinder)
     T = X['T']
-    tim = FE.tim_schreiben(px, reihen, T['clut_x'], T['clut_y'], T['bild_x'], T['bild_y'])
     os.makedirs(os.path.join(aus, 'pruef'), exist_ok=True)
     # Pruef-Stand: dieselbe Textur auf den Flaechen VOR dem Spalt (Schluessel wie zonen_v2/traeger_texel) - nur fuer die Textur-Riegel
     pe = GG.emd_mit_md1(sek, form)
+    # ---- Spalt B4 auf die bemalten Flaechen (G4), Runde 2 mit den UV der Stufe uvfein (GEOMETRIE.md 9.6: GEO3_SPALT_UV statt GEO3_SPALT).
+    # kinder_ausserhalb (Kind-UV ausserhalb des Mutter-Rechtecks +-1) bricht nicht mehr ab: die Kopie-Maske (kf_k5g3_tex.lese_maske) nimmt die
+    # Kind-UV mit; geprueft wird unten am Ergebnis (kein Zugriff auf einen ungeschriebenen Texel).
+    mber = GG.mulde_auf_form(form, tabelle=G3.GEO3_SPALT_UV)
+    if geo_schluessel(form) != geo_schluessel(form_v):
+        raise SystemExit('Geometrie nach der Textur-Stufe != Geometrie-Stufe kf_k5g3_geo')
+    # ---- Augen: eigene Texel an den Nutzerpunkten (kf_k5g3_auge.dekal; E3, O4)
+    geschrieben = belegt.copy()        # textur: Lesemasken der Ausgangs-Flaechen (mit Spalt-Kindern) + Kopie-Ziele
+    for m in form['meshes']:
+        for art in ('dreiecke', 'vierecke'):
+            for f in m[art]:
+                belegt |= T3.lese_maske(f, belegt.shape)
+    vor = belegt.copy()
+    aber = AU.dekal(form, px, reihen, T, ber_t['auge_rampe'], par, belegt)
+    geschrieben |= belegt & ~vor
+    augen = set((AU.TEIL, 0, i) for i in aber['dreiecke'])
+    falsch = uv_gegen_geo(form, form_v, augen)
+    if falsch:
+        raise SystemExit('UV != Geometrie-Stufe (uvfein) + Kopie-Versatz: %s' % falsch[:10])
+    # kein Zugriff auf einen Texel, den weder die Ausgangs-Form gelesen noch eine Kopie/ein Augen-Block geschrieben hat (Pruefer K5g3 r1 ROT 2:
+    # 26 Zugriffe auf leere Kopie-Texel = Index 0 = 0x7FFF auf 10|1|76)
+    zug = abtasten(form, px, int(T['clut_y']))
+    leer = [z for z in zug if not geschrieben[z[3], z[2]]]
+    if leer:
+        raise SystemExit('Zugriffe auf ungeschriebene Texel: %d, z. B. %s' % (len(leer), leer[:5]))
+    nz = len(reihen)
+    if nz > 16:
+        raise SystemExit('%d Zeilen > 16' % nz)
+    tim = FE.tim_schreiben(px, reihen, T['clut_x'], T['clut_y'], T['bild_x'], T['bild_y'])
     open(os.path.join(aus, 'pruef', 'BAHNSTEIG_FORM.EMD'), 'wb').write(pe)
     open(os.path.join(aus, 'pruef', 'BAHNSTEIG_FORM.TIM'), 'wb').write(tim)
     open(os.path.join(aus, 'pruef', 'FORM.EMD'), 'wb').write(G3.form_emd_bytes(pe))
     open(os.path.join(aus, 'pruef', 'FORM.TIM'), 'wb').write(tim)
     form_json(os.path.join(aus, 'pruef'), par.get('name', 'K5g3') + ' (Pruef-Stand vor dem Spalt)')
-    # ---- Spalt B4 auf die bemalten Flaechen (G4)
-    mber = GG.mulde_auf_form(form, tabelle=G3.GEO3_SPALT)
-    if mber['kinder_ausserhalb']:
-        raise SystemExit('Spalt-Kinder lesen nach der Kopie fremde Texel: %s' % mber['kinder_ausserhalb'][:10])
-    if geo_schluessel(form) != geo_schluessel(form_v):
-        raise SystemExit('Geometrie nach der Textur-Stufe != Geometrie-Stufe kf_k5g3_geo')
+    ber_t['zeilen'] = ber_t['zeilen'] + ['auge']
+    ber_t['augen_dekal'] = aber
+    ber_t['zugriffe_abgetastet'] = len(zug)
+    ber_t['zugriffe_ungeschrieben'] = len(leer)
     emd_bahn = GG.emd_mit_md1(sek, form)
     emd_form = G3.form_emd_bytes(emd_bahn)
     for n, b in (('BAHNSTEIG_FORM.EMD', emd_bahn), ('BAHNSTEIG_FORM.TIM', tim), ('FORM.EMD', emd_form), ('FORM.TIM', tim)):
@@ -106,16 +190,20 @@ def bauen(par, aus, log=log):
     bericht = dict(variante=par.get('name', 'K5g3'), generator='generator/kf_k5g3.py (Stufe 1 kf_k5g3_geo, Stufe 2 kf_k5g3_tex)', par=par,
                    geometrie=dict(stufe='kf_k5g3_geo.geometrie_form', teilstufe=gber, voll=gber_v,
                                   geometrie_gleich_kf_k5g3_geo='ja (Ecken, Normalen, Flaechen-Ecken aller Netze; sonst Abbruch)',
-                                  geo_emd_sha256=geo_sha, spalt=dict(muetter_verschoben=mber['muetter_verschoben'],
-                                                                      kinder_verschoben=mber['kinder_verschoben'],
-                                                                      kinder_neue_zeile=mber['kinder_clut_neu'])),
+                                  geo_emd_sha256=geo_sha, spalt_tabelle='geo/spalt_uv_tabelle.json (uvfein)',
+                                  spalt=dict(muetter_verschoben=mber['muetter_verschoben'], kinder_verschoben=mber['kinder_verschoben'],
+                                             kinder_neue_zeile=mber['kinder_clut_neu'],
+                                             kinder_ausserhalb_mutter_rechteck=len(mber['kinder_ausserhalb'])),
+                                  uv_gegen_geo='gleich bis auf den Kopie-Versatz (ausser %d Augen-Dreiecke)' % len(augen)),
                    textur=ber_t, zeilen=len(reihen), port_texturhoehe=len(reihen) * 256,
                    sha256={n: sha(open(os.path.join(aus, n), 'rb').read()) for n in DATEIEN if not n.endswith('form.json')},
                    eingang_sha256=dict(k5e_f1_bahnsteig_emd=sha(emd_a), k5e_f1_tim=sha(tim_a),
                                        basis_k5c_tim=sha(open(os.path.join(E.BASIS, 'FORM.TIM'), 'rb').read()),
                                        zonen_v2=sha(open(TX.ZONEN, 'rb').read()), traeger_texel=sha(open(TX.TRAEGER, 'rb').read()),
                                        material_json=sha(open(E.MATERIAL, 'rb').read()),
-                                       spalt_tabelle=sha(open(G3.GEO3_SPALT, 'rb').read()), krallen_k5c=sha(open(G3.GEO3_KRALLEN, 'rb').read())))
+                                       spalt_tabelle=sha(open(G3.GEO3_SPALT, 'rb').read()), krallen_k5c=sha(open(G3.GEO3_KRALLEN, 'rb').read()),
+                                       spalt_uv_tabelle=sha(open(G3.GEO3_SPALT_UV, 'rb').read().rstrip(b'\r\n')),
+                                       augen_mitten=sha(open(AU.TABELLE, 'rb').read().replace(b'\r\n', b'\n'))))
     json.dump(bericht, open(os.path.join(aus, 'bau.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False, sort_keys=True)
     log('K5g3 gebaut: %s  Zeilen %d  EMD %s  TIM %s' % (aus.replace(chr(92), '/'), len(reihen), bericht['sha256']['BAHNSTEIG_FORM.EMD'][:16],
                                                        bericht['sha256']['BAHNSTEIG_FORM.TIM'][:16]))
@@ -295,29 +383,42 @@ def fleisch_bisektion(lo, hi, schritte):
     log('fertig k', par['textur']['fleisch']['k'])
 
 
+NUTZERPUNKTE = ((217.4, 274.3, 6.5), (280.2, 275.1, 12.3))     # zonen_v2.json augen.nutzerpunkte: punkt_vorlage, punkt_px_vorlage
+AUGE_FAKTOR = 3.0
+
+
 def auge_mass(v):
-    """O4: Bild 2 (Buehne, Licht der Szene, ohne Videofilter), je Nutzerpunkt (217,274) / (280,275): L* max im 9x9-Fenster gegen den Median
-    der Kopfhaut im Ring 25x25 ohne 9x9 (nur Pixel von Kopf 22). Rueckgabe Liste [(max, ring_median)]."""
+    """O4 (Runde 2): Bild 2 (Buehne, Licht der Szene, ohne Videofilter). Augen-Pixel = Pixel von Teil 22, die einen Augen-Eintrag der Zeile 'auge'
+    lesen (bau.json textur.augen_dekal), je Nutzerpunkt im Umkreis 8 px. Rueckgabe je Auge dict(px, nutzer_px, mitte_abstand, L_median, L_max,
+    ring_median) - Ring = Pixel von Teil 22 im Abstand 4-12 px ohne Augen-Pixel."""
     sys.path.insert(0, os.path.join(K5, 'farbe_lesung', 'V4F_skripte'))
     import v4f
     v4f._KC.pop(v, None)
+    a = json.load(open(os.path.join(v, 'bau.json'), encoding='utf-8'))['textur']['augen_dekal']
     sauber, K = v4f.szene_id(v, 2)
     L = v4f.lab(sauber)[..., 0]
+    eye = (K['zeile'] == a['zeile']) & np.isin(K['eintrag'], a['augen_eintraege']) & (K['mesh'] == 22)
+    yy, xx = np.mgrid[0:L.shape[0], 0:L.shape[1]]
     out = []
-    for (x, y) in ((217, 274), (280, 275)):
-        win = L[y - 4:y + 5, x - 4:x + 5]
-        ring = np.ones((25, 25), bool)
-        ring[8:17, 8:17] = False
-        sub = L[y - 12:y + 13, x - 12:x + 13]
-        kopf = K['mesh'][y - 12:y + 13, x - 12:x + 13] == 22
-        r = sub[ring & kopf]
-        out.append((float(win.max()), float(np.median(r)) if len(r) else 0.0))
+    for x, y, u in NUTZERPUNKTE:
+        d = np.hypot(xx + 0.5 - x, yy + 0.5 - y)
+        e = eye & (d < 8)
+        ring = (K['mesh'] == 22) & (d >= 4) & (d < 12) & ~eye
+        ys, xs = np.nonzero(e)
+        out.append(dict(px=int(e.sum()), nutzer_px=u, mitte_abstand=float(np.hypot(xs.mean() + 0.5 - x, ys.mean() + 0.5 - y)) if len(xs) else None,
+                        L_median=float(np.median(L[e])) if e.any() else 0.0, L_max=float(L[e].max()) if e.any() else 0.0,
+                        ring_median=float(np.median(L[ring]))))
     return out
 
 
+def auge_ok(a):
+    return all(t['L_median'] >= AUGE_FAKTOR * t['ring_median'] for t in a)
+
+
 def auge_bisektion(lo, hi, schritte):
-    """auge.f (O4): kleinster Faktor, mit dem an BEIDEN Nutzerpunkten in Bild 2 (Licht der Szene) das Augenmaximum >= 2 x Median der
-    Kopfhaut daneben ist ('sichtbar heller'; das Video zeigt etwa 30 gegen 7, also 4x - die Haelfte davon, keine Eichung am Video)."""
+    """auge.f (O4, Runde 2): kleinster Faktor (multiplikativ auf die hellen G4-Augeneintraege, Knie wie die Haut), mit dem in Bild 2 (Licht der
+    Szene) an BEIDEN Nutzerpunkten der Median der Augen-Pixel >= AUGE_FAKTOR x Median der Kopfhaut daneben ist. Runde 1 nahm das 9x9-Maximum
+    >= 2 x (Sicht-Pruefer: ein 4-Pixel-Strich reicht dafuer, im Spielfenster war kein Auge zu sehen); jetzt der Median des ganzen Auges."""
     par = lade_par()
     proto = []
 
@@ -328,9 +429,9 @@ def auge_bisektion(lo, hi, schritte):
         shutil.rmtree(v, ignore_errors=True)
         bauen(p, v, log=lambda *a: None)
         a = auge_mass(v)
-        proto.append([fv] + [round(x, 2) for t in a for x in t])
-        log('  f_auge %.4f -> %s' % (fv, a))
-        return all(m >= 2.0 * r for m, r in a)
+        proto.append([fv] + [round(x, 2) for t in a for x in (t['L_median'], t['ring_median'])])
+        log('  f_auge %.4f -> %s' % (fv, proto[-1][1:]))
+        return auge_ok(a)
     if not mess(hi):
         raise SystemExit('auch f_auge %.3f reicht nicht' % hi)
     for _ in range(schritte):
@@ -342,10 +443,11 @@ def auge_bisektion(lo, hi, schritte):
     par = lade_par()
     par['textur']['auge']['f'] = round(hi, 4)
     par['textur']['auge']['f_quelle'] = (
-        'O4: kleinster Faktor (multiplikativ auf die hellen G4-Augeneintraege, Knie wie die Haut), mit dem in Bild 2 (Buehne, Licht der Szene, '
-        'ohne Videofilter) an beiden Nutzerpunkten (217,274)/(280,275) das L*-Maximum im 9x9-Fenster >= 2 x Median der Kopfhaut (Teil 22) im '
-        'Ring 25x25 ohne 9x9 ist; Bisektion kf_k5g3.py --auge [%s, %s], %d Schritte. Protokoll [f, max1, ring1, max2, ring2]: %s'
-        % (lo, hi, schritte, proto))
+        'O4 (Runde 2): kleinster Faktor (multiplikativ auf die hellen G4-Augeneintraege, Knie wie die Haut), mit dem in Bild 2 (Buehne, Licht der '
+        'Szene, ohne Videofilter) an beiden Nutzerpunkten der Median der Augen-Pixel (eigene Augen-Texel, kf_k5g3_auge) >= %.1f x Median der '
+        'Kopfhaut daneben ist (Ring 4-12 px). Runde 1: 9x9-Maximum >= 2 x (Sicht-Pruefer r1: im Spielfenster kein Auge). Gemessen am Stand mit f 1,98: '
+        'Bild 2 2,1/2,5-fach, im Spielfenster 5080 von vorn 2,2/2,7-fach (L* 10,1/11,2 gegen 4,7/4,1) - zu schwach. Bisektion kf_k5g3.py --auge '
+        '[%s, %s], %d Schritte. Protokoll [f, Median1, Ring1, Median2, Ring2]: %s' % (AUGE_FAKTOR, lo, hi, schritte, proto))
     json.dump(par, open(PAR, 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False)
     log('fertig f_auge', par['textur']['auge']['f'])
 

@@ -33,8 +33,36 @@ SP3 = SCR + '/spiel'
 NUTZER = 'C:/workspace/git/reAi_v2/Version_80%/4_Beiner_Zerlegt/'
 
 
-def nah(mo, clip, az, el, meshes=(21, 22, 23), gross=760):
+def fleck_pixel(K, neu):
+    """Runde 2 (Sicht-Pruefer r1: Tafel 09 zeigte die Flecken ohne Markierung): Pixel, die Fleck-Material lesen (Zeile 'fleck_*' mit Wort != Grundzeile)
+    oder ein Augen-Eintrag der Zeile 'auge'."""
+    b = json.load(open(os.path.join(neu, 'bau.json'), encoding='utf-8'))['textur']
+    nam = b['zeilen']
+    import kf_k5e as E_
+    T = E_.FE.tim_lesen(open(os.path.join(neu, 'BAHNSTEIG_FORM.TIM'), 'rb').read())
+    cl = [[int(x) for x in z] for z in T['cluts']]
+    m = np.zeros(K['zeile'].shape, bool)
+    for z, n in enumerate(nam):
+        sel = K['zeile'] == z
+        if not sel.any():
+            continue
+        if n.startswith('fleck_'):
+            basis = nam.index(n.split('_')[1])
+            w = np.array(cl[z])[K['eintrag'][sel]]
+            wb = np.array(cl[basis])[K['eintrag'][sel]]
+            m[sel] = w != wb
+        elif n == 'auge':
+            m[sel] = np.isin(K['eintrag'][sel], b['augen_dekal']['augen_eintraege'])
+    return m
+
+
+def nah(mo, clip, az, el, meshes=(21, 22, 23), gross=760, markiere=None):
     img, K = rl.weiss_id(mo, clip, az, el, gross)
+    if markiere is not None:
+        fm = fleck_pixel(K, markiere) & np.isin(K['mesh'], meshes)
+        rand = cv2.dilate(fm.astype(np.uint8), np.ones((3, 3), np.uint8)).astype(bool) & ~fm
+        img = img.copy()
+        img[rand] = (0, 255, 255)
     m = np.isin(K['mesh'], meshes)
     if not m.any():
         return cv2.resize(img, (300, 300), interpolation=cv2.INTER_AREA)
@@ -105,6 +133,14 @@ def main():
                                 ('5090 Schnitt 11, Griff (Clip 27 Bild 20, Hals-Unterseite)', 0, 'griff_r5090_s11.png')):
             z.append(reihe([v4f.original(n) if n else leer, lade('heute_' + datei), lade('k5g_' + datei)],
                            ['Original-Standbild Bild %d' % n if n else '(kein Original-Standbild zu dieser Pose)', 'K5e heute: ' + titel, 'K5g3: ' + titel]))
+        # Runde 2: Kopf von vorn vergroessert (Augen; Sicht-Pruefer r1 (5)) - Ausschnitt x 4 nearest, daneben Ihr Bild "Gesicht vorne"
+        box = (235, 205, 355, 275)
+        gb = cv2.imdecode(np.fromfile(os.path.join(NUTZER, 'Gesicht vorne.png'), np.uint8), cv2.IMREAD_COLOR)
+        gb = cv2.cvtColor(gb, cv2.COLOR_BGR2RGB)
+        gb = cv2.resize(gb, (int(gb.shape[1] * 280 / gb.shape[0]), 280), interpolation=cv2.INTER_AREA)
+        kz = [cv2.resize(lade(p_ + 'vorn_r5080.png')[box[1]:box[3], box[0]:box[2]], ((box[2] - box[0]) * 4, (box[3] - box[1]) * 4),
+                         interpolation=cv2.INTER_NEAREST) for p_ in ('heute_', 'k5g_')]
+        z.append(reihe([gb] + kz, ['Ihr Bild "Gesicht vorne" (Video)', 'K5e heute: Kopf von vorn x4 (Spielfenster)', 'K5g3: Kopf von vorn x4 (Spielfenster)']))
         speichern(os.path.join(aus, '04_spiel.png'), stapeln(z, 'K5g3 im echten Spielfenster (gdigrab des eigenen Fensters, kein AUTOSHOT/SOFTWARE_RENDER, Variante ueber '
                                                                 'RE15_RE2_ASSET_ROOT): Original | K5e heute | K5g3, roh'))
     if soll('05'):
@@ -181,11 +217,13 @@ def t09(neu, aus):
         z = next(zz for zz in Z['zonen'] if zz['nr'] == nr)
         az, el = (90, 10) if z['bild'] == 2 else (-90, 15)
         for k in ('K5e', 'K5g3'):
-            nah_z.append((nah(mods[k], 2, az, el, meshes=teile), '%s: %s (%s)' % (k, z['nutzerwort'][:34], z['nr'])))
+            wort = z['nutzerwort'].replace('ä', 'ae').replace('ö', 'oe').replace('ü', 'ue').replace('ß', 'ss')     # Schrift der Tafel ohne Umlaute
+            nah_z.append((nah(mods[k], 2, az, el, meshes=teile), '%s: %s (%s)' % (k, wort[:34], z['nr'])))
+        nah_z.append((nah(mods['K5g3'], 2, az, el, meshes=teile, markiere=neu), 'K5g3, Fleck tuerkis umrandet (%s)' % z['nr']))
     for i in range(0, len(nah_z), 6):
         zeilen.append(reihe([a for a, _t in nah_z[i:i + 6]], [t for _a, t in nah_z[i:i + 6]]))
     speichern(os.path.join(aus, '09_zonen.png'), stapeln(zeilen, 'Ihre Bilder neben dem Modell in derselben Pose (ohne Videofilter) und Ihre Flecken nah unter weissem Licht: '
-                                                                 'je Fleck K5e heute | K5g3, roh'))
+                                                                 'je Fleck K5e heute | K5g3 | K5g3 mit tuerkis umrandetem Fleck, roh'))
 
 
 
