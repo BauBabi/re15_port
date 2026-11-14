@@ -567,7 +567,7 @@ static const int16_t k_schwanz_gewicht_v2[][2] = { { 15, 0 }, { 19, 4096 }, { 74
 static int bf_schwanz_v2(void)
 {
     const re15_enemy_bank_t *bk = re15_enemy_find(0x30u);
-    return bk && bk->skel.bone_count == 23 && bk->skel.bone_relative_pos[16][0] < BF_V2_WURZEL_X;
+    return bk && bk->skel.bone_count == 23 && bk->skel.bone_relative_pos[16][0] < BF_V2_WURZEL_X && !re15_schwanz_r41_v8_kette(&bk->skel);
 }
 /* Runde 41 SF V4 Runde 3 (Pruefung V4 r2 Zahlen Abschnitt 3 / T7, Entscheid O3 "keine waagerechte Kette im Gang"): im Lauf sfv4/r/V4r2
  * stand die V4-Kette bei h100 waagerecht (Gelenke 3-7 auf y -2051..-2157, Abfall Biegung -> Ende -0,001 H statt 0,358 H), weil das
@@ -580,10 +580,13 @@ static int bf_schwanz_v2(void)
  * 15/19 = Referenz 2 / V2 (Uebernahme), 70/74 = Lauf sfv4/r/V4r3m0.95 (s. oben); GESTALTUNG (PORT-WAHL), Nutzer-Wortlaut "Ich will
  * EXAKT diese Umsetzung" (Vorlage 2 = h85 zeigt den Schwanz frei in seiner Form). */
 static const int16_t k_schwanz_gewicht_v4[][2] = { { 15, 0 }, { 19, 4096 }, { 70, 4096 }, { 74, 0 } };
+/* Runde 41 SF V8: die V8-Kette (gleiche Glieder, Wurzel oben am Ruecken, re15_schwanz_r41_v8_kette) nimmt dieselbe Szenenfuehrung wie V4/V7
+ * (Gewicht k_schwanz_gewicht_v4, Freigabe h70-h74): die freigegebene Szene (V7, Nutzer 2026-11-08) bleibt der Ablauf; nur Form und
+ * Kettenmodus aendern sich. PORT-WAHL. */
 static int bf_schwanz_v4(void)
 {
     const re15_enemy_bank_t *bk = re15_enemy_find(0x30u);
-    return bk && bk->skel.bone_count == 23 && re15_schwanz_r41_v4_kette(&bk->skel);
+    return bk && bk->skel.bone_count == 23 && (re15_schwanz_r41_v4_kette(&bk->skel) || re15_schwanz_r41_v8_kette(&bk->skel));
 }
 
 

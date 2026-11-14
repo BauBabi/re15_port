@@ -1,0 +1,10 @@
+Runde 7c (Einbau P5-Stufe R3 + Pflicht-Korrekturen K-a..K-e), Zweig r41/sichel_v8
+Eingang: Stand 7b, Spiel-Asset 87b026816352c9987e9ceace2afbcb2dc8ff9827351e87b0a1693b20c8029b10 (Commit db62602be)
+P5-Kandidat R3: 9860f6bd78bfd8f827c66b33fe893331393a8aaeab23cbe7b5ee7e35b0f7ca2c (auf r6 e9e71bca); p5_stufe.py --r3 auf r6 = 9860f6bd
+R3 auf Stand 7b (vor den Korrekturen): 47b51e807858987d0750057cc3a5e5b31fffd79d413238f974d5c65e582da318
+Zwischenstand 0c307f80ffd474a1a513b58508e23501e38af5b96586e9ac4d75b67e79b118a4 (Commit 4e6e4b17f; t8 (25,36), q2 R2-UV) - ersetzt
+NEU (Spiel-Asset = Pin): 5c902d493e6815f8551e0297eb1ef7e8c6cbda4b11ed3ab5191cf6a62ac11f30 (277316 Byte, Commit 639132b77)
+Szenenlauf NEU (lauf_v4.sh FD 200-1100, Ende 1110, sfv8/r7c/laeufe/KC8): state.log bytegleich sfv4/r/V7_szene/state.log
+Exe: re15_port/build/platform/pc/re15_pc.exe sha256 8f15f6c52c7db434... (= P5-Exe 8f15f6c5)
+Bank P5: bank/bank_schnell_NEU.txt (5c902d49); --voll am Zwischenstand 0c307f80 (bank/bank_voll_KC6_0c307f80.txt): gleiche Geometrie
+wie NEU (nur UV von t8 und q2 anders; Marker-Zeilen deckend einfarbig), R3 auf 7b: bank/bank_voll_R3_auf_7b.txt.

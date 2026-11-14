@@ -1,0 +1,1016 @@
+{
+ "a": {
+  "p1": {
+   "ellbogen": 33.5,
+   "unterarm_mitte": 36.5,
+   "handgelenk": 12.2,
+   "handwurzel": 13.5,
+   "hand_breit": 14.5,
+   "krallenwurzel": 13.5,
+   "krallen_mitte": 7.8,
+   "spitzen": 5.2
+  },
+  "vorlage": {
+   "ellbogen": [
+    34.0,
+    34.8,
+    40.8
+   ],
+   "unterarm_mitte": [
+    32.5,
+    33.5,
+    39.1
+   ],
+   "handgelenk": [
+    20.0,
+    21.1,
+    25.5
+   ],
+   "handwurzel": [
+    26.6,
+    31.4,
+    34.8
+   ],
+   "hand_breit": [
+    37.8,
+    44.5,
+    50.6
+   ],
+   "krallenwurzel": [
+    37.8,
+    43.5,
+    50.6
+   ],
+   "krallen_mitte": [
+    18.2,
+    21.8,
+    29.1
+   ],
+   "spitzen": [
+    5.1,
+    6.9,
+    9.0
+   ]
+  },
+  "ausser": [
+   "handgelenk",
+   "handwurzel",
+   "hand_breit",
+   "krallenwurzel",
+   "krallen_mitte"
+  ],
+  "eng": {
+   "P2": 0.415,
+   "PV": 0.489
+  },
+  "eng_min": 0.597,
+  "profil": {
+   "unterarm": {
+    "werte": [
+     34.5,
+     39.5,
+     42.5,
+     40.5,
+     36.5,
+     33.2,
+     30.5,
+     27.5,
+     24.2,
+     15.0
+    ],
+    "ausser": [
+     2,
+     9
+    ],
+    "vorlage": [
+     35.6,
+     36.6,
+     36.6,
+     35.6,
+     33.5,
+     30.0,
+     27.0,
+     24.1,
+     22.5,
+     22.0
+    ]
+   },
+   "hand": {
+    "werte": [
+     11.2,
+     12.5,
+     13.5,
+     13.5,
+     13.5,
+     14.8,
+     13.5,
+     12.2,
+     7.8,
+     5.8
+    ],
+    "ausser": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9
+    ],
+    "vorlage": [
+     21.8,
+     25.8,
+     31.4,
+     36.4,
+     40.5,
+     43.5,
+     44.5,
+     31.1,
+     20.2,
+     12.6
+    ]
+   }
+  },
+  "ok": false
+ },
+ "b": {
+  "handgelenk": 12.2,
+  "vorlage": [
+   20.0,
+   21.1,
+   25.5
+  ],
+  "gelenk_offen_kf": 912,
+  "keyframes": 912,
+  "ok": false
+ },
+ "c": {
+  "breite_durch_laenge": 0.336,
+  "vorlage": [
+   0.655,
+   0.739,
+   0.783
+  ],
+  "hand_laenge": 43.2,
+  "vorlage_laenge": [
+   56.9,
+   59.5,
+   68.5
+  ],
+  "hand_breit": 14.5,
+  "ok": false
+ },
+ "d": {
+  "krallen": {
+   "A": [
+    18.1,
+    11.2,
+    -18.1
+   ],
+   "B": [
+    18.2,
+    5.6,
+    -51.3
+   ],
+   "C": [
+    18.1,
+    7.6,
+    -6.3
+   ],
+   "T": [
+    12.1,
+    5.8,
+    15.5
+   ]
+  },
+  "v7": {
+   "A": [
+    18.1,
+    11.2
+   ],
+   "B": [
+    18.2,
+    5.6
+   ],
+   "C": [
+    18.1,
+    7.6
+   ],
+   "T": [
+    12.1,
+    5.8
+   ]
+  },
+  "laenge_ausser": [],
+  "duenner_als_v7": [],
+  "daumen": {
+   "gabel_ab_handgelenk": 37.0,
+   "laenge": 1.3,
+   "dicke_wurzel": 1.0,
+   "winkel_zur_handachse": -5.7,
+   "seite": "Bild-links (zum Koerper)"
+  },
+  "daumen_vorlage": {
+   "gabel_ab_handgelenk": [
+    22.4,
+    24.4,
+    30.5
+   ],
+   "laenge": [
+    16.9,
+    17.7,
+    19.4
+   ],
+   "dicke_wurzel": [
+    10.0,
+    12.0,
+    16.1
+   ],
+   "winkel_zur_handachse": [
+    -26.0,
+    -23.7,
+    -22.1
+   ]
+  },
+  "daumen_ausser": [
+   "gabel_ab_handgelenk",
+   "laenge",
+   "dicke_wurzel"
+  ],
+  "ok": false
+ },
+ "e": {
+  "kreuzen": {
+   "P1": [
+    "AB",
+    "BC"
+   ],
+   "P2": [
+    "AC",
+    "BC"
+   ],
+   "PV": [
+    "AC"
+   ]
+  },
+  "ok": false
+ },
+ "f": {
+  "fehler": [],
+  "zeilen_mesh12": {
+   "491": 6,
+   "490": 34,
+   "492": 18
+  },
+  "fremde_texel": 0,
+  "mesh11_clut_wie_v7": true,
+  "ok": true
+ },
+ "g": {
+  "neu": {
+   "keyframes": 912,
+   "krallen_kf": 26,
+   "hand_kf": 68,
+   "zusammen_kf": 68,
+   "clips": [
+    5,
+    9,
+    11,
+    12,
+    18,
+    20
+   ],
+   "je_knochen": {
+    "8": 11,
+    "10": 51,
+    "4": 16
+   },
+   "tiefste": [
+    {
+     "clip": 18,
+     "bild": 20,
+     "kf": 792,
+     "knochen": 4,
+     "krallen": 38,
+     "hand": 16
+    },
+    {
+     "clip": 18,
+     "bild": 18,
+     "kf": 791,
+     "knochen": 4,
+     "krallen": 36,
+     "hand": 17
+    },
+    {
+     "clip": 18,
+     "bild": 22,
+     "kf": 793,
+     "knochen": 4,
+     "krallen": 28,
+     "hand": 17
+    },
+    {
+     "clip": 18,
+     "bild": 16,
+     "kf": 790,
+     "knochen": 4,
+     "krallen": 30,
+     "hand": 8
+    },
+    {
+     "clip": 20,
+     "bild": 46,
+     "kf": 835,
+     "knochen": 10,
+     "krallen": 2,
+     "hand": 27
+    },
+    {
+     "clip": 20,
+     "bild": 48,
+     "kf": 836,
+     "knochen": 10,
+     "krallen": 1,
+     "hand": 27
+    }
+   ]
+  },
+  "v7": {
+   "krallen_kf": 26,
+   "hand_kf": 68,
+   "zusammen_kf": 68,
+   "clips": [
+    5,
+    9,
+    11,
+    12,
+    18,
+    20
+   ]
+  },
+  "r5d": {
+   "krallen_kf": 26,
+   "hand_kf": 68,
+   "zusammen_kf": 68,
+   "gelenk_offen_kf": 912
+  },
+  "liste": [
+   {
+    "clip": 5,
+    "bild": 16,
+    "kf": 280,
+    "knochen": 8,
+    "krallen": 0,
+    "hand": 1
+   },
+   {
+    "clip": 5,
+    "bild": 17,
+    "kf": 281,
+    "knochen": 8,
+    "krallen": 0,
+    "hand": 2
+   },
+   {
+    "clip": 5,
+    "bild": 17,
+    "kf": 281,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 2
+   },
+   {
+    "clip": 5,
+    "bild": 18,
+    "kf": 282,
+    "knochen": 8,
+    "krallen": 0,
+    "hand": 3
+   },
+   {
+    "clip": 5,
+    "bild": 18,
+    "kf": 282,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 2
+   },
+   {
+    "clip": 5,
+    "bild": 19,
+    "kf": 283,
+    "knochen": 8,
+    "krallen": 0,
+    "hand": 3
+   },
+   {
+    "clip": 5,
+    "bild": 19,
+    "kf": 283,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 3
+   },
+   {
+    "clip": 5,
+    "bild": 20,
+    "kf": 284,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 3
+   },
+   {
+    "clip": 5,
+    "bild": 21,
+    "kf": 285,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 2
+   },
+   {
+    "clip": 5,
+    "bild": 22,
+    "kf": 286,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 2
+   },
+   {
+    "clip": 5,
+    "bild": 23,
+    "kf": 287,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 1
+   },
+   {
+    "clip": 9,
+    "bild": 42,
+    "kf": 400,
+    "knochen": 4,
+    "krallen": 2,
+    "hand": 2
+   },
+   {
+    "clip": 9,
+    "bild": 44,
+    "kf": 401,
+    "knochen": 4,
+    "krallen": 8,
+    "hand": 3
+   },
+   {
+    "clip": 9,
+    "bild": 46,
+    "kf": 402,
+    "knochen": 4,
+    "krallen": 11,
+    "hand": 3
+   },
+   {
+    "clip": 9,
+    "bild": 48,
+    "kf": 403,
+    "knochen": 4,
+    "krallen": 14,
+    "hand": 3
+   },
+   {
+    "clip": 9,
+    "bild": 50,
+    "kf": 404,
+    "knochen": 4,
+    "krallen": 16,
+    "hand": 3
+   },
+   {
+    "clip": 9,
+    "bild": 52,
+    "kf": 405,
+    "knochen": 4,
+    "krallen": 16,
+    "hand": 3
+   },
+   {
+    "clip": 9,
+    "bild": 54,
+    "kf": 406,
+    "knochen": 4,
+    "krallen": 12,
+    "hand": 3
+   },
+   {
+    "clip": 9,
+    "bild": 56,
+    "kf": 407,
+    "knochen": 4,
+    "krallen": 4,
+    "hand": 2
+   },
+   {
+    "clip": 9,
+    "bild": 108,
+    "kf": 433,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 2
+   },
+   {
+    "clip": 9,
+    "bild": 110,
+    "kf": 434,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 3
+   },
+   {
+    "clip": 9,
+    "bild": 112,
+    "kf": 435,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 1
+   },
+   {
+    "clip": 11,
+    "bild": 36,
+    "kf": 492,
+    "knochen": 8,
+    "krallen": 0,
+    "hand": 4
+   },
+   {
+    "clip": 11,
+    "bild": 36,
+    "kf": 492,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 3
+   },
+   {
+    "clip": 11,
+    "bild": 37,
+    "kf": 493,
+    "knochen": 8,
+    "krallen": 1,
+    "hand": 12
+   },
+   {
+    "clip": 11,
+    "bild": 37,
+    "kf": 493,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 4
+   },
+   {
+    "clip": 11,
+    "bild": 38,
+    "kf": 494,
+    "knochen": 8,
+    "krallen": 0,
+    "hand": 3
+   },
+   {
+    "clip": 11,
+    "bild": 38,
+    "kf": 494,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 3
+   },
+   {
+    "clip": 11,
+    "bild": 39,
+    "kf": 495,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 1
+   },
+   {
+    "clip": 12,
+    "bild": 64,
+    "kf": 571,
+    "knochen": 10,
+    "krallen": 1,
+    "hand": 11
+   },
+   {
+    "clip": 12,
+    "bild": 66,
+    "kf": 572,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 6
+   },
+   {
+    "clip": 12,
+    "bild": 68,
+    "kf": 573,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 4
+   },
+   {
+    "clip": 12,
+    "bild": 70,
+    "kf": 574,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 2
+   },
+   {
+    "clip": 12,
+    "bild": 72,
+    "kf": 575,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 1
+   },
+   {
+    "clip": 18,
+    "bild": 12,
+    "kf": 788,
+    "knochen": 4,
+    "krallen": 2,
+    "hand": 1
+   },
+   {
+    "clip": 18,
+    "bild": 14,
+    "kf": 789,
+    "knochen": 4,
+    "krallen": 15,
+    "hand": 4
+   },
+   {
+    "clip": 18,
+    "bild": 16,
+    "kf": 790,
+    "knochen": 4,
+    "krallen": 30,
+    "hand": 8
+   },
+   {
+    "clip": 18,
+    "bild": 18,
+    "kf": 791,
+    "knochen": 4,
+    "krallen": 36,
+    "hand": 17
+   },
+   {
+    "clip": 18,
+    "bild": 20,
+    "kf": 792,
+    "knochen": 4,
+    "krallen": 38,
+    "hand": 16
+   },
+   {
+    "clip": 18,
+    "bild": 22,
+    "kf": 793,
+    "knochen": 4,
+    "krallen": 28,
+    "hand": 17
+   },
+   {
+    "clip": 18,
+    "bild": 24,
+    "kf": 794,
+    "knochen": 4,
+    "krallen": 5,
+    "hand": 5
+   },
+   {
+    "clip": 18,
+    "bild": 26,
+    "kf": 795,
+    "knochen": 4,
+    "krallen": 0,
+    "hand": 1
+   },
+   {
+    "clip": 20,
+    "bild": 6,
+    "kf": 815,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 3
+   },
+   {
+    "clip": 20,
+    "bild": 8,
+    "kf": 816,
+    "knochen": 10,
+    "krallen": 1,
+    "hand": 20
+   },
+   {
+    "clip": 20,
+    "bild": 10,
+    "kf": 817,
+    "knochen": 8,
+    "krallen": 0,
+    "hand": 1
+   },
+   {
+    "clip": 20,
+    "bild": 10,
+    "kf": 817,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 16
+   },
+   {
+    "clip": 20,
+    "bild": 12,
+    "kf": 818,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 2
+   },
+   {
+    "clip": 20,
+    "bild": 14,
+    "kf": 819,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 1
+   },
+   {
+    "clip": 20,
+    "bild": 16,
+    "kf": 820,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 11
+   },
+   {
+    "clip": 20,
+    "bild": 18,
+    "kf": 821,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 22
+   },
+   {
+    "clip": 20,
+    "bild": 20,
+    "kf": 822,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 26
+   },
+   {
+    "clip": 20,
+    "bild": 22,
+    "kf": 823,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 19
+   },
+   {
+    "clip": 20,
+    "bild": 24,
+    "kf": 824,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 13
+   },
+   {
+    "clip": 20,
+    "bild": 26,
+    "kf": 825,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 8
+   },
+   {
+    "clip": 20,
+    "bild": 28,
+    "kf": 826,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 6
+   },
+   {
+    "clip": 20,
+    "bild": 30,
+    "kf": 827,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 6
+   },
+   {
+    "clip": 20,
+    "bild": 32,
+    "kf": 828,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 6
+   },
+   {
+    "clip": 20,
+    "bild": 34,
+    "kf": 829,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 8
+   },
+   {
+    "clip": 20,
+    "bild": 36,
+    "kf": 830,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 10
+   },
+   {
+    "clip": 20,
+    "bild": 38,
+    "kf": 831,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 13
+   },
+   {
+    "clip": 20,
+    "bild": 40,
+    "kf": 832,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 16
+   },
+   {
+    "clip": 20,
+    "bild": 42,
+    "kf": 833,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 19
+   },
+   {
+    "clip": 20,
+    "bild": 44,
+    "kf": 834,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 25
+   },
+   {
+    "clip": 20,
+    "bild": 46,
+    "kf": 835,
+    "knochen": 10,
+    "krallen": 2,
+    "hand": 27
+   },
+   {
+    "clip": 20,
+    "bild": 48,
+    "kf": 836,
+    "knochen": 10,
+    "krallen": 1,
+    "hand": 27
+   },
+   {
+    "clip": 20,
+    "bild": 50,
+    "kf": 837,
+    "knochen": 10,
+    "krallen": 1,
+    "hand": 25
+   },
+   {
+    "clip": 20,
+    "bild": 52,
+    "kf": 838,
+    "knochen": 10,
+    "krallen": 1,
+    "hand": 23
+   },
+   {
+    "clip": 20,
+    "bild": 54,
+    "kf": 839,
+    "knochen": 10,
+    "krallen": 1,
+    "hand": 20
+   },
+   {
+    "clip": 20,
+    "bild": 56,
+    "kf": 840,
+    "knochen": 8,
+    "krallen": 0,
+    "hand": 2
+   },
+   {
+    "clip": 20,
+    "bild": 56,
+    "kf": 840,
+    "knochen": 10,
+    "krallen": 1,
+    "hand": 20
+   },
+   {
+    "clip": 20,
+    "bild": 58,
+    "kf": 841,
+    "knochen": 8,
+    "krallen": 0,
+    "hand": 1
+   },
+   {
+    "clip": 20,
+    "bild": 58,
+    "kf": 841,
+    "knochen": 10,
+    "krallen": 1,
+    "hand": 25
+   },
+   {
+    "clip": 20,
+    "bild": 60,
+    "kf": 842,
+    "knochen": 8,
+    "krallen": 0,
+    "hand": 1
+   },
+   {
+    "clip": 20,
+    "bild": 60,
+    "kf": 842,
+    "knochen": 10,
+    "krallen": 1,
+    "hand": 23
+   },
+   {
+    "clip": 20,
+    "bild": 100,
+    "kf": 862,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 2
+   },
+   {
+    "clip": 20,
+    "bild": 101,
+    "kf": 863,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 6
+   },
+   {
+    "clip": 20,
+    "bild": 102,
+    "kf": 864,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 14
+   },
+   {
+    "clip": 20,
+    "bild": 103,
+    "kf": 865,
+    "knochen": 10,
+    "krallen": 0,
+    "hand": 2
+   }
+  ],
+  "je_clip": {
+   "5": 8,
+   "9": 11,
+   "11": 4,
+   "12": 5,
+   "18": 8,
+   "20": 32
+  },
+  "je_clip_v7": {
+   "5": 8,
+   "9": 11,
+   "11": 4,
+   "12": 5,
+   "18": 8,
+   "20": 32
+  },
+  "dazu": [],
+  "dazu_je_clip": {},
+  "weg_je_clip": {},
+  "ok": true
+ },
+ "ok": false,
+ "teile_rot": [
+  "a",
+  "b",
+  "c",
+  "d",
+  "e"
+ ]
+}

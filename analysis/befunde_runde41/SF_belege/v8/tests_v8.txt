@@ -1,0 +1,11 @@
+V8 Runde 5d (Asset c4976c62, Code 3022778f2), Baum r41_sichel_v8/re15_port/build, 2026-11-10
+build: === LOCAL-BUILD-OK (build)
+ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+100% tests passed, 0 tests failed out of 8
+ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)":
+100% tests passed, 0 tests failed out of 1013
+Gegenprobe (ctest -R "unit_birkin_formen|unit_schwanz_r41", Asset voruebergehend ersetzt, danach zurueck und sha256 geprueft):
+V7 319bbd17: 0% tests passed, 2 tests failed out of 2
+V8 r4 10d02173: 50% tests passed, 1 tests failed out of 2 (unit_birkin_formen)
+V8 r5 P4 5fd35ff1 (Commit 91885ed8c): 50% tests passed, 1 tests failed out of 2 (unit_birkin_formen)
+Protokolle: runde5/ctest_gruppe.txt, runde5/ctest_unit.txt, runde5/gegenprobe_test_*.txt

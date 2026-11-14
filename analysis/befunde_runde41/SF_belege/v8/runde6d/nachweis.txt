@@ -1,0 +1,21 @@
+NACHWEIS V8 Runde 6d (Abgabe): Spiel-Asset gegen V7, V8 r5d und den Stand Rest-Bauer (Skript sfv8/r6c/p7/nachweis.py, unveraendert)
+--- V7 (319bbd17) gegen Endstand
+A 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6
+B e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83
+Meshes anders (Ecken/Normalen/Flaechen/UV): [8, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22] von 23 | Mesh 9 gleich: True
+Keyframes 912, EMR gleich lang: True; Knochen mit anderen gespeicherten Winkeln (Zahl der Keyframes): {10: 888, 11: 889, 16: 912, 17: 912, 18: 912, 19: 912, 20: 912, 21: 912, 22: 912}
+--- V8 r5d (c4976c62) gegen Endstand
+A c4976c6214c74fb1ac341fc0ed4ec0768e15c34b0b1939c53b68e04aabd9526a
+B e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83
+Meshes anders (Ecken/Normalen/Flaechen/UV): [8, 11, 12, 16, 17, 18, 19, 20, 21, 22] von 23 | Mesh 9 gleich: True
+Keyframes 912, EMR gleich lang: True; Knochen mit anderen gespeicherten Winkeln (Zahl der Keyframes): {10: 888, 11: 889}
+--- Rest-Bauer (95a783a6) gegen Endstand
+A 95a783a62e75ed2bd792094373ce0a27b8ad71ad508be21f4261400ef42aa7cc
+B e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83
+Meshes anders (Ecken/Normalen/Flaechen/UV): [11, 12] von 23 | Mesh 9 gleich: True
+Keyframes 912, EMR gleich lang: True; Knochen mit anderen gespeicherten Winkeln (Zahl der Keyframes): {10: 888, 11: 889}
+--- Hand-Bauer 6a (7a65e3f0) gegen Endstand
+A 7a65e3f0befa0c42c1b67a3136593e5272777f3caf507c33b061348065ee2c71
+B e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83
+Meshes anders (Ecken/Normalen/Flaechen/UV): [8, 11, 12, 16, 17, 18, 19, 20, 21, 22] von 23 | Mesh 9 gleich: True
+Keyframes 912, EMR gleich lang: True; Knochen mit anderen gespeicherten Winkeln (Zahl der Keyframes): {10: 888, 11: 889}

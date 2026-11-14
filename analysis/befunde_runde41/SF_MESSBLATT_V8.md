@@ -1,0 +1,445 @@
+# SF Messblatt V8: Koerperbau nach Nutzer-Skizze (Darstellung.png) - nur Messung (Messer, 2026-11-08)
+
+Kein RE-Befund: Die Sichel-Form gibt es auf keiner Disc. Alle Zahlen sind Bildmessungen an der Vorlage und am Modell V7
+(Spiel-Asset re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD, sha256 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6,
+Zweig r41/sichel_v8, HEAD 6a25db27b) bzw. Lesungen des Original-EM30 (CDEMD0.EMS Typ 0x30). Keine Zahl hier ist eine @0x-Konstante;
+jede Bauzahl ist eine PORT-WAHL, belegt mit Nutzer-Wortlaut oder dieser Messung. Am Code, am Asset und unter Version_80%/, pri/,
+synchro/ ist nichts geaendert. Kein Bau, kein Spiellauf: die Szenen-Zahlen stammen aus dem freigegebenen Lauf
+sfv4/r/V7_szene/debug.log (nur gelesen).
+
+Seiten: (B) = Sicht des Betrachters, (W) = Sicht des Wesens. H = Figurhoehe der Vorlage = Sohle 436 - Oberkante 182 = 254 px.
+Massstab am Koerper (PV, senkrecht): 65,4 px je 1000 Modelleinheiten (E.). Rot = a* >= 10 (CIE-Lab, Videoraum; Modell nach
+v4_gemein.videoraum, Gauss 1,5 + Eichung V = a + b P).
+
+Belege: Tafeln SF_belege/v8/messung/*.png (roh), Rohdaten SF_belege/v8/messung/daten/*.json, Werkzeuge
+SF_belege/v8/messung/werkzeuge/*.py (Python ohne -I; nutzen re15_port/tools/r41_sichel/{foto,v4,v2,v3,v6kopf}; Arbeitsordner
+scratchpad/sfv8).
+
+## 0. Ergebnis zuerst
+
+| Punkt | Befund |
+|---|---|
+| Vorlage | Darstellung_Vorlage.png = Videobild **n1439** (Datei SF_belege/roh/alle/f1440.png; mittlere Abweichung 0,22 Grauwerte, naechstes n1438 0,97). 4 Bilder nach Foto 2 (n1435). Kamera 50A0 Cut 12. |
+| Pose | **PV = Clip 17 Bild 47 Gier 587 (51,6 Grad) x -8246 z -21266**: Rumpf-IoU ohne Schwanz 0,639 (P2 0,516), Kopf-Anker 0,981, Sohle 0,992. |
+| "Die rechte Seite" | = **(W)-rechts** = in n1439/PV die zur Kamera gewandte Flanke (Knochen 13 Oberarm (W)-rechts 3671 px sichtbar, Knochen 10 (W)-links 234 px). Bild-rechts ist NICHT roeter: Figur Bild-rechts 31,7 % rot, Bild-links 40,9 %. |
+| Schwanz-Ursache | Nicht die Dicke, sondern **Wurzel und Verlauf**: Wurzel (Gelenk 16) sitzt 659 E. unter der Rumpf-Oberkante und 378 E. (W)-rechts -> der Buckel (Mesh 8) ragt ueber die Schwanzwurzel = Stufe/Huegel an J; die Biegung liegt fest auf drei Gelenken (39 / 73 / 48 Grad, in allen 912 Keyframes und in 130 von 144 Szenentakten), Gelenk 19 kehrt die Richtung um -> L/Zickzack, unteres Ende 43-50 px rechts der Vorlage. schwanz_r41.c erhaelt diese Biegung (V4-Kette, Knick-Ausnahme > 30 Grad). |
+| V7 gegen Nutzerlinie T | Aussenkante V7 gegen Vorlage-Kante: Mittel 16,8 px, Max 50 px (22 Stationen); gegen die Linie T selbst 24,0 / 56 px. |
+| V7 an J / Ruecken / Kopf | Oberkontur x 330-385 im Mittel 6,2 px (max 12) unter der Vorlage (Stufe an der Wurzel); Anstieg x 330 -> 405: V7 29 px, Vorlage 18 px; Buckelkuppe Prominenz V7 8 px, Vorlage 3 px; Sattel der V7-Oberkontur 6,6 px bei x 355; Huegel H: Vorlage 7,5 px ueber der Sehne x 405 -> 447 (bei x 437), V7 4,6 px (bei x 427); K (Kopf-Vorderkante) V7 3,0 px Abweichung von der Geraden, Nutzerlinie 2,2 px. |
+| Rot (W)-rechts | Oberarm 13: Vorlage 49,4 %, V7 22,8 %; Rumpf 8 (W)-rechts: Vorlage 76,3 %, V7 **0,0 %**; Ruecken oben: 55,2 % / 0,0 %. V7-Zeilen 480-482 haben 0 Eintraege mit a* >= 10 (V5 hat sie vergraut). |
+| Adern Original | Original-EM30: Adernbaum Seite 0 Zeile 480 (u 0-77 v 0-155, 1313 Ader-Texel) und Brustadern Seite 1 Zeile 481 (u 128-255 v 0-90, 605 Ader-Texel); V7 traegt dort zu 99,0 / 100 % die Original-Texel. Probe (nur im Speicher): Zeile "V7-480 + 62 Original-Aderfarben" auf Mesh 13 -> Oberarm 42,7 % rot; auf Mesh 8 (W)-rechts nur 1,7 %, weil die in PV sichtbaren Rumpfflaechen auf aderarmen Texeln liegen (9,6 % Ader) -> UV-Verschiebung je Flaeche noetig. |
+| Riegel | S1-S8 entworfen (Abschnitt 7); V7 ist bei S1, S2, S3, S4, S6, S7 ROT, bei S5 und S8 gruen. |
+
+## 1. Vorlage einordnen
+
+- Suche (werkzeuge/m1_suche.py): mittlere absolute Abweichung Darstellung_Vorlage.png gegen alle 1538 Bilder SF_belege/roh/alle
+  (Worktree r41_sichel, nur gelesen): f1440 0,221 (Figurbox 0,302), f1439 0,971, f1438 1,428, f1437 1,954, f1441 2,441.
+  **n1439 = f1440** (n(N-1) = fN).
+- Schnitt (m3_schnitt.py, Wandbox x 0-150 y 60-140, Abweichung zu n1439): n1351-n1379 1,2-2,8, n1383-n1435 <= 0,35, n1443-n1475
+  2,5-2,9 (derselbe Schnitt, leichte Helligkeitsverschiebung), ab n1479 steigend (Abblende); vor n1351 anderer Schnitt (60,5).
+- Bewegung des Schwanzbands (m21_nachbarn.py, Box x 262-330 y 220-340, Abweichung zu n1439): n1435 2,7 / n1436 1,8 / n1437 1,7 /
+  n1438 0,5 / n1440 2,8 / n1441 3,6 / n1445 7,3 / n1451 9,7. Das Band steht n1435-n1440 still (Foto 2 zeigt denselben Schwanz), ab
+  n1441 schwingt es nach vorn unten vor den Koerper (Tafel 03, n1445-n1451 mit roten Streifen). Die Ruecken-Box (x 330-450, y 175-215)
+  dreht schon ab n1440 (11-31).
+- Figur-Maske (m4d.py, m7_trimap.py): Konsens-Hintergrund je Pixel aus n1352-n1475 (ohne n1418-n1435, Vordergrund) = Median der 25 %
+  Bilder, die dem BSS-Hintergrund (ROOM50A12, Videoraum) am naechsten sind; dE76 Vorlage gegen Konsens, Gauss 1,0, Schwelle 9, Schliessen,
+  groesste Komponente (Tafel 09). Figur sicher 10 974 px, unbekannt 29 455 px; Beine und unteres Schwanzstueck bleiben unbekannt (dunkler
+  Tuerraum, dE 2-7).
+- Pose (m9_pose.py, Verfahren foto/f_pose.py): Gesamt = 0,5 IoU + 0,25 Kopf + 0,25 Sohle; IoU nur Rumpf (Knochen 0-15), Bild links der
+  Nutzerlinie J = unbekannt. Kopfbox Vorlage (422,193)-(468,254), Sohle 436 (Messblatt V4). Grob 912 Keyframes x 72 Gier = 65 664
+  Kandidaten, Feinsuche (Gier/Bild/Lage) aus den besten 24 und P2.
+
+| Kandidat | Gesamt | IoU | Kopf | Sohle |
+|---|---|---|---|---|
+| **PV Clip 17 Bild 47 Gier 587 x -8246 z -21266** | **0,813** | **0,639** | 0,981 | 0,992 |
+| Clip 17 Bild 49 Gier 644 x -8246 z -21330 | 0,809 | 0,629 | 0,988 | 0,992 |
+| Clip 10 Bild 43 Gier 770 x -8326 z -21330 | 0,802 | 0,629 | 0,959 | 0,992 |
+| P2 fein: Clip 12 Bild 48 Gier 868 x -8246 z -21330 | 0,720 | 0,539 | 0,811 | 0,992 |
+| P2 (Messblatt Foto) Clip 12 Bild 48 Gier 861 x -8182 z -21330 | 0,709 | 0,516 | 0,813 | 0,992 |
+
+Sichtkontrolle Tafel 08 (selbst angesehen): PV deckt Buckel, Kopf rechts und den Oberarm unter dem Buckel; die Beine weichen ab (sie
+liegen in der Unbekannt-Zone).
+
+## 2. Nutzerlinien (Annotationspixel)
+
+Differenz Darstellung.png - Darstellung_Vorlage.png (max. Kanal > 40), 8er-Komponenten, Farbe je Komponente, Skelett + laengster Pfad
+(m2_linien.py, m2b_poly.py, daten/m2_linien.json). Die Schrift-Komponenten (Textzeilen) sind ausgenommen.
+
+| Linie | Farbe RGB | px | Polylinie (Bildkoordinaten) | Laenge px |
+|---|---|---|---|---|
+| T1 rot "tail area 1" | 237/28/36 | 209 | (268,296) -> (269,313) -> (270,333) | 37,8 |
+| T2 gruen "tail area 2" | 34/177/76 | 848 | (372,180) -> (354,184) -> (336,187) -> (318,199) -> (300,215) -> (282,231) -> (278,249) -> (275,267) -> (272,288) | 172,3 |
+| J blau "Tail directly smooth into the back - no hill or anything..." | 0/162/232 | 464 | Zeiger (384,157) -> (381,180); Linie (379,189) -> (369,199) -> (360,217) -> (355,229) -> (357,241) | 24,2 / 63,4 |
+| H hellblau "Little red hill from the back" | 153/217/234 | 192 | (420,190) -> (436,190) -> (440,194) -> (445,206) | 35,7 |
+| K weiss "smooth straight to head without further hills...." | 195/195/195 | 202 | (454,210) -> (458,218) -> (462,226) -> (463,244) | 37,7 |
+
+Lesung: T = T2 + T1 (219 px, geglaettet) ist die Aussenkontur des Schwanzes von der Rueckenoberkante bis unten; die Linie liegt
+**neben** der Bildkante: Median 11,0 px (19 Stationen) ausserhalb. J markiert die Naht Schwanz/Ruecken (Innenseite der Wurzel),
+H die Rueckenkontur kurz vor dem Kopf, K die Kopf-Vorderkante.
+
+## 3. Vorlage messen
+
+### 3.1 Schwanz quer zu T (Stationen alle 10 px, Normale nach innen; m27_breite.py, daten/m27_breite.json, Tafel 02)
+Aussenkante = erste Stelle mit 3 x dE >= 8; Innenkante = Ende des Laufs dE >= 5 (Luecke <= 4 px).
+
+| s | T-Punkt | Kante (px ab T) | Breite Vorlage px | Breite (H) | Breite V7-Schwanz px |
+|---|---|---|---|---|---|
+| 0-80 | (370,180)-(305,211) | 6-14 | Ruecken (nicht trennbar) | - | 0-43 |
+| 90 | (297,217) | 8 | 39 | 0,154 | 33 |
+| 100 | (290,224) | 9 | 12 (dunkle Luecke im Band, Ausreisser) | - | 62 |
+| 110 | (283,231) | 11 | 43 | 0,169 | 50 |
+| 120 | (280,239) | 12 | 45 | 0,177 | 38 |
+| 130 | (279,248) | 13 | 33 | 0,130 | 32 |
+| 140 | (277,258) | 9 | 33 | 0,130 | 31 |
+| 150 | (275,267) | 14 | 13 | 0,051 | 28 |
+| 160 | (274,276) | 14 | 11 | 0,043 | 26 |
+| 170 / 190 / 210 | - | keine Kante (dE < 8) | - | - | 12 / 12 / 9 |
+| 180 | (269,295) | 6 | 7 | 0,028 | 9 |
+| 200 | (269,314) | 11 | 9 | 0,035 | 9 |
+
+- Wurzel: Die Innenkante der Wurzel ist J; Strecke J (379,189) -> (357,241) = 63,4 px, mit der Oberkante (+5-8 px) ein Wurzelquerschnitt
+  von **55-63 px = 0,22-0,25 H** (Lesung, siehe Offen 1).
+- Mittellinie Vorlage (T + Normale x (Kante + Breite/2)): (316,238) s90, (310,249) s110, (314,246) s120, (308,253) s130, (302,262) s140,
+  (296,271) s150, (293,280) s160, (278,297) s180, (285,314) s200; Wurzelmitte an J ~(366,215). Ein Bogen: erst nach Bild-links, ab
+  s 130 senkrecht nach unten, keine Umkehr.
+- Ende: Die Linie T1 endet bei y 333 (Kante x 278). Der Boden unter diesem Bildpunkt liegt 5137 E. hinter der Lage PV
+  (birkin_buehne.boden_aus_video, m20_raum.py); in Koerpertiefe liegt der Punkt ~1575 E. ueber dem Boden (103 px / 65,4 px je 1000 E.).
+  Ob der Schwanz dort den Boden beruehrt, zeigt das Bild nicht (Offen 2).
+
+### 3.2 Ruecken-Kontur, Huegel, Kopf (m13b.py, m25_j.py, daten/m13b_oben.json, m25_j.json, Tafel 04)
+Oberkontur aus der Figur-Maske je Spalte: x 345-375 y 192-189, x 380-405 185-182 (Kuppe 182 bei x 405, Prominenz 3,0 px), x 410-430
+185-190, x 435-445 192-197, ab x 450 Kopf (211). **Huegel H**: Die Kontur liegt bis 7,5 px ueber der Sehne x 405 -> 447, hoechste Stelle
+x 437, dort rot (Tafel 07). **K**: Die Nutzerlinie weicht 2,2 px von der Geraden ab (fast gerade). Stufen >= 3 px in x 330-445: keine
+(nur die Kopfkante x 446-450).
+
+### 3.3 Rot (W)-rechts (Orte und Anteil; keine Texelwerte; m14_rot.py, daten/m14_rot.json, Tafel 07)
+Teile = Id-Puffer V7 in PV auf den sicheren Figurpixeln der Vorlage; (W)-rechts am Rumpf = Knochenraum x < 0.
+
+| Teil | Vorlage rot (a* Median) | V7 rot (a* Median) |
+|---|---|---|
+| Oberarm (W)-rechts, Knochen 13 (3132 px) | **49,4 %** (10,0) | 22,8 % (3,6) |
+| Rumpf 8 (W)-rechts (2148 px) | **76,3 %** (11,6) | **0,0 %** (2,7) |
+| Rumpf 8 (W)-links (938 px) | 15,1 % (6,3) | 8,0 % (2,4) |
+| Kopf 9 (938 px) | 9,7 % (4,9) | 0,0 % (4,3) |
+| Schwanz 16-22 (2511 px) | 26,5 % (6,9) | 0,0 % (-1,6) |
+| Region Ruecken oben x 330-450 y 150-215 | 55,2 % | 0,0 % |
+| Region Brust/Arm-Mitte x 345-430 y 215-300 | 43,0 % | 13,7 % |
+
+Orte: Ruecken oben und Flanke (W)-rechts unter dem Buckel, Oberarm (W)-rechts (Seiten-/Hinterflaeche), kleiner Huegel H. Das V7-Rot
+sitzt nur auf Mesh 13 Zeile 489 (735 px) und Mesh 8 Zeile 488 (114 px, Brust).
+
+## 4. V7 dagegen (PV, gleiche Kamera; m10_v7.py, f_rast-Pixelprotokoll)
+
+- Kontur gegen T (Tafel 02, daten/m27_breite.json; d = Aussenkante V7 - Vorlage-Kante entlang der Normale, + = V7 weiter innen):
+  s 0-50: +2 bis +13 (V7-Rueckenoberkante tiefer); s 60-120: 0 bis -9 (der V7-Schwanz ragt bis 9 px ueber die Kante); s 130-210:
+  +2 bis +50 (unteres Stueck 43-50 px nach Bild-rechts). **Mittel 16,8 px, Max 50 px**; gegen die Linie T: 24,0 / 56 px.
+- Breite: V7 oben 31-62 px (Glieder schraeg zur Normale), s 150-160 26-28 px (Vorlage 11-13), unten 9-12 px (Vorlage 7-9). Durchmesser
+  der Ringe in PV: Glied 16-22 = 40 / 36 / 36 / 33 / 22 / 10 / 10 px gegen den Wurzelquerschnitt der Vorlage 55-63 px.
+- Kette in PV (Bild): 16 (387,218) -> 17 (351,223) -> 18 (325,227) -> 19 (303,242) -> **20 (334,292)** -> 21 (329,311) -> 22 (328,323).
+  Bis Gelenk 19 liegt die Kette nahe der Vorlage-Mittellinie (303,242 gegen ~310,248); Glied 19 kehrt nach Bild-rechts um.
+  Gelenkwinkel 17..22: 13,2 / 38,9 / 73,4 / 48,1 / 16,0 / 2,1 Grad; Glied 16 81,9 Grad gegen die Senkrechte.
+- J: Oberkontur x 330-385 V7 - Vorlage +6,2 px im Mittel (max 12); V7 steigt x 330 -> 405 um 29 px (Vorlage 18). Rumpf und Schwanz
+  getrennt gerastert (m26_huckel_j.py): Schwanz-Oberkante x 345-395 y 204-195, der Rumpf liegt ab x 360 darueber (x 380: 191 gegen 197;
+  x 405: 179). Entlang J wechseln 19 von 25 Querpaaren (+-4 px) zwischen Schwanz- und Rumpfknochen = sichtbare Naht.
+- Ruecken: V7-Kuppe y 179 bei x 405 (Vorlage 182), Prominenz 8,0 px (Vorlage 3,0); Sattel der V7-Oberkontur unter ihrer oberen Huelle
+  (x 300-420) 6,6 px bei x 355; Ruecken -> Kopf (x 380-447) 6,4 px bei x 438. Huegel H 4,6 px bei x 427 (Vorlage 7,5 bei x 437).
+- Kopf: V7-Vorderkante y 212-244 bei x 452-461, 3,0 px Abweichung von der Geraden. Die Kopfgeometrie bleibt (Nutzer "jetzt schon gut").
+- Rot (W)-rechts: siehe 3.3 (Oberarm 22,8 %, Rumpf 0,0 %).
+
+Tafel 01: Vorlage | Darstellung.png | V7 mit Nutzerlinien, V7-Umriss (weiss), Schwanz 16-22 (magenta), Vorlage-Figur (gelb) | 50 %.
+
+## 5. Ursache
+
+1. **Wurzel zu tief und seitlich.** Knochen 16 relpos im Raum von 8 = (-378, -602, -410); Rumpf-Oberkante y -1261 (Ecken (-395,-1261,-296),
+   (-122,-1232,-304), (-339,-1231,-392)). Mit Wurzelradius 308 liegt die Rohroberkante bei y -910, **351 E. (~23 px) unter dem Ruecken**:
+   Der Buckel steigt ueber der Wurzel auf (J-Stufe 6-12 px, Kuppe 8 px Prominenz). Die Vorlage zeigt die Schwanzoberkante als
+   Fortsetzung der Rueckenkontur ("Tail directly smooth into the back - no hill").
+2. **Feste L-Biegung.** Gelenkwinkel ueber alle 912 Keyframes (m19_kette.py): Median 14,5 / 37,8 / 73,3 / 45,5 / 16,0 / 13,9 Grad,
+   P10-P90 nur 2-9 Grad breit -> jede Animation zeigt dieselbe Form. Glied 16 liegt im Median 72 Grad von der Senkrechten (waagerecht
+   nach hinten); Gelenk 19 knickt 73 Grad und dreht die Kette zurueck unter den Koerper. Glied 19 ist mit 1121 E. das laengste
+   (V6 x 2,14 fuer die alte Spitze in P2).
+3. **Das Spiel erzwingt die L-Form.** schwanz_r41.c erkennt die Kette als V4 (Gliedlaengen 1121 / 204 = 5,5 > SW_GLATT_V4_VERH 2,0),
+   haengen() laeuft nicht, glaetten() laesst jedes Gelenk mit Keyframe-Winkel > SW_GLATT_KNICK_AB (30 Grad) bei seinem Winkel (+3 Grad,
+   oeffnet hoechstens SW_BIEGUNG_SPIEL 10 Grad) und begrenzt die uebrigen auf 12-16 Grad. Szene V7 (144 Takte, m28_szene.py):
+   Gelenkwinkel Median 14,3 / 38,5 / 72,2 / 46,3 / 15,9 / 13,4 Grad, 130 Takte mit einem Gelenk > 60 Grad; kein Gelenk unter dem Boden
+   (tiefstes y -108).
+4. **Querschnitt.** Ringradien (Knochenraum, daten/m19_kette.json): Mesh 16 308 -> 273, 17 274 -> 272, 18 272 -> 255 (Bauch 282),
+   19 255 -> 170, 20 170 -> 80, 21 80 -> 74, 22 74 -> Spitze. Mitte und Ende passen zur Vorlage (36-33 px, 10 px); zu schmal ist nur die
+   Wurzel (40 px gegen 55-63 px), und sie steckt seitlich im Rumpf (Mesh 16 reicht bis t = -383 in den Rumpf, Endring sichtbar als Naht an J).
+5. **Huckel.** (a) Stufe an J = Buckel ueber der tiefen Wurzel (Punkt 1). (b) Kuppe von Mesh 8 (Ecken siehe Punkt 1) mit 8 px Prominenz
+   statt 3 px. (c) Sattel Ruecken -> Kopf 6,4 px bei x 438 (die Vorlage hat dort keinen; ihr Huegel H sitzt bei x 437 als Erhebung).
+
+## 6. Bauplan V8 (PORT-WAHL; Ziel = Nutzerlinien in PV)
+
+### 6a Schwanz
+- **Wurzel:** Gelenk 16 (relpos in 8) auf die Rueckenmitte zwischen den Schulterblaettern: x ~ 0 (heute -378), Oberkante des Wurzelrings
+  buendig mit der Rumpf-Oberkante (Ring-Mitte y ~ -1261 + r0, heute -602), z an der Rueckenflaeche (oberste Ecken z -296 bis -392) halb
+  eingebettet. Feinwerte per Suche gegen S1/S2 in PV. Beleg: Nutzer "Tail directly smooth into the back - no hill or anything",
+  frueher "vom ruecken aus geschlossen ein zusammenhaengendes stueck Das direkt I. den Ruecken uebergeht".
+- **Radien (Durchmesser in PV -> E. mit 65,4 px je 1000 E.):** Wurzel 55-63 px -> r0 420-480 E.; s 90-130 40 px -> 305 E.; s 140 33 px ->
+  250 E.; s 150-160 12 px -> 90 E.; Ende 8 px -> 60 E.; monoton fallend, Steigungsknick <= 15 Grad (Regel V5f), Gelenkringe deckungsgleich,
+  Deckel V6 bleiben. Der Wurzelring liegt im Rumpf (keine sichtbare Ringkante, S2).
+- **Ruheverlauf:** Kette in PV entlang der Vorlage-Mittellinie (3.1): Wurzel (366,215) -> (316,238) -> (302,262) -> (293,280) -> (278,297)
+  -> (285,314) -> Ende ~(283,330). Biegung ~90 Grad gleichmaessig auf die Gelenke 17-21 (je <= 25 Grad), ohne Umkehr. Umsetzung im EMD:
+  Drehungs-Keyframes der Knochen 16-22 = Ruhebogen (in PV gegen S1 eingepasst) plus die bisherige Bewegung je Bild (Keyframe minus
+  Clip-Median); Gliedlaengen neu verteilt (etwa gleich lang statt 624/440/887/1121/350/204); Meshes 16-22 mit neuen Ringen (Radien oben),
+  Flaechen/UV/Zeile 487 wie V6/V7 (Schwanzfarbe bleibt "dunkel gruenlich-grau").
+- **Code (schwanz_r41.c):** Die V4-Erkennung (Gliedverhaeltnis > 2,0) und die Biegungs-Ausnahme (SW_GLATT_KNICK_AB 30 Grad,
+  SW_BIEGUNG_SPIEL 10 Grad) wurden fuer die L-Form gebaut. V8 braucht einen eigenen Kettenmodus: glaetten() mit Grenze = Keyframe-Winkel
+  + 3 Grad, hoechstens 25 Grad, ohne Ausnahme; haengen() aus (Glied 16 liegt fast waagerecht; SW_HANG_COS_MIN 80 Grad wuerde es
+  herunterdruecken); Feder/Mitnahme wie V4; die Bodenregel (Radius + Dorn, ganze Kette hochdrehen) bleibt. Erkennungsmerkmal neu waehlen
+  (z. B. Wurzel-relpos), weil gleich lange Glieder den V4-Pfad verlassen.
+- **Szene (engine/src/birkin_formen.c ~575-681 und 816):** Schwanzbahn-Ziele (ziel/fuehrung), verdeckte Glieder h60-h70 und
+  k_schwanz_dicke sind auf die alte Kette gelegt; neue Gesamtlaenge und Wurzel nachpruefen. Die Spider-Man-Szene (lauf_v4.sh) muss mit
+  EXIT 0, 191 FRAMEDUMPs und "EM30 loaded: 23 meshes, 23 bones, 21 clips" laufen und gegen sfv4/r/V7_szene verglichen werden.
+- **Boden:** Spitze (inkl. Dornspitze Mesh 22) in keinem der 912 Keyframes unter der tiefsten Koerperecke (V7: 82 darunter) und in der
+  Szene nie y > 0.
+
+### 6b Ruecken
+- Buckel: Die obersten Ecken von Mesh 8 (Oberkante y -1261 / -1232 / -1231, Kuppe in PV x 395-415) so absenken, dass die Kuppe hoechstens
+  4 px Prominenz hat (Vorlage 3) und die Oberkontur x 330-385 auf +-4 px an der Vorlage liegt; die Schwanzoberkante uebernimmt x 330-380.
+- Huegel H: ein kleiner Huegel 5-10 px ueber der Sehne x 405 -> 447 bei x 428-445 (Vorlage 7,5 px bei x 437), rot (Ader-Zeile, 6c);
+  sonst keine weiteren Huegel.
+- K: Kopf (Mesh 9 und Zeile 486) bytegleich V7; Uebergang 8 -> 9 ohne Stufe >= 3 px (heute 201 -> 206 bei x 445 -> 450, gut).
+
+### 6c Adern (W)-rechts (Original-EM30-Texel; m15_orig.py, m16_vgl_tex.py, m17_adern.py, daten/m17_adern.json, Tafel 05)
+- Quelle: CDEMD0.EMS Typ 0x30 = Blob 16, 226 404 Byte, sha256 569e3138...; TIM 384 x 256, 8 bpp, CLUT-Zeilen 480-482.
+- Ader-Texel = Original-Texel mit Paletten-a* >= 15 und L* <= 38 in der Zeile seiner Original-Flaechen, duenn (verschwindet unter der
+  Oeffnung 5 x 5); Flaechen-Rot (bleibt unter der Oeffnung) = Wunde/Augapfel, nicht verwenden.
+
+| Bereich | Seite / Zeile | Texel benutzt | Ader | Flaechen-Rot | Ader-Lab Median | Haut-Lab Median | V7 = Original |
+|---|---|---|---|---|---|---|---|
+| A Adernbaum u 0-77 v 0-155 | 0 / 480 | 10 046 | 1313 (13,1 %) | 92 | 22,8 / 21,9 / 10,4 | 51,4 / 10,8 / 5,5 | 99,0 % |
+| B Brustadern u 128-255 v 0-90 | 1 / 481 | 7713 | 605 (7,8 %) | 233 | 20,7 / 23,3 / 11,2 | 46,3 / 8,2 / 6,9 | 100 % |
+| C Schulter-Augapfel u 78-127 v 0-100 | 0 / 480 | 2415 | 225 | 342 | 28,7 / 30,5 / 15,3 | 55,0 / 12,8 / 7,2 | 100 % (nicht verwenden, Offen 7) |
+
+- Zeilen: X1 = V7-Zeile 480 (graue Haut V5) + die 62 Original-Eintraege der Zeile 480 mit a* >= 15 und L* <= 38, bytegleich; X2 =
+  V7-Zeile 481 + die 50 entsprechenden Original-Eintraege der Zeile 481. Eine Transformation je Material (Haut grau wie V5, Adern =
+  Original), keine neue Farbe, keine Eichung je Fleck. Budget: 13 + 2 = 15 Zeilen, Port-Texturhoehe 256 x 15 = 3840 <= 4096.
+- Flaechen: Mesh 13 (Oberarm (W)-rechts) Zeile 480 -> X1 (die Zeile-489-Flaechen bleiben); Mesh 8 (W)-rechts (Schwerpunkt x < 0) Zeile
+  480 -> X1 (51 Flaechen), 481 -> X2 (6). Probe im Speicher (m22_adersim.py, Tafel 06): Oberarm 22,8 -> **42,7 %**, Rumpf (W)-rechts
+  0,0 -> **1,7 %**.
+- Rumpf: Die 18 in PV sichtbaren Flaechen von Mesh 8 (W)-rechts (d0, d15, d43, d48, d51, d55, d56, d64, d73, v4, v8, v13, v14, v18, v19,
+  v21, v24, v25; zusammen 2954 Texel, heute 283 Ader = 9,6 %, u 1-193 v 5-101) liegen auf aderarmen Texeln; ein gemeinsamer Schub ist
+  nicht moeglich (beide Seiten der Textur, m23b.py). Plan: je Flaeche bzw. je zusammenhaengender UV-Insel eine Verschiebung auf
+  aderreiche Fenster derselben Seite/Zeile, Form gleich, nur auf benutzte Original-Texel (m24): A u 19-43 v 40-64 (43 %), u 0-12 v 22-46
+  (51 %), u 0-12 v 69-93 (48 %); B u 188-212 v 29-53 (37 %), u 136-160 v 35-59 (23 %). Texel bleiben bytegleich (Mehrfachnutzung
+  unschaedlich).
+- Huegel H: dieselbe Ader-Zeile auf die Flaechen, die in PV x 425-445 y 188-200 bilden.
+
+## 7. Riegel-Entwurf (Schwellen, V7-Wert, Gegenprobe)
+
+| Riegel | Pruefung (PV, Spielkamera 50A0/12, RDT-Licht) | Schwelle | V7 |
+|---|---|---|---|
+| S1 Kontur T | Aussenkante Modell entlang der 22 T-Normalen gegen die Vorlage-Kante (wo nicht messbar: T + 11 px) | Mittel <= 4 px, Max <= 8 px | 16,8 / 50 -> **ROT** |
+| S2 Uebergang J | (a) Oberkontur x 330-385 gegen Vorlage-Maske; (b) Sattel der Modell-Oberkontur unter ihrer oberen Huelle x 300-420; (c) Rumpf ueber der Schwanz-Oberkante an der Wurzel (m26) | (a) Mittel <= 4, Max <= 6 px; (b) <= 2 px; (c) <= 3 px | (a) 6,2 / 12; (b) 6,6; (c) 6-14 -> **ROT** |
+| S3 Ruecken/H/K | (a) Kuppenprominenz; (b) Huegel H ueber der Sehne x 405 -> 447 und sein Ort; (c) keine weitere Erhebung >= 3 px in x 330-460; (d) Sattel Ruecken -> Kopf; (e) K: Vorderkante y 212-244, Abweichung von der Geraden | (a) <= 4 px; (b) 5-10 px bei x 428-445; (c) 0; (d) <= 2 px; (e) <= 3 px | (a) 8,0; (b) 4,6 bei 427; (d) 6,4; (e) 3,0 -> **ROT** |
+| S4 Breite | Durchmesser der Ringe in PV quer zur eigenen Achse | Wurzel >= 55 px; s 90-130 >= 36 px; monoton fallend (+-2 px); Ende <= 10 px | Wurzel 40 px -> **ROT** |
+| S5 Gesicht | Mesh 9 (Ecken, Normalen, Flaechen, UV, CLUT-Feld), Zeile 486, alle von Mesh 9 benutzten Texel | bytegleich V7 | gruen (Gegenprobe: V5f muss rot sein) |
+| S6 Boden | Spitze + Dornspitze Mesh 22 gegen die tiefste Koerperecke in allen 912 Keyframes; Szene lauf_v4.sh alle Takte y <= 0 | 0 Keyframes, 0 Takte | 82 Keyframes -> **ROT** (Szene 0) |
+| S7 Adern | (a) Herkunft: jeder Eintrag der neuen Zeilen = V7-Zeile (gleicher Index) oder Original-Eintrag mit a* >= 15, L* <= 38 (15 Bit gleich); jeder Texel unter den umgestellten Flaechen = Original-Texel; (b) Anteil a* >= 10 Oberarm 13; (c) Rumpf 8 (W)-rechts; (d) Ruhe: rote 8er-Komponenten unter weissem Licht auf (W)-rechts <= Original-EM30 in derselben Pose | (b) 35-59 % (Vorlage 49,4); (c) 25-80 % (Vorlage 76,3); (d) <= Original | (b) 22,8; (c) 0,0 -> **ROT** |
+| S8 Technik | CLUT-Zeilen <= 16, 256 x Zeilen <= 4096, jedes CLUT-Feld zeigt auf eine vorhandene Zeile, 23 Meshes, 23 Knochen, 21 Clips, Port-Lader (unit_birkin_formen, unit_schwanz_r41, integration_r41_sichel_form) | alles | gruen (13 Zeilen, 3328) |
+
+Gegenprobe-Pflicht: V7 (319bbd17) muss bei S1, S2, S3, S4, S6 und S7 rot sein (oben gemessen: ist es). S5 zusaetzlich gegen V5f
+(alter Kopf) rot.
+
+## 8. Tafeln (SF_belege/v8/messung/, roh)
+
+| Datei | Inhalt |
+|---|---|
+| 01_vorlage_linien_v7.png | Vorlage n1439 / Darstellung.png / V7 in PV mit Nutzerlinien, V7-Umriss, Schwanz 16-22, Vorlage-Figur / 50 % (x3) |
+| 02_kontur_entlang_T.png | Stationen entlang T: Vorlage-Kante, Innenkante, Mitte / V7-Aussenkante (x3) |
+| 03_nachbarbilder_n1431-1451.png | Bewegung des Schwanzbands n1431-n1451 mit Nutzerlinien (Gamma 0,6, x2) |
+| 04_oberkontur_J_H_K.png | Oberkontur Vorlage (gelb) gegen V7 (magenta) an J, H, K (x5) |
+| 05_aderkarte_original_em30.png | Original-EM30-Textur (Zeilen der Original-Flaechen) / Karte: Ader rot, Flaechen-Rot gelb, Bereiche A-E (x2) |
+| 06_adern_probe.png | Vorlage / V7 / Probe X1 (nur Zeilenwechsel), Ausschnitt Oberarm-Ruecken (x3) |
+| 07_rotkarte_vorlage_v7.png | a* >= 10 Vorlage / V7 PV (x2) |
+| 08_pose_kandidaten.png | Vorlage, drei beste Posen und P2 fein mit 50 %-Mischung |
+| 09_trimap_n1439.png | Figur-Maske (gruen sicher, rot unbekannt) |
+
+## 9. Offen
+
+1. Der Wurzelquerschnitt 55-63 px ist aus der Lage von J gelesen (die Vorlage trennt Schwanz und Ruecken bei s 0-80 nicht). Liegt J
+   weiter innen, ist die Wurzel schmaler.
+2. Ende: T1 endet bei y 333; Bodenkontakt dort hiesse 5137 E. hinter dem Koerper, in Koerpertiefe haengt das Ende ~1575 E. ueber dem Boden.
+   Ziel ist die Bildlinie; die Tiefe waehlt der Bau (S1 + S6). Bei Konflikt den Nutzer fragen.
+3. Vorlage-Breite s 100 (12 px) und s 170/190/210 (keine Kante) sind Messluecken (dunkle Luecke, dE < 8); S1 nutzt dort T + 11 px.
+4. Nachbarbilder n1441-n1451: Das Band schwingt nach vorn unten vor den Koerper (rote Streifen). Fuer Gang/Kampf ist nur die Form in
+   n1435-n1440 gemessen; die Bewegung der neuen Kette im Spiel bleibt Pruefung am Szenenlauf.
+5. Pose: Rumpf-IoU 0,639; die Beine liegen in der Unbekannt-Zone (dunkler Tuerraum) und sind nicht eingepasst.
+6. S7 Rumpf: Die Vorlage zeigt 76 % rot (die Video-Unschaerfe verbreitert duenne Adern). Ob Adern allein (Original-Texel) nach dem UV-Schub
+   25 % erreichen, ist nicht gemessen (Probe ohne UV-Schub: 1,7 %). Faellt S7c zu knapp aus, ist die Schwelle mit dem Nutzer am Bild zu
+   klaeren - keine gemalten Flaechen (Memory "Texturen nie aus Videobildern eichen").
+7. V5-Nutzersatz "roter Fleck oben auf der rechten Schulter, den gibt es in der Vorlage ganz offensichtlich nicht" (Foto 1 frontal) gegen
+   heute "mehr rottoene ... mehr adern an verschiedenen Stellen, am Arm und Koerper": Lesung = Adern ja, Flaechen-Rot (Augapfel C) nein.
+8. Kein Bau und kein Spiellauf in diesem Schritt; die Szenen-Zahlen sind aus dem freigegebenen V7-Lauf (nur gelesen).
+
+## 10. Runde 5 P4: Unterseite des Schwanzes (Bauer, 2026-11-09)
+
+Nutzer 2026-11-09 nach der V8-Vorschau (woertlich): "Der 2 Beiner Birkin sieht in der Vorschau schon mal super aus. Nur eine Sache passt
+noch nicht so ganz. Die Unterseite des großen Schwanzes ist fleischig wenn man in die Vorlagen Bilder schaut. Nur die oberseite ist durchweg
+grau." Werkzeug re15_port/tools/r41_sichel/v8/unterseite_r5.py ("messen"), Protokoll SF_belege/v8/runde5/unterseite_messung.txt/.json.
+Kein RE-Befund; Messung am Videobild, keine Texel-Eichung.
+
+**Mass.** theta = Winkel zwischen der Flaechennormale (senkrecht zur Gliedachse) und der Richtung von der Gliedmitte zum Mittelpunkt des
+Schwanzbogens (Kreis durch die Gelenke 17-22 und die Spitze in der Pose). theta 0 = Innenseite des Bogens (zum Koerper und zum Boden),
+theta 180 = Aussenseite (Ruecken des Schwanzes). Modell = Spiel-Asset V8 Runde 5 (Geometrie wie Runde 4), Schwanz-Bildpunkte (Knochen 16-22)
+2 px erodiert; Vorlage-Lab je Bildpunkt gemittelt ueber n1438-n1440 (PV) bzw. n1434-n1436 (P2). Seiten: in PV und P2 sieht die Kamera die
+Seite des Bogens, die zur (W)-rechten Flanke gehoert; das Mass ist symmetrisch (|theta|).
+
+| theta (Grad) | PV a* Median | PV a* >= 10 | PV L* | P2 a* Median | P2 a* >= 10 | P2 L* |
+|---|---|---|---|---|---|---|
+| 30-60 | 0,8-3,5 | 0 % | 10-12 | 1,0-3,7 | 0 % | 9-11 |
+| 60-70 | 6,4 | 8,8 % | 9,1 | 5,3 | 1,5 % | 9,2 |
+| 70-110 | 6,6-9,7 | 25,7-48,8 % | 8,9-13,7 | 5,7-8,0 | 15,6-31,5 % | 10,2-14,4 |
+| 110-120 | 4,5 | 1,1 % | 17,9 | 4,3 | 1,0 % | 17,4 |
+| 120-180 | 1,4-4,2 | 0 % | 22,9-38,4 | 0,8-3,0 | 0 % | 24,0-37,6 |
+
+Laengs (theta 60-115, PV): Knochen 16 a* 12,8 (75,8 %), 17 10,3 (56,6 %), 18 7,6 (10,2 %), 19 4,9 (2,9 %), 20-22 0,0-1,6 (0 %) bei L* 10-11.
+Foto 1 (P1, n1485): vom Schwanz sind nur 215 erodierte Bildpunkte der Knochen 21/22 sichtbar (theta 0-50, a* -2,6, L* 8-11) - keine Aussage.
+
+**Regel (PORT-WAHL aus der Tabelle).** Grau = |theta| >= 125 (Vorlage ab 120 0 % rot, 5 Grad Abstand); Uebergang 100-125 (Vorlage 110-120
+a* 4,5 / 1 %); Fleisch <= 100 (Vorlage 70-110 rot). Die Innenseite theta < 60 ist in der Vorlage dunkel (Schatten, a* nicht lesbar) und gilt
+als Unterseite. Laengs von der Wurzel bis zur Spitze: rot sicher bis Knochen 18; Knochen 19-22 in der Vorlage dunkel und ohne Farbe - die
+Regel laeuft durch, damit mitten im Schwanz keine Querkante entsteht (Offen 1). Flaechenweise (11 Ringecken je Ring, alle 32,7 Grad bei
+|theta| ~ 59/92/125/157 bzw. 72/105/137/170): Mittel der Ringecken >= 130 grau (Zeile 487, UV wie gebaut), 100-130 Uebergang, < 100 Fleisch.
+
+**Material (Original-EM30, CDEMD0.EMS Typ 0x30).** Seite 2, u 0-43 = Unterarm/Klaue des Original-Birkin (Original-Flaechen der Meshes 11,
+12, 14, 15, alle Zeile 482); diese Texel sind im Spiel-Asset bytegleich (0 Abweichungen in den von Original-Flaechen benutzten Texeln), die
+Zeile 482 liegt bytegleich als Zeile 495 vor. Verlauf entlang v (Original-Zeile 482, benutzte Texel): v 0-40 helle Haut (L* 34-41), v 42-60
+dunkle Haut mit violetten Adern (L* 16-28, b* -3,4..-3,8), v 60-85 dunkelgraue Haut (L* 12-16, a* 3,8, b* 0-1,4), v 86-95 gewellte Kante, v
+96-120 Fleisch mit weichen Streifen (L* 17-26, a* 20-26). Uebergangsflaechen: v folgt theta (125 -> v 64, 100 -> v 90), u entlang der
+Gliedachse (6-31, je Glied gespiegelt). Fleischflaechen: Streifen laengs (v 90-100 entlang der Achse, je Glied gespiegelt; u 4-36 um den
+Umfang, theta -110..110). Nutzungsmaske der Original-Flaechen (Zeile 482, Seite 2): v 50 u 5-32, v 51-106 u <= 4 bis >= 32, Luecke v 110-117
+u 17-32 - alle neuen UV liegen darin (Bau prueft: 0 Texel ausserhalb).
+
+**Proben (Farbrichtung, keine Eichung; prof.py, L*/a* je theta-Band in PV, Videoraum).** U1 (v 50 an der Grenze): violettes Band ueber dem
+Fleisch. U4 (Fleisch quer): regelmaessige rote Querriefen alle ~8 px, in der Vorlage nicht vorhanden. U7 (laengs, v 94-104): hellrot (theta
+75-90 L* 22,9 a* 14,3). U8 (laengs, v 90-100): dunkelrot - gewaehlt. U9 (v 86-96): Fleisch kaum sichtbar. G38 (v 38 an der Grenze):
+L*-Sprung an der Zeilenkante kleiner, aber violettes Adernband, S15d PV 8,5 > Vorlage 7,0. Probe-Kacheln sfv8/r5p4/z1-z7.png.
+
+**Riegel S15** (riegel_v8.py, Abschnitt 7 ergaenzt): (a) Herkunft 0 fremde Texel; (b) 72 Unterseiten-Flaechen auf Zeile 495 mit Fleisch,
+38 Oberseiten-Flaechen auf 487 mit unveraenderter UV; (c) Fleisch-Texel-Anteil |theta| <= 100 in PV und P2 >= 30 %, |theta| >= 135 = 0;
+(d) groesster L*-Sprung zwischen 15-Grad-Baendern theta 90-180 <= Vorlage. Gegenprobe V8 r4 (Schwanz rundum grau): ROT.
+
+**Offen.** 1. Knochen 19-22 (unteres Drittel): die Vorlage zeigt dort keine Farbe (dunkel vor dunklem Tuerraum); Fleisch durchlaufend ist
+Wahl gegen eine Querkante. 2. Die Grenze liegt flaechenweise auf Ringecken (32,7 Grad Raster); die Uebergangsflaeche traegt den Verlauf.
+3. Das Fleisch des Modells ist im Spiellicht heller als die Vorlage (theta 75-90 L* 23 gegen 9,4) - Farbrichtung dunkelrot ist durch die Wahl
+v 90-100 angenaehert, nicht geeicht.
+
+## 11. Runde 5 P5: Luecke zwischen Ruecken und Kopf (Bauer, 2026-11-09)
+
+Nutzer 2026-11-09 (woertlich): "Das einzige was mir noch auffällt, es gibt immer noch eine Lücke zwischen Rücken und Kopf beim 2 beiner
+Birkin. Das ist in der Vorlage so wie es aussieht nicht so." Frueher: "Auch der obere Rücken geht im original screenshot direkt mehr oder
+weniger in den Kopf über." und Darstellung.png (weiss) "smooth straight to head without further hills....". Werkzeug
+re15_port/tools/r41_sichel/v8/luecke_r5.py (Mass, Riegel S16), Suche ruecken_r5.py. Kein RE-Befund.
+
+**Was die Luecke ist (gemessen, sfv8/r5p5 luecke2.py, lz2.py; Spiel-Asset 91885ed8c = 5fd35ff1).** In Knochenraum 8 ragt der Kopf (Mesh 9)
+ueber den Ruecken hinaus: Kopf-Oberkante y -1338..-1379, Ruecken-Oberkante direkt dahinter (x -150..-500) y -1200..-1265 (profil.py, PV und
+Takt F310). Daraus entstehen drei Arten Hintergrund zwischen Ruecken und Kopf:
+1. Kerbe ueber dem Kopf (Foto 2 / P2 39 px bei (447,197), PV 18 px bei (448,202)): die Buckel-Oberkante endet ueber der Kopfoberkante, dazwischen
+   ein Keil Hintergrund - das ist die Kerbe, die der Orchestrator in 02_foto2_seite.jpg rechts oben sah.
+2. Spalt links am Kopf (PV 7 px bei (430,205)): eine 1 px breite senkrechte Spalte, durch die der Hintergrund scheint (an derselben Stelle
+   in V7).
+3. Szene Clip 11 (Birkin greift nach oben, Takt F262-F323): der Kopf hebt sich ueber die Schultern, links und rechts davon je ein Keil
+   Hintergrund (Takt F278 187 px, F310 179 px).
+Der Schlitz-Riegel S9b/S9s fasste das nicht: er zaehlt nur Loecher DURCH die Silhouette (ohne Culling belegt, mit Culling nicht) und nur
+von vorn (P1, Takt F336-F372). Die Kerbe ist ein Einschnitt AM RAND zwischen zwei Teilen - ohne Culling ist dort ebenso nichts.
+
+**Mass (luecke_r5.py).** S = Silhouette (Maler-Reihenfolge und Rueckseiten-Culling wie im Port), H = Kopf (Knochen 9), R = Knochen 8 oberhalb
+des Kopfgelenks (Knochenraum 8 y < -971 = EMR relpos Knochen 9). (a) Kerbe = konvexe Huelle von H und Knochen 8 im Umkreis 12 px ohne S,
+Stuecke an H UND R; (b) Spalt = Schliessen von S mit 5 x 5, Stuecke an R und <= 12 px von H. Ansichten: PV, P1, P2, alle 144 Szenen-Takte
+F235-F378, rundum PV/P2 (Gier + k x 256, k 1..15); je 7 Halbpixel-Varianten (= S2C_VARIANTEN). Kehle/Brust (Knochenraum 8 y > -971; dort
+grenzt in PV/P2 die (W)-linke Schulter an das Gesicht) zaehlt nicht.
+
+**Vorlage (vorlage_kerbe.py, Figurmaske dE > 9 gegen den Konsens-Hintergrund m4_bgT wie m7_trimap, je Bild gemittelt ueber n-1..n+1;
+Kasten = Kopf des Modells + 22 px; obere Haelfte).** Die Vorlage ist unscharf (Gauss, Bewegung); ihre Maske hat an der Kopfgrenze kleine
+Einschnitte, die keine sichtbare Luecke sind: PV n1439 21 px bei (448,206) (Maske dE > 6: 1 px), P2 n1435 10 px bei (441,195); Modell V8 r4
+PV 16 px bei (447,201), P2 38 px bei (447,196). Foto 1 (n1485): Maske im Kasten nicht brauchbar (Kopf dunkel vor dunklem Tuerraum, dE < 9).
+Oberkontur PV (m13b oben_vorlage_maske) x 441-453: Vorlage 197 197 205 211 215, Modell 195 197 203 206 208 - im Umriss gleich; die
+Luecke des Modells ist der scharfe Keil Hintergrund zwischen Buckelende und Kopfkante, den die Vorlage nicht zeigt (Nutzer: "in der Vorlage so
+wie es aussieht nicht so"). Deshalb Soll S16 = 0 (Orchestrator P5 (d)), nicht "wie Vorlage".
+
+### 11a Soll neu (Bauer, 2026-11-10; ersetzt den Satz "Soll S16 = 0")
+
+Das Soll "= 0" war strenger als die Vorlage (Orchestrator 2026-11-10; Memory reai-v2-schranke-strenger-als-befund). Auftrag Runde 5:
+"Der Bauer misst die Vorlage selbst nach (eigener Lauf, Schwellen 6/9/12, Nachbarbilder) und schreibt Messung und Soll ins Messblatt".
+
+**Eigener Lauf: re15_port/tools/r41_sichel/v8/vorlage_luecke_r5.py** (Ausgabe SF_belege/v8/runde5/vorlage_luecke.txt, Bild
+vorlage_luecke.png; Tafel 15 Zeile 1). Kastenmass: Figurmaske = dE (CIELAB) gegen den Konsens-Hintergrund m4_bgT > Schwelle (6 / 9 / 12),
+je Bild gemittelt ueber n-1..n+1 und mit Gauss 1,0 geglaettet, zur Probe das Einzelbild; Kasten = Kopf (Knochen 9) der Referenz V7 in
+derselben Pose + 22 px (PV fuer n1437-n1441: (408,179)-(483,251); P2 fuer n1433-n1437: (410,173)-(483,243)); Kerbe = konvexe Huelle der
+Maske im Kasten ohne die Maske, nur Stuecke in der oberen Kastenhaelfte; Tiefe = Abstand zum freien Hintergrund ausserhalb der Kerbe
+(wie luecke_r5.tiefe). Je Stueck der Abstand zum Kopf der Referenz: "am Kopf" = beruehrt den um 2 px geweiteten Kopf; "nah" = innerhalb
+12 px (luecke_r5.NAH); sonst Huegel.
+
+| Maske | "am Kopf": px / tiefer als 1,5 px / groesste Tiefe | groesstes Stueck | "nah" (<= 12 px, Stuecke auf dem Huegel) |
+|---|---|---|---|
+| dE > 6, n-1..n+1 | 15 / 6 / 3,2 | | 74 / 45 / 5,4 |
+| **dE > 9, n-1..n+1** | **21 / 7 / 3,2** | n1439 PV (448,206) | 55 / 27 / 4,0 (n1434 P2, Sattel bei (422,189)) |
+| dE > 12, n-1..n+1 | 11 / 3 / 2,8 | | 37 / 13 / 3,0 |
+| dE > 6 / 9 / 12, Einzelbild | 15 / 6 / 3,2; 14 / 6 / 3,2; 20 / 6 / 3,2 | | |
+
+Je Bild, dE > 9, Stuecke am Kopf (px / tief / groesste Tiefe @ Ort): n1433 14 / 6 / 3,2 @ (441,195); n1434 12 / 4 / 2,8; n1435 10 / 3 /
+2,2 @ (441,195); n1436 9 / 2 / 2,2; n1437 10 / 2 / 2,0; n1438 9 / 3 / 2,2; n1439 21 / 7 / 2,8 @ (448,206); n1440 9 / 1 / 2,0 @ (446,206)
+und 10 / 0 / 1,4 @ (440,196); n1441 10 / 1 / 2,0. Dieselbe Messung an der Referenz V7 selbst (Modell statt Vorlage): PV 59 / 32 / 5,0 @
+(436,196) und Spalt 7 / 7 / 15,3 @ (430,205); P2 95 / 51 / 6,3 @ (433,190) - das Kastenmass fasst also die Luecke, die der Nutzer meint.
+
+**Vergleich mit der Messung des Orchestrators** (sfv8/r5p5/vorlage_tiefe2.py: n1439 21 px / 7 / 2,8; n1435 10 / 3 / 2,2; n1433 14 / 6 /
+3,2): **gleich**. Soll des Riegels S16 je Ansicht und Halbpixel-Variante: **Summe <= 21 px UND tiefer als 1,5 px <= 7 UND groesste
+Tiefe <= 3,2 px** (luecke_r5.SOLL_SUMME / SOLL_TIEF / SOLL_MAXTIEFE). Zwei Lesarten wurden gemessen und NICHT genommen:
+- "nah" statt "am Kopf" (55 / 27 / 4,0): das sind Stuecke weiter hinten auf dem Huegel (mehr als 10 px links vom Kopf), nicht der
+  Uebergang zum Kopf; im Zweifel gilt die strengere Zahl. Auch unter dieser Lesart waere Takt F311 (63 / 37 / 6,3) rot.
+- Das Riegelmass luecke_aus direkt auf der Vorlagenmaske (Knochen vom naechsten Bildpunkt der Referenz): die Maske der Vorlage fehlt am
+  dunklen Gesicht vor dunklem Hintergrund, die Huelle zaehlt dann den Raum vor dem Gesicht (n1435 dE > 9: 15 352 px; 2 712-15 605 px je
+  Bild). Nicht brauchbar; im Kopf von vorlage_luecke_r5.py belegt.
+Was das Bild zeigt (vorlage_luecke.png, selbst angesehen): die Kerben der Vorlage sind flache Mulden des unscharfen Umrisses (1-3 px
+tief), kein Keil Hintergrund. Foto 1 (n1485): Maske im Kasten nicht brauchbar (Abschnitt oben).
+**Schnelle Drehung Takt F310-F314:** die vermessenen Vorlagenbilder n1433-n1441 zeigen die stehende Haltung von der Seite (PV, Foto 2),
+nicht den nach oben greifenden, sich drehenden Birkin von vorn. Fuer F310-F314 gibt es damit keine Vorlagen-Messung dieser Haltung; es
+gilt das Soll oben (Auftrag Runde 5, Punkt 3). Keine Ausnahme je Bild.
+
+### 11b Runde 5d: Ausgang, gezielte Versuche, Stand (Bauer, 2026-11-10)
+
+**Ausgang (riegel_v8.py am vollen Bau, sfv8/r5p6/riegel_i.txt):** Suchlauf h (ruecken_v8.json Stand 82828ad9b) 14 von 16 gruen, rot S7
+(Unterarm / Flecken ueber dem Original) und S16; Suchlauf i 15 von 16 gruen, S7 gruen, rot S16 (F311 63 px / 37 tief / 6,3; F332 112 /
+75 / 6,7; Gesicht P2 gier+3840 161 statt 165 Bildpunkte von V7). Ausgang = i. Keine weitere globale Suche.
+
+**Gesicht P2+3840 (Riegel S16 b):** Flaeche 8 v24 wurde ueber 4 Gesichts-Bildpunkte gezeichnet. Ecke 65 x 60 -> 50: keine der 177
+Ansichten mehr unter V7 - 2 % (sfv8/r5p6/voll2_b.txt).
+
+**F332 (drei Versuche; Kacheln SF_belege/v8/runde5/versuch_F332.png, Tafel 15):**
+1. Nacken-Volumen im Nacken hinter dem Kopfgelenk (111, -971, -133) (Auftrag (iii) woertlich; Raster scan1.py: Mitten x -160 / -90 /
+   -20, y -1180 / -1250, z -160 / -60, Halbmesser (150,110,170), (200,140,220), (260,160,260)): auch mit dem groessten Koerper in 4 von 16
+   Probe-Ansichten ueber dem Soll; der Keil von F332 bleibt. Verworfen.
+2. Rueckprojektion der Keil-Bildpunkte von F332 in den Raum von Knochen 8 (scan2.py): der Keil liegt zwischen der Unterkante der
+   Rueckenflaechen 8 v24 / 8 v4 und der Kopfunterseite ueber der (W)-rechten Schulter, rund 350 E. vom Kopfgelenk. Geschlossener Koerper
+   Halbmesser 80 um (350, -860, -410): F332 2 px / 0 tief / 1,0 px, keine der 16 Probe-Ansichten veraendert.
+3. Kleinste Lage (scan4.py 108 Lagen, scan5.py 144 Lagen in 7 Halbpixel-Lagen, scan6.py 450 Lagen gegen das Gesicht): Halbmesser 50
+   haelt nur in 4 von 7 Lagen (81 px / 46 tief / 6,1 px); Halbmesser 65 um (350, -860, -370) wird in PV ueber 4 und in P2 ueber 7
+   Gesichts-Bildpunkte gezeichnet. **Gesetzt: Halbmesser 65 um (350, -820, -370)** (nacken_v8.json, Stufe n): F332 vorher 108 / 72 /
+   6,3, jetzt hoechstens **8 px / 1 tief / 2,0 px** ueber die 7 Lagen; in keiner der 177 Ansichten ueber Gesichts-Bildpunkten von V7
+   (Riegel S16 c); sichtbar PV 59, P1 67, P2 59 Bildpunkte (Tafel 15 unten, gruen).
+   Haut: Texel der Wirtsflaeche 8 d65 (Zeile 494, Original-EM30), winkeltreu, UV im Rechteck u 37-50 / v 0-22.
+
+**F311 (drei Versuche; Kachel SF_belege/v8/runde5/versuch_F311.png, Tafel 15):** vorher (Variante 0) 55 px / 31 tief / 5,8 px.
+1. Einzelne Ecken des Kragens (65 / 67 / 68 / 16) je Achse um +-40 / +-80 E. (scan3_a.txt, scan3_b.txt): bestes ohne neuen Fehler
+   Ecke 67 x +80: 49 / 25 / 5,4. Ecke 65 x +80 bringt 44 / 20 / 4,1, oeffnet aber F332 (114 / 87 / 10,8) und F262.
+2. Groessere Schritte +-120 / +-160 E. (scan3_c.txt): bestes Ecke 67 y -160: 38 / 14 / 3,6 - weiter ueber dem Soll. Ecke 67
+   x +160 oeffnet F332 (110 / 81 / 10,0).
+3. Kleiner geschlossener Koerper an der Stelle der Luecke (Rueckprojektion wie bei F332, Rasterlauf in sfv8/r5p6): bestes Halbmesser 130
+   um (350, -1140, -410):
+   28 / 8 / 2,8 - ueber dem Soll, oeffnet F332 wieder und steht in PV / P2 als Knoten neben dem Gesicht. Verworfen.
+Was die Luecke in F311 ist (Tafel 15, Zeile "Takt F311"): ein Keil von 47 Bildpunkten bei (386,192) LINKS vom Gesichtsprofil, zwischen
+Kinn / Wange und der (W)-rechten Schulter, den das Mass zaehlt, weil schmale Streifen von Knochen 8 an ihn grenzen, und ein kleines Stueck
+ueber dem Scheitel. V8 r4 hatte in F311 120 / 90 / 12,5. **Stand: F311 63 px / 37 tief / 6,3 px (groesster Wert der 7 Halbpixel-Lagen;
+Lage 0: 55 / 31 / 5,8) - ueber dem Soll, offen gemeldet; Riegel S16 bleibt ROT.**
+
+**Stand am Asset c4976c62 (riegel_v8.py, SF_belege/v8/riegel_v8.txt):** Luecke Summe 484 px (tiefer als 1,5 px: 51) in 73 von 177
+Ansichten (V8 r4 / 91885ed8c Lage 0: 4233 px, tief 2671); ueber dem Soll 1 Ansicht (F311). PV 8 / 0 / 1,0; P2 6 / 1 / 2,2; P1 0;
+F278 8 / 1 / 2,0 (vorher 187 / 138 / 9,2); F310 8 / 1 / 2,0 (179 / 126 / 9,2); F332 8 / 1 / 2,0; rundum hoechstens PV+1280 19 / 0 / 1,0
+und P2+2048 11 / 3 / 2,2.
+
+**Was vom Kragen bleibt (ehrlich, Tafel 15 und gdigrab):** der Suchlauf i schliesst die Kerbe weiter durch gehobene Ruecken-/
+Schulterflaechen (Kragen). In PV / P2 liegt rechts oben am Kopf eine helle dreieckige Flaeche; in F332 (von hinten) lange, gestreckt
+texturierte Flaechen; der Einsatz ist unter dem Kiefer als kleiner Knoten zu sehen (59-67 Bildpunkte) und sitzt NICHT im Nacken. Entfernt
+sind der Keil in F332 und die Flaeche ueber dem Gesicht (P2+3840). Mesh 9 und seine CLUT-Zeilen: bytegleich V7 (Riegel S5).

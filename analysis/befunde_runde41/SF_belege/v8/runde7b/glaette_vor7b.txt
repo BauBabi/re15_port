@@ -1,0 +1,7 @@
+unterseite  Bilder 120  oertl. Streuung L* Median  0.52 (p25  0.36 p75  0.69)  relativ 0.1133  L*   3.8  Kantenanteil 0.000
+oberseite   Bilder 106  oertl. Streuung L* Median  1.19 (p25  0.72 p75  1.84)  relativ 0.1608  L*   6.9  Kantenanteil 0.033
+rumpf       Bilder 242  oertl. Streuung L* Median  3.60 (p25  2.36 p75  5.66)  relativ 0.1954  L*  18.7  Kantenanteil 0.306
+beinhaut    Bilder 244  oertl. Streuung L* Median  1.86 (p25  1.43 p75  4.10)  relativ 0.2107  L*   7.2  Kantenanteil 0.095
+arm_rechts  Bilder 265  oertl. Streuung L* Median  2.67 (p25  2.18 p75  3.96)  relativ 0.2247  L*  11.5  Kantenanteil 0.199
+sonst       Bilder 242  oertl. Streuung L* Median  1.18 (p25  0.90 p75  2.73)  relativ 0.2174  L*   5.7  Kantenanteil 0.056
+Soll {'sd_lo': 1.86, 'sd_hi': 3.6, 'unterseite': 0.52, 'ok': False}

@@ -1,0 +1,13 @@
+Runde 7d (Abgabe am Endstand), Zweig r41/sichel_v8 - Teil 7d aendert KEINE Geometrie, keine Keyframes, keine Textur.
+Spiel-Asset re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD: 5c902d493e6815f8551e0297eb1ef7e8c6cbda4b11ed3ab5191cf6a62ac11f30 (277316 Byte)
+Pin release/em30_hangar.sha256: 5c902d493e6815f8551e0297eb1ef7e8c6cbda4b11ed3ab5191cf6a62ac11f30
+Asset im Commit 639132b77 (Stand 7c): 5c902d493e6815f8551e0297eb1ef7e8c6cbda4b11ed3ab5191cf6a62ac11f30; Asset und Pin seit 639132b77 unveraendert (git diff): ja
+Kette v8_kette.sh zweimal (kette_a.txt, kette_b.txt): V8-KETTE-OK sha256 5c902d493e6815f8551e0297eb1ef7e8c6cbda4b11ed3ab5191cf6a62ac11f30 / V8-KETTE-OK sha256 5c902d493e6815f8551e0297eb1ef7e8c6cbda4b11ed3ab5191cf6a62ac11f30; A=B bytegleich
+Exe re15_port/build/platform/pc/re15_pc.exe: 8f15f6c52c7db434f3bcb05c31c499f1486aadff81625f8dd254e64708542f42 (= P5-Exe 8f15f6c5, Bau: ninja: no work to do)
+Szenenlauf sfv8/r7d/szene (lauf_v4.sh, EMD "-", FD 200-1100/1, Ende 1110): EXIT=0, 901 Framedumps; state.log sha256 e48e1cad143cc5776401bc6a415652d694aaba972c1c23235cd18a5cc1ece349 = sfv4/r/V7_szene/state.log (cmp)
+Marker-Assets (marker_bauen.txt): MK_A, MK_B, GR, KO_NEU, LM_NEU bytegleich zu r7c/mk; KL_NEU neu (glaette_r7b.py marker)
+Marker-Laeufe sfv8/r7d/mk: LM_NEU, KO_NEU (F225-F450), MK_A, MK_B, GR (F300-F380), KL_NEU (F200-F1100), alle EXIT=0
+Video sfv8/spiderman_szene_v8_r7.mp4: F225-F450, 226 Bilder, 30 fps, 960x720, sha256 664b64dfeda044c65e9a753ec04e2062f00433b3adf1ee2551eeda24eab30c03
+gdigrab (echtes Fenster, gdi.sh): sfv8/r7d/gdi/gdi_szene_v8r7d.mp4 sha256 0fdd59c27669cf14f1102915584c28b65fcf3ba9d706b513bba7bfdd993f8a0e, 2089 Bilder; state.log bytegleich V7
+gdigrab 2 (gdi2.sh, nur fuer F311): sfv8/r7d/gdi2/gdi_szene_v8r7d.mp4 sha256 d1104ed72af4f689ab02a704be3a73acefffe98189b560a9b953263c8521f5b7, 2143 Bilder; state.log bytegleich V7
+Framedumps r7d gegen r7c/KC8: 901 verglichen, 0 anders

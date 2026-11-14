@@ -1,0 +1,71 @@
+EMD C:\workspace\git\reAi_v2\.claude\worktrees\r41_sichel_v8\re15_port\shared_assets\PSX\EMD\EM30_HANGAR.EMD e9e71bca
+--- h125 <-> birkin20: Handlaenge Vorlage 56.9 Modell 64.8
+ px vor Ende :   0.5   1.5   2.5   3.5   4.5   5.5   6.5   7.5   8.5   9.5  10.5  11.5  12.5  13.5  14.5  15.5
+ Vorlage ges :   3.5   8.0   9.1  10.0  11.6  12.6  13.6  15.0  15.6  16.6  18.0  19.1  19.6  20.6  21.1  21.6
+ Vorlage Lauf:   2.0   8.0   9.1  10.0  11.6  12.6  13.6  15.0  15.6  16.6  18.0  19.1  19.6  20.6  21.1  21.6
+ Vorlage n   :     2     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1
+ Modell ges  :   1.0   1.0   3.0   3.0   4.0   8.0   9.0  10.0  15.0  16.0  18.0  19.0  20.0  20.0  22.0  23.0
+ Modell Lauf :   1.0   1.0   3.0   3.0   4.0   4.0   5.0   6.0   6.0   7.0   8.0   8.0  15.0  20.0  22.0  23.0
+ Modell n    :     1     1     1     1     1     2     2     2     3     3     3     3     2     1     1     1
+   Kralle A: Spitze laengs 59.7 (5.1 vor Ende) quer -1.0 | Wurzel laengs 43.2 quer -8.7 | Laenge 18.2 Dicke 11.7 px 107
+   Kralle B: Spitze laengs 67.8 (-3.1 vor Ende) quer +12.3 | Wurzel laengs 52.1 quer +9.8 | Laenge 15.9 Dicke 10.3 px 129
+   Kralle C: Spitze laengs 61.3 (3.5 vor Ende) quer +5.8 | Wurzel laengs 44.7 quer -1.3 | Laenge 18.1 Dicke 11.8 px 159
+   Kralle T: Spitze laengs 43.4 (21.3 vor Ende) quer +30.4 | Wurzel laengs 29.9 quer +26.1 | Laenge 14.3 Dicke 5.0 px 29
+   Daumen Vorlage {'gabel_ab_handgelenk': 24.5, 'laenge': 16.9, 'dicke_wurzel': 12.0, 'winkel_zur_handachse': -23.7, 'seite': 'Bild-links (zum Koerper)', 'fingerblock_laenge': 32.4, 'fingerblock_breite': 23.6, 'abstand_wurzel': 18.8, 'abstand_spitze': 23.2, 'spalt_wurzel': 1.0, 'spalt_spitze': 12.2}
+   Daumen Modell  {'gabel_ab_handgelenk': 19.8, 'laenge': 22.0, 'dicke_wurzel': 11.0, 'winkel_zur_handachse': -26.3, 'seite': 'Bild-links (zum Koerper)', 'fingerblock_laenge': 45.0, 'fingerblock_breite': 27.0, 'abstand_wurzel': 22.0, 'abstand_spitze': 29.5, 'spalt_wurzel': 3.0, 'spalt_spitze': 16.0}
+--- h126 <-> birkin22: Handlaenge Vorlage 58.0 Modell 66.0
+ px vor Ende :   0.5   1.5   2.5   3.5   4.5   5.5   6.5   7.5   8.5   9.5  10.5  11.5  12.5  13.5  14.5  15.5
+ Vorlage ges :   2.5   6.0   7.1   9.1  11.0  12.1  13.1  14.1  15.2  15.8  16.8  17.6  18.6  19.1  19.8  20.8
+ Vorlage Lauf:   1.5   6.0   7.1   9.1  11.0  12.1  13.1  14.1  15.2  15.8  16.8  17.6  18.6  19.1  19.8  20.8
+ Vorlage n   :     2     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1
+ Modell ges  :   1.0   1.0   3.0   3.0   3.0   4.0   4.0   5.0  17.0  18.0  19.0  20.0  21.0  22.0  22.0  23.0
+ Modell Lauf :   1.0   1.0   3.0   3.0   3.0   4.0   4.0   5.0   6.0   6.0   6.0   8.0   8.0   8.0  15.0  16.0
+ Modell n    :     1     1     1     1     1     1     1     1     3     3     3     3     3     3     2     2
+   Kralle A: Spitze laengs 59.9 (6.1 vor Ende) quer -0.9 | Wurzel laengs 43.2 quer -8.7 | Laenge 18.4 Dicke 11.7 px 142
+   Kralle B: Spitze laengs 67.9 (-1.9 vor Ende) quer +12.5 | Wurzel laengs 51.8 quer +9.9 | Laenge 16.3 Dicke 10.4 px 139
+   Kralle C: Spitze laengs 61.3 (4.7 vor Ende) quer +5.9 | Wurzel laengs 44.5 quer -1.3 | Laenge 18.2 Dicke 11.9 px 153
+   Kralle T: Spitze laengs 43.3 (22.7 vor Ende) quer +30.6 | Wurzel laengs 29.7 quer +26.3 | Laenge 14.3 Dicke 5.0 px 29
+   Daumen Vorlage {'gabel_ab_handgelenk': 24.4, 'laenge': 18.4, 'dicke_wurzel': 10.0, 'winkel_zur_handachse': -26.0, 'seite': 'Bild-links (zum Koerper)', 'fingerblock_laenge': 33.6, 'fingerblock_breite': 23.1, 'abstand_wurzel': 18.2, 'abstand_spitze': 26.2, 'spalt_wurzel': 1.6, 'spalt_spitze': 15.0}
+   Daumen Modell  {'gabel_ab_handgelenk': 20.0, 'laenge': 21.2, 'dicke_wurzel': 11.0, 'winkel_zur_handachse': -28.1, 'seite': 'Bild-links (zum Koerper)', 'fingerblock_laenge': 46.0, 'fingerblock_breite': 26.0, 'abstand_wurzel': 21.5, 'abstand_spitze': 29.5, 'spalt_wurzel': 3.0, 'spalt_spitze': 15.0}
+--- h128 <-> birkin23: Handlaenge Vorlage 59.8 Modell 65.2
+ px vor Ende :   0.5   1.5   2.5   3.5   4.5   5.5   6.5   7.5   8.5   9.5  10.5  11.5  12.5  13.5  14.5  15.5
+ Vorlage ges :   1.0   3.6   6.6   7.6   9.6  11.8  12.6  14.1  16.1  17.2  18.2  19.8  20.8  21.6  22.2  23.8
+ Vorlage Lauf:   1.0   3.6   6.6   7.6   9.6  11.8  12.6  14.1  16.1  17.2  18.2  19.8  20.8  21.6  22.2  23.8
+ Vorlage n   :     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1
+ Modell ges  :   1.0   1.0   3.0   3.0   4.0   4.0  10.0  12.0  17.0  18.0  18.0  19.0  21.0  22.0  22.0  23.0
+ Modell Lauf :   1.0   1.0   3.0   3.0   4.0   4.0   5.0   6.0   7.0   7.0   8.0   8.0  16.0  16.0  22.0  23.0
+ Modell n    :     1     1     1     1     1     1     2     2     3     3     3     3     2     2     1     1
+   Kralle A: Spitze laengs 60.0 (5.2 vor Ende) quer -0.9 | Wurzel laengs 43.0 quer -8.7 | Laenge 18.8 Dicke 11.9 px 139
+   Kralle B: Spitze laengs 67.8 (-2.6 vor Ende) quer +12.7 | Wurzel laengs 51.3 quer +10.0 | Laenge 16.8 Dicke 10.5 px 165
+   Kralle C: Spitze laengs 61.2 (4.1 vor Ende) quer +6.0 | Wurzel laengs 44.1 quer -1.3 | Laenge 18.5 Dicke 12.0 px 157
+   Kralle T: Spitze laengs 43.1 (22.2 vor Ende) quer +31.0 | Wurzel laengs 29.5 quer +26.5 | Laenge 14.3 Dicke 5.1 px 31
+   Daumen Vorlage {'gabel_ab_handgelenk': 23.1, 'laenge': 19.4, 'dicke_wurzel': 13.1, 'winkel_zur_handachse': -22.9, 'seite': 'Bild-links (zum Koerper)', 'fingerblock_laenge': 36.6, 'fingerblock_breite': 27.4, 'abstand_wurzel': 20.8, 'abstand_spitze': 28.9, 'spalt_wurzel': 0.5, 'spalt_spitze': 15.4}
+   Daumen Modell  {'gabel_ab_handgelenk': 19.5, 'laenge': 20.8, 'dicke_wurzel': 12.0, 'winkel_zur_handachse': -28.7, 'seite': 'Bild-links (zum Koerper)', 'fingerblock_laenge': 46.0, 'fingerblock_breite': 26.0, 'abstand_wurzel': 22.0, 'abstand_spitze': 30.0, 'spalt_wurzel': 3.0, 'spalt_spitze': 15.0}
+--- h130 <-> birkin21: Handlaenge Vorlage 59.5 Modell 65.2
+ px vor Ende :   0.5   1.5   2.5   3.5   4.5   5.5   6.5   7.5   8.5   9.5  10.5  11.5  12.5  13.5  14.5  15.5
+ Vorlage ges :   2.0   6.1   9.9  12.9  14.2  15.8  17.2  18.2  19.2  20.4  21.8  21.8  22.4  23.4  23.8  24.9
+ Vorlage Lauf:   2.0   5.6   9.9  12.9  14.2  15.8  17.2  17.8  19.2  20.4  21.8  21.8  22.4  23.4  23.8  24.9
+ Vorlage n   :     1     2     1     1     1     1     1     2     1     1     1     1     1     1     1     1
+ Modell ges  :   1.0   2.0   2.0   3.0   3.0   5.0   9.0  10.0  16.0  17.0  18.0  20.0  21.0  21.0  22.8  24.2
+ Modell Lauf :   1.0   2.0   2.0   3.0   3.0   5.0   5.0   5.0   7.0   7.0   7.0   9.0  15.0  15.0  22.8  24.2
+ Modell n    :     1     1     1     1     1     1     2     2     3     3     4     3     2     2     1     1
+   Kralle A: Spitze laengs 60.1 (5.1 vor Ende) quer -0.6 | Wurzel laengs 43.0 quer -8.7 | Laenge 18.9 Dicke 11.8 px 138
+   Kralle B: Spitze laengs 67.9 (-2.7 vor Ende) quer +12.9 | Wurzel laengs 51.1 quer +10.0 | Laenge 17.0 Dicke 10.4 px 162
+   Kralle C: Spitze laengs 61.2 (4.1 vor Ende) quer +6.1 | Wurzel laengs 44.2 quer -1.3 | Laenge 18.5 Dicke 12.0 px 169
+   Kralle T: Spitze laengs 42.9 (22.3 vor Ende) quer +31.2 | Wurzel laengs 29.3 quer +26.6 | Laenge 14.3 Dicke 5.1 px 33
+   Daumen Vorlage {'gabel_ab_handgelenk': 22.4, 'laenge': 17.7, 'dicke_wurzel': 10.8, 'winkel_zur_handachse': -24.0, 'seite': 'Bild-links (zum Koerper)', 'fingerblock_laenge': 37.1, 'fingerblock_breite': 28.9, 'abstand_wurzel': 22.8, 'abstand_spitze': 30.8, 'spalt_wurzel': 3.0, 'spalt_spitze': 16.9}
+   Daumen Modell  {'gabel_ab_handgelenk': 18.2, 'laenge': 23.5, 'dicke_wurzel': 13.0, 'winkel_zur_handachse': -27.9, 'seite': 'Bild-links (zum Koerper)', 'fingerblock_laenge': 47.0, 'fingerblock_breite': 26.0, 'abstand_wurzel': 21.5, 'abstand_spitze': 29.5, 'spalt_wurzel': 2.0, 'spalt_spitze': 15.0}
+--- h132 <-> birkin24: Handlaenge Vorlage 68.5 Modell 65.5
+ px vor Ende :   0.5   1.5   2.5   3.5   4.5   5.5   6.5   7.5   8.5   9.5  10.5  11.5  12.5  13.5  14.5  15.5
+ Vorlage ges :   3.0   7.1   9.6  14.0  17.1  18.6  20.6  21.0  22.6  23.6  24.1  25.6  26.1  27.1  28.6  29.6
+ Vorlage Lauf:   3.0   7.1   9.6  14.0  17.1  18.6  20.6  21.0  22.6  23.6  24.1  25.6  26.1  27.1  28.6  29.6
+ Vorlage n   :     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1     1
+ Modell ges  :   1.0   1.0   1.0   3.0   3.0   4.0   8.2  17.0  18.0  18.0  19.0  19.0  21.0  21.2  22.0  23.0
+ Modell Lauf :   1.0   1.0   1.0   3.0   3.0   4.0   4.2   5.0   6.0   6.0   6.0   7.0   8.0   8.0  22.0  23.0
+ Modell n    :     1     1     1     1     1     1     2     3     3     3     4     3     3     3     1     1
+   Kralle A: Spitze laengs 60.0 (5.5 vor Ende) quer -0.7 | Wurzel laengs 43.2 quer -8.7 | Laenge 18.6 Dicke 11.7 px 121
+   Kralle B: Spitze laengs 67.9 (-2.4 vor Ende) quer +12.6 | Wurzel laengs 51.5 quer +9.9 | Laenge 16.5 Dicke 10.3 px 136
+   Kralle C: Spitze laengs 61.2 (4.3 vor Ende) quer +6.1 | Wurzel laengs 44.4 quer -1.3 | Laenge 18.3 Dicke 11.8 px 177
+   Kralle T: Spitze laengs 43.1 (22.4 vor Ende) quer +30.9 | Wurzel laengs 29.4 quer +26.4 | Laenge 14.3 Dicke 5.0 px 30
+   Daumen Vorlage {'gabel_ab_handgelenk': 30.5, 'laenge': 17.1, 'dicke_wurzel': 16.1, 'winkel_zur_handachse': -22.1, 'seite': 'Bild-links (zum Koerper)', 'fingerblock_laenge': 38.0, 'fingerblock_breite': 31.6, 'abstand_wurzel': 25.4, 'abstand_spitze': 30.4, 'spalt_wurzel': 1.5, 'spalt_spitze': 14.6}
+   Daumen Modell  {'gabel_ab_handgelenk': 18.5, 'laenge': 25.5, 'dicke_wurzel': 13.0, 'winkel_zur_handachse': -29.3, 'seite': 'Bild-links (zum Koerper)', 'fingerblock_laenge': 47.0, 'fingerblock_breite': 27.2, 'abstand_wurzel': 22.1, 'abstand_spitze': 30.8, 'spalt_wurzel': 2.0, 'spalt_spitze': 17.2}

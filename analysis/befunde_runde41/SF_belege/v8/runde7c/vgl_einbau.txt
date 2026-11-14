@@ -1,0 +1,21 @@
+Abschnitt 0 gleich
+Abschnitt 1 gleich
+Abschnitt 2 gleich
+Abschnitt 3 gleich
+Abschnitt 4 gleich
+Abschnitt 5 gleich
+Abschnitt 6 gleich
+TIM/CLUT gleich
+Meshes 23 23 ungleich: [8]
+-- Meshes 8/9 vor den Korrekturen (R3B 47b51e80) gegen R3 9860f6bd, Rest gegen 7b:
+Abschnitt 0 gleich
+Abschnitt 1 gleich
+Abschnitt 2 gleich
+Abschnitt 3 gleich
+Abschnitt 4 gleich
+Abschnitt 5 gleich
+Abschnitt 6 gleich
+TIM/CLUT gleich
+Meshes 23 23 ungleich (8/9 gegen C, Rest gegen B): []
+-- NEU gegen V7 (Mesh 9 nicht in der Liste = bytegleich V7):
+Meshes 23 23 ungleich: [8, 11, 12, 13, 14, 16, 17, 18, 19, 20, 21, 22]

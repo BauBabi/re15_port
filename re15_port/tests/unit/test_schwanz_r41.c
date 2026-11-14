@@ -94,10 +94,11 @@ static void verbunden(const re15_skel_pose_t *p, const re15_skel_pose_t *k, cons
 
 static void kette_pruefen(re15_actor_t *a, const char *wo)
 {
-    const int v4 = re15_schwanz_r41_v4_kette(&s_skel);
+    const int v4 = re15_schwanz_r41_v4_kette(&s_skel) || re15_schwanz_r41_v8_kette(&s_skel);   /* V8: Regeln der V4-Kette (SW_V4_*) */
     re15_skel_pose_t p[RE15_EMD_MAX_BONES], k[RE15_EMD_MAX_BONES];
     double sp[3], sk[3];
-    fprintf(stderr, "Schwanz [%s]: %s\n", wo, v4 ? "V4-Kette (ungleiche Glieder)" : "Kette mit gleichen Gliedern");
+    fprintf(stderr, "Schwanz [%s]: %s\n", wo, re15_schwanz_r41_v8_kette(&s_skel) ? "V8-Kette (gleiche Glieder, Wurzel oben)" :
+            v4 ? "V4-Kette (ungleiche Glieder)" : "Kette mit gleichen Gliedern");
 
     /* (1) Ruhe */
     for (int i = 0; i < 90; i++) { takt(); CHECK(pose(a, p, 1), "[%s] Kette nicht angewandt (Ruhe)", wo); }
@@ -207,15 +208,27 @@ int main(void)
     if (!blob) return 1;
     CHECK(re15_emd_parse_container(blob, len, &s_md1, &s_skel, &s_anim, NULL) == 0, "EM30_HANGAR nicht lesbar");
     CHECK(s_skel.bone_count == 23, "Knochen %d statt 23", s_skel.bone_count);
-    /* Einbau V7 (v0.8.30): das Spiel-Asset traegt die V4-Kette mit den Gliedlaengen aus V6 drei Punkte 2. (Knochen 17-22 relpos y
-     * 624/440/887/1121/350/204, gemessen am EMR von 319bbd17; Referenz 2: 467/466/466/466/466/466) */
+    /* Zweig r41/sichel_v8: das Spiel-Asset traegt die V8-Kette (Messblatt V8 6a; tools/r41_sichel/v8/kette_v8.json, Runde 3): Knochen 16
+     * relpos (-722,-145,108), 17-22 (0,541,0), gemessen am EMR von 66806bc4 (Runde 2 d0ef852c: (-714,-214,130) / 526, Runde 1 fa31156c:
+     * (-667,-342,102) / 538 - Gegenprobe rot).
+     * Gegenprobe V7 (319bbd17: 16 (-378,-602,-410), 17-22 y 624/440/887/1121/350/204): keine V8-Kette, V4-Kette (= hier rot fuer V7). */
     {
-        static const int16_t v7_y[6] = { 624, 440, 887, 1121, 350, 204 };
+        static const int16_t v8_rel[7][3] = { { -722, -145, 108 }, { 0, 541, 0 }, { 0, 541, 0 }, { 0, 541, 0 }, { 0, 541, 0 },
+                                              { 0, 541, 0 }, { 0, 541, 0 } };
+        static const int16_t v7_rel[7][3] = { { -378, -602, -410 }, { 0, 624, 0 }, { 0, 440, 0 }, { 0, 887, 0 }, { 0, 1121, 0 },
+                                              { 0, 350, 0 }, { 0, 204, 0 } };
         int abw = 0;
-        for (int b = 17; b <= 22; b++) abw += s_skel.bone_relative_pos[b][1] != v7_y[b - 17];
-        CHECK(s_skel.bone_count == 23 && abw == 0 && re15_schwanz_r41_v4_kette(&s_skel),
-              "Spiel-Asset: Schwanzglieder 17-22 nicht die V7-Kette (%d Laengen anders, V4-Kette %d)", abw,
-              re15_schwanz_r41_v4_kette(&s_skel));
+        for (int b = 16; b <= 22; b++) for (int c = 0; c < 3; c++) abw += s_skel.bone_relative_pos[b][c] != v8_rel[b - 16][c];
+        CHECK(s_skel.bone_count == 23 && abw == 0 && re15_schwanz_r41_v8_kette(&s_skel) && !re15_schwanz_r41_v4_kette(&s_skel),
+              "Spiel-Asset: Schwanzkette 16-22 nicht die V8-Kette (%d Werte anders, V8-Kette %d, V4-Kette %d)", abw,
+              re15_schwanz_r41_v8_kette(&s_skel), re15_schwanz_r41_v4_kette(&s_skel));
+        int16_t alt[7][3];
+        for (int b = 16; b <= 22; b++)
+            for (int c = 0; c < 3; c++) { alt[b - 16][c] = s_skel.bone_relative_pos[b][c]; s_skel.bone_relative_pos[b][c] = v7_rel[b - 16][c]; }
+        CHECK(!re15_schwanz_r41_v8_kette(&s_skel) && re15_schwanz_r41_v4_kette(&s_skel),
+              "Gegenprobe V7-Kette: als V8-Kette erkannt (%d) oder keine V4-Kette (%d)",
+              re15_schwanz_r41_v8_kette(&s_skel), re15_schwanz_r41_v4_kette(&s_skel));
+        for (int b = 16; b <= 22; b++) for (int c = 0; c < 3; c++) s_skel.bone_relative_pos[b][c] = alt[b - 16][c];
     }
 
     re15_schwanz_r41_reset();
@@ -332,6 +345,99 @@ int main(void)
         re15_schwanz_r41_reset();
       }
         for (int b = 17; b <= 22; b++) s_skel.bone_relative_pos[b][1] = alt[b - 17];
+    }
+
+    /* (10) V8 (Messblatt V8 6a, schwanz_r41.c SW_V8_GLATT_MAX): mit der V8-Kette (Spiel-Asset) knickt nach einer Drehung um 180 Grad in
+     *      einem Takt kein Gelenk weiter ab als min(25 Grad, max(12 Grad, Keyframe-Gelenkwinkel + 3 Grad)) (+1 Grad Rundung), es gibt
+     *      keine Knick-Ausnahme (V4: Biegung behaelt bis 73 Grad). Gegenprobe ohne V8-Erkennung (Wurzel x -800 < SW_V8_WURZEL_X -760):
+     *      nur ausgegeben. */
+    if (re15_schwanz_r41_v8_kette(&s_skel)) {
+        const int16_t wx = s_skel.bone_relative_pos[16][0];
+        for (int lauf = 0; lauf < 2; lauf++) {
+            if (lauf) s_skel.bone_relative_pos[16][0] = -800;
+            re15_schwanz_r41_reset();
+            a->motion = 0; a->anim_frame = 0;
+            for (int i = 0; i < 30; i++) { takt(); pose(a, p, 1); }
+            a->rot_y = (int16_t)(a->rot_y + 2048);
+            double ueber = -90, max_w = 0;
+            for (int i = 0; i < 60; i++) {
+                re15_skel_pose_t q[RE15_EMD_MAX_BONES];
+                double kf[8][3];
+                int32_t g[8][3];
+                takt();
+                pose(a, q, 0);
+                for (int j = 0; j < 7; j++) for (int k = 0; k < 3; k++) kf[j][k] = q[16 + j].trans[k];
+                spitze(q, kf[7]);
+                pose(a, p, 1);
+                int ok = 1;
+                for (int j = 0; j < 8; j++) ok &= re15_schwanz_r41_gelenk(20, j, g[j]);
+                if (!ok) continue;
+                for (int j = 1; j < 7; j++) {
+                    double u[3], v[3], ku[3], kv[3];
+                    for (int k = 0; k < 3; k++) {
+                        u[k] = g[j][k] - g[j - 1][k]; v[k] = g[j + 1][k] - g[j][k];
+                        ku[k] = kf[j][k] - kf[j - 1][k]; kv[k] = kf[j + 1][k] - kf[j][k];
+                    }
+                    const double w = acos((u[0] * v[0] + u[1] * v[1] + u[2] * v[2]) /
+                                          (sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]) * sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) + 1e-9))
+                                     * 180.0 / 3.14159265;
+                    const double wk = acos((ku[0] * kv[0] + ku[1] * kv[1] + ku[2] * kv[2]) /
+                                           (sqrt(ku[0] * ku[0] + ku[1] * ku[1] + ku[2] * ku[2]) *
+                                            sqrt(kv[0] * kv[0] + kv[1] * kv[1] + kv[2] * kv[2]) + 1e-9)) * 180.0 / 3.14159265;
+                    double grenze = wk + 3.0 > 12.0 ? wk + 3.0 : 12.0;
+                    if (grenze > 25.0) grenze = 25.0;
+                    if (w > max_w) max_w = w;
+                    if (w - grenze > ueber) ueber = w - grenze;
+                }
+            }
+            if (lauf == 0)
+                CHECK(ueber <= 1.0, "V8-Kette: Gelenk %.1f Grad ueber min(25, max(12, Keyframe + 3)) (groesster Gelenkwinkel %.1f)", ueber, max_w);
+            fprintf(stderr, "Schwanz %s: groesster Gelenkwinkel %.1f Grad, Abstand zur Grenze %.1f\n",
+                    lauf ? "ohne V8-Erkennung (Gegenprobe)" : "V8-Kette", max_w, ueber);
+        }
+        s_skel.bone_relative_pos[16][0] = wx;
+        re15_schwanz_r41_reset();
+    }
+
+    /* (11) V8 Runde 2 (schwanz_r41.c SW_V8_STARR, Sicht-Pruefer V8 r1 Punkt 5 "graue Dreiecke des Wurzelrohrs stechen durch die
+     *      Rueckenhaut"): ohne Szenenziel liegt das erste Glied (Gelenk 0 -> 1) nach einer Drehung um 180 Grad und waehrend des Gangs in
+     *      jedem Takt auf seinem Keyframe (Abweichung <= 1 Grad, gemessen 0); nach einer Szenenfuehrung kehrt es zurueck.
+     *      Gegenprobe ohne V8-Erkennung (Wurzel x -800): das erste Glied weicht ab (nur ausgegeben). */
+    if (re15_schwanz_r41_v8_kette(&s_skel)) {
+        const int16_t wx = s_skel.bone_relative_pos[16][0];
+        for (int lauf = 0; lauf < 2; lauf++) {
+            if (lauf) s_skel.bone_relative_pos[16][0] = -800;
+            re15_schwanz_r41_reset();
+            a->motion = 0; a->anim_frame = 0;
+            for (int i = 0; i < 20; i++) { takt(); pose(a, p, 1); }
+            a->rot_y = (int16_t)(a->rot_y + 2048);
+            a->motion = 1;
+            double max_w = 0;
+            for (int i = 0; i < 60; i++) {
+                re15_skel_pose_t q[RE15_EMD_MAX_BONES];
+                int32_t g0[3], g1[3];
+                takt();
+                a->anim_frame = i % 20;                      /* Gang (Clip 1), Bild 0-19 */
+                pose(a, q, 0);
+                pose(a, p, 1);
+                if (!re15_schwanz_r41_gelenk(20, 0, g0) || !re15_schwanz_r41_gelenk(20, 1, g1)) continue;
+                /* Keyframe-Gelenke 0/1 (Modellraum) -> Welt wie die Kette: gleiche Gier */
+                const double cs = re15_cos_q12(a->rot_y) / 4096.0, sn = re15_sin_q12(a->rot_y) / 4096.0;
+                const double kx = q[17].trans[0] - q[16].trans[0], ky = q[17].trans[1] - q[16].trans[1], kz = q[17].trans[2] - q[16].trans[2];
+                const double wx_ = cs * kx + sn * kz, wz_ = -sn * kx + cs * kz;
+                const double dx = g1[0] - g0[0], dy = g1[1] - g0[1], dz = g1[2] - g0[2];
+                const double c = (dx * wx_ + dy * ky + dz * wz_) /
+                                 (sqrt(dx * dx + dy * dy + dz * dz) * sqrt(wx_ * wx_ + ky * ky + wz_ * wz_) + 1e-9);
+                const double w = acos(c > 1 ? 1 : (c < -1 ? -1 : c)) * 180.0 / 3.14159265;
+                if (w > max_w) max_w = w;
+            }
+            if (lauf == 0) CHECK(max_w <= 1.0, "V8-Kette: erstes Glied %.1f Grad neben dem Keyframe ohne Szenenziel (Soll <= 1)", max_w);
+            fprintf(stderr, "Schwanz %s: erstes Glied hoechstens %.1f Grad neben dem Keyframe (Drehung 180 Grad, Gang)\n",
+                    lauf ? "ohne V8-Erkennung (Gegenprobe)" : "V8-Kette", max_w);
+        }
+        s_skel.bone_relative_pos[16][0] = wx;
+        a->motion = 0;
+        re15_schwanz_r41_reset();
     }
 
     /* (6) EM30 mit 16 Knochen: keine Kette */

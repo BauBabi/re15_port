@@ -1,0 +1,9 @@
+EM30_HANGAR.EMD: 886 von 913 Keyframes geduckt, Fussgelenk max 342 vom EM30-Ort, 900 mit bewegtem Schwanz
+FAIL: EM30_HANGAR.EMD: Mesh 11 nicht umtexturiert
+FAIL: EM30_HANGAR.EMD: Unterarm (Mesh 11) 25/25 Flaechen auf 482, 8 mit UV ungleich EM30 bzw. Abbildung, 8 umgelegt (Soll 8, V8 Runde 7e)
+FAIL: EM30_HANGAR.EMD: Klauenhand (Mesh 12) 0 Flaechen auf 482 statt 34, 34 noch auf 490 (V8 Runde 7e Handfarbe)
+FAIL: EM30_HANGAR.EMD: Klauenhand (Mesh 12) 34 Flaechen mit UV ungleich EM30 bzw. Abbildung der Stufe f, 34 umgelegt (Soll 0 / 34, V8 Runde 7e)
+EM30_HANGAR.EMD: 642 Haut-CLUT-Eintraege umgefaerbt, 30 blaue grau, 13 Zusatzzeilen, Port-Texturhoehe 4096
+EM30_HANGAR.EMD: 23 Meshes, 23 Knochen, 21 Clips, 310 Tri-Vertices umgeformt, 13 Teile umtexturiert
+test_birkin_formen: 4 Fehler
+rc_alt=1

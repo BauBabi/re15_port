@@ -1,0 +1,19 @@
+MK_A/MK_B/GR in C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk Wurzelflaechen 22
+KO C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/KO_NEU.EMD Gesichtsflaechen 61 Hinterkopf 30
+LM C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/LM_NEU.EMD 33d2f9eae7c240ae952d9d864d6ebd341523563a57852f1c9e69cc1df6403fba
+Marker C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/KL_NEU.EMD {'sonst': 313, 'beinhaut': 141, 'rumpf': 108, 'arm_rechts': 143, 'unterseite': 267, 'oberseite': 134}
+HF-Marker C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/HF_NEU.EMD e4cccbe10eee318c9222582d1051dbe8014153eedb592ee192372a896575cca6 aus 07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95 Flaechen je Klasse {'daumenkralle': 6, 'finger': 18, 'hand': 24, 'kastenfinger': 10, 'rest': 1023, 'unterarm': 25}
+MK_A ANDERS als r7d
+MK_B ANDERS als r7d
+GR ANDERS als r7d
+KO_NEU ANDERS als r7d
+LM_NEU ANDERS als r7d
+KL_NEU ANDERS als r7d
+2fca740aaca43a28ac4c35336ed68340c22b03163a8a3637d26660afe15ffbe7 *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/GR.EMD
+e0adaacf1e641a97f67965fc61234961408cc4901e72f7916150a469651d8f25 *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/HF_ALT.EMD
+e4cccbe10eee318c9222582d1051dbe8014153eedb592ee192372a896575cca6 *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/HF_NEU.EMD
+fb70510a9f94d33757f05e561fc01f31183b60701bf87b04690f095e67e8b3e6 *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/KL_NEU.EMD
+68b1a37009011cb310d41ba5b2f0d98c221bc25780646f57c0ce066a610d80e0 *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/KO_NEU.EMD
+33d2f9eae7c240ae952d9d864d6ebd341523563a57852f1c9e69cc1df6403fba *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/LM_NEU.EMD
+09d9eb630abe2ba36d1f342c32553246684d89150c1e72985c70de3dacbc37a7 *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/MK_A.EMD
+5b034ef42a944a3742373dd95f0d15848325ad79cb03eb44ee4c53883264a22e *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7e/mk/MK_B.EMD

@@ -1,0 +1,4 @@
+sfv8/szene_v8r3/debug.log Takte 144 tiefstes y -118 Gelenk max 25.1 Median des Takt-Max 18.2, Takte >30 Grad 0, >60 0
+sfv8/szene_v8r2/debug.log Takte 144 tiefstes y -66 Gelenk max 39.3 Median des Takt-Max 20.4, Takte >30 Grad 2, >60 0
+sfv8/szene_v8r3/debug.log Takte mit Vorzeichenwechsel der Biegeebene 43 von 144
+sfv8/szene_v8r2/debug.log Takte mit Vorzeichenwechsel der Biegeebene 40 von 144

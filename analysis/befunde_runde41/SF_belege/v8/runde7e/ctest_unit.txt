@@ -1,0 +1,12 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build
+          Start   18: unit_rdt_parser
+   1/1013 Test   #18: unit_rdt_parser .........................   Passed    0.01 sec
+[... gekuerzt: Einzelzeilen der 1013 Tests; Aufruf: ctest --test-dir build -j 1 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)" ...]
+100% tests passed, 0 tests failed out of 1013
+
+Total Test time (real) = 1102.10 sec
+
+real	18m22.524s
+user	0m0.030s
+sys	0m0.000s
+rc=0

@@ -1,0 +1,414 @@
+"""SF V8: Tafeln (roh) nach analysis/befunde_runde41/SF_belege/v8/ (Auftrag Punkt 6).
+
+    python tafeln_v8.py --v7 EMD_V7 --v8 EMD_V8 --szene7 DIR --szene8 DIR [--aus DIR]
+
+01_darstellung.png    Darstellung_Vorlage | Nutzerlinien ueber V7 | Nutzerlinien ueber V8 (PV, Spielkamera 50A0/12, RDT-Licht)
+02_foto2_seite.jpg    Foto 2 (Beschreibung2_Vorlage = n1435) | V7 | V8 in P2 (Clip 12 Bild 48 Gier 861)
+03_foto1_vorn.jpg     Foto 1 (Beschreibung1_Vorlage = n1485) | V7 | V8 in P1 (Clip 20 Bild 139 Gier 1422)
+04_rundum.jpg         V8 und V7 rundum (birkin_buehne.rundum, Clip 17 Bild 47, 8 Richtungen)
+05_adern_rechts.png   Vorlage | V7 | V8 | Original-EM30 (CDEMD0.EMS Typ 0x30, gleiche Pose PV), Ausschnitt (W)-rechte Flanke / Ruecken
+06_spiel.jpg          Spielbilder der Szene (lauf_v4.sh RE15_FRAMEDUMP) V7 | V8 an gleichen Bildnummern
+07_bogen_jedes7.jpg   Bogen: jedes 7. Spielbild F225-F450 der V8-Szene (320 x 240)
+08_ruecken_hinten.jpg Runde 2 (Sicht-Pruefer V8 r1: "keine Tafel vergroessert den Ruecken von hinten in der Szene"): Spielbilder
+                      F322-F346 (Birkin von hinten), Ausschnitt um den Ruecken x3, V7 | V8
+09_vorn_kopf.png      Runde 3 (O3, Sicht-Pruefer r2 Punkt 2 "Kamm hinter dem Kopf"): Foto 1 | V7 | V8 r2 | neu in P1, nah am Kopf (x3), dazu
+                      die Szene von vorn (Takt F354, offline, Spielkamera)
+10_adern_rechts_original.png Runde 3 (O1/O2): Vorlage | Original-EM30 gleiche Pose PV | V8 r2 | neu (x3)
+11_gdigrab_echtes_fenster.jpg Runde 4 (--gdi): Standbilder aus dem gdigrab-Video des echten Fensters
+                      Runde 6d (--gdi-bilder): dieselbe Tafel aus den je Spielbild gemessen zugeordneten gdigrab-Bildern (gdi_zuordnung.py)
+12_wurzel_hinten.jpg  Runde 4 (--szene8r3): Spielbilder F322-F340 von hinten, V8 r3 | neu
+13_brust_vorn.png     Runde 5 (--v8r4, Sicht-Pruefer r4 (3) "graue Platte ... weisse Keile"): Foto 1 | V7 | V8 r4 | neu, nah an Brust und Gesicht:
+                      P1 (x3), Szene Takt F354 offline (x3) und - mit --szene7/--szene8r3/--szene8 - die echten Framedumps F354 (x2)
+14_schwanz_unterseite.png Runde 5 P4 (--v8r4, Nutzer 2026-11-09 "Die Unterseite des großen Schwanzes ist fleischig"): Vorlagen n1439 / Foto 2 /
+                      Foto 1 nah am Schwanz mit der gemessenen Grenze | V8 r4 | neu in denselben Posen | neu von unten und in der Szene
+15_ruecken_kopf.png   Runde 5 P5 (--v8r4, Nutzer 2026-11-09 "Lücke zwischen Rücken und Kopf"): Vorlagen n1439 / Foto 2 / Foto 1 | V8 r4 | neu, nah an
+                      Ruecken und Kopf (x4), Luecken-Bildpunkte (luecke_r5) tuerkis daneben; dazu die Szenen-Takte mit der staerksten Luecke
+                      von V8 r4 (offline Spielkamera), V8 r4 | neu; Runde 5d: Mass an der Vorlage eingezeichnet (vorlage_luecke_r5), dazu Takt F311 und
+                      F332 und der Einsatz von Stufe n (gruen)
+Runde 5: --alt-name benennt den Vergleichsstand von --v8r2 / --szene8r3 (Tafeln 09, 10, 12; Standard wie Runde 3/4).
+Nutzerlinien = Pixel, in denen Darstellung.png von Darstellung_Vorlage.png um mehr als 40 (Kanal) abweicht (wie Messblatt m2_linien).
+"""
+import os, sys, argparse
+import numpy as np, cv2
+from PIL import Image
+HIER = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, HIER)
+import v8_gemein as V                 # noqa: E402
+import f_rast as FR                   # noqa: E402
+import birkin_formen as BF            # noqa: E402
+
+P1 = dict(clip=20, bild=139, gier=1422, x=-8420, z=-21908)      # Messblatt Foto (v6_gemein.posen P1)
+P2 = dict(clip=12, bild=48, gier=861, x=-8182, z=-21330)        # Messblatt Foto (v6_gemein.posen P2)
+
+
+def bild(p):
+    return np.array(Image.open(p).convert("RGB"))
+
+
+def render(blob, pose):
+    mo = V.modell(blob)
+    return FR.mit_bg(mo, pose)['img'][:480]
+
+
+def schrift(im, s, x, y, sc=0.6):
+    cv2.putText(im, s, (x, y), cv2.FONT_HERSHEY_SIMPLEX, sc, (0, 0, 0), 3, cv2.LINE_AA)
+    cv2.putText(im, s, (x, y), cv2.FONT_HERSHEY_SIMPLEX, sc, (255, 255, 0), 1, cv2.LINE_AA)
+
+
+def kachel(im, box, f, titel):
+    x0, y0, x1, y1 = box
+    t = cv2.resize(np.ascontiguousarray(im[y0:y1, x0:x1]), None, fx=f, fy=f, interpolation=cv2.INTER_NEAREST)
+    t = np.ascontiguousarray(t)
+    schrift(t, titel, 6, 22)
+    return t
+
+
+def reihe(ks):
+    h = max(k.shape[0] for k in ks)
+    return np.hstack([np.vstack([k, np.zeros((h - k.shape[0], k.shape[1], 3), np.uint8)]) for k in ks])
+
+
+def kopf(im, z):
+    k = np.full((34, im.shape[1], 3), 16, np.uint8)
+    schrift(k, z, 8, 24, 0.55)
+    return np.vstack([k, im])
+
+
+def speichern(im, p):
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    if p.endswith('.jpg'):
+        cv2.imwrite(p, cv2.cvtColor(im, cv2.COLOR_RGB2BGR), [cv2.IMWRITE_JPEG_QUALITY, 90])
+    else:
+        cv2.imwrite(p, cv2.cvtColor(im, cv2.COLOR_RGB2BGR))
+    print(p, im.shape)
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--v7', required=True); ap.add_argument('--v8', default=V.ASSET)
+    ap.add_argument('--szene7'); ap.add_argument('--szene8'); ap.add_argument('--v8r2')
+    ap.add_argument('--szene8r3', help='Runde 4: Szenenordner V8 r3 (Tafel 12)'); ap.add_argument('--gdi', help='Runde 4: gdigrab-Video (Tafel 11)')
+    ap.add_argument('--aus', default=os.path.join(V.BAUM, 'analysis', 'befunde_runde41', 'SF_belege', 'v8'))
+    ap.add_argument('--alt-name', default=None, help='Runde 5: Name des Vergleichsstands (--v8r2 / --szene8r3)')
+    ap.add_argument('--v8r4', help='Runde 5: EMD V8 r4 (Tafel 13)')
+    ap.add_argument('--gdi-bilder', help='Runde 6d: Ordner mit gdi_fenster_F<n>.png (gdi_zuordnung.py: gdigrab-Bilder, je Spielbild gemessen zugeordnet) - Tafel 11 aus diesen Bildern statt aus festen Zeiten')
+    a = ap.parse_args()
+    v7, v8 = open(a.v7, 'rb').read(), open(a.v8, 'rb').read()
+    n8 = 'V8 ' + V.sha(v8)[:8]
+    vl = bild(V.V80 + 'Darstellung_Vorlage.png'); dar = bild(V.V80 + 'Darstellung.png')
+    lin = np.abs(dar.astype(int) - vl.astype(int)).max(2) > 40
+    r7, r8 = render(v7, V.PV), render(v8, V.PV)
+    o7, o8 = r7.copy(), r8.copy(); o7[lin] = dar[lin]; o8[lin] = dar[lin]
+    box = (230, 140, 500, 450)
+    im = reihe([kachel(vl, box, 2, 'Darstellung_Vorlage (n1439)'), kachel(o7, box, 2, 'V7 319bbd17 + Nutzerlinien'),
+                kachel(o8, box, 2, n8 + ' + Nutzerlinien')])
+    speichern(kopf(im, 'SF V8 01: Vorlage | V7 | V8, Pose PV Clip 17 Bild 47 Gier 587, Spielkamera 50A0/12, RDT-Licht (roh, x2)'),
+              os.path.join(a.aus, '01_darstellung.png'))
+    # 02 / 03
+    for nr, foto, pose, name, bx in ((2, 'Beschreibung2_Vorlage.png', P2, '02_foto2_seite.jpg', (230, 130, 500, 450)),
+                                     (1, 'Beschreibung1_Vorlage.png', P1, '03_foto1_vorn.jpg', (250, 110, 560, 450))):
+        f = bild(V.V80 + foto)
+        im = reihe([kachel(f, bx, 2, 'Foto %d' % nr), kachel(render(v7, pose), bx, 2, 'V7'), kachel(render(v8, pose), bx, 2, n8)])
+        speichern(kopf(im, 'SF V8 %s: Foto %d | V7 | V8, Pose Clip %d Bild %d Gier %d (roh, x2)' % (name[:2], nr, pose['clip'], pose['bild'],
+                                                                                              pose['gier'])), os.path.join(a.aus, name))
+    # 04 rundum
+    import birkin_buehne as BB
+    tmp = os.path.join(V.SFV8, 'tafeln_tmp'); os.makedirs(tmp, exist_ok=True)
+    BB.rundum(v8, 17, 47, os.path.join(tmp, 'r8.png'), n8 + ' rundum (Clip 17 Bild 47)', schritte=8, groesse=300)
+    BB.rundum(v7, 17, 47, os.path.join(tmp, 'r7.png'), 'V7 319bbd17 rundum (Clip 17 Bild 47)', schritte=8, groesse=300)
+    i8, i7 = bild(os.path.join(tmp, 'r8.png')), bild(os.path.join(tmp, 'r7.png'))
+    w = max(i8.shape[1], i7.shape[1])
+    pad = lambda x: np.hstack([x, np.full((x.shape[0], w - x.shape[1], 3), 16, np.uint8)])
+    speichern(np.vstack([pad(i8), pad(i7)]), os.path.join(a.aus, '04_rundum.jpg'))
+    # 05 Adern
+    orig = BF.lade_em30()
+    ro = render(orig, V.PV)
+    bx = (320, 150, 480, 330)
+    im = reihe([kachel(vl, bx, 3, 'Vorlage n1439'), kachel(r7, bx, 3, 'V7'), kachel(r8, bx, 3, n8 + ' (Adern X1-X3)'),
+                kachel(ro, bx, 3, 'Original-EM30 (Quelle)')])
+    speichern(kopf(im, 'SF V8 05: (W)-rechte Flanke/Ruecken in PV - Vorlage | V7 | V8 | Original-RE1.5-Birkin EM30 gleiche Pose (roh, x3)'),
+              os.path.join(a.aus, '05_adern_rechts.png'))
+    # 09 / 10 (Runde 3)
+    if a.v8r2:
+        import r3_gemein as R3
+        v8r2 = open(a.v8r2, 'rb').read()
+        f1 = bild(V.V80 + 'Beschreibung1_Vorlage.png')
+        bx = (380, 130, 530, 260)
+        z1 = reihe([kachel(f1, bx, 3, 'Foto 1'), kachel(render(v7, P1), bx, 3, 'V7'), kachel(render(v8r2, P1), bx, 3, a.alt_name or 'V8 r2 d0ef852c'),
+                    kachel(render(v8, P1), bx, 3, n8)])
+        sp = R3.szene_posen()[354]
+        rs = [render(b_, sp) for b_ in (v7, v8r2, v8)]
+        A_ = FR.mit_bg(V.modell(v8), sp); ys, xs = np.nonzero(A_['bone'][:480] >= 0)
+        bx2 = (max(int(xs.mean()) - 75, 0), max(int(ys.min()) - 10, 0), max(int(xs.mean()) - 75, 0) + 150, max(int(ys.min()) - 10, 0) + 130)
+        z2 = reihe([np.zeros((390, 450, 3), np.uint8)] + [kachel(r_, bx2, 3, t_ + ' Szene Takt F354') for r_, t_ in zip(rs, ('V7', a.alt_name or 'V8 r2', n8))])
+        speichern(kopf(np.vstack([z1, z2[:, :z1.shape[1]] if z2.shape[1] >= z1.shape[1] else np.hstack([z2, np.zeros((z2.shape[0], z1.shape[1] - z2.shape[1], 3), np.uint8)])]),
+                       'SF V8 09: von vorn nah am Kopf - Foto 1 | V7 | %s | neu (P1), darunter Szene Takt F354 (roh, x3)' % (a.alt_name or 'V8 r2')),
+                  os.path.join(a.aus, '09_vorn_kopf.png'))
+        bx = (320, 150, 480, 330)
+        im = reihe([kachel(vl, bx, 3, 'Vorlage n1439'), kachel(ro, bx, 3, 'Original-EM30 (gleiche Pose)'), kachel(render(v8r2, V.PV), bx, 3, a.alt_name or 'V8 r2'),
+                    kachel(r8, bx, 3, n8)])
+        speichern(kopf(im, 'SF V8 10: (W)-rechte Flanke in PV - Vorlage | Original-RE1.5-Birkin EM30 | %s | neu (roh, x3)' % (a.alt_name or 'V8 r2')),
+                  os.path.join(a.aus, '10_adern_rechts_original.png'))
+    # 06 Spiel
+    if a.szene7 and a.szene8:
+        nrs = [235, 260, 290, 320, 345, 380, 420, 450]
+        zeilen = []
+        for n in nrs:
+            p7 = os.path.join(a.szene7, 'fd', 'f%06d.ppm' % n); p8 = os.path.join(a.szene8, 'fd', 'f%06d.ppm' % n)
+            if not (os.path.exists(p7) and os.path.exists(p8)):
+                continue
+            k7, k8 = bild(p7), bild(p8)
+            k7 = np.array(k7, copy=True); k8 = np.array(k8, copy=True)
+            schrift(k7, 'V7 F%d' % n, 6, 20); schrift(k8, 'V8 F%d' % n, 6, 20)
+            zeilen.append(np.hstack([k7, k8]))
+        par = [np.hstack(zeilen[i:i + 2]) if i + 1 < len(zeilen) else np.hstack([zeilen[i], np.zeros_like(zeilen[i])])
+               for i in range(0, len(zeilen), 2)]
+        speichern(kopf(np.vstack(par), 'SF V8 06: Spielbilder Hangar 50A0 (lauf_v4.sh FRAMEDUMP, je Paar V7 | V8, gleiche Bildnummer)'),
+                  os.path.join(a.aus, '06_spiel.jpg'))
+        # 07 Bogen jedes 7. Bild (V8)
+        ks = []
+        for n in range(225, 451, 7):
+            pp = os.path.join(a.szene8, 'fd', 'f%06d.ppm' % n)
+            if os.path.exists(pp):
+                k = cv2.resize(bild(pp), (320, 240), interpolation=cv2.INTER_AREA)
+                k = np.ascontiguousarray(k); schrift(k, 'F%d' % n, 6, 20)
+                ks.append(k)
+        if ks:
+            while len(ks) % 6:
+                ks.append(np.zeros_like(ks[0]))
+            speichern(kopf(np.vstack([np.hstack(ks[i:i + 6]) for i in range(0, len(ks), 6)]),
+                           'SF V8 07: %s Szene Hangar 50A0, jedes 7. Bild F225-F450 (lauf_v4.sh FRAMEDUMP)' % n8),
+                      os.path.join(a.aus, '07_bogen_jedes7.jpg'))
+        # 08 Ruecken von hinten (Spiel)
+        zeilen = []
+        for n in (322, 328, 334, 340, 346):
+            p7 = os.path.join(a.szene7, 'fd', 'f%06d.ppm' % n); p8 = os.path.join(a.szene8, 'fd', 'f%06d.ppm' % n)
+            if not (os.path.exists(p7) and os.path.exists(p8)):
+                continue
+            ks = []
+            for nm, pp in (('V7', p7), (n8, p8)):
+                b_ = bild(pp)
+                h_, w_ = b_.shape[:2]
+                x0, y0 = int(w_ * 0.31), int(h_ * 0.25)        # Birkin von hinten in F322-F346 (960 x 720: x 300-720, y 180-560)
+                ks.append(kachel(b_, (x0, y0, x0 + int(w_ * 0.44), y0 + int(h_ * 0.53)), 2, '%s F%d' % (nm, n)))
+            zeilen.append(np.hstack(ks))
+        if zeilen:
+            speichern(kopf(np.vstack(zeilen), 'SF V8 08: Ruecken von hinten im Spiel (FRAMEDUMP 960x720, Ausschnitt x2), V7 | V8'),
+                      os.path.join(a.aus, '08_ruecken_hinten.jpg'))
+
+    # 11 / 12 (Runde 4)
+    if a.gdi:
+        tmp = os.path.join(V.SFV8, 'tafeln_tmp'); os.makedirs(tmp, exist_ok=True)
+        ks = []
+        for t in ('10.25', '11.75', '12.50', '12.75', '13.25', '14.00'):
+            p = os.path.join(tmp, 'gdi_%s.png' % t)
+            os.system('ffmpeg -y -loglevel error -ss %s -i "%s" -frames:v 1 "%s"' % (t, a.gdi, p))
+            if os.path.exists(p):
+                ks.append(kachel(bild(p), (280, 150, 760, 600), 1, 'gdigrab t %s s' % t))
+        if ks:
+            speichern(kopf(np.vstack([reihe(ks[:3]), reihe(ks[3:])]), 'SF V8 11: echtes Spielfenster (gdigrab, eigene exe-Kopie, kein AUTOSHOT/SOFTWARE_RENDER), '
+                           'seitlich t 10,25/11,75, hinten t 12,50/12,75, vorn t 13,25/14,00 (roh)'), os.path.join(a.aus, '11_gdigrab_echtes_fenster.jpg'))
+    if a.gdi_bilder:
+        # Runde 6d: die Zeiten eines gdigrab-Videos schwanken von Lauf zu Lauf (Runde 5: t 10,25 ... 14,00; Runde 6d bei 60 Bildern/s andere
+        # Zeiten); deshalb je Spielbild das gemessen zugeordnete gdigrab-Bild (SF_belege/v8/runde6d/gdi_zuordnung.txt).
+        ks = []
+        for F, was in ((262, 'seitlich'), (300, 'seitlich'), (328, 'hinten'), (334, 'hinten'), (354, 'vorn'), (366, 'vorn')):
+            p = os.path.join(a.gdi_bilder, 'gdi_fenster_F%d.png' % F)
+            if os.path.exists(p):
+                ks.append(kachel(bild(p), (280, 150, 760, 600), 1, 'gdigrab = Spielbild F%d (%s)' % (F, was)))
+        if ks:
+            speichern(kopf(np.vstack([reihe(ks[:3]), reihe(ks[3:])]), 'SF V8 11: %s echtes Spielfenster (gdigrab 60 Bilder/s, eigene exe-Kopie, kein AUTOSHOT/'
+                           'SOFTWARE_RENDER), seitlich F262/F300, hinten F328/F334, vorn F354/F366 (roh)' % n8), os.path.join(a.aus, '11_gdigrab_echtes_fenster.jpg'))
+    if a.szene8r3 and a.szene8:
+        zeilen = []
+        for n in (322, 328, 334, 340):
+            ks = []
+            for nm, d in ((a.alt_name or 'V8 r3 66806bc4', a.szene8r3), (n8, a.szene8)):
+                pp = os.path.join(d, 'fd', 'f%06d.ppm' % n)
+                if os.path.exists(pp):
+                    b_ = bild(pp)
+                    ks.append(kachel(b_, (400, 180, 720, 420), 2, '%s F%d' % (nm, n)))
+            if len(ks) == 2:
+                zeilen.append(np.hstack(ks))
+        if zeilen:
+            speichern(kopf(np.vstack(zeilen), 'SF V8 12: Schwanzwurzel von hinten im Spiel (FRAMEDUMP 960x720, x2) - %s | neu (Befund S10/O5 "Keil")' % (a.alt_name or 'V8 r3')),
+                      os.path.join(a.aus, '12_wurzel_hinten.jpg'))
+
+    # 13 (Runde 5)
+    if a.v8r4:
+        import r3_gemein as R3
+        v8r4 = open(a.v8r4, 'rb').read()
+        f1 = bild(V.V80 + 'Beschreibung1_Vorlage.png')
+        bx = (360, 140, 520, 280)
+        z1 = reihe([kachel(f1, bx, 3, 'Foto 1 (n1485)'), kachel(render(v7, P1), bx, 3, 'V7 319bbd17'), kachel(render(v8r4, P1), bx, 3, 'V8 r4 10d02173'),
+                    kachel(render(v8, P1), bx, 3, n8)])
+        sp = R3.szene_posen()[354]
+        bx2 = (290, 140, 450, 280)
+        z2 = reihe([np.zeros((420, 480, 3), np.uint8)] + [kachel(render(b_, sp), bx2, 3, t_ + ' Takt F354 offline') for b_, t_ in
+                                                          ((v7, 'V7'), (v8r4, 'V8 r4'), (v8, n8))])
+        zs = [z1, z2]
+        if a.szene7 and a.szene8r3 and a.szene8:
+            ks = [np.zeros((280, 480, 3), np.uint8)]
+            for nm, d in (('V7', a.szene7), ('V8 r4', a.szene8r3), (n8, a.szene8)):
+                pp = os.path.join(d, 'fd', 'f%06d.ppm' % 354)
+                if os.path.exists(pp):
+                    ks.append(kachel(bild(pp), (520, 200, 760, 340), 2, '%s Framedump F354' % nm))
+            z3 = reihe(ks)
+            zs.append(np.hstack([z3, np.zeros((z3.shape[0], max(0, z1.shape[1] - z3.shape[1]), 3), np.uint8)])[:, :z1.shape[1]])
+        w = max(z.shape[1] for z in zs)
+        zs = [np.hstack([z, np.zeros((z.shape[0], w - z.shape[1], 3), np.uint8)]) for z in zs]
+        speichern(kopf(np.vstack(zs), 'SF V8 13: Brust und Gesicht von vorn - Foto 1 | V7 | V8 r4 | neu; P1 und Takt F354 offline (x3), '
+                       'echte Framedumps F354 (x2) (roh)'), os.path.join(a.aus, '13_brust_vorn.png'))
+
+    # 14 (Runde 5, P4)
+    if a.v8r4:
+        tafel14(v7, open(a.v8r4, 'rb').read(), v8, n8, a.aus)
+    # 15 (Runde 5, P5)
+    if a.v8r4:
+        tafel15(open(a.v8r4, 'rb').read(), v8, n8, a.aus)
+
+
+def grenze_maske(blob, pose):
+    """Gemessene Grenze grau/fleischig im Bild (unterseite_r5): Schwanz-Bildpunkte mit |theta| am Uebergang GRAU_AB (125, gelb) und an der
+    Fleischgrenze FLEISCH_AB (100, rot) - aus dem Modell in derselben Pose (Spielkamera)."""
+    import unterseite_r5 as U5
+    mo = V.modell(blob)
+    A = FR.zeichne(mo, pose, None, licht=False)
+    ys, xs, _bb, th = U5.theta_bild(mo, pose, A)
+    T = np.full((480, 640), np.nan); T[ys, xs] = th
+    g = np.zeros((480, 640), bool); f = np.zeros((480, 640), bool)
+    for dy, dx in ((0, 1), (1, 0)):
+        a_, b_ = T[:480 - dy, :640 - dx], T[dy:, dx:]
+        ok = ~np.isnan(a_) & ~np.isnan(b_)
+        g[:480 - dy, :640 - dx] |= ok & ((a_ - U5.GRAU_AB) * (b_ - U5.GRAU_AB) <= 0)
+        f[:480 - dy, :640 - dx] |= ok & ((a_ - U5.FLEISCH_AB) * (b_ - U5.FLEISCH_AB) <= 0)
+    return g, f
+
+
+def tafel14(v7, v8r4, v8, n8, aus):
+    """14_schwanz_unterseite.png (Runde 5, P4, Nutzer 2026-11-09 "Die Unterseite des großen Schwanzes ist fleischig ... Nur die oberseite ist
+    durchweg grau"): Zeile 1 Vorlagen n1439 (Darstellung_Vorlage, PV) / Foto 2 n1435 (P2) / Foto 1 n1485 (P1) nah am Schwanz, mit der gemessenen
+    Grenze (gelb theta 125 = Ende grau, rot theta 100 = Fleisch voll; Linien aus dem Modell in derselben Pose); Zeile 2 V8 r4; Zeile 3 neu in
+    denselben Posen; Zeile 4 neu von unten (Pose PV, Modell 1800 E. hoeher, Kamera sieht von unten) und seitlich (Szene Takt F262 /
+    F328, offline Spielkamera). Alles roh, RDT-Licht."""
+    import r3_gemein as R3
+    roh = os.path.join(V.BAUM.replace('r41_sichel_v8', 'r41_sichel'), 'analysis', 'befunde_runde41', 'SF_belege', 'roh', 'alle')   # nur gelesen
+    ans = (('PV', V.PV, 1439, (250, 165, 400, 345)), ('P2', R3.P2, 1435, (250, 165, 400, 345)),
+           ('P1', R3.P1, 1485, (385, 230, 520, 380)))      # P1: Schwanz (Knochen 16-22) im Bild x 443-461, y 278-332 (gemessen)
+    z1, z2, z3 = [], [], []
+    for nm, pose, n, bx in ans:
+        vb = bild(os.path.join(roh, 'f%04d.png' % (n + 1)))
+        g, f = grenze_maske(v8, pose)
+        vl = vb.copy(); vl[g] = (255, 255, 0); vl[f] = (255, 40, 40)
+        z1.append(np.hstack([kachel(vb, bx, 2, 'Vorlage n%d (%s)' % (n, nm)), kachel(vl, bx, 2, 'Grenze 125 gelb / 100 rot')]))
+        z2.append(kachel(render(v8r4, pose), bx, 2, 'V8 r4 %s' % nm))
+        z3.append(kachel(render(v8, pose), bx, 2, '%s %s' % (n8, nm)))
+    unten = dict(V.PV); unten['y'] = -1800
+    sp = R3.szene_posen()
+
+    def box(blob, pose, rand=12):
+        mo = V.modell(blob)
+        m = FR.zeichne(mo, pose, None, licht=False)['bone'][:480] >= 0
+        ys, xs = np.nonzero(m)
+        return (max(int(xs.min()) - rand, 0), max(int(ys.min()) - rand, 0), min(int(xs.max()) + rand, 640), min(int(ys.max()) + rand, 480))
+    bu = box(v8, unten)
+    z4 = [kachel(render(v8, unten), bu, 260.0 / max(bu[3] - bu[1], 1), '%s von unten (PV, 1800 E. hoeher)' % n8)]
+    for tk in (262, 328):
+        bt = box(v8, sp[tk])
+        f = 260.0 / max(bt[3] - bt[1], 1)
+        z4.append(kachel(render(v8, sp[tk]), bt, f, '%s Takt F%d' % (n8, tk)))
+        z4.append(kachel(render(v8r4, sp[tk]), bt, f, 'V8 r4 Takt F%d' % tk))
+    zs = [reihe(z1), reihe(z2 + [np.zeros((10, 10, 3), np.uint8)]), reihe(z3), reihe(z4)]
+    w = max(z.shape[1] for z in zs)
+    zs = [np.hstack([z, np.zeros((z.shape[0], w - z.shape[1], 3), np.uint8)]) for z in zs]
+    speichern(kopf(np.vstack(zs), 'SF V8 14: Schwanz-Unterseite - Vorlagen mit gemessener Grenze | V8 r4 | neu (PV/P2/P1, x2) | neu von unten '
+                   'und Szene (roh)'), os.path.join(aus, '14_schwanz_unterseite.png'))
+
+
+def tafel15(v8r4, v8, n8, aus, takte=None):
+    """15_ruecken_kopf.png (Runde 5, P5, Nutzer 2026-11-09 "es gibt immer noch eine Lücke zwischen Rücken und Kopf ... Das ist in der Vorlage so
+    wie es aussieht nicht so"): Zeile 1 Vorlagen n1439 (PV) / n1435 (Foto 2, P2) / n1485 (Foto 1, P1) nah an Ruecken und Kopf (x4), daneben
+    das Mass an der Vorlage (vorlage_luecke_r5: Maskenrand dE > 9 gelb, Kerben der oberen Kastenhaelfte tuerkis; Foto 1 ohne Mass, die Maske
+    ist dort nicht brauchbar); Zeile 2 V8 r4, Zeile 3 neu in denselben Posen, je Bild und daneben die Luecken-Bildpunkte (luecke_r5,
+    tuerkis; Titel: Summe px / tiefer als 1,5 px / groesste Tiefe); danach die Szenen-Takte mit der staerksten Luecke von V8 r4 und
+    (Runde 5d) F311 und F332, je V8 r4 | neu (offline Spielkamera, RDT-Licht); letzte Zeile (Runde 5d) der Einsatz von Stufe n: neu in
+    PV / P2 / P1, daneben die Einsatz-Flaechen gruen (ueber Gesichts-Bildpunkten magenta). Alles roh."""
+    import r3_gemein as R3
+    import luecke_r5 as L
+    import vorlage_luecke_r5 as VL
+    import kopf_orig_bau as KB
+    roh = os.path.join(V.BAUM.replace('r41_sichel_v8', 'r41_sichel'), 'analysis', 'befunde_runde41', 'SF_belege', 'roh', 'alle')   # nur gelesen
+    mo4, mo = V.modell(v8r4), V.modell(v8)
+
+    def bx_kopf(A, w=110, h=90):
+        ys, xs = np.nonzero(A['bone'][:480] == 9)
+        cx, cy = int(xs.mean()), int(ys.mean())
+        x0, y0 = min(max(cx - w // 2, 0), 640 - w), min(max(cy - h // 2 - 10, 0), 480 - h)
+        return (x0, y0, x0 + w, y0 + h)
+
+    def paar(m_, pose, titel, bx=None):
+        A = FR.mit_bg(m_, pose)
+        B = FR.zeichne(m_, pose, None, licht=False)
+        r, G = L.luecke(B)
+        nt, mt = L.tiefe(B['bone'][:480], G)
+        im = A['img'][:480]
+        bx = bx or bx_kopf(A)
+        g = im.copy(); g[G] = (0, 255, 255)
+        return np.hstack([kachel(im, bx, 4, titel), kachel(g, bx, 4, 'Luecke %d px / %d tief / %.1f' % (r['kerbe'] + r['spalt'], nt, mt))]), bx
+
+    ans = (('PV', V.PV, 1439), ('P2', R3.P2, 1435), ('P1', R3.P1, 1485))
+    z1, z2, z3 = [], [], []
+    for nm, pose, n in ans:
+        k4, bx = paar(mo4, pose, 'V8 r4 %s' % nm)
+        k8, _ = paar(mo, pose, '%s %s' % (n8, nm), bx)
+        vb = bild(os.path.join(roh, 'f%04d.png' % (n + 1)))
+        if nm == 'P1':
+            mk = np.zeros(((bx[3] - bx[1]) * 4, (bx[2] - bx[0]) * 4, 3), np.uint8)
+            schrift(mk, 'n1485: Maske nicht brauchbar', 6, 22)
+        else:
+            H = FR.zeichne(mo, pose, None, licht=False)['bone'][:480] == 9
+            S_ = VL.de_bild(n) > 9
+            st, Gm = VL.kerben(S_, VL.kasten(H), H)
+            vm = vb[:480].copy()
+            vm[S_ & ~(cv2.erode(S_.astype(np.uint8), np.ones((3, 3), np.uint8)) > 0)] = (255, 255, 0)
+            vm[Gm] = (0, 255, 255)
+            am = [s for s in st if s['kopf'] <= VL.AM_KOPF]
+            mk = kachel(vm, bx, 4, 'Mass dE>9 am Kopf: ' + (', '.join('%d/%d/%.1f' % (s['px'], s['tief'], s['max']) for s in am[:2]) or '-'))
+        z1.append(np.hstack([kachel(vb, bx, 4, 'Vorlage n%d (%s)' % (n, nm)), mk]))
+        z2.append(k4); z3.append(k8)
+    sp = R3.szene_posen()
+    if takte is None:
+        st = []
+        for k in sorted(sp):
+            r, _G = L.luecke(FR.zeichne(mo4, sp[k], None, licht=False))
+            st.append((r['kerbe'] + r['spalt'], k))
+        takte = sorted(set(k for _w, k in sorted(st, reverse=True)[:3]) | {311, 332})
+    zs = [reihe(z1), reihe(z2), reihe(z3)]
+    for i in range(0, len(takte), 3):
+        z4, z5 = [], []
+        for k in takte[i:i + 3]:
+            k4, bx = paar(mo4, sp[k], 'V8 r4 Takt F%d' % k)
+            k8, _ = paar(mo, sp[k], '%s Takt F%d' % (n8, k), bx)
+            z4.append(k4); z5.append(k8)
+        zs += [reihe(z4), reihe(z5)]
+    # Runde 5d: der Einsatz (Flaechen von Mesh 8, die V8 r4 nicht hat) in PV / P2 / P1
+    m4, m8 = KB.teile(v8r4)[2][8], KB.teile(v8)[2][8]
+    namen = (['d%d' % i for i in range(len(m4['tuv']), len(m8['tuv']))] + ['v%d' % i for i in range(len(m4['quv']), len(m8['quv']))])
+    if namen:
+        z6 = []
+        for nm, pose, _n in ans:
+            A = FR.mit_bg(mo, pose)
+            ein = (A['bone'][:480] == 8) & np.isin(A['flaeche'][:480], namen)
+            ges = (A['bone'][:480] == 9) & (A['lok'][:480][..., 0] >= L.GESICHT_X)
+            bx = bx_kopf(A)
+            g = A['img'][:480].copy(); g[ein] = (0, 255, 0); g[ein & ges] = (255, 0, 255)
+            z6.append(np.hstack([kachel(A['img'][:480], bx, 4, '%s %s' % (n8, nm)), kachel(g, bx, 4, 'Einsatz %d px gruen' % int(ein.sum()))]))
+        zs.append(reihe(z6))
+    w = max(z.shape[1] for z in zs)
+    zs = [np.hstack([z, np.zeros((z.shape[0], w - z.shape[1], 3), np.uint8)]) for z in zs]
+    speichern(kopf(np.vstack(zs), 'SF V8 15: Ruecken/Kopf - Vorlagen mit Mass | V8 r4 | neu (PV/P2/P1, x4, Luecke tuerkis); Szene-Takte %s V8 r4 | neu; '
+                   'unten der Einsatz (gruen) (roh)' % ', '.join('F%d' % k for k in takte)), os.path.join(aus, '15_ruecken_kopf.png'))
+
+
+if __name__ == '__main__':
+    main()

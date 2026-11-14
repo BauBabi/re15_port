@@ -1,0 +1,11 @@
+Eingang sha256 5c902d493e6815f8551e0297eb1ef7e8c6cbda4b11ed3ab5191cf6a62ac11f30
+Grau-Zone N: 1462 Texel, u 5-38, v 0-56
+hand: 34 Flaechen (d2 d8 d9 d10 d28 d29 d30 d31 v0 v1 v2 v3 v4 v5 v6 v7 v8 v9 v10 v11 v12 v13 v14 v15 v16 v17 v18 v19 v20 v21 v22 v23 v24 v25), UV u 4-39 v 51-86
+   groesster Massstab M = 92/100, gueltige Schuebe (SU, SV): [(6, 6)] -> gewaehlt (6, 6)
+unterarm: 8 Flaechen (d0 d1 d16 d17 v1 v2 v3 v4), UV u 0-38 v 25-87
+   groesster Massstab M = 82/100, gueltige Schuebe (SU, SV): [(5, 3)] -> gewaehlt (5, 3)
+{'hand': (92, 4, 51, 6, 6), 'unterarm': (82, 0, 25, 5, 3)}
+
+real	0m56.325s
+user	0m0.031s
+sys	0m0.000s

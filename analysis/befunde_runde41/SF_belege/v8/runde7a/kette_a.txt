@@ -1,0 +1,16 @@
+== V8-Kette: Stufen 1-6 (v7_kette.sh), Ziel C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7a/kette_a
+   6 V7: EM30_V7.EMD sha256 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6 OK
+   1 V4 Runde 3 (ot3): EM30_V4ot3.EMD sha256 a1bc9309e5dd9ce8a948371ec4fef8595bd86310e3ea5e01dc3326552d5f8998 OK
+   2 V5 Runde 4: EM30_V5r4.EMD sha256 38562ced41061258f435be0d6598697b10ed241b09ba1a948007bc5bdf5993d5 OK
+   3 V6 Kopf (V5k): EM30_V5k.EMD sha256 99703bbda76ebda1317555c0e7c5e5669938c32df408a8d9a2042db570bd679e OK
+   4 V5 wie Foto (V5f): EM30_V5f.EMD sha256 784c8f05dfc4ac57dfdf3ac52127ac2a4e900603043aafa0c6bada897a2d3019 OK
+   5 V6 drei Punkte: EM30_V6.EMD sha256 9e0e58ef09322b51213eaa4e55f6d04d980478cce4fe940f0f9b841c9e78c626 OK
+-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwaunhb
+   7 V8: EM30_V8.EMD sha256 a474188a2a06fb181df8acdea64be48c29af9f527efbe66aacf8f41b1cc657ec OK (= Pin release/em30_hangar.sha256)
+   Spiel-Asset EM30_HANGAR.EMD = Pin (a474188a2a06fb181df8acdea64be48c29af9f527efbe66aacf8f41b1cc657ec)
+   EM30_V8.EMD bytegleich Spiel-Asset
+V8-KETTE-OK sha256 a474188a2a06fb181df8acdea64be48c29af9f527efbe66aacf8f41b1cc657ec
+
+real	0m39.850s
+user	0m2.269s
+sys	0m2.751s

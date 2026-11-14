@@ -1,0 +1,11 @@
+R3B gegen V7: 16 Bildpunkte (960x720) in 2 von 226 Bildern, davon Mesh 8: 1 | F312 15 {'Rest': 15}; F313 1 {'Mesh8 unten': 1}
+KC6 gegen V7: 15 Bildpunkte (960x720) in 1 von 226 Bildern, davon Mesh 8: 0 | F312 15 {'Rest': 15}
+KC8 gegen V7: 15 Bildpunkte (960x720) in 1 von 226 Bildern, davon Mesh 8: 0 | F312 15 {'Rest': 15}
+N7B gegen V7: 15 Bildpunkte (960x720) in 1 von 226 Bildern, davon Mesh 8: 0 | F312 15 {'Rest': 15}
+KC8 gegen N7B: 0 Bildpunkte (960x720) in 0 von 226 Bildern, davon Mesh 8: 0 | 
+R3B gegen V7, 177 Ansichten: 8 Gesichts-Bildpunkte in 3 Ansichten [('F312', 6, {"(10, 't', 16)": 4, "(10, 'q', 8)": 2}), ('PV+1792', 1, {"(10, 'q', 12)": 1}), ('P2+2048', 1, {"(8, 't', 49)": 1})]
+KC8 gegen V7, 177 Ansichten: 7 Gesichts-Bildpunkte in 2 Ansichten [('F312', 6, {"(10, 't', 16)": 4, "(10, 'q', 8)": 2}), ('PV+1792', 1, {"(10, 'q', 12)": 1})]
+N7B {'F253': (4, ['v15']), 'PV+1024': (2, ['d48', 'v15']), 'P2+2048': (0, [])}
+R3B {'F253': (4, ['v15']), 'PV+1024': (4, ['v15']), 'P2+2048': (4, ['d49', 'd8'])}
+KC6 {'F253': (4, ['v15']), 'PV+1024': (4, ['v15']), 'P2+2048': (2, ['d49'])}
+KC8 {'F253': (4, ['v15']), 'PV+1024': (4, ['v15']), 'P2+2048': (2, ['d49'])}
