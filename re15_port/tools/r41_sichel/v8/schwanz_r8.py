@@ -45,9 +45,9 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
   grau  = Rueckensektor, Nadel, Wurzelflaechen ueber der Grenze: Zeile 487, Feld je Glied = groesstes Rechteck in den Texeln, die die
           Oberseite (Zeile 487) dieses Glieds im Eingang benutzt;
   bauch = Bauchsektor: Original-Zeile 482 (Asset 495), schraeges Feld (Parallelogramm, suche(): v 114-123, Zeilenanfang u 1 -> 19, Breite 21;
-          Median L* 25,7 C* 24,2, hellere Partie des Original-Unterarm-Fleischs), um den Bauch zweimal und entlang des Glieds je Ringabschnitt
-          einmal gependelt (Spiegelung an jeder Kante, keine Naht; Runde 8: ein 17 x 7-Feld ueber den ganzen Bauch gestreckt = "flaechig wie
-          gemalt", Pruefer pr8);
+          Median L* 25,7 C* 24,2, hellere Partie des Original-Unterarm-Fleischs) - groesser als das 17 x 7-Feld der Runde 8 ("flaechig wie gemalt",
+          Pruefer pr8); einmal quer ueber den Bauch, einmal laengs je Glied (je Glied gespiegelt). Gependelt je Flaeche (Runde 8b, erster Bau)
+          ergab im Spiel ein regelmaessiges Rautenmuster und ist verworfen;
   band  = Probe b: die zwei mittleren Bauchfelder (BAND_J) in der Fuge (zwischen E und D bzw. S und C, dazu die Deckel): Original-Zeile 480
           (Asset 493, bytegleich), Seite 0, Feld u 58-73 v 19-48 (>= 60 % hellrot/rosa, Median L* 48,4 C* 17,4 h 22; Runde 8: Zeile 481 fast weiss
           L* 74 = "Klebeband", Pruefer pr8); Probe a: ohne Band (Fleisch).
@@ -108,7 +108,7 @@ SPITZE_Y = 1300.0                     # Nadelspitze (PV: Glied-22-Achse 3,5 px j
 ENDE_Y = 760.0                        # Ring 1 von Mesh 22 = Nadelansatz (Radius 75) -> riegel_v8.s4 "Ende <= 10 px"
 ZWISCHEN = {1: (0.3733, 0.6267), 2: (0.31, 0.69), 3: (0.3733, 0.6267), 4: (0.3733, 0.6267), 5: (0.3733, 0.6267)}
                                       # Runde 8b: zwei Zwischenringe Z1/Z2 je Glied 17-21 (Glied 18 um M bei 0,5) - das Fleischfeld liegt dreimal
-                                      # gependelt entlang des Glieds statt einmal gestreckt (Pruefer "Rot flaechig wie gemalt", 17 x 7 gestreckt)
+                                      # (Runde 8b2: Fleisch nicht mehr gependelt, siehe uv_setzen; die Ringe bleiben fuer die Biegung)
 
 # ------------------------------------------------------------------ Farbe (PORT-WAHL; Felder aus suche(), Beleg SF_belege/v8/runde8/suche.txt)
 ZEILE_GRAU, ZEILE_FLEISCH, ZEILE_BAND = 487, 495, 493      # 487 = Schwanz-Oberseite seit V6; 495 = Original 482; 493 = Original 480 (bytegleich)
@@ -583,7 +583,12 @@ def uv_setzen(g, V_, F, ringe, info, farbe, felder, L):
                 s_um = float(np.mean([PENDEL.get(ring_k[q], 0.5) for q in rs]))
                 vs = seite_e[rs[0]]
             if kl == 'bauch':
-                uv_e.append(fleisch_uv(feld_f, s_um, vs))
+                # Runde 8b2: EIN Feld ueber den ganzen Bauch (quer linear -theta_b .. +theta_b) und je Glied einmal laengs (gespiegelt je Glied);
+                # gependelt je Flaeche ergab im Spiel ein regelmaessiges Rautenmuster (Tafel 21 Probe a/b, Pruefbild) - verworfen
+                ts = th if th <= 180.0 else th - 360.0
+                sq = float(np.clip((ts + tb) / (2 * tb), 0.0, 1.0))
+                sl = s_lang if g % 2 == 0 else 1.0 - s_lang
+                uv_e.append(fleisch_uv(feld_f, sq, sl))
             else:
                 # Band: quer gependelt ueber die zwei mittleren Felder, laengs v0 am Gelenkring (S / E), v1 am vollen Querschnitt (C / D)
                 nm = [n_ for n_ in (ra, rb) if info['pos'][n_] <= i < info['pos'][n_] + S_] if i in ring_k else [ra]
