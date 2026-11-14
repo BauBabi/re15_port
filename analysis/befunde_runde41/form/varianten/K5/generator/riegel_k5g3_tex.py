@@ -84,7 +84,9 @@ def tb(R, var):
     d = os.path.join(K3.SCR, 'riegel_tb')
     shutil.rmtree(d, ignore_errors=True)
     K3.bauen(par, d, log=lambda *a: None)
-    ab = [n for n in K3.DATEIEN + ('bau.json',) if open(os.path.join(var, n), 'rb').read() != open(os.path.join(d, n), 'rb').read()]
+    def lies(o, n):
+        return json.load(open(os.path.join(o, n), encoding='utf-8')) if n.endswith('.json') else open(os.path.join(o, n), 'rb').read()
+    ab = [n for n in K3.DATEIEN + ('bau.json',) if lies(var, n) != lies(d, n)]
     p2 = json.loads(json.dumps(par))
     p2['textur']['haut']['s'] = float(p2['textur']['haut']['s']) + 0.01
     d2 = d + '_gegen'

@@ -1,0 +1,3093 @@
+{
+ "eingang_sha256": {
+  "basis_k5c_tim": "7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3",
+  "k5e_f1_bahnsteig_emd": "f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1",
+  "k5e_f1_tim": "31a35e66428bac1e8783587f2336ea0bec7aab6e34876b0be87a144c576445b8",
+  "krallen_k5c": "677aa8cf522e1e9b824fba52521937a61adae43a4248b8786af2f778f6ffd7b6",
+  "material_json": "3308ea639b0a3e6bb6b0e176b36b6173c0f1ee9eb650bce1c90f6564bd2860d9",
+  "spalt_tabelle": "99a4f142c2d01c5eb8e70dd299c0cd98c3e34268adc8473454dcfb42b4cd6d07",
+  "traeger_texel": "98f4b70e68cb8de632069f78d8e0a2fbb653fd3ece0e76f669fa4b7a65bbf75e",
+  "zonen_v2": "4b961ea03a20965538a88dfc48ad33a65bef3a1f3b20b8e7d671427958e7276b"
+ },
+ "generator": "generator/kf_k5g3.py (Stufe 1 kf_k5g3_geo, Stufe 2 kf_k5g3_tex)",
+ "geometrie": {
+  "geo_emd_sha256": "eadfac31aef1864644376c9952641ff584334c3e8293702df918d3a0e3758409",
+  "geometrie_gleich_kf_k5g3_geo": "ja (Ecken, Normalen, Flaechen-Ecken aller Netze; sonst Abbruch)",
+  "spalt": {
+   "kinder_neue_zeile": 8721,
+   "kinder_verschoben": 1544,
+   "muetter_verschoben": 78
+  },
+  "stufe": "kf_k5g3_geo.geometrie_form",
+  "teilstufe": {
+   "basis": "f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1",
+   "krallen": {
+    "datei": "k5g3_krallen_k5c.json",
+    "quelle_k5c": "1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041",
+    "sha256": "677aa8cf522e1e9b824fba52521937a61adae43a4248b8786af2f778f6ffd7b6"
+   },
+   "posen": {
+    "datei": null,
+    "hinweis": "keine Posen-Datei: Posen = K5c = K5e_f1 (Sektionen 0-6 byte-gleich)"
+   },
+   "stufen": [
+    "posen",
+    "krallen"
+   ]
+  },
+  "voll": {
+   "basis": "f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1",
+   "krallen": {
+    "datei": "k5g3_krallen_k5c.json",
+    "quelle_k5c": "1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041",
+    "sha256": "677aa8cf522e1e9b824fba52521937a61adae43a4248b8786af2f778f6ffd7b6"
+   },
+   "posen": {
+    "datei": null,
+    "hinweis": "keine Posen-Datei: Posen = K5c = K5e_f1 (Sektionen 0-6 byte-gleich)"
+   },
+   "spalt": {
+    "sha256": "99a4f142c2d01c5eb8e70dd299c0cd98c3e34268adc8473454dcfb42b4cd6d07",
+    "tabelle": "k5g3_spalt_b4_tabelle.json"
+   },
+   "stufen": [
+    "posen",
+    "krallen",
+    "spalt"
+   ]
+  }
+ },
+ "par": {
+  "_doc": "K5g3 Textur (Runde 41, Riesenform; Auftrag K5g3 Textur-Bauer Runde 1, 2026-11-14): E3 Grundlage v2 Zone fuer Zone, V1-V6, O3-O5 auf der Geometrie K5g3 (Spalt B4 G1, rechte Krallen K5c G2). Jeder Wert mit Quelle. Verboten (Memory reai-v2-texturen-nicht-aus-video-eichen mit Nachtraegen 2026-11-08/09): Eichung je Region/Fleck/Texel am Video, additive Hebung. Fortschreibung von k5g/K5g2/k5g2_par.json (Textur-Teil); die Geometrie kommt aus kf_k5g3_geo (keine Parameter hier).",
+  "name": "K5g3",
+  "textur": {
+   "auge": {
+    "f": 1.9844,
+    "f_quelle": "O4: kleinster Faktor (multiplikativ auf die hellen G4-Augeneintraege, Knie wie die Haut), mit dem in Bild 2 (Buehne, Licht der Szene, ohne Videofilter) an beiden Nutzerpunkten (217,274)/(280,275) das L*-Maximum im 9x9-Fenster >= 2 x Median der Kopfhaut (Teil 22) im Ring 25x25 ohne 9x9 ist; Bisektion kf_k5g3.py --auge [1.875, 1.9844], 6 Schritte. Protokoll [f, max1, ring1, max2, ring2]: [[8.0, 36.1, 5.74, 36.1, 5.74], [4.5, 36.1, 5.74, 32.97, 5.74], [2.75, 34.53, 5.74, 19.37, 5.74], [1.875, 25.27, 5.74, 11.46, 5.74], [2.3125, 31.21, 5.74, 15.55, 5.74], [2.0938, 28.45, 5.74, 14.45, 5.74], [1.9844, 25.85, 5.74, 12.9, 5.74]]",
+    "quantil": 0.9,
+    "quelle": "Runde 2, Pruefer r1 Sicht (2) 'Augen fehlen' (Augenflaechen L* 2-13): E3 'Augen = nur die hellen Nutzerpunkte' + V3 'Auge = G4-Augeneintraege' -> nur die hellen G4-Augeneintraege: L* >= texelgewichtetes 90-%-Quantil der Eintraege der K5c-Augenflaechen auf G4-Zeile 0 (oberes Zehntel = die roten Glanzeintraege 0x0c69..0x2511, bau.json textur.auge); Helligkeit eigenes f_auge (V1 je Material eine Transformation, O4), Buntheit/Ton der Quelle"
+   },
+   "braun": {
+    "C_min": 6.0,
+    "quelle": "V3 'braeunliche Musterung = braeunliche G4-Eintraege': G4-Eintraege der Hautflaechen derselben Seite mit Farbton 35-80 Grad (braun-orange) und C* > 6; Helligkeit wie Haut (f), Buntheit der Eintraege (k 1), Farbton = Kreismittel der Quelle",
+    "ton": [
+     35.0,
+     80.0
+    ]
+   },
+   "fleisch": {
+    "C_ziel": 24.0,
+    "L_ziel": 36.0,
+    "k": 0.7825,
+    "k_quelle": "Eichung b (Buckel C* 22-26, Mitte 24): kleinstes k mit Median C* der Zone-27-Material-Texelzugriffe >= 24 am gebauten Pruef-Stand (wie Riegel V3.3); Bisektion kf_k5g3.py --fleisch [0.7806, 0.7825], 6 Schritte. Protokoll [k, L*, C*]: [[0.8, 36.24, 24.99], [0.7378, 36.24, 22.35], [0.7689, 36.24, 22.35], [0.7845, 36.24, 24.99], [0.7767, 36.24, 22.35], [0.7806, 36.24, 22.35], [0.7825, 36.24, 24.99]]",
+    "quelle": "Auftrag QUELLEN eichung (b) belastbar: Buckel L* 33-39, C* 22-26 (fleischrot); Mitte des Bandes fuer den texelgewichteten Median der Quelle (G4-Eintraege der K5c-Buckelflaechen, G4-Seite 1). Farbton = Kreismittel der Quelle (Eichung: Rot nur Obergrenze, Ton nicht belastbar)"
+   },
+   "hand_kralle": {
+    "quelle": "Runde 2, Pruefer r1 Sicht (6): Hand 18/13 lasen helle G4-Eintraege (L* Median 31,4/25,1 gegen Haut 6,7, 1132 px reinweiss); Sicht-Befund 2 'Die Hand muss im Band der uebrigen Haut liegen, ohne reinweisse Texel. Erst dann ist Krallen wie die Hand sinnvoll' + V5 'Krallenfarbe wie die Hand'",
+    "regel": "Rang-Tausch auf die Hautrampe der eigenen G4-Seite (wie Lippe/Unterkiefer)"
+   },
+   "haut": {
+    "f": 1.86,
+    "f_quelle": "O3 + Messblatt K5F 1.2/2.1: kleinster globaler Faktor mit P L* >= 7,71 (Median der vier Original-Gegner Zombie 8,04 / Gorilla 7,38 / EM30 18,80 / Tyrant 5,57 im eigenen Raumlicht) im echten Spiel (5080 Bild-1-Lage, Bilder 360-440, eigenes Normal-/Schluessel-Paar, kf_k5g3_zlauf.sh), aufgerundet auf 0,01; zweite Untergrenze W6 (Bild 2 Video >= Vorlage 15,37: f >= 1,339 aus K5g2 Runde 2, dieselbe Haut-Abbildung). Bei s 0.5000 gemessen; Bisektion kf_k5g3.py --f, 4 Schritte. Protokoll [f, P L*, P L-cv, P C*, Q C*]: [[2.0, 8.51, 0.701, 5.08, 14.07], [1.8348, 7.7, 0.709, 4.74, 13.46], [1.9174, 8.05, 0.719, 4.88, 13.76], [1.8761, 7.83, 0.715, 4.78, 13.51], [1.8555, 7.77, 0.707, 4.76, 13.45]]",
+    "h": 20.5,
+    "h_quelle": "Mitte des Farbtonbandes der Originale [14, 27] Grad (Auftrag QUELLEN eichung (a); GEGENPRUEFUNG_EICHUNG 4: sichtbare Albedo G4 hinten +14, EM30-Haut +24/+27). Der texelgewichtete Ton der G4-Hautklasse unter der K5c-UV liegt bei -30 Grad (violett, bau.json textur.haut h_g4_hautklasse_info); die sichtbar warme G4 entsteht erst mit ihren roten Adern. V2 verlangt den Ton im Band, darum EIN Ton je Material aus dem Band, nicht der Ton je Eintrag (K5f v1: Ton je Eintrag -> F_fremd 13-22, unruhig)",
+    "knie": 75.0,
+    "knie_quelle": "Messblatt K5F 3.1: L > 75 -> 75 + 25 tanh((L - 75)/25) (betrifft nur helle G4-Eintraege)",
+    "s": 0.5225,
+    "s_quelle": "O3 + Messblatt K5F 3.1: kleinste Buntheit (C' = s x L') mit Z4 P-C* >= 4,41, Z8 Q-C* >= 12,09, Z5 P C-std >= 2,39 und Z9 Q C-std >= 6,53 im echten Spiel (5080 Bild-1-Lage, Bilder 360-440, eigenes Normal-/Schluessel-Paar, kf_k5g3_zlauf.sh mit RE15_FORCE_CUT=1); Bisektion kf_k5g3.py --s [0.5207, 0.5225], 3 Schritte. Protokoll [s, P L*, P C*, Q C*, P C-std, Q C-std]: [[0.53, 7.8, 4.95, 14.03, 3.23, 6.65], [0.5225, 7.8, 4.91, 13.92, 3.18, 6.53], [0.5188, 7.8, 4.9, 13.9, 3.17, 6.49], [0.5207, 7.79, 4.91, 13.92, 3.18, 6.52]]",
+    "seiten_angleichen": true,
+    "seiten_angleichen_quelle": "O3 \"Kein fast schwarzer, unbunter Sattel auf Huefte und Ruecken (Sicht-Pruefer r1)\": Pruefer K5g2 r1 Sicht (1): Teile 0/7 lasen haut0 (G4-Seite 0) mit L* 11,3/9,9, C* 0,1 gegen haut1 L* 24-31. Je G4-Seite s der Faktor g_s = Median L* der Hautklasse auf Seite 1 / auf Seite s (texelgewichtet ueber die Hautflaechen der Seite), f_s = f x g_s - multiplikativ (V1), Rang und Kontrastverhaeltnis je Seite bleiben (bau.json textur.haut).",
+    "ton_band": [
+     14.0,
+     27.0
+    ],
+    "ton_band_quelle": "Auftrag QUELLEN eichung (a): Originale G4/EM30 +14..+27 Grad; K5-Staende -9..-35 Grad violett. Der Bau nimmt den G4-Hautton selbst (texelgewichteter Kreismittel der G4-Hautklasse) und bricht ab, wenn er ausserhalb liegt (V2 'weg vom Violetten')"
+   },
+   "rundung": {
+    "cmin": 3.0,
+    "fenster": 7.5,
+    "quelle": "kf_k5f.runde15_zeile (Riegel K5f H4: Farbtonspanne <= 15 Grad -> halbe Spanne 7,5; unbunt unter C* 3): 15-Bit-Wahl nur unter den 5-Bit-Nachbarn, Rangfolge erhalten"
+   },
+   "weiss": {
+    "quantil": 0.75,
+    "quelle": "V3 'weisse Musterung = helle, fast unbunte Gelenk-Eintraege': die G4-Eintraege der K5c-Gelenkflaechen derselben G4-Seite mit L* >= texelgewichtetes 75-%-Quantil (oberes Viertel = hell); Transformation = Haut (k klein = fast unbunt)"
+   }
+  }
+ },
+ "port_texturhoehe": 3840,
+ "sha256": {
+  "BAHNSTEIG_FORM.EMD": "37407afd3c414373fb4df8d35f0abf3b3739d7d0155fd2a022f6a92a8fe18384",
+  "BAHNSTEIG_FORM.TIM": "2f7b244463e4e7216e840c72e3670fdf70a375e806841b3258d834bb71cb0275",
+  "FORM.EMD": "62fa1e67657c796202cc9ed606576565ffbb4198a17fb0a863e63dd93dae8e3e",
+  "FORM.TIM": "2f7b244463e4e7216e840c72e3670fdf70a375e806841b3258d834bb71cb0275",
+  "pruef/BAHNSTEIG_FORM.EMD": "ce6766a032db6c31551ba4e455c9c91084361bceac6062584743c5509d3b8a30",
+  "pruef/BAHNSTEIG_FORM.TIM": "2f7b244463e4e7216e840c72e3670fdf70a375e806841b3258d834bb71cb0275",
+  "pruef/FORM.EMD": "6ee4ca467e347400d2dfbaa06b4ab5dd820f78290e0f690222ad63b11ef111fb",
+  "pruef/FORM.TIM": "2f7b244463e4e7216e840c72e3670fdf70a375e806841b3258d834bb71cb0275"
+ },
+ "textur": {
+  "auge": {
+   "L_grenze": 16.43,
+   "L_quelle": [
+    16.5,
+    21.3,
+    23.4,
+    18.4,
+    37.7,
+    28.0
+   ],
+   "eintraege": [
+    3,
+    8,
+    19,
+    35,
+    221,
+    231
+   ],
+   "quantil": 0.9,
+   "ton": 26.7
+  },
+  "f1": {
+   "davon_haut_zeile": 16,
+   "kern_eintraege": 56,
+   "umgefaerbt": 24
+  },
+  "flecken": {
+   "f1_kern_vorrang_texel": 129,
+   "fleck_zeilen": [
+    {
+     "basis": "f12",
+     "flaechen": 5,
+     "material_eintraege": 23
+    },
+    {
+     "basis": "haut1",
+     "flaechen": 65,
+     "material_eintraege": 153
+    },
+    {
+     "basis": "haut1",
+     "flaechen": 58,
+     "material_eintraege": 117
+    },
+    {
+     "basis": "haut2",
+     "flaechen": 17,
+     "material_eintraege": 42
+    },
+    {
+     "basis": "tausch0",
+     "flaechen": 2,
+     "material_eintraege": 4
+    }
+   ],
+   "konflikte": {
+    "14/15": [
+     19,
+     "15"
+    ]
+   },
+   "kopien": 147,
+   "zonen": {
+    "11": {
+     "material": "muster",
+     "texel_flaeche_paare": 394,
+     "traeger": 12,
+     "zone_texel": 339
+    },
+    "12": {
+     "material": "rotfleisch",
+     "texel_flaeche_paare": 135,
+     "traeger": 9,
+     "zone_texel": 125
+    },
+    "14": {
+     "material": "weiss",
+     "texel_flaeche_paare": 1,
+     "traeger": 1,
+     "zone_texel": 20
+    },
+    "15": {
+     "material": "weiss",
+     "texel_flaeche_paare": 19,
+     "traeger": 4,
+     "zone_texel": 19
+    },
+    "16": {
+     "material": "braun",
+     "texel_flaeche_paare": 94,
+     "traeger": 2,
+     "zone_texel": 94
+    },
+    "18": {
+     "material": "weiss",
+     "texel_flaeche_paare": 16,
+     "traeger": 3,
+     "zone_texel": 14
+    },
+    "19": {
+     "material": "braun",
+     "texel_flaeche_paare": 16,
+     "traeger": 4,
+     "zone_texel": 13
+    },
+    "2": {
+     "material": "wunde",
+     "texel_flaeche_paare": 12,
+     "traeger": 2,
+     "zone_texel": 116
+    },
+    "24": {
+     "material": "weiss",
+     "texel_flaeche_paare": 290,
+     "traeger": 7,
+     "zone_texel": 290
+    },
+    "27": {
+     "material": "fleisch",
+     "texel_flaeche_paare": 9601,
+     "traeger": 68,
+     "zone_texel": 2201
+    },
+    "29": {
+     "material": "auge",
+     "texel_flaeche_paare": 24,
+     "traeger": 5,
+     "zone_texel": 21
+    },
+    "3": {
+     "material": "muster",
+     "texel_flaeche_paare": 71,
+     "traeger": 8,
+     "zone_texel": 70
+    },
+    "4": {
+     "material": "muster",
+     "texel_flaeche_paare": 45,
+     "traeger": 4,
+     "zone_texel": 45
+    },
+    "9": {
+     "material": "muster",
+     "texel_flaeche_paare": 570,
+     "traeger": 28,
+     "zone_texel": 408
+    }
+   }
+  },
+  "fleisch": {
+   "f": 2.151,
+   "h": 27.69,
+   "k": 0.7825,
+   "k_einfach_info": 0.6054,
+   "k_quellmedian_info": 0.6755,
+   "quelle_C_median": 39.65,
+   "quelle_L_median": 16.74,
+   "quelle_eintraege": 39
+  },
+  "haut": {
+   "C_median_g4_hautklasse_info": 4.022,
+   "L_median_hautklasse": 23.547,
+   "f": 1.86,
+   "f_je_seite": {
+    "0": 4.5388,
+    "1": 1.86,
+    "2": 2.5491
+   },
+   "h": 20.5,
+   "h_g4_hautklasse_info": -29.7,
+   "knie": 75.0,
+   "s": 0.5225,
+   "seiten_faktor": {
+    "0": 2.4402,
+    "1": 1.0,
+    "2": 1.3705
+   },
+   "seiten_median_L_g4": {
+    "0": 5.205,
+    "1": 12.702,
+    "2": 9.268
+   }
+  },
+  "kopien": [
+   {
+    "flaeche": "0|1|8",
+    "fleck_texel": 1,
+    "groesse": [
+     15,
+     10
+    ],
+    "nach": [
+     384,
+     0
+    ],
+    "seite_alt": 3,
+    "seite_neu": 3,
+    "von": [
+     386,
+     13
+    ]
+   },
+   {
+    "flaeche": "0|1|19",
+    "fleck_texel": 2,
+    "groesse": [
+     16,
+     14
+    ],
+    "nach": [
+     384,
+     29
+    ],
+    "seite_alt": 3,
+    "seite_neu": 3,
+    "von": [
+     398,
+     17
+    ]
+   },
+   {
+    "flaeche": "0|1|20",
+    "fleck_texel": 27,
+    "groesse": [
+     18,
+     14
+    ],
+    "nach": [
+     384,
+     44
+    ],
+    "seite_alt": 3,
+    "seite_neu": 3,
+    "von": [
+     393,
+     8
+    ]
+   },
+   {
+    "flaeche": "0|1|31",
+    "fleck_texel": 10,
+    "groesse": [
+     15,
+     17
+    ],
+    "nach": [
+     384,
+     59
+    ],
+    "seite_alt": 3,
+    "seite_neu": 3,
+    "von": [
+     408,
+     14
+    ]
+   },
+   {
+    "flaeche": "0|1|32",
+    "fleck_texel": 6,
+    "groesse": [
+     21,
+     18
+    ],
+    "nach": [
+     384,
+     77
+    ],
+    "seite_alt": 3,
+    "seite_neu": 3,
+    "von": [
+     401,
+     2
+    ]
+   },
+   {
+    "flaeche": "2|1|64",
+    "fleck_texel": 2,
+    "groesse": [
+     12,
+     11
+    ],
+    "nach": [
+     384,
+     96
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     169,
+     131
+    ]
+   },
+   {
+    "flaeche": "2|1|65",
+    "fleck_texel": 6,
+    "groesse": [
+     11,
+     12
+    ],
+    "nach": [
+     384,
+     125
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     198,
+     131
+    ]
+   },
+   {
+    "flaeche": "3|1|26",
+    "fleck_texel": 13,
+    "groesse": [
+     11,
+     13
+    ],
+    "nach": [
+     384,
+     138
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     198,
+     135
+    ]
+   },
+   {
+    "flaeche": "3|1|44",
+    "fleck_texel": 8,
+    "groesse": [
+     17,
+     14
+    ],
+    "nach": [
+     384,
+     151
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     159,
+     114
+    ]
+   },
+   {
+    "flaeche": "3|1|45",
+    "fleck_texel": 11,
+    "groesse": [
+     15,
+     14
+    ],
+    "nach": [
+     384,
+     166
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     164,
+     114
+    ]
+   },
+   {
+    "flaeche": "3|1|46",
+    "fleck_texel": 4,
+    "groesse": [
+     10,
+     13
+    ],
+    "nach": [
+     384,
+     181
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     174,
+     115
+    ]
+   },
+   {
+    "flaeche": "3|1|53",
+    "fleck_texel": 14,
+    "groesse": [
+     16,
+     9
+    ],
+    "nach": [
+     384,
+     195
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     128,
+     108
+    ]
+   },
+   {
+    "flaeche": "3|1|54",
+    "fleck_texel": 1,
+    "groesse": [
+     15,
+     10
+    ],
+    "nach": [
+     384,
+     205
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     160,
+     108
+    ]
+   },
+   {
+    "flaeche": "3|1|55",
+    "fleck_texel": 5,
+    "groesse": [
+     13,
+     10
+    ],
+    "nach": [
+     384,
+     216
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     169,
+     108
+    ]
+   },
+   {
+    "flaeche": "3|1|73",
+    "fleck_texel": 2,
+    "groesse": [
+     15,
+     11
+    ],
+    "nach": [
+     384,
+     227
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     159,
+     103
+    ]
+   },
+   {
+    "flaeche": "3|1|80",
+    "fleck_texel": 2,
+    "groesse": [
+     27,
+     12
+    ],
+    "nach": [
+     384,
+     239
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     157,
+     111
+    ]
+   },
+   {
+    "flaeche": "3|1|81",
+    "fleck_texel": 31,
+    "groesse": [
+     18,
+     12
+    ],
+    "nach": [
+     395,
+     138
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     158,
+     110
+    ]
+   },
+   {
+    "flaeche": "3|1|82",
+    "fleck_texel": 32,
+    "groesse": [
+     16,
+     12
+    ],
+    "nach": [
+     395,
+     173
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     167,
+     110
+    ]
+   },
+   {
+    "flaeche": "4|1|14",
+    "fleck_texel": 8,
+    "groesse": [
+     15,
+     10
+    ],
+    "nach": [
+     396,
+     126
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     158,
+     114
+    ]
+   },
+   {
+    "flaeche": "4|1|15",
+    "fleck_texel": 11,
+    "groesse": [
+     13,
+     11
+    ],
+    "nach": [
+     397,
+     94
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     166,
+     114
+    ]
+   },
+   {
+    "flaeche": "4|1|23",
+    "fleck_texel": 34,
+    "groesse": [
+     18,
+     14
+    ],
+    "nach": [
+     397,
+     211
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     128,
+     103
+    ]
+   },
+   {
+    "flaeche": "4|1|24",
+    "fleck_texel": 10,
+    "groesse": [
+     13,
+     14
+    ],
+    "nach": [
+     400,
+     57
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     161,
+     104
+    ]
+   },
+   {
+    "flaeche": "4|1|25",
+    "fleck_texel": 8,
+    "groesse": [
+     11,
+     14
+    ],
+    "nach": [
+     400,
+     186
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     170,
+     104
+    ]
+   },
+   {
+    "flaeche": "4|1|54",
+    "fleck_texel": 2,
+    "groesse": [
+     10,
+     10
+    ],
+    "nach": [
+     399,
+     155
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     151,
+     209
+    ]
+   },
+   {
+    "flaeche": "4|1|73",
+    "fleck_texel": 16,
+    "groesse": [
+     11,
+     11
+    ],
+    "nach": [
+     400,
+     38
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     151,
+     204
+    ]
+   },
+   {
+    "flaeche": "4|1|74",
+    "fleck_texel": 12,
+    "groesse": [
+     11,
+     11
+    ],
+    "nach": [
+     400,
+     226
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     149,
+     204
+    ]
+   },
+   {
+    "flaeche": "5|0|22",
+    "fleck_texel": 2,
+    "groesse": [
+     8,
+     10
+    ],
+    "nach": [
+     400,
+     200
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     175,
+     107
+    ]
+   },
+   {
+    "flaeche": "5|1|23",
+    "fleck_texel": 28,
+    "groesse": [
+     15,
+     20
+    ],
+    "nach": [
+     403,
+     71
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     144,
+     197
+    ]
+   },
+   {
+    "flaeche": "5|1|24",
+    "fleck_texel": 60,
+    "groesse": [
+     15,
+     21
+    ],
+    "nach": [
+     406,
+     151
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     147,
+     198
+    ]
+   },
+   {
+    "flaeche": "5|1|25",
+    "fleck_texel": 12,
+    "groesse": [
+     11,
+     22
+    ],
+    "nach": [
+     411,
+     177
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     148,
+     196
+    ]
+   },
+   {
+    "flaeche": "5|1|33",
+    "fleck_texel": 63,
+    "groesse": [
+     18,
+     20
+    ],
+    "nach": [
+     411,
+     31
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     139,
+     181
+    ]
+   },
+   {
+    "flaeche": "5|1|34",
+    "fleck_texel": 127,
+    "groesse": [
+     14,
+     21
+    ],
+    "nach": [
+     412,
+     126
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     148,
+     181
+    ]
+   },
+   {
+    "flaeche": "5|1|43",
+    "fleck_texel": 1,
+    "groesse": [
+     10,
+     20
+    ],
+    "nach": [
+     411,
+     223
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     141,
+     168
+    ]
+   },
+   {
+    "flaeche": "5|1|44",
+    "fleck_texel": 37,
+    "groesse": [
+     13,
+     21
+    ],
+    "nach": [
+     414,
+     52
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     145,
+     168
+    ]
+   },
+   {
+    "flaeche": "5|1|63",
+    "fleck_texel": 1,
+    "groesse": [
+     13,
+     8
+    ],
+    "nach": [
+     409,
+     201
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     141,
+     177
+    ]
+   },
+   {
+    "flaeche": "5|1|72",
+    "fleck_texel": 11,
+    "groesse": [
+     9,
+     12
+    ],
+    "nach": [
+     412,
+     244
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     140,
+     176
+    ]
+   },
+   {
+    "flaeche": "5|1|73",
+    "fleck_texel": 4,
+    "groesse": [
+     12,
+     13
+    ],
+    "nach": [
+     416,
+     210
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     147,
+     176
+    ]
+   },
+   {
+    "flaeche": "5|1|74",
+    "fleck_texel": 2,
+    "groesse": [
+     12,
+     13
+    ],
+    "nach": [
+     418,
+     74
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     146,
+     176
+    ]
+   },
+   {
+    "flaeche": "5|1|80",
+    "fleck_texel": 13,
+    "groesse": [
+     9,
+     14
+    ],
+    "nach": [
+     418,
+     162
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     141,
+     168
+    ]
+   },
+   {
+    "flaeche": "5|1|89",
+    "fleck_texel": 15,
+    "groesse": [
+     13,
+     13
+    ],
+    "nach": [
+     418,
+     0
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     144,
+     170
+    ]
+   },
+   {
+    "flaeche": "6|1|22",
+    "fleck_texel": 5,
+    "groesse": [
+     10,
+     20
+    ],
+    "nach": [
+     422,
+     184
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     136,
+     171
+    ]
+   },
+   {
+    "flaeche": "6|1|23",
+    "fleck_texel": 18,
+    "groesse": [
+     11,
+     20
+    ],
+    "nach": [
+     422,
+     224
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     140,
+     171
+    ]
+   },
+   {
+    "flaeche": "6|1|31",
+    "fleck_texel": 19,
+    "groesse": [
+     10,
+     19
+    ],
+    "nach": [
+     423,
+     88
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     129,
+     188
+    ]
+   },
+   {
+    "flaeche": "6|1|32",
+    "fleck_texel": 90,
+    "groesse": [
+     18,
+     19
+    ],
+    "nach": [
+     422,
+     14
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     132,
+     188
+    ]
+   },
+   {
+    "flaeche": "6|1|33",
+    "fleck_texel": 137,
+    "groesse": [
+     19,
+     20
+    ],
+    "nach": [
+     423,
+     147
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     140,
+     187
+    ]
+   },
+   {
+    "flaeche": "6|1|34",
+    "fleck_texel": 18,
+    "groesse": [
+     11,
+     21
+    ],
+    "nach": [
+     426,
+     124
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     151,
+     188
+    ]
+   },
+   {
+    "flaeche": "6|1|41",
+    "fleck_texel": 23,
+    "groesse": [
+     12,
+     21
+    ],
+    "nach": [
+     425,
+     52
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     131,
+     204
+    ]
+   },
+   {
+    "flaeche": "6|1|42",
+    "fleck_texel": 88,
+    "groesse": [
+     18,
+     21
+    ],
+    "nach": [
+     429,
+     34
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     136,
+     204
+    ]
+   },
+   {
+    "flaeche": "6|1|43",
+    "fleck_texel": 95,
+    "groesse": [
+     11,
+     21
+    ],
+    "nach": [
+     429,
+     197
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     147,
+     204
+    ]
+   },
+   {
+    "flaeche": "6|1|44",
+    "fleck_texel": 23,
+    "groesse": [
+     14,
+     22
+    ],
+    "nach": [
+     429,
+     233
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     149,
+     204
+    ]
+   },
+   {
+    "flaeche": "10|0|7",
+    "fleck_texel": 5,
+    "groesse": [
+     12,
+     25
+    ],
+    "nach": [
+     432,
+     168
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     229,
+     25
+    ]
+   },
+   {
+    "flaeche": "10|0|9",
+    "fleck_texel": 45,
+    "groesse": [
+     17,
+     19
+    ],
+    "nach": [
+     431,
+     97
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     230,
+     31
+    ]
+   },
+   {
+    "flaeche": "10|0|11",
+    "fleck_texel": 45,
+    "groesse": [
+     20,
+     12
+    ],
+    "nach": [
+     431,
+     69
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     230,
+     38
+    ]
+   },
+   {
+    "flaeche": "10|0|13",
+    "fleck_texel": 28,
+    "groesse": [
+     20,
+     11
+    ],
+    "nach": [
+     431,
+     0
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     230,
+     47
+    ]
+   },
+   {
+    "flaeche": "10|0|15",
+    "fleck_texel": 10,
+    "groesse": [
+     17,
+     18
+    ],
+    "nach": [
+     432,
+     7
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     230,
+     47
+    ]
+   },
+   {
+    "flaeche": "10|0|58",
+    "fleck_texel": 43,
+    "groesse": [
+     16,
+     21
+    ],
+    "nach": [
+     437,
+     206
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     193,
+     29
+    ]
+   },
+   {
+    "flaeche": "10|0|59",
+    "fleck_texel": 77,
+    "groesse": [
+     20,
+     16
+    ],
+    "nach": [
+     437,
+     111
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     224,
+     34
+    ]
+   },
+   {
+    "flaeche": "10|0|60",
+    "fleck_texel": 120,
+    "groesse": [
+     20,
+     15
+    ],
+    "nach": [
+     431,
+     82
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     224,
+     47
+    ]
+   },
+   {
+    "flaeche": "10|0|61",
+    "fleck_texel": 101,
+    "groesse": [
+     16,
+     20
+    ],
+    "nach": [
+     437,
+     128
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     193,
+     45
+    ]
+   },
+   {
+    "flaeche": "10|0|62",
+    "fleck_texel": 163,
+    "groesse": [
+     15,
+     39
+    ],
+    "nach": [
+     439,
+     160
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     224,
+     12
+    ]
+   },
+   {
+    "flaeche": "10|0|63",
+    "fleck_texel": 79,
+    "groesse": [
+     21,
+     13
+    ],
+    "nach": [
+     436,
+     53
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     224,
+     25
+    ]
+   },
+   {
+    "flaeche": "10|1|53",
+    "fleck_texel": 24,
+    "groesse": [
+     24,
+     18
+    ],
+    "nach": [
+     439,
+     238
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     129,
+     35
+    ]
+   },
+   {
+    "flaeche": "10|1|54",
+    "fleck_texel": 10,
+    "groesse": [
+     19,
+     29
+    ],
+    "nach": [
+     441,
+     21
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     131,
+     17
+    ]
+   },
+   {
+    "flaeche": "10|1|55",
+    "fleck_texel": 5,
+    "groesse": [
+     25,
+     31
+    ],
+    "nach": [
+     449,
+     69
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     129,
+     27
+    ]
+   },
+   {
+    "flaeche": "10|1|64",
+    "fleck_texel": 17,
+    "groesse": [
+     13,
+     34
+    ],
+    "nach": [
+     450,
+     203
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     240,
+     40
+    ]
+   },
+   {
+    "flaeche": "10|1|65",
+    "fleck_texel": 166,
+    "groesse": [
+     20,
+     24
+    ],
+    "nach": [
+     450,
+     0
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     129,
+     23
+    ]
+   },
+   {
+    "flaeche": "10|1|67",
+    "fleck_texel": 266,
+    "groesse": [
+     12,
+     73
+    ],
+    "nach": [
+     455,
+     119
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     232,
+     4
+    ]
+   },
+   {
+    "flaeche": "10|1|86",
+    "fleck_texel": 24,
+    "groesse": [
+     9,
+     25
+    ],
+    "nach": [
+     460,
+     25
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     232,
+     15
+    ]
+   },
+   {
+    "flaeche": "10|1|92",
+    "fleck_texel": 13,
+    "groesse": [
+     21,
+     22
+    ],
+    "nach": [
+     462,
+     96
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     230,
+     62
+    ]
+   },
+   {
+    "flaeche": "10|1|110",
+    "fleck_texel": 34,
+    "groesse": [
+     12,
+     33
+    ],
+    "nach": [
+     462,
+     193
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     232,
+     28
+    ]
+   },
+   {
+    "flaeche": "10|1|66",
+    "fleck_texel": 160,
+    "groesse": [
+     18,
+     26
+    ],
+    "nach": [
+     464,
+     227
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     132,
+     11
+    ]
+   },
+   {
+    "flaeche": "10|1|76",
+    "fleck_texel": 154,
+    "groesse": [
+     11,
+     77
+    ],
+    "nach": [
+     467,
+     119
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     237,
+     0
+    ]
+   },
+   {
+    "flaeche": "10|1|77",
+    "fleck_texel": 146,
+    "groesse": [
+     10,
+     26
+    ],
+    "nach": [
+     469,
+     9
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     238,
+     29
+    ]
+   },
+   {
+    "flaeche": "10|1|78",
+    "fleck_texel": 115,
+    "groesse": [
+     10,
+     23
+    ],
+    "nach": [
+     469,
+     45
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     237,
+     13
+    ]
+   },
+   {
+    "flaeche": "10|1|79",
+    "fleck_texel": 378,
+    "groesse": [
+     10,
+     61
+    ],
+    "nach": [
+     479,
+     108
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     236,
+     11
+    ]
+   },
+   {
+    "flaeche": "10|1|80",
+    "fleck_texel": 120,
+    "groesse": [
+     12,
+     55
+    ],
+    "nach": [
+     478,
+     170
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     237,
+     30
+    ]
+   },
+   {
+    "flaeche": "10|1|87",
+    "fleck_texel": 151,
+    "groesse": [
+     21,
+     22
+    ],
+    "nach": [
+     471,
+     75
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     228,
+     12
+    ]
+   },
+   {
+    "flaeche": "10|1|88",
+    "fleck_texel": 186,
+    "groesse": [
+     21,
+     20
+    ],
+    "nach": [
+     476,
+     26
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     231,
+     22
+    ]
+   },
+   {
+    "flaeche": "10|1|89",
+    "fleck_texel": 173,
+    "groesse": [
+     19,
+     17
+    ],
+    "nach": [
+     479,
+     59
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     235,
+     33
+    ]
+   },
+   {
+    "flaeche": "10|1|90",
+    "fleck_texel": 161,
+    "groesse": [
+     19,
+     16
+    ],
+    "nach": [
+     480,
+     0
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     235,
+     47
+    ]
+   },
+   {
+    "flaeche": "10|1|91",
+    "fleck_texel": 151,
+    "groesse": [
+     21,
+     20
+    ],
+    "nach": [
+     482,
+     225
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     231,
+     55
+    ]
+   },
+   {
+    "flaeche": "10|1|102",
+    "fleck_texel": 26,
+    "groesse": [
+     14,
+     12
+    ],
+    "nach": [
+     480,
+     46
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     196,
+     13
+    ]
+   },
+   {
+    "flaeche": "10|1|117",
+    "fleck_texel": 38,
+    "groesse": [
+     12,
+     18
+    ],
+    "nach": [
+     486,
+     92
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     235,
+     26
+    ]
+   },
+   {
+    "flaeche": "10|1|121",
+    "fleck_texel": 43,
+    "groesse": [
+     20,
+     22
+    ],
+    "nach": [
+     489,
+     199
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     229,
+     62
+    ]
+   },
+   {
+    "flaeche": "10|1|122",
+    "fleck_texel": 130,
+    "groesse": [
+     25,
+     25
+    ],
+    "nach": [
+     0,
+     0
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     228,
+     43
+    ]
+   },
+   {
+    "flaeche": "10|1|129",
+    "fleck_texel": 107,
+    "groesse": [
+     20,
+     58
+    ],
+    "nach": [
+     490,
+     102
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     230,
+     20
+    ]
+   },
+   {
+    "flaeche": "10|1|130",
+    "fleck_texel": 200,
+    "groesse": [
+     25,
+     27
+    ],
+    "nach": [
+     0,
+     25
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     228,
+     45
+    ]
+   },
+   {
+    "flaeche": "10|1|131",
+    "fleck_texel": 12,
+    "groesse": [
+     25,
+     16
+    ],
+    "nach": [
+     484,
+     15
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     227,
+     39
+    ]
+   },
+   {
+    "flaeche": "10|1|147",
+    "fleck_texel": 230,
+    "groesse": [
+     24,
+     23
+    ],
+    "nach": [
+     0,
+     53
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     27
+    ]
+   },
+   {
+    "flaeche": "10|1|148",
+    "fleck_texel": 272,
+    "groesse": [
+     24,
+     22
+    ],
+    "nach": [
+     0,
+     77
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     225,
+     41
+    ]
+   },
+   {
+    "flaeche": "10|1|149",
+    "fleck_texel": 42,
+    "groesse": [
+     26,
+     40
+    ],
+    "nach": [
+     0,
+     85
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     22
+    ]
+   },
+   {
+    "flaeche": "10|1|150",
+    "fleck_texel": 148,
+    "groesse": [
+     28,
+     58
+    ],
+    "nach": [
+     0,
+     126
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     129,
+     0
+    ]
+   },
+   {
+    "flaeche": "10|1|155",
+    "fleck_texel": 30,
+    "groesse": [
+     24,
+     34
+    ],
+    "nach": [
+     0,
+     180
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     19
+    ]
+   },
+   {
+    "flaeche": "10|1|156",
+    "fleck_texel": 41,
+    "groesse": [
+     29,
+     21
+    ],
+    "nach": [
+     0,
+     214
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     38
+    ]
+   },
+   {
+    "flaeche": "16|0|19",
+    "fleck_texel": 3,
+    "groesse": [
+     12,
+     11
+    ],
+    "nach": [
+     439,
+     149
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     131,
+     56
+    ]
+   },
+   {
+    "flaeche": "16|0|20",
+    "fleck_texel": 1,
+    "groesse": [
+     12,
+     11
+    ],
+    "nach": [
+     456,
+     54
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     130,
+     49
+    ]
+   },
+   {
+    "flaeche": "16|1|58",
+    "fleck_texel": 46,
+    "groesse": [
+     22,
+     18
+    ],
+    "nach": [
+     490,
+     170
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     131,
+     44
+    ]
+   },
+   {
+    "flaeche": "16|1|59",
+    "fleck_texel": 113,
+    "groesse": [
+     14,
+     18
+    ],
+    "nach": [
+     495,
+     42
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     231,
+     52
+    ]
+   },
+   {
+    "flaeche": "16|1|60",
+    "fleck_texel": 119,
+    "groesse": [
+     15,
+     19
+    ],
+    "nach": [
+     496,
+     77
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     195,
+     52
+    ]
+   },
+   {
+    "flaeche": "17|1|11",
+    "fleck_texel": 1,
+    "groesse": [
+     16,
+     13
+    ],
+    "nach": [
+     495,
+     156
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     167,
+     102
+    ]
+   },
+   {
+    "flaeche": "17|1|12",
+    "fleck_texel": 7,
+    "groesse": [
+     17,
+     12
+    ],
+    "nach": [
+     0,
+     231
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     156,
+     103
+    ]
+   },
+   {
+    "flaeche": "21|0|0",
+    "fleck_texel": 39,
+    "groesse": [
+     22,
+     57
+    ],
+    "nach": [
+     22,
+     85
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     230,
+     26
+    ]
+   },
+   {
+    "flaeche": "21|0|2",
+    "fleck_texel": 26,
+    "groesse": [
+     24,
+     66
+    ],
+    "nach": [
+     24,
+     41
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     226,
+     16
+    ]
+   },
+   {
+    "flaeche": "21|0|41",
+    "fleck_texel": 58,
+    "groesse": [
+     16,
+     21
+    ],
+    "nach": [
+     16,
+     194
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     228,
+     8
+    ]
+   },
+   {
+    "flaeche": "21|0|42",
+    "fleck_texel": 110,
+    "groesse": [
+     15,
+     21
+    ],
+    "nach": [
+     18,
+     234
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     232,
+     6
+    ]
+   },
+   {
+    "flaeche": "21|1|0",
+    "fleck_texel": 106,
+    "groesse": [
+     29,
+     28
+    ],
+    "nach": [
+     22,
+     15
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     36
+    ]
+   },
+   {
+    "flaeche": "21|1|1",
+    "fleck_texel": 152,
+    "groesse": [
+     27,
+     28
+    ],
+    "nach": [
+     25,
+     134
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     22
+    ]
+   },
+   {
+    "flaeche": "21|1|2",
+    "fleck_texel": 25,
+    "groesse": [
+     29,
+     32
+    ],
+    "nach": [
+     28,
+     167
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     32
+    ]
+   },
+   {
+    "flaeche": "21|1|8",
+    "fleck_texel": 72,
+    "groesse": [
+     23,
+     40
+    ],
+    "nach": [
+     39,
+     34
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     13
+    ]
+   },
+   {
+    "flaeche": "21|1|9",
+    "fleck_texel": 388,
+    "groesse": [
+     23,
+     32
+    ],
+    "nach": [
+     47,
+     70
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     227,
+     20
+    ]
+   },
+   {
+    "flaeche": "21|1|10",
+    "fleck_texel": 580,
+    "groesse": [
+     21,
+     55
+    ],
+    "nach": [
+     53,
+     101
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     229,
+     20
+    ]
+   },
+   {
+    "flaeche": "21|1|17",
+    "fleck_texel": 103,
+    "groesse": [
+     15,
+     39
+    ],
+    "nach": [
+     30,
+     196
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     130,
+     13
+    ]
+   },
+   {
+    "flaeche": "21|1|18",
+    "fleck_texel": 284,
+    "groesse": [
+     19,
+     31
+    ],
+    "nach": [
+     49,
+     194
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     129,
+     28
+    ]
+   },
+   {
+    "flaeche": "21|1|26",
+    "fleck_texel": 216,
+    "groesse": [
+     15,
+     60
+    ],
+    "nach": [
+     63,
+     0
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     230,
+     7
+    ]
+   },
+   {
+    "flaeche": "21|1|34",
+    "fleck_texel": 45,
+    "groesse": [
+     27,
+     25
+    ],
+    "nach": [
+     56,
+     168
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     129,
+     32
+    ]
+   },
+   {
+    "flaeche": "21|1|49",
+    "fleck_texel": 6,
+    "groesse": [
+     29,
+     50
+    ],
+    "nach": [
+     61,
+     206
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     13
+    ]
+   },
+   {
+    "flaeche": "21|1|50",
+    "fleck_texel": 92,
+    "groesse": [
+     27,
+     22
+    ],
+    "nach": [
+     74,
+     101
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     129,
+     34
+    ]
+   },
+   {
+    "flaeche": "21|1|56",
+    "fleck_texel": 186,
+    "groesse": [
+     30,
+     28
+    ],
+    "nach": [
+     29,
+     0
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     35
+    ]
+   },
+   {
+    "flaeche": "21|1|57",
+    "fleck_texel": 225,
+    "groesse": [
+     28,
+     25
+    ],
+    "nach": [
+     75,
+     186
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     28
+    ]
+   },
+   {
+    "flaeche": "21|1|58",
+    "fleck_texel": 296,
+    "groesse": [
+     22,
+     42
+    ],
+    "nach": [
+     90,
+     213
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     225,
+     14
+    ]
+   },
+   {
+    "flaeche": "21|1|59",
+    "fleck_texel": 96,
+    "groesse": [
+     29,
+     25
+    ],
+    "nach": [
+     78,
+     0
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     224,
+     35
+    ]
+   },
+   {
+    "flaeche": "21|1|64",
+    "fleck_texel": 566,
+    "groesse": [
+     20,
+     77
+    ],
+    "nach": [
+     106,
+     137
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     230,
+     7
+    ]
+   },
+   {
+    "flaeche": "21|1|65",
+    "fleck_texel": 399,
+    "groesse": [
+     21,
+     35
+    ],
+    "nach": [
+     102,
+     100
+    ],
+    "seite_alt": 1,
+    "seite_neu": 0,
+    "von": [
+     227,
+     13
+    ]
+   },
+   {
+    "flaeche": "21|1|66",
+    "fleck_texel": 550,
+    "groesse": [
+     22,
+     47
+    ],
+    "nach": [
+     155,
+     0
+    ],
+    "seite_alt": 1,
+    "seite_neu": 1,
+    "von": [
+     227,
+     17
+    ]
+   },
+   {
+    "flaeche": "21|1|67",
+    "fleck_texel": 492,
+    "groesse": [
+     22,
+     43
+    ],
+    "nach": [
+     157,
+     47
+    ],
+    "seite_alt": 1,
+    "seite_neu": 1,
+    "von": [
+     230,
+     21
+    ]
+   },
+   {
+    "flaeche": "22|1|112",
+    "fleck_texel": 7,
+    "groesse": [
+     7,
+     27
+    ],
+    "nach": [
+     468,
+     182
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     231,
+     46
+    ]
+   },
+   {
+    "flaeche": "22|1|113",
+    "fleck_texel": 5,
+    "groesse": [
+     7,
+     16
+    ],
+    "nach": [
+     454,
+     101
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     232,
+     70
+    ]
+   },
+   {
+    "flaeche": "22|1|152",
+    "fleck_texel": 1,
+    "groesse": [
+     18,
+     5
+    ],
+    "nach": [
+     384,
+     251
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     226,
+     15
+    ]
+   },
+   {
+    "flaeche": "0|1|21",
+    "fleck_texel": 7,
+    "groesse": [
+     25,
+     11
+    ],
+    "nach": [
+     75,
+     124
+    ],
+    "seite_alt": 2,
+    "seite_neu": 0,
+    "von": [
+     262,
+     109
+    ]
+   },
+   {
+    "flaeche": "0|1|27",
+    "fleck_texel": 24,
+    "groesse": [
+     16,
+     19
+    ],
+    "nach": [
+     106,
+     17
+    ],
+    "seite_alt": 2,
+    "seite_neu": 0,
+    "von": [
+     277,
+     21
+    ]
+   },
+   {
+    "flaeche": "0|1|33",
+    "fleck_texel": 23,
+    "groesse": [
+     33,
+     14
+    ],
+    "nach": [
+     159,
+     166
+    ],
+    "seite_alt": 2,
+    "seite_neu": 1,
+    "von": [
+     258,
+     92
+    ]
+   },
+   {
+    "flaeche": "0|1|110",
+    "fleck_texel": 2,
+    "groesse": [
+     12,
+     12
+    ],
+    "nach": [
+     478,
+     243
+    ],
+    "seite_alt": 2,
+    "seite_neu": 3,
+    "von": [
+     262,
+     108
+    ]
+   },
+   {
+    "flaeche": "0|1|135",
+    "fleck_texel": 4,
+    "groesse": [
+     8,
+     13
+    ],
+    "nach": [
+     407,
+     102
+    ],
+    "seite_alt": 2,
+    "seite_neu": 3,
+    "von": [
+     267,
+     115
+    ]
+   },
+   {
+    "flaeche": "0|1|136",
+    "fleck_texel": 6,
+    "groesse": [
+     7,
+     9
+    ],
+    "nach": [
+     442,
+     226
+    ],
+    "seite_alt": 2,
+    "seite_neu": 3,
+    "von": [
+     268,
+     111
+    ]
+   },
+   {
+    "flaeche": "0|1|143",
+    "fleck_texel": 4,
+    "groesse": [
+     16,
+     15
+    ],
+    "nach": [
+     491,
+     241
+    ],
+    "seite_alt": 2,
+    "seite_neu": 3,
+    "von": [
+     267,
+     117
+    ]
+   },
+   {
+    "flaeche": "0|1|144",
+    "fleck_texel": 1,
+    "groesse": [
+     12,
+     13
+    ],
+    "nach": [
+     496,
+     61
+    ],
+    "seite_alt": 2,
+    "seite_neu": 3,
+    "von": [
+     271,
+     111
+    ]
+   },
+   {
+    "flaeche": "8|1|20",
+    "fleck_texel": 8,
+    "groesse": [
+     12,
+     15
+    ],
+    "nach": [
+     499,
+     5
+    ],
+    "seite_alt": 2,
+    "seite_neu": 3,
+    "von": [
+     337,
+     20
+    ]
+   },
+   {
+    "flaeche": "8|1|27",
+    "fleck_texel": 89,
+    "groesse": [
+     41,
+     16
+    ],
+    "nach": [
+     93,
+     0
+    ],
+    "seite_alt": 2,
+    "seite_neu": 0,
+    "von": [
+     308,
+     22
+    ]
+   },
+   {
+    "flaeche": "8|1|28",
+    "fleck_texel": 5,
+    "groesse": [
+     14,
+     15
+    ],
+    "nach": [
+     497,
+     139
+    ],
+    "seite_alt": 2,
+    "seite_neu": 3,
+    "von": [
+     328,
+     32
+    ]
+   },
+   {
+    "flaeche": "8|1|76",
+    "fleck_texel": 6,
+    "groesse": [
+     42,
+     13
+    ],
+    "nach": [
+     160,
+     181
+    ],
+    "seite_alt": 2,
+    "seite_neu": 1,
+    "von": [
+     308,
+     20
+    ]
+   },
+   {
+    "flaeche": "9|1|18",
+    "fleck_texel": 2,
+    "groesse": [
+     14,
+     14
+    ],
+    "nach": [
+     3,
+     174
+    ],
+    "seite_alt": 2,
+    "seite_neu": 0,
+    "von": [
+     324,
+     22
+    ]
+   },
+   {
+    "flaeche": "9|1|19",
+    "fleck_texel": 16,
+    "groesse": [
+     10,
+     14
+    ],
+    "nach": [
+     0,
+     118
+    ],
+    "seite_alt": 2,
+    "seite_neu": 0,
+    "von": [
+     331,
+     23
+    ]
+   },
+   {
+    "flaeche": "9|1|74",
+    "fleck_texel": 1,
+    "groesse": [
+     14,
+     14
+    ],
+    "nach": [
+     46,
+     157
+    ],
+    "seite_alt": 2,
+    "seite_neu": 0,
+    "von": [
+     323,
+     26
+    ]
+   },
+   {
+    "flaeche": "9|1|75",
+    "fleck_texel": 3,
+    "groesse": [
+     14,
+     14
+    ],
+    "nach": [
+     29,
+     242
+    ],
+    "seite_alt": 2,
+    "seite_neu": 0,
+    "von": [
+     329,
+     26
+    ]
+   },
+   {
+    "flaeche": "9|1|82",
+    "fleck_texel": 2,
+    "groesse": [
+     12,
+     16
+    ],
+    "nach": [
+     75,
+     136
+    ],
+    "seite_alt": 2,
+    "seite_neu": 0,
+    "von": [
+     322,
+     13
+    ]
+   },
+   {
+    "flaeche": "22|0|82",
+    "fleck_texel": 8,
+    "groesse": [
+     12,
+     3
+    ],
+    "nach": [
+     397,
+     0
+    ],
+    "seite_alt": 0,
+    "seite_neu": 3,
+    "von": [
+     102,
+     71
+    ]
+   },
+   {
+    "flaeche": "22|0|83",
+    "fleck_texel": 3,
+    "groesse": [
+     15,
+     3
+    ],
+    "nach": [
+     441,
+     200
+    ],
+    "seite_alt": 0,
+    "seite_neu": 3,
+    "von": [
+     102,
+     71
+    ]
+   }
+  ],
+  "kralle": {
+   "flaechen": 252,
+   "median_hand_L": 26.9,
+   "median_kralle_L": 27.95,
+   "regel": "Rang-Tausch auf die Hautrampe wie die Haende (Runde 2)"
+  },
+  "material_zaehlung": {
+   "f1": 6,
+   "haut": 2870,
+   "maul": 27,
+   "tausch": 811,
+   "zahn": 114
+  },
+  "maul": {
+   "0": 23,
+   "1": 4
+  },
+  "schwarz_boden": {
+   "10": {
+    "L": 5.65,
+    "eintraege": 1,
+    "ersatz": 2115
+   },
+   "12": {
+    "L": 2.76,
+    "eintraege": 1,
+    "ersatz": 1058
+   },
+   "13": {
+    "L": 5.65,
+    "eintraege": 1,
+    "ersatz": 2115
+   },
+   "14": {
+    "L": 9.48,
+    "eintraege": 1,
+    "ersatz": 3172
+   },
+   "2": {
+    "L": 2.19,
+    "eintraege": 1,
+    "ersatz": 1057
+   },
+   "3": {
+    "L": 5.65,
+    "eintraege": 1,
+    "ersatz": 2115
+   },
+   "4": {
+    "L": 9.48,
+    "eintraege": 1,
+    "ersatz": 3172
+   },
+   "5": {
+    "L": 2.76,
+    "eintraege": 1,
+    "ersatz": 1058
+   },
+   "6": {
+    "L": 5.65,
+    "eintraege": 1,
+    "ersatz": 2115
+   },
+   "7": {
+    "L": 9.48,
+    "eintraege": 2,
+    "ersatz": 3172
+   },
+   "8": {
+    "L": 2.76,
+    "eintraege": 1,
+    "ersatz": 1058
+   },
+   "9": {
+    "L": 5.65,
+    "eintraege": 1,
+    "ersatz": 2115
+   }
+  },
+  "tausch": {
+   "0": {
+    "tausch": {
+     "eintraege": 121,
+     "flaechen": 157,
+     "schon_belegt": 0
+    }
+   },
+   "1": {
+    "hand": {
+     "eintraege": 99,
+     "flaechen": 268,
+     "schon_belegt": 44
+    },
+    "kralle": {
+     "eintraege": 75,
+     "flaechen": 252,
+     "schon_belegt": 37
+    },
+    "tausch": {
+     "eintraege": 68,
+     "flaechen": 74,
+     "schon_belegt": 0
+    }
+   },
+   "2": {
+    "kralle": {
+     "eintraege": 45,
+     "flaechen": 60,
+     "schon_belegt": 0
+    }
+   }
+  },
+  "texel_neu": 40034,
+  "zeilen": [
+   "maul0",
+   "maul1",
+   "zahn0",
+   "f12",
+   "haut0",
+   "haut1",
+   "haut2",
+   "tausch0",
+   "tausch1",
+   "tausch2",
+   "fleck_f12_0",
+   "fleck_haut1_1",
+   "fleck_haut1_2",
+   "fleck_haut2_3",
+   "fleck_tausch0_4"
+  ]
+ },
+ "variante": "K5g3",
+ "zeilen": 15
+}

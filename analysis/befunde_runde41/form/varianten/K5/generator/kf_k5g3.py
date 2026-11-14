@@ -134,8 +134,12 @@ def pruef():
         shutil.rmtree(d, ignore_errors=True)
         bauen(par, d, log=lambda *a: None)
         for n in DATEIEN + ('bau.json',):
-            a = open(os.path.join(AUS, n), 'rb').read() if os.path.exists(os.path.join(AUS, n)) else b''
-            b = open(os.path.join(d, n), 'rb').read()
+            if n.endswith('.json'):         # Text: inhaltlich vergleichen (git kann beim Auschecken das Zeilenende tauschen)
+                a = json.load(open(os.path.join(AUS, n), encoding='utf-8')) if os.path.exists(os.path.join(AUS, n)) else None
+                b = json.load(open(os.path.join(d, n), encoding='utf-8'))
+            else:
+                a = open(os.path.join(AUS, n), 'rb').read() if os.path.exists(os.path.join(AUS, n)) else b''
+                b = open(os.path.join(d, n), 'rb').read()
             if a != b:
                 gleich = False
                 log('VERSCHIEDEN %s (%s)' % (n, lauf))

@@ -1,0 +1,439 @@
+{
+ "zeilen": [
+  {
+   "nr": "TG",
+   "text": "Geometrie des Assets == Geometrie-Stufe kf_k5g3_geo (geo/BAHNSTEIG_FORM.EMD sha eadfac31aef1; Ecken, Normalen, Flaechen-Ecken; Sektionen 0-6)",
+   "ist": "gleich",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1",
+    "verschieden",
+    false
+   ]
+  },
+  {
+   "nr": "TB",
+   "text": "Generator kf_k5g3.py: neuer Lauf mit par aus bau.json byte-gleich (alle Dateien + bau.json)",
+   "ist": "abweichend: []",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "Bau mit s + 0,01",
+    "TIM verschieden",
+    false
+   ]
+  },
+  {
+   "nr": "V3.1",
+   "text": "Fleck-Material genau auf den Traegertexeln (zonen_v2/traeger_texel, F1-Kern-Vorrang), keine andere Flaeche liest eine Fleck-Zeile",
+   "ist": "fremde Leser 0, Material ausserhalb der Texel 0, fehlende Fleck-Texel 0, richtige 10646 (davon 2 mit zufaellig gleichem Wort)",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "ohne eigene Texel (Material an den Original-Indizes, erste Traegerflaeche)",
+    "1 andere Flaechen lesen es",
+    false
+   ]
+  },
+  {
+   "nr": "V3.2",
+   "text": "Texel-Konflikte zwischen Zonen auf derselben Flaeche (nach Lage aufgeloest: VORRANG 11 vor 12, sonst kleinere Zone)",
+   "ist": "{'14/15': [19, '15']}",
+   "ok": true,
+   "art": "Info",
+   "gegenprobe": null
+  },
+  {
+   "nr": "V3.1b",
+   "text": "Asset: 10257 Spalt-Kinder lesen Zeile/Seite der Mutter, UV im Texturstueck der Mutter, keine Fleck-Zeile ohne Traeger-Mutter",
+   "ist": "falsche Zeile/Seite 0, ausserhalb 0, fremde Fleck-Leser 0",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "Tabellen-Netze ohne Erbe (K5e_f1-Zeilen)",
+    "falsch 8721, ausserhalb 1544, fremd 0",
+    false
+   ]
+  },
+  {
+   "nr": "V3.3",
+   "text": "Buckel-Fleisch (Zone 27, Material-Texel): Median L* 33-39, C* 22-26 (Eichung b)",
+   "ist": "L* 36.2, C* 25.0 (9067 Texelzugriffe)",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1 Buckel",
+    "L* 35.4, C* 16.8",
+    false
+   ]
+  },
+  {
+   "nr": "V4.1",
+   "text": "Zone 45, Hals 21, Lippe, Unterkiefer, Hals-/Kopf-Unterseite (ohne Fleck-Material, ohne Maul/Zaehne): Texelzugriffe roeter als die Haut (C* > s L* + 6) = 0 %",
+   "ist": "0.00 % von 50428 (Info absolute Rotklasse a*>12/C*>15: 24.97 %)",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1",
+    "1.49 %",
+    false
+   ]
+  },
+  {
+   "nr": "V4.2",
+   "text": "dieselben Flaechen nicht schwarz: Anteil RGB-Max <= 12 nicht ueber der uebrigen Haut, Median L* >= P25 der Haut",
+   "ist": "0.00 % (Haut 0.00 %), Median 23.3 (Haut-P25 14.7)",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5f",
+    "0.77 %, Median 22.9",
+    false
+   ]
+  },
+  {
+   "nr": "V4.3",
+   "text": "Maul-Zeilen (G4-Mundfleisch) nur von Zone 30 gelesen",
+   "ist": "0 andere Flaechen",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1 (Zeile 0)",
+    "99 andere Flaechen",
+    false
+   ]
+  },
+  {
+   "nr": "V4.4",
+   "text": "keine Flaeche ausser Zone 30 liest 0x8000 (deckendes Schwarz) oder eine Mundfleisch-Zeile (Asset, Spalt-Kinder nach Mutter)",
+   "ist": "0x8000 0, Mundfleisch-Zeile 0 Texelzugriffe, 0 Flaechen",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1",
+    "0x8000 0, Zeile 0 2121, 99 Flaechen",
+    false
+   ]
+  },
+  {
+   "nr": "V2.1",
+   "text": "Hautton (Albedo der Hautflaechen, C-gewichtet) im Band der Originale [14, 27] Grad und waermer als K5e_f1 und K5f",
+   "ist": "22.1 Grad (K5e_f1 -34.0, K5f -26.8)",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1",
+    "-34.0 Grad",
+    false
+   ]
+  },
+  {
+   "nr": "V2.2",
+   "text": "Haut-Buntheit Median C* (Info; O3: Eichung C* 2-6 ist keine Grenze, s kommt aus Z4/Z8)",
+   "ist": "11.98 (L* Median 23.3)",
+   "ok": true,
+   "art": "Info",
+   "gegenprobe": null
+  },
+  {
+   "nr": "V5",
+   "text": "Krallen wie die Hand (V5): reinweiss (0x7FFF) = 0, roeter als die Haut = 0 %, dE76 der Mediane Kralle/Hand <= 6",
+   "ist": "0 / 0.00 % / dE 3.6 (von 23636)",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5c (rote Krallen)",
+    "0 / 44.72 % / dE 30.2",
+    false
+   ]
+  },
+  {
+   "nr": "H1",
+   "text": "Haende 13/18: kein 0x7FFF, Median L* im Band der Haut (P25-P75)",
+   "ist": "reinweiss 0, Hand-Median L* 26.9, Haut P25/Median/P75 14.7/23.3/31.6",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5g2 Runde 1 (weisse Hand)",
+    "reinweiss 900, Median 43.4, Haut 21.3-39.1",
+    false
+   ]
+  },
+  {
+   "nr": "S1",
+   "text": "kein Sattel (O3): Median L* der Haut auf Huefte/Ruecken (Teile 0/7) im Band P25-P75 der uebrigen Haut",
+   "ist": "Teile 0/7 23.3 (C* 12.0), Haut P25-P75 18.4-31.6",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "Bau ohne Seitenangleich (K5g2-Weg)",
+    "Teile 0/7 9.5, Haut 14.7-31.6",
+    false
+   ]
+  },
+  {
+   "nr": "V1",
+   "text": "Adern multiplikativ: je Hautzeile Fit L' = a + b L_G4 der Aderklasse unter dem Knie, |a| <= 1,5",
+   "ist": "|a| max 0.48",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5f (Adern affin)",
+    "|a| max 2.43",
+    false
+   ]
+  },
+  {
+   "nr": "V6",
+   "text": "F1: Kern-Eintraege der F1-Zeilen bytegleich K5c-Zeile 5 und jede F1-Flaeche liest im Kern K5c; Rand-Median >= Mesh-0-Haut - 6",
+   "ist": "Grundzeilen gleich, falsch gelesene Kern-Eintraege 0; Rand 19.6 gegen Haut 23.3",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e (schwarzer Ring, E32)",
+    "Rand 5.1 gegen Haut 26.4",
+    false
+   ]
+  },
+  {
+   "nr": "A1",
+   "text": "Augen (O4): Bild 2 (Licht der Szene), an beiden Nutzerpunkten L*-max 9x9 >= 2 x Median Kopfhaut daneben",
+   "ist": "max 25.8 / Kopfhaut 5.7; max 12.9 / Kopfhaut 5.7",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1",
+    "max 15.0 / Kopfhaut 9.4; max 9.4 / Kopfhaut 6.6",
+    false
+   ]
+  },
+  {
+   "nr": "W1",
+   "text": "weiss L-cv im Band 0.409..1.128 (Originale)",
+   "ist": "0.569",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1",
+    "0.291",
+    false
+   ]
+  },
+  {
+   "nr": "W2",
+   "text": "weiss lokal_rel im Band 0.175..0.460 (Originale)",
+   "ist": "0.373",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1",
+    "0.147",
+    false
+   ]
+  },
+  {
+   "nr": "W3",
+   "text": "weiss C-std im Band 4.780..13.550 (Originale)",
+   "ist": "5.560",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1",
+    "3.143",
+    false
+   ]
+  },
+  {
+   "nr": "W4",
+   "text": "weiss hell %% <= 17,8 und F_hell <= 71,7 (Decke der Originale)",
+   "ist": "4.0 / 31.9",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": null
+  },
+  {
+   "nr": "W5",
+   "text": "weiss C* Mittel (Info; Band Originale 8,63..23,41)",
+   "ist": "11.28",
+   "ok": true,
+   "art": "Info",
+   "gegenprobe": null
+  },
+  {
+   "nr": "R1",
+   "text": "Ruhe: Sektoren gepoolt <= 5",
+   "ist": "1",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": null
+  },
+  {
+   "nr": "R2",
+   "text": "Ruhe: farbfremde Flecken <= 7,4 je 10k und <= 0,64 %",
+   "ist": "0.0 / 0.00 %",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": null
+  },
+  {
+   "nr": "R3",
+   "text": "Ruhe: Farbtonspanne 90 % <= 76,8 Grad",
+   "ist": "1.1",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": null
+  },
+  {
+   "nr": "R4",
+   "text": "Ruhe: Block-Farbton <= 16,3 Grad",
+   "ist": "1.1",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": null
+  },
+  {
+   "nr": "Z1",
+   "text": "Spiel 5080 P L* im Band 5.570..18.800 der Original-Gegner (zweiseitig)",
+   "ist": "7.8",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5c (eigener Lauf)",
+    "2.77",
+    false
+   ]
+  },
+  {
+   "nr": "Z2",
+   "text": "Spiel 5080 P L-cv im Band 0.481..1.431 der Original-Gegner (zweiseitig)",
+   "ist": "0.708",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1 (eigener Lauf)",
+    "0.409",
+    false
+   ]
+  },
+  {
+   "nr": "Z3",
+   "text": "Spiel 5080 P lokal_rel im Band 0.243..0.656 der Original-Gegner (zweiseitig)",
+   "ist": "0.361",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1 (eigener Lauf)",
+    "0.168",
+    false
+   ]
+  },
+  {
+   "nr": "Z4",
+   "text": "Spiel 5080 P C* im Band 4.410..7.590 der Original-Gegner (zweiseitig)",
+   "ist": "4.91",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1 (eigener Lauf)",
+    "4.33",
+    false
+   ]
+  },
+  {
+   "nr": "Z5",
+   "text": "Spiel 5080 P C-std im Band 2.390..7.450 der Original-Gegner (zweiseitig)",
+   "ist": "3.18",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1 (eigener Lauf)",
+    "1.76",
+    false
+   ]
+  },
+  {
+   "nr": "Z6",
+   "text": "Spiel 5080 Q L-cv im Band 0.369..1.020 der Original-Gegner (zweiseitig)",
+   "ist": "0.52",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1 (eigener Lauf)",
+    "0.238",
+    false
+   ]
+  },
+  {
+   "nr": "Z7",
+   "text": "Spiel 5080 Q lokal_rel im Band 0.210..0.528 der Original-Gegner (zweiseitig)",
+   "ist": "0.289",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1 (eigener Lauf)",
+    "0.116",
+    false
+   ]
+  },
+  {
+   "nr": "Z8",
+   "text": "Spiel 5080 Q C* im Band 12.090..15.050 der Original-Gegner (zweiseitig)",
+   "ist": "13.93",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1 (eigener Lauf)",
+    "11.51",
+    false
+   ]
+  },
+  {
+   "nr": "Z9",
+   "text": "Spiel 5080 Q C-std im Band 6.530..8.880 der Original-Gegner (zweiseitig)",
+   "ist": "6.54",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5e_f1 (eigener Lauf)",
+    "3.98",
+    false
+   ]
+  },
+  {
+   "nr": "T1",
+   "text": "Zeilen <= 16, Port-Texturhoehe <= 4096",
+   "ist": "15 / 3840",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "17 Zeilen (gebaut)",
+    "17 / 4352",
+    false
+   ]
+  },
+  {
+   "nr": "T5",
+   "text": "jede Flaeche des Assets liest eine gueltige Zeile",
+   "ist": "0 ungueltig von 13173",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": null
+  },
+  {
+   "nr": "G5",
+   "text": "Spiel-Asset shared_assets/RE2/BAHNSTEIG_FORM.* bleibt K5e_f1 (EMD f277916d, TIM 31a35e66)",
+   "ist": "EMD f277916d, TIM 31a35e66",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5g3-Asset",
+    "EMD 37407afd",
+    false
+   ]
+  }
+ ],
+ "rot": [],
+ "gegenprobe_gruen": [],
+ "summe": "RIEGEL K5g3 TEXTUR: 36 von 36 gruen, 30 von 30 Gegenproben rot wie verlangt; ROT: -; Gegenproben gruen: -"
+}
