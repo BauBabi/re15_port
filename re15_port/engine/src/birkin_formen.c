@@ -308,8 +308,14 @@ static const int16_t k_birkin_bild[BF_BILD_N][2] = {
  * zur Kamera gedreht (die haltende rechte Klaue liegt dann links im Bild, Gier 1300 = Bezug - 1270,
  * Video Rumpf x 110..145 bis h70), dreht h66..72 nach links und schmettert in Richtung des Ansprungs (Klaue B50 bei Gier
  * 2570 Bild (148,188), Video h72 Rumpf ganz links (60..150), Aufschlag (115..150, 203..215)). */
+/* Nachbesserung 2026-11-14 (Pruefer: "h70-Ruck nach oben rechts"): die Drehung h66..h72 trug den an der Sichelhand haengenden
+ * Spider-Man h67..h69 um ~100 Bildpunkte nach rechts oben ueber Birkins Kopf und h69..h72 wieder ~70 nach links (Messzeile: Aktor-x
+ * -9303 -> -7106 -> -8110 bei h66/h69/h70; Griffknochen dabei genau auf der Hand, kein Uebergabe-/Ueberblendungsfehler).
+ * Video 4 (Bogen R2_wurf_a/b, Sichtpruefung je Bild h62..h76): Birkins Umriss bleibt h62..h73 unveraendert (keine Drehung), erst
+ * h73 -> h74 lehnt der Oberkoerper 15..20 Bildpunkte nach links; der Spider-Man haengt h66..h70 still oben links, steigt h70..h72
+ * ~25 nach links und ~35 nach oben und faellt dann. Daher die Drehung erst nach dem Loslassen (BF_H_LOS = 71): h72 -> h76. */
 static const int16_t k_birkin_gier[][2] = {
-    {   0, -1270 }, {  66, -1270 }, {  72,     0 }, { BF_H_AUFSCHLAG, 0 } };   /* Schritt 4: wieder NB2-Takte (Takt = Bild) */
+    {   0, -1270 }, {  66, -1270 }, { BF_H_WURF, -1270 }, { BF_H_AUFSCHLAG, 0 } };
 #define BF_GANG_SCHRITT  22          /* Video h90..135: ~1000 Einheiten in 45 Bildern */
 /* Runde 41 SF Neuaufbau ab NB2 (Nutzerwunsch "Schwanz: laenger, Laenge, Glieder und Baender wie im Video, Bewegung 1:1 nach
  * dem Video"): Schwanzbahn und Verdecken aus NB3-NB5 (r41/sichel 3f91e5c57) uebernommen. Die Tabelle ist je VIDEOBILD h; der
