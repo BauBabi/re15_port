@@ -1,5 +1,5 @@
 {
- "quelle": "schwanz_r8.py suche am Eingang 07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95 (Stand Runde 7e, = Ausgang Stufe f); Protokoll SF_belege/v8/runde8/suche.txt",
+ "quelle": "schwanz_r8.py suche am Eingang 07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95 (Stand Runde 7e, = Ausgang Stufe f); Runde 8b: Fleisch schraeg (Original-Zeile 482), Band rosa (Original-Zeile 480, Seite 0); Protokoll SF_belege/v8/runde8/suche_r8b.txt",
  "felder": {
   "grau": {
    "16": [
@@ -45,17 +45,18 @@
     255
    ]
   },
-  "gedeckt": [
-   21,
-   37,
-   118,
-   124
-  ],
+  "fleisch": {
+   "v0": 114,
+   "v1": 123,
+   "u_v0": 1,
+   "u_v1": 19,
+   "breite": 21
+  },
   "band": [
-   36,
-   44,
-   28,
-   41
+   58,
+   73,
+   19,
+   48
   ]
  }
 }

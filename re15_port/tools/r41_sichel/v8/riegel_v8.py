@@ -95,10 +95,9 @@ Runde 8 (Schwanz, Stufe q schwanz_r8.py; Nutzer 2026-11-14 "weder mit dem rot de
 S4 Runde 8      Wurzel >= 55, monoton, Ende <= 10, s 170-200 >= 9 wie bisher; "s 90-130 >= 36" und "(b) s 140-160 >= 27" (Messblatt V8 an der
                 Vorlage n1439, Linie T) ersetzt durch R8b (dasselbe Bild n1439 = h90 mit dem Nutzer-Umriss Areas.png vom 14.11.: PV s .3 >= 36,
                 s .5 15-20 % duenner als 07b6703f, s .5/.7/.9 gegen den Umriss +- 4) - Auftrag Runde 8 "Schwanzmitte (s .5) 15-20 % duenner".
-S6 Runde 8      (a) Keyframes: Spitze (Gelenk 7) und das Knollen-Ende (groesste Ecke von Mesh 22 bis y 600 = Ort des alten Dorns y 589) unter der
-                tiefsten Koerperecke in 0 Keyframes; die Nadel (bis y 1139) offline nur Angabe - im Spiel hebt die Bodenregel des Codes die Kette
-                mit der Nadel als Dornspitze (schwanz_r41.c sw_mesh_mass / glaetten); (c) Szene (--szene): alle Gelenke UND die Nadelspitze
-                (Gelenk 6 + (Gelenk 7 - Gelenk 6) x 1139 / 541) y <= 0, Gelenkwinkel <= 25,5.
+S6 Runde 8b     STRENG (Pruefer pr8 / Koordinator, die Runde-8-Fassung "Nadel nur Angabe" ist zurueckgenommen): (a) Spitze und JEDE Ecke von Mesh 22
+                (Knolle, Nadel) in 0 von allen Keyframes unter der tiefsten Koerperecke (schwanz_r8.heben hebt die Keyframes); (c) Szene (--szene):
+                alle Gelenke UND die Nadelspitze (Gelenk 6 + (Gelenk 7 - Gelenk 6) x dorn_y / 541) y <= 0, Gelenkwinkel <= 25,5.
 S15 Runde 8     ersetzt durch R8e (Fleisch nur auf der Bauchseite, Grenze 90 -> 60 Grad, Herkunft; Nutzer "weder mit dem rot der Schwanzfarbe ...");
                 die Regeln der Runden 5/6 (Unterseite bis theta 110/120, Ring-Deckel, Reifen) gelten fuer diesen Schwanz nicht mehr.
 Szene (Optionen --mk-a/--mk-b/--gr/--gr-v7, echte Framedumps mit Marker-Assets, szene_marker.py): S10s Wurzel F328-F346 = 0; S9s Schlitz
@@ -300,10 +299,7 @@ def s6(blob, szene=None):
     P22 = np.array([v[:3] for v in m22.tv], float)
     dorn = P22[np.argmax(P22[:, 1])]
     r8 = bool(dorn[1] > 1000)                                     # Runde 8: Nadel (riegel_schwanz_r8.ist_r8)
-    nadel = dorn.copy()
-    if r8:
-        K = P22[P22[:, 1] <= 600.0]
-        dorn = K[np.argmax(K[:, 1])]                              # Knollen-Ende (Ort des alten Dorns y 589)
+    nadel = dorn.copy()                                           # Runde 8b: S6 wieder STRENG - Spitze und JEDE Ecke von Mesh 22 (Knolle, Nadel)
     L = float(np.linalg.norm(np.array(s.rel[22], float)))
     unter, unter_nadel = [], []
     for k in range(s.kf_count):
@@ -317,10 +313,12 @@ def s6(blob, szene=None):
         R22 = R[22].astype(float) / 4096.0
         sp = T[22].astype(float) + R22[:, 1] * L
         dn = T[22].astype(float) + R22 @ dorn
+        if r8:
+            dn = np.array([0.0, float((T[22].astype(float)[None, :] + P22 @ R22.T)[:, 1].max()), 0.0])
         if max(sp[1], dn[1]) > y:
             unter.append(k)
-        if r8 and float((T[22].astype(float) + R22 @ nadel)[1]) > y:
-            unter_nadel.append(k)
+            if r8:
+                unter_nadel.append(k)
     sz = None
     if szene and os.path.exists(szene):
         tief, n = -1e9, 0
@@ -347,7 +345,7 @@ def s6(blob, szene=None):
             sz['nadel_tiefstes_y'] = round(ntief, 1)
     ok = not unter and (sz is None or (sz['tiefstes_y'] <= 0 and sz['gelenk_max_grad'] <= 25.5 and sz.get('nadel_tiefstes_y', -1) <= 0))
     return dict(keyframes=s.kf_count, unter=len(unter), beispiele=unter[:10], szene=sz, ok=ok, r8=r8,
-                nadel_unter_info=len(unter_nadel) if r8 else None, nadel_y=int(nadel[1]), knolle_y=int(dorn[1]))
+                nadel_unter_info=len(unter_nadel) if r8 else None, nadel_y=int(nadel[1]))
 
 
 # ------------------------------------------------------------------ S7
@@ -846,9 +844,9 @@ def zeilen(r):
     s = r['S6']; z.append('S6 Boden: %d von %d Keyframes unter der tiefsten Koerperecke %s; Szene %s -> %s'
                           % (s['unter'], s['keyframes'], s['beispiele'], s['szene'], 'GRUEN' if s['ok'] else 'ROT'))
     if s.get('r8'):
-        z.append('   S6 Runde 8: Keyframes mit Spitze + Knollen-Ende (Mesh 22 y %d) gezaehlt; Nadel (y %d) offline unter der Sohle in %d von %d Keyframes '
-                 '(Angabe - im Spiel hebt die Bodenregel des Codes die Kette, Dorn = Nadel); Szene: Nadelspitze tiefstes y %s (Soll <= 0)'
-                 % (s['knolle_y'], s['nadel_y'], s['nadel_unter_info'], s['keyframes'], (s['szene'] or {}).get('nadel_tiefstes_y', 'ohne --szene')))
+        z.append('   S6 Runde 8b (streng): Spitze und jede Ecke von Mesh 22 (Knolle, Nadel bis y %d) in %d von %d Keyframes unter der Sohle (Soll 0); '
+                 'Szene: Nadelspitze tiefstes y %s (Soll <= 0)'
+                 % (s['nadel_y'], s['nadel_unter_info'], s['keyframes'], (s['szene'] or {}).get('nadel_tiefstes_y', 'ohne --szene')))
     if 'S7' in r:
         s = r['S7']
         d1, d2 = s['d']['v8_13'], s['d']['v8_13_14']

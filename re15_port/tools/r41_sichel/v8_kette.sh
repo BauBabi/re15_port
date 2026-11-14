@@ -3,7 +3,7 @@
 # committeten Eingaben neu und prueft die sha256 gegen release/em30_hangar.sha256 (Exit 1 bei Abweichung).
 #
 #   bash re15_port/tools/r41_sichel/v8_kette.sh [ZIELORDNER]      (Standard: Scratchpad .../sfv8/kette)
-#   Umgebung: KETTE_COMMIT (Stand der Werkzeuge, Standard HEAD), KETTE_REF2_COMMIT (wie v7_kette.sh), SCHWANZFARBE (a / b / c, Standard b),
+#   Umgebung: KETTE_COMMIT (Stand der Werkzeuge, Standard HEAD), KETTE_REF2_COMMIT (wie v7_kette.sh), SCHWANZFARBE (a / b, Standard b),
 #             V7_SOLL (sha256 der Stufe 6, Standard 319bbd17 = V7, Spiel-Asset v0.8.30)
 #
 # Nutzer 2026-11-08 abends (woertlich): "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber mit Schwanz und sowas bin ich immer
@@ -39,14 +39,15 @@
 #        von Mesh 11 und 12; Stufenfolge s r w a u n h b p f)
 #       (Runde 8 Schwanz: Stufe q = v8/schwanz_r8.py + v8/schwanz_r8.json, Nutzer 2026-11-14 "weder mit dem rot der Schwanzfarbe noch mit dem
 #        etwas zu steifen grossen Schwanz zufrieden" + Version_80%/Areas*.png - Meshes 16-22 flach, Glieder mit Fugen, Knolle + Nadel, Fleisch nur
-#        Bauchseite; letzte Stufe, aendert nur Meshes 16-22; Farbe SCHWANZFARBE (Standard b); Stufenfolge s r w a u n h b p f q)
+#        Bauchseite; letzte Stufe, aendert nur Meshes 16-22 und - Runde 8b - die Winkel der Knochen 17-22 angehobener Keyframes (S6 streng);
+#        Farbe SCHWANZFARBE (Standard b); Stufenfolge s r w a u n h b p f q)
 #                                    -> EM30_V8.EMD = Pin (V8)
 set -u
 HIER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BAUM="$(git -C "$HIER" rev-parse --show-toplevel)" || exit 2
 ZIEL="${1:-C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/kette}"
 V7_SOLL="${V7_SOLL:-319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6}"
-SCHWANZFARBE="${SCHWANZFARBE:-b}"     # Runde 8: Farbprobe der Stufe q (a / b / c); der Pin gilt fuer b
+SCHWANZFARBE="${SCHWANZFARBE:-b}"     # Runde 8: Farbprobe der Stufe q (a / b; Runde 8b nur noch zwei); der Pin gilt fuer b
 PIN="$BAUM/release/em30_hangar.sha256"
 PIN_SOLL="$(awk 'NR==1{print $1}' "$PIN")"
 [ -n "$PIN_SOLL" ] || { echo "FEHLER: Pin $PIN leer"; exit 2; }

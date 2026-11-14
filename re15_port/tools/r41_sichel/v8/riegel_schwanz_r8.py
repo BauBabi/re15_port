@@ -9,11 +9,12 @@ Szene, Vorhersage der Rollreihe, Nutzer-Umriss) in riegel_schwanz_r8.json. Kein 
 R8a Breite vorn   Rollreihe der Analyse (roll_render/teil_b) am GEBAUTEN Asset: echte Meshes 16-22 entlang der Szenenketten h22 / h24 / h64 (Bauchachse
                   zur Kamera, phi 0), Breite quer zur Kette an s .3 / .5 / .7 je 15-20 px (Auftrag "vorn 15-20 px breit", +-0,5 px Messschritt) und
                   |neu - Vorhersage der Analyse (flach, Querdicke 280)| <= 4 px; s .1 / .9 (Wurzel, Knolle) nur Angabe.
-R8b Seite (PV)    Vorlage-Pose PV (Clip 17 B47 Gier 587, Keyframe-Rolle wie im Spiel), f_rast nur Knochen 16-22: s .3 >= 36 px; s .5 15-20 % duenner als
-                  der Bezug 07b6703f (+-0,5 px Messschritt); s .5 / .7 / .9 gegen den Nutzer-Umriss h90 (Wurzel = Schnittkante: 23,5 / 18,5 / 15,
-                  Messziel Bauplan 2) +- 4 px; mit der oberen Ecke als Wurzel (27 / 19,5 / 14,5) nur Angabe.
-R8c Laenge/Spitze PV: Bildlaenge Kette + Nadel >= Bezug + 15 px (Ziel der Analyse ~190, mit der Nadel 450-550 E. erreichbar ~176-179); Nadelspitze
-                  <= 4 px vom Zielkasten x 286-289 / y 349-356; Nadel auf der Gliedachse (groesste Ecke von Mesh 22: x = z = 0, y = 541 + 48 + 550).
+R8b Seite (PV)    Runde 8b (Pruefer pr8: "in festen Abstaenden ab der Wurzel, nicht in Anteilen der Port-Laenge"): Vorlage-Pose PV, sichtbare
+                  Schwanz-Bildpunkte der ganzen Figur (f_rast), Breite = 2 x Abstandstransformation auf der Mittellinie in 30-170 px ab dem
+                  koerpernahen Ende (Verfahren a_mass.profil_abs des Pruefers); gegen den Nutzer-Umriss h90 mit demselben Verfahren je <= 6 px,
+                  im Mittel <= 5 px; bei 90 px <= 0,9 x vorher.
+R8c Laenge/Spitze Runde 8b ("nur mit der sichtbaren Laenge"): Mittellinienlaenge der sichtbaren Bildpunkte >= 180 px, tiefster sichtbarer
+                  Schwanz-Bildpunkt y >= 346 (Video 351), Nadel auf der Gliedachse bis SPITZE_Y.
 R8d Fugen         (1) Geometrie: an allen 6 Gelenken Hochachse von Endring und Manschette / Huellradius am Gelenk (kette_v8.json x MITTE) <= 0,88;
                   (2) sichtbar von vorn: in der Rollreihe h22 / h24 / h64 ist die Breite an den sichtbaren Gelenken im Mittel >= 1,0 px schmaler als
                   in den Gliedmitten daneben; (3) Farbprobe b / c: an allen 6 Gelenken Flaechen auf Zeile 494 (helles Band) und in PV sichtbare
@@ -23,8 +24,10 @@ R8e Fleisch nur   (1) jede Flaeche auf Zeile 495 / 494 (ausser den 14 Wurzelflae
                   keine Flaeche auf 487 ganz im Bauchsektor (ausser der Nadel ab y 560, die ganz grau ist); (2) PV: Anteil Fleisch-Zeile an den Schwanz-Bildpunkten mit Normalen-|theta| >= 100 <= 1 %, mit |theta| <= 40 >= 50 %;
                   (3) Herkunft: Texel unter 495 / 494 = Texel, die Original-Flaechen der Original-Zeile 482 / 481 benutzen; Texel unter 487 = Texel
                   der Oberseite (487) der Meshes 16-22 im Eingang 07b6703f; Asset-Texel dort bytegleich Original bzw. Eingang.
-R8f Bytegleich    Sektionen 0-6 (Skelett, Clips, Keyframes), TIM (Texturbild, 16 CLUT-Zeilen) und Meshes 0-15 (Mesh 9 = V7-Kopf) = Eingang 07b6703f;
-                  Gliedlaengen 17-22 = (0, 541, 0) (re15_schwanz_r41_v8_kette).
+R8f Bytegleich    Sektionen 0-6 (Skelett, Clips, Keyframes), TIM (Texturbild, 16 CLUT-Zeilen) und Meshes 0-15 (Mesh 9 = V7-Kopf) = Eingang 07b6703f,
+                  ausser den 12-Bit-Winkeln der Knochen 17-22 in den von schwanz_r8.heben angehobenen Keyframes; Gliedlaengen 17-22 = (0, 541, 0).
+R8g Szene         (--szene) Schwanzkette der Szene gegen 7e: jede Verschiebung liegt in einem Takt, in dem die 7e-Kette mit den Mesh-Massen dieses
+                  Assets die Bodenregel des Codes verletzt, oder in dessen Nachlauf; state.log bytegleich; neue Kette haelt die Bodenregel ein.
 """
 import os
 import sys
@@ -44,6 +47,15 @@ EINGANG_SHA = '07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95'
 DATEN = os.path.join(HIER, 'riegel_schwanz_r8.json')
 S = (0.1, 0.3, 0.5, 0.7, 0.9)
 ZIEL_SPITZE = ((286.0, 289.0), (349.0, 356.0))
+ABSTAENDE = (10, 30, 50, 70, 90, 110, 130, 150, 170, 190, 210)
+PV_WURZEL = (376, 220)                # Wurzel im Bild (PV, Gelenk 0 projiziert 375,7 / 219,5) - waehlt das koerpernahe Ende der Mittellinie
+R8B_STELLEN = (30, 50, 70, 90, 110, 130, 150, 170)
+R8G_NACHLAUF = 40                     # Takte Nachlauf nach dem letzten Bodenregel-Takt (Feder/Erhalt 0,5, Mitnahme 0,8: gemessen klingt die Abweichung
+                                      # in der 7e/8-Szene binnen 34 Takten auf <= 1 E. ab, szene_kette_7e_r8.txt h67 -> h101)
+R8B_MAX, R8B_MITTEL = 6.0, 5.0        # Abweichung Port - Video je Stelle hoechstens 6 px, im Mittel 5 px (Video weich, +2-3 px Unschaerfe, ANALYSE 7;
+                                      # das Verfahren misst Port und Video gleich); dazu bei 90 px <= 0,9 x vorher (Mitte duenner)
+R8C_LAENGE = 180.0                    # sichtbare Laenge in PV (Video 216,9, vorher 164,7; der Rest liegt laut Analyse an der Wurzel und der Bahn)
+R8C_TIEF = 346                        # tiefster sichtbarer Schwanz-Bildpunkt in PV (Video 351, vorher 325; Pruefer "bis y ~350")
 WURZEL_495 = 14                       # Wurzelflaechen von Mesh 16 auf 495 (Kegel/Rohr im Rumpf, Stufe w/u, Indizes 0-21 / 34, UV wie 07b6703f)
 TOL_GRAD = 2.5                        # R8e (1): Toleranz der Sektorpruefung. Der Parameterwinkel einer Ring-Ecke wird aus Mitte und Halbachsen der
                                       # Ring-Ausdehnung geschaetzt (Gehrungsebene, Manschette zum Vorglied verschoben); an den Grenz-Ecken des Baus
@@ -197,27 +209,89 @@ def kasten_abstand(p, k):
     return float(np.hypot(dx, dy))
 
 
+def mittellinie(m):
+    """Laengster Pfad auf dem Skelett der groessten Zusammenhangsflaeche der Maske m (Verfahren des Pruefers pr8 a_mass.mittellinie)."""
+    import heapq
+    from scipy import ndimage as ndi
+    from skimage.morphology import skeletonize
+    m = ndi.binary_opening(m, iterations=1) if m.sum() > 200 else m
+    lab, n = ndi.label(m)
+    if n == 0:
+        return None
+    m = lab == (np.argmax(np.bincount(lab.ravel())[1:]) + 1)
+    ys, xs = np.nonzero(skeletonize(m))
+    idx = {(y, x): i for i, (y, x) in enumerate(zip(ys, xs))}
+    nb = [[] for _ in ys]
+    for i, (y, x) in enumerate(zip(ys, xs)):
+        for dy in (-1, 0, 1):
+            for dx in (-1, 0, 1):
+                if (dy or dx) and (y + dy, x + dx) in idx:
+                    nb[i].append((idx[(y + dy, x + dx)], (dy * dy + dx * dx) ** 0.5))
+
+    def weit(s0):
+        dd_, pr = {s0: 0.0}, {s0: None}
+        q = [(0.0, s0)]
+        while q:
+            dd, u = heapq.heappop(q)
+            if dd > dd_[u]:
+                continue
+            for v, w in nb[u]:
+                if dd + w < dd_.get(v, 1e18):
+                    dd_[v] = dd + w; pr[v] = u; heapq.heappush(q, (dd + w, v))
+        e = max(dd_, key=dd_.get)
+        return e, pr
+    a, _ = weit(0)
+    b, pr = weit(a)
+    pfad, u = [], b
+    while u is not None:
+        pfad.append((ys[u], xs[u])); u = pr[u]
+    return dict(pfad=np.array(pfad), dt=ndi.distance_transform_edt(m), maske=m)
+
+
+def profil_abstand(m, wurzel_xy, abst=ABSTAENDE):
+    """Breite (2 x Abstandstransformation) in festen Abstaenden (px entlang der Mittellinie) ab dem koerpernahen Ende; dazu die Laenge."""
+    r = mittellinie(m)
+    pf = r['pfad']
+    if np.hypot(pf[-1][1] - wurzel_xy[0], pf[-1][0] - wurzel_xy[1]) < np.hypot(pf[0][1] - wurzel_xy[0], pf[0][0] - wurzel_xy[1]):
+        pf = pf[::-1]
+    seg = np.r_[0, np.cumsum(np.hypot(*np.diff(pf, axis=0).T))]
+    out = {}
+    for d_ in abst:
+        out[d_] = None if d_ > seg[-1] else round(2 * float(r['dt'][pf[int(np.argmin(abs(seg - d_)))][0], pf[int(np.argmin(abs(seg - d_)))][1]]), 1)
+    return dict(L=round(float(seg[-1]), 1), breite=out)
+
+
+def pv_sichtbar(blob):
+    """PV (Vorlage-Pose), ganze Figur mit f_rast (Maler-Reihenfolge, Culling): sichtbare Schwanz-Bildpunkte (Knochen 16-22)."""
+    import f_rast as FR
+    mo = V.modell(blob)
+    A = FR.mit_bg(mo, V.PV, licht=False)
+    return (A['bone'][:480] >= 16) & (A['bone'][:480] <= 22), mo, A
+
+
 def r8b_r8c(blob, bezug, D):
-    n, b = pv_mass(blob), pv_mass(bezug)
-    br, bb = n['breite'], b['breite']
-    vid = D['ansichten']['90']['video_schnittkante']                 # Messziel Bauplan 2 (Schnittkante als Wurzel)
-    vid2 = D['ansichten']['90']['video_obere_ecke']
-    duenner = 1.0 - br[2] / bb[2]
-    abw = [round(x - y, 1) for x, y in zip(br[2:], vid[2:])]
-    abw2 = [round(x - y, 1) for x, y in zip(br[2:], vid2[2:])]
-    okb = br[1] >= 36.0 and (bb[2] * 0.80 - 0.5) <= br[2] <= (bb[2] * 0.85 + 0.5) and all(abs(x) <= 4.0 for x in abw)
-    mo = n['mo']
+    """Runde 8b (Pruefer pr8 (C) "R8b in festen Abstaenden ab der Wurzel", "R8c nur mit der sichtbaren Laenge"): PV, sichtbare Schwanz-Bildpunkte der
+    ganzen Figur, Mittellinie und Breiten wie das Pruefer-Werkzeug a_mass.profil_abs; Video = Nutzer-Umriss h90 mit demselben Verfahren
+    (riegel_schwanz_r8.json, gemessen n7_pv_abstand.py)."""
+    vid = {int(k): v for k, v in D['ansichten']['90']['abstand']['breite'].items()}
+    vL, vy = D['ansichten']['90']['abstand']['L'], D['ansichten']['90']['abstand']['tief_y']
+    m, mo, A = pv_sichtbar(blob)
+    mb, _mob, _Ab = pv_sichtbar(bezug)
+    n, b = profil_abstand(m, PV_WURZEL), profil_abstand(mb, PV_WURZEL)
+    ys = np.nonzero(m)[0]; ysb = np.nonzero(mb)[0]
+    abw = {d_: (None if (n['breite'][d_] is None or vid.get(d_) is None) else round(n['breite'][d_] - vid[d_], 1)) for d_ in R8B_STELLEN}
+    werte = [abs(x) for x in abw.values() if x is not None]
+    okb = (all(x is not None for x in abw.values()) and max(werte) <= R8B_MAX and float(np.mean(werte)) <= R8B_MITTEL
+           and n['breite'][90] <= 0.9 * b['breite'][90])
     m22 = mo.meshes[22]
     P22 = np.array([v[:3] for v in m22.tv], float)
     i = int(np.argmax(P22[:, 1]))
     achse = bool(P22[i][0] == 0 and P22[i][2] == 0)
-    soll_y = int(541 + Q.DORN_ALT + Q.NADEL)
-    ab = kasten_abstand(n['spitze'], ZIEL_SPITZE)
-    okc = n['laenge'] >= b['laenge'] + 15.0 and ab <= 4.0 and achse and int(P22[i][1]) == soll_y
-    return (dict(breite=br, bezug=bb, duenner_s5=round(100 * duenner, 1), video_h90=vid, abweichung_s5_s9=abw, video_h90_obere_ecke=vid2,
-                 abweichung_obere_ecke=abw2, ok=bool(okb)),
-            dict(laenge=n['laenge'], bezug=b['laenge'], spitze=n['spitze'], bezug_spitze=b['spitze'], abstand_ziel=round(ab, 1),
-                 nadel_y=int(P22[i][1]), soll_y=soll_y, auf_achse=achse, ok=bool(okc)), n)
+    okc = n['L'] >= R8C_LAENGE and int(ys.max()) >= R8C_TIEF and achse and int(P22[i][1]) == int(Q.SPITZE_Y)
+    return (dict(breite=n['breite'], bezug=b['breite'], video=vid, abweichung=abw, mittel=round(float(np.mean(werte)), 1) if werte else None,
+                 ok=bool(okb)),
+            dict(laenge=n['L'], bezug=b['L'], video_laenge=vL, tief_y=int(ys.max()), bezug_tief_y=int(ysb.max()), video_tief_y=vy,
+                 nadel_y=int(P22[i][1]), soll_y=int(Q.SPITZE_Y), auf_achse=achse, ok=bool(okc)), dict(mo=mo, A=A))
 
 
 # ------------------------------------------------------------------ Fugen (Geometrie, Baender), Fleisch, Herkunft
@@ -229,14 +303,14 @@ def ringe_a(m, phi, k0):
 
 
 def lage(b):
-    """Ring-Startindizes je Mesh nach dem Bau (schwanz_r8.mesh_bauen)."""
+    """Ring-Startindizes je Mesh nach dem Bau (schwanz_r8.mesh_bauen; Runde 8b mit Zwischenringen Z1/Z2, gemessen info['pos'])."""
     if b == 16:
         return dict(D=22, E=35)
     if b == 18:
-        return dict(C=0, M=11, D=22, S=35, E=46)
+        return dict(C=0, M=11, D=22, S=35, Z1=46, Z2=57, E=68)
     if b == 22:
-        return dict(C=0, S=24)
-    return dict(C=0, D=11, S=24, E=35)
+        return dict(C=0, E=11, S=24)
+    return dict(C=0, D=11, S=24, Z1=35, Z2=46, E=57)
 
 
 def r8d(blob, farbe, pv):
@@ -309,7 +383,7 @@ def r8e(blob, bezug, pv):
     an_innen = float(fl[innen].mean() * 100) if innen.any() else 0.0
     ok2 = an_aussen <= 1.0 and an_innen >= 50.0
     # (3) Herkunft
-    nutz = {Q.ZEILE_FLEISCH: A4.nutzung(None, 482), Q.ZEILE_BAND: A4.nutzung(None, 481)}
+    nutz = {Q.ZEILE_FLEISCH: A4.nutzung(None, 482), Q.ZEILE_BAND: A4.nutzung(None, 480 + (Q.ZEILE_BAND - 493))}   # 493/494/495 = Original 480/481/482
     grau = np.zeros((256, 384), bool)
     for b in range(16, 23):
         for uv in ms_e[b]['tuv'] + ms_e[b]['quv']:
@@ -329,9 +403,10 @@ def r8e(blob, bezug, pv):
             if n:
                 fremd[z] = fremd.get(z, 0) + n
     t, te = KB.tim_teile(tim), KB.tim_teile(tim_e)
-    ok3 = not fremd and bool(np.array_equal(t['pix'], te['pix']))
+    pix_gleich = bool(np.array_equal(t['pix'], te['pix']))
+    ok3 = not fremd and pix_gleich
     return dict(falsch=falsch[:30], n_falsch=len(falsch), flaechen_495=n495, ok1=bool(ok1), pv_fleisch_aussen=round(an_aussen, 2),
-                pv_fleisch_innen=round(an_innen, 1), ok2=bool(ok2), zeilen=zeilen, fremde_texel=fremd, ok3=bool(ok3),
+                pv_fleisch_innen=round(an_innen, 1), ok2=bool(ok2), zeilen=zeilen, fremde_texel=fremd, pix_gleich=pix_gleich, ok3=bool(ok3),
                 ok=bool(ok1 and ok2 and ok3))
 
 
@@ -371,14 +446,87 @@ def _ganz_bauch(ring, th, gr):
 
 
 def r8f(blob, bezug):
+    """Bytegleich zum Eingang ausser Meshes 16-22 und (Runde 8b) den 12-Bit-Winkeln der Knochen 17-22 in den angehobenen Keyframes: die EMR des
+    Pruefllings, in der genau diese Bits auf die Werte des Eingangs zurueckgesetzt werden, muss bytegleich zur EMR des Eingangs sein."""
+    import birkin_formen as BF
+    import emd_ansichtsblatt as EA
     d, _o, ms, tim = KB.teile(blob)
     de, _oe, mse, time = KB.teile(bezug)
     sek = [blob[d[i]:d[i + 1]] == bezug[de[i]:de[i + 1]] for i in range(7)]
     meshes = [ms[i] == mse[i] for i in range(16)]
     mo = V.modell(blob)
+    sk = mo.skel
+    emr, emr_e = bytearray(blob[d[2]:d[3]]), bytes(bezug[de[2]:de[3]])
+    geaendert = 0
+    if len(emr) == len(emr_e):
+        for k in range(sk.kf_count):
+            o = EA.u16(emr, 2) + k * sk.kf_size + 12
+            anders = False
+            for b in range(17, 23):
+                for j in range(3):
+                    bit = b * 36 + j * 12
+                    alt = sum(((emr_e[o + ((bit + i) >> 3)] >> ((bit + i) & 7)) & 1) << i for i in range(12))
+                    neu = sum(((emr[o + ((bit + i) >> 3)] >> ((bit + i) & 7)) & 1) << i for i in range(12))
+                    if alt != neu:
+                        anders = True
+                        BF._bits_schreiben(emr, o, bit, alt)
+            geaendert += anders
+    emr_rest = bytes(emr) == emr_e
+    sek_ok = all(sek[i] for i in range(7) if i != 2) and emr_rest
     gl = all(tuple(mo.skel.rel[b]) == (0, 541, 0) for b in range(17, 23))
-    return dict(sektionen=sek, tim=tim == time, meshes_0_15=all(meshes), mesh9=meshes[9], glieder_541=gl,
-                ok=bool(all(sek) and tim == time and all(meshes) and gl))
+    return dict(sektionen=sek, emr_nur_schwanzwinkel=emr_rest, keyframes_angehoben=geaendert, tim=tim == time, meshes_0_15=all(meshes),
+                mesh9=meshes[9], glieder_541=gl, ok=bool(sek_ok and tim == time and all(meshes) and gl))
+
+
+def r8g(debug_7e, debug_neu, state_7e, state_neu, blob, nachlauf=None):
+    """Runde 8b (Koordinator "Szenenkette gegen 7e ... Verschiebung muss begruendet oder beseitigt sein"): Schwanzkette der Szene (debug.log
+    "[hangar-takt] h.. Schwanz B") gegen den Lauf 7e. Begruendet = (1) state.log bytegleich; (2) jede Abweichung > 1 E. liegt in einem Takt, in dem die
+    7e-Kette mit den Mesh-Massen DIESES Assets die Bodenregel des Codes verletzt (schwanz_r41.c glaetten: Gelenk j + radius[j] oder Dornpunkt
+    Gelenk 6 + Achse x dorn_y unter y 0; Masse wie sw_mesh_mass), oder im Nachlauf danach (<= NACHLAUF Takte, Abweichung faellt); (3) in den Takten,
+    in denen die 7e-Kette verletzt, haelt die neue Kette die Bodenregel ein (Gelenke + Radius, Dornpunkt y <= 0,5)."""
+    import re
+    nachlauf = R8G_NACHLAUF if nachlauf is None else nachlauf
+
+    def lese(p):
+        G = {}
+        for l in open(p, encoding='latin-1'):
+            m_ = re.match(r'\[hangar-takt\] h(-?\d+) Schwanz B y (-?\d+) (.*)', l)
+            if m_:
+                G[int(m_.group(1))] = np.array([[int(a), int(b_), int(c)] for a, b_, c in re.findall(r'\d\((-?\d+),(-?\d+),(-?\d+)\)', m_.group(3))], float)
+        return G
+    A, B = lese(debug_7e), lese(debug_neu)
+    mo = V.modell(blob)
+    rad, dorn = np.zeros(8), 0.0
+    for g in range(7):
+        P = np.array([v[:3] for v in mo.meshes[16 + g].tv], float)
+        r_ = float(np.hypot(P[:, 0], P[:, 2]).max())
+        rad[g], rad[g + 1] = max(rad[g], r_), max(rad[g + 1], r_)
+        if g == 6:
+            dorn = float(P[:, 1].max())
+
+    def verletzt(P):
+        dp = P[6] + (P[7] - P[6]) * dorn / 541.0
+        return bool((P[2:, 1] + rad[2:] > 0.5).any() or dp[1] > 0.5)
+    hs = sorted(set(A) & set(B))
+    flag = [h for h in hs if verletzt(A[h])]
+    diff = {h: round(float(np.linalg.norm(A[h] - B[h], axis=1).max())) for h in hs}
+    anders = [h for h in hs if diff[h] > 1]
+    unbegruendet = []
+    for h in anders:
+        if h in flag:
+            continue
+        vor = [f for f in flag if 0 < h - f <= nachlauf]
+        if not vor:
+            unbegruendet.append((h, diff[h])); continue
+        f = max(vor)
+        if diff[h] > max(diff[f2] for f2 in flag if f2 <= h) + 1:
+            unbegruendet.append((h, diff[h]))
+    neu_verletzt = [h for h in flag if verletzt(B[h])]
+    st = open(state_7e, 'rb').read() == open(state_neu, 'rb').read()
+    ok = st and not unbegruendet and not neu_verletzt
+    return dict(takte=len(hs), anders=len(anders), max_e=max(diff.values()) if diff else 0, bodenregel_takte=flag, unbegruendet=unbegruendet,
+                neue_kette_verletzt=neu_verletzt, state_gleich=st, radius=rad.round(1).tolist(), dorn_y=dorn, nachlauf=nachlauf,
+                diff=diff, ok=bool(ok))
 
 
 def ist_r8(blob):
@@ -386,7 +534,7 @@ def ist_r8(blob):
     return max(v[1] for v in mo.meshes[22].tv) > 1000
 
 
-def alles(blob, farbe='b'):
+def alles(blob, farbe='b', szene=None):
     D = json.load(open(DATEN))
     bezug = eingang()
     mo = V.modell(blob)
@@ -399,6 +547,8 @@ def alles(blob, farbe='b'):
     r['R8d'] = d
     r['R8e'] = r8e(blob, bezug, pv)
     r['R8f'] = r8f(blob, bezug)
+    if szene:                             # (debug_7e, debug_neu, state_7e, state_neu)
+        r['R8g'] = r8g(*szene, blob)
     return r
 
 
@@ -410,14 +560,14 @@ def zeilen(r):
              % ('; '.join('h%s %s (Vorhersage %s, Abw. %s, Video %s, rund 07b6703f %s)' % (h, v['breite'], v['vorhersage'], v['abweichung'], v['video'],
                                                                                          v['rund_07b6703f']) for h, v in a.items()), g(r['R8a']['ok'])))
     b = r['R8b']
-    z.append('R8b Seite PV (f_rast, Keyframe-Rolle): s .1-.9 %s (Bezug 07b6703f %s); s .3 >= 36: %.1f; s .5 %.1f %% duenner (Soll 15-20); s .5/.7/.9 '
-             'gegen Nutzer-Umriss h90 (Wurzel Schnittkante, Messziel Bauplan 2) %s: Abw. %s (<= 4); Angabe Wurzel obere Ecke %s: Abw. %s -> %s'
-             % (b['breite'], b['bezug'], b['breite'][1], b['duenner_s5'], b['video_h90'][2:], b['abweichung_s5_s9'], b['video_h90_obere_ecke'][2:],
-                b['abweichung_obere_ecke'], g(b['ok'])))
+    z.append('R8b Seite PV in festen Abstaenden ab dem koerpernahen Ende (sichtbare Schwanz-Bildpunkte, Verfahren Pruefer pr8): Abstand -> Breite '
+             'neu %s | vorher %s | Video %s; Abweichung neu - Video an 30-170 %s, Mittel %s (Soll je <= %.0f, Mittel <= %.0f; bei 90 <= 0,9 x vorher) -> %s'
+             % (b['breite'], b['bezug'], b['video'], b['abweichung'], b['mittel'], R8B_MAX, R8B_MITTEL, g(b['ok'])))
     c = r['R8c']
-    z.append('R8c Laenge/Spitze PV: Laenge %.1f px (Bezug %.1f, Soll >= Bezug + 15; Ziel der Analyse ~190 Offen), Nadelspitze %s (Bezug %s), Abstand '
-             'zum Zielkasten x 286-289 / y 349-356 %.1f px (<= 4), Nadel y %d (Soll %d) auf der Achse %s -> %s'
-             % (c['laenge'], c['bezug'], c['spitze'], c['bezug_spitze'], c['abstand_ziel'], c['nadel_y'], c['soll_y'], c['auf_achse'], g(c['ok'])))
+    z.append('R8c sichtbare Laenge PV: %.1f px (vorher %.1f, Video %.1f; Soll >= %.0f), tiefster sichtbarer Schwanz-Bildpunkt y %d (vorher %d, Video %d; '
+             'Soll >= %d), Nadelspitze y %d (Soll %d) auf der Achse %s -> %s'
+             % (c['laenge'], c['bezug'], c['video_laenge'], R8C_LAENGE, c['tief_y'], c['bezug_tief_y'], c['video_tief_y'], R8C_TIEF, c['nadel_y'],
+                c['soll_y'], c['auf_achse'], g(c['ok'])))
     d = r['R8d']
     z.append('R8d Fugen: (1) Hochachse Endring und Manschette / Huellradius je Gelenk %s (<= 0,88) %s; (2) von vorn schmaler an den Gelenken im Mittel %s px '
              '(>= 1,0) %s; (3) Band (Probe %s): Flaechen auf 494 je Glied %s, PV-Bildpunkte %s, Gelenke mit Band in PV %d (>= 5) %s -> %s'
@@ -429,12 +579,22 @@ def zeilen(r):
     z.append('R8e Fleisch nur Bauchseite: (1) %d Flaechen auf 495, ausserhalb des Bauchsektors bzw. graue im Bauchsektor %d %s %s; (2) PV Fleisch-Anteil '
              'bei Normalen-|theta| >= 100: %.2f %% (<= 1), <= 40: %.1f %% (>= 50) %s; (3) Herkunft: Flaechen je Zeile %s, fremde Texel %s, Texturbild '
              'bytegleich %s -> %s' % (e['flaechen_495'], e['n_falsch'], e['falsch'][:8], g(e['ok1']), e['pv_fleisch_aussen'], e['pv_fleisch_innen'],
-                                      g(e['ok2']), e['zeilen'], e['fremde_texel'], 'ja' if e['ok3'] else 'nein', g(e['ok'])))
+                                      g(e['ok2']), e['zeilen'], e['fremde_texel'], 'ja' if e['pix_gleich'] else 'nein', g(e['ok'])))
     f = r['R8f']
-    z.append('R8f Bytegleich zum Eingang 07b6703f: Sektionen 0-6 %s, TIM %s, Meshes 0-15 %s (Mesh 9 %s), Gliedlaengen 541 %s -> %s'
-             % (f['sektionen'], f['tim'], f['meshes_0_15'], f['mesh9'], f['glieder_541'], g(f['ok'])))
-    rot = [k for k in ('R8a', 'R8b', 'R8c', 'R8d', 'R8e', 'R8f') if not r[k]['ok']]
-    z.append('SUMME R8: %d von 6 gruen%s' % (6 - len(rot), ('; ROT: ' + ', '.join(rot)) if rot else ''))
+    z.append('R8f Bytegleich zum Eingang 07b6703f ausser Meshes 16-22 und den Winkeln der Knochen 17-22 in %d angehobenen Keyframes: Sektionen 0-6 %s '
+             '(EMR nach Ruecksetzen dieser Winkel gleich: %s), TIM %s, Meshes 0-15 %s (Mesh 9 %s), Gliedlaengen 541 %s -> %s'
+             % (f['keyframes_angehoben'], f['sektionen'], f['emr_nur_schwanzwinkel'], f['tim'], f['meshes_0_15'], f['mesh9'], f['glieder_541'],
+                g(f['ok'])))
+    keys = ['R8a', 'R8b', 'R8c', 'R8d', 'R8e', 'R8f']
+    if 'R8g' in r:
+        q = r['R8g']
+        keys.append('R8g')
+        z.append('R8g Szenenkette gegen 7e: %d Takte, %d anders (groesste Verschiebung %d E.), state.log gleich %s; Bodenregel-Takte der 7e-Kette mit den '
+                 'Massen dieses Assets (radius %s, dorn_y %.0f) %s; unbegruendet (nicht Bodenregel, nicht Nachlauf <= %d) %s; neue Kette verletzt %s -> %s'
+                 % (q['takte'], q['anders'], q['max_e'], q['state_gleich'], q['radius'], q['dorn_y'], q['bodenregel_takte'], q['nachlauf'],
+                    q['unbegruendet'], q['neue_kette_verletzt'], g(q['ok'])))
+    rot = [k for k in keys if not r[k]['ok']]
+    z.append('SUMME R8: %d von %d gruen%s' % (len(keys) - len(rot), len(keys), ('; ROT: ' + ', '.join(rot)) if rot else ''))
     return z, rot
 
 
@@ -443,8 +603,12 @@ def main():
     ap.add_argument('emd', nargs='?', default=V.ASSET)
     ap.add_argument('--farbe', default=Q.STANDARD)
     ap.add_argument('--aus'); ap.add_argument('--json')
+    ap.add_argument('--szene', nargs=4, metavar=('DEBUG_7E', 'DEBUG_NEU', 'STATE_7E', 'STATE_NEU'), help='R8g: Szenenlaeufe 7e und neu')
+    ap.add_argument('--nachlauf', type=int, default=None)
     a = ap.parse_args()
-    r = alles(open(a.emd, 'rb').read(), a.farbe)
+    r = alles(open(a.emd, 'rb').read(), a.farbe, a.szene)
+    if a.nachlauf is not None and 'R8g' in r:
+        r['R8g'] = r8g(*a.szene, open(a.emd, 'rb').read(), nachlauf=a.nachlauf)
     z, rot = zeilen(r)
     txt = '\n'.join(z)
     print(txt)

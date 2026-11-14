@@ -2,7 +2,7 @@
 Skorpionstachel, Fleisch nur auf der Bauchseite. NUR Asset (Meshes 16-22 mit ihrer UV/CLUT); Knochen, Keyframes, Texturbild, CLUT-Zeilen
 und alle anderen Meshes (Mesh 9 = V7-Kopf) bleiben bytegleich.
 
-    python schwanz_r8.py <eingang.emd> <ausgang.emd> [a|b|c]     Stufe auf einen fertigen Stand anwenden (Standard-Farbe STANDARD)
+    python schwanz_r8.py <eingang.emd> <ausgang.emd> [a|b]       Stufe auf einen fertigen Stand anwenden (Standard-Farbe STANDARD)
     python schwanz_r8.py suche [<eingang.emd>]                    Texelfelder nachrechnen (Ausgabe = Beleg von schwanz_r8.json "felder")
 
 Nutzer 2026-11-14 (woertlich): "weder mit dem rot der Schwanzfarbe noch mit dem etwas zu steifen grossen Schwanz zufrieden", dazu
@@ -30,8 +30,10 @@ Bau (je Glied g = 0..6 = Knochen/Mesh 16..22, Gliedraum: y entlang der Achse, Ge
   KERBE_LAENGE x L zurueck), E (Gehrung am Gelenk g+1, KERBE). Deckel an S und E wie bisher (Mitte auf der Achse).
   Glied 16: Ring 0/1 = Wurzelring an der Haut (Stufe w), auf die Winkel der neuen Ringe umgetastet und teilweise abgeflacht (WURZEL_FLACH),
   Ring D halb flach (D16_QUER), E flach; die Wurzelflaechen (Rohr Ring 0 -> 1, Kegel) bleiben mit ihren Indizes und ihrer UV.
-  Glied 22: S, C, Knolle und Verjuengung (STACHEL, rund), Nadel bis y = L + DORN_ALT + NADEL = 1139 entlang der Gliedachse (der Code nimmt die
+  Glied 22: S, C, Knolle und Verjuengung (STACHEL, rund), Nadel bis y = SPITZE_Y = 1300 entlang der Gliedachse (der Code nimmt die
   groesste Ecke entlang der Achse als Dornspitze, schwanz_r41.c sw_mesh_mass); kein End-Deckel, die Nadelspitze schliesst.
+  Runde 8b (Pruefer pr8): Glieder 17-21 mit zwei Zwischenringen Z1/Z2 (Glied 18 um M); Keyframes, in denen eine Ecke von Mesh 22 unter der
+  tiefsten Koerperecke laege, hebt heben() an (nur die Winkel der Knochen 17-22 dieser Keyframes; S6 streng).
   Reihenfolge der Ecken wie die Riegel sie lesen (riegel_v8.ringe_bild: die ersten 2 bzw. 3 Ringe; szene_marker.wurzel_flaechen: Mesh 16
   Ecken 0-21 und 34 = Wurzel): 17/19/20/21 = C, D, End-Mitte, Anfangs-Mitte, S, E; 18 = C, M, D, End-Mitte, Anfangs-Mitte, S, E;
   16 = Ring 0, Ring 1, D, End-Mitte, Kegelspitze, E; 22 = C, Ring bei y 560 (Lage des alten Endrings = "Ende" fuer S4), Nadelspitze,
@@ -42,13 +44,14 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
   07b6703f; Felder aus "suche"):
   grau  = Rueckensektor, Nadel, Wurzelflaechen ueber der Grenze: Zeile 487, Feld je Glied = groesstes Rechteck in den Texeln, die die
           Oberseite (Zeile 487) dieses Glieds im Eingang benutzt;
-  bauch = Bauchsektor: Variante a/b "gedeckt" = Original-Zeile 482 (Asset 495) Feld "gedeckt" (hellere, weniger satte Partie des
-          Original-Unterarm-Fleischs, suche: u 21-37 v 118-124, Median L* 26,8 C* 20,3), Variante c "satt" = FELD_SATT (heutiger Ton,
-          unterseite_v8.json fleisch_r7b feld u 4-37 v 96-106, L* 18,2 C* 28,4); u um den Bauch, v entlang des Glieds (je Glied gespiegelt);
-  band  = Bauchsektor in der Fuge (zwischen E und D bzw. S und C, dazu die Deckel), Variante b/c: Original-Zeile 481 (Asset 494) Seite 1 Feld
-          "band" (groesstes Feld mit >= 90 % hellen Texeln der Original-Nutzung, suche: u 36-44 v 28-41, L* 74,1 C* 5,5); Variante a: wie bauch.
-  Variante (Auftrag: 3 Farbproben): a gedeckt ohne Baender, b gedeckt mit hellen Baendern (STANDARD: Bauplan 2 verlangt das helle Band an
-  jeder Fuge), c heutiger satter Ton nur auf der Bauchseite mit hellen Baendern.
+  bauch = Bauchsektor: Original-Zeile 482 (Asset 495), schraeges Feld (Parallelogramm, suche(): v 114-123, Zeilenanfang u 1 -> 19, Breite 21;
+          Median L* 25,7 C* 24,2, hellere Partie des Original-Unterarm-Fleischs), um den Bauch zweimal und entlang des Glieds je Ringabschnitt
+          einmal gependelt (Spiegelung an jeder Kante, keine Naht; Runde 8: ein 17 x 7-Feld ueber den ganzen Bauch gestreckt = "flaechig wie
+          gemalt", Pruefer pr8);
+  band  = Probe b: die zwei mittleren Bauchfelder (BAND_J) in der Fuge (zwischen E und D bzw. S und C, dazu die Deckel): Original-Zeile 480
+          (Asset 493, bytegleich), Seite 0, Feld u 58-73 v 19-48 (>= 60 % hellrot/rosa, Median L* 48,4 C* 17,4 h 22; Runde 8: Zeile 481 fast weiss
+          L* 74 = "Klebeband", Pruefer pr8); Probe a: ohne Band (Fleisch).
+  Proben (Koordinator: nur noch zwei, wenn sie sich sichtbar unterscheiden): a ohne Baender, b mit rosa Baendern (STANDARD).
 """
 import os
 import sys
@@ -89,26 +92,41 @@ MITTE = {3: 0.86, 4: 0.78}            # Hochachse an Gelenk 3 / 4 (Bauplan 2 "Sc
 GRENZE = (90.0, 60.0)                 # Fleischgrenze |theta| an der Wurzel (u 0) / am Spitzenende (u 7), linear (Auftrag Schritt 3: "vorn bei etwa
                                       # 85-95 Grad, zur Spitze hin etwa 60 Grad"; Video h90 rot auf 32-56 % der Breite innen, s >= .65 dunkel)
 MANSCHETTE_R, MANSCHETTE_S = 0.99, 0.2   # wie v8_bau (Runde 2, Riegel S2b)
-DORN_ALT = 48.0                       # heutiges Ende von Mesh 22: Dorn 0,8 x r7 = 48 E. ueber dem Gelenk 7 (Stand 07b6703f, Ecke 22 y 589)
-NADEL = 550.0                         # Nadel ueber das heutige Ende hinaus (Auftrag "450-550 E."; Messung PV: Glied-22-Achse 35 px je 1000 E., Spitze
-                                      # y_bild 347 bei 550 - der obere Rand ist dem Messziel 349-356 am naechsten)
-# Stachel (Glied 22, rund, Areas_Tip.png: Knolle 16-17 px breit mit Kerbe am Ansatz, auf 35 px verjuengt, Nadel <= 2 px breit):
-# (y, Radius) hinter Ring C; Knolle D = 2 x 135 = 270 E. (Auftrag "Knolle 260-280 E."), Nadel bis zur Spitze y = 541 + 48 + 550
-STACHEL = ((200.0, 135.0), (330.0, 118.0), (450.0, 80.0), (560.0, 45.0), (640.0, 26.0), (880.0, 17.0), (1020.0, 10.0))
-# Nadel-Radien 26 / 17 / 10 E.: Video "Breite <= 2 px" = <= 30 E.; duenner (24 / 12) verschwand die Nadel in PV ab y_bild 332 zwischen den
-# Bildpunktmitten (Versuch m1_pv: tiefster Schwanz-Bildpunkt y 332 bei Spitze 347)
-STACHEL_C = 120.0                     # Radius Ring C von Glied 22 (Knolle steigt aus der Kerbe 0,85 x 115,8 = 98 an)
-ENDE_Y = 560.0                        # Ring 1 von Mesh 22 = Ort des alten Endrings (y 541) -> riegel_v8.s4 "Ende" misst dieselbe Stelle
+DORN_ALT = 48.0                       # Ende von Mesh 22 bis Runde 7e: Dorn 0,8 x r7 = 48 E. ueber dem Gelenk 7 (Stand 07b6703f, Ecke 22 y 589)
+# Runde 8b (Pruefer pr8, PRUEFUNG.md (A)/(E)1: "Knolle in PV als Verdickung sichtbar ... ~18 px breit bei 150-190 px ab Wurzel", "sichtbarer Schwanz
+# in PV bis y ~350", "die Nadel ist ein 1-2 px duenner Draht ... soll eine sichtbare Skorpionspitze sein"). Gemessen (n1_richtung.py): in PV ist
+# bildabwaerts fast ueberall weltabwaerts (in 855-897 von 912 Keyframes), eine abgewinkelte Nadel waere also nicht bodensicherer als eine gerade;
+# die gerade Nadel entlang der Gliedachse bildet der Code genau ab (sw_mesh_mass dorn_y), eine abgewinkelte nur als Radius um das Gelenk 7
+# (mehr Anhebung). Deshalb: Knolle (Radius 190), Verjuengung, kegelige Nadel (Radius 75 -> 28) bis zur Spitze SPITZE_Y auf der Achse.
+# Bodenfreiheit in den Keyframes stellt heben() her (S6 streng).
+# (y, Radius) hinter Ring C, rund; Knolle D 380 E. Versuch x4_stachel (PV, Verfahren des Pruefers in festen Abstaenden): Knolle 168 / Spitze 1200
+# tiefster sichtbarer Punkt y 346, Laenge 184,8; Knolle 190 / Spitze 1300 y 350, 185,8 (Breite bei 150 / 170 px 12,0 / 12,6); 210 / 1250 y 348.
+# Die Knolle liegt in PV hinter dem Ende von Glied 21 (Achse 22 zeigt von der Kamera weg) - groesser macht sie dort kaum breiter.
+STACHEL = ((200.0, 160.0), (330.0, 190.0), (450.0, 185.0), (560.0, 150.0), (660.0, 110.0), (760.0, 75.0), (920.0, 50.0), (1100.0, 28.0))
+STACHEL_C = 128.0                     # Radius Ring C von Glied 22 (Knolle steigt aus der Kerbe 0,85 x 115,8 = 98 an)
+SPITZE_Y = 1300.0                     # Nadelspitze (PV: Glied-22-Achse 3,5 px je 100 E. ab Gelenk 7 y_bild 325,8; sichtbar bis y 350, Pruefer "bis y ~350")
+ENDE_Y = 760.0                        # Ring 1 von Mesh 22 = Nadelansatz (Radius 75) -> riegel_v8.s4 "Ende <= 10 px"
+ZWISCHEN = {1: (0.3733, 0.6267), 2: (0.31, 0.69), 3: (0.3733, 0.6267), 4: (0.3733, 0.6267), 5: (0.3733, 0.6267)}
+                                      # Runde 8b: zwei Zwischenringe Z1/Z2 je Glied 17-21 (Glied 18 um M bei 0,5) - das Fleischfeld liegt dreimal
+                                      # gependelt entlang des Glieds statt einmal gestreckt (Pruefer "Rot flaechig wie gemalt", 17 x 7 gestreckt)
 
 # ------------------------------------------------------------------ Farbe (PORT-WAHL; Felder aus suche(), Beleg SF_belege/v8/runde8/suche.txt)
-ZEILE_GRAU, ZEILE_FLEISCH, ZEILE_BAND = 487, 495, 494      # 487 = Schwanz-Oberseite seit V6; 495 = Original 482; 494 = Original 481
-SEITE_FLEISCH, SEITE_BAND = 2, 1
+ZEILE_GRAU, ZEILE_FLEISCH, ZEILE_BAND = 487, 495, 493      # 487 = Schwanz-Oberseite seit V6; 495 = Original 482; 493 = Original 480 (bytegleich)
+SEITE_FLEISCH, SEITE_BAND = 2, 0
+# Runde 8b (Pruefer pr8 (B)): Band hellrot/rosa statt fast weiss - Original-Zeile 480, Seite 0, Feld aus suche() (L* 40-56, C* 12-28, Farbton 5-35
+# >= 60 %, Klasse des Pruefer-Werkzeugs b_bandfeld.py); nur die beiden mittleren Bauchfelder (j 10 / 0) der Fuge, die aeusseren bleiben Fleisch
+# ("nicht als Ring ueber die ganze Breite wie Klebeband"). Fleisch: schraeges Feld (Parallelogramm) der Original-Zeile 482 (suche()), um den Bauch
+# zweimal und entlang des Glieds je Feld einmal gependelt (Spiegelung an jeder Kante, keine Naht).
+BAND_J = (10, 0)
+PENDEL = {9: 0.0, 10: 1.0, 0: 0.0, 1: 1.0, 2: 0.0}   # Bauch-Ecke j -> Lage im Feld quer (0 / 1), Spiegelung je Flaeche
 FELD_SATT = (4, 37, 96, 106)          # (u0, u1, v0, v1) Seite 2 = unterseite_v8.json fleisch_r7b "feld" (heutiger Ton)
 # Felder "grau" (je Glied), "gedeckt", "band": schwanz_r8.json (Ergebnis von suche() am Eingang 07b6703f, Protokoll runde8/suche.txt)
 FARBEN = {'a': dict(fleisch='gedeckt', band=False, name='gedeckt, ohne Baender'),
-          'b': dict(fleisch='gedeckt', band=True, name='gedeckt, helle Baender'),
-          'c': dict(fleisch='satt', band=True, name='heutiger Ton nur Bauchseite, helle Baender')}
+          'b': dict(fleisch='gedeckt', band=True, name='gedeckt, rosa Baender')}
 STANDARD = 'b'
+FLEISCH_V_AB = 114                    # Runde 8b: schraeges Fleischfeld ab Zeile 114 (n6b: ab 111 Median C* 24,4 / L* 23,7, ab 114 C* 24,2 / L* 25,7 =
+                                      # naeher am Ton der Probe a L* 26,8 C* 20,3; die satte Partie v 93-112 ist Probe c, verworfen)
+BAND_ROSA_ANTEIL = 0.6                # Runde 8b: Band-Feld mit >= 60 % hellrot/rosa Texeln (Pruefer b_bandfeld.py-Klasse)
 GED_L, GED_A, GED_C = 20.0, 15.0, 26.0  # suche(): "gedeckt" = Fleischzeile (a* >= 15) heller (L* >= 20) und weniger satt (C* <= 26) als die satte
                                         # Partie (L* 18, C* 28,4 im Feld FELD_SATT); Richtung aus der Analyse (Video "gedeckter"), keine Eichung
 GRAU_MIN_BREITE = 12                  # Grau-Feld eines Glieds schmaler als 12 Texel (Glieder 19/20: 8 / 7) -> Feld von Glied 16 (24 x 56): der
@@ -179,9 +197,13 @@ def glied_ringe(g, L, R, n_anf, n_end, a_vor, phi, alt16=None):
         else:
             th = winkel(grenze(g + KERBE_LAENGE))
             out.append(('C', ring(kl, STACHEL_C, STACHEL_C, n_anf, th, eh, eq), th, np.full(S_, g + KERBE_LAENGE), False))
-    if g == 2:
-        th = winkel(grenze(g + 0.5))
-        out.append(('M', ring(0.5 * L, rr(0.5 * L), quer(rr(0.5 * L)), None, th, eh, eq), th, np.full(S_, g + 0.5), False))
+    if g in ZWISCHEN:
+        z1, z2 = ZWISCHEN[g]
+        for nm, t in (('Z1', z1), ('M', 0.5), ('Z2', z2)):
+            if nm == 'M' and g != 2:
+                continue
+            th = winkel(grenze(g + t))
+            out.append((nm, ring(t * L, rr(t * L), quer(rr(t * L)), None, th, eh, eq), th, np.full(S_, g + t), False))
     if g < 6:
         th = winkel(grenze(g + 1 - KERBE_LAENGE))
         aD = rr(L - kl)
@@ -300,7 +322,7 @@ def mesh_bauen(g, ringe, L, alt, y_spitze):
         achse['ende'] = len(V_); V_.append(np.array([0.0, L, 0.0]))
         achse['kegel'] = len(V_); V_.append(np.array(alt['v'][34][:3], float))
     elif g == 6:
-        achse['spitze'] = len(V_); V_.append(np.array([0.0, y_spitze, 0.0]))
+        achse['spitze'] = len(V_); V_.append(np.array([0.0, y_spitze, 0.0]))     # Nadelspitze SPITZE_Y
         achse['anfang'] = len(V_); V_.append(_kappe_mitte(ring_d['S'][1]))
     else:
         achse['ende'] = len(V_); V_.append(np.array([0.0, L, 0.0]))
@@ -418,54 +440,68 @@ def suche(blob, log=print):
         c = to['clut'][z - 480].astype(int)
         rgb = np.stack([(c & 31) * 255 / 31., ((c >> 5) & 31) * 255 / 31., ((c >> 10) & 31) * 255 / 31.], -1)
         return G.lab(rgb[None])[0]
-    # gedeckt: Zeile 482, Seite 2 - Texelzeilen des Original-Unterarms, deren Median (Original-Nutzung) Fleisch, aber heller und weniger satt als
-    # die satte Partie ist: L* >= GED_L, a* >= GED_A, C* <= GED_C (satte Partie v 93-112: L* 18, C* 25-30; Messung im Protokoll)
+    # Fleisch (Runde 8b): schraeges Feld (Parallelogramm) in der Original-Nutzung der Zeile 482, Seite 2 - Zeilen v0..v1 der hellen Fleischpartie
+    # unterhalb der satten (v0 >= FLEISCH_V_AB), Zeilenanfang linear von u_v0 nach u_v1, groesste Flaeche.
     lab = lab_zeile(482)
     nutz = A4.nutzung(None, 482)[:, 256:384]
     Lm = lab[to['pix'][:, 256:384]]
-    zeilen = []
-    for v in range(256):
-        if nutz[v].sum() < 8:
-            continue
-        x = Lm[v][nutz[v]]
-        Lz, az, Cz = float(np.median(x[:, 0])), float(np.median(x[:, 1])), float(np.median(np.hypot(x[:, 1], x[:, 2])))
-        if Lz >= GED_L and az >= GED_A and Cz <= GED_C:
-            zeilen.append(v)
-            log('   gedeckt-Zeile v %d: L* %.1f a* %.1f C* %.1f (%d Texel)' % (v, Lz, az, Cz, int(nutz[v].sum())))
-    mk = np.zeros_like(nutz)
-    for v in zeilen:
-        mk[v] = nutz[v]
-    r = _rechteck(mk)
-    sel = Lm[r[2]:r[3] + 1, r[0]:r[1] + 1].reshape(-1, 3)
-    Ls, Cs = float(np.median(sel[:, 0])), float(np.median(np.hypot(sel[:, 1], sel[:, 2])))
-    log('gedeckt Zeile 482 Seite 2: groesstes Rechteck in diesen Zeilen und der Original-Nutzung u %d-%d v %d-%d (%d x %d), Median L* %.1f '
-        'C* %.1f a* %.1f' % (r[0], r[1], r[2], r[3], r[1] - r[0] + 1, r[3] - r[2] + 1, Ls, Cs, float(np.median(sel[:, 1]))))
-    erg['gedeckt'] = list(map(int, r))
-    # satt (heutiger Ton): Feld pruefen
-    u0, u1, v0, v1 = FELD_SATT
-    ok = bool(nutz[v0:v1 + 1, u0:u1 + 1].all())
+    best = None
+    for v0 in range(FLEISCH_V_AB, FLEISCH_V_AB + 4):
+        for v1 in range(v0 + 6, 126):
+            for a in range(0, 30):
+                for b in range(a, 40):
+                    for w in range(40, 5, -1):
+                        if all(0 <= int(round(a + (b - a) * (v - v0) / (v1 - v0))) and
+                               nutz[v, int(round(a + (b - a) * (v - v0) / (v1 - v0))):int(round(a + (b - a) * (v - v0) / (v1 - v0))) + w].all()
+                               and int(round(a + (b - a) * (v - v0) / (v1 - v0))) + w <= 128 for v in range(v0, v1 + 1)):
+                            if best is None or w * (v1 - v0 + 1) > best[0]:
+                                best = (w * (v1 - v0 + 1), v0, v1, a, b, w)
+                            break
+    _a, v0, v1, a, b, w = best
+    # Probe mit dem Rasterer der Riegel (KB.raster: Flaeche + Kantenlinie): das Parallelogramm (u_v0 / u_v0 + w - 1 bei v0, u_v1 / u_v1 + w - 1 bei
+    # v1) darf keinen Texel ausserhalb der Original-Nutzung beruehren; sonst Breite verkleinern (Runde 8b: bei Breite 22 lagen 2 Texel der Kante
+    # (23,114), (25,115) in der Luecke, riegel_schwanz_r8 R8e (3) 232 fremde Texel)
+    nutz_ganz = A4.nutzung(None, 482)
+    while w > 4:
+        uv = [a, v0, 0, a + w - 1, v0, 130, b, v1, 0, b + w - 1, v1, 0]
+        if not (KB.raster(uv, 4, 256) & ~nutz_ganz).any():
+            break
+        w -= 1
+    _a = w * (v1 - v0 + 1)
+    sel = np.concatenate([Lm[v, int(round(a + (b - a) * (v - v0) / (v1 - v0))):int(round(a + (b - a) * (v - v0) / (v1 - v0))) + w] for v in range(v0, v1 + 1)])
+    erg['fleisch'] = dict(v0=v0, v1=v1, u_v0=a, u_v1=b, breite=w)
+    log('Fleisch Zeile 482 Seite 2: schraeges Feld v %d-%d, Zeilenanfang u %d -> %d, Breite %d (%d Texel), Median L* %.1f C* %.1f, L*-Streuung %.1f'
+        % (v0, v1, a, b, w, _a, float(np.median(sel[:, 0])), float(np.median(np.hypot(sel[:, 1], sel[:, 2]))), float(np.std(sel[:, 0]))))
+    # Band (Runde 8b): Original-Zeile 480 (Asset 493), Seite 0, groesstes Rechteck in der Original-Nutzung mit >= BAND_ROSA_ANTEIL hellrot/rosa Texeln
+    lab = lab_zeile(480)
+    nz = A4.nutzung(None, 480)[:, 0:128]
+    Lm = lab[to['pix'][:, 0:128]]
+    C = np.hypot(Lm[..., 1], Lm[..., 2]); hh = np.degrees(np.arctan2(Lm[..., 2], Lm[..., 1]))
+    rosa = nz & (Lm[..., 0] >= 40) & (Lm[..., 0] <= 56) & (C >= 12) & (C <= 28) & (hh >= 5) & (hh <= 35)
+    bb = None
+    for v0 in range(0, 250):
+        for v1 in range(v0 + 3, min(v0 + 30, 256)):
+            for u0 in range(0, 125):
+                for u1 in range(u0 + 3, min(u0 + 16, 128)):
+                    if not nz[v0:v1 + 1, u0:u1 + 1].all():
+                        break
+                    if rosa[v0:v1 + 1, u0:u1 + 1].mean() >= BAND_ROSA_ANTEIL:
+                        fl = (u1 - u0 + 1) * (v1 - v0 + 1)
+                        if bb is None or fl > bb[0]:
+                            bb = (fl, u0, u1, v0, v1)
+    _f, u0, u1, v0, v1 = bb
     sel = Lm[v0:v1 + 1, u0:u1 + 1].reshape(-1, 3)
-    log('satt Zeile 482 Seite 2: Feld u %d-%d v %d-%d ganz in der Original-Nutzung: %s, Median L* %.1f C* %.1f' % (u0, u1, v0, v1, ok,
-        float(np.median(sel[:, 0])), float(np.median(np.hypot(sel[:, 1], sel[:, 2])))))
-    erg['satt_ok'] = ok
-    # band: Zeile 481, Seite 1
-    lab = lab_zeile(481)
-    nutz = A4.nutzung(None, 481)[:, 128:256]
-    Lm = lab[to['pix'][:, 128:256]]
-    hell = nutz & (Lm[..., 0] >= 55) & (np.hypot(Lm[..., 1], Lm[..., 2]) <= 18)
-    from scipy import ndimage as ndi
-    dichte = ndi.uniform_filter(hell.astype(float), 5)
-    r = _rechteck(nutz & (dichte >= 0.9))
-    sel = Lm[r[2]:r[3] + 1, r[0]:r[1] + 1].reshape(-1, 3)
-    anteil = float(hell[r[2]:r[3] + 1, r[0]:r[1] + 1].mean())
-    log('band Zeile 481 Seite 1: groesstes Rechteck (5x5-Dichte hell >= 0,9, Original-Nutzung) u %d-%d v %d-%d (%d x %d), hell %.0f %%, '
-        'Median L* %.1f C* %.1f' % (r[0], r[1], r[2], r[3], r[1] - r[0] + 1, r[3] - r[2] + 1, 100 * anteil, float(np.median(sel[:, 0])),
-                                    float(np.median(np.hypot(sel[:, 1], sel[:, 2])))))
-    erg['band'] = list(map(int, r))
+    log('Band Zeile 480 Seite 0: groesstes Rechteck mit >= %.0f %% hellrot/rosa (L* 40-56, C* 12-28, h 5-35) u %d-%d v %d-%d (%d x %d), Anteil %.0f %%, '
+        'Median L* %.1f C* %.1f h %.0f' % (100 * BAND_ROSA_ANTEIL, u0, u1, v0, v1, u1 - u0 + 1, v1 - v0 + 1, 100 * rosa[v0:v1 + 1, u0:u1 + 1].mean(),
+                                          float(np.median(sel[:, 0])), float(np.median(np.hypot(sel[:, 1], sel[:, 2]))),
+                                          float(np.median(np.degrees(np.arctan2(sel[:, 2], sel[:, 1]))))))
+    erg['band'] = [int(u0), int(u1), int(v0), int(v1)]
     # Texel des Spiel-Assets in diesen Feldern = Original?
-    gl = {k: bool(np.array_equal(t['pix'][r_[2]:r_[3] + 1, s * 128 + r_[0]:s * 128 + r_[1] + 1],
-                                 to['pix'][r_[2]:r_[3] + 1, s * 128 + r_[0]:s * 128 + r_[1] + 1]))
-          for k, r_, s in (('gedeckt', erg['gedeckt'], 2), ('band', erg['band'], 1), ('satt', FELD_SATT, 2))}
+    ff = erg['fleisch']
+    gl = {'band': bool(np.array_equal(t['pix'][v0:v1 + 1, u0:u1 + 1], to['pix'][v0:v1 + 1, u0:u1 + 1])),
+          'fleisch': bool(np.array_equal(t['pix'][ff['v0']:ff['v1'] + 1, 256:256 + max(ff['u_v0'], ff['u_v1']) + ff['breite']],
+                                         to['pix'][ff['v0']:ff['v1'] + 1, 256:256 + max(ff['u_v0'], ff['u_v1']) + ff['breite']])),
+          'zeile_493_gleich_original_480': bool(np.array_equal(t['clut'][13] & 0x7FFF, to['clut'][0] & 0x7FFF))}
     log('Asset-Texel in den Feldern bytegleich Original: %s' % gl)
     erg['asset_gleich'] = gl
     return erg
@@ -481,7 +517,7 @@ BAUCH_J = (9, 10, 0, 1)                # Sektoren (Flaeche j = Ecke j -> j+1) zw
 
 
 def klasse_von(f, farbe, g):
-    """Flaechenklasse 'grau' / 'bauch' / 'band' (Kopf der Datei)."""
+    """Flaechenklasse 'grau' / 'bauch' / 'band' (Kopf der Datei; Runde 8b: Band nur in den mittleren Bauchfeldern BAND_J)."""
     art, e, (ra, rb), j = f
     if art == 'spitze' or j not in BAUCH_J:
         return 'grau'
@@ -489,37 +525,49 @@ def klasse_von(f, farbe, g):
         fuge = art == 'deckel_anf' or (art == 'mantel' and 'S' in (ra, rb))
     else:
         fuge = art.startswith('deckel') or (art == 'mantel' and bool({ra, rb} & {'S', 'E'}))
-    return 'band' if farbe['band'] and fuge else 'bauch'
+    return 'band' if farbe['band'] and fuge and j in BAND_J else 'bauch'
+
+
+def fleisch_uv(F_, s_um, v_seite):
+    """Schraeges Fleischfeld: v = v0 / v1 (v_seite 0 / 1), u = Anfang der Zeile (linear zwischen u_v0 und u_v1) + s_um x (Breite - 1)."""
+    v = F_['v0'] + v_seite * (F_['v1'] - F_['v0'])
+    u0 = F_['u_v0'] + (F_['u_v1'] - F_['u_v0']) * (v - F_['v0']) / (F_['v1'] - F_['v0'])
+    return (u0 + s_um * (F_['breite'] - 1), v)
 
 
 def uv_setzen(g, V_, F, ringe, info, farbe, felder, L):
-    """-> Liste (Flaeche, UV-Liste fuer KB/BF-Format, Klasse)."""
-    th_e = {}
-    u_e = {}
+    """-> Liste (Flaeche, UV-Liste, Klasse). Runde 8b: Fleisch und Band gependelt (je Flaeche ein Feld, gespiegelt an jeder Kante)."""
+    th_e, u_e, seite_e = {}, {}, {}
+    folge = info['folge']
     for nm, P, th, u, _k in ringe:
         p0 = info['pos'][nm]
         for k in range(S_):
             th_e[p0 + k] = float(np.degrees(th[k]))
             u_e[p0 + k] = float(u[k])
+            seite_e[p0 + k] = folge.index(nm) % 2          # Pendel entlang des Glieds: Ringe abwechselnd Feldanfang / Feldende
+    ring_k = {}
+    for nm, _P, _t, _u, _k in ringe:
+        for k in range(S_):
+            ring_k[info['pos'][nm] + k] = k
     ys = V_[:, 1]
     y_lo, y_hi = float(min(ys)), float(max(ys))
     out = []
     feld_grau = felder['grau'][str(16 + g)]
-    feld_bauch = felder['gedeckt'] if farbe['fleisch'] == 'gedeckt' else list(FELD_SATT)
+    feld_f = felder['fleisch']
     feld_band = felder['band']
     tb_glied = lambda i: grenze(u_e.get(i, g + 0.5))
     for f in F:
         art, e, (ra, rb), j = f
         kl = klasse_von(f, farbe, g)
         if g == 6 and kl != 'grau' and all(V_[i][1] >= ENDE_Y - 1.0 for i in e):
-            kl = 'grau'                                    # Nadel ganz grau (Video: duenne dunkle Spitze)
+            kl = 'grau'                                    # Nadel grau (Video: dunkle Spitze)
         uv_e = []
+        rs = [q for q in e if q in th_e]
         for i in e:
             if i in th_e:
                 th = th_e[i]
                 tb = tb_glied(i)
             else:                                          # Achs-Ecke: Mitte der Ring-Ecken der Flaeche
-                rs = [q for q in e if q in th_e]
                 th = float(np.degrees(np.angle(np.mean([np.exp(1j * np.radians(th_e[q])) for q in rs]))))
                 tb = tb_glied(rs[0])
             th = th % 360.0
@@ -527,17 +575,20 @@ def uv_setzen(g, V_, F, ringe, info, farbe, felder, L):
             if kl == 'grau':
                 s_um = float(np.clip((th - tb) / max(360.0 - 2 * tb, 1.0), 0.0, 1.0))
                 uv_e.append(_uv_feld(feld_grau, s_um, s_lang))
+                continue
+            if i in ring_k:
+                s_um = PENDEL.get(ring_k[i], 0.5)
+                vs = seite_e[i]
             else:
-                ts = th if th <= 180.0 else th - 360.0
-                s_um = float(np.clip((ts + tb) / (2 * tb), 0.0, 1.0))
-                if kl == 'bauch':
-                    sl = s_lang if g % 2 == 0 else 1.0 - s_lang       # je Glied gespiegelt: an jedem Gelenk dieselbe Texelzeile
-                    uv_e.append(_uv_feld(feld_bauch, s_um, sl))
-                else:
-                    # Band: v = Abstand zum Gelenk (v0 am Gelenk, v1 am vollen Querschnitt) - beide Seiten der Fuge gespiegelt gleich
-                    yy = V_[i][1]
-                    dist = min(abs(yy), abs(yy - L)) / (KERBE_LAENGE * L)
-                    uv_e.append(_uv_feld(feld_band, s_um, float(np.clip(dist, 0.0, 1.0))))
+                s_um = float(np.mean([PENDEL.get(ring_k[q], 0.5) for q in rs]))
+                vs = seite_e[rs[0]]
+            if kl == 'bauch':
+                uv_e.append(fleisch_uv(feld_f, s_um, vs))
+            else:
+                # Band: quer gependelt ueber die zwei mittleren Felder, laengs v0 am Gelenkring (S / E), v1 am vollen Querschnitt (C / D)
+                nm = [n_ for n_ in (ra, rb) if info['pos'][n_] <= i < info['pos'][n_] + S_] if i in ring_k else [ra]
+                am_gelenk = 1.0 if (nm and nm[0] in ('S', 'E')) else 0.0
+                uv_e.append(_uv_feld(feld_band, s_um, 1.0 - am_gelenk))
         out.append((f, [(int(round(u)), int(round(v))) for u, v in uv_e], kl))
     return out
 
@@ -554,6 +605,102 @@ def uv_eintrag(uvl, kl):
 
 
 # ------------------------------------------------------------------ Stufe
+# ------------------------------------------------------------------ Bodenfreiheit (Runde 8b, S6 streng)
+HEBEN_RAND = 0.0                      # wie Stufe s (kette_v8.json boden_rand 0): kein Punkt UNTER der tiefsten Koerperecke (Riegel S6 "unter" = y > Sohle)
+
+
+def mesh22_tief(R8, T8, loks, rel, L, P22):
+    """Groesstes Welt-y (Modellraum, y nach unten) der Ecken von Mesh 22 bei den Lokaldrehungen loks (Knochen 16-22, wie v8_bau.kette_punkte)."""
+    import v8_bau as VB
+    pts, W22 = VB.kette_punkte(R8, T8, loks, rel, L)
+    return float((pts[6][None, :] + P22 @ W22.T)[:, 1].max())
+
+
+def heben(blob, prot=None):
+    """Runde 8b (Pruefer pr8 (C)/(E)1, Koordinator "S6 wieder STRENG mit Nadel: in 0 von 912 Keyframes unter der Sohle"; Weg "die Schwanz-Keyframes
+    anheben ... es ist Form-Anpassung an unserem eigenen Modell"): je Keyframe, in dem eine Ecke von Mesh 22 (Knolle, Nadel) unter der tiefsten
+    Koerperecke liegt, die Glieder 17-22 wie die Bodenregel der Stufe s (v8_bau.schwanz) gemeinsam um eine waagerechte Achse hochdrehen (1 Grad je
+    Schritt, beide Richtungen, Knochen 16 fest, jedes Gelenk <= 25 Grad), bis Mesh 22 UND die Pruefung der Stufe s (Gelenke + Radius, Dorn 589) frei
+    sind. Aendert nur die 12-Bit-Winkel der Knochen 17-22 in diesen Keyframes; alle anderen Keyframes und Knochen bleiben bytegleich. Danach Probe
+    mit der echten Posenformel (EA/b2 pose) und, falls die Rundung der Winkel noch eine Ecke unter die Sohle bringt, weiter drehen."""
+    import struct as _st
+    import v8_bau as VB
+    d, _o, ms, _tim = KB.teile(blob)
+    mo = V.modell(blob)
+    s = mo.skel
+    par = _p('kette_v8.json')
+    P = np.array(par['gelenke_b8'], float)
+    L = int(par['L'])
+    rad = [float(r) for r in par['radien']]
+    lok_ruhe = VB.ruhe_lokal(P)
+    kpv = VB.BB_kf(mo, V.PV)
+    wmax = np.radians(VB.WINKEL_MAX_GRAD)
+    Rp, _Tp = mo.pose(kpv)
+    R8p = Rp[8].astype(float) / 4096.0
+    W_, Dpv = R8p @ lok_ruhe[0], []
+    for g in range(1, 7):
+        W_ = W_ @ lok_ruhe[g]
+        Dpv.append(W_ @ Y)
+    Dpv = np.array(Dpv)
+    k_pv = VB.kurs(R8p)
+    dorn_alt = float(L + VB.DORN * rad[7])
+    rel = [np.array(s.rel[b], float) for b in SCHWANZ]
+    P22 = np.array([v[:3] for v in ms[22]['v']], float)
+    emr = bytearray(blob[d[2]:d[3]])
+
+    def frei(R8, T8, loks, boden):
+        return (VB.kette_tief(R8, T8, loks, rel, L, rad, dorn_alt) <= boden and mesh22_tief(R8, T8, loks, rel, L, P22) <= boden)
+
+    gehoben, nicht = {}, []
+    for k in range(s.kf_count):
+        R, T = mo.pose(k)
+        R8, T8 = R[8].astype(float) / 4096.0, T[8].astype(float)
+        boden = VB.tiefste_koerperecke(mo, R, T) - HEBEN_RAND
+        R22 = R[22].astype(float) / 4096.0
+        if float((T[22].astype(float)[None, :] + P22 @ R22.T)[:, 1].max()) <= boden:
+            continue                                          # mit der echten Pose schon frei: Keyframe unveraendert
+        Ry = VB.rot_y(VB.kurs(R8) - k_pv)
+        D = Dpv @ Ry.T
+        W16 = R8 @ lok_ruhe[0]
+        loks0 = [lok_ruhe[0]] + VB.glieder_aus_richtungen(W16, D, wmax)
+        pts, _W = VB.kette_punkte(R8, T8, loks0, rel, L)
+        h = pts[-1] - pts[1]
+        ax = np.cross(np.array([h[0], 0.0, h[2]]), Y)
+        ax = ax / max(np.linalg.norm(ax), 1e-9)
+        ok = None
+        for n in range(1, 121):
+            for sg in (1, -1):
+                Rh = BF._exp(ax * np.radians(n) * sg)
+                l2 = [lok_ruhe[0]] + VB.glieder_aus_richtungen(W16, D @ Rh.T, wmax)
+                if frei(R8, T8, l2, boden):
+                    ok = (n * sg, l2)
+                    break
+            if ok:
+                break
+        if not ok:
+            nicht.append(k)
+            continue
+        for i, b in enumerate(SCHWANZ):
+            if b > 16:
+                VB.winkel_schreiben(emr, s, k, b, ok[1][i])
+        gehoben[k] = ok[0]
+    neu = bytes(blob[:d[2]]) + bytes(emr) + bytes(blob[d[3]:])
+    # Probe mit der echten Posenformel
+    mo2 = V.modell(neu)
+    rest = []
+    for k in range(s.kf_count):
+        R, T = mo2.pose(k)
+        boden = VB.tiefste_koerperecke(mo2, R, T)
+        R22 = R[22].astype(float) / 4096.0
+        if float((T[22].astype(float)[None, :] + P22 @ R22.T)[:, 1].max()) > boden:
+            rest.append(k)
+    if prot is not None:
+        prot['heben'] = dict(keyframes=len(gehoben), grad={str(k): v for k, v in sorted(gehoben.items())}, nicht_frei=nicht, rest_echte_pose=rest,
+                             pv_keyframe=kpv, pv_gehoben=kpv in gehoben)
+    return neu, gehoben, rest
+
+
+
 def felder_laden():
     p = os.path.join(HIER, 'schwanz_r8.json')
     return json.load(open(p))['felder'] if os.path.exists(p) else None
@@ -573,7 +720,7 @@ def stufe(blob, farbe=STANDARD, prot=None, felder=None):
     lok = VB.ruhe_lokal(np.array(par['gelenke_b8'], float))
     n_end, n_anf = VB.gehrungen(lok)
     R = gelenk_radien(par)
-    y_spitze = L + DORN_ALT + NADEL
+    y_spitze = SPITZE_Y
     alt = copy.deepcopy(ms)
     info_alle = {}
     for g in range(7):
@@ -608,7 +755,11 @@ def stufe(blob, farbe=STANDARD, prot=None, felder=None):
                             ringe=[(nm, round(float(np.abs((P - P.mean(0)) @ achsen(phi[b])[0]).max()), 1),
                                     round(float(np.abs((P - P.mean(0)) @ achsen(phi[b])[1]).max()), 1)) for nm, P, _t, _u, _k in ringe])
     neu = KB.packen(blob, d, ms, tim)
+    hp = {}
+    neu, gehoben, rest = heben(neu, hp)                    # Runde 8b: Keyframes mit Mesh 22 unter der Sohle anheben (S6 streng)
+    assert not rest and not hp['heben']['nicht_frei'], ('Mesh 22 nach dem Anheben noch unter der Sohle', rest, hp['heben']['nicht_frei'])
     if prot is not None:
+        prot['heben'] = hp['heben']
         prot['schwanz_r8'] = dict(wurzel_eingebettet=eingebettet, farbe=farbe, farbe_name=fa['name'], quer=QUER, kerbe=KERBE, kerbe_laenge=KERBE_LAENGE, mitte=MITTE,
                                   grenze=GRENZE, nadel_spitze_y=y_spitze, stachel=STACHEL, felder=felder, glieder=info_alle,
                                   eingang_sha256=hashlib.sha256(blob).hexdigest())

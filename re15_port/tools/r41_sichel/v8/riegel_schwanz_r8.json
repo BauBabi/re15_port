@@ -263,7 +263,25 @@
     18.5,
     15.0
    ],
-   "hinweis": "ANALYSE.md 2a: Wurzel = Mitte der Schnittkante am Buckel (366,213) -> 29,5/38/23,5/18,5/15 (Messziel Bauplan 2 \"s .5/.7/.9 = 23,5/18,5/15 +- 4\"); mit der oberen Ecke (376,188) als Wurzel -> 23,5/43,5/27/19,5/14,5 (= nutzer_mass.json \"video\")"
+   "hinweis": "ANALYSE.md 2a: Wurzel = Mitte der Schnittkante am Buckel (366,213) -> 29,5/38/23,5/18,5/15 (Messziel Bauplan 2 \"s .5/.7/.9 = 23,5/18,5/15 +- 4\"); mit der oberen Ecke (376,188) als Wurzel -> 23,5/43,5/27/19,5/14,5 (= nutzer_mass.json \"video\")",
+   "abstand": {
+    "quelle": "Nutzer-Umriss Areas.png - Videobild n1439 (Pruefer pr8 a_mass.nutzer_maske), Mittellinie/Breite wie a_mass.profil_abs, Wurzel (366, 213); gemessen n7_pv_abstand.py (runde8/werkzeug)",
+    "L": 216.9,
+    "tief_y": 351,
+    "breite": {
+     "10": 12.0,
+     "30": 26.0,
+     "50": 34.0,
+     "70": 33.1,
+     "90": 33.3,
+     "110": 18.1,
+     "130": 19.8,
+     "150": 17.9,
+     "170": 18.1,
+     "190": 10.0,
+     "210": 6.0
+    }
+   }
   }
  }
 }

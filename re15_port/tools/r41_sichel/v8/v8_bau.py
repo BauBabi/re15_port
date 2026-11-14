@@ -47,8 +47,9 @@ Stufe f) Runde 7e (Handfarbe, handfarbe_r7e.py; Nutzerentscheid 2026-11-14 "wie 
 Stufe q) Runde 8 (Schwanz, schwanz_r8.py + schwanz_r8.json; Nutzer 2026-11-14 "weder mit dem rot der Schwanzfarbe noch mit dem etwas zu
    steifen grossen Schwanz zufrieden" + Version_80%/Areas*.png): Meshes 16-22 neu - Querschnitt flach quer zur Bauchachse (Querdicke 270 E.),
    Schwanzmitte duenner, Einschnuerung 0,85 an den 6 Gelenken, Glied 22 = Knolle + Nadel (bis y 1139), Fleisch nur auf der Bauchseite (Grenze
-   90 -> 60 Grad), Flanken grau (Zeile 487), Farbvariante a / b / c (--schwanzfarbe, Standard b = gedeckt mit hellen Baendern). Letzte Stufe,
-   aendert nur Meshes 16-22 (Ecken, Normalen, Flaechen, UV-/CLUT-Felder); Knochen, Keyframes, Textur, CLUT-Zeilen, Meshes 0-15 bytegleich.
+   90 -> 60 Grad), Flanken grau (Zeile 487), Farbvariante a / b (--schwanzfarbe, Standard b = gedeckt mit rosa Baendern). Letzte Stufe,
+   aendert nur Meshes 16-22 (Ecken, Normalen, Flaechen, UV-/CLUT-Felder) und (Runde 8b, schwanz_r8.heben) die Winkel der Knochen 17-22 in
+   Keyframes, in denen Mesh 22 sonst unter der Sohle laege; Knochen 0-16, Textur, CLUT-Zeilen, Meshes 0-15 bytegleich.
    Bau Runde 8: --stufen srwaunhbpfq.
 Stufe a) Runde 4 (adern_r4.py, modus "original_r4"): wie Runde 3, dazu ganz Mesh 8 ausser der Brust auf den Original-Zeilen (Naht rosa/grau)
    und ganze UV-Gruppen mit einem Schub (Feld C von Mesh 13, Unterarmband von Mesh 14, Huegel und Wurzelstreifen von Mesh 8) auf Texel, die
@@ -523,7 +524,7 @@ def main():
     ap.add_argument('--name', default='EM30_V8.EMD')
     ap.add_argument('--json')
     ap.add_argument('--stufen', default='srwaunhbpfq')
-    ap.add_argument('--schwanzfarbe', default=None, help='Stufe q: Farbvariante a / b / c (Standard schwanz_r8.STANDARD)')
+    ap.add_argument('--schwanzfarbe', default=None, help='Stufe q: Farbvariante a / b (Standard schwanz_r8.STANDARD)')
     a = ap.parse_args()
     neu, prot = bauen(a.basis, a.stufen, schwanzfarbe=a.schwanzfarbe)
     os.makedirs(a.aus, exist_ok=True)
