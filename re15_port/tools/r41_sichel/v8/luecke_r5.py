@@ -227,6 +227,7 @@ def _arbeit(args):
 
 def messen_parallel(pfad, art='alle', nv=7, jobs=8):
     from multiprocessing import Pool
+    jobs = int(os.environ.get('RE15_RIEGEL_JOBS', jobs))      # Runde 8: Auftrag "hoechstens 2 Rechenprozesse" (Ergebnis unabhaengig von jobs)
     n = len(ansichten(art))
     k = (n + jobs - 1) // jobs
     teile = [(pfad, art, nv, i, min(i + k, n)) for i in range(0, n, k)]

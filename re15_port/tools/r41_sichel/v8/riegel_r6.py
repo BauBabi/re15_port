@@ -60,6 +60,8 @@ def r4_blob(pfad=None):
 # ------------------------------------------------------------------ S15 (P4-neu d)
 def s15_plus(s15, blob):
     import unterseite_r5 as U5
+    if s15.get('r8'):                                             # Runde 8: S15 = R8e (riegel_schwanz_r8.py), Regeln der Runden 5/6 ersetzt
+        return s15
     try:
         g = U5.s15_grenze(blob)
         dk = U5.s15_deckel(blob)
@@ -362,7 +364,9 @@ def einbauen(out, blob, ref_blob, r4, ko=None, fd=None):
 def zeilen(r):
     z = []
     s = r.get('S15', {})
-    if 'r6_fehler' in s:
+    if s.get('r8'):
+        pass
+    elif 'r6_fehler' in s:
         z.append('S15 Runde 6 (Grenze / Deckel / Reifen): nicht messbar (%s) -> ROT' % s['r6_fehler'])
     elif 'grenze' in s:
         g, d, f, k = s['grenze'], s['deckel'], s['reifen'], s['kanten']

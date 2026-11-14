@@ -81,9 +81,11 @@ D16_QUER = 0.15                       # Querhalbachse Ring D in Glied 16 = QUER 
 KERBE_LAENGE = 0.12                   # Anteil der Gliedlaenge je Gelenkseite bis zum vollen Querschnitt (65 E.; Fuge ~4 px von vorn, Videobaender
                                       # 4-6 je sichtbarem Stueck bei 25-35 px Abstand, Analyse 2b; Gehrung kippt hoechstens 10 Grad -> Ring C/D
                                       # bleiben vor/hinter den Gehrungsringen)
-MITTE = {3: 0.86, 4: 0.80}            # Hochachse an Gelenk 3 / 4 (Bauplan 2 "Schwanzmitte (s .5) 15-20 % duenner", Analyse 5.5: s .5 in PV 33 px
-                                      # gegen Video 23,5, Glieder 19/20); dazwischen linear; uebrige Gelenke 1,0. Versuch x2_mitte (PV, f_rast, s .5
-                                      # gegen 07b6703f 33,5 px): 0,88/0,80 -13,4 %; 0,86/0,80 -16,4 % (28,0 px); 0,86/0,78 -19,4 %; 0,84/0,75 -25,4 %
+MITTE = {3: 0.86, 4: 0.78}            # Hochachse an Gelenk 3 / 4 (Bauplan 2 "Schwanzmitte (s .5) 15-20 % duenner" und Messziel "Seitenansicht s .5 /
+                                      # .7 / .9 = 23,5 / 18,5 / 15 +- 4"; Analyse 5.5: s .5 in PV 33 px gegen Video 23,5, Glieder 19/20); dazwischen
+                                      # linear; uebrige Gelenke 1,0. Versuch x2_mitte (PV, f_rast, Breite in 0,5-px-Schritten, 07b6703f s .5 33,5 px):
+                                      # 0,88/0,80 29,0 (-13,4 %); 0,86/0,80 28,0 (-16,4 %, aber +4,5 gegen 23,5); 0,86/0,78 27,0 (-19,4 %, +3,5);
+                                      # 0,84/0,75 25,0 (-25,4 %)
 GRENZE = (90.0, 60.0)                 # Fleischgrenze |theta| an der Wurzel (u 0) / am Spitzenende (u 7), linear (Auftrag Schritt 3: "vorn bei etwa
                                       # 85-95 Grad, zur Spitze hin etwa 60 Grad"; Video h90 rot auf 32-56 % der Breite innen, s >= .65 dunkel)
 MANSCHETTE_R, MANSCHETTE_S = 0.99, 0.2   # wie v8_bau (Runde 2, Riegel S2b)
