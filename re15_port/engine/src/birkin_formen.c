@@ -437,8 +437,13 @@ static const int16_t k_birkin_beuge[][2] = {
  * 338 326 329 353 359 365 371 377, Video 360 355 350 352 330 - 350 - 365 - 390 (Mittel |Fehler| 9). h80 -> h100 langsam auf -969
  * (Video-Kopf h86..h100 ~400), h100 -> h104 zur Kamera (BF_H_ZUR_KAMERA), Gang wie bisher. Vorher h72 -> h76 auf 0 = Ruecken zur
  * Kamera (Sichtpruefung h76..h78), dann bis h90 zur Kamera. */
+/* Runde 4 (Koordinator Punkt 4 "Birkin zeigt h73-h75 kurz den Ruecken (Drehung bis 82 Grad): Kopfposition durch Beugung statt
+ * Drehung"): Gier zur Kamera ~ Bezug-1054 (h104); vorher Spitze -119 bei h74 = 935 von der Kamera weg (82 Grad, Buckel sichtbar).
+ * Jetzt hoechstens -569 = 485 von der Kamera (43 Grad, Dreiviertelansicht von vorn), die Kopflage kommt aus der Beugung (B85,
+ * Ueberblendung): Rechnung n2/blend.py h70..h80 Port 370 373 363 349 345 348 353 359 365 371 377, Video 360 355 350 352 330 -
+ * 350 - 365 - 390 (Mittel |Fehler| 9.4, mit der 82-Grad-Drehung 9.0). */
 static const int16_t k_birkin_gier[][2] = {
-    {   0, -1270 }, {  70, -1270 }, {  71, -969 }, {  72, -569 }, {  73, -269 }, {  74, -119 }, {  75, -369 }, {  76, -669 },
+    {   0, -1270 }, {  70, -1270 }, {  71, -969 }, {  72, -719 }, {  73, -569 }, {  74, -569 }, {  75, -619 }, {  76, -669 },
     {  77, -719 }, {  78, -769 }, {  79, -819 }, {  80, -869 }, { 100, -969 } };
 #define BF_H_ZUR_KAMERA  104
 /* Runde 3 N2: Gangtempo aus dem Video - Hoehe 282 -> 302 Bildpunkte h118 -> h126 (+7.1 %) = Blicktiefe 6833 -> 6380 (rueck.py), also
