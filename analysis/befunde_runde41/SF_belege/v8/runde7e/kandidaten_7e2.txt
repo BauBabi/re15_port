@@ -1,0 +1,120 @@
+Runde 7e2 (Auftrag Koordinator nach Sicht-Pruefung 7e "knapp nicht bestanden", scratchpad sfv8/pr7e/PRUEFUNG.md):
+1. Kastenfinger (Mesh 12 v15-v24, 10 Flaechen) auf Zeile 492 mit Capcom-UV aus 5c902d49; 2. Daumenspitze pruefen; Gate: "Wird (a) rot,
+diesen Schritt NICHT nehmen und den Riegel NICHT anpassen, sondern melden."
+Kandidaten (Scratch sfv8/r7e/emd, Werkzeug runde7e/werkzeug/b2_kand.py, Laeufe lauf_v4.sh FD 360-380, Marker HF_NEU, Riegel
+riegel_handfarbe.py UNVERAENDERT, Rotanteil ganze Hand b3_ganz.py):
+  K3 ed9c5d048e8f...  7e (07b6703f) + Kastenfinger 10 Flaechen -> 492, Capcom-UV
+  K4 993647c2075d...  K3 + Daumen v1 v4 v12 -> 492, Capcom-UV
+  K5 e2422161f9d2...  7e + nur Daumen v1 v4 v12 -> 492, Capcom-UV
+ERGEBNIS: (a) "Handruecken rot" in allen drei Kandidaten ROT -> kein Schritt genommen, Asset bleibt 07b6703f, Riegel unveraendert.
+
+== 2. Daumen: Flaechen von Mesh 12 an den Ecken 13-16 / 23-26 (ohne Daumenkralle 18-22) - b1_daumen.py
+Achse Handgelenk -> Krallenringe, Laenge bis zur fernsten Krallenspitze 725
+Ecken 13-16, 23-26 (Daumen?) und 18-22 (Daumenkralle): Anteil entlang der Achse, Abstand von der Achse
+  Ecke 13 t 0.50 quer 207
+  Ecke 14 t 0.51 quer 190
+  Ecke 15 t 0.45 quer 280
+  Ecke 16 t 0.45 quer 303
+  Ecke 18 t 0.52 quer 324
+  Ecke 19 t 0.55 quer 290
+  Ecke 20 t 0.69 quer 316
+  Ecke 21 t 0.54 quer 282
+  Ecke 22 t 0.51 quer 275
+  Ecke 23 t 0.54 quer 322
+  Ecke 24 t 0.55 quer 320
+  Ecke 25 t 0.58 quer 244
+  Ecke 26 t 0.57 quer 252
+Texel unter den 18 Fingerkrallen-Flaechen: 695
+Flaechen mit einer Ecke aus 13-16 / 23-26 (Daumen) - Capcom-UV (5c902d49 = EM30):
+  v0   Ecken [15, 16, 23, 24] t 0.45-0.55  Texel  55, davon unter Krallen   0 | 495: L 17.4 a  3.9 b   0.0 rot 0.18 482: L  9.5 a  3.5 b   0.0 rot 0.00 491: L 35.7 a  3.4 b   1.2 rot 0.04 492: L 12.0 a 11.7 b   4.8 rot 0.89
+  v1   Ecken [13, 16, 24, 25] t 0.45-0.58  Texel  44, davon unter Krallen   0 | 495: L 13.8 a 15.4 b -11.2 rot 0.70 482: L  9.5 a  4.2 b   1.5 rot 0.00 491: L 15.7 a 15.2 b  -6.2 rot 0.57 492: L 12.1 a 15.5 b  -7.3 rot 0.98
+  v3   Ecken [13, 14, 25, 26] t 0.50-0.58  Texel  41, davon unter Krallen   0 | 495: L 12.2 a  7.9 b   0.0 rot 0.22 482: L  8.5 a  4.2 b   1.2 rot 0.00 491: L 35.7 a  3.3 b   1.2 rot 0.00 492: L  8.3 a 12.5 b   3.9 rot 0.83
+  v4   Ecken [14, 15, 23, 26] t 0.45-0.57  Texel  39, davon unter Krallen   0 | 495: L 16.8 a 11.0 b  -4.0 rot 0.51 482: L 12.7 a  3.9 b   1.4 rot 0.00 491: L 17.8 a  5.8 b   1.2 rot 0.38 492: L 13.9 a 13.8 b  -3.6 rot 0.87
+  v7   Ecken [5, 7, 15, 16] t 0.24-0.45  Texel  72, davon unter Krallen   0 | 495: L 13.6 a  3.9 b   0.0 rot 0.33 482: L  8.5 a  3.5 b   0.0 rot 0.00 491: L 35.7 a  3.3 b   1.2 rot 0.01 492: L  8.3 a 12.0 b   3.9 rot 0.97
+  v10  Ecken [7, 8, 13, 16] t 0.24-0.50  Texel  57, davon unter Krallen   0 | 495: L 13.6 a  9.9 b  -0.4 rot 0.49 482: L  9.5 a  4.2 b   1.4 rot 0.00 491: L 35.7 a  3.3 b   1.2 rot 0.26 492: L  9.9 a 13.8 b   2.6 rot 0.95
+  v11  Ecken [8, 9, 13, 14] t 0.42-0.51  Texel  41, davon unter Krallen   0 | 495: L 16.5 a  3.9 b   1.3 rot 0.17 482: L  9.5 a  3.5 b   1.2 rot 0.00 491: L 35.7 a  3.3 b   1.2 rot 0.00 492: L  9.9 a 11.7 b   3.9 rot 0.98
+  v12  Ecken [23, 24, 25, 26] t 0.54-0.58  Texel   8, davon unter Krallen   0 | 495: L 19.4 a 10.2 b -10.9 rot 0.50 482: L 15.5 a  4.2 b   1.5 rot 0.00 491: L 18.6 a 11.0 b -11.1 rot 0.50 492: L 19.4 a 13.8 b -12.8 rot 1.00
+  v13  Ecken [5, 9, 14, 15] t 0.26-0.51  Texel  52, davon unter Krallen   0 | 495: L 13.6 a 11.8 b  -0.4 rot 0.60 482: L  9.5 a  4.2 b   1.4 rot 0.00 491: L 35.7 a  3.4 b   1.2 rot 0.31 492: L  9.9 a 15.9 b   2.6 rot 0.92
+
+Lesart: Daumen = Kasten 13-16 -> 23-26 mit Kappe v12 (t 0,45-0,58), Daumenkralle 18-22 bis t 0,69. In Capcoms UV liegen v1 (Median a* 15,4,
+70 % a* >= 10), v4 (11,0 / 51 %) und v12 (10,2 / 50 %) auf roetlichen Texeln der Original-Zeile (= 495), aber violett (b* -4 .. -11);
+v0 und v3 nicht (a* 3,9 / 7,9). Kein Daumen-Texel liegt im Texelbereich der roten Fingerkrallen (0 von 695). Probe K5 = diese drei.
+
+== Riegel Handfarbe (unveraendert) je Kandidat
+-- K3
+Riegel Handfarbe (R7e, Nutzerentscheid 2026-11-14 "wie in der Vorlage") - K3 sha256 ed9c5d048e8fa088bee85911795f59dc0a19bd38bb33e7bb71e24f4f3c8076ec: ROT
+   Soll aus den fuenf Vorlagebildern: (a) Handruecken rot <= 0.024; (b) Finger rot >= 0.393; (c) Unterarm unteres Drittel rot <= 0.000 (rot = a* >= 10)
+   F368 | birkin20: Handruecken rot 0.123 (L 21.6 a  3.6 b   1.3, 2992 px) | Vorlage 0.024 (L 12.7 a  3.5 b  -2.2, 3677 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.473 der Handlaenge (Vorlage 0.559); Krallenwurzel S6 (Marker) 0.609; L* Handruecken / L* Unterarm oben 0.88 (Vorlage 0.52), unteres / oberes Drittel 0.76 (Vorlage 0.49)
+   F369 | birkin22: Handruecken rot 0.124 (L 21.6 a  3.6 b   1.3, 2981 px) | Vorlage 0.021 (L 12.4 a  2.8 b  -2.2, 3782 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.488 der Handlaenge (Vorlage 0.578); Krallenwurzel S6 (Marker) 0.612; L* Handruecken / L* Unterarm oben 0.88 (Vorlage 0.58), unteres / oberes Drittel 0.80 (Vorlage 0.55)
+   F371 | birkin23: Handruecken rot 0.153 (L 21.2 a  3.6 b   1.3, 2950 px) | Vorlage 0.001 (L 13.8 a  2.8 b  -2.2, 4185 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.468 der Handlaenge (Vorlage 0.532); Krallenwurzel S6 (Marker) 0.615; L* Handruecken / L* Unterarm oben 0.88 (Vorlage 0.65), unteres / oberes Drittel 0.80 (Vorlage 0.55)
+   F373 | birkin21: Handruecken rot 0.143 (L 21.6 a  3.6 b   1.3, 3042 px) | Vorlage 0.008 (L 14.3 a  2.9 b  -2.3, 4223 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.462 der Handlaenge (Vorlage 0.513); Krallenwurzel S6 (Marker) 0.600; L* Handruecken / L* Unterarm oben 0.89 (Vorlage 0.69), unteres / oberes Drittel 0.82 (Vorlage 0.56)
+   F375 | birkin24: Handruecken rot 0.141 (L 21.6 a  3.6 b   1.3, 2975 px) | Vorlage 0.008 (L 14.2 a  2.9 b  -2.3, 5775 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.471 der Handlaenge (Vorlage 0.553); Krallenwurzel S6 (Marker) 0.622; L* Handruecken / L* Unterarm oben 0.87 (Vorlage 0.72), unteres / oberes Drittel 0.75 (Vorlage 0.69)
+   F367 (Angabe) | birkin20: Handruecken rot 0.112 (L 21.6 a  3.6 b   1.3, 2928 px) | Vorlage 0.024 (L 12.7 a  3.5 b  -2.2, 3677 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.492 der Handlaenge (Vorlage 0.559); Krallenwurzel S6 (Marker) 0.623; L* Handruecken / L* Unterarm oben 0.88 (Vorlage 0.52), unteres / oberes Drittel 0.74 (Vorlage 0.49)
+   (a) Handruecken ueber dem Soll: [368, 369, 371, 373, 375] -> ROT
+   (b) Finger unter dem Soll: keine -> GRUEN
+   (c) Unterarm unteres Drittel ueber dem Soll: keine -> GRUEN
+-- K4
+Riegel Handfarbe (R7e, Nutzerentscheid 2026-11-14 "wie in der Vorlage") - K4 sha256 993647c2075d3ac270cd854fe22509570f85b3218ae5e00b38b17cc3bbe94544: ROT
+   Soll aus den fuenf Vorlagebildern: (a) Handruecken rot <= 0.024; (b) Finger rot >= 0.393; (c) Unterarm unteres Drittel rot <= 0.000 (rot = a* >= 10)
+   F368 | birkin20: Handruecken rot 0.147 (L 20.7 a  3.6 b   1.3, 2992 px) | Vorlage 0.024 (L 12.7 a  3.5 b  -2.2, 3677 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.473 der Handlaenge (Vorlage 0.559); Krallenwurzel S6 (Marker) 0.609; L* Handruecken / L* Unterarm oben 0.84 (Vorlage 0.52), unteres / oberes Drittel 0.76 (Vorlage 0.49)
+   F369 | birkin22: Handruecken rot 0.144 (L 21.1 a  3.6 b   1.3, 2981 px) | Vorlage 0.021 (L 12.4 a  2.8 b  -2.2, 3782 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.488 der Handlaenge (Vorlage 0.578); Krallenwurzel S6 (Marker) 0.612; L* Handruecken / L* Unterarm oben 0.86 (Vorlage 0.58), unteres / oberes Drittel 0.80 (Vorlage 0.55)
+   F371 | birkin23: Handruecken rot 0.176 (L 20.7 a  3.6 b   1.3, 2950 px) | Vorlage 0.001 (L 13.8 a  2.8 b  -2.2, 4185 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.468 der Handlaenge (Vorlage 0.532); Krallenwurzel S6 (Marker) 0.615; L* Handruecken / L* Unterarm oben 0.86 (Vorlage 0.65), unteres / oberes Drittel 0.80 (Vorlage 0.55)
+   F373 | birkin21: Handruecken rot 0.176 (L 20.7 a  3.6 b   1.3, 3042 px) | Vorlage 0.008 (L 14.3 a  2.9 b  -2.3, 4223 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.462 der Handlaenge (Vorlage 0.513); Krallenwurzel S6 (Marker) 0.600; L* Handruecken / L* Unterarm oben 0.85 (Vorlage 0.69), unteres / oberes Drittel 0.82 (Vorlage 0.56)
+   F375 | birkin24: Handruecken rot 0.166 (L 20.7 a  3.6 b   1.3, 2975 px) | Vorlage 0.008 (L 14.2 a  2.9 b  -2.3, 5775 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.471 der Handlaenge (Vorlage 0.553); Krallenwurzel S6 (Marker) 0.622; L* Handruecken / L* Unterarm oben 0.83 (Vorlage 0.72), unteres / oberes Drittel 0.75 (Vorlage 0.69)
+   F367 (Angabe) | birkin20: Handruecken rot 0.133 (L 20.7 a  3.6 b   1.3, 2928 px) | Vorlage 0.024 (L 12.7 a  3.5 b  -2.2, 3677 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.492 der Handlaenge (Vorlage 0.559); Krallenwurzel S6 (Marker) 0.623; L* Handruecken / L* Unterarm oben 0.84 (Vorlage 0.52), unteres / oberes Drittel 0.74 (Vorlage 0.49)
+   (a) Handruecken ueber dem Soll: [368, 369, 371, 373, 375] -> ROT
+   (b) Finger unter dem Soll: keine -> GRUEN
+   (c) Unterarm unteres Drittel ueber dem Soll: keine -> GRUEN
+-- K5
+Riegel Handfarbe (R7e, Nutzerentscheid 2026-11-14 "wie in der Vorlage") - K5 sha256 e2422161f9d22948ed7831aeb6bd0347b119523ee3f72ff5f4fad63a4217d56c: ROT
+   Soll aus den fuenf Vorlagebildern: (a) Handruecken rot <= 0.024; (b) Finger rot >= 0.393; (c) Unterarm unteres Drittel rot <= 0.000 (rot = a* >= 10)
+   F368 | birkin20: Handruecken rot 0.038 (L 23.0 a  3.5 b   1.3, 2992 px) | Vorlage 0.024 (L 12.7 a  3.5 b  -2.2, 3677 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.709 der Handlaenge (Vorlage 0.559); Krallenwurzel S6 (Marker) 0.609; L* Handruecken / L* Unterarm oben 0.94 (Vorlage 0.52), unteres / oberes Drittel 0.76 (Vorlage 0.49)
+   F369 | birkin22: Handruecken rot 0.037 (L 23.0 a  3.5 b   1.3, 2981 px) | Vorlage 0.021 (L 12.4 a  2.8 b  -2.2, 3782 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.727 der Handlaenge (Vorlage 0.578); Krallenwurzel S6 (Marker) 0.612; L* Handruecken / L* Unterarm oben 0.93 (Vorlage 0.58), unteres / oberes Drittel 0.80 (Vorlage 0.55)
+   F371 | birkin23: Handruecken rot 0.040 (L 23.2 a  3.5 b   1.3, 2950 px) | Vorlage 0.001 (L 13.8 a  2.8 b  -2.2, 4185 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.751 der Handlaenge (Vorlage 0.532); Krallenwurzel S6 (Marker) 0.615; L* Handruecken / L* Unterarm oben 0.97 (Vorlage 0.65), unteres / oberes Drittel 0.80 (Vorlage 0.55)
+   F373 | birkin21: Handruecken rot 0.046 (L 23.4 a  3.5 b   1.3, 3042 px) | Vorlage 0.008 (L 14.3 a  2.9 b  -2.3, 4223 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.730 der Handlaenge (Vorlage 0.513); Krallenwurzel S6 (Marker) 0.600; L* Handruecken / L* Unterarm oben 0.96 (Vorlage 0.69), unteres / oberes Drittel 0.82 (Vorlage 0.56)
+   F375 | birkin24: Handruecken rot 0.039 (L 23.0 a  3.5 b   1.3, 2975 px) | Vorlage 0.008 (L 14.2 a  2.9 b  -2.3, 5775 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.743 der Handlaenge (Vorlage 0.553); Krallenwurzel S6 (Marker) 0.622; L* Handruecken / L* Unterarm oben 0.93 (Vorlage 0.72), unteres / oberes Drittel 0.75 (Vorlage 0.69)
+   F367 (Angabe) | birkin20: Handruecken rot 0.041 (L 21.6 a  3.5 b   1.3, 2928 px) | Vorlage 0.024 (L 12.7 a  3.5 b  -2.2, 3677 px)
+        (d) Grenze grau/rot nach der Regel der Vorlage bei 0.719 der Handlaenge (Vorlage 0.559); Krallenwurzel S6 (Marker) 0.623; L* Handruecken / L* Unterarm oben 0.88 (Vorlage 0.52), unteres / oberes Drittel 0.74 (Vorlage 0.49)
+   (a) Handruecken ueber dem Soll: [368, 369, 371, 373, 375] -> ROT
+   (b) Finger unter dem Soll: keine -> GRUEN
+   (c) Unterarm unteres Drittel ueber dem Soll: keine -> GRUEN
+
+== Rotanteil der ganzen Hand (Mesh 12 sichtbar bzw. Vorlage-Arm ab W), a* >= 6 / >= 10, je Klasse a* >= 10 - b3_ganz.py
+Vorlage ganze Hand (ab W) a*>=6 / >=10: birkin20 0.331/0.184  birkin22 0.312/0.182  birkin23 0.284/0.159  birkin21 0.296/0.168  birkin24 0.295/0.149
+ALT ganze Hand a*>=6 / >=10: F368 0.528/0.408 (Hand 0.36 Kasten 0.26 Krallen 0.63 Daumenkralle 0.00)  F369 0.532/0.412 (Hand 0.36 Kasten 0.28 Krallen 0.63 Daumenkralle 0.00)  F371 0.524/0.403 (Hand 0.35 Kasten 0.27 Krallen 0.61 Daumenkralle 0.00)  F373 0.535/0.414 (Hand 0.37 Kasten 0.28 Krallen 0.61 Daumenkralle 0.00)  F375 0.514/0.399 (Hand 0.36 Kasten 0.25 Krallen 0.60 Daumenkralle 0.00)
+NEU ganze Hand a*>=6 / >=10: F368 0.344/0.156 (Hand 0.00 Kasten 0.00 Krallen 0.63 Daumenkralle 0.00)  F369 0.345/0.158 (Hand 0.00 Kasten 0.00 Krallen 0.63 Daumenkralle 0.00)  F371 0.350/0.160 (Hand 0.00 Kasten 0.00 Krallen 0.61 Daumenkralle 0.00)  F373 0.350/0.159 (Hand 0.00 Kasten 0.00 Krallen 0.61 Daumenkralle 0.00)  F375 0.332/0.147 (Hand 0.00 Kasten 0.00 Krallen 0.60 Daumenkralle 0.00)
+K3 ganze Hand a*>=6 / >=10: F368 0.478/0.242 (Hand 0.00 Kasten 0.57 Krallen 0.63 Daumenkralle 0.00)  F369 0.473/0.244 (Hand 0.00 Kasten 0.63 Krallen 0.63 Daumenkralle 0.00)  F371 0.490/0.264 (Hand 0.00 Kasten 0.66 Krallen 0.61 Daumenkralle 0.00)  F373 0.486/0.259 (Hand 0.00 Kasten 0.67 Krallen 0.61 Daumenkralle 0.00)  F375 0.481/0.245 (Hand 0.00 Kasten 0.60 Krallen 0.60 Daumenkralle 0.00)
+K4 ganze Hand a*>=6 / >=10: F368 0.505/0.259 (Hand 0.03 Kasten 0.57 Krallen 0.63 Daumenkralle 0.00)  F369 0.496/0.258 (Hand 0.02 Kasten 0.63 Krallen 0.63 Daumenkralle 0.00)  F371 0.512/0.281 (Hand 0.03 Kasten 0.66 Krallen 0.61 Daumenkralle 0.00)  F373 0.520/0.283 (Hand 0.04 Kasten 0.67 Krallen 0.61 Daumenkralle 0.00)  F375 0.509/0.263 (Hand 0.03 Kasten 0.60 Krallen 0.60 Daumenkralle 0.00)
+K5 ganze Hand a*>=6 / >=10: F368 0.371/0.173 (Hand 0.03 Kasten 0.00 Krallen 0.63 Daumenkralle 0.00)  F369 0.367/0.172 (Hand 0.02 Kasten 0.00 Krallen 0.63 Daumenkralle 0.00)  F371 0.371/0.176 (Hand 0.03 Kasten 0.00 Krallen 0.61 Daumenkralle 0.00)  F373 0.384/0.183 (Hand 0.04 Kasten 0.00 Krallen 0.61 Daumenkralle 0.00)  F375 0.361/0.165 (Hand 0.03 Kasten 0.00 Krallen 0.60 Daumenkralle 0.00)
+
+Zusammenfassung (Paare F368/F369/F371/F373/F375):
+                     (a) Handruecken rot   Grenze grau/rot (Regel Vorlage)   ganze Hand a*>=6 / >=10
+  Vorlage            0,001-0,024           0,513-0,578                       0,284-0,331 / 0,149-0,184 (Pruefer: 0,30-0,33 / 0,17-0,19)
+  7d 5c902d49        0,343-0,357 ROT       0,74-0,77                         0,514-0,535 / 0,399-0,414
+  7e 07b6703f        0,012-0,017 GRUEN     0,71-0,75                         0,332-0,350 / 0,147-0,160
+  K3 (+Kasten)       0,123-0,153 ROT       0,462-0,488                       0,473-0,490 / 0,242-0,264
+  K4 (+Kasten+Daumen)0,144-0,176 ROT       0,462-0,488                       0,496-0,520 / 0,258-0,283
+  K5 (+Daumen)       0,037-0,046 ROT       (wie 7e)                          0,367-0,371 / 0,172-0,176
+Der Kastenfinger liegt bei 0,47-0,65 der Handlaenge, also zu gut zwei Dritteln VOR der Krallenwurzel S6 (0,60-0,62), auf der der Riegel
+den Handruecken enden laesst; rot gefaerbt rueckt die Grenze grau/rot auf 0,46-0,49 (Vorlage 0,51-0,58: jetzt 2-6 Videopixel zu frueh
+statt 10-14 zu spaet) und der Rotanteil der ganzen Hand steigt ueber das Band der Vorlage (0,47-0,49 gegen 0,28-0,33).
+Pruefbild (nur Arbeitsbild, nicht fuer den Nutzer): Scratch sfv8/r7e/pruefbild_7e2.png (Vorlage | 7d | 7e | 7e+Kasten | 7e+Kasten+Daumen
+| 7e+Daumen in F368/F371/F375). Sicht: mit Kastenfinger ein dunkelrotes Band direkt ueber den Krallen, harte waagrechte Kante zum Grau
+(kein Verlauf); Daumen als kleiner violetter Fleck.
