@@ -1,0 +1,17 @@
+P5-Bank fuer C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7c/m/V7.EMD
+sha256 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6
+Bezug V7 319bbd17f10b, r4 10d021738731, Eingang r6 e9e71bca28f4
+Laufzeit schnell 134 s
+K-PRAEFIX  ROT    Fehler ['Abschnitt 2 (Knochen/Keyframes/Clips) ungleich Eingang', 'Texturbild/CLUT ungleich Eingang', 'Mesh 11 ungleich Eingang', 'Mesh 12 ungleich Eingang', 'Mesh 13 ungleich Eingang', 'Mesh 14 ungleich Eingang', 'Mesh 16 ungleich Eingang', 'Mesh 17 ungleich Eingang', 'Mesh 18 ungleich Eingang', 'Mesh 19 ungleich Eingang', 'Mesh 20 ungleich Eingang', 'Mesh 21 ungleich Eingang', 'Mesh 22 ungleich Eingang', 'neue Flaechen auf fremden CLUT-Zeilen [488]']; Mesh 9 angehaengt {'ecken': 0, 'dreiecke': 0, 'vierecke': 0}; Texel ausserhalb der vom Eingang benutzten (Info) 6089 (Soll: V7-Kopf bytegleich als Praefix, Rest = Eingang; Auftrag E6/NICHT AENDERN)
+K-FORMAT   GRUEN  Fehler keine; Rundlauf True; Dreiecke Modell 1347 (< 8192 render_pc.c:226); Mesh 8/9 (Ecken, Dreiecke, Vierecke) [(69, 77, 27), (61, 73, 18)]; 268948 Byte
+K-GESICHT  GRUEN  geaenderte Gesichts-Bildpunkte gegen Basis (ohne angehaengte Flaechen) in 152 Ansichten (vorn + alle Szenenposen): 0 (Soll 0, E6 i) []
+K-VORN     GRUEN  (a) Kragen = Mesh-8-Bildpunkte im Kopffenster von vorn hoeher als y -1270 (Knochenraum 8): Summe 0 in 0 von 136 Vorderansichten, max 0, F344-F378 0, hoechster Rumpfpunkt von vorn y -1259 (Soll 0; V7 -1259 / r4 -1263, erk M6) []; (b) Rahmen = angehaengte Kopf-Bildpunkte von vorn ausserhalb des Basis-Kopfumrisses: 0 in 0 Ansichten (Soll 0) []; Info: angehaengt sichtbar von vorn 0 px; Umriss 8+9 ueber V7 max 0.0 px (F344-F378 0.0)
+S16        ROT    (a) ueber dem Soll (<= 21 px / <= 7 tief / <= 3.2 px; luecke_r5 Z. 52-58, Vorlage n1433-n1441) 52 von 177 Ansichten [('PV', 63, 39, 15.6), ('P2', 57, 31, 5.4), ('F268', 32, 6, 2.2), ('F269', 32, 6, 2.2), ('F270', 26, 0, 1.4), ('F271', 26, 0, 1.4), ('F272', 37, 6, 2.8), ('F273', 37, 6, 2.8), ('F274', 82, 38, 5.7), ('F275', 82, 38, 5.7)]; Summe 3494 / tief 1719; E3: {'status': 'ROT', 'grund': '52 Ansichten ueber dem Soll'}; (b) weniger Gesicht als V7 0; (c) Einsatz ueber Gesicht 0; verdeckt (riegel_r6.s16_verdeckt) 0
+S18        ROT    (a1) Ecken von Mesh 8 von vorn > 2 px neben r4: 136 Ansichten max 9.6; (a2 Info) Umriss ueber r4 max 3.0; (a3) Mesh-8-Flaechen ohne r4-Gegenstueck sichtbar: 0 Ansichten max 0 (riegel_r6.s18, Soll 0)
+S3         ROT    (a) Kuppe 8.0 (<= 4); (b) H 4.6 bei x 427 (5-10, x 428-445); (c) weitere []; (d) Sattel Kopf 6.4 (<= 2); (e) K 3.0 (<= 3) (riegel_v8.s2_s3, Messblatt V8 Abschnitt 7)
+S7-Buckel  ROT    Huegel/Buckel-Rot PV 0.0 % (>= 50; riegel_v8.S3F_MIN, r4 = Vorlage 58,3 %)
+S2c        ROT    Naht Rumpf ueber Schwanz 7 px (<= 3; riegel_v8.s2c_r5, 7 Varianten) [7, 7, 7, 6, 6, 7, 7]
+S9         GRUEN  Vorderansicht Oberkontur gegen V7 (<= 2 px, keine neue Ecke; riegel_v8.s9): []; (b) Schlitz 0 (Soll 0)
+S19        ROT    Texeldichte/Streckung Mesh 8 gegen r4 (0,5-2-fach, Streckung <= 2; riegel_r6.s19): geprueft 100, neu 0, ausserhalb [('-', 0, 'keine unberuehrte Zeile-493-Flaeche')]
+S1         ROT    Koerperbau Kontur T Mittel 16.8 Max 50.0 px (<= 4 / <= 8; riegel_v8.s1)
+SUMME: 8 ROT ['K-PRAEFIX', 'S16', 'S18', 'S3', 'S7-Buckel', 'S2c', 'S19', 'S1']

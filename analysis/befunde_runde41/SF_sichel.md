@@ -4496,3 +4496,119 @@ Gegenproben (runde7b/riegel_alle.sh; mit dem neuen unterseite_v8.json):
 4. K5: Bildmass in P2 bleibt Messartefakt; die 7-Varianten-Zahl des Zahlen-Pruefers ist nicht nachgestellt.
 5. Gegenproben mit dem neuen unterseite_v8.json: an a474188a und Stand 6d ist S15 jetzt ROT (die 7 grauen Kegel-Dreiecke gelten als
    Deckel der Unterseite) - gewollt, siehe Riegel-Abschnitt.
+
+## V8 Runde 7c - Einbau der P5-Stufe (Kandidat R3) und Pflicht-Korrekturen K-a bis K-e (Bauer, Zweig r41/sichel_v8, 2026-11-13/14)
+
+Auftrag Runde 7 Teil c. Eingang Stand 7b (Spiel-Asset 87b02681, Commit db62602be). Geaendert ist nur Mesh 8; Mesh 9 bleibt der V7-Kopf.
+NEU = Spiel-Asset 5c902d49 (Pin). Belege: analysis/befunde_runde41/SF_belege/v8/runde7c/ (stand.txt, vgl_einbau.txt, kette_a/b.txt,
+ctest_gruppe.txt, bank/, e9_messung.txt, zacke_messung.txt, gesicht_messung.txt, orange_messung.txt, flaechen_messung.txt,
+texel_weiss_messung.txt, riegel_v8r7c.txt/.json, riegel_r7c_*_gegenprobe.txt, riegel_alle.sh, bilder/, werkzeug/).
+Arbeitsnotiz: scratchpad sfv8/r7c/NOTIZ.md.
+
+### Einbau
+- Werkzeug re15_port/tools/r41_sichel/v8/p5_stufe.py = Stufe des P5-Ablaufs (sfv8/p5/kand_r3/stufe_p5.py). Der Kopf nennt die Herkunft
+  (Ablauf P5, Kandidat R3, Pruefberichte). In v8_bau.py ist sie die letzte Stufe p, in v8_kette.sh gilt --stufen srwaunhbp.
+- p5_stufe.py --r3 auf r6 (e9e71bca) ergibt bytegleich 9860f6bd (= R3).
+- Auf Stand 7b ergibt --r3 47b51e80. Dort sind Abschnitte 0-6, Textur und CLUT bytegleich 7b, die Meshes 8/9 bytegleich R3 und alle
+  anderen Meshes bytegleich 7b (vgl_einbau.txt).
+
+### Pflicht-Korrekturen (vorher = R3 auf Stand 7b, nachher = NEU)
+| Punkt | Aenderung (p5_stufe.KORR_UV / KORR_ECKEN) | vorher -> nachher |
+|---|---|---|
+| K-a | UV t60 Ecke 17 (57,0) -> (61,6) und q15 Ecke 17 (74,11) -> (77,15), beides = R2/r6 | fremde Texel in Mesh 8: 40 -> 0. Orange Bildpunkte neu gegen den Eingangs-Lauf (Maske des Sicht-Pruefers R3): 115 Bilder / 1266 px / groesstes Stueck 17 -> 0 / 0 / 0 |
+| K-a (Riegel S7 a) | q2 Ecke 46 (42,0) -> r6 (41,0), Ecke 16 (37,2) -> (38,4) | Texel ohne Original-Flaeche 3 -> 0. Streckung q2 1,81 -> 1,61 |
+| K-b | UV t8 Ecke 17 (29,38) -> (23,41) | Dichte 0,47 -> 0,53 (Pruefer flaechen.py), Bank S19 d8 0,49 -> nicht mehr ausserhalb, Streckung 1,80. Fast weisse Bildpunkte d8: 1 -> 0 |
+| K-c | Ecke 17 (-29,-1160,240) -> (-10,-1160,198), Ecke 25 (220,-710,170) -> (216,-708,178) | Pruefer-Mass: offline 1 (P2+2048) -> 0 in 177 Ansichten, echt 1 (F313) -> 0 in F225-F450. Riegel-Mass (s16_verdeckt je Bildpunkt): 12 -> 10, Eingang 6 |
+| K-d | wie K-c (Ecke 17) | S9 F344: 3 -> 2 px |
+| K-e | - | Buckel-Rot S7: 50,0 -> 50,0 % |
+
+Versuche fuer K-c und K-d (je hoechstens drei):
+1. Ecke 17 nur tiefer (-29,-1140,240): F344 2, P2+2048 0. Aber F313 blieb, und in den echten Bildern kam rechts neben dem Kopf eine
+   helle Zacke mit V-Kerbe in Folge zurueck (F274-F282 und F306-F309, 21-25 px, Wand L 95-99). Verworfen.
+2. Ecke 17 auf (-10,-1160,198) nach Jacobi (jac.py). Ecke 25 nach dem Flaechen-Kennlauf F313: der Bildpunkt liegt unter der Kante 30-25
+   von q15; Ecke 23 zu verschieben wirkt nicht. (215,-708,170) hob die Streckung des Nachbarn t36 von 2,96 auf 3,02, (216,-708,178)
+   senkt sie auf 2,91. Behalten.
+
+Nebenversuche: t8 (25,36) ergab 112 fast weisse Bildpunkte (S14 b) und S14s 415 -> ersetzt durch (23,41). q2 nur mit Ecke 46 auf (41,0)
+ergab Streckung 2,13 (> 2) -> zusaetzlich Ecke 16 (38,4).
+
+### Was R3 erreicht hat, vorher -> nachher
+- Foto-Posen offline (Bank): PV 15/0/1,4 -> 15/0/1,4; P2 20/1/2,0 -> 20/1/2,0. Kragen 0 -> 0, Rahmen 0 -> 0, Mesh 9 = V7.
+- Zacke + V-Kerbe neben dem Kopf in Folge (echte Bilder): 0 -> 0. Nur F313 einzeln (35 px).
+- E9 offline, vorn: 36 / 2520 -> 36 / 2519 (V7 42 / 2824).
+- E9 echt, vorn, Pruefer-Klassen ohne F340: 18 / 1041 -> 18 / 1041 (V7 17 / 1306).
+- E9 echt mit Bank-Klassen: 24 / 1347 -> 24 / 1617 (V7 30 / 1881). Ursache: 17 liegt in F276-F310 1,1 px tiefer. Jede Lage, die P2+2048
+  schliesst, senkt 17 dort um mindestens 1,1 px (grid17.py).
+- K-STREIFEN (Bank): 7946 -> 7850. S2c 2 -> 2. S1 2,3 / 6,0 -> 2,3 / 6,0. S14s 55 -> 22 (= V7). state.log der Szene bytegleich V7.
+
+### Riegel (riegel_r7c.py; riegel_v8.py --r7c*; riegel_alle.sh)
+Summe NEU: 18 von 24 gruen; GELB: S3; ROT: S9, S14, S16, S18, S19.
+Zum Vergleich: Stand 6d 17 von 23 (ROT S3, S9, S16, S17, S18, S19); Stand 7b 18 von 23 (ROT S3, S9, S16, S18, S19).
+
+Stand 6d -> neu:
+- S1, S2, S4-S8, S10-S13, S15, S20, S10s, S14s: gruen -> gruen.
+  - S7 (c) 46,2 -> 39,8 % (Band 25-80).
+  - S9s 10 -> 0.
+- S17: ROT -> GRUEN (seit 7a).
+- S3: ROT -> GELB "Erbe" (E12). (e) K 3,4 = Eingang. (f) Huegel-Rot 57,6 -> 50,0 %.
+- S9: ROT -> ROT, schlechter.
+  - Neue Ecke P1 x 458, seit P5 R2/R3.
+  - F344 0 -> 2 px.
+  - Schlitz 73 -> 75.
+  - F354 5 = 5.
+- S14: GRUEN -> ROT, durch den UV-Rueckbau von R3 (d66/v24/v4 auf r4).
+  - (b) fast weisse Bildpunkte von vorn 0 -> 1804 (d66 880, v24 587, v4 337).
+  - (a) dL F354 3,88 und F364 3,93 > V7 + 1,5. F344 3,66 und P1 3,23 sind im Soll.
+- S16: ROT -> ROT.
+  - (a) alt: 62 -> 42 Ansichten.
+  - E9 offline gruen; E9 echt vorn 18 / 1041 gegen V7 17 / 1306: eins zu viel (F312 54/28/5,0).
+  - Mesh 8 verdeckt mehr Gesicht als der Eingang: PV+1024 4/2, P2+2048 2/0.
+  - Zacke 0, F340 ist Artefakt (E13), Szene Mesh 8 0.
+- S18: ROT -> ROT.
+  - (a1) ohne die Ecken 17/30/46: 79 Ansichten / 6,4 px -> 1 Ansicht / 2,5 px (Ecke 41, PV+512). Die E10-Bedingung "Gesicht" fehlt
+    (siehe S16), daher zaehlt 17 mit 13,8 px.
+  - (a3) 116 -> 0 (E11).
+  - Kragen 0. (b) E12: 0 Keile, 35 Bilder GELB, groesstes Stueck 14 px.
+- S19: ROT -> ROT. d65 0,49 -> 0,46, v13 2,42 = 2,42; d10 nicht mehr ausserhalb.
+- S21 (neu): GRUEN. Fremde Texel 0, oranger Fleck in 0 Bildern.
+
+Gegenproben (riegel_r7c.py teil, riegel_r7c_*_gegenprobe.txt):
+- V8 r4: S16 ROT. PV 33/17/18,4, P2 43/17/3,6, vorn offline 61/4136.
+- V8 r5d: S18 ROT, Kragen 49387 px.
+- R2: S16 ROT, Zacke in Folge F275-F282 und F307-F313.
+- R3 (auf 7b): S21 ROT. 40 fremde Texel, oranger Fleck in 115 Bildern. Szene Mesh 8 F313 1 px.
+- V7: Vorder-Klasse gruen, offline 42/2824 und echt 17/1306. S16 insgesamt ROT wegen der Foto-Posen.
+- Stand 7b: S16 ROT, Kragen 4684 px.
+
+### Tests und Spiel
+- Kette zweimal V8-KETTE-OK, A = B (5c902d49). Spiel-Asset = Pin. local_build.sh configure/build: LOCAL-BUILD-OK.
+- ctest-Gruppe: "100% tests passed, 0 tests failed out of 8" (305,17 s).
+- test_birkin_formen.c fuer Mesh 8: 81/27/69, Ergaenzungsdreiecke = Haelften von v8/v17, Zeilen 493/494 60/48, UV anders 31.
+- Szenenlauf FD 200-1100: state.log bytegleich V7.
+
+### Tafeln (roh, echte Framedumps, selbst angesehen; bilder/)
+- t7c_griff.png (F278, F310-F313): Silhouetten R3 = NEU, keine Zacke, Gesicht = V7.
+- t7c_vorn.png (F344-F364): R3 hat orange Punkte an der Plattenkante, NEU nicht.
+- t7c_orange_F348.png: oranges Dreieck bei R3 sichtbar, bei NEU weg.
+- t7c_gesicht_F313.png.
+- t7c_t8_weiss_F354.png: weisse Streifen mit t8 (25,36), mit der Endwahl (23,41) weg.
+
+### Offen
+- S14 (6d gruen, jetzt ROT): R3 hat d66/v24/v4 per UV auf r4 zurueckgesetzt, um den dunkelroten Fleck links neben dem Gesicht zu entfernen.
+  Folgen:
+  - (b) offline 1804 fast weisse Bildpunkte von vorn.
+  - (a) dL F354/F364 ueber V7 + 1,5.
+  - Im echten Fenster S14s nur 22 (= V7).
+  Zielkonflikt dunkelroter Fleck gegen weisse Haut. Nicht geaendert: liegt ausserhalb von K-a bis K-e und beruehrt etwas, das R3 erreicht hat.
+- K-c im Riegel-Mass: Mesh 8 verdeckt PV+1024 4 px (Eingang 2, v15 seit R3-Ecke 30) und P2+2048 2 px (d49). Im Pruefer-Mass 0.
+  Kein dritter Versuch, weil jede Lage, die P2+2048 weiter schliesst, 17 in der Griffphase weiter senkt und PV+1024 an Ecke 30 haengt
+  (S7 steht bei 50,0).
+- S16 E9 echt: vorn 18 gegen V7 17 durch F312 (linke Kerbe "Kopf ueber Schulter", 54/28/5,0). Die gibt es seit r6, sie steckt auch in
+  R2 und R3. Summe 1041 <= 1306.
+- S9: neue Ecke P1 x 458 (seit R2/R3), Schlitz 75 (6d 73).
+- S18 a1: Ecke 41 PV+512 2,5 px (r5d-Rest).
+- S19: d65 0,46 und v13 2,42 (Erbe).
+- t36 Streckung 2,91 (r6 2,96).
+- Bank-Mass E9 echt: 1347 -> 1617 (siehe oben).
+- Bank K-PRAEFIX ROT ist eine Bauart-Folge: die Bank vergleicht mit r6, die Meshes 12 und 16-22 sind seit 7a/7b anders.
+- TaskStop beendete die Schleife riegel_alle.sh nicht. Doppelte Laeufe wurden per PID beendet und alles einmal sauber neu gerechnet.

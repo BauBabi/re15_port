@@ -1,0 +1,7 @@
+R3B gegen ['N7B', 'R4', 'V7', 'R2', 'R6'] : fremde Texel in Mesh 8: 40 {'d60': (494, 37), 'v15': (494, 3)}
+KC8 gegen ['N7B', 'R4', 'V7'] : fremde Texel in Mesh 8: 0 {}
+- S7a ok True texel_ohne_original_flaeche 0 q2 Streckung [1.61, 1.04]
+N7B weiss 0 []
+R3B weiss 1805 [('d66', 880), ('v24', 587), ('v4', 337), ('d8', 1)]
+KC6 weiss 1917 [('d66', 880), ('v24', 587), ('v4', 337), ('d8', 113)]
+KC8 weiss 1804 [('d66', 880), ('v24', 587), ('v4', 337)]
