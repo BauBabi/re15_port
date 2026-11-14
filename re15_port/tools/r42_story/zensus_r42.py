@@ -353,14 +353,35 @@ def bank9_saetze():
     # Bildbytes in gen/*_plakat.inc (Palette/Pixel des Plakats, Spur C), die der Port-Zensus als "SCD 0x21 Bank 0x09" liest
     # (gen/ventilkette_r41_plakat.inc:361 = Bit 12, :3303 = Bit 17): kein Flag-Zugriff -> nicht zaehlen.
     zeilen = [z for z in ptxt.splitlines() if "_plakat.inc:" not in z]
-    ptxt = chr(10).join(zeilen)
-    port = set(int(x) for x in re.findall(r"= Bit (\d+)", ptxt)) | set(int(x) for x in re.findall(r"-> Bit (\d+)", ptxt))
-    for name, wert in re.findall(r"(RE15_\w+)=(\d+)", ptxt):
-        if name.startswith("RE15_R42_"):
+    # Runde 42 Stufe STAGE2 (Pruefung 1, Befund 2): die Runde-42-Bits sind seit dem Bau SELBST im Port. B2 fragt nach einer
+    # FREMDEN Belegung: eine Stelle, deren Bit-Argument ein RE15_R42_*-Makro ist (SCD OP_SET ... Bit RE15_R42_BIT_x, Tabellen-
+    # Liste "RE15_R42_BIT_x=n" der Datei mit dem Wrapper bit9_setzen()), ist die EIGENE Nutzung des Vertrags-Bits und wird als
+    # solche ausgewiesen (EIGEN), nicht als Kollision gezaehlt. Jede andere Stelle mit demselben Wert bleibt B2.
+    eigen = {}
+    fremd = []
+    for z in zeilen:
+        m = re.search(r"Bit (RE15_R42_\w+)\s+= Bit (\d+)", z) or re.search(r"flag_(?:get|set)\(\S+, (RE15_R42_\w+)\)\s+= Bit (\d+)", z)
+        if m:
+            eigen.setdefault(int(m.group(2)), []).append(z.strip().split()[0])
             continue
-        if name in ("RE15_R41C_STROM_BIT", "RE15_R41C_SICHERUNG_BIT", "RE15_R41C_GENERATOR_BIT"):
-            continue   # Bank 3 (re15_ventilkette_r41.h:216-219), Treffer des Port-Zensus nur ueber den Dateinamen
-        port.add(int(wert))
+        fremd.append(z)
+    ptxt = chr(10).join(fremd)
+    port = set(int(x) for x in re.findall(r"= Bit (\d+)", ptxt)) | set(int(x) for x in re.findall(r"-> Bit (\d+)", ptxt))
+    datei = None
+    for z in fremd:
+        m = re.match(r"\s+(engine/\S+|include/\S+|platform/\S+)\s+\[", z)
+        if m:
+            datei = m.group(1)
+        for name, wert in re.findall(r"(RE15_\w+)=(\d+)", z):
+            if name.startswith("RE15_R42_"):
+                eigen.setdefault(int(wert), []).append("%s (Wrapper, %s)" % (datei or "?", name))
+                continue
+            if name in ("RE15_R41C_STROM_BIT", "RE15_R41C_SICHERUNG_BIT", "RE15_R41C_GENERATOR_BIT"):
+                continue   # Bank 3 (re15_ventilkette_r41.h:216-219), Treffer des Port-Zensus nur ueber den Dateinamen
+            if name in ("RE15_S2_RIEGEL_BIT", "RE15_S2_WASSER_BIT"):
+                continue   # Bank 3 (re15_story2_r42.h RE15_S2_RIEGEL_BANK / RE15_S2_WASSER_BANK = 3), Treffer nur ueber den Dateinamen
+            port.add(int(wert))
+    bank9_saetze.eigen = eigen
     return orig, port, disc
 
 
@@ -430,6 +451,14 @@ def pruefen():
         notiz = " (Disc-Bit, bewusst)" if b in disc and b in DISC_BIT_OK else ""
         print("  Bit %3d %-28s %-3s %s %s%s  %s" % (b, m, blk, geb, "OK" if not msgs else "FEHLER " + "; ".join(msgs),
                                                   notiz, zweck))
+        st = sorted(set(getattr(bank9_saetze, "eigen", {}).get(b, [])))
+        if st:
+            print("          EIGEN (Port nutzt das Vertrags-Bit ueber %s): %s" % (m, ", ".join(st)))
+    # Gegenprobe: jede eigene Stelle gehoert zu einem Vertrags-Bit
+    for b, st in sorted(getattr(bank9_saetze, "eigen", {}).items()):
+        if b not in werte:
+            print("  FEHLER B6 eigene Stelle mit Bit %d ohne Vertrags-Eintrag: %s" % (b, ", ".join(sorted(set(st)))))
+            fehler += 1
     frei = [b for b in range(256) if b not in orig and b not in port and b not in disc and b not in werte and b not in ZWEIG_BITS]
     print("  danach noch frei (Original, Port, Disc): %d Bits, Auszug %s" % (len(frei), frei[:24]))
     print("\nERGEBNIS: %s (%d Zeilen, %d Bits, %d Fehler)" % ("FREI" if fehler == 0 else "KOLLISION", len(ZEILEN), len(BITS), fehler))

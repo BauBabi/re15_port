@@ -152,6 +152,8 @@ int  re15_gatorszene_r41_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_
  * (M2, gatorszene_r41.c key_lage_bei_tod); Ankunfts-Neigung unter der Puls-Kappung (M5, leiche_lage.py). */
 #define RE15_GSZ_KEY_ITEM        0x34
 int  re15_gatorszene_r41_key_lage(int32_t *x, int32_t *y, int32_t *z);   /* Runde 42 Story (K-08): Lage des Schluessels    */
+int  re15_gatorszene_r41_neben_lage(int32_t abstand, int32_t out[3], int *out_cut, int *out_sx, int *out_sy);   /* Runde 42 (K-08): Uhr */
+void re15_gatorszene_r41_key_neigung_lesen(int16_t *rx, int16_t *rz);                                       /* Runde 42 (K-08): Uhr */
 int  re15_gatorszene_r41_obj_id(uint16_t room_id);                       /* main.c Prop-Lader: 4 in 2090/2091, sonst -1 */
 const uint8_t *re15_gatorszene_r41_md1_bytes(uint16_t room_id, int *n);
 const uint8_t *re15_gatorszene_r41_tim_bytes(uint16_t room_id, int *n);

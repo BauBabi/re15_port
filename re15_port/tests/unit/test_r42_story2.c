@@ -15,7 +15,14 @@
  *              danach Durchgang nach 2070; 2040 schliesst auf (msg 6, Bit 122), danach Durchgang nach 2070; 2070 danach offen
  *   tueren_elza dasselbe mit 2071/11A1/2041
  *   uhr        K-08: vor dem Tod keine Uhr; nach dem Tod Uhr-Zone (Platz 16, Item 0x3F, Bit 90) auf dem Schluessel-Rechteck, Puls;
- *              Beschreibung 0x3F: Leon mit Gravur (F-19), Elza Original
+ *              Beschreibung 0x3F: Leon mit Gravur (F-19), Elza Original; Modell-Lage = re15_gatorszene_r41_neben_lage (im Bild der
+ *              Schluessel-Kamera, nicht der alte Versatz laengs x; Pruefung 1 Befund 6)
+ *   altstand   Pruefung 1 Befund 5: Spielstand v0.8.30 mit schon geoeffnetem Tor (9,113) = 1, (9,119) = 0 -> kein Schluesselloch
+ *              (kein msg 53/54), Bit 119 nachgezogen, Druck am Rechner startet die Szene einmal
+ *   begleiter  Pruefung 1 Befund 8 (K-07): 11A0 Marvin (@0x0118C) / 11A1 John (@0x0118C) + Sherry (@0x011A0) fehlen, solange sie in
+ *              2080/2081 warten (Bit 118 = 1, Bit 120 = 0); ohne Bit 118 und nach Bit 120 unveraendert
+ *   inszenierung Pruefung 1 Befund 1/4: Endlagen der Szene (Spieler P, Begleiter N, Sherry S) und die Reihenfolge Begleiter ->
+ *              Spieler -> Drehen; Begleiter von Suedwesten, Sherry aus der Nische an der Treppe (re15_story2_r42.h)
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
 #define _DEFAULT_SOURCE 1
@@ -400,11 +407,141 @@ static void teil_uhr(void)
           "nach dem Tod: Uhr-Zone Platz %d auf dem Schluessel-Rechteck (%d,%d), Taken-Bit 90", RE15_S2_UHR_PLATZ, (int)kx, (int)kz);
     PRUEF(!(g_aot.slots[5].active && g_aot.slots[5].type == RE15_AOT_TYPE_ITEM), "Original-Platz 5 am Tor leer");
     PRUEF(re15_blink_r41_aktiv(0x2090, RE15_S2_UHR_OBJ), "Puls an obj 0 (dasselbe Mittel wie der Schluessel)");
+    {   /* Befund 6: die Lage waehlt re15_gatorszene_r41_neben_lage beim ersten Legen (Spieler-/Leichen-Kugeln dieses Augenblicks) und
+         * behaelt sie; hier: 450 vom Schluessel, auf dem Wasser, nicht der alte Versatz laengs x, und die Wahl hat eine Lage gefunden. */
+        int32_t ul[3] = {0, 0, 0}; int cut = -1, sx = -1, sy = -1;
+        const int ok = re15_gatorszene_r41_neben_lage(RE15_S2_UHR_VERSATZ, ul, &cut, &sx, &sy);
+        int k = -1;
+        for (int q = 0; q < (int)g_scd.prop_count; q++) if (g_scd.props[q].obj_id == RE15_S2_UHR_OBJ) k = q;
+        const int64_t dx = k >= 0 ? (int64_t)g_scd.props[k].x - kx : 0, dz = k >= 0 ? (int64_t)g_scd.props[k].z - kz : 0;
+        const int64_t d2 = dx * dx + dz * dz;
+        PRUEF(ok && k >= 0 && d2 >= 448 * 448 && d2 <= 452 * 452 && re15_aot_water_at(g_scd.props[k].x, g_scd.props[k].z) != 0 &&
+              !(g_scd.props[k].x == kx + RE15_S2_UHR_VERSATZ && g_scd.props[k].z == kz),
+              "Modell 450 neben dem Schluessel auf dem Wasser (%d,%d), nicht laengs x; Wahl jetzt Kamera %d Bild %d,%d (Befund 6)",
+              k >= 0 ? (int)g_scd.props[k].x : 0, k >= 0 ? (int)g_scd.props[k].z : 0, cut, sx, sy); }
+    {   /* Befund 6: die Uhr wird so gross gezeichnet wie der Schluessel (Skala aus der Ausdehnung des Modells obj 0) */
+        const re15_md1_vertex_t ein = { 100, -50, 20, 0 };
+        const re15_md1_vertex_t *aus = re15_story2_r42_scheitel(0x2090, RE15_S2_UHR_OBJ, &ein, 1, 0);
+        PRUEF(aus && aus->x > ein.x && aus->y < ein.y && abs((int)aus->x * ein.y - (int)aus->y * ein.x) <= 100,
+              "Uhr-Modell vergroessert gezeichnet (x %d -> %d, gleichmaessig)", ein.x, aus ? aus->x : 0);
+        PRUEF(re15_story2_r42_scheitel(0x2090, 1, &ein, 1, 0) == NULL && re15_story2_r42_scheitel(0x2080, RE15_S2_UHR_OBJ, &ein, 1, 0) == NULL,
+              "nur obj 0 in 2090/2091"); }
     g_gameflow.character = 0;
     const uint8_t *dl = re15_inv_desc_entry(RE15_S2_UHR_ITEM);
     PRUEF(dl == re15_story2_r42_desc(RE15_S2_UHR_ITEM) && dl != NULL, "Leon: Beschreibung 0x3F mit Gravur (F-19)");
     g_gameflow.character = 4;
     PRUEF(re15_story2_r42_desc(RE15_S2_UHR_ITEM) == NULL, "Elza: Original-Beschreibung 0x3F");
+}
+
+/* ---- altstand (Befund 5) ------------------------------------------------------------------------------------- */
+static void teil_altstand(int elza)
+{
+    printf("== altstand%s ==\n", elza ? "_elza" : "");
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    re15_game_flag_set(3, 245, 1);
+    re15_game_flag_set(9, 110, 1); re15_game_flag_set(9, 111, 1); re15_game_flag_set(9, 112, 1);
+    re15_game_flag_set(9, 113, 1);                                   /* v0.8.30: Tor 2090 mit dem Schluessel aufgeschlossen */
+    re15_game_flag_set(9, 114, 1); re15_game_flag_set(9, 115, 1);
+    const uint16_t raum = elza ? 0x2081 : 0x2080;
+    if (room_boot(raum, -11160, -14400, -7316, 3072, 3) != 0) return;
+    for (int f = 0; f < 20; f++) frame(0, 0);
+    PRUEF(bit9(RE15_R42_BIT_2080_TOR), "Bit %d nachgezogen (das Tor ist offen)", RE15_R42_BIT_2080_TOR);
+    const unsigned z1 = g_re15_s2_zaehler[1], z2 = g_re15_s2_zaehler[2], z7 = g_re15_s2_zaehler[7];
+    druck_t r = druecke(-11160, -7316, 3072, 40);
+    PRUEF(r.msg_id != RE15_R42_MSG_2080_TOR_ZU && r.msg_id != RE15_R42_MSG_2080_TOR_AUF && g_re15_s2_zaehler[1] == z1 &&
+          g_re15_s2_zaehler[2] == z2, "kein Schluesselloch-Text (msg %d; soll weder 53 noch 54)", r.msg_id);
+    PRUEF(g_re15_s2_zaehler[7] == z7 + 1, "Druck am Rechner startet die Szene (Zaehler %u -> %u)", z7, g_re15_s2_zaehler[7]);
+    for (int f = 0; f < 6000 && !bit9(RE15_R42_BIT_2080_SZENE); f++) {
+        uint16_t e = ((f % 20) == 0 && g_scd.message_active) ? RE15_PAD_BIT_SQUARE : 0; frame(e, e); }
+    PRUEF(bit9(RE15_R42_BIT_2080_SZENE), "Szene gelaufen: Bit 118 = 1");
+    for (int f = 0; f < 60; f++) frame(0, 0);
+    if (room_boot(raum, -11160, -14400, -7316, 3072, 3) != 0) return;
+    for (int f = 0; f < 30; f++) frame(0, 0);
+    PRUEF(!(g_aot.slots[4].active && g_aot.slots[4].type == RE15_AOT_TYPE_GENERIC && g_aot.slots[4].event_id == RE15_S2_EREIGNIS),
+          "Wiederbetreten: kein Platz mehr am Rechner");
+    druecke(-11160, -7316, 3072, 40);
+    PRUEF(g_re15_s2_zaehler[7] == z7 + 1, "keine zweite Szene");
+}
+
+/* ---- begleiter (Befund 8) ------------------------------------------------------------------------------------ */
+static void begleiter_fall(int elza, int b118, int b120, int soll)
+{
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    if (b118) re15_game_flag_set(9, RE15_R42_BIT_2080_SZENE, 1);
+    if (b120) re15_game_flag_set(9, RE15_R42_BIT_LEITER, 1);
+    const uint16_t raum = elza ? 0x11A1 : 0x11A0;
+    if (room_boot(raum, 28150, -1800, 1250, 2048, 0) != 0) return;
+    for (int f = 0; f < 10; f++) frame(0, 0);
+    const int n = elza ? typ_zahl(RE15_S2_TYP_JOHN) + typ_zahl(RE15_S2_TYP_SHERRY) : typ_zahl(RE15_S2_TYP_MARVIN);
+    PRUEF(n == soll, "ROOM%04X Bit 118 = %d, Bit 120 = %d: %d Begleiter (soll %d)", raum, b118, b120, n, soll);
+}
+static void teil_begleiter(void)
+{
+    printf("== begleiter ==\n");
+    for (int e = 0; e < 2; e++) {
+        const int voll = e ? 2 : 1;                                  /* 11A1: John + Sherry (@0x0118C/@0x011A0), 11A0: Marvin */
+        begleiter_fall(e, 0, 0, voll);                               /* vor der Szene 2080: wie bisher (Mod-Satz) */
+        begleiter_fall(e, 1, 0, 0);                                  /* wartet in 2080/2081: hier nicht */
+        begleiter_fall(e, 1, 1, voll);                               /* nach der Szene an der Leiter: die naechste Stufe entscheidet */
+    }
+}
+
+/* ---- inszenierung (Befund 1/4) -------------------------------------------------------------------------------- */
+static int nahe(int32_t x, int32_t z, int32_t sx, int32_t sz, int32_t r)
+{
+    const int64_t dx = (int64_t)x - sx, dz = (int64_t)z - sz;
+    return dx * dx + dz * dz <= (int64_t)r * r;
+}
+static void teil_inszenierung(int elza)
+{
+    printf("== inszenierung%s ==\n", elza ? "_elza" : "");
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    re15_game_flag_set(3, 245, 1);
+    re15_game_flag_set(9, 110, 1); re15_game_flag_set(9, 111, 1); re15_game_flag_set(9, 112, 1);
+    re15_game_flag_set(9, 114, 1); re15_game_flag_set(9, 115, 1);
+    const uint16_t raum = elza ? 0x2081 : 0x2080;
+    if (room_boot(raum, -11160, -14400, -7316, 3072, 3) != 0) return;
+    for (int f = 0; f < 20; f++) frame(0, 0);
+    inv_geben(RE15_S2_KEY_ITEM);
+    (void)druecke(-11160, -7316, 3072, 40);
+    int npc_slot = -1, sherry_slot = -1, erst_npc = -1, erst_sherry = -1, npc_an = -1, sp_los = -1, f = 0;
+    const int32_t sx0 = g_actors[RE15_ACTOR_SLOT_PLAYER].x, sz0 = g_actors[RE15_ACTOR_SLOT_PLAYER].z;
+    for (f = 0; f < 6000 && !bit9(RE15_R42_BIT_2080_SZENE); f++) {
+        uint16_t e = ((f % 20) == 0 && (g_scd.message_active || re15_discard_active())) ? RE15_PAD_BIT_SQUARE : 0; frame(e, e);
+        for (int i = 1; i < RE15_ACTOR_MAX; i++) {
+            if (!g_actors[i].active) continue;
+            if (npc_slot < 0 && g_actors[i].type == (elza ? RE15_S2_TYP_JOHN : RE15_S2_TYP_MARVIN)) {
+                npc_slot = i; erst_npc = f;
+                PRUEF(nahe(g_actors[i].x, g_actors[i].z, RE15_S2_NPC_START_X, RE15_S2_NPC_START_Z, 50),
+                      "Begleiter erscheint im Suedwesten (%d,%d)", g_actors[i].x, g_actors[i].z);
+            }
+            if (sherry_slot < 0 && g_actors[i].type == RE15_S2_TYP_SHERRY) {
+                sherry_slot = i; erst_sherry = f;
+                PRUEF(nahe(g_actors[i].x, g_actors[i].z, RE15_S2_SHERRY_START_X, RE15_S2_SHERRY_START_Z, 50),
+                      "Sherry erscheint in der Nische an der Treppe (%d,%d)", g_actors[i].x, g_actors[i].z);
+            }
+        }
+        if (npc_slot >= 0 && npc_an < 0 && nahe(g_actors[npc_slot].x, g_actors[npc_slot].z, RE15_S2_NPC_X, RE15_S2_NPC_Z, 300)) npc_an = f;
+        if (sp_los < 0 && !nahe(g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z, sx0, sz0, 60)) sp_los = f;
+    }
+    PRUEF(npc_slot >= 0 && npc_an >= 0, "Begleiter kommt an N (Bild %d)", npc_an);
+    PRUEF(sp_los > npc_an, "Spieler geht erst nach der Ankunft des Begleiters los (Bild %d > %d)", sp_los, npc_an);
+    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    PRUEF(nahe(pl->x, pl->z, RE15_S2_SPIELER_X, RE15_S2_SPIELER_Z, 150), "Spieler steht bei P (%d,%d)", pl->x, pl->z);
+    if (npc_slot >= 0)
+        PRUEF(nahe(g_actors[npc_slot].x, g_actors[npc_slot].z, RE15_S2_NPC_X, RE15_S2_NPC_Z, 300), "Begleiter steht bei N (%d,%d)",
+              g_actors[npc_slot].x, g_actors[npc_slot].z);
+    if (elza) {
+        PRUEF(sherry_slot >= 0 && erst_sherry - erst_npc >= RE15_S2_SHERRY_LAUF_BILDER, "Sherry erst nach dem Treppenweg (%d Bilder)",
+              erst_sherry - erst_npc);
+        if (sherry_slot >= 0)
+            PRUEF(nahe(g_actors[sherry_slot].x, g_actors[sherry_slot].z, RE15_S2_SHERRY_X, RE15_S2_SHERRY_Z, 300),
+                  "Sherry steht bei S (%d,%d)", g_actors[sherry_slot].x, g_actors[sherry_slot].z);
+    } else PRUEF(sherry_slot < 0, "Leon: keine Sherry");
+    PRUEF(bit9(RE15_R42_BIT_2080_SZENE), "Szene zu Ende (Bit 118) nach %d Bildern", f);
 }
 
 int main(int argc, char **argv)
@@ -419,6 +556,11 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "tueren")) teil_tueren(0);
     else if (!strcmp(t, "tueren_elza")) teil_tueren(1);
     else if (!strcmp(t, "uhr")) teil_uhr();
+    else if (!strcmp(t, "altstand")) teil_altstand(0);
+    else if (!strcmp(t, "altstand_elza")) teil_altstand(1);
+    else if (!strcmp(t, "begleiter")) teil_begleiter();
+    else if (!strcmp(t, "inszenierung")) teil_inszenierung(0);
+    else if (!strcmp(t, "inszenierung_elza")) teil_inszenierung(1);
     else { printf("unbekannter Teil '%s'\n", t); return 2; }
     printf("%s: %d Fehler\n", t, g_fail);
     return g_fail ? 1 : 0;

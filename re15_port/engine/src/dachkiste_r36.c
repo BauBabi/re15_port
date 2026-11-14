@@ -153,8 +153,10 @@ void re15_dachkiste_schub_log(int prop_idx, int32_t ziel_x, int32_t ziel_z, int 
 #define WP_DOWN   0x0040u
 #define WP_LEFT   0x0080u
 #define WP_SQUARE 0x8000u
+#define WP_R1     0x0800u   /* Zielen (platform/pc/src/input_pc.c RE15_PAD_R1) */
 
-enum { WP_OBJ = 1, WP_RAUM, WP_WARTE, WP_GEGNERWEG, WP_ZELLE, WP_GEHE, WP_BLICK, WP_SCHIEB, WP_AKTION, WP_AOTS, WP_FLAG, WP_ENDE };
+enum { WP_OBJ = 1, WP_RAUM, WP_WARTE, WP_GEGNERWEG, WP_ZELLE, WP_GEHE, WP_BLICK, WP_SCHIEB, WP_AKTION, WP_AOTS, WP_FLAG, WP_ENDE,
+       WP_SCHIESS, WP_GEHE_OBJ, WP_BLICK_OBJ };
 
 typedef struct {
     int kind;
@@ -162,7 +164,7 @@ typedef struct {
                              * SCHIEB yaw achse(0=X,1=Z) op(0 = >=, 1 = <=) wert max */
 } wp_cmd_t;
 
-#define WP_MAX 96
+#define WP_MAX 192   /* Runde 42: Kette Ablassen -> Kampf -> Schluessel -> Szene -> Tor in EINEM Lauf */
 static wp_cmd_t s_wp[WP_MAX];
 static int      s_wp_n = 0;
 static int      s_wp_i = 0;
@@ -250,6 +252,13 @@ static void wp_parse(const char *pfad)
         else if (!strcmp(w, "AOTS"))      { cmd.kind = WP_AOTS; }
         else if (!strcmp(w, "FLAG"))      { cmd.kind = WP_FLAG; sscanf(zeile, "%*s %d %d", &a, &b); cmd.a = a; cmd.b = b; }
         else if (!strcmp(w, "ENDE"))      { cmd.kind = WP_ENDE; }
+        /* Runde 42 Story (Durchlauf mit echtem Kampf): SCHIESS bank bit max = Zielen + Feuern (R1 gehalten, Quadrat je 24 Bilder)
+         * bis Flag (bank,bit) = 1 oder max Bilder;
+         * GEHE_OBJ tol = GEHE zur Lage des verfolgten Objekts (OBJ n); BLICK_OBJ = Blick auf das verfolgte Objekt. */
+        else if (!strcmp(w, "SCHIESS"))   { cmd.kind = WP_SCHIESS; c = 6000; sscanf(zeile, "%*s %d %d %d", &a, &b, &c);
+                                            cmd.a = a; cmd.b = b; cmd.c = c; }
+        else if (!strcmp(w, "GEHE_OBJ"))  { cmd.kind = WP_GEHE_OBJ; c = 150; sscanf(zeile, "%*s %d", &c); cmd.c = c; }
+        else if (!strcmp(w, "BLICK_OBJ")) { cmd.kind = WP_BLICK_OBJ; }
         else continue;
         s_wp[s_wp_n++] = cmd;
     }
@@ -282,6 +291,9 @@ static void wp_start(const wp_cmd_t *c)
     case WP_AKTION: wp_log("AKTION"); break;
     case WP_AOTS:  wp_log("AOTS"); break;
     case WP_FLAG:  wp_log("FLAG (%d,%d)", c->a, c->b); break;
+    case WP_SCHIESS: wp_log("SCHIESS bis (%d,%d) = 1, max %d Bilder", c->a, c->b, c->c); break;
+    case WP_GEHE_OBJ: wp_log("GEHE_OBJ Slot %d (%d,%d) tol %d", s_wp_obj, g_scd.props[s_wp_obj].x, g_scd.props[s_wp_obj].z, c->c); break;
+    case WP_BLICK_OBJ: wp_log("BLICK_OBJ Slot %d", s_wp_obj); break;
     default: break;
     }
 }
@@ -354,6 +366,15 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
 
     uint16_t out = 0;
     if (s_wp_phase == 0 && s_wp_zaehler == 0 && s_wp_runden == 0) wp_start(c);
+    if (c->kind == WP_GEHE_OBJ || c->kind == WP_BLICK_OBJ) {   /* Ziel = Lage des verfolgten Objekts, dann wie GEHE / BLICK */
+        if (c->kind == WP_GEHE_OBJ && s_wp_phase == 0 && s_wp_zaehler == 0 && s_wp_runden == 0) wp_obj_aufloesen();
+        static wp_cmd_t ersatz;
+        ersatz = *c;
+        if (c->kind == WP_GEHE_OBJ) { ersatz.kind = WP_GEHE; ersatz.a = g_scd.props[s_wp_obj].x; ersatz.b = g_scd.props[s_wp_obj].z; }
+        else { const re15_actor_t *p0 = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+               ersatz.kind = WP_BLICK; ersatz.a = wp_yaw_zu(g_scd.props[s_wp_obj].x - p0->x, g_scd.props[s_wp_obj].z - p0->z); }
+        c = &ersatz;
+    }
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
 
     switch (c->kind) {
@@ -381,6 +402,15 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
         wp_zelle(c->a, c->b);
         wp_naechster("gelesen");
         break;
+    case WP_SCHIESS: {
+        if (re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b)) { wp_log("  SCHIESS: (%d,%d) = 1 nach %d Bildern", c->a, c->b, s_wp_zaehler);
+                                                               wp_naechster("Flag gesetzt"); break; }
+        /* R1 gehalten (Zielen), Quadrat 3 Bilder je 24 (Feuern) - wie ein Spieler, der auf den Alligator haelt; die Kampf-Laeufe
+         * der Runde 41 schossen mit 3 s Pause und brauchten nach dem Kampfbeginn (HP 25240, 7 je Pistolentreffer) zu lange. */
+        out = WP_R1;
+        if ((s_wp_zaehler % 24) < 3) out |= WP_SQUARE;
+        if (++s_wp_zaehler >= c->c) { wp_log("  SCHIESS: %d Bilder ohne (%d,%d)", s_wp_zaehler, c->a, c->b); wp_naechster("max Bilder"); }
+        break; }
     case WP_FLAG:   /* Nachbesserung 3: Spielflag (Bank, Bit) ins Log — z. B. der Latch (3,172) von ROOM2060 sub01 */
         wp_log("  FLAG (%d,%d) = %d", c->a, c->b, re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b));
         wp_naechster("gelesen");

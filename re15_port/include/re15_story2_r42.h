@@ -75,24 +75,57 @@
 #define RE15_S2_CUT_SZENE        3        /* RID @0x0C0: blickt vom Treppenabsatz den Gang hinauf auf den Rechner           */
 #define RE15_S2_Y_OBEN           (-14400) /* Band 8 = -8 * 1800 (Sce_em_set +0x1ba @0x800421d4, RE15_K2080_Y)               */
 #define RE15_S2_BAND_OBEN        8
-/* Spieler am Schluesselloch (Lauf e2 "angekommen" (-11160,-7316), Bildpunkt x 233 in Cut 3 laut [leon-root]). Der Begleiter
- * kommt vom Sueden (von der Leiter, wo er den Kanister geworfen hat) durch den Gang (x -12400..-9200) und bleibt vor dem Spieler
- * stehen. Start hinter der Bildebene von Cut 3 (Auge (-8446,-16448), Blick (-3360,4540): (p - Auge) . Blick < 0). Lagen im Bild
- * gemessen (Projektion mit dem Cut-3-Auge und H 208 = sd des Logs; Laeufe t1/t1e): bei Bildpunkt 243 verdeckte der Ostrahmen im
- * Vordergrund den NPC (Lauf t1, (-10400,-9000)), Sherry hinter John (Lauf t1e, (-11700,-8700) Bildpunkt 211 hinter John 222).
- * Jetzt: Spieler 236 (Tiefe 8955), John/Marvin (-10750,-9600) 227 (6875), Sherry (-11800,-9500) 199 (7580). Abstaende: Kreise
- * @0x5F4 (Mitte (-12700,-10000) r 600) 1030 und @0x600 ((-12200,-7500) r 600) 2040, John-Sherry 1055 (> zwei Koerperradien).
- * Sherry laeuft ueber einen Zwischenpunkt (-11300,-11000), damit ihr Weg am Kreis @0x5F4 >= 1177 vorbeifuehrt. */
-#define RE15_S2_NPC_START_X      (-10700)
-#define RE15_S2_NPC_START_Z      (-20000)
-#define RE15_S2_NPC_X            (-10750)
-#define RE15_S2_NPC_Z            (-9600)
-#define RE15_S2_SHERRY_START_X   (-11300)
-#define RE15_S2_SHERRY_START_Z   (-20000)
-#define RE15_S2_SHERRY_ZW_X      (-11300)
-#define RE15_S2_SHERRY_ZW_Z      (-11000)
-#define RE15_S2_SHERRY_X         (-11800)
-#define RE15_S2_SHERRY_Z         (-9500)
+/* Spieler am Schluesselloch (Lauf e2 "angekommen" (-11160,-7316), [leon-root] Bildpunkt x 230,6 in Cut 3). PORT-WAHL der Inszenierung
+ * (Pruefung 1, Befund 1 "Begleiter steht mit dem Ruecken zur Kamera direkt vor der Spielfigur"; Befund 4 "Sherry kommt nach dem
+ * 2030-Tuerton von Sueden aus dem Vordergrund"). Gemessen mit der Cut-3-Projektion (Auge/Ziel RID @0x0C0, sd 208 wie das Log;
+ * Werkzeug scratchpad story/proj.py, gegen [leon-root] 230,6 / 84,7 auf 3 Bildpunkte genau) und der SCA ROOM2080 @0x4BC Band 8:
+ *  - Sichtbarer Boden in Cut 3 nur zwischen dem Wandpfeiler links (Bildpunkt ~120) und dem Ostrahmen rechts (~235, Vordergrund).
+ *  - Zwiegespraech QUER zur Blickachse: Spieler P rechts (Bildpunkt 217, Tiefe 8055), Begleiter N links (188, 8031), Abstand 1140
+ *    (Form der RE2-Zweierszenen: beide im Profil). Der Spieler geht dafuer vom Rechner nach P (Plc_dest Modus 4 GEHEN, Form ROOM1021
+ *    sub02 @0x020B2 `40 00 04 22`), kein Hindernis auf dem Weg (Kreis @0x600 (-12200,-7500) r 600 >= 1000 entfernt).
+ *  - Begleiter von Suedwesten (aus dem Gang von der Leiter, wo er den Kanister geworfen hat), ueber den Zwischenpunkt W1 an der
+ *    Wand @0x5E8 (x <= -12700, z -14450..-13050) vorbei (>= 715) und am Kreis @0x5F4 (-12700,-10000) r 600 vorbei (Rand 570):
+ *    er tritt bei Bildpunkt 6 unten links in einer Tiefe von 4750 ins Bild (vorher (-10700,-20000): Tiefe 640 = direkt unter der
+ *    Linse).
+ *  - Sherry (E1 Punkt 3 "kommt vom Treppenabsatz die Treppe hinauf"): Tuer 2030 (-24400,-17700) Band 5, Treppe x -22700..-16400,
+ *    Absatz oben = Nische SCA @0x51C x -16650..-14300 z -18300..-14750 (Boden fl 120 wie der Gang). Sie erscheint in der Nische
+ *    (Bildpunkt -46, ausserhalb), laeuft durch deren Oeffnung bei x -14300 (z -18300..-14750, Weg z -15400) und ueber W2 an der Wand
+ *    @0x5E8 vorbei (Abstand 950) vor die beiden. Der RUN haelt 300 vor dem Ziel (d < 300 @0x80051764): Lauf k_elza5 (gdigrab Bild
+ *    831) mit dem Ziel (-10600,-11200) hielt Sherry bei (-10738,-11451) = Bildpunkt 194 genau vor John (185) und verdeckte seine
+ *    Beine. Ziel jetzt (-10350,-10900): Halt ~(-10501,-11159) = Bildpunkt 205 zwischen John (185) und Elza (217), Tiefe 6899 (vor
+ *    dem Paar, ein Kind - Kopf in Hueftenhoehe der Erwachsenen); Ziel zu P 1250, zu N 1346. */
+#define RE15_S2_SPIELER_X        (-10700)   /* P */
+#define RE15_S2_SPIELER_Z        (-9700)
+#define RE15_S2_NPC_START_X      (-13400)   /* Start, ausserhalb des Bildes (Bildpunkt -65, Kopf y 211 unter dem Untertitelband) */
+#define RE15_S2_NPC_START_Z      (-17200)
+#define RE15_S2_NPC_ZW_X         (-12000)   /* W1 */
+#define RE15_S2_NPC_ZW_Z         (-14600)
+#define RE15_S2_NPC_X            (-11600)   /* N */
+#define RE15_S2_NPC_Z            (-10400)
+#define RE15_S2_SHERRY_START_X   (-15800)   /* Nische oben an der Treppe */
+#define RE15_S2_SHERRY_START_Z   (-16400)
+#define RE15_S2_SHERRY_ZW_X      (-12100)   /* W2 */
+#define RE15_S2_SHERRY_ZW_Z      (-13900)
+#define RE15_S2_SHERRY_X         (-10350)   /* S (Ziel; Halt 300 davor) */
+#define RE15_S2_SHERRY_Z         (-10900)
+#define RE15_S2_TREPPE_X         (-16400)   /* Blickziel beim Tuerton: oberes Treppenende (Treppe x -22700..-16400) */
+#define RE15_S2_TREPPE_Z         (-16500)
+/* Gier beim Erscheinen (Sce_em_set pc[16..17]) = Richtung zum ersten Wegpunkt, Konvention dir(Gier) = (cos, -sin) (0 = +X, 1024 = -Z,
+ * 3072 = +Z; dachkiste_r36.c wp_yaw_zu, gemessen Punkt 1.2): round(atan2(-dz, dx) / 2pi * 4096) & 4095. Beim Wiederbetreten (K-07,
+ * k_warten_*) die Gier zum Gespraechspartner der Szene. */
+#define RE15_S2_GIER_NPC_START   3394       /* Start -> W1 */
+#define RE15_S2_GIER_SHERRY_START 3709      /* Nische -> W2 */
+#define RE15_S2_GIER_NPC_WARTEN  3665       /* N -> P */
+#define RE15_S2_GIER_SHERRY_WARTEN 2296     /* S -> N (Sherry bleibt bei John) */
+/* Weg vom Tuerton bis Sherry in der Nische: Tuer (-24400,-17700) -> Treppenfuss (-22700,-16500) 2081, Treppe bis -16400 6300,
+ * bis zur Nische 608 = 8989 Einheiten; Bilder = Weg / Laufgeschwindigkeit Sherry (Plc_dest Modus 5 = NPC-Sub 5 RUN @0x80051484).
+ * GEMESSEN (Lauf s2b/k_elza3, debug.log "[story2] ... Sherry erscheint" / "Ankunft Sherry"): erscheint F1192 bei (-15800,-16400),
+ * Plc_dest ab F1193 (Sleep 1), Ankunft an W2 F1236 bei (-12173,-14091) = 4300 Einheiten in 43 Bildern = 100 je Bild aus dem
+ * Stand (zweiter Abschnitt W2 -> S mit Wende: 3005 in 25 = 120). 8989 / 100 = 89 Bilder. PORT-WAHL: die Treppe selbst laeuft
+ * Sherry nicht (Band-Wechsel 5 -> 8 im NPC-Gang nicht gebaut), sie erscheint, wenn sie oben waere. */
+#define RE15_S2_TREPPE_WEG       8989
+#define RE15_S2_SHERRY_V         100       /* gemessen, s. o. */
+#define RE15_S2_SHERRY_LAUF_BILDER (RE15_S2_TREPPE_WEG / RE15_S2_SHERRY_V)
 #define RE15_S2_NPC_SLOT         8        /* Skript-Slot wie RE15_K2080_NPC_SLOT (Aktor 9)                                  */
 #define RE15_S2_SHERRY_SLOT      9
 #define RE15_S2_TYP_MARVIN       0x40     /* ROOM2000 sub @0x017B4 `44 01 40 40 ..`                                         */
@@ -123,7 +156,11 @@
 #define RE15_S2_UHR_BIT          90       /* pc[18] Taken-Bit                                                               */
 #define RE15_S2_UHR_OBJ          0        /* pc[20] -> Obj_model_set obj 0 @0x00A28                                         */
 #define RE15_S2_UHR_HALB         500      /* Rechteck 1000 x 1000 wie @0x00A12 `e8 03 e8 03`                                */
-/* PORT-WAHL: das Modell liegt 450 neben dem Schluessel (laengs x; Schluessel-Quadrat 270 = 180 x 3/2, RE15_GSZ_KEY_SKALA_Q12).
+/* PORT-WAHL: das Modell liegt 450 neben dem Schluessel (Schluessel-Quadrat 270 = 180 x 3/2, RE15_GSZ_KEY_SKALA_Q12); seit Pruefung 1
+ * Befund 6 nicht mehr laengs x (nach echtem Tod lag es bei Bildpunkt 287 am Plattformrand, Kamera 0), sondern in der Richtung, die in
+ * der Einstellung des Schluessels sichtbar ist (re15_gatorszene_r41_neben_lage), und es wird so gross gezeichnet wie der Schluessel
+ * (groesste Ausdehnung 144 -> 270, Skala 7680/4096, re15_story2_r42_scheitel; gemessen in Originalgroesse ~3 x 1,5 Bildpunkte, Lauf
+ * s2b/k_elza5 Bild 512).
  * Die Item-Zone ist die des Schluessels (Platz 16 hinter dessen Platz 15, gatorszene GSZ_KEY_AOT; 2090 main00 nutzt 0..5,
  * Kamerazonen 48..63, Montage-Tuer 20, Kanister-Tuer 21): Lauf t5 zeigte, dass der Spieler vor der Leiche bei x -1050
  * klemmt - eine um 450 versetzte Zone (x -220..780) erreichte er nicht. */
@@ -137,6 +174,9 @@ void re15_story2_r42_tick(void);                                             /* 
 void re15_story2_r42_schluessel_liegt(uint16_t room_id);                     /* gatorszene_r41.c key_bei_leiche               */
 int  re15_story2_r42_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_t *out_item);   /* item_discard_common.c        */
 const uint8_t *re15_story2_r42_desc(uint8_t item_id);                        /* re15_inv_screen.c re15_inv_desc_entry         */
+int  re15_story2_r42_spawn_weg(uint16_t room_id, uint8_t type);
+#include "re15_md1.h"
+const re15_md1_vertex_t *re15_story2_r42_scheitel(uint16_t room_id, int obj_id, const re15_md1_vertex_t *v, int n, int quad);   /* main.c Props: Uhr gross (Befund 6) */              /* scd_vm.c Sce_em_set: 11A0/11A1 Befund 8  */
 int  re15_story2_r42_tor2090_nimmt_schluessel(void);                         /* gatorszene_r41.c tor_druck: 0 seit K-01       */
 void re15_story2_r42_tor2090_alt_setzen(int an);                             /* Pruefhaken: 1 = Stand Runde 41 (Riegel)       */
 

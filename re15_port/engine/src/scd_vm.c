@@ -3918,6 +3918,8 @@ static int op_sce_em_set(scd_thread_t *t)
     int      suppress = (persist != 0xFF) && re15_game_flag_get(re15_em_status_zone(), persist);
     if (re15_gatorszene_r41_spawn_weg((uint16_t)g_current_room_id, type, x, z)) suppress = 1;   /* Runde 41 Spur F: Spinnen 2090/2091 verworfen wie am Kill-Flag-Tor @0x80042120-38 (re15_gatorszene_r41.h) */
     if (re15_annette_r41_spawn_weg((uint16_t)g_current_room_id, type)) suppress = 1;   /* Runde 41 Spur AN: 0x4D in 5090 erst nach dem Tor (3,89), nicht nach (3,42) (re15_annette_r41.h) */
+    { extern int re15_story2_r42_spawn_weg(uint16_t, uint8_t);   /* Runde 42 Story STAGE2: Begleiter in 11A0/11A1 nicht, solange sie in 2080/2081 warten (K-07) */
+      if (re15_story2_r42_spawn_weg((uint16_t)g_current_room_id, type)) suppress = 1; }
 
     /* GLEICHZEITIG-LIMIT (byte-true @0x80042214-3c) — der Grund, warum ROOM1030 im Original nur
      * SECHS Zombies zeigt, obwohl 20 Records im RDT stehen:

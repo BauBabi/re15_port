@@ -76,6 +76,7 @@ static inline int RNDI(float f) {
 #include "re15_affen.h"         /* Runde 35 Spur J: Parts ohne Knochen weltfest (FUN_8001e5b0) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"
+#include "re15_story2_r42.h"   /* Runde 42 Story STAGE2: Uhr-Skala */
 #include "re15_blink_r41.h"   /* Runde 41 Spur D: Helligkeitspuls aufnehmbarer Port-Gegenstaende */
 #include "re15_pri.h"
 #include "re15_g5auftritt_r41.h"   /* Runde 41: Szenen-Schnitte 16/17 ROOM5090/5091 (RE2 room7040 Schnitt 9/10) */
@@ -11609,6 +11610,10 @@ re_title:;
                           if (kt) prop_tv = kt;
                           const re15_md1_vertex_t *kq = re15_gatorszene_r41_leiche_scheitel(pi, hm->quad_vertices, hm->quad_vertex_count, 1);
                           if (kq) prop_qv = kq; }
+                        { const re15_md1_vertex_t *ut = re15_story2_r42_scheitel((uint16_t)g_current_room_id, oid, prop_tv, hm->tri_vertex_count, 0);   /* Runde 42 Story: Uhr 2090 so gross wie der Schluessel (re15_story2_r42.h, Befund 6) */
+                          if (ut) prop_tv = ut;
+                          const re15_md1_vertex_t *uq = re15_story2_r42_scheitel((uint16_t)g_current_room_id, oid, prop_qv, hm->quad_vertex_count, 1);
+                          if (uq) prop_qv = uq; }
 
                         /* Textured rendering using bound prop TIM slot. */
                         for (int ti = 0; ti < hm->triangle_count; ti++) {

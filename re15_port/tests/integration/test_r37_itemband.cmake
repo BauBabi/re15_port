@@ -206,9 +206,13 @@ _lauf(weg2090 500 _wp_weg2090 RE15_SET_FLAG=9:110,9:113 RE15_DEBUG_JUMP=20A0@250
       "RE15_EXIT_AT=500#2090")
 _muss("[aot] DOOR FIRE slot=0 rect=(4950,5000,hw=1500,hh=500) target_cut=2 spawn=(6300,-1800,-16250)" _dbg "weg2090: Tuer 20A0 slot 0 @0x01746 nicht ausgeloest")
 _muss("loaded room2090.rdt" _dbg "weg2090: ROOM2090 nicht geladen")
-_frei(weg2090 2090 5 1)
-_flag_ende(weg2090 9 90 1)
-message(STATUS "r37_itemband weg2090: Tuer 20A0 -> Plattform Band 1 -> Pocket Watch FREI -> (9,90) = 1")
+# Querbezug Runde 42 Story (Konzept K-08, Nutzer 11.11.; include/re15_story2_r42.h): die Taschenuhr liegt nicht mehr auf der
+# Plattform (Item_aot_set slot 5 @0x00A12, Band 1), sondern erst nach dem Tod des Alligators neben dem Schluessel (Bit (9,111));
+# mit 9:110,9:113 allein ist Platz 5 leer. Der Weg ueber die Tuer bleibt der Riegel; die Band-Pruefung der Plattform haelt der
+# Zensus unit_r37_itemband (Satz @0x00A12 floor 1).
+_muss("Taschenuhr (Platz 5 @0x00A12) bis zum Tod des Alligators verborgen" _dbg "weg2090: K-08 - Uhr nicht auf der Plattform")
+_flag_ende(weg2090 9 90 0)
+message(STATUS "r37_itemband weg2090: Tuer 20A0 -> Plattform Band 1 -> keine Uhr mehr (K-08), (9,90) = 0")
 
 # ---- ROOM2040: Halle (Band 3) -----------------------------------------------------------------------------------------
 set(_wp_galerie2040 "OBJ 0" "RAUM 2040" "GEGNERWEG" "WARTE 30" "FLAG 9 91" "BLICK 1024" "WARTE 20" "AKTION" "WARTE 60"

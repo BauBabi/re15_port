@@ -9,6 +9,9 @@ der Rest fantastisch."), Korrekturen K-01..K-08 (Abschnitt 0) BINDEND. Aufnahmel
 Diese Datei ist der Vertrag fuer ALLE Spuren der Runde 42: Bank-9-Bits und Nachrichten-Ids werden NUR von hier genommen.
 Werte im Code: `re15_port/include/re15_story_r42.h`. Eine Quelle der Zuteilung + Pruefung:
 `re15_port/tools/r42_story/zensus_r42.py` (Ausgabe `belege/zensus_r42.txt`: ERGEBNIS FREI, 181 Zeilen, 27 Bits, 0 Fehler).
+Seit dem Bau der Stufe STAGE2 nutzt der Port die Vertrags-Bits selbst: der Zensus weist Stellen, deren Bit-Argument ein
+`RE15_R42_*`-Makro ist, als EIGEN aus (Zeile "EIGEN ..." unter dem Bit, auch die Wrapper-Stellen `bit9_setzen()`); B2 zaehlt
+nur fremde Stellen, B6 prueft, dass jede eigene Stelle ein Vertrags-Bit ist (Stand 2026-11-14: 118..122 EIGEN in story2_r42.c).
 Riegel: `tests/unit/test_r36_kartenbits.c` k_port[] traegt die 23 Bits (ohne Lageplaene), `unit_r36_kartenbits` gruen
 (85 Port-Bits gegen 85 Original-Bits: 0 Kollisionen, `belege/unit_r36_kartenbits_r42.txt`).
 

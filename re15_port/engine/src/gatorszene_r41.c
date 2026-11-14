@@ -2899,3 +2899,61 @@ static void musik_takt(void)
     re15_audio_start_room_bgm(stage, room);  /* Weiche wie cut_10f0.c bgm_fenster_tick: MAIN wechselt -> Ausblendung + Load */
     s_bgm_stand = soll;
 }
+
+/* Runde 42 Story (K-08, Befund 6): Neigung des Schluessels (key_neigung, beim Tod gewaehlt) - unabhaengig davon, ob der Schluessel
+ * schon genommen ist (der Prop traegt sie dann nicht mehr; integration_r41_gatorszene_tod vergleicht Laeufe mit und ohne Schluessel). */
+void re15_gatorszene_r41_key_neigung_lesen(int16_t *rx, int16_t *rz)
+{
+    if (rx) *rx = s_key_rx;
+    if (rz) *rz = s_key_rz;
+}
+/* Runde 42 Story (K-08; Pruefung 1 der Stufe STAGE2, Befund 6 "Uhr nach echtem Tod im Bild nicht zu sehen"): eine Lage NEBEN dem Schluessel,
+ * die in DERSELBEN Einstellung sichtbar ist wie der Schluessel - dieselben Pruefungen wie key_suche fuer den Schluessel selbst: auf einer
+ * Wasserzone (re15_aot_water_at, Hoehe = Wasserflaeche), im Bild (GSZ_BILD_* mit Rand), nicht von der Leiche (GSZ_GATOR_HALBBREITE) und nicht
+ * von der Spielfigur (GSZ_SPIELER_RADIUS) verdeckt (kugeln_verdeckt). Zusaetzlich nicht weiter hinten als der Schluessel (dort verdeckt ihn
+ * eher etwas) und im Bild mindestens eine Schluessel-Bildbreite neben ihm (sonst deckt einer den anderen). Kandidaten: 16 Richtungen im
+ * Abstand `abstand` (Konvention dir = (cos, -sin), FUN_800152c8 wie spieler_punkte); Wahl = der Bildmitte am naechsten (PORT-WAHL: dort
+ * faellt ein Gegenstand am ehesten auf; die Kamera ist die des Schluessels s_key_cut, ohne sie die laufende). 0 = keine Lage. */
+int re15_gatorszene_r41_neben_lage(int32_t abstand, int32_t out[3], int *out_cut, int *out_sx, int *out_sy)
+{
+    int32_t kx = 0, ky = 0, kz = 0;
+    re15_gatorszene_r41_key_lage(&kx, &ky, &kz);
+    const int cut = s_key_cut >= 0 ? s_key_cut : (int)g_scd.cam_id;
+    re15_camera_view_t v;
+    if (!kam_sicht(cut, &v)) return 0;
+    const int32_t kp[3] = { kx, ky, kz };
+    int ksx = 0, ksy = 0; int32_t kvz = 0;
+    if (!kam_proj(&v, kp, &ksx, &ksy, &kvz) || kvz <= 0) return 0;
+    static int32_t pk[GSZ_LEICHE_PUNKTE][3];
+    int32_t kopf[3];
+    re15_actor_t *g = gator_aktor();
+    const int npk = g ? leichen_punkte(g, pk, kopf) : 0;
+    int32_t sp[GSZ_SPIELER_PUNKTE][3];
+    const int nsp = spieler_punkte(sp);
+    const int64_t kbild = (2 * GSZ_KEY_HALB * (int64_t)v.fov_screen_dist) / kvz;     /* Bildbreite des Schluessels */
+    int64_t best = INT64_MAX;
+    for (int i = 0; i < 16; i++) {
+        const int16_t gier = (int16_t)(i * 256);
+        const int32_t x = kx + (int32_t)(((int64_t)re15_cos_q12(gier) * abstand) >> 12);
+        const int32_t z = kz - (int32_t)(((int64_t)re15_sin_q12(gier) * abstand) >> 12);
+        const int32_t wy = re15_aot_water_at(x, z);
+        if (!wy) continue;
+        const int32_t p[3] = { x, wy, z };
+        int sx = 0, sy = 0; int32_t vz = 0;
+        if (!kam_proj(&v, p, &sx, &sy, &vz) || vz > kvz) continue;
+        if (sx < GSZ_BILD_X0 + GSZ_BILD_RAND || sx > GSZ_BILD_X1 - GSZ_BILD_RAND || sy < GSZ_BILD_Y0 + GSZ_BILD_RAND ||
+            sy > GSZ_BILD_Y1 - GSZ_BILD_RAND) continue;
+        const int64_t dx = sx - ksx, dy = sy - ksy;
+        if (dx * dx + dy * dy < kbild * kbild) continue;
+        if (npk && kugeln_verdeckt(&v, pk, npk, GSZ_GATOR_HALBBREITE, sx, sy, vz)) continue;
+        if (nsp && kugeln_verdeckt(&v, sp, nsp, GSZ_SPIELER_RADIUS, sx, sy, vz)) continue;
+        const int64_t m = (int64_t)(sx - 160) * (sx - 160) + (int64_t)(sy - 120) * (sy - 120);
+        if (m < best) {
+            best = m; out[0] = x; out[1] = wy; out[2] = z;
+            if (out_sx) *out_sx = sx;
+            if (out_sy) *out_sy = sy;
+        }
+    }
+    if (out_cut) *out_cut = cut;
+    return best != INT64_MAX;
+}
