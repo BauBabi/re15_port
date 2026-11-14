@@ -343,7 +343,7 @@ static const int32_t k_sm_zurueck[][3] = { { 12, -10447, -19130 }, { 13, -10705,
 #define BF_H_AUFSPRINGEN 80          /* Video h80: Beine schon hoch, h82..86 rechts hinaus; Lauf n5 (Start h82) war 2 Bilder spaet */
 #define BF_H_WEG         87          /* Neuaufbau ab NB2: Bild 87 weg (Video h87 weg, h86 noch 5266 Bildpunkte am Rand); Schritt 4:
                                        * Takt = Bild (vorher Takt 89 = Bild 87) */
-#define BF_H_GANG        90
+#define BF_H_GANG        119         /* Runde 3 N2: Video-Gangbeginn (s. k_birkin_beuge); Runde 2 90 */
 #define BF_H_ENDE       135
 /* Birkin-Clip 0x0B Bild je Videobild (stueckweise linear): Griff beginnt h7 (Klaue bei h12 auf Brusthoehe B5, ueber dem
  * Kopf B10 bei h17). Das Video haelt 53 Bilder (h17..70), der Clip hat fuer das Halten nur B10..37 (Klaue oben,
@@ -360,10 +360,28 @@ static const int32_t k_sm_zurueck[][3] = { { 12, -10447, -19130 }, { 13, -10705,
  * 260, 640er), faellt h71..h74 und liegt h74..h79 vor ihm. Jetzt: Pendel weiter zurueck B27 (h66) -> B20 (h73), Hand Bild-x
  * 131 -> 124 (hand.py), Neigung 16 Grad; ab BF_H_STEHEN Stand-Clip 0 (INIT @0x8011683c) mit Ueberblendung (bf_clip, +0x8f = 7):
  * der erhobene Arm sinkt, Birkin richtet sich auf; der tiefe Schlag B41..B70 entfaellt. */
+/* Runde 3 (Pruefer Runde 2 N2 "nach dem Wurf aufrecht und zur Kamera gedreht h85..h103, im Video bis ~h104 nach links gebeugt,
+ * schaut auf den Spider-Man", N6 "Sichel steht beim Drehen h73..h75 nach oben ab", N7 "Wurf ohne Ausholen"). Video (Augen-Agent,
+ * Pixelmessung, 640x480): Birkin-Kopfoberkante h70 (360,168) h71 (355,170) h72 (350,170) h73 (352,175) h74 (330,185) h76 (350,188)
+ * h78 (365,195) h80 (390,185) ... h86-h90 (404,182) h92-h98 (~400,180) h100 177 h102 172 h104 (390,166), h112 158; der haltende Arm
+ * h72 waagerecht links, ab h76 haengt er links unten (273-329, 188-321), nie senkrecht hoch. Fuesse: kein Schritt h86..h118 (nur
+ * Gewichtsverlagerung), erster Schritt h119/h120 (linker Fuss 419 -> 423 -> 427).
+ * Umsetzung mit Original-Bildern von Clip 0x0B ohne den Ueberkopf-Schlag (B38..B44 hebt den Arm ueber den Kopf und schiebt den Kopf
+ * bei Gier Bezug-1270 um 40..70 Bildpunkte nach RECHTS - das Video nach links): Halten bis h70 (B27 -> B29), ab h70 Ueberblendung
+ * (+0x8f = 7, Gewicht wie skeleton_common.c re15_blend_angle12) in das gebeugte Bild B85 (Kopf 28 Bildpunkte tiefer, Arm haengt);
+ * nachgerechnet (Ueberblendung je Takt, Kamera rueck.py): Hand h70 (256,166) h71 (245,199) h72 (254,257) h73 (290,296) h74
+ * (318,312) - der Arm schwingt links herab, nie ueber die Schulter. Aufrichten in Clip-Reihenfolge nach der Kopfhoehe des Videos
+ * (Absenkung gegen h70: B85 +28, B86 +19, B87 +11, B88 +5, B89 +1, B90 -2, B92 -4 Bildpunkte; Video h74..h80 +17..+27, h86..h98
+ * +12..+14, h100 +9, h102 +4, h104 -2); ab BF_H_STEHEN Stand-Clip 0 (INIT @0x8011683c, richtet sich weiter auf), Gang ab
+ * BF_H_GANG. Bildwechsel im Aufrichten mit kurzer Ueberblendung (+0x8f = 3). */
 #define BF_BILD_N 6
 static const int16_t k_birkin_bild[BF_BILD_N][2] = {
-    {   7,  0 }, {  17, 10 }, {  35, 28 }, {  51, 12 }, {  66, 27 }, {  73, 20 } };
-#define BF_H_STEHEN      74         /* Video: Birkin aufrecht bis h73, ab h74 lehnt er sich vor */
+    {   7,  0 }, {  17, 10 }, {  35, 28 }, {  51, 12 }, {  66, 27 }, {  70, 29 } };
+#define BF_H_BEUGT       70         /* Ueberblendung in die gebeugte Haltung (s. oben) */
+static const int16_t k_birkin_beuge[][2] = {
+    {  70, 85 }, {  80, 85 }, {  81, 86 }, {  88, 86 }, {  89, 87 }, {  98, 87 }, {  99, 88 }, { 101, 88 }, { 102, 89 },
+    { 103, 90 }, { 104, 92 } };
+#define BF_H_STEHEN      105        /* Video h104 aufrecht (Kopfoberkante 166 = h70 - 2) */
 /* Schritt 2 nach Referenz 2 (Loslassen): Video 4 h66-h70 haelt Birkin den Spider-Man noch oben links (Rumpf x ~100-170, y ~60-250),
  * h71 sinkt er links herab, h72 kopfueber links (x 60-150), h73/h74 unten links. Ref2 (84e8a4d97) schwang die Hand schon ab Bild 68
  * nach unten (Clip 0x0B B38 -> B44 Takt 70 -> 72) und liess bei Bild 70 los (3041 Einheiten von der Hand). Jetzt der Abschwung
@@ -382,9 +400,18 @@ static const int16_t k_birkin_bild[BF_BILD_N][2] = {
  * Video 4 (Bogen R2_wurf_a/b, Sichtpruefung je Bild h62..h76): Birkins Umriss bleibt h62..h73 unveraendert (keine Drehung), erst
  * h73 -> h74 lehnt der Oberkoerper 15..20 Bildpunkte nach links; der Spider-Man haengt h66..h70 still oben links, steigt h70..h72
  * ~25 nach links und ~35 nach oben und faellt dann. Daher die Drehung erst nach dem Loslassen (BF_H_LOS = 71): h72 -> h76. */
+/* Runde 3 N2: nach dem Loslassen dreht Birkin mit dem Schwung nach links (zum fallenden Spider-Man) und wieder zur Kamera; Gier je
+ * Takt so, dass die Kopflage in der Ueberblendung (Rechnung s. k_birkin_beuge) die Video-Kopflage trifft: h70..h80 Port 370 373 359
+ * 338 326 329 353 359 365 371 377, Video 360 355 350 352 330 - 350 - 365 - 390 (Mittel |Fehler| 9). h80 -> h100 langsam auf -969
+ * (Video-Kopf h86..h100 ~400), h100 -> h104 zur Kamera (BF_H_ZUR_KAMERA), Gang wie bisher. Vorher h72 -> h76 auf 0 = Ruecken zur
+ * Kamera (Sichtpruefung h76..h78), dann bis h90 zur Kamera. */
 static const int16_t k_birkin_gier[][2] = {
-    {   0, -1270 }, {  66, -1270 }, { BF_H_WURF, -1270 }, { BF_H_AUFSCHLAG, 0 } };
-#define BF_GANG_SCHRITT  22          /* Video h90..135: ~1000 Einheiten in 45 Bildern */
+    {   0, -1270 }, {  70, -1270 }, {  71, -969 }, {  72, -569 }, {  73, -269 }, {  74, -119 }, {  75, -369 }, {  76, -669 },
+    {  77, -719 }, {  78, -769 }, {  79, -819 }, {  80, -869 }, { 100, -969 } };
+#define BF_H_ZUR_KAMERA  104
+/* Runde 3 N2: Gangtempo aus dem Video - Hoehe 282 -> 302 Bildpunkte h118 -> h126 (+7.1 %) = Blicktiefe 6833 -> 6380 (rueck.py), also
+ * 453 Einheiten in 8 Bildern auf die Kamera zu = 57 je Bild (vorher 22 = ~1000 in h90..h135 bei Gangbeginn h90). */
+#define BF_GANG_SCHRITT  57
 /* Runde 41 SF Neuaufbau ab NB2 (Nutzerwunsch "Schwanz: laenger, Laenge, Glieder und Baender wie im Video, Bewegung 1:1 nach
  * dem Video"): Schwanzbahn und Verdecken aus NB3-NB5 (r41/sichel 3f91e5c57) uebernommen. Die Tabelle ist je VIDEOBILD h; der
  * NB2-Takt h wird im Bild h - 2 gezeichnet (Lauf nb2neu/G2: Messzeile "h-1 F240", erstes Letterbox-Bild F243) -> die Szene
@@ -729,7 +756,7 @@ static void bf_hangar_starten(void)
     }
     re15_actor_t *b = &g_actors[s_h.birkin], *m = &g_actors[s_h.sm];
     s_h.gier0 = b->rot_y;
-    b->rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, 4, 0)) & 0x0fff);
+    b->rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, BF_N(k_birkin_gier), 0)) & 0x0fff);
     m->rot_y = bf_blick(m, b->x, b->z);
     m->hp = 100;
     s_griff_y = BF_SM_GRIFF_Y;
@@ -825,7 +852,7 @@ static void bf_heben_ziel(const re15_actor_t *b, const re15_actor_t *m, int h, i
     int32_t g[3];
     re15_actor_t bb = *b, mm = *m;
     bb.motion = BF_CLIP_GRIFF; bb.anim_frame = (uint8_t)bf_tab(k_birkin_bild, BF_BILD_N, hg);
-    bb.rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, 4, hg)) & 0x0fff);
+    bb.rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, BF_N(k_birkin_gier), hg)) & 0x0fff);
     mm.anim_frame = (uint8_t)(m->anim_frame + (hg - h));
     bf_heben_basis(hg - 1, g);
     for (int it = 0; it < 3; it++) {
@@ -1048,16 +1075,24 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     /* --- Birkin: Clip, Gier ------------------------------------------------------------------------------------- */
     if (h < BF_H_GANG) {
         if (h < k_birkin_bild[0][0]) re15_r38_birkin_anim(b);             /* Stand, Clip 0 laeuft */
-        else if (h < BF_H_STEHEN) bf_bild(b, BF_CLIP_GRIFF, bf_tab(k_birkin_bild, BF_BILD_N, h));
+        else if (h < BF_H_BEUGT) bf_bild(b, BF_CLIP_GRIFF, bf_tab(k_birkin_bild, BF_BILD_N, h));
+        else if (h < BF_H_STEHEN) {                                       /* gebeugt (Kopf k_birkin_beuge) */
+            const int alt = b->anim_frame, neu = bf_tab(k_birkin_beuge, BF_N(k_birkin_beuge), h);
+            bf_bild(b, BF_CLIP_GRIFF, neu);
+            if (h == BF_H_BEUGT) b->anim_frac = 7;                        /* Ueberblendung B29 -> B85 (+0x8f = 7 wie bf_clip) */
+            else if (neu != alt) b->anim_frac = 3;                        /* Aufrichten: kurze Ueberblendung je Bildwechsel */
+        }
         else if (h == BF_H_STEHEN) bf_clip(b, 0);                         /* Stand-Clip 0 wie INIT @0x8011683c, Ueberblendung */
         else re15_r38_birkin_anim(b);
-        b->rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, 4, h)) & 0x0fff);
-        if (h > BF_H_AUFSCHLAG) {                                         /* Video h77..90: richtet sich auf, dreht zur Kamera */
+        b->rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, BF_N(k_birkin_gier), h)) & 0x0fff);
+        if (h > k_birkin_gier[BF_N(k_birkin_gier) - 1][0]) {              /* h100..h104 zur Kamera, dann stehen */
             const re15_camera_cut_t *c = bf_szenenkamera();
             if (c) {
+                const int g1 = k_birkin_gier[BF_N(k_birkin_gier) - 1][1], h1 = k_birkin_gier[BF_N(k_birkin_gier) - 1][0];
                 int d = (bf_blick(b, c->pos_x, c->pos_z) - s_h.gier0) & 0x0fff;
                 if (d > 0x800) d -= 0x1000;
-                b->rot_y = (int16_t)((s_h.gier0 + d * (h - BF_H_AUFSCHLAG) / (BF_H_GANG - BF_H_AUFSCHLAG)) & 0x0fff);
+                if (h < BF_H_ZUR_KAMERA) d = g1 + (d - g1) * (h - h1) / (BF_H_ZUR_KAMERA - h1);
+                b->rot_y = (int16_t)((s_h.gier0 + d) & 0x0fff);
             }
         }
     } else {                                                              /* Gang auf die Kamera zu (Video h88..135) */
