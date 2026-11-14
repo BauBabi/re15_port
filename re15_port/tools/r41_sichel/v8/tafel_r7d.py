@@ -25,8 +25,8 @@ import tafeln_v8 as T                 # noqa: E402
 
 VIDEO = os.path.join(os.path.dirname(V.BAUM), 'r41_sichel', 'analysis', 'befunde_runde41', 'SF_belege', 'roh', 'alle')
 BILDER = (262, 278, 294, 310, 311, 312, 346, 354, 362, 372)
-BOX_FOTO = (330, 115, 542, 274)        # Ausschnitt 640 x 480 um Huegel, Nacken und Kopf in PV/P2 (weisse Linie etwa x 447-462, y 207-245)
-F_FOTO = 510.0 / 212                   # gleiche Kachelbreite wie die Framedump-Zeilen
+BOX_FOTO = (330, 160, 500, 288)        # Ausschnitt 640 x 480 um Huegel, Nacken und Kopf in PV/P2 (weisse Linie etwa x 447-462, y 207-245)
+F_FOTO = 3.0                             # gleiche Kachelbreite wie die Framedump-Zeilen
 W_FD, H_FD = 270, 200                  # Ausschnitt im Framedump
 
 
@@ -102,7 +102,7 @@ def main():
             z = np.hstack([z, np.zeros((z.shape[0], breite - z.shape[1], 3), np.uint8)])
         zs.append(z[:, :breite])
     im = np.vstack(zs)
-    T.speichern(T.kopf(im, 'SF V8 19: Nacken P5 - Vorlage | V7 | V8 r4 | V8 r6 | NEU; PV/P2 offline (x2,4), echte Framedumps F262-F312 '
+    T.speichern(T.kopf(im, 'SF V8 19: Nacken P5 - Vorlage | V7 | V8 r4 | V8 r6 | NEU; PV/P2 offline (x3), echte Framedumps F262-F312 '
                            'Griffphase und F346-F372 vorn (Ausschnitt um das Gesicht, x1,9), roh'), a.aus)
 
 
