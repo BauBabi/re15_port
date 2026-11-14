@@ -435,7 +435,14 @@ static const int16_t k_birkin_bild[BF_BILD_N][2] = {
 #define BF_HALT_H0       17
 #define BF_HALT_B0       10
 #define BF_HALT_N        19         /* B10..B28 */
-static const int16_t k_halt_blende[7] = { 125, 344, 590, 795, 923, 981, 1000 };   /* Gewicht des neuen Bilds x 1000, Takt 0.. */
+#define BF_HALT_WIEDER2  52         /* zweiter Wiedereinstieg (s. k_halt_blende) */
+/* Runde 4 Nachbesserung Punkt 5 (Sichtpruefung Runde 4 P2: "beim Wiedereinstieg doppelt so schnell, der gehaltene Spider-Man
+ * schwingt h34..h40 15..20 Bildpunkte"): Wiedereinstieg mit langsamer Ueberblendung +0x8f = 15 bei Mischschritt 0x100 (statt 7 /
+ * 0x200, Gewicht wie skeleton_common.c: Restgewicht (15-t)/16 je Takt) -> die Rueckbewegung verteilt sich auf ~10 statt ~5 Takte;
+ * der zweite Umlauf ist kuerzer (B10..B25, Wiedereinstieg h52 statt h55), damit h66..h70 wie bisher B24..B28 liegt (Sichelspitze
+ * y 80..83 hinter dem Spider-Man, B21..B23 hoeher). */
+#define BF_HALT_RATE     0x100
+static const int16_t k_halt_blende[12] = { 62, 180, 334, 500, 656, 785, 879, 934, 967, 985, 994, 1000 };   /* neues Bild x 1000 */
 static const int16_t k_birkin_beuge[][2] = {
     {  71, 85 }, {  80, 85 }, {  81, 86 }, {  88, 86 }, {  89, 87 }, {  98, 87 }, {  99, 88 }, { 101, 88 }, { 102, 89 },
     { 103, 90 }, { 104, 92 } };
@@ -808,7 +815,9 @@ static int bf_tab(const int16_t (*t)[2], int n, int h)
 static int bf_halt_bild(int h)
 {
     if (h < BF_HALT_H0) return bf_tab(k_birkin_bild, BF_BILD_N, h);
-    return BF_HALT_B0 + (h - BF_HALT_H0) % BF_HALT_N;
+    if (h < BF_HALT_H0 + BF_HALT_N) return BF_HALT_B0 + (h - BF_HALT_H0);           /* h17..h35 B10..B28 */
+    if (h < BF_HALT_WIEDER2) return BF_HALT_B0 + (h - BF_HALT_H0 - BF_HALT_N);         /* h36..h51 B10..B25 */
+    return BF_HALT_B0 + (h - BF_HALT_WIEDER2) % BF_HALT_N;                             /* ab h52 B10.. (h70 B28) */
 }
 /* Glatter Verlauf 0..4096 (smoothstep), u in Q12. */
 static int32_t bf_glatt(int32_t u)
@@ -1176,7 +1185,9 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         else if (h < BF_H_BEUGT) {                                        /* Griff, Halten vorwaerts im Kreis (Kopf BF_HALT_N) */
             const int f_ = bf_halt_bild(h);
             bf_bild(b, BF_CLIP_GRIFF, f_);
-            if (h > BF_HALT_H0 && f_ == BF_HALT_B0) { b->anim_frac = 7; s_h.halt_wechsel = h; }   /* Wiedereinstieg B28 -> B10 */
+            if (h > BF_HALT_H0 && f_ == BF_HALT_B0) {                     /* Wiedereinstieg -> B10, langsam ueberblendet */
+                b->anim_frac = 15; b->anim_blend_rate = BF_HALT_RATE; s_h.halt_wechsel = h;
+            } else if (s_h.halt_wechsel > 0 && h - s_h.halt_wechsel >= BF_N(k_halt_blende)) b->anim_blend_rate = 0;
         }
         else if (h < BF_H_STEHEN) {                                       /* gebeugt (Kopf k_birkin_beuge) */
             const int alt = b->anim_frame, neu = bf_tab(k_birkin_beuge, BF_N(k_birkin_beuge), h);

@@ -244,10 +244,10 @@ static void test_hangar(unsigned raum)
                     (void)re15_enemy_part_point(m, 19, gofs, griff); }
                 const double gx = hand[0] - griff[0], gy = hand[1] - griff[1], gz = hand[2] - griff[2];
                 const int ga = (int)sqrt(gx * gx + gy * gy + gz * gz);
-                /* Runde 4 Punkt 5: Birkin haelt vorwaerts im Kreis B10..B28 (19 Takte ab h17); beim Wiedereinstieg B28 -> B10 (h36,
-                 * h55) ueberblendet der Zeichner 6 Takte lang und der Griff folgt der GEZEICHNETEN Hand - die Abfrage hier liefert die
-                 * Zielpose, daher zaehlen diese Takte nicht. */
-                const int hw = 11 + griff_takte, wieder = (hw >= 36) && ((hw - 17) % 19) < 6;
+                /* Runde 4 Punkt 5: Birkin haelt vorwaerts im Kreis (B10..B28 ab h17, Wiedereinstieg h36 und h52); dabei ueberblendet
+                 * der Zeichner 12 Takte lang und der Griff folgt der GEZEICHNETEN Hand - die Abfrage hier liefert die Zielpose, daher
+                 * zaehlen diese Takte nicht. */
+                const int hw = 11 + griff_takte, wieder = (hw >= 36 && hw < 48) || (hw >= 52 && hw < 64);
                 if (!wieder && ga > griff_max) griff_max = ga;
                 griff_n++;
             }
