@@ -859,6 +859,8 @@ AKTION
 WARTE 150
 AKTION
 WARTE 450
+AKTION
+WARTE 60
 FLAG 3 245
 GEHE -10541 -8106 150
 GEHE -10496 -24008 150
@@ -878,6 +880,8 @@ _muss("${_dbg}" "[aot] DOOR FIRE slot=1 rect=(-7700,6400,hw=500,hh=900) target_c
 _darf_nicht("${_dbg}" "Port-Programm 2080" w4 "Rechner 2080 ohne Port-Programm (Nachtrag 7)")
 _muss("${_dbg}" "[msgtext] room=208${S} id=0 \"From here maybe I can control the water level." w4 "Original-Frage am Rechner (sub02 @0x00C86)")
 _danach("${_dbg}" "From here maybe I can control the water level." "Cut_chg(7)" w4 "Wasser 2080 sinkt (sub02 Cut 7)")
+# Runde 42 Story (K-01, re15_story2_r42.h): nach dem Ablassen folgt der Hinweis msg 52 (Text-Platz-Maske, wird weggedrueckt)
+_danach("${_dbg}" "Cut_chg(7)" "[msgtext] room=208${S} id=52 \"Next to the computer... there's a keyhole.\"" w4 "Runde 42: Hinweis msg 52 nach dem Ablassen")
 _darf_nicht("${_dbg}" "[msgtext] room=208${S} id=40" w4 "kein Port-Text 2080 Id 40 (entfallen)")
 _flagfolge("${_wp}" w4 3 245 "0;1")
 _muss("${_dbg}" "[aot] DOOR FIRE slot=1 rect=(-9150,-25650,hw=500,hh=500) target_cut=0" w4 "Tuer slot 1 @0x00BC2 nach 2090 (erst nach dem Rechner)")

@@ -449,6 +449,9 @@ static int tabellen_art(unsigned room, int msg)
      * Art M, dining_r38.c) — ROOM1131 Slot 0 -> 1141, Port-Nachricht 40 "It's locked. / The door is marked "Dining
      * Room"." (re15_dining_r38.h RE15_R38F_MSG_1131_ZU), bis der Dining Room Key benutzt ist. */
     if (room == 0x1131u && msg == 40) return RE15_LOCK_SE_ART_M;
+    /* Runde 42 Story (K-02/K-03, re15_story2_r42.h): ROOM2070/2071 Platz 7 (@0x0AC2) und Platz 5 (@0x0B1C) zeigen die Port-
+     * Nachricht 1 "It's locked from the other side." (= ROOM11A0 msg 2 @0x0142C) mit dem Ton der Art M wie 11A0 msg 2. */
+    if ((room == 0x2070u || room == 0x2071u) && msg == 1) return RE15_LOCK_SE_ART_M;
     return -1;
 }
 
@@ -537,8 +540,11 @@ static void teil_raeume(void)
      * ROOM20A0/20A1 Slot 0 (Door_aot_set @0x01746 -> 2090) ist bis Bank 9 Bit 113 ein sce-3-Ereignis, dessen Druck die
      * Original-msg 1 @0x0203C "It's locked." zeigt (gatorszene_r41.c tor_druck) = dieselbe Tabellen-Stelle wie Platz 8
      * (lock_se_sites.inc Zeile 49/50). Der Ton faellt dabei EINMAL (Zeile oben: 1 x Satz der Art). */
-    CHECK(tab == 54 && tabK == 16 && tabM == 38 && tabS == 0 && n_stellen == 47,
-          "Tabellen-Plaetze %d (K %d / M %d / S %d, %d Stellen) statt 54 (16 / 38 / 0, 47)",
+    /* Runde 42 Story (K-02): ROOM11A0/11A1 Platz 0 (msg 2 @0x00F42) schliesst jetzt auf (Port-Text msg 11, Riegel-Ton der Karten-
+     * Bank, kein Tuer-Ton) -> 2 Plaetze Art M weniger; ROOM2070/2071 Platz 5 und 7 -> 4 Plaetze Art M und 2 Stellen mehr
+     * (s. tabellen_art). 54 - 2 + 4 = 56, M 38 - 2 + 4 = 40, Stellen 47 + 2 = 49 (11A0 msg 2 bleibt ueber Platz 4). */
+    CHECK(tab == 56 && tabK == 16 && tabM == 40 && tabS == 0 && n_stellen == 49,
+          "Tabellen-Plaetze %d (K %d / M %d / S %d, %d Stellen) statt 56 (16 / 40 / 0, 49)",
           tab, tabK, tabM, tabS, n_stellen);
     CHECK(p10d0_0,  "Pflichtfall ROOM10D0 Platz 0 -> msg 6, 1 x ZU_E");
     CHECK(p1170_5,  "Pflichtfall ROOM1170 Platz 5 -> msg 12, 1 x ZU_A");

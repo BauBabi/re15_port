@@ -420,6 +420,17 @@ static void leiche_mitte_konst(int32_t *x, int32_t *z)
 
 static int32_t s_key_x = 0, s_key_y = GSZ_WASSER_Y, s_key_z = 0;
 static int16_t s_key_rx = 0, s_key_rz = 0;      /* Neigung zur Kamera (Nachbesserung 1, M2), Welt (parent -1) */
+/* Runde 42 Story (STAGE2, K-08): Lage des Schluessels bei der Leiche fuer die Taschenuhr daneben. Gilt die Todeslage dieses
+ * Laufs nicht (Spielstand geladen, noch kein key_bei_leiche), dann dieselbe Ersatzlage wie key_bei_leiche. Rueckgabe 1. */
+int re15_gatorszene_r41_key_lage(int32_t *x, int32_t *y, int32_t *z)
+{
+    int32_t kx = s_key_x, kz = s_key_z, ky = s_key_y;
+    if (kx == 0 && kz == 0) { leiche_mitte_konst(&kx, &kz); ky = GSZ_WASSER_Y; }
+    if (x) *x = kx;
+    if (y) *y = ky;
+    if (z) *z = kz;
+    return 1;
+}
 static int     s_key_lage_ok = 0;               /* Lage + Neigung aus dem Tod (nur RAM) */
 static int     s_key_neigung_offen = 0;         /* Ersatzlage nach dem Laden: Neigung im ersten Takt (s. key_bei_leiche) */
 static int     s_key_cut = -1;                  /* Kamera, fuer die Lage/Neigung gewaehlt wurde (Messzeile/Riegel) */
@@ -527,6 +538,8 @@ static void key_bei_leiche(uint16_t room_id)
     re15_aot_set_item_tk_prop(GSZ_KEY_AOT, s_key_x, s_key_z, GSZ_KEY_RECHTECK / 2, GSZ_KEY_RECHTECK / 2,
                               RE15_GSZ_KEY_ITEM, 1, RE15_GSZ_BIT_GENOMMEN, RE15_GSZ_KEY_OBJ);
     g_aot.slots[GSZ_KEY_AOT].band = 0;
+    { extern void re15_story2_r42_schluessel_liegt(uint16_t room_id);
+      re15_story2_r42_schluessel_liegt(room_id); }   /* Runde 42 Story (K-08): Taschenuhr neben den Schluessel */
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[gatorszene] ROOM%04X: Water Key (Item 0x%02X, Bits (9,%d)/(9,%d)) bei der Leiche (%d,%d,%d) Neigung rx %d rz %d"
                     " (Kamera %d%s), Zone Slot %d\n",
@@ -2786,7 +2799,11 @@ static const uint8_t *tor_druck(uint16_t room_id)
     const uint16_t basis = (uint16_t)(room_id & 0xFFFEu);
     if (!s_tor_slot || (basis != RE15_GSZ_RAUM && basis != 0x20A0u)) return NULL;
     const int slot = s_tor_slot - 1;
-    if (basis == RE15_GSZ_RAUM && re15_inv_find_item(RE15_GSZ_KEY_ITEM) >= 0) {
+    /* Runde 42 Story (Konzept K-01, Nutzer 08.11.): "Nach dem Alligator geht man mit dem Schluessel hoch nach 2080 und oeffnet dort
+     * das Tor" - das Schluesselloch neben dem Rechner ROOM2080/2081 (story2_r42.c) setzt Bit 113; am Tor selbst nimmt der Handler den
+     * Schluessel nicht mehr (Pruefhaken re15_story2_r42_tor2090_alt_setzen(1) = Stand Runde 41). */
+    extern int re15_story2_r42_tor2090_nimmt_schluessel(void);
+    if (basis == RE15_GSZ_RAUM && re15_story2_r42_tor2090_nimmt_schluessel() && re15_inv_find_item(RE15_GSZ_KEY_ITEM) >= 0) {
         /* RE2 LAB_80051514 Treffer-Zweig: Besitz VOR dem Oeffnen (@0x80051628/34), Text (@0x8005164c), Aufschliess-Ton
          * (@0x80051654/58), Wegwerf-Fortsetzung (@0x80051670), Schlossbit (@0x80051690); kein Durchgang bei diesem Druck. */
         (void)re15_discard_besitz_vor_nachricht(room_id, RE15_GSZ_MSG_AUF);

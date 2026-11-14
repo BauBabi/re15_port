@@ -328,6 +328,15 @@ Besonderheiten:
 - L3/E2: Ausloesezone "schmaler Abschnitt vor der Leiter" 11A0/11A1 und Laufweg der Begleiter.
 - E-11: Birkin-Form/Spawn in 50E0/50F0/50E1/50F1.
 
+### 4.1 Gemessen (Stufe STAGE2, 2026-11-14; Belege im Kopf von `re15_port/include/re15_story2_r42.h`)
+- L1/K-01: ROOM2080/2081 haben KEINEN Tor-Satz (main00 nur Slot 0 @0x0BA2 -> 2030 und Slot 1 @0x0BC2 Leiter). Das einzige Tor
+  ist ROOM2090/2091 Slot 1 @0x009B6 -> 20A0 (Bit 113). Umsetzung: Schluesselloch = Rechteck des Rechners (sub00 @0x0C1A) nach dem
+  Ablassen ((3,245) = 1), der Schluessel setzt Bit 113 + 119 und startet die Szene; das Tor in 2090 nimmt den Schluessel nicht
+  mehr. Der Schluessel liegt nach dem Tod bei der Leiche im Suedbecken (Ersatzlage (-170,-1620,-23629), gatorszene_r41.c).
+- L1b/K-02: 11A0-Seite = 11A0/11A1 main00 Slot 0 (msg 2 @0x00F42 bei (3,151)=0, sonst Door_aot_set @0x00F5A). Riegel im Original
+  auf der 2070-Seite (sub02 @0x0CDA). K-03: 2040/2041 Slot 4 @0x0131C (Galerie, Band 5) <-> 2070 Slot 5 @0x0B1C.
+- L3/E2 (Leiter 11A0/11A1) und E-11 (50E0/50F1): noch nicht gemessen (spaetere Stufen).
+
 ## 5. Gemeinsame Dateien (nur kleine Haken, Kommentar "Runde 42 Story")
 Wie Runde 41 (VERTRAG R41 1.3). Tabu: `synchro/`, `pri/`, `Cutscenes/`, `Version_80%/`, `release/`. Neue Bits nur
 mit Eintrag in `re15_story_r42.h`, `zensus_r42.py` BITS, k_port[] und hier.

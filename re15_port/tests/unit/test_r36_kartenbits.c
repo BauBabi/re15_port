@@ -178,15 +178,20 @@ static const orig_item_t k_orig[] = {
 
 static raum_t s_orig_raum[N_ORIG];
 
+/* Runde 42 Story (K-08, re15_story2_r42.h): die Taschenuhr 0x3F liegt erst nach dem Tod des Alligators (Bit (9,111)) und dann
+ * auf dem Platz RE15_S2_UHR_PLATZ neben dem Schluessel - der Satz @0x00A12 (Slot 5, Taken-Bit 90) wird dorthin umgelegt. */
+#define R42_UHR_PLATZ 16
 static int satz_scharf(const orig_item_t *o)
 {
-    return g_aot.slots[o->slot].active && g_aot.slots[o->slot].type == RE15_AOT_TYPE_ITEM &&
-           g_aot.item_params[o->slot].item_type == o->item;
+    const int slot = (o->item == 0x3F) ? R42_UHR_PLATZ : o->slot;
+    return g_aot.slots[slot].active && g_aot.slots[slot].type == RE15_AOT_TYPE_ITEM &&
+           g_aot.item_params[slot].item_type == o->item;
 }
 
 /* Den Original-Raum mit dem aktuellen Bank-9-Stand starten; 1 = Item-Satz scharf. */
 static int orig_raum_scharf(int i)
 {
+    if (k_orig[i].item == 0x3F) re15_game_flag_set(BANK9, 111, 1);   /* Runde 42 K-08: Alligator tot, Uhr liegt */
     raum_start(&s_orig_raum[i], 0, 0);
     return satz_scharf(&k_orig[i]);
 }

@@ -132,6 +132,16 @@ int re15_aufschliessen_r36_notice(unsigned room_id, uint8_t msg_id, int weg)
     return -1;
 }
 
+/* Runde 42 Story (STAGE2): Folge einer Art ohne Tabellenzeile (Kopf re15_aufschliessen_r36.h). */
+int re15_aufschliessen_r36_art_starten(int art, unsigned room_id, uint8_t msg_id)
+{
+    if (art < 0 || art > 3) return -1;
+    s_lauf.aktiv = 1; s_lauf.frisch = 1; s_lauf.art = art; s_lauf.bild = 0; s_lauf.naechster = 0;
+    s_lauf.room = room_id; s_lauf.msg = msg_id;
+    faellige_spielen();                 /* Bild 0 im selben Bild wie der Text (wie re15_aufschliessen_r36_notice) */
+    return art;
+}
+
 void re15_aufschliessen_r36_tick(void)
 {
     if (!s_lauf.aktiv) return;

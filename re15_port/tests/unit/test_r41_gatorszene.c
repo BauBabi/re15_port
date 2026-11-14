@@ -82,6 +82,7 @@
 
 void re15_actor_step_all_walkers(void);
 extern unsigned g_re15_gsz_tor_zu, g_re15_gsz_tor_auf;
+void re15_story2_r42_tor2090_alt_setzen(int an);   /* Runde 42 Story: Pruefhaken Tor 2090 = Stand Runde 41 (Teil tor) */
 int re15_gatorszene_r41_bgm_eintrag(int stage, int room);
 extern int g_test_door_se_count;   /* tests/test_support.c: Spion re15_audio_re2_door_se (Tuer-/Schloss-Ton) */
 extern int g_test_door_se_last;
@@ -410,6 +411,9 @@ static void teil_texte(void)
 static void teil_tor(void)
 {
     printf("== tor ==\n");
+    /* Runde 42 Story (K-01): der Schluessel wirkt seit v0.8.31 am Schluesselloch in 2080 (story2_r42.c, Riegel unit_r42_story2_loch);
+     * dieser Teil haelt den Tor-Handler der Runde 41 selbst fest und schaltet dafuer den Pruefhaken auf den Stand Runde 41. */
+    re15_story2_r42_tor2090_alt_setzen(1);
     re15_game_state_init();
     re15_inv_load_briefing();
     re15_game_flag_set(RE15_GSZ_BANK, RE15_GSZ_BIT_GESEHEN, 1);
@@ -467,6 +471,7 @@ static void teil_tor(void)
     PRUEF(!re15_gatorszene_r41_tor_gesperrt(), "20A0 nach (9,113): Tor nicht mehr gesperrt");
     r = druecke(4950, 4100, 3072, 200);
     PRUEF(r.raumwechsel && (r.ziel & 0xFFFE) == 0x2090, "20A0 nach (9,113): Raumwechsel nach ROOM%04X (soll 2090)", (unsigned)r.ziel);
+    re15_story2_r42_tor2090_alt_setzen(0);
 }
 
 /* ---- Teil: schluessel ------------------------------------------------------------------------------------- */

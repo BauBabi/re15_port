@@ -527,6 +527,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     re15_annette_r41_install((uint16_t)g_current_room_id);      /* Runde 41 Spur AN: 5090 Texte 40/42/43, 6030 Texte 27-30, Zustand je Raum (re15_annette_r41.h) */
     { extern void re15_kanister2080_r41_install(uint16_t); re15_kanister2080_r41_install((uint16_t)g_current_room_id); }   /* Runde 41 Spur G: 2080 Knall (Knall-Bank Satz 0) + Zombies / Kanister-Szene, 2090 Kanister im Becken (re15_kanister2080_r41.h) */
     { extern void re15_keyitems_r41_raum(uint16_t); re15_keyitems_r41_raum((uint16_t)g_current_room_id); }   /* Runde 41 Spur O: USE-Lauf und Flanken-Merker je Raum */
+    { extern void re15_story2_r42_install(uint16_t); re15_story2_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 Story STAGE2: Schluesselloch/Szene 2080, Tueren 2070/11A0/2040, Uhr 2090 (re15_story2_r42.h); NACH gatorszene/kanister */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und

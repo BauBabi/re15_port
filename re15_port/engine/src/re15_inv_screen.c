@@ -75,6 +75,8 @@ const uint8_t *re15_inv_desc_entry(int id)
     { const uint8_t *q = re15_dining_r38_desc((uint8_t)id); if (q) return q; }       /* Runde 38 Spur F: Dining Room Key */
     { const uint8_t *q = re15_keyitems_r41_desc((uint8_t)id); if (q) return q; }     /* Runde 41 Spur O: Crank */
     { const uint8_t *q = re15_gatorszene_r41_desc((uint8_t)id); if (q) return q; }   /* Runde 41 Spur F: Water Key (Original-CHECK 0x45) */
+    { extern const uint8_t *re15_story2_r42_desc(uint8_t); const uint8_t *q = re15_story2_r42_desc((uint8_t)id);
+      if (q) return q; }                                                               /* Runde 42 Story (F-19): Uhr bei Leon mit Gravur */
     return re15_inv_desc_blob + re15_inv_desc_off[id];
 }
 int re15_inv_desc_nids(void) { return RE15_INV_DESC_NIDS; }

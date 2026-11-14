@@ -13,6 +13,12 @@
 #      EM-Status-Gate FUN_800420a0 @0x80042120-38).
 #   c  Gegenprobe Leon: ROOM11A0 mit (3,206)=1 -> dieselbe Aktion -> DOOR FIRE slot 4 -> ROOM20A0 (die einzige Sperre).
 #
+# Runde 42 Story (Konzept K-02/K-03, Nutzer 08.11.; include/re15_story2_r42.h): der Zeitbomben-Weg fuehrt nicht mehr am
+# Alligator vorbei. a/b enden jetzt im 2070-Nordgang: 2040 slot 4 schliesst von der Galerie auf ("Leon/Elza unlocked the door.",
+# msg 6, Bit (9,122)), die Tuer 2070 -> 11A0 ist auf der Korridorseite "It's locked from the other side." (msg 1 = 11A0 msg 2
+# @0x0142C), (3,151) bleibt 0, kein Raumwechsel nach 11A0. Die Original-Sperre 11A0 slot 4 (3,206) haelt jetzt Lauf d (Leon,
+# Debug-Sprung in den 11A0-Kanal, derselbe Steg-Weg wie bisher hinter der 2070-Tuer).
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_ventilkette_sperre.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -117,6 +123,11 @@ GEHE -19750 -19800 150
 BLICK 2048
 WARTE 10
 AKTION
+WARTE 60
+AKTION
+WARTE 40
+FLAG 9 122
+AKTION
 RAUM ${_r2070}
 WARTE 30
 FLAG 3 151
@@ -131,7 +142,52 @@ FLAG 3 151
 AKTION
 WARTE 60
 AKTION
-RAUM ${_r11a0}
+WARTE 90
+FLAG 3 151
+FLAG 3 206
+ENDE
+" PARENT_SCOPE)
+endfunction()
+
+macro(_weg_pruefen _name _r2040 _r2070 _r11a0)
+    string(TOLOWER "${_r2070}" _k2070)
+    string(TOLOWER "${_r11a0}" _k11a0)
+    _muss("${_dbg}" "[aot] DOOR FIRE slot=2 rect=(-2400,-19800,hw=400,hh=1000) target_cut=11 spawn=(-3900,-9000,-19850)" ${_name} "Galerie-Tuer slot 2 @0x012DC nach der Treppe (Band 5)")
+    _muss("${_dbg}" "[aot] DOOR FIRE slot=4 rect=(-20450,-19800,hw=500,hh=1000) target_cut=9 spawn=(4650,0,-19200)" ${_name} "Tuer slot 4 @0x0131C nach 2070 Nordgang")
+    string(TOLOWER "${_r2040}" _k2040)
+    _muss("${_dbg}" "[msgtext] room=${_k2040} id=6 \"" ${_name} "Runde 42 K-03: 2040 slot 4 schliesst von der Galerie auf (msg 6)")
+    _muss("${_wp}" "FLAG (9,122) = 1" ${_name} "Runde 42 K-03: Bit (9,122) nach dem Aufschliessen")
+    _muss("${_dbg}" "[msgtext] room=${_k2070} id=1 \"It's locked from the other side.\"" ${_name} "Runde 42 K-02: 2070-Seite verriegelt (msg 1)")
+    _darf_nicht("${_dbg}" "[msgtext] room=${_k2070} id=0 \"You've opened the lock.\"" ${_name} "Runde 42 K-02: kein Riegel mehr auf der 2070-Seite (sub02 @0x00CE4)")
+    _darf_nicht("${_dbg}" "loaded room${_k11a0}.rdt" ${_name} "Runde 42 K-02: kein Raumwechsel nach 11A0 (Zeitbombe fuehrt nicht am Alligator vorbei)")
+    _darf_nicht("${_dbg}" "loaded room20a" ${_name} "kein Raumwechsel nach 20A0")
+    _muss("${_wp}" "FLAG (3,53) = 1" ${_name} "Zeitbombe als benutzt gesetzt")
+    _darf_nicht("${_wp}" "FLAG (3,151) = 1" ${_name} "Runde 42 K-02: (3,151) bleibt 0")
+    string(FIND "${_wp}" "FLAG (3,206) = 1" _p206)
+    if(NOT _p206 LESS 0)
+        _fehler("[${_name}]: (3,206) wurde 1 — die Sperre waere offen")
+    endif()
+    _muss("${_wp}" "FLAG (3,206) = 0" ${_name} "(3,206) bleibt 0")
+    _muss("${_dbg}" "EXIT_AT: Bild" ${_name} "Endbild im 2070-Nordgang erreicht")
+endmacro()
+
+# ---- a: Leon 2040 -> 2070 -> 11A0 -> Sperre ------------------------------------------------------------------------
+_weg_plan(_pa 2040 2070 11A0)
+_lauf(a 420 "${_pa}" ${_leon} RE15_DEBUG_JUMP=2040@250 RE15_SET_FLAG=9:103,9:100,3:146,3:53,7:98,7:99
+      "RE15_PLAYER_POS=-12850,1600,1024,3" "RE15_EXIT_AT=900#2070")
+_weg_pruefen(a 2040 2070 11A0)
+message(STATUS "r41_ventilkette_sperre a (Leon): 2040 Halle -> Treppe -> Galerie (aufgeschlossen, Runde 42 K-03) -> 2070 Nordgang -> 'It's locked from the other side.' (Runde 42 K-02)")
+
+# ---- b: Elza 2041 -> 2071 -> 11A1 -> Sperre ------------------------------------------------------------------------
+_weg_plan(_pb 2041 2071 11A1)
+_lauf(b 420 "${_pb}" ${_elza} RE15_DEBUG_JUMP=2040@250 RE15_SET_FLAG=9:103,9:100,3:146,3:53,7:98,7:99
+      "RE15_PLAYER_POS=-12850,1600,1024,3" "RE15_EXIT_AT=900#2071")
+_muss("${_dbg}" "Spieler-Familie PL04" b "Elza gewaehlt")
+_weg_pruefen(b 2041 2071 11A1)
+message(STATUS "r41_ventilkette_sperre b (Elza): dasselbe in 2041/2071")
+
+# ---- d: Original-Sperre 11A0 slot 4 ((3,206)=0), Leon im Kanal (Ankunft wie aus 2070: Tuer slot 4 spawn (6500,0,-3200)) ------
+_lauf(d 240 "RAUM 11A0
 WARTE 30
 FLAG 3 206
 GEHE 6500 -600 100
@@ -148,44 +204,10 @@ AKTION
 WARTE 90
 FLAG 3 206
 ENDE
-" PARENT_SCOPE)
-endfunction()
-
-macro(_weg_pruefen _name _r2040 _r2070 _r11a0)
-    string(TOLOWER "${_r2070}" _k2070)
-    string(TOLOWER "${_r11a0}" _k11a0)
-    _muss("${_dbg}" "[aot] DOOR FIRE slot=2 rect=(-2400,-19800,hw=400,hh=1000) target_cut=11 spawn=(-3900,-9000,-19850)" ${_name} "Galerie-Tuer slot 2 @0x012DC nach der Treppe (Band 5)")
-    _muss("${_dbg}" "[aot] DOOR FIRE slot=4 rect=(-20450,-19800,hw=500,hh=1000) target_cut=9 spawn=(4650,0,-19200)" ${_name} "Tuer slot 4 @0x0131C nach 2070 Nordgang")
-    _muss("${_dbg}" "[msgtext] room=${_k2070} id=0 \"You've opened the lock.\"" ${_name} "Riegel im Nordgang (sub02 @0x00CE4)")
-    _muss("${_dbg}" "[aot] DOOR FIRE slot=4 rect=(-19400,-19250,hw=500,hh=1000) target_cut=7 spawn=(6500,0,-3200)" ${_name} "Tuer 2070 slot 4 @0x00AFA nach 11A0")
-    _muss("${_dbg}" "loaded room${_k11a0}.rdt" ${_name} "11A0 geladen")
-    _muss("${_dbg}" "[msgtext] room=${_k11a0} id=2 \"It's locked from the other side.\"" ${_name} "ORIGINAL-Sperre 11A0 slot 4 (@0x00FEA Ck(3,206)=0 -> @0x00FEE msg 2)")
-    _danach("${_dbg}" "loaded room${_k11a0}.rdt" "[msgtext] room=${_k11a0} id=2" ${_name} "der Satz kommt in 11A0 nach dem Aufstieg")
-    _darf_nicht("${_dbg}" "loaded room20a" ${_name} "kein Raumwechsel nach 20A0 (Tuer erst mit (3,206))")
-    _muss("${_wp}" "FLAG (3,53) = 1" ${_name} "Zeitbombe als benutzt gesetzt")
-    _muss("${_wp}" "FLAG (3,151) = 1" ${_name} "(3,151) nach dem Riegel = 1")
-    string(FIND "${_wp}" "FLAG (3,206) = 1" _p206)
-    if(NOT _p206 LESS 0)
-        _fehler("[${_name}]: (3,206) wurde 1 — die Sperre waere offen")
-    endif()
-    _muss("${_wp}" "FLAG (3,206) = 0" ${_name} "(3,206) bleibt 0")
-    _muss("${_dbg}" "EXIT_AT: Bild" ${_name} "Endbild in 11A0 erreicht")
-endmacro()
-
-# ---- a: Leon 2040 -> 2070 -> 11A0 -> Sperre ------------------------------------------------------------------------
-_weg_plan(_pa 2040 2070 11A0)
-_lauf(a 420 "${_pa}" ${_leon} RE15_DEBUG_JUMP=2040@250 RE15_SET_FLAG=9:103,9:100,3:146,3:53,7:98,7:99
-      "RE15_PLAYER_POS=-12850,1600,1024,3" "RE15_EXIT_AT=1000#11A0")
-_weg_pruefen(a 2040 2070 11A0)
-message(STATUS "r41_ventilkette_sperre a (Leon): 2040 Halle -> Treppe -> Galerie -> 2070 Nordgang -> 11A0 -> 'It's locked from the other side.' (Original-Sperre (3,206))")
-
-# ---- b: Elza 2041 -> 2071 -> 11A1 -> Sperre ------------------------------------------------------------------------
-_weg_plan(_pb 2041 2071 11A1)
-_lauf(b 420 "${_pb}" ${_elza} RE15_DEBUG_JUMP=2040@250 RE15_SET_FLAG=9:103,9:100,3:146,3:53,7:98,7:99
-      "RE15_PLAYER_POS=-12850,1600,1024,3" "RE15_EXIT_AT=1000#11A1")
-_muss("${_dbg}" "Spieler-Familie PL04" b "Elza gewaehlt")
-_weg_pruefen(b 2041 2071 11A1)
-message(STATUS "r41_ventilkette_sperre b (Elza): dieselbe Sperre in 11A1")
+" ${_leon} RE15_DEBUG_JUMP=11A0@250 RE15_SET_FLAG=9:103,9:100,3:151 "RE15_PLAYER_POS=6500,-3200,3072,0" "RE15_EXIT_AT=900#11A0")
+_muss("${_dbg}" "[msgtext] room=11a0 id=2 \"It's locked from the other side.\"" d "ORIGINAL-Sperre 11A0 slot 4 (@0x00FEA Ck(3,206)=0 -> @0x00FEE msg 2)")
+_darf_nicht("${_dbg}" "loaded room20a" d "kein Raumwechsel nach 20A0 (Tuer erst mit (3,206))")
+_muss("${_wp}" "FLAG (3,206) = 0" d "(3,206) bleibt 0")
 
 # ---- c: Gegenprobe (3,206)=1 -> Tuer nach 20A0 ------------------------------------------------------------------------
 _lauf(c 150 "RAUM 11A0
@@ -208,4 +230,4 @@ _muss("${_dbg}" "loaded room20a0.rdt" c "20A0 geladen")
 _darf_nicht("${_dbg}" "[msgtext] room=11a0 id=2" c "kein Sperrsatz mit (3,206)")
 
 file(REMOVE "${_exe_kopie}")
-message(STATUS "r41_ventilkette_sperre: 2040->2070->11A0 (Leon+Elza) endet an der ORIGINAL-Sperre 11A0 slot 4 (3,206); mit (3,206) -> 20A0")
+message(STATUS "r41_ventilkette_sperre: 2040->2070 (Leon+Elza) endet seit Runde 42 an der 11A0-Tuer (von der anderen Seite verriegelt); ORIGINAL-Sperre 11A0 slot 4 (3,206) haelt; mit (3,206) -> 20A0")

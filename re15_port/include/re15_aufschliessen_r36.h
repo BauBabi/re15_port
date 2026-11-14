@@ -42,6 +42,10 @@
 int  re15_aufschliessen_r36_notice(unsigned room_id, uint8_t msg_id, int weg);
 /* Ein Spielbild: faellige Toene der laufenden Folge spielen. */
 void re15_aufschliessen_r36_tick(void);
+/* Runde 42 Story (STAGE2, K-02/K-03): dieselbe Folge einer Art fuer eine Port-Stelle starten, die nicht in der Tabelle
+ * steht (Port-Text "Leon/Elza unlocked the door." = derselbe Riegel wie ROOM2070 sub02 msg 0 @0x00CE8, Art RIEGEL).
+ * Gerufen im selben Bild wie das Oeffnen der Nachricht. Rueckgabe: art oder -1 (ungueltig). */
+int  re15_aufschliessen_r36_art_starten(int art, unsigned room_id, uint8_t msg_id);
 
 /* Die Plattform meldet ihren Spieler fuer Saetze der Mini-Bank KARTSE.VBS an (PC: audio_pc.c
  * re15_audio_re2_karte_se via platform/pc/src/tuer_r36_pc.c). Ohne Anmeldung (PSX, Tests) wird nur gezaehlt. */

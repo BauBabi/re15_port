@@ -697,6 +697,8 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_nahaufnahmen_r40_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 40: 11D0/1110/1100 Ereignis 31, 1110/3, 11F0/16 */
     if (!pc) pc = re15_ventilkette_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur C: 2030/17-27, 2050/2+4+9, 2010/20 (re15_ventilkette_r41.h; 2080 seit Nachtrag 7 Original) */
     if (!pc) pc = re15_gatorszene_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur F: 2090/2091 + 2080/2081 Ereignis 18 */
+    if (!pc) { extern const uint8_t *re15_story2_r42_ereignis(uint16_t, uint8_t);
+               pc = re15_story2_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 Story STAGE2: 2080 Ereignis 2 (+Hinweis) + 30, 2070/11A0/2040 Ereignis 30 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -778,6 +780,7 @@ void scd_vm_tick(void)
     if (!s_vm_room_init) re15_gatorszene_r41_tick();   /* Runde 41 Spur F: Signale (5,28)/(5,29) der 2090-Szene */
     if (!s_vm_room_init) re15_elzazombies_r39_tick();   /* Runde 39 Spur Q: Flanke (9,97), Montage, Halten 1061 */
     if (!s_vm_room_init) { extern void re15_kanister2080_r41_tick(void); re15_kanister2080_r41_tick(); }   /* Runde 41 Spur G: Ausloeser 2090, Signale/Wurf 2080 */
+    if (!s_vm_room_init) { extern void re15_story2_r42_tick(void); re15_story2_r42_tick(); }   /* Runde 42 Story STAGE2: Signale der 2080-Szene, Uhr-Hinweis 2090 */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
 
