@@ -196,7 +196,7 @@ static void test_hangar(unsigned raum)
      * Vorher: Skala 0x3400/0x1800/0x3000/0x4000, abr_port 4 (ABR3), Anker Sichelhand + Bildversatz. */
     int blut_teil0 = 0, blut_boden = 0, blut_falsch = 0, blut_art = 0;
     /* Ansprung (Nutzer 2026-11-13 "gleitet ... mit gehobenen Armen ... Linear auf Birkin zu"): in Phase 2 (h0..h11) steht der Aktor
-     * auf dem Boden bzw. gleitet knapp darueber (y 0 .. -245, Video h6-h10 5..10 Bildpunkte) und spielt ATTACK2 0x17 (@0x8011402c) bzw. den Zugriff 0x0E (@0x80112c40);
+     * auf dem Boden bzw. gleitet knapp darueber (y 0 .. -245, Video h6-h10 5..10 Bildpunkte) und spielt ATTACK2 0x17 (@0x8011402c) bzw. den Zugriff 0x12 (@0x80113138);
      * vorher Bogen bis y -1641 mit dem Sprung-Clip 0x16. */
     int gleit_n = 0, gleit_falsch = 0;
     /* Halten (Nutzer 2026-11-13 "struggled ... viel mehr ... bis er letztendlich tot ist"): erst HURT Clip 4 (@0x80114a44), dann
@@ -225,7 +225,7 @@ static void test_hangar(unsigned raum)
             if (-m->y > max_hoehe) max_hoehe = -m->y;
             if (ph == 5 && m->y == 0) sm_am_boden = 1;
             if (ph == 3) { halt_clip = m->motion; halt_bild = m->anim_frame; if (m->motion == 4) halt_weh++; if (m->motion == 7) halt_zuck++; if (m->motion == 9) halt_tod++; }
-            if (ph == 2) { gleit_n++; if (m->y < -245 || m->y > 0 || (m->motion != 0x17 && m->motion != 0x0E)) gleit_falsch++; }
+            if (ph == 2) { gleit_n++; if (m->y < -245 || m->y > 0 || (m->motion != 0x17 && m->motion != 0x12)) gleit_falsch++; }
             if (ph == 2 || (ph == 3 && ++griff_takte < 54)) {   /* Ansprung + Halten bis Video h66 (Wurf ab h66 ist schnell) */
                 double dx = m->x - mx, dy = m->y - my, dz = m->z - mz;
                 int32_t d = (int32_t)sqrt(dx * dx + dy * dy + dz * dz);
@@ -259,7 +259,7 @@ static void test_hangar(unsigned raum)
     CHECK(halt_weh >= 20 && halt_zuck >= 5 && halt_tod >= 20 && halt_clip == 9 && halt_bild == 5,
           "Halten: %d Takte Clip 4, %d Takte Clip 7, %d Takte Clip 9, letzter Haltetakt Clip %d B%d (Soll >= 20, >= 5, >= 20, Clip 9 B5)",
           halt_weh, halt_zuck, halt_tod, halt_clip, halt_bild);
-    CHECK(gleit_n >= 10 && gleit_falsch == 0, "Ansprung: %d von %d Takten hoeher als 245 ueber dem Boden oder nicht Clip 0x17/0x0E", gleit_falsch, gleit_n);
+    CHECK(gleit_n >= 10 && gleit_falsch == 0, "Ansprung: %d von %d Takten hoeher als 245 ueber dem Boden oder nicht Clip 0x17/0x12", gleit_falsch, gleit_n);
     CHECK(blut_art == 0, "gruenes Blut: %d Plaetze nicht Effekt 0 / Sub 8 / Skala 0x2000 / abr_port 0 (@0x80113b10/30)", blut_art);
     CHECK(blut_teil0 == 22 && blut_boden == 2 && blut_falsch == 0,
           "gruenes Blut: %d an Teil 0 des Spider-Man (Soll 22, @0x80113b54), %d am Boden (Soll 2), %d anderswo (Soll 0)",

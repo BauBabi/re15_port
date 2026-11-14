@@ -195,7 +195,7 @@ void re15_bf_morph_zu_g5(int slot)
 #define BF_HANGAR_CUT    12          /* Video: die Szene laeuft vollstaendig in Cut 12 */
 
 /* Clips. Birkin EM30: 0x0B = GRAB-THROW (ACT[5] @0x80117d30), Wurf bei Bild 0x2C; 1 = Gang (WALK @0x80117220); 0 = Stand
- * (INIT @0x8011683c). Spider-Man EM2B (Bank 0): 0x17/0x0E = Angriff/Zugriff (Kopf "Ansprung"), 4 = HURT, 9 = DEATH
+ * (INIT @0x8011683c). Spider-Man EM2B (Bank 0): 0x17/0x12 = Angriff/Zugriff (Kopf "Ansprung"), 4/7 = HURT, 9 = DEATH
  * (Kopf BF_SM_WEH), 0x0B = Rueckenlage mit Aufstehen (Katalog tools/r41_hangar/clipkatalog.py: B0..30 liegt, B31..39
  * richtet sich auf). Die Rollen in der Szene sind Gestaltung. Voraussetzung an jedes EM30-Ersatzmodell: Knochen 15 =
  * haltende Hand (im Sichel-Modell die Sichelhand), Clips 0/1/0x0B wie EM30; Spider-Man EM2B: Knochen 20 = Griffpunkt. */
@@ -269,19 +269,24 @@ void re15_bf_morph_zu_g5(int slot)
  *   0x17 = ATTACK2 (B[14]: `ori v0,zero,0x17` @0x8011402c / `sb v0,148(v1)` @0x80114030; STAGE4 @0x80113eac/b0) fuer h0..h4:
  *     B8/B9 Hocke (Glied 4 vorn oben) = Video h0/h1, B10 richtet sich auf = h2, B11/B12 aufrecht (-16/-14 Grad), ein Arm
  *     ueber dem Kopf (Spitze 1600 ueber der Schulter) = Video h3/h4 "aufrecht, Arm im Bogen ueber dem Kopf".
- *   0x0E = GRIFF 1 vorn, Zugriff (P0: `ori v0,zero,0xe` @0x80112c40 / `sb v0,148(v1)` @0x80112c44; STAGE4 @0x80112ac0/c4) fuer
- *     h5..h11, B0..B14: aufrecht stehend (Wurzel -1912..-2046), um 38 -> 11 Grad vorgeneigt, die Arme heben sich nach vorn
- *     oben = Video h5..h8 "vorgeneigt, Arme vorn oben", h9..h11 an Birkins Schulter. Wechsel mit Ueberblendung (bf_bild). */
+ *   h5..h11: Clip 0x12 (s. BF_SM_ZUGRIFF; bis 2026-11-14 Clip 0x0E = GRIFF 1 vorn, Zugriff @0x80112c40). */
 #define BF_SM_ANGRIFF       0x17
 #define BF_SM_ANGRIFF_H0    8          /* Clipbild bei h0 */
-#define BF_SM_ZUGRIFF       0x0E
+/* Nachbesserung 2026-11-14 (Pruefer Mangel 6 "Gleitpose geduckt und tief statt gestreckt und vorgeneigt", Koordinator: Rumpf
+ * anheben, nach vorn kippen (Video ca. 45 Grad), Arme hoch, Beine nachziehen). Gemessen (EM2B, Schultermitte gegen Becken,
+ * Grad nach vorn; hinterer Fuss = Knochen 24 relativ zum Becken, x vorn): Clip 0x0E B0..B14 38 -> 11 Grad, Fuss -1015 -> -299
+ * (richtet sich beim Gleiten auf); Clip 0x12 = GRIFF 1 hinten, Zugriff (P0: `ori v0,zero,0x12` @0x80113138 / `sb v0,148(v1)`
+ * @0x8011313c, STAGE5; STAGE4 @0x80112fb8/bc) B0..B6 44 -> 61 Grad, Fuss -996 -> -760 (nachgezogen), Arm 4 vorn auf/ueber
+ * Schulterhoehe (y -122..-434), Arm 18 vorn unten; Hoehe 3000..3170 wie 0x0E. Rumpf (Schultermitte projiziert, 480er Zeilen) h5..h10
+ * 236..251 (0x0E 215..246; Video-Rumpf laut Sichtpruefung PSX-y 105..120 = 216..246): die Rumpfhoehe passt schon. Jetzt h5..h11
+ * Clip 0x12 B0..B6 (1 Bild je Takt), Wechsel mit Ueberblendung. */
+#define BF_SM_ZUGRIFF       0x12
 #define BF_H_ZUGRIFF        5          /* Video h5: neigt sich vor */
-#define BF_SM_ZUGRIFF_LETZT 14         /* letztes Bild von Clip 0x0E (15 Bilder) bei h11 */
 /* Gleitbahn: waagerecht durch die Schattenpunkte des Videos (Rueckprojektion H_hangar.md Abschnitt 3: h0..2 (29..31,190),
  * h4 (49,194), h6 (71,193), h8 (100,192)), zwischen ihnen linear = 448 / 358 / 485 Einheiten je Bild; ab h8 steht er (Video
  * Rumpf x 100..105 h8..h12) bis zum Heben. Hoehe: Video tiefster Punkt (Bogen z_video_h0-8 / z_video_h9-17, zwei Lesungen)
  * h3..h5 am Boden (197..200), h6..h10 5..10 Bildpunkte darueber (Mittel 7 = Weltabstand 245 in Blicktiefe ~7850,
- * tools/r41_hangar/rueck.py), h11/h12 wieder am Boden (194..197) -> Aktor-y 0 bis h5, -245 h6..h10, 0 ab h11 (Clip 0x0E steht
+ * tools/r41_hangar/rueck.py), h11/h12 wieder am Boden (194..197) -> Aktor-y 0 bis h5, -245 h6..h10, 0 ab h11 (Clip 0x0E/0x12 steht
  * mit den Fuessen auf y 0). */
 /* Nachbesserung 2026-11-14 (Pruefer Maengel 3 und 4: "Stillstand h9..h13 ohne Kontakt", "Hochreissen zu schnell"): vorher stand
  * er h8..h12 an derselben Stelle (Port-Mitte x 226..229, 640er) etwa 3200 vor Birkin und wurde h13..h16 in 4 Takten zu je 600
@@ -1031,7 +1036,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     } else if (h < BF_H_BERUEHRUNG) {                                     /* Gleiten h2..h11 (Kopf "Ansprung") */
         int i = 0;
         if (h < BF_H_ZUGRIFF) bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0 + h);              /* B10 h2 .. B12 h4 */
-        else bf_bild(m, BF_SM_ZUGRIFF, (h - BF_H_ZUGRIFF) * BF_SM_ZUGRIFF_LETZT / (BF_H_BERUEHRUNG - 1 - BF_H_ZUGRIFF));   /* B0 h5 .. B14 h11 */
+        else bf_bild(m, BF_SM_ZUGRIFF, h - BF_H_ZUGRIFF);                /* Clip 0x12 B0 h5 .. B6 h11 */
         m->rot_y = bf_blick(m, b->x, b->z);
         while (i < BF_N(k_sm_gleit) - 2 && h >= k_sm_gleit[i + 1][0]) i++;
         {
