@@ -45,7 +45,7 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
   grau  = Rueckensektor, Nadel, Wurzelflaechen ueber der Grenze: Zeile 487, Feld je Glied = groesstes Rechteck in den Texeln, die die
           Oberseite (Zeile 487) dieses Glieds im Eingang benutzt;
   Runde 8c (Koordinator 14.11., Nutzer waehlt Probe b: "wobei das Original Video der Schwanz noch etwas heller ist und nicht ganz so rot"):
-  bauch = Original-Zeile 480 (Asset 493), Seite 0, Feld C1 u 54-65 v 48-57 (schwanz_r8.json; ausgewaehlt unter 18 Original-Feldern nach der
+  bauch = Original-Zeile 480 (Asset 493), Seite 0, Feld C1 u 54-65 v 48-57 (schwanz_r8.json; ausgewaehlt unter 17 Original-Feldern (Zeilen 480-482) nach der
           Messung im Spielbild F255-F320, Lab-Abstand zur Video-Mitte des Pruefers gruenblut 5,1 statt 8,7; SF_belege/v8/runde8c); grosse
           gefleckte Felder ergaben je Bild sehr verschiedene Toene (nur ein Teil des Felds sichtbar), gespiegelte Abbildung ein Augenmuster;
   band  = Probe b: Ring umlaufend auf allen 11 Sektoren der Fugen (Mantel S-C / D-E und Deckel), Original-Zeile 480 (Asset 493), Seite 0,
