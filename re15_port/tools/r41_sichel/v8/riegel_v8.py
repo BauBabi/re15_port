@@ -835,11 +835,11 @@ def zeilen(r):
                              'GRUEN' if s['ok'] else 'ROT'))
     if 'R8' in r:
         s = r['S4']; b8 = r['R8']['R8b']
-        z.append('S4 Runde 8 (Auftrag Runde 8 / Nutzer-Umriss Areas.png): Wurzel %.1f (>= 55), monoton %s, Ende %.1f (<= 10), s 170-200 %s (>= 9); '
-                 'R8b PV s .1-.9 %s, s .3 %.1f (>= 36), s .5 %.1f %% duenner als 07b6703f (15-20), Abw. s .5/.7/.9 gegen den Umriss %s (<= 4); '
-                 'alte Regel (s 90-130 >= 36 / s 140-160 >= 27) waere %s -> %s'
-                 % (s['wurzel'], s['monoton'], s['ende'], s['unten']['s170_200'], b8['breite'], b8['breite'][1], b8['duenner_s5'],
-                    b8['abweichung_s5_s9'], 'GRUEN' if s['r8_alt_ok'] else 'ROT', 'GRUEN' if s['ok'] else 'ROT'))
+        z.append('S4 Runde 8b (Auftrag Runde 8, Pruefer pr8): Wurzel %.1f (>= 55), monoton %s, Ende %.1f (<= 10), s 170-200 %s (>= 9); '
+                 'R8b PV-Breite in festen Abstaenden ab dem koerpernahen Ende %s, Abweichung gegen das Video %s, Mittel %.1f (je <= 6, Mittel <= 5) %s; '
+                 'alte Regel (s 90-130 >= 36 / s 140-160 >= 27, nur Info) waere %s -> %s'
+                 % (s['wurzel'], s['monoton'], s['ende'], s['unten']['s170_200'], b8['breite'], b8['abweichung'], b8['mittel'],
+                    'GRUEN' if b8['ok'] else 'ROT', 'GRUEN' if s['r8_alt_ok'] else 'ROT', 'GRUEN' if s['ok'] else 'ROT'))
     s = r['S5']; z.append('S5 Gesicht: Mesh 9 %s, Zeile 486 %s, Texel %s (%d) -> %s' % (s['mesh9'], s['zeile486'], s['texel'], s['n_texel'], 'GRUEN' if s['ok'] else 'ROT'))
     s = r['S6']; z.append('S6 Boden: %d von %d Keyframes unter der tiefsten Koerperecke %s; Szene %s -> %s'
                           % (s['unter'], s['keyframes'], s['beispiele'], s['szene'], 'GRUEN' if s['ok'] else 'ROT'))
@@ -964,7 +964,7 @@ def main():
     ap.add_argument('--r7c-plain-r4', help='Runde 7c: Szenenlauf V8 r4 (helle Bildpunkte E12, F344-F378)')
     ap.add_argument('--r7c-ein', help='Runde 7c: Eingang (Standard git show db62602be = Stand 7b 87b02681)')
     ap.add_argument('--r7c', action='store_true', help='Runde 7c: Urteile nach E9-E13 (auch ohne Laeufe: dann nur offline)')
-    ap.add_argument('--farbe', default=None, help='Runde 8: Farbprobe des Schwanzes (a / b / c) fuer R8d (Baender)')
+    ap.add_argument('--farbe', default=None, help='Runde 8: Farbprobe des Schwanzes (a / b; Runde 8b ohne c) fuer R8d (Baender)')
     a = ap.parse_args()
     v7 = a.v7 or os.path.join(V.SFV8, 'emd', 'EM30_V7.EMD')
     ref = open(v7, 'rb').read()
@@ -977,6 +977,11 @@ def main():
     if a.r7c or a.r7c_lm:
         import riegel_r7c as R7C
         R7C.einbauen(r, blob, ref, R6.r4_blob(a.r4), a)
+    if a.json:                        # Runde 8b: Ergebnis zuerst sichern (ein Formatfehler in zeilen verlor sonst den ganzen Lauf)
+        json.dump(r, open(a.json, 'w'), indent=1, default=lambda o: o.tolist() if hasattr(o, 'tolist') else str(o))
+    if os.environ.get('RE15_RIEGEL_PICKLE'):                     # Runde 8b: Rohergebnis fuer eine erneute Ausgabe ohne neuen Lauf
+        import pickle
+        pickle.dump(r, open(os.environ['RE15_RIEGEL_PICKLE'], 'wb'))
     z, rot = zeilen(r)
     kopf = ['Riegel V8 (Messblatt V8 Abschnitt 7) fuer %s' % a.emd, 'sha256 %s' % r['sha256'], 'Referenz V7 %s' % V.V7_SHA,
             'Referenz V8 r4 %s' % r.get('r4_sha256')]

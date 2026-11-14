@@ -18,7 +18,7 @@ Grundlage: Analyse scratchpad/schwanz_v8/analyse/ANALYSE.md (Bauplan Schritte 1,
     grau wie die Oberseite bis Runde 7e; Bauch aus Original-Texeln/-Eintraegen, keine neue CLUT-Zeile (16 belegt), keine Eichung am Video.
 
 Kein RE-Befund: die Sichel-Form und ihr Schwanz existieren auf keiner Disc (SF_sichel.md); keine Zahl hier ist eine @0x-Konstante. Jede Zahl
-ist PORT-WAHL, belegt mit Nutzer-Wortlaut, der Analyse oder der Messung von "suche" (SF_belege/v8/runde8/suche.txt).
+ist PORT-WAHL, belegt mit Nutzer-Wortlaut, der Analyse oder der Messung von "suche" (SF_belege/v8/runde8/suche.txt, Runde 8b runde8b/suche_r8b.txt).
 
 Bau (je Glied g = 0..6 = Knochen/Mesh 16..22, Gliedraum: y entlang der Achse, Gelenk g bei y 0, Gelenk g+1 bei y L = 541):
   Querschnitt = Ellipse in der Ringebene: Hochachse e_h = (cos phi, 0, sin phi) (phi = innen_phi des Knochens; +e_h = Bauch, theta 0),
@@ -44,7 +44,7 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
   07b6703f; Felder aus "suche"):
   grau  = Rueckensektor, Nadel, Wurzelflaechen ueber der Grenze: Zeile 487, Feld je Glied = groesstes Rechteck in den Texeln, die die
           Oberseite (Zeile 487) dieses Glieds im Eingang benutzt;
-  bauch = Bauchsektor: Original-Zeile 482 (Asset 495), schraeges Feld (Parallelogramm, suche(): v 114-123, Zeilenanfang u 1 -> 19, Breite 21;
+  bauch = Bauchsektor: Original-Zeile 482 (Asset 495), schraeges Feld (Parallelogramm, suche(): v 114-123, Zeilenanfang u 1 -> 19, Breite 21, im Bau 20;
           Median L* 25,7 C* 24,2, hellere Partie des Original-Unterarm-Fleischs) - groesser als das 17 x 7-Feld der Runde 8 ("flaechig wie gemalt",
           Pruefer pr8); einmal quer ueber den Bauch, einmal laengs je Glied (je Glied gespiegelt). Gependelt je Flaeche (Runde 8b, erster Bau)
           ergab im Spiel ein regelmaessiges Rautenmuster und ist verworfen;
@@ -110,7 +110,7 @@ ZWISCHEN = {1: (0.3733, 0.6267), 2: (0.31, 0.69), 3: (0.3733, 0.6267), 4: (0.373
                                       # Runde 8b: zwei Zwischenringe Z1/Z2 je Glied 17-21 (Glied 18 um M bei 0,5) - das Fleischfeld liegt dreimal
                                       # (Runde 8b2: Fleisch nicht mehr gependelt, siehe uv_setzen; die Ringe bleiben fuer die Biegung)
 
-# ------------------------------------------------------------------ Farbe (PORT-WAHL; Felder aus suche(), Beleg SF_belege/v8/runde8/suche.txt)
+# ------------------------------------------------------------------ Farbe (PORT-WAHL; Felder aus suche(), Beleg SF_belege/v8/runde8b/suche_r8b.txt)
 ZEILE_GRAU, ZEILE_FLEISCH, ZEILE_BAND = 487, 495, 493      # 487 = Schwanz-Oberseite seit V6; 495 = Original 482; 493 = Original 480 (bytegleich)
 SEITE_FLEISCH, SEITE_BAND = 2, 0
 # Runde 8b (Pruefer pr8 (B)): Band hellrot/rosa statt fast weiss - Original-Zeile 480, Seite 0, Feld aus suche() (L* 40-56, C* 12-28, Farbton 5-35

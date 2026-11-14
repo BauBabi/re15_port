@@ -46,7 +46,7 @@ Stufe f) Runde 7e (Handfarbe, handfarbe_r7e.py; Nutzerentscheid 2026-11-14 "wie 
    Felder von Mesh 11 und 12. Bau Runde 7e: --stufen srwaunhbpf.
 Stufe q) Runde 8 (Schwanz, schwanz_r8.py + schwanz_r8.json; Nutzer 2026-11-14 "weder mit dem rot der Schwanzfarbe noch mit dem etwas zu
    steifen grossen Schwanz zufrieden" + Version_80%/Areas*.png): Meshes 16-22 neu - Querschnitt flach quer zur Bauchachse (Querdicke 270 E.),
-   Schwanzmitte duenner, Einschnuerung 0,85 an den 6 Gelenken, Glied 22 = Knolle + Nadel (bis y 1139), Fleisch nur auf der Bauchseite (Grenze
+   Schwanzmitte duenner, Einschnuerung 0,85 an den 6 Gelenken, Glied 22 = Knolle + Nadel (Runde 8b bis y 1300), Fleisch nur auf der Bauchseite (Grenze
    90 -> 60 Grad), Flanken grau (Zeile 487), Farbvariante a / b (--schwanzfarbe, Standard b = gedeckt mit rosa Baendern). Letzte Stufe,
    aendert nur Meshes 16-22 (Ecken, Normalen, Flaechen, UV-/CLUT-Felder) und (Runde 8b, schwanz_r8.heben) die Winkel der Knochen 17-22 in
    Keyframes, in denen Mesh 22 sonst unter der Sohle laege; Knochen 0-16, Textur, CLUT-Zeilen, Meshes 0-15 bytegleich.
