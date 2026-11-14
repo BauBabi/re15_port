@@ -519,7 +519,12 @@ static void key_auf_leiche(uint16_t room_id)
 /* Nach dem Tod: Schluessel liegt bei der Leiche (Weltraum), Item-Zone mit Taken-Bit 112 und Prop-Verstecken. */
 static void key_bei_leiche(uint16_t room_id)
 {
-    if (re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GENOMMEN)) return;
+    if (re15_game_flag_get(RE15_GSZ_BANK, RE15_GSZ_BIT_GENOMMEN)) {
+        /* Runde 42 Story (K-08): die Uhr liegt nach dem Tod bei der Leiche, auch wenn der Schluessel schon genommen ist */
+        extern void re15_story2_r42_schluessel_liegt(uint16_t room_id);
+        re15_story2_r42_schluessel_liegt(room_id);
+        return;
+    }
     int k = key_prop();
     if (k < 0) return;
     if (!s_key_lage_ok) {
