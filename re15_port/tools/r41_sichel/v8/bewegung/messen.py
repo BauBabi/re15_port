@@ -41,26 +41,28 @@ def pose_log(pfad):
 
 
 def bauchachse(mo):
-    """+e_h je Knochenraum: Hauptachse der Ecken (x-z, ohne Achs-Ecken) der Meshes 17-21, Vorzeichen zur Mitte der Flaechen, deren
-    CLUT-Zeile nicht die haeufigste ist (Bauch/Baender gegen Ruecken)."""
-    xz, fl = [], {}
+    """+e_h je Knochenraum wie schwanz_r41.c re15_schwanz_r41_bauchachse: Hauptachse der Ecken (x-z) der Meshes 17-21, Seite = Innenseite
+    des Ruhebogens ueber alle Keyframes (Richtung, in die Glied 17-22 gegen das Vorglied abknickt). Die fruehere Farbregel (Seite der
+    Flaechen ohne die haeufigste CLUT) kippte mit der Schwanzfarbe Runde 8c (d31f9534)."""
+    xz = []
     for b in range(17, 22):
         m = mo.meshes[b]
-        for verts, faces, uvs in ((m.tv, m.tf, m.tuv), (m.qv, m.qf, m.quv)):
-            Pv = np.array([v[:3] for v in verts], float)
-            for v in Pv:
-                if math.hypot(v[0], v[2]) > 20:
-                    xz.append((v[0], v[2]))
-            for f, uv in zip(faces, uvs):
-                z = (uv[2] >> 6) & 0x1FF
-                c = Pv[list(f[1::2])].mean(0)
-                fl.setdefault(z, []).append((c[0], c[2]))
-    xz = np.array(xz)
-    w, e = np.linalg.eigh(np.cov(xz.T))
-    ax = e[:, 1]
-    haupt = max(fl, key=lambda k: len(fl[k]))
-    rest = np.array([c for k, v in fl.items() if k != haupt for c in v])
-    if rest.mean(0) @ ax < 0:
+        for verts in (m.tv, m.qv):
+            for v in verts:
+                xz.append((v[0], v[2]))
+    xz = np.array(xz, float)
+    C = np.cov(xz.T, bias=True)
+    th = 0.5 * math.atan2(2 * C[0, 1], C[0, 0] - C[1, 1])
+    ax = np.array([math.cos(th), math.sin(th)])
+    acc = np.zeros(2)
+    for kf in sorted(set(int(f) & 0xFFF for f in mo.frames)):
+        R, _T = mo.pose(kf)
+        for j in range(17, 23):
+            Ra = R[j - 1].astype(float); Rb = R[j].astype(float)
+            a = Ra[:, 1] / np.linalg.norm(Ra[:, 1]); bb = Rb[:, 1] / np.linalg.norm(Rb[:, 1])
+            loc = (Ra / np.linalg.norm(Ra, axis=0)).T @ (bb - (bb @ a) * a)
+            acc += (loc[0], loc[2])
+    if acc @ ax < 0:
         ax = -ax
     return np.array([ax[0], 0.0, ax[1]])
 

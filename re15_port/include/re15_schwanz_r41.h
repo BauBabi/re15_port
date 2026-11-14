@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include "re15_actor.h"
 #include "re15_emd.h"
+#include "re15_md1.h"
 #include "re15_skeleton.h"
 
 /* Zeichner (platform/pc/main.c), direkt nach re15_skel_compute_pose: Knochen 16-22 von `poses` nach der Feder-Kette
@@ -62,6 +63,9 @@ void re15_schwanz_r41_bogen(int slot, const int32_t bild_n_q12[3], int32_t pfeil
 /* Runde 41 SF V8 Schwanz-Bewegung (Bauplan 5): die Spitze des Szenenziels gleitet auf dem Sehstrahl von `kamera` (Welt) so weit, dass die
  * Kette ab dem Austritt mit dem Pfeil der Bildebene genau hinreicht (Bildlage der Spitze bleibt). NULL = aus. Nur V8 unter Szenenfuehrung. */
 void re15_schwanz_r41_tiefe_frei(int slot, const int32_t kamera[3]);
+/* Runde 41 SF V8 Schwanz-Bewegung: Bauchachse +e_h der Glieder (Knochenraum) - Hauptachse x-z der Ecken der Meshes 17-21, Seite = Innenseite
+ * des Ruhebogens ueber alle Keyframes (nicht die Farbe). Rueckgabe 1 = gemessen. Spiel-Asset 66db2244 / d31f9534: (0,8956, 0, 0,4449). */
+int  re15_schwanz_r41_bauchachse(const re15_md1_t *md1, const re15_emd_skeleton_t *skel, float eh[3]);
 
 /* Zuruecksetzen (Raumwechsel, Tests). */
 void re15_schwanz_r41_reset(void);

@@ -161,75 +161,66 @@ static int sw_mesh_mass(const re15_emd_skeleton_t *skel, float radius[], float *
 }
 
 /* Schwanz-Bewegung (Bauplan 3 "die Bauchachse wird beim Laden aus der Flachachse der Meshes gemessen, keine Konstante"): +e_h im
- * Knochenraum der Glieder = Hauptachse (x-z) aller Ecken der Meshes 17-21, Vorzeichen zur Mitte der Flaechen, deren CLUT nicht die
- * haeufigste ist (Bauch- und Bandflaechen gegen den grauen Ruecken). Gemessen am Spiel-Asset 66db2244 (tools/r41_sichel/v8/bewegung/quer.py):
- * Achse (0,8956, 0, 0,4449) = 26,42 Grad = notiz.txt Runde 8b; die Deckel-Mitten (Abstand 0-23 E.) aendern sie nicht (ohne sie ebenso
- * 26,42 Grad); Ruecken Zeile 487 (49-56 Flaechen je Glied), Bauch 495 und Baender 493 auf +e_h. Je Bank zwischengespeichert.
- * Rueckgabe 0 = keine V8-Meshes. */
+ * Knochenraum der Glieder.
+ *   Achse = Hauptachse (x-z) aller Ecken der Meshes 17-21 (flacher Querschnitt: Ruecken -> Bauch hoch, quer schmal). Spiel-Asset 66db2244
+ *   und d31f9534 (Runde 8c, Ecken bytegleich): (0,8956, 0, 0,4449) = 26,42 Grad = notiz.txt Runde 8b (tools/r41_sichel/v8/bewegung/quer.py);
+ *   die Deckel-Mitten (Abstand 0-23 E.) aendern sie nicht.
+ *   Seite = Innenseite des Ruhebogens: die Asset-Stufe q legt die Bauchachse genau so fest (tools/r41_sichel/v8/schwanz_r8.py "Bauchachse =
+ *   Innenrichtung des Bogens", unterseite_v8.json innen_phi 26,4 Grad). Gemessen ueber alle Keyframes des EMR: je Glied 17-22 die
+ *   Richtung, in die es gegen das Vorglied abknickt (Spalte 1 der lokalen Drehung, x/z im Raum des Vorglieds), aufsummiert. 66db2244 und
+ *   d31f9534 (Keyframes bytegleich): 4967 von 5467 Gelenken knicken zu +e_h, 500 dagegen, Summe 40,3 Grad (tools/r41_sichel/v8/bewegung/
+ *   bauchachse_vergleich.py -> SF_belege/v8/bewegung/bauchachse_8c.txt).
+ *   Vorher (bis c94847a31) kam die Seite von der Farbe: Mitte der Flaechen, deren CLUT nicht die haeufigste ist. Mit der Schwanzfarbe
+ *   Runde 8c (d31f9534) ist die haeufigste CLUT nicht mehr der graue Ruecken (31168, 252 Flaechen in 66db2244), sondern Bauch und Ringe
+ *   (31552, 284 Flaechen) - die Achse kippte auf -e_h, der Bauch zeigte um 180 Grad verdreht (Befund Koordinator 2026-11-14,
+ *   unit_schwanz_r41 rot "Bauch 180.0 Grad neben der Kamera"). Die Biegung haengt nicht an der Farbe.
+ * Rueckgabe 0 = keine V8-Meshes / kein Bogen. */
+int re15_schwanz_r41_bauchachse(const re15_md1_t *md1, const re15_emd_skeleton_t *skel, float eh[3])
+{
+    if (!md1 || !skel || md1->mesh_count < SW_K0 + SW_N || skel->bone_count < SW_K0 + SW_N || skel->keyframe_count <= 0) return 0;
+    double sx = 0, sz = 0, sxx = 0, sxz = 0, szz = 0, n = 0;
+    for (int g = 1; g <= 5; g++) {
+        const re15_md1_mesh_t *m = &md1->meshes[SW_K0 + g];
+        for (int sec = 0; sec < 2; sec++) {
+            const re15_md1_vertex_t *v = sec ? m->quad_vertices : m->tri_vertices;
+            const int nv = sec ? m->quad_vertex_count : m->tri_vertex_count;
+            for (int i = 0; v && i < nv; i++) {
+                const double x = v[i].x, z = v[i].z;
+                sx += x; sz += z; sxx += x * x; sxz += x * z; szz += z * z; n += 1;
+            }
+        }
+    }
+    if (n < 3) return 0;
+    const double mx = sx / n, mz = sz / n, a = sxx / n - mx * mx, b = sxz / n - mx * mz, c = szz / n - mz * mz;
+    const double th = 0.5 * atan2(2.0 * b, a - c);       /* Hauptachse der 2x2-Kovarianz */
+    double ax = cos(th), az = sin(th), bx = 0, bz = 0;
+    for (int kf = 0; kf < skel->keyframe_count; kf++)
+        for (int bn = SW_K0 + 1; bn < SW_K0 + SW_N; bn++) {
+            int16_t wx, wy, wz;
+            int32_t m[9];
+            if (!re15_emd_get_keyframe_angles(skel, kf, bn, &wx, &wy, &wz)) continue;
+            re15_skel_euler_matrix(wx, wy, wz, m);       /* lokale Drehung wie re15_skel_compute_pose (RotMatrix) */
+            bx += m[1]; bz += m[7];                      /* Gliedachse im Raum des Vorglieds: Anteil quer zu dessen y */
+        }
+    const double d = bx * ax + bz * az;
+    if (fabs(d) < 1.0) return 0;
+    if (d < 0.0) { ax = -ax; az = -az; }
+    eh[0] = (float)ax; eh[1] = 0.0f; eh[2] = (float)az;
+    return 1;
+}
+
+/* Bauchachse der geladenen Bank 0x30 (re15_schwanz_r41_bauchachse), je Bank zwischengespeichert. */
 static int sw_bauchachse(float eh[3])
 {
-    static const void *s_schl = NULL;
+    static const void *s_schl = NULL, *s_schl2 = NULL;
     static float s_eh[3];
     static int s_ok = 0;
     const re15_enemy_bank_t *bk = re15_enemy_find(0x30u);
     if (!bk || bk->md1.mesh_count < SW_K0 + SW_N) return 0;
-    const void *schl = (const void *)bk->md1.meshes[SW_K0 + 1].quad_vertices;
-    if (schl != s_schl) {
-        double sx = 0, sz = 0, sxx = 0, sxz = 0, szz = 0, n = 0;
-        uint16_t cl[8]; int cn[8], ncl = 0;
-        for (int g = 1; g <= 5; g++) {
-            const re15_md1_mesh_t *m = &bk->md1.meshes[SW_K0 + g];
-            for (int sec = 0; sec < 2; sec++) {
-                const re15_md1_vertex_t *v = sec ? m->quad_vertices : m->tri_vertices;
-                const int nv = sec ? m->quad_vertex_count : m->tri_vertex_count;
-                for (int i = 0; v && i < nv; i++) {
-                    const double x = v[i].x, z = v[i].z;
-                    sx += x; sz += z; sxx += x * x; sxz += x * z; szz += z * z; n += 1;
-                }
-            }
-            for (int i = 0; i < m->triangle_count; i++) {
-                const uint16_t c = m->triangle_uvs ? m->triangle_uvs[i].clut : 0;
-                int k = 0; while (k < ncl && cl[k] != c) k++;
-                if (k == ncl && ncl < 8) { cl[ncl] = c; cn[ncl++] = 0; }
-                if (k < ncl) cn[k]++;
-            }
-            for (int i = 0; i < m->quad_count; i++) {
-                const uint16_t c = m->quad_uvs ? m->quad_uvs[i].clut : 0;
-                int k = 0; while (k < ncl && cl[k] != c) k++;
-                if (k == ncl && ncl < 8) { cl[ncl] = c; cn[ncl++] = 0; }
-                if (k < ncl) cn[k]++;
-            }
-        }
-        s_ok = 0;
-        if (n > 2 && ncl > 1) {
-            const double mx = sx / n, mz = sz / n, a = sxx / n - mx * mx, b = sxz / n - mx * mz, c = szz / n - mz * mz;
-            const double th = 0.5 * atan2(2.0 * b, a - c);   /* Hauptachse der 2x2-Kovarianz */
-            float ax = (float)cos(th), az = (float)sin(th);
-            int haupt = 0;
-            for (int k = 1; k < ncl; k++) if (cn[k] > cn[haupt]) haupt = k;
-            double bx = 0, bz = 0;                           /* Mitte der Flaechen ohne die haeufigste CLUT */
-            for (int g = 1; g <= 5; g++) {
-                const re15_md1_mesh_t *m = &bk->md1.meshes[SW_K0 + g];
-                for (int i = 0; i < m->triangle_count && m->triangle_uvs; i++) {
-                    if (m->triangle_uvs[i].clut == cl[haupt]) continue;
-                    const re15_md1_triangle_t *t = &m->triangles[i];
-                    if (t->v0 >= m->tri_vertex_count || t->v1 >= m->tri_vertex_count || t->v2 >= m->tri_vertex_count) continue;
-                    bx += m->tri_vertices[t->v0].x + m->tri_vertices[t->v1].x + m->tri_vertices[t->v2].x;
-                    bz += m->tri_vertices[t->v0].z + m->tri_vertices[t->v1].z + m->tri_vertices[t->v2].z;
-                }
-                for (int i = 0; i < m->quad_count && m->quad_uvs; i++) {
-                    if (m->quad_uvs[i].clut == cl[haupt]) continue;
-                    const re15_md1_quad_t *q = &m->quads[i];
-                    if (q->v0 >= m->quad_vertex_count || q->v1 >= m->quad_vertex_count || q->v2 >= m->quad_vertex_count ||
-                        q->v3 >= m->quad_vertex_count) continue;
-                    bx += m->quad_vertices[q->v0].x + m->quad_vertices[q->v1].x + m->quad_vertices[q->v2].x + m->quad_vertices[q->v3].x;
-                    bz += m->quad_vertices[q->v0].z + m->quad_vertices[q->v1].z + m->quad_vertices[q->v2].z + m->quad_vertices[q->v3].z;
-                }
-            }
-            if (bx * ax + bz * az < 0.0) { ax = -ax; az = -az; }
-            if (bx * bx + bz * bz > 1.0) { s_eh[0] = ax; s_eh[1] = 0.0f; s_eh[2] = az; s_ok = 1; }
-        }
-        s_schl = schl;
+    const void *schl = (const void *)bk->md1.meshes[SW_K0 + 1].quad_vertices, *schl2 = (const void *)bk->skel.keyframe_data;
+    if (schl != s_schl || schl2 != s_schl2) {
+        s_ok = re15_schwanz_r41_bauchachse(&bk->md1, &bk->skel, s_eh);
+        s_schl = schl; s_schl2 = schl2;
     }
     if (s_ok) for (int k = 0; k < 3; k++) eh[k] = s_eh[k];
     return s_ok;

@@ -536,6 +536,64 @@ int main(void)
         }
     }
 
+    /* (13) Bauchachse (re15_schwanz_r41_bauchachse): Hauptachse der Ecken, Seite = Innenseite des Ruhebogens ueber alle Keyframes. Dasselbe
+     *      Ergebnis (0,8956, 0, 0,4449) +-0,001 mit dem Spiel-Asset (seit Runde 8c d31f9534) und mit Runde 8b (66db2244, abgelegt unter
+     *      analysis/befunde_runde41/SF_belege/v8/bewegung/). Gegenprobe: die alte Farbregel (Seite = Mitte der Flaechen ohne die haeufigste
+     *      CLUT, bis c94847a31) liefert mit 66db2244 +e_h, mit d31f9534 -e_h (dort ist Bauch/Ring-CLUT 31552 die haeufigste) - muss ROT sein. */
+    {
+        static const char *namen[2] = { RE15_ASSET_PSX_DIR "/EMD/EM30_HANGAR.EMD",
+                                        RE15_ASSET_PSX_DIR "/../../../analysis/befunde_runde41/SF_belege/v8/bewegung/EM30_HANGAR_66db2244.EMD" };
+        int alt_falsch = 0;
+        for (int i = 0; i < 2; i++) {
+            size_t n = 0;
+            uint8_t *bl = slurp(namen[i], &n);
+            CHECK(bl != NULL, "Bauchachse: %s fehlt", namen[i]);
+            if (!bl) continue;
+            static re15_md1_t md; static re15_emd_skeleton_t sk; static re15_emd_animation_t an;
+            CHECK(re15_emd_parse_container(bl, n, &md, &sk, &an, NULL) == 0, "Bauchachse: %s nicht lesbar", namen[i]);
+            float eh[3] = { 0, 0, 0 };
+            const int ok = re15_schwanz_r41_bauchachse(&md, &sk, eh);
+            CHECK(ok && fabs(eh[0] - 0.8956) <= 0.001 && fabs(eh[1]) <= 0.001 && fabs(eh[2] - 0.4449) <= 0.001,
+                  "Bauchachse %s: (%.4f, %.4f, %.4f) statt (0,8956, 0, 0,4449)", i ? "66db2244" : "Spiel-Asset", eh[0], eh[1], eh[2]);
+            /* alte Farbregel (Gegenprobe) */
+            uint16_t cl[8]; int cn[8], ncl = 0;
+            for (int g = 17; g <= 21; g++) {
+                const re15_md1_mesh_t *m = &md.meshes[g];
+                for (int f = 0; f < m->triangle_count + m->quad_count; f++) {
+                    const uint16_t c = f < m->triangle_count ? m->triangle_uvs[f].clut : m->quad_uvs[f - m->triangle_count].clut;
+                    int k = 0; while (k < ncl && cl[k] != c) k++;
+                    if (k == ncl && ncl < 8) { cl[ncl] = c; cn[ncl++] = 0; }
+                    if (k < ncl) cn[k]++;
+                }
+            }
+            int haupt = 0;
+            for (int k = 1; k < ncl; k++) if (cn[k] > cn[haupt]) haupt = k;
+            double bx = 0, bz = 0;
+            for (int g = 17; g <= 21; g++) {
+                const re15_md1_mesh_t *m = &md.meshes[g];
+                for (int f = 0; f < m->quad_count; f++) {
+                    if (m->quad_uvs[f].clut == cl[haupt]) continue;
+                    const re15_md1_quad_t *q = &m->quads[f];
+                    bx += m->quad_vertices[q->v0].x + m->quad_vertices[q->v1].x + m->quad_vertices[q->v2].x + m->quad_vertices[q->v3].x;
+                    bz += m->quad_vertices[q->v0].z + m->quad_vertices[q->v1].z + m->quad_vertices[q->v2].z + m->quad_vertices[q->v3].z;
+                }
+                for (int f = 0; f < m->triangle_count; f++) {
+                    if (m->triangle_uvs[f].clut == cl[haupt]) continue;
+                    const re15_md1_triangle_t *t = &m->triangles[f];
+                    bx += m->tri_vertices[t->v0].x + m->tri_vertices[t->v1].x + m->tri_vertices[t->v2].x;
+                    bz += m->tri_vertices[t->v0].z + m->tri_vertices[t->v1].z + m->tri_vertices[t->v2].z;
+                }
+            }
+            const int alt_plus = bx * 0.8956 + bz * 0.4449 > 0.0;
+            fprintf(stderr, "Schwanz Bauchachse %s: (%.4f, %.4f, %.4f); alte Farbregel (haeufigste CLUT %u, %d Flaechen) -> %s\n",
+                    i ? "66db2244" : "Spiel-Asset", eh[0], eh[1], eh[2], (unsigned)cl[haupt], cn[haupt], alt_plus ? "+e_h" : "-e_h (falsch)");
+            if (i == 0) alt_falsch = !alt_plus;
+            else CHECK(alt_plus, "Gegenprobe: alte Farbregel mit 66db2244 nicht +e_h - Vorlage stimmt nicht");
+            free(bl);
+        }
+        CHECK(alt_falsch, "Gegenprobe: alte Farbregel trifft beim Spiel-Asset die Bauchseite - der Riegel prueft nichts (erwartet ROT)");
+    }
+
     /* (6) EM30 mit 16 Knochen: keine Kette */
     {
         size_t esz = 0, off = 0, elen = 0;

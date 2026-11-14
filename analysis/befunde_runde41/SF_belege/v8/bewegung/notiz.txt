@@ -58,3 +58,13 @@ gegen Sehstrahl quer zur Achse; Gelenkwinkel; Verdrehung gegen das Vorglied), ta
     Pixel), Spitze h88/h90/h92 288/286/284 (vorher 262/286/254), linker Bogenrand ruhig 255-273, keine Spalten, kein Durchstossen.
     Offen klein: Spitze h78 20-30 hoeher als h76/h80 (= Ablesung h78 (278,323), endet ueber dem Schatten); Reste h102 (24 Punkte an der
     Huefte), h104, h106 (22 x 12) in der Freigabe; Gelenk 2 im Bogen Kerbe 3-5 Videopunkte an der Innenseite, Gelenk 3 kleine Stufe.
+[11] Behebung Bauchachse nach der Schwanzfarbe Runde 8c (Asset d31f9534, Merge 3648b1d09; Befund Koordinator 2026-11-14): sw_bauchachse
+    nahm die Seite von der Farbe (Flaechen ohne die haeufigste CLUT = Bauch). In 66db2244 war die haeufigste CLUT 31168 (grauer Ruecken,
+    252 Flaechen), in d31f9534 ist es 31552 (Bauch und Ringe, 284 Flaechen) -> Achse auf -e_h, Bauch 180 Grad verdreht (rolle_vergleich_8c.md,
+    Spalte "ohne Behebung": vorn 180 Grad, Bogen bis 169 Grad; unit_schwanz_r41 rot). Kandidaten (bauchachse_8c.txt, beide Assets): Ecken
+    und Keyframes bytegleich; Eckenschwerpunkt -19,5 (haengt an der Teilung 4 Bauch- / 7 Rueckenfelder je Ring), Keyframe-Beugung +794 =
+    4967 von 5467 Gelenken zu +e_h. Gewaehlt: Innenseite des Ruhebogens (so definiert die Asset-Stufe q die Bauchachse, schwanz_r8.py),
+    jetzt re15_schwanz_r41_bauchachse (schwanz_r41.c) und messen.py (hatte dieselbe Farbregel). Ergebnis: beide Assets (0,8956, 0, 0,4449);
+    Szenenlauf: Rolle h16-h104 gleich c94847a31 (45 von 45 Bildern), Lagen/Breiten gleich; Framedump bis h118 176 041 Punkte anders, 35
+    ausserhalb der Schwanzmaske (Rand) = nur Farbe; ab h119 Gangvortrieb b84fcc83c (anderer Auftrag). Test test_schwanz_r41 (13): beide
+    Assets, Gegenprobe alte Farbregel beim Spiel-Asset -e_h (rot); altes Asset abgelegt als EM30_HANGAR_66db2244.EMD.
