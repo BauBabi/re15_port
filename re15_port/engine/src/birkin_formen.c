@@ -417,6 +417,13 @@ static const int16_t k_birkin_bild[BF_BILD_N][2] = {
  * Gier-Tabelle ist um einen Takt verschoben. Kopf-x h70..h80 (n2/blend.py) 369 370 373 363 349 345 348 353 359 365 371,
  * Video 360 355 350 352 330 - 350 - 365 - 390 (Mittel |Fehler| 13, vorher 9.4 mit Stummel). */
 #define BF_H_BEUGT       71         /* Ueberblendung in die gebeugte Haltung (s. oben) */
+/* Runde 4 Nachbesserung Punkt 3 (Sichtpruefung Runde 4 P3: "h71 grauer Arm, Spitze (223,61), x 209..229, y 61..158, am grauen
+ * Unterarm"): mit +0x8f = 7 schwenkt die Sichel im ersten Ueberblendtakt fuer JEDES Zielbild (B41..B92) nach links oben
+ * (Spitze y 49..66, Euler-Mischung der Armknochen 13..15 mit 12.5 %, r4/bfeld2.py) - auch h71 noch, der Spider-Man verdeckt sie
+ * nicht. Mit +0x8f = 4 (erster Takt 50 %) liegt die Sichel schon im ersten Takt unten (x 218..288, y 236..284), danach
+ * (304..401, 325..410): der Arm schlaegt sofort herab (Video h71 Arm verwischt = schnell). Kopf-x h71..h77 387 381 358 343 343
+ * 348 353 (Video h71 355, h72 350, h73 352, h74 330, h76 350). */
+#define BF_BEUGE_BLENDE  4
 /* Runde 4 (Koordinator Punkt 5 "Birkins Beine laufen beim Halten h18-h56 rueckwaerts (Hin-und-her-Haltebild); vorwaerts im Kreis,
  * wenn das eine Szenen-Entscheidung des Ports ist; paarweise gleiche Bilder als Original-Clipdaten so lassen"):
  *   - paarweise gleiche Bilder: Original. Die EDD von EM30_HANGAR ist unveraendert die des RE1.5-EM30 (CDEMD0.EMS Blob 16,
@@ -1174,7 +1181,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         else if (h < BF_H_STEHEN) {                                       /* gebeugt (Kopf k_birkin_beuge) */
             const int alt = b->anim_frame, neu = bf_tab(k_birkin_beuge, BF_N(k_birkin_beuge), h);
             bf_bild(b, BF_CLIP_GRIFF, neu);
-            if (h == BF_H_BEUGT) b->anim_frac = 7;                        /* Ueberblendung B29 -> B85 (+0x8f = 7 wie bf_clip) */
+            if (h == BF_H_BEUGT) b->anim_frac = BF_BEUGE_BLENDE;          /* Ueberblendung Haltebild -> B85 (Kopf BF_BEUGE_BLENDE) */
             else if (neu != alt) b->anim_frac = 3;                        /* Aufrichten: kurze Ueberblendung je Bildwechsel */
         }
         else if (h == BF_H_STEHEN) bf_clip(b, 0);                         /* Stand-Clip 0 wie INIT @0x8011683c, Ueberblendung */
