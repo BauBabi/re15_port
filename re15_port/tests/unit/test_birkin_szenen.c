@@ -203,6 +203,9 @@ static void test_hangar(unsigned raum)
     /* Halten (Nutzer 2026-11-13 "struggled ... viel mehr ... bis er letztendlich tot ist"): erst HURT Clip 4 (@0x80114a44), dann
      * nachlassend HURT Clip 7 (@0x80114a68), ab h52 tot in Clip 7 B5 (kompakteste haengende Haltung, Runde 3). */
     int halt_weh = 0, halt_zuck = 0, halt_tod = 0, halt_clip = -1, halt_bild = -1;
+    /* Runde 7 (Wurf eindrehend, birkin_formen.c Kopf BF_H_LOS): im letzten Grifftakt h73 schon die Rueckenlage 0x0B B4 (Spider-Man-
+     * Maschine @0x801150bc, +0x8f = 7 @0x801150dc), davor tot in Clip 7 B5. */
+    int letzt_clip = -1, letzt_bild = -1;
     unsigned char fx_vorher[RE15_ESP_FX_MAX];
     re15_esp_fx_reset();
     for (int f = 0; f < 200 && ende < 0; f++) {
@@ -226,7 +229,8 @@ static void test_hangar(unsigned raum)
             if (-m->y > max_hoehe) max_hoehe = -m->y;
             if (ph == 5 && m->y == 0) sm_am_boden = 1;
             if (ph == 3 && griff_takte >= 7 && m->rot_z != 0) kipp_rest++;
-            if (ph == 3) { halt_clip = m->motion; halt_bild = m->anim_frame; if (m->motion == 4) halt_weh++; if (m->motion == 7) halt_zuck++; if (m->motion == 9) halt_tod++; }
+            if (ph == 3) { letzt_clip = m->motion; letzt_bild = m->anim_frame; if (m->motion == 4) halt_weh++; if (m->motion == 7) halt_zuck++; if (m->motion == 9) halt_tod++; }
+            if (ph == 3 && m->motion != 0x0B) { halt_clip = m->motion; halt_bild = m->anim_frame; }
             if (ph == 2) { gleit_n++; if (m->y < -1100 || m->y > 0 || (m->motion != 0x17 && m->motion != 0x11)) gleit_falsch++; }
             if (ph == 2 || (ph == 3 && ++griff_takte < 54)) {   /* Ansprung + Halten bis Video h66 (Wurf ab h66 ist schnell) */
                 double dx = m->x - mx, dy = m->y - my, dz = m->z - mz;
@@ -248,7 +252,11 @@ static void test_hangar(unsigned raum)
                  * der Zeichner 12 Takte lang und der Griff folgt der GEZEICHNETEN Hand - die Abfrage hier liefert die Zielpose, daher
                  * zaehlen diese Takte nicht. */
                 const int hw = 11 + griff_takte, wieder = (hw >= 36 && hw < 48) || (hw >= 52 && hw < 64);
-                if (!wieder && ga > griff_max) griff_max = ga;
+                /* Runde 7 (Wurf eindrehend, birkin_formen.c Kopf BF_H_LOS): h71..h73 ueberblendet Birkin jeden Takt (Haltebilder B24/B20
+                 * +0x8f = 2, dann B85 +0x8f = 5) und der Griff liegt an der GEZEICHNETEN Hand (bf_knochen_gezeichnet) - die Abfrage
+                 * hier liefert die Zielpose, daher zaehlen diese Takte nicht. */
+                const int wurf = hw > 70;
+                if (!wieder && !wurf && ga > griff_max) griff_max = ga;
                 griff_n++;
             }
         } else if (sm_weg < 0) sm_weg = f;
@@ -269,6 +277,7 @@ static void test_hangar(unsigned raum)
     CHECK(halt_weh >= 20 && halt_zuck >= 30 && halt_tod == 0 && halt_clip == 7 && halt_bild == 5,
           "Halten: %d Takte Clip 4, %d Takte Clip 7, %d Takte Clip 9, letzter Haltetakt Clip %d B%d (Soll >= 20, >= 30, 0, Clip 7 B5)",
           halt_weh, halt_zuck, halt_tod, halt_clip, halt_bild);
+    CHECK(letzt_clip == 0x0B && letzt_bild == 4, "Wurf: letzter Grifftakt Clip %d B%d (Soll Rueckenlage 0x0B B4, Runde 7)", letzt_clip, letzt_bild);
     CHECK(kipp_rest == 0, "Halten: %d Takte ab h18 noch mit gekippter Wurzel (rot_z)", kipp_rest);
     CHECK(gleit_n >= 10 && gleit_falsch == 0, "Ansprung: %d von %d Takten hoeher als 1100 ueber dem Boden oder nicht Clip 0x17/0x11", gleit_falsch, gleit_n);
     CHECK(blut_art == 0, "gruenes Blut: %d Plaetze nicht Effekt 0 / Sub 8 / Skala 0x2000 / abr_port 0 (@0x80113b10/30)", blut_art);

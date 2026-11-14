@@ -10649,6 +10649,25 @@ re_title:;
                         fputc('\n', s_griff_fp); fflush(s_griff_fp);
                     }
                 }
+                {   /* Runde 41 SF Runde 7 (Wurf eindrehend) Messhaken RE15_POSE_LOG=<datei>: gezeichnete Pose der Hangar-Figuren je Bild
+                     * nach allen Posen-Haken - Typ 0x30 und 0x2B, Aktorlage, Gier/Kippung, Massstab und je Knochen Drehung (Q12, 9 Werte)
+                     * und Lage im Modellraum (wie re15_skel_compute_pose). Damit rechnet die Messung Mesh, Kopf, Brust und Mitte genau
+                     * so, wie der Zeichner sie zeigt. Nur Messung, im Normalpfad stumm, kein Verhalten. */
+                    static FILE *s_pose_fp = NULL; static int s_pose_tried = 0;
+                    if (!s_pose_tried) { s_pose_tried = 1; const char *pp = getenv("RE15_POSE_LOG"); if (pp && *pp) s_pose_fp = fopen(pp, "w"); }
+                    if (s_pose_fp && (npc->type == 0x30u || npc->type == 0x2Bu)) {
+                        fprintf(s_pose_fp, "[pose] F%u typ%02X mo=%d af=%d frac=%d lage %d %d %d rot %d %d %d s %d n %d",
+                                (unsigned)g_engine.frame_count, (unsigned)npc->type, (int)npc->motion, (int)npc->anim_frame,
+                                (int)npc->anim_frac, (int)npc->x, (int)npc->y, (int)npc->z, (int)npc->rot_x, (int)npc->rot_y,
+                                (int)npc->rot_z, (int)npc->render_scale_q12, (int)npc_skel->bone_count);
+                        for (int q = 0; q < npc_skel->bone_count; q++) {
+                            const re15_skel_pose_t *pq = &npc_poses[q];
+                            fprintf(s_pose_fp, " |%d %d %d %d %d %d %d %d %d %d %d %d", pq->rot[0], pq->rot[1], pq->rot[2], pq->rot[3],
+                                    pq->rot[4], pq->rot[5], pq->rot[6], pq->rot[7], pq->rot[8], pq->trans[0], pq->trans[1], pq->trans[2]);
+                        }
+                        fputc('\n', s_pose_fp); fflush(s_pose_fp);
+                    }
+                }
                 {   /* Runde 41 SF NB6 Messhaken RE15_BEIN_LOG=<datei>: Beingelenke (Knochen 0-6: Becken, Huefte/Knie/Knoechel
                      * rechts und links) jedes gezeichneten Typs 0x30 in Weltkoordinaten nach allen Posen-Haken, je Bild.
                      * Nur Messung (Dossier SF_sichel.md "NB6 Beinhaltung"), im Normalpfad stumm, kein Verhalten. */
