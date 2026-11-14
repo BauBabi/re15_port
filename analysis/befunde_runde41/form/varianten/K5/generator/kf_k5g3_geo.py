@@ -13,8 +13,11 @@ Eingaenge (alle im Repo, mit sha256 geprueft):
            OPTIONAL eine Posen-Datei (Vorgabe generator/krallen_posen.json, sonst --posen <datei>): {"keys": {"<key>": {"alt": {"<knochen>":
            [x,y,z]}, "neu": {...}}}}, nur Keys 398-425 und 542-556 (Lage der rechten Hand in Bild 2, Nutzer-Entscheid offen), nur Knochen des
            rechten Arms (16 und alles darunter: 16, 17, 18, 19, 20, 29, 31). 'alt' muss der Wert in K5c sein (modulo 4096), sonst Abbruch.
-Stufen: posen -> krallen -> spalt (fassen verschiedene Daten an: Sektion 2 / Netze 19, 20, 28, 29 / Netze 10, 16, 21, 22).
-Keine Gleitkommazahl, kein Zufall, keine Uhr: zweiter Lauf ergibt dieselben Bytes.
+  uvfein   (Runde 2, Befund "gestreckte Farbstreifen aus UV-entarteten Dreiecken"): UV der Spalt-Kinder neu gewaehlt, kf_k5g3_uv.uv_fein -
+           nur UV; Ecken, Normalen, Flaechen-Indizes, CLUT, Seite bleiben die der B4-Tabelle. Die Tabelle mit diesen UV schreibt `bauen` nach
+           K5/k5g/K5g3/geo/spalt_uv_tabelle.json (GEO3_SPALT_UV) - die nimmt die Textur-Stufe fuer mulde_auf_form statt GEO3_SPALT.
+Stufen: posen -> krallen -> spalt -> uvfein (Sektion 2 / Netze 19, 20, 28, 29 / Netze 10, 16, 21, 22 / UV der Kinder in 10, 16, 21, 22).
+Kein Zufall, keine Uhr: zweiter Lauf ergibt dieselben Bytes (uvfein rechnet in float64 nur die Auswahl, das Ergebnis ist ganzzahlig).
 
 Aufruf:  python kf_k5g3_geo.py bauen [--posen <datei>] [<ziel.EMD>]   -> K5/k5g/K5g3/geo/BAHNSTEIG_FORM.EMD (+ FORM.EMD daneben)
          python kf_k5g3_geo.py pruef                                 -> zwei Laeufe + Datei byte-gleich, Byte-Probe gegen KAND.EMD (Exit 1 sonst)
@@ -28,6 +31,7 @@ sys.dont_write_bytecode = True
 HIER = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HIER)
 import kf_k5g2_geo as G  # noqa: E402
+import kf_k5g3_uv as UVF  # noqa: E402
 
 FE = G.FE
 K5 = G.K5
@@ -39,13 +43,14 @@ GEO3_KRALLEN = os.path.join(HIER, 'k5g3_krallen_k5c.json')
 GEO3_K5C_SHA = '1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041'   # nur Bericht/Riegel; Inhalt steckt in GEO3_KRALLEN
 GEO3_POSEN = os.path.join(HIER, 'krallen_posen.json')                                # optional (G2); fehlt heute
 GEO3_ZIEL = os.path.join(K5, 'k5g', 'K5g3', 'geo', 'BAHNSTEIG_FORM.EMD')
+GEO3_SPALT_UV = os.path.join(K5, 'k5g', 'K5g3', 'geo', 'spalt_uv_tabelle.json')     # B4-Tabelle mit den UV der Stufe uvfein (Textur-Stufe)
 KAND_B4_SHA = 'f78e598336872111de14a7b06ec7cb3610c8777897d30fc3b5bc9f12945c1a66'      # spalt/kand_b4/KAND.EMD (Byte-Probe)
 SPALT_TEILE = G.MULDEN_TEILE                    # (10, 16, 21, 22)
 KRALLEN_K5C = (19, 20, 28, 29)
 KRALLE_GLEICH = 31
 POSEN_KEYS = tuple(range(398, 426)) + tuple(range(542, 557))
 FORM_KEYS = ((0, 11), (1, 542))                 # kleine FORM.EMD: Key 0 = BAHNSTEIG-Key 11 (Bild 1), Key 1 = Key 542 (Bild 2), Key 2 Ruhe
-STUFEN = ('posen', 'krallen', 'spalt')
+STUFEN = ('posen', 'krallen', 'spalt', 'uvfein')
 
 
 def sha(b):
@@ -128,6 +133,13 @@ def geometrie_form(stufen=STUFEN, posen=None, tabelle=GEO3_SPALT, krallen=GEO3_K
             raise SystemExit('Spalt-Tabelle hat nicht die sha256 aus G1 (%s)' % GEO3_SPALT_SHA)
         _e, form = G.geometrie_form(emd0=emd0, tabelle=tabelle, stufen=('mulde',))     # Netze 10, 16, 21, 22 aus der Tabelle (Basis-/Teileprobe dort)
         ber['spalt'] = dict(tabelle=os.path.basename(tabelle), sha256=sha(open(tabelle, 'rb').read()))
+        if 'uvfein' in stufen:
+            tuv, ub = spalt_uv(tabelle, emd0)
+            for t in SPALT_TEILE:
+                form['meshes'][t] = tuv['teile'][str(t)]
+            ber['uvfein'] = dict((k, v) for k, v in ub.items() if k != 'je_netz')
+    elif 'uvfein' in stufen:
+        raise SystemExit('Stufe uvfein braucht die Stufe spalt')
     else:
         form = FE.lese_emd(emd0)
     if 'krallen' in stufen:
@@ -149,6 +161,17 @@ def geometrie_form(stufen=STUFEN, posen=None, tabelle=GEO3_SPALT, krallen=GEO3_K
             ber['posen'] = dict(datei=pfad.replace(chr(92), '/'), sha256=sha(open(pfad, 'rb').read()), tripel=len(geschr),
                                 keys=sorted(set(k for k, _t, _a, _n in geschr)))
     return sek, form, ber
+
+
+def spalt_uv(tabelle=GEO3_SPALT, emd0=None):
+    """B4-Tabelle -> (Tabelle mit den UV der Stufe uvfein, Bericht). Deterministisch (kf_k5g3_uv.uv_fein)."""
+    emd0 = emd0 or open(GEO_BASIS, 'rb').read()
+    return UVF.uv_fein(json.load(open(tabelle, encoding='utf-8')), FE.lese_emd(emd0))
+
+
+def spalt_uv_bytes(tabelle=GEO3_SPALT):
+    t, _b = spalt_uv(tabelle)
+    return (json.dumps(t, sort_keys=True, separators=(',', ':')) + chr(10)).encode('utf-8')
 
 
 def geometrie_bytes(stufen=STUFEN, posen=None, tabelle=GEO3_SPALT, krallen=GEO3_KRALLEN):
@@ -187,6 +210,10 @@ def bauen(ziel=None, posen=None, log=print):
     ber.update(emd=dict(datei=os.path.basename(ziel), bytes=len(aus), sha256=sha(aus)),
                form_emd=dict(datei='FORM.EMD', bytes=len(fa), sha256=sha(fa)),
                tim='K5/ruhe/K5e_f1/BAHNSTEIG_FORM.TIM (sha %s)' % sha(open(GEO_BASIS_TIM, 'rb').read()))
+    if 'uvfein' in ber:
+        tb = spalt_uv_bytes()
+        open(os.path.join(os.path.dirname(ziel), os.path.basename(GEO3_SPALT_UV)), 'wb').write(tb)
+        ber['spalt_uv_tabelle'] = dict(datei=os.path.basename(GEO3_SPALT_UV), sha256=sha(tb))
     json.dump(ber, open(os.path.join(os.path.dirname(ziel), 'bau.json'), 'w', encoding='utf-8', newline='\n'), indent=1, sort_keys=True)
     log('EMD %s  %d Byte  sha256 %s' % (ziel.replace(chr(92), '/'), len(aus), sha(aus)))
     log('FORM.EMD %d Byte  sha256 %s' % (len(fa), sha(fa)))
@@ -203,7 +230,11 @@ def pruef(ziel=None):
     k = geometrie_bytes(stufen=('spalt',), posen='')
     gut2 = sha(k) == KAND_B4_SHA
     print('Byte-Probe K5e_f1-Posen + K5e_f1-Krallen + B4-Tabelle == KAND.EMD (f78e5983...): %s  sha256 %s' % ('JA' if gut2 else 'NEIN', sha(k)))
-    return gut1 and gut2
+    tb = spalt_uv_bytes()
+    d3 = open(GEO3_SPALT_UV, 'rb').read() if os.path.exists(GEO3_SPALT_UV) else b''
+    gut3 = tb == d3
+    print('UV-Tabelle (uvfein) == geo/%s: %s  sha256 %s' % (os.path.basename(GEO3_SPALT_UV), 'JA' if gut3 else 'NEIN', sha(tb)))
+    return gut1 and gut2 and gut3
 
 
 if __name__ == '__main__':

@@ -3,12 +3,12 @@
  "emd": {
   "bytes": 586012,
   "datei": "BAHNSTEIG_FORM.EMD",
-  "sha256": "eadfac31aef1864644376c9952641ff584334c3e8293702df918d3a0e3758409"
+  "sha256": "db9404a18368f420050cddbc45f06fca11c24c80a0d315082668280576590e00"
  },
  "form_emd": {
   "bytes": 462920,
   "datei": "FORM.EMD",
-  "sha256": "3f1f70b3fcc6dda6e54500b7ee5cc249f63005f54d7af9c86eeb0e4450aaaca4"
+  "sha256": "d84d4762965e8b0f4b6feb7a587212ae3f106b2de0853aceb13b97b9d801fd8a"
  },
  "krallen": {
   "datei": "k5g3_krallen_k5c.json",
@@ -23,10 +23,38 @@
   "sha256": "99a4f142c2d01c5eb8e70dd299c0cd98c3e34268adc8473454dcfb42b4cd6d07",
   "tabelle": "k5g3_spalt_b4_tabelle.json"
  },
+ "spalt_uv_tabelle": {
+  "datei": "spalt_uv_tabelle.json",
+  "sha256": "cfec25bcb194f9909e0ecef18a7fb938d687cf7bb8187d9c9e6268bdb89f0897"
+ },
  "stufen": [
   "posen",
   "krallen",
-  "spalt"
+  "spalt",
+  "uvfein"
  ],
- "tim": "K5/ruhe/K5e_f1/BAHNSTEIG_FORM.TIM (sha 31a35e66428bac1e8783587f2336ea0bec7aab6e34876b0be87a144c576445b8)"
+ "tim": "K5/ruhe/K5e_f1/BAHNSTEIG_FORM.TIM (sha 31a35e66428bac1e8783587f2336ea0bec7aab6e34876b0be87a144c576445b8)",
+ "uvfein": {
+  "geaendert": 3743,
+  "gruende": {
+   "aussen": 2186,
+   "aussen+linie/kipp": 476,
+   "aussen, im Gebiet nur Linie -> B4 bleibt": 49,
+   "linie/kipp": 1179
+  },
+  "kinder": 9961,
+  "nachher": {
+   "aussen": 49,
+   "fehlrate_gew": 0.247789,
+   "kipp": 3,
+   "linie": 207
+  },
+  "viereck_kinder_unveraendert": 0,
+  "vorher": {
+   "aussen": 2711,
+   "fehlrate_gew": 0.239498,
+   "kipp": 98,
+   "linie": 1556
+  }
+ }
 }
