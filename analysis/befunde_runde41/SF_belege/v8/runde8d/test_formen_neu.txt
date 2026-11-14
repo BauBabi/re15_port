@@ -1,0 +1,5 @@
+EM30_HANGAR.EMD: 886 von 913 Keyframes geduckt, Fussgelenk max 342 vom EM30-Ort, 900 mit bewegtem Schwanz
+EM30_HANGAR.EMD: 642 Haut-CLUT-Eintraege umgefaerbt, 30 blaue grau, 13 Zusatzzeilen, Port-Texturhoehe 4096
+EM30_HANGAR.EMD: 23 Meshes, 23 Knochen, 21 Clips, 310 Tri-Vertices umgeformt, 13 Teile umtexturiert
+test_birkin_formen: OK
+rc=0

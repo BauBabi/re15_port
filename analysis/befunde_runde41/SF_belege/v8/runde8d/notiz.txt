@@ -1,0 +1,45 @@
+Runde 8d (Schwanz Sichel-Form V8, einheitlich ueber die Gliedfugen) - Notiz. Zweig r41/sichel_v8.
+Nutzer 14.11. zum Endstand 8c d31f9534 (woertlich): "Im prinzip fast perfekt, aber - ich weiss nicht wo du die Streifen bei den Schwanz
+Abschnitten von Birkin her nimmst, die gehoeren da nicht hin. Schau doch auf das Original Video, der Schwanz wirkt auch ueber die Abschnitte
+hinweg einheitlich." Auftrag Koordinator: Ringe weg, Fugen mit demselben Bauchfeld C1, Grenze Bauch/Flanke / Form / Einschnuerungen / Nadel
+wie 8c, Flanke an den Fugen pruefen, nur Original-Texel, keine Eichung. Kein RE-Befund (Sichel-Form auf keiner Disc), PORT-WAHL.
+
+[1] Messverfahren (werkzeug/x21_maske_glied.py, x22_fugen.py, x23_band.py): je Glied 16-22 und Klasse (grau / bauch) ein Masken-Lauf (Flaechen
+    einfarbig fast weiss), Differenz zum Bezugslauf = Bildpunkte dieses Glieds. Je Bild F255-F320 (jedes 5.): "Streifen" = L* der Bildpunkte
+    <= 3 px an einem Nachbarglied minus L* der Glied-Mitten (>= 8 px); "Kante" / "Stufe" = Lab-Abstand beider Seiten einer Fuge bzw. der Glieder.
+[2] Bauch (messung/streifen.txt, streifen_final.txt, mb_fugen.png, mb_endstand.png). Streifen L*(Fuge) - L*(Mitte), Median ueber 10 Bilder:
+      8c d31f9534 (Ringe)                           +2,6 (Gelenke +3 .. +13, helle Ringe)
+      ohne Ringe, C1 v 48-57 (Messprobe V1)          -9,1 (Gelenke -5,6 .. -13,1: dunkle Flecken an JEDER Fuge)
+      Messprobe einfarbig (nur Zeile 52, V1mid)      -2,7 (= Schattierung der Einschnuerung allein)
+      ohne Ringe, C1 v 51-55 (Endstand 8d)           -3,2 (Gelenke -0,2 / -1,8 / -6,8 / -5,2 / -1,1 / -2,3)
+    Ursache bei v 48-57: die Fugen liegen (laengs je Glied gespiegelt) auf den Endzeilen des Felds; Zeilen 56-57 sind ganz dunkler (Mittel
+    L* 22 gegen 32), in 48-50 ist die Ader am linken Feldrand breiter (Spiellicht-Vorhersage Ende - Mitte -6,4 L*). Weitere Proben: v 48-55
+    -1,4 (Gelenk 4 -10,6), v 50-55 -4,4, v 48-54 -1,2 (Gelenk 4 -9,1, Ton Abstand 7,8). Gewaehlt v 51-55 (u 54-65 wie 8c): je Gelenk am
+    naechsten an der einfarbigen Probe, Ton gleich 8c.
+    Bauchton im Spiellicht (x19_reihe.py, 9 Bilder, Median): 8b 66db2244 S 0,54 V 0,32 L* 21,7 C* 22,1, Abstand Video-Mitte 8,7;
+    8c d31f9534 S 0,35 V 0,39 L* 31,2 C* 16,0, Abstand 5,1; 8d 547acc80 S 0,35 V 0,41 L* 32,0 C* 16,1, Abstand 5,1 (reihe_final.txt).
+    Sichtbar bleibt ein duenner dunkelroter Laengsstrich am einen Bauchrand (Ader der Original-Texel bei u 54, in 8c als Flecken) - laengs,
+    nicht an den Fugen.
+[3] Flanke (messung/fugen_A8c.txt, fugen_varianten.txt): mit den Grau-Feldern je Glied (17, 21, 22 eigene Felder) und ohne Spiegelung (an jeder
+    Fuge Zeile v0 neben v1): Gelenk 5 Stufe dE 7,0 / Kante 12,5, Gelenk 3 / 4 Kante 7,1 / 5,3. Mit EINEM Grau-Feld (Feld von Glied 16,
+    u 64-87 v 76-131, Oberseiten-Texel des Eingangs) laengs je Glied gespiegelt: Gelenk 5 3,3 / 3,9, Gelenk 3 / 4 0,0 / 0,5. Die Flanke ist in
+    diesen Bildern nur in 1-5 Bildern je Gelenk sichtbar (wenig Bildpunkte); der Riegel R8d (3) prueft die Naht zusaetzlich am Asset.
+[4] Riegel riegel_schwanz_r8.py (r8_b.txt): 7 von 7 gruen. R8d (3): Band-Flaechen 0, Fugen nur bauch/grau, Bauchfeld an allen 6 Gelenken
+    beidseitig, Naht Bauch-v je Gelenk 0,0 Texel, Grau alle im einen Feld (ausser den 2 Wurzelflaechen im Rumpf), Naht Grau 0,0, PV an 6
+    Gelenken. Gegenproben: 8c d31f9534 4 von 6 (rot R8d, R8e), 07b6703f 1 von 6.
+    riegel_v8 (riegel_v8r8d.txt): 18 von 24, GELB S3, ROT S9 / S14 / S16 / S18 / S19 = wie 8c (Erbe frueherer Runden); S15 (= R8e) gruen.
+    Bezuege: die Ordner sfv8/r4 und sfv8/r6b fehlen seit der Runde 8c (nicht von dieser Runde geloescht). R4.EMD aus sfv8/p5/staende (sha
+    10d02173 = bisheriger Bezug); Marker-Laeufe GR_V7 / KO_V7 mit V7 319bbd17 und der heutigen exe neu (werkzeug/riegel_nach.sh). Kontrolle:
+    8c d31f9534 mit denselben neuen Bezuegen (kontrolle_8c_riegel_v8.txt) gleich der Runde 8c bis auf S15 (rot, weil das Bauchfeld jetzt
+    v 51-55 ist - Gegenprobe), S9s / S10s / S16 identisch.
+[5] Herkunft (messung/herkunft_final.txt): Bauch 60 Texel, alle = Disc-Original in der Nutzung der Original-Zeile 480; CLUT 493 == Original 480;
+    Wurzel 495 unveraendert; Grau 1552 Texel = Oberseiten-Texel des Eingangs (R8e (3) gruen).
+[6] Kette zweimal V8-KETTE-OK = Pin 547acc80fb704b4a525bbcc6bbbf4a61a898eaf9f9c5b0a0d4766b5fb8952e55; Bau OK; ctest-Gruppe 8/8;
+    test_birkin_formen neu OK (493 12 / 28 / 32 / 28 / 28 / 28 / 32), Gegenproben 07b6703f 20 Fehler, d31f9534 7 Fehler.
+[7] Bauchachse (re15_schwanz_r41_bauchachse, r41/sichel_szene 109695330): nachgerechnet mit bauchachse_vergleich.py (messung/bauchachse_8d.txt):
+    Ecken und Keyframes gleich 8c -> Keyframe-Beugung +4967 / -500, Summe 794,38 (40,3 Grad), Achse (0,8956, 0,4449) unveraendert.
+    ACHTUNG test_schwanz_r41 (13) auf r41/sichel_szene: die Gegenprobe "alte Farbregel trifft beim Spiel-Asset die Bauchseite NICHT" (erwartet
+    ROT) haengt an d31f9534 als Spiel-Asset. Mit 8d ist die haeufigste CLUT wieder Grau (31168, 252 Flaechen gegen 493: 144) -> die alte
+    Farbregel liefert +e_h, der CHECK(alt_falsch) wird ROT. Die Hauptpruefung (Achse) bleibt gruen. Abhilfe dort: d31f9534 als Datei fuer die
+    Gegenprobe ablegen (wie 66db2244), nicht das Spiel-Asset.
+[8] Tafel 21 neu: ../21_schwanz_farbe_r8d.png (Nutzerbild | 8c | 8d). Nicht selbst angesehen (Pruefer). messung/mb_*.png = Messbilder.
