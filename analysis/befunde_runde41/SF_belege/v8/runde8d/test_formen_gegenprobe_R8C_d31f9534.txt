@@ -1,0 +1,12 @@
+EM30_HANGAR.EMD: 886 von 913 Keyframes geduckt, Fussgelenk max 342 vom EM30-Ort, 900 mit bewegtem Schwanz
+FAIL: EM30_HANGAR.EMD: Schwanzglied 16: 14 Flaechen auf 495 (Soll 14), 26 auf 493 (Soll 12), 15 auf 487, 55 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 17: 0 Flaechen auf 495 (Soll 0), 56 auf 493 (Soll 28), 21 auf 487, 77 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 18: 0 Flaechen auf 495 (Soll 0), 60 auf 493 (Soll 32), 28 auf 487, 88 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 19: 0 Flaechen auf 495 (Soll 0), 56 auf 493 (Soll 28), 21 auf 487, 77 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 20: 0 Flaechen auf 495 (Soll 0), 56 auf 493 (Soll 28), 21 auf 487, 77 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 21: 0 Flaechen auf 495 (Soll 0), 56 auf 493 (Soll 28), 21 auf 487, 77 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 22: 0 Flaechen auf 495 (Soll 0), 46 auf 493 (Soll 32), 75 auf 487, 121 gesamt (V8 Runde 8d)
+EM30_HANGAR.EMD: 642 Haut-CLUT-Eintraege umgefaerbt, 30 blaue grau, 13 Zusatzzeilen, Port-Texturhoehe 4096
+EM30_HANGAR.EMD: 23 Meshes, 23 Knochen, 21 Clips, 310 Tri-Vertices umgeformt, 13 Teile umtexturiert
+test_birkin_formen: 7 Fehler
+rc=1

@@ -573,15 +573,19 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
              * rot"): nur UV/CLUT - Bauch auf ein anderes Original-Feld (Zeile 493 = Original 480, Seite 0, Feld C1), helle Stellen als Ringe auf
              * ALLEN 11 Sektoren der Fugen (Mantel S-C / D-E und Deckel, Zeile 493, Feld RB). Auf 495 bleiben nur die 14 Wurzelflaechen von
              * Glied 16. Gemessen am Asset der Runde 8c (sfv8/r8/r8d NEU_b): auf 493 26 / 56 / 60 / 56 / 56 / 56 / 46, auf 495 14 / 0 / ... / 0,
-             * Rest 487; Ecken unveraendert. Gegenprobe Runde 8b 66db2244: rot (495 22 / 20 / 24 / 20 / 20 / 20 / 28). */
+             * Rest 487; Ecken unveraendert. Gegenprobe Runde 8b 66db2244: rot (495 22 / 20 / 24 / 20 / 20 / 20 / 28).
+             * Runde 8d (Nutzer 14.11. zum Endstand 8c: "ich weiss nicht wo du die Streifen bei den Schwanz Abschnitten von Birkin her nimmst,
+             * die gehoeren da nicht hin"): keine Ringe - die Fugenflaechen im Bauchsektor tragen das Bauchfeld C1, die uebrigen grau. Gemessen
+             * am Asset der Runde 8d (sfv8/r8/r8e NEU_b): auf 493 12 / 28 / 32 / 28 / 28 / 28 / 32 (nur Bauch), auf 495 14 / 0 / ... / 0,
+             * Rest 487; Ecken unveraendert. Gegenprobe Runde 8c d31f9534: rot (493 26 / 56 / 60 / 56 / 56 / 56 / 46). */
             static const int ECKEN[7] = {46, 68, 79, 68, 68, 68, 112};
             static const int AUF495[7] = {14, 0, 0, 0, 0, 0, 0};
-            static const int AUF493[7] = {26, 56, 60, 56, 56, 56, 46};
+            static const int AUF493[7] = {12, 28, 32, 28, 28, 28, 32};
             CHECK(b->tri_vertex_count == ECKEN[m - 16], "%s: Schwanzglied %d: %d Ecken statt %d (V8 Runde 8b)", name, m,
                   b->tri_vertex_count, ECKEN[m - 16]);
             int auf487 = zeile_zahl(b, 487), auf495 = zeile_zahl(b, Z_X3), auf493 = zeile_zahl(b, 493);
             CHECK(auf495 == AUF495[m - 16] && auf493 == AUF493[m - 16] && auf487 + auf495 + auf493 == b->quad_count + b->triangle_count,
-                  "%s: Schwanzglied %d: %d Flaechen auf 495 (Soll %d), %d auf 493 (Soll %d), %d auf 487, %d gesamt (V8 Runde 8c)", name, m,
+                  "%s: Schwanzglied %d: %d Flaechen auf 495 (Soll %d), %d auf 493 (Soll %d), %d auf 487, %d gesamt (V8 Runde 8d)", name, m,
                   auf495, AUF495[m - 16], auf493, AUF493[m - 16], auf487, b->quad_count + b->triangle_count);
             for (int q = 0; q < b->quad_count; q++) {
                 const unsigned z = b->quad_uvs[q].clut >> 6, seite = b->quad_uvs[q].page & 0xF;
