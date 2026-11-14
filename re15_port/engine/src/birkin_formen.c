@@ -553,8 +553,34 @@ static const int16_t k_birkin_gier[][2] = {     /* Runde 5: h71/h72 Schwung nach
     {  80, -1342 }, {  86, -1399 }, {  88, -1421 }, {  96, -1369 }, { 104, -1319 } };
 #define BF_H_ZUR_KAMERA  108        /* Runde 7: Hauptteil der Rueckdrehung h104 -> h108 (Kopf k_birkin_gier); vorher 104 */
 /* Runde 3 N2: Gangtempo aus dem Video - Hoehe 282 -> 302 Bildpunkte h118 -> h126 (+7.1 %) = Blicktiefe 6833 -> 6380 (rueck.py), also
- * 453 Einheiten in 8 Bildern auf die Kamera zu = 57 je Bild (vorher 22 = ~1000 in h90..h135 bei Gangbeginn h90). */
-#define BF_GANG_SCHRITT  57
+ * 453 Einheiten in 8 Bildern auf die Kamera zu = 57 je Bild (vorher 22 = ~1000 in h90..h135 bei Gangbeginn h90). Runde 7: ersetzt
+ * durch den Original-Vortrieb (folgender Kopf). */
+/* Runde 7 Gang (Nutzer 2026-11-14 zum Szenenvideo: "Was viel eher auffaellt ist, das birkin dann zum schluss im video kurzzeitig einmal
+ * nach vorne gleitet statt zu gehen"). Messung Lauf gang/vorher (Bein-Log = gezeichnete Pose, fuss.py): ab h119 schob die Szene die
+ * Wurzel um BF_GANG_SCHRITT 57 je Takt, waehrend der Zeichner h119-h126 noch die Stand-Pose zeigte - beide Knoechel glitten 57 je
+ * Bild (bf_clip +0x8f = 15 mit Mischschritt 0x200: Gewicht der alten Pose 15/8 > 1 -> 8 Bilder lang 100 % Stand-Clip 0). Danach
+ * glitt der Standfuss h128-h131 noch 31..88 je Bild (Clip 1: Standfuss Knochen 6 laeuft im Mittel 26 je Bild nach hinten).
+ * Jetzt der Original-Gang des 0x30 (WALK Phase 0/1, STAGE5.BIN, selbst disassembliert):
+ *   Clip 1, Bild 0, +0x8f = 15: `sb v1,148(v0)` @0x80117a44, `sb zero,149(v0)` @0x80117a54, `ori v0,zero,0xf` @0x80117a60 /
+ *     `sb v0,143(v1)` @0x80117a64;
+ *   anim_set mit Mischschritt 0x100: `jal 0x8001f314` @0x80117a98, `ori a3,zero,0x100` @0x80117a9c (Gewicht der alten Pose 15/16,
+ *     14/16 ... - der Gang blendet vom ersten Bild an ein);
+ *   Vortrieb = Fussschritt + 0x14: `jal 0x8011bdd8` (a0 = 1, a1 = 1) @0x80117aa4 legt die Schrittlaenge des Beins 0-4-5-6 nach
+ *     +0x8c (`jal SquareRoot0` @0x8011bf00, `sh v0,140(v1)` @0x8011bf14), `addiu v0,v0,0x14` @0x80117ac0 / `sh v0,140(v1)`
+ *     @0x80117ac4, `jal 0x800245d8` (a0 = 0) @0x80117be0 schiebt um +0x8c entlang der Gier.
+ * Fussschritt wie re15_birkin_fuss_schritt (enemy_ai_common.c, Auftritt): Knoechel 6 im gezeichneten Bild gegen das Bild davor.
+ * Clip 1 (EM30_HANGAR = EDD des EM30): 2 / 12 / 12 / 18 / 24 ... 36 je Bild, Vortrieb im Mittel B1-B32 46,8 (vorher 57).
+ * Ergebnis (gleit.py, Bein-Log: Beckenweg in Bildern, in denen kein Knoechel mehr als 15 ueber der Standhoehe liegt): h119-h135
+ * vorher 560 Einheiten in 10 Bildern (h119-h128 je 50..57), jetzt 109 in 3 Bildern (h119 18, h120 44, h125 47); der rechte Fuss
+ * hebt ab h121 sichtbar ab (16..26). Video-Gangbeginn h119/h120 (Runde 3, Kopf BF_H_GANG). */
+/* PORT-SZENE Startbild: der Original-Gang beginnt mit Bild 0 (@0x80117a54), dort steht der linke Fuss 322 vor, der rechte 528 hinter
+ * der Wurzel (Schrittstellung) - die Ueberblendung aus dem Stand (Clip 0 B13: Knoechel R (25,-641), L (24,630), breit nebeneinander)
+ * schob beide Fuesse am Boden in die Schrittstellung (Lauf gang/g1 h120-h125: Standfuss 48..82 je Bild). Bild 16 hat die Fuesse unter
+ * dem Koerper (R (-36,-511) gehoben y -389, L (-86,549)) - kleinster Abstand zur Standstellung aller 68 Bilder (Summe 280 gegen 881
+ * fuer B0) - und der rechte Fuss hebt gerade ab: der Gang beginnt mit einem sichtbaren Schritt (Video: erster Schritt h119/h120). */
+#define BF_GANG_BILD0    16
+#define BF_GANG_MISCH    0x100      /* @0x80117a9c */
+#define BF_GANG_ZUSATZ   0x14       /* @0x80117ac0 */
 /* Runde 41 SF Neuaufbau ab NB2 (Nutzerwunsch "Schwanz: laenger, Laenge, Glieder und Baender wie im Video, Bewegung 1:1 nach
  * dem Video"): Schwanzbahn und Verdecken aus NB3-NB5 (r41/sichel 3f91e5c57) uebernommen. Die Tabelle ist je VIDEOBILD h; der
  * NB2-Takt h wird im Bild h - 2 gezeichnet (Lauf nb2neu/G2: Messzeile "h-1 F240", erstes Letterbox-Bild F243) -> die Szene
@@ -989,6 +1015,7 @@ static void bf_hangar_beenden(void)
     if (s_h.birkin >= 0 && g_actors[s_h.birkin].active && g_actors[s_h.birkin].type == 0x30u) {
         re15_actor_t *b = &g_actors[s_h.birkin];
         b->state = 0; b->sub_state_1 = b->sub_state_2 = b->sub_state_3 = 0;
+        b->anim_blend_rate = 0;                          /* Runde 7: Mischschritt des Szenen-Gangs (BF_GANG_MISCH) zurueck */
     }
     if (s_h.sm >= 0 && g_actors[s_h.sm].active && g_actors[s_h.sm].type == 0x2Bu) g_actors[s_h.sm].active = 0;
     re15_schwanz_r41_seite(s_h.birkin, 0);
@@ -1534,8 +1561,17 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         }
     } else {                                                              /* Gang auf die Kamera zu (Video h88..135) */
         const re15_camera_cut_t *c = bf_szenenkamera();
-        if (h == BF_H_GANG) { bf_clip(b, 1); b->anim_frac = 0xf; }        /* WALK-Clip 1 wie @0x80117220 */
-        else re15_r38_birkin_anim(b);
+        int32_t schritt = 0;
+        if (h == BF_H_GANG) { bf_clip(b, 1); b->anim_frame = BF_GANG_BILD0; b->anim_frac = 0xf; }   /* WALK-Clip 1, +0x8f = 15 @0x80117a64 */
+        else {                                                            /* Runde 7: Fussschritt (Kopf BF_GANG_MISCH) */
+            static const int32_t null3[3] = { 0, 0, 0 };
+            int32_t alt[3], neu[3];
+            const int ok = re15_enemy_part_point(b, 6, null3, alt);       /* Knoechel 6 im Bild davor */
+            re15_r38_birkin_anim(b);                                      /* anim_set @0x80117a98 */
+            if (ok && re15_enemy_part_point(b, 6, null3, neu))            /* 0x8011bdd8(1,1) @0x80117aa4 */
+                schritt = (int32_t)re15_squareroot0((uint32_t)((neu[0] - alt[0]) * (neu[0] - alt[0]) + (neu[2] - alt[2]) * (neu[2] - alt[2])));
+        }
+        b->anim_blend_rate = BF_GANG_MISCH;                               /* Runde 7: Mischschritt 0x100 @0x80117a9c */
         if (c) {
             int d = (bf_blick(b, c->pos_x, c->pos_z) - b->rot_y) & 0x0fff;
             if (d > 0x800) d -= 0x1000;
@@ -1543,8 +1579,9 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
             if (d < -0x20) d = -0x20;
             b->rot_y = (int16_t)((b->rot_y + d) & 0x0fff);
         }
-        b->x += (int32_t)(((int64_t)re15_cos_q12(b->rot_y) * BF_GANG_SCHRITT) >> 12);
-        b->z -= (int32_t)(((int64_t)re15_sin_q12(b->rot_y) * BF_GANG_SCHRITT) >> 12);
+        schritt += BF_GANG_ZUSATZ;                                        /* +0x8c += 0x14 @0x80117ac0 */
+        b->x += (int32_t)(((int64_t)re15_cos_q12(b->rot_y) * schritt) >> 12);   /* 0x800245d8(0) @0x80117be0 */
+        b->z -= (int32_t)(((int64_t)re15_sin_q12(b->rot_y) * schritt) >> 12);
     }
 #ifdef RE15_PLATFORM_PC
     {   static int log = -1;
