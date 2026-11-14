@@ -200,8 +200,8 @@ static void test_hangar(unsigned raum)
      * vorher Bogen bis y -1641 mit dem Sprung-Clip 0x16. */
     int gleit_n = 0, gleit_falsch = 0;
     /* Halten (Nutzer 2026-11-13 "struggled ... viel mehr ... bis er letztendlich tot ist"): erst HURT Clip 4 (@0x80114a44), dann
-     * DEATH Clip 9 (@0x80114ecc) B0..B5, danach haengt er tot in Clip 9 B5 bis zum Loslassen. */
-    int halt_weh = 0, halt_tod = 0, halt_clip = -1, halt_bild = -1;
+     * nachlassend HURT Clip 7 (@0x80114a68), dann DEATH Clip 9 (@0x80114ecc) B0..B5, danach haengt er tot in Clip 9 B5. */
+    int halt_weh = 0, halt_zuck = 0, halt_tod = 0, halt_clip = -1, halt_bild = -1;
     unsigned char fx_vorher[RE15_ESP_FX_MAX];
     re15_esp_fx_reset();
     for (int f = 0; f < 200 && ende < 0; f++) {
@@ -224,7 +224,7 @@ static void test_hangar(unsigned raum)
         if (sm_da) {
             if (-m->y > max_hoehe) max_hoehe = -m->y;
             if (ph == 5 && m->y == 0) sm_am_boden = 1;
-            if (ph == 3) { halt_clip = m->motion; halt_bild = m->anim_frame; if (m->motion == 4) halt_weh++; if (m->motion == 9) halt_tod++; }
+            if (ph == 3) { halt_clip = m->motion; halt_bild = m->anim_frame; if (m->motion == 4) halt_weh++; if (m->motion == 7) halt_zuck++; if (m->motion == 9) halt_tod++; }
             if (ph == 2) { gleit_n++; if (m->y < -245 || m->y > 0 || (m->motion != 0x17 && m->motion != 0x0E)) gleit_falsch++; }
             if (ph == 2 || (ph == 3 && ++griff_takte < 54)) {   /* Ansprung + Halten bis Video h66 (Wurf ab h66 ist schnell) */
                 double dx = m->x - mx, dy = m->y - my, dz = m->z - mz;
@@ -256,9 +256,9 @@ static void test_hangar(unsigned raum)
     for (int p = 1; p <= 7; p++) CHECK(ph_seen[p], "Phase %d nie erreicht", p);
     CHECK(max_hoehe > 2500, "Spider-Man nie hochgehalten (max %d)", max_hoehe);
     CHECK(sm_am_boden, "Spider-Man nie am Boden aufgeschlagen");
-    CHECK(halt_weh >= 10 && halt_tod >= 30 && halt_clip == 9 && halt_bild == 5,
-          "Halten: %d Takte HURT-Clip 4, %d Takte DEATH-Clip 9, letzter Haltetakt Clip %d B%d (Soll >= 10, >= 30, Clip 9 B5)",
-          halt_weh, halt_tod, halt_clip, halt_bild);
+    CHECK(halt_weh >= 20 && halt_zuck >= 5 && halt_tod >= 20 && halt_clip == 9 && halt_bild == 5,
+          "Halten: %d Takte Clip 4, %d Takte Clip 7, %d Takte Clip 9, letzter Haltetakt Clip %d B%d (Soll >= 20, >= 5, >= 20, Clip 9 B5)",
+          halt_weh, halt_zuck, halt_tod, halt_clip, halt_bild);
     CHECK(gleit_n >= 10 && gleit_falsch == 0, "Ansprung: %d von %d Takten hoeher als 245 ueber dem Boden oder nicht Clip 0x17/0x0E", gleit_falsch, gleit_n);
     CHECK(blut_art == 0, "gruenes Blut: %d Plaetze nicht Effekt 0 / Sub 8 / Skala 0x2000 / abr_port 0 (@0x80113b10/30)", blut_art);
     CHECK(blut_teil0 == 22 && blut_boden == 2 && blut_falsch == 0,

@@ -218,21 +218,27 @@ void re15_bf_morph_zu_g5(int slot)
  *   Clip 9 = DEATH Phase 0 bei +0x93 & 0x80: `andi v0,v0,0x80` @0x80114ec0, `ori v0,zero,0x9` @0x80114ecc / `sb v0,148(v1)`
  *     @0x80114ed0 (STAGE4 @0x80114d40/4c/50). B0..B5 sackt er aufrecht zusammen (Neigung 29 -> 17 Grad, Glieder sinken: Spitzen
  *     528 -> 667 unter der Schulter, B5 = tiefster Wert von B0..B19), ab B11 kippt er um (Neigung 20 -> 115 Grad, B30 liegt).
- *   Zeitplan (1 Clipbild je Takt): Treffer-Reaktion h12..h36, Tod ab BF_H_STIRBT = h37 (Video: die Bewegung faellt ab h37,
- *     h25-h36 1142 -> h37-h52 782; Sichtpruefung "deutlich schwaecher ab h36"), B0..B5 h37..h42, danach haengt er tot in B5 bis
- *     zum Wurf (Video h48-h70: senkrecht haengende Masse, Glieder nach unten). Ergebnis je Fenster: 1040 / 1030 / 663 / 437 /
- *     988 (Video 1378 / 1142 / 782 / 445 / 685; h63-h70 hoeher, weil Birkins Drehung h66-h72 die haengenden Glieder mitnimmt -
- *     Birkin dreht im Video nicht, unveraendert). Gemessene Gegenprobe: den ganzen Tod B0..B30 ab h25 (B30 = Clip 0x0B B0, der
- *     Wurf schloesse ohne Posensprung an) trifft die Fenster besser (1040 / 1196 / 832 / 403 / 671), liegt aber h55..h70
- *     waagerecht mit abstehenden Gliedern in der Hand (Sichtpruefung: "steif, nicht schlaff"; Video senkrecht) - verworfen.
- *     Wurf ab BF_H_LOS: Clip 9 B5 -> 0x0B B0 = 1250 Einheiten (vorher Clip 7 -> 0x0B B0 = 1039), die Ueberblendung von bf_clip
- *     (+0x8f = 7) laeuft wie bisher. Neue Treffer-Reaktion alle 5 bzw. 3 Takte (statt je Clip-Ende) gab h17-h24 1019 bzw. 912;
- *     von den beiden HURT-Clips bewegt Clip 4 am meisten um den Griffknochen (Bild-zu-Bild 161, Clip 7 45). */
+ *   Clip 7 = HURT bei +0x1dc: `ori v0,zero,0x7` @0x80114a68 / `sb v0,148(v1)` @0x80114a6c (STAGE4 @0x801148e8), 10 Bilder im Kreis,
+ *     Bild-zu-Bild 45 Einheiten = das schwaecher werdende Zucken.
+ *   Zeitplan (1 Clipbild je Takt), Nachbesserung 2026-11-14 (Pruefer Mangel 5 "Zappeln zu schwach, Tod zu frueh und schlagartig",
+ *     Koordinator: allmaehlich nachlassen, spaeter und langsamer sterben, gemessen wie der Pruefer: Anteil geaenderter Bildpunkte
+ *     je Schritt im Feld x 100..340, y 48..300 (640er), pruefung/skripte/bewegung_roi.py; Video h17-24 / 25-36 / 37-47 / 48-60 /
+ *     61-65: 17.7 / 12.7 / 8.4 / 5.4 / 4.5). Mit dem tieferen Griff (Rumpf jetzt unter dem Balken) misst der Port fuer Clip 4
+ *     h17-24 16.6 (94 %; vorher 9.2 = 52 % laut Pruefer, der Rumpf zappelte im Balken). Gemessene Varianten (Fenster 37-47 /
+ *     48-60 / 61-65, Summe der Abweichungen 17..65): Tod h37 schlagartig 12.7 / 6.7 / 12.1 (15.6); Clip 7 ab h37, Tod h44
+ *     10.3 / 9.7 / 12.1 (16.2); Tod h37 halbe Geschwindigkeit 14.3 / 6.7 / 12.1 (17.2); Clip 7 ab h40, Tod h50 halbe
+ *     Geschwindigkeit B0..B10 7.9 / 12.7 / 15.0 (20.7); Tod h52 mit 1/3 Geschwindigkeit 7.4 / 10.3 / 15.8. Jedes Sacken nach h48
+ *     bringt mehr Bewegung als das Video (dort ab h48 fast nur noch Blut). Gewaehlt: Clip 4 h12..h36, Clip 7 h37..h43
+ *     (Nachlassen), Tod Clip 9 B0..B5 h44..h49, danach haengt er tot in B5. h61-65 liegt bei jeder Variante bei ~12 (Blut-
+ *     Spritzer bis h64 und Birkins Pendel; ein Nachzucken nach dem Tod wuerde das Fenster weiter ueber das Video treiben).
+ *     Wurf ab BF_H_LOS: Clip 9 B5 -> 0x0B B0 = 1250 Einheiten (vorher Clip 7 -> 0x0B B0 = 1039), Ueberblendung von bf_clip. */
 #define BF_SM_WEH        4
 #define BF_SM_TOD        9
 #define BF_SM_TOD_SCHLAFF 5        /* Clip 9 B5: aufrecht zusammengesackt, Glieder am tiefsten (s. Kopf) */
 #define BF_SM_WEH_BILDER 10        /* Laenge von Clip 4 (EM2B Bank 0): neue Treffer-Reaktion bei jedem Clip-Ende */
-#define BF_H_STIRBT      37        /* Video: Bewegung faellt ab h37 (s. Kopf) */
+#define BF_SM_ZUCK       7         /* HURT bei +0x1dc (s. Kopf) */
+#define BF_H_ZUCKT       37        /* Video: Bewegung faellt ab h37 (h25-36 12.7 -> h37-47 8.4) */
+#define BF_H_STIRBT      44        /* Wahl nach der Messung oben */
 #define BF_SM_LIEGT      0x0B
 /* Griffpunkt am Spider-Man (PORT-WAHL nach Videomessung, Dossier SF_sichel.md N1.3): die Sichelhand haelt ihn am Bein -
  * EM2B-Knochen 20 (Knie der Beinkette 19-20-21 an der Wurzel; Clip 7 rel (859,-1045,-369): ~750 unter dem Becken, ~860 vor
@@ -1036,9 +1042,11 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
             m->y = (h >= BF_H_GLEIT_AB && h <= BF_H_GLEIT_BIS) ? BF_SM_GLEIT_Y : 0;
         }
     } else if (h < BF_H_LOS) {                                            /* gehalten bis zum Loslassen (NB2-Kopplung) */
-        if (h >= BF_H_STIRBT)                                             /* Tod: Clip 9 B0..B5, dann haengt er tot (Kopf BF_SM_WEH) */
+        if (h >= BF_H_STIRBT) {                                           /* Tod (Kopf BF_SM_WEH) */
             bf_bild(m, BF_SM_TOD, h - BF_H_STIRBT > BF_SM_TOD_SCHLAFF ? BF_SM_TOD_SCHLAFF : h - BF_H_STIRBT);
-        else if ((h - BF_H_BERUEHRUNG) % BF_SM_WEH_BILDER == 0) bf_clip(m, BF_SM_WEH);   /* neue Treffer-Reaktion */
+        } else if (h >= BF_H_ZUCKT) {                                     /* nachlassendes Zucken (Kopf BF_SM_WEH) */
+            if (h == BF_H_ZUCKT) bf_clip(m, BF_SM_ZUCK); else re15_r38_birkin_anim(m);
+        } else if ((h - BF_H_BERUEHRUNG) % BF_SM_WEH_BILDER == 0) bf_clip(m, BF_SM_WEH);   /* neue Treffer-Reaktion */
         else re15_r38_birkin_anim(m);
         s_h.wvor[0] = m->x; s_h.wvor[1] = m->y; s_h.wvor[2] = m->z;       /* Neuaufbau: Lage vor dem Takt (Handtempo) */
         m->rot_y = bf_blick(m, b->x, b->z);
