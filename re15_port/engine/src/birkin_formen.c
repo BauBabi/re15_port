@@ -448,8 +448,7 @@ static struct {
     int32_t  lx, lz;               /* Spider-Man: Aufschlagstelle */
     int32_t  ex, ez;               /* Spider-Man: Fluchtziel neben der Kamera */
     int32_t  w0[3], wv[3], wvor[3]; /* Neuaufbau ab NB2: Loslassen (Lage, Handtempo je Takt), Lage im Takt davor */
-    int32_t  heben0[3], heben1[3]; /* Heben h12 -> h16: Lage beim Fangen, vorausberechnete Lage am Griff bei h16 */
-} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
+} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
 static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_rs_kam_halt = 0;  /* Nachbesserung 4: Haltezeit nach einem Szenenschnitt */
@@ -708,6 +707,27 @@ static void bf_klauenziel(re15_actor_t *b, re15_actor_t *m, int32_t z[3])
     z[2] -= g[2] - m->z;
 }
 
+/* Heben h13..h16 (Kopf "Ansprung"): Aktorlage, in der der Griffknochen bei h16 auf der Sichelhand liegt, im Takt h vorausberechnet
+ * (nur Abfrage an Kopien). Birkin bei h16: Clip 0x0B Bild k_birkin_bild(h16), Gier k_birkin_gier(h16), Lage fest. Spider-Man bei
+ * h16: Halte-Clip 1 Bild je Takt weiter, Gier = Blick auf Birkin aus der Lage NACH Takt h15 (so rechnet der Takt h16:
+ * bf_blick vor bf_klauenziel) - die haengt selbst vom Ziel ab, daher drei Durchlaeufe. Im Takt h15 ist die Vorausberechnung
+ * damit genau die Lage, die der Takt h16 mit bf_klauenziel festsetzt (kein Korrektursprung bei h16). */
+static void bf_heben_ziel(const re15_actor_t *b, const re15_actor_t *m, int h, int32_t z[3])
+{
+    const int h16 = BF_H_BERUEHRUNG + 4;
+    re15_actor_t bb = *b, mm = *m;
+    bb.motion = BF_CLIP_GRIFF; bb.anim_frame = (uint8_t)bf_tab(k_birkin_bild, BF_BILD_N, h16);
+    bb.rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, 4, h16)) & 0x0fff);
+    mm.anim_frame = (uint8_t)(m->anim_frame + (h16 - h));
+    for (int it = 0; it < 3; it++) {
+        bf_klauenziel(&bb, &mm, z);
+        mm.x = m->x + (int32_t)((int64_t)(z[0] - m->x) * (h16 - h) / (h16 + 1 - h));   /* Lage nach Takt h15 */
+        mm.z = m->z + (int32_t)((int64_t)(z[2] - m->z) * (h16 - h) / (h16 + 1 - h));
+        mm.rot_y = bf_blick(&mm, b->x, b->z);
+    }
+    bf_klauenziel(&bb, &mm, z);
+}
+
 /* Runde 41 SF NB3: Videopunkt (640x480; Registrierung der Abnahme 1: x_v = 2 x_psx + 1,97, y_v = 2,079 y_psx + 1,3) ->
  * Weltpunkt durch die Szenenkamera (Umkehrung von bf_punkt_im_bild). art 0 = Boden (y = -100, Schwanzradius), 1 = Blicktiefe
  * der Birkin-Wurzel (Hoehe -1000) + tiefe, 2 = hinter dem Koerper (Modellraum (-1500,-150,200)). */
@@ -951,27 +971,20 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         m->rot_y = bf_blick(m, b->x, b->z);
         bf_klauenziel(b, m, k);
         /* Heben h13..h16 (Kopf "Ansprung", Video Rumpf y 122 -> 73, je Bild 9..13 Bildpunkte): geradlinig und gleich schnell
-         * von der Lage beim Fangen (h12) zur Lage, in der der Griffknochen bei h16 auf der Sichelhand liegt (bei h12 aus Birkins
-         * Bild bei h16, k_birkin_bild, vorausberechnet); ab dem 4. Haltetakt (Video h16) haengt der Griffknochen JEDEN Takt genau
+         * von der Lage beim Fangen (h12) zur Lage, in der der Griffknochen bei h16 auf der Sichelhand liegt (je Takt neu
+         * vorausberechnet, bf_heben_ziel; die einmalige Vorausberechnung bei h12 lag 228 daneben -> Knick 10 Grad und Schritt 683
+         * bei h16, jetzt 4 x 665 ohne Knick); ab dem 4. Haltetakt (Video h16) haengt der Griffknochen JEDEN Takt genau
          * auf der Sichelhand (Runde 41 SF Neuaufbau ab NB2, Nutzer 2026-11-03: Fangen und Wurf "vollkommen asynchron").
          * Vorher zog ein geglaetteter Schritt (halber Abstand, hoechstens 600 je Takt) ihn ab h12 heran - von der neuen Fanglage
          * am Boden aus waere er bei h16 noch ~300 von der Hand entfernt gewesen und dann gesprungen; ein Bruchteil der Strecke
          * zur mitsteigenden Hand (Laeufe T2 v1/v2) hob immer schneller (421 .. 953 je Takt, Bild h13/h14 noch unten). */
-        if (h == BF_H_HEBEN_AB) {                                         /* Endlage des Hebens vorausberechnen */
-            re15_actor_t bb = *b, mm = *m;                                /* Kopien: nur Abfrage, keine Zustandsaenderung */
-            const int h16 = BF_H_BERUEHRUNG + 4;
-            bb.motion = BF_CLIP_GRIFF; bb.anim_frame = (uint8_t)bf_tab(k_birkin_bild, BF_BILD_N, h16);   /* Birkin-Bild bei h16 */
-            bb.rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, 4, h16)) & 0x0fff);
-            mm.anim_frame = (uint8_t)(m->anim_frame + (h16 - h));        /* Halte-Clip laeuft 1 Bild je Takt weiter */
-            s_h.heben0[0] = m->x; s_h.heben0[1] = m->y; s_h.heben0[2] = m->z;
-            bf_klauenziel(&bb, &mm, s_h.heben1);
-        }
-        if (h > BF_H_HEBEN_AB) {
-            const int32_t w = (h - BF_H_HEBEN_AB) * 4096 / (BF_H_BERUEHRUNG + 4 - BF_H_HEBEN_AB);
-            m->x = bf_mix(s_h.heben0[0], s_h.heben1[0], w); m->y = bf_mix(s_h.heben0[1], s_h.heben1[1], w);
-            m->z = bf_mix(s_h.heben0[2], s_h.heben1[2], w);
-            if (h >= BF_H_BERUEHRUNG + 4) { m->x = k[0]; m->y = k[1]; m->z = k[2]; }
-        }
+        if (h > BF_H_HEBEN_AB && h < BF_H_BERUEHRUNG + 4) {              /* je Takt: Lage am Griff bei h16 neu vorausberechnen */
+            int32_t z[3];
+            bf_heben_ziel(b, m, h, z);
+            m->x += (z[0] - m->x) / (BF_H_BERUEHRUNG + 5 - h);          /* 1/4, 1/3, 1/2 der Reststrecke bei h13, h14, h15 */
+            m->y += (z[1] - m->y) / (BF_H_BERUEHRUNG + 5 - h);
+            m->z += (z[2] - m->z) / (BF_H_BERUEHRUNG + 5 - h);
+        } else if (h >= BF_H_BERUEHRUNG + 4) { m->x = k[0]; m->y = k[1]; m->z = k[2]; }
         if (m->y > 0) m->y = 0;                                           /* Hand tief im Wurf: nicht unter den Boden */
     } else if (h < BF_H_WEG) {                                            /* Neuaufbau ab NB2: passiv geworfen (Kopf k_wurf_bahn) */
         const int hb = h + BF_BILD_VERSATZ;
