@@ -4973,3 +4973,109 @@ K2 ist naeher (0,234 gegen 0,357 / alt 0,336); K1b liest sich im Pruefbild als s
    eine andere Texelzone - beides waere eine Eichung an der Vorlage (E4) und ist nicht gemacht.
 2. Grenze grau/rot spaeter als in der Vorlage (siehe (3)); der Kastenfinger ist nach V7 Hand, nicht Finger.
 3. Unveraendert aus Runde 7: S9, S14, S16, S18, S19 ROT; S3 GELB (Erbe); Krallenform (drei Spitzen statt Faeustling), Daumenwinkel.
+
+## V8 Runde 8 - Schwanz flach, Glieder, Skorpionstachel, Fleisch nur Bauchseite (Bauer Asset, Zweig r41/sichel_v8, 2026-11-14)
+
+Kein RE-Befund: die Sichel-Form und ihr Schwanz stehen auf keiner Disc; jede Zahl ist PORT-WAHL (Auftrag, Analyse, Messung), keine @0x-Adresse.
+Textur nur Original-EM30-Texel mit den Original-Zeilen bzw. die Oberseiten-Texel des Stands 7e; keine neue CLUT-Zeile, keine Eichung am Video.
+Belege: analysis/befunde_runde41/SF_belege/v8/runde8/ (notiz.txt fortlaufend). Commits 6cf418dd8, 46d259880, b508e12db (Werkzeuge), 14bba8783
+(Asset, Pin, Unit-Test), danach Belege/Tafeln.
+
+### Auftrag (Nutzer 2026-11-14, woertlich)
+"weder mit dem rot der Schwanzfarbe noch mit dem etwas zu steifen grossen Schwanz zufrieden" + Version_80%/Areas*.png (Umriss rot,
+Gliedfugen gruen, Skorpionspitze Areas_Tip.png). Grundlage: Analyse scratchpad/schwanz_v8/analyse/ANALYSE.md, Bauplan Schritte 1, 2, 4
+(Asset); Schritte 3, 5, 6 (Rolle, Bahn, Biegsamkeit) macht der Code-Bauer.
+
+### Stufe q (re15_port/tools/r41_sichel/v8/schwanz_r8.py + schwanz_r8.json; v8_kette.sh --stufen srwaunhbpfq, SCHWANZFARBE a/b/c)
+- Nur Meshes 16-22 neu (Ecken, Normalen, Flaechen, UV-/CLUT-Felder). Skelett, Clips, Keyframes, Gliedlaengen 541, Texturbild, 16 CLUT-Zeilen,
+  Meshes 0-15 (Mesh 9 = V7-Kopf) bytegleich zu 07b6703f (Riegel R8f).
+- Querschnitt: Ellipse, Hochachse = Bauchachse e_h (innen_phi 26,4 Grad) mit dem V8-Profil, Querdicke 270 E. (Bauplan 1: 260-280).
+  Wurzelring an der Haut nur zu 0,6 abgeflacht, Ring D von Glied 16 zu 0,15 (ganz flach: Rumpf 56 px ueber der Schwanz-Oberkante an der
+  Naht J, Riegel S2c; Nutzer "Tail directly smooth into the back"; Versuche in runde8/versuche.txt).
+- Schwanzmitte: Hochachse an Gelenk 3 / 4 x 0,86 / 0,78 -> PV s .5 33,5 -> 27,0 px (-19,4 %; Messziel Bauplan 2 23,5 +- 4).
+- Fugen: Einschnuerung 0,85 an allen 6 Gelenken (voller Querschnitt 65 E. vor/hinter dem Gelenk), Manschette und Deckel wie bisher.
+- Glied 22 = Stachel: Kerbe -> Knolle Radius 135 (D 270, Auftrag 260-280) -> Verjuengung -> Nadel bis y 1139 = 550 E. ueber das heutige Ende
+  (Auftrag 450-550), auf der Gliedachse (sw_mesh_mass nimmt sie als Dornspitze).
+- Farbe: Fleisch nur im Bauchsektor |theta| <= 90 (Wurzel) .. 60 Grad (Spitze), Ruecken/Flanken Zeile 487 auf den Oberseiten-Texeln des
+  Eingangs, Nadel grau. Probe a "gedeckt" = Original-Zeile 482 (Asset 495) u 21-37 v 118-124 (L* 26,8 C* 20,3; die hellere, weniger satte
+  Partie des Original-Unterarm-Fleischs), b = a + helles Band in jeder Fuge (Original-Zeile 481 = Asset 494, Seite 1, u 36-44 v 28-41,
+  L* 74,1 C* 5,5), c = heutiger Ton (u 4-37 v 96-106, L* 18,2 C* 28,4) nur auf der Bauchseite + Baender. Standard b (Bauplan 2 verlangt das
+  helle Band an jeder Fuge). Felder aus "suche" (runde8/suche.txt), Texel bytegleich Original und von Original-Flaechen der Zeile benutzt.
+
+### Stand
+- **Asset** re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD, 280 612 Bytes, sha256
+  **4cf282427d345d47d35dd471d2fd26dc5ccca46420a5737d68e3635465b52d7d** (Farbprobe b) = Pin release/em30_hangar.sha256 (Commit 14bba8783).
+- **Kette** v8_kette.sh zweimal (runde8/kette_lauf1.txt, kette_lauf2.txt): "V8-KETTE-OK sha256 4cf28242...", Lauf 1 = Lauf 2 bytegleich.
+- **Farbproben** (Kette mit SCHWANZFARBE a / c; nicht Spiel-Asset, Scratch sfv8/r8/proben/): a e5bcda60..., c aea9bb65...
+- Bau re15_port/build_r8 (local_build.sh, RE15_BUILD_DIR, 2 Jobs); Engine-Quelltext unveraendert gegen 7e.
+
+### Messung (Messziele aus Auftrag / Analyse; runde8/rollreihe_pv.txt, r8_*.txt)
+| Ziel | vorher 07b6703f | neu 4cf28242 | Soll |
+|---|---|---|---|
+| vorn (Rollreihe, Bauch zur Kamera) s .3/.5/.7 h22 | 45 / 40 / 25 | 16 / 16,5 / 15,5 | 15-20, Vorhersage 18 / 18,5 / 17,5 +- 4 |
+| vorn h24 | 45,5 / 41 / 25,5 | 16 / 16,5 / 17 | 15-20 |
+| vorn h64 | 44 / 40,5 / 25 | 15,5 / 15,5 / 16,5 | 15-20 |
+| vorn s .1 (Wurzelglied) / s .9 (Knolle) h22-h64 | 50-51,5 / 11,5-12,5 | 22,5-26,5 / 15,5-17 | Angabe (Video 14,5-22 / 13-18) |
+| PV (f_rast, Keyframe-Rolle) s .3 | 41,5 | 39 | >= 36 |
+| PV s .5 | 33,5 | 27,0 (-19,4 %) | 15-20 % duenner; Umriss 23,5 +- 4 |
+| PV s .7 / s .9 | 19,5 / 7,5 | 18,5 / 13,5 | Umriss 18,5 / 15 +- 4 |
+| PV Bildlaenge | 159,3 px | 178,7 px | ~190 (mit 450-550 E. Nadel nicht erreichbar) |
+| PV Spitze | (285,9 / 327,6) | (286,8 / 347,0) | (286-289, 349-356): 2,0 px daneben |
+| Fugen: Einschnuerung je Gelenk (Hochachse / Huellradius) | - | 0,83-0,86 | ~0,85 |
+| Fugen von vorn schmaler an den Gelenken (Mittel h22/h24/h64) | -0,4 / -0,65 / -0,4 | 2,7 / 2,6 / 1,5 px | sichtbar (>= 1) |
+| Fleisch bei Normalen-theta >= 100 (PV) | 36,2 % | 0,0 % | 0 |
+
+### Riegel
+- **Voll-Riegel** riegel_v8.py mit denselben Optionen wie 7e, dazu --szene (debug.log des Szenenlaufs) und --farbe b (werkzeug/riegel_alle_r8.sh,
+  RE15_RIEGEL_JOBS=2): **"SUMME: 18 von 24 gruen; GELB: S3; ROT: S9, S14, S16, S18, S19"** = 7e (runde8/riegel_v8r8.txt). S5 Gesicht gruen
+  (Mesh 9, Zeile 486, 6501 Texel = V7). Gegen 7e anders nur: S1 2,5 / 6,0 (7e 2,3 / 6,0), S2 (a) 2,2 / 6, (b) 1,9 bei x 336, (c) 2 in allen
+  7 Varianten (7e 2,2 / 5, 1,7, 2; Angabe ohne Culling 13 statt 4), S4/S6/S15 nach den Regeln der Runde 8 (unten), S6 mit Szene.
+  Alle uebrigen Zeilen (S7-S14, S16-S21, S9s/S10s/S14s) bis auf die sha256 gleich wie 7e.
+- **Regeln der Runde 8** (riegel_v8.py Kopf; nur fuer ein Asset mit Nadel, Staende ohne Nadel wie bisher):
+  S4: Wurzel 55,5 (>= 55), monoton, Ende 4,2, s 170-200 >= 9 und R8b - die alte Regel "s 90-130 >= 36 / s 140-160 >= 27" (Messblatt V8,
+  Linie T) waere ROT (37,1 / 34,0 / 31,3 und 25,0 / 23,0): sie widerspricht dem Auftrag "Schwanzmitte (s .5) 15-20 % duenner" und dem
+  Nutzer-Umriss Areas.png auf demselben Bild n1439 (s .5 23,5, s .7 18,5). S6: Keyframes mit Spitze + Knollen-Ende 0 von 912; Nadel
+  offline 213 von 912 unter der Sohle (Angabe); Szene: Gelenke tiefstes y -139, Nadelspitze -11,3, Gelenkwinkel max 25,2 (7e 25,2) -> GRUEN.
+  S15 = R8e (die Regeln der Runden 5/6 - Fleisch bis theta 110/120 - widersprechen dem neuen Auftrag "Fleisch nur auf der Bauchseite").
+- **Schwanz-Riegel R8a-R8f** (riegel_schwanz_r8.py; runde8/r8_a.txt, r8_b.txt, r8_c.txt): je **6 von 6 gruen**; **Gegenprobe 07b6703f**
+  (r8_gegenprobe_07b6703f.txt): 1 von 6, **ROT R8a, R8b, R8c, R8d, R8e** (R8f bytegleich - am Eingang selbst trivial gruen).
+- Teil-Riegel riegel_r7c.py NEU: Urteile wie 7e (S3 GELB Erbe, S9/S16/S18 ROT, S21 GRUEN); einzige Zahl anders: S18 (b) helle Punkte F344
+  7 statt 4 (GELB-Liste, Urteil unveraendert).
+
+### Tests (runde8/ctest_gruppe.txt, test_formen_gegenprobe_07b6703f.txt)
+- ctest-Gruppe (unit_birkin_ai/formen/bahnsteig/szenen/opfer, unit_schwanz_r41, integration_r41_birkin_pistole, integration_r41_sichel_form)
+  am Asset 4cf28242, -j 1: **"100% tests passed, 0 tests failed out of 8"**, 304,9 s.
+- test_birkin_formen.c (Schwanzglieder nach Runde 8: Ecken, Flaechen je Zeile 495/494/487, Textur-Seiten, flach, Nadelspitze y 1139,
+  Knolle <= 136): am Asset 4cf28242 OK; Gegenprobe 07b6703f 20 FAIL.
+
+### Spiel (runde8/notiz.txt [8], szene_kette_7e_r8.txt)
+- Szenenlauf Hangar 50A0 (lauf_v4.sh, Spiel-Asset, FD 200-1100): EXIT=0, 901 Bilder, **state.log bytegleich V7 / 7e** (e48e1cad...).
+- Die Schwanzkette der Szene ist in 70 von 144 Takten anders als in 7e (bis ~630 E.; h17-h18, h31-h61, h69-h70): die Bodenregel des Codes
+  (schwanz_r41.c glaetten, Dorn = groesste Ecke von Mesh 22 = Nadelspitze 1139 statt 589) hebt die Kette frueher. Tiefste Nadelspitze y -11
+  (Boden 0). Das ist Folge des Assets im unveraenderten Code und Sache der Bahn (Bauplan 5).
+- Farbproben a / c als Overlay-Laeufe (FD 255-320), Marker LM/KO/MK_A/MK_B/GR aus 4cf28242; alle EXIT=0.
+
+### Tafeln (SF_belege/v8; selbst angesehen)
+- 20_schwanz_r8.png: Nutzerbild (Areas4 h22, Areas2 h24, Areas3 h64, Areas h90) | V8 vorher (Framedump 7e bzw. PV offline) | neu.
+  Von vorn ist die breite rote Klinge weg: ein schmaler Schwanz (15-17 px an s .3-.7) mit hellen Querbaendern und duenner Nadel; in PV
+  die graue Flanke mit roter Innenkante, Mitte schmaler, Knolle mit Nadel. Die Bahn (Lage im Bild) ist unveraendert die des Codes.
+- 21_schwanz_farbe_r8.png: vorher | a | b | c in h22, h64 (Spiel) und PV (offline).
+- Was zu sehen ist / Abweichungen: (1) In den Vorderansichten zeigt die geerbte Keyframe-Rolle die Bauchseite zur Kamera - der Schwanz
+  ist dort vor allem rot(-braun) mit Baendern; a und c sind im Spiellicht nah beieinander (farbe_spiel.txt: a L* 22-23 C* 17-21, c L* 18-21
+  C* 16-23). (2) Die Baender sind fast weiss und hart begrenzt. (3) Das Wurzelglied ist von vorn noch 22-27 px breit (S2-Kompromiss).
+  (4) Die Nadel ist 1-3 px breit und verschwindet in manchen Ansichten zwischen den Bildpunkten; in PV (Zeile Spitze, 4x) ist sie nur ein
+  kurzer Stummel, weil die Glied-22-Achse dort stark verkuerzt ist - die Nadel des Nutzers (Areas_Tip, ~20 px) ist viel deutlicher.
+
+### Fuer den Code-Bauer (Bauplan 3/5/6)
+Siehe runde8/notiz.txt "Fuer den Code-Bauer": Bauchachse e_h je Knochen (0,896, 0, 0,445), Bauch in +e_h, aus den Flaechen auf 495/494
+messbar; Querhalbachse <= 135; Gliedlaengen 541 und Knochen unveraendert; sw_mesh_mass radius[6] 136, dorn_y 1139 -> Kette hebt sich in
+der Szene frueher; Fugen 65 E. um jedes Gelenk, bei Knicken > 25 Grad Spaltenmass pruefen; Wurzelglied von vorn noch breit.
+
+### Offen
+1. Rolle (Bauplan 3): ohne gefuehrte Rolle zeigen h18-h28 laut Analyse 25-40 px; erst mit "Bauch zur Kamera" 15-17 px.
+2. Laenge PV 178,7 statt ~190 px und Spitze 2 px ueber dem Zielkasten: mit der Nadel 450-550 E. entlang der Glied-22-Achse (in PV stark
+   verkuerzt, 35 px je 1000 E.) nicht erreichbar; der Rest liegt laut Analyse an der Wurzel (Bogen beginnt im Video 15-20 px hoeher).
+3. "Gedeckt" ist im Spiellicht nur wenig gedeckter als der heutige Ton. Gedeckter ginge mit Original-Texeln einer anderen Zeile
+   (Original-Zeile 481, Seite 1 u 40-55 v 0-8 / v 48-56: L* 30-35, C* ~15, Farbton 37-39 = braeunlich) - als weitere Probe moeglich.
+4. Nadel offline in 213 von 912 Keyframes unter der Sohle (im Spiel hebt die Bodenregel); Wurzelring in PV nur 3,7 E. unter der Haut an
+   einer Ecke (S10/S10s gruen).

@@ -1,0 +1,6 @@
+Bauchfarbe im echten Spielbild (m9_farbe_spiel.py; Bauch = Bildpunkte, in denen sich Probe a und c unterscheiden; Angabe, keine Eichung)
+Video vorn zum Vergleich der Richtung (ANALYSE.md 2b): L* 24-37, C* 11-20, h 16-28
+F265 Bauch-Bildpunkte 5803 (Band-Bildpunkte a!=b 1716): a L* 22.2 C* 20.6 h 24 | b L* 25.4 C* 19.1 h 24 | c L* 20.9 C* 22.7 h 27
+F267 Bauch-Bildpunkte 6530 (Band-Bildpunkte a!=b 1956): a L* 22.6 C* 20.6 h 24 | b L* 25.4 C* 17.3 h 24 | c L* 19.4 C* 21.8 h 27
+F307 Bauch-Bildpunkte 4402 (Band-Bildpunkte a!=b 1211): a L* 23.4 C* 19.7 h 23 | b L* 26.2 C* 19.1 h 24 | c L* 17.6 C* 22.1 h 27
+F313 Bauch-Bildpunkte 1618 (Band-Bildpunkte a!=b 594): a L* 23.1 C* 17.3 h 23 | b L* 25.0 C* 10.6 h 23 | c L* 20.9 C* 15.6 h 27
