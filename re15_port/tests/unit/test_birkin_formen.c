@@ -22,7 +22,7 @@
  * Mesh 8 haengen 4 Ergaenzungsdreiecke d77-d80 = die Haelften (0,1,3) / (0,3,2) der Vierecke v8 und v17 mit gleichen Ecken, Normalen,
  * Texeln und Zeile (Entscheid E11: der Port verwirft ein verdrehtes Viereck nach dem Testdreieck, engine/src/nclip_r38.c). Zeilen 493/494
  * 60/48 Flaechen, 31 EM30-Flaechen mit anderer UV (Runde 6b 29; neu d48 v2 v15 v17 v18 aus der UV-Mitfuehrung von R3, wieder Original
- * d26 d66 v4 durch den UV-Rueckbau auf r4). Gemessen am Asset 0c307f80 (sfv8/r7c/w,
+ * d26 d66 v4 durch den UV-Rueckbau auf r4). Gemessen am Asset 0c307f80 und 5c902d49 (sfv8/r7c/w,
  * Abschnitt "Unit-Test" der NOTIZ). Gegenprobe Stand 7b 87b02681: rot (87 Dreiecke, 76 Ecken, Nackenstueck).
  * V8 Runde 6b (P5-neu / P4-neu nach Pruefung V8 r5d "Kragen", "graue Reifen"; gemessen am Asset 95a783a6, sfv8/r6b pins.py / pins2.py,
  * Ausgabe sfv8/r6c/pins.out; erster Stand der Runde 6b 382bbfe7: Mesh 16 noch 20 Flaechen auf 495, sonst gleiche Zahlen):
