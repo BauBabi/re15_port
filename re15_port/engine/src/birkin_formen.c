@@ -371,7 +371,7 @@ static const int16_t k_birkin_bild[BF_BILD_N][2] = {
  * BF_H_LOS = 73 = Bild 71 mitten im Abschwung (B41) mit dem Tempo der Hand. GESTALTUNG nach dem Video. */
 /* Schritt 4 (Zeitversatz: Takt h = Bild h): derselbe Bildablauf wie Schritt 2 mit den NB2-Takten - Wurfbild B44 Takt/Bild 72,
  * Loslassen Takt/Bild 71 (B41). */
-#define BF_H_LOS        (BF_H_WURF - 1)
+#define BF_H_LOS        70          /* Runde 3 N7: Video h70 haengt er zuletzt still (Mitte (262,172)), ab h71 fliegt er (k_wurf_luft) */
 /* Birkin-Gier relativ zum Blick auf den Spider-Man-Start (Q12, 4096 = 360 Grad). Gestaltung nach dem Video: Birkin steht
  * zur Kamera gedreht (die haltende rechte Klaue liegt dann links im Bild, Gier 1300 = Bezug - 1270,
  * Video Rumpf x 110..145 bis h70), dreht h66..72 nach links und schmettert in Richtung des Ansprungs (Klaue B50 bei Gier
@@ -522,8 +522,9 @@ static struct {
     int32_t  lx, lz;               /* Spider-Man: Aufschlagstelle */
     int32_t  ex, ez;               /* Spider-Man: Fluchtziel neben der Kamera */
     int32_t  w0[3], wv[3], wvor[3]; /* Neuaufbau ab NB2: Loslassen (Lage, Handtempo je Takt), Lage im Takt davor */
+    int32_t  wtiefe;               /* Runde 3 N7: Blicktiefe beim Loslassen (k_wurf_luft) */
     int32_t  kvor[3];              /* Griff-Lage im Takt davor (Glaettung der paarweisen Hand-Stufen, N4) */
-} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } };
+} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, 0, { 0, 0, 0 } };
 static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_rs_kam_halt = 0;  /* Nachbesserung 4: Haltezeit nach einem Szenenschnitt */
@@ -988,6 +989,18 @@ static void bf_gruenes_blut(re15_actor_t *b, re15_actor_t *m, int h)
  * Aufspringens bei x 311 (Video h79, Messung flucht6.py, Kopf BF_H_AUFSPRINGEN), y 420 (Port-Rahmen endet bei 431) - mit (250,400)
  * sprang er h80 -> h81 vom Boden auf Blicktiefe 4600 (Sichtpruefung "von flach am Boden zu riesig am rechten Rand"); ab h81 wie
  * bisher. */
+/* Runde 3 (Pruefer Runde 2 N7 "Wurf ohne Ausholen": Port-Oberkante h70 99 -> h71 123 -> h72 109 -> h73 184, er sackt ab; Video
+ * h70 113 -> h71 90 -> h72 87 -> h73 159 -> h74 254, erst gehoben, dann hinuntergeschmettert). Video (Augen-Agent, Pixelmessung
+ * 640x480, Mitte des Spider-Man): h70 (262,172) haengt still, h71 (245,165) links hoch geschleudert, h72 (210,150) am hoechsten
+ * (Oberkante 56..60), h73 (215,240) faellt, h74 (215,330); h75..h78 liegt er vorn. Birkin schwingt den Arm dabei links herab (Kopf
+ * k_birkin_beuge). Jetzt: Loslassen h70 (BF_H_LOS) an der Hand (Haltung bleibt in diesem Takt), h71..h74 Punkte auf dem Sehstrahl
+ * in der Blicktiefe des Loslassens (h70 7586), je Takt ohne Vorlauf, Gier bleibt (im Fall kaum Seitenweg; vorher drehte bf_gier_zu
+ * ihn je Takt um bis zu 512 und aenderte den Umriss). Punkt zuerst Video-Mitte minus Abstand Mitte -> Aktorpunkt der Rueckenlage
+ * (Clip 0x0B B2/B4/B6/B8: (0,-22) / (0,-15) / (0,-8) / (0,-3), Mesh-Rechnung smgeo.py), dann in zwei Laeufen an der Pruefer-Maske
+ * (pmask.py: Oberkante y05, Mitte cx) nachgestellt: Lauf n2b Oberkante h71..h74 59 / 53 / 148 / 210, cx 272 / 248 / 246 / 236;
+ * jetzt (n2c) 78 / 64 / 154 / 211, cx 258 / 221 / 218 / 231; Video 90 / 87 / 158 / 254, cx 252 / 219 / 211 / 223. Ab h75 die
+ * Bodenbahn wie bisher. Vorher quadratisch vom Loslassen (h71) zum Bodenpunkt h76 mit dem Handtempo als Anfangsrichtung. */
+static const int16_t k_wurf_luft[][3] = { { 71, 243, 243 }, { 72, 199, 199 }, { 73, 198, 258 }, { 74, 220, 407 } };
 static const int16_t k_wurf_bahn[][4] = { { 76, 245, 400, 0 }, { 78, 215, 405, 0 }, { 80, 311, 420, 0 },
                                           { 81, 370, 450, 4600 }, { 82, 450, 380, 3800 }, { 83, 560, 340, 3200 }, { 84, 640, 290, 2500 },
                                           { 85, 720, 290, 2200 }, { 86, 820, 320, 2000 }, { 87, 940, 330, 1900 } };
@@ -1002,6 +1015,15 @@ static int16_t bf_gier_zu(int16_t ist, int16_t soll)
     if (d > BF_WURF_DREH) d = BF_WURF_DREH;
     if (d < -BF_WURF_DREH) d = -BF_WURF_DREH;
     return (int16_t)((ist + d) & 0x0fff);
+}
+
+/* Blicktiefe (Kameraraum z) eines Weltpunkts in der Szenenkamera, wie bf_punkt_im_bild. */
+static int32_t bf_blicktiefe(int32_t x, int32_t y, int32_t z)
+{
+    const re15_camera_cut_t *c = bf_szenenkamera();
+    re15_camera_view_t v;
+    if (!c || re15_camera_build_view(c, &v) != 0) return 0;
+    return (int32_t)((((int64_t)v.rot[6] * x + (int64_t)v.rot[7] * y + (int64_t)v.rot[8] * z) >> 12) + v.trans[2]);
 }
 
 static int bf_wurf_punkt(const re15_actor_t *b, int i, int32_t out[3])
@@ -1131,24 +1153,16 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     } else if (h < BF_H_WEG) {                                            /* Neuaufbau ab NB2: passiv geworfen (Kopf k_wurf_bahn) */
         const int hb = h + BF_BILD_VERSATZ;
         int32_t p[3], z[3];
-        if (h == BF_H_LOS) {                                              /* Loslassen im Abschwung mit dem Tempo der Hand */
+        if (h == BF_H_LOS) {                                              /* Loslassen an der Hand (Kopf k_wurf_luft) */
             s_h.w0[0] = m->x; s_h.w0[1] = m->y; s_h.w0[2] = m->z;
-            for (int k_ = 0; k_ < 3; k_++) s_h.wv[k_] = s_h.w0[k_] - s_h.wvor[k_];
-            bf_clip(m, BF_SM_LIEGT);
-        }
-        bf_bild(m, BF_SM_LIEGT, (h - BF_H_LOS) * 2 > 30 ? 30 : (h - BF_H_LOS) * 2);   /* Rueckenlage, Glieder schlaff */
-        if (hb < k_wurf_bahn[0][0]) {                                     /* Flug vom Loslassen zum Boden: quadratisch */
-            const int h0 = BF_H_LOS + BF_BILD_VERSATZ, n_ = k_wurf_bahn[0][0] - h0;
-            if (bf_wurf_punkt(b, 0, z)) {
-                const int32_t u = (hb + 1 - h0) * 4096 / n_;             /* Takt h wird im Bild hb gezeichnet: Stand fuer hb+1 */
-                for (int k_ = 0; k_ < 3; k_++) {
-                    const int32_t c_ = s_h.w0[k_] + s_h.wv[k_] * n_ / 2;  /* Kontrollpunkt: Anfangsrichtung = Handtempo */
-                    const int32_t a_ = bf_mix(s_h.w0[k_], c_, u), e_ = bf_mix(c_, z[k_], u);
-                    p[k_] = bf_mix(a_, e_, u);
-                }
+            s_h.wtiefe = bf_blicktiefe(m->x, m->y, m->z);                 /* Video h70: haengt noch (Haltung bleibt) */
+        } else bf_bild(m, BF_SM_LIEGT, (h - BF_H_LOS) * 2 > 30 ? 30 : (h - BF_H_LOS) * 2);   /* Rueckenlage, Glieder schlaff */
+        if (hb <= k_wurf_luft[BF_N(k_wurf_luft) - 1][0]) {               /* geschleudert und fallend (Kopf k_wurf_luft) */
+            for (int i = 0; i < BF_N(k_wurf_luft); i++) {
+                const bf_schwanzpunkt_t q = { 0, k_wurf_luft[i][1], k_wurf_luft[i][2], 3, (int16_t)s_h.wtiefe };
+                if (k_wurf_luft[i][0] != hb || s_h.wtiefe <= 0 || !bf_video_welt(&q, b, p)) continue;
                 if (p[1] > 0) p[1] = 0;
-                if (p[0] != m->x || p[2] != m->z) m->rot_y = bf_gier_zu(m->rot_y, bf_blick(m, p[0], p[2]));
-                m->x = p[0]; m->y = p[1]; m->z = p[2];
+                m->x = p[0]; m->y = p[1]; m->z = p[2];                    /* Gier bleibt: im Fall kaum Seitenweg */
             }
         } else {                                                          /* am Boden und an der Kamera vorbei */
             int i = 0;
