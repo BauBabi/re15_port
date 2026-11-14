@@ -635,7 +635,8 @@ static struct {
     int32_t  kvor[3];              /* Griff-Lage im Takt davor (Glaettung der paarweisen Hand-Stufen, N4) */
     int32_t  kalt[3];              /* Runde 4 Punkt 5: Griff-Lage vor dem Wiedereinstieg B28 -> B10 */
     int      halt_wechsel;         /* Takt des letzten Wiedereinstiegs (0 = keiner) */
-} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, 0, { 0, 0, 0 }, { 0, 0, 0 }, 0 };
+    int16_t  sprung_gier0, sprung_gier1;   /* Runde 5 M2: Gier beim Aufspringen und Gesamtrichtung des Sprungs */
+} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, 0, { 0, 0, 0 }, { 0, 0, 0 }, 0, 0, 0 };
 static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_rs_kam_halt = 0;  /* Nachbesserung 4: Haltezeit nach einem Szenenschnitt */
@@ -1150,8 +1151,14 @@ static const int16_t k_wurf_luft[][3] = { { 73, 198, 258 }, { 74, 220, 407 } };
  * liegenden Ecken und die Oberkante dem Video gleichen (flucht6.py: Schwerpunkt x h81..h86 345 406 495 544 584 606, Oberkante
  * h82..h85 196 196 111 120) und keine Ecke naeher als 1500 liegt: Mitte 348 395 500 542 570 606, Oberkante 167 188 183 116 175,
  * naechste Tiefe 1947 / 2487 / 1773 / 2012 / 2623 / 2623. */
-static const int16_t k_wurf_bahn[][4] = { { 76, 245, 400, 0 }, { 78, 215, 405, 0 }, { 80, 311, 420, 0 },
-                                          { 81, 370, 450, 4600 }, { 82, 380, 330, 3750 }, { 83, 440, 330, 4250 }, { 84, 580, 370, 3500 },
+/* Runde 5 (Pruefer Runde 4 M2 "Aufsprung h80->h81 als Pop: aus der flach liegenden, unten halb verdeckten Figur wird in einem Bild
+ * eine grosse ausgebreitete Figur, Bildaenderung h81 19.1 % / h82 18.5 % gegen 8.5 / 8.3 im Video; im Video steigt das Bein h79..h81
+ * allmaehlich"): die Zwischenpunkte h80 (311,420, Boden) und h81 (370,450, Tiefe 4600 = unter dem unteren Bildrand) entfallen; der
+ * Spider-Man steigt jetzt in Weltlage gleichmaessig vom Bodenpunkt h78 zum Punkt h82 (Bilder h77..h81, Vorlauf 1). Die Punkte h82/h83
+ * (Bild h81/h82) lagen mit Tiefe 3750/4250 viel zu nah (Flaeche gerastert 58702 / 46656 Bildpunkte, Video-Orange h82 13011 laut
+ * flucht6.py): jetzt Tiefe 7000 und Bildpunkt so, dass die Mitte der Flaeche dem Video gleicht (h81 340 / Video 345, h82 407 / 406),
+ * Flaeche 13816 / 13812 (Rechnung wie r4/vordergrund.py). */
+static const int16_t k_wurf_bahn[][4] = { { 76, 245, 400, 0 }, { 78, 215, 405, 0 }, { 82, 330, 340, 7000 }, { 83, 390, 340, 7000 }, { 84, 580, 370, 3500 },
                                           { 85, 600, 330, 3750 }, { 86, 640, 290, 4500 }, { 87, 760, 320, 4500 } };
 /* Gier im Wurf: zur Bewegungsrichtung hin, hoechstens BF_WURF_DREH je Takt. Pruefer Mangel 8: vorher folgte sie ihr sofort und
  * schnappte h74 -> h75 um 1312 (115 Grad) zurueck (Gier 2229 / 909 / 21 / 3775 bei h73..h76). Koordinator: die Enddrehung ueber
@@ -1389,7 +1396,21 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
                 /* liegend (Bodenpunkte bis BF_H_AUFSPRINGEN) bleibt die Gier der Landung - die kleinen Verschiebungen am Boden sind
                  * kein Laufweg (Lauf "w": dort drehte er sich h76..h80 je Takt um 512 im Kreis); erst beim Aufspringen wieder zur
                  * Bewegungsrichtung */
-                if ((z[0] != x || z[2] != zz) && hz > BF_H_AUFSPRINGEN) m->rot_y = bf_gier_zu(m->rot_y, bf_blick(m, z[0], z[2]));
+                /* Runde 5 M2: im Sprung dreht er gleichmaessig in eine Richtung - vom Aufspringen bis zum Verlassen des Bilds je Takt
+                 * derselbe Anteil von der Landegier zur Gesamtrichtung Punkt h82 -> letzter Punkt. Vorher je Takt zum naechsten Bahnpunkt
+                 * (bis 512): die Bahn wechselt in der Tiefe hin und her, die Gier sprang h80..h86 675 1187 675 509 647 135 161. */
+                if (hz > BF_H_AUFSPRINGEN) {
+                    int32_t a_[3], e_[3];
+                    if (hz == BF_H_AUFSPRINGEN + 1 && bf_wurf_punkt(b, 2, a_) && bf_wurf_punkt(b, BF_N(k_wurf_bahn) - 1, e_)) {
+                        re15_actor_t t_ = *m; t_.x = a_[0]; t_.z = a_[2];
+                        s_h.sprung_gier0 = m->rot_y; s_h.sprung_gier1 = bf_blick(&t_, e_[0], e_[2]);
+                    }
+                    {   int d_ = (s_h.sprung_gier1 - s_h.sprung_gier0) & 0x0fff;
+                        int n_ = BF_H_WEG - BF_H_AUFSPRINGEN, t2 = hz - BF_H_AUFSPRINGEN;
+                        if (d_ > 0x800) d_ -= 0x1000;
+                        if (t2 > n_) t2 = n_;
+                        m->rot_y = (int16_t)((s_h.sprung_gier0 + d_ * t2 / n_) & 0x0fff); }
+                }
                 m->x = x; m->y = y > 0 ? 0 : y; m->z = zz;
             }
         }
