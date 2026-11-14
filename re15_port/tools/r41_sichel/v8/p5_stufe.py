@@ -167,10 +167,16 @@ KORR_UV = {
     't60': [(0, (57, 0), (61, 6))],
     # K-a: q15 [25,23,17,30] Ecke 17 R3 (74,11) -> R2/r6 (77,15) (2 der 35 fremden Texel); q15.1 danach 1,05-1,07-fach.
     'q15': [(2, (74, 11), (77, 15))],
-    # K-b: t8 [60,17,4] R3 (29,38) = 0,47-fach (Pruefer flaechen.py) / 0,49 (Bank S19) -> (25,36): 0,54-fach, Streckung 1,48 an der
-    #      Endgeometrie (Ecke 17 nach 7b; r7c/pz/t8such.py: Dichte >= 0,5 (Auftrag E4) mit Rand, nur Texel, die R6/R4/V7/R2/Stand 7b auf
-    #      Zeile 493 schon benutzen; (26,37) ergab dort nur 0,513).
-    't8': [(1, (29, 38), (25, 36))],
+    # K-b: t8 [60,17,4] R3 (29,38) = 0,47-fach (Pruefer flaechen.py) / 0,49 (Bank S19) -> (23,41): 0,53-fach, Streckung 1,80 an der
+    #      Endgeometrie (r7c/pz/t8such.py / t8such2.py: Dichte >= 0,5 (Auftrag E4), nur Texel, die R6/R4/V7/R2/Stand 7b auf Zeile 493 schon
+    #      benutzen). Erste Wahl (25,36) gab 112 fast weisse Bildpunkte von vorn (riegel_v8 S14 b, r7c/w/weiss.py; R3 (29,38): 1);
+    #      (23,41): 0 (die Nachbarn (24..28, 35..38) 58-140).
+    't8': [(1, (29, 38), (23, 41))],
+    # K-a / Riegel S7 (a): q2 [16,46,23,0] las seit der UV-Mitfuehrung der Ecke 46 (P5 R2/R3) mit (42,0) 3 Texel auf Zeile 494, die weder
+    #      eine Original-EM30-Flaeche (S7 a "texel_ohne_original_flaeche" 3 -> ROT) noch Eingang/r4/V7 benutzen. Ecke 46 zurueck auf r6 (41,0)
+    #      allein gaebe Streckung 2,13 (> 2, E4); dazu Ecke 16 (37,2) -> (38,4): S7 (a) 0, fremde Texel 0, Streckung q2 1,61 / 1,04,
+    #      Dichte 1,10 / 1,21 (r7c/w/q2such.py, fremd.py; (38,3) 1,90, (37,3)/(37,4)/(36,x) mit fremden Texeln).
+    'q2': [(1, (42, 0), (41, 0)), (0, (37, 2), (38, 4))],
 }
 # 7b. K-c/K-d (Geometrie, so wenig wie moeglich; E10: 17 frei). Messungen r7c/NOTIZ.md Abschnitt 2:
 #     Versuch 1 (verworfen): 17 nur tiefer (-29,-1140,240) loeste S9 F344 (3 -> 2 px) und P2+2048 offline, brachte aber in den echten

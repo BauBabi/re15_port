@@ -26,8 +26,7 @@ S18 (E10/E11/E12)  (a1) wie riegel_r6.s18, aber die Ecken 17, 30 und 46 von Mesh
 S3 / S9 (E12)  Pruefpunkte, die schon im Eingang ROT sind und nachweislich aus Meshes ausser 8/9 kommen (S3 (e) K, S9 F354), sind GELB "Erbe",
           solange sie nicht schlechter als der Eingang sind und alle anderen Teilpunkte gruen sind.
 S21 (neu, K-a)  (a) fremde Texel in Mesh 8: (Zeile, Texel) unter Mesh-8-Flaechen, die weder der Eingang (Stand 7b) noch V8 r4 noch V7 (alle
-          Meshes) noch die Zulassung ZULASSUNG (Texel, die der P5-Kandidat R2 schon benutzte; Auftrag K-a "Texel, die R2/r6 auf Zeile 494
-          schon benutzen") auf derselben Zeile benutzen: Soll 0. (b) oranger Fleck: Bilder F225-F450 mit >= ORANGE_MIN orange Bildpunkten
+          Meshes) auf derselben Zeile benutzen (ZULASSUNG: ausdruecklich zugelassene Texel, derzeit keine): Soll 0. (b) oranger Fleck: Bilder F225-F450 mit >= ORANGE_MIN orange Bildpunkten
           (Maske des Sicht-Pruefers R3: HSV H 16-40 Grad, S > 0,43, V > 0,59, Kasten x 420-760 / y 180-420), die im Eingangs-Lauf nicht
           im Umkreis von 2 px orange sind: Soll 0.
 
@@ -60,8 +59,8 @@ KRAGEN_Y = -1270                      # Bank P5 K-VORN (a): r4-Hoehe -1263 - 7 E
 E10_ECKEN = (17, 30, 46)              # E10: Vorder- und Seitenkante der Buckelplatte neben dem Kopf
 HELL_KEIL = 20                        # E12: ">= 20 zusammenhaengende Bildpunkte, die r4 im selben Bild nicht hat"
 ORANGE_MIN = 3                        # oranger Fleck: >= 3 neue orange Bildpunkte in einem Bild (Eingang 7b: groesstes Stueck 4 px, R3 bis 17)
-ZULASSUNG = {(494, 0, 171), (494, 1, 174), (494, 2, 177)}   # (Zeile, Texel-y, Texel-x): q2 [16,46,23,0] Ecke 46 UV (42,0) - UV-Mitfuehrung
-                                      # der Ecke 46 seit P5-Kandidat R2 (969789fd); r6-UV (41,0) gaebe Streckung 2,13 > 2 (sfv8/r7c NOTIZ KC3)
+ZULASSUNG = set()                     # (Zeile, Texel-y, Texel-x) ausdruecklich zugelassener Texel; leer: die 3 Texel von q2 aus der UV-Mitfuehrung
+                                      # der Ecke 46 (P5 R2/R3) sind seit p5_stufe.KORR_UV q2 wieder Original-Texel (sfv8/r7c NOTIZ)
 LM_ZEILE = {0: 480, 1: 481, 2: 482, 3: 484, 4: 485, 5: 486}
 LM_FARBE = {480: 0x03E0, 481: 0x001F, 482: 0x7C00, 484: 0x7C1F, 485: 0x7FE0, 486: 0x03FF}
 
