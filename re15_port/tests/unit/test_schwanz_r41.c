@@ -537,14 +537,18 @@ int main(void)
     }
 
     /* (13) Bauchachse (re15_schwanz_r41_bauchachse): Hauptachse der Ecken, Seite = Innenseite des Ruhebogens ueber alle Keyframes. Dasselbe
-     *      Ergebnis (0,8956, 0, 0,4449) +-0,001 mit dem Spiel-Asset (seit Runde 8c d31f9534) und mit Runde 8b (66db2244, abgelegt unter
-     *      analysis/befunde_runde41/SF_belege/v8/bewegung/). Gegenprobe: die alte Farbregel (Seite = Mitte der Flaechen ohne die haeufigste
-     *      CLUT, bis c94847a31) liefert mit 66db2244 +e_h, mit d31f9534 -e_h (dort ist Bauch/Ring-CLUT 31552 die haeufigste) - muss ROT sein. */
+     *      Ergebnis (0,8956, 0, 0,4449) +-0,001 mit dem Spiel-Asset (seit Runde 8d 547acc80), Runde 8b (66db2244) und Runde 8c (d31f9534) -
+     *      beide abgelegt unter analysis/befunde_runde41/SF_belege/v8/bewegung/ (Ecken und Keyframes aller drei bytegleich, nur die Farben
+     *      verschieden). Gegenprobe: die alte Farbregel (Seite = Mitte der Flaechen ohne die haeufigste CLUT, bis c94847a31) liefert mit
+     *      66db2244 +e_h, mit d31f9534 -e_h (dort ist Bauch/Ring-CLUT 31552 die haeufigste) - muss dort ROT sein. Beim Spiel-Asset 547acc80
+     *      ist die haeufigste CLUT wieder das Grau, die alte Regel traefe zufaellig richtig; dort wird sie nur ausgegeben. */
     {
-        static const char *namen[2] = { RE15_ASSET_PSX_DIR "/EMD/EM30_HANGAR.EMD",
-                                        RE15_ASSET_PSX_DIR "/../../../analysis/befunde_runde41/SF_belege/v8/bewegung/EM30_HANGAR_66db2244.EMD" };
+        static const char *namen[3] = { RE15_ASSET_PSX_DIR "/EMD/EM30_HANGAR.EMD",
+                                        RE15_ASSET_PSX_DIR "/../../../analysis/befunde_runde41/SF_belege/v8/bewegung/EM30_HANGAR_66db2244.EMD",
+                                        RE15_ASSET_PSX_DIR "/../../../analysis/befunde_runde41/SF_belege/v8/bewegung/EM30_HANGAR_d31f9534.EMD" };
+        static const char *kurz[3] = { "Spiel-Asset", "66db2244", "d31f9534" };
         int alt_falsch = 0;
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < 3; i++) {
             size_t n = 0;
             uint8_t *bl = slurp(namen[i], &n);
             CHECK(bl != NULL, "Bauchachse: %s fehlt", namen[i]);
@@ -554,7 +558,7 @@ int main(void)
             float eh[3] = { 0, 0, 0 };
             const int ok = re15_schwanz_r41_bauchachse(&md, &sk, eh);
             CHECK(ok && fabs(eh[0] - 0.8956) <= 0.001 && fabs(eh[1]) <= 0.001 && fabs(eh[2] - 0.4449) <= 0.001,
-                  "Bauchachse %s: (%.4f, %.4f, %.4f) statt (0,8956, 0, 0,4449)", i ? "66db2244" : "Spiel-Asset", eh[0], eh[1], eh[2]);
+                  "Bauchachse %s: (%.4f, %.4f, %.4f) statt (0,8956, 0, 0,4449)", kurz[i], eh[0], eh[1], eh[2]);
             /* alte Farbregel (Gegenprobe) */
             uint16_t cl[8]; int cn[8], ncl = 0;
             for (int g = 17; g <= 21; g++) {
@@ -586,12 +590,12 @@ int main(void)
             }
             const int alt_plus = bx * 0.8956 + bz * 0.4449 > 0.0;
             fprintf(stderr, "Schwanz Bauchachse %s: (%.4f, %.4f, %.4f); alte Farbregel (haeufigste CLUT %u, %d Flaechen) -> %s\n",
-                    i ? "66db2244" : "Spiel-Asset", eh[0], eh[1], eh[2], (unsigned)cl[haupt], cn[haupt], alt_plus ? "+e_h" : "-e_h (falsch)");
-            if (i == 0) alt_falsch = !alt_plus;
-            else CHECK(alt_plus, "Gegenprobe: alte Farbregel mit 66db2244 nicht +e_h - Vorlage stimmt nicht");
+                    kurz[i], eh[0], eh[1], eh[2], (unsigned)cl[haupt], cn[haupt], alt_plus ? "+e_h" : "-e_h (falsch)");
+            if (i == 2) alt_falsch = !alt_plus;
+            else if (i == 1) CHECK(alt_plus, "Gegenprobe: alte Farbregel mit 66db2244 nicht +e_h - Vorlage stimmt nicht");
             free(bl);
         }
-        CHECK(alt_falsch, "Gegenprobe: alte Farbregel trifft beim Spiel-Asset die Bauchseite - der Riegel prueft nichts (erwartet ROT)");
+        CHECK(alt_falsch, "Gegenprobe: alte Farbregel trifft bei d31f9534 die Bauchseite - der Riegel prueft nichts (erwartet ROT)");
     }
 
     /* (6) EM30 mit 16 Knochen: keine Kette */

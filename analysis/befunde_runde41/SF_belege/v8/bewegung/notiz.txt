@@ -68,3 +68,8 @@ gegen Sehstrahl quer zur Achse; Gelenkwinkel; Verdrehung gegen das Vorglied), ta
     Szenenlauf: Rolle h16-h104 gleich c94847a31 (45 von 45 Bildern), Lagen/Breiten gleich; Framedump bis h118 176 041 Punkte anders, 35
     ausserhalb der Schwanzmaske (Rand) = nur Farbe; ab h119 Gangvortrieb b84fcc83c (anderer Auftrag). Test test_schwanz_r41 (13): beide
     Assets, Gegenprobe alte Farbregel beim Spiel-Asset -e_h (rot); altes Asset abgelegt als EM30_HANGAR_66db2244.EMD.
+[12] Runde 8d (Asset 547acc80, Merge 4026c7288, keine Ringe): die haeufigste CLUT ist wieder Grau 31168 (252 Flaechen); die alte Farbregel
+    traefe beim Spiel-Asset zufaellig richtig, die Gegenprobe in test_schwanz_r41 (13) wurde rot. Gegenprobe jetzt auf d31f9534 (abgelegt
+    als EM30_HANGAR_d31f9534.EMD, alte Regel -e_h), Hauptpruefung mit 547acc80 / 66db2244 / d31f9534: (0,8956, 0, 0,4449) (bauchachse_8d.txt;
+    Ecken und Keyframes aller drei bytegleich). Szenenlauf 547acc80 gegen 109695330: state.log gleich, Posen 201/201 bitgleich, Rolle/Spitze/
+    Breite 45/45 gleich, Framedump in der Szene 181 059 Punkte anders, 30 ausserhalb der Schwanzmaske (Rand) = nur Farbe.
