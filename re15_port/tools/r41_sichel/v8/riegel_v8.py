@@ -887,7 +887,7 @@ def zeilen(r):
         z.append('   S14 (a) streng (dL und da* je <= V7, ohne Rand): %s' % ('erfuellt' if s['a_streng'] else 'NICHT erfuellt (dL ueber V7, siehe Rand)'))
     if 'S15' in r and r['S15'].get('r8'):
         e = r['S15']['r8e']
-        z.append('S15 Runde 8 = R8e (Fleisch nur Bauchseite): Flaechen auf 495 %d, ausserhalb des Bauchsektors %d; PV Fleisch bei |theta| >= 100 %.2f %%, '
+        z.append('S15 Runde 8 = R8e (Fleisch nur Bauchseite): Bauch-Flaechen %d, ausserhalb des Bauchsektors %d; PV Fleisch bei |theta| >= 100 %.2f %%, '
                  '<= 40 %.1f %%; fremde Texel %s -> %s (Regeln der Runden 5/6 fuer diesen Schwanz ersetzt)'
                  % (e['flaechen_495'], e['n_falsch'], e['pv_fleisch_aussen'], e['pv_fleisch_innen'], e['fremde_texel'], 'GRUEN' if r['S15']['ok'] else 'ROT'))
     if 'R8' in r:
