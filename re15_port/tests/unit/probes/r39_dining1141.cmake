@@ -8,7 +8,7 @@
 #   unit_r39_dining1141_programme  Programm-Bytes je Nutzer-Punkt 1-8 (Formen/Reihenfolgen, Kopf-Konstanten)
 #   unit_r39_dining1141_stamm      help01..05 = Sprach-Ids 53..57 nur in ROOM1141
 #   unit_r39_dining1141_phase_h    ROOM1141 am VM mit allen Installern: John auf dem Dach, Klopfen/Hilferufe + Reaktion,
-#                                  Tuer-Auftritt mit Kameraschnitten, Glasbruch, Blick ab msg 9, Zeilen 51/52, Abgang
+#                                  Tuer-Auftritt mit Kameraschnitten, Schrei-Zeile (R41 ZWS114), Blick ab msg 9, Zeilen 51/52, Abgang
 #   unit_r39_dining1141_fenster    Nachbesserung 1: Gemaelde im Fenster erster Ruf..Reaktion -> Reaktion erst nach der Rolladen-
 #                                  Szene, genau einmal (M1); Wiederbetreten mit offenem Rolladen + Entriegeln (N4.1/N4.2)
 #   unit_r39_dining1141_senken     Nachbesserung 3 (Abnahme 2 M1): wer unter der Pad-Sperre (2,7) zielt, senkt die Waffe
