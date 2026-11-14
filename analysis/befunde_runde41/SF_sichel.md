@@ -4856,3 +4856,120 @@ Rot bleiben am Endstand S9, S14, S16, S18, S19 (siehe Offen).
 14. Fuer F528-F600 (Seitengang) gibt es kein Videobild (Video endet bei f1538 = F430). Labor 50E0 nicht eigens gelaufen (der Kampf laeuft
     in integration_r41_birkin_pistole, gruen).
 15. Die volle P5-Bank lief am Zwischenstand 0c307f80 (gleiche Geometrie wie der Endstand), am Endstand nur die schnelle Bank (7c).
+
+## V8 Runde 7e - Handfarbe "wie in der Vorlage" (Bauer, Zweig r41/sichel_v8, 2026-11-14)
+
+Kein RE-Befund: die Sichel-Form steht auf keiner Disc; jede Zahl ist PORT-WAHL (Nutzerentscheid, Messung, Suche), keine @0x-Adresse.
+Textur nur Original-EM30-Texel und vorhandene CLUT-Zeilen dieses Modells; keine Farbe an Video oder Nutzerbild geeicht (E4).
+Belege: analysis/befunde_runde41/SF_belege/v8/runde7e/. Commits 9a12ed9ac (Werkzeuge), b9c8c5bf6 (Asset, Pin, Unit-Test), danach Belege.
+
+### Nutzerentscheid (woertlich, bindend)
+2026-11-14, auf die Frage "dunkelrot-violett wie jetzt oder grau mit roten Spitzen wie auf Ihrer Vorlage?": **"wie in der Vorlage."**
+Vorlage birkin20-24: grauer Handruecken, nur die Finger/Krallen rot (Sicht-Pruefer r7 (4b)/(4c)).
+
+### Messung vorher (runde7e/messung_vorher.txt; Stand 7d 5c902d49, echte Framedumps F368-F375, Marker HF)
+- Handruecken 34-36 % rote Bildpunkte (a* >= 10), 15 % violett (b* < -5), L* 8,7; Vorlage 0,1-2,4 % rot, L* 12,4-14,3.
+  Ursache: Mesh 12 liegt mit 34 Flaechen auf Zeile 490 = Referenz-2-Zeile 482 OHNE die V5-Grau-Regel (V5 wie Foto b "rote Handflaeche");
+  Texel u 4-39 / v 51-86 auf Seite 2 (die dunkle Handgelenk-/Handzone der Original-Textur, Zeile 482 L* 8,5-13,6).
+- Unterarm unteres Drittel: 0 % rot, aber L* 6,8-7,2 gegen 24-25 oben (Vorlage 11,5-13,5 gegen 19,7-24,5). Die 8 Flaechen von Mesh 11,
+  die das untere Drittel beruehren (d0 d1 d16 d17 v1 v2 v3 v4), lesen dieselbe dunkle Zone (v 25-87); die 17 uebrigen die graue Zone
+  (u 5-38, v 0-56).
+- Kastenfinger (Ecken 32-39, 10 Flaechen) liegt entlang der Finger-Achse bei 0,47-0,65 der Handlaenge, die Krallen ab 0,62; der Beginn
+  der roten Zone der Vorlage bei 0,51-0,58.
+
+### Kandidaten (runde7e/kandidaten.txt) und Wahl
+| Kandidat | Was | Handfarbe (a)/(b)/(c) | L* Handruecken | Abstand der L*-Verteilung zur Vorlage (Hand / Unterarm) |
+|---|---|---|---|---|
+| Stand 7d | - | ROT / gruen / gruen | 8,7 | 0,347 / 0,325 |
+| K1 | 24 Handflaechen 490 -> 482, nur CLUT | ROT (Kastenfinger 6-7 % rot) | 8,7 | - |
+| K1b | 34 Handflaechen (mit Kastenfinger) -> 482, nur CLUT | gruen | 8,2-8,6 (fast schwarz) | 0,388 / 0,325 |
+| **K2 = Stufe f** | K1b + UV je Teilgruppe in die Grau-Zone, Mesh 11 unteres Drittel ebenso | gruen | 23,8-24,3 | **0,278 / 0,190** |
+| gemeinsame Abbildung | eine Abbildung fuer beide Teilgruppen | - | - | nicht gebaut: groesster Massstab 0,69 (gestreckte Texel) |
+Regel (vor dem Vergleich festgelegt): Handfarbe gruen; dann die Vorlage nur als Ort und Farbrichtung - L*-Perzentile 10/25/50/75/90
+von Handruecken und unterem Drittel, je Bild durch den L*-Median des oberen Unterarm-Drittels geteilt, mittlere Abweichung zur Vorlage.
+K2 ist naeher (0,234 gegen 0,357 / alt 0,336); K1b liest sich im Pruefbild als schwarze Hand.
+
+### Stufe f (re15_port/tools/r41_sichel/v8/handfarbe_r7e.py; letzte Stufe der Kette, v8_kette.sh --stufen srwaunhbpf)
+- Gruppe: 34 Flaechen von Mesh 12 ohne die 24 Krallenflaechen (Handruecken, Daumenballen, Kastenfinger mit Kappe v16; V7 "Kappe v16
+  (Kastenfinger, keine Kralle) -> 490 wie die Hand") und die 8 Flaechen von Mesh 11 mit einer Ecke im unteren Drittel
+  (y > y_min + 2/3 Spanne).
+- CLUT-Feld -> **Zeile 482** = Zeile aller 25 Flaechen des Unterarms Mesh 11 (Referenz-2-Zeile 482 mit der V5-Grau-Regel).
+- UV je Teilgruppe mit EINER ganzzahligen Abbildung u' = (M (u - U0) + 100 SU + 50) / 100 (v ebenso) in die **Grau-Zone** = die Texel
+  der 17 uebrigen Unterarm-Flaechen (Original-EM30-UV; 1462 Texel, Seite 2, u 5-38, v 0-56). Wahl nach Geometrie: groesster
+  Massstab, bei dem kein Texel ausserhalb der Grau-Zone liegt (runde7e/suche.txt, je genau ein Schub):
+  **Hand M 92 ab (4,51) nach (6,6)** (u 4-39 v 51-86 -> u 6-38 v 6-38), **Unterarm M 82 ab (0,25) nach (5,3)** (u 0-38 v 25-87 ->
+  u 5-36 v 3-54).
+- Unveraendert: Krallen (Daumenkralle 491, Fingerkrallen 492, UV = Original), Texturbild, alle 16 CLUT-Zeilen, Ecken, Normalen,
+  Flaechen, Keyframes, alle anderen Meshes, Mesh 9 (V7-Kopf). Zeile 490 bleibt im TIM, keine Flaeche zeigt mehr darauf.
+
+### Stand
+- **Asset** re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD, 277 316 Bytes, sha256
+  **07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95** = Pin release/em30_hangar.sha256 (Commit b9c8c5bf6).
+- **Kette** v8_kette.sh zweimal (runde7e/kette_a.txt, kette_b.txt): "V8-KETTE-OK sha256 07b6703f...", Stufen 1-6 = V7 319bbd17, A = B
+  bytegleich. Der erste Lauf vor dem Pin (kette_0_vor_pin.txt) baute dieselbe Datei und meldete erwartungsgemaess die Abweichung zum
+  alten Pin. Hinweis: der Hintergrund-Abzug sfv4/bg/ROOM50A12.ppm (Eingabe von Stufe 3) fehlte im Scratch (nach dem Lauf 7d geloescht);
+  neu erzeugt mit build/tests/unit/probe_bg_dump.exe (shared_assets/PSX, Stage 5), Stufe 3 danach wieder 99703bbd OK.
+- Exe unveraendert 8f15f6c5 (local_build.sh build: nur test_birkin_formen neu gelinkt).
+
+### Riegel
+- **Voll-Riegel** riegel_v8.py mit denselben Optionen wie 7d (runde7e/riegel_alle.sh, Laeufe sfv8/r7e): **"SUMME: 18 von 24 gruen; GELB: S3; ROT: S9, S14, S16, S18, S19"** = 7d;
+  die Ausgabe ist bis auf die sha256-Zeile und die Zeile S17 (f) bytegleich zu runde7d/riegel_v8r7d.txt (runde7e/riegel_v8r7e.txt). S5 Gesicht gruen (Mesh 9, Zeile 486, 6501 Texel = V7).
+  S17 (f) neu nach dem Entscheid: Mesh 12 491: 6, 492: 18, 482: 34; UV = Original oder Abbildung der Stufe f; 42 umgelegt; 0 Texel
+  ausserhalb der Grau-Zone.
+- Teil-Riegel riegel_r7c.py NEU: ab Zeile 2 bytegleich zu 7d (Urteile S3 GELB Erbe, S9/S16/S18 ROT, S21 GRUEN).
+- Gegenprobe S17 (f) allein (runde7e/riegel_s17f_gegenprobe.txt): NEU GRUEN; Stand 7d 5c902d49 und V7 ROT (34 Flaechen auf 490, 42 mit
+  anderer UV, 1168 Texel ausserhalb der Grau-Zone). Der Voll-Riegel am Stand 7d brach in S16 mit MemoryError ab (Pool mit 12 Prozessen
+  neben der Unit-Gruppe) und wurde nicht wiederholt.
+- **Riegel Handfarbe** (riegel_handfarbe.py; Marker HF: Mesh 11 blau, Hand gruen, Kastenfinger gelb, Fingerkrallen magenta, Daumenkralle
+  cyan; echte Framedumps; rot = a* >= 10; Soll aus den fuenf Vorlagebildern):
+  | Paar | Handruecken rot NEU / alt / Vorlage | Finger rot NEU / Vorlage | Unterarm unten rot NEU / Vorlage | L* Handruecken NEU / alt / Vorlage |
+  |---|---|---|---|---|
+  | F368 / birkin20 | 0,015 / 0,347 / 0,024 | 0,565 / 0,485 | 0 / 0 | 23,9 / 8,7 / 12,7 |
+  | F369 / birkin22 | 0,017 / 0,353 / 0,021 | 0,564 / 0,516 | 0 / 0 | 23,8 / 8,7 / 12,4 |
+  | F371 / birkin23 | 0,016 / 0,343 / 0,001 | 0,556 / 0,428 | 0 / 0 | 23,9 / 8,7 / 13,8 |
+  | F373 / birkin21 | 0,012 / 0,357 / 0,008 | 0,557 / 0,412 | 0 / 0 | 24,3 / 8,7 / 14,3 |
+  | F375 / birkin24 | 0,014 / 0,349 / 0,008 | 0,539 / 0,393 | 0 / 0 | 23,9 / 8,7 / 14,2 |
+  | F367 / birkin20 (Angabe) | 0,020 / 0,338 / 0,024 | 0,543 / 0,485 | 0 / 0 | 23,0 / 8,4 / 12,7 |
+  Soll (a) <= 0,024, (b) >= 0,393, (c) <= 0. **NEU GRUEN** (a, b, c); **Gegenprobe 5c902d49 ROT** in (a) (alle fuenf Paare).
+  Angaben (d): Grenze grau/rot nach der Regel der Vorlage bei 0,71-0,75 der Handlaenge (Vorlage 0,51-0,58; Stand 7d 0,74-0,77);
+  L* Handruecken / oberes Unterarm-Drittel 0,93-1,00 (Vorlage 0,52-0,72), unteres / oberes Drittel 0,74-0,82 (Vorlage 0,49-0,69).
+
+### Tests (runde7e/ctest_gruppe.txt, ctest_unit.txt, test_formen_*.txt)
+- ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  **"100% tests passed, 0 tests failed out of 8"**, Total Test time (real) = 305.44 sec.
+- Unit-Gruppe wie 7d, aber -j 1 (hoechstens 2 Rechenprozesse): **"100% tests passed, 0 tests failed out of 1013"**, Total Test time
+  (real) = 1102.10 sec.
+- test_birkin_formen am Asset 07b6703f OK; Gegenprobe mit dem Asset 5c902d49: 4 FAIL (Mesh 11 nicht umtexturiert; Mesh 11 8 Flaechen
+  mit falscher UV; Mesh 12 34 Flaechen auf 490; Mesh 12 34 Flaechen mit falscher UV).
+
+### Spiel
+- **Szenenlauf** Hangar 50A0 (runde7e/laeufe.sh, lauf_v4.sh, EMD "-", FD 200-1100/1): EXIT=0, 901 Bilder, "EM30: Ersatzmodell
+  EMD/EM30_HANGAR.EMD (Raum 50A0)", "Szene Ende: Cut 4"; **state.log bytegleich V7** (sha256 e48e1cad..., 1131 Zeilen).
+  565 der 901 Framedumps anders als 7d; in F360-F380 liegen ALLE geaenderten Bildpunkte (87 957) in der Marker-Maske von Mesh 11 + 12
+  (+1 Bildpunkt Rand), 0 ausserhalb (runde7e/diff_nur_arm.txt).
+- Marker LM/KO/MK_A/MK_B/GR/KL/HF neu aus dem Asset gebaut (alle anders als 7d nur durch die UV-/CLUT-Bytes von Mesh 11/12; der
+  HF-Marker zeichnet bildgleich zum HF-Marker von 7d: 0 Bildpunkte Unterschied F360-F380), alle Laeufe EXIT=0.
+- **gdigrab des echten Fensters** (runde7e/gdi.sh, gdi2.sh: eigene exe-Kopie, Fenster ueber die eigene PID, kein AUTOSHOT, kein
+  SOFTWARE_RENDER, 960 x 720): Aufnahme 1 sha256 b38fadc5..., 3212 Bilder; Aufnahme 2 sha256 81f6ce20..., 2153 Bilder (fuer F367);
+  state.log beider Laeufe bytegleich V7. Zuordnung gemessen (gdi_zuordnung.txt, gdi2_zuordnung.txt; Treffer 0,91-0,93).
+  Fensterbilder runde7e/gdi_fenster_F354 (vorn), F366, F367, F368, F369, F371, F373, F375; Hand-Tafel runde7e/gdi_hand_r7e.png
+  (Vorlage | Stand 7d Framedump | NEU Fenster).
+
+### Tafeln (SF_belege/v8; selbst angesehen)
+- 16_hand_r7e.png (tafel_r7a.py hand --mitte "Stand 7d"): Vorlage | V7 | Stand 7d | NEU in den fuenf Paar-Posen, Breitenprofil
+  unveraendert gegen 7d (Geometrie gleich).
+- 18_handstellung_r7e.png (tafel_r7a.py stellung): echte Spielbilder F368-F375 je V7 | Stand 7d | NEU neben der Vorlage, ganze Figur
+  in Stand und Gang.
+- Was zu sehen ist: Unterarm und Handruecken grau, die drei Fingerkrallen rot, der Daumen mit heller Kralle - wie die Vorlage "grau mit
+  roten Spitzen"; die dunkelrot-violetten Sprenkel sind weg. **Abweichungen:** (1) Die Hand ist heller als in der Vorlage (L* 24 gegen
+  12-14; Verhaeltnis zum oberen Unterarm 0,93-1,00 gegen 0,52-0,72) und warmgrau (b* +1,3) statt kuehl grau-violett (b* -2,2). (2) Am
+  Handgelenk ein dunkleres Band (der untere Rand der Grau-Zone, v 45-54, liegt dort). (3) Die Grenze grau/rot liegt an den
+  Krallenwurzeln, nach der Regel der Vorlage bei 0,71-0,75 der Handlaenge statt 0,51-0,58: die rote Zone ist kuerzer, weil der
+  Kastenfinger grau ist und die Krallen erst bei 0,62 beginnen (Form unveraendert, nicht Auftrag). (4) Die Hand traegt jetzt das
+  Hautmuster des Unterarms (Hand 0,92-, unteres Drittel 0,82-fach gestreckt), nicht mehr Capcoms Handtextur.
+
+### Offen
+1. Helligkeit/Farbton der Hand gegen die Vorlage (siehe (1)/(2)); eine Abhilfe ginge nur ueber eine weitere Farbtransformation oder
+   eine andere Texelzone - beides waere eine Eichung an der Vorlage (E4) und ist nicht gemacht.
+2. Grenze grau/rot spaeter als in der Vorlage (siehe (3)); der Kastenfinger ist nach V7 Hand, nicht Finger.
+3. Unveraendert aus Runde 7: S9, S14, S16, S18, S19 ROT; S3 GELB (Erbe); Krallenform (drei Spitzen statt Faeustling), Daumenwinkel.

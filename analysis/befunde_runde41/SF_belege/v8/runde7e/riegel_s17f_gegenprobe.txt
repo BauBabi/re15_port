@@ -1,0 +1,4 @@
+Riegel S17 (f) Runde 7e allein (riegel_hand.zeilen_pruefen), Referenz V7 319bbd17
+NEU 07b6703f sha256 07b6703f15879bbe: Zeilen Mesh 12 {491: 6, 482: 34, 492: 18}, falsche Zeile 0 (erste []), u/v weder Original noch Stufe f 0, umgelegt 42, Texel ausserhalb Grau-Zone 0, Mesh 11 ganz auf 482 True -> GRUEN
+Stand 7d 5c902d49 (Gegenprobe) sha256 5c902d493e6815f8: Zeilen Mesh 12 {491: 6, 490: 34, 492: 18}, falsche Zeile 34 (erste ['Mesh 12 d2 Zeile 490 statt 482', 'Mesh 12 d8 Zeile 490 statt 482']), u/v weder Original noch Stufe f 42, umgelegt 42, Texel ausserhalb Grau-Zone 1168, Mesh 11 ganz auf 482 True -> ROT
+V7 319bbd17 (Gegenprobe) sha256 319bbd17f10ba0cd: Zeilen Mesh 12 {491: 6, 490: 34, 492: 18}, falsche Zeile 34 (erste ['Mesh 12 d2 Zeile 490 statt 482', 'Mesh 12 d8 Zeile 490 statt 482']), u/v weder Original noch Stufe f 42, umgelegt 42, Texel ausserhalb Grau-Zone 1168, Mesh 11 ganz auf 482 True -> ROT
