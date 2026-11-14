@@ -263,7 +263,8 @@ static void test_hangar(unsigned raum)
         }
     }
     for (int p = 1; p <= 7; p++) CHECK(ph_seen[p], "Phase %d nie erreicht", p);
-    CHECK(max_hoehe > 2500, "Spider-Man nie hochgehalten (max %d)", max_hoehe);
+    /* Runde 5: Griff bis h72 (Handhoehe ~2190), der Schleuder-Scheitel der Runden 3/4 (y -3305 frei in der Luft) entfaellt. */
+    CHECK(max_hoehe > 2000, "Spider-Man nie hochgehalten (max %d)", max_hoehe);
     CHECK(sm_am_boden, "Spider-Man nie am Boden aufgeschlagen");
     CHECK(halt_weh >= 20 && halt_zuck >= 30 && halt_tod == 0 && halt_clip == 7 && halt_bild == 5,
           "Halten: %d Takte Clip 4, %d Takte Clip 7, %d Takte Clip 9, letzter Haltetakt Clip %d B%d (Soll >= 20, >= 30, 0, Clip 7 B5)",
