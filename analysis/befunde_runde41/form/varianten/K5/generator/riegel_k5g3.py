@@ -4,6 +4,8 @@
 Jeder Riegel hat mindestens eine Gegenprobe, die ROT sein MUSS; ist sie gruen, meldet der Riegel STUMPF (Exit 1).
 
   python riegel_k5g3.py            -> Protokoll auf stdout und K5/k5g/K5g3/geo/riegel_k5g3.txt (+ .json)
+  python riegel_k5g3.py textur [<Variante>] [--spiel <json>] [--neu_spiel]
+                                   -> Textur-Riegel (E3, V1-V6, O3-O5; riegel_k5g3_tex.py), Protokoll <Variante>/riegel_k5g3_textur.txt (+ .json)
 
 R1 Generator     Datei == kf_k5g3_geo.geometrie_bytes(), zweiter Lauf byte-gleich      | Gegenprobe: ohne Krallen-Stufe
 R2 Byte-Probe    K5e_f1-Posen + K5e_f1-Krallen + B4-Tabelle == KAND.EMD (sha f78e5983)  | Gegenprobe: volle Geometrie
@@ -344,4 +346,8 @@ def main():
 
 
 if __name__ == '__main__':
+    if len(sys.argv) > 1 and sys.argv[1] == 'textur':
+        # K5g3 Textur-Stufe (Auftrag K5g3 Textur-Bauer, 2026-11-14): E3, V1-V6, O3-O5 - riegel_k5g3_tex.py
+        import riegel_k5g3_tex as RT
+        sys.exit(0 if RT.main(sys.argv[2:]) else 1)
     sys.exit(0 if main() else 1)
