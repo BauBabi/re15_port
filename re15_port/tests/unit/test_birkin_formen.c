@@ -17,12 +17,19 @@
  *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22), 484 (Sichel, Mesh 15), 485 (Kopf, Mesh 9),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  *
+ * V8 Runde 7e (Handfarbe, Stufe f = tools/r41_sichel/v8/handfarbe_r7e.py; Nutzerentscheid 2026-11-14 woertlich "wie in der Vorlage" =
+ * grauer Handruecken, nur die Finger/Krallen rot): die 34 Flaechen der Klauenhand Mesh 12 ohne Krallen (bis 7d Zeile 490) und die 8 Flaechen
+ * von Mesh 11 im unteren Unterarm-Drittel (d0 d1 d16 d17 v1 v2 v3 v4) liegen auf der Unterarm-Zeile 482, ihre UV = EM30-UV mit EINER
+ * ganzzahligen Abbildung je Teilgruppe (Massstab M/100 und Schub, Ergebnis der Suche handfarbe_r7e.py suche): Hand M 92 ab (4,51) nach (6,6),
+ * Unterarm M 82 ab (0,25) nach (5,3) - Texel der 17 uebrigen Unterarm-Flaechen. Krallen 491 / 492 und alle anderen UV = EM30.
+ * Gemessen am Asset 07b6703f (sfv8/r7e). Gegenprobe Stand 7d 5c902d49: rot (Mesh 12 34 Flaechen auf 490, Mesh 11/12 UV = EM30).
+ * Bis Runde 7d: Mesh 12 nur im CLUT-Feld umtexturiert (490 / 491 / 492), Mesh 11 UV und CLUT = V7.
  * V8 Runde 7c (P5, Stufe p = tools/r41_sichel/v8/p5_stufe.py: Kandidat R3 des P5-Ablaufs + Pflicht-Korrekturen K-a..K-e; Nutzer
  * "smooth straight to head without further hills...."): das Nackenstueck der Runde 6b ist wieder weg (Mesh 8 = 69 Ecken wie EM30); an
  * Mesh 8 haengen 4 Ergaenzungsdreiecke d77-d80 = die Haelften (0,1,3) / (0,3,2) der Vierecke v8 und v17 mit gleichen Ecken, Normalen,
  * Texeln und Zeile (Entscheid E11: der Port verwirft ein verdrehtes Viereck nach dem Testdreieck, engine/src/nclip_r38.c). Zeilen 493/494
  * 60/48 Flaechen, 31 EM30-Flaechen mit anderer UV (Runde 6b 29; neu d48 v2 v15 v17 v18 aus der UV-Mitfuehrung von R3, wieder Original
- * d26 d66 v4 durch den UV-Rueckbau auf r4). Gemessen am Asset 0c307f80 und 5c902d49 (sfv8/r7c/w,
+ * d26 d66 v4 durch den UV-Rueckbau auf r4). Gemessen am Asset 0c307f80, 5c902d49 und 07b6703f (sfv8/r7c/w,
  * Abschnitt "Unit-Test" der NOTIZ). Gegenprobe Stand 7b 87b02681: rot (87 Dreiecke, 76 Ecken, Nackenstueck).
  * V8 Runde 6b (P5-neu / P4-neu nach Pruefung V8 r5d "Kragen", "graue Reifen"; gemessen am Asset 95a783a6, sfv8/r6b pins.py / pins2.py,
  * Ausgabe sfv8/r6c/pins.out; erster Stand der Runde 6b 382bbfe7: Mesh 16 noch 20 Flaechen auf 495, sonst gleiche Zahlen):
@@ -59,7 +66,8 @@
  * PORT-WAHL / Gestaltung, keine @0x-Konstante (die Form gibt es auf keiner Disc):
  *   - Kopf Mesh 9 = Original-Kopf des RE1.5-Birkin (UV bis auf das CLUT-Feld = EM30, hoechstens 4 Ecken geglaettet), CLUT-Zeile 486
  *     (= EM30-Zeile 0 bytegleich) - V6 Kopf Schritt 1/3, T-H6;
- *   - Brust Mesh 8 / Oberarm Mesh 13 / Klauenhand Mesh 12 nur im CLUT-Feld umtexturiert (488 / 489 / 490) - V5 wie Foto b);
+ *   - Brust Mesh 8 / Oberarm Mesh 13 / Klauenhand Mesh 12 nur im CLUT-Feld umtexturiert (488 / 489 / 490) - V5 wie Foto b; seit V8 Runde 7e
+ *     Klauenhand auf 482 mit der UV der Stufe f, siehe oben);
  *   - Daumenkralle 6 Flaechen auf Zeile 491 (grau), Fingerkrallen 18 Flaechen auf Zeile 492 (rot) - V7 linke Hand 2.;
  *   - Schwanzglieder 16-22 (Mantel und die V6-Deckel-Dreiecke) auf Zeile 487 - V5 wie Foto a) Farbe, V6 drei Punkte 2. Deckel;
  *   - 13 CLUT-Zeilen (<= 16, Port-Texturhoehe tex_h = tim->height x n_cluts = 3328 <= 4096, render_pc.c
@@ -120,12 +128,13 @@ static int spanne(const re15_md1_mesh_t *b, int achse)   /* V8 Runde 6a: groesst
 }
 static int umtexturiert(int m)   /* birkin_formen.py FORMEN['hangar'] umtexturieren (1-6, 9, 15); V7: dazu 8, 12, 13 (V5 wie Foto b) */
 {
-    return (m >= 1 && m <= 6) || m == 8 || m == 9 || m == 12 || m == 13 || m == 14 || m == 15;   /* V8 Runde 2: dazu 14 (X3) */
+    return (m >= 1 && m <= 6) || m == 8 || m == 9 || m >= 11;   /* V8 Runde 2: dazu 14 (X3); V8 Runde 7e: dazu 11 (Stufe f) */
 }
 static int nur_clut(int m)       /* V7: UV bis auf das CLUT-Feld = EM30 (V6 Kopf Schritt 1: Mesh 9 = Original-Mesh; V5 wie Foto b):
                                   * nur CLUT-Felder fuer 8/12/13; Sichel 15 wie Referenz 2). Gemessen: genau 8, 9, 12, 13, 15 */
 {
-    return m == 9 || m == 12 || m == 15;   /* V8 Runde 4: Meshes 8 / 13 / 14 haben Flaechen mit UV-Schub (eigene Pruefung je Mesh) */
+    return m == 9 || m == 15;   /* V8 Runde 4: Meshes 8 / 13 / 14 haben Flaechen mit UV-Schub (eigene Pruefung je Mesh); V8 Runde 7e: 11 / 12
+                                 * mit der Abbildung der Stufe f (eigene Pruefung hf_pruefen) */
 }
 static int uv_ohne_clut_anders(const re15_md1_mesh_t *a, const re15_md1_mesh_t *b)   /* V8: Zahl der Flaechen mit anderer UV */
 {
@@ -187,6 +196,77 @@ static int geteilt(int m)        /* birkin_formen.py FORMEN['hangar'] teilen (ku
 #define Z_X3 495u                 /* V8 Runde 2: Ader-Zeile X3 = V7-Zeile 482 + 88 Original-EM30-Ader-Eintraege (Unterarm-Wulst Mesh 14) */
 #define TEX_H_MAX    4096         /* Port-Texturhoehe tex_h = tim->height x n_cluts (render_pc.c re15_render_pc_upload_tim_slot);
                                    * Grenze 4096 = 16 Paletten 480..495 x 256 (render_pc.c Kommentar tpage 0x1e/0x1f; Dossier V6 Kopf T-K1c) */
+
+/* V8 Runde 7e (Stufe f, tools/r41_sichel/v8/handfarbe_r7e.py ABBILDUNG; Suche SF_belege/v8/runde7e/suche.txt): u' = (M (u - U0) + 100 SU + 50) / 100,
+ * v' = (M (v - V0) + 100 SV + 50) / 100 (ganzzahlig, Zaehler >= 0), CLUT-Feld -> Zeile 482. PORT-WAHL, keine @0x-Konstante. */
+#define HF_ZEILE 482u             /* Zeile aller 25 Flaechen von Mesh 11 (V7) = Referenz-2-Zeile 482 mit der V5-Grau-Regel */
+static const int HF_HAND[5] = {92, 4, 51, 6, 6};       /* M, U0, V0, SU, SV: 34 Handflaechen Mesh 12, u 4-39 v 51-86 -> u 6-38 v 6-38 */
+static const int HF_UNTERARM[5] = {82, 0, 25, 5, 3};   /* 8 Flaechen Mesh 11 unteres Drittel, u 0-38 v 25-87 -> u 5-36 v 3-54 */
+static uint8_t hf_abb(uint8_t x, int m, int x0, int s)
+{
+    const int z = m * ((int)x - x0) + 100 * s + 50;
+    return (uint8_t)(z >= 0 ? z / 100 : 255);
+}
+static int hf_kralle(const uint16_t *ecken, int n)    /* Flaeche nur aus den 5 Ecken einer Kralle (Ring + Spitzen)? 1 Daumen, 2 Finger, 0 nein */
+{
+    static const int K[4][5] = {{18, 19, 20, 21, 22}, {45, 46, 47, 48, 49}, {27, 28, 29, 30, 31}, {40, 41, 42, 43, 44}};
+    for (int k = 0; k < 4; k++) {
+        int alle = 1;
+        for (int i = 0; i < n && alle; i++) {
+            int drin = 0;
+            for (int j = 0; j < 5; j++) drin |= ecken[i] == K[k][j];
+            alle = drin;
+        }
+        if (alle) return k == 0 ? 1 : 2;
+    }
+    return 0;
+}
+/* Zahl der Flaechen von Mesh m (11 oder 12), deren UV (mit CLUT-Feld) NICHT dem Soll der Stufe f entspricht; *um = Zahl der umgelegten
+ * Flaechen. Krallen (Mesh 12): CLUT-Feld prueft der Block m == 12 (491 / 492), u/v muessen EM30 sein. */
+static int hf_pruefen(int m, const re15_md1_mesh_t *a, const re15_md1_mesh_t *b, int *um)
+{
+    int fehl = 0, ymin = 32767, ymax = -32768;
+    *um = 0;
+    for (int v = 0; v < a->tri_vertex_count; v++) {
+        if (a->tri_vertices[v].y < ymin) ymin = a->tri_vertices[v].y;
+        if (a->tri_vertices[v].y > ymax) ymax = a->tri_vertices[v].y;
+    }
+    for (int t = 0; t < a->triangle_count && t < b->triangle_count; t++) {
+        const re15_md1_triangle_t *f = &a->triangles[t];
+        const uint16_t e[3] = {f->v0, f->v1, f->v2};
+        int unten = 0;
+        for (int i = 0; i < 3; i++) unten |= 3 * a->tri_vertices[e[i]].y > 3 * ymin + 2 * (ymax - ymin);
+        const int *h = m == 12 ? (hf_kralle(e, 3) ? NULL : HF_HAND) : (unten ? HF_UNTERARM : NULL);
+        re15_md1_tri_uv_t x = a->triangle_uvs[t];
+        if (h) {
+            x.u0 = hf_abb(x.u0, h[0], h[1], h[3]); x.u1 = hf_abb(x.u1, h[0], h[1], h[3]); x.u2 = hf_abb(x.u2, h[0], h[1], h[3]);
+            x.v0 = hf_abb(x.v0, h[0], h[2], h[4]); x.v1 = hf_abb(x.v1, h[0], h[2], h[4]); x.v2 = hf_abb(x.v2, h[0], h[2], h[4]);
+            (*um)++;
+        }
+        if (h || m == 11) x.clut = (uint16_t)((HF_ZEILE << 6) | (x.clut & 0x3F));
+        else x.clut = b->triangle_uvs[t].clut;
+        fehl += memcmp(&x, &b->triangle_uvs[t], sizeof x) != 0;
+    }
+    for (int q = 0; q < a->quad_count && q < b->quad_count; q++) {
+        const re15_md1_quad_t *f = &a->quads[q];
+        const uint16_t e[4] = {f->v0, f->v1, f->v2, f->v3};
+        int unten = 0;
+        for (int i = 0; i < 4; i++) unten |= 3 * a->quad_vertices[e[i]].y > 3 * ymin + 2 * (ymax - ymin);
+        const int *h = m == 12 ? (hf_kralle(e, 4) ? NULL : HF_HAND) : (unten ? HF_UNTERARM : NULL);
+        re15_md1_quad_uv_t x = a->quad_uvs[q];
+        if (h) {
+            x.u0 = hf_abb(x.u0, h[0], h[1], h[3]); x.u1 = hf_abb(x.u1, h[0], h[1], h[3]);
+            x.u2 = hf_abb(x.u2, h[0], h[1], h[3]); x.u3 = hf_abb(x.u3, h[0], h[1], h[3]);
+            x.v0 = hf_abb(x.v0, h[0], h[2], h[4]); x.v1 = hf_abb(x.v1, h[0], h[2], h[4]);
+            x.v2 = hf_abb(x.v2, h[0], h[2], h[4]); x.v3 = hf_abb(x.v3, h[0], h[2], h[4]);
+            (*um)++;
+        }
+        if (h || m == 11) x.clut = (uint16_t)((HF_ZEILE << 6) | (x.clut & 0x3F));
+        else x.clut = b->quad_uvs[q].clut;
+        fehl += memcmp(&x, &b->quad_uvs[q], sizeof x) != 0;
+    }
+    return fehl;
+}
 
 static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
 {
@@ -399,13 +479,20 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                 CHECK(uv_ohne_clut_anders(a, b) == 24, "%s: Oberarm (Mesh 13) %d Flaechen mit anderer UV (Soll 24, Feld C)", name,
                       uv_ohne_clut_anders(a, b));
             }
-            if (m == 12) {               /* V7 linke Hand 2.: Daumenkralle T 6 Flaechen -> 491 (grau), Fingerkrallen A/B/C 18 -> 492 (rot),
-                                          * Rest der Klauenhand 490 (V5 wie Foto b, Kappe v16 zurueck auf 490); gemessen 490:34, 491:6, 492:18 */
+            if (m == 12) {               /* V7 linke Hand 2.: Daumenkralle T 6 Flaechen -> 491 (grau), Fingerkrallen A/B/C 18 -> 492 (rot);
+                                          * V8 Runde 7e (Stufe f): Rest der Klauenhand (34, mit Kastenfinger und Kappe v16) auf 482 statt 490 (V5
+                                          * wie Foto b, bis 7d); gemessen am Asset 07b6703f 482:34, 491:6, 492:18, 490:0 */
                 CHECK(zeile_zahl(b, 491) == 6, "%s: Daumenkralle (Mesh 12) %d Flaechen auf CLUT 491 statt 6", name, zeile_zahl(b, 491));
                 CHECK(zeile_zahl(b, 492) == 18, "%s: Fingerkrallen (Mesh 12) %d Flaechen auf CLUT 492 statt 18", name,
                       zeile_zahl(b, 492));
-                CHECK(zeile_zahl(b, 490) == b->quad_count + b->triangle_count - 24, "%s: Klauenhand (Mesh 12) %d Flaechen auf 490 statt %d",
-                      name, zeile_zahl(b, 490), b->quad_count + b->triangle_count - 24);
+                CHECK(zeile_zahl(b, HF_ZEILE) == b->quad_count + b->triangle_count - 24 && zeile_zahl(b, 490) == 0,
+                      "%s: Klauenhand (Mesh 12) %d Flaechen auf 482 statt %d, %d noch auf 490 (V8 Runde 7e Handfarbe)", name, zeile_zahl(b, HF_ZEILE),
+                      b->quad_count + b->triangle_count - 24, zeile_zahl(b, 490));
+                {
+                    int um = 0, fehl = hf_pruefen(12, a, b, &um);
+                    CHECK(fehl == 0 && um == 34, "%s: Klauenhand (Mesh 12) %d Flaechen mit UV ungleich EM30 bzw. Abbildung der Stufe f, %d umgelegt "
+                          "(Soll 0 / 34, V8 Runde 7e)", name, fehl, um);
+                }
                 /* V8 Runde 6c (P7, Nutzer 2026-11-10: "sieht es so aus als waere die linke Hand verkehrt herum gedreht"; hand_r6.py /
                  * hand_v8.json skala 0.77 0.72 0.77, dreh_grad 0, Krallen-Wurzelring 1.6): breite Hand in Capcoms Lage - Spanne der
                  * 52 Ecken und Wurzelring (Ecken 1-4) hinter dem Gelenk; gemessen am Asset e9e71bca. Gegenproben: der um 118 Grad
@@ -419,6 +506,13 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                 for (int v = 1; v <= 4 && v < b->tri_vertex_count; v++)
                     CHECK(b->tri_vertices[v].y == -22, "%s: Klauenhand (Mesh 12) Wurzelring-Ecke %d y %d statt -22", name, v,
                           b->tri_vertices[v].y);
+            }
+            if (m == 11) {               /* V8 Runde 7e (Stufe f): alle 25 Flaechen auf 482; die 8 im unteren Drittel (eine Ecke y > y_min + 2/3
+                                          * Spanne, EM30-Ecken; gemessen d0 d1 d16 d17 v1 v2 v3 v4) mit der Abbildung, die 17 uebrigen UV = EM30 */
+                int um = 0, fehl = hf_pruefen(11, a, b, &um);
+                CHECK(zeile_zahl(b, HF_ZEILE) == b->quad_count + b->triangle_count && fehl == 0 && um == 8,
+                      "%s: Unterarm (Mesh 11) %d/%d Flaechen auf 482, %d mit UV ungleich EM30 bzw. Abbildung, %d umgelegt (Soll 8, V8 Runde 7e)",
+                      name, zeile_zahl(b, HF_ZEILE), b->quad_count + b->triangle_count, fehl, um);
             }
             if (m == 11) {               /* V8 Runde 6c (P7): Unterarm nach dem Breitenprofil der Vorlage in den echten Szenenposen
                                           * (hand_v8.json unterarm verlauf, Ellbogen-Ende 1.2 / 1.15); gemessen am Asset e9e71bca,
