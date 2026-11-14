@@ -71,7 +71,9 @@ S17 Hand links  seit Runde 6c (P7) in den ECHTEN Szenenposen (hand_szene.py: Paa
                 (a) Breitenprofil des linken Arms in JEDER Paar-Pose an den acht Stationen des Messblatts in der Streuung der fuenf Vorlagebilder
                 (+- 1 px); in allen acht Posen Handgelenk durch Unterarm-Mitte >= kleinstes Verhaeltnis der Vorlage; (b) Handgelenkbreite
                 und Unterarmspitze in allen Keyframes im Handkoerper; (c) Handbreite / Handlaenge und Handlaenge; (d) Laenge und Wurzeldicke je
-                Kralle, Daumen; (e) Krallen kreuzen nicht in den acht Posen; (f) Daumenkralle Zeile 491, Fingerkrallen 492, 0 fremde Texel;
+                Kralle, Daumen; (e) Krallen kreuzen nicht in den acht Posen; (f) Daumenkralle Zeile 491, Fingerkrallen 492, 0 fremde Texel
+                (Runde 7e, Nutzerentscheid 2026-11-14 "wie in der Vorlage": Hand und unteres Unterarm-Drittel auf Zeile 482 mit der UV der Stufe f,
+                handfarbe_r7e.py, 0 Texel ausserhalb der Grau-Zone; dazu eigener Riegel riegel_handfarbe.py);
                 (g) Keyframes aller Clips mit Kralle oder Hand im Koerper <= V7 und V8 r5d; in den Szenen-Keyframes <= r5d (1)
 Runde 6c P7 (Nutzer 2026-11-10: "Bei dem 2 beinigen Birkin in der Vorschau sieht es so aus als wäre die linke Hand verkehrt herum gedreht";
                 Regel riegel_hand.s20; Gegenproben: Stand Rest-Bauer 95a783a6 ROT in S20 (a), (b), (c) und S17 (a), (c); V7 ROT in S17 (a), (c)):

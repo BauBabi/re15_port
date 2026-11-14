@@ -21,8 +21,11 @@ Bis Runde 6b galten die Ersatz-Posen P1/P2/PV; dort lag der Arm anders als im Sp
     in V7 in derselben Pose - 1 px Rasterkante (Nutzer: "Sind die Krallen zu duenn?"); Daumen (Gabel ab Handgelenk, Laenge, Wurzeldicke)
     in der Streuung der Vorlage.
 (e) Krallen kreuzen sich in keiner der acht Posen (die Vorlage belegt kein Kreuzen).
-(f) Daumenkralle (Ecken 18-22) CLUT-Zeile 491, Fingerkrallen 492, uebrige Hand 490; u/v aller Flaechen von Mesh 11 und 12
-    bytegleich dem Original-EM30 (0 fremde Texel), CLUT-Felder von Mesh 11 wie V7.
+(f) Runde 7e (Nutzerentscheid 2026-11-14 "wie in der Vorlage", Stufe f = handfarbe_r7e.py): Daumenkralle (Ecken 18-22) CLUT-Zeile 491,
+    Fingerkrallen 492 (6 / 18 Flaechen, u/v wie Original-EM30); die 34 uebrigen Flaechen von Mesh 12 und alle 25 von Mesh 11 auf der
+    Unterarm-Zeile 482; u/v der 34 Handflaechen und der 8 Flaechen im unteren Unterarm-Drittel = handfarbe_r7e.abbilden(Original-UV),
+    alle anderen u/v = Original-EM30; kein Texel unter den 42 umgelegten Flaechen ausserhalb der Grau-Zone (Texel der 17 uebrigen
+    Unterarm-Flaechen). Bis Runde 7d: uebrige Hand 490, alle u/v = Original-EM30 (Gegenprobe Stand 5c902d49 dort jetzt ROT).
 (g) Durchdringung: Zahl der Keyframes ALLER Clips, in denen Krallenachsen (Regel T-V7h: 11 Punkte Ringmitte -> Spitze) oder
     Hand-Ecken in einem Mesh ausser Unterarm und Hand stecken - nicht mehr als in V7 und in V8 r5d. Dazu getrennt die Keyframes der
     Szene (hand_szene.SZENE_KF: Clip 0, 11 und 1, wie der Hangar-Auftritt sie zeigt): nicht mehr als bei r5d (1).
@@ -144,31 +147,39 @@ def _je_clip(paare):
 
 
 def zeilen_pruefen(blob, ref_blob):
-    """(f): CLUT-Zeilen und Texel von Mesh 11 und 12 gegen Original-EM30 und V7."""
-    ms, ov, v7 = KB.teile(blob)[2], H6.original(), KB.teile(ref_blob)[2]
+    """(f) Runde 7e: CLUT-Zeilen und u/v von Mesh 11 und 12 gegen Original-EM30 und die Stufe f (handfarbe_r7e.py)."""
+    import handfarbe_r7e as HF
+    ms, ov = KB.teile(blob)[2], H6.original()
     out = dict(fehler=[])
     zeile = lambda uv: (uv[2] >> 6) & 0x1FF
-    m = ms[12]
-    kr = {n: set([H6.KRALLEN[n][0]] + H6.KRALLEN[n][1]) for n in H6.KRALLEN}
-    zahl = {}
-    for fl, uvs in ((m['tf'], m['tuv']), (m['qf'], m['quv'])):
-        for f, uv in zip(fl, uvs):
-            ecken = set(f[1::2])
-            soll = HG.Z_DAUMEN if ecken & kr['T'] and len(ecken & (kr['T'] | {22})) == len(ecken) else \
-                HG.Z_FINGER if any(len(ecken & (kr[n] | {w_})) == len(ecken) for n, w_ in (('A', 49), ('B', 31), ('C', 44))) else HG.Z_HAND
-            zahl[zeile(uv)] = zahl.get(zeile(uv), 0) + 1
-            if zeile(uv) != soll:
-                out['fehler'].append('Mesh 12 Flaeche %s Zeile %d statt %d' % (sorted(ecken), zeile(uv), soll))
-    out['zeilen_mesh12'] = zahl
-    fremd = 0
+    ohne = lambda uv: [x for i, x in enumerate(uv) if i != 2]
+    soll_z = dict(daumenkralle=HG.Z_DAUMEN, finger=HG.Z_FINGER, hand=HF.ZEILE_GRAU, kastenfinger=HF.ZEILE_GRAU)
+    unten = set(HF.unterarm_unten(ov[11]))
+    zahl, fremd, umgelegt = {}, 0, []
     for nr in (11, 12):
-        for k in ('tuv', 'quv'):
-            for a, b in zip(ms[nr][k], ov[nr][k]):
-                fremd += int([x for i, x in enumerate(a) if i != 2] != [x for i, x in enumerate(b) if i != 2])
-            assert len(ms[nr][k]) == len(ov[nr][k])
-    out['fremde_texel'] = fremd
-    out['mesh11_clut_wie_v7'] = all(list(a) == list(b) for k in ('tuv', 'quv') for a, b in zip(ms[11][k], v7[11][k]))
-    out['ok'] = not out['fehler'] and fremd == 0 and out['mesh11_clut_wie_v7'] and zahl == {HG.Z_DAUMEN: 6, HG.Z_FINGER: 18, HG.Z_HAND: len(m['tf']) + len(m['qf']) - 24}
+        for (k, f, uv), (k0, f0, uv0) in zip(HF._flaechen(ms[nr]), HF._flaechen(ov[nr])):
+            assert k == k0 and list(f) == list(f0), 'Mesh %d %s: Flaeche weicht vom Original ab' % (nr, k)
+            if nr == 12:
+                kl = HF.klasse12(f)
+                zahl[zeile(uv)] = zahl.get(zeile(uv), 0) + 1
+                soll, abb = soll_z[kl], (HF.ABBILDUNG['hand'] if kl in ('hand', 'kastenfinger') else None)
+            else:
+                soll, abb = HF.ZEILE_GRAU, (HF.ABBILDUNG['unterarm'] if k in unten else None)
+            if zeile(uv) != soll:
+                out['fehler'].append('Mesh %d %s Zeile %d statt %d' % (nr, k, zeile(uv), soll))
+            uv_soll = HF.abbilden(uv0, *abb) if abb else list(uv0)
+            if ohne(uv) != ohne(uv_soll):
+                fremd += 1
+            if abb:
+                umgelegt.append(list(uv))
+    out['zeilen_mesh12'] = zahl
+    out['fremde_texel'] = fremd                                  # Flaechen, deren u/v weder Original noch Stufe-f-Abbildung ist
+    out['umgelegt'] = len(umgelegt)
+    out['ausserhalb_grau'] = int((HF.texel(umgelegt) & ~HF.grau_zone(ov)).sum()) if umgelegt else 0
+    out['mesh11_clut_wie_v7'] = all(zeile(uv) == HF.ZEILE_GRAU for _k, _f, uv in HF._flaechen(ms[11]))
+    m = ms[12]
+    out['ok'] = (not out['fehler'] and fremd == 0 and out['umgelegt'] == 42 and out['ausserhalb_grau'] == 0 and out['mesh11_clut_wie_v7']
+                 and zahl == {HG.Z_DAUMEN: 6, HG.Z_FINGER: 18, HF.ZEILE_GRAU: len(m['tf']) + len(m['qf']) - 24})
     return out
 
 
@@ -270,8 +281,10 @@ def zeilen(s):
              'duenner als V7 - 1 px (selbe Pose): %s; Daumen min..max %s gegen Vorlage %s, ausserhalb: %s -> %s'
              % (d['krallen'], d['v7'], d['laenge_ausser'] or 'keine', d['duenner_als_v7'] or 'keine', d['daumen'], d['daumen_vorlage'], d['daumen_ausser'] or 'keine', gr(d)))
     z.append('   S17 (e) Krallen kreuzen in den acht Posen: %s (Soll keine) -> %s' % ([pn for pn, k in e['kreuzen'].items() if k] or 'keine', gr(e)))
-    z.append('   S17 (f) Mesh 12 Flaechen je CLUT-Zeile %s (Soll 491: 6, 492: 18, Rest 490), falsche Zeile: %d, fremde Texel (u/v ungleich Original-EM30, Mesh 11 + 12): %d, '
-             'Mesh 11 UV und CLUT wie V7: %s -> %s' % (f['zeilen_mesh12'], len(f['fehler']), f['fremde_texel'], 'ja' if f['mesh11_clut_wie_v7'] else 'NEIN', gr(f)))
+    z.append('   S17 (f) Runde 7e: Mesh 12 Flaechen je CLUT-Zeile %s (Soll 491: 6, 492: 18, Rest 482), falsche Zeile (Mesh 11 + 12): %d, u/v weder '
+             'Original-EM30 noch Stufe f (Mesh 11 + 12): %d, umgelegt %d (Soll 42), Texel ausserhalb der Grau-Zone: %d, Mesh 11 ganz auf 482: %s -> %s'
+             % (f['zeilen_mesh12'], len(f['fehler']), f['fremde_texel'], f['umgelegt'], f['ausserhalb_grau'], 'ja' if f['mesh11_clut_wie_v7'] else 'NEIN',
+                gr(f)))
     if 'g' in s:
         g = s['g']
         n, v7, r5 = g['neu'], g['v7'], g['r5d']

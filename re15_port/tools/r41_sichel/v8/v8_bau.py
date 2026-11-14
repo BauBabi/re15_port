@@ -40,6 +40,10 @@ Stufe b) Runde 6c (P7, hand_szene.py + hand_v8.json "ellbogen"): Ellbogen-Beuge 
 Stufe p) Runde 7c (P5, p5_stufe.py): Luecke Ruecken/Kopf ohne Kragen = Kandidat R3 des P5-Ablaufs (Nackenstueck r6 weg, Ecken 6/43 auf r4,
    Ecken 17/30/46 nach E10, Viereck-Ergaenzungen d77-d80 nach E11, UV-Rueckbau auf r4) und die Pflicht-Korrekturen K-a..K-e der Pruefer R3.
    Laeuft als letzte Stufe auf dem gepackten Stand, aendert nur Mesh 8 (Mesh 9 bleibt der V7-Kopf). Bau Runde 7c: --stufen srwaunhbp.
+Stufe f) Runde 7e (Handfarbe, handfarbe_r7e.py; Nutzerentscheid 2026-11-14 "wie in der Vorlage"): die 34 Handflaechen von Mesh 12 (ohne
+   Krallen) und die 8 Flaechen von Mesh 11 im unteren Unterarm-Drittel auf die Zeile 482 des Unterarms, ihre UV je Teilgruppe mit einem
+   Massstab und einem Schub in die Grau-Zone des Unterarms (Texel der 17 uebrigen Unterarm-Flaechen). Letzte Stufe, aendert nur UV-/CLUT-
+   Felder von Mesh 11 und 12. Bau Runde 7e: --stufen srwaunhbpf.
 Stufe a) Runde 4 (adern_r4.py, modus "original_r4"): wie Runde 3, dazu ganz Mesh 8 ausser der Brust auf den Original-Zeilen (Naht rosa/grau)
    und ganze UV-Gruppen mit einem Schub (Feld C von Mesh 13, Unterarmband von Mesh 14, Huegel und Wurzelstreifen von Mesh 8) auf Texel, die
    Original-Flaechen derselben Zeile benutzen.
@@ -492,6 +496,11 @@ def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None
         vor = V.sha(neu)              # (Mesh 9 = V7-Kopf wird nur geprueft)
         neu = P5.stufe(neu)
         prot['p5'] = dict(eingang_sha256=vor, korr_uv=P5.KORR_UV, korr_ecken=P5.KORR_ECKEN)
+    if 'f' in stufen:                 # Runde 7e (Nutzerentscheid 2026-11-14 "wie in der Vorlage": grauer Handruecken, rote Krallen):
+        import handfarbe_r7e as HF    # Hand und unteres Unterarm-Drittel auf die graue Zeile/Texel des Unterarms (handfarbe_r7e.py);
+        vor = V.sha(neu)              # letzte Stufe, aendert nur UV-/CLUT-Felder von Mesh 11 und 12
+        neu = HF.stufe(neu)
+        prot['handfarbe'] = dict(eingang_sha256=vor, zeile=HF.ZEILE_GRAU, abbildung=HF.ABBILDUNG)
     prot['tim'] = dict(clut_zeilen=int(t['clut'].shape[0]), port_texturhoehe=int(t['ih'] * t['clut'].shape[0]))
     prot['emd'] = dict(bytes=len(neu), sha256=V.sha(neu))
     return neu, prot
@@ -503,7 +512,7 @@ def main():
     ap.add_argument('--aus', default=os.path.join(V.SFV8, 'emd'))
     ap.add_argument('--name', default='EM30_V8.EMD')
     ap.add_argument('--json')
-    ap.add_argument('--stufen', default='srwaunhbp')
+    ap.add_argument('--stufen', default='srwaunhbpf')
     a = ap.parse_args()
     neu, prot = bauen(a.basis, a.stufen)
     os.makedirs(a.aus, exist_ok=True)
