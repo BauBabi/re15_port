@@ -153,5 +153,8 @@ int  re15_bf_szene_zeigt(const re15_actor_t *a);
 /* Runde 41 SF Neuaufbau ab NB2 (aus NB3): 1 = die Hangar-Szene haelt Cut 12 -> Effekte (gruenes Blut) nicht gegen den
  * Platzhalter-Anker cullen. */
 int  re15_bf_szene_effekte(void);
+/* Schatten des Spider-Man der Hangar-Szene auf den Boden (Spider-Man-Schatten @0x80111bc0 `lh a1,442` = +0x1ba, birkin_formen.c);
+ * 1 = *y gesetzt. */
+int  re15_bf_schatten_y(const re15_actor_t *a, int32_t *y);
 
 #endif

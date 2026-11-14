@@ -559,6 +559,21 @@ int re15_bf_szene_zeigt(const re15_actor_t *a)
     return slot >= 1 && (slot == s_h.birkin || slot == s_h.sm);
 }
 
+/* Schatten des Spider-Man (Pruefer Runde 2 N1: "schwebt h14..h73 auf Hoehe des HANGAR-Streifens unter seinen Fuessen"; der
+ * Zeichner nahm den Aktor-y). Original (STAGE5.BIN, Ende des 0x2B-Handlers, selbst disassembliert): `ori v0,zero,0x3e8` @0x80111b54 /
+ * `sh v0,180` @0x80111b58 und +0xb6 = +0xb4 + 100 @0x80111b70/74 (Groesse), dann `lh v1,442` / `lw v0,56` / `slt` @0x80111b84..90:
+ * liegt y (+0x38) ueber der Boden-Referenz +0x1ba, setzt `sh zero,180` / `sh zero,182` @0x80111b9c/ac die Groesse auf 0; gezeichnet
+ * wird mit `lh a1,442(v0)` @0x80111bc0 / `jal 0x8001b064` @0x80111bc4 auf Hoehe +0x1ba = Boden. Das 80%-Video zeigt den Schatten
+ * waehrend des Haltens aber gross auf dem Boden links vor Birkin (Pruefer, schatten_schwebt.png) - daher hier: Hoehe = Boden
+ * (ROOM50A0 y 0, der Bezug +0x1ba), Groesse wie bisher, auch in der Luft. */
+int re15_bf_schatten_y(const re15_actor_t *a, int32_t *y)
+{
+    if (!a || !y || s_h.raum == 0 || s_h.sm < 0) return 0;
+    if ((int)(a - g_actors) != s_h.sm) return 0;
+    *y = 0;
+    return 1;
+}
+
 /* Neuaufbau ab NB2 (aus NB3): Effekte (gruenes Blut) der Szene nicht gegen den Platzhalter-Anker von Cut 12 cullen. */
 int re15_bf_szene_effekte(void)
 {

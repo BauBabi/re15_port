@@ -10340,6 +10340,7 @@ re_title:;
                     re15_wasserzombie_schatten_y(npc, &nsh_y);   /* Runde 38 Spur U: Hochziehen -> +0x1ba (`lh a1,442` @0x801004fc) */
                     re15_r39_schatten_y(npc, &nsh_y);            /* Runde 39 Spur E: Gorilla 0x27 / Affe 0x29 -> +0x1ba (`lh a1,442` @0x80116f30 / @0x80110c78) */
                     re15_spinnenanim_r41_schatten_y(npc, &nsh_y); /* Runde 41 Spur L: Spinne -> +0x1ba (`lh a1,442` @0x80110b4c) */
+                    re15_bf_schatten_y(npc, &nsh_y);             /* Hangar-Szene: Spider-Man -> Boden (+0x1ba @0x80111bc0, STAGE5) */
                     if (npc->type == 0x21)
                         nsh_y = re15_ai_re2_for_type(npc->type)
                                   ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */
