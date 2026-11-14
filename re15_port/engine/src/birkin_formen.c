@@ -1168,8 +1168,13 @@ static const int16_t k_wurf_luft[][3] = { { 73, 198, 258 }, { 74, 220, 407 } };
  * Spider-Man steigt jetzt in Weltlage gleichmaessig vom Bodenpunkt h78 zum Punkt h82 (Bilder h77..h81, Vorlauf 1). Die Punkte h82/h83
  * (Bild h81/h82) lagen mit Tiefe 3750/4250 viel zu nah (Flaeche gerastert 58702 / 46656 Bildpunkte, Video-Orange h82 13011 laut
  * flucht6.py): jetzt Tiefe 7000 und Bildpunkt so, dass die Mitte der Flaeche dem Video gleicht (h81 340 / Video 345, h82 407 / 406),
- * Flaeche 13816 / 13812 (Rechnung wie r4/vordergrund.py). */
-static const int16_t k_wurf_bahn[][4] = { { 76, 245, 400, 0 }, { 78, 215, 405, 0 }, { 82, 330, 340, 7000 }, { 83, 390, 340, 7000 }, { 84, 580, 370, 3500 },
+ * Flaeche 13816 / 13812 (Rechnung wie r4/vordergrund.py).
+ * Runde 6 (Pruefer Runde 5 Stelle 2 "h82->h83 springt er von klein vor Birkins Knien gross in den Vordergrund: Flaeche x2.9, Schwer-
+ * punkt +257 px (960er); Video x1.56 / +133, dort waechst das Bein ab h79 stetig, im Port schrumpft er vorher"): Tiefe h82/h83
+ * 7000 -> 6500 / 6200 und Punkt h83 x 390 -> 410, damit er h78..h83 stetig waechst und der Schwerpunkt gleichmaessiger wandert
+ * (Lauf r6c, Flaeche gerastert 640er h78..h83 11020 12974 15405 16475 18113 26277, Faktor h83 1.45; Schwerpunkt-x 246 275 305
+ * 337 426 533). */
+static const int16_t k_wurf_bahn[][4] = { { 76, 245, 400, 0 }, { 78, 215, 405, 0 }, { 82, 330, 340, 6500 }, { 83, 410, 340, 6200 }, { 84, 580, 370, 3500 },
                                           { 85, 600, 330, 3750 }, { 86, 640, 290, 4500 }, { 87, 760, 320, 4500 } };
 /* Gier im Wurf: zur Bewegungsrichtung hin, hoechstens BF_WURF_DREH je Takt. Pruefer Mangel 8: vorher folgte sie ihr sofort und
  * schnappte h74 -> h75 um 1312 (115 Grad) zurueck (Gier 2229 / 909 / 21 / 3775 bei h73..h76). Koordinator: die Enddrehung ueber
