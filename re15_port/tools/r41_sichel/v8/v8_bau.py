@@ -1,6 +1,6 @@
 """SF V8 Koerperbau nach Nutzer-Skizze (Bauer, 2026-11-08): baut EM30_V8.EMD aus V7 (Spiel-Asset v0.8.30, sha256 319bbd17).
 
-    python v8_bau.py [--basis EMD] [--aus DIR] [--name NAME] [--json PROT] [--stufen srea]
+    python v8_bau.py [--basis EMD] [--aus DIR] [--name NAME] [--json PROT] [--stufen srwaunhbpfq] [--schwanzfarbe a|b|c]
 
 Nutzer 2026-11-08 abends (woertlich, bindend):
   (A) "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber mit Schwanz und sowas bin ich immer noch 0 zufrieden.... Ich verstehe
@@ -44,6 +44,13 @@ Stufe f) Runde 7e (Handfarbe, handfarbe_r7e.py; Nutzerentscheid 2026-11-14 "wie 
    Krallen) und die 8 Flaechen von Mesh 11 im unteren Unterarm-Drittel auf die Zeile 482 des Unterarms, ihre UV je Teilgruppe mit einem
    Massstab und einem Schub in die Grau-Zone des Unterarms (Texel der 17 uebrigen Unterarm-Flaechen). Letzte Stufe, aendert nur UV-/CLUT-
    Felder von Mesh 11 und 12. Bau Runde 7e: --stufen srwaunhbpf.
+Stufe q) Runde 8 (Schwanz, schwanz_r8.py + schwanz_r8.json; Nutzer 2026-11-14 "weder mit dem rot der Schwanzfarbe noch mit dem etwas zu
+   steifen grossen Schwanz zufrieden" + Version_80%/Areas*.png): Meshes 16-22 neu - Querschnitt flach quer zur Bauchachse (Querdicke 270 E.),
+   Schwanzmitte duenner, Einschnuerung 0,85 an den 6 Gelenken, Glied 22 = Knolle + Nadel (Runde 8b bis y 1300), Fleisch nur auf der Bauchseite (Grenze
+   90 -> 60 Grad), Flanken grau (Zeile 487), Farbvariante a / b (--schwanzfarbe, Standard b = gedeckt mit rosa Baendern). Letzte Stufe,
+   aendert nur Meshes 16-22 (Ecken, Normalen, Flaechen, UV-/CLUT-Felder) und (Runde 8b, schwanz_r8.heben) die Winkel der Knochen 17-22 in
+   Keyframes, in denen Mesh 22 sonst unter der Sohle laege; Knochen 0-16, Textur, CLUT-Zeilen, Meshes 0-15 bytegleich.
+   Bau Runde 8: --stufen srwaunhbpfq.
 Stufe a) Runde 4 (adern_r4.py, modus "original_r4"): wie Runde 3, dazu ganz Mesh 8 ausser der Brust auf den Original-Zeilen (Naht rosa/grau)
    und ganze UV-Gruppen mit einem Schub (Feld C von Mesh 13, Unterarmband von Mesh 14, Huegel und Wurzelstreifen von Mesh 8) auf Texel, die
    Original-Flaechen derselben Zeile benutzen.
@@ -458,7 +465,8 @@ def einbetten(blob, ms, prot):
 
 
 # ------------------------------------------------------------------ Bau
-def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None, blob=None, unterseite=None, nacken=None, hand=None):
+def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None, blob=None, unterseite=None, nacken=None, hand=None,
+          schwanzfarbe=None):
     blob = open(basis, 'rb').read() if blob is None else blob
     prot = dict(basis=basis, basis_sha256=V.sha(blob), stufen=stufen)
     d, _do, ms, tim = KB.teile(blob)
@@ -501,6 +509,9 @@ def bauen(basis, stufen='sra', kette=None, ruecken=None, adern=None, nur_kf=None
         vor = V.sha(neu)              # letzte Stufe, aendert nur UV-/CLUT-Felder von Mesh 11 und 12
         neu = HF.stufe(neu)
         prot['handfarbe'] = dict(eingang_sha256=vor, zeile=HF.ZEILE_GRAU, abbildung=HF.ABBILDUNG)
+    if 'q' in stufen:                 # Runde 8 (Nutzer 2026-11-14, Schwanz flach / Glieder / Stachel / Fleisch nur Bauchseite; schwanz_r8.py):
+        import schwanz_r8 as Q8       # letzte Stufe, aendert nur Meshes 16-22 (Mesh 9 = V7-Kopf, Knochen, Keyframes, Textur bleiben)
+        neu = Q8.stufe(neu, farbe=schwanzfarbe or Q8.STANDARD, prot=prot)
     prot['tim'] = dict(clut_zeilen=int(t['clut'].shape[0]), port_texturhoehe=int(t['ih'] * t['clut'].shape[0]))
     prot['emd'] = dict(bytes=len(neu), sha256=V.sha(neu))
     return neu, prot
@@ -512,9 +523,10 @@ def main():
     ap.add_argument('--aus', default=os.path.join(V.SFV8, 'emd'))
     ap.add_argument('--name', default='EM30_V8.EMD')
     ap.add_argument('--json')
-    ap.add_argument('--stufen', default='srwaunhbpf')
+    ap.add_argument('--stufen', default='srwaunhbpfq')
+    ap.add_argument('--schwanzfarbe', default=None, help='Stufe q: Farbvariante a / b (Standard schwanz_r8.STANDARD)')
     a = ap.parse_args()
-    neu, prot = bauen(a.basis, a.stufen)
+    neu, prot = bauen(a.basis, a.stufen, schwanzfarbe=a.schwanzfarbe)
     os.makedirs(a.aus, exist_ok=True)
     open(os.path.join(a.aus, a.name), 'wb').write(neu)
     print('geschrieben %s (%d Byte, sha256 %s)' % (os.path.join(a.aus, a.name), len(neu), prot['emd']['sha256']))

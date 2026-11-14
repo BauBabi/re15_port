@@ -1,0 +1,5 @@
+C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD
+Texturbild Asset == Disc-Original: False ; Pixel verschieden: 23470
+Zeile 495: 465 Texel, davon gleich Disc-Original 465, in Nutzung der Original-Zeile 482 durch Original-Flaechen 465; CLUT-Zeile Asset 495 == Original 482: True
+Zeile 493: 480 Texel, davon gleich Disc-Original 480, in Nutzung der Original-Zeile 480 durch Original-Flaechen 480; CLUT-Zeile Asset 493 == Original 480: True
+Zeile 487: 2846 Texel, davon gleich Disc-Original 4

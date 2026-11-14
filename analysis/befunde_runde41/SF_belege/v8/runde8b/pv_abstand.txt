@@ -1,0 +1,5 @@
+n7_pv_abstand.py: PV in festen Abstaenden ab dem koerpernahen Ende (Verfahren Pruefer pr8 a_mass.profil_abs)
+Video h90 (Nutzer-Umriss): L 216.9, tiefster Punkt y 351 {10: 12.0, 30: 26.0, 50: 34.0, 70: 33.1, 90: 33.3, 110: 18.1, 130: 19.8, 150: 17.9, 170: 18.1, 190: 10.0, 210: 6.0}
+ALT_07b6703f.EMD L 164.7, tiefster sichtbarer Punkt y 325 (x 281), Spitze der Mittellinie [284, 322] {10: 10.0, 30: 19.7, 50: 40.0, 70: 39.7, 90: 33.1, 110: 22.1, 130: 15.2, 150: 10.0, 170: None, 190: None, 210: None}
+EM30_R8_b.EMD L 169.3, tiefster sichtbarer Punkt y 332 (x 284), Spitze der Mittellinie [284, 325] {10: 10.0, 30: 21.5, 50: 37.9, 70: 34.5, 90: 26.7, 110: 19.7, 130: 16.0, 150: 10.2, 170: None, 190: None, 210: None}
+EM30_HANGAR.EMD L 185.8, tiefster sichtbarer Punkt y 350 (x 285), Spitze der Mittellinie [285, 341] {10: 10.0, 30: 21.5, 50: 37.9, 70: 36.5, 90: 28.6, 110: 19.7, 130: 16.5, 150: 12.0, 170: 12.6, 190: None, 210: None}

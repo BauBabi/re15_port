@@ -1,0 +1,2 @@
+4cf282427d345d47d35dd471d2fd26dc5ccca46420a5737d68e3635465b52d7d *C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD
+1150f87b3a1c84329ebb12c683a6dcd8946f23e1b30ae7981b6387869780af90 *C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build_r8/platform/pc/re15_pc.exe

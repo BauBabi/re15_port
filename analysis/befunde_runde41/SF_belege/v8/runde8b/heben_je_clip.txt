@@ -1,0 +1,16 @@
+Runde 8b2 heben(): 289 von 912 Keyframes angehoben (nur Winkel der Knochen 17-22), PV-Keyframe 777 angehoben: False
+je Clip: Keyframes angehoben / Drehung Median / Max (Grad)
+  Clip  3:  33     4    7
+  Clip  4:  26    15   27
+  Clip  5:  14     6   12
+  Clip  7:  22    20   29
+  Clip  8:   6    10   18
+  Clip  9:  46    11   22
+  Clip 10:  15    15   19
+  Clip 11:  24     8   41
+  Clip 12:  43    18   23
+  Clip 13:  30    16   20
+  Clip 14:   6     2    4
+  Clip 15:   9     1    1
+  Clip 17:  18    20   29
+  Clip 20:  27     6   10

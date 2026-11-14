@@ -89,6 +89,17 @@ Runde 6b P5-neu / P4-neu (riegel_r6.py, dort die Regeln im Wortlaut): S15 um Gre
                 Mesh 9 in allen 177 Ansichten und (Optionen --ko-v7 / --ko, Marker-Laeufe szene_marker.bauen_ko) in den Szenenbildern F225-F450;
                 S18 "vorn ohne Kragen" (gegen V8 r4, Option --r4; helle Bildpunkte am Szenenlauf --fd / --fd-v7); S19 Texeldichte und Streckung;
                 S3 (f) Huegel-Rot >= 50 % (r4 und Vorlage 58,3 %; r5d 45,8 %). Gegenproben: V8 r5d ROT in S15, S18, S19; V8 r4 ROT in S16 (a).
+Runde 8 (Schwanz, Stufe q schwanz_r8.py; Nutzer 2026-11-14 "weder mit dem rot der Schwanzfarbe noch mit dem etwas zu steifen grossen Schwanz
+                zufrieden" + Version_80%/Areas*.png; eigene Riegel riegel_schwanz_r8.py R8a-R8f). Fuer ein Asset mit dem Schwanz der Runde 8
+                (Mesh 22 mit Nadel, groesste Ecke y > 1000; riegel_schwanz_r8.ist_r8) gelten drei Regeln neu, die alten Werte stehen als Angabe dabei:
+S4 Runde 8      Wurzel >= 55, monoton, Ende <= 10, s 170-200 >= 9 wie bisher; "s 90-130 >= 36" und "(b) s 140-160 >= 27" (Messblatt V8 an der
+                Vorlage n1439, Linie T) ersetzt durch R8b (dasselbe Bild n1439 = h90 mit dem Nutzer-Umriss Areas.png vom 14.11.: PV s .3 >= 36,
+                s .5 15-20 % duenner als 07b6703f, s .5/.7/.9 gegen den Umriss +- 4) - Auftrag Runde 8 "Schwanzmitte (s .5) 15-20 % duenner".
+S6 Runde 8b     STRENG (Pruefer pr8 / Koordinator, die Runde-8-Fassung "Nadel nur Angabe" ist zurueckgenommen): (a) Spitze und JEDE Ecke von Mesh 22
+                (Knolle, Nadel) in 0 von allen Keyframes unter der tiefsten Koerperecke (schwanz_r8.heben hebt die Keyframes); (c) Szene (--szene):
+                alle Gelenke UND die Nadelspitze (Gelenk 6 + (Gelenk 7 - Gelenk 6) x dorn_y / 541) y <= 0, Gelenkwinkel <= 25,5.
+S15 Runde 8     ersetzt durch R8e (Fleisch nur auf der Bauchseite, Grenze 90 -> 60 Grad, Herkunft; Nutzer "weder mit dem rot der Schwanzfarbe ...");
+                die Regeln der Runden 5/6 (Unterseite bis theta 110/120, Ring-Deckel, Reifen) gelten fuer diesen Schwanz nicht mehr.
 Szene (Optionen --mk-a/--mk-b/--gr/--gr-v7, echte Framedumps mit Marker-Assets, szene_marker.py): S10s Wurzel F328-F346 = 0; S9s Schlitz
                 F344-F378 Ueberschuss gegen V7 <= SCHLITZ_SZENE_SOLL
 """
@@ -287,8 +298,10 @@ def s6(blob, szene=None):
     m22 = mo.meshes[22]
     P22 = np.array([v[:3] for v in m22.tv], float)
     dorn = P22[np.argmax(P22[:, 1])]
+    r8 = bool(dorn[1] > 1000)                                     # Runde 8: Nadel (riegel_schwanz_r8.ist_r8)
+    nadel = dorn.copy()                                           # Runde 8b: S6 wieder STRENG - Spitze und JEDE Ecke von Mesh 22 (Knolle, Nadel)
     L = float(np.linalg.norm(np.array(s.rel[22], float)))
-    unter = []
+    unter, unter_nadel = [], []
     for k in range(s.kf_count):
         R, T = mo.pose(k)
         y = -1e9
@@ -300,8 +313,12 @@ def s6(blob, szene=None):
         R22 = R[22].astype(float) / 4096.0
         sp = T[22].astype(float) + R22[:, 1] * L
         dn = T[22].astype(float) + R22 @ dorn
+        if r8:
+            dn = np.array([0.0, float((T[22].astype(float)[None, :] + P22 @ R22.T)[:, 1].max()), 0.0])
         if max(sp[1], dn[1]) > y:
             unter.append(k)
+            if r8:
+                unter_nadel.append(k)
     sz = None
     if szene and os.path.exists(szene):
         tief, n = -1e9, 0
@@ -314,16 +331,21 @@ def s6(blob, szene=None):
                     except (IndexError, ValueError):
                         pass
         import re as _re
-        wmax = 0.0
+        wmax, ntief = 0.0, -1e9
         for z in open(szene, errors='replace'):
             if 'Schwanz B y' in z:
                 pts = np.array([tuple(map(int, m.groups())) for m in _re.finditer(r'\d\((-?\d+),(-?\d+),(-?\d+)\)', z)], float)
                 if len(pts) == 8:
                     dd = np.diff(pts, axis=0); dd /= np.linalg.norm(dd, axis=1)[:, None]
                     wmax = max(wmax, max(float(np.degrees(np.arccos(np.clip((dd[j] * dd[j + 1]).sum(), -1, 1)))) for j in range(6)))
+                    if r8:                                        # Runde 8: Nadelspitze = Gelenk 6 + (Gelenk 7 - Gelenk 6) x y_nadel / 541
+                        ntief = max(ntief, float((pts[6] + (pts[7] - pts[6]) * float(nadel[1]) / 541.0)[1]))
         sz = dict(takte=n, tiefstes_y=tief, unter_boden=int(tief > 0), gelenk_max_grad=round(wmax, 1))
-    ok = not unter and (sz is None or (sz['tiefstes_y'] <= 0 and sz['gelenk_max_grad'] <= 25.5))
-    return dict(keyframes=s.kf_count, unter=len(unter), beispiele=unter[:10], szene=sz, ok=ok)
+        if r8:
+            sz['nadel_tiefstes_y'] = round(ntief, 1)
+    ok = not unter and (sz is None or (sz['tiefstes_y'] <= 0 and sz['gelenk_max_grad'] <= 25.5 and sz.get('nadel_tiefstes_y', -1) <= 0))
+    return dict(keyframes=s.kf_count, unter=len(unter), beispiele=unter[:10], szene=sz, ok=ok, r8=r8,
+                nadel_unter_info=len(unter_nadel) if r8 else None, nadel_y=int(nadel[1]))
 
 
 # ------------------------------------------------------------------ S7
@@ -734,7 +756,7 @@ def s16(blob, ref_blob):
                 c_einsatz_ansichten=n_sicht, c_einsatz_ueber_gesicht=ue, ok=z['ok'] and not ge and not ue)
 
 
-def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None, r4=None, ko=None):
+def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None, r4=None, ko=None, farbe=None):
     mo, A = render(blob)
     bone = A['bone'][:480]
     out = dict(sha256=V.sha(blob))
@@ -761,7 +783,16 @@ def alles(blob, ref_blob, szene=None, mit_s7=True, marker=None, fd=None, r4=None
     out['S12'] = s12(blob, ref_blob)
     out['S13'] = s13(blob)
     out['S14'] = s14(blob, ref_blob)
-    out['S15'] = s15(blob, ref_blob)
+    import riegel_schwanz_r8 as RS8
+    if RS8.ist_r8(blob):              # Runde 8: S4 mit R8b, S15 = R8e (Kopf dieser Datei)
+        r8 = RS8.alles(blob, RS8.Q.STANDARD if farbe is None else farbe)
+        out['R8'] = r8
+        out['S4']['r8_alt_ok'] = out['S4']['ok']
+        out['S4']['ok'] = bool(out['S4']['wurzel'] >= 55 and out['S4']['monoton'] and out['S4']['ende'] <= 10
+                               and bool(out['S4']['unten']['s170_200']) and min(out['S4']['unten']['s170_200']) >= 9 and r8['R8b']['ok'])
+        out['S15'] = dict(r8=True, ok=bool(r8['R8e']['ok']), r8e=r8['R8e'])
+    else:
+        out['S15'] = s15(blob, ref_blob)
     out['S16'] = s16(blob, ref_blob)
     import riegel_hand as RH
     out['S17'] = RH.s17(blob, ref_blob)
@@ -802,9 +833,20 @@ def zeilen(r):
     s = r['S4']; z.append('S4 Breite: Wurzel %.1f (>= 55), s 90-130 %s (>= 36), Ende %.1f (<= 10), monoton %s; (b) unten s 140-160 %s (>= 27), s 170-200 %s (>= 9); Folge %s -> %s'
                           % (s['wurzel'], s['s90_130'], s['ende'], s['monoton'], s['unten']['s140_160'], s['unten']['s170_200'], s['folge'],
                              'GRUEN' if s['ok'] else 'ROT'))
+    if 'R8' in r:
+        s = r['S4']; b8 = r['R8']['R8b']
+        z.append('S4 Runde 8b (Auftrag Runde 8, Pruefer pr8): Wurzel %.1f (>= 55), monoton %s, Ende %.1f (<= 10), s 170-200 %s (>= 9); '
+                 'R8b PV-Breite in festen Abstaenden ab dem koerpernahen Ende %s, Abweichung gegen das Video %s, Mittel %.1f (je <= 6, Mittel <= 5) %s; '
+                 'alte Regel (s 90-130 >= 36 / s 140-160 >= 27, nur Info) waere %s -> %s'
+                 % (s['wurzel'], s['monoton'], s['ende'], s['unten']['s170_200'], b8['breite'], b8['abweichung'], b8['mittel'],
+                    'GRUEN' if b8['ok'] else 'ROT', 'GRUEN' if s['r8_alt_ok'] else 'ROT', 'GRUEN' if s['ok'] else 'ROT'))
     s = r['S5']; z.append('S5 Gesicht: Mesh 9 %s, Zeile 486 %s, Texel %s (%d) -> %s' % (s['mesh9'], s['zeile486'], s['texel'], s['n_texel'], 'GRUEN' if s['ok'] else 'ROT'))
     s = r['S6']; z.append('S6 Boden: %d von %d Keyframes unter der tiefsten Koerperecke %s; Szene %s -> %s'
                           % (s['unter'], s['keyframes'], s['beispiele'], s['szene'], 'GRUEN' if s['ok'] else 'ROT'))
+    if s.get('r8'):
+        z.append('   S6 Runde 8b (streng): Spitze und jede Ecke von Mesh 22 (Knolle, Nadel bis y %d) in %d von %d Keyframes unter der Sohle (Soll 0); '
+                 'Szene: Nadelspitze tiefstes y %s (Soll <= 0)'
+                 % (s['nadel_y'], s['nadel_unter_info'], s['keyframes'], (s['szene'] or {}).get('nadel_tiefstes_y', 'ohne --szene')))
     if 'S7' in r:
         s = r['S7']
         d1, d2 = s['d']['v8_13'], s['d']['v8_13_14']
@@ -843,7 +885,15 @@ def zeilen(r):
                     'ok' if s['b_ok'] else 'ROT', '; '.join('%s %d | %d' % (p, n, v) for p, (n, v) in s['c_rot'].items()),
                     'ok' if s['c_ok'] else 'ROT', 'GRUEN' if s['ok'] else 'ROT'))
         z.append('   S14 (a) streng (dL und da* je <= V7, ohne Rand): %s' % ('erfuellt' if s['a_streng'] else 'NICHT erfuellt (dL ueber V7, siehe Rand)'))
-    if 'S15' in r:
+    if 'S15' in r and r['S15'].get('r8'):
+        e = r['S15']['r8e']
+        z.append('S15 Runde 8 = R8e (Fleisch nur Bauchseite): Flaechen auf 495 %d, ausserhalb des Bauchsektors %d; PV Fleisch bei |theta| >= 100 %.2f %%, '
+                 '<= 40 %.1f %%; fremde Texel %s -> %s (Regeln der Runden 5/6 fuer diesen Schwanz ersetzt)'
+                 % (e['flaechen_495'], e['n_falsch'], e['pv_fleisch_aussen'], e['pv_fleisch_innen'], e['fremde_texel'], 'GRUEN' if r['S15']['ok'] else 'ROT'))
+    if 'R8' in r:
+        import riegel_schwanz_r8 as RS8
+        z += ['   ' + x for x in RS8.zeilen(r['R8'])[0]]
+    if 'S15' in r and not r['S15'].get('r8'):
         s = r['S15']; a, c, d = s['flaechen'], s['bild']['ansichten'], s['ruhe']['ansichten']
         z.append('S15 Schwanz-Unterseite (P4): (a) Herkunft Zeile %s: fremde Texel %d, falsche Zeile/Seite %d; (b) Unterseite %d Flaechen, davon ohne '
                  'Fleisch %d, Fleisch-Texel %d; Oberseite %d Flaechen, Fehler %d; (c) Fleisch-Texel-Anteil |theta| <= 100 / >= 135: %s (Soll >= %.0f %% / 0); '
@@ -914,6 +964,7 @@ def main():
     ap.add_argument('--r7c-plain-r4', help='Runde 7c: Szenenlauf V8 r4 (helle Bildpunkte E12, F344-F378)')
     ap.add_argument('--r7c-ein', help='Runde 7c: Eingang (Standard git show db62602be = Stand 7b 87b02681)')
     ap.add_argument('--r7c', action='store_true', help='Runde 7c: Urteile nach E9-E13 (auch ohne Laeufe: dann nur offline)')
+    ap.add_argument('--farbe', default=None, help='Runde 8: Farbprobe des Schwanzes (a / b; Runde 8b ohne c) fuer R8d (Baender)')
     a = ap.parse_args()
     v7 = a.v7 or os.path.join(V.SFV8, 'emd', 'EM30_V7.EMD')
     ref = open(v7, 'rb').read()
@@ -922,10 +973,15 @@ def main():
     mk = (a.mk_a, a.mk_b, a.gr, a.gr_v7) if (a.mk_a or a.gr) else None
     import riegel_r6 as R6
     r = alles(blob, ref, a.szene, marker=mk, fd=(a.fd, a.fd_v7) if (a.fd and a.fd_v7) else None, r4=R6.r4_blob(a.r4),
-              ko=(a.ko_v7, a.ko) if (a.ko_v7 and a.ko) else None)
+              ko=(a.ko_v7, a.ko) if (a.ko_v7 and a.ko) else None, farbe=a.farbe)
     if a.r7c or a.r7c_lm:
         import riegel_r7c as R7C
         R7C.einbauen(r, blob, ref, R6.r4_blob(a.r4), a)
+    if a.json:                        # Runde 8b: Ergebnis zuerst sichern (ein Formatfehler in zeilen verlor sonst den ganzen Lauf)
+        json.dump(r, open(a.json, 'w'), indent=1, default=lambda o: o.tolist() if hasattr(o, 'tolist') else str(o))
+    if os.environ.get('RE15_RIEGEL_PICKLE'):                     # Runde 8b: Rohergebnis fuer eine erneute Ausgabe ohne neuen Lauf
+        import pickle
+        pickle.dump(r, open(os.environ['RE15_RIEGEL_PICKLE'], 'wb'))
     z, rot = zeilen(r)
     kopf = ['Riegel V8 (Messblatt V8 Abschnitt 7) fuer %s' % a.emd, 'sha256 %s' % r['sha256'], 'Referenz V7 %s' % V.V7_SHA,
             'Referenz V8 r4 %s' % r.get('r4_sha256')]

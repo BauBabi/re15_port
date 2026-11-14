@@ -3,7 +3,7 @@
 # committeten Eingaben neu und prueft die sha256 gegen release/em30_hangar.sha256 (Exit 1 bei Abweichung).
 #
 #   bash re15_port/tools/r41_sichel/v8_kette.sh [ZIELORDNER]      (Standard: Scratchpad .../sfv8/kette)
-#   Umgebung: KETTE_COMMIT (Stand der Werkzeuge, Standard HEAD), KETTE_REF2_COMMIT (wie v7_kette.sh),
+#   Umgebung: KETTE_COMMIT (Stand der Werkzeuge, Standard HEAD), KETTE_REF2_COMMIT (wie v7_kette.sh), SCHWANZFARBE (a / b, Standard b),
 #             V7_SOLL (sha256 der Stufe 6, Standard 319bbd17 = V7, Spiel-Asset v0.8.30)
 #
 # Nutzer 2026-11-08 abends (woertlich): "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber mit Schwanz und sowas bin ich immer
@@ -14,7 +14,7 @@
 #
 # Schritte:
 #   1-6 v7_kette.sh (Stufe 6 = V7, sha256 319bbd17; dessen Pin-Pruefung wird hier durch V7_SOLL ersetzt, weil der Pin jetzt V8 ist)
-#   7   v8/v8_bau.py --stufen srwaunhbpf + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, v8/unterseite_v8.json, v8/nacken_v8.json, Original-EM30 (CDEMD0.EMS)
+#   7   v8/v8_bau.py --stufen srwaunhbpfq + v8/kette_v8.json, v8/ruecken_v8.json, v8/adern_v8.json, v8/unterseite_v8.json, v8/nacken_v8.json, Original-EM30 (CDEMD0.EMS)
 #       (Runde 6b: Stufe r mit ruecken_v8.json ohne Kragen (Ecken um den Kopf auf Stand Runde 4), Stufe n = nacken_r6.py (ein geschlossenes
 #        Nackenstueck, 7 Ecken / 10 Dreiecke, Zeile 493), Stufe u = unterseite_r5.py Runde 6: Grenze 110 / 120 Grad, Mantel, Dorn und
 #        Ring-Deckel an der Grenze geteilt, Fleisch-Verlauf v 98-108; Asset sha256 95a783a6 -
@@ -37,12 +37,17 @@
 #       (Runde 7e Handfarbe: Stufe f = v8/handfarbe_r7e.py, Nutzerentscheid 2026-11-14 "wie in der Vorlage" - Hand (Mesh 12 ohne Krallen) und
 #        unteres Unterarm-Drittel (Mesh 11) auf die graue Zeile 482 und die Grau-Zone des Unterarms; letzte Stufe, aendert nur UV-/CLUT-Felder
 #        von Mesh 11 und 12; Stufenfolge s r w a u n h b p f)
+#       (Runde 8 Schwanz: Stufe q = v8/schwanz_r8.py + v8/schwanz_r8.json, Nutzer 2026-11-14 "weder mit dem rot der Schwanzfarbe noch mit dem
+#        etwas zu steifen grossen Schwanz zufrieden" + Version_80%/Areas*.png - Meshes 16-22 flach, Glieder mit Fugen, Knolle + Nadel, Fleisch nur
+#        Bauchseite; letzte Stufe, aendert nur Meshes 16-22 und - Runde 8b - die Winkel der Knochen 17-22 angehobener Keyframes (S6 streng);
+#        Farbe SCHWANZFARBE (Standard b); Stufenfolge s r w a u n h b p f q)
 #                                    -> EM30_V8.EMD = Pin (V8)
 set -u
 HIER="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BAUM="$(git -C "$HIER" rev-parse --show-toplevel)" || exit 2
 ZIEL="${1:-C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/kette}"
 V7_SOLL="${V7_SOLL:-319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6}"
+SCHWANZFARBE="${SCHWANZFARBE:-b}"     # Runde 8: Farbprobe der Stufe q (a / b; Runde 8b nur noch zwei); der Pin gilt fuer b
 PIN="$BAUM/release/em30_hangar.sha256"
 PIN_SOLL="$(awk 'NR==1{print $1}' "$PIN")"
 [ -n "$PIN_SOLL" ] || { echo "FEHLER: Pin $PIN leer"; exit 2; }
@@ -59,8 +64,8 @@ grep -E "^   [1-5] " "$ZIEL/v7_kette.txt"
 
 T="$ZIEL/baum/re15_port/tools/r41_sichel/v8"
 [ -f "$T/v8_bau.py" ] || { echo "FEHLER: $T/v8_bau.py fehlt im Schattenbaum"; exit 2; }
-echo "-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwaunhbpf"
-( cd "$T" && python v8_bau.py --basis "$ZIEL/emd/EM30_V7.EMD" --aus "$ZIEL/emd" --name EM30_V8.EMD --stufen srwaunhbpf \
+echo "-- 7_v8: python v8_bau.py --basis EM30_V7.EMD --stufen srwaunhbpfq --schwanzfarbe $SCHWANZFARBE"
+( cd "$T" && python v8_bau.py --basis "$ZIEL/emd/EM30_V7.EMD" --aus "$ZIEL/emd" --name EM30_V8.EMD --stufen srwaunhbpfq --schwanzfarbe "$SCHWANZFARBE" \
       --json "$ZIEL/prot/7_v8.json" ) > "$ZIEL/prot/7_v8.txt" 2>&1 || { echo "FEHLER: Schritt 7_v8 (Protokoll $ZIEL/prot/7_v8.txt)"; tail -5 "$ZIEL/prot/7_v8.txt"; exit 1; }
 rc=0
 v8="$(sha256sum "$ZIEL/emd/EM30_V8.EMD" | awk '{print $1}')"

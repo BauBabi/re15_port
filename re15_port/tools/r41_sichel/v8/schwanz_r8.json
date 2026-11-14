@@ -1,0 +1,62 @@
+{
+ "quelle": "schwanz_r8.py suche am Eingang 07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95 (Stand Runde 7e, = Ausgang Stufe f); Runde 8b: Fleisch schraeg (Original-Zeile 482), Band rosa (Original-Zeile 480, Seite 0); Protokoll SF_belege/v8/runde8b/suche_r8b.txt; Fleisch-Breite: suche 21, im Bau 20 (Runde 8b2: bei kontinuierlichem v lag mit 21 nach der Rundung 1 Texel ausserhalb der Original-Nutzung, riegel_schwanz_r8 R8e (3))",
+ "felder": {
+  "grau": {
+   "16": [
+    64,
+    87,
+    76,
+    131
+   ],
+   "17": [
+    64,
+    90,
+    45,
+    85
+   ],
+   "18": [
+    64,
+    87,
+    76,
+    131
+   ],
+   "19": [
+    64,
+    87,
+    76,
+    131
+   ],
+   "20": [
+    64,
+    87,
+    76,
+    131
+   ],
+   "21": [
+    64,
+    76,
+    219,
+    238
+   ],
+   "22": [
+    64,
+    77,
+    235,
+    255
+   ]
+  },
+  "fleisch": {
+   "v0": 114,
+   "v1": 123,
+   "u_v0": 1,
+   "u_v1": 19,
+   "breite": 20
+  },
+  "band": [
+   58,
+   73,
+   19,
+   48
+  ]
+ }
+}
