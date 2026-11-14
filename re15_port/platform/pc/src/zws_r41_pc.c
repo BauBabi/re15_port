@@ -13,6 +13,11 @@
  *     re15_render_pc_show_fmv. Danach re15_zws_r41_film_gespielt -> das Skript laeuft im naechsten Takt weiter. Fehlt die
  *     Datei, laeuft es sofort weiter (Meldung auf stderr). Der Einstieg ist ein harter Schnitt, nach dem Film blendet das
  *     Spielbild in 15 Bildern aus Schwarz ein - beides wie RE2 (Belege include/re15_zws_r41.h "UEBERBLENDUNG WIE RE2").
+ *   * Vorspulen (11C, re15_zws_r41_pc_vorspul_bild, aus platform/pc/main.c am Bildende): solange die Engine nach dem Film den
+ *     Original-Auftritt @0x01988..@0x01A5B unsichtbar laufen laesst (re15_zws_r41_vorspulen), wird das Bild nicht
+ *     praesentiert (re15_render_pc_bild_halten) und der Bildtakt der Hauptschleife entfaellt
+ *     (re15_zws_r41_pc_bild_uebersprungen). Messhaken RE15_ZWS_VORSPULEN_SICHTBAR=1 (kein Spielverhalten): dieselben Bilder
+ *     gezeigt und getaktet - fuer den Vergleich des Endzustands mit und ohne Vorspulen.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -152,6 +157,29 @@ static int film_spielen(const char *rel)
     fprintf(stderr, "[%s] Film zu Ende: %d von %d Bildern gezeigt%s (F%u, %u ms)\n", kennung(), gezeigt, movie.num_frames,
             abbruch ? " (START)" : "", (unsigned)g_engine.frame_count, (unsigned)(SDL_GetTicks() - start_ms));
     return gezeigt;
+}
+
+/* ---- Vorspulen (11C) --------------------------------------------------------------------------------------------- */
+static int      s_uebersprungen = 0;     /* dieses Bild wurde nicht praesentiert */
+static uint32_t s_vorspul_start = 0;     /* Wanduhr beim ersten uebersprungenen Bild */
+int re15_zws_r41_pc_vorspul_bild(void)
+{
+    static int s_sichtbar = -1;
+    if (s_sichtbar < 0) { const char *e = getenv("RE15_ZWS_VORSPULEN_SICHTBAR"); s_sichtbar = (e && *e && *e != '0') ? 1 : 0; }
+    const int an = re15_zws_r41_vorspulen();
+    if (an && !s_uebersprungen) s_vorspul_start = SDL_GetTicks();
+    if (!an && s_uebersprungen)
+        fprintf(stderr, "[%s] F%u Vorspulen: erstes gezeigtes Bild, %u ms Wanduhr seit dem Film\n", kennung(),
+                (unsigned)g_engine.frame_count, (unsigned)(SDL_GetTicks() - s_vorspul_start));
+    if (an) re15_zws_r41_vorspul_bild();     /* Zaehler + Notbremse */
+    s_uebersprungen = an;
+    return an && !s_sichtbar;
+}
+int re15_zws_r41_pc_bild_uebersprungen(void)
+{
+    static int s_sichtbar = -1;
+    if (s_sichtbar < 0) { const char *e = getenv("RE15_ZWS_VORSPULEN_SICHTBAR"); s_sichtbar = (e && *e && *e != '0') ? 1 : 0; }
+    return s_uebersprungen && !s_sichtbar;
 }
 
 void re15_zws_r41_pc_bild(void)

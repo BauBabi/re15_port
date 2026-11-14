@@ -16,7 +16,8 @@
  *             Byte); Port-Zeilen 60/61 in 11C0 und fremde Zeiger mit gleichen Bytes vom Haken unberuehrt
  *   ablauf    ROOM11C0 am VM (Tuer-Spawn, Programm SZENE = Gosub sub02): msg 3 -> Schrei -> msg 4 genau Tonlaenge + 20 Takte
  *             danach; Film erst nach msg 4 + Drehen; waehrend des Films keine Musik, keine Kamera 12, keine msg 5; nach dem
- *             Film Musikstart MAIN Play und Kamera 12, dann msg 5; harter Schnitt, danach Einblenden 240 ... 16, 0
+ *             Film Musikstart MAIN Play und Kamera 12 (Original-Auftritt) - alle Bilder bis vor Cut_chg 5 @0x01A5C unsichtbar
+ *             vorgespult, ohne Blendkanal; das erste gezeigte Bild ist Kamera 5 mit msg 5, ab dort Einblenden 240 ... 16, 0
  *   elza      ROOM11C1 (Elzas Szenario): kein Nachrichtenblock, keine Anker, 600 Bilder ohne Schrei/Film
  */
 #include "re15_rdt.h"
@@ -187,11 +188,13 @@ static void teil_anker(void)
                                           "MAIN Play, @0x01988 `29 0c` Cut_chg 12");
     PRUEF(!memcmp(r + 0x01A5C, vor5, 6), "@0x01A5C `29 05` Cut_chg 5, @0x01A5E `2b 05 00 00` msg 5 \"Ada, you hide ...\"");
     PRUEF(!memcmp(r + f11c->schrei.off, f11c->schrei.bytes, f11c->schrei.n) &&
-          !memcmp(r + f11c->film.off, f11c->film.bytes, f11c->film.n), "Tabellen-Bytes = RDT-Bytes an beiden Ankern");
+          !memcmp(r + f11c->film.off, f11c->film.bytes, f11c->film.n) && f11c->sichtbar.off == 0x01A5Cu &&
+          !memcmp(r + f11c->sichtbar.off, f11c->sichtbar.bytes, f11c->sichtbar.n) && f114->sichtbar.n == 0,
+          "Tabellen-Bytes = RDT-Bytes an allen drei Ankern (Cut_chg 5 @0x01A5C `29 05` = Ende des Vorspulens; 114 ohne)");
 
     const unsigned alt = g_current_room_id;
     re15_zws_r41_raum_scan(r, (long)n, 0x11C0);
-    PRUEF(g_re15_zws_anker_n == 2, "ROOM11C0: 2 Anker armiert");
+    PRUEF(g_re15_zws_anker_n == 3, "ROOM11C0: 3 Anker armiert");
     re15_zws_r41_raum_scan(r, (long)n, 0x11C1);
     PRUEF(g_re15_zws_anker_n == 0, "dieselben Bytes als ROOM11C1 (Elza): kein Anker");
     {
@@ -387,7 +390,7 @@ static void teil_ablauf(void)
     re15_fade_init();
     /* Tuer-Spawn aus ROOM11B0 main00 @0x00FAA: (-25279,0,17268) Blick 0x11FB, Cut 0 (wie test_r39_parkplatz11c0 kampf) */
     if (room_boot(0x11C0, -25279, 17268, 0x11FB, 0) != 0) return;
-    PRUEF(g_re15_zws_anker_n == 2, "Raumladen ROOM11C0: 2 Anker armiert (scd_register_current_rdt)");
+    PRUEF(g_re15_zws_anker_n == 3, "Raumladen ROOM11C0: 3 Anker armiert (scd_register_current_rdt)");
     re15_zws_r41_schrei_hook = echter_schrei;
     re15_zws_r41_film_spieler = 1;
     const unsigned s0 = g_re15_r39o_szene_zaehler;
@@ -395,9 +398,16 @@ static void teil_ablauf(void)
     long b_msg3 = -1, b_msg4 = -1, b_msg5 = -1, b_schrei_ende = -1, b_film_an = -1, b_film_aus = -1, b_cam12 = -1;
     int msg5_im_film = 0, cam12_im_film = 0, musik_im_film = 0, halte = 0;
     int blende[32], n_blende = 0, vorher_blende = 0;
+    long b_sichtbar = -1;                     /* erstes Bild nach dem Film, das wieder gezeigt wird (Vorspulen aus) */
+    int unsichtbar = 0, blende_unsichtbar = 0, cam_sichtbar = -1;
     re15_fade_kill(RE15_ZWS_BLENDE_KANAL);
-    for (int f = 0; f < 6000 && b_msg5 < 0; f++) {
+    for (int f = 0; f < 6000 && (b_msg5 < 0 || s_bild < b_msg5 + 20); f++) {
         frame(0, 0);
+        /* Plattform-Ersatz Vorspulen (zws_r41_pc.c re15_zws_r41_pc_vorspul_bild am Bildende): Bild nicht zeigen, zaehlen */
+        if (b_film_aus >= 0 && b_sichtbar < 0) {
+            if (re15_zws_r41_vorspulen()) { unsichtbar++; re15_zws_r41_vorspul_bild(); }
+            else { b_sichtbar = s_bild; cam_sichtbar = (int)g_scd.cam_id; }
+        }
         if (s_bild_schrei >= 0 && b_schrei_ende < 0 && re15_zws_r41_schrei_rest() == 0) b_schrei_ende = s_bild;
         if (g_scd.message_active && (int)g_scd.message_id != last) {
             last = (int)g_scd.message_id;
@@ -410,7 +420,8 @@ static void teil_ablauf(void)
         if (b_cam12 < 0 && g_scd.cam_id == 12) b_cam12 = s_bild;
         re15_fade_tick();   /* wie re15_render_end_frame (render_pc.c) je gezeichnetem Bild */
         if (b_film_an < 0 && g_fade_ch[RE15_ZWS_BLENDE_KANAL].drawn) vorher_blende++;
-        if (b_film_aus >= 0 && n_blende < 32 && s_bild > b_film_aus)
+        if (b_film_aus >= 0 && b_sichtbar < 0 && g_fade_ch[RE15_ZWS_BLENDE_KANAL].drawn) blende_unsichtbar++;
+        if (b_sichtbar >= 0 && n_blende < 32)   /* ab dem ersten wieder gezeigten Bild */
             blende[n_blende++] = g_fade_ch[RE15_ZWS_BLENDE_KANAL].drawn ? g_fade_ch[RE15_ZWS_BLENDE_KANAL].out_r : -1;
         /* Plattform-Ersatz Film: angefordert -> FILM_HALTEN Bilder "laufen lassen" (die echte Plattform spielt ihn
          * zwischen zwei Spielbildern; hier tickt das Spiel weiter, damit das Parken sichtbar wird), dann gespielt. */
@@ -423,6 +434,8 @@ static void teil_ablauf(void)
                 PRUEF(re15_zws_r41_aktiv() && !strcmp(re15_zws_r41_aktiv()->film_datei, RE15_ZWS11C_FILM),
                       "Plattform spielt %s", re15_zws_r41_aktiv() ? re15_zws_r41_aktiv()->film_datei : "-");
                 re15_zws_r41_film_gespielt(); b_film_aus = s_bild;
+                PRUEF(re15_zws_r41_vorspulen() && re15_fade_done(RE15_ZWS_BLENDE_KANAL),
+                      "nach dem Film: Vorspulen an, noch kein Einblenden (erst am Anker @0x01A5C)");
             }
         }
     }
@@ -458,15 +471,25 @@ static void teil_ablauf(void)
     PRUEF(b_msg5 > b_cam12 && b_msg5 - b_cam12 >= 36 + 80,
           "msg 5 \"Ada, you hide inside that patrol car.\" nach dem Original-Auftritt (36 Takte Schwingen + Sleep 80 @0x01A50): "
           "%ld Takte nach Kamera 12", b_msg5 - b_cam12);
+    /* Orchestrator-Entscheid 2026-11-14: der Auftritt @0x01988..@0x01A5B laeuft mit allen Takten, aber unsichtbar */
+    printf("    Vorspulen: Film aus Bild %ld, %d Bilder unsichtbar (Zaehler %u), erstes gezeigtes Bild %ld (Kamera %d), "
+           "msg 5 Bild %ld\n", b_film_aus, unsichtbar, g_re15_zws_vorspul_bilder, b_sichtbar, cam_sichtbar, b_msg5);
+    PRUEF(b_sichtbar == b_msg5 && cam_sichtbar == 5 && unsichtbar == (int)(b_sichtbar - b_film_aus - 1) &&
+          g_re15_zws_vorspul_bilder == (unsigned)unsichtbar && unsichtbar >= 36 + 80,
+          "unsichtbar vorgespult: alle %d Bilder von Kamera 12 bis vor Cut_chg 5 @0x01A5C; erstes gezeigtes Bild = Kamera 5 "
+          "mit msg 5 (Bild %ld)", unsichtbar, b_sichtbar);
+    PRUEF(blende_unsichtbar == 0, "waehrend des Vorspulens kein Blendkanal aktiv (%d Bilder)", blende_unsichtbar);
     {
         int ok = n_blende >= 17 && vorher_blende == 0;
         for (int i = 0; ok && i < 16; i++) if (blende[i] != 240 - 16 * i) ok = 0;
         if (ok && blende[16] != -1) ok = 0;
-        printf("    Blende nach dem Film:"); for (int i = 0; i < n_blende && i < 18; i++) printf(" %d", blende[i]); printf("\n");
-        PRUEF(ok, "Ueberblendung wie RE2: vor dem Film kein Abblenden (%d Bilder), danach %d, %d ... %d, %d, Halt (15 Bilder "
-                  "aus Schwarz, ROOM1080 sub14 @0x0252A)", vorher_blende, n_blende > 0 ? blende[0] : -9,
-              n_blende > 1 ? blende[1] : -9, n_blende > 14 ? blende[14] : -9, n_blende > 15 ? blende[15] : -9);
+        printf("    Blende ab Kamera 5:"); for (int i = 0; i < n_blende && i < 18; i++) printf(" %d", blende[i]); printf("\n");
+        PRUEF(ok, "Ueberblendung wie RE2: vor dem Film kein Abblenden (%d Bilder), ab dem ersten gezeigten Bild (Kamera 5, "
+                  "msg 5) %d, %d ... %d, %d, Halt (15 Bilder aus Schwarz, ROOM1080 sub14 @0x0252A)", vorher_blende,
+              n_blende > 0 ? blende[0] : -9, n_blende > 1 ? blende[1] : -9, n_blende > 14 ? blende[14] : -9,
+              n_blende > 15 ? blende[15] : -9);
     }
+    PRUEF(!re15_zws_r41_vorspulen(), "Vorspulen danach aus");
     re15_zws_r41_schrei_hook = NULL;
     re15_zws_r41_film_spieler = 0;
 }

@@ -70,20 +70,28 @@
  * FUN_80044da4 Steuerwert (a0>>24)&0xF = 1 (`andi v1,v0,0xf` @0x80044dcc, Sprungtabelle @0x80010e58[1] -> 0x80044e00):
  * SsSeqSetVol (`jal 0x8005ab5c` @0x80044e24) + SsSeqPlay (`jal 0x80060030` @0x80044e40) = die Kampfmusik beginnt HIER.
  *
- * ABLAUF 11C (zwei RDT-Anker, sub02 selbst bleibt bytegleich):
+ * ABLAUF 11C (drei RDT-Anker, sub02 selbst bleibt bytegleich):
  *   ... msg 3 "You didn't run into him?", Ada Plc_motion 0x18 @0x0191C
  *   ANKER @0x01920: Adas Sprachzeile ausreden lassen, dann SCHREI (derselbe Ton wie 114), parken bis zum Tonende
  *   Sleep 20 @0x01920 (Original) = die "kurze Pause" nach dem Ton (wie Sleep 20 @0x00DC6 in 114)
  *   msg 4 "What!?" @0x01928 - Leon/Ada drehen sich zum Anhaenger, Gosub sub06, Sleep 10 @0x0197E (Original) = "kurz warten"
  *   ANKER @0x01982: FILM R11CGORI.STR (beginnt mit Leon/Ada, die auf den Anhaenger schauen), parken bis gespielt
  *   Sce_bgm_control @0x01982: die Kampfmusik beginnt NACH dem Film (Nutzer 11-13 zur Filmmusik: keine Bossmusik im Film,
- *   "Bruch, wenn das Spiel sie danach neu startet"), dann laeuft der Original-Auftritt @0x01988..@0x01A5C, msg 5.
- * WAS DIE SKRIPT-REIHENFOLGE NICHT ZULAESST: zwischen "What!?" (@0x01928) und "Ada, you hide ..." (@0x01A5E) steht im
- *   Original der Auftritt in Kamera 12 (@0x01988..@0x01A5C, 36 Takte Schwingen + Evt_next + Sleep 80 + Cut 5 = ca. 4 s).
- *   Der Film steht davor; danach laeuft dieser Auftritt unveraendert, erst dann "Ada, you hide ...". Ein Film direkt vor
- *   msg 5 (@0x01A5E) zeigte den Auftritt zweimal in falscher Folge (erst im Spiel, dann im Film aus dem geschlossenen
- *   Anhaenger) und laege hinter dem Musikstart @0x01982. Den Original-Auftritt wegzulassen ist ein Eingriff in sub02 und
- *   NICHT Teil dieser Vorgabe (offene Nutzerfrage).
+ *   "Bruch, wenn das Spiel sie danach neu startet"), dann der Original-Auftritt @0x01988..@0x01A5B UNSICHTBAR (s. u.),
+ *   ANKER @0x01A5C `29 05` Cut_chg 5: Ende des Vorspulens, Einblenden aus Schwarz, im selben Takt msg 5 @0x01A5E.
+ * AUFTRITT IN KAMERA 12 UNSICHTBAR VORSPULEN (Orchestrator-Entscheid 2026-11-14 zur Nutzer-Vorgabe "dann das Video, dann
+ *   geht es weiter mit 'Ada, you hide in that patrol car'"): der Block @0x01988..@0x01A5B (Cut_chg 12 @0x01988; Member_set
+ *   Y=-2500 fuer Work 2/1 @0x0198E und 2/2 @0x01996; Work 3/0 @0x0199A = Objekt 0, sieben Speed_set/For-Add_speed/
+ *   Add_aspeed-Schleifen @0x0199E..@0x01A28 = Anhaenger wackelt 12+6x4 = 36 Takte; Gorillas auf ihre Plaetze, 0x0C=0x10
+ *   @0x01A2E..@0x01A4C; Sleep 80 @0x01A50; 0x0C=0x30 @0x01A58) zeigt dasselbe Ereignis wie der Film noch einmal in
+ *   Spielgrafik und soll nicht sichtbar sein. Er laeuft vollstaendig mit allen Logik-Takten (Endzustand wie im Original),
+ *   aber ohne Bildausgabe und ohne Wanduhr-Takt: nach dem Film (re15_zws_r41_film_gespielt) meldet re15_zws_r41_vorspulen()
+ *   1, die PC-Hauptschleife zeichnet diese Bilder wie ein gehaltenes Apply-Bild (re15_render_pc_bild_halten, Runde 41
+ *   Spur E: kein Present, Fade-Takt laeuft) und laesst Bildtakt und Standbild-Wartezeit aus. Der Anker @0x01A5C beendet
+ *   das Vorspulen und setzt erst DORT das Einblenden aus Schwarz (dieselben 15 Bilder wie 114, Konstanten
+ *   RE15_ZWS_BLENDE_*), das erste gezeigte Bild danach ist Kamera 5 mit msg 5. Bildzaehler und Logik laufen unveraendert
+ *   (im Riegel und im Echtlauf gleiche Spielbilder fuer Cut_chg 5 / msg 5 wie ohne Vorspulen). Kein Anker -> Notbremse
+ *   nach RE15_ZWS_VORSPUL_NOTBREMSE Bildern (Vorspulen aus, Einblenden). PSX-Fassung: kein Plattform-Haken, nichts zu tun.
  *
  * ================================ GEMEINSAM ================================
  * DER SCHREI: Raum-Tonbank snd1 von ROOM11C0 (Gorilla-Raum; RDT-Kopf +0x14/+0x18/+0x1C = EDT/VH/VB, rdt_common.c), auf der
@@ -121,8 +129,8 @@
  *     Helligkeit = Pegel >> 7 (`sra a0,v0,0x17` @0x8002c3b8), Kachel-RGB = Maske & Helligkeit, Pegel += Schritt (@0x8002c404-14),
  *     Halt bei gesetztem Bit 15 (`bltz` @0x8002c3b4) - dieselbe Mechanik wie RE1.5 FUN_80021880 (engine/src/fade_common.c).
  *     Folge ROOM1080 sub14: Pegel 0x7800 -> nach dem Film Helligkeit 240, 224, ..., 16, 0 = 15 Bilder subtraktiv (ABR 2) aus
- *     Schwarz zurueck ins Spiel. Der Port setzt genau das, wenn die Plattform einen Film beendet (re15_zws_r41_film_gespielt),
- *     fuer beide Filme gleich.
+ *     Schwarz zurueck ins Spiel. Der Port setzt genau das, wenn die Plattform einen Film beendet (re15_zws_r41_film_gespielt);
+ *     11C erst am Ende des unsichtbaren Vorspulens (Anker @0x01A5C), dieselben Konstanten.
  *   TON: RE2 schaltet nur die Musik per Skript (sub14 Sce_bgm_control vor/nach dem Film). 114: in ENTRIEGELN39 ist sie schon
  *     aus (Sce_bgm_control MAIN Stop, Port-Zeile +0x80) und startet wie im Original nach msg 7 (@0x00E5C). 11C: vor dem Film
  *     laeuft keine Musik: der Raumlader laedt MAIN16 nur (Tabelleneintrag FF56, MAIN-Byte 0x56 -> Flag 0x56 >> 6 = 1:
@@ -145,6 +153,9 @@
 #define RE15_ZWS_TAKTE_JE_S   30       /* scd_vm.c op_sleep: SCD-VM laeuft mit 30 Hz */
 /* Notbremse des Stimmen-Wartens am Anker = RE15_VOICE_NOTBREMSE in scd_vm.c op_message_on (10 s > laengste Aufnahme). */
 #define RE15_ZWS_STIMME_NOTBREMSE 300
+/* Notbremse des unsichtbaren Vorspulens (Anker nie erreicht): dieselbe Grenze, 300 Bilder = 10 s > Block @0x01988..@0x01A5B
+ * (36 Takte Schwingen + Evt_next + Sleep 80 = ca. 117 Takte). */
+#define RE15_ZWS_VORSPUL_NOTBREMSE RE15_ZWS_STIMME_NOTBREMSE
 
 /* ---- Raum 114 (ROOM1141): Port-Zeilen ohne Text (ROOM1141: 40-42 Runde 38, 50-58 Runde 39, Sprach-Id 59 -> 60/61 frei) */
 #define RE15_ZWS114_RAUM         0x1141u
@@ -157,6 +168,7 @@
 #define RE15_ZWS11C_RAUM         0x11C0u
 #define RE15_ZWS11C_ANKER_SCHREI 0x01920u /* `09 0a 14 00` Sleep 20 vor Work_set Leon + msg 4 "What!?" @0x01928      */
 #define RE15_ZWS11C_ANKER_FILM   0x01982u /* `54 00 01 00 00 00` Sce_bgm_control MAIN Play vor Cut_chg 12 @0x01988      */
+#define RE15_ZWS11C_ANKER_SICHT  0x01A5Cu /* `29 05` Cut_chg 5 vor msg 5 @0x01A5E: Ende des Vorspulens, Einblenden       */
 #define RE15_ZWS11C_MSG_WAS      4        /* @0x01928 `2b 04 00 00` "Leon: What!?"                                     */
 #define RE15_ZWS11C_MSG_WEITER   5        /* @0x01A5E `2b 05 00 00` "Leon: Ada, you hide inside that patrol / car."   */
 #define RE15_ZWS11C_FILM         "MOVIE/R11CGORI.STR"
@@ -185,6 +197,7 @@ typedef struct {
     uint16_t           raum;         /* g_current_room_id */
     re15_zws_stelle_t  schrei;       /* vor der "Was war das?"-Zeile */
     re15_zws_stelle_t  film;         /* nach dem Warten, vor der Fortsetzung */
+    re15_zws_stelle_t  sichtbar;     /* n > 0: nach dem Film unsichtbar vorspulen bis zu diesem RDT-Anker, dort Einblenden */
     int                schrei_satz;  /* ROOM11C0 snd1 Satz */
     const char        *film_datei;   /* relativ zur Asset-Wurzel */
     int                film_bilder;
@@ -219,6 +232,11 @@ int  re15_zws_r41_film_offen(void);      /* 1 = Film angefordert, Skript parkt (
 void re15_zws_r41_film_gespielt(void);   /* Plattform: Film zu Ende (oder uebersprungen) -> RE2-Einblenden */
 void re15_zws_r41_film_fehlt(void);      /* Plattform: Film nicht abspielbar -> weiter ohne Einblenden */
 int  re15_zws_r41_film_zustand(void);
+/* 1 = nach dem Film wird der Original-Auftritt unsichtbar vorgespult: die Plattform praesentiert diese Bilder nicht und
+ * laesst den Bildtakt aus. re15_zws_r41_vorspul_bild(): je uebersprungenem Bild einmal (Zaehler + Notbremse). */
+int  re15_zws_r41_vorspulen(void);
+void re15_zws_r41_vorspul_bild(void);
+extern unsigned g_re15_zws_vorspul_bilder;   /* Bilder des letzten Vorspulens */
 
 /* Laenge des Satzes `satz` einer Raumbank in SCD-Takten (laengste Lage, aufgerundet), < 0 = Satz leer/Bank defekt. */
 int re15_zws_r41_satz_takte(const uint8_t *edt, const uint8_t *vh, int vh_size, const uint8_t *vb, int vb_size, int satz);

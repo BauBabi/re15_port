@@ -3,10 +3,11 @@
 # scd_vm.c (Dispatcher-Anker + Raumladen), Film shared_assets/PSX/MOVIE/R11CGORI.STR (tools/r41_zws114/film_bauen.py --film 11C).
 #
 #   unit_r41_zws11c_datei   R11CGORI.STR: Form wie CAPCOM.STR, 362 Bilder 320x240 mit den Port-Dekodern, CD-XA-Ton = Filmlaenge
-#   unit_r41_zws11c_anker   Tabelle 114/11C; ROOM11C0-Bytes an @0x01920 / @0x01982 (+ msg 4 @0x01928, msg 5 @0x01A5E);
+#   unit_r41_zws11c_anker   Tabelle 114/11C; ROOM11C0-Bytes an @0x01920 / @0x01982 / @0x01A5C (+ msg 4 @0x01928, msg 5);
 #                           armiert nur in ROOM11C0, nicht bei geaendertem Byte, nicht in 11C1/1141/11B0
 #   unit_r41_zws11c_ablauf  ROOM11C0 am VM: msg 3 -> Schrei -> Tonlaenge + Sleep 20 -> msg 4 "What!?" -> Drehen -> Film ->
-#                           Musik + Kamera 12 -> msg 5 "Ada, you hide ..."; harter Schnitt, danach Einblenden 240..0
+#                           Musik + Kamera-12-Auftritt unsichtbar vorgespult bis Cut_chg 5 @0x01A5C -> erstes gezeigtes Bild
+#                           Kamera 5 mit msg 5 "Ada, you hide ...", ab dort Einblenden 240..0; harter Schnitt in den Film
 #   unit_r41_zws11c_elza    ROOM11C1 (Elza): kein Nachrichtenblock, keine Anker, kein Schrei/Film
 add_executable(test_r41_zws11c ${CMAKE_CURRENT_LIST_DIR}/../test_r41_zws11c.c)
 target_link_libraries(test_r41_zws11c PRIVATE re15_engine re15_test_support)
