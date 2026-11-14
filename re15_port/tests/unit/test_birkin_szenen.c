@@ -182,7 +182,7 @@ static void test_hangar(unsigned raum)
     int max_hoehe = 0, ende = -1, starr_b = 0, starr_m = 0, lauf_b = 0, lauf_m = 0, sprung_max = 0, sm_am_boden = 0;
     int sm_weg = -1, ph_seen[8] = { 0 }, griff_takte = 0;
     /* Runde 41 SF Neuaufbau ab NB2 (Nutzer 2026-11-03: Fangen und Wurf "vollkommen asynchron"): im Halten haengt der Spider-Man
-     * mit seinem Griffknochen (20) an Birkins Sichelhand (15). r41/sichel 3f91e5c57 hielt ihn 866-1243 Einheiten (57-84 Bildpunkte)
+     * mit seinem Griffpunkt (Knochen 19 + (0,485,0), vorher Knochen 20) an Birkins Sichelhand (15). r41/sichel 3f91e5c57 hielt ihn 866-1243 Einheiten (57-84 Bildpunkte)
      * daneben (eigene Bildversatz-Spur k_sm_halte5_dx/dy); NB2 6a1e9430d 39-126. Grenze 150 Einheiten = ~10 Bildpunkte in Birkins
      * Blicktiefe (~7000, 1 Bildpunkt ~14,6 Einheiten), also sichtbar Hand an Glied; gemessen ab dem 5. Haltetakt (Video h16), vorher
      * zieht der Griff ihn heran (h12-h14 396-762). */
@@ -235,7 +235,8 @@ static void test_hangar(unsigned raum)
             if (ph == 3 && griff_takte >= 5) {   /* griff_takte 1 = h12 -> 5 = h16 */
                 int32_t hand[3], griff[3];
                 re15_enemy_bone_world_pos(b, 15, hand);
-                re15_enemy_bone_world_pos(m, 20, griff);
+                {   static const int32_t gofs[3] = { 0, 485, 0 };   /* Griffpunkt: Knochen 19 + (0,485,0), birkin_formen.c BF_SM_GRIFF_* */
+                    (void)re15_enemy_part_point(m, 19, gofs, griff); }
                 const double gx = hand[0] - griff[0], gy = hand[1] - griff[1], gz = hand[2] - griff[2];
                 const int ga = (int)sqrt(gx * gx + gy * gy + gz * gz);
                 if (ga > griff_max) griff_max = ga;

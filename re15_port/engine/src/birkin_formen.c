@@ -239,8 +239,16 @@ void re15_bf_morph_zu_g5(int slot)
  * ihm). Der Knochen liegt jeden Takt GENAU auf der Hand (bf_klauenziel), kein seitlicher Versatz. Damit steht der Rumpf
  * ueber der Hand und von Birkin weg: Video h16..70 Spider-Man oben links, oben am Bildrand abgeschnitten (Rumpf Bild
  * (110..140, 40..65)); mit dem Becken auf der Hand (Rumpf ~1370 tiefer) lag er 30..40 Bildpunkte zu tief.
- * Vorher (Spur H): Aktor-y = Klaue + 1200 und 1000 seitlich (BF_HALTE_SEITE) - der Spider-Man hing neben der Hand. */
-#define BF_SM_GRIFF_KNOCHEN 20
+ * Vorher (Spur H): Aktor-y = Klaue + 1200 und 1000 seitlich (BF_HALTE_SEITE) - der Spider-Man hing neben der Hand.
+ * Nachbesserung 2026-11-14 (Pruefer Mangel 1 "zu hoch gehalten, Rumpf im oberen Balken"): mit Treffer-/Sterbe-Clip 4/9 liegt das
+ * Knie tiefer unter dem Becken (1007/1120 statt 750 bei Clip 7), Schulter h50..h66 bei Zeile 42..56 (480er, Balken bis 48).
+ * Der obere Bildausschnitt ist gleich (Balken beginnt bei Video und Port bei Zeile 48, Pruefer an h120), es ist die Haltehoehe.
+ * Griffpunkt jetzt auf dem Oberschenkel: Knochen 19 (Huefte) + (0, BF_SM_GRIFF_Y, 0) in seinem Raum; das Knie (Knochen 20)
+ * sitzt dort bei (-2, 970, 1) (EMR rel). Gemessen (Oberkante y05 der Pruefer-Maske, 480er Zeilen, Fenster h17-24 / 25-36 /
+ * 37-47 / 48-60 / 61-70; Video 57.8 / 71.4 / 67.8 / 73.5 / 96.8): Knie (970) 57.9 / 59.7 / 52.7 / 52.5 / 52.2 (am Balken
+ * abgeschnitten), Mitte 485: 69.1 / 70.6 / 64.9 / 65.5 / 68.5, Huefte 0: 90.8 / 92.3 / 85.5 / 89.7 / 93.1 -> 485. */
+#define BF_SM_GRIFF_KNOCHEN 19
+#define BF_SM_GRIFF_Y    485        /* halbe Oberschenkellaenge (Knie bei 970), Wahl nach der Messung oben */
 /* Ansprung (Nutzer 2026-11-13: "Im Original Video gleitet der Spiderman mit gehobenen Armen zum Angriff Linear auf Birkin zu,
  * und wird dann von Birkin abgefangen und hochgehoben. Bei uns springt er ... mehr oder weniger direkt hoch auf Birkins Arm").
  * Video 4 Bild fuer Bild (Laufordner gruenblut/video, Bogen z_video_h0-8 / z_video_h9-17, PSX-Bildpunkte): h0..h1 hockt, ein
@@ -701,13 +709,14 @@ static void bf_hangar_beenden(void)
 #endif
 }
 
-/* Aktorlage des Spider-Man, bei der sein Griffknochen (BF_SM_GRIFF_KNOCHEN, aktuelle Pose und Gier) genau auf Birkins
- * Sichelhand (Knochen 15, aktuelles Bild) liegt. Kein Versatz: Hand - (Griffknochen - Wurzel). */
+/* Aktorlage des Spider-Man, bei der sein Griffpunkt (Knochen BF_SM_GRIFF_KNOCHEN + BF_SM_GRIFF_Y, aktuelle Pose und Gier)
+ * genau auf Birkins Sichelhand (Knochen 15, aktuelles Bild) liegt: Hand - (Griffpunkt - Wurzel). */
 static void bf_klauenziel(re15_actor_t *b, re15_actor_t *m, int32_t z[3])
 {
     int32_t g[3];
     re15_enemy_bone_world_pos(b, BF_KLAUE, z);
-    re15_enemy_bone_world_pos(m, BF_SM_GRIFF_KNOCHEN, g);
+    {   static const int32_t ofs[3] = { 0, BF_SM_GRIFF_Y, 0 };
+        (void)re15_enemy_part_point(m, BF_SM_GRIFF_KNOCHEN, ofs, g); }
     z[0] -= g[0] - m->x;
     z[1] -= g[1] - m->y;
     z[2] -= g[2] - m->z;
