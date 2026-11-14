@@ -2,7 +2,7 @@
  "lauf": "lauf_voll.json",
  "emd": "GK.EMD",
  "tabelle": "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/varianten/K5/generator/k5g3_spalt_b4_tabelle.json",
- "sha256": "eadfac31aef1864644376c9952641ff584334c3e8293702df918d3a0e3758409",
+ "sha256": "db9404a18368f420050cddbc45f06fca11c24c80a0d315082668280576590e00",
  "voll": true,
  "hart": [
   {
@@ -55,7 +55,7 @@
    "nr": "H5",
    "punkt": "der Lauf gehoert zur EMD-Datei",
    "gut": true,
-   "ist": "sha256 Datei eadfac31aef18646, Lauf eadfac31aef18646"
+   "ist": "sha256 Datei db9404a18368f420, Lauf db9404a18368f420"
   },
   {
    "nr": "H7",
@@ -2709,7 +2709,7 @@
      93
     ]
    ],
-   "sekunden": 245
+   "sekunden": 241
   }
  },
  "s13": {
@@ -2972,9 +2972,9 @@
    "nr": "H5",
    "punkt": "der Lauf gehoert zur EMD-Datei",
    "gut": true,
-   "ist": "sha256 Datei eadfac31aef18646, Lauf eadfac31aef18646",
+   "ist": "sha256 Datei db9404a18368f420, Lauf db9404a18368f420",
    "daten": {
-    "sha": "eadfac31aef1864644376c9952641ff584334c3e8293702df918d3a0e3758409"
+    "sha": "db9404a18368f420050cddbc45f06fca11c24c80a0d315082668280576590e00"
    }
   },
   {

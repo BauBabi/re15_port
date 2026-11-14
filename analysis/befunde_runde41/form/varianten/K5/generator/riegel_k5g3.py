@@ -9,7 +9,8 @@ Jeder Riegel hat mindestens eine Gegenprobe, die ROT sein MUSS; ist sie gruen, m
 
 R1 Generator     Datei == kf_k5g3_geo.geometrie_bytes(), zweiter Lauf byte-gleich      | Gegenprobe: ohne Krallen-Stufe
 R2 Byte-Probe    K5e_f1-Posen + K5e_f1-Krallen + B4-Tabelle == KAND.EMD (sha f78e5983)  | Gegenprobe: volle Geometrie
-R3 Spalt         Netze 10/16/21/22 == B4-Tabelle (G1, sha 99a4f142)                     | Gegenprobe: K5e_f1
+R3 Spalt         Netze 10/16/21/22: Ecken/Normalen/Flaechen/CLUT/Seite == B4-Tabelle (G1, sha 99a4f142), UV == uvfein(B4)
+                                                                                         | Gegenproben: K5e_f1; B4-UV ohne uvfein
 R4 Krallen       19/20/28/29 Ecken+Normalen == K5c, Flaechen/UV/CLUT/Seite == K5e_f1   | Gegenproben: K5e_f1; K5c-Netze ganz
 R5 Rest          alle anderen Netze und die Knochen == K5e_f1                           | Gegenprobe: Netz 31 eine Ecke +1
 R6 EDD/EMR       Sektionen 0-6 byte-gleich K5e_f1 und K5c                               | Gegenprobe: ein Bit in emr1
@@ -17,6 +18,9 @@ R7 Posen         Pool == K5c (keine Posen-Datei) bzw. == Posen-Datei; FORM.EMD z
 R8 B4-Grenzen    Messbank-Urteil des Gesamtmodells (urteil4, voller Lauf) nicht schlechter als B4 allein | Gegenprobe: Urteil B3
 R9 Dreiecke      max gezeichnet je Bild (Messbank, alle Clips/Ansichten) + Spielfigur + Waffe + Effekte <= 16384 - Reserve;
                  im Spiel gezaehlt (G3-Zaehler) <= 16384 - Reserve, verworfen 0   | Gegenprobe: alte Grenze 8192
+R10 UV-Stufe     (Runde 2) Kinder der Netze 10/16/21/22: (a) keine Ecke ausserhalb der UV-Flaeche der Mutter ausser den gemeldeten
+                 B4-Kindern, wo im Gebiet nur eine Linie moeglich ist; (b) Linien-Dreiecke (UV-Flaeche 0) je Netz <= B4 und gesamt
+                 <= 1/4 von B4; (c) Augen-Flaechen (Zone 29) lesen dieselben Augen-Texel wie K5e_f1   | Gegenprobe: B4-UV ohne uvfein
 """
 import copy
 import hashlib
@@ -79,6 +83,9 @@ A = open(K.GEO_BASIS, 'rb').read()
 C = open(K5C_EMD, 'rb').read()
 FG, FA, FC = FE.lese_emd(EMD), FE.lese_emd(A), FE.lese_emd(C)
 TAB = json.load(open(K.GEO3_SPALT, encoding='utf-8'))
+TUV, UVBER = K.spalt_uv()                              # uvfein(B4) im Speicher
+FB4UV = K.geometrie_form(stufen=('posen', 'krallen', 'spalt'))[1]   # Gegenprobe: B4-UV ohne uvfein
+import kf_k5g3_uv as UVF  # noqa: E402
 
 
 def form_von(b):
@@ -98,11 +105,22 @@ def r2(b=None):
 
 
 # R3
+def _ohne_uv(m):
+    return dict(ecken=m['ecken'], normalen=m['normalen'],
+                fl=[[(f['e'], f['n'], f['clut'], f['page']) for f in m[a]] for a in ('dreiecke', 'vierecke')])
+
+
+def _nur_uv(m):
+    return [[f['uv'] for f in m[a]] for a in ('dreiecke', 'vierecke')]
+
+
 def r3(f=FG):
     t_sha = sha(open(K.GEO3_SPALT, 'rb').read())
-    ab = [t for t in K.SPALT_TEILE if f['meshes'][t] != TAB['teile'][str(t)]]
+    ab = [t for t in K.SPALT_TEILE if _ohne_uv(f['meshes'][t]) != _ohne_uv(TAB['teile'][str(t)])]
+    au = [t for t in K.SPALT_TEILE if _nur_uv(f['meshes'][t]) != _nur_uv(TUV['teile'][str(t)])]
     nd = {t: '%d/%d/%d' % (len(f['meshes'][t]['ecken']), len(f['meshes'][t]['dreiecke']), len(f['meshes'][t]['vierecke'])) for t in K.SPALT_TEILE}
-    return (not ab and t_sha == K.GEO3_SPALT_SHA), 'Tabelle sha %s; abweichende Netze %s; Ecken/Dreiecke/Vierecke %s' % (t_sha[:16], ab or 'keine', nd)
+    return (not ab and not au and t_sha == K.GEO3_SPALT_SHA), ('Tabelle sha %s; Netze mit anderer Geometrie als B4: %s; Netze mit anderer UV als '
+                                                             'uvfein(B4): %s; Ecken/Dreiecke/Vierecke %s' % (t_sha[:16], ab or 'keine', au or 'keine', nd))
 
 
 # R4
@@ -180,6 +198,67 @@ def r7_mechanik():
         os.remove(p)
     f = FE.lese_emd(b)
     return f, K.form_emd_bytes(b)
+
+
+# R10
+AUGEN_FL = ((22, 0, 82), (22, 0, 83), (22, 1, 112), (22, 1, 113), (22, 1, 152))      # Zone 29 (zonen_v2.json)
+
+
+def _augen_texel():
+    z = json.load(open(os.path.join(K5, 'zonen_nutzer', 'v2', 'zonen_v2.json'), encoding='utf-8'))
+    e = [x for x in z['zonen'] if x['nr'] == '29'][0]
+    return {(u, v) for _s, _z, u, v in e['texel']['liste']}
+
+
+def _texel(tris, page):
+    import numpy as np
+    out = set()
+    for tr in tris:
+        P = UVF.PROBEN @ np.array(tr, float)
+        out |= {(int(np.floor(x + 1e-9)) + (int(page) & 15) * 128, int(np.floor(y + 1e-9))) for x, y in P}
+    return out
+
+
+def r10(f=FG):
+    ART = UVF.ART
+    aug = _augen_texel()
+    aussen, aussen_b4fremd = 0, []
+    her = TAB['herkunft']
+    for t, a, i, mt, ma, mi in her:
+        mf = FA['meshes'][mt][ART[ma]][mi]
+        k = f['meshes'][t][ART[a]][i]
+        if a != 0 or (k['uv'] == mf['uv'] and a == ma):
+            continue
+        tris = UVF.render_dreiecke(mf, ma)
+        if not all(UVF.im_gebiet(tuple(p), tris) for p in k['uv']):
+            aussen += 1
+            if k['uv'] != TAB['teile'][str(t)][ART[a]][i]['uv']:
+                aussen_b4fremd.append('%d|%d|%d' % (t, a, i))
+    erlaubt = UVBER['gruende'].get('aussen, im Gebiet nur Linie -> B4 bleibt', 0)
+    lin = UVF.linien_flaechen(f['meshes'])
+    lb4 = UVF.linien_flaechen({int(k): v for k, v in TAB['teile'].items()})
+    la = UVF.linien_flaechen(FA['meshes'])
+    aug_soll, aug_ist = [], []
+    for mt, ma, mi in AUGEN_FL:
+        mf = FA['meshes'][mt][ART[ma]][mi]
+        aug_soll.append(len(_texel(UVF.render_dreiecke(mf, ma), mf['page']) & aug))
+        ks = [(t, a, i) for t, a, i, x, y, z in her if (x, y, z) == (mt, ma, mi)]
+        tk = set()
+        for t, a, i in ks:
+            k = f['meshes'][t][ART[a]][i]
+            tk |= _texel(UVF.render_dreiecke(k, a), k['page'])
+        aug_ist.append(len(tk & aug))
+    fl = []
+    if aussen > erlaubt or aussen_b4fremd:
+        fl.append('Kinder ausserhalb der Mutter-UV %d (erlaubt %d), davon nicht B4: %s' % (aussen, erlaubt, aussen_b4fremd[:5]))
+    if any(lin[t] > lb4[t] for t in lin) or sum(lin.values()) * 4 > sum(lb4.values()):
+        fl.append('Linien-Dreiecke %s gegen B4 %s' % (lin, lb4))
+    if aug_ist != aug_soll:
+        fl.append('Augen-Texel %s statt %s' % (aug_ist, aug_soll))
+    return not fl, ('Kinder ausserhalb der Mutter-UV %d (B4 2711; erlaubt die %d gemeldeten B4-Kinder); Linien-Dreiecke je Netz %s, gesamt %d '
+                    '(B4 %s = %d, K5e_f1 %s = %d); Augen-Texel je Zone-29-Mutter %s (K5e_f1 %s); gew. Fehlrate %.4f (B4 %.4f)%s'
+                    % (aussen, erlaubt, lin, sum(lin.values()), lb4, sum(lb4.values()), la, sum(la.values()), aug_ist, aug_soll,
+                       UVBER['nachher']['fehlrate_gew'], UVBER['vorher']['fehlrate_gew'], ('; ROT: ' + '; '.join(fl)) if fl else ''))
 
 
 # R8
@@ -289,10 +368,10 @@ def main():
     log('RIEGEL K5g3 GEOMETRIE  EMD %s  sha256 %s' % (K.GEO3_ZIEL.replace(chr(92), '/'), sha(EMD)))
     tests = []
     tests.append(('R1 Generator (Datei == Generator, zweiter Lauf gleich)', r1,
-                  [('ohne Krallen-Stufe', lambda: r1(stufen=('posen', 'spalt')))]))
+                  [('ohne Krallen-Stufe', lambda: r1(stufen=('posen', 'spalt', 'uvfein')))]))
     tests.append(('R2 Byte-Probe (K5e_f1-Posen/-Krallen + B4 == KAND.EMD)', r2,
                   [('volle Geometrie', lambda: r2(EMD))]))
-    tests.append(('R3 Netze 10/16/21/22 == B4-Tabelle (G1)', r3, [('K5e_f1', lambda: r3(FA))]))
+    tests.append(('R3 Netze 10/16/21/22 == B4-Tabelle (G1), UV == uvfein(B4)', r3, [('K5e_f1', lambda: r3(FA)), ('B4-UV ohne uvfein', lambda: r3(FB4UV))]))
 
     def k5c_ganz():
         f = copy.deepcopy(FG)
@@ -331,6 +410,8 @@ def main():
                   [('Urteil von B3 statt GK', lambda: r8b(gk=os.path.join(MESS, 'urteil_b3.json')))]))
     tests.append(('R9 Dreiecke je Bild + Spielfigur + Effekte <= 16384 mit Reserve; im Spiel 0 verworfen (G3)', r9,
                   [('alte Grenze 8192', lambda: r9(grenze=8192))]))
+    tests.append(('R10 UV-Stufe uvfein: Kinder in der Mutter-UV, keine Linien-Dreiecke wo vermeidbar, Augen-Texel wie K5e_f1', r10,
+                  [('B4-UV ohne uvfein', lambda: r10(FB4UV))]))
     for name, fn, gegen in tests:
         g, n = riegel(name, fn, gegen)
         gr += 1 if g else 0

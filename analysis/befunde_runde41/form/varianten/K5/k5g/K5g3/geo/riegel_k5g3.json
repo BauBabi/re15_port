@@ -1,12 +1,12 @@
 {
  "R1 Generator (Datei == Generator, zweiter Lauf gleich)": {
   "urteil": "GRUEN",
-  "text": "zwei Laeufe gleich True, == Datei True, sha256 eadfac31aef18646",
+  "text": "zwei Laeufe gleich True, == Datei True, sha256 db9404a18368f420",
   "gegenproben": [
    {
     "name": "ohne Krallen-Stufe",
     "gruen": false,
-    "text": "zwei Laeufe gleich True, == Datei False, sha256 f78e598336872111"
+    "text": "zwei Laeufe gleich True, == Datei False, sha256 b57936cbcd4d250a"
    }
   ]
  },
@@ -17,18 +17,23 @@
    {
     "name": "volle Geometrie",
     "gruen": false,
-    "text": "sha256 eadfac31aef18646 (KAND.EMD f78e598336872111)"
+    "text": "sha256 db9404a18368f420 (KAND.EMD f78e598336872111)"
    }
   ]
  },
- "R3 Netze 10/16/21/22 == B4-Tabelle (G1)": {
+ "R3 Netze 10/16/21/22 == B4-Tabelle (G1), UV == uvfein(B4)": {
   "urteil": "GRUEN",
-  "text": "Tabelle sha 99a4f142c2d01c5e; abweichende Netze keine; Ecken/Dreiecke/Vierecke {10: '804/1483/0', 16: '406/640/80', 21: '1688/2981/0', 22: '2768/5073/0'}",
+  "text": "Tabelle sha 99a4f142c2d01c5e; Netze mit anderer Geometrie als B4: keine; Netze mit anderer UV als uvfein(B4): keine; Ecken/Dreiecke/Vierecke {10: '804/1483/0', 16: '406/640/80', 21: '1688/2981/0', 22: '2768/5073/0'}",
   "gegenproben": [
    {
     "name": "K5e_f1",
     "gruen": false,
-    "text": "Tabelle sha 99a4f142c2d01c5e; abweichende Netze [10, 16, 21, 22]; Ecken/Dreiecke/Vierecke {10: '212/72/168', 16: '134/48/104', 21: '102/48/72', 22: '402/182/218'}"
+    "text": "Tabelle sha 99a4f142c2d01c5e; Netze mit anderer Geometrie als B4: [10, 16, 21, 22]; Netze mit anderer UV als uvfein(B4): [10, 16, 21, 22]; Ecken/Dreiecke/Vierecke {10: '212/72/168', 16: '134/48/104', 21: '102/48/72', 22: '402/182/218'}"
+   },
+   {
+    "name": "B4-UV ohne uvfein",
+    "gruen": false,
+    "text": "Tabelle sha 99a4f142c2d01c5e; Netze mit anderer Geometrie als B4: keine; Netze mit anderer UV als uvfein(B4): [10, 16, 21, 22]; Ecken/Dreiecke/Vierecke {10: '804/1483/0', 16: '406/640/80', 21: '1688/2981/0', 22: '2768/5073/0'}"
    }
   ]
  },
@@ -121,15 +126,26 @@
  },
  "R9 Dreiecke je Bild + Spielfigur + Effekte <= 16384 mit Reserve; im Spiel 0 verworfen (G3)": {
   "urteil": "GRUEN",
-  "text": "Messbank max 7276 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9135 <= 16384 - 2048 = 14336; Spiel max 7718 (kampf 7415, s11 7718, v5080 7184, v5080_c11 7596), verworfen 0; Reserve Messbank 7249, Spiel 8666",
+  "text": "Messbank max 7276 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9135 <= 16384 - 2048 = 14336; Spiel max 7718 (f5080_vorn 7184, f5090_s11 7718, kampf 7415, s11 7718, v5080 7184, v5080_c11 7596), verworfen 0; Reserve Messbank 7249, Spiel 8666",
   "gegenproben": [
    {
     "name": "alte Grenze 8192",
     "gruen": false,
-    "text": "Messbank max 7276 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9135 <= 8192 - 2048 = 6144; Spiel max 7718 (kampf 7415, s11 7718, v5080 7184, v5080_c11 7596), verworfen 0; Reserve Messbank -943, Spiel 474"
+    "text": "Messbank max 7276 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9135 <= 8192 - 2048 = 6144; Spiel max 7718 (f5080_vorn 7184, f5090_s11 7718, kampf 7415, s11 7718, v5080 7184, v5080_c11 7596), verworfen 0; Reserve Messbank -943, Spiel 474"
    }
   ]
  },
- "summe": "RIEGEL K5g3 GEOMETRIE: 10 von 11 gruen, 13 von 13 Gegenproben rot wie verlangt",
- "emd_sha256": "eadfac31aef1864644376c9952641ff584334c3e8293702df918d3a0e3758409"
+ "R10 UV-Stufe uvfein: Kinder in der Mutter-UV, keine Linien-Dreiecke wo vermeidbar, Augen-Texel wie K5e_f1": {
+  "urteil": "GRUEN",
+  "text": "Kinder ausserhalb der Mutter-UV 49 (B4 2711; erlaubt die 49 gemeldeten B4-Kinder); Linien-Dreiecke je Netz {10: 5, 16: 34, 21: 0, 22: 186}, gesamt 225 (B4 {10: 41, 16: 36, 21: 36, 22: 1461} = 1574, K5e_f1 {10: 0, 16: 3, 21: 0, 22: 25} = 28); Augen-Texel je Zone-29-Mutter [6, 6, 6, 5, 0] (K5e_f1 [6, 6, 6, 5, 0]); gew. Fehlrate 0.2478 (B4 0.2395)",
+  "gegenproben": [
+   {
+    "name": "B4-UV ohne uvfein",
+    "gruen": false,
+    "text": "Kinder ausserhalb der Mutter-UV 2711 (B4 2711; erlaubt die 49 gemeldeten B4-Kinder); Linien-Dreiecke je Netz {10: 41, 16: 36, 21: 36, 22: 1461}, gesamt 1574 (B4 {10: 41, 16: 36, 21: 36, 22: 1461} = 1574, K5e_f1 {10: 0, 16: 3, 21: 0, 22: 25} = 28); Augen-Texel je Zone-29-Mutter [6, 6, 6, 5, 0] (K5e_f1 [6, 6, 6, 5, 0]); gew. Fehlrate 0.2478 (B4 0.2395); ROT: Kinder ausserhalb der Mutter-UV 2711 (erlaubt 49), davon nicht B4: []; Linien-Dreiecke {10: 41, 16: 36, 21: 36, 22: 1461} gegen B4 {10: 41, 16: 36, 21: 36, 22: 1461}"
+   }
+  ]
+ },
+ "summe": "RIEGEL K5g3 GEOMETRIE: 11 von 12 gruen, 15 von 15 Gegenproben rot wie verlangt",
+ "emd_sha256": "db9404a18368f420050cddbc45f06fca11c24c80a0d315082668280576590e00"
 }

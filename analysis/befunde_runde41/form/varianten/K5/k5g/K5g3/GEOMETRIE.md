@@ -1,4 +1,8 @@
-# K5g3 Geometrie-Stufe (Runde 1) - Arbeitsnotiz
+# K5g3 Geometrie-Stufe (Runde 1 und 2) - Arbeitsnotiz
+
+**Runde 2 (Abschnitt 9) hat die Geometrie ersetzt:** heute gilt k5g/K5g3/geo/BAHNSTEIG_FORM.EMD sha256
+db9404a18368f420050cddbc45f06fca11c24c80a0d315082668280576590e00 (FORM.EMD d84d4762...), Stufen posen -> krallen -> spalt -> uvfein.
+Die Tabellen und sha in den Abschnitten 1-8 sind der Stand von Runde 1 (eadfac31...).
 
 Stand 2026-11-14. Grundlage: Orchestrator-Entscheide G1 (Spalt B4, vom Nutzer am 14.11. abgenommen), G2 (rechte Krallen aus K5c,
 Posen vorerst K5c, Posen-Datei optional), G3 (Dreiecks-Liste 16384 + Ueberlauf-Zaehler), G5 (Spiel-Asset bleibt K5e_f1).
@@ -195,3 +199,111 @@ Was zu sehen ist:
 4. Bildzeit: die Einfuegesortierung in end_frame (render_pc.c) ist quadratisch; mit bis zu 7718 Dreiecken je Bild nicht gemessen.
 5. Unit-Test-Pins (test_birkin_bahnsteig.c MD1-Laenge/CRC) werden rot, sobald K5g3 Spiel-Asset wird (G5, spaeter).
 6. Wie bei B4 angenommen: H9-Kanten, S18-Risse (3 px), Sprenkelfleck im linken roten Halsfeld, Schulter-Naht im Licht.
+
+## 9 Runde 2 (2026-11-14): Befunde der Pruefung K5g3 Runde 1, Anteil der Geometrie
+
+### 9.1 Welche Befunde die Geometrie betreffen (gemessen, nicht angenommen)
+
+| Befund (Pruefer) | Anteil Geometrie | Beleg |
+|---|---|---|
+| Weisse Musterung C* 18-25 (Zahlen, ROT) | keiner | Material-Transformation kf_k5g3_tex.py:356-362 (k_haut), Textur-Stufe |
+| Weisser Strich Flaeche 10\|1\|76 (Zahlen, ROT) | keiner (Ursache ist die Kopie-Maske) | siehe 9.3 |
+| Haut drei Seitenfaktoren (Zahlen, GELB) | keiner | Textur-Stufe / Orchestrator |
+| Braun, Reinweiss auf der Haut (Zahlen, GELB) | keiner | Textur-Stufe |
+| Augen verschwunden, schwarzes Loch rechts (Sicht, ablehnen) | keiner | siehe 9.4 |
+| Gestreckte Farbstreifen an Kopf/Kiefer aus UV-entarteten Dreiecken (Sicht, klein) | ja, teilweise | siehe 9.2 - behoben mit der Stufe uvfein |
+| Leuchtstelle F1 lila-grau (Sicht, klein) | keiner | F1-Flaechen sind nicht geteilt (Netz 0) |
+
+### 9.2 Gestreckte Farbstreifen: Stufe uvfein
+
+Mechanismus (gemessen): B4 (scratchpad k5g2/spalt/kand_b4/bau.py attribute()) rundet die UV jeder neuen Ecke einzeln (rint der
+baryzentrischen Mutter-UV). Bei kleinen Kindern faellt das UV-Dreieck dadurch auf eine Linie (Flaeche 0 bei zwei verschiedenen Ecken);
+das Dreieck zeigt dann nur die Texel entlang dieser Linie, quer gestreckt. Zaehlung der Render-Dreiecke mit UV-Linie in den Netzen
+10/16/21/22: K5e_f1 0/3/0/25 = 28, B4 41/36/36/1461 = 1574. Ausserdem: 2711 von 9961 Kindern haben eine Ecke ausserhalb der UV-Flaeche
+der Mutter (Rundung).
+
+Aber auch: der Grossteil der Streifen, die man unter weissem Licht sieht, ist schon auf den UNGETEILTEN Flaechen da (Pruef-Stand
+k5g/K5g3/pruef = K5e_f1-Flaechen mit K5g3-Textur): die K5e_f1-UV ist am Kopf stark gestreckt, die kontrastreiche K5g3-Textur macht das
+sichtbar. Messung (scratchpad k5g2/geo_r2/m9b.py, rl.weiss_id 760 px, Clips 0/1/2 x 6 Winkel = 18 Ansichten, Textur K5g3):
+Pixel auf Linien-Dreiecken der Netze 10/16/21/22 ungeteilt 569, B4 10687, Runde 2 2203 (von 315722); Pixel, die vom ungeteilten
+Stand abweichen (Farbabstand > 24): B4 42795, Runde 2 44053 (von 314874; darin stecken auch die Formaenderungen von B4).
+
+Stufe uvfein (generator/kf_k5g3_uv.py, Regel im Dateikopf): nur die UV der Kinder; Ecken, Normalen, Flaechen, CLUT, Seite bleiben B4.
+Je Kind ganzzahlige UV im UV-Gebiet der Mutter (Render-Dreiecke (0,1,3)+(0,3,2), main.c npc_qz1/npc_qz2 bzw. form_buehne.py), gewaehlt
+nach (keine Linie / kein Kippen, Fehlrate der floor-Abtastung gegen die exakte Abbildung, Abstand). Ist im Gebiet nur eine Linie
+moeglich, das B4-Kind aber gut, bleibt B4 (49 Kinder).
+
+| | B4 (Runde 1) | uvfein (Runde 2) |
+|---|---|---|
+| Kinder mit neuer UV | - | 3743 von 9961 (10: 544, 16: 262, 21: 813, 22: 2124) |
+| Linien-Dreiecke 10/16/21/22 | 41/36/36/1461 = 1574 | 5/34/0/186 = 225 (K5e_f1 28) |
+| Kinder mit Ecke ausserhalb der Mutter-UV | 2711 | 49 (dort waere im Gebiet nur eine Linie moeglich) |
+| gekippte Kinder (UV-Umlauf gegen die exakte Abbildung, |Flaeche| > 0,1) | 98 | 3 |
+| Fehlrate floor-Abtastung gegen exakte Abbildung, flaechengewichtet | 0,2395 | 0,2478 (Preis der Nicht-Entartung) |
+| Linien-Pixel, vier Kopf-Ansichten der Tafel 11 | 3443 | 674 (ungeteilt 111) |
+| Augen-Texel (Zone 29) je Mutter 22\|0\|82, 83, 22\|1\|112, 113, 152 | 6/6/6/5/0 | 6/6/6/5/0 (= K5e_f1) |
+
+Ehrlich: Die Fehlrate steigt leicht (+0,008) und die Abweichung vom ungeteilten Stand um 2,9 % der Pixel; ganz heilen laesst sich die
+Rundung mit 8-Bit-UV nicht (eine optimierte Wahl je Kind ohne Linien-Bedingung senkt die Fehlrate nur von 0,216 auf 0,180 im Netz 22,
+macht aber mehr Linien). 225 Linien-Dreiecke bleiben (186 im Kopf; 16 davon liegen in Muettern, deren UV-Gebiet selbst nur eine Linie
+ist).
+
+Aufruf unveraendert (`python generator/kf_k5g3_geo.py bauen | pruef`); `bauen` schreibt zusaetzlich geo/spalt_uv_tabelle.json
+(sha cfec25bc..., B4-Tabelle mit den uvfein-UV), `pruef` prueft zusaetzlich diese Datei. Byte-Probe ohne uvfein weiter == KAND.EMD.
+
+### 9.3 Weisser Strich 10|1|76: Ursache ist die Kopie-Maske, nicht die Teilung
+
+Nachgemessen (scratchpad k5g2/geo_r2/idx0.py, m8.py; 16 x 16 Proben im Inneren je Dreieck wie der Zahlen-Pruefer): 26 Zugriffe auf
+Index 0 (reinweiss), nur Kinder 10|0|342 (12), 343 (2), 344 (12). Kind 344 ist UNVERAENDERT das Render-Dreieck (0,3,2) der Mutter
+(Texel (468,120), (476,169), (476,194)) und liest dieselben 12 Index-0-Texel wie 342. Die Mutter-UV (84,120) (85,172) (92,194) (92,169)
+auf Seite 3 ist als Polygon (0,1,3,2) eine "Fliege" (Kanten 1-3 und 2-0 schneiden sich); kf_k5g2_tex.flaeche_maske (fillPoly +
+polylines ueber 0,1,3,2) laesst darum einen Teil von Dreieck (0,3,2) aus, die Kopie bleibt dort leer. Die Geometrie-Stufe aendert das
+nicht: mit uvfein 27 Zugriffe (343: 3). Erhebung ueber alle Vierecke des Pruef-Stands (bowtie2.py): 73 Vierecke mit sich selbst
+schneidendem Polygon (0,1,3,2), 48 Vierecke mit Render-Texeln mehr als 1 Texel ausserhalb der Maske (groesste 10|1|149 268,
+10|1|150 201, 22|1|195 133, 10|1|158 130). Behebung gehoert in die Textur-Stufe: Maske = Vereinigung der Render-Dreiecke (0,1,3) und
+(0,3,2).
+
+### 9.4 Augen: kein Anteil der Geometrie
+
+R10 misst: die Kinder der fuenf Zone-29-Muetter lesen dieselben Augen-Texel wie K5e_f1 (6/6/6/5/0), in Runde 1 wie in Runde 2; Tafel 10
+zeigt die Augen auf der Geometrie mit K5e_f1-Textur. Fuer die Textur-Stufe gemessen: 22|0|82 und 22|0|83 sind schon in K5e_f1
+UV-entartet (alle drei Ecken v = 72, UV (109,72) (112,72) (103,72) bzw. (112,72) (115,72) (103,72)) - diese Flaechen koennen nur einen
+gestreckten Strich zeigen, nie einen Punkt; 22|1|152 liest keinen Augen-Texel. Ein sichtbarer Augenpunkt braucht dort eigene Texel mit
+eigener, nicht entarteter UV (V3 erlaubt "UV dieser Flaechen umlegen").
+
+### 9.5 Messbank, Spiel, Riegel (Runde 2)
+
+- Messbank voll (spalt/bank.py lauf, 3995 Ansichten in 10 Teilen, scratchpad k5g2/geo_r2/lauf, 17:10-18:03; urteil4.py): alle Zahlen
+  gleich Runde 1 (H1a 3578, H1b 23, H1c 20, H2 12543/162, H3b 0/383432, H4 7276, H7 0,61248/0,72328, H3a 19<->23 535, 20<->22 424,
+  19<->22 104), H5 Lauf == EMD db9404a1. Die Messbank misst Tiefe/Form, nicht UV - erwartet gleich, gemessen gleich.
+  Kopien: geo/messung/urteil_gk.json/.txt. Umriss neu gemessen (bank.py umriss): 0,612480 / 0,723282 wie Runde 1 (messung/umriss.json).
+- Spiel (eigene exe-Kopien, Modell per RE15_RE2_ASSET_ROOT=k5g/K5g3/geo, TIM = K5e_f1 aus shared_assets): Test-Ablauf
+  re15_port/tests/integration/test_r41_form_dreiecke.cmake (kampf 5090 96 Schuesse, Form-HP bis 0; s11; v5080; Gegenprobe Grenze 2000
+  rot) "alle Pruefungen gruen"; dazu kf_k5g3_spiel.sh mit gdigrab des eigenen Fensters 5080 von vorn Clip 12, 5090 Schnitt 11 Clip 12
+  und 5080 Clip 11 (schwerste Stelle). Hoechststand 7184 / 7718 / 7415 / 7718 / 7184 / 7596, verworfen 0 in allen sechs Laeufen, kein
+  Absturz, "Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips". messung/spiel_dreiecke.json. Fensterbilder geo/spiel/r2_*.png (selbst
+  angesehen: Form im Bild, Leon schiesst, Huelse sichtbar; 5090 mit Feuer und Annette).
+- Riegel `python generator/riegel_k5g3.py` (geo/riegel_k5g3.txt): **"RIEGEL K5g3 GEOMETRIE: 11 von 12 gruen, 15 von 15 Gegenproben rot
+  wie verlangt"**. Neu: R3 trennt Geometrie (== B4) und UV (== uvfein(B4)), Gegenprobe B4-UV; R10 UV-Stufe (Kinder in der Mutter-UV,
+  Linien-Dreiecke je Netz <= B4 und gesamt <= 1/4 B4, Augen-Texel == K5e_f1), Gegenprobe B4-UV. ROT bleibt R8 aus demselben Grund wie in
+  Runde 1 (K5c-Krallen in der Bild-2-Haltung, G2; R8b gruen).
+
+### 9.6 Fuer den Textur-Bauer (Runde 2)
+
+- mulde_auf_form mit `tabelle=kf_k5g3_geo.GEO3_SPALT_UV` (geo/spalt_uv_tabelle.json) statt GEO3_SPALT, sonst bekommen die Kinder wieder
+  die B4-UV (kf_k5g3.py:94; geo_schluessel vergleicht keine UV und merkt das nicht). Pruefbar: die Kinder-UV des Ergebnisses minus
+  Verschiebung der Mutter == spalt_uv_tabelle.json.
+- Kopie-Maske: kf_k5g2_tex.flaeche_maske nimmt das Polygon (0,1,3,2); fuer 73 Vierecke schneidet es sich selbst, bei 48 liegen
+  Render-Texel mehr als 1 Texel ausserhalb (9.3). Maske = Vereinigung der Render-Dreiecke (0,1,3) + (0,3,2) behebt den weissen Strich auf
+  10|1|76.
+- Augen: 22|0|82/83 sind in K5e_f1 UV-entartet (v = 72) - nur ein Strich moeglich; fuer zwei Augenpunkte eigene Texel mit eigener,
+  flaechiger UV.
+
+### 9.7 Offen
+
+1. R8 rot (K5c-Krallen, Bild-2-Haltung) wie Runde 1 - wartet auf die Posen-Datei der rechten Hand (G2).
+2. 225 Linien-Dreiecke bleiben (K5e_f1 28); 49 Kinder lesen bis zu 8 Texel ausserhalb ihrer Mutter-UV (duenne Muetter, z. B.
+   10|1|140; dort ergaebe jede Wahl im Gebiet eine Linie). Beides ist B4-Rest, kein neuer Fehler.
+3. urteil4 H8 meldet "uv_entartet 1463" fuer Netz 22, weil es die B4-Tabelle prueft, nicht die EMD (urteil.sh uebergibt die Tabelle);
+   die EMD hat 186 (R10).
+4. Git schreibt spalt_uv_tabelle.json beim Auschecken ggf. mit CRLF am Schluss; `pruef` vergleicht darum ohne das letzte Zeilenende.

@@ -232,7 +232,7 @@ def pruef(ziel=None):
     print('Byte-Probe K5e_f1-Posen + K5e_f1-Krallen + B4-Tabelle == KAND.EMD (f78e5983...): %s  sha256 %s' % ('JA' if gut2 else 'NEIN', sha(k)))
     tb = spalt_uv_bytes()
     d3 = open(GEO3_SPALT_UV, 'rb').read() if os.path.exists(GEO3_SPALT_UV) else b''
-    gut3 = tb == d3
+    gut3 = tb.rstrip(b'\r\n') == d3.rstrip(b'\r\n')          # nur das Zeilenende am Schluss kann git (autocrlf) umschreiben
     print('UV-Tabelle (uvfein) == geo/%s: %s  sha256 %s' % (os.path.basename(GEO3_SPALT_UV), 'JA' if gut3 else 'NEIN', sha(tb)))
     return gut1 and gut2 and gut3
 

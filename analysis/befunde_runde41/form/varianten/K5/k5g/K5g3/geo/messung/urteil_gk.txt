@@ -1,5 +1,5 @@
 == URTEIL4 lauf_voll.json | EMD GK.EMD
-== URTEIL2 lauf_voll.json | EMD sha256 eadfac31aef18646 | Ansichten 3995 (ALLE)
+== URTEIL2 lauf_voll.json | EMD sha256 db9404a18368f420 | Ansichten 3995 (ALLE)
   GUT  H1a  ab4-Summe <= 1 % der K5e_f1-Summe ueber alle Ansichten (1043153 -> 10431)
             Summe 3578 (K5e_f1 auf denselben Ansichten 1043153, MULDE 547)
   GUT  H1b  ab4 groesstes zusammenhaengendes Streifenstueck je Ansicht <= 25 px
@@ -15,7 +15,7 @@
   GUT  H4   gezeichnete Dreiecke + 773 + 86 <= 8192
             meiste 7276 (spiel5080_vorn Clip 11 Bild 30) -> 8135
   GUT  H5   der Lauf gehoert zur EMD-Datei
-            sha256 Datei eadfac31aef18646, Lauf eadfac31aef18646
+            sha256 Datei db9404a18368f420, Lauf db9404a18368f420
   ROT  H6b  Netz 16 nur formgleich fein geteilt (statt H6)
             Sektionen 0-6 gleich; fremde Netze geaendert: [19, 20, 28, 29]; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler
   ROT  H7   Umriss >= K5e_f1 - 0,0005
@@ -60,7 +60,7 @@
    schulter_licht spiel5080:12:18        Gebiet  2666 | Maler 7.4 (Bezug K5e-Puffer 2.8) Abw 2.44(2.83) Splitter 21(19) | Kand-Puffer 7.5 Spl 19 | K5e-Maler 5.5 Spl 17 ROT
    schulter_licht bild1:12:22            Gebiet  2212 | Maler 0.0 (Bezug K5e-Puffer 0.0) Abw 2.22(2.22) Splitter 117(93) | Kand-Puffer 0.0 Spl 120 | K5e-Maler 0.0 Spl 102
    S18 Risse (ganz in K5e_f1-Figur): Orbit 1 px in 1 Ansichten [(1, 11, 5, 8), (0, 27, 72, 25), (0, 27, 72, 24)] | Spielkameras 2 px [(1, 'spiel5080_vorn', 12, 0), (1, 'spiel5080_vorn', 10, 45), (0, 'spiel5090', 27, 49)]
-   S18 Loecher (Def. Zahlen-Pruefer R3): Orbit 13 px in 13 von 390 Ansichten [(1, 27, 46, 21), (1, 27, 46, 4), (1, 12, 12, 25), (1, 12, 12, 0)] | Spielkameras 61 px in 10 von 21 [(27, 'bild1', 27, 60), (7, 'bild2', 10, 35), (6, 'spiel5090', 9, 18), (6, 'bild2', 27, 59)] (245 s)
+   S18 Loecher (Def. Zahlen-Pruefer R3): Orbit 13 px in 13 von 390 Ansichten [(1, 27, 46, 21), (1, 27, 46, 4), (1, 12, 12, 25), (1, 12, 12, 0)] | Spielkameras 61 px in 10 von 21 [(27, 'bild1', 27, 60), (7, 'bild2', 10, 35), (6, 'spiel5090', 9, 18), (6, 'bild2', 27, 59)] (241 s)
   ---- Runde 4 (H3a nach S16, H6b nach S12, H9 nach S9/S19 + S14, S18):
   ROT  H3a    S16: 7<->22 je Ansicht <= 25 px (Summe Bericht); uebrige Gruppen je <= K5e_f1*1,05+50 (5.2)
             7<->22 je Ansicht: groesste 13 ('spiel5080', 12, 14), Ansichten > 25: 0; Summe 163 (K5e_f1 101, alte Summengrenze 156, nur Bericht) | uebrige Gruppen: ROT 19<->23 535 > 50; 20<->22 424 > 50; 19<->22 104 > 50
