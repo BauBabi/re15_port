@@ -46,6 +46,23 @@ void re15_schwanz_r41_dicke(int slot, int32_t dicke_q12);
  * Video liegt das Stueck Huefte -> Austritt hinter dem Koerper); Kette und Lage bleiben. 0 = alle sichtbar. */
 void re15_schwanz_r41_verdeckt(int slot, int glieder);
 
+/* Runde 41 SF V8 Schwanz-Bewegung (Bauplan 3, PORT-SZENE nach Video 4): Rolle der Glieder 16-22 um ihre Achse; `punkt` = Szenenkamera
+ * (Welt). modus 1: die Bauchseite (+e_h, beim Laden aus der Flachachse der Meshes 17-21 gemessen) zeigt quer zur Gliedachse zur Kamera
+ * (Schmalseite); modus 2: quer zu Gliedachse und Sehstrahl zur Mitte der Sehne Wurzel -> Spitze (Innenseite des Bogens, Flanke zur Kamera).
+ * Hoechstens 30 Grad Verdrehung gegen das Vorglied (ausser hinter einem verdeckten Glied); Kette und Gelenkwinkel bleiben. gewicht Q12,
+ * 0 = aus. Nur V8-Kette. */
+void re15_schwanz_r41_rolle(int slot, int modus, const int32_t punkt[3], int32_t gewicht_q12);
+/* Runde 41 SF V8 Schwanz-Bewegung (Bauplan 6): 1 = Hangar-Szene - unter Szenenfuehrung knickt die V8-Kette bis 39,4 Grad je Gelenk
+ * (ueberblendet mit dem Gewicht des Szenenziels, auch in FABRIK); ohne Szenenziel und mit 0 gelten die Kampfwerte unveraendert. */
+void re15_schwanz_r41_szene(int slot, int an);
+/* Runde 41 SF V8 Schwanz-Bewegung (Bauplan 5): Bauch der Startform des Szenenziels IN DER BILDEBENE - Richtung bild_n (Welt, Q12, quer zur
+ * Sehne im Bild) mit hoechstens `pfeil` Welteinheiten (Pfeil der Videolinie); der Rest des Ueberschusses liegt in der Beugerichtung von
+ * re15_schwanz_r41_fuehrung (Blickrichtung). NULL / 0 = aus. */
+void re15_schwanz_r41_bogen(int slot, const int32_t bild_n_q12[3], int32_t pfeil);
+/* Runde 41 SF V8 Schwanz-Bewegung (Bauplan 5): die Spitze des Szenenziels gleitet auf dem Sehstrahl von `kamera` (Welt) so weit, dass die
+ * Kette ab dem Austritt mit dem Pfeil der Bildebene genau hinreicht (Bildlage der Spitze bleibt). NULL = aus. Nur V8 unter Szenenfuehrung. */
+void re15_schwanz_r41_tiefe_frei(int slot, const int32_t kamera[3]);
+
 /* Zuruecksetzen (Raumwechsel, Tests). */
 void re15_schwanz_r41_reset(void);
 

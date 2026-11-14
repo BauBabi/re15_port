@@ -440,6 +440,102 @@ int main(void)
         re15_schwanz_r41_reset();
     }
 
+    /* (12) Runde 41 SF V8 Schwanz-Bewegung (Bauplan 3, re15_schwanz_r41_rolle): die Rolle dreht jedes Glied NUR um seine eigene Achse -
+     *      Gelenklagen (trans) und Gliedachsen (lokale y) bleiben gleich, die Bauchseite (+e_h, beim Laden aus der Flachachse der Meshes
+     *      gemessen; Spiel-Asset (0,8956, 0, 0,4449), werkzeug quer.py) zeigt zur Kamera (Modus 1, Rolle <= 10 Grad an den Gliedern 18-22,
+     *      Glied 16/17 laufen mit je hoechstens 30 Grad ein) bzw. die Flanke zur Kamera (Modus 2, 90 +- 10 Grad); Verdrehung zwischen
+     *      Nachbargliedern hoechstens 30 Grad (+1 Rundung) bzw. die des Keyframes. Gegenprobe: ohne Rolle liegt der Bauch nicht ueberall
+     *      unter 10 Grad. Dazu wird die Bank 0x30 mit dem Spiel-Asset angelegt (die Bauchachse liest die Meshes der Bank). */
+    {
+        re15_enemy_bank_t *eb = re15_enemy_find(0x30u);
+        if (!eb) eb = re15_enemy_alloc(0x30u);
+        CHECK(eb != NULL, "Rolle: Bank 0x30 nicht anlegbar");
+        if (eb) {
+            eb->md1 = s_md1; eb->skel = s_skel; eb->anim = s_anim; eb->ok = 1;
+            static const double eh[3] = { 0.8956, 0.0, 0.4449 };
+            const re15_emd_skeleton_t *sk = &eb->skel;
+            re15_schwanz_r41_reset();
+            a->motion = 0; a->anim_frame = 0; a->rot_y = 1300;
+            re15_skel_pose_t p0[RE15_EMD_MAX_BONES], p1[RE15_EMD_MAX_BONES];
+            const double cs = re15_cos_q12(a->rot_y) / 4096.0, sn = re15_sin_q12(a->rot_y) / 4096.0;
+            /* Kamera vor Birkin (Modellraum +x = vorn), 8000 E. entfernt, 1500 E. hoch - in Welt umgerechnet */
+            const double km[3] = { 8000.0, -1500.0, 0.0 };
+            const int32_t kam[3] = { (int32_t)(a->x + cs * km[0] + sn * km[2]), (int32_t)(a->y + km[1]), (int32_t)(a->z - sn * km[0] + cs * km[2]) };
+            for (int modus = 0; modus <= 2; modus++) {
+                for (int i = 0; i < 30; i++) {
+                    takt();
+                    int kf = re15_compute_actor_kf(&s_anim, sk, a, -1, a->anim_frame);
+                    re15_skel_compute_pose(sk, kf, p0);
+                    re15_schwanz_r41_rolle(20, 0, NULL, 0);
+                    re15_schwanz_r41_pose(a, sk, p0);              /* Kettenschritt dieses Takts, ohne Rolle */
+                }
+                int kf = re15_compute_actor_kf(&s_anim, sk, a, -1, a->anim_frame);
+                re15_skel_compute_pose(sk, kf, p1);
+                re15_schwanz_r41_rolle(20, modus, modus ? kam : NULL, modus ? 4096 : 0);
+                re15_schwanz_r41_pose(a, sk, p1);                  /* gleicher Takt: nur die Knochen neu, Kette unveraendert */
+                double d_lage = 0, d_achse = 0, phi_max = 0, phi_min = 180, tw_max = 0;
+                double e_vor[3] = { 0, 0, 0 }, a_vor[3] = { 0, 0, 0 };
+                for (int b = 16; b <= 22; b++) {
+                    double ax0[3], ax1[3], bauch[3], mid[3], v[3], n0 = 0, n1 = 0;
+                    for (int k = 0; k < 3; k++) {
+                        d_lage = fmax(d_lage, fabs((double)p1[b].trans[k] - p0[b].trans[k]));
+                        ax0[k] = p0[b].rot[k * 3 + 1]; ax1[k] = p1[b].rot[k * 3 + 1];
+                        n0 += ax0[k] * ax0[k]; n1 += ax1[k] * ax1[k];
+                    }
+                    n0 = sqrt(n0); n1 = sqrt(n1);
+                    double dot = 0, nb = 0;
+                    for (int k = 0; k < 3; k++) { ax0[k] /= n0; ax1[k] /= n1; dot += ax0[k] * ax1[k]; }
+                    d_achse = fmax(d_achse, acos(dot > 1 ? 1 : dot) * 180.0 / 3.14159265);
+                    for (int k = 0; k < 3; k++) bauch[k] = p1[b].rot[k * 3] * eh[0] + p1[b].rot[k * 3 + 2] * eh[2];
+                    double db = 0; for (int k = 0; k < 3; k++) db += bauch[k] * ax1[k];
+                    for (int k = 0; k < 3; k++) { bauch[k] -= db * ax1[k]; nb += bauch[k] * bauch[k]; }
+                    nb = sqrt(nb); for (int k = 0; k < 3; k++) bauch[k] /= nb;
+                    /* Kamera im Modellraum wie die Kette (zu_modell) */
+                    const double dx = kam[0] - a->x, dz = kam[2] - a->z;
+                    const double kmod[3] = { cs * dx - sn * dz, (double)kam[1] - a->y, sn * dx + cs * dz };
+                    const int16_t *r = s_skel.bone_relative_pos[b < 22 ? b + 1 : 22];
+                    const double L = sqrt((double)r[0] * r[0] + (double)r[1] * r[1] + (double)r[2] * r[2]);
+                    double dv = 0, nv = 0, c = 0;
+                    for (int k = 0; k < 3; k++) { mid[k] = p1[b].trans[k] + ax1[k] * L * 0.5; v[k] = kmod[k] - mid[k]; dv += v[k] * ax1[k]; }
+                    for (int k = 0; k < 3; k++) { v[k] -= dv * ax1[k]; nv += v[k] * v[k]; }
+                    nv = sqrt(nv);
+                    for (int k = 0; k < 3; k++) c += bauch[k] * v[k] / nv;
+                    const double phi = acos(c > 1 ? 1 : (c < -1 ? -1 : c)) * 180.0 / 3.14159265;
+                    if (b >= 18 && phi > phi_max) phi_max = phi;
+                    if (b >= 18 && phi < phi_min) phi_min = phi;
+                    if (b > 16) {                                 /* Verdrehung gegen das Vorglied: Bauch des Vorglieds parallel verschoben */
+                        double cr[3] = { a_vor[1] * ax1[2] - a_vor[2] * ax1[1], a_vor[2] * ax1[0] - a_vor[0] * ax1[2],
+                                         a_vor[0] * ax1[1] - a_vor[1] * ax1[0] };
+                        const double cc = a_vor[0] * ax1[0] + a_vor[1] * ax1[1] + a_vor[2] * ax1[2];
+                        double et[3];
+                        for (int k = 0; k < 3; k++) {
+                            const double kx = cr[(k + 1) % 3] * e_vor[(k + 2) % 3] - cr[(k + 2) % 3] * e_vor[(k + 1) % 3];
+                            const double kd = cr[0] * e_vor[0] + cr[1] * e_vor[1] + cr[2] * e_vor[2];
+                            et[k] = e_vor[k] * cc + kx + cr[k] * kd / (1.0 + cc);
+                        }
+                        double de = 0, ne = 0, ct = 0;
+                        for (int k = 0; k < 3; k++) de += et[k] * ax1[k];
+                        for (int k = 0; k < 3; k++) { et[k] -= de * ax1[k]; ne += et[k] * et[k]; }
+                        ne = sqrt(ne);
+                        for (int k = 0; k < 3; k++) ct += et[k] / ne * bauch[k];
+                        tw_max = fmax(tw_max, acos(ct > 1 ? 1 : (ct < -1 ? -1 : ct)) * 180.0 / 3.14159265);
+                    }
+                    for (int k = 0; k < 3; k++) { e_vor[k] = bauch[k]; a_vor[k] = ax1[k]; }
+                }
+                fprintf(stderr, "Schwanz Rolle Modus %d: Lage %.1f E., Achse %.2f Grad, Bauch-Kamera Glied 18-22 %.1f..%.1f Grad, Verdrehung max %.1f\n",
+                        modus, d_lage, d_achse, phi_min, phi_max, tw_max);
+                CHECK(d_lage <= 1.0 && d_achse <= 0.5, "Rolle Modus %d: Gelenklage %.1f E. / Gliedachse %.2f Grad veraendert", modus, d_lage, d_achse);
+                if (modus == 1) CHECK(phi_max <= 10.0, "Rolle Modus 1: Bauch %.1f Grad neben der Kamera (Soll <= 10)", phi_max);
+                if (modus == 2) CHECK(phi_min >= 80.0 && phi_max <= 100.0, "Rolle Modus 2: Flanke %.1f..%.1f Grad (Soll 90 +- 10)", phi_min, phi_max);
+                if (modus) CHECK(tw_max <= 31.0, "Rolle Modus %d: Verdrehung %.1f Grad zwischen Nachbargliedern (Soll <= 30)", modus, tw_max);
+                if (modus == 0) CHECK(phi_max > 10.0, "Gegenprobe ohne Rolle: Bauch ueberall unter 10 Grad (%.1f) - Pruefung waere leer", phi_max);
+            }
+            re15_schwanz_r41_rolle(20, 0, NULL, 0);
+            eb->ok = 0; eb->type = 0;
+            re15_schwanz_r41_reset();
+        }
+    }
+
     /* (6) EM30 mit 16 Knochen: keine Kette */
     {
         size_t esz = 0, off = 0, elen = 0;

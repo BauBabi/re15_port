@@ -995,6 +995,10 @@ static void bf_hangar_beenden(void)
     re15_schwanz_r41_ziel(s_h.birkin, NULL, 0);          /* Neuaufbau ab NB2: Schwanzbahn und Verdecken aus */
     re15_schwanz_r41_dicke(s_h.birkin, 0);
     re15_schwanz_r41_verdeckt(s_h.birkin, 0);
+    re15_schwanz_r41_rolle(s_h.birkin, 0, NULL, 0);       /* Runde 41 SF V8 Schwanz-Bewegung: Rolle und Szenenwerte aus (Kampf) */
+    re15_schwanz_r41_bogen(s_h.birkin, NULL, 0);
+    re15_schwanz_r41_tiefe_frei(s_h.birkin, NULL);
+    re15_schwanz_r41_szene(s_h.birkin, 0);
     s_h.sm = -1;
     s_h.phase = BF_H_FREI;
     s_szene_gespielt = 1;
@@ -1115,10 +1119,171 @@ static int bf_video_welt(const bf_schwanzpunkt_t *q, const re15_actor_t *b, int3
 }
 
 
+/* ---- Runde 41 SF V8 "Schwanz-Bewegung" (Nutzer 2026-11-14 woertlich: "weder mit dem rot der Schwanzfarbe noch mit dem etwas zu steifen
+ * grossen Schwanz zufrieden"; Vorlagen Version_80%/Areas*.png; Analyse scratchpad/schwanz_v8/analyse/ANALYSE.md Bauplan 3/5/6) -----------
+ * PORT-SZENE: Schwanz und Sichel-Form gibt es auf keiner Disc (SF_sichel.md), keine @0x-Adresse. Jede Zahl ist am 80-%-Video 4 gemessen
+ * (Videoraum 640x480, Videobild n = 1349 + h): Linien video_linien.py (Raster 10 px, +-5 px), Nutzer-Mittellinien Areas*.png (h22/h24/h64/
+ * h90, y - 40). Die V8-Kette (re15_schwanz_r41_v8_kette) faehrt ihre eigene Tabelle; Referenz 2 / V2 / V4 behalten k_schwanz_bahn.
+ * Spalten: h | Spitze x, y, art, tiefe (art wie bf_video_welt, dazu 4 = wie 1, die Tiefe ist aber frei: die Spitze gleitet auf ihrem
+ * Sehstrahl, bis die Kette ab dem Austritt mit dem Pfeil genau hinreicht, vor dem Koerper - re15_schwanz_r41_tiefe_frei; Spitze = Nadelspitze,
+ * schwanz_r41.c ziel_anwenden) | Durchgangsgelenk j,
+ * Austritt x, y, art, tiefe | pfeil | verdeckt.
+ *   Spitze / Austritt: letzter / erster Punkt der Videolinie (tools/r41_sichel/v8/bewegung/tabelle_v8.py -> SF_belege/v8/bewegung/tabelle_v8.json).
+ *   j: die Kette ab Gelenk j bis zur Nadelspitze ist 7 - j + 759/541 Glieder lang; j = rund(8,40 - sichtbare Videolaenge in Gliedern),
+ *      Gliedlaenge im Bild aus der Blicktiefe des Schwanzes (knick_video.json, 29-38 Videopunkte je Glied), 1..6. Bogen h76-h100 (sichtbar ab
+ *      der Wurzel): j = 2 = kleinstes j mit j x 541 >= Abstand Wurzel -> Austritt (Abstimmungslauf SF_belege/v8/bewegung cd: 523-1043 E.), sonst
+ *      rollte sich das Stueck am Buckel sichtbar ein.
+ *   pfeil: groesster Abstand der Videolinie von ihrer Sehne Austritt -> Spitze in Videopunkten (+ = links der Sehne im Bild gesehen,
+ *      - = rechts; |Pfeil| < 5 = Ablesegenauigkeit der Linien -> 0). Die Kette baucht um diesen Pfeil IN DER BILDEBENE aus (Bauplan 5:
+ *      "Beugung in der Bildebene, damit Knick und Kruemmung im Bild sichtbar sind"), die uebrige Laenge liegt in der Blicktiefe (NB4).
+ *   verdeckt: Glieder ab der Wurzel ohne Querschnitt (Video: Wurzel -> Austritt hinter dem Koerper). Bogen h76-h100: 0 (Video: der Bogen
+ *      waechst aus dem Buckel; der Austritt liegt 20-30 Videopunkte links neben dem Port-Koerperrand, umriss.py).
+ * h36-h56 (Video: nicht sichtbar, hinter den Knien) wie k_schwanz_bahn hinter dem Koerper, h74 (Spider-Man fliegt durchs Bild) schon im
+ * Bogen h76 - beide ganz verdeckt (verdeckt 7). */
+typedef struct { int16_t h, sx, sy, sart, stiefe, vj, vx, vy, vart, vtiefe, pfeil, verdeckt; } bf_schwanz_v8_t;
+static const bf_schwanz_v8_t k_schwanz_v8[] = {
+    /* h   Spitze              j  Austritt           pfeil verdeckt   Videolinie (Pfeil Videopunkte, sichtbare Glieder) */
+    {  16, 285, 348, 4,    0,  5, 330, 262, 1,    0,   0, 5 },   /* Video h16 nicht sichtbar: Stand h18 (Gewicht 0 -> 4096 h15-h18) */
+    {  18, 285, 348, 4,    0,  5, 330, 262, 1,    0,   0, 5 },   /* (330,262) -> (285,348), Pfeil -0,1, 3,37 Glieder */
+    {  20, 272, 372, 4,    0,  5, 327, 263, 1,    0,   0, 5 },   /* (327,263) -> (272,372), Pfeil -3,2, 3,38 */
+    {  22, 233, 410, 4,    0,  3, 330, 260, 1,    0,   7, 3 },   /* Nutzer Areas4.png, Pfeil 7,3, 5,05 */
+    {  24, 199, 346, 4,    0,  3, 333, 273, 1,    0,  36, 3 },   /* Nutzer Areas2.png, Knick, Pfeil 36,4, 4,92 */
+    {  26, 245, 290, 4,    0,  6, 300, 345, 1,    0,   0, 6 },   /* (300,345) -> (245,290) Spitze hoch, 2,16 */
+    {  28, 230, 298, 4,    0,  6, 262, 338, 1,    0,   0, 6 },   /* (262,338) -> (230,298), 1,40 */
+    {  30, 354, 350, 4,    0,  6, 318, 369, 1,    0,   0, 6 },   /* zwischen den Knien, 1,12 */
+    {  32, 340, 378, 4,    0,  6, 374, 340, 1,    0,   0, 6 },   /* 1,37 */
+    {  34, 358, 368, 4,    0,  6, 375, 330, 1,    0,   0, 6 },   /* 1,17 */
+    {  36, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 },   /* h36-h56 nicht sichtbar (wie k_schwanz_bahn); ganz verdeckt: die
+                                                               * zusammengelegte Kette stand sonst als roter Stummel an der Flanke
+                                                               * (Sichtpruefung, h38-h56; Video: nichts) */
+    {  56, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 },
+    {  58, 418, 372, 4,    0,  6, 405, 322, 1,    0,   0, 6 },   /* kurz, 1,74 */
+    {  60, 455, 388, 4,    0,  6, 420, 320, 1,    0,   0, 6 },   /* Pfeil 1,4, 2,33 */
+    {  62, 480, 425, 4,    0,  5, 430, 325, 1,    0,   0, 5 },   /* Pfeil 3,1, 3,38 */
+    {  64, 509, 427, 4,    0,  5, 426, 320, 1,    0,   0, 5 },   /* Nutzer Areas3.png, Pfeil 4,8, 3,72 (Bodenziel art 0: 12,5 Videopunkte daneben,
+                                                               * Stand E) */
+    {  66, 535, 415, 4,    0,  5, 432, 320, 1,    0, -14, 5 },   /* Pfeil -14,1, 3,83 */
+    {  68, 544, 395, 4,    0,  5, 435, 322, 1,    0,  -7, 5 },   /* Pfeil -6,6, 3,66 */
+    {  70, 528, 402, 4,    0,  5, 430, 322, 1,    0,   0, 5 },   /* Pfeil -2,3, 3,49 */
+    {  72, 384, 355, 4,    0,  6, 395, 338, 1,    0,   0, 6 },   /* kurzer Rest, 0,69 */
+    {  74, 280, 341, 4,    0,  2, 326, 226, 1,    0, -36, 7 },   /* Video h74 nichts (Spider-Man fliegt durchs Bild): schon in den Bogen
+                                                               * h76, aber ganz verdeckt (Sichtpruefung: Rest an der Huefte) */
+    /* Bogen h76-h100 (Seitenansicht): Ablesung mit EINER Methode (Augen-Agent, Pixelauswertung der Rasterblaetter, Spitze/Knolle/Rand
+     * +-3, Ansatz +-8 Videopunkte; tools/r41_sichel/v8/bewegung/bogen_v8.py -> SF_belege/v8/bewegung/bogen_v8.json). Die Linienablesung
+     * video_linien.py lag hier 20-40 Videopunkte weiter links; mit ihr lagen h88/h92 25-30 Videopunkte links vom Nutzer-Umriss h90 und der
+     * Bogen zuckte (Sichtpruefung). Spitze, die an der Schattenoberkante endet (h88-h94, h98): + (3,27) = Nutzer-Umriss Areas.png h90
+     * (286,349) gegen dieselbe Ablesung (283,322), die Nadel laeuft im Bodenschatten weiter. h82 (Spitze vom Spider-Man verdeckt) und h96
+     * (Form unsicher) nicht abgelesen: gemischt. Pfeil aus Ansatz, linkestem Bogenpunkt und Knollenende. */
+    {  76, 280, 341, 4,    0,  2, 326, 226, 1,    0, -36, 0 },   /* bis zur Bodenlinie, Ansatz unsicher */
+    {  78, 278, 323, 4,    0,  2, 340, 226, 1,    0, -43, 0 },   /* endet ueber dem Schatten */
+    {  80, 300, 343, 4,    0,  2, 350, 222, 1,    0, -54, 0 },   /* Spitze unsicher (zwei Aeste), Spur nach rechts unten */
+    {  84, 292, 337, 4,    0,  2, 350, 222, 1,    0, -39, 0 },
+    {  86, 291, 336, 4,    0,  2, 350, 222, 1,    0, -37, 0 },
+    {  88, 287, 352, 4,    0,  2, 350, 222, 1,    0, -40, 0 },   /* Ablesung (284,325) + Nadel im Schatten */
+    {  90, 286, 349, 4,    0,  2, 350, 222, 1,    0, -37, 0 },   /* Nutzer Areas.png (+Areas_Tip.png); Ansatz wie h84-h94 (Schnittkante
+                                                               * des Umrisses (366,213) liegt im Port-Koerper, Rand x 357) */
+    {  92, 285, 344, 4,    0,  2, 350, 222, 1,    0, -35, 0 },   /* (282,317) + Nadel */
+    {  94, 283, 344, 4,    0,  2, 350, 222, 1,    0, -28, 0 },   /* (280,317) + Nadel */
+    {  98, 272, 354, 4,    0,  2, 346, 225, 1,    0, -23, 0 },   /* (269,327) + Nadel */
+    { 100, 292, 351, 4,    0,  2, 338, 222, 1,    0, -21, 0 },   /* unsicher: Knolle rechts versetzt, bis zur Bodenlinie */
+    { 104, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 0 } }; /* Video h102-h104 nur noch Saum, ab h106 kein Schwanz (Augen-Agent,
+                                                               * SF_belege/v8/bewegung/notiz.txt): hinter den Koerper
+                                                               * wie h36-h56, dort freigeben */
+#define BF_SCHWANZ_V8_N ((int)(sizeof k_schwanz_v8 / sizeof k_schwanz_v8[0]))
+/* Gewicht der Szenenfuehrung (Bahn, Rolle, Gelenkgrenze) je Videobild fuer V8: Anlauf ab h15 wie Referenz 2 / V2 / V4, aber voll ab h18 =
+ * erstes Videobild mit sichtbarem Schwanz (video_linien.py h16 'nein', h18 'ja'; mit dem Anlauf bis h19 lag die Spitze h18 52 Videopunkte
+ * daneben, Stand D). Der Bogen ist im Video bis h100 sichtbar, h102-h104 nur als Saum, ab h106 nicht mehr (bis h134); die Kette liegt h104
+ * hinter dem Koerper und wird dort in derselben Spanne wie k_schwanz_gewicht (Referenz 2: 6 Bilder) freigegeben, h104-h110. Freigabe direkt
+ * aus dem Bogen (h102-h108, Stand F) schlug sichtbar zurueck: Spitze h104 -> h106 -> h108 81 / 80 Videopunkte je 2 Bilder, h106 60 % des
+ * Schwanzes sichtbar. */
+static const int16_t k_schwanz_gewicht_v8[][2] = { { 15, 0 }, { 18, 4096 }, { 104, 4096 }, { 110, 0 } };
+/* Rolle je Videobild: bis h72 Bauch zur Kamera (Modus 1; Video h18-h34 / h58-h72 von vorn rot-weiss gebaendert, 15-20 Videopunkte breit =
+ * Schmalseite), ab h74 Bauch zur Bogeninnenseite (Modus 2; Video h76-h100 Flanke, rote Bauchkante innen; Analyse 2a). */
+#define BF_SCHWANZ_V8_BOGEN_AB 74
+
+static int bf_schwanz_v8(void)
+{
+    const re15_enemy_bank_t *bk = re15_enemy_find(0x30u);
+    return bk && bk->skel.bone_count == 23 && re15_schwanz_r41_v8_kette(&bk->skel);
+}
+
+/* Weltrichtung der Bildebenen-Beugung: quer zur Sehne a -> e (Videopunkte) im Bild, Seite s (+1 links, -1 rechts der Sehne im Bild),
+ * in der Tiefe des Punkts q (art/tiefe wie dort), senkrecht zur Weltsehne. Rechenweg: Differenz zweier Weltpunkte (Sehnenmitte und 40
+ * Videopunkte quer daneben, gleiche Tiefe), normiert - die Schrittweite faellt durch die Normierung heraus (nur numerisch). */
+static int bf_bild_beuge(const re15_actor_t *b, const bf_schwanzpunkt_t *q, int ax_, int ay_, int ex_, int ey_, int s, int32_t out[3])
+{
+    const double dx = ex_ - ax_, dy = ey_ - ay_, l = sqrt(dx * dx + dy * dy);
+    if (l < 1.0) return 0;
+    bf_schwanzpunkt_t m = *q, n = *q, qa = *q, qe = *q;
+    m.vx = (int16_t)((ax_ + ex_) / 2); m.vy = (int16_t)((ay_ + ey_) / 2);
+    n.vx = (int16_t)(m.vx + (int)lrint(s * 40.0 * dy / l)); n.vy = (int16_t)(m.vy + (int)lrint(-s * 40.0 * dx / l));
+    qa.vx = (int16_t)ax_; qa.vy = (int16_t)ay_; qe.vx = (int16_t)ex_; qe.vy = (int16_t)ey_;
+    int32_t pm[3], pn[3], pa[3], pe[3];
+    if (!bf_video_welt(&m, b, pm) || !bf_video_welt(&n, b, pn) || !bf_video_welt(&qa, b, pa) || !bf_video_welt(&qe, b, pe)) return 0;
+    double d[3], c[3], cl = 0, dc = 0, dl = 0;
+    for (int k = 0; k < 3; k++) { d[k] = pn[k] - pm[k]; c[k] = pe[k] - pa[k]; cl += c[k] * c[k]; dc += d[k] * c[k]; }
+    for (int k = 0; k < 3; k++) { if (cl > 1.0) d[k] -= c[k] * dc / cl; dl += d[k] * d[k]; }
+    if (dl < 1.0) return 0;
+    dl = sqrt(dl);
+    for (int k = 0; k < 3; k++) out[k] = (int32_t)lrint(d[k] * 4096.0 / dl);
+    return 1;
+}
+
+static void bf_schwanz_ziel_v8(const re15_actor_t *b, int h)
+{
+    const int32_t w = bf_tab(k_schwanz_gewicht_v8, BF_N(k_schwanz_gewicht_v8), h);
+    const re15_camera_cut_t *c = bf_szenenkamera();
+    re15_schwanz_r41_szene(s_h.birkin, 1);
+    if (w <= 0 || !c) {
+        re15_schwanz_r41_ziel(s_h.birkin, NULL, 0); re15_schwanz_r41_fuehrung(s_h.birkin, NULL, 0, NULL);
+        re15_schwanz_r41_verdeckt(s_h.birkin, 0); re15_schwanz_r41_rolle(s_h.birkin, 0, NULL, 0); re15_schwanz_r41_bogen(s_h.birkin, NULL, 0);
+        re15_schwanz_r41_tiefe_frei(s_h.birkin, NULL);
+        return;
+    }
+    int i = 0;
+    while (i < BF_SCHWANZ_V8_N - 1 && h >= k_schwanz_v8[i + 1].h) i++;
+    const bf_schwanz_v8_t *p0 = &k_schwanz_v8[i], *p1 = &k_schwanz_v8[i < BF_SCHWANZ_V8_N - 1 ? i + 1 : i];
+    const bf_schwanzpunkt_t s0 = { 0, p0->sx, p0->sy, p0->sart, p0->stiefe }, s1 = { 0, p1->sx, p1->sy, p1->sart, p1->stiefe };
+    const bf_schwanzpunkt_t v0 = { 0, p0->vx, p0->vy, p0->vart, p0->vtiefe }, v1 = { 0, p1->vx, p1->vy, p1->vart, p1->vtiefe };
+    int32_t a[3], e[3], va[3], ve[3], z[3], vz[3], bg[3];
+    if (!bf_video_welt(&s0, b, a) || !bf_video_welt(&s1, b, e) || !bf_video_welt(&v0, b, va) || !bf_video_welt(&v1, b, ve)) {
+        re15_schwanz_r41_ziel(s_h.birkin, NULL, 0); return;
+    }
+    const int span = p1->h - p0->h;
+    const int u = (span > 0 && h > p0->h) ? ((h < p1->h ? h - p0->h : span) * 4096 / span) : 0;
+    for (int k = 0; k < 3; k++) { z[k] = bf_mix(a[k], e[k], u); vz[k] = bf_mix(va[k], ve[k], u); }
+    bg[0] = bg[1] = bg[2] = 0;
+    {   /* Ueberschuss in die Blickrichtung (NB4) ... */
+        const double fx = (vz[0] + z[0]) * 0.5 - c->pos_x, fy = (vz[1] + z[1]) * 0.5 - c->pos_y, fz = (vz[2] + z[2]) * 0.5 - c->pos_z;
+        const double l = sqrt(fx * fx + fy * fy + fz * fz);
+        if (l > 1.0) { bg[0] = (int32_t)(fx * 4096.0 / l); bg[1] = (int32_t)(fy * 4096.0 / l); bg[2] = (int32_t)(fz * 4096.0 / l); }
+    }
+    {   /* ... ausser dem Pfeil der Videolinie, der in der Bildebene liegt (Weltlaenge des Pfeils in der Tiefe des Austritts) */
+        int32_t bn[3], pm[3], pn[3];
+        const int pf = p0->pfeil < 0 ? -p0->pfeil : p0->pfeil;
+        bf_schwanzpunkt_t qm = v0, qn = v0;
+        qm.vx = (int16_t)((p0->vx + p0->sx) / 2); qm.vy = (int16_t)((p0->vy + p0->sy) / 2); qn.vx = (int16_t)(qm.vx + pf); qn.vy = qm.vy;
+        if (pf && bf_bild_beuge(b, &v0, p0->vx, p0->vy, p0->sx, p0->sy, p0->pfeil > 0 ? 1 : -1, bn) && bf_video_welt(&qm, b, pm) &&
+            bf_video_welt(&qn, b, pn)) {
+            const double dx = pn[0] - pm[0], dy = pn[1] - pm[1], dz = pn[2] - pm[2];
+            re15_schwanz_r41_bogen(s_h.birkin, bn, (int32_t)lrint(sqrt(dx * dx + dy * dy + dz * dz)));
+        } else re15_schwanz_r41_bogen(s_h.birkin, NULL, 0);
+    }
+    re15_schwanz_r41_fuehrung(s_h.birkin, vz, p0->vj, bg);
+    re15_schwanz_r41_ziel(s_h.birkin, z, w);
+    re15_schwanz_r41_verdeckt(s_h.birkin, p0->verdeckt);
+    {
+        const int32_t kam[3] = { c->pos_x, c->pos_y, c->pos_z };
+        re15_schwanz_r41_tiefe_frei(s_h.birkin, p0->sart == 4 ? kam : NULL);
+        re15_schwanz_r41_rolle(s_h.birkin, h < BF_SCHWANZ_V8_BOGEN_AB ? 1 : 2, kam, w);
+    }
+}
+
 /* Schwanzziel je Videobild: zwischen den Tabellenpunkten im Weltraum linear (Spitze und Durchgangspunkt), Startform in die
  * Blickrichtung der Szenenkamera gebogen (NB4, Kopf k_schwanz_bahn). */
 static void bf_schwanz_ziel(const re15_actor_t *b, int h)
 {
+    if (bf_schwanz_v8()) { bf_schwanz_ziel_v8(b, h); return; }   /* Runde 41 SF V8 Schwanz-Bewegung: eigene Tabelle */
     const int v2 = bf_schwanz_v2();
     const int32_t w = bf_schwanz_v4() ? bf_tab(k_schwanz_gewicht_v4, BF_N(k_schwanz_gewicht_v4), h)
                     : v2 ? bf_tab(k_schwanz_gewicht_v2, BF_N(k_schwanz_gewicht_v2), h)
@@ -1332,7 +1497,8 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     {   /* Neuaufbau ab NB2: Schwanzbahn je Videobild (NB3-NB5), der Takt h wird im Bild h + BF_BILD_VERSATZ gezeichnet */
         const int hb = h + BF_BILD_VERSATZ;
         bf_schwanz_ziel(b, hb);
-        re15_schwanz_r41_dicke(s_h.birkin, bf_tab(k_schwanz_dicke, BF_N(k_schwanz_dicke), hb));
+        re15_schwanz_r41_dicke(s_h.birkin, bf_schwanz_v8() ? 0 : bf_tab(k_schwanz_dicke, BF_N(k_schwanz_dicke), hb));   /* V8: flacher
+                                                         * Querschnitt des Assets, keine Verduennung (Schwanz-Bewegung, k_schwanz_v8) */
         bf_gruenes_blut(b, m, hb);                       /* gruenes Blut = Original-Spinnenblut (@0x80113b08-54) */
     }
     /* --- Birkin: Clip, Gier ------------------------------------------------------------------------------------- */
