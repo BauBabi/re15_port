@@ -255,6 +255,12 @@ void re15_bf_morph_zu_g5(int slot)
  * abgeschnitten), Mitte 485: 69.1 / 70.6 / 64.9 / 65.5 / 68.5, Huefte 0: 90.8 / 92.3 / 85.5 / 89.7 / 93.1 -> 485. */
 #define BF_SM_GRIFF_KNOCHEN 19
 #define BF_SM_GRIFF_Y    485        /* halbe Oberschenkellaenge (Knie bei 970), Wahl nach der Messung oben */
+/* Tot sackt er im Griff ab: Video-Oberkante h37-47 / 48-60 / 61-70 67.8 / 73.5 / 96.8 (er haengt spaeter tiefer), Port mit 485
+ * durchgehend 75.5 / 65.1 / 71.7 (Lauf 945d32583; Sichtpruefung: "h50..h68 Glieder im oberen Balken"), mit dem Griff an der
+ * Huefte (0) 85.5 / 89.7 / 93.1 (Lauf g0). Daher gleitet der Griffpunkt nach dem Tod h48 -> h60 linear von 485 zur Huefte (0). */
+#define BF_H_SACKT_AB    48
+#define BF_H_SACKT_BIS   60
+static int32_t s_griff_y = BF_SM_GRIFF_Y;   /* aktueller Griffpunkt (bf_klauenziel), je Takt der Szene gesetzt */
 /* Ansprung (Nutzer 2026-11-13: "Im Original Video gleitet der Spiderman mit gehobenen Armen zum Angriff Linear auf Birkin zu,
  * und wird dann von Birkin abgefangen und hochgehoben. Bei uns springt er ... mehr oder weniger direkt hoch auf Birkins Arm").
  * Video 4 Bild fuer Bild (Laufordner gruenblut/video, Bogen z_video_h0-8 / z_video_h9-17, PSX-Bildpunkte): h0..h1 hockt, ein
@@ -685,6 +691,7 @@ static void bf_hangar_starten(void)
     b->rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, 4, 0)) & 0x0fff);
     m->rot_y = bf_blick(m, b->x, b->z);
     m->hp = 100;
+    s_griff_y = BF_SM_GRIFF_Y;
     bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0); m->anim_frac = 0;     /* hockt: Angriffs-Clip 0x17 B8 (Video h0) */
     s_h.cut_zurueck = (int)g_scd.cam_id;                 /* der Schnitt, den der RVD-Scan gerade angefordert hat */
     bf_riegel(1);
@@ -745,7 +752,7 @@ static void bf_klauenziel(re15_actor_t *b, re15_actor_t *m, int32_t z[3])
 {
     int32_t g[3];
     re15_enemy_bone_world_pos(b, BF_KLAUE, z);
-    {   static const int32_t ofs[3] = { 0, BF_SM_GRIFF_Y, 0 };
+    {   const int32_t ofs[3] = { 0, s_griff_y, 0 };
         (void)re15_enemy_part_point(m, BF_SM_GRIFF_KNOCHEN, ofs, g); }
     z[0] -= g[0] - m->x;
     z[1] -= g[1] - m->y;
@@ -937,9 +944,11 @@ static void bf_gruenes_blut(re15_actor_t *b, re15_actor_t *m, int h)
  * h74 Mitte (232, 380) unten 409, h76 (259, 389) unten 404, h77/h78 (204..220, 397..400) unten 413..422, h79 (231, 385); er
  * liegt vor Birkin auf dem Boden. Fall: Pruefer-Mass (Mitte mit Schatten) h72 229 -> h73 280 -> h74 337 -> h75 387 -> h76 409 =
  * 4 Bilder; Lauf "w" mit erstem Bodenpunkt bei h74 fiel er h72 -> h73 um 103 Zeilen. Jetzt Flug vom Loslassen (h71) zum ersten
- * Bodenpunkt in 5 Takten (h71..h75), Bodenpunkte h76 (245,400) (Mittel h74..h76: x 232/259), h78 (215,405), h80 (250,400); ab
- * h81 wie bisher. */
-static const int16_t k_wurf_bahn[][4] = { { 76, 245, 400, 0 }, { 78, 215, 405, 0 }, { 80, 250, 400, 0 },
+ * Bodenpunkt in 5 Takten (h71..h75), Bodenpunkte h76 (245,400) (Mittel h74..h76: x 232/259), h78 (215,405); h80 Beginn des
+ * Aufspringens bei x 311 (Video h79, Messung flucht6.py, Kopf BF_H_AUFSPRINGEN), y 420 (Port-Rahmen endet bei 431) - mit (250,400)
+ * sprang er h80 -> h81 vom Boden auf Blicktiefe 4600 (Sichtpruefung "von flach am Boden zu riesig am rechten Rand"); ab h81 wie
+ * bisher. */
+static const int16_t k_wurf_bahn[][4] = { { 76, 245, 400, 0 }, { 78, 215, 405, 0 }, { 80, 311, 420, 0 },
                                           { 81, 370, 450, 4600 }, { 82, 450, 380, 3800 }, { 83, 560, 340, 3200 }, { 84, 640, 290, 2500 },
                                           { 85, 720, 290, 2200 }, { 86, 820, 320, 2000 }, { 87, 940, 330, 1900 } };
 /* Gier im Wurf: zur Bewegungsrichtung hin, hoechstens BF_WURF_DREH je Takt. Pruefer Mangel 8: vorher folgte sie ihr sofort und
@@ -1054,6 +1063,8 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         } else if ((h - BF_H_BERUEHRUNG) % BF_SM_WEH_BILDER == 0) bf_clip(m, BF_SM_WEH);   /* neue Treffer-Reaktion */
         else re15_r38_birkin_anim(m);
         s_h.wvor[0] = m->x; s_h.wvor[1] = m->y; s_h.wvor[2] = m->z;       /* Neuaufbau: Lage vor dem Takt (Handtempo) */
+        s_griff_y = h <= BF_H_SACKT_AB ? BF_SM_GRIFF_Y : h >= BF_H_SACKT_BIS ? 0
+                  : BF_SM_GRIFF_Y * (BF_H_SACKT_BIS - h) / (BF_H_SACKT_BIS - BF_H_SACKT_AB);   /* tot: sackt im Griff ab */
         m->rot_y = bf_blick(m, b->x, b->z);
         bf_klauenziel(b, m, k);
         /* Heben h12..h18 (Kopf k_sm_gleit): vom zurueckgedrueckten Bodenpunkt zur Lage am Griff bei h18 (je Takt neu

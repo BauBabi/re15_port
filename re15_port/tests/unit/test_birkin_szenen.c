@@ -235,7 +235,10 @@ static void test_hangar(unsigned raum)
             if (ph == 3 && griff_takte >= 7) {   /* griff_takte 1 = h12 -> 7 = h18 (BF_H_GEHALTEN) */
                 int32_t hand[3], griff[3];
                 re15_enemy_bone_world_pos(b, 15, hand);
-                {   static const int32_t gofs[3] = { 0, 485, 0 };   /* Griffpunkt: Knochen 19 + (0,485,0), birkin_formen.c BF_SM_GRIFF_* */
+                {   /* Griffpunkt: Knochen 19 + (0, d, 0), d = 485 bis h48, dann linear zur Huefte (0) bei h60 (birkin_formen.c
+                     * BF_SM_GRIFF_Y / BF_H_SACKT_*: tot sackt er im Griff ab); griff_takte 1 = h12 */
+                    const int hh = 11 + griff_takte;
+                    const int32_t gofs[3] = { 0, hh <= 48 ? 485 : hh >= 60 ? 0 : 485 * (60 - hh) / 12, 0 };
                     (void)re15_enemy_part_point(m, 19, gofs, griff); }
                 const double gx = hand[0] - griff[0], gy = hand[1] - griff[1], gz = hand[2] - griff[2];
                 const int ga = (int)sqrt(gx * gx + gy * gy + gz * gz);
