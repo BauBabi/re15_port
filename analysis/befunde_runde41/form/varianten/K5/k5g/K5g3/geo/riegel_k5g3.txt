@@ -1,0 +1,26 @@
+RIEGEL K5g3 GEOMETRIE  EMD C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/varianten/K5/k5g/K5g3/geo/BAHNSTEIG_FORM.EMD  sha256 eadfac31aef1864644376c9952641ff584334c3e8293702df918d3a0e3758409
+GRUEN  R1 Generator (Datei == Generator, zweiter Lauf gleich) | zwei Laeufe gleich True, == Datei True, sha256 eadfac31aef18646
+         Gegenprobe "ohne Krallen-Stufe": rot wie verlangt | zwei Laeufe gleich True, == Datei False, sha256 f78e598336872111
+GRUEN  R2 Byte-Probe (K5e_f1-Posen/-Krallen + B4 == KAND.EMD) | sha256 f78e598336872111 (KAND.EMD f78e598336872111)
+         Gegenprobe "volle Geometrie": rot wie verlangt | sha256 eadfac31aef18646 (KAND.EMD f78e598336872111)
+GRUEN  R3 Netze 10/16/21/22 == B4-Tabelle (G1) | Tabelle sha 99a4f142c2d01c5e; abweichende Netze keine; Ecken/Dreiecke/Vierecke {10: '804/1483/0', 16: '406/640/80', 21: '1688/2981/0', 22: '2768/5073/0'}
+         Gegenprobe "K5e_f1": rot wie verlangt | Tabelle sha 99a4f142c2d01c5e; abweichende Netze [10, 16, 21, 22]; Ecken/Dreiecke/Vierecke {10: '212/72/168', 16: '134/48/104', 21: '102/48/72', 22: '402/182/218'}
+GRUEN  R4 Krallen 19/20/28/29 = K5c-Ecken/Normalen, Flaechen K5e_f1 (G2) | K5c sha 1ab56076b20ef022; 19/20/28/29 Ecken+Normalen = K5c, Flaechen = K5e_f1; 31 = K5e_f1 = K5c
+         Gegenprobe "K5e_f1-Krallen": rot wie verlangt | K5c sha 1ab56076b20ef022; 19 Ecken != K5c; 20 Ecken != K5c; 28 Ecken != K5c; 29 Ecken != K5c
+         Gegenprobe "K5c-Netze ganz (K5c-UV/CLUT)": rot wie verlangt | K5c sha 1ab56076b20ef022; 19 Flaechen/UV/CLUT/Seite != K5e_f1; 20 Flaechen/UV/CLUT/Seite != K5e_f1; 28 Flaechen/UV/CLUT/Seite != K5e_f1; 29 Flaechen/UV/CLUT/Seite != K5e_f1
+GRUEN  R5 alle anderen Netze und Knochen == K5e_f1 | 24 Netze geprueft; abweichend keine; Knochen/Netzzahl gleich True
+         Gegenprobe "Netz 31 eine Ecke +1": rot wie verlangt | 24 Netze geprueft; abweichend [31]; Knochen/Netzzahl gleich True
+GRUEN  R6 EDD/EMR (Sektionen 0-6) byte-gleich | Sektionen 0-6 (123976 Byte) gleich K5e_f1 und K5c: ja
+         Gegenprobe "ein Bit in emr1": rot wie verlangt | Sektionen 0-6 (123976 Byte) gleich K5e_f1 und K5c: NEIN ['emr1']
+GRUEN  R7 Posen == K5c (keine Posen-Datei); FORM.EMD nachgezogen | keine Posen-Datei -> Pool == K5c; FORM.EMD Key 0/1 = Key 11/542, MD1 gleich: ja
+         Gegenprobe "Probe-Posen-Datei gegen "== K5c"": rot wie verlangt | keine Posen-Datei -> Pool == K5c; FORM.EMD Key 0/1 = Key 11/542, MD1 gleich: Pool/Clips != K5c
+         Gegenprobe "Posen-Datei mit Key 300 (nicht erlaubt)": rot wie verlangt | Abbruch: SystemExit('Posen-Datei: Keys ausserhalb 398-425 / 542-556: [300]')
+GRUEN  R7b Posen-Datei wirkt genau auf ihre Tripel (Mechanik) | Mechanik Probe-Datei (Key 542 Knochen 17): Posen-Datei mit 1 Tripeln -> Pool == K5c + Datei; FORM.EMD Key 0/1 = Key 11/542, MD1 gleich: ja
+         Gegenprobe "Probe-Datei, aber alt falsch": rot wie verlangt | Abbruch: SystemExit('Posen-Datei passt nicht zur Form: Key 542 Knochen 17 ist [12, 3933, 3061], "alt" sagt [1, 2, 3]')
+ROT    R8 B4-Grenzen am Gesamtmodell nicht schlechter als B4 allein (Messbank voll, urteil4) | GK/B4: H1a 3578/3578, H1b 23/23, H1c 20/20, H1c_rot 0/0, H2_summe 12543/12543, H2_ueber20 162/162, H3b_rot 0/0, H3b_summe 383432/384302, H3a Gruppen 21 (ueber B4 und Grenze: 3), H7_bild2 0.61248/0.65316, H7_bild1 0.72328/0.72330, H4 7276/7318; ROT: H3a 19<->22 104 > B4 0 / Grenze 50; H3a 19<->23 535 > B4 0 / Grenze 50; H3a 20<->22 424 > B4 0 / Grenze 50; H7 bild2 0.61248 < Grenze 0.65244; H3a bei B4 gruen, am Gesamtmodell rot; H7 bei B4 gruen, am Gesamtmodell rot
+         Gegenprobe "Urteil von B3 statt GK": rot wie verlangt | GK/B4: H1a 4298/3578, H1b 21/23, H1c 20/20, H1c_rot 0/0, H2_summe 12833/12543, H2_ueber20 163/162, H3b_rot 0/0, H3b_summe 384256/384302, H3a Gruppen 17 (ueber B4 und Grenze: 0), H7_bild2 0.65316/0.65316, H7_bild1 0.72330/0.72330, H4 6937/7318; ROT: H1a 4298 > B4 3578; H2_summe 12833 > B4 12543; H2_ueber20 163 > B4 162; H3a bei B4 gruen, am Gesamtmodell rot; H9-S14 bei B4 gruen, am Gesamtmodell rot
+GRUEN  R8b Ursache der R8-Reste: nur die K5c-Krallen (G2) | 6 Verschlechterungen, alle an den K5c-Krallen: ja; Umriss Bild 2 K5g3 0.61248 / K5c allein 0.61228 / B4 0.65316
+         Gegenprobe "Urteil von B3 statt GK": rot wie verlangt | 5 Verschlechterungen, alle an den K5c-Krallen: NEIN ohne Kralle: H1a 4298 > B4 3578; ohne Kralle: H2_summe 12833 > B4 12543; ohne Kralle: H2_ueber20 163 > B4 162; ohne Kralle: H9-S14 bei B4 gruen, am Gesamtmodell rot; Umriss Bild 2 K5g3 0.61248 / K5c allein 0.61228 / B4 0.65316
+GRUEN  R9 Dreiecke je Bild + Spielfigur + Effekte <= 16384 mit Reserve; im Spiel 0 verworfen (G3) | Messbank max 7276 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9135 <= 16384 - 2048 = 14336; Spiel max 7718 (kampf 7415, s11 7718, v5080 7184, v5080_c11 7596), verworfen 0; Reserve Messbank 7249, Spiel 8666
+         Gegenprobe "alte Grenze 8192": rot wie verlangt | Messbank max 7276 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9135 <= 8192 - 2048 = 6144; Spiel max 7718 (kampf 7415, s11 7718, v5080 7184, v5080_c11 7596), verworfen 0; Reserve Messbank -943, Spiel 474
+RIEGEL K5g3 GEOMETRIE: 10 von 11 gruen, 13 von 13 Gegenproben rot wie verlangt
