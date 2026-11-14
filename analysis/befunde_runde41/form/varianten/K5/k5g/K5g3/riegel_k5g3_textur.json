@@ -63,7 +63,7 @@
   {
    "nr": "V3.1",
    "text": "Fleck-Material genau auf den Traegertexeln (zonen_v2/traeger_texel, F1-Kern-Vorrang), keine andere Flaeche liest eine Fleck-Zeile",
-   "ist": "fremde Leser 0, Material ausserhalb der Texel 0, fehlende Fleck-Texel 0, richtige 10697 (davon 4 mit zufaellig gleichem Wort)",
+   "ist": "fremde Leser 0, Material ausserhalb der Texel 0, fehlende Fleck-Texel 0, richtige 9748 (davon 13 mit zufaellig gleichem Wort)",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -88,14 +88,14 @@
    "art": "Riegel",
    "gegenprobe": [
     "Tabellen-Netze ohne Erbe (K5e_f1-Zeilen)",
-    "falsch 8710, ausserhalb 1544, fremd 0",
+    "falsch 8710, ausserhalb 1206, fremd 0",
     false
    ]
   },
   {
    "nr": "V3.3",
    "text": "Buckel-Fleisch (Zone 27, Material-Texel): Median L* 33-39, C* 22-26 (Eichung b)",
-   "ist": "L* 36.2, C* 25.0 (9067 Texelzugriffe)",
+   "ist": "L* 36.2, C* 25.0 (8118 Texelzugriffe)",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -107,7 +107,7 @@
   {
    "nr": "V4.1",
    "text": "Zone 45, Hals 21, Lippe, Unterkiefer, Hals-/Kopf-Unterseite (ohne Fleck-Material, ohne Maul/Zaehne): Texelzugriffe roeter als die Haut (C* > s L* + 6) = 0 %",
-   "ist": "0.00 % von 50428 (Info absolute Rotklasse a*>12/C*>15: 24.97 %)",
+   "ist": "0.00 % von 51377 (Info absolute Rotklasse a*>12/C*>15: 25.16 %)",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -187,12 +187,68 @@
   {
    "nr": "B1",
    "text": "braeunliche Musterung (Zonen 16/19) braun statt beige: Median L* <= 2 x Median L* der Haut, Farbton 35-80 Grad (Zahlen-Pruefer r1 Gelb 2)",
-   "ist": "L* 31.9 (Haut 23.3), C* 6.4, Ton 71.3 Grad, 101 Zugriffe",
+   "ist": "L* 32.6 (Haut 23.3), C* 13.2, Ton 71.2 Grad, 101 Zugriffe",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
     "Runde 1 (Commit da6560372)",
     "L* 72.6 (Haut 23.3), Ton 62.9",
+    false
+   ]
+  },
+  {
+   "nr": "G6.16",
+   "text": "braeunliche Musterung Zone 16 mit der Helligkeitsstruktur der Original-Texel: cv(L*) >= 0,5 x cv(G4) und ab 15 Texeln >= 5 Stufen (Zahlen-Pruefer r2 ROT)",
+   "ist": "Zone 16: 94 Texel, cv 0.412 (G4 0.416), 14 Stufen (G4 23)",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "Runde 2 (Commit f48d37df1)",
+    "Zone 16: 94 Texel, cv 0.062 (G4 0.416), 2 Stufen (G4 23)",
+    false
+   ]
+  },
+  {
+   "nr": "G6.19",
+   "text": "braeunliche Musterung Zone 19 mit der Helligkeitsstruktur der Original-Texel: cv(L*) >= 0,5 x cv(G4) und ab 15 Texeln >= 5 Stufen (Zahlen-Pruefer r2 ROT)",
+   "ist": "Zone 19: 13 Texel, cv 0.264 (G4 0.270), 5 Stufen (G4 7)",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "Runde 2 (Commit f48d37df1)",
+    "Zone 19: 13 Texel, cv 0.061 (G4 0.270), 2 Stufen (G4 7)",
+    false
+   ]
+  },
+  {
+   "nr": "G6.i",
+   "text": "uebrige Fleck-Zonen, dieselbe Regel (Info; Zahlen-Pruefer r2 Gelb 4: Zonen 3/4 gestaucht)",
+   "ist": "Zone 2: 12 Texel, cv 0.420 (G4 0.524), 12 Stufen (G4 9); Zone 3: 67 Texel, cv 0.272 (G4 0.842), 12 Stufen (G4 18); Zone 4: 45 Texel, cv 0.191 (G4 0.385), 15 Stufen (G4 12); Zone 9: 408 Texel, cv 0.438 (G4 0.454), 29 Stufen (G4 37); Zone 11: 339 Texel, cv 0.426 (G4 0.559), 27 Stufen (G4 70); Zone 12: 125 Texel, cv 0.311 (G4 0.530), 37 Stufen (G4 27); Zone 14: 1 Texel, cv 0.000 (G4 0.000), 1 Stufen (G4 1); Zone 15: 19 Texel, cv 0.287 (G4 0.495), 10 Stufen (G4 11); Zone 18: 14 Texel, cv 0.221 (G4 0.254), 8 Stufen (G4 7); Zone 24: 290 Texel, cv 0.239 (G4 0.321), 9 Stufen (G4 32); Zone 27: 2151 Texel, cv 0.474 (G4 0.488), 34 Stufen (G4 66) | unter der Regel: ['3', '4']",
+   "ok": true,
+   "art": "Info",
+   "gegenprobe": null
+  },
+  {
+   "nr": "G7",
+   "text": "Hals-Unterseite (Zone 44) ohne Zone-27-Material und nicht roeter als die Haut (C* > s L* + 6, Fleck-Material eingeschlossen); alle V4-Flaechen ohne Fleck-Material (V4 geht vor)",
+   "ist": "Zone 44: 0 von 13072 Zugriffen Fleck-Material, roeter als die Haut 0.00 %; alle V4-Flaechen: 0 von 26541",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "Runde 2 (Commit f48d37df1)",
+    "Zone 44: 949 von 13072 Zugriffen Fleck-Material, roeter als die Haut 3.60 %; alle V4-Flaechen: 949 von 26541",
+    false
+   ]
+  },
+  {
+   "nr": "G8",
+   "text": "fast weiss wie reinweiss: kein Zugriff auf einen Eintrag mit L* > 85 (Haut, Tausch, Fleck-Grund und Fleck-Material; ausser Zaehnen, Maul, Augen, F1-Kern), ganzes Asset",
+   "ist": "0 von 457031 Zugriffen ",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "Runde 2 (Commit f48d37df1)",
+    "1856 Zugriffe {'haut0': 574, 'fleck_f12_0': 12, 'haut2': 591, 'fleck_haut2_3': 32, 'haut1': 469, 'fleck_haut1_1': 28, 'fleck_haut1_2': 44, 'tausch0': 99, 'tausch2': 7}",
     false
    ]
   },
@@ -295,7 +351,7 @@
   {
    "nr": "W1",
    "text": "weiss L-cv im Band 0.409..1.128 (Originale)",
-   "ist": "0.568",
+   "ist": "0.561",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -307,7 +363,7 @@
   {
    "nr": "W2",
    "text": "weiss lokal_rel im Band 0.175..0.460 (Originale)",
-   "ist": "0.373",
+   "ist": "0.369",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -319,7 +375,7 @@
   {
    "nr": "W3",
    "text": "weiss C-std im Band 4.780..13.550 (Originale)",
-   "ist": "5.550",
+   "ist": "5.555",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -331,7 +387,7 @@
   {
    "nr": "W4",
    "text": "weiss hell %% <= 17,8 und F_hell <= 71,7 (Decke der Originale)",
-   "ist": "3.9 / 32.1",
+   "ist": "3.9 / 34.2",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": null
@@ -339,7 +395,7 @@
   {
    "nr": "W5",
    "text": "weiss C* Mittel (Info; Band Originale 8,63..23,41)",
-   "ist": "11.27",
+   "ist": "11.32",
    "ok": true,
    "art": "Info",
    "gegenprobe": null
@@ -379,7 +435,7 @@
   {
    "nr": "Z1",
    "text": "Spiel 5080 P L* im Band 5.570..18.800 der Original-Gegner (zweiseitig)",
-   "ist": "7.79",
+   "ist": "7.77",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -391,7 +447,7 @@
   {
    "nr": "Z2",
    "text": "Spiel 5080 P L-cv im Band 0.481..1.431 der Original-Gegner (zweiseitig)",
-   "ist": "0.708",
+   "ist": "0.703",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -403,7 +459,7 @@
   {
    "nr": "Z3",
    "text": "Spiel 5080 P lokal_rel im Band 0.243..0.656 der Original-Gegner (zweiseitig)",
-   "ist": "0.363",
+   "ist": "0.361",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -415,7 +471,7 @@
   {
    "nr": "Z4",
    "text": "Spiel 5080 P C* im Band 4.410..7.590 der Original-Gegner (zweiseitig)",
-   "ist": "4.84",
+   "ist": "4.86",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -427,7 +483,7 @@
   {
    "nr": "Z5",
    "text": "Spiel 5080 P C-std im Band 2.390..7.450 der Original-Gegner (zweiseitig)",
-   "ist": "3.19",
+   "ist": "3.2",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -439,7 +495,7 @@
   {
    "nr": "Z6",
    "text": "Spiel 5080 Q L-cv im Band 0.369..1.020 der Original-Gegner (zweiseitig)",
-   "ist": "0.517",
+   "ist": "0.514",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -451,7 +507,7 @@
   {
    "nr": "Z7",
    "text": "Spiel 5080 Q lokal_rel im Band 0.210..0.528 der Original-Gegner (zweiseitig)",
-   "ist": "0.29",
+   "ist": "0.288",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -463,7 +519,7 @@
   {
    "nr": "Z8",
    "text": "Spiel 5080 Q C* im Band 12.090..15.050 der Original-Gegner (zweiseitig)",
-   "ist": "13.73",
+   "ist": "13.79",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -475,7 +531,7 @@
   {
    "nr": "Z9",
    "text": "Spiel 5080 Q C-std im Band 6.530..8.880 der Original-Gegner (zweiseitig)",
-   "ist": "6.57",
+   "ist": "6.58",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -512,12 +568,12 @@
    "art": "Riegel",
    "gegenprobe": [
     "K5g3-Asset",
-    "EMD 482bd63f",
+    "EMD 1981f97e",
     false
    ]
   }
  ],
  "rot": [],
  "gegenprobe_gruen": [],
- "summe": "RIEGEL K5g3 TEXTUR: 43 von 43 gruen, 37 von 37 Gegenproben rot wie verlangt; ROT: -; Gegenproben gruen: -"
+ "summe": "RIEGEL K5g3 TEXTUR: 47 von 47 gruen, 41 von 41 Gegenproben rot wie verlangt; ROT: -; Gegenproben gruen: -"
 }

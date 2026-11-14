@@ -35,6 +35,10 @@ Wiederverwendet: riegel_k5g2.py (Stand, v3, v4, v3_fleisch, v5, v1, v6, h1, weis
  W1-W4, R1-R4 weisses Licht im Band der Originale, Ruhe                                                                     | K5e_f1
  Z1-Z9 Spiel 5080 im Zielband der Original-Gegner (bindend, O3)                                                            | K5e_f1 (eigener Lauf)
  T1   Zeilen <= 16, Port-Texturhoehe <= 4096 | T5 jede Flaeche liest eine gueltige Zeile | G5 Spiel-Asset = K5e_f1
+ Runde 3 (Orchestrator-Entscheide G6-G8; Gegenprobe die Abgabe der Runde 2 aus git, Commit f48d37df1):
+ G6.16/G6.19 braeunliche Musterung: cv(L*) >= 0,5 x cv(G4), ab 15 Texeln >= 5 Stufen (G6.i dieselbe Regel, uebrige Zonen, Info) | Runde 2
+ G7   Zone 44 (und alle V4-Flaechen) ohne Fleck-Material, nicht roeter als die Haut                                        | Runde 2
+ G8   kein Zugriff auf L* > 85 ausser Zaehnen, Maul, Augen, F1-Kern                                                         | Runde 2
 """
 import hashlib
 import json
@@ -214,13 +218,24 @@ def loch_je(S):
     return aus
 
 
+def v4_flaechen(Z):
+    """Runde 3 (G7): Flaechen der V4-Zonen (Lippe 42, Unterkiefer aussen 31, Hals-Unterseite 44, Kopf-Unterseite 45) und Lippensaum/Maul_Band -
+    sie tragen kein rotes Fleck-Material (wie der Generator, kf_k5g3_tex.V4_ZONEN)."""
+    zl = R2.zonen_listen(Z)
+    mj = json.load(open(E.MATERIAL, encoding='utf-8'))['material']
+    return set().union(*[zl[nr] for nr in T3.V4_ZONEN]) | set(TX.schluessel(k) for nm in ('Lippensaum', 'Maul_Band') for k in mj[nm]['liste'])
+
+
 def je_mit_kern(S, plan):
     """Fleck-Texel je Traeger wie der Generator: kf_k5g2_tex.fleck_zuordnung + F1-Kern-Vorrang (V6). Runde 2: ohne Zone 29 (Augen ueber eigene
     Augen-Texel, Riegel A1-A3), dazu die Loch-Flaechen als Fleck 'L'."""
-    je, _k = TX.fleck_zuordnung(TX.lade_zonen(), S.form, S.T['pixel'].shape)
+    Z = TX.lade_zonen()
+    je, _k = TX.fleck_zuordnung(Z, S.form, S.T['pixel'].shape)
     kern = E.f1_masken()['kern']
+    v4 = v4_flaechen(Z)
+    rot_z = set(nr for nr, a in T3.FLECK_ART.items() if a in T3.ROT_MATERIAL)
     for k in list(je):
-        for xy in [xy for xy, nr in je[k].items() if nr == '29']:
+        for xy in [xy for xy, nr in je[k].items() if nr == '29' or (k in v4 and nr in rot_z)]:
             del je[k][xy]
         if plan[k][0] == 'f1':
             for xy in [xy for xy in je[k] if kern[xy[1], xy[0]]]:
@@ -657,6 +672,161 @@ def augen_spiel(R, var, pfad):
             txt(d['augen']), ok(d['augen']), gegen=('f_auge der Runde 1 (1,9844), gleicher Lauf', txt(d['gegen']), ok(d['gegen'])))
 
 
+# ================================================================== Runde 3 (Orchestrator-Entscheide G6-G8 nach PRUEFUNG_K5G3_r2_zahlen/_sicht)
+R2_COMMIT = 'f48d37df1'     # Abgabe K5g3 Runde 2 (EMD 482bd63f, TIM ce9a1dc9) - Gegenprobe fuer die Befunde der Runde 2
+L_MAX = 85.0                # G8: "Kein Haut-Texel liest einen Eintrag mit L* > 85"
+S_HAUT_G7 = 0.5225          # 'roeter als die Haut' wie V4.1 (Haut C* = s L*, s aus k5g3_par.json haut.s)
+
+
+def r2_stand():
+    """Abgabe der Runde 2 aus git (Commit f48d37df1) in den Scratchpad holen (einmal)."""
+    import subprocess
+    d = os.path.join(K3.SCR, 'gegen_r2_' + R2_COMMIT)
+    if os.path.exists(os.path.join(d, 'bau.json')):
+        return d
+    os.makedirs(os.path.join(d, 'pruef'), exist_ok=True)
+    for n in K3.DATEIEN + ('bau.json',):
+        b = subprocess.run(['git', '-C', E.WT, 'show', '%s:%s/%s' % (R2_COMMIT, R1_PFAD, n)], capture_output=True, check=True).stdout
+        open(os.path.join(d, n), 'wb').write(b)
+    return d
+
+
+def struktur_je_zone(St, b, je, plan, X, zonen):
+    """G6: je Fleck-Zone die eindeutigen Zonen-Texel (x, y) - je Texel das Wort, das der erste Traeger (sortiert) in seiner Kopie liest - gegen die
+    G4-Originalfarbe am Original-Index (CDEMD0.EMS-CLUT der G4-Seite des Traegers: X['cl_g4']; X['T']['pixel'] = Atlas K5e_f1, Seiten 0-2 =
+    G4-Atlas bytegleich). Rueckgabe {zone: (n, cv_K5g3, Stufen_K5g3, cv_G4, Stufen_G4)}; cv = Standardabweichung / Mittel von L*,
+    Stufen = verschiedene Worte."""
+    kopien = {c['flaeche']: c for c in b['textur']['kopien']}
+    px0 = X['T']['pixel']
+    g4lab = [TX.lab_zeile([int(x) for x in z]) for z in X['cl_g4']]
+    texel = {}
+    for k in sorted(je):
+        c = kopien.get('%d|%d|%d' % k)
+        if c is None:
+            continue
+        dx, dy = c['nach'][0] - c['von'][0], c['nach'][1] - c['von'][1]
+        z = St.zeile[k]
+        for (x, y), nr in sorted(je[k].items()):
+            if nr not in zonen or (nr, x, y) in texel:
+                continue
+            i = int(St.T['pixel'][y + dy, x + dx])
+            i0 = int(px0[y, x])
+            s = plan[k][1]
+            texel[(nr, x, y)] = (St.cl[z][i], float(St.lab[z][i, 0]), int(X['cl_g4'][s][i0]), float(g4lab[s][i0, 0]))
+    aus = {}
+    for nr in zonen:
+        t = [v for kk, v in texel.items() if kk[0] == nr]
+        if not t:
+            continue
+        L = np.array([v[1] for v in t])
+        Lg = np.array([v[3] for v in t])
+        aus[nr] = (len(t), float(L.std() / max(L.mean(), 1e-6)), len(set(v[0] for v in t)), float(Lg.std() / max(Lg.mean(), 1e-6)),
+                   len(set(v[2] for v in t)))
+    return aus
+
+
+def g6(R, S, bau, plan, X):
+    """G6 (V3 'Helligkeitsstruktur der Original-Texel bleibt'): in jeder Fleck-Zone cv(K5g3) >= 0,5 x cv(G4) und - ab 15 Texeln - mindestens 5
+    Stufen (Vorschlag des Zahlen-Pruefers r2). Riegel fuer die Zonen 16 und 19 (braeunliche Musterung), die uebrigen Fleck-Zonen als Info.
+    Gegenprobe: Abgabe der Runde 2 (Pruefer: Zone 16 cv 0,06 gegen 0,42, 2 Stufen)."""
+    alle = ('2', '3', '4', '9', '11', '12', '14', '15', '16', '18', '19', '24', '27')
+    v = struktur_je_zone(S, bau, je_mit_kern(S, plan), plan, X, alle)
+    g2 = r2_stand()
+    Sg = stand_mit_namen(os.path.join(g2, 'pruef'), _zeilen_namen(g2))
+    bg = json.load(open(os.path.join(g2, 'bau.json'), encoding='utf-8'))
+    g = struktur_je_zone(Sg, bg, je_mit_kern(Sg, plan), plan, X, ('16', '19'))
+
+    def ok(t):
+        return t[1] >= 0.5 * t[3] and (t[0] < 15 or t[2] >= 5)
+
+    def txt(d, zs):
+        return '; '.join('Zone %s: %d Texel, cv %.3f (G4 %.3f), %d Stufen (G4 %d)' % (nr, d[nr][0], d[nr][1], d[nr][3], d[nr][2], d[nr][4])
+                         for nr in zs if nr in d) or 'keine Texel'
+    for nr in ('16', '19'):
+        R.zeile('G6.%s' % nr, 'braeunliche Musterung Zone %s mit der Helligkeitsstruktur der Original-Texel: cv(L*) >= 0,5 x cv(G4) und ab 15 Texeln '
+                '>= 5 Stufen (Zahlen-Pruefer r2 ROT)' % nr, txt(v, (nr,)), nr in v and ok(v[nr]),
+                gegen=('Runde 2 (Commit %s)' % R2_COMMIT, txt(g, (nr,)), nr in g and ok(g[nr])))
+    info = [nr for nr in alle if nr not in ('16', '19') and nr in v]
+    schwach = [nr for nr in info if not ok(v[nr])]
+    R.zeile('G6.i', 'uebrige Fleck-Zonen, dieselbe Regel (Info; Zahlen-Pruefer r2 Gelb 4: Zonen 3/4 gestaucht)', txt(v, info) +
+            ' | unter der Regel: %s' % (schwach or '-'), True, art='Info')
+
+
+def _material_zugriffe(St, keys):
+    """Texelzugriffe der Flaechen (Pruef-Stand) auf Fleck-Material: Fleck-Zeile und Wort != Grundzeile am selben Index."""
+    n, alle = 0, 0
+    for k in keys:
+        if k not in St.fl:
+            continue
+        _y, _x, idx = St.texel(k)
+        z = St.zeile[k]
+        alle += len(idx)
+        if not St.namen[z].startswith('fleck_'):
+            continue
+        b = St.namen.index(St.namen[z].split('_')[1])
+        n += int((np.array(St.cl[z])[idx] != np.array(St.cl[b])[idx]).sum())
+    return n, alle
+
+
+def g7(R, S, plan):
+    """G7 (V4 vor Fleck): die Flaechen der Hals-Unterseite (Zone 44) - und aller V4-Zonen 31/42/44/45 samt Lippensaum - lesen kein Fleck-Material
+    (Pruef-Stand vor dem Spalt; die Spalt-Kinder folgen der Mutter, Riegel V3.1b), und keiner ihrer Zugriffe ist roeter als die Haut, das
+    Fleck-Material eingeschlossen. Gegenprobe: Abgabe der Runde 2 (5 Flaechen mit Zone-27-Fleisch)."""
+    Z = TX.lade_zonen()
+    zl = R2.zonen_listen(Z)
+    v4 = sorted(v4_flaechen(Z))
+    z44 = sorted(zl['44'])
+
+    def mess(St):
+        n44, a44 = _material_zugriffe(St, z44)
+        nv4, av4 = _material_zugriffe(St, v4)
+        L, _W = St.farben([k for k in z44 if k in St.fl])
+        r = float(roeter(L, S_HAUT_G7).mean() * 100) if len(L) else 0.0
+        return n44, a44, nv4, av4, r
+    v = mess(S)
+    g2 = r2_stand()
+    g = mess(stand_mit_namen(os.path.join(g2, 'pruef'), _zeilen_namen(g2)))
+
+    def txt(t):
+        return 'Zone 44: %d von %d Zugriffen Fleck-Material, roeter als die Haut %.2f %%; alle V4-Flaechen: %d von %d' % (t[0], t[1], t[4], t[2], t[3])
+    R.zeile('G7', 'Hals-Unterseite (Zone 44) ohne Zone-27-Material und nicht roeter als die Haut (C* > s L* + 6, Fleck-Material eingeschlossen); '
+            'alle V4-Flaechen ohne Fleck-Material (V4 geht vor)', txt(v), v[0] == 0 and v[2] == 0 and v[4] == 0,
+            gegen=('Runde 2 (Commit %s)' % R2_COMMIT, txt(g), g[0] == 0 and g[2] == 0 and g[4] == 0))
+
+
+def hell_zugriffe(o):
+    """G8: Abtastung des Assets (kf_k5g3.abtasten wie K1/K2): Zugriffe mit L* > L_MAX ohne Zahn-Zeile (K5c-Zeile 7, G4-Zaehne), Maul-Zeilen
+    (G4-Mundfleisch), Augen-Zeile (O4) und ohne die F1-Kern-Eintraege (bytegleich K5c-Zeile 5, V6). Rueckgabe (Zugriffe, ueber, je Zeile)."""
+    A = FE.lese_emd(open(os.path.join(o, 'BAHNSTEIG_FORM.EMD'), 'rb').read())
+    T = FE.tim_lesen(open(os.path.join(o, 'BAHNSTEIG_FORM.TIM'), 'rb').read())
+    cl = [[int(x) for x in z] for z in T['cluts']]
+    lab = [TX.lab_zeile(z) for z in cl]
+    nam = _zeilen_namen(o)
+    kern_e = set(E.f1_kern_eintraege())
+    z5 = [int(x) for x in E.eingaenge()['cl_k5c'][5]]
+    zz = K3.abtasten(A, T['pixel'], int(T['clut_y']))
+    je = {}
+    n = 0
+    for _f, zi, _x, _y, i in zz:
+        nm = nam[zi]
+        if nm.startswith(('zahn', 'maul', 'auge')):
+            continue
+        if 'f1' in nm and i in kern_e and cl[zi][i] == z5[i]:
+            continue
+        if float(lab[zi][i, 0]) > L_MAX:
+            n += 1
+            je[nm] = je.get(nm, 0) + 1
+    return len(zz), n, je
+
+
+def g8(R, var):
+    nv, hv, jv = hell_zugriffe(var)
+    ng, hg, jg = hell_zugriffe(r2_stand())
+    R.zeile('G8', 'fast weiss wie reinweiss: kein Zugriff auf einen Eintrag mit L* > %.0f (Haut, Tausch, Fleck-Grund und Fleck-Material; ausser '
+            'Zaehnen, Maul, Augen, F1-Kern), ganzes Asset' % L_MAX, '%d von %d Zugriffen %s' % (hv, nv, jv or ''), hv == 0,
+            gegen=('Runde 2 (Commit %s)' % R2_COMMIT, '%d Zugriffe %s' % (hg, jg), hg == 0))
+
+
 # ------------------------------------------------------------------ Technik
 def technik(R, var, bau):
     t = FE.tim_lesen(open(os.path.join(var, 'BAHNSTEIG_FORM.TIM'), 'rb').read())
@@ -706,6 +876,9 @@ def main(argv):
     v44(R, var, bau)
     v2(R, S, plan)
     weiss_braun(R, S, bau, plan)
+    g6(R, S, bau, plan, X)
+    g7(R, S, plan)
+    g8(R, var)
     v5(R, S, s_haut)
     R2.h1(R, S)
     s1(R, S, var)

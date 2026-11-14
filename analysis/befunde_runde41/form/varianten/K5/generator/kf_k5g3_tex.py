@@ -35,6 +35,10 @@ K5 = E.K5
 KRALLEN_TEILE = (14, 15, 19, 20, 28, 29, 30, 31)
 HAENDE = (13, 18)
 FLECK_ART = dict(TX.FLECK_ART, L='hautrampe')     # 'L' = Loch-Flaechen (Runde 2), Material Haut
+# Runde 3 (G7/V4): diese Zonen der Grundlage v2 tragen nie rotes Fleck-Material (V4 "Lippe, Unterkiefer aussen, Hals-Unterseite und
+# Kopf-Unterseite dunkelgrau wie die Haut, NIE schwarz und NIE rot")
+V4_ZONEN = ('31', '42', '44', '45')
+ROT_MATERIAL = ('fleisch', 'wunde', 'rotfleisch')
 
 
 def materialplan(form, X, Z):
@@ -100,6 +104,26 @@ def lese_maske(f, shape, kinder=None):
         cv2.fillPoly(mk, [q], 1)
         cv2.polylines(mk, [q], True, 1)
     return cv2.dilate(mk, np.ones((3, 3), np.uint8)).astype(bool)
+
+
+def deckel(worte, L0, idx, grenze):
+    """Runde 3 (Orchestrator G8, Zahlen-Pruefer K5g3 r2 Gelb 2: 0x7FFE/0x7BDF/0x77BF mit L* 95-99 auf der Haut, im Spiel 107 Pixel mit L* > 90 -
+    "wie reinweiss zu behandeln"): kein Eintrag der Rampe liest L* > grenze. Die Eintraege `idx` werden nach ihrem Quell-L* (L0, G4-Rang)
+    aufsteigend durchlaufen; ein Eintrag ueber der Grenze bekommt das Wort des naechsten Rangs der Rampe darunter, der unter der Grenze liegt
+    (Rangfolge bleibt, nicht streng: die obersten Raenge fallen zusammen). Eintraege unter der Grenze bleiben bytegleich. STP-Bit bleibt.
+    Aendert `worte` an Ort und Stelle; Rueckgabe Liste (Index, altes Wort, neues Wort)."""
+    lab = TX.lab_zeile(worte)
+    letzt = None
+    aus = []
+    for i in sorted(idx, key=lambda j: (float(L0[j]), j)):
+        if float(lab[i, 0]) > grenze:
+            if letzt is not None:
+                neu = (int(worte[letzt]) & 0x7FFF) | (int(worte[i]) & 0x8000)
+                aus.append((int(i), int(worte[i]), neu or 0x8000))
+                worte[i] = neu or 0x8000
+        else:
+            letzt = i
+    return aus
 
 
 def loch_flaechen(plan, flaechen, idx_alt, px0, klassen, anteil):
@@ -190,10 +214,16 @@ def textur(form, par, X, Z, kinder=None):
                        s=k_haut, f=f0, knie=kn, seiten_median_L_g4={str(s): (round(v, 3) if v else None) for s, v in med_s.items()},
                        seiten_faktor={str(s): v for s, v in g_s.items()}, f_je_seite={str(s): round(v, 4) for s, v in fs.items()})
     zeilen = {}
+    deckel_info = {}
+    ber['deckel_haut'] = deckel_info
     for s in range(3):
         # Runde 2 (Zahlen-Pruefer K5g3 r1 Gelb 4: 76 Zugriffe auf 0x7FFF auf Huefte/Ruecken, Zeile haut0 Index 221/231 nach Faktor 4,54):
         # reinweiss ist in keiner Hautzeile erlaubt (nie_weiss; der 15-Bit-Nachbar daneben wird genommen, die Rangfolge bleibt).
         zeilen[('haut', s)] = TX.zeile_transformieren(cl_g4[s], fs[s], k_haut, h_haut, kn, rp, nie_weiss=True)
+        # Runde 3 (G8): fast weiss wie reinweiss - kein Hauteintrag mit L* > par haut.L_max; naechster Rang darunter (deckel). Die Tausch-Zeilen,
+        # die Loch-Haut und die Grundworte der Fleck-Zeilen nehmen ihre Worte aus dieser Zeile und erben den Deckel.
+        gd = deckel(zeilen[('haut', s)], lab_g4[s][:, 0], [i for i in range(256) if cl_g4[s][i] != 0], float(tp['haut']['L_max']))
+        deckel_info[str(s)] = dict(eintraege=len(gd), worte=['%d:%04x->%04x' % t for t in gd])
 
     # ---- Tausch-Zeilen (Lippe, Unterkiefer aussen, Kopf-Unterseite, Augenhoehle, alte Augen-/Maulflaechen): Rang -> Hautrampe
     def hautrampe(s):
@@ -276,6 +306,9 @@ def textur(form, par, X, Z, kinder=None):
             n_haut += 1
         else:
             neu[i] = TX.zeile_transformieren([z5[i]] + [0] * 255, fs[2], k_haut, h_haut, kn, rp, nie_weiss=True)[0]
+    # Runde 3 (G8): die umgefaerbten (Haut-)Eintraege der F1-Zeile ebenfalls ohne L* > L_max; die Kern-Eintraege bleiben bytegleich K5c (V6)
+    gd = deckel(neu, TX.lab_zeile(z5)[:, 0], um, float(tp['haut']['L_max']))
+    deckel_info['f1'] = dict(eintraege=len(gd), worte=['%d:%04x->%04x' % t for t in gd])
     for s in sorted(set(plan[k][1] for k in f1k)):
         zeilen[('f1', s)] = neu
     ber['f1'] = dict(kern_eintraege=len(kern_e), umgefaerbt=len(um), davon_haut_zeile=n_haut)
@@ -317,6 +350,26 @@ def textur(form, par, X, Z, kinder=None):
             del je[k][xy]
         if not je[k]:
             del je[k]
+    # Runde 3 (Orchestrator G7, Zahlen-Pruefer K5g3 r2 Gelb: Zone 44 Hals-Unterseite traegt auf 5 Flaechen Zone-27-Fleisch, 2722 Zugriffe): V4 geht
+    # vor - Lippe (42), Unterkiefer aussen (31), Hals-Unterseite (44), Kopf-Unterseite (45) und der Lippensaum tragen kein rotes Fleck-Material
+    # (fleisch, wunde, rotfleisch). Die Flaechen behalten ihre Haut; das Fleck-Material der Zone liegt weiter auf den Kopien der uebrigen
+    # Traeger (kein Original-Texel wird umgefaerbt). Gemessen 2026-11-14: betroffen nur 21|0|0, 21|1|0, 21|1|8, 21|1|56, 21|1|64 (Zone 27).
+    zon_ = {z['nr']: z for z in Z['zonen']}
+    mj_v4 = json.load(open(E.MATERIAL, encoding='utf-8'))['material']
+    v4_flaechen = set(TX.schluessel(s_) for nr in V4_ZONEN for s_ in zon_[nr]['modell_zuordnung']['liste']) | \
+        set(TX.schluessel(s_) for nm in ('Lippensaum', 'Maul_Band') for s_ in mj_v4[nm]['liste'])
+    rot_zonen = set(nr for nr, a in FLECK_ART.items() if a in ROT_MATERIAL)
+    v4_weg = {}
+    for k in sorted(je):
+        if k not in v4_flaechen:
+            continue
+        weg = [xy for xy, nr in je[k].items() if nr in rot_zonen]
+        for xy in weg:
+            v4_weg.setdefault('%d|%d|%d' % k, {}).setdefault(je[k][xy], 0)
+            v4_weg['%d|%d|%d' % k][je[k][xy]] += 1
+            del je[k][xy]
+        if not je[k]:
+            del je[k]
     # Runde 2: Loch-Flaechen (loch_flaechen) als eigener Fleck "L" mit Material Haut (Rang-Tausch auf die Hautrampe der Seite, eigene Texel):
     # E3 "der Rest des heutigen Augenfelds wird Haut" - die Flaechen zeigen danach die Haut mit ihrer Helligkeitsstruktur statt eines Lochs.
     loch = loch_flaechen(plan, flaechen, idx_alt, px0, klassen, float(tp['loch']['anteil']))
@@ -329,7 +382,9 @@ def textur(form, par, X, Z, kinder=None):
     M = E.f1_masken()
     kern = M['kern']
     zon = {z['nr']: z for z in Z['zonen']}
-    fl_info = dict(konflikte=konflikte, loch_flaechen=fl_info_loch, loch_anteil=float(tp['loch']['anteil']))
+    fl_info = dict(konflikte=konflikte, loch_flaechen=fl_info_loch, loch_anteil=float(tp['loch']['anteil']),
+                   v4_vorrang=dict(regel='V4 vor Fleck: Zonen %s + Lippensaum/Maul_Band ohne %s' % ('/'.join(V4_ZONEN), '/'.join(ROT_MATERIAL)),
+                                   entfernt=v4_weg))
     # F1-Kern hat Vorrang (V6): Fleck-Texel auf F1-Flaechen im Kern bleiben F1
     weg_kern = 0
     for k in list(je):
@@ -406,6 +461,7 @@ def textur(form, par, X, Z, kinder=None):
         fp['k'] = float(tp['fleisch']['k'])
     ber['fleisch'] = dict(fp, quelle_L_median=round(Lb_med, 2), quelle_C_median=round(Cb_med, 2), quelle_eintraege=int(len(bsel)))
     rampen = {}
+    braun_pos = {}      # Runde 3 (G6): (G4-Seite, Index) -> Rampeneintrag der braeunlichen Musterung
 
     def rampe(mat, s):
         key = (mat, s)
@@ -434,13 +490,17 @@ def textur(form, par, X, Z, kinder=None):
             lab = TX.transform(lab_g4[s][sel], fs[s], 1.0, hw_, kn, 'C')
             worte = None
         elif mat == 'braun':
-            # Runde 2 (Zahlen-Pruefer K5g3 r1 Gelb 2: Zonen 16/19 L* 72,6/67,2 = dreimal so hell wie die Haut, "hell-beige statt braun"): die
-            # braeunlichen G4-Eintraege (Ton 35-80 Grad, C* > 6) nur, soweit sie nicht heller sind als die Haut ihrer Seite (Quell-L* <=
-            # texelgewichtetes Quantil par braun.L_quantil der Hautklasse dieser Seite) - braun ist ein dunkles Orange, beige das helle. Gemessen:
-            # auf Seite 2 (Traeger der Zonen 16/19) bleiben so nur 2 Eintraege, darum EINE Rampe aus allen drei Seiten (je Eintrag die Helligkeit
-            # f_s seiner Seite, Buntheit der Quelle k 1, Farbton = Kreismittel der Quelle).
+            # Runde 3 (Orchestrator G6, Zahlen-Pruefer K5g3 r2 ROT: Zonen 16/19 als flache Farbinsel mit 2 Werten, cv 0,06 gegen G4 0,42 mit 23
+            # Stufen; Ursache: Rang-Tausch auf eine Rampe aus nur 3 braeunlichen Eintraegen). Jetzt EINE Transformation auf die G4-Helligkeit
+            # der Zonen-Texel selbst (V3 "Material-Tausch je Texel ueber die Rampe, keine flache Farbinsel"): je Zonen-Texel der G4-Eintrag an
+            # seiner Stelle (Seite s, Index i), L' = knie(b x f_s x L_G4), C' = r x L', Farbton h. So bleibt die Helligkeitsstruktur der
+            # Original-Texel (Rang und Verhaeltnis, nur das Knie bei 75 staucht). Die drei Kennwerte kommen aus den braeunlichen G4-Eintraegen
+            # wie in Runde 2 (Ton 35-80 Grad, C* > 6, Quell-L* <= P90 der Haut ihrer Seite; texelgewichtet wie die Hautflaechen sie lesen):
+            #   h = Kreismittel ihrer Farbtoene, r = Median ihres C*/L* (Buntheit je Helligkeit der Quelle),
+            #   b so, dass der texelgewichtete Median von b x f_s x L_G4 der Zonen-Texel = Median von f_s x L der braeunlichen Eintraege ist
+            #   (dasselbe Helligkeitsniveau wie Runde 2: Zahlen-Pruefer "die uebrigen B1-Werte (L*, Ton) muessen bleiben").
             bw = tp['braun']
-            labs, ws_, Ls_, hs_ = [], [], [], []
+            ws_, Ls_, hs_, rs_, ein_ = [], [], [], [], []
             for s_ in range(3):
                 n = nutz(gruppe('haut', s_))
                 hb = TX.ton(lab_g4[s_]); cb_ = TX.buntheit(lab_g4[s_])
@@ -449,16 +509,38 @@ def textur(form, par, X, Z, kinder=None):
                 lq = TX.gew_quantil(Lh[hs, 0], n[hs], float(bw['L_quantil']))
                 sel_ = np.nonzero((n > 0) & (hb > bw['ton'][0]) & (hb < bw['ton'][1]) & (cb_ > bw['C_min']) & (Lh[:, 0] <= lq))[0]
                 for i in sel_:
-                    labs.append((s_, int(i))); ws_.append(float(n[i])); Ls_.append(float(Lh[i, 0]) * fs[s_]); hs_.append(float(hb[i]))
-            if not labs:
-                raise SystemExit('braun: kein Eintrag')
-            w = np.array(ws_)
-            hbr = circ_mittel(np.array(hs_), w)
-            lab = np.vstack([TX.transform(lab_g4[s_][i:i + 1], fs[s_], 1.0, hbr, kn, 'C') for s_, i in labs])
-            sel = np.arange(len(labs))
-            L = np.array(Ls_)
+                    ein_.append('%d:%d' % (s_, int(i))); ws_.append(float(n[i])); Ls_.append(float(Lh[i, 0]) * fs[s_]); hs_.append(float(hb[i]))
+                    rs_.append(float(cb_[i]) / max(float(Lh[i, 0]), 1e-6))
+            if not ein_:
+                raise SystemExit('braun: kein braeunlicher G4-Eintrag')
+            wb = np.array(ws_)
+            hbr = circ_mittel(np.array(hs_), wb)
+            L_bezug = TX.gew_quantil(np.array(Ls_), wb, 0.5)
+            r_cl = TX.gew_quantil(np.array(rs_), wb, 0.5)
+            quellen = {}
+            for nr_, lst_ in je_zone.items():
+                if FLECK_ART[nr_] != 'braun':
+                    continue
+                for k_, xy_ in lst_:
+                    if plan[k_][0] == 'f1':
+                        raise SystemExit('braun auf F1-Flaeche %s' % (k_,))
+                    q_ = (plan[k_][1], int(px0[xy_[1], xy_[0]]))
+                    if cl_g4[q_[0]][q_[1]] == 0:
+                        raise SystemExit('braun: transparenter Quelltexel %s' % (q_,))
+                    quellen[q_] = quellen.get(q_, 0) + 1
+            qs = sorted(quellen, key=lambda q_: (float(lab_g4[q_[0]][q_[1], 0]) * fs[q_[0]], q_))
+            w = np.array([quellen[q_] for q_ in qs], float)
+            L = np.array([float(lab_g4[s_][i, 0]) * fs[s_] for s_, i in qs])
+            b_br = L_bezug / TX.gew_quantil(L, w, 0.5)
+            lab = np.vstack([TX.transform(lab_g4[s_][i:i + 1], b_br * fs[s_], r_cl, hbr, kn, 'L') for s_, i in qs])
+            sel = np.arange(len(qs))
             worte = None
-            ber['braun'] = dict(eintraege=['%d:%d' % t for t in labs], L_quelle_mal_f=[round(x, 2) for x in Ls_], ton=round(hbr, 2))
+            braun_pos.update({q_: j for j, q_ in enumerate(qs)})
+            Lq0 = np.array([float(lab_g4[s_][i, 0]) for s_, i in qs])
+            cv_g4 = float(np.sqrt(np.average((Lq0 - np.average(Lq0, weights=w)) ** 2, weights=w)) / np.average(Lq0, weights=w))
+            ber['braun'] = dict(regel='L = knie(b x f_s x L_G4) je Zonen-Texel, C = r x L, Ton h (Runde 3, G6)', bezug_eintraege=ein_,
+                                bezug_L_median=round(L_bezug, 3), r=round(r_cl, 4), ton=round(hbr, 2), b=round(b_br, 4),
+                                quellen=len(qs), quell_texel=int(w.sum()), cv_L_g4_quelle=round(cv_g4, 3))
         elif mat == 'hautrampe':
             # Runde 2: Loch-Flaechen = Haut (Rang-Tausch auf die Worte der Hautzeile ihrer Seite, nur Hautklasse ohne die Eintraege unter dem
             # 1-%-Quantil, gewichtet wie die Hautflaechen dieser Seite sie lesen).
@@ -526,12 +608,42 @@ def textur(form, par, X, Z, kinder=None):
         for (k, xy), qq in zip(lst, q):
             s = plan[k][1] if mat in ('muster', 'weiss', 'hautrampe') else (1 if mat in ('fleisch', 'wunde') else 0)
             r = rampe(mat, s)
+            if mat == 'braun':
+                # Runde 3 (G6): kein Rang-Tausch, sondern der eigene G4-Eintrag des Texels (EINE Transformation, Struktur bleibt)
+                zuweisung[(k, xy)] = (mat, s, braun_pos[(plan[k][1], int(px0[xy[1], xy[0]]))])
+                continue
             rc = np.cumsum(r['w']); rq = (rc - 0.5 * r['w']) / rc[-1]
             j = int(np.clip(np.searchsorted(rq, qq), 0, len(rq) - 1))
             zuweisung[(k, xy)] = (mat, s, j)
         zone_info[nr] = dict(material=mat, texel_flaeche_paare=len(lst), traeger=len(set(k for k, _ in lst)),
                              zone_texel=(len(zon[nr]['texel']['liste']) if nr in zon else None))
     fl_info['zonen'] = zone_info
+
+    rw_cache = {}
+
+    def rampen_worte(mat, s):
+        """15-Bit-Worte aller Eintraege der Rampe (mat, s), je Eintrag wie bisher (runde15, Farbton des Eintrags). Runde 3 (G8): danach entlang
+        der Rampe (aufsteigend nach Quell-L*) gedeckelt - kein Eintrag mit L* > haut.L_max (naechster Rang darunter); ausgenommen das Auge
+        (eigenes Material, O4) und das rote Fleisch (F1-Kern-Worte K5c, V6)."""
+        key = (mat, s)
+        if key in rw_cache:
+            return rw_cache[key]
+        ra = rampen[key]
+        if ra['worte'] is not None:
+            ws = [int(x) for x in ra['worte']]
+        else:
+            ws = []
+            for j in range(len(ra['lab'])):
+                lab = ra['lab'][j:j + 1]
+                hh_ = float(TX.ton(lab)[0]) if TX.buntheit(lab)[0] > 1e-6 else h_haut
+                w = TX.runde15(lab, [float(lab[0, 0])], hh_, rp['fenster'], rp['cmin'], nie_weiss=True)[0] & 0x7FFF
+                ws.append(w or 0x8000)
+        if mat not in ('auge', 'rotfleisch'):
+            gd = deckel(ws, np.arange(len(ws), dtype=float), list(range(len(ws))), float(tp['haut']['L_max']))
+            if gd:
+                deckel_info['%s%d' % key] = dict(eintraege=len(gd), worte=['%d:%04x->%04x' % t for t in gd])
+        rw_cache[key] = ws
+        return ws
 
     # ---- Fleisch-Band (Eichung b): Median L*/C* ueber Zone-27-Texel muss im Band liegen (Pruefung, Riegel misst nach)
     # ---- Kopien + Indizes
@@ -574,15 +686,7 @@ def textur(form, par, X, Z, kinder=None):
             basis = zeilen[gkey]
             worte = list(basis)
             for (mat, s, j), r in remap.items():
-                ra = rampen[(mat, s)]
-                if ra['worte'] is not None:
-                    w = int(ra['worte'][j])
-                else:
-                    lab = ra['lab'][j:j + 1]
-                    hh_ = float(TX.ton(lab)[0]) if TX.buntheit(lab)[0] > 1e-6 else h_haut
-                    w = TX.runde15(lab, [float(lab[0, 0])], hh_, rp['fenster'], rp['cmin'], nie_weiss=True)[0] & 0x7FFF
-                    w = w or 0x8000
-                worte[r] = w
+                worte[r] = rampen_worte(mat, s)[j]
             zi = len(fleck_zeilen)
             fleck_zeilen.append((gkey, worte, zeile_faces, len(remap)))
             # Kopien je Flaeche

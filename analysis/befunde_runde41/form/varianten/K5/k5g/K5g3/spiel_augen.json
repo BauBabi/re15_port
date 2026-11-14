@@ -1,10 +1,10 @@
 {
- "tim_sha256": "ce9a1dc9285a05196a750d1b34e8b7ef6b73e351c5a481e7dd291a9a599b83ce",
- "emd_sha256": "482bd63fa93dfd5a008c4c4837029f313a40e2b09ea2ee278877e6afb2fd38ef",
+ "tim_sha256": "c00823b35ad80624adc0678d5a57dfe6aa23c99bb7fd970fc696a2f40ec4102c",
+ "emd_sha256": "1981f97ea6fac8d1a377cf53a10e4358419dbff69c23e1418372f55915ec5024",
  "verfahren": "kf_k5g3_augen_spiel.py: kf_k5g3_spiel.sh 5080 BB_POSE -20711,-15984,2095,12,0,1, RE15_FORCE_CUT=1, Normal- und Markierungslauf (Augen-Eintraege gruen), Differenz > 20 = Augen-Pixel, L* im Normalbild, Ring = 15x15 ohne 5x5 um das Auge",
  "bilder": {
-  "normal": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/k5g2/t3r2/augen_spiel/augen_normal/fenster_1.png",
-  "markiert": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/k5g2/t3r2/augen_spiel/augen_markiert/fenster_1.png"
+  "normal": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/k5g2/k5g3tex/augen_spiel/augen_normal/fenster_1.png",
+  "markiert": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/k5g2/k5g3tex/augen_spiel/augen_markiert/fenster_1.png"
  },
  "augen": [
   {
