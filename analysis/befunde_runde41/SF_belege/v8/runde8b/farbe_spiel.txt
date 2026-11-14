@@ -1,0 +1,6 @@
+Messung (keine Eichung): Band- und Bauchfarbe im echten Spielbild der Runde 8b2. Band = Bildpunkte, in denen sich Probe a und b (gleiche Geometrie)
+unterscheiden; Bauch = Schwanz-Bildpunkte mit rotem Ton ausserhalb der Baender im Lauf der Probe a (a* >= 10, L* < 40). Video (Pruefer pr8, nur
+Richtung): helle Stellen L* 41-53, C* ~21, Farbton ~20; Rot L* 23-25, C* 12,8-16,5.
+F265 Band (Probe b): L* 41.1 C* 13.7 h 22 (1139 px) | Bauch rot (Probe a): L* 24.5 C* 20.3 h 24 (4566 px)
+F267 Band (Probe b): L* 42.9 C* 13.7 h 22 (1189 px) | Bauch rot (Probe a): L* 25.0 C* 19.8 h 24 (4878 px)
+F307 Band (Probe b): L* 44.9 C* 15.0 h 22 (824 px) | Bauch rot (Probe a): L* 22.6 C* 19.8 h 24 (4142 px)
