@@ -10345,7 +10345,9 @@ re_title:;
                         nsh_y = re15_ai_re2_for_type(npc->type)
                                   ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */
                                   : (int32_t)npc->crow_floor;      /* +0x1BA @0x8011221c-234 */
-                    int32_t nsh_world[3] = { npc->x, nsh_y, npc->z };
+                    int32_t nsh_x = npc->x, nsh_z = npc->z;
+                    re15_bf_schatten_xz(npc, &nsh_x, &nsh_z);    /* Hangar-Szene Runde 4: Schattenpunkt bei gekipptem Spider-Man */
+                    int32_t nsh_world[3] = { nsh_x, nsh_y, nsh_z };
                     int32_t nsh_rot[9], nsh_trans[3];
                     /* byte-true: RotMatrixY(ACTOR rot_y) via the trig LUT (FUN_8001b064 @0x8001b0e4
                      * uses entity+0x6a, NOT the camera yaw — RE'd wf_13911cba). nyaw above IS that
@@ -10705,7 +10707,8 @@ re_title:;
                  * (@0x8010143c-5c), Speer/Wedeln/Zug aus den Tabellen @0x80105740/@0x80105770.
                  * Yaw-only (nyaw) == RotMatrix(0, yaw, 0), also fuer alle anderen Typen unveraendert. */
                 if (npc->type == 0x37u || re15_spinnenanim_r41_volle_drehung(npc)   /* Runde 41 Spur L: Spinne RotMatrix(+0x68) @0x8001e8f4 */
-                    || re15_annette_r41_volle_drehung(npc))                      /* Runde 41 Spur AN: Leiche gekippt (re15_annette_r41.h) */
+                    || re15_annette_r41_volle_drehung(npc)                       /* Runde 41 Spur AN: Leiche gekippt (re15_annette_r41.h) */
+                    || re15_bf_volle_drehung(npc))                               /* Hangar-Szene Runde 4: Spider-Man gekippt (re15_birkin_formen.h) */
                     re15_skel_euler_matrix((int)npc->rot_x, npc_yaw_eff, (int)npc->rot_z, nyaw);
                 /* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800): das Original skaliert die
                  * Root-Matrix VOR der Bone-Schleife uniform per ScaleMatrix (FUN_8001e8c8

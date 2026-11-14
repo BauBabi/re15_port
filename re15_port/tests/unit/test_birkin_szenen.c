@@ -197,9 +197,9 @@ static void test_hangar(unsigned raum)
     int blut_teil0 = 0, blut_boden = 0, blut_falsch = 0, blut_art = 0;
     /* Ansprung (Nutzer 2026-11-13 "gleitet ... mit gehobenen Armen ... Linear auf Birkin zu"): in Phase 2 (h0..h11) steht der Aktor
      * auf dem Boden bzw. springt flach darueber (y 0 .. -605, Video h5-h11 Spalt Fuss -> Boden 5..20 Bildpunkte) und spielt ATTACK2
-     * 0x17 (@0x8011402c) bzw. den Zugriff 0x12 (@0x80113138), Hoehe nach dem Video (Runde 3 N5); vor Aufgabe 2 Bogen bis y -1641
-     * mit dem Sprung-Clip 0x16. */
-    int gleit_n = 0, gleit_falsch = 0;
+     * 0x17 (@0x8011402c) bzw. ab h2 den gekippten GRIFF-Clip 0x11 B62 (@0x80112fdc, Runde 4 N5), Hoehe nach dem Video; vor
+     * Aufgabe 2 Bogen bis y -1641 mit dem Sprung-Clip 0x16. Nach dem Abklingen (ab h18) ist die Wurzel nicht mehr gekippt. */
+    int gleit_n = 0, gleit_falsch = 0, kipp_rest = 0;
     /* Halten (Nutzer 2026-11-13 "struggled ... viel mehr ... bis er letztendlich tot ist"): erst HURT Clip 4 (@0x80114a44), dann
      * nachlassend HURT Clip 7 (@0x80114a68), ab h52 tot in Clip 7 B5 (kompakteste haengende Haltung, Runde 3). */
     int halt_weh = 0, halt_zuck = 0, halt_tod = 0, halt_clip = -1, halt_bild = -1;
@@ -225,8 +225,9 @@ static void test_hangar(unsigned raum)
         if (sm_da) {
             if (-m->y > max_hoehe) max_hoehe = -m->y;
             if (ph == 5 && m->y == 0) sm_am_boden = 1;
+            if (ph == 3 && griff_takte >= 7 && m->rot_z != 0) kipp_rest++;
             if (ph == 3) { halt_clip = m->motion; halt_bild = m->anim_frame; if (m->motion == 4) halt_weh++; if (m->motion == 7) halt_zuck++; if (m->motion == 9) halt_tod++; }
-            if (ph == 2) { gleit_n++; if (m->y < -605 || m->y > 0 || (m->motion != 0x17 && m->motion != 0x12)) gleit_falsch++; }
+            if (ph == 2) { gleit_n++; if (m->y < -1100 || m->y > 0 || (m->motion != 0x17 && m->motion != 0x11)) gleit_falsch++; }
             if (ph == 2 || (ph == 3 && ++griff_takte < 54)) {   /* Ansprung + Halten bis Video h66 (Wurf ab h66 ist schnell) */
                 double dx = m->x - mx, dy = m->y - my, dz = m->z - mz;
                 int32_t d = (int32_t)sqrt(dx * dx + dy * dy + dz * dz);
@@ -263,7 +264,8 @@ static void test_hangar(unsigned raum)
     CHECK(halt_weh >= 20 && halt_zuck >= 30 && halt_tod == 0 && halt_clip == 7 && halt_bild == 5,
           "Halten: %d Takte Clip 4, %d Takte Clip 7, %d Takte Clip 9, letzter Haltetakt Clip %d B%d (Soll >= 20, >= 30, 0, Clip 7 B5)",
           halt_weh, halt_zuck, halt_tod, halt_clip, halt_bild);
-    CHECK(gleit_n >= 10 && gleit_falsch == 0, "Ansprung: %d von %d Takten hoeher als 605 ueber dem Boden oder nicht Clip 0x17/0x12", gleit_falsch, gleit_n);
+    CHECK(kipp_rest == 0, "Halten: %d Takte ab h18 noch mit gekippter Wurzel (rot_z)", kipp_rest);
+    CHECK(gleit_n >= 10 && gleit_falsch == 0, "Ansprung: %d von %d Takten hoeher als 1100 ueber dem Boden oder nicht Clip 0x17/0x11", gleit_falsch, gleit_n);
     CHECK(blut_art == 0, "gruenes Blut: %d Plaetze nicht Effekt 0 / Sub 8 / Skala 0x2000 / abr_port 0 (@0x80113b10/30)", blut_art);
     CHECK(blut_teil0 == 22 && blut_boden == 2 && blut_falsch == 0,
           "gruenes Blut: %d an Teil 0 des Spider-Man (Soll 22, @0x80113b54), %d am Boden (Soll 2), %d anderswo (Soll 0)",

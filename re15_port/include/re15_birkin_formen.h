@@ -156,5 +156,7 @@ int  re15_bf_szene_effekte(void);
 /* Schatten des Spider-Man der Hangar-Szene auf den Boden (Spider-Man-Schatten @0x80111bc0 `lh a1,442` = +0x1ba, birkin_formen.c);
  * 1 = *y gesetzt. */
 int  re15_bf_schatten_y(const re15_actor_t *a, int32_t *y);
+int  re15_bf_volle_drehung(const re15_actor_t *a);   /* Runde 4 N5: Spider-Man gekippt -> volle Figurmatrix (@0x8001e8f4) */
+int  re15_bf_schatten_xz(const re15_actor_t *a, int32_t *x, int32_t *z);   /* Runde 4 N5: Schattenpunkt bei Versatz */
 
 #endif

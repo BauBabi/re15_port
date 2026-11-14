@@ -284,7 +284,7 @@ static int32_t s_griff_y = BF_SM_GRIFF_Y;   /* aktueller Griffpunkt (bf_klauenzi
  *   0x17 = ATTACK2 (B[14]: `ori v0,zero,0x17` @0x8011402c / `sb v0,148(v1)` @0x80114030; STAGE4 @0x80113eac/b0) fuer h0..h4:
  *     B8/B9 Hocke (Glied 4 vorn oben) = Video h0/h1, B10 richtet sich auf = h2, B11/B12 aufrecht (-16/-14 Grad), ein Arm
  *     ueber dem Kopf (Spitze 1600 ueber der Schulter) = Video h3/h4 "aufrecht, Arm im Bogen ueber dem Kopf".
- *   h5..h11: Clip 0x12 (s. BF_SM_ZUGRIFF; bis 2026-11-14 Clip 0x0E = GRIFF 1 vorn, Zugriff @0x80112c40). */
+ *   h2..h11: Clip 0x11 B62 gekippt (s. BF_SM_FLUG, Runde 4); Runde 2/3 Clip 0x12 @0x80113138, bis 2026-11-14 0x0E @0x80112c40. */
 #define BF_SM_ANGRIFF       0x17
 #define BF_SM_ANGRIFF_H0    8          /* Clipbild bei h0 */
 /* Nachbesserung 2026-11-14 (Pruefer Mangel 6 "Gleitpose geduckt und tief statt gestreckt und vorgeneigt", Koordinator: Rumpf
@@ -313,10 +313,40 @@ static int32_t s_griff_y = BF_SM_GRIFF_Y;   /* aktueller Griffpunkt (bf_klauenzi
  * Szenenkamera): 0x12 braucht fuer die Video-Neigung rz 400..550, die waagerechten Arme zeigen dann 30..40 Grad NACH UNTEN in
  * Birkins Bauch (Spitzen bis x 449..497); die Bilder mit erhobenen Armen (0x0F/0x11 GRIFF vorn, 0x16 B28..B34) lehnen zurueck und
  * brauchen rz ~800 (70 Grad) - kein Original-Bild ergibt "schraeg mit erhobenen Armen". Daher bleibt der Zugriff 0x12 B0..B6
- * (Runde 2); neu ist nur die Hoehe je Takt (k_sm_flug_y) nach dem Video-Spalt unterster Beinpunkt -> Boden 5 / 16 / 20 / 16 / 11
+ * (Runde 2); Runde 3 neu nur die Hoehe je Takt nach dem Video-Spalt unterster Beinpunkt -> Boden 5 / 16 / 20 / 16 / 11
  * / 4 (h5..h10; Rechnung Mesh in Pose 0x12, Szenenkamera rueck.py), h11 wie bisher am Boden (Spalt Video 4, Port ~0). Vorher
  * -245 h6..h10 (Spalt ~0, Pruefer "auf beiden Fuessen"). */
-static const int16_t k_sm_flug_y[7] = { -166, -374, -448, -376, -280, -149, 0 };   /* h5..h11, s. oben */
+/* Runde 4 (Koordinator 2026-11-14 zu N5: "Bild mit erhobenen Armen nehmen, Wurzel so weit kippen, dass der Rumpf im Bild den
+ * Video-Winkel hat und die Arme nach vorn-oben auf Birkins Brust zeigen; Kippwinkel je Takt aus dem Video; Uebergaenge mit
+ * Ueberblendung; Flughoehe bleibt"). Die Szene gibt es nur im 80-%-Video, Kippung und Versatz sind Szenenfuehrung.
+ * Bildwahl: alle 30 EM2B-Clips je Bild (Modellraum) - Armwinkel Schulter (2/16) -> Spitze (4/18) nach Kippung der Achse
+ * Fuss -> Kopf auf 40 Grad; dann im Bild (Mesh, Szenenkamera rueck.py, Kippung je Takt nachgerechnet, r4/armsuche.py):
+ *   0x11 B62  Laenge Fuss -> Kopf 210 Bildpunkte (Video 210..230), Arm 18 nach vorn auf Birkins Brust (Spitze h8 (298,256),
+ *             h9 (317,247), h10 (318,221); Video-Kontakt x 290..305, y 180..260), Arm 4 nach oben (+43..+71 Grad)
+ *   0x11 B61/B64, 0x0F, 0x10, 0x0E: Arme nach der Kippung waagerecht oder nach unten; 0x16 B17..B28: ein Arm hoch, aber
+ *             Laenge nur 114..135 Bildpunkte (kompakt, Sichtpruefung Runde 3)
+ * -> Clip 0x11 (GRIFF vorn, Folge von 0x0E: `ori v0,zero,0x11` @0x80112fdc / `sb v0,148(v1)` @0x80112fe0, STAGE5) Bild 62.
+ * Ueberblendung ab h2 (+0x8f = 7 wie bf_bild, Gewicht wie skeleton_common.c re15_blend_angle12 + Wurzel-Lerp) aus 0x17 B10.
+ * Je Takt aus dem Video (Augen-Agent, Pixelmessung; r4/flugfit5.py rechnet die UEBERBLENDETE Pose je Takt nach):
+ *   rz  Wurzelkippung (+0x6c wie @0x801138dc), so dass die Bildachse unterster Beinpunkt -> Kopfende die Video-Neigung hat
+ *       (Video h2..h11 +5 +12 +13 +22 +33 +40 +41 +36 +29 +16; Port +2 +14 +15 +26 +32 +40 +40 +37 +26 +10)
+ *   s   Versatz des Modells entlang der Gleitrichtung hinter den Schattenpunkt (k_sm_gleit), so dass Kopf und Fuesse wie im
+ *       Video liegen (Video-Fuss h2..h11 x 20 27 25 28 38 55 85 121 157 196, Port 43 28 23 45 46 53 85 115 154 195; der
+ *       Schatten bleibt am Schattenpunkt, re15_bf_schatten_xz); h2 halber Versatz (sonst 44 Bildpunkte Sprung h1 -> h2)
+ *   Y   Hoehe, so dass der Spalt unterster Beinpunkt -> Boden dem Video gleicht (h2..h4 0, h5..h11 5 16 20 16 11 4 4)
+ * Nach h11 klingen rz, s und Y mit der Ueberblendung in Clip 4 ab (Faktor = Restgewicht des alten Bilds 7/8, 7/8*6/8 ...).
+ * Gemessen (Mesh in Pose): tiefster Punkt h2..h11 0 .. -328 (nie unter dem Boden), Kopf-x h5..h11 139 164 196 226 244 248
+ * 231 (Video 145 165 200 225 244 244 224); Kopf-y 197..223 (Video 172..180: das Video-Modell ist laenger). */
+#define BF_SM_FLUG          0x11
+#define BF_SM_FLUG_BILD     62
+static const int16_t k_sm_flug[10][4] = {      /* h, rz, s, Y */
+    {  2, 175,  -375, -193 }, {  3, 375,  -900, -494 }, {  4, 400, -1350, -597 }, {  5, 550, -1350, -788 },
+    {  6, 625, -1650, -958 }, {  7, 725, -1950, -1043 }, {  8, 725, -1950, -966 }, {  9, 675, -1950, -849 },
+    { 10, 525, -1650, -625 }, { 11, 300,  -900, -409 } };
+static const int16_t k_sm_flug_aus[6] = { 875, 656, 410, 205, 77, 19 };   /* h12..h17: Restgewicht x 1000 (s. oben) */
+#define BF_GLEIT_DX   3580                     /* Gleitrichtung (0.874, -0.485) in Q12 (Kopf k_sm_gleit) */
+#define BF_GLEIT_DZ  (-1987)
+static int32_t s_sm_schatten[3] = { 0, 0, 0 };  /* [0] 1 = gesetzt, Schattenpunkt x/z waehrend Kippung/Versatz */
 /* Gleitbahn: waagerecht durch die Schattenpunkte des Videos (Rueckprojektion H_hangar.md Abschnitt 3: h0..2 (29..31,190),
  * h4 (49,194), h6 (71,193), h8 (100,192)), zwischen ihnen linear = 448 / 358 / 485 Einheiten je Bild; ab h8 steht er (Video
  * Rumpf x 100..105 h8..h12) bis zum Heben. Hoehe: Video tiefster Punkt (Bogen z_video_h0-8 / z_video_h9-17, zwei Lesungen)
@@ -629,6 +659,25 @@ int re15_bf_schatten_y(const re15_actor_t *a, int32_t *y)
     return 1;
 }
 
+/* Runde 4 N5: der gekippte Spider-Man wird mit der vollen Figurmatrix gezeichnet - das Original nimmt fuer JEDE Figur
+ * RotMatrix(+0x68: rot_x, Gier, rot_z) (FUN_8001e8c8 `jal 0x80068098` @0x8001e8f4); der Port-Zeichner nur fuer freigegebene
+ * Typen (main.c), daher hier die Freigabe fuer den Szenen-Spider-Man, solange er gekippt ist. */
+int re15_bf_volle_drehung(const re15_actor_t *a)
+{
+    if (!a || s_h.raum == 0 || s_h.sm < 0 || (int)(a - g_actors) != s_h.sm) return 0;
+    return (a->rot_x || a->rot_z) ? 1 : 0;
+}
+
+/* Runde 4 N5: waehrend das Modell gekippt und hinter den Schattenpunkt versetzt ist (k_sm_flug), bleibt der Schatten am
+ * Schattenpunkt des Videos (k_sm_gleit / Hebebahn). */
+int re15_bf_schatten_xz(const re15_actor_t *a, int32_t *x, int32_t *z)
+{
+    if (!a || !x || !z || s_h.raum == 0 || s_h.sm < 0 || !s_sm_schatten[0]) return 0;
+    if ((int)(a - g_actors) != s_h.sm) return 0;
+    *x = s_sm_schatten[1]; *z = s_sm_schatten[2];
+    return 1;
+}
+
 /* Neuaufbau ab NB2 (aus NB3): Effekte (gruenes Blut) der Szene nicht gegen den Platzhalter-Anker von Cut 12 cullen. */
 int re15_bf_szene_effekte(void)
 {
@@ -762,6 +811,7 @@ static void bf_hangar_starten(void)
     m->rot_y = bf_blick(m, b->x, b->z);
     m->hp = 100;
     s_griff_y = BF_SM_GRIFF_Y;
+    m->rot_z = 0; s_sm_schatten[0] = 0;
     bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0); m->anim_frac = 0;     /* hockt: Angriffs-Clip 0x17 B8 (Video h0) */
     s_h.cut_zurueck = (int)g_scd.cam_id;                 /* der Schnitt, den der RVD-Scan gerade angefordert hat */
     bf_riegel(1);
@@ -1117,8 +1167,8 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         if (log) fprintf(stderr, "[hangar-takt] h%d F%u B clip %d bild %d gier %d (%d,%d) SM %s\n", h,
                          (unsigned)g_engine.frame_count, b->motion, b->anim_frame, b->rot_y, (int)b->x, (int)b->z,
                          m ? "da" : "weg");
-        if (log && m) fprintf(stderr, "[hangar-takt] h%d SM clip %d bild %d (%d,%d,%d) gier %d\n", h, m->motion,
-                              m->anim_frame, (int)m->x, (int)m->y, (int)m->z, m->rot_y);
+        if (log && m) fprintf(stderr, "[hangar-takt] h%d SM clip %d bild %d (%d,%d,%d) gier %d kipp %d\n", h, m->motion,
+                              m->anim_frame, (int)m->x, (int)m->y, (int)m->z, m->rot_y, m->rot_z);
         {   int32_t sp[3];                                  /* Runde 41 SF N1.9: Schwanzspitze (Stand des letzten Zeichnens) */
             if (log && re15_schwanz_r41_gelenk(s_h.birkin, 7, sp))
                 fprintf(stderr, "[hangar-takt] h%d Schwanzspitze (%d,%d,%d)\n", h, (int)sp[0], (int)sp[1], (int)sp[2]);
@@ -1143,8 +1193,8 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         m->rot_y = bf_blick(m, b->x, b->z);
     } else if (h < BF_H_BERUEHRUNG) {                                     /* Gleiten h2..h11 (Kopf "Ansprung") */
         int i = 0;
-        if (h < BF_H_ZUGRIFF) bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0 + h);              /* B10 h2 .. B12 h4 */
-        else bf_bild(m, BF_SM_ZUGRIFF, h - BF_H_ZUGRIFF);                /* Clip 0x12 B0 h5 .. B6 h11 */
+        const int16_t *fl = k_sm_flug[h - k_sm_flug[0][0]];             /* h2..h11 (Kopf k_sm_flug) */
+        bf_bild(m, BF_SM_FLUG, BF_SM_FLUG_BILD);                          /* 0x11 B62, Ueberblendung ab h2 */
         m->rot_y = bf_blick(m, b->x, b->z);
         while (i < BF_N(k_sm_gleit) - 2 && h >= k_sm_gleit[i + 1][0]) i++;
         {
@@ -1152,7 +1202,9 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
             const int32_t u = h >= k_sm_gleit[i + 1][0] ? 4096 : (h - k_sm_gleit[i][0]) * 4096 / span;
             m->x = bf_mix(k_sm_gleit[i][1], k_sm_gleit[i + 1][1], u);
             m->z = bf_mix(k_sm_gleit[i][2], k_sm_gleit[i + 1][2], u);
-            m->y = h >= BF_H_ZUGRIFF ? k_sm_flug_y[h - BF_H_ZUGRIFF] : 0;     /* Hoehe nach dem Video (s. k_sm_flug_y) */
+            s_sm_schatten[0] = 1; s_sm_schatten[1] = m->x; s_sm_schatten[2] = m->z;   /* Schattenpunkt */
+            m->x += (BF_GLEIT_DX * fl[2]) >> 12; m->z += (BF_GLEIT_DZ * fl[2]) >> 12;  /* Versatz s */
+            m->y = fl[3]; m->rot_z = fl[1];                               /* Hoehe Y, Kippung rz */
         }
     } else if (h < BF_H_LOS) {                                            /* gehalten bis zum Loslassen (NB2-Kopplung) */
         if (h >= BF_H_STIRBT) {                                           /* tot: Haltung erstarrt (Kopf BF_SM_WEH) */
@@ -1185,6 +1237,17 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
             if (h == BF_H_GEHALTEN) { s_h.kvor[0] = k[0]; s_h.kvor[1] = k[1]; s_h.kvor[2] = k[2]; }
             m->x = (k[0] + s_h.kvor[0]) / 2; m->y = (k[1] + s_h.kvor[1]) / 2; m->z = (k[2] + s_h.kvor[2]) / 2;
             s_h.kvor[0] = k[0]; s_h.kvor[1] = k[1]; s_h.kvor[2] = k[2];
+        }
+        {   /* Runde 4 N5: Kippung, Versatz und Hoehe des Flugbilds klingen mit der Ueberblendung in Clip 4 ab (Kopf k_sm_flug) */
+            const int i_ = h - BF_H_BERUEHRUNG;
+            const int16_t *fl = k_sm_flug[BF_N(k_sm_flug) - 1];
+            s_sm_schatten[0] = 0;
+            if (i_ >= 0 && i_ < BF_N(k_sm_flug_aus)) {
+                const int32_t f = k_sm_flug_aus[i_];
+                s_sm_schatten[0] = 1; s_sm_schatten[1] = m->x; s_sm_schatten[2] = m->z;
+                m->x += (BF_GLEIT_DX * fl[2] / 1000 * f) >> 12; m->z += (BF_GLEIT_DZ * fl[2] / 1000 * f) >> 12;
+                m->y += fl[3] * f / 1000; m->rot_z = (int16_t)(fl[1] * f / 1000);
+            } else m->rot_z = 0;
         }
         if (m->y > 0) m->y = 0;                                           /* Hand tief im Wurf: nicht unter den Boden */
     } else if (h < BF_H_WEG) {                                            /* Neuaufbau ab NB2: passiv geworfen (Kopf k_wurf_bahn) */
