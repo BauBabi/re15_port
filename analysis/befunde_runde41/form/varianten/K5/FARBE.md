@@ -1862,3 +1862,104 @@ kein schwarzer Fleck mehr; K5e zeigt grosse dunkle gemalte Augen mit rotem Rand)
 4. Leuchtstelle F1 "lila-grau mit grauen Bloecken" (Sicht-Pruefer r1, klein): nicht bearbeitet.
 5. Zone 44 (Hals-Unterseite) traegt auf 5 Flaechen Zone-27-Fleisch (Zahlen-Pruefer r1 Hinweis): unveraendert, Vorrang Zone 27 bitte bestaetigen.
 6. Rechte Hand: Posen-Datei (G2) fehlt weiter; Geometrie-Riegel R8 bleibt deshalb rot (GEOMETRIE.md 9.7).
+
+## K5g3 Runde 3 - Entscheide G6-G9 nach der Pruefung r2 (2026-11-14)
+
+Auftrag K5g3 Textur-Bauer Runde 3: nur G6-G9 (Orchestrator), aufgebaut auf dem committeten Stand der Runde 2 (f48d37df1). Grundlage:
+PRUEFUNG_K5G3_r2_zahlen.md (1 ROT: braeunliche Musterung flach; Gelb: fast weisse Haut, Seitenfaktoren, Zone 44/27) und
+PRUEFUNG_K5G3_r2_sicht.md (BESTANDEN). Geometrie unveraendert (Stufe kf_k5g3_geo, geo/BAHNSTEIG_FORM.EMD db9404a1, Riegel TG gruen). Spiel-Asset
+bleibt K5e_f1 (G5 gruen). Messwerkzeuge und Ergebnisse dieser Runde: k5g/K5g3/messung_r3/ (gelaufen im Scratchpad k5g2/r3/).
+
+### K5g3R3.0 Abgabe
+
+| Datei (k5g/K5g3/) | sha256 |
+|---|---|
+| BAHNSTEIG_FORM.EMD (28 Clips) | 1981f97ea6fac8d1a377cf53a10e4358419dbff69c23e1418372f55915ec5024 |
+| BAHNSTEIG_FORM.TIM = FORM.TIM (15 Zeilen, Port-Hoehe 3840) | c00823b35ad80624adc0678d5a57dfe6aa23c99bb7fd970fc696a2f40ec4102c |
+| FORM.EMD (3 Keys) | 26e310fe335ef4302868101f92bb3c026e42d49c5ce3685067490dace2caa85f |
+
+Die EMD aendert sich gegen Runde 2 nur in UV/Seite: die 5 Hals-Unterseiten-Flaechen (G7) werden nicht mehr kopiert (Kopien 150 -> 145), die
+uebrigen Kopien liegen dadurch teils an anderen freien Plaetzen. Ecken, Normalen, Flaechen-Ecken = Geometrie-Stufe (TG, UV1, V3.1b gruen).
+`python generator/kf_k5g3.py pruef`: "zwei Laeufe und Abgabe byte-gleich: JA". Zeilen wie Runde 2.
+
+### K5g3R3.1 Entscheid fuer Entscheid
+
+| Entscheid | Ursache (gemessen) | Umsetzung (generator/kf_k5g3_tex.py) | Ergebnis |
+|---|---|---|---|
+| G6 braeunliche Musterung (Zonen 16/19) = flache Insel | Rang-Tausch auf eine Rampe aus nur 3 braeunlichen G4-Eintraegen (1:148, 2:123, 2:170) -> 2 Werte (L* 32/36) | EINE Transformation auf die G4-Helligkeit der Zonen-Texel selbst: je Zonen-Texel sein G4-Eintrag (23 verschiedene Quellen, 110 Texel-Flaechen-Paare), L = knie(b x f_s x L_G4), C = r x L, Ton h. Aus den braeunlichen G4-Eintraegen (wie Runde 2, texelgewichtet): h 70,21 Grad (Kreismittel), r 0,4189 (Median C*/L*), b 0,7576 (Median b f_s L_G4 der Zonen-Texel = Median f_s L der braeunlichen Eintraege 32,06 = Niveau der Runde 2) | G6.16: cv 0,412 (G4 0,416), 14 Stufen (G4 23); G6.19: cv 0,264 (G4 0,270), 5 Stufen (G4 7); Runde 2: 0,062 / 0,061 mit 2 Stufen. B1: L* 32,6 (R2 31,9), Ton 71,2 (71,3), C* 13,2 (R2 6,4) |
+| G7 Zone 44 traegt Zone-27-Fleisch | 21/0/0, 21/1/0, 21/1/8, 21/1/56, 21/1/64 stehen in zonen_v2 sowohl in Zone 44 (Hals-Unterseite) als auch in Zone 27 (traeger_texel: 39+106+72+186+566 Texel) | V4 vor Fleck: die Flaechen der Zonen 31/42/44/45 und Lippensaum/Maul_Band tragen kein rotes Fleck-Material (fleisch, wunde, rotfleisch); sie behalten die Haut, das Fleisch bleibt auf den Kopien der uebrigen Traeger (V4_ZONEN, ROT_MATERIAL; bau.json flecken.v4_vorrang). Gemessen: nur diese 5 Flaechen betroffen | G7: Zone 44 0 von 13072 Zugriffen Fleck-Material, 0,00 % roeter als die Haut; alle V4-Flaechen 0 von 26541 (Runde 2: 949 Zugriffe, 3,60 %) |
+| G8 fast weisse Haut (L* 95-99) | Faktor f_s auf helle G4-Eintraege (Seite 0: 4,54); die 15-Bit-Wahl nahm 0x7FFE/0x7BDF/0x77BF | kf_k5g3_tex.deckel: entlang der Rampe (nach Quell-L*) bekommt jeder Eintrag mit L* > 85 (par haut.L_max) das Wort des naechsten Rangs darunter, der unter 85 liegt (Rangfolge bleibt, die obersten Raenge fallen zusammen; Eintraege darunter bytegleich). Auf die Hautzeilen (davon erben Tausch, Loch-Haut, Fleck-Grund), die umgefaerbten F1-Randeintraege und alle Fleck-Materialrampen ausser Auge und rotem Fleisch (F1-Kern K5c). Gedeckelt: haut0 237, haut1 129, haut2 160, f1 2, muster1 11, muster2 12, weiss2 4, fleisch1 3, wunde1 3 Eintraege; Ersatzwort meist 0x631F (L* 84,5) | G8: 0 von 457031 Zugriffen mit L* > 85 (ausser Zaehnen, Maul, Augen, F1-Kern; Runde 2: 1856). Im Spiel (5080, 5 Bilder, Q): L* > 90 0 Pixel (Runde 2: 535 = 107 je Bild), L* > 85 65 (Runde 2: 690), K5e_f1 0 |
+| G9 Seitenfaktoren der Haut | siehe K5g3R3.2 | **gemeldet, nicht gebaut** (Bedingung nicht voll erfuellt) | Faktoren unveraendert 4,54 / 1,86 / 2,55 |
+
+Die uebrigen Werte bleiben (G10): f 1,86, s 0,5225, Fleisch k 0,7825, f_auge 2,6972 unveraendert; Z1-Z9 neu gemessen (eigenes Normal-/
+Schluessel-Paar, kf_k5g3_zlauf.sh): Z1 7,77 / Z2 0,703 / Z3 0,361 / Z4 4,86 / Z5 3,20 / Z6 0,514 / Z7 0,288 / Z8 13,79 / Z9 6,58 (Grenze 6,53;
+Runde 2 6,57). Augen im Spielfenster 5080 von vorn: 9 px Median L* 15,5 gegen 4,7 und 15 px 17,3 gegen 4,1 (wie Runde 2).
+
+**Braun im echten Spiel** (messung_r3/braun_spiel.py, 5080 Bild-1-Lage, Framedump des eigenen Fensters, Marker = Braun-Eintraege gruen,
+103 Pixel, Bild 400; Messbild messung_r3/braun_z5080_messbild.png):
+
+| | Q cv | Q L* Median | Q Ton | Q Farben | P cv |
+|---|---|---|---|---|---|
+| K5g3 Runde 3 | **0,412** | 25,3 | 70,8 | 50 | 0,507 |
+| K5g3 Runde 2 | 0,062 | 32,1 | 70,4 | 37 | 0,149 |
+| K5e_f1 | 0,234 | 33,5 | -35,6 | 48 | 0,333 |
+
+Pruefer-Vorgabe "Q-cv nicht unter etwa 0,5 x K5e_f1 (0,23)": erfuellt. Ton bleibt. Q-L* der sichtbaren 103 Pixel sinkt von 32,1 auf 25,3:
+im Bild liegen die dunkleren Texel des Flecks (der Median aller Zonen-Texel bleibt 32,6, Riegel B1).
+
+### K5g3R3.2 G9 - Herleitung der Seitenfaktoren (Ergebnis: nicht nur Grundhelligkeit der Seiten, darum gemeldet)
+
+Heute (bau.json textur.haut): g_s = texelgewichteter Median L* der G4-Hautklasse, gewichtet mit den Texeln, die die **K5-Hautflaechen** auf
+Seite s lesen: Seite 0 5,205 / Seite 1 12,702 / Seite 2 9,268 -> g 2,4402 / 1 / 1,3705, f_s = 1,86 g_s = 4,54 / 1,86 / 2,55. Quelle sind
+Original-Texel (G4-Atlas und G4-CLUT, kein Video, kein Zielwert je Koerperregion).
+
+Gegenrechnung mit der Grundhelligkeit der Original-Seiten selbst (messung_r3/seiten_g4.py, seiten_g4.json): dieselbe Statistik, aber gewichtet
+mit den Texeln, die das **RE2-G4-Modell selbst** liest (CDEMD0.EMS Typ 0x34; 564 / 924 / 384 Dreiecke auf Seite 0 / 1 / 2; Atlas = K5e-Atlas
+Seiten 0-2 bytegleich): Median Hautklasse 9,847 / 13,105 / 12,508 -> g 1,3308 / 1 / 1,0477.
+
+| Seitenfaktor f_s | Seite 0 | Seite 1 | Seite 2 | Huefte/Ruecken (Teile 0/7) Median L* | uebrige Haut P25/Median/P75 |
+|---|---|---|---|---|---|
+| Abgabe (K5-Hautflaechen) | 4,539 | 1,86 | 2,549 | 23,3 | 18,4 / 24,2 / 32,2 |
+| G4-eigene Seitenstatistik | 2,475 | 1,86 | 1,949 | **12,7** | 16,5 / 23,6 / 31,3 |
+| ohne Angleich | 1,86 | 1,86 | 1,86 | 9,6 | 15,7 / 23,6 / 31,3 |
+
+(messung_r3/g9_sattel.py, L* = knie(f_s L_G4) je Zugriff wie die Hautzeile.) Die Grundhelligkeit der Seiten erklaert nur einen Teil der
+Faktoren (Seite 0: 1,33 von 2,44; Seite 2: 1,05 von 1,37). Der Rest kommt daher, dass die K5c-UV Huefte und Ruecken auf dunklere Stellen der
+Seite 0 legt, als das G4-Modell dort selbst nutzt. Mit Faktoren nur aus der Seitenstatistik kaeme der Sattel zurueck (Teile 0/7 L* 12,7 unter
+der Haut-P25 16,5; Riegel S1 waere rot, Sicht-Pruefer K5g2 r1 "fast schwarzer Sattel"). Nach G9 ("ist das nicht so, melden statt bauen")
+bleibt der Stand der Runde 2 unveraendert; Entscheid beim Orchestrator.
+
+### K5g3R3.3 Riegel
+
+`python generator/riegel_k5g3.py textur` (Protokoll k5g/K5g3/riegel_k5g3_textur.txt/.json): **"RIEGEL K5g3 TEXTUR: 47 von 47 gruen, 41 von
+41 Gegenproben rot wie verlangt"**, Exit 0. Neu (Gegenprobe = Abgabe der Runde 2 aus git, Commit f48d37df1, riegel_k5g3_tex.r2_stand):
+G6.16, G6.19 (cv >= 0,5 x cv(G4) und ab 15 Texeln >= 5 Stufen, gegen die G4-CLUT der EMS am Original-Index), G6.i (Info, dieselbe Regel fuer
+die uebrigen Fleck-Zonen), G7, G8. V3.1 rechnet die Fleck-Zuordnung mit derselben V4-Regel wie der Generator (je_mit_kern; fehlende
+Fleck-Texel 0, Material ausserhalb 0).
+
+### K5g3R3.4 Tests und Spiellauf
+
+- local_build.sh build: "ninja: no work to do" (keine C-Aenderung in dieser Runde).
+- ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3 mit RE15_RE2_ASSET_ROOT=k5g/K5g3: "100% tests passed, 0 tests failed out of 12"
+  (377,7 s; integration_r41_form_dreiecke 377,6 s, integration_r41_form_wagenweg 127,5 s).
+- RE15_SOFTWARE_RENDER=1, 5090 Schnitt 11, Form Clip 12, bis Bild 1300 (kf_k5g3_spiel.sh): "[render] SDL-Renderer software", "EXIT_AT: Bild
+  1300 in Raum 5090 erreicht", "[tri-liste] ENDE hoechststand=7318 (F6) verworfen=0" - kein Absturz.
+- Fensterbilder neu (kf_k5g3_fenster.sh, gdigrab nur auf das eigene Fenster, kein AUTOSHOT/SOFTWARE_RENDER): k5g/K5g3/spiel/k5g_*.png;
+  Zielband-Paar (kf_k5g3_zlauf.sh) f80_riegel_c00823b3; Augen-Laeufe kf_k5g3_augen_spiel.py; Braun-Laeufe messung_r3/braun_spiel.py.
+
+### K5g3R3.5 Tafeln (k5g/K5g3/tafeln/, roh, neu gerendert)
+
+01-09 mit `python generator/kf_k5g3_tafeln.py k5g/K5g3 k5g/K5g3/tafeln` auf dem Asset 1981f97e/c00823b3 (04 mit neuen Fensterbildern
+k5g/K5g3/spiel/k5g_*.png, 08 mit dem neuen Paar f80_riegel_c00823b3). Selbst angesehen: 01 (Form wie Runde 2) und das Messbild zur
+braunen Stelle (der Fleck am Bein zeigt jetzt hellere und dunklere Texel statt einer glatten Flaeche).
+
+### K5g3R3.6 Offen
+
+1. G9: Seitenfaktoren gleichen nicht nur die Grundhelligkeit der Seiten aus (K5g3R3.2) - Entscheid beim Orchestrator.
+2. G6.i (Info): Zonen 3 (cv 0,272 gegen G4 0,842) und 4 (0,191 gegen 0,385) liegen unter 0,5 x cv(G4) (Musterung/Maserung, Rang-Tausch
+   auf die Aderrampe, Zahlen-Pruefer r2 Gelb 4); alle uebrigen Fleck-Zonen erfuellen die Regel. Nicht angefasst (Auftrag: nur G6-G9).
+3. G8: das Deckel-Wort ist meist 0x631F (L* 84,5, rosa-weiss); im Spiel 65 Q-Pixel mit L* 85-90 in 5 Bildern (Runde 2: 690). Die Regel
+   "naechster Rang darunter" laesst die hellsten Raenge zusammenfallen.
+4. Braun: C* steigt von 6,4 auf 13,2 (r = C*/L* der braeunlichen Quelle, wie vom Pruefer vorgeschlagen; Haut C* 12,0 bei L* 23,3).
+5. Z9 bleibt knapp (6,58 bei Grenze 6,53).
+6. Rechte Hand: Posen-Datei (G2/G11) fehlt weiter; Geometrie-Riegel R8 bleibt rot (nicht angefasst).
