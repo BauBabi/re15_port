@@ -284,7 +284,7 @@ static int32_t s_griff_y = BF_SM_GRIFF_Y;   /* aktueller Griffpunkt (bf_klauenzi
  *   0x17 = ATTACK2 (B[14]: `ori v0,zero,0x17` @0x8011402c / `sb v0,148(v1)` @0x80114030; STAGE4 @0x80113eac/b0) fuer h0..h4:
  *     B8/B9 Hocke (Glied 4 vorn oben) = Video h0/h1, B10 richtet sich auf = h2, B11/B12 aufrecht (-16/-14 Grad), ein Arm
  *     ueber dem Kopf (Spitze 1600 ueber der Schulter) = Video h3/h4 "aufrecht, Arm im Bogen ueber dem Kopf".
- *   h5..h11: Clip 0x12 (s. BF_SM_ZUGRIFF; bis 2026-11-14 Clip 0x0E = GRIFF 1 vorn, Zugriff @0x80112c40). */
+ *   h5..h11: Clip 0x16 (s. BF_SM_SPRUNG; Runde 2 Clip 0x12 @0x80113138, bis 2026-11-14 Clip 0x0E = GRIFF 1 vorn @0x80112c40). */
 #define BF_SM_ANGRIFF       0x17
 #define BF_SM_ANGRIFF_H0    8          /* Clipbild bei h0 */
 /* Nachbesserung 2026-11-14 (Pruefer Mangel 6 "Gleitpose geduckt und tief statt gestreckt und vorgeneigt", Koordinator: Rumpf
@@ -293,10 +293,28 @@ static int32_t s_griff_y = BF_SM_GRIFF_Y;   /* aktueller Griffpunkt (bf_klauenzi
  * (richtet sich beim Gleiten auf); Clip 0x12 = GRIFF 1 hinten, Zugriff (P0: `ori v0,zero,0x12` @0x80113138 / `sb v0,148(v1)`
  * @0x8011313c, STAGE5; STAGE4 @0x80112fb8/bc) B0..B6 44 -> 61 Grad, Fuss -996 -> -760 (nachgezogen), Arm 4 vorn auf/ueber
  * Schulterhoehe (y -122..-434), Arm 18 vorn unten; Hoehe 3000..3170 wie 0x0E. Rumpf (Schultermitte projiziert, 480er Zeilen) h5..h10
- * 236..251 (0x0E 215..246; Video-Rumpf laut Sichtpruefung PSX-y 105..120 = 216..246): die Rumpfhoehe passt schon. Jetzt h5..h11
- * Clip 0x12 B0..B6 (1 Bild je Takt), Wechsel mit Ueberblendung. */
-#define BF_SM_ZUGRIFF       0x12
-#define BF_H_ZUGRIFF        5          /* Video h5: neigt sich vor */
+ * 236..251 (0x0E 215..246; Video-Rumpf laut Sichtpruefung PSX-y 105..120 = 216..246): die Rumpfhoehe passt schon. Runde 2:
+ * h5..h11 Clip 0x12 B0..B6 (1 Bild je Takt) - Pruefer Runde 2 N5: "aufrecht am Boden"; ersetzt durch BF_SM_SPRUNG. */
+#define BF_H_ZUGRIFF        5          /* Video h5: Absprung (Spalt Fuss -> Boden 5 Bildpunkte, s. unten) */
+/* Runde 3 (Pruefer Runde 2 N5 "Anflug immer noch aufrecht am Boden ... im Video ein schraeger Sprung in der Luft mit erhobenen
+ * Armen"; Koordinator: zuerst einen Original-Sprungclip suchen). Alle Clip-Setzer der EM2B-Maschine in STAGE5.BIN (sb v0,148(v1)
+ * nach ori v0,zero,N, 0x80111000..0x80117c44) durchgesehen; der einzige Sprung ist Clip 0x16 im Wandsprung: `ori v0,zero,0x16`
+ * @0x80113714 / `sb v0,148(v1)` @0x80113718 (B0, +0x8f = 0 @0x80113738), am Clipende B35 (`ori v0,zero,0x23` @0x801138a0)
+ * kippt die Wurzel um 90 Grad (+0x6c -= 1024 @0x801138dc) und springt 2014 hoch (@0x80113968) an die Wand. ATTACK2 0x17
+ * (@0x8011402c) schlaegt nur im Stand (Trefferpruefung ab B11 @0x80114124, keine Hoehenaenderung). Clip 0x16 B4..B13: Beine
+ * 330..700 HINTER dem Aktorpunkt, Rumpf schraeg nach vorn oben, Arme vorn ueber dem Rumpf; B24..B28 aufrecht, Arme hoch.
+ * Video (Augen-Agent auf Gitterblaettern, 640x480, Achse = unterster Fuss -> Rumpfoberkante, + = zu Birkin): h5 Absprung
+ * (Spalt 5, Achse +29), h6..h9 in der Luft (Spalt 16 / 20 / 16 / 11, Achse +32 / +36 / +38 / +30), h10/h11 aufrecht an Birkins
+ * Brust (Spalt 4 / 4, Achse +8 / +7); der Schatten liegt 65..120 rechts der Fuesse (= Beine hinter dem Aktorpunkt wie in 0x16).
+ * Jetzt h5..h11 Clip 0x16 B4 -> B28 in Clipreihenfolge, 4 Bilder je Takt: Anfang B4 (Achse +31 am Port-Ort h5, Video +29),
+ * Ende B28 (+5, Video +7). Hoehe je Takt (k_sm_sprung_y) so, dass der Spalt unterster Beinpunkt -> Boden dem Video gleicht
+ * (Rechnung: Mesh in Pose, Szenenkamera rueck.py; h11 +94 auf 0 begrenzt = Spalt 9 statt 4). Gemessen gegen das Video
+ * (Mittel h5..h11): Fuss-x 93 -> 50, Achse 28.8 -> 12.4 Grad, Rumpfoberkante-x 26 -> 28; die Rumpfoberkante liegt 58 statt 15
+ * Bildpunkte unter der des Videos (das Video-Modell ist ~1.25-fach so lang: Fuss -> Rumpfoberkante 257 statt 205). */
+#define BF_SM_SPRUNG        0x16
+#define BF_SM_SPRUNG_B0     4          /* Clipbild bei h5 */
+#define BF_SM_SPRUNG_TEMPO  4          /* Bilder je Takt: B4 h5 .. B28 h11 */
+static const int16_t k_sm_sprung_y[7] = { -406, -605, -375, -381, -391, -178, 0 };   /* h5..h11, s. oben */
 /* Gleitbahn: waagerecht durch die Schattenpunkte des Videos (Rueckprojektion H_hangar.md Abschnitt 3: h0..2 (29..31,190),
  * h4 (49,194), h6 (71,193), h8 (100,192)), zwischen ihnen linear = 448 / 358 / 485 Einheiten je Bild; ab h8 steht er (Video
  * Rumpf x 100..105 h8..h12) bis zum Heben. Hoehe: Video tiefster Punkt (Bogen z_video_h0-8 / z_video_h9-17, zwei Lesungen)
@@ -314,9 +332,6 @@ static int32_t s_griff_y = BF_SM_GRIFF_Y;   /* aktueller Griffpunkt (bf_klauenzi
 static const int32_t k_sm_gleit[][3] = { { 2, BF_SM_X, BF_SM_Z }, { 4, -11974, -18287 }, { 6, -11342, -18623 }, { 8, -10497, -19102 },
                                          { 9, -10110, -19321 }, { 10, -9908, -19435 }, { 11, -10103, -19325 } };
 static const int32_t k_sm_zurueck[][3] = { { 12, -10447, -19130 }, { 13, -10705, -18984 } };   /* zurueckgedrueckt, s. oben */
-#define BF_SM_GLEIT_Y    (-245)
-#define BF_H_GLEIT_AB    6
-#define BF_H_GLEIT_BIS   10
 #define BF_H_HEBEN_AB    12         /* Heben ab h12 ... */
 #define BF_H_GEHALTEN    18         /* ... bis h18 (Video Oberkante h17 60, h18 56: oben), dann haengt der Griffpunkt auf der Hand;
                                      * Verlauf geglaettet (bf_heben_w) */
@@ -1070,7 +1085,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     } else if (h < BF_H_BERUEHRUNG) {                                     /* Gleiten h2..h11 (Kopf "Ansprung") */
         int i = 0;
         if (h < BF_H_ZUGRIFF) bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0 + h);              /* B10 h2 .. B12 h4 */
-        else bf_bild(m, BF_SM_ZUGRIFF, h - BF_H_ZUGRIFF);                /* Clip 0x12 B0 h5 .. B6 h11 */
+        else bf_bild(m, BF_SM_SPRUNG, BF_SM_SPRUNG_B0 + BF_SM_SPRUNG_TEMPO * (h - BF_H_ZUGRIFF));   /* 0x16 B4 h5 .. B28 h11 */
         m->rot_y = bf_blick(m, b->x, b->z);
         while (i < BF_N(k_sm_gleit) - 2 && h >= k_sm_gleit[i + 1][0]) i++;
         {
@@ -1078,7 +1093,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
             const int32_t u = h >= k_sm_gleit[i + 1][0] ? 4096 : (h - k_sm_gleit[i][0]) * 4096 / span;
             m->x = bf_mix(k_sm_gleit[i][1], k_sm_gleit[i + 1][1], u);
             m->z = bf_mix(k_sm_gleit[i][2], k_sm_gleit[i + 1][2], u);
-            m->y = (h >= BF_H_GLEIT_AB && h <= BF_H_GLEIT_BIS) ? BF_SM_GLEIT_Y : 0;
+            m->y = h >= BF_H_ZUGRIFF ? k_sm_sprung_y[h - BF_H_ZUGRIFF] : 0;   /* Sprung (Kopf BF_SM_SPRUNG) */
         }
     } else if (h < BF_H_LOS) {                                            /* gehalten bis zum Loslassen (NB2-Kopplung) */
         if (h >= BF_H_STIRBT) {                                           /* tot: Haltung erstarrt (Kopf BF_SM_WEH) */
