@@ -232,7 +232,7 @@ static void test_hangar(unsigned raum)
                 if (d > sprung_max) sprung_max = d;
             }
             mx = m->x; my = m->y; mz = m->z;
-            if (ph == 3 && griff_takte >= 5) {   /* griff_takte 1 = h12 -> 5 = h16 */
+            if (ph == 3 && griff_takte >= 7) {   /* griff_takte 1 = h12 -> 7 = h18 (BF_H_GEHALTEN) */
                 int32_t hand[3], griff[3];
                 re15_enemy_bone_world_pos(b, 15, hand);
                 {   static const int32_t gofs[3] = { 0, 485, 0 };   /* Griffpunkt: Knochen 19 + (0,485,0), birkin_formen.c BF_SM_GRIFF_* */

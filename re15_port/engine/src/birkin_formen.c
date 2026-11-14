@@ -277,11 +277,23 @@ void re15_bf_morph_zu_g5(int slot)
  * h3..h5 am Boden (197..200), h6..h10 5..10 Bildpunkte darueber (Mittel 7 = Weltabstand 245 in Blicktiefe ~7850,
  * tools/r41_hangar/rueck.py), h11/h12 wieder am Boden (194..197) -> Aktor-y 0 bis h5, -245 h6..h10, 0 ab h11 (Clip 0x0E steht
  * mit den Fuessen auf y 0). */
-static const int32_t k_sm_gleit[][3] = { { 2, BF_SM_X, BF_SM_Z }, { 4, -11974, -18287 }, { 6, -11342, -18623 }, { 8, -10497, -19102 } };
+/* Nachbesserung 2026-11-14 (Pruefer Maengel 3 und 4: "Stillstand h9..h13 ohne Kontakt", "Hochreissen zu schnell"): vorher stand
+ * er h8..h12 an derselben Stelle (Port-Mitte x 226..229, 640er) etwa 3200 vor Birkin und wurde h13..h16 in 4 Takten zu je 600
+ * hochgerissen (Oberkante h13..h16 177 / 140 / 81 / 61: bis 59 Zeilen je Bild). Video (Pruefer sm_bahn, Mitte x, 640er): h8 205.6,
+ * h9 231.5, h10 245.0 (fliegt in Birkin hinein), h11 232.0, h12 209.0, h13 191.8 (zurueckgedrueckt), dann gehoben bis h17
+ * (Oberkante h12..h17 182 / 161 / 142 / 103 / 85 / 60). Die Gleitrichtung zeigt fast genau nach Bild-rechts (Skalarprodukt mit
+ * der Kamera-Rechten 0.996), 1 Bildpunkt (640er) = 17.2 Einheiten in Blicktiefe 7936 (rueck.py) -> Schritte +445, +232, -224,
+ * -396, -296 entlang der Gleitrichtung (845,-479)/971: h9 (-10110,-19321), h10 (-9908,-19435), h11 (-10103,-19325),
+ * h12 (-10447,-19130), h13 (-10705,-18984). */
+static const int32_t k_sm_gleit[][3] = { { 2, BF_SM_X, BF_SM_Z }, { 4, -11974, -18287 }, { 6, -11342, -18623 }, { 8, -10497, -19102 },
+                                         { 9, -10110, -19321 }, { 10, -9908, -19435 }, { 11, -10103, -19325 } };
+static const int32_t k_sm_zurueck[][3] = { { 12, -10447, -19130 }, { 13, -10705, -18984 } };   /* zurueckgedrueckt, s. oben */
 #define BF_SM_GLEIT_Y    (-245)
 #define BF_H_GLEIT_AB    6
 #define BF_H_GLEIT_BIS   10
-#define BF_H_HEBEN_AB     12         /* Video h12 Fuss am Boden, Rumpf y 115; h13 110, h14 95, h15 80, h16 65: Heben h13..h16 */
+#define BF_H_HEBEN_AB    12         /* Heben ab h12 ... */
+#define BF_H_GEHALTEN    18         /* ... bis h18 (Video Oberkante h17 60, h18 56: oben), dann haengt der Griffpunkt auf der Hand;
+                                     * Verlauf geglaettet (bf_heben_w) */
 /* Zeitplan, h = Videobild (0 = erstes Bild in Cut 12). */
 #define BF_H_SPRUNG_AB    2
 #define BF_H_BERUEHRUNG  12
@@ -729,22 +741,38 @@ static void bf_klauenziel(re15_actor_t *b, re15_actor_t *m, int32_t z[3])
     z[2] -= g[2] - m->z;
 }
 
-/* Heben h13..h16 (Kopf "Ansprung"): Aktorlage, in der der Griffknochen bei h16 auf der Sichelhand liegt, im Takt h vorausberechnet
- * (nur Abfrage an Kopien). Birkin bei h16: Clip 0x0B Bild k_birkin_bild(h16), Gier k_birkin_gier(h16), Lage fest. Spider-Man bei
- * h16: Halte-Clip 1 Bild je Takt weiter, Gier = Blick auf Birkin aus der Lage NACH Takt h15 (so rechnet der Takt h16:
- * bf_blick vor bf_klauenziel) - die haengt selbst vom Ziel ab, daher drei Durchlaeufe. Im Takt h15 ist die Vorausberechnung
- * damit genau die Lage, die der Takt h16 mit bf_klauenziel festsetzt (kein Korrektursprung bei h16). */
+/* Heben (Kopf k_sm_gleit): Aktorlage, in der der Griffpunkt bei BF_H_GEHALTEN auf der Sichelhand liegt, im Takt h
+ * vorausberechnet (nur Abfrage an Kopien). Birkin dann: Clip 0x0B Bild k_birkin_bild, Gier k_birkin_gier, Lage fest. Spider-Man:
+ * Halte-Clip 1 Bild je Takt weiter, Gier = Blick auf Birkin aus der Lage NACH dem Takt davor (so rechnet der Griff-Takt: bf_blick
+ * vor bf_klauenziel) - die haengt selbst vom Ziel ab, daher drei Durchlaeufe; im letzten Hebe-Takt ist die Vorausberechnung damit
+ * genau die Lage, die der Griff-Takt festsetzt (kein Korrektursprung). */
+/* Grundlage des Hebens: Lage am Boden (zurueckgedrueckt) im Takt h. */
+static void bf_heben_basis(int h, int32_t p[3])
+{
+    const int i = h <= k_sm_zurueck[0][0] ? 0 : 1;
+    p[0] = k_sm_zurueck[i][1]; p[1] = 0; p[2] = k_sm_zurueck[i][2];
+}
+/* Anteil des Hubs im Takt h (0 bei BF_H_HEBEN_AB, 4096 bei BF_H_GEHALTEN): Mittel aus gleichmaessig und smoothstep (bf_glatt) -
+ * Anfangs-/Endsteigung halb, Mitte 1.25-fach. Lauf "h" mit reinem smoothstep: Oberkante h13..h18 196 / 177 / 129 / 77 / 63 / 56,
+ * bis 52 Zeilen je Bild (Video hoechstens 39, Pruefer). */
+static int32_t bf_heben_w(int h)
+{
+    const int32_t u = (h - BF_H_HEBEN_AB) * 4096 / (BF_H_GEHALTEN - BF_H_HEBEN_AB);
+    return (u + bf_glatt(u)) / 2;
+}
 static void bf_heben_ziel(const re15_actor_t *b, const re15_actor_t *m, int h, int32_t z[3])
 {
-    const int h16 = BF_H_BERUEHRUNG + 4;
+    const int hg = BF_H_GEHALTEN;
+    int32_t g[3];
     re15_actor_t bb = *b, mm = *m;
-    bb.motion = BF_CLIP_GRIFF; bb.anim_frame = (uint8_t)bf_tab(k_birkin_bild, BF_BILD_N, h16);
-    bb.rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, 4, h16)) & 0x0fff);
-    mm.anim_frame = (uint8_t)(m->anim_frame + (h16 - h));
+    bb.motion = BF_CLIP_GRIFF; bb.anim_frame = (uint8_t)bf_tab(k_birkin_bild, BF_BILD_N, hg);
+    bb.rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, 4, hg)) & 0x0fff);
+    mm.anim_frame = (uint8_t)(m->anim_frame + (hg - h));
+    bf_heben_basis(hg - 1, g);
     for (int it = 0; it < 3; it++) {
+        const int32_t w = bf_heben_w(hg - 1);                            /* Lage nach Takt hg-1 */
         bf_klauenziel(&bb, &mm, z);
-        mm.x = m->x + (int32_t)((int64_t)(z[0] - m->x) * (h16 - h) / (h16 + 1 - h));   /* Lage nach Takt h15 */
-        mm.z = m->z + (int32_t)((int64_t)(z[2] - m->z) * (h16 - h) / (h16 + 1 - h));
+        mm.x = bf_mix(g[0], z[0], w); mm.z = bf_mix(g[2], z[2], w);
         mm.rot_y = bf_blick(&mm, b->x, b->z);
     }
     bf_klauenziel(&bb, &mm, z);
@@ -1015,21 +1043,17 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         s_h.wvor[0] = m->x; s_h.wvor[1] = m->y; s_h.wvor[2] = m->z;       /* Neuaufbau: Lage vor dem Takt (Handtempo) */
         m->rot_y = bf_blick(m, b->x, b->z);
         bf_klauenziel(b, m, k);
-        /* Heben h13..h16 (Kopf "Ansprung", Video Rumpf y 122 -> 73, je Bild 9..13 Bildpunkte): geradlinig und gleich schnell
-         * von der Lage beim Fangen (h12) zur Lage, in der der Griffknochen bei h16 auf der Sichelhand liegt (je Takt neu
-         * vorausberechnet, bf_heben_ziel; die einmalige Vorausberechnung bei h12 lag 228 daneben -> Knick 10 Grad und Schritt 683
-         * bei h16, jetzt 4 x 665 ohne Knick); ab dem 4. Haltetakt (Video h16) haengt der Griffknochen JEDEN Takt genau
-         * auf der Sichelhand (Runde 41 SF Neuaufbau ab NB2, Nutzer 2026-11-03: Fangen und Wurf "vollkommen asynchron").
-         * Vorher zog ein geglaetteter Schritt (halber Abstand, hoechstens 600 je Takt) ihn ab h12 heran - von der neuen Fanglage
-         * am Boden aus waere er bei h16 noch ~300 von der Hand entfernt gewesen und dann gesprungen; ein Bruchteil der Strecke
-         * zur mitsteigenden Hand (Laeufe T2 v1/v2) hob immer schneller (421 .. 953 je Takt, Bild h13/h14 noch unten). */
-        if (h > BF_H_HEBEN_AB && h < BF_H_BERUEHRUNG + 4) {              /* je Takt: Lage am Griff bei h16 neu vorausberechnen */
-            int32_t z[3];
-            bf_heben_ziel(b, m, h, z);
-            m->x += (z[0] - m->x) / (BF_H_BERUEHRUNG + 5 - h);          /* 1/4, 1/3, 1/2 der Reststrecke bei h13, h14, h15 */
-            m->y += (z[1] - m->y) / (BF_H_BERUEHRUNG + 5 - h);
-            m->z += (z[2] - m->z) / (BF_H_BERUEHRUNG + 5 - h);
-        } else if (h >= BF_H_BERUEHRUNG + 4) { m->x = k[0]; m->y = k[1]; m->z = k[2]; }
+        /* Heben h12..h18 (Kopf k_sm_gleit): vom zurueckgedrueckten Bodenpunkt zur Lage am Griff bei h18 (je Takt neu
+         * vorausberechnet, bf_heben_ziel, ohne Korrektursprung), Anteil geglaettet (bf_heben_w); ab h18 haengt der Griffpunkt
+         * JEDEN Takt genau auf der Sichelhand (Runde 41 SF Neuaufbau ab NB2, Nutzer 2026-11-03: Fangen und Wurf "vollkommen
+         * asynchron"). Vorher h13..h16 4 x ~600 in gleichen Schritten, Griff ab h16. */
+        if (h < BF_H_GEHALTEN) {                                          /* zurueckgedrueckt und gehoben (Kopf k_sm_gleit) */
+            int32_t z[3], g[3];
+            const int32_t w = bf_heben_w(h);
+            bf_heben_basis(h, g);
+            bf_heben_ziel(b, m, h, z);                                    /* Lage am Griff bei h18, je Takt neu */
+            m->x = bf_mix(g[0], z[0], w); m->y = bf_mix(g[1], z[1], w); m->z = bf_mix(g[2], z[2], w);
+        } else { m->x = k[0]; m->y = k[1]; m->z = k[2]; }
         if (m->y > 0) m->y = 0;                                           /* Hand tief im Wurf: nicht unter den Boden */
     } else if (h < BF_H_WEG) {                                            /* Neuaufbau ab NB2: passiv geworfen (Kopf k_wurf_bahn) */
         const int hb = h + BF_BILD_VERSATZ;
