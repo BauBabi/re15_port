@@ -1,5 +1,5 @@
 {
- "quelle": "schwanz_r8.py suche am Eingang 07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95 (Stand Runde 7e, = Ausgang Stufe f); Runde 8b: Fleisch schraeg (Original-Zeile 482), Band rosa (Original-Zeile 480, Seite 0); Protokoll SF_belege/v8/runde8b/suche_r8b.txt; Fleisch-Breite: suche 21, im Bau 20 (Runde 8b2: bei kontinuierlichem v lag mit 21 nach der Rundung 1 Texel ausserhalb der Original-Nutzung, riegel_schwanz_r8 R8e (3))",
+ "quelle": "schwanz_r8.py suche am Eingang 07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95 (Stand Runde 7e, = Ausgang Stufe f); Runde 8b: Fleisch schraeg (Original-Zeile 482), Band rosa (Original-Zeile 480, Seite 0); Protokoll SF_belege/v8/runde8b/suche_r8b.txt; Fleisch-Breite: suche 21, im Bau 20 (Runde 8b2: bei kontinuierlichem v lag mit 21 nach der Rundung 1 Texel ausserhalb der Original-Nutzung, riegel_schwanz_r8 R8e (3)); Runde 8c: fleisch = Feld C1 (Original-Zeile 480 = Asset 493, Seite 0, u 54-65 v 48-57) und ring = Feld RB (Zeile 480, Seite 0, u 93-100 v 10-17, hell bei u 100), ausgewaehlt nach Messung im Spielbild (Protokoll SF_belege/v8/runde8c/); band = Feld der Runde 8b, nur noch fuer den Band-Modus ohne Ring",
  "felder": {
   "grau": {
    "16": [
@@ -46,17 +46,28 @@
    ]
   },
   "fleisch": {
-   "v0": 114,
-   "v1": 123,
-   "u_v0": 1,
-   "u_v1": 19,
-   "breite": 20
+   "v0": 48,
+   "v1": 57,
+   "u_v0": 54,
+   "u_v1": 54,
+   "breite": 12,
+   "zeile": 493,
+   "seite": 0
   },
   "band": [
    58,
    73,
    19,
    48
-  ]
+  ],
+  "ring": {
+   "u0": 93,
+   "u1": 100,
+   "v0": 10,
+   "v1": 17,
+   "richt": "u-",
+   "zeile": 493,
+   "seite": 0
+  }
  }
 }

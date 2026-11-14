@@ -44,6 +44,13 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
   07b6703f; Felder aus "suche"):
   grau  = Rueckensektor, Nadel, Wurzelflaechen ueber der Grenze: Zeile 487, Feld je Glied = groesstes Rechteck in den Texeln, die die
           Oberseite (Zeile 487) dieses Glieds im Eingang benutzt;
+  Runde 8c (Koordinator 14.11., Nutzer waehlt Probe b: "wobei das Original Video der Schwanz noch etwas heller ist und nicht ganz so rot"):
+  bauch = Original-Zeile 480 (Asset 493), Seite 0, Feld C1 u 54-65 v 48-57 (schwanz_r8.json; ausgewaehlt unter 18 Original-Feldern nach der
+          Messung im Spielbild F255-F320, Lab-Abstand zur Video-Mitte des Pruefers gruenblut 5,1 statt 8,7; SF_belege/v8/runde8c); grosse
+          gefleckte Felder ergaben je Bild sehr verschiedene Toene (nur ein Teil des Felds sichtbar), gespiegelte Abbildung ein Augenmuster;
+  band  = Probe b: Ring umlaufend auf allen 11 Sektoren der Fugen (Mantel S-C / D-E und Deckel), Original-Zeile 480 (Asset 493), Seite 0,
+          Feld RB u 93-100 v 10-17 mit Verlauf hell (u 100, am Gelenk) -> dunkel (u 93, am vollen Querschnitt), ohne Texel unter L* 18;
+  Bis Runde 8b:
   bauch = Bauchsektor: Original-Zeile 482 (Asset 495), schraeges Feld (Parallelogramm, suche(): v 114-123, Zeilenanfang u 1 -> 19, Breite 21, im Bau 20;
           Median L* 25,7 C* 24,2, hellere Partie des Original-Unterarm-Fleischs) - groesser als das 17 x 7-Feld der Runde 8 ("flaechig wie gemalt",
           Pruefer pr8); einmal quer ueber den Bauch, einmal laengs je Glied (je Glied gespiegelt). Gependelt je Flaeche (Runde 8b, erster Bau)
@@ -51,7 +58,7 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
   band  = Probe b: die zwei mittleren Bauchfelder (BAND_J) in der Fuge (zwischen E und D bzw. S und C, dazu die Deckel): Original-Zeile 480
           (Asset 493, bytegleich), Seite 0, Feld u 58-73 v 19-48 (>= 60 % hellrot/rosa, Median L* 48,4 C* 17,4 h 22; Runde 8: Zeile 481 fast weiss
           L* 74 = "Klebeband", Pruefer pr8); Probe a: ohne Band (Fleisch).
-  Proben (Koordinator: nur noch zwei, wenn sie sich sichtbar unterscheiden): a ohne Baender, b mit rosa Baendern (STANDARD).
+  Proben (Koordinator: nur noch zwei, wenn sie sich sichtbar unterscheiden): a ohne Baender, b mit rosa Baendern (STANDARD; Runde 8c: Ringe).
 """
 import os
 import sys
@@ -111,8 +118,9 @@ ZWISCHEN = {1: (0.3733, 0.6267), 2: (0.31, 0.69), 3: (0.3733, 0.6267), 4: (0.373
                                       # (Runde 8b2: Fleisch nicht mehr gependelt, siehe uv_setzen; die Ringe bleiben fuer die Biegung)
 
 # ------------------------------------------------------------------ Farbe (PORT-WAHL; Felder aus suche(), Beleg SF_belege/v8/runde8b/suche_r8b.txt)
-ZEILE_GRAU, ZEILE_FLEISCH, ZEILE_BAND = 487, 495, 493      # 487 = Schwanz-Oberseite seit V6; 495 = Original 482; 493 = Original 480 (bytegleich)
-SEITE_FLEISCH, SEITE_BAND = 2, 0
+ZEILE_GRAU, ZEILE_FLEISCH, ZEILE_BAND = 487, 493, 493      # 487 = Schwanz-Oberseite seit V6; 493 = Original 480 (bytegleich); Runde 8c: Bauch und
+SEITE_FLEISCH, SEITE_BAND = 0, 0                            # Ring beide auf 493 Seite 0 (Felder C1 / RB, schwanz_r8.json); bis Runde 8b Bauch 495 = Original 482
+ZEILE_WURZEL = 495                                          # die 14 Wurzelflaechen von Mesh 16 (Stufe w/u) behalten Zeile 495 und ihre UV
 # Runde 8b (Pruefer pr8 (B)): Band hellrot/rosa statt fast weiss - Original-Zeile 480, Seite 0, Feld aus suche() (L* 40-56, C* 12-28, Farbton 5-35
 # >= 60 %, Klasse des Pruefer-Werkzeugs b_bandfeld.py); nur die beiden mittleren Bauchfelder (j 10 / 0) der Fuge, die aeusseren bleiben Fleisch
 # ("nicht als Ring ueber die ganze Breite wie Klebeband"). Fleisch: schraeges Feld (Parallelogramm) der Original-Zeile 482 (suche()), um den Bauch
@@ -121,8 +129,15 @@ BAND_J = (10, 0)
 PENDEL = {9: 0.0, 10: 1.0, 0: 0.0, 1: 1.0, 2: 0.0}   # Bauch-Ecke j -> Lage im Feld quer (0 / 1), Spiegelung je Flaeche
 FELD_SATT = (4, 37, 96, 106)          # (u0, u1, v0, v1) Seite 2 = unterseite_v8.json fleisch_r7b "feld" (heutiger Ton)
 # Felder "grau" (je Glied), "gedeckt", "band": schwanz_r8.json (Ergebnis von suche() am Eingang 07b6703f, Protokoll runde8/suche.txt)
-FARBEN = {'a': dict(fleisch='gedeckt', band=False, name='gedeckt, ohne Baender'),
-          'b': dict(fleisch='gedeckt', band=True, name='gedeckt, rosa Baender')}
+FARBEN = {'a': dict(fleisch='gedeckt', band=False, ring=False, name='gedeckt, ohne Baender'),
+          'b': dict(fleisch='gedeckt', band=True, ring=True, name='gedeckt, weiche rosa Ringe an den Gliedfugen')}
+# Runde 8c (Koordinator 14.11., Nutzer waehlt b: "wobei das Original Video der Schwanz noch etwas heller ist und nicht ganz so rot"; Pruefer
+# gruenblut: Port-Bauch Saettigung 0,50-0,55 gegen Video 0,38-0,41, Baender "2-4 kleine Flecken seitlich, keine weichen Ringe an den Gliedfugen"):
+# - Bauch: ein anderes ORIGINAL-Feld (schwanz_r8.json felder.fleisch mit "zeile"/"seite"), ausgewaehlt nach der Vorhersage im Spiellicht
+#   (x12_vorrat.py / Spiellauf), keine Farbverschiebung;
+# - Probe b: Band-Klasse auf ALLEN 11 Sektoren der Fugen (Mantel S-C und D-E = KERBE_LAENGE x L um jedes Gelenk, dazu die Deckel), UV aus dem
+#   Ring-Feld felder.ring (Original-Zeile 480 = Asset 493, Seite 0): quer gespiegelt |theta| / 180 (Bauch u0 -> Ruecken u1), laengs vom hellen
+#   Ende am Gelenk (t 0) zum dunklen Ende am vollen Querschnitt (t 1) = weicher Verlauf aus den Original-Texeln des Felds.
 STANDARD = 'b'
 FLEISCH_V_AB = 114                    # Runde 8b: schraeges Fleischfeld ab Zeile 114 (n6b: ab 111 Median C* 24,4 / L* 23,7, ab 114 C* 24,2 / L* 25,7 =
                                       # naeher am Ton der Probe a L* 26,8 C* 20,3; die satte Partie v 93-112 ist Probe c, verworfen)
@@ -516,10 +531,38 @@ def _uv_feld(feld, s_um, s_lang):
 BAUCH_J = (9, 10, 0, 1)                # Sektoren (Flaeche j = Ecke j -> j+1) zwischen -theta_b und +theta_b
 
 
+def klasse_uv(uv, felder=None):
+    """Runde 8c: Flaechenklasse einer gebauten Flaeche aus Zeile, Seite und UV -> 'grau' / 'bauch' / 'band' / None (fuer die Riegel: Bauch und
+    Ring liegen beide auf Zeile 493, getrennt durch ihre Felder in schwanz_r8.json)."""
+    felder = felder or felder_laden()
+    z, seite = (uv[2] >> 6) & 0x1FF, uv[5] & 0xF
+    us, vs = uv[0::3], uv[1::3]
+    if z == ZEILE_GRAU:
+        return 'grau'
+    fr = felder.get('ring')
+    if fr and (z, seite) == (fr['zeile'], fr['seite']) and all(fr['u0'] <= u <= fr['u1'] for u in us) and all(fr['v0'] <= v <= fr['v1'] for v in vs):
+        return 'band'
+    ff = felder['fleisch']
+    if (z, seite) == (int(ff.get('zeile', ZEILE_FLEISCH)), int(ff.get('seite', SEITE_FLEISCH))):
+        ulo, uhi = min(ff['u_v0'], ff['u_v1']), max(ff['u_v0'], ff['u_v1']) + ff['breite'] - 1
+        if all(ulo <= u <= uhi for u in us) and all(ff['v0'] <= v <= ff['v1'] for v in vs):
+            return 'bauch'
+    return None
+
+
 def klasse_von(f, farbe, g):
     """Flaechenklasse 'grau' / 'bauch' / 'band' (Kopf der Datei; Runde 8b: Band nur in den mittleren Bauchfeldern BAND_J)."""
     art, e, (ra, rb), j = f
-    if art == 'spitze' or j not in BAUCH_J:
+    if art == 'spitze':
+        return 'grau'
+    if farbe.get('ring') and farbe['band']:
+        if g == 6:
+            fuge_r = art == 'deckel_anf' or (art == 'mantel' and 'S' in (ra, rb))
+        else:
+            fuge_r = art.startswith('deckel') or (art == 'mantel' and bool({ra, rb} & {'S', 'E'}))
+        if fuge_r:
+            return 'band'                                  # Runde 8c: Ring umlaufend (alle Sektoren j)
+    if j not in BAUCH_J:
         return 'grau'
     if g == 6:
         fuge = art == 'deckel_anf' or (art == 'mantel' and 'S' in (ra, rb))
@@ -590,16 +633,39 @@ def uv_setzen(g, V_, F, ringe, info, farbe, felder, L):
                 sl = s_lang if g % 2 == 0 else 1.0 - s_lang
                 uv_e.append(fleisch_uv(feld_f, sq, sl))
             else:
-                # Band: quer gependelt ueber die zwei mittleren Felder, laengs v0 am Gelenkring (S / E), v1 am vollen Querschnitt (C / D)
                 nm = [n_ for n_ in (ra, rb) if info['pos'][n_] <= i < info['pos'][n_] + S_] if i in ring_k else [ra]
                 am_gelenk = 1.0 if (nm and nm[0] in ('S', 'E')) else 0.0
-                uv_e.append(_uv_feld(feld_band, s_um, 1.0 - am_gelenk))
+                if farbe.get('ring'):
+                    # Runde 8c: Ring - quer gespiegelt |theta| / 180 (Bauch 0, Ruecken 1), laengs t 0 am Gelenk (helles Ende des Felds) -> 1 am vollen
+                    # Querschnitt (dunkles Ende). "richt" = Achse und Seite des hellen Endes im Feld: v+ hell bei v0, v- bei v1, u+ bei u0, u- bei u1
+                    ts = th if th <= 180.0 else th - 360.0
+                    fr = felder['ring']
+                    t_ = 1.0 - am_gelenk
+                    q_ = abs(ts) / 180.0
+                    if fr['richt'][0] == 'v':
+                        vv = fr['v1'] - t_ * (fr['v1'] - fr['v0']) if fr['richt'] == 'v-' else fr['v0'] + t_ * (fr['v1'] - fr['v0'])
+                        uv_e.append((fr['u0'] + q_ * (fr['u1'] - fr['u0']), vv))
+                    else:
+                        uu = fr['u1'] - t_ * (fr['u1'] - fr['u0']) if fr['richt'] == 'u-' else fr['u0'] + t_ * (fr['u1'] - fr['u0'])
+                        uv_e.append((uu, fr['v0'] + q_ * (fr['v1'] - fr['v0'])))
+                else:
+                    # Band (Runde 8b): quer gependelt ueber die zwei mittleren Felder, laengs v0 am Gelenkring (S / E), v1 am vollen Querschnitt (C / D)
+                    uv_e.append(_uv_feld(feld_band, s_um, 1.0 - am_gelenk))
         out.append((f, [(int(round(u)), int(round(v))) for u, v in uv_e], kl))
     return out
 
 
-def uv_eintrag(uvl, kl):
-    zeile, seite = {'grau': (ZEILE_GRAU, 2), 'bauch': (ZEILE_FLEISCH, SEITE_FLEISCH), 'band': (ZEILE_BAND, SEITE_BAND)}[kl]
+def zeilen_seiten(felder, farbe):
+    """Klasse -> (Asset-Zeile, Seite). Runde 8c: Bauch aus felder.fleisch "zeile"/"seite" (Standard 495 / 2), Ring aus felder.ring."""
+    ff = felder['fleisch']
+    zs = {'grau': (ZEILE_GRAU, 2), 'bauch': (int(ff.get('zeile', ZEILE_FLEISCH)), int(ff.get('seite', SEITE_FLEISCH))), 'band': (ZEILE_BAND, SEITE_BAND)}
+    if farbe.get('ring'):
+        zs['band'] = (int(felder['ring']['zeile']), int(felder['ring']['seite']))
+    return zs
+
+
+def uv_eintrag(uvl, kl, zs=None):
+    zeile, seite = (zs or {'grau': (ZEILE_GRAU, 2), 'bauch': (ZEILE_FLEISCH, SEITE_FLEISCH), 'band': (ZEILE_BAND, SEITE_BAND)})[kl]
     n = len(uvl)
     x = [0] * (9 if n == 3 else 12)
     for k, (u, v) in enumerate(uvl):
@@ -740,6 +806,7 @@ def stufe(blob, farbe=STANDARD, prot=None, felder=None):
             ach[i] = {'ende': Y, 'spitze': Y, 'anfang': -Y, 'kegel': np.array(alt[b]['n'][34][:3], float) if g == 0 else -Y}[nm]
         N = normalen(V_, F, ach)
         uvs = uv_setzen(g, V_, F, ringe, info, fa, felder, L)
+        zs = zeilen_seiten(felder, fa)
         m = dict(v=[[int(round(x)) for x in p] + [0] for p in V_], n=[n + [0] for n in N], tf=[], tuv=[], qf=[], quv=[])
         zahl = {}
         if g == 0:
@@ -751,9 +818,9 @@ def stufe(blob, farbe=STANDARD, prot=None, felder=None):
             zahl['wurzel'] = len(m['tf']) + len(m['qf'])
         for (art, e, _r, _j), uvl, kl in uvs:
             if len(e) == 4:
-                m['qf'].append([x for i in e for x in (i, i)]); m['quv'].append(uv_eintrag(uvl, kl))
+                m['qf'].append([x for i in e for x in (i, i)]); m['quv'].append(uv_eintrag(uvl, kl, zs))
             else:
-                m['tf'].append([x for i in e for x in (i, i)]); m['tuv'].append(uv_eintrag(uvl, kl))
+                m['tf'].append([x for i in e for x in (i, i)]); m['tuv'].append(uv_eintrag(uvl, kl, zs))
             zahl[kl] = zahl.get(kl, 0) + 1
         ms[b] = m
         info_alle[b] = dict(ecken=len(m['v']), dreiecke=len(m['tf']), vierecke=len(m['qf']), klassen=zahl,

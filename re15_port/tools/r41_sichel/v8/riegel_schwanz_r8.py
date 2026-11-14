@@ -17,12 +17,14 @@ R8c Laenge/Spitze Runde 8b ("nur mit der sichtbaren Laenge"): Mittellinienlaenge
                   Schwanz-Bildpunkt y >= 346 (Video 351), Nadel auf der Gliedachse bis SPITZE_Y.
 R8d Fugen         (1) Geometrie: an allen 6 Gelenken Hochachse von Endring und Manschette / Huellradius am Gelenk (kette_v8.json x MITTE) <= 0,88;
                   (2) sichtbar von vorn: in der Rollreihe h22 / h24 / h64 ist die Breite an den sichtbaren Gelenken im Mittel >= 1,0 px schmaler als
-                  in den Gliedmitten daneben; (3) Farbprobe b / c: an allen 6 Gelenken Flaechen auf Zeile 494 (helles Band) und in PV sichtbare
-                  Band-Bildpunkte an >= 5 Gelenken; Farbprobe a: ohne Band (Angabe).
-R8e Fleisch nur   (1) jede Flaeche auf Zeile 495 / 494 (ausser den 14 Wurzelflaechen von Mesh 16 im Rumpf, Stufe w/u) liegt mit allen Ring-Ecken
+                  in den Gliedmitten daneben; (3) Farbprobe b (Runde 8c, Ring): die Band-Flaechen (Klasse aus dem Ring-Feld, schwanz_r8.klasse_uv)
+                  sind GENAU die Fugen-Flaechen aller 11 Sektoren (Ringe S/C bzw. D/E mit Deckel-Mitte, aus den Ring-Lagen lage()) an allen 6
+                  Gelenken, und in PV sind Band-Bildpunkte an >= 5 Gelenken sichtbar; Farbprobe a: keine Band-Flaeche.
+R8e Fleisch nur   (1) Runde 8c: jede Bauch-Flaeche (Klasse aus dem Fleisch-Feld, schwanz_r8.klasse_uv; Bauch und Ring liegen auf derselben
+                  Zeile 493; eine Flaeche ohne Klasse ist falsch; ausser den 14 Wurzelflaechen von Mesh 16 im Rumpf, Stufe w/u) liegt mit allen Ring-Ecken
     Bauchseite    im Bauchsektor |theta| <= Grenze(u) + TOL_GRAD (Grenze 90 -> 60, schwanz_r8.grenze; theta = Parameterwinkel der Ellipse des Rings),
                   keine Flaeche auf 487 ganz im Bauchsektor (ausser der Nadel ab y 560, die ganz grau ist); (2) PV: Anteil Fleisch-Zeile an den Schwanz-Bildpunkten mit Normalen-|theta| >= 100 <= 1 %, mit |theta| <= 40 >= 50 %;
-                  (3) Herkunft: Texel unter 495 / 494 = Texel, die Original-Flaechen der Original-Zeile 482 / 481 benutzen; Texel unter 487 = Texel
+                  (3) Herkunft: Texel unter 493 / 494 / 495 = Texel, die Original-Flaechen der Original-Zeile 480 / 481 / 482 benutzen; unter 487 = Texel
                   der Oberseite (487) der Meshes 16-22 im Eingang 07b6703f; Asset-Texel dort bytegleich Original bzw. Eingang.
 R8f Bytegleich    Sektionen 0-6 (Skelett, Clips, Keyframes), TIM (Texturbild, 16 CLUT-Zeilen) und Meshes 0-15 (Mesh 9 = V7-Kopf) = Eingang 07b6703f,
                   ausser den 12-Bit-Winkeln der Knochen 17-22 in den von schwanz_r8.heben angehobenen Keyframes; Gliedlaengen 17-22 = (0, 541, 0).
@@ -328,19 +330,62 @@ def r8d(blob, farbe, pv):
             e_d = s_c = 1.0
         geo.append((j, round(e_d, 3), round(s_c, 3)))
     ok1 = all(a <= 0.88 and c <= 0.88 for _j, a, c in geo) and len(ms[22]['v']) > 47
-    band = {}
+    band, fuge_n, abweich = {}, {}, {}
+    kl = klassen(ms)
     for b in range(16, 23):
-        band[b] = sum(1 for uv in ms[b]['tuv'] + ms[b]['quv'] if ((uv[2] >> 6) & 0x1FF) == Q.ZEILE_BAND)
+        fs = fugen_flaechen(b, ms[b])
+        bs = {k for k, c in kl[b].items() if c == 'band'}
+        band[b] = len(bs); fuge_n[b] = len(fs)
+        abweich[b] = sorted(fs ^ bs)[:6]
     A = pv['A']
-    z = A['zeile'][:480]; bo = A['bone'][:480]
-    band_pv = {b: int(((z == Q.ZEILE_BAND) & (bo == b)).sum()) for b in range(16, 23)}
+    bo = A['bone'][:480]; fk = A['flaeche'][:480]
+    band_pv = {b: 0 for b in range(16, 23)}
+    ys, xs = np.nonzero((bo >= 16) & (bo <= 22))
+    for y, x in zip(ys, xs):
+        b = int(bo[y, x])
+        if kl[b].get(str(fk[y, x])) == 'band':
+            band_pv[b] += 1
     gel_sicht = sum(1 for j in range(1, 7) if band_pv[15 + j] + band_pv[16 + j] > 0)
     if Q.FARBEN[farbe]['band']:
-        ok3 = all(band[15 + j] > 0 and band[16 + j] > 0 for j in range(1, 7)) and gel_sicht >= 5
+        ok3 = all(not abweich[b] and band[b] > 0 for b in range(16, 23)) and gel_sicht >= 5
     else:
-        ok3 = True
-    return dict(geometrie=geo, ok1=bool(ok1), band_flaechen=band, band_pv_px=band_pv, gelenke_mit_band_pv=gel_sicht, band=Q.FARBEN[farbe]['band'],
-                ok3=bool(ok3))
+        ok3 = all(band[b] == 0 for b in range(16, 23))
+    return dict(geometrie=geo, ok1=bool(ok1), band_flaechen=band, fugen_flaechen=fuge_n, band_ungleich_fuge=abweich, band_pv_px=band_pv,
+                gelenke_mit_band_pv=gel_sicht, band=Q.FARBEN[farbe]['band'], ok3=bool(ok3))
+
+
+def klassen(ms):
+    """Runde 8c: (Knochen) -> {'d<i>' / 'v<i>': Klasse} aus Zeile, Seite und UV (schwanz_r8.klasse_uv; Schluessel wie f_rast 'flaeche')."""
+    out = {}
+    for b in range(16, 23):
+        out[b] = {}
+        for key, U in (('d', ms[b]['tuv']), ('v', ms[b]['quv'])):
+            for i, uv in enumerate(U):
+                out[b]['%s%d' % (key, i)] = Q.klasse_uv(uv)
+    return out
+
+
+def fugen_flaechen(b, m):
+    """Runde 8c: Fugen-Flaechen eines Glieds = Flaechen, deren Ecken alle in (Ring S + Ring C + Anfangs-Mitte) bzw. (Ring D + Ring E + End-Mitte)
+    liegen (KERBE_LAENGE x L um die Gelenke; Ring-Lagen aus lage(), Achs-Ecken je Mesh wie schwanz_r8.mesh_bauen). Mesh 22 nur am Anfang
+    (Ring E dort = y 760, kein Gelenk), Mesh 16 nur am Ende."""
+    l = lage(b)
+    r = lambda nm: set(range(l[nm], l[nm] + Q.S_))
+    if b == 16:
+        mengen = [r('D') | r('E') | {33}]
+    elif b == 22:
+        mengen = [r('S') | r('C') | {23}]
+    elif b == 18:
+        mengen = [r('S') | r('C') | {34}, r('D') | r('E') | {33}]
+    else:
+        mengen = [r('S') | r('C') | {23}, r('D') | r('E') | {22}]
+    out = set()
+    for key, F in (('d', m['tf']), ('v', m['qf'])):
+        for i, f in enumerate(F):
+            e = set(f[1::2])
+            if any(e <= mg for mg in mengen):
+                out.add('%s%d' % (key, i))
+    return out
 
 
 def r8e(blob, bezug, pv):
@@ -350,6 +395,7 @@ def r8e(blob, bezug, pv):
     _d2, _o2, ms_e, tim_e = KB.teile(bezug)
     phi = {int(k): float(v) for k, v in json.load(open(os.path.join(HIER, 'unterseite_v8.json')))['innen_phi'].items()}
     falsch, n495 = [], 0
+    kl = klassen(ms)
     alt16 = {tuple(f[1::2]) for f in ms_e[16]['tf'] + ms_e[16]['qf'] if set(f[1::2]) <= set(range(22)) | {34}}
     for b in range(16, 23):
         m = ms[b]
@@ -363,8 +409,13 @@ def r8e(blob, bezug, pv):
                 if b == 16 and tuple(e) in alt16:
                     continue                                   # Wurzelflaechen im Rumpf (Stufe w/u), UV wie 07b6703f
                 ring = [k for k in e if k in th]
-                if z in (Q.ZEILE_FLEISCH, Q.ZEILE_BAND):
-                    n495 += z == Q.ZEILE_FLEISCH
+                c = kl[b]['%s%d' % (key, i)]
+                if c is None:
+                    falsch.append('%d:%s%d ohne Klasse' % (b, key, i))     # Runde 8c: Zeile/UV in keinem Feld
+                elif c == 'band':
+                    continue                                   # Ring umlaufend (R8d (3) prueft, dass er genau auf den Fugen liegt)
+                elif c == 'bauch':
+                    n495 += 1
                     if any(th[k] > gr[k] + TOL_GRAD for k in ring):
                         falsch.append('%d:%s%d' % (b, key, i))
                 elif z == Q.ZEILE_GRAU:
@@ -376,14 +427,14 @@ def r8e(blob, bezug, pv):
     # (2) PV: Normalen-theta je Bildpunkt
     A = pv['A']
     ys, xs, bo, th = U5.theta_bild(pv['mo'], V.PV, A)
-    zz = A['zeile'][:480][ys, xs]
-    fl = zz == Q.ZEILE_FLEISCH
+    fk = A['flaeche'][:480][ys, xs]
+    fl = np.array([kl[int(b_)].get(str(k_)) == 'bauch' for b_, k_ in zip(bo, fk)], bool)
     aussen = th >= 100.0; innen = th <= 40.0
     an_aussen = float(fl[aussen].mean() * 100) if aussen.any() else 0.0
     an_innen = float(fl[innen].mean() * 100) if innen.any() else 0.0
     ok2 = an_aussen <= 1.0 and an_innen >= 50.0
     # (3) Herkunft
-    nutz = {Q.ZEILE_FLEISCH: A4.nutzung(None, 482), Q.ZEILE_BAND: A4.nutzung(None, 480 + (Q.ZEILE_BAND - 493))}   # 493/494/495 = Original 480/481/482
+    nutz = {z_: A4.nutzung(None, z_ - 13) for z_ in (493, 494, 495)}                  # 493/494/495 = Original 480/481/482 (bytegleich)
     grau = np.zeros((256, 384), bool)
     for b in range(16, 23):
         for uv in ms_e[b]['tuv'] + ms_e[b]['quv']:
@@ -570,13 +621,15 @@ def zeilen(r):
                 c['soll_y'], c['auf_achse'], g(c['ok'])))
     d = r['R8d']
     z.append('R8d Fugen: (1) Hochachse Endring und Manschette / Huellradius je Gelenk %s (<= 0,88) %s; (2) von vorn schmaler an den Gelenken im Mittel %s px '
-             '(>= 1,0) %s; (3) Band (Probe %s): Flaechen auf 494 je Glied %s, PV-Bildpunkte %s, Gelenke mit Band in PV %d (>= 5) %s -> %s'
-             % (d['geometrie'], g(d['ok1']), d['vorn']['mittel_je_ansicht'], g(d['vorn']['ok']), 'mit Baendern' if d['band'] else 'ohne Baender',
-                d['band_flaechen'], d['band_pv_px'], d['gelenke_mit_band_pv'], g(d['ok3']) if d['band'] else 'Angabe', g(d['ok'])))
+             '(>= 1,0) %s; (3) Ring (Probe %s, Runde 8c): Band-Flaechen je Glied %s, Fugen-Flaechen je Glied %s, Abweichung Band <> Fuge %s, '
+             'PV-Bildpunkte %s, Gelenke mit Band in PV %d (>= 5) %s -> %s'
+             % (d['geometrie'], g(d['ok1']), d['vorn']['mittel_je_ansicht'], g(d['vorn']['ok']), 'mit Ringen' if d['band'] else 'ohne Ringe',
+                d['band_flaechen'], d.get('fugen_flaechen'), {k: v for k, v in d.get('band_ungleich_fuge', {}).items() if v}, d['band_pv_px'],
+                d['gelenke_mit_band_pv'], g(d['ok3']), g(d['ok'])))
     for h, v in r['R8a']['ansichten'].items():
         z.append('   R8d (2) h%s Gelenke %s schmaler um %s px' % (h, v['fugen']['gelenke'], v['fugen']['schmaler_px']))
     e = r['R8e']
-    z.append('R8e Fleisch nur Bauchseite: (1) %d Flaechen auf 495, ausserhalb des Bauchsektors bzw. graue im Bauchsektor %d %s %s; (2) PV Fleisch-Anteil '
+    z.append('R8e Fleisch nur Bauchseite: (1) %d Bauch-Flaechen (bis Runde 8b: auf 495), ausserhalb des Bauchsektors bzw. graue im Bauchsektor %d %s %s; (2) PV Fleisch-Anteil '
              'bei Normalen-|theta| >= 100: %.2f %% (<= 1), <= 40: %.1f %% (>= 50) %s; (3) Herkunft: Flaechen je Zeile %s, fremde Texel %s, Texturbild '
              'bytegleich %s -> %s' % (e['flaechen_495'], e['n_falsch'], e['falsch'][:8], g(e['ok1']), e['pv_fleisch_aussen'], e['pv_fleisch_innen'],
                                       g(e['ok2']), e['zeilen'], e['fremde_texel'], 'ja' if e['pix_gleich'] else 'nein', g(e['ok'])))
