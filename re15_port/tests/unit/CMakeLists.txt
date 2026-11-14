@@ -4128,6 +4128,14 @@ if(TARGET re15_pc)
                      -DRE15_FORM_HP_HEADER=${CMAKE_SOURCE_DIR}/include/re15_birkin_formen.h
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_form_wagenweg.cmake)
     set_tests_properties(integration_r41_form_wagenweg PROPERTIES TIMEOUT 600)
+    # Form K5g3 G3 (Orchestrator 2026-11-14): Dreiecks-Liste 16384 + Ueberlauf-Zaehler; 5090 Kampf/Schnitt 11 und 5080 Clip 12 ohne
+    # verworfene Dreiecke mit dem K5g3-Geometrie-Modell (analysis/.../K5/k5g/K5g3/geo), Gegenprobe Grenze 2000 muss rot sein.
+    add_test(NAME integration_r41_form_dreiecke
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_form_dreiecke_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_form_dreiecke.cmake)
+    set_tests_properties(integration_r41_form_dreiecke PROPERTIES TIMEOUT 900)
     # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
     add_test(NAME integration_r41_g5_westen
              COMMAND "${CMAKE_COMMAND}"
