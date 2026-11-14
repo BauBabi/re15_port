@@ -409,9 +409,16 @@ static const int32_t k_sm_zurueck[][3] = { { 12, -10447, -19130 }, { 13, -10705,
 #define BF_BILD_N 6
 static const int16_t k_birkin_bild[BF_BILD_N][2] = {
     {   7,  0 }, {  17, 10 }, {  35, 28 }, {  51, 12 }, {  66, 27 }, {  70, 29 } };
-#define BF_H_BEUGT       70         /* Ueberblendung in die gebeugte Haltung (s. oben) */
+/* Runde 4 (Koordinator Punkt 3 "heller Gliedstummel bei h70, x 232-257"): Rechnung (Birkin-Mesh in der Ueberblendung, Kamera
+ * rueck.py, r4/bfeld.py): in den Haltebildern B27/B29 steht die Sichel (Knochen 15, 88 Ecken) bei x 251..306, y 82..177 hinter
+ * dem Spider-Man (Spider-Man x 223..320, y 77..171, davor); im ersten Ueberblendtakt (h70) rueckt sie nach x 232..271, y 56..175
+ * links neben ihn - der Stummel. Der Spider-Man wird h70 losgelassen und haengt dort noch still (Video). Daher beginnt die
+ * Ueberblendung erst h71, wenn der geschleuderte Spider-Man (k_wurf_luft h71, x ~206..323, y ~59..) die Sichel verdeckt; die
+ * Gier-Tabelle ist um einen Takt verschoben. Kopf-x h70..h80 (n2/blend.py) 369 370 373 363 349 345 348 353 359 365 371,
+ * Video 360 355 350 352 330 - 350 - 365 - 390 (Mittel |Fehler| 13, vorher 9.4 mit Stummel). */
+#define BF_H_BEUGT       71         /* Ueberblendung in die gebeugte Haltung (s. oben) */
 static const int16_t k_birkin_beuge[][2] = {
-    {  70, 85 }, {  80, 85 }, {  81, 86 }, {  88, 86 }, {  89, 87 }, {  98, 87 }, {  99, 88 }, { 101, 88 }, { 102, 89 },
+    {  71, 85 }, {  80, 85 }, {  81, 86 }, {  88, 86 }, {  89, 87 }, {  98, 87 }, {  99, 88 }, { 101, 88 }, { 102, 89 },
     { 103, 90 }, { 104, 92 } };
 #define BF_H_STEHEN      105        /* Video h104 aufrecht (Kopfoberkante 166 = h70 - 2) */
 /* Schritt 2 nach Referenz 2 (Loslassen): Video 4 h66-h70 haelt Birkin den Spider-Man noch oben links (Rumpf x ~100-170, y ~60-250),
@@ -442,9 +449,9 @@ static const int16_t k_birkin_beuge[][2] = {
  * Jetzt hoechstens -569 = 485 von der Kamera (43 Grad, Dreiviertelansicht von vorn), die Kopflage kommt aus der Beugung (B85,
  * Ueberblendung): Rechnung n2/blend.py h70..h80 Port 370 373 363 349 345 348 353 359 365 371 377, Video 360 355 350 352 330 -
  * 350 - 365 - 390 (Mittel |Fehler| 9.4, mit der 82-Grad-Drehung 9.0). */
-static const int16_t k_birkin_gier[][2] = {
-    {   0, -1270 }, {  70, -1270 }, {  71, -969 }, {  72, -719 }, {  73, -569 }, {  74, -569 }, {  75, -619 }, {  76, -669 },
-    {  77, -719 }, {  78, -769 }, {  79, -819 }, {  80, -869 }, { 100, -969 } };
+static const int16_t k_birkin_gier[][2] = {     /* Runde 4 Punkt 3: ab h71 (BF_H_BEUGT), s. k_birkin_beuge */
+    {   0, -1270 }, {  71, -1270 }, {  72, -969 }, {  73, -719 }, {  74, -569 }, {  75, -569 }, {  76, -619 }, {  77, -669 },
+    {  78, -719 }, {  79, -769 }, {  80, -819 }, {  81, -869 }, { 100, -969 } };
 #define BF_H_ZUR_KAMERA  104
 /* Runde 3 N2: Gangtempo aus dem Video - Hoehe 282 -> 302 Bildpunkte h118 -> h126 (+7.1 %) = Blicktiefe 6833 -> 6380 (rueck.py), also
  * 453 Einheiten in 8 Bildern auf die Kamera zu = 57 je Bild (vorher 22 = ~1000 in h90..h135 bei Gangbeginn h90). */
