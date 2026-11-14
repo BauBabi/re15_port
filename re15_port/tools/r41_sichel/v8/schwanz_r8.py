@@ -48,8 +48,14 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
   bauch = Original-Zeile 480 (Asset 493), Seite 0, Feld C1 u 54-65 v 48-57 (schwanz_r8.json; ausgewaehlt unter 17 Original-Feldern (Zeilen 480-482) nach der
           Messung im Spielbild F255-F320, Lab-Abstand zur Video-Mitte des Pruefers gruenblut 5,1 statt 8,7; SF_belege/v8/runde8c); grosse
           gefleckte Felder ergaben je Bild sehr verschiedene Toene (nur ein Teil des Felds sichtbar), gespiegelte Abbildung ein Augenmuster;
-  band  = Probe b: Ring umlaufend auf allen 11 Sektoren der Fugen (Mantel S-C / D-E und Deckel), Original-Zeile 480 (Asset 493), Seite 0,
-          Feld RB u 93-100 v 10-17 mit Verlauf hell (u 100, am Gelenk) -> dunkel (u 93, am vollen Querschnitt), ohne Texel unter L* 18;
+  band  = Runde 8c Probe b (seit Runde 8d verworfen, nur noch Farbe "ring" fuer die Gegenprobe): Ring umlaufend auf allen 11 Sektoren der
+          Fugen, Original-Zeile 480 (Asset 493), Seite 0, Feld RB u 93-100 v 10-17, Verlauf hell (am Gelenk) -> dunkel;
+  Runde 8d: keine Ringe - die Fugen tragen im Bauchsektor das Bauchfeld C1, sonst grau (Nutzer: "der Schwanz wirkt auch ueber die
+          Abschnitte hinweg einheitlich"). C1 auf die Zeilen v 51-55 begrenzt: die Fugen liegen (laengs je Glied gespiegelt) auf den Endzeilen
+          des Felds, und die Zeilen 48-50 / 56-57 sind dunkler -> mit v 48-57 im Spielbild dunkle Flecken an jeder Fuge (L* Fuge - Mitte -9,1;
+          einfarbige Messprobe -2,7 = nur Schattierung der Einschnuerung; v 51-55: -3,2; SF_belege/v8/runde8d). Grau: EIN Feld fuer alle
+          Glieder (felder.grau_alle = Feld von Glied 16), laengs je Glied gespiegelt - vorher je Glied ein eigenes Feld (17 / 21 / 22 anders) und
+          ungespiegelt (Zeile v0 neben v1 an jeder Fuge; gemessen an Gelenk 5 Stufe dE 7,0, Kante 12,5 -> 3,3 / 3,9);
   Bis Runde 8b:
   bauch = Bauchsektor: Original-Zeile 482 (Asset 495), schraeges Feld (Parallelogramm, suche(): v 114-123, Zeilenanfang u 1 -> 19, Breite 21, im Bau 20;
           Median L* 25,7 C* 24,2, hellere Partie des Original-Unterarm-Fleischs) - groesser als das 17 x 7-Feld der Runde 8 ("flaechig wie gemalt",
@@ -58,7 +64,8 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
   band  = Probe b: die zwei mittleren Bauchfelder (BAND_J) in der Fuge (zwischen E und D bzw. S und C, dazu die Deckel): Original-Zeile 480
           (Asset 493, bytegleich), Seite 0, Feld u 58-73 v 19-48 (>= 60 % hellrot/rosa, Median L* 48,4 C* 17,4 h 22; Runde 8: Zeile 481 fast weiss
           L* 74 = "Klebeband", Pruefer pr8); Probe a: ohne Band (Fleisch).
-  Proben (Koordinator: nur noch zwei, wenn sie sich sichtbar unterscheiden): a ohne Baender, b mit rosa Baendern (STANDARD; Runde 8c: Ringe).
+  Proben (Koordinator: nur noch zwei, wenn sie sich sichtbar unterscheiden): a ohne Baender, b mit rosa Baendern (STANDARD; Runde 8c: Ringe;
+  Runde 8d: b ohne Ringe = a).
 """
 import os
 import sys
@@ -129,8 +136,14 @@ BAND_J = (10, 0)
 PENDEL = {9: 0.0, 10: 1.0, 0: 0.0, 1: 1.0, 2: 0.0}   # Bauch-Ecke j -> Lage im Feld quer (0 / 1), Spiegelung je Flaeche
 FELD_SATT = (4, 37, 96, 106)          # (u0, u1, v0, v1) Seite 2 = unterseite_v8.json fleisch_r7b "feld" (heutiger Ton)
 # Felder "grau" (je Glied), "gedeckt", "band": schwanz_r8.json (Ergebnis von suche() am Eingang 07b6703f, Protokoll runde8/suche.txt)
-FARBEN = {'a': dict(fleisch='gedeckt', band=False, ring=False, name='gedeckt, ohne Baender'),
-          'b': dict(fleisch='gedeckt', band=True, ring=True, name='gedeckt, weiche rosa Ringe an den Gliedfugen')}
+FARBEN = {'a': dict(fleisch='gedeckt', band=False, ring=False, name='gedeckt, ohne Baender (seit Runde 8d gleich b)'),
+          'b': dict(fleisch='gedeckt', band=False, ring=False, name='gedeckt, einheitlich ueber die Gliedfugen (Runde 8d)'),
+          'ring': dict(fleisch='gedeckt', band=True, ring=True, name='Runde 8c: weiche Ringe an den Gliedfugen (verworfen, nur Gegenprobe)')}
+# Runde 8d (Nutzer 14.11. zum Endstand 8c d31f9534, woertlich: "Im prinzip fast perfekt, aber - ich weiss nicht wo du die Streifen bei den
+# Schwanz Abschnitten von Birkin her nimmst, die gehoeren da nicht hin. Schau doch auf das Original Video, der Schwanz wirkt auch ueber die
+# Abschnitte hinweg einheitlich."): die Ringe entfallen. Die Fugenflaechen im Bauchsektor (BAUCH_J) bekommen dasselbe Bauchfeld C1 wie der
+# uebrige Bauch (laengs je Glied gespiegelt -> an jedem Gelenk dieselbe Feldzeile auf beiden Seiten, nahtlos), die uebrigen Sektoren grau wie
+# die Flanke daneben; Grenze Bauch/Flanke, Form, Einschnuerungen und Nadel wie 8c. Farbe b (Standard) = a.
 # Runde 8c (Koordinator 14.11., Nutzer waehlt b: "wobei das Original Video der Schwanz noch etwas heller ist und nicht ganz so rot"; Pruefer
 # gruenblut: Port-Bauch Saettigung 0,50-0,55 gegen Video 0,38-0,41, Baender "2-4 kleine Flecken seitlich, keine weichen Ringe an den Gliedfugen"):
 # - Bauch: ein anderes ORIGINAL-Feld (schwanz_r8.json felder.fleisch mit "zeile"/"seite"), ausgewaehlt nach der Vorhersage im Spiellicht
@@ -595,7 +608,8 @@ def uv_setzen(g, V_, F, ringe, info, farbe, felder, L):
     ys = V_[:, 1]
     y_lo, y_hi = float(min(ys)), float(max(ys))
     out = []
-    feld_grau = felder['grau'][str(16 + g)]
+    grau_alle = felder.get('grau_alle')                    # Runde 8d: ein Grau-Feld fuer alle Glieder, laengs je Glied gespiegelt (sonst je Glied)
+    feld_grau = grau_alle or felder['grau'][str(16 + g)]
     feld_f = felder['fleisch']
     feld_band = felder['band']
     tb_glied = lambda i: grenze(u_e.get(i, g + 0.5))
@@ -617,7 +631,7 @@ def uv_setzen(g, V_, F, ringe, info, farbe, felder, L):
             s_lang = float(np.clip((V_[i][1] - y_lo) / max(y_hi - y_lo, 1.0), 0.0, 1.0))
             if kl == 'grau':
                 s_um = float(np.clip((th - tb) / max(360.0 - 2 * tb, 1.0), 0.0, 1.0))
-                uv_e.append(_uv_feld(feld_grau, s_um, s_lang))
+                uv_e.append(_uv_feld(feld_grau, s_um, (s_lang if g % 2 == 0 else 1.0 - s_lang) if grau_alle else s_lang))
                 continue
             if i in ring_k:
                 s_um = PENDEL.get(ring_k[i], 0.5)
