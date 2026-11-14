@@ -1112,9 +1112,16 @@ static void bf_gruenes_blut(re15_actor_t *b, re15_actor_t *m, int h)
  * jetzt (n2c) 78 / 64 / 154 / 211, cx 258 / 221 / 218 / 231; Video 90 / 87 / 158 / 254, cx 252 / 219 / 211 / 223. Ab h75 die
  * Bodenbahn wie bisher. Vorher quadratisch vom Loslassen (h71) zum Bodenpunkt h76 mit dem Handtempo als Anfangsrichtung. */
 static const int16_t k_wurf_luft[][3] = { { 71, 243, 243 }, { 72, 199, 199 }, { 73, 198, 258 }, { 74, 220, 407 } };
+/* Runde 4 (Koordinator Punkt 2 / Sichtpruefung Runde 3 P8: "h81-h86 der geworfene Koerper etwa doppelt so gross und dunkelbraun
+ * statt orange"). Ursache (Mesh in Pose, Szenenkamera rueck.py, r4/vordergrund.py): mit den Blicktiefen 3800 -> 1900 kamen Ecken
+ * der Rueckenlage der Kamera bis auf 674 / 363 / 25 / -75 nahe (Bild h83..h86) - Kasten h83 x 301..1606, y -60..614 (Video-Glied
+ * x 300..460, y 150..440). Jetzt je Bild (Tabellenpunkt h+1, Vorlauf s. unten) Punkt und Tiefe so, dass die Mitte der im Bild
+ * liegenden Ecken und die Oberkante dem Video gleichen (flucht6.py: Schwerpunkt x h81..h86 345 406 495 544 584 606, Oberkante
+ * h82..h85 196 196 111 120) und keine Ecke naeher als 1500 liegt: Mitte 348 395 500 542 570 606, Oberkante 167 188 183 116 175,
+ * naechste Tiefe 1947 / 2487 / 1773 / 2012 / 2623 / 2623. */
 static const int16_t k_wurf_bahn[][4] = { { 76, 245, 400, 0 }, { 78, 215, 405, 0 }, { 80, 311, 420, 0 },
-                                          { 81, 370, 450, 4600 }, { 82, 450, 380, 3800 }, { 83, 560, 340, 3200 }, { 84, 640, 290, 2500 },
-                                          { 85, 720, 290, 2200 }, { 86, 820, 320, 2000 }, { 87, 940, 330, 1900 } };
+                                          { 81, 370, 450, 4600 }, { 82, 380, 330, 3750 }, { 83, 440, 330, 4250 }, { 84, 580, 370, 3500 },
+                                          { 85, 600, 330, 3750 }, { 86, 640, 290, 4500 }, { 87, 760, 320, 4500 } };
 /* Gier im Wurf: zur Bewegungsrichtung hin, hoechstens BF_WURF_DREH je Takt. Pruefer Mangel 8: vorher folgte sie ihr sofort und
  * schnappte h74 -> h75 um 1312 (115 Grad) zurueck (Gier 2229 / 909 / 21 / 3775 bei h73..h76). Koordinator: die Enddrehung ueber
  * h73..h76 einblenden = 4 Takte fuer hoechstens eine halbe Drehung -> 2048 / 4 = 512 je Takt. */
