@@ -858,6 +858,16 @@ static const re15_camera_cut_t *bf_szenenkamera(void)
     return (g_room_rdt_ok && g_room_rdt.cuts && BF_HANGAR_CUT < g_room_rdt.cut_count) ? &g_room_rdt.cuts[BF_HANGAR_CUT] : NULL;
 }
 
+/* Runde 6 (Pruefer Runde 5 "Ruck bei h0: der Spider-Man hockt h-8..h-1 still und springt bei h0 in einem Bild 20..30 Bildpunkte
+ * (960er) nach links, 12.8 % Bildaenderung"): der Versatz s von h2 (k_sm_flug) im Hocken galt erst ab h0; die Szene ist ab h-8 im
+ * Bild (BF_VORLAUF). Jetzt ab dem Setzen des Spider-Man (bf_hangar_starten) und in jedem Hocktakt. */
+static void bf_hocken_lage(re15_actor_t *m)
+{
+    s_sm_schatten[0] = 1; s_sm_schatten[1] = k_sm_gleit[0][1]; s_sm_schatten[2] = k_sm_gleit[0][2];
+    m->x = k_sm_gleit[0][1] + ((BF_GLEIT_DX * k_sm_flug[0][2]) >> 12);
+    m->z = k_sm_gleit[0][2] + ((BF_GLEIT_DZ * k_sm_flug[0][2]) >> 12);
+}
+
 static void bf_hangar_starten(void)
 {
     s_h.birkin = bf_hangar_birkin_setzen();
@@ -874,6 +884,7 @@ static void bf_hangar_starten(void)
     m->hp = 100;
     s_griff_y = BF_SM_GRIFF_Y;
     m->rot_z = 0; s_sm_schatten[0] = 0; s_h.halt_wechsel = 0;
+    bf_hocken_lage(m);
     bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0); m->anim_frac = 0;     /* hockt: Angriffs-Clip 0x17 B8 (Video h0) */
     s_h.cut_zurueck = (int)g_scd.cam_id;                 /* der Schnitt, den der RVD-Scan gerade angefordert hat */
     bf_riegel(1);
@@ -1297,11 +1308,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     if (h < BF_H_SPRUNG_AB) {                                             /* hockt (Video h0..1) */
         bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0 + (h < 0 ? 0 : h));
         m->rot_y = bf_blick(m, b->x, b->z);
-        if (h >= 0) {                                                     /* Runde 5 M3: Versatz s von h2 schon im Hocken */
-            s_sm_schatten[0] = 1; s_sm_schatten[1] = k_sm_gleit[0][1]; s_sm_schatten[2] = k_sm_gleit[0][2];
-            m->x = k_sm_gleit[0][1] + ((BF_GLEIT_DX * k_sm_flug[0][2]) >> 12);
-            m->z = k_sm_gleit[0][2] + ((BF_GLEIT_DZ * k_sm_flug[0][2]) >> 12);
-        }
+        bf_hocken_lage(m);                                                /* Runde 5 M3 / Runde 6: Versatz s ab Szenenbeginn */
     } else if (h < BF_H_BERUEHRUNG) {                                     /* Gleiten h2..h11 (Kopf "Ansprung") */
         int i = 0;
         const int16_t *fl = k_sm_flug[h - k_sm_flug[0][0]];             /* h2..h11 (Kopf k_sm_flug) */
