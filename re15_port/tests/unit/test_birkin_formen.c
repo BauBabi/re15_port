@@ -558,18 +558,58 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
              * Abschnitts-Ringe (neue Ecken auf den Laengskanten, Form gleich) in den Gliedern 19-22, die 7 Kegel-Dreiecke und die
              * Rohr-Vierecke der Wurzel unter der Grenze auf 495. Gemessen am Asset 87b02681 (sfv8/r7b): 35 / 30 / 41 / 41 / 40 / 40 / 40
              * = 267 Flaechen auf 495, Ecken 43 / 32 / 47 / 48 / 47 / 47 / 47. Gegenprobe Stand a474188a: rot (213 Flaechen, Ecken 32 in 19-22). */
-            static const int UNTEN[7] = {35, 30, 41, 41, 40, 40, 40};
-            static const int ECKEN[7] = {43, 32, 47, 48, 47, 47, 47};
-            CHECK(b->tri_vertex_count == ECKEN[m - 16], "%s: Schwanzglied %d: %d Ecken statt %d (V8 Runde 7b Abschnitte)", name, m,
+            /* V8 Runde 8 (Nutzer 2026-11-14 woertlich "weder mit dem rot der Schwanzfarbe noch mit dem etwas zu steifen grossen Schwanz
+             * zufrieden" + Version_80%/Areas*.png; Stufe q = tools/r41_sichel/v8/schwanz_r8.py, schwanz_r8.json): Meshes 16-22 neu gebaut -
+             * Querschnitt flach quer zur Bauchachse (innen_phi 26,4 Grad, Querhalbachse <= 135 E. = Querdicke 270), Einschnuerung an den 6
+             * Gelenken, Glied 22 = Knolle (Radius <= 135) + Nadel bis y 1139 (541 + 48 + 550), Fleisch nur im Bauchsektor (Zeile 495 =
+             * Original 482, Seite 2), helle Baender in den Fugen (Zeile 494 = Original 481, Seite 1), Ruecken/Flanken Zeile 487 (Seite 2).
+             * Gemessen am Asset 4cf28242 (Farbprobe b, sfv8/r8; ebenso am ersten Bau 8bad8267): Ecken 46 / 46 / 57 / 46 / 46 / 46 / 101; Flaechen auf 495 18 / 4 / 8 / 4 / 4 / 4 /
+             * 16 (Glied 16: 14 Wurzelflaechen aus Stufe w/u mit ihrer UV + 4 Bauch), auf 494 8 / 16 / 16 / 16 / 16 / 16 / 8, Rest 487.
+             * Gegenprobe Stand 7e 07b6703f: rot (Ecken 43 / 32 / 47 / 48 / 47 / 47 / 47, keine Flaeche auf 494, rund: Querhalbachse bis 380).
+             * Bis Runde 7e: 267 Flaechen auf 495 (Unterseite bis theta 110 / 120, unterseite_r5.py / unterseite_r7b.py), Ecken 43 / 32 / 47 / 48 /
+             * 47 / 47 / 47. */
+            static const int ECKEN[7] = {46, 46, 57, 46, 46, 46, 101};
+            static const int AUF495[7] = {18, 4, 8, 4, 4, 4, 16};
+            static const int AUF494[7] = {8, 16, 16, 16, 16, 16, 8};
+            CHECK(b->tri_vertex_count == ECKEN[m - 16], "%s: Schwanzglied %d: %d Ecken statt %d (V8 Runde 8)", name, m,
                   b->tri_vertex_count, ECKEN[m - 16]);
-            int auf487 = zeile_zahl(b, 487), auf495 = zeile_zahl(b, Z_X3);
-            CHECK(auf495 == UNTEN[m - 16] && auf487 + auf495 == b->quad_count + b->triangle_count,
-                  "%s: Schwanzglied %d: %d Flaechen auf 495 (Soll %d), %d auf 487, %d gesamt (V8 Runde 7b Unterseite)", name, m, auf495,
-                  UNTEN[m - 16], auf487, b->quad_count + b->triangle_count);
-            for (int q = 0; q < b->quad_count; q++)
-                if (b->quad_uvs[q].clut == (uint16_t)(Z_X3 << 6))
-                    CHECK((b->quad_uvs[q].page & 0xF) == 2, "%s: Schwanzglied %d Quad %d (Unterseite) Textur-Seite %d statt 2", name, m, q,
-                          b->quad_uvs[q].page & 0xF);
+            int auf487 = zeile_zahl(b, 487), auf495 = zeile_zahl(b, Z_X3), auf494 = zeile_zahl(b, 494);
+            CHECK(auf495 == AUF495[m - 16] && auf494 == AUF494[m - 16] && auf487 + auf495 + auf494 == b->quad_count + b->triangle_count,
+                  "%s: Schwanzglied %d: %d Flaechen auf 495 (Soll %d), %d auf 494 (Soll %d), %d auf 487, %d gesamt (V8 Runde 8)", name, m,
+                  auf495, AUF495[m - 16], auf494, AUF494[m - 16], auf487, b->quad_count + b->triangle_count);
+            for (int q = 0; q < b->quad_count; q++) {
+                const unsigned z = b->quad_uvs[q].clut >> 6, seite = b->quad_uvs[q].page & 0xF;
+                CHECK(seite == (z == 494 ? 1u : 2u), "%s: Schwanzglied %d Quad %d Zeile %u Textur-Seite %u (Soll 494 -> 1, sonst 2)", name, m,
+                      q, z, seite);
+            }
+            for (int t = 0; t < b->triangle_count; t++) {
+                const unsigned z = b->triangle_uvs[t].clut >> 6, seite = b->triangle_uvs[t].page & 0xF;
+                CHECK(seite == (z == 494 ? 1u : 2u), "%s: Schwanzglied %d Dreieck %d Zeile %u Textur-Seite %u (Soll 494 -> 1, sonst 2)", name,
+                      m, t, z, seite);
+            }
+            if (m >= 17) {               /* flach: Querhalbachse <= 135 E. (+1 Rundung); Glieder 17-19 hoch >= 2 x quer */
+                const double ph = 26.43 * 3.14159265358979 / 180.0;    /* unterseite_v8.json innen_phi 26,40-26,46 je Knochen */
+                double qmax = 0.0, hmax = 0.0;
+                for (int v = 0; v < b->tri_vertex_count; v++) {
+                    const double x = b->tri_vertices[v].x, z = b->tri_vertices[v].z;
+                    const double qq = fabs(-x * sin(ph) + z * cos(ph)), hh = fabs(x * cos(ph) + z * sin(ph));
+                    if (qq > qmax) qmax = qq;
+                    if (hh > hmax) hmax = hh;
+                }
+                CHECK(qmax <= 136.0 && (m > 19 || hmax >= 2.0 * qmax), "%s: Schwanzglied %d nicht flach (quer %.0f, hoch %.0f; V8 Runde 8)",
+                      name, m, qmax, hmax);
+            }
+            if (m == 22) {               /* Nadelspitze y 1139 auf der Achse, Knolle Radius <= 135 */
+                int ymax = -32768, rmax = 0;
+                for (int v = 0; v < b->tri_vertex_count; v++) {
+                    const re15_md1_vertex_t *e = &b->tri_vertices[v];
+                    if (e->y > ymax) ymax = e->y;
+                    const int r = (int)lrint(sqrt((double)e->x * e->x + (double)e->z * e->z));
+                    if (r > rmax) rmax = r;
+                }
+                CHECK(ymax == 1139 && rmax <= 136, "%s: Stachel (Mesh 22) Spitze y %d (Soll 1139), Radius %d (Soll <= 136; V8 Runde 8)", name,
+                      ymax, rmax);
+            }
             for (int q = 0; q < b->quad_count; q++) {
                 const re15_md1_quad_t *f = &b->quads[q];
                 CHECK(f->v0 < b->quad_vertex_count && f->v1 < b->quad_vertex_count &&
