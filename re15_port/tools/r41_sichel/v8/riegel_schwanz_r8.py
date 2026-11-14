@@ -10,7 +10,8 @@ R8a Breite vorn   Rollreihe der Analyse (roll_render/teil_b) am GEBAUTEN Asset: 
                   zur Kamera, phi 0), Breite quer zur Kette an s .3 / .5 / .7 je 15-20 px (Auftrag "vorn 15-20 px breit", +-0,5 px Messschritt) und
                   |neu - Vorhersage der Analyse (flach, Querdicke 280)| <= 4 px; s .1 / .9 (Wurzel, Knolle) nur Angabe.
 R8b Seite (PV)    Vorlage-Pose PV (Clip 17 B47 Gier 587, Keyframe-Rolle wie im Spiel), f_rast nur Knochen 16-22: s .3 >= 36 px; s .5 15-20 % duenner als
-                  der Bezug 07b6703f (+-0,5 px Messschritt); s .5 / .7 / .9 gegen den Nutzer-Umriss h90 (23,5 / 18,5 / 15) +- 4 px.
+                  der Bezug 07b6703f (+-0,5 px Messschritt); s .5 / .7 / .9 gegen den Nutzer-Umriss h90 (Wurzel = Schnittkante: 23,5 / 18,5 / 15,
+                  Messziel Bauplan 2) +- 4 px; mit der oberen Ecke als Wurzel (27 / 19,5 / 14,5) nur Angabe.
 R8c Laenge/Spitze PV: Bildlaenge Kette + Nadel >= Bezug + 15 px (Ziel der Analyse ~190, mit der Nadel 450-550 E. erreichbar ~176-179); Nadelspitze
                   <= 4 px vom Zielkasten x 286-289 / y 349-356; Nadel auf der Gliedachse (groesste Ecke von Mesh 22: x = z = 0, y = 541 + 48 + 550).
 R8d Fugen         (1) Geometrie: an allen 6 Gelenken Hochachse von Endring und Manschette / Huellradius am Gelenk (kette_v8.json x MITTE) <= 0,88;
@@ -199,9 +200,11 @@ def kasten_abstand(p, k):
 def r8b_r8c(blob, bezug, D):
     n, b = pv_mass(blob), pv_mass(bezug)
     br, bb = n['breite'], b['breite']
-    vid = D['ansichten']['90']['video']
+    vid = D['ansichten']['90']['video_schnittkante']                 # Messziel Bauplan 2 (Schnittkante als Wurzel)
+    vid2 = D['ansichten']['90']['video_obere_ecke']
     duenner = 1.0 - br[2] / bb[2]
     abw = [round(x - y, 1) for x, y in zip(br[2:], vid[2:])]
+    abw2 = [round(x - y, 1) for x, y in zip(br[2:], vid2[2:])]
     okb = br[1] >= 36.0 and (bb[2] * 0.80 - 0.5) <= br[2] <= (bb[2] * 0.85 + 0.5) and all(abs(x) <= 4.0 for x in abw)
     mo = n['mo']
     m22 = mo.meshes[22]
@@ -211,7 +214,8 @@ def r8b_r8c(blob, bezug, D):
     soll_y = int(541 + Q.DORN_ALT + Q.NADEL)
     ab = kasten_abstand(n['spitze'], ZIEL_SPITZE)
     okc = n['laenge'] >= b['laenge'] + 15.0 and ab <= 4.0 and achse and int(P22[i][1]) == soll_y
-    return (dict(breite=br, bezug=bb, duenner_s5=round(100 * duenner, 1), video_h90=vid, abweichung_s5_s9=abw, ok=bool(okb)),
+    return (dict(breite=br, bezug=bb, duenner_s5=round(100 * duenner, 1), video_h90=vid, abweichung_s5_s9=abw, video_h90_obere_ecke=vid2,
+                 abweichung_obere_ecke=abw2, ok=bool(okb)),
             dict(laenge=n['laenge'], bezug=b['laenge'], spitze=n['spitze'], bezug_spitze=b['spitze'], abstand_ziel=round(ab, 1),
                  nadel_y=int(P22[i][1]), soll_y=soll_y, auf_achse=achse, ok=bool(okc)), n)
 
@@ -407,8 +411,9 @@ def zeilen(r):
                                                                                          v['rund_07b6703f']) for h, v in a.items()), g(r['R8a']['ok'])))
     b = r['R8b']
     z.append('R8b Seite PV (f_rast, Keyframe-Rolle): s .1-.9 %s (Bezug 07b6703f %s); s .3 >= 36: %.1f; s .5 %.1f %% duenner (Soll 15-20); s .5/.7/.9 '
-             'gegen Nutzer-Umriss h90 %s: Abw. %s (<= 4) -> %s' % (b['breite'], b['bezug'], b['breite'][1], b['duenner_s5'], b['video_h90'][2:],
-                                                                   b['abweichung_s5_s9'], g(b['ok'])))
+             'gegen Nutzer-Umriss h90 (Wurzel Schnittkante, Messziel Bauplan 2) %s: Abw. %s (<= 4); Angabe Wurzel obere Ecke %s: Abw. %s -> %s'
+             % (b['breite'], b['bezug'], b['breite'][1], b['duenner_s5'], b['video_h90'][2:], b['abweichung_s5_s9'], b['video_h90_obere_ecke'][2:],
+                b['abweichung_obere_ecke'], g(b['ok'])))
     c = r['R8c']
     z.append('R8c Laenge/Spitze PV: Laenge %.1f px (Bezug %.1f, Soll >= Bezug + 15; Ziel der Analyse ~190 Offen), Nadelspitze %s (Bezug %s), Abstand '
              'zum Zielkasten x 286-289 / y 349-356 %.1f px (<= 4), Nadel y %d (Soll %d) auf der Achse %s -> %s'

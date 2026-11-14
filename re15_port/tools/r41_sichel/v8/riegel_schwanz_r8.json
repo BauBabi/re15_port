@@ -255,7 +255,15 @@
     27.0,
     19.5,
     14.5
-   ]
+   ],
+   "video_schnittkante": [
+    29.5,
+    38.0,
+    23.5,
+    18.5,
+    15.0
+   ],
+   "hinweis": "ANALYSE.md 2a: Wurzel = Mitte der Schnittkante am Buckel (366,213) -> 29,5/38/23,5/18,5/15 (Messziel Bauplan 2 \"s .5/.7/.9 = 23,5/18,5/15 +- 4\"); mit der oberen Ecke (376,188) als Wurzel -> 23,5/43,5/27/19,5/14,5 (= nutzer_mass.json \"video\")"
   }
  }
 }
