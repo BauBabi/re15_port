@@ -507,7 +507,18 @@ static const uint8_t k_wurf_haltebild[2] = { 24, 20 };   /* Runde 7: Birkin-Halt
  * Kamera zu und nach links heraus. Rechnung smsim.py (EM2B Clip 7 B5 am Griffpunkt, Hand aus sim.py): Mitte h71 +384 -> (267,156),
  * h72 +768 -> (236,150); ohne Drehung (280,165) / (276,163) = der Koerper bleibt rechts der Hand (Lauf n5 gemessen (267,157) /
  * (236,152), h73 mit +1024 (233,265)). Kippung (rot_z) brachte die Beine ueber Birkins Kopf (rz -1024: Kasten bis x 389, Vorrunde s4/s5), daher nur Gier. */
-static const int16_t k_sm_dreh[3] = { 384, 768, 1024 };
+static const int16_t k_sm_dreh[3] = { 384, 768, 1536 };
+/* Runde 7 Nachbesserung (Pruefer "Wurf" PRUEFUNG.md Grenzfall 1, Koordinator: h73/h74 zeigte er beim Herausdrehen die Glieder flach
+ * zur Kamera, "wie ein Stern", dunkle Keile links): mit +1024 (h73) bzw. +512 (h74, Rueckdrehung) sah er die Kamera an (Gier 1459..1715,
+ * Blickrichtung zur Kamera 0,90..1,00). Jetzt h73 +1536 = Seitenansicht nach Bild-links (Blick quer zur Kamera 0,32), h74 sofort die
+ * Halte-Gier (Seitenansicht 3/4 nach rechts, 0,44; wie bisher ab h75). Rechnung sternprobe.py (Lauf n7, gezeichnete Lokalpose, Griff
+ * an der gezeichneten Hand): Umrissflaeche h73 26136 -> 21807, h74 ~29000 -> 21272 Bildpunkte, Kasten h73 x 101..340 -> 127..314. */
+/* Runde 7 Nachbesserung (Grenzfall 2: beim Ausholen ragte der Oberkoerper in den oberen Balken): Absenkung des Spider-Man unter die
+ * Hand h71/h72 in Welt-y. Messung smoben.py (gleiches Verfahren Video und Port: Vordergrund dE > 12 gegen die Hintergrundplatte,
+ * Fenster x 110..300, y 30..250, Schwerpunkt; Lauf n7): Mitte h71 Video (247,163) / Port (253,154), h72 Video (226,160) / Port
+ * (225,144) = 9 / 16 Videopunkte zu hoch; Abbildung 7,7 / 8,7 Videopunkte je 100 Einheiten (Lauf n7, Mesh verschoben) ->
+ * 117 / 184. h70 (freigegebenes Halten) Video (262,171) / Port (269,169). */
+static const int16_t k_sm_absenken[2] = { 117, 184 };
 /* Birkin-Gier relativ zum Blick auf den Spider-Man-Start (Q12, 4096 = 360 Grad). Gestaltung nach dem Video: Birkin steht
  * zur Kamera gedreht (die haltende rechte Klaue liegt dann links im Bild, Gier 1300 = Bezug - 1270,
  * Video Rumpf x 110..145 bis h70), dreht h66..72 nach links und schmettert in Richtung des Ansprungs (Klaue B50 bei Gier
@@ -1238,7 +1249,7 @@ static void bf_gruenes_blut(re15_actor_t *b, re15_actor_t *m, int h)
  * k_wurf_bahn h76 (Vorlauf 1; Video h75 (251,390) flach). Punkt nach der Mesh-Mitte im Posenlog nachgestellt (Laeufe n2-n4: Punkt
  * (205,354) -> Mitte (159,330), (261,365) -> (251,334), (243,349) -> (227,330); Lauf n5 (228,331), h75 (257,383)).
  * Vorher { 73, 198, 258 }, { 74, 220, 407 } (h74 schon am Boden). */
-static const int16_t k_wurf_luft[][3] = { { 74, 243, 349 } };
+static const int16_t k_wurf_luft[][3] = { { 74, 203, 343 } };   /* Nachbesserung: Halte-Gier ab h74 (k_sm_dreh) -> Mitte +44/+8, Punkt nachgestellt */
 /* Runde 4 (Koordinator Punkt 2 / Sichtpruefung Runde 3 P8: "h81-h86 der geworfene Koerper etwa doppelt so gross und dunkelbraun
  * statt orange"). Ursache (Mesh in Pose, Szenenkamera rueck.py, r4/vordergrund.py): mit den Blicktiefen 3800 -> 1900 kamen Ecken
  * der Rueckenlage der Kamera bis auf 674 / 363 / 25 / -75 nahe (Bild h83..h86) - Kasten h83 x 301..1606, y -60..614 (Video-Glied
@@ -1435,6 +1446,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
         else m->rot_y = (int16_t)((s_h.sm_gier_halt + k_sm_dreh[(h - BF_HALT_ENDE - 1) % 3]) & 0x0fff);   /* Runde 7: Schwung */
         if (h == BF_HALT_ENDE) s_h.sm_gier_halt = m->rot_y;
         bf_klauenziel(b, m, k);
+        if (h > BF_HALT_ENDE && h < BF_H_LOS - 1) k[1] += k_sm_absenken[(h - BF_HALT_ENDE - 1) & 1];   /* Nachbesserung h71/h72 */
         {   /* Runde 4 Punkt 5: nach dem Wiedereinstieg folgt der Griffpunkt der ueberblendeten Hand (k_halt_blende) */
             const int t_ = h - s_h.halt_wechsel;
             if (s_h.halt_wechsel > 0 && t_ >= 0 && t_ < BF_N(k_halt_blende) - 1) {
@@ -1481,11 +1493,11 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
             s_h.w0[0] = m->x; s_h.w0[1] = m->y; s_h.w0[2] = m->z;
             s_h.wtiefe = bf_blicktiefe(m->x, m->y, m->z);                 /* Blicktiefe am hoechsten Punkt (h72) */
         }
-        /* Runde 7: nach dem Schwung (k_sm_dreh, +1024 bei h73) dreht er im Fall zur Gier des Haltens zurueck (hoechstens BF_WURF_DREH
-         * je Takt: h74 +512, ab h75 +0) und liegt wie bisher. Rechnung gierprobe.py (Lauf n1, Lokalpose und Lage fest): mit der
+        /* Runde 7: nach dem Schwung (k_sm_dreh, h73 +1536) hat er im Fall ab h74 wieder die Gier des Haltens (Nachbesserung; vorher
+         * hoechstens BF_WURF_DREH je Takt: h74 +512 = Blick zur Kamera, "Stern") und liegt wie bisher. Rechnung gierprobe.py (Lauf n1, Lokalpose und Lage fest): mit der
          * Schwung-Gier lag er h76-h80 bei (194,382) (179,400) (204,397) (225,385) (247,366), mit der Halte-Gier (241,387) (218,411)
          * (246,411) (270,403) (301,386); Video h76 (259,416), h77/h78 (204..220, 397..400), h79 (231,385). */
-        if (h < BF_H_LOS + 2) m->rot_y = bf_gier_zu(m->rot_y, s_h.sm_gier_halt);
+        if (h < BF_H_LOS + 2) m->rot_y = s_h.sm_gier_halt;    /* Nachbesserung: sofort (Kopf k_sm_dreh), vorher bf_gier_zu je 512 */
         {   const int wb = (h - BF_H_LOS + BF_WURF_BILD0) * 2;
             bf_bild(m, BF_SM_LIEGT, wb > 30 ? 30 : wb); }                 /* Rueckenlage, Glieder schlaff */
         if (hb <= k_wurf_luft[BF_N(k_wurf_luft) - 1][0]) {               /* geschleudert und fallend (Kopf k_wurf_luft) */
