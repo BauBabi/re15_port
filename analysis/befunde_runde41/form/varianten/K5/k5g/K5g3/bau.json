@@ -1,23 +1,27 @@
 {
  "eingang_sha256": {
+  "augen_mitten": "8546521e687c0acc55eadd010e22ad9ab8bc890777c60a06df4c49e91ea39027",
   "basis_k5c_tim": "7187ff097f42427dc40fc77264f43cc5860f6b28de70fb1549c626ef92af75e3",
   "k5e_f1_bahnsteig_emd": "f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1",
   "k5e_f1_tim": "31a35e66428bac1e8783587f2336ea0bec7aab6e34876b0be87a144c576445b8",
   "krallen_k5c": "677aa8cf522e1e9b824fba52521937a61adae43a4248b8786af2f778f6ffd7b6",
   "material_json": "3308ea639b0a3e6bb6b0e176b36b6173c0f1ee9eb650bce1c90f6564bd2860d9",
   "spalt_tabelle": "99a4f142c2d01c5eb8e70dd299c0cd98c3e34268adc8473454dcfb42b4cd6d07",
+  "spalt_uv_tabelle": "616a22d7ad63769d801c3fcdc13a6ae213ecf1f3b205faf83e65f8e3660f63bc",
   "traeger_texel": "98f4b70e68cb8de632069f78d8e0a2fbb653fd3ece0e76f669fa4b7a65bbf75e",
   "zonen_v2": "4b961ea03a20965538a88dfc48ad33a65bef3a1f3b20b8e7d671427958e7276b"
  },
  "generator": "generator/kf_k5g3.py (Stufe 1 kf_k5g3_geo, Stufe 2 kf_k5g3_tex)",
  "geometrie": {
-  "geo_emd_sha256": "eadfac31aef1864644376c9952641ff584334c3e8293702df918d3a0e3758409",
+  "geo_emd_sha256": "db9404a18368f420050cddbc45f06fca11c24c80a0d315082668280576590e00",
   "geometrie_gleich_kf_k5g3_geo": "ja (Ecken, Normalen, Flaechen-Ecken aller Netze; sonst Abbruch)",
   "spalt": {
+   "kinder_ausserhalb_mutter_rechteck": 0,
    "kinder_neue_zeile": 8721,
    "kinder_verschoben": 1544,
-   "muetter_verschoben": 78
+   "muetter_verschoben": 81
   },
+  "spalt_tabelle": "geo/spalt_uv_tabelle.json (uvfein)",
   "stufe": "kf_k5g3_geo.geometrie_form",
   "teilstufe": {
    "basis": "f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1",
@@ -35,6 +39,7 @@
     "krallen"
    ]
   },
+  "uv_gegen_geo": "gleich bis auf den Kopie-Versatz (ausser 11 Augen-Dreiecke)",
   "voll": {
    "basis": "f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1",
    "krallen": {
@@ -53,8 +58,32 @@
    "stufen": [
     "posen",
     "krallen",
-    "spalt"
-   ]
+    "spalt",
+    "uvfein"
+   ],
+   "uvfein": {
+    "geaendert": 3743,
+    "gruende": {
+     "aussen": 2186,
+     "aussen+linie/kipp": 476,
+     "aussen, im Gebiet nur Linie -> B4 bleibt": 49,
+     "linie/kipp": 1179
+    },
+    "kinder": 9961,
+    "nachher": {
+     "aussen": 49,
+     "fehlrate_gew": 0.247789,
+     "kipp": 3,
+     "linie": 207
+    },
+    "viereck_kinder_unveraendert": 0,
+    "vorher": {
+     "aussen": 2711,
+     "fehlrate_gew": 0.239498,
+     "kipp": 98,
+     "linie": 1556
+    }
+   }
   }
  },
  "par": {
@@ -62,14 +91,18 @@
   "name": "K5g3",
   "textur": {
    "auge": {
-    "f": 1.9844,
-    "f_quelle": "O4: kleinster Faktor (multiplikativ auf die hellen G4-Augeneintraege, Knie wie die Haut), mit dem in Bild 2 (Buehne, Licht der Szene, ohne Videofilter) an beiden Nutzerpunkten (217,274)/(280,275) das L*-Maximum im 9x9-Fenster >= 2 x Median der Kopfhaut (Teil 22) im Ring 25x25 ohne 9x9 ist; Bisektion kf_k5g3.py --auge [1.875, 1.9844], 6 Schritte. Protokoll [f, max1, ring1, max2, ring2]: [[8.0, 36.1, 5.74, 36.1, 5.74], [4.5, 36.1, 5.74, 32.97, 5.74], [2.75, 34.53, 5.74, 19.37, 5.74], [1.875, 25.27, 5.74, 11.46, 5.74], [2.3125, 31.21, 5.74, 15.55, 5.74], [2.0938, 28.45, 5.74, 14.45, 5.74], [1.9844, 25.85, 5.74, 12.9, 5.74]]",
+    "f": 2.6972,
+    "f_quelle": "O4 (Runde 2): kleinster Faktor (multiplikativ auf die hellen G4-Augeneintraege, Knie wie die Haut), mit dem in Bild 2 (Buehne, Licht der Szene, ohne Videofilter) an beiden Nutzerpunkten der Median der Augen-Pixel (eigene Augen-Texel, kf_k5g3_auge) >= 3.0 x Median der Kopfhaut daneben ist (Ring 4-12 px). Runde 1: 9x9-Maximum >= 2 x (Sicht-Pruefer r1: im Spielfenster kein Auge). Gemessen am Stand mit f 1,98: Bild 2 2,1/2,5-fach, im Spielfenster 5080 von vorn 2,2/2,7-fach (L* 10,1/11,2 gegen 4,7/4,1) - zu schwach. Bisektion kf_k5g3.py --auge [2.6813, 2.6972], 6 Schritte. Protokoll [f, Median1, Ring1, Median2, Ring2]: [[3.0, 20.21, 5.74, 23.21, 5.74], [2.49, 15.63, 5.74, 18.11, 5.74], [2.745, 18.18, 5.74, 20.54, 5.74], [2.6175, 17.0, 5.74, 19.5, 5.74], [2.6813, 17.0, 5.74, 20.02, 5.74], [2.7131, 18.18, 5.74, 20.54, 5.74], [2.6972, 17.52, 5.74, 20.54, 5.74]]",
     "quantil": 0.9,
-    "quelle": "Runde 2, Pruefer r1 Sicht (2) 'Augen fehlen' (Augenflaechen L* 2-13): E3 'Augen = nur die hellen Nutzerpunkte' + V3 'Auge = G4-Augeneintraege' -> nur die hellen G4-Augeneintraege: L* >= texelgewichtetes 90-%-Quantil der Eintraege der K5c-Augenflaechen auf G4-Zeile 0 (oberes Zehntel = die roten Glanzeintraege 0x0c69..0x2511, bau.json textur.auge); Helligkeit eigenes f_auge (V1 je Material eine Transformation, O4), Buntheit/Ton der Quelle"
+    "quelle": "Runde 2, Pruefer K5g3 r1 Sicht (5) 'Augen verschwunden': E3 'Augen = nur die hellen Nutzerpunkte (eigene Texel)' + V3 'Auge = G4-Augeneintraege' -> die hellen G4-Augeneintraege (L* >= texelgewichtetes 90-%-Quantil der Eintraege der K5c-Augenflaechen auf G4-Zeile 0) auf eigenen Texeln an den Nutzerpunkten (Lage und Groesse: generator/k5g3_augen_mitten.json aus zonen_v2 augen.nutzerpunkte)",
+    "texel_je_radius": 4.0,
+    "texel_je_radius_quelle": "Runde 2 (eigene Augen-Texel, kf_k5g3_auge.dekal): Massstab der eigenen UV der Augen-Dreiecke = 4 Texel je Augenradius (Augenscheibe 8 Texel breit, rund genug fuer die floor-Abtastung). Gemessen (t3r2/w/dichte.py): die alte UV der 11 Augen-Dreiecke hat 0,03-0,09 Texel je Einheit (Wurzel des Flaechenverhaeltnisses; 287/288 UV-entartet), je Kante hoechstens 0,199; die neue 4/17,5 = 0,228 bzw. 4/18,8 = 0,213 ist feiner als jede alte Kante - die Rueckabtastung der Haut ausserhalb der Augenscheibe trifft darum Texel fuer Texel die alte Farbe"
    },
    "braun": {
     "C_min": 6.0,
-    "quelle": "V3 'braeunliche Musterung = braeunliche G4-Eintraege': G4-Eintraege der Hautflaechen derselben Seite mit Farbton 35-80 Grad (braun-orange) und C* > 6; Helligkeit wie Haut (f), Buntheit der Eintraege (k 1), Farbton = Kreismittel der Quelle",
+    "L_quantil": 0.9,
+    "L_quantil_quelle": "Runde 2 (Zahlen-Pruefer K5g3 r1 Gelb 2: Zonen 16/19 L* 72,6/67,2 bei Haut 23,3, 'hell-beige statt braun'): braeunlich = dunkles Orange, nicht heller als die Haut der Seite: Quell-L* <= texelgewichtetes 90-%-Quantil der Hautklasse derselben G4-Seite (das helle Ende der Haut; P90 = Seite 0 8,7 / Seite 1 17,5 / Seite 2 21,0, t3r2/w/ana2.py). Eine Rampe aus allen Seiten (Seite 2 allein haette 2 Eintraege)",
+    "quelle": "V3 'braeunliche Musterung = braeunliche G4-Eintraege': G4-Eintraege der Hautflaechen mit Farbton 35-80 Grad (braun-orange), C* > 6 und Quell-L* <= P90 der Haut ihrer Seite; Helligkeit f_s der Seite des Eintrags (multiplikativ), Buntheit der Eintraege (k 1), Farbton = Kreismittel der Quelle",
     "ton": [
      35.0,
      80.0
@@ -103,27 +136,33 @@
     ],
     "ton_band_quelle": "Auftrag QUELLEN eichung (a): Originale G4/EM30 +14..+27 Grad; K5-Staende -9..-35 Grad violett. Der Bau nimmt den G4-Hautton selbst (texelgewichteter Kreismittel der G4-Hautklasse) und bricht ab, wenn er ausserhalb liegt (V2 'weg vom Violetten')"
    },
+   "loch": {
+    "anteil": 0.5,
+    "quelle": "Runde 2 (Sicht-Pruefer K5g3 r1 (5): runder schwarzer Fleck an der rechten Augenhoehle, Netz 22, Zeile haut1, Eintraege 213/204/255; weisses Licht von vorn 57 nahezu schwarze Pixel auf Netz 22, K5e 6): Flaechen, deren gelesene Texel zu mindestens der Haelfte unter dem texelgewichteten 1-%-Quantil der Hautklasse ihrer G4-Seite liegen, sind ein schwarzes G4-Detail, das die K5c-UV ganz auf sie legt; sie bekommen eigene Texel mit Haut (Rang-Tausch auf die Hautzeile ihrer Seite; E3 'der Rest des heutigen Augenfelds wird Haut'). Gemessen (t3r2/w/dunkel.py): Anteil >= 0,5 trifft genau 22|0|28-35 (0,50-1,00); die naechste Flaeche 16|0|23 hat 0,32"
+   },
    "rundung": {
     "cmin": 3.0,
     "fenster": 7.5,
     "quelle": "kf_k5f.runde15_zeile (Riegel K5f H4: Farbtonspanne <= 15 Grad -> halbe Spanne 7,5; unbunt unter C* 3): 15-Bit-Wahl nur unter den 5-Bit-Nachbarn, Rangfolge erhalten"
    },
    "weiss": {
+    "C_max": 6.0,
+    "C_max_quelle": "Runde 2 (Zahlen-Pruefer K5g3 r1 ROT 1: weisse Musterung C* 18-25, so bunt wie das Fleisch): 'fast unbunt' = Quell-C* der hellen G4-Gelenk-Eintraege <= 6 = Obergrenze des belastbaren Bandes 'Haut wenig bunt (C* 2-6)' (GEGENPRUEFUNG_EICHUNG (a)); Buntheit der Quelle (k 1), Helligkeit f_s der Seite. Gemessen (t3r2/w/ana2.py): Seite 2 hat 31 von 33, Seite 1 5 von 108 helle Gelenk-Eintraege mit C* <= 6",
     "quantil": 0.75,
-    "quelle": "V3 'weisse Musterung = helle, fast unbunte Gelenk-Eintraege': die G4-Eintraege der K5c-Gelenkflaechen derselben G4-Seite mit L* >= texelgewichtetes 75-%-Quantil (oberes Viertel = hell); Transformation = Haut (k klein = fast unbunt)"
+    "quelle": "V3 'weisse Musterung = helle, fast unbunte Gelenk-Eintraege': die G4-Eintraege der K5c-Gelenkflaechen derselben G4-Seite mit L* >= texelgewichtetes 75-%-Quantil (oberes Viertel = hell) und Quell-C* <= C_max (fast unbunt); Transformation: Helligkeit multiplikativ f_s wie die Haut, Buntheit der Quelle (Runde 2; in Runde 1 C' = s_haut x L', Pruefer ROT)"
    }
   }
  },
  "port_texturhoehe": 3840,
  "sha256": {
-  "BAHNSTEIG_FORM.EMD": "37407afd3c414373fb4df8d35f0abf3b3739d7d0155fd2a022f6a92a8fe18384",
-  "BAHNSTEIG_FORM.TIM": "2f7b244463e4e7216e840c72e3670fdf70a375e806841b3258d834bb71cb0275",
-  "FORM.EMD": "62fa1e67657c796202cc9ed606576565ffbb4198a17fb0a863e63dd93dae8e3e",
-  "FORM.TIM": "2f7b244463e4e7216e840c72e3670fdf70a375e806841b3258d834bb71cb0275",
-  "pruef/BAHNSTEIG_FORM.EMD": "ce6766a032db6c31551ba4e455c9c91084361bceac6062584743c5509d3b8a30",
-  "pruef/BAHNSTEIG_FORM.TIM": "2f7b244463e4e7216e840c72e3670fdf70a375e806841b3258d834bb71cb0275",
-  "pruef/FORM.EMD": "6ee4ca467e347400d2dfbaa06b4ab5dd820f78290e0f690222ad63b11ef111fb",
-  "pruef/FORM.TIM": "2f7b244463e4e7216e840c72e3670fdf70a375e806841b3258d834bb71cb0275"
+  "BAHNSTEIG_FORM.EMD": "482bd63fa93dfd5a008c4c4837029f313a40e2b09ea2ee278877e6afb2fd38ef",
+  "BAHNSTEIG_FORM.TIM": "ce9a1dc9285a05196a750d1b34e8b7ef6b73e351c5a481e7dd291a9a599b83ce",
+  "FORM.EMD": "9eab983e22154c630da02a851d321db21797977226109d0100b8a2cfcfa062f1",
+  "FORM.TIM": "ce9a1dc9285a05196a750d1b34e8b7ef6b73e351c5a481e7dd291a9a599b83ce",
+  "pruef/BAHNSTEIG_FORM.EMD": "eace73604aecebbd345ac01b531892b7fc384ca933f866d88dcdee9cd5ab4508",
+  "pruef/BAHNSTEIG_FORM.TIM": "ce9a1dc9285a05196a750d1b34e8b7ef6b73e351c5a481e7dd291a9a599b83ce",
+  "pruef/FORM.EMD": "407c2946f5425ba7bcbcfa569cf56265a46e85a99c7605f4563b81e058588865",
+  "pruef/FORM.TIM": "ce9a1dc9285a05196a750d1b34e8b7ef6b73e351c5a481e7dd291a9a599b83ce"
  },
  "textur": {
   "auge": {
@@ -147,6 +186,376 @@
    "quantil": 0.9,
    "ton": 26.7
   },
+  "auge_rampe": {
+   "L": [
+    45.07,
+    48.13,
+    58.76,
+    63.67,
+    74.37,
+    95.42
+   ],
+   "w": [
+    18.0,
+    22.0,
+    10.0,
+    6.0,
+    10.0,
+    2.0
+   ],
+   "worte": [
+    13741,
+    11637,
+    17970,
+    17976,
+    20125,
+    30655
+   ]
+  },
+  "augen_dekal": {
+   "augen": [
+    {
+     "augen_texel": 175,
+     "dreiecke": 7,
+     "flaechen": [
+      {
+       "augen_texel": 45,
+       "block": [
+        501,
+        32,
+        10,
+        13
+       ],
+       "dreieck": 287,
+       "texel": 91,
+       "uv_alt": [
+        [
+         106,
+         72
+        ],
+        [
+         109,
+         72
+        ],
+        [
+         103,
+         72
+        ]
+       ],
+       "zeile_alt": 7
+      },
+      {
+       "augen_texel": 42,
+       "block": [
+        0,
+        186,
+        10,
+        13
+       ],
+       "dreieck": 288,
+       "texel": 92,
+       "uv_alt": [
+        [
+         109,
+         72
+        ],
+        [
+         112,
+         72
+        ],
+        [
+         103,
+         72
+        ]
+       ],
+       "zeile_alt": 7
+      },
+      {
+       "augen_texel": 25,
+       "block": [
+        170,
+        15,
+        23,
+        25
+       ],
+       "dreieck": 4148,
+       "texel": 345,
+       "uv_alt": [
+        [
+         238,
+         20
+        ],
+        [
+         242,
+         20
+        ],
+        [
+         229,
+         22
+        ]
+       ],
+       "zeile_alt": 5
+      },
+      {
+       "augen_texel": 27,
+       "block": [
+        210,
+        118,
+        29,
+        13
+       ],
+       "dreieck": 4151,
+       "texel": 238,
+       "uv_alt": [
+        [
+         240,
+         16
+        ],
+        [
+         229,
+         18
+        ],
+        [
+         227,
+         18
+        ]
+       ],
+       "zeile_alt": 5
+      },
+      {
+       "augen_texel": 6,
+       "block": [
+        75,
+        43,
+        13,
+        15
+       ],
+       "dreieck": 4180,
+       "texel": 131,
+       "uv_alt": [
+        [
+         106,
+         68
+        ],
+        [
+         109,
+         68
+        ],
+        [
+         109,
+         72
+        ]
+       ],
+       "zeile_alt": 7
+      },
+      {
+       "augen_texel": 12,
+       "block": [
+        40,
+        44,
+        17,
+        9
+       ],
+       "dreieck": 4181,
+       "texel": 106,
+       "uv_alt": [
+        [
+         106,
+         68
+        ],
+        [
+         109,
+         72
+        ],
+        [
+         106,
+         72
+        ]
+       ],
+       "zeile_alt": 7
+      },
+      {
+       "augen_texel": 18,
+       "block": [
+        82,
+        126,
+        17,
+        9
+       ],
+       "dreieck": 4183,
+       "texel": 106,
+       "uv_alt": [
+        [
+         109,
+         68
+        ],
+        [
+         112,
+         72
+        ],
+        [
+         109,
+         72
+        ]
+       ],
+       "zeile_alt": 7
+      }
+     ],
+     "name": "Auge rechts (vom Wesen aus; links im Bild)",
+     "radius": 17.5468,
+     "texel_je_einheit": 0.227962
+    },
+    {
+     "augen_texel": 100,
+     "dreiecke": 4,
+     "flaechen": [
+      {
+       "augen_texel": 5,
+       "block": [
+        210,
+        132,
+        33,
+        17
+       ],
+       "dreieck": 4071,
+       "texel": 338,
+       "uv_alt": [
+        [
+         241,
+         70
+        ],
+        [
+         236,
+         79
+        ],
+        [
+         236,
+         70
+        ]
+       ],
+       "zeile_alt": 5
+      },
+      {
+       "augen_texel": 56,
+       "block": [
+        105,
+        142,
+        21,
+        23
+       ],
+       "dreieck": 4082,
+       "texel": 295,
+       "uv_alt": [
+        [
+         236,
+         63
+        ],
+        [
+         235,
+         71
+        ],
+        [
+         232,
+         52
+        ]
+       ],
+       "zeile_alt": 5
+      },
+      {
+       "augen_texel": 9,
+       "block": [
+        110,
+        220,
+        19,
+        24
+       ],
+       "dreieck": 4084,
+       "texel": 280,
+       "uv_alt": [
+        [
+         237,
+         77
+        ],
+        [
+         236,
+         84
+        ],
+        [
+         233,
+         76
+        ]
+       ],
+       "zeile_alt": 5
+      },
+      {
+       "augen_texel": 30,
+       "block": [
+        97,
+        102,
+        27,
+        12
+       ],
+       "dreieck": 4085,
+       "texel": 209,
+       "uv_alt": [
+        [
+         237,
+         77
+        ],
+        [
+         233,
+         76
+        ],
+        [
+         233,
+         71
+        ]
+       ],
+       "zeile_alt": 5
+      }
+     ],
+     "name": "Auge links (vom Wesen aus; rechts im Bild)",
+     "radius": 18.7619,
+     "texel_je_einheit": 0.213198
+    }
+   ],
+   "augen_eintraege": [
+    2,
+    3,
+    5,
+    6,
+    10,
+    11
+   ],
+   "dreiecke": [
+    287,
+    288,
+    4071,
+    4082,
+    4084,
+    4085,
+    4148,
+    4151,
+    4180,
+    4181,
+    4183
+   ],
+   "worte": 17,
+   "zeile": 14
+  },
+  "braun": {
+   "L_quelle_mal_f": [
+    32.03,
+    37.57,
+    36.47
+   ],
+   "eintraege": [
+    "1:148",
+    "2:123",
+    "2:170"
+   ],
+   "ton": 70.21
+  },
   "f1": {
    "davon_haut_zeile": 16,
    "kern_eintraege": 56,
@@ -162,23 +571,18 @@
     },
     {
      "basis": "haut1",
-     "flaechen": 65,
+     "flaechen": 67,
      "material_eintraege": 153
     },
     {
      "basis": "haut1",
-     "flaechen": 58,
-     "material_eintraege": 117
+     "flaechen": 61,
+     "material_eintraege": 76
     },
     {
      "basis": "haut2",
      "flaechen": 17,
-     "material_eintraege": 42
-    },
-    {
-     "basis": "tausch0",
-     "flaechen": 2,
-     "material_eintraege": 4
+     "material_eintraege": 29
     }
    ],
    "konflikte": {
@@ -187,7 +591,18 @@
      "15"
     ]
    },
-   "kopien": 147,
+   "kopien": 150,
+   "loch_anteil": 0.5,
+   "loch_flaechen": {
+    "22|0|28": 3.513,
+    "22|0|29": 3.513,
+    "22|0|30": 3.513,
+    "22|0|31": 3.513,
+    "22|0|32": 3.513,
+    "22|0|33": 3.513,
+    "22|0|34": 3.513,
+    "22|0|35": 3.513
+   },
    "zonen": {
     "11": {
      "material": "muster",
@@ -249,12 +664,6 @@
      "traeger": 68,
      "zone_texel": 2201
     },
-    "29": {
-     "material": "auge",
-     "texel_flaeche_paare": 24,
-     "traeger": 5,
-     "zone_texel": 21
-    },
     "3": {
      "material": "muster",
      "texel_flaeche_paare": 71,
@@ -272,6 +681,12 @@
      "texel_flaeche_paare": 570,
      "traeger": 28,
      "zone_texel": 408
+    },
+    "L": {
+     "material": "hautrampe",
+     "texel_flaeche_paare": 222,
+     "traeger": 8,
+     "zone_texel": null
     }
    }
   },
@@ -319,7 +734,7 @@
     ],
     "nach": [
      384,
-     0
+     29
     ],
     "seite_alt": 3,
     "seite_neu": 3,
@@ -337,7 +752,7 @@
     ],
     "nach": [
      384,
-     29
+     40
     ],
     "seite_alt": 3,
     "seite_neu": 3,
@@ -355,7 +770,7 @@
     ],
     "nach": [
      384,
-     44
+     55
     ],
     "seite_alt": 3,
     "seite_neu": 3,
@@ -373,7 +788,7 @@
     ],
     "nach": [
      384,
-     59
+     70
     ],
     "seite_alt": 3,
     "seite_neu": 3,
@@ -391,7 +806,7 @@
     ],
     "nach": [
      384,
-     77
+     88
     ],
     "seite_alt": 3,
     "seite_neu": 3,
@@ -409,7 +824,7 @@
     ],
     "nach": [
      384,
-     96
+     126
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -427,7 +842,7 @@
     ],
     "nach": [
      384,
-     125
+     0
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -445,7 +860,7 @@
     ],
     "nach": [
      384,
-     138
+     149
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -463,7 +878,7 @@
     ],
     "nach": [
      384,
-     151
+     162
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -481,7 +896,7 @@
     ],
     "nach": [
      384,
-     166
+     177
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -499,7 +914,7 @@
     ],
     "nach": [
      384,
-     181
+     192
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -517,7 +932,7 @@
     ],
     "nach": [
      384,
-     195
+     206
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -535,7 +950,7 @@
     ],
     "nach": [
      384,
-     205
+     216
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -553,7 +968,7 @@
     ],
     "nach": [
      384,
-     216
+     227
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -571,7 +986,7 @@
     ],
     "nach": [
      384,
-     227
+     238
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -588,8 +1003,8 @@
      12
     ],
     "nach": [
-     384,
-     239
+     386,
+     138
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -607,7 +1022,7 @@
     ],
     "nach": [
      395,
-     138
+     184
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -624,8 +1039,8 @@
      12
     ],
     "nach": [
-     395,
-     173
+     397,
+     224
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -642,8 +1057,8 @@
      10
     ],
     "nach": [
-     396,
-     126
+     395,
+     151
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -660,8 +1075,8 @@
      11
     ],
     "nach": [
-     397,
-     94
+     398,
+     245
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -678,8 +1093,8 @@
      14
     ],
     "nach": [
-     397,
-     211
+     399,
+     163
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -697,7 +1112,7 @@
     ],
     "nach": [
      400,
-     57
+     32
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -714,8 +1129,8 @@
      14
     ],
     "nach": [
-     400,
-     186
+     399,
+     69
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -732,8 +1147,8 @@
      10
     ],
     "nach": [
-     399,
-     155
+     397,
+     127
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -751,7 +1166,7 @@
     ],
     "nach": [
      400,
-     38
+     49
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -769,7 +1184,7 @@
     ],
     "nach": [
      400,
-     226
+     210
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -786,8 +1201,8 @@
      10
     ],
     "nach": [
-     400,
-     200
+     401,
+     197
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -804,8 +1219,8 @@
      20
     ],
     "nach": [
-     403,
-     71
+     410,
+     56
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -823,7 +1238,7 @@
     ],
     "nach": [
      406,
-     151
+     77
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -840,8 +1255,8 @@
      22
     ],
     "nach": [
-     411,
-     177
+     410,
+     194
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -858,8 +1273,8 @@
      20
     ],
     "nach": [
-     411,
-     31
+     408,
+     127
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -876,8 +1291,8 @@
      21
     ],
     "nach": [
-     412,
-     126
+     411,
+     234
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -894,8 +1309,8 @@
      20
     ],
     "nach": [
-     411,
-     223
+     412,
+     32
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -912,8 +1327,8 @@
      21
     ],
     "nach": [
-     414,
-     52
+     416,
+     148
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -930,8 +1345,8 @@
      8
     ],
     "nach": [
-     409,
-     201
+     413,
+     178
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -948,8 +1363,8 @@
      12
     ],
     "nach": [
-     412,
-     244
+     414,
+     217
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -966,8 +1381,8 @@
      13
     ],
     "nach": [
-     416,
-     210
+     419,
+     86
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -984,8 +1399,8 @@
      13
     ],
     "nach": [
-     418,
-     74
+     420,
+     0
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1002,8 +1417,8 @@
      14
     ],
     "nach": [
-     418,
-     162
+     421,
+     187
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1020,8 +1435,8 @@
      13
     ],
     "nach": [
-     418,
-     0
+     422,
+     40
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1038,8 +1453,8 @@
      20
     ],
     "nach": [
-     422,
-     184
+     423,
+     17
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1056,8 +1471,8 @@
      20
     ],
     "nach": [
-     422,
-     224
+     423,
+     215
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1074,8 +1489,8 @@
      19
     ],
     "nach": [
-     423,
-     88
+     426,
+     54
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1093,7 +1508,7 @@
     ],
     "nach": [
      422,
-     14
+     126
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1110,8 +1525,8 @@
      20
     ],
     "nach": [
-     423,
-     147
+     424,
+     235
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1128,8 +1543,8 @@
      21
     ],
     "nach": [
-     426,
-     124
+     429,
+     146
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1146,8 +1561,8 @@
      21
     ],
     "nach": [
-     425,
-     52
+     428,
+     74
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1164,8 +1579,8 @@
      21
     ],
     "nach": [
-     429,
-     34
+     426,
+     170
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1183,7 +1598,7 @@
     ],
     "nach": [
      429,
-     197
+     192
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1200,8 +1615,8 @@
      22
     ],
     "nach": [
-     429,
-     233
+     432,
+     12
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1218,8 +1633,8 @@
      25
     ],
     "nach": [
-     432,
-     168
+     436,
+     35
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1236,8 +1651,8 @@
      19
     ],
     "nach": [
-     431,
-     97
+     433,
+     95
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1254,8 +1669,8 @@
      12
     ],
     "nach": [
-     431,
-     69
+     433,
+     222
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1272,7 +1687,7 @@
      11
     ],
     "nach": [
-     431,
+     432,
      0
     ],
     "seite_alt": 1,
@@ -1290,8 +1705,8 @@
      18
     ],
     "nach": [
-     432,
-     7
+     435,
+     125
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1309,7 +1724,7 @@
     ],
     "nach": [
      437,
-     206
+     202
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1327,7 +1742,7 @@
     ],
     "nach": [
      437,
-     111
+     51
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1344,8 +1759,8 @@
      15
     ],
     "nach": [
-     431,
-     82
+     436,
+     115
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1363,7 +1778,7 @@
     ],
     "nach": [
      437,
-     128
+     68
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1380,8 +1795,8 @@
      39
     ],
     "nach": [
-     439,
-     160
+     440,
+     137
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1398,8 +1813,8 @@
      13
     ],
     "nach": [
-     436,
-     53
+     440,
+     24
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1416,8 +1831,8 @@
      18
     ],
     "nach": [
-     439,
-     238
+     443,
+     183
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1434,8 +1849,8 @@
      29
     ],
     "nach": [
-     441,
-     21
+     447,
+     83
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1453,7 +1868,7 @@
     ],
     "nach": [
      449,
-     69
+     225
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1470,8 +1885,8 @@
      34
     ],
     "nach": [
-     450,
-     203
+     453,
+     147
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1488,7 +1903,7 @@
      24
     ],
     "nach": [
-     450,
+     451,
      0
     ],
     "seite_alt": 1,
@@ -1506,14 +1921,50 @@
      73
     ],
     "nach": [
-     455,
-     119
+     462,
+     19
     ],
     "seite_alt": 1,
     "seite_neu": 3,
     "von": [
      232,
      4
+    ]
+   },
+   {
+    "flaeche": "10|1|77",
+    "fleck_texel": 146,
+    "groesse": [
+     10,
+     26
+    ],
+    "nach": [
+     454,
+     196
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     238,
+     29
+    ]
+   },
+   {
+    "flaeche": "10|1|80",
+    "fleck_texel": 120,
+    "groesse": [
+     12,
+     55
+    ],
+    "nach": [
+     465,
+     93
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     237,
+     30
     ]
    },
    {
@@ -1524,8 +1975,8 @@
      25
     ],
     "nach": [
-     460,
-     25
+     465,
+     195
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1542,8 +1993,8 @@
      22
     ],
     "nach": [
-     462,
-     96
+     466,
+     157
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1560,8 +2011,8 @@
      33
     ],
     "nach": [
-     462,
-     193
+     469,
+     180
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1578,8 +2029,8 @@
      26
     ],
     "nach": [
-     464,
-     227
+     472,
+     0
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1596,32 +2047,14 @@
      77
     ],
     "nach": [
-     467,
-     119
+     475,
+     27
     ],
     "seite_alt": 1,
     "seite_neu": 3,
     "von": [
      237,
      0
-    ]
-   },
-   {
-    "flaeche": "10|1|77",
-    "fleck_texel": 146,
-    "groesse": [
-     10,
-     26
-    ],
-    "nach": [
-     469,
-     9
-    ],
-    "seite_alt": 1,
-    "seite_neu": 3,
-    "von": [
-     238,
-     29
     ]
    },
    {
@@ -1632,8 +2065,8 @@
      23
     ],
     "nach": [
-     469,
-     45
+     472,
+     232
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1650,32 +2083,14 @@
      61
     ],
     "nach": [
-     479,
-     108
+     482,
+     169
     ],
     "seite_alt": 1,
     "seite_neu": 3,
     "von": [
      236,
      11
-    ]
-   },
-   {
-    "flaeche": "10|1|80",
-    "fleck_texel": 120,
-    "groesse": [
-     12,
-     55
-    ],
-    "nach": [
-     478,
-     170
-    ],
-    "seite_alt": 1,
-    "seite_neu": 3,
-    "von": [
-     237,
-     30
     ]
    },
    {
@@ -1686,8 +2101,8 @@
      22
     ],
     "nach": [
-     471,
-     75
+     475,
+     129
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1704,8 +2119,8 @@
      20
     ],
     "nach": [
-     476,
-     26
+     477,
+     105
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1722,8 +2137,8 @@
      17
     ],
     "nach": [
-     479,
-     59
+     480,
+     22
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1740,8 +2155,8 @@
      16
     ],
     "nach": [
-     480,
-     0
+     483,
+     40
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1758,8 +2173,8 @@
      20
     ],
     "nach": [
-     482,
-     225
+     483,
+     231
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1776,8 +2191,8 @@
      12
     ],
     "nach": [
-     480,
-     46
+     484,
+     151
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1795,7 +2210,7 @@
     ],
     "nach": [
      486,
-     92
+     56
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1812,8 +2227,8 @@
      22
     ],
     "nach": [
-     489,
-     199
+     487,
+     74
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1848,11 +2263,11 @@
      58
     ],
     "nach": [
-     490,
-     102
+     0,
+     26
     ],
     "seite_alt": 1,
-    "seite_neu": 3,
+    "seite_neu": 0,
     "von": [
      230,
      20
@@ -1867,7 +2282,7 @@
     ],
     "nach": [
      0,
-     25
+     81
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -1884,8 +2299,8 @@
      16
     ],
     "nach": [
-     484,
-     15
+     487,
+     0
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -1903,7 +2318,7 @@
     ],
     "nach": [
      0,
-     53
+     109
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -1921,7 +2336,7 @@
     ],
     "nach": [
      0,
-     77
+     133
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -1939,7 +2354,7 @@
     ],
     "nach": [
      0,
-     85
+     153
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -1957,7 +2372,7 @@
     ],
     "nach": [
      0,
-     126
+     194
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -1974,8 +2389,8 @@
      34
     ],
     "nach": [
-     0,
-     180
+     9,
+     44
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -1992,8 +2407,8 @@
      21
     ],
     "nach": [
-     0,
-     214
+     15,
+     75
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2010,8 +2425,8 @@
      11
     ],
     "nach": [
-     439,
-     149
+     424,
+     100
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -2028,8 +2443,8 @@
      11
     ],
     "nach": [
-     456,
-     54
+     448,
+     39
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -2046,11 +2461,11 @@
      18
     ],
     "nach": [
-     490,
-     170
+     19,
+     27
     ],
     "seite_alt": 1,
-    "seite_neu": 3,
+    "seite_neu": 0,
     "von": [
      131,
      44
@@ -2064,8 +2479,8 @@
      18
     ],
     "nach": [
-     495,
-     42
+     493,
+     162
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -2082,8 +2497,8 @@
      19
     ],
     "nach": [
-     496,
-     77
+     493,
+     181
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -2100,8 +2515,8 @@
      13
     ],
     "nach": [
-     495,
-     156
+     493,
+     97
     ],
     "seite_alt": 1,
     "seite_neu": 3,
@@ -2118,11 +2533,11 @@
      12
     ],
     "nach": [
-     0,
-     231
+     493,
+     123
     ],
     "seite_alt": 1,
-    "seite_neu": 0,
+    "seite_neu": 3,
     "von": [
      156,
      103
@@ -2137,7 +2552,7 @@
     ],
     "nach": [
      22,
-     85
+     153
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2154,8 +2569,8 @@
      66
     ],
     "nach": [
-     24,
-     41
+     23,
+     101
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2172,11 +2587,11 @@
      21
     ],
     "nach": [
-     16,
-     194
+     493,
+     201
     ],
     "seite_alt": 1,
-    "seite_neu": 0,
+    "seite_neu": 3,
     "von": [
      228,
      8
@@ -2190,8 +2605,8 @@
      21
     ],
     "nach": [
-     18,
-     234
+     26,
+     0
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2208,8 +2623,8 @@
      28
     ],
     "nach": [
-     22,
-     15
+     29,
+     93
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2227,7 +2642,7 @@
     ],
     "nach": [
      25,
-     134
+     202
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2244,8 +2659,8 @@
      32
     ],
     "nach": [
-     28,
-     167
+     31,
+     49
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2262,8 +2677,8 @@
      40
     ],
     "nach": [
-     39,
-     34
+     41,
+     3
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2280,8 +2695,8 @@
      32
     ],
     "nach": [
-     47,
-     70
+     43,
+     121
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2298,8 +2713,8 @@
      55
     ],
     "nach": [
-     53,
-     101
+     48,
+     152
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2316,8 +2731,8 @@
      39
     ],
     "nach": [
-     30,
-     196
+     54,
+     66
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2334,8 +2749,8 @@
      31
     ],
     "nach": [
-     49,
-     194
+     59,
+     25
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2352,8 +2767,8 @@
      60
     ],
     "nach": [
-     63,
-     0
+     66,
+     86
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2370,8 +2785,8 @@
      25
     ],
     "nach": [
-     56,
-     168
+     58,
+     231
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2388,8 +2803,8 @@
      50
     ],
     "nach": [
-     61,
-     206
+     70,
+     169
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2406,8 +2821,8 @@
      22
     ],
     "nach": [
-     74,
-     101
+     65,
+     0
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2424,8 +2839,8 @@
      28
     ],
     "nach": [
-     29,
-     0
+     82,
+     101
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2442,8 +2857,8 @@
      25
     ],
     "nach": [
-     75,
-     186
+     85,
+     229
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2460,8 +2875,8 @@
      42
     ],
     "nach": [
-     90,
-     213
+     99,
+     180
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2478,8 +2893,8 @@
      25
     ],
     "nach": [
-     78,
-     0
+     53,
+     204
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2496,11 +2911,11 @@
      77
     ],
     "nach": [
-     106,
-     137
+     157,
+     12
     ],
     "seite_alt": 1,
-    "seite_neu": 0,
+    "seite_neu": 1,
     "von": [
      230,
      7
@@ -2514,8 +2929,8 @@
      35
     ],
     "nach": [
-     102,
-     100
+     93,
+     0
     ],
     "seite_alt": 1,
     "seite_neu": 0,
@@ -2532,8 +2947,8 @@
      47
     ],
     "nach": [
-     155,
-     0
+     175,
+     165
     ],
     "seite_alt": 1,
     "seite_neu": 1,
@@ -2550,8 +2965,8 @@
      43
     ],
     "nach": [
-     157,
-     47
+     198,
+     167
     ],
     "seite_alt": 1,
     "seite_neu": 1,
@@ -2561,57 +2976,147 @@
     ]
    },
    {
-    "flaeche": "22|1|112",
-    "fleck_texel": 7,
+    "flaeche": "22|0|28",
+    "fleck_texel": 29,
     "groesse": [
-     7,
-     27
+     5,
+     7
     ],
     "nach": [
-     468,
-     182
-    ],
-    "seite_alt": 1,
-    "seite_neu": 3,
-    "von": [
-     231,
-     46
-    ]
-   },
-   {
-    "flaeche": "22|1|113",
-    "fleck_texel": 5,
-    "groesse": [
-     7,
-     16
-    ],
-    "nach": [
-     454,
-     101
+     392,
+     249
     ],
     "seite_alt": 1,
     "seite_neu": 3,
     "von": [
      232,
-     70
+     0
     ]
    },
    {
-    "flaeche": "22|1|152",
-    "fleck_texel": 1,
+    "flaeche": "22|0|29",
+    "fleck_texel": 30,
     "groesse": [
-     18,
-     5
+     6,
+     6
     ],
     "nach": [
      384,
-     251
+     250
     ],
     "seite_alt": 1,
     "seite_neu": 3,
     "von": [
-     226,
-     15
+     207,
+     1
+    ]
+   },
+   {
+    "flaeche": "22|0|30",
+    "fleck_texel": 26,
+    "groesse": [
+     6,
+     5
+    ],
+    "nach": [
+     396,
+     0
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     207,
+     3
+    ]
+   },
+   {
+    "flaeche": "22|0|31",
+    "fleck_texel": 25,
+    "groesse": [
+     5,
+     6
+    ],
+    "nach": [
+     395,
+     197
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     232,
+     0
+    ]
+   },
+   {
+    "flaeche": "22|0|32",
+    "fleck_texel": 26,
+    "groesse": [
+     5,
+     6
+    ],
+    "nach": [
+     384,
+     24
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     232,
+     0
+    ]
+   },
+   {
+    "flaeche": "22|0|33",
+    "fleck_texel": 26,
+    "groesse": [
+     6,
+     5
+    ],
+    "nach": [
+     400,
+     84
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     232,
+     0
+    ]
+   },
+   {
+    "flaeche": "22|0|34",
+    "fleck_texel": 30,
+    "groesse": [
+     6,
+     6
+    ],
+    "nach": [
+     400,
+     237
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     232,
+     0
+    ]
+   },
+   {
+    "flaeche": "22|0|35",
+    "fleck_texel": 30,
+    "groesse": [
+     5,
+     7
+    ],
+    "nach": [
+     403,
+     61
+    ],
+    "seite_alt": 1,
+    "seite_neu": 3,
+    "von": [
+     232,
+     0
     ]
    },
    {
@@ -2622,8 +3127,8 @@
      11
     ],
     "nach": [
-     75,
-     124
+     103,
+     130
     ],
     "seite_alt": 2,
     "seite_neu": 0,
@@ -2640,8 +3145,8 @@
      19
     ],
     "nach": [
-     106,
-     17
+     69,
+     147
     ],
     "seite_alt": 2,
     "seite_neu": 0,
@@ -2658,8 +3163,8 @@
      14
     ],
     "nach": [
-     159,
-     166
+     166,
+     0
     ],
     "seite_alt": 2,
     "seite_neu": 1,
@@ -2676,8 +3181,8 @@
      12
     ],
     "nach": [
-     478,
-     243
+     493,
+     218
     ],
     "seite_alt": 2,
     "seite_neu": 3,
@@ -2694,8 +3199,8 @@
      13
     ],
     "nach": [
-     407,
-     102
+     443,
+     235
     ],
     "seite_alt": 2,
     "seite_neu": 3,
@@ -2712,8 +3217,8 @@
      9
     ],
     "nach": [
-     442,
-     226
+     406,
+     99
     ],
     "seite_alt": 2,
     "seite_neu": 3,
@@ -2730,11 +3235,11 @@
      15
     ],
     "nach": [
-     491,
+     28,
      241
     ],
     "seite_alt": 2,
-    "seite_neu": 3,
+    "seite_neu": 0,
     "von": [
      267,
      117
@@ -2748,8 +3253,8 @@
      13
     ],
     "nach": [
-     496,
-     61
+     447,
+     68
     ],
     "seite_alt": 2,
     "seite_neu": 3,
@@ -2766,8 +3271,8 @@
      15
     ],
     "nach": [
-     499,
-     5
+     497,
+     136
     ],
     "seite_alt": 2,
     "seite_neu": 3,
@@ -2784,11 +3289,11 @@
      16
     ],
     "nach": [
-     93,
-     0
+     205,
+     163
     ],
     "seite_alt": 2,
-    "seite_neu": 0,
+    "seite_neu": 1,
     "von": [
      308,
      22
@@ -2802,8 +3307,8 @@
      15
     ],
     "nach": [
-     497,
-     139
+     496,
+     241
     ],
     "seite_alt": 2,
     "seite_neu": 3,
@@ -2820,8 +3325,8 @@
      13
     ],
     "nach": [
-     160,
-     181
+     210,
+     88
     ],
     "seite_alt": 2,
     "seite_neu": 1,
@@ -2838,8 +3343,8 @@
      14
     ],
     "nach": [
-     3,
-     174
+     39,
+     3
     ],
     "seite_alt": 2,
     "seite_neu": 0,
@@ -2856,11 +3361,11 @@
      14
     ],
     "nach": [
-     0,
-     118
+     454,
+     123
     ],
     "seite_alt": 2,
-    "seite_neu": 0,
+    "seite_neu": 3,
     "von": [
      331,
      23
@@ -2874,11 +3379,11 @@
      14
     ],
     "nach": [
-     46,
-     157
+     498,
+     17
     ],
     "seite_alt": 2,
-    "seite_neu": 0,
+    "seite_neu": 3,
     "von": [
      323,
      26
@@ -2892,8 +3397,8 @@
      14
     ],
     "nach": [
-     29,
-     242
+     67,
+     55
     ],
     "seite_alt": 2,
     "seite_neu": 0,
@@ -2910,50 +3415,14 @@
      16
     ],
     "nach": [
-     75,
-     136
+     499,
+     55
     ],
     "seite_alt": 2,
-    "seite_neu": 0,
+    "seite_neu": 3,
     "von": [
      322,
      13
-    ]
-   },
-   {
-    "flaeche": "22|0|82",
-    "fleck_texel": 8,
-    "groesse": [
-     12,
-     3
-    ],
-    "nach": [
-     397,
-     0
-    ],
-    "seite_alt": 0,
-    "seite_neu": 3,
-    "von": [
-     102,
-     71
-    ]
-   },
-   {
-    "flaeche": "22|0|83",
-    "fleck_texel": 3,
-    "groesse": [
-     15,
-     3
-    ],
-    "nach": [
-     441,
-     200
-    ],
-    "seite_alt": 0,
-    "seite_neu": 3,
-    "von": [
-     102,
-     71
     ]
    }
   ],
@@ -2989,11 +3458,6 @@
     "L": 5.65,
     "eintraege": 1,
     "ersatz": 2115
-   },
-   "14": {
-    "L": 9.48,
-    "eintraege": 1,
-    "ersatz": 3172
    },
    "2": {
     "L": 2.19,
@@ -3069,7 +3533,7 @@
     }
    }
   },
-  "texel_neu": 40034,
+  "texel_neu": 40610,
   "zeilen": [
    "maul0",
    "maul1",
@@ -3085,8 +3549,10 @@
    "fleck_haut1_1",
    "fleck_haut1_2",
    "fleck_haut2_3",
-   "fleck_tausch0_4"
-  ]
+   "auge"
+  ],
+  "zugriffe_abgetastet": 457031,
+  "zugriffe_ungeschrieben": 0
  },
  "variante": "K5g3",
  "zeilen": 15
