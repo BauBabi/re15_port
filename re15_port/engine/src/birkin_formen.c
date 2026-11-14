@@ -339,8 +339,13 @@ static int32_t s_griff_y = BF_SM_GRIFF_Y;   /* aktueller Griffpunkt (bf_klauenzi
  * 231 (Video 145 165 200 225 244 244 224); Kopf-y 197..223 (Video 172..180: das Video-Modell ist laenger). */
 #define BF_SM_FLUG          0x11
 #define BF_SM_FLUG_BILD     62
+/* Runde 5 (Pruefer Runde 4 M3 "Zucken beim Absprung h2..h5: die Wurzel laeuft erst rueckwaerts (x -12470 -> -13154, Schwerpunkt
+ * -21 px), dann vor (+26)"; Video steigt stetig nach rechts oben): der Versatz s wuchs h1..h4 schneller als die Gleitbahn vorrueckt
+ * (Aktorpunkt im Bild x 61.9 / 39.4 / 25.4 / 15.4 / 38.3 bei h1..h5). Jetzt liegt der Aktorpunkt h0..h5 still bei x 39.4 (s -375 schon
+ * im Hocken h0/h1, h3..h5 s -673 / -971 / -1332 statt -900 / -1350 / -1350) - die Fuesse stehen wie im Video (h2..h5 x 20 / 27 / 25 /
+ * 28), der Koerper geht nur ueber Kippung und Ueberblendung nach vorn; ab h6 wie Runde 4. */
 static const int16_t k_sm_flug[10][4] = {      /* h, rz, s, Y */
-    {  2, 175,  -375, -193 }, {  3, 375,  -900, -494 }, {  4, 400, -1350, -597 }, {  5, 550, -1350, -788 },
+    {  2, 175,  -375, -193 }, {  3, 375,  -673, -494 }, {  4, 400,  -971, -597 }, {  5, 550, -1332, -788 },
     {  6, 625, -1650, -958 }, {  7, 725, -1950, -1043 }, {  8, 725, -1950, -966 }, {  9, 675, -1950, -849 },
     { 10, 525, -1650, -625 }, { 11, 300,  -900, -409 } };
 static const int16_t k_sm_flug_aus[6] = { 875, 656, 410, 205, 77, 19 };   /* h12..h17: Restgewicht x 1000 (s. oben) */
@@ -1252,6 +1257,11 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     if (h < BF_H_SPRUNG_AB) {                                             /* hockt (Video h0..1) */
         bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0 + (h < 0 ? 0 : h));
         m->rot_y = bf_blick(m, b->x, b->z);
+        if (h >= 0) {                                                     /* Runde 5 M3: Versatz s von h2 schon im Hocken */
+            s_sm_schatten[0] = 1; s_sm_schatten[1] = k_sm_gleit[0][1]; s_sm_schatten[2] = k_sm_gleit[0][2];
+            m->x = k_sm_gleit[0][1] + ((BF_GLEIT_DX * k_sm_flug[0][2]) >> 12);
+            m->z = k_sm_gleit[0][2] + ((BF_GLEIT_DZ * k_sm_flug[0][2]) >> 12);
+        }
     } else if (h < BF_H_BERUEHRUNG) {                                     /* Gleiten h2..h11 (Kopf "Ansprung") */
         int i = 0;
         const int16_t *fl = k_sm_flug[h - k_sm_flug[0][0]];             /* h2..h11 (Kopf k_sm_flug) */
