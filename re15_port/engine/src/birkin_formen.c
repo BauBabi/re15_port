@@ -417,6 +417,18 @@ static const int16_t k_birkin_bild[BF_BILD_N][2] = {
  * Gier-Tabelle ist um einen Takt verschoben. Kopf-x h70..h80 (n2/blend.py) 369 370 373 363 349 345 348 353 359 365 371,
  * Video 360 355 350 352 330 - 350 - 365 - 390 (Mittel |Fehler| 13, vorher 9.4 mit Stummel). */
 #define BF_H_BEUGT       71         /* Ueberblendung in die gebeugte Haltung (s. oben) */
+/* Runde 4 (Koordinator Punkt 5 "Birkins Beine laufen beim Halten h18-h56 rueckwaerts (Hin-und-her-Haltebild); vorwaerts im Kreis,
+ * wenn das eine Szenen-Entscheidung des Ports ist; paarweise gleiche Bilder als Original-Clipdaten so lassen"):
+ *   - paarweise gleiche Bilder: Original. Die EDD von EM30_HANGAR ist unveraendert die des RE1.5-EM30 (CDEMD0.EMS Blob 16,
+ *     tools/birkin_formen.py "Byte-true geerbt: EDD (alle 21 Clips)"); Clip 0x0B Eintraege B10..B35 = Keyframe 0x1df 0x1df 0x1e0
+ *     0x1e0 ... 0x1eb 0x1eb (je zweimal), B36.. wieder einzeln. Bleibt.
+ *   - Hin und her: Port-Wahl (Runde 41 SF N1.3, Pendel B10 -> B28 -> B12 -> B27 nach der Video-Lage des Spider-Man). Jetzt
+ *     vorwaerts im Kreis B10..B28 (1 Bild je Takt), Wiedereinstieg in B10 mit Ueberblendung (+0x8f = 7 wie bf_clip); der
+ *     Griffpunkt folgt der gezeichneten (ueberblendeten) Hand mit demselben Restgewicht (k_halt_blende). */
+#define BF_HALT_H0       17
+#define BF_HALT_B0       10
+#define BF_HALT_N        19         /* B10..B28 */
+static const int16_t k_halt_blende[7] = { 125, 344, 590, 795, 923, 981, 1000 };   /* Gewicht des neuen Bilds x 1000, Takt 0.. */
 static const int16_t k_birkin_beuge[][2] = {
     {  71, 85 }, {  80, 85 }, {  81, 86 }, {  88, 86 }, {  89, 87 }, {  98, 87 }, {  99, 88 }, { 101, 88 }, { 102, 89 },
     { 103, 90 }, { 104, 92 } };
@@ -595,7 +607,9 @@ static struct {
     int32_t  w0[3], wv[3], wvor[3]; /* Neuaufbau ab NB2: Loslassen (Lage, Handtempo je Takt), Lage im Takt davor */
     int32_t  wtiefe;               /* Runde 3 N7: Blicktiefe beim Loslassen (k_wurf_luft) */
     int32_t  kvor[3];              /* Griff-Lage im Takt davor (Glaettung der paarweisen Hand-Stufen, N4) */
-} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, 0, { 0, 0, 0 } };
+    int32_t  kalt[3];              /* Runde 4 Punkt 5: Griff-Lage vor dem Wiedereinstieg B28 -> B10 */
+    int      halt_wechsel;         /* Takt des letzten Wiedereinstiegs (0 = keiner) */
+} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, 0, { 0, 0, 0 }, { 0, 0, 0 }, 0 };
 static int s_szene_gespielt = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_rs_kam_halt = 0;  /* Nachbesserung 4: Haltezeit nach einem Szenenschnitt */
@@ -783,6 +797,12 @@ static int bf_tab(const int16_t (*t)[2], int n, int h)
         if (h <= t[i][0]) return t[i - 1][1] + (t[i][1] - t[i - 1][1]) * (h - t[i - 1][0]) / (t[i][0] - t[i - 1][0]);
     return t[n - 1][1];
 }
+/* Runde 4 Punkt 5: Birkin-Bild im Griff (Kopf BF_HALT_N): vor dem Halten k_birkin_bild, dann vorwaerts im Kreis B10..B28. */
+static int bf_halt_bild(int h)
+{
+    if (h < BF_HALT_H0) return bf_tab(k_birkin_bild, BF_BILD_N, h);
+    return BF_HALT_B0 + (h - BF_HALT_H0) % BF_HALT_N;
+}
 /* Glatter Verlauf 0..4096 (smoothstep), u in Q12. */
 static int32_t bf_glatt(int32_t u)
 {
@@ -823,7 +843,7 @@ static void bf_hangar_starten(void)
     m->rot_y = bf_blick(m, b->x, b->z);
     m->hp = 100;
     s_griff_y = BF_SM_GRIFF_Y;
-    m->rot_z = 0; s_sm_schatten[0] = 0;
+    m->rot_z = 0; s_sm_schatten[0] = 0; s_h.halt_wechsel = 0;
     bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0); m->anim_frac = 0;     /* hockt: Angriffs-Clip 0x17 B8 (Video h0) */
     s_h.cut_zurueck = (int)g_scd.cam_id;                 /* der Schnitt, den der RVD-Scan gerade angefordert hat */
     bf_riegel(1);
@@ -915,7 +935,7 @@ static void bf_heben_ziel(const re15_actor_t *b, const re15_actor_t *m, int h, i
     const int hg = BF_H_GEHALTEN;
     int32_t g[3];
     re15_actor_t bb = *b, mm = *m;
-    bb.motion = BF_CLIP_GRIFF; bb.anim_frame = (uint8_t)bf_tab(k_birkin_bild, BF_BILD_N, hg);
+    bb.motion = BF_CLIP_GRIFF; bb.anim_frame = (uint8_t)bf_halt_bild(hg);
     bb.rot_y = (int16_t)((s_h.gier0 + bf_tab(k_birkin_gier, BF_N(k_birkin_gier), hg)) & 0x0fff);
     mm.anim_frame = (uint8_t)(m->anim_frame + (hg - h));
     bf_heben_basis(hg - 1, g);
@@ -1139,7 +1159,11 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     /* --- Birkin: Clip, Gier ------------------------------------------------------------------------------------- */
     if (h < BF_H_GANG) {
         if (h < k_birkin_bild[0][0]) re15_r38_birkin_anim(b);             /* Stand, Clip 0 laeuft */
-        else if (h < BF_H_BEUGT) bf_bild(b, BF_CLIP_GRIFF, bf_tab(k_birkin_bild, BF_BILD_N, h));
+        else if (h < BF_H_BEUGT) {                                        /* Griff, Halten vorwaerts im Kreis (Kopf BF_HALT_N) */
+            const int f_ = bf_halt_bild(h);
+            bf_bild(b, BF_CLIP_GRIFF, f_);
+            if (h > BF_HALT_H0 && f_ == BF_HALT_B0) { b->anim_frac = 7; s_h.halt_wechsel = h; }   /* Wiedereinstieg B28 -> B10 */
+        }
         else if (h < BF_H_STEHEN) {                                       /* gebeugt (Kopf k_birkin_beuge) */
             const int alt = b->anim_frame, neu = bf_tab(k_birkin_beuge, BF_N(k_birkin_beuge), h);
             bf_bild(b, BF_CLIP_GRIFF, neu);
@@ -1230,6 +1254,12 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
                   : BF_SM_GRIFF_Y * (BF_H_SACKT_BIS - h) / (BF_H_SACKT_BIS - BF_H_SACKT_AB);   /* tot: sackt im Griff ab */
         m->rot_y = bf_blick(m, b->x, b->z);
         bf_klauenziel(b, m, k);
+        {   /* Runde 4 Punkt 5: nach dem Wiedereinstieg folgt der Griffpunkt der ueberblendeten Hand (k_halt_blende) */
+            const int t_ = h - s_h.halt_wechsel;
+            if (s_h.halt_wechsel > 0 && t_ >= 0 && t_ < BF_N(k_halt_blende) - 1) {
+                for (int q = 0; q < 3; q++) k[q] = s_h.kalt[q] + (int32_t)((int64_t)(k[q] - s_h.kalt[q]) * k_halt_blende[t_] / 1000);
+            } else { s_h.kalt[0] = k[0]; s_h.kalt[1] = k[1]; s_h.kalt[2] = k[2]; }
+        }
         /* Heben h12..h18 (Kopf k_sm_gleit): vom zurueckgedrueckten Bodenpunkt zur Lage am Griff bei h18 (je Takt neu
          * vorausberechnet, bf_heben_ziel, ohne Korrektursprung), Anteil geglaettet (bf_heben_w); ab h18 haengt der Griffpunkt
          * JEDEN Takt genau auf der Sichelhand (Runde 41 SF Neuaufbau ab NB2, Nutzer 2026-11-03: Fangen und Wurf "vollkommen
