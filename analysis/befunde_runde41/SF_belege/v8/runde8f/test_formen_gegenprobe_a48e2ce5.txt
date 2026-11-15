@@ -1,0 +1,23 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build_r9e
+    Start 1372: unit_birkin_formen
+1/1 Test #1372: unit_birkin_formen ...............***Failed    0.12 sec
+EM30_HANGAR.EMD: 886 von 913 Keyframes geduckt, Fussgelenk max 342 vom EM30-Ort, 900 mit bewegtem Schwanz
+FAIL: EM30_HANGAR.EMD: Schwanzglied 16: 14 Flaechen auf 495 (Soll 14), 12 auf 493 (Soll 33), 29 auf 487, 55 gesamt (V8 Runde 8f)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 17: 0 Flaechen auf 495 (Soll 0), 28 auf 493 (Soll 77), 49 auf 487, 77 gesamt (V8 Runde 8f)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 18: 0 Flaechen auf 495 (Soll 0), 32 auf 493 (Soll 88), 56 auf 487, 88 gesamt (V8 Runde 8f)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 19: 0 Flaechen auf 495 (Soll 0), 28 auf 493 (Soll 77), 49 auf 487, 77 gesamt (V8 Runde 8f)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 20: 0 Flaechen auf 495 (Soll 0), 28 auf 493 (Soll 77), 49 auf 487, 77 gesamt (V8 Runde 8f)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 21: 0 Flaechen auf 495 (Soll 0), 28 auf 493 (Soll 77), 49 auf 487, 77 gesamt (V8 Runde 8f)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 22: 0 Flaechen auf 495 (Soll 0), 32 auf 493 (Soll 88), 89 auf 487, 121 gesamt (V8 Runde 8f)
+EM30_HANGAR.EMD: 642 Haut-CLUT-Eintraege umgefaerbt, 30 blaue grau, 13 Zusatzzeilen, Port-Texturhoehe 4096
+EM30_HANGAR.EMD: 23 Meshes, 23 Knochen, 21 Clips, 310 Tri-Vertices umgeformt, 13 Teile umtexturiert
+test_birkin_formen: 7 Fehler
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) =   0.26 sec
+
+The following tests FAILED:
+	1372 - unit_birkin_formen (Failed)
+Errors while running CTest
