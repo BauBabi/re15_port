@@ -26,8 +26,10 @@ if(NOT WORKDIR)
     message(FATAL_ERROR "r41_form_dreiecke: WORKDIR fehlt")
 endif()
 if(NOT DEFINED RE15_FORM_ASSET_ROOT)
+    # Seit dem R9-Einbau (15.11.2026, K5g3 + rechte Hand Variante 1) ist das Spiel-Asset selbst die zu pruefende Form
+    # (vorher: K5/k5g/K5g3/geo, die Geometrie-Stufe vor dem Einbau).
     get_filename_component(RE15_FORM_ASSET_ROOT
-        "${CMAKE_CURRENT_LIST_DIR}/../../../analysis/befunde_runde41/form/varianten/K5/k5g/K5g3/geo" ABSOLUTE)
+        "${CMAKE_CURRENT_LIST_DIR}/../../shared_assets/RE2" ABSOLUTE)
 endif()
 set(_variante 0)
 if(NOT RE15_FORM_ASSET_ROOT STREQUAL "-" AND EXISTS "${RE15_FORM_ASSET_ROOT}/BAHNSTEIG_FORM.EMD")

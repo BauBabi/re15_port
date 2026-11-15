@@ -11,6 +11,10 @@ Seit E32 (2026-11-09, Einbau K5e): MD1 und TIM kommen aus der Variante REFERENZ 
 bytegleich wie im Spiel-Asset; Generator varianten/K5/generator/kf_k5e.py). Die Posen kommen weiter aus dem Rig (BASIS_DIR = basis_k5c):
 K5e traegt EDD/EMR/Clips bytegleich K5c, nur MD1 (Geometrie K5d, CLUT-Worte K5e) und TIM (10 Zeilen) sind neu.
 Umschaltbar fuer Vergleiche: Umgebungsvariable S3_TESTKOPF_REF (Pfad ohne .EMD/.TIM).
+
+Seit dem R9-Einbau (2026-11-15, Nutzerentscheid "Variante1", varianten/K5/k5g/K5g3/EINBAU_R9.md): REFERENZ = varianten/K5/k5g/K5g3 (= Spiel-Asset;
+MD1 mit Spalt B4, K5c-Krallen und Spiegelhand 18; TIM 15 Zeilen). Die Bild-2-Pose (Key 542 = 412) traegt die Posen-Datei des Einbaus (rechter Arm
+17/18/Krallen = Pose h1 der Krallen-Runde R9); ihre Winkel kommen darum aus REFERENZ (Pool Key 542), Wurzel und Bild 1/Ruhe weiter aus dem Rig.
 """
 import os, sys, zlib
 HIER = os.path.dirname(os.path.abspath(__file__))
@@ -19,7 +23,8 @@ import s3_rig as S          # noqa: E402
 import form_emd as FE       # noqa: E402
 
 AUS = os.path.join(S.WURZEL, 're15_port', 'tests', 'unit', 'form_j_posen.h')
-REFERENZ = os.environ.get('S3_TESTKOPF_REF') or os.path.join(S.FORM_DIR, 'varianten', 'K5', 'ruhe', 'K5e_f1', 'BAHNSTEIG_FORM')
+REFERENZ = os.environ.get('S3_TESTKOPF_REF') or os.path.join(S.FORM_DIR, 'varianten', 'K5', 'k5g', 'K5g3', 'BAHNSTEIG_FORM')
+BILD2_KEY = 542                     # Clip 12 Bild 0 = Clip 10 Bild 45-52 (Key 412, gleiche Tripel) - Bild-2-Pose des Spiel-Assets
 
 
 def main():
@@ -28,10 +33,11 @@ def main():
     md1 = FE.sektionen(emd)['md1']
     r = S.Rig()
     namen = {0: 'BILD1', 1: 'BILD2', 2: 'RUHE'}
+    ref = FE.lese_emd(emd)
     z = ['/* form_j_posen.h - ERZEUGT von analysis/befunde_runde41/form/stufe3/gen/s3_testkopf.py, nicht von Hand aendern.',
-         ' * Referenz Formtreue seit E32 (2026-11-09): Riesenform K5e ruhige Haut mit F1-Hautrand, 10 CLUT-Zeilen (varianten/K5/ruhe/K5e_f1,',
-         ' * Generator varianten/K5/generator/kf_k5e.py; Geometrie K5d, Texel/UV K5c). Vorher E30 K5c V3 Runde 5 (stufe3/basis_k5c), davor K4.',
-         ' * MD1/TIM aus K5e_f1; Posen Bild 1/Bild 2 von K5c (Clips bytegleich), Ruhe = Ruhe von J mit Kiefer zu.',
+         ' * Referenz Formtreue seit dem R9-Einbau (2026-11-15): Riesenform K5g3 + rechte Hand Variante 1 (varianten/K5/k5g/K5g3 = Spiel-Asset,',
+         ' * Generator varianten/K5/generator/kf_k5g3.py; EINBAU_R9.md). Vorher E32 K5e_f1 (einbau_k5e_f1), E30 K5c, davor K4.',
+         ' * MD1/TIM aus K5g3; Bild 1 von K5c, Bild 2 Winkel aus dem Asset (Key 542, Posen-Datei R9), Ruhe = Ruhe von J mit Kiefer zu.',
          ' * Makronamen FORM_J_* wie bisher. Kein RE-Wert. */',
          '#ifndef FORM_J_POSEN_H', '#define FORM_J_POSEN_H', '#include <stdint.h>', '',
          '#define FORM_J_MD1_LEN %du' % len(md1), '#define FORM_J_MD1_CRC 0x%08xu' % (zlib.crc32(md1) & 0xffffffff),
@@ -39,6 +45,8 @@ def main():
     for ci in range(3):
         k = r.keyframe((r.bild1, r.bild2, r.ruhe)[ci])
         n = namen[ci]
+        if ci == 1:
+            k = dict(k, winkel=[list(w) for w in ref['pool'][BILD2_KEY]['winkel']])
         z.append('static const int16_t FORM_J_%s_WURZEL[3] = { %d, %d, %d };' % (n, *k['wurzel']))
         z.append('static const int16_t FORM_J_%s_WINKEL[32][3] = {' % n)
         for i in range(0, 32, 4):
