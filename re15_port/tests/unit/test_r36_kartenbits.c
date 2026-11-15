@@ -80,7 +80,6 @@
 #include <string.h>
 #include "re15_kanister2080_r41.h"   /* Runde 41 Spur G: Bits 114-117 */
 #include "re15_story80_r41.h"        /* Runde 41 Spur ST80 Nachbesserung 1: Bit 128 */
-#include "re15_monitor_r41.h"        /* Runde 41 Spur Monitor: Bit 38 (Monitorbild gesehen) */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -544,7 +543,6 @@ static const port_bit_t k_port[] = {
     { RE15_K2080_BANK, RE15_K2080_BIT_SUEDWURF, "RE15_K2080_BIT_SUEDWURF", "Kanister-Wurf ins Suedbecken (sonst Nord), kanister2080_r41.c (Runde 41 G NB2)" },
     { RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG, "RE15_S80_BIT_NACHTRAG", "6030 Sherry-Nachtrag offen (Fuehrerstand vor dem Wagen), gen/story80_szenen.inc Set (Runde 41 ST80 NB1)" },
     { RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT, "RE15_AN_ZUG_BIT", "Zugstart 6030 gesehen, annette_r41.c Zugstart-Programm Set (Runde 41 AN NB1/NB2)" },
-    { RE15_MON41_BANK, RE15_MON41_BIT, "RE15_MON41_BIT", "Monitorbild Hangar-Szene im Monitor Room 5030/5031 gesehen, monitor_r41.c (Runde 41 Monitor)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 
@@ -560,7 +558,7 @@ static int kollisionen(const unsigned *bits, int n, unsigned *treffer, int max_t
 static void teil_p(void)
 {
     printf("=== P: Bank-9-Bits des Ports gegen den Original-Satz ===\n");
-    unsigned alle[128]; int n = 0;   /* Runde 41 Monitor: 58 + 5 Lageplaene; Puffer wie r42/story auf 128 */
+    unsigned alle[64]; int n = 0;
     for (int i = 0; i < N_PORT; i++) {
         PRUEFE(k_port[i].bank == 9, "%s steht in Bank 9 (%u)", k_port[i].makro, k_port[i].bank);
         int im_original = k_port[i].bit < 256 && s_z.belegt[k_port[i].bit];

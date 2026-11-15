@@ -700,8 +700,6 @@ static const re15_map_zone_t *s_cur_zone;
 
 void re15_map_zone_update(unsigned room, int32_t x, int32_t z)
 {
-    { extern int re15_monitor_r41_unterwegs(void);   /* Runde 41 Spur Monitor: der Hangar im Monitorbild ist kein Besuch */
-      if (re15_monitor_r41_unterwegs()) return; }
     re15_karte_raum_gesehen(room);   /* Runde 35 Spur G: alter Raum fuer die Fahrstuhl-Etage */
     {   /* Runde 36 Spur M: mit dem Fahrstuhl auf dieser Etage ausgestiegen -> die Kabine war hier */
         unsigned kab = 0;
