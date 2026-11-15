@@ -12,6 +12,9 @@ Commit 62bd0001b (`re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD/.TIM`) und mit
 FORM.EMD/.TIM lagen nie in `shared_assets` (nur BAHNSTEIG_FORM.EMD/.TIM, wie beim Einbau 62bd0001b); die kleine FORM.EMD von K5e_f1 liegt in
 `ruhe/K5e_f1/FORM.EMD`.
 
-Diese Kopie ist seit dem R9-Einbau der Eingang "Spiel-Asset K5e_f1" fuer `generator/kf_k5g2.py` und `generator/kf_k5g3.py` (Konstante ASSET;
+Diese Kopie ist seit dem R9-Einbau der Eingang "Spiel-Asset K5e_f1" fuer `generator/kf_k5g3.py` (Konstante ASSET;
 kf_k5g3 prueft die Basis `ruhe/K5e_f1` jetzt per sha256). Sie lasen bis dahin `re15_port/shared_assets/RE2/BAHNSTEIG_FORM`, dort liegt jetzt K5g3 + R9
-(EMD a5a9a264..., TIM c00823b3...).
+(EMD 88c49ce1..., TIM c00823b3...).
+
+Hinweis git: `*.EMD`/`*.TIM` sind unter `analysis/befunde_runde41/form/` ignoriert (wie bei `einbau_k5c/`); die beiden Dateien liegen lokal in diesem
+Ordner und sind jederzeit byte-gleich aus git holbar: `git show 62bd0001b:re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD` (bzw. `.TIM`).
