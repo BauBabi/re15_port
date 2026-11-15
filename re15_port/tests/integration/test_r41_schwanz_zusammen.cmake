@@ -39,6 +39,16 @@
 #     (graue Flanke) 7,7-11,3 in 27 von 27 Bildern ROT, Asset 92a58f26 (Runde 8f, Flanke im Bauchfeld C1) 3,7-5,3; 6,5 liegt dazwischen.
 #     Original-Video (nur Richter, 640x480): Mittel 2,7, hoechstens 4,6.
 #
+# Runde 4 (Pruefer r9 Runde 3, scratchpad schwanz_r9/pruefung_r3/PRUEFUNG.md: h58-h61 / h71 Schwanz fast unsichtbar, h15/h16 rosa
+# Wurzelstueck an der linken Taille zwischen Rumpf und Arm, h17 / h29-h35 Stueck vor Schritt und Oberschenkel - kein Riegel sah es):
+# (3) jetzt F258-F316 (h15-h73) statt F301-F316, gleiche Grenzen (mehr als 20 Punkte UND mehr als 20 %).
+# (5b) TAILLE LINKS F255-F267 (h12-h24): hoechstens 10 Schwanzpunkte (320x240) je Bild NEBEN der Silhouette ueber dem Guertel (oberste
+#     Jeanszeile) rechts der Koerpermitte (Bild rechts = Birkins linke Taille zwischen Rumpf und Arm). Original h16-h24: der Schwanz kommt
+#     links aus der Koerpermitte; vorher (d8ef12963) lief dort h12-h16 ein rosa Streifen bis 18 Zeilen (320x240) ueber dem Guertel.
+# (7) MINDEST-SICHTBARKEIT F301-F314 (h58-h71): je Bild mindestens 100 Schwanzpunkte (320x240). 100 = knapp die Haelfte der kleinsten
+#     Video-Schwanzflaeche der Strecke (h58: Videolinie (405,322) -> (418,372) 51,7 Videopunkte = 25 Punkte lang x Schwanzbreite 9 = 225).
+# Messwerte und Gegenproben: scratchpad schwanz_r9/r4 (BERICHT_r4.md).
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PRUEF_TOOL=<probe_r41_schwanz_zusammen> -DWORKDIR=<dir> -P test_r41_schwanz_zusammen.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -122,7 +132,7 @@ szene_lauf(l "figuren" _dl)
 szene_lauf(b "birkin" _db)
 
 execute_process(COMMAND "${RE15_PRUEF_TOOL}" "${_dn}" "${_dt}" "${_dl}" ${_f0} ${_f1} 2 3
-                        "${_db}" "${_dn}/../schwanz.log" 70 301 316 200 20 301 315 10 317 343 65
+                        "${_db}" "${_dn}/../schwanz.log" 70 258 316 200 20 301 315 10 317 343 65 255 267 301 314 100
                 TIMEOUT 120
                 RESULT_VARIABLE _rv
                 OUTPUT_VARIABLE _out)

@@ -38,6 +38,15 @@
  *       320x240) bei t 0,2..0,8: Halbbreite je Seite bis zum Rand der Schwanzmaske (beide >= 3), Mitte = Versatz |s| <= 0,2 w (5 Proben),
  *       Rand je Seite 0,6 w .. 0,9 w (4 Proben). sRGB -> Lab (D65). Je Bild dEab = groesster Abstand in a*b* (ohne L* = Schattierung) der
  *       Mittel Mitte / Rand einer Seite. Fehler, wenn dEab > ton_max_x10 / 10 oder weniger als 10 Bilder messbar.
+ *
+ * Runde 4 (Pruefer r9 Runde 3, scratchpad schwanz_r9/pruefung_r3/PRUEFUNG.md: h58-h61 / h71 Schwanz fast unsichtbar (13-58 bzw. 0 Punkte
+ * 320x240), h15/h16 rosa Wurzelstueck an der linken Taille bis 54 Zeilen (960x720) ueber dem Guertel, h17 / h29-h35 Stueck vor Schritt und
+ * Oberschenkel - kein Riegel deckte es ab). Weitere optionale Argumente:  <taille2_f0> <taille2_f1> <sicht_f0> <sicht_f1> <sicht_min>
+ *   (5b) TAILLE LINKS: in taille2_f0..taille2_f1 je Bild hoechstens ueber_max Schwanzpunkte NEBEN der Silhouette ueber dem Guertel (oberste
+ *       Jeanszeile der Birkin) rechts der Koerpermitte (Bild rechts = Birkins linke Taille). Original h16-h24: der Schwanz kommt links aus der
+ *       Koerpermitte (Bild links); rechts zwischen Rumpf und Arm ist keiner.
+ *   (7) MINDEST-SICHTBARKEIT: in sicht_f0..sicht_f1 je Bild mindestens sicht_min Schwanzpunkte (320x240, umgerechnet).
+ *   (3) faehrt der Riegel seit Runde 4 ueber F258-F316 (h15-h73, vorher F301-F316).
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -193,6 +202,10 @@ int main(int argc, char **argv)
     const int ton = r3 && argc > 20;
     const int n_f0 = ton ? atoi(argv[18]) : 0, n_f1 = ton ? atoi(argv[19]) : -1;
     const double ton_max = ton ? atof(argv[20]) / 10.0 : 0.0;
+    const int r4 = ton && argc > 25;
+    const int u_f0 = r4 ? atoi(argv[21]) : 0, u_f1 = r4 ? atoi(argv[22]) : -1;
+    const int s_f0 = r4 ? atoi(argv[23]) : 0, s_f1 = r4 ? atoi(argv[24]) : -1, sicht_min = r4 ? atoi(argv[25]) : 0;
+    int fehler_sicht = 0, sicht_kleinst = 1 << 30, fehler_5b = 0, groesst_5b = 0;
     int fehler_ueber = 0, ueber_groesst = 0, fehler_ton = 0, ton_bilder = 0;
     double ton_groesst = 0.0;
     int fehler = 0, bilder = 0, mit_schwanz = 0, fehler_vor = 0, fehler_knick = 0;
@@ -291,6 +304,41 @@ int main(int argc, char **argv)
                     fehler_knick++;
                 }
             }
+            if (r4 && f >= u_f0 && f <= u_f1) {
+                /* (5b) Runde 4: Guertel = oberste Jeanszeile der Birkin (Lauf T ohne Schwanz, Koerper K = T != B, Jeans blau: b > r + 15,
+                 * b > g + 5, b > 60; Zeile mit >= 8 Punkten (320x240, umgerechnet), 2-%-Zeile), Mitte = mittleres x der Jeanspunkte.
+                 * Gezaehlt: Schwanzpunkte NEBEN der Silhouette (N != T, T == B) ueber dem Guertel rechts der Mitte (Birkins linke Taille). */
+                int *zj = (int *)calloc((size_t)h, sizeof(int));
+                long sx_ = 0, nj = 0;
+                for (int yy = 0; yy < h; yy++)
+                    for (int xx = 0; xx < w; xx++) {
+                        const size_t i = (size_t)yy * w + xx;
+                        const unsigned char *q = t.p + 3 * i;
+                        if (anders(&t, &bb, i) && q[2] > q[0] + 15 && q[2] > q[1] + 5 && q[2] > 60) { zj[yy]++; sx_ += xx; nj++; }
+                    }
+                const int min_z = (int)lround(8.0 * sx);
+                int zeilen = 0, gz = -1;
+                for (int yy = 0; yy < h; yy++) zeilen += zj[yy] >= min_z;
+                for (int yy = 0, k = 0; yy < h && gz < 0; yy++)
+                    if (zj[yy] >= min_z && ++k > zeilen / 50) gz = yy;
+                free(zj);
+                if (gz >= 0 && nj > 0) {
+                    const int cx = (int)(sx_ / nj);
+                    int ub = 0;
+                    for (int yy = 0; yy < gz; yy++)
+                        for (int xx = cx; xx < w; xx++) {
+                            const size_t i = (size_t)yy * w + xx;
+                            ub += sw[i] && !anders(&t, &bb, i);
+                        }
+                    const int ub320 = (int)lround(ub / (sx * sy));
+                    if (ub320 > groesst_5b) groesst_5b = ub320;
+                    if (ub320 > ueber_max) {
+                        printf("F%d (5b) TAILLE LINKS h%d: %d Schwanzpunkte (320x240) neben der Silhouette ueber dem Guertel (Zeile %.1f) rechts der Mitte FEHLER\n",
+                               f, f - 243, ub320, gz / sy);
+                        fehler_5b++;
+                    }
+                }
+            }
             if (r3 && f >= t_f0 && f <= t_f1 && f - 243 >= 58 && f - 243 <= 72) {
                 const int ymax = (int)ceil((aus_zeile(f - 243) - 4.5) * sy);      /* Zeilen y < ymax liegen ueber der Grenze */
                 int ub = 0;
@@ -302,6 +350,14 @@ int main(int argc, char **argv)
                     printf("F%d (5) UEBER DER AUSTRITTSZEILE h%d: %d Schwanzpunkte (320x240) ueber Zeile %.1f FEHLER\n", f, f - 243, ub320,
                            aus_zeile(f - 243) - 4.5);
                     fehler_ueber++;
+                }
+            }
+            if (r4 && f >= s_f0 && f <= s_f1) {               /* (7) Mindest-Sichtbarkeit (Runde 4) */
+                const int s320 = (int)lround(sw_n / (sx * sy));
+                if (s320 < sicht_kleinst) sicht_kleinst = s320;
+                if (s320 < sicht_min) {
+                    printf("F%d (7) SCHWANZ KAUM SICHTBAR h%d: %d Schwanzpunkte (320x240) < %d FEHLER\n", f, f - 243, s320, sicht_min);
+                    fehler_sicht++;
                 }
             }
             if (ton && f >= n_f0 && f <= n_f1) {
@@ -330,5 +386,8 @@ int main(int argc, char **argv)
     if (ton)
         printf("(6) Ton Mitte/Rand F%d-F%d: %d Bilder gemessen, %d Fehlerbilder (groesster dEab %.1f, Grenze %.1f) -> %s\n", n_f0, n_f1,
                ton_bilder, fehler_ton, ton_groesst, ton_max, (fehler_ton || ton_bilder < 10) ? "SCHWANZ-RANDTON" : "TON-OK");
-    return (fehler || fehler_vor || fehler_knick || fehler_ueber || (ton && (fehler_ton || ton_bilder < 10))) ? 1 : 0;
+    if (r4)
+        printf("(5b) Taille links F%d-F%d: %d Fehlerbilder (groesster Wert %d Punkte, Grenze %d) -> %s; (7) Sichtbarkeit F%d-F%d: %d Fehlerbilder (kleinster Wert %d Punkte, Grenze %d) -> %s\n", u_f0, u_f1, fehler_5b, groesst_5b, ueber_max,
+               fehler_5b ? "SCHWANZ-TAILLE-LINKS" : "TAILLE-LINKS-OK", s_f0, s_f1, fehler_sicht, sicht_kleinst, sicht_min, fehler_sicht ? "SCHWANZ-UNSICHTBAR" : "SICHT-OK");
+    return (fehler || fehler_vor || fehler_knick || fehler_ueber || fehler_5b || fehler_sicht || (ton && (fehler_ton || ton_bilder < 10))) ? 1 : 0;
 }
