@@ -253,6 +253,7 @@ static struct {
     int      bogen_an;
     int32_t  kam[3];                           /* Schwanz-Bewegung: Szenenkamera (freie Spitzentiefe) */
     int      tiefe_frei;                       /* Schwanz-Bewegung: 1 = Spitze entlang ihres Sehstrahls verschieben */
+    int      tiefe_hinten;                     /* Schwanz r9 Runde 2: 1 = hinterer Schnittpunkt des Sehstrahls (Stueck hinter dem Bein) */
     int32_t  ziel_w_vor;                       /* Schwanz-Bewegung: Gewicht des Szenenziels im letzten Kettenschritt (Anlauf/Freigabe) */
 } s_sw[RE15_ACTOR_MAX];
 
@@ -322,6 +323,14 @@ void re15_schwanz_r41_tiefe_frei(int slot, const int32_t kamera[3])
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
     s_sw[slot].tiefe_frei = kamera ? 1 : 0;
     if (kamera) for (int k = 0; k < 3; k++) s_sw[slot].kam[k] = kamera[k];
+}
+
+/* Runde 41 Schwanz r9 Runde 2 (Pruefer r9 Runde 1: "Schwanz vorn ueber dem rechten Oberschenkel bei h58-h60 und h71-h72"): mit an = 1 nimmt
+ * re15_schwanz_r41_tiefe_frei den HINTEREN Schnittpunkt des Sehstrahls - das Stueck Austritt -> Spitze liegt dann hinter dem Bein und
+ * kommt seitlich daneben hervor (Messlauf scratchpad schwanz_r9/r2, Tabelle k_schwanz_v8 Spitzen-art 5). PORT-SZENE. */
+void re15_schwanz_r41_tiefe_hinten(int slot, int an)
+{
+    if (slot >= 0 && slot < RE15_ACTOR_MAX) s_sw[slot].tiefe_hinten = an ? 1 : 0;
 }
 
 void re15_schwanz_r41_szene(int slot, int an)
@@ -772,10 +781,13 @@ static void ziel_anwenden(int slot, const float *laenge, float boden, float nade
             /* Vorderer Schnittpunkt (zur Kamera): das Video zeigt das Stueck - hinter Beinen und Rumpf laege es verdeckt (Stand D h32/h34/h58:
              * Spitze 5 Videopunkte genau, aber 0 sichtbare Schwanzpunkte). Liegt er unter dem Boden, der hintere; sonst der Bodenpunkt des
              * Strahls (Stand D h62: Spitze auf den Boden geklemmt, 28 Videopunkte neben dem Strahl). */
+            /* Schwanz r9 Runde 2: mit tiefe_hinten der hintere Schnittpunkt, falls er ueber dem Boden liegt - vorn lag das Stueck h58-h60 /
+             * h71-h72 UEBER dem rechten Oberschenkel (Port-Bein steht anders als im Video; Messlauf scratchpad schwanz_r9/r2: 112-234
+             * Schwanzpunkte vor dem Koerper in 320x240, 30-79 % des sichtbaren Schwanzes; hinten 0). */
             float sl = -b;
             if (disc >= 0.0f) {
                 const float s1 = -b - sqrtf(disc), s2 = -b + sqrtf(disc);
-                sl = (C[1] + D[1] * s1 <= boden) ? s1 : s2;
+                sl = (s_sw[slot].tiefe_hinten && C[1] + D[1] * s2 <= boden) ? s2 : (C[1] + D[1] * s1 <= boden) ? s1 : s2;
             }
             if (C[1] + D[1] * sl > boden && D[1] > 1e-6f) sl = (boden - C[1]) / D[1];
             if (sl > 64.0f) for (int k = 0; k < 3; k++) t[k] = C[k] + D[k] * sl;

@@ -65,6 +65,9 @@ void re15_schwanz_r41_bogen(int slot, const int32_t bild_n_q12[3], int32_t pfeil
 /* Runde 41 SF V8 Schwanz-Bewegung (Bauplan 5): die Spitze des Szenenziels gleitet auf dem Sehstrahl von `kamera` (Welt) so weit, dass die
  * Kette ab dem Austritt mit dem Pfeil der Bildebene genau hinreicht (Bildlage der Spitze bleibt). NULL = aus. Nur V8 unter Szenenfuehrung. */
 void re15_schwanz_r41_tiefe_frei(int slot, const int32_t kamera[3]);
+/* Runde 41 Schwanz r9 Runde 2: 1 = re15_schwanz_r41_tiefe_frei nimmt den hinteren Schnittpunkt (Stueck Austritt -> Spitze hinter dem Bein,
+ * Tabellen-art 5 in k_schwanz_v8), 0 = den vorderen. */
+void re15_schwanz_r41_tiefe_hinten(int slot, int an);
 /* Runde 41 SF V8 Schwanz-Bewegung: Bauchachse +e_h der Glieder (Knochenraum) - Hauptachse x-z der Ecken der Meshes 17-21, Seite = Innenseite
  * des Ruhebogens ueber alle Keyframes (nicht die Farbe). Rueckgabe 1 = gemessen. Spiel-Asset 66db2244 / d31f9534: (0,8956, 0, 0,4449). */
 int  re15_schwanz_r41_bauchachse(const re15_md1_t *md1, const re15_emd_skeleton_t *skel, float eh[3]);

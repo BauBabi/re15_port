@@ -15,6 +15,18 @@
 # Abstand <= 2 Punkte; dazu Schwanz in mindestens 60 Bildern (gemessen nach r9: 74 von 96; vor r9 ebenso - die Probe ist also nicht leer).
 # Gegenprobe (vor r9, Querschnitt 0, sonst gleiche exe): (1) rot F268-F273 (h25-h30), (2) rot (verdeckt 3..7). Dazu (2) unten.
 #
+# Runde 2 (Pruefer r9 Runde 1, scratchpad schwanz_r9/pruefung/PRUEFUNG.md: der Riegel war ein Pixelnaehe-Mass und blieb gruen bei einem
+# Knick wie ein Ellbogen h26-h30 und einem Schwanzstueck VOR dem rechten Oberschenkel h58-h60 / h71-h72). Vierter Lauf
+#   B RE15_SCHWANZ_MASKE=birkin (Koerperpunkte = T != B), dazu im Auswerter:
+# (3) VOR DEM KOERPER F301-F316 (h58-h73): kein Bild mit mehr als 20 Schwanzpunkten UND mehr als 20 % des sichtbaren Schwanzes ueber der
+#     Birkin. Gemessen (scratchpad schwanz_r9/r2, 320x240): vorher 93a512aef h58/h59/h60/h71/h72 155/195, 173/288, 112/371, 234/317,
+#     46/104 (30-79 %); nachher groesster Wert h62 60/595 (10 %, Nadel ueber dem Schienbein am Boden - im Video ebenso am Bein).
+# (4) SICHTBARER KNICK F255-F350: an keinem Gelenk mit beiden Gliedern sichtbar ein Bildwinkel ueber 70 Grad. Vorher 93a512aef h26-h30
+#     95/90/87/139/154 Grad (Gelenk 6); nachher groesster Wert 59 Grad (h21, unveraendert seit dem Stand der Videos 27/28: Austritt an der
+#     Huefte h18-h22). 70 liegt zwischen beiden.
+# Gegenproben (gleicher Auswerter auf eigenen Laeufen, scratchpad schwanz_r9/r2): 93a512aef ROT (3) und (4); Verhalten 7fd592184 (Querschnitt
+# 0 der verdeckten Glieder) ROT (1), (3) und (4).
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PRUEF_TOOL=<probe_r41_schwanz_zusammen> -DWORKDIR=<dir> -P test_r41_schwanz_zusammen.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -95,8 +107,10 @@ endif()
 message(STATUS "schwanz_zusammen: ${_zeilen} Bilder, kein Glied ohne Querschnitt")
 szene_lauf(t "schwanz" _dt)
 szene_lauf(l "figuren" _dl)
+szene_lauf(b "birkin" _db)
 
 execute_process(COMMAND "${RE15_PRUEF_TOOL}" "${_dn}" "${_dt}" "${_dl}" ${_f0} ${_f1} 2 3
+                        "${_db}" "${_dn}/../schwanz.log" 70 301 316 200 20
                 TIMEOUT 120
                 RESULT_VARIABLE _rv
                 OUTPUT_VARIABLE _out)
@@ -104,10 +118,10 @@ message("${_out}")
 string(REGEX MATCH "mit Schwanz ([0-9]+)" _m "${_out}")
 set(_mit "${CMAKE_MATCH_1}")
 if(NOT _rv EQUAL 0)
-    message(FATAL_ERROR "schwanz_zusammen: Schwanzteil haengt frei in der Luft (exit=${_rv}) - Dumps ${_basis}_*")
+    message(FATAL_ERROR "schwanz_zusammen: Schwanzteil haengt frei in der Luft, liegt vor dem Koerper oder knickt sichtbar (exit=${_rv}) - Dumps ${_basis}_*")
 endif()
 if(NOT _mit OR _mit LESS 60)
     message(FATAL_ERROR "schwanz_zusammen: Schwanz nur in '${_mit}' von 96 Bildern sichtbar (Soll >= 60) - Messhaken oder Szene kaputt")
 endif()
-file(REMOVE_RECURSE "${_basis}_n" "${_basis}_t" "${_basis}_l")
-message(STATUS "schwanz_zusammen: OK (Schwanz in ${_mit} Bildern, kein frei haengender Teil)")
+file(REMOVE_RECURSE "${_basis}_n" "${_basis}_t" "${_basis}_l" "${_basis}_b")
+message(STATUS "schwanz_zusammen: OK (Schwanz in ${_mit} Bildern, kein frei haengender Teil, nicht vor dem Koerper, kein sichtbarer Knick)")

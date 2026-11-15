@@ -1153,7 +1153,7 @@ static int bf_video_welt(const bf_schwanzpunkt_t *q, const re15_actor_t *b, int3
  * h90, y - 40). Die V8-Kette (re15_schwanz_r41_v8_kette) faehrt ihre eigene Tabelle; Referenz 2 / V2 / V4 behalten k_schwanz_bahn.
  * Spalten: h | Spitze x, y, art, tiefe (art wie bf_video_welt, dazu 4 = wie 1, die Tiefe ist aber frei: die Spitze gleitet auf ihrem
  * Sehstrahl, bis die Kette ab dem Austritt mit dem Pfeil genau hinreicht, vor dem Koerper - re15_schwanz_r41_tiefe_frei; Spitze = Nadelspitze,
- * schwanz_r41.c ziel_anwenden) | Durchgangsgelenk j,
+ * schwanz_r41.c ziel_anwenden; 5 = wie 4, aber hinter dem Koerper, r9 Runde 2) | Durchgangsgelenk j,
  * Austritt x, y, art, tiefe | pfeil | verdeckt.
  *   Spitze / Austritt: letzter / erster Punkt der Videolinie (tools/r41_sichel/v8/bewegung/tabelle_v8.py -> SF_belege/v8/bewegung/tabelle_v8.json).
  *   j: die Kette ab Gelenk j bis zur Nadelspitze ist 7 - j + 759/541 Glieder lang; j = rund(8,40 - sichtbare Videolaenge in Gliedern),
@@ -1170,7 +1170,25 @@ static int bf_video_welt(const bf_schwanzpunkt_t *q, const re15_actor_t *b, int3
  *      auf einen Schlag 11379). Bogen h76-h100: 0 (Video: der Bogen
  *      waechst aus dem Buckel; der Austritt liegt 20-30 Videopunkte links neben dem Port-Koerperrand, umriss.py).
  * h36-h56 (Video: nicht sichtbar, hinter den Knien) wie k_schwanz_bahn hinter dem Koerper, h74 (Spider-Man fliegt durchs Bild) schon im
- * Bogen h76 - beide ganz verdeckt (verdeckt 7). */
+ * Bogen h76 - beide ganz verdeckt (verdeckt 7).
+ * Runde 41 Schwanz r9 Runde 2 (Pruefer r9 Runde 1, scratchpad schwanz_r9/pruefung/PRUEFUNG.md: "Knick wie ein Ellbogen h26-h30" und
+ * "Schwanz vorn ueber dem rechten Oberschenkel h58-h60 / h71-h72"). Ursache: die Videopunkte liegen am VIDEO-Koerper; der Port-Koerper steht
+ * anders. Seit r9 sind die Glieder Wurzel -> Austritt sichtbar, und
+ *   - h26/h28 lag der Video-Austritt 18 / 36 Punkte (320x240) links NEBEN dem linken Port-Bein auf dem Boden: das Stueck Wurzel -> Austritt
+ *     lief sichtbar von der Huefte zum Boden und knickte dort zur Spitze hoch (Bildknick 87-154 Grad h26-h30, Lauf alt 93a512aef);
+ *   - h58-h60 / h71-h72 lag das Stueck Austritt -> Spitze mit dem vorderen Schnittpunkt (art 4) UEBER dem rechten Oberschenkel (112-234
+ *     Schwanzpunkte vor dem Koerper, 30-79 % des sichtbaren Schwanzes).
+ * Aenderung (PORT-SZENE, gemessen an der Koerpermaske des Laufs alt = Lauf ohne Schwanz minus Lauf ohne Birkin, Messhaken RE15_SCHWANZ_MASKE):
+ *   h26 / h28: Austritt auf die Mitte des linken Port-Beins in der Bildzeile des Video-Austritts (h26 Zeile 165: Bein x 173..192 -> 182,5 ->
+ *     Video 2 x 182,5 + 1,97 = 366; h28 Zeile 163: 174..192 -> 183 -> 368), Blicktiefe +600 hinter das Bein (mit 0 zeigte h27 den Knick noch,
+ *     Bildknick 101 Grad, 33-77 Punkte vor dem Bein); Spitze unveraendert. j nach der Regel oben aus der neuen sichtbaren Laenge: h26 132,9
+ *     Videopunkte / 36,0 je Glied = 3,69 -> rund(8,40 - 3,69) = 5; h28 143,7 / 36,6 = 3,93 -> 5. Der Knick Wurzel -> Austritt liegt jetzt hinter
+ *     dem Bein; sichtbar ist das Stueck vom Bein zur Spitze (wie im Video: der Schwanz kommt hinter dem linken Bein hervor).
+ *   h30: Austritt wie h32 (374,340) in den linken Oberschenkel innen (374,345) statt 7 Punkte links neben das Bein.
+ *   h58 / h60 / h70 (fuer h71) / h72: Spitze art 5 = hinterer Schnittpunkt (re15_schwanz_r41_tiefe_hinten): das Stueck liegt hinter dem
+ *     rechten Bein und kommt seitlich daneben hervor (Video h58-h62: der Schwanz kommt rechts neben dem Oberschenkel hervor).
+ *   Gemessen nachher (scratchpad schwanz_r9/r2, 320x240): sichtbarer Bildknick h25-h30 hoechstens 38 Grad (vorher 95/90/87/139/154), Schwanz
+ *   vor dem Koerper h58-h61 / h71-h72 0 Punkte. Riegel: integration_r41_schwanz_zusammen (3) und (4). */
 typedef struct { int16_t h, sx, sy, sart, stiefe, vj, vx, vy, vart, vtiefe, pfeil, verdeckt; } bf_schwanz_v8_t;
 static const bf_schwanz_v8_t k_schwanz_v8[] = {
     /* h   Spitze              j  Austritt           pfeil verdeckt   Videolinie (Pfeil Videopunkte, sichtbare Glieder) */
@@ -1179,24 +1197,24 @@ static const bf_schwanz_v8_t k_schwanz_v8[] = {
     {  20, 272, 372, 4,    0,  5, 327, 263, 1,    0,   0, 5 },   /* (327,263) -> (272,372), Pfeil -3,2, 3,38 */
     {  22, 233, 410, 4,    0,  3, 330, 260, 1,    0,   7, 3 },   /* Nutzer Areas4.png, Pfeil 7,3, 5,05 */
     {  24, 199, 346, 4,    0,  3, 333, 273, 1,    0,  36, 3 },   /* Nutzer Areas2.png, Knick, Pfeil 36,4, 4,92 */
-    {  26, 245, 290, 4,    0,  6, 300, 345, 1,    0,   0, 6 },   /* (300,345) -> (245,290) Spitze hoch, 2,16 */
-    {  28, 230, 298, 4,    0,  6, 262, 338, 1,    0,   0, 6 },   /* (262,338) -> (230,298), 1,40 */
-    {  30, 354, 350, 4,    0,  6, 318, 369, 1,    0,   0, 6 },   /* zwischen den Knien, 1,12 */
+    {  26, 245, 290, 4,    0,  5, 366, 345, 1,  600,   0, 5 },   /* (300,345) -> (245,290) Spitze hoch, 2,16; r9 R2: Austritt im Port-Bein */
+    {  28, 230, 298, 4,    0,  5, 368, 338, 1,  600,   0, 5 },   /* (262,338) -> (230,298), 1,40; r9 R2: Austritt im Port-Bein */
+    {  30, 354, 350, 4,    0,  6, 374, 345, 1,    0,   0, 6 },   /* zwischen den Knien, 1,12; r9 R2: Austritt wie h32 (Video 318,369) */
     {  32, 340, 378, 4,    0,  6, 374, 340, 1,    0,   0, 6 },   /* 1,37 */
     {  34, 358, 368, 4,    0,  6, 375, 330, 1,    0,   0, 6 },   /* 1,17 */
     {  36, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 },   /* h36-h56 nicht sichtbar (wie k_schwanz_bahn); ganz verdeckt: die
                                                                * zusammengelegte Kette stand sonst als roter Stummel an der Flanke
                                                                * (Sichtpruefung, h38-h56; Video: nichts) */
     {  56, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 },
-    {  58, 418, 372, 4,    0,  6, 405, 322, 1,    0,   0, 6 },   /* kurz, 1,74 */
-    {  60, 455, 388, 4,    0,  6, 420, 320, 1,    0,   0, 6 },   /* Pfeil 1,4, 2,33 */
+    {  58, 418, 372, 5,    0,  6, 405, 322, 1,    0,   0, 6 },   /* kurz, 1,74; r9 R2: hinter dem Bein (art 5) */
+    {  60, 455, 388, 5,    0,  6, 420, 320, 1,    0,   0, 6 },   /* Pfeil 1,4, 2,33; r9 R2: art 5 */
     {  62, 480, 425, 4,    0,  5, 430, 325, 1,    0,   0, 5 },   /* Pfeil 3,1, 3,38 */
     {  64, 509, 427, 4,    0,  5, 426, 320, 1,    0,   0, 5 },   /* Nutzer Areas3.png, Pfeil 4,8, 3,72 (Bodenziel art 0: 12,5 Videopunkte daneben,
                                                                * Stand E) */
     {  66, 535, 415, 4,    0,  5, 432, 320, 1,    0, -14, 5 },   /* Pfeil -14,1, 3,83 */
     {  68, 544, 395, 4,    0,  5, 435, 322, 1,    0,  -7, 5 },   /* Pfeil -6,6, 3,66 */
-    {  70, 528, 402, 4,    0,  5, 430, 322, 1,    0,   0, 5 },   /* Pfeil -2,3, 3,49 */
-    {  72, 384, 355, 4,    0,  6, 395, 338, 1,    0,   0, 6 },   /* kurzer Rest, 0,69 */
+    {  70, 528, 402, 5,    0,  5, 430, 322, 1,    0,   0, 5 },   /* Pfeil -2,3, 3,49; r9 R2: art 5 (fuer h71) */
+    {  72, 384, 355, 5,    0,  6, 395, 338, 1,    0,   0, 6 },   /* kurzer Rest, 0,69; r9 R2: art 5 */
     {  74, 280, 341, 4,    0,  2, 326, 226, 1,    0, -36, 7 },   /* Video h74 nichts (Spider-Man fliegt durchs Bild): schon in den Bogen
                                                                * h76, aber ganz verdeckt (Sichtpruefung: Rest an der Huefte) */
     /* Bogen h76-h100 (Seitenansicht): Ablesung mit EINER Methode (Augen-Agent, Pixelauswertung der Rasterblaetter, Spitze/Knolle/Rand
@@ -1268,7 +1286,7 @@ static void bf_schwanz_ziel_v8(const re15_actor_t *b, int h)
     if (w <= 0 || !c) {
         re15_schwanz_r41_ziel(s_h.birkin, NULL, 0); re15_schwanz_r41_fuehrung(s_h.birkin, NULL, 0, NULL);
         re15_schwanz_r41_verdeckt(s_h.birkin, 0); re15_schwanz_r41_rolle(s_h.birkin, 0, NULL, 0); re15_schwanz_r41_bogen(s_h.birkin, NULL, 0);
-        re15_schwanz_r41_tiefe_frei(s_h.birkin, NULL);
+        re15_schwanz_r41_tiefe_frei(s_h.birkin, NULL); re15_schwanz_r41_tiefe_hinten(s_h.birkin, 0);
         return;
     }
     int i = 0;
@@ -1305,7 +1323,8 @@ static void bf_schwanz_ziel_v8(const re15_actor_t *b, int h)
     re15_schwanz_r41_verdeckt(s_h.birkin, p0->verdeckt);
     {
         const int32_t kam[3] = { c->pos_x, c->pos_y, c->pos_z };
-        re15_schwanz_r41_tiefe_frei(s_h.birkin, p0->sart == 4 ? kam : NULL);
+        re15_schwanz_r41_tiefe_frei(s_h.birkin, (p0->sart == 4 || p0->sart == 5) ? kam : NULL);
+        re15_schwanz_r41_tiefe_hinten(s_h.birkin, p0->sart == 5);
         re15_schwanz_r41_rolle(s_h.birkin, h < BF_SCHWANZ_V8_BOGEN_AB ? 1 : 2, kam, w);
     }
 }
