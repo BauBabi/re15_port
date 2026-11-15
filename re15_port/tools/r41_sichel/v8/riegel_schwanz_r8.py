@@ -29,7 +29,9 @@ R8e Fleisch nur   (1) Runde 8c: jede Bauch-Flaeche (Klasse aus dem Fleisch-Feld,
     Bauchseite    im Bauchsektor |theta| <= Grenze(u) + TOL_GRAD (Grenze 90 -> 60, schwanz_r8.grenze; theta = Parameterwinkel der Ellipse des Rings),
                   keine Flaeche auf 487 ganz im Bauchsektor (ausser der Nadel ab y 560, die ganz grau ist); (2) PV: Anteil Fleisch-Zeile an den Schwanz-Bildpunkten mit Normalen-|theta| >= 100 <= 1 %, mit |theta| <= 40 >= 50 %;
                   (3) Herkunft: Texel unter 493 / 494 / 495 = Texel, die Original-Flaechen der Original-Zeile 480 / 481 / 482 benutzen; unter 487 = Texel
-                  der Oberseite (487) der Meshes 16-22 im Eingang 07b6703f; Asset-Texel dort bytegleich Original bzw. Eingang.
+                  der Oberseite (487) der Meshes 16-22 im Eingang 07b6703f; Asset-Texel dort bytegleich Original bzw. Eingang;
+                  (4) Runde 8e: kein Texel der Bauch-Flaechen (Rasterung KB.raster, Farbe aus ihrer CLUT-Zeile) unter L* BAUCH_L_MIN - die dunkle
+                  Naht des Original-Bilds an u 54-55 (L* 11,6-27,0) gab im Spiel den Laengsstrich an der Bauchkante (Nutzer 15.11.).
 R8f Bytegleich    Sektionen 0-6 (Skelett, Clips, Keyframes), TIM (Texturbild, 16 CLUT-Zeilen) und Meshes 0-15 (Mesh 9 = V7-Kopf) = Eingang 07b6703f,
                   ausser den 12-Bit-Winkeln der Knochen 17-22 in den von schwanz_r8.heben angehobenen Keyframes; Gliedlaengen 17-22 = (0, 541, 0).
 R8g Szene         (--szene) Schwanzkette der Szene gegen 7e: jede Verschiebung liegt in einem Takt, in dem die 7e-Kette mit den Mesh-Massen dieses
@@ -63,6 +65,7 @@ R8B_MAX, R8B_MITTEL = 6.0, 5.0        # Abweichung Port - Video je Stelle hoechs
 R8C_LAENGE = 180.0                    # sichtbare Laenge in PV (Video 216,9, vorher 164,7; der Rest liegt laut Analyse an der Wurzel und der Bahn)
 R8C_TIEF = 346                        # tiefster sichtbarer Schwanz-Bildpunkt in PV (Video 351, vorher 325; Pruefer "bis y ~350")
 WURZEL_495 = 14                       # Wurzelflaechen von Mesh 16 auf 495 (Kegel/Rohr im Rumpf, Stufe w/u, Indizes 0-21 / 34, UV wie 07b6703f)
+BAUCH_L_MIN = 30.0                    # R8e (4): Naht-Texel L* 11,6-27,0, uebrige Texel von C1 (u 54-65 v 51-55) L* 31,8-50,4 (Runde 8e, scratchpad schwanz_r9/mess/c1lab.py)
 TOL_GRAD = 2.5                        # R8e (1): Toleranz der Sektorpruefung. Der Parameterwinkel einer Ring-Ecke wird aus Mitte und Halbachsen der
                                       # Ring-Ausdehnung geschaetzt (Gehrungsebene, Manschette zum Vorglied verschoben); an den Grenz-Ecken des Baus
                                       # gemessen bis 1,4 Grad daneben. Die naechste Ruecken-Ecke liegt >= 25 Grad hinter der Grenze.
@@ -513,9 +516,25 @@ def r8e(blob, bezug, pv):
     t, te = KB.tim_teile(tim), KB.tim_teile(tim_e)
     pix_gleich = bool(np.array_equal(t['pix'], te['pix']))
     ok3 = not fremd and pix_gleich
+    # (4) Runde 8e: keine dunklen Naht-Texel auf den Bauch-Flaechen
+    import v4_gemein as G
+    dunkel, l_min = 0, 999.0
+    for b in range(16, 23):
+        for key, U in (('d', ms[b]['tuv']), ('v', ms[b]['quv'])):
+            for i, uv in enumerate(U):
+                if kl[b]['%s%d' % (key, i)] != 'bauch':
+                    continue
+                z = (uv[2] >> 6) & 0x1FF
+                c = t['clut'][z - t['cy']].astype(int)
+                lab = G.lab(np.stack([(c & 31) * 255 / 31., ((c >> 5) & 31) * 255 / 31., ((c >> 10) & 31) * 255 / 31.], -1)[None])[0]
+                mk = KB.raster(uv, 3 if len(uv) == 9 else 4, (uv[5] & 0xF) * 128)
+                L = lab[t['pix'][mk]][:, 0]
+                dunkel += int((L < BAUCH_L_MIN).sum())
+                l_min = min(l_min, float(L.min()))
+    ok4 = dunkel == 0 and n495 > 0
     return dict(falsch=falsch[:30], n_falsch=len(falsch), flaechen_495=n495, ok1=bool(ok1), pv_fleisch_aussen=round(an_aussen, 2),
                 pv_fleisch_innen=round(an_innen, 1), ok2=bool(ok2), zeilen=zeilen, fremde_texel=fremd, pix_gleich=pix_gleich, ok3=bool(ok3),
-                ok=bool(ok1 and ok2 and ok3))
+                bauch_texel_dunkel=dunkel, bauch_l_min=round(l_min, 1), ok4=bool(ok4), ok=bool(ok1 and ok2 and ok3 and ok4))
 
 
 def ring_bloecke(b, n):
@@ -690,8 +709,9 @@ def zeilen(r):
     e = r['R8e']
     z.append('R8e Fleisch nur Bauchseite: (1) %d Bauch-Flaechen (bis Runde 8b: auf 495), ausserhalb des Bauchsektors bzw. graue im Bauchsektor %d %s %s; (2) PV Fleisch-Anteil '
              'bei Normalen-|theta| >= 100: %.2f %% (<= 1), <= 40: %.1f %% (>= 50) %s; (3) Herkunft: Flaechen je Zeile %s, fremde Texel %s, Texturbild '
-             'bytegleich %s -> %s' % (e['flaechen_495'], e['n_falsch'], e['falsch'][:8], g(e['ok1']), e['pv_fleisch_aussen'], e['pv_fleisch_innen'],
-                                      g(e['ok2']), e['zeilen'], e['fremde_texel'], 'ja' if e['pix_gleich'] else 'nein', g(e['ok'])))
+             'bytegleich %s; (4) Bauch-Texel unter L* %.0f: %d (kleinstes L* %.1f) %s -> %s' % (e['flaechen_495'], e['n_falsch'], e['falsch'][:8], g(e['ok1']),
+                                      e['pv_fleisch_aussen'], e['pv_fleisch_innen'], g(e['ok2']), e['zeilen'], e['fremde_texel'],
+                                      'ja' if e['pix_gleich'] else 'nein', BAUCH_L_MIN, e['bauch_texel_dunkel'], e['bauch_l_min'], g(e['ok4']), g(e['ok'])))
     f = r['R8f']
     z.append('R8f Bytegleich zum Eingang 07b6703f ausser Meshes 16-22 und den Winkeln der Knochen 17-22 in %d angehobenen Keyframes: Sektionen 0-6 %s '
              '(EMR nach Ruecksetzen dieser Winkel gleich: %s), TIM %s, Meshes 0-15 %s (Mesh 9 %s), Gliedlaengen 541 %s -> %s'

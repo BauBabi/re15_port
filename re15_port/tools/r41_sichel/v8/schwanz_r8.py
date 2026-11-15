@@ -56,6 +56,10 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
           einfarbige Messprobe -2,7 = nur Schattierung der Einschnuerung; v 51-55: -3,2; SF_belege/v8/runde8d). Grau: EIN Feld fuer alle
           Glieder (felder.grau_alle = Feld von Glied 16), laengs je Glied gespiegelt - vorher je Glied ein eigenes Feld (17 / 21 / 22 anders) und
           ungespiegelt (Zeile v0 neben v1 an jeder Fuge; gemessen an Gelenk 5 Stufe dE 7,0, Kante 12,5 -> 3,3 / 3,9);
+  Runde 8e (Nutzer 15.11. zu 8d: "komische braune Streifen an den Raendern ... vor allem wenn er sich eindreht und man den dicken Schwanz
+          Teil sieht"): C1 ohne die dunkle Naht des Original-Bilds - u 56-65 statt 54-65 (v 51-55 wie 8d). Die Bauchkante (Fleischgrenze, sq 0)
+          lag auf der Spalte u 54 (L* 11,6-34, Naht), im Spiel ein dunkelroter Laengsstrich an jeder Bauch-/Flankengrenze (Markerlauf
+          scratchpad schwanz_r9: u 54 gruen = genau der Strich). Auswahl Original-Texel, keine Eichung; Riegel riegel_schwanz_r8 R8e (4).
   Bis Runde 8b:
   bauch = Bauchsektor: Original-Zeile 482 (Asset 495), schraeges Feld (Parallelogramm, suche(): v 114-123, Zeilenanfang u 1 -> 19, Breite 21, im Bau 20;
           Median L* 25,7 C* 24,2, hellere Partie des Original-Unterarm-Fleischs) - groesser als das 17 x 7-Feld der Runde 8 ("flaechig wie gemalt",
