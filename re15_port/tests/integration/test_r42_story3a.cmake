@@ -19,6 +19,8 @@
 #                3010 -> Laderampe -> Kartentuer (erst jetzt offen, L-10: msg 1 "You've used the Green Keycard.") -> 30E0.
 # TEIL speichern Lauf 1 wie kette bis zur Keycard in 3040, Speichern als Marvin (RE15_SAVE_TEST_AGAIN, Karte im Arbeitsordner);
 #                Lauf 2 laedt (RE15_CONTINUE_TEST): Marvin mit Keycard, orange Tuer -> 3060 -> Rueckwechsel: Leon hat alles zurueck.
+# Kartentuer: msg 1 "You've used the Green Keycard." und die Wegwerf-Frage (gen/discard_sites.inc 3010 msg 1 -> 0x36) schliesst wie im
+# Spiel erst ein Tastendruck - TIPPE 9 255 = Quadrat je 30 Bilder fuer 200 Bilder (Bank 9 Bit 255 ist nirgends belegt, Zensus).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<teil> -P test_r42_story3a.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -167,9 +169,7 @@ GEHE -26750 -19800 800
 RAEUME 6000 2500
 BLICK 2048
 TIPPE 3 60 600
-WARTE 30
-RAEUME 6000 2500
-AKTION
+TIPPE 9 255 200
 RAUM 30E0
 WARTE 30
 ENDE
