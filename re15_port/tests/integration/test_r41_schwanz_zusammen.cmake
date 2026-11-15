@@ -49,6 +49,24 @@
 #     Video-Schwanzflaeche der Strecke (h58: Videolinie (405,322) -> (418,372) 51,7 Videopunkte = 25 Punkte lang x Schwanzbreite 9 = 225).
 # Messwerte und Gegenproben: scratchpad schwanz_r9/r4 (BERICHT_r4.md).
 #
+# Runde 5 (Pruefer r9 Runde 4, scratchpad schwanz_r9/pruefung_r4/PRUEFUNG.md: h30-h34 und h72 ein kurzer rosa Klumpen unter dem Schritt, h30/h31
+# geknickt 107 / 84 Grad in 960x720 - (4) sah es bei 320x240 nicht, eine Mindestlaenge fehlte; dazu Nutzer 2026-11-15 zur Farbe "die Oberseite des
+# Schwanzes wieder eher rot als dunkel" / "NUR DIE UNTERSEITE WAR KOMISCH MIT DEN ABSCHNITTEN!!!!"):
+# (4) zaehlt auch kleine sichtbare Stuecke (Glied >= 3 Punkte, Schwanzpunkt an 30 %, 50 % ODER 70 %).
+# (6) "Ton Mitte/Rand im Bogen" (d8ef12963) ist ERSETZT durch die Farbregel 8g (Asset a02a6df3, r41/sichel_v8 83350f359):
+#   (6a) Spiel-Asset EM30_HANGAR.EMD sha256 == Pin release/em30_hangar.sha256 == 8g a02a6df3.
+#   Drei weitere Laeufe mit ausgetauschtem Schwanz-Asset (RE15_CD_ROOT-Ueberlagerung, sonst alles gleich): C8 = Asset 8c d31f9534 (Video 28,
+#   SF_belege/v8/bewegung/), MK = Klassen-Marker, NAHT = Naht-Marker (beide aus dem Spiel-Asset 8g mit runde8g/werkzeug/marker.py, abgelegt
+#   unter SF_belege/v8/schwanz_r9_r5/). Auswerter probe_r41_schwanz_farbe:
+#   (6b) Oberseite/Flanke/Nadel im Bogen F317-F343 (darin F336 = Nutzerbild 3) bildpunktgleich zu 8c: hoechstens 10 Promille anders.
+#   (6c) Unterseite ohne Abschnitte F255-F350: dE76 Mittel Bauch gegen Bauch-Fuge hoechstens 8,0.
+#   (6d) 0 Schwanzpunkte mit Naht-Texel u 54-55.
+#   Gemessen (320x240, scratchpad schwanz_r9/r5): 8g 0,00 % / 3,54 / 0; Gegenproben 8f 92a58f26 (b) 98,07 % ROT, 8c (c) 18,33 ROT, 8d 547acc80
+#   (d) 5172 ROT (und (b) 61,62 %).
+# (8) MINDESTLAENGE F272-F278 (h29-h35) und F315 (h72): je Bild 0 Schwanzpunkte (verdeckt) oder ein Stueck mindestens so lang wie die Linie des
+#   Original-Videos und mindestens zwei Schwanzbreiten (18 Punkte 320x240). Gemessen: Runde 4 (47eab4cdb) ROT h30-h34 (9,8-22,1 gegen
+#   20,0-25,0) und (4) h30-h32 (107 / 84 / 74 Grad); Runde 5 h30-h34 29,8-31,3, h35 / h72 verdeckt.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PRUEF_TOOL=<probe_r41_schwanz_zusammen> -DWORKDIR=<dir> -P test_r41_schwanz_zusammen.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -57,23 +75,48 @@ endif()
 if(NOT RE15_PRUEF_TOOL OR NOT EXISTS "${RE15_PRUEF_TOOL}")
     message(FATAL_ERROR "schwanz_zusammen: RE15_PRUEF_TOOL fehlt: '${RE15_PRUEF_TOOL}'")
 endif()
+if(NOT RE15_FARB_TOOL OR NOT EXISTS "${RE15_FARB_TOOL}")
+    message(FATAL_ERROR "schwanz_zusammen: RE15_FARB_TOOL fehlt: '${RE15_FARB_TOOL}'")
+endif()
 if(NOT WORKDIR)
     message(FATAL_ERROR "schwanz_zusammen: WORKDIR fehlt")
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
 
+# (6a) Spiel-Asset = Pin = 8g (Runde 5)
+set(_asset "${CMAKE_CURRENT_LIST_DIR}/../../shared_assets/PSX/EMD/EM30_HANGAR.EMD")
+set(_pin_datei "${CMAKE_CURRENT_LIST_DIR}/../../../release/em30_hangar.sha256")
+set(_sha_8g "a02a6df3472b99597ad520f7c76bcff62f3665ca01c495358ff5aac3c31cc744")
+file(SHA256 "${_asset}" _sha)
+file(STRINGS "${_pin_datei}" _pin LIMIT_COUNT 1)
+string(REGEX MATCH "^[0-9a-f]+" _pin "${_pin}")
+if(NOT _sha STREQUAL _pin OR NOT _sha STREQUAL _sha_8g)
+    message(FATAL_ERROR "schwanz_zusammen (6a): Spiel-Asset ${_sha}, Pin ${_pin}, verlangt 8g ${_sha_8g}")
+endif()
+message(STATUS "schwanz_zusammen (6a): Spiel-Asset = Pin = 8g a02a6df3")
+set(_belege "${CMAKE_CURRENT_LIST_DIR}/../../../analysis/befunde_runde41/SF_belege/v8")
+
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_basis "${WORKDIR}/lauf_${_lauf_id}")
 set(_f0 255)
 set(_f1 350)
 
-function(szene_lauf _name _maske _out_dir)
+# _asset_ueber: leer = Spiel-Asset, sonst EMD-Datei, die per RE15_CD_ROOT-Ueberlagerung (<lauf>/cd/EMD/EM30_HANGAR.EMD) das Schwanz-Asset ersetzt
+function(szene_lauf _name _maske _asset_ueber _out_dir)
     set(WORKDIR "${_basis}_${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}/fd")
     set(_menv "RE15_SCHWANZ_LOG=schwanz.log")
     if(_maske)
         set(_menv "RE15_SCHWANZ_MASKE=${_maske}")
+    endif()
+    if(_asset_ueber)
+        if(NOT EXISTS "${_asset_ueber}")
+            message(FATAL_ERROR "schwanz_zusammen[${_name}]: Ueberlagerungs-Asset fehlt: ${_asset_ueber}")
+        endif()
+        file(MAKE_DIRECTORY "${WORKDIR}/cd/EMD")
+        configure_file("${_asset_ueber}" "${WORKDIR}/cd/EMD/EM30_HANGAR.EMD" COPYONLY)
+        list(APPEND _menv "RE15_CD_ROOT=${WORKDIR}/cd")
     endif()
     re15_start_spiel(_rv 300
         RE15_NO_INTRO=1
@@ -103,7 +146,7 @@ function(szene_lauf _name _maske _out_dir)
     set(${_out_dir} "${WORKDIR}/fd" PARENT_SCOPE)
 endfunction()
 
-szene_lauf(n "" _dn)
+szene_lauf(n "" "" _dn)
 # (2) Kein Glied wird kuenstlich unsichtbar gemacht: der Messhaken schreibt je gezeichnetem Bild die Zahl der Glieder ab der Wurzel ohne
 # Querschnitt ("verdeckt N"). Vor r9 stand dort h16-h35 / h58-h73 3..6 (sichtbares Stueck mit Schnittkante, frei oder VOR der Huefte) und
 # h36-h57 / h74-h75 7 (Schwanz ganz weg). Verlangt: in der Szene F${_f0}-F${_f1} ueberall 0 - was hinter dem Koerper liegt, verdeckt der Koerper.
@@ -127,12 +170,15 @@ if(_ohne)
     message(FATAL_ERROR "schwanz_zusammen: Glieder ohne Querschnitt (Bild:Zahl) ${_ohne}")
 endif()
 message(STATUS "schwanz_zusammen: ${_zeilen} Bilder, kein Glied ohne Querschnitt")
-szene_lauf(t "schwanz" _dt)
-szene_lauf(l "figuren" _dl)
-szene_lauf(b "birkin" _db)
+szene_lauf(t "schwanz" "" _dt)
+szene_lauf(l "figuren" "" _dl)
+szene_lauf(b "birkin" "" _db)
+szene_lauf(c8 "" "${_belege}/bewegung/EM30_HANGAR_d31f9534.EMD" _dc8)
+szene_lauf(mk "" "${_belege}/schwanz_r9_r5/EM30_HANGAR_a02a6df3_marker_klasse.EMD" _dmk)
+szene_lauf(naht "" "${_belege}/schwanz_r9_r5/EM30_HANGAR_a02a6df3_marker_naht.EMD" _dnaht)
 
 execute_process(COMMAND "${RE15_PRUEF_TOOL}" "${_dn}" "${_dt}" "${_dl}" ${_f0} ${_f1} 2 3
-                        "${_db}" "${_dn}/../schwanz.log" 70 258 316 200 20 301 315 10 317 343 65 255 267 301 314 100
+                        "${_db}" "${_dn}/../schwanz.log" 70 258 316 200 20 301 315 10 272 278 100 255 267 301 314 100 315
                 TIMEOUT 120
                 RESULT_VARIABLE _rv
                 OUTPUT_VARIABLE _out)
@@ -140,10 +186,18 @@ message("${_out}")
 string(REGEX MATCH "mit Schwanz ([0-9]+)" _m "${_out}")
 set(_mit "${CMAKE_MATCH_1}")
 if(NOT _rv EQUAL 0)
-    message(FATAL_ERROR "schwanz_zusammen: Schwanzteil haengt frei in der Luft, liegt vor dem Koerper, knickt sichtbar, kommt ueber der Austrittszeile aus der Taille oder ist am Rand anders getoent (exit=${_rv}) - Dumps ${_basis}_*")
+    message(FATAL_ERROR "schwanz_zusammen: Schwanzteil haengt frei in der Luft, liegt vor dem Koerper, knickt sichtbar, kommt ueber der Austrittszeile aus der Taille oder ist ein Klumpen (exit=${_rv}) - Dumps ${_basis}_*")
+endif()
+execute_process(COMMAND "${RE15_FARB_TOOL}" "${_dn}" "${_dt}" "${_dc8}" "${_dmk}" "${_dnaht}" ${_f0} ${_f1} 317 343 10 80 0
+                TIMEOUT 120
+                RESULT_VARIABLE _rvf
+                OUTPUT_VARIABLE _outf)
+message("${_outf}")
+if(NOT _rvf EQUAL 0)
+    message(FATAL_ERROR "schwanz_zusammen (6): Farbe nicht 8g - Oberseite anders als 8c, Unterseite mit Abschnitten oder Naht-Texel sichtbar (exit=${_rvf}) - Dumps ${_basis}_*")
 endif()
 if(NOT _mit OR _mit LESS 60)
     message(FATAL_ERROR "schwanz_zusammen: Schwanz nur in '${_mit}' von 96 Bildern sichtbar (Soll >= 60) - Messhaken oder Szene kaputt")
 endif()
-file(REMOVE_RECURSE "${_basis}_n" "${_basis}_t" "${_basis}_l" "${_basis}_b")
-message(STATUS "schwanz_zusammen: OK (Schwanz in ${_mit} Bildern, kein frei haengender Teil, nicht vor dem Koerper, kein sichtbarer Knick)")
+file(REMOVE_RECURSE "${_basis}_n" "${_basis}_t" "${_basis}_l" "${_basis}_b" "${_basis}_c8" "${_basis}_mk" "${_basis}_naht")
+message(STATUS "schwanz_zusammen: OK (Schwanz in ${_mit} Bildern, kein frei haengender Teil, nicht vor dem Koerper, kein sichtbarer Knick, kein Klumpen, Farbe 8g)")

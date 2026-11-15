@@ -34,7 +34,7 @@
  *       linear), Port-Zeile (vy - 1,3) / 2,079 (Registrierung bf_video_welt); 4,5 = halbe Schwanzbreite (Median 9 Punkte der sichtbaren
  *       Zeilen h58-h70, Lauf 4f2b7a354): so weit reicht der Rand eines schraeg hervorkommenden Schwanzes ueber seine Mittellinie. Fehler bei
  *       mehr als ueber_max Punkten (320x240-Punkte; Messung scratchpad schwanz_r9/r3: 4f2b7a354 38-190 je Bild h58-h70, Runde 3 hoechstens 3).
- *   (6) TON MITTE/RAND: in ton_f0..ton_f1 (Bogen) Querprofile senkrecht zu jedem Glied (Gelenke aus schwanz.log, Bildlaenge >= 5 Punkte
+ *   (6) [bis Runde 4, in Runde 5 entfernt - siehe unten] TON MITTE/RAND: in ton_f0..ton_f1 (Bogen) Querprofile senkrecht zu jedem Glied (Gelenke aus schwanz.log, Bildlaenge >= 5 Punkte
  *       320x240) bei t 0,2..0,8: Halbbreite je Seite bis zum Rand der Schwanzmaske (beide >= 3), Mitte = Versatz |s| <= 0,2 w (5 Proben),
  *       Rand je Seite 0,6 w .. 0,9 w (4 Proben). sRGB -> Lab (D65). Je Bild dEab = groesster Abstand in a*b* (ohne L* = Schattierung) der
  *       Mittel Mitte / Rand einer Seite. Fehler, wenn dEab > ton_max_x10 / 10 oder weniger als 10 Bilder messbar.
@@ -47,6 +47,20 @@
  *       Koerpermitte (Bild links); rechts zwischen Rumpf und Arm ist keiner.
  *   (7) MINDEST-SICHTBARKEIT: in sicht_f0..sicht_f1 je Bild mindestens sicht_min Schwanzpunkte (320x240, umgerechnet).
  *   (3) faehrt der Riegel seit Runde 4 ueber F258-F316 (h15-h73, vorher F301-F316).
+ *
+ * Runde 5 (Pruefer r9 Runde 4, scratchpad schwanz_r9/pruefung_r4/PRUEFUNG.md: h30-h34 und h72 ein kurzer rosa Klumpen unter dem Schritt,
+ * h30/h31 geknickt 107 / 84 Grad (960x720); (4) sah es nicht, weil es bei 320x240 beide Glieder an 30 % UND 70 % sichtbar verlangte; keine
+ * Mindestlaenge). Dazu Nutzer 2026-11-15 zur Farbe: die Regel "Ton Mitte/Rand" (6) ist entfernt; die Farbe prueft seit Runde 5 der eigene
+ * Auswerter probe_r41_schwanz_farbe (Regel 8g).
+ *   (4) ein Glied zaehlt jetzt als sichtbar, wenn es im Bild >= 3 Punkte (320x240) lang ist und an 30 %, 50 % ODER 70 % seiner Laenge ein
+ *       Schwanzpunkt im Abstand <= 2 liegt (auch kleine sichtbare Stuecke).
+ *   Die Argumente 18-20 (bisher (6) Ton) sind jetzt  <laenge_f0> <laenge_f1> <laenge_prozent>, dazu nach (5b)/(7) optional <laenge_extra_f>:
+ *   (8) MINDESTLAENGE: in laenge_f0..laenge_f1 und im Bild laenge_extra_f je Bild entweder 0 Schwanzpunkte (verdeckt) oder ein sichtbares Stueck,
+ *       dessen Ausdehnung entlang der Hauptachse der Schwanzmaske (320x240) mindestens laenge_prozent % der Linie des Original-Videos ist
+ *       (video_linie320: Abstand Austritt -> Spitze tabelle_v8.json in Videopunkten / 2,04 (Registrierung bf_video_welt, Mittel aus 2 und
+ *       2,079); ungerade h Mittel der Nachbarn, h35 halbe Linie h34 (h36 nicht sichtbar)) und mindestens zwei Schwanzbreiten (18 Punkte).
+ *       Gemessen (scratchpad schwanz_r9/r5, 320x240): Runde 4 (47eab4cdb) h30-h34 9,8 / 15,4 / 22,1 / 18,3 / 14,9 gegen Videolinie 20,0-25,0,
+ *       h72 10,0 (Klumpen); Runde 5 h30-h34 29,8-31,3, h35 / h72 verdeckt (0 Punkte).
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -114,77 +128,46 @@ static double aus_zeile(int h)                       /* Port-Zeile 320x240 */
     return (vy - 1.3) / 2.079;
 }
 
-static double lin(double c) { c /= 255.0; return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4); }
-static double fl(double t) { return t > 0.008856 ? cbrt(t) : 7.787 * t + 16.0 / 116.0; }
-static void lab_von(const unsigned char *q, double o[3])
+/* (8) Linie des Original-Videos (Videopunkte, tabelle_v8.json "austritt" -> "spitze"), Rueckgabe in Punkten 320x240; -1 = kein Wert */
+static double video_linie320(int h)
 {
-    const double r = lin(q[0]), g = lin(q[1]), b = lin(q[2]);
-    const double x = (0.412453 * r + 0.357580 * g + 0.180423 * b) / 0.950456, y = 0.212671 * r + 0.715160 * g + 0.072169 * b,
-                 z = (0.019334 * r + 0.119193 * g + 0.950227 * b) / 1.088754;
-    o[0] = y > 0.008856 ? 116.0 * cbrt(y) - 16.0 : 903.3 * y;
-    o[1] = 500.0 * (fl(x) - fl(y));
-    o[2] = 200.0 * (fl(y) - fl(z));
+    static const double k[4] = { 51.2, 40.7, 51.0, 41.6 };   /* h28 (262,338)->(230,298), h30 (318,369)->(354,350), h32 (374,340)->(340,378),
+                                                                * h34 (375,330)->(358,368) */
+    double v;
+    if (h == 72) v = 20.2;                                     /* h72 (395,338)->(384,355) */
+    else if (h == 35) v = 0.5 * k[3];
+    else if (h >= 28 && h <= 34) v = (h % 2 == 0) ? k[(h - 28) / 2] : 0.5 * (k[(h - 29) / 2] + k[(h - 27) / 2]);
+    else return -1.0;
+    return v / 2.04;
 }
 
-/* (6) Tonunterschied Mitte/Rand eines Bilds (dEab, siehe Kopf); -1 = zu wenig Proben */
-static double ton_bild(const bild_t *n, const unsigned char *sw, const double P[8][2])
+/* (8) Schwanzbreite 9 Punkte (320x240): Median der sichtbaren Zeilen h58-h70, Lauf 4f2b7a354 (scratchpad schwanz_r9/r3; birkin_formen.c
+ * BF_V8_PFEIL_WURZEL). Ein sichtbares Stueck unter zwei Schwanzbreiten ist kaum laenger als breit = Klumpen. */
+#define K_SCHWANZBREITE 9.0
+
+/* (8) Ausdehnung der Schwanzmaske entlang ihrer Hauptachse, in Punkten 320x240 */
+static double laenge320(const unsigned char *sw, int w, int h)
 {
-    const int w = n->w, h = n->h;
-    const double sx = w / 320.0, sy = h / 240.0;
-    double sm[3] = { 0 }, sp[3] = { 0 }, sn[3] = { 0 }, o[3];
-    int cm = 0, cp = 0, cn = 0;
-    for (int g = 0; g < 7; g++) {
-        const double ax = P[g][0] * sx, ay = P[g][1] * sy, dx = P[g + 1][0] * sx - ax, dy = P[g + 1][1] * sy - ay, L = sqrt(dx * dx + dy * dy);
-        if (L < 5.0 * sx) continue;
-        const double nx = -dy / L, ny = dx / L;
-        for (int k = 2; k <= 8; k++) {
-            const double cx = ax + dx * k / 10.0, cy = ay + dy * k / 10.0;
-            int ws[2];
-            for (int sg = 0; sg < 2; sg++) {
-                const double sv = sg ? -1.0 : 1.0;
-                int m = 0;
-                while (m < 60) {
-                    const int x = (int)lround(cx + sv * nx * (m + 1)), y = (int)lround(cy + sv * ny * (m + 1));
-                    if (x < 0 || x >= w || y < 0 || y >= h || !sw[(size_t)y * w + x]) break;
-                    m++;
-                }
-                ws[sg] = m;
+    double n = 0, mx = 0, my = 0;
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++)
+            if (sw[(size_t)y * w + x]) { n++; mx += x; my += y; }
+    if (n < 2) return 0.0;
+    mx /= n; my /= n;
+    double cxx = 0, cyy = 0, cxy = 0;
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++)
+            if (sw[(size_t)y * w + x]) { const double dx = x - mx, dy = y - my; cxx += dx * dx; cyy += dy * dy; cxy += dx * dy; }
+    const double th = 0.5 * atan2(2.0 * cxy, cxx - cyy), ux = cos(th), uy = sin(th);
+    double lo = 1e30, hi = -1e30;
+    for (int y = 0; y < h; y++)
+        for (int x = 0; x < w; x++)
+            if (sw[(size_t)y * w + x]) {
+                const double t = (x - mx) * ux + (y - my) * uy;
+                if (t < lo) lo = t;
+                if (t > hi) hi = t;
             }
-            const int wm = ws[0] < ws[1] ? ws[0] : ws[1];
-            if (wm < (int)lround(3.0 * sx)) continue;
-            const int x0 = (int)lround(cx), y0 = (int)lround(cy);
-            if (x0 < 0 || x0 >= w || y0 < 0 || y0 >= h || !sw[(size_t)y0 * w + x0]) continue;
-            for (int sg = 0; sg < 2; sg++) {
-                const double sv = sg ? -1.0 : 1.0;
-                for (int q = 0; q < 4; q++) {
-                    const double s = ws[sg] * (0.6 + 0.1 * q);
-                    const int x = (int)lround(cx + sv * nx * s), y = (int)lround(cy + sv * ny * s);
-                    if (x < 0 || x >= w || y < 0 || y >= h) continue;
-                    lab_von(n->p + 3 * ((size_t)y * w + x), o);
-                    double *acc = sg ? sn : sp;
-                    for (int c = 0; c < 3; c++) acc[c] += o[c];
-                    if (sg) cn++; else cp++;
-                }
-            }
-            for (int q = 0; q < 5; q++) {
-                const double s = -0.2 * wm + 0.1 * wm * q;
-                const int x = (int)lround(cx + nx * s), y = (int)lround(cy + ny * s);
-                if (x < 0 || x >= w || y < 0 || y >= h) continue;
-                lab_von(n->p + 3 * ((size_t)y * w + x), o);
-                for (int c = 0; c < 3; c++) sm[c] += o[c];
-                cm++;
-            }
-        }
-    }
-    if (cm < 10 || cp < 10 || cn < 10) return -1.0;
-    double best = 0.0;
-    for (int sg = 0; sg < 2; sg++) {
-        const double *acc = sg ? sn : sp;
-        const int c_ = sg ? cn : cp;
-        const double da = acc[1] / c_ - sm[1] / cm, db = acc[2] / c_ - sm[2] / cm, d = sqrt(da * da + db * db);
-        if (d > best) best = d;
-    }
-    return best;
+    return (hi - lo) * 320.0 / w;
 }
 
 int main(int argc, char **argv)
@@ -199,15 +182,16 @@ int main(int argc, char **argv)
     const int vor_promille = extra ? atoi(argv[13]) : 0, vor_min = extra ? atoi(argv[14]) : 0;
     const int r3 = extra && argc > 17;
     const int t_f0 = r3 ? atoi(argv[15]) : 0, t_f1 = r3 ? atoi(argv[16]) : -1, ueber_max = r3 ? atoi(argv[17]) : 0;
-    const int ton = r3 && argc > 20;
-    const int n_f0 = ton ? atoi(argv[18]) : 0, n_f1 = ton ? atoi(argv[19]) : -1;
-    const double ton_max = ton ? atof(argv[20]) / 10.0 : 0.0;
-    const int r4 = ton && argc > 25;
+    const int r5l = r3 && argc > 20;                         /* (8) Mindestlaenge (Runde 5; bis Runde 4 hier (6) Ton) */
+    const int l_f0 = r5l ? atoi(argv[18]) : 0, l_f1 = r5l ? atoi(argv[19]) : -1;
+    const double l_prozent = r5l ? atof(argv[20]) : 0.0;
+    const int r4 = r5l && argc > 25;
+    const int l_extra = (r4 && argc > 26) ? atoi(argv[26]) : -1;
     const int u_f0 = r4 ? atoi(argv[21]) : 0, u_f1 = r4 ? atoi(argv[22]) : -1;
     const int s_f0 = r4 ? atoi(argv[23]) : 0, s_f1 = r4 ? atoi(argv[24]) : -1, sicht_min = r4 ? atoi(argv[25]) : 0;
     int fehler_sicht = 0, sicht_kleinst = 1 << 30, fehler_5b = 0, groesst_5b = 0;
-    int fehler_ueber = 0, ueber_groesst = 0, fehler_ton = 0, ton_bilder = 0;
-    double ton_groesst = 0.0;
+    int fehler_ueber = 0, ueber_groesst = 0, fehler_laenge = 0, laenge_bilder = 0;
+    double laenge_kleinst = 1e30;
     int fehler = 0, bilder = 0, mit_schwanz = 0, fehler_vor = 0, fehler_knick = 0;
     double knick_groesst = 0.0;
     int vor_groesst = 0;
@@ -281,9 +265,11 @@ int main(int argc, char **argv)
             int sicht[7];
             for (int g = 0; g < 7; g++) {
                 const double dx = P[g + 1][0] - P[g][0], dy = P[g + 1][1] - P[g][1];
-                sicht[g] = sqrt(dx * dx + dy * dy) >= 4.0;
-                for (int k = 0; k < 2 && sicht[g]; k++) {
-                    const double tt = k ? 0.7 : 0.3;
+                /* Runde 5: auch kleine Stuecke - >= 3 Punkte lang, Schwanzpunkt an 30 %, 50 % ODER 70 % (bis Runde 4: >= 4, an 30 % UND 70 %) */
+                const int lang = sqrt(dx * dx + dy * dy) >= 3.0;
+                sicht[g] = 0;
+                for (int k = 0; k < 3 && lang && !sicht[g]; k++) {
+                    const double tt = 0.3 + 0.2 * k;
                     const int cx = (int)lround((P[g][0] + dx * tt) * sx), cy = (int)lround((P[g][1] + dy * tt) * sy);
                     int da = 0;
                     for (int yy = cy - r; yy <= cy + r && !da; yy++)
@@ -360,13 +346,17 @@ int main(int argc, char **argv)
                     fehler_sicht++;
                 }
             }
-            if (ton && f >= n_f0 && f <= n_f1) {
-                const double d = ton_bild(&n, sw, P);
-                if (d >= 0.0) {
-                    ton_bilder++;
-                    if (d > ton_groesst) ton_groesst = d;
-                    printf("F%d (6) Ton Mitte/Rand dEab %.1f%s\n", f, d, d > ton_max ? " FEHLER" : "");
-                    if (d > ton_max) fehler_ton++;
+            if (r5l && ((f >= l_f0 && f <= l_f1) || f == l_extra)) {       /* (8) Mindestlaenge (Runde 5) */
+                const double lv = video_linie320(f - 243);
+                const int s320 = (int)lround(sw_n / (sx * sy));
+                if (lv > 0.0) {
+                    laenge_bilder++;
+                    const double lg = sw_n ? laenge320(sw, w, h) : 0.0;
+                    const int ok = sw_n == 0 || (lg >= l_prozent / 100.0 * lv && lg >= 2.0 * K_SCHWANZBREITE);
+                    if (sw_n && lg < laenge_kleinst) laenge_kleinst = lg;
+                    printf("F%d (8) h%d: %d Schwanzpunkte (320x240), sichtbar %.1f Punkte lang, Videolinie %.1f%s\n", f, f - 243, s320, lg, lv,
+                           ok ? (sw_n ? "" : " (verdeckt)") : " FEHLER");
+                    if (!ok) fehler_laenge++;
                 }
             }
             free(bb.p);
@@ -383,11 +373,12 @@ int main(int argc, char **argv)
     if (r3)
         printf("(5) ueber der Austrittszeile F%d-F%d (h58-h72): %d Fehlerbilder (groesster Wert %d Punkte, Grenze %d) -> %s\n", t_f0, t_f1,
                fehler_ueber, ueber_groesst, ueber_max, fehler_ueber ? "SCHWANZ-UEBER-TAILLE" : "TAILLE-OK");
-    if (ton)
-        printf("(6) Ton Mitte/Rand F%d-F%d: %d Bilder gemessen, %d Fehlerbilder (groesster dEab %.1f, Grenze %.1f) -> %s\n", n_f0, n_f1,
-               ton_bilder, fehler_ton, ton_groesst, ton_max, (fehler_ton || ton_bilder < 10) ? "SCHWANZ-RANDTON" : "TON-OK");
+    if (r5l)
+        printf("(8) Mindestlaenge F%d-F%d und F%d: %d Bilder, %d Fehlerbilder (kleinste sichtbare Laenge %.1f Punkte, Grenze %.0f %% der Videolinie) -> %s\n",
+               l_f0, l_f1, l_extra, laenge_bilder, fehler_laenge, laenge_kleinst < 1e29 ? laenge_kleinst : 0.0, l_prozent,
+               (fehler_laenge || laenge_bilder < 1) ? "SCHWANZ-KLUMPEN" : "LAENGE-OK");
     if (r4)
         printf("(5b) Taille links F%d-F%d: %d Fehlerbilder (groesster Wert %d Punkte, Grenze %d) -> %s; (7) Sichtbarkeit F%d-F%d: %d Fehlerbilder (kleinster Wert %d Punkte, Grenze %d) -> %s\n", u_f0, u_f1, fehler_5b, groesst_5b, ueber_max,
                fehler_5b ? "SCHWANZ-TAILLE-LINKS" : "TAILLE-LINKS-OK", s_f0, s_f1, fehler_sicht, sicht_kleinst, sicht_min, fehler_sicht ? "SCHWANZ-UNSICHTBAR" : "SICHT-OK");
-    return (fehler || fehler_vor || fehler_knick || fehler_ueber || fehler_5b || fehler_sicht || (ton && (fehler_ton || ton_bilder < 10))) ? 1 : 0;
+    return (fehler || fehler_vor || fehler_knick || fehler_ueber || fehler_5b || fehler_sicht || (r5l && (fehler_laenge || laenge_bilder < 1))) ? 1 : 0;
 }

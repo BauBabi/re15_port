@@ -1,0 +1,12 @@
+Messkopien (NIE Spiel-Asset) fuer den Riegel integration_r41_schwanz_zusammen (6) Farbregel 8g, Runde 41 Schwanz r9 Runde 5.
+
+EM30_HANGAR_a02a6df3_marker_klasse.EMD  sha256 f8d27070939dba076bbb052c55768e4bc0899dc79b3e3031b9cb0eec22b10c68
+EM30_HANGAR_a02a6df3_marker_naht.EMD    sha256 efc81a2b044c6f1545519d6ef766c5db143e21b057d15196e3655d0f8d31cf3f
+
+Erzeugt aus dem Spiel-Asset 8g (EMD/EM30_HANGAR.EMD sha256 a02a6df3...) mit
+  python analysis/befunde_runde41/SF_belege/v8/runde8g/werkzeug/marker.py klasse <Spiel-Asset> <aus>
+  python analysis/befunde_runde41/SF_belege/v8/runde8g/werkzeug/marker.py naht   <Spiel-Asset> <aus>
+Zweiter Lauf bytegleich (scratchpad schwanz_r9/r5). Der Riegel prueft vorher (6a), dass das Spiel-Asset = Pin = 8g ist; damit gehoeren diese
+Kopien zum Spiel-Asset. Geometrie, Flaechen und Keyframes gleich dem Spiel-Asset, nur die Schwanzfarben sind Marker:
+  klasse: Bauch rot, Bauch-Fuge magenta, Flanke/Ruecken gruen, Flanken-Fuge cyan, Nadel blau, Wurzel gelb (Flaechen 92/96/161/168/33/22)
+  naht:   Texel Seite 0 u 54-55 v 46-60 gruen (die dunkle Naht des Original-Bilds)

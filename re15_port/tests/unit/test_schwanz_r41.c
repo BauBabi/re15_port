@@ -541,7 +541,10 @@ int main(void)
      *      beide abgelegt unter analysis/befunde_runde41/SF_belege/v8/bewegung/ (Ecken und Keyframes aller drei bytegleich, nur die Farben
      *      verschieden). Gegenprobe: die alte Farbregel (Seite = Mitte der Flaechen ohne die haeufigste CLUT, bis c94847a31) liefert mit
      *      66db2244 +e_h, mit d31f9534 -e_h (dort ist Bauch/Ring-CLUT 31552 die haeufigste) - muss dort ROT sein. Beim Spiel-Asset 547acc80
-     *      ist die haeufigste CLUT wieder das Grau, die alte Regel traefe zufaellig richtig; dort wird sie nur ausgegeben. */
+     *      ist die haeufigste CLUT wieder das Grau, die alte Regel traefe zufaellig richtig; dort wird sie nur ausgegeben.
+     *      r9 Runde 5: Spiel-Asset ist 8g a02a6df3 (Merge r41/sichel_v8 83350f359; Ecken und Keyframes bytegleich zu 8c, Oberseite UV/CLUT wie 8c).
+     *      Die Bauchachse bleibt (0,8956, 0, 0,4449); die alte Farbregel trifft wie bei d31f9534 die falsche Seite (haeufigste CLUT 31552,
+     *      284 Flaechen, gemessen) - die Gegenprobe gilt damit auch fuer das Spiel-Asset. */
     {
         static const char *namen[3] = { RE15_ASSET_PSX_DIR "/EMD/EM30_HANGAR.EMD",
                                         RE15_ASSET_PSX_DIR "/../../../analysis/befunde_runde41/SF_belege/v8/bewegung/EM30_HANGAR_66db2244.EMD",
@@ -592,6 +595,7 @@ int main(void)
             fprintf(stderr, "Schwanz Bauchachse %s: (%.4f, %.4f, %.4f); alte Farbregel (haeufigste CLUT %u, %d Flaechen) -> %s\n",
                     kurz[i], eh[0], eh[1], eh[2], (unsigned)cl[haupt], cn[haupt], alt_plus ? "+e_h" : "-e_h (falsch)");
             if (i == 2) alt_falsch = !alt_plus;
+            else if (i == 0) CHECK(!alt_plus, "Gegenprobe Spiel-Asset 8g: alte Farbregel trifft die Bauchseite - Spiel-Asset nicht 8g?");
             else if (i == 1) CHECK(alt_plus, "Gegenprobe: alte Farbregel mit 66db2244 nicht +e_h - Vorlage stimmt nicht");
             free(bl);
         }
