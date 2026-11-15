@@ -60,6 +60,14 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
           Teil sieht"): C1 ohne die dunkle Naht des Original-Bilds - u 56-65 statt 54-65 (v 51-55 wie 8d). Die Bauchkante (Fleischgrenze, sq 0)
           lag auf der Spalte u 54 (L* 11,6-34, Naht), im Spiel ein dunkelroter Laengsstrich an jeder Bauch-/Flankengrenze (Markerlauf
           scratchpad schwanz_r9: u 54 gruen = genau der Strich). Auswahl Original-Texel, keine Eichung; Riegel riegel_schwanz_r8 R8e (4).
+  Runde 8f (Nutzer 15.11. zu den Videos 30: "komische braune Streifen an den Raendern ... vor allem wenn er sich eindreht und man den dicken
+          Schwanz Teil sieht"; Entscheid des Orchestrators: wie im Original EINHEITLICH auch ueber die Breite - im Bogen h74-h100 wirkte die graue
+          Flanke grau-oliv mit Querrippen neben der rosa Bauchflaeche, Pruefer r9 Runde 2): felder.flanke_fleisch - Flanke und Ruecken
+          (alle Sektoren ausserhalb des Bauchs, Mantel und Deckel) tragen dasselbe Bauchfeld C1, quer gespiegelt zurueck (u_hi -> u_lo ueber
+          +theta_b .. 360 - theta_b: an beiden Fleischgrenzen dieselbe Feldspalte wie der Bauch daneben, nahtlos), laengs wie der Bauch; grau
+          bleibt nur die Nadel. Nur Auswahl vorhandener Original-Texel (dasselbe Feld), keine Eichung. Gemessen im Spielbild (scratchpad
+          schwanz_r9/r3, Querprofile Mitte/Rand, dEab ohne L* = Schattierung): Bogen 960x720 a48e2ce5 8,4-11,3, neu 4,1-5,9; Original-Video nur
+          als Richter Mittel 2,7.
   Bis Runde 8b:
   bauch = Bauchsektor: Original-Zeile 482 (Asset 495), schraeges Feld (Parallelogramm, suche(): v 114-123, Zeilenanfang u 1 -> 19, Breite 21, im Bau 20;
           Median L* 25,7 C* 24,2, hellere Partie des Original-Unterarm-Fleischs) - groesser als das 17 x 7-Feld der Runde 8 ("flaechig wie gemalt",
@@ -622,6 +630,10 @@ def uv_setzen(g, V_, F, ringe, info, farbe, felder, L):
         kl = klasse_von(f, farbe, g)
         if g == 6 and kl != 'grau' and all(V_[i][1] >= ENDE_Y - 1.0 for i in e):
             kl = 'grau'                                    # Nadel grau (Video: dunkle Spitze)
+        flanke_c1 = False
+        if (felder.get('flanke_fleisch') and kl == 'grau' and art != 'spitze'
+                and not (g == 6 and all(V_[i][1] >= ENDE_Y - 1.0 for i in e))):
+            kl, flanke_c1 = 'bauch', True                  # Runde 8f: Flanke/Ruecken mit dem Bauchfeld C1 (Nadel bleibt grau)
         uv_e = []
         rs = [q for q in e if q in th_e]
         for i in e:
@@ -636,6 +648,13 @@ def uv_setzen(g, V_, F, ringe, info, farbe, felder, L):
             if kl == 'grau':
                 s_um = float(np.clip((th - tb) / max(360.0 - 2 * tb, 1.0), 0.0, 1.0))
                 uv_e.append(_uv_feld(feld_grau, s_um, (s_lang if g % 2 == 0 else 1.0 - s_lang) if grau_alle else s_lang))
+                continue
+            if flanke_c1:
+                # Runde 8f: quer ueber Flanke und Ruecken (+theta_b .. 360 - theta_b) das Bauchfeld C1 gespiegelt zurueck (u_hi -> u_lo): an
+                # beiden Fleischgrenzen dieselbe Feldspalte wie der Bauch daneben (Bauch sq 1 bei +theta_b, sq 0 bei -theta_b) -> nahtlos;
+                # laengs wie der Bauch (je Glied gespiegelt)
+                s_um = float(np.clip((th - tb) / max(360.0 - 2 * tb, 1.0), 0.0, 1.0))
+                uv_e.append(fleisch_uv(feld_f, 1.0 - s_um, s_lang if g % 2 == 0 else 1.0 - s_lang))
                 continue
             if i in ring_k:
                 s_um = PENDEL.get(ring_k[i], 0.5)
