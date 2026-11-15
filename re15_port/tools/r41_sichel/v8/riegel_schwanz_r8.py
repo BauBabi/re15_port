@@ -30,7 +30,7 @@ R8e Fleisch nur   (1) Runde 8c: jede Bauch-Flaeche (Klasse aus dem Fleisch-Feld,
                   keine Flaeche auf 487 ganz im Bauchsektor (ausser der Nadel ab y 560, die ganz grau ist); (2) PV: Anteil Fleisch-Zeile an den Schwanz-Bildpunkten mit Normalen-|theta| >= 100 <= 1 %, mit |theta| <= 40 >= 50 %;
                   (3) Herkunft: Texel unter 493 / 494 / 495 = Texel, die Original-Flaechen der Original-Zeile 480 / 481 / 482 benutzen; unter 487 = Texel
                   der Oberseite (487) der Meshes 16-22 im Eingang 07b6703f; Asset-Texel dort bytegleich Original bzw. Eingang;
-                  (4) Runde 8e: kein Texel der Bauch-Flaechen (Rasterung KB.raster, Farbe aus ihrer CLUT-Zeile) unter L* BAUCH_L_MIN - die dunkle
+                  (4) Runde 8e: kein Texel der Flaechen der Bauch-Zeile 493 ausser Ring-Flaechen (Rasterung KB.raster, Farbe aus ihrer CLUT-Zeile) unter L* BAUCH_L_MIN - die dunkle
                   Naht des Original-Bilds an u 54-55 (L* 11,6-27,0) gab im Spiel den Laengsstrich an der Bauchkante (Nutzer 15.11.).
 R8f Bytegleich    Sektionen 0-6 (Skelett, Clips, Keyframes), TIM (Texturbild, 16 CLUT-Zeilen) und Meshes 0-15 (Mesh 9 = V7-Kopf) = Eingang 07b6703f,
                   ausser den 12-Bit-Winkeln der Knochen 17-22 in den von schwanz_r8.heben angehobenen Keyframes; Gliedlaengen 17-22 = (0, 541, 0).
@@ -522,9 +522,9 @@ def r8e(blob, bezug, pv):
     for b in range(16, 23):
         for key, U in (('d', ms[b]['tuv']), ('v', ms[b]['quv'])):
             for i, uv in enumerate(U):
-                if kl[b]['%s%d' % (key, i)] != 'bauch':
-                    continue
                 z = (uv[2] >> 6) & 0x1FF
+                if z != int(Q.felder_laden()['fleisch'].get('zeile', Q.ZEILE_FLEISCH)) or kl[b]['%s%d' % (key, i)] == 'band':
+                    continue                                   # alle Flaechen der Bauch-Zeile, auch ohne Klasse (Gegenprobe 8d: u 54)
                 c = t['clut'][z - t['cy']].astype(int)
                 lab = G.lab(np.stack([(c & 31) * 255 / 31., ((c >> 5) & 31) * 255 / 31., ((c >> 10) & 31) * 255 / 31.], -1)[None])[0]
                 mk = KB.raster(uv, 3 if len(uv) == 9 else 4, (uv[5] & 0xF) * 128)
