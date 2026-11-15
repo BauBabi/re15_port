@@ -308,9 +308,16 @@ static void test_hangar(unsigned raum)
                     "Abstand %d -> %d, starr max %d/%d\n", raum, bs, ms, sm_weg, ende, max_hoehe, sprung_max, d0, d1, starr_b, starr_m);
     free(buf);
 
-    /* (6) Wiedereintritt: keine Szene, kein Spider-Man, Birkin sofort Angreifer */
+    /* (6) Wiedereintritt: keine Szene, kein Spider-Man, Birkin sofort Angreifer.
+     * Seit dem Rueckbau des Monitorbilds (2026-11-15) ist "Szene gesehen" das Bank-9-Bit RE15_BF_HANGAR_BIT (38) statt eines
+     * Prozess-Merkers. raum_laden ruft scd_vm_init -> re15_game_state_init und loescht ALLE Flag-Baenke (= neues Spiel); ein
+     * Raumwechsel im Spiel tut das nicht (re15_room_apply_pending, gemessen integration_r41_hangar_laden). Das Bit wird deshalb
+     * ueber das Neuladen getragen. */
+    const int gesehen = re15_game_flag_get(RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT);
+    CHECK(gesehen == 1, "Szenenende setzt Bank-9-Bit %d nicht", RE15_BF_HANGAR_BIT);
     buf = raum_laden(rel, raum);
     if (!buf) return;
+    re15_game_flag_set(RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, gesehen);
     g_room_rdt = s_rdt; g_room_rdt_ok = 1;
     pl->active = 1; pl->state = 1; pl->x = -12406; pl->z = 4381; pl->hp = 100;
     g_scd.cam_id = 0; g_scd.work_vars[0x0A] = 0;
