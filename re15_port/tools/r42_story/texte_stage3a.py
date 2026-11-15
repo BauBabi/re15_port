@@ -7,7 +7,7 @@
 PORT-STORY nach dem freigegebenen Konzept (C:/workspace/git/reAi_v2_entscheidung_2026-11-06/11_story_v0831/KONZEPT.md,
 Abschnitt 3.2 L5, L6, L7; Zeitleiste L-05..L-10; Entscheide F-04, F-05, F-06). Ids und Sprecher = VERTRAG
 analysis/befunde_runde42/VERTRAG.md Abschnitt 2.3 (Zensus zensus_r42.py, Werte in include/re15_story_r42.h):
-ROOM3020 msg 0..2 Neutext (Glaettung L5), 7..9 neu; ROOM3060 msg 11..27 neu (RDT 0..10).
+ROOM3020 msg 0..2 Neutext (Glaettung L5), 7..9 neu; ROOM3060 msg 11..27 neu (RDT 0..10); ROOM30E0 msg 3 Neutext (L7).
 Nur Leons Fassung (ROOM3020/3060); Elzas ROOM3021/3061 bleiben unveraendert.
 
 Kodierung wie texte_stage2.py (Vorbild tools/r41_annette/texte_bauen.py, Glyphen = msg_common.c re15_msg_glyph):
@@ -54,6 +54,9 @@ UNTERTITEL = (
     (0x3060, 25, 0x07, 'Marvin', "If Ada turns up, I'll send her your way."),
     (0x3060, 26, 0x01, 'Leon',   "Hang in there. I'll come back for you."),
     (0x3060, 27, 0x07, 'Marvin', "You'd better, rookie."),
+    # L7: 30E0 msg 3 Neutext (sub02 Message_on 3 @0x00D6C; RDT-Text @0x1163 "Leon: Y-yeah, Marvin is out in the hall. He can't get out
+    # because of all the monsters outside..."), Farbe Leon 01 wie die RDT-Zeile (@0x1163 `05 01`). Stufe STAGE3a NB1 B5.
+    (0x30E0, 3, 0x01, 'Leon',   "He's back in the lobby. Some dogs got his leg... he can barely walk."),
 )
 # (Raum, Id, Text) - Systemtexte (VERTRAG 2.3 Art SYS)
 SYSTEM = (

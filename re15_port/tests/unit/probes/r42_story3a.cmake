@@ -10,6 +10,9 @@
 #   unit_r42_story3a_hebung       v9 -> v10
 #   unit_r42_story3a_wiedersehen  3060 Wiedersehen mit Uebergabe (Keycard, Fabrikplan, Redhawk, Magnum), Bit 124
 #   unit_r42_story3a_karte3010    Kartentuer 3010 erst nach der Uebergabe (L-10 = T-01 + Kistenregel K7 @0x020AE)
+#   unit_r42_story3a_rdttexte     NB1 B1/B5: Neutexte 3020 msg 0..2 / 30E0 msg 3 nach dem echten Raumaufbau (Wortlaut)
+#   unit_r42_story3a_weg30e0      NB1 B2: Marvin erreicht die 30E0-Seite der Kartentuer nicht (Ost-Ring, Messung)
+#   unit_r42_story3a_altstand     NB1 B6: kein "Gunshots"/Wiedersehen ausser Zusammenhang
 #   integration_r42_story3a_*     echte exe (tests/integration/test_r42_story3a.cmake): kette = Durchlauf Leon 3000 .. 30E0 mit Marvin,
 #                                 speichern = Speichern/Laden als Marvin. Elzas STAGE3 (3061/3091) pruefen die Runde-41-Laeufe
 #                                 integration_r41_stage3szenen_a_3061 / _b_sherry / _b_3091 unveraendert.
@@ -20,7 +23,7 @@ target_compile_definitions(test_r42_story3a PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_
 if(NOT WIN32)
     target_link_libraries(test_r42_story3a PRIVATE m)
 endif()
-foreach(_teil texte programme tausch tausch_elza speichern hebung wiedersehen karte3010)
+foreach(_teil texte programme tausch tausch_elza speichern hebung wiedersehen karte3010 rdttexte weg30e0 altstand)
     add_test(NAME unit_r42_story3a_${_teil} COMMAND test_r42_story3a ${_teil} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r42_story3a_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()

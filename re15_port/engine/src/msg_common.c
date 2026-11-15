@@ -351,6 +351,9 @@ void re15_msg_load_room_block(const uint8_t *block, int block_size)
     /* Runde 36 Spur P: Text-Overrides "nie begegnet" NACH dem Laden (der Tuer-Weg laedt erst nach
      * scd_room_reenter, room_common.c Schritt 11) — re15_story_r36.h. */
     re15_story_r36_texte((uint16_t)g_current_room_id);
+    /* Runde 42 Story STAGE3a NB1 B1: 3020 msg 0..2 (Glaettung), 30E0 msg 3 (L7) liegen im RDT-Bereich - erst NACH dem Laden
+     * einsetzen (re15_story3a_r42.h). */
+    { extern void re15_story3a_r42_texte(uint16_t); re15_story3a_r42_texte((uint16_t)g_current_room_id); }
 }
 
 /* ===== BYTE-TRUE dialog typewriter FSM (FUN_80028134) ======================

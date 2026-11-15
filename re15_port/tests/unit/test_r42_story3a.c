@@ -18,6 +18,12 @@
  *   wiedersehen 3060 als Leon nach Marvins Abschnitt, Hunde tot: Marvin erscheint an der orangen Tuer, Zeilen 12..27, Keycard + Fabrikplan
  *               (Bit 35, Blatt 7) + Redhawk + Magnum (msg 20 je Fund mit Namen) in Leons Inventar, Marvin geht durch die Tuer, Bit 124
  *   karte3010   Kartentuer 3010 Platz 6: nach Marvins Abschnitt ohne Uebergabe "locked" (msg 0 @0x020B2), nach Bit 124 die Original-Wege
+ *   rdttexte    NB1 B1/B5: nach dem ECHTEN Raumaufbau (scd_room_reenter + re15_msg_load_room_block) stehen in 3020 msg 0..2 und 30E0
+ *               msg 3 die neuen Texte (Wortlaut), Elzas 3021 behaelt den RDT-Text
+ *   weg30e0     NB1 B2: Marvin kommt aus 3030 in den Ost-Ring von 30E0 und erreicht die Rueckseite der Kartentuer (Slot 0
+ *               @0x009F2, West-Ring) nicht (Messung re15_story3a_r42.h "L-10 gegen Marvins Weg")
+ *   altstand    NB1 B6: ohne frischen Rueckwechsel kein "Gunshots...?" in 3020; ohne offene Uebergabe und nach (3,0x3C) kein
+ *               Wiedersehen, davor holt der Altstand es nach
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
 #define _DEFAULT_SOURCE 1
@@ -211,7 +217,7 @@ static void teil_texte(void)
         { 0x3060, 11, "Marvin:" }, { 0x3060, 12, "Marvin:" }, { 0x3060, 13, "Leon:" }, { 0x3060, 14, "Marvin:" },
         { 0x3060, 15, "Marvin:" }, { 0x3060, 17, "Marvin:" }, { 0x3060, 19, "Marvin:" }, { 0x3060, 21, "Leon:" },
         { 0x3060, 22, "Marvin:" }, { 0x3060, 23, "Leon:" }, { 0x3060, 24, "Marvin:" }, { 0x3060, 25, "Marvin:" },
-        { 0x3060, 26, "Leon:" }, { 0x3060, 27, "Marvin:" } };
+        { 0x3060, 26, "Leon:" }, { 0x3060, 27, "Marvin:" }, { 0x30E0, 3, "Leon:" } };
     static const uint8_t halt[4] = { 0x04, 0x01, 0x01, 0x63 };
     for (size_t i = 0; i < sizeof k / sizeof k[0]; i++) {
         int l = 0;
@@ -233,7 +239,13 @@ static void teil_texte(void)
         PRUEF(b && l > 4 && b[0] == 0x04 && b[1] == 0x02 && b[l - 2] == 0x01 && b[l - 1] == 0x00,
               "ROOM3060 msg %d: Systemtext 04 02 .. 01 00 (Form ROOM3020 msg 3 @0x0EBD)", id);
     }
-    PRUEF(!re15_story3a_r42_text(0x3021, 7, NULL) && !re15_story3a_r42_text(0x3061, 11, NULL), "Elzas 3021/3061: keine neuen Texte");
+    {
+        int l = 0;
+        const uint8_t *b = re15_story3a_r42_text(0x30E0, 18, &l);
+        PRUEF(!b && !l, "ROOM30E0 msg 18: kein Port-Text (kein Riegel noetig, Messung B2)");
+    }
+    PRUEF(!re15_story3a_r42_text(0x3021, 7, NULL) && !re15_story3a_r42_text(0x3061, 11, NULL) && !re15_story3a_r42_text(0x30E1, 3, NULL),
+          "Elzas 3021/3061/30E1: keine neuen Texte");
     PRUEF(!re15_story3a_r42_text(0x3020, 3, NULL), "3020 msg 3 bleibt Original");
 }
 
@@ -292,6 +304,9 @@ static void teil_programme(void)
         { "Keycard",           { 0x03, 0x15, 0x36, 0 },    { 15, 50, 1, 0 }, "12,13,14,15,16,17,18,21,22,23,24,25,26,27", 2 },
         { "Keycard + Redhawk", { 0x03, 0x15, 0x36, 0x07 }, { 15, 50, 1, 6 }, "12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27", 3 },
         { "ohne Keycard",      { 0x03, 0x15, 0, 0 },       { 15, 50, 0, 0 }, "12,13,14,17,18,22,23,24,25,26,27", 1 },
+        /* NB1 B8: 80 H. Gun Bullets = 50 eigene + 30 gefundene -> die 30 sind ein Fund (msg 19/20) */
+        { "Munition ueber 50", { 0x03, 0x15, 0x36, 0 },    { 15, 80, 1, 0 }, "12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27", 3 },
+        { "Munition 50",       { 0x03, 0x15, 0x36, 0 },    { 15, 50, 1, 0 }, "12,13,14,15,16,17,18,21,22,23,24,25,26,27", 2 },
     };
     for (size_t f = 0; f < sizeof fall / sizeof fall[0]; f++) {
         re15_s3a_figur_t s; memset(&s, 0, sizeof s);
@@ -324,6 +339,8 @@ static void teil_tausch(void)
     re15_inv_slot_t leon_vorher[RE15_INV_MAX_SLOTS];
     memcpy(leon_vorher, g_inv.slots, sizeof leon_vorher);
     g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 64;
+    g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags = 0x2u;              /* Gift (Bit 0x2 von 0x800acaec) */
+    re15_inv_set_prev_equip_slot(2);
     re15_sherry_r41_modell_init(0);
     re15_sherry_r41_modell_setzen(RE15_S3A_MODELL_MARVIN);             /* ROOM3020 @0x00D7A -> Raumlader */
     PRUEF(re15_story3a_r42_marvin_spielt(), "Tausch aktiv");
@@ -332,7 +349,8 @@ static void teil_tausch(void)
     PRUEF(re15_inv_equipped_slot() == 0 && re15_player_equipped_weapon() == 0x03,
           "Marvin: Platz 0 ausgeruestet, Waffe 3 (kein Messer; Platz und Waffe passen -> kein UNEQUIP-Doppeldruck) - Platz %d Waffe %d",
           re15_inv_equipped_slot(), re15_player_equipped_weapon());
-    PRUEF(g_actors[RE15_ACTOR_SLOT_PLAYER].hp == 100, "HP := 100 (Schwanz FUN_800314b0 @0x80031710 bleibt)");
+    PRUEF(g_actors[RE15_ACTOR_SLOT_PLAYER].hp == 100 && !(g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags & 0x2u),
+          "Marvin: HP := 100, kein Gift (Schwanz FUN_800314b0 @0x80031710/@0x80031720 bleibt)");
     const re15_s3a_figur_t *f = re15_story3a_r42_figur();
     PRUEF(!memcmp(f->leon, leon_vorher, sizeof leon_vorher) && f->leon_platz == 0 && f->leon_waffe == 0x03,
           "Leons Seite, Platz 0 und Waffe 3 gesichert (vor dem Schwanz)");
@@ -342,6 +360,10 @@ static void teil_tausch(void)
     PRUEF(!memcmp(g_inv.slots, leon_vorher, sizeof leon_vorher), "Leon hat alles zurueck (4 Plaetze wie vorher)");
     PRUEF(re15_inv_equipped_slot() == 0 && re15_player_equipped_weapon() == 0x03, "Leon: Platz 0, Waffe 3 zurueck (Platz %d Waffe %d)",
           re15_inv_equipped_slot(), re15_player_equipped_weapon());
+    PRUEF(g_actors[RE15_ACTOR_SLOT_PLAYER].hp == 64 && (g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags & 0x2u),
+          "NB1 B8: Leon hat HP 64 und Gift zurueck (RE2 FUN_80049e48 @0x8004a058-@0x8004a07c; keine Heilung) - HP %d",
+          (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp);
+    PRUEF(re15_inv_prev_equip_slot() == 2, "NB1 B8: Vor-Platz 2 zurueck (nicht 0x80) - %d", re15_inv_prev_equip_slot());
     PRUEF(f->marvin_offen && seite_menge(f->marvin, 0x36) == 1 && seite_menge(f->marvin, 0x07) == 6,
           "Marvins Funde (Keycard, Redhawk x6) fuer die Uebergabe gemerkt");
     PRUEF(inv_menge(0x36) == 0, "Leon hat die Keycard NICHT (erst die Uebergabe, L6)");
@@ -529,6 +551,101 @@ static void teil_karte3010(void)
           (int)g_aot.slots[6].type, (int)g_aot.slots[6].event_id);
 }
 
+/* ---- rdttexte (NB1 B1/B5) ---------------------------------------------------------------------------------------- */
+static void teil_rdttexte(void)
+{
+    printf("== rdttexte ==\n");
+    re15_game_state_init(); re15_story3a_r42_neues_spiel();
+    static const struct { uint16_t r; int id; int32_t x, z; const char *wort; } k[] = {
+        { 0x3020, 0, -19500, -19000, "It won't budge." },
+        { 0x3020, 1, -19500, -19000, "We could get in that way." },
+        { 0x3020, 2, -19500, -19000, "Leon, give me a hand!" },
+        { 0x30E0, 3, -19406, -22938, "Some dogs got his leg" } };
+    for (size_t i = 0; i < sizeof k / sizeof k[0]; i++) {
+        if (room_boot(k[i].r, k[i].x, 0, k[i].z, 0, 0) != 0) return;
+        int len = 0, l = 0;
+        const unsigned char *raw = re15_msg_get_raw(k[i].id, &len);
+        const uint8_t *tab = re15_story3a_r42_text(k[i].r, (uint8_t)k[i].id, &l);
+        const char *txt = re15_msg_get_text(k[i].id);
+        PRUEF(raw && tab && len >= l && !memcmp(raw, tab, (size_t)l) && txt && strstr(txt, k[i].wort),
+              "ROOM%04X msg %d nach dem Raumaufbau (re15_msg_load_room_block): \"%s\"", k[i].r, k[i].id, txt ? txt : "(leer)");
+    }
+    if (room_boot(0x3021, -19500, 0, -19000, 0, 0) != 0) return;
+    for (int id = 0; id <= 2; id++) {
+        const char *t0 = re15_msg_get_text(id);
+        PRUEF(t0 && !strstr(t0, "budge") && !strstr(t0, "get in that way") && !strstr(t0, "give me a hand"),
+              "Elzas ROOM3021 msg %d: RDT-Text, keine Leon-Glaettung (\"%s\")", id, t0 ? t0 : "(leer)");
+    }
+}
+
+/* ---- weg30e0 (NB1 B2): Marvin erreicht die Rueckseite der Kartentuer (30E0 Slot 0 @0x009F2) nicht ------------------------ */
+static void teil_weg30e0(void)
+{
+    printf("== weg30e0 ==\n");
+    re15_game_state_init(); re15_story3a_r42_neues_spiel();
+    re15_s3a_figur_t s; memset(&s, 0, sizeof s);
+    s.aktiv = 1;                                                   /* Marvin spielt (Leons Seite gesichert) */
+    uint8_t blk[RE15_S3A_SPEICHER_BYTES]; memset(blk, 0, sizeof blk); memcpy(blk, &s, sizeof s);
+    re15_story3a_r42_import(blk);
+    /* Ankunft aus 3030 (3030 Slot 0 @0x001D2 -> (7025,0,2700) Blick 3072). Je Blickrichtung (16 Stufen) 240 Bilder OBEN gehalten,
+     * jedes Mal ab der Ankunft: der Spieler laeuft gegen die Waende des Ost-Rings (SCA Eintr. 13..18). */
+    int x_min = 1 << 30, weit = 0, tuer = 0, wechsel = 0;
+    for (int yaw = 0; yaw < 4096; yaw += 256) {
+        if (room_boot(0x30E0, 7025, 0, 2700, (int16_t)yaw, 6) != 0) return;
+        re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        for (int f = 0; f < 240; f++) {
+            frame(RE15_PAD_BIT_UP, 0);
+            if (pl->x < x_min) x_min = pl->x;
+            const int dx = pl->x - 7025, dz = pl->z - 2700;
+            if (dx * dx + dz * dz > 1500 * 1500) weit = 1;
+            if (pl->x >= -18900 && pl->x <= -18100 && pl->z >= -23500 && pl->z <= -22180) tuer = 1;
+            if (g_room_change.pending) { wechsel = 1; g_room_change.pending = 0; }
+        }
+    }
+    PRUEF(weit, "der Spieler laeuft (mehr als 1500 vom Ankunftspunkt)");
+    PRUEF(x_min >= RE15_S3A_30E0_OST_X0, "Marvin bleibt im Ost-Ring: kleinstes x = %d (Westwand x %d, Slot 0 bei x -18900..-18100)", x_min,
+          RE15_S3A_30E0_OST_X0);
+    PRUEF(!tuer && !wechsel, "Slot 0 (@0x009F2) nie erreicht, kein Raumwechsel");
+    re15_story3a_r42_neues_spiel();
+}
+
+/* ---- altstand (NB1 B6) --------------------------------------------------------------------------------------------- */
+static void teil_altstand(void)
+{
+    printf("== altstand ==\n");
+    re15_game_state_init(); re15_story3a_r42_neues_spiel();
+    re15_game_flag_set(3, RE15_S3A_A0_BIT, 1);                      /* Marvins 3060-Szene gelaufen (@0x01026), Bit 123 = 0 */
+    const unsigned z6 = g_re15_s3a_zaehler[6], z7 = g_re15_s3a_zaehler[7];
+    if (room_boot(0x3020, -19500, 0, -19000, 0, 0) != 0) return;
+    for (int f = 0; f < 240; f++) frame(0, 0);
+    PRUEF(g_re15_s3a_zaehler[6] == z6 && !s_msg_gesehen[RE15_R42_MSG_3020_ERSTE + 2],
+          "Spielstand nach Marvins Abschnitt (ohne frischen Rueckwechsel): kein \"Gunshots...?\" in 3020");
+    /* frischer Rueckwechsel: Tausch hin und zurueck (Raumlader), dann 3020 */
+    g_gameflow.character = 0;
+    leon_inventar();
+    re15_sherry_r41_modell_init(0);
+    re15_sherry_r41_modell_setzen(RE15_S3A_MODELL_MARVIN);
+    re15_sherry_r41_modell_setzen(0);
+    room_boot(0x3020, -19500, 0, -19000, 0, 0);
+    for (int f = 0; f < 240 && !s_msg_gesehen[RE15_R42_MSG_3020_ERSTE + 2]; f++) frame(0, 0);
+    PRUEF(g_re15_s3a_zaehler[6] == z6 + 1 && s_msg_gesehen[RE15_R42_MSG_3020_ERSTE + 2], "direkt nach dem Rueckwechsel: msg 9");
+    room_boot(0x3020, -19500, 0, -19000, 0, 0);
+    for (int f = 0; f < 240; f++) frame(0, 0);
+    PRUEF(g_re15_s3a_zaehler[6] == z6 + 1, "wieder betreten: keine zweite Zeile");
+    /* Wiedersehen im Altstand (gemeinsames Inventar, nichts gemerkt) */
+    re15_story3a_r42_neues_spiel();
+    re15_game_flag_set(7, 0x50, 1); re15_game_flag_set(7, 0x51, 1); re15_game_flag_set(7, 0x52, 1);
+    re15_game_flag_set(RE15_S3A_KARTE_BANK, RE15_S3A_KARTE_BENUTZT, 1);
+    room_boot(0x3060, -26027, 0, -22532, 0, 0);
+    for (int f = 0; f < 240; f++) frame(0, 0);
+    PRUEF(g_re15_s3a_zaehler[7] == z7, "Altstand nach der Kartentuer ((3,0x3C) = 1): kein Wiedersehen");
+    re15_game_flag_set(RE15_S3A_KARTE_BANK, RE15_S3A_KARTE_BENUTZT, 0);
+    room_boot(0x3060, -26027, 0, -22532, 0, 0);
+    for (int f = 0; f < 240 && g_re15_s3a_zaehler[7] == z7; f++) frame(0, 0);
+    PRUEF(g_re15_s3a_zaehler[7] == z7 + 1, "Altstand vor der Kartentuer: das Wiedersehen wird nachgeholt");
+    re15_story3a_r42_neues_spiel();
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "";
@@ -540,6 +657,9 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "hebung")) teil_hebung();
     else if (!strcmp(t, "wiedersehen")) teil_wiedersehen();
     else if (!strcmp(t, "karte3010")) teil_karte3010();
+    else if (!strcmp(t, "rdttexte")) teil_rdttexte();
+    else if (!strcmp(t, "weg30e0")) teil_weg30e0();
+    else if (!strcmp(t, "altstand")) teil_altstand();
     else { printf("unbekannter Teil '%s'\n", t); return 2; }
     printf("%s: %d Fehler\n", t, g_fail);
     return g_fail ? 1 : 0;

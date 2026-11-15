@@ -360,8 +360,9 @@ static void t_marvin(void)
     pl->hp = 30;
     r = re15_sherry_pc_r41_koerper(1, f, (int)n);
     CHECK(r == 1 && g_pl00_skel.bone_relative_pos[10][1] == 422 && g_pl00_anim.clips[1].frame_count == 34 &&
-          g_wpn_skel[3].bone_relative_pos[10][1] == 422 && pl->hp == 100,
-          "Marvin -> Leon (PL01): Koerper wieder Leons (Knochen 10 y %d, Clip 1 %d), W-Verbunde zurueck, HP 100",
+          g_wpn_skel[3].bone_relative_pos[10][1] == 422 && pl->hp == 70,
+          "Marvin -> Leon (PL01): Koerper wieder Leons (Knochen 10 y %d, Clip 1 %d), W-Verbunde zurueck, HP 70 = Leons Leben vor "
+          "dem Tausch (Runde 42 STAGE3a NB1 B8: RE2 FUN_80049e48 @0x8004a058-@0x8004a07c, keine Heilung durch @0x80031710)",
           g_pl00_skel.bone_relative_pos[10][1], g_pl00_anim.clips[1].frame_count);
     free(f);
     /* Ruestung bleibt Port-Weg: Leon 1 -> 0 (Weste ab) */

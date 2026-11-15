@@ -65,11 +65,16 @@ static void seite_loggen(const char *was, const re15_inv_slot_t *s)
 }
 
 static int s_waffe_vor = -1;   /* DAT_800aca5d VOR dem Schwanz von FUN_800314b0 (der setzt sie auf @0x800c00d4[Modell]) */
+static int s_hp_vor = -1;      /* +0x9a VOR dem Schwanz (HP := 100 @0x80031710/18)                                      */
+static unsigned s_status_vor;  /* +0x98 VOR dem Schwanz (Status := 0 @0x80031720)                                         */
+static int s_rueck_frisch = 0; /* NB1 B6: Rueckwechsel gerade gelaufen -> "Gunshots...?" nur beim DIREKT folgenden 3020   */
 
 int re15_story3a_r42_figur_vor(int alt, int neu)
 {
     (void)alt;
     s_waffe_vor = re15_player_equipped_weapon();
+    s_hp_vor = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp;
+    s_status_vor = (unsigned)g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags;
     /* Neuladen im laufenden Tausch (Spielstand als Marvin geladen: der Lader zieht das Modell 0x0D nach, main.c CONTINUE
      * @0x80039760-8c): kein neuer Figurwechsel - Seite, Waffe, HP und Status kommen aus dem Spielstand. */
     if ((neu & 0x0F) == RE15_S3A_MODELL_MARVIN && s_f.aktiv) {
@@ -95,6 +100,15 @@ void re15_story3a_r42_figur_nach(int alt, int neu)
         /* Eintritt (RE2 @0x80068fc8..@0x800690f4): Ausruest-Platz + Waffe sichern, 11 Plaetze sichern, Marvins Seite laden. */
         s_f.leon_platz = (uint8_t)re15_inv_equipped_slot();
         s_f.leon_waffe = (uint8_t)(s_waffe_vor >= 0 ? s_waffe_vor : re15_player_equipped_weapon());
+        /* NB1 B8: Vor-Platz (Port) und - wie RE2 FUN_80049e48 beim Eintritt (`lhu v0,0x3b66(s0)` Leben @0x8004a000, Gift
+         * @0x8004a004/08 -> `sh v0,..d46be` @0x8004a020, `sb v1,..d46b3` @0x8004a02c, `sh a0,..d46b4` @0x8004a038) - Leben und
+         * Gift VOR dem RE1.5-Schwanz (der setzt HP 100 @0x80031710 / Status 0 @0x80031720; Marvin beginnt damit gesund). */
+        s_f.leon_vorplatz = (uint8_t)re15_inv_prev_equip_slot();
+        {
+            const int hp = s_hp_vor >= 0 ? s_hp_vor : 100;
+            s_f.leon_hp_lo = (uint8_t)(hp & 0xff); s_f.leon_hp_hi = (uint8_t)((hp >> 8) & 0xff);
+            s_f.leon_gift = (uint8_t)((s_status_vor & 0x2u) ? 1 : 0);
+        }
         memcpy(s_f.leon, g_inv.slots, sizeof s_f.leon);
         memset(s_f.marvin, 0, sizeof s_f.marvin);
         s_f.marvin_offen = 0;
@@ -107,9 +121,10 @@ void re15_story3a_r42_figur_nach(int alt, int neu)
         re15_player_waffe_roh(RE15_S3A_PISTOLE);             /* RE2 Ada: Waffe 3 @0x8006901c */
         g_re15_s3a_zaehler[0]++;
         seite_loggen("Tausch Leon -> Marvin, Leons Seite gesichert", s_f.leon);
-        S3A_LOG("Leon: Ausruest-Platz 0x%02x Waffe %d; Marvin: Platz 0 Waffe %d (Browning x%d, H. Gun Bullets x%d)",
-                (unsigned)s_f.leon_platz, (int)s_f.leon_waffe, re15_player_equipped_weapon(), RE15_S3A_PISTOLE_MENGE,
-                RE15_S3A_MUNITION_MENGE);
+        S3A_LOG("Leon: Ausruest-Platz 0x%02x Waffe %d Vor-Platz 0x%02x HP %d Gift %d; Marvin: Platz 0 Waffe %d (Browning x%d, "
+                "H. Gun Bullets x%d)", (unsigned)s_f.leon_platz, (int)s_f.leon_waffe, (unsigned)s_f.leon_vorplatz,
+                (int)s_f.leon_hp_lo | ((int)s_f.leon_hp_hi << 8), (int)s_f.leon_gift, re15_player_equipped_weapon(),
+                RE15_S3A_PISTOLE_MENGE, RE15_S3A_MUNITION_MENGE);
         return;
     }
     if (alt == RE15_S3A_MODELL_MARVIN && ist_leon_modell(neu) && s_f.aktiv) {
@@ -119,16 +134,28 @@ void re15_story3a_r42_figur_nach(int alt, int neu)
         s_f.marvin_offen = 1;
         memcpy(g_inv.slots, s_f.leon, sizeof g_inv.slots);
         re15_inv_set_equipped_slot(s_f.leon_platz);
+        re15_inv_set_prev_equip_slot(s_f.leon_vorplatz);                 /* NB1 B8: Vor-Platz zurueck (nicht 0x80) */
         re15_player_waffe_roh(s_f.leon_waffe);
+        /* NB1 B8: Leben und Gift zurueck wie RE2 FUN_80049e48 im Rueckweg-Zweig (alte Figur > 0xb: `sltiu v0,s1,0xc` @0x8004a044,
+         * `lhu v0,..d46be` @0x8004a058 -> `sh v0,0x3b66(s0)` @0x8004a074, Gift @0x8004a064/70 -> @0x8004a078/7c). Ohne das
+         * heilte der RE1.5-Schwanz (HP 100 @0x80031710) Leon bei jedem Rueckwechsel. */
+        {
+            const int hp = (int)s_f.leon_hp_lo | ((int)s_f.leon_hp_hi << 8);
+            if (hp > 0) g_actors[RE15_ACTOR_SLOT_PLAYER].hp = (int16_t)hp;
+            if (s_f.leon_gift) g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags |= 0x2u;
+        }
         s_f.aktiv = 0;
+        s_rueck_frisch = 1;
         g_re15_s3a_zaehler[1]++;
         seite_loggen("Tausch Marvin -> Leon, Marvins Seite (Uebergabe offen)", s_f.marvin);
         seite_loggen("Leons Seite zurueck", g_inv.slots);
-        S3A_LOG("Leon: Ausruest-Platz 0x%02x Waffe %d", (unsigned)re15_inv_equipped_slot(), re15_player_equipped_weapon());
+        S3A_LOG("Leon: Ausruest-Platz 0x%02x Waffe %d Vor-Platz 0x%02x HP %d Gift %d", (unsigned)re15_inv_equipped_slot(),
+                re15_player_equipped_weapon(), (unsigned)re15_inv_prev_equip_slot(), (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp,
+                (g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags & 0x2u) ? 1 : 0);
     }
 }
 
-void re15_story3a_r42_neues_spiel(void) { memset(&s_f, 0, sizeof s_f); }
+void re15_story3a_r42_neues_spiel(void) { memset(&s_f, 0, sizeof s_f); s_rueck_frisch = 0; }
 
 void re15_story3a_r42_export(uint8_t out[RE15_S3A_SPEICHER_BYTES])
 {
@@ -139,6 +166,7 @@ void re15_story3a_r42_export(uint8_t out[RE15_S3A_SPEICHER_BYTES])
 void re15_story3a_r42_import(const uint8_t in[RE15_S3A_SPEICHER_BYTES])
 {
     memset(&s_f, 0, sizeof s_f);
+    s_rueck_frisch = 0;
     memcpy(&s_f, in, sizeof s_f < RE15_S3A_SPEICHER_BYTES ? sizeof s_f : RE15_S3A_SPEICHER_BYTES);
     if (s_f.aktiv > 1 || s_f.marvin_offen > 1) memset(&s_f, 0, sizeof s_f);   /* fremde Bytes: kein Tausch */
     if (s_f.aktiv) {
@@ -172,8 +200,19 @@ static void text_ablegen(uint8_t id, const uint8_t *b, int n)
 
 static void texte_einsetzen(uint16_t room_id)
 {
+    int n = 0;
     for (int i = 0; i < S3A_TEXTE_N; i++)
-        if (k_s3a_texte[i].raum == room_id) text_ablegen(k_s3a_texte[i].id, k_s3a_texte[i].b, k_s3a_texte[i].n);
+        if (k_s3a_texte[i].raum == room_id) { text_ablegen(k_s3a_texte[i].id, k_s3a_texte[i].b, k_s3a_texte[i].n); n++; }
+    if (n) S3A_LOG("ROOM%04X: %d Nachrichten eingesetzt (nach den RDT-Texten)", (unsigned)room_id, n);
+}
+
+/* NB1 B1: Haken in re15_msg_load_room_block NACH den RDT-Texten (wie re15_story_r36_texte). Der Installer laeuft im Raumaufbau
+ * VOR Schritt 11 (room_common.c re15_msg_load_room_block) - dort eingesetzte Texte mit Ids im RDT-Bereich (3020 msg 0..2,
+ * 30E0 msg 3) ueberschrieb der Loader wieder (Pruefer pruef_s3a_r1 B1, Lauf: alter Wortlaut). */
+void re15_story3a_r42_texte(uint16_t room_id)
+{
+    if (!leon()) return;
+    if (room_id == RE15_S3A_RAUM_3020 || room_id == RE15_S3A_RAUM_3060 || room_id == RE15_S3A_RAUM_30E0) texte_einsetzen(room_id);
 }
 
 /* msg 20 "You've received the <Name>." fuer einen Fund (Name = Namensbank wie "Will you take the <Name>?"); Umbruch vor dem
@@ -293,6 +332,14 @@ static int seite_hat(const re15_inv_slot_t *s, uint8_t id)
     return -1;
 }
 
+/* H. Gun Bullets in Marvins Seite ueber seiner Startmenge (alle Stapel zusammen). */
+static int munition_ueber(void)
+{
+    int n = 0;
+    for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) if (s_f.marvin[i].id == RE15_S3A_MUNITION) n += s_f.marvin[i].qty;
+    return n > RE15_S3A_MUNITION_MENGE ? n - RE15_S3A_MUNITION_MENGE : 0;
+}
+
 static void wiedersehen_bauen(void)
 {
     s_pw_n = 0; s_ueb_n = 0; s_ueb_i = 0;
@@ -314,6 +361,10 @@ static void wiedersehen_bauen(void)
             if (!id || id == RE15_S3A_KEYCARD || id == RE15_S3A_REDHAWK || id == RE15_S3A_PISTOLE || id == RE15_S3A_MUNITION) continue;
             s_ueb[s_ueb_n++] = id;
         }
+        /* NB1 B8: Munition. F-06 "alle Funde, die eigene Pistole behaelt Marvin"; L6 "weil er sich in der Lobby verteidigen muss".
+         * Seine eigene Munition (Startmenge RE15_S3A_MUNITION_MENGE @0x80074bd0) behaelt er mit der Pistole; was er an H. Gun
+         * Bullets darueber hinaus aufgehoben hat, ist ein Fund und geht an Leon. */
+        if (munition_ueber() > 0) s_ueb[s_ueb_n++] = RE15_S3A_MUNITION;
     }
 
     PW(OP_RIEGEL, OP_CUT(RE15_S3A_CUT_TUER),
@@ -335,7 +386,10 @@ static void wiedersehen_bauen(void)
     if (karte) PW(OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 10));                                                       /* 21 */
     PW(OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 11), OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 12), OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 13),
        OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 14), OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 15), OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 16),
-       /* 22..27; Marvin geht durch die orange Tuer zurueck (L5 Punkt 6 "Marvin geht in die Lobby 30C0" - ueber 3040) */
+       /* 22..27; Marvin geht durch die orange Tuer zurueck (L5 Punkt 6 "Marvin geht in die Lobby 30C0" - ueber 3040).
+        * KONZEPT L5 Punkt 4 "Marvin humpelt" NICHT gebaut (NB1 B4): die NPC-Gangarten des Originals sind nur Sub 4/5/7/8
+        * (@0x80076ca0: Gehen Clip 5, Rennen, zwei Rueckwaerts-Subs); Marvins eigene Bank (CDEMD0.EMS Blob 18, 24 Clips) hat keinen
+        * belegten Hinke-Zyklus. Gebaut ist M_GEHEN (ROOM1021 sub02 @0x020B2). Offen: Clip-Katalog mit dem Nutzer. */
        OP_WORK(2, RE15_S3A_NPC_SLOT), OP_DESTV(M_GEHEN, RE15_S3A_AN_NPC, S3A_T), OP_WARTE(RE15_S3A_AN_NPC),
        OP_SET(5, RE15_S3A_SIG_MARVIN_WEG, 1), OP_SLEEP(1),
        OP_SET(RE15_R42_BANK, RE15_R42_BIT_3060_UEBERGABE, 1),
@@ -376,7 +430,8 @@ int re15_story3a_r42_szene_laeuft(void) { return s_szene; }
  * "Benutzung nur mit dem Gegenstand im INVENTAR") laesst Ck(3,0x3B)==0 @0x020AE nur mit Bit UND Green Keycard 0x36 im Inventar
  * durch. Seit T-01 liegt die Karte bis zur Uebergabe in Marvins Seite - die Tuer bleibt "locked" (msg 0 @0x020B2), auch wenn
  * (3,0x3B) schon gesetzt ist; die Uebergabe gibt Leon die Karte und setzt (3,0x3B) wie ROOM3040 sub01 @0x014DA (geben()), dann
- * fuehrt derselbe Satz in sub02 @0x020D2. */
+ * fuehrt derselbe Satz in sub02 @0x020D2. Die 30E0-Seite der Kartentuer (Slot 0 @0x009F2) erreicht Marvin nicht: West-Ring von 30E0,
+ * Marvin kommt in den Ost-Ring (Messung re15_story3a_r42.h "L-10 gegen Marvins Weg", NB1 B2). */
 
 /* ==== Haken =============================================================================================================== */
 void re15_story3a_r42_install(uint16_t room_id)
@@ -389,14 +444,13 @@ void re15_story3a_r42_install(uint16_t room_id)
     if (s_szene != SZ_KEINE && !s_frisch) s_szene = SZ_KEINE;
     s_frisch = 0;
     if (!leon()) return;
+    const int frisch = s_rueck_frisch;
+    s_rueck_frisch = 0;   /* NB1 B6: gilt nur fuer den Raum direkt nach dem Rueckwechsel (3060 sub03 Aot_on 3 @0x010E4 -> 3020) */
     if (room_id == RE15_S3A_RAUM_3020) {
-        texte_einsetzen(room_id);
-        s_schuesse_faellig = (!s_f.aktiv && re15_game_flag_get(RE15_S3A_A0_BANK, RE15_S3A_A0_BIT) &&
+        s_schuesse_faellig = (frisch && !s_f.aktiv && re15_game_flag_get(RE15_S3A_A0_BANK, RE15_S3A_A0_BIT) &&
                               !bit9(RE15_R42_BIT_3020_SCHUESSE)) ? 1 : 0;
         if (s_schuesse_faellig) S3A_LOG("ROOM3020: Leon nach dem Rueckwechsel -> \"Gunshots...?\" faellig (Bit %d = 0, L-08)",
                                         RE15_R42_BIT_3020_SCHUESSE);
-    } else if (room_id == RE15_S3A_RAUM_3060) {
-        texte_einsetzen(room_id);
     }
 }
 
@@ -438,8 +492,20 @@ static void geben(uint8_t id)
         return;
     }
     uint8_t menge = 1;
-    const int i = seite_hat(s_f.marvin, id);
-    if (i >= 0) { menge = s_f.marvin[i].qty; s_f.marvin[i].id = 0; s_f.marvin[i].qty = 0; }
+    if (id == RE15_S3A_MUNITION) {
+        /* nur der Teil ueber Marvins eigener Munition (munition_ueber), abgezogen vom letzten Stapel nach vorn */
+        int rest = munition_ueber();
+        menge = (uint8_t)(rest > 255 ? 255 : rest);
+        for (int k = RE15_INV_MAX_SLOTS - 1; k >= 0 && rest > 0; k--)
+            if (s_f.marvin[k].id == RE15_S3A_MUNITION) {
+                const int ab = rest < s_f.marvin[k].qty ? rest : s_f.marvin[k].qty;
+                s_f.marvin[k].qty = (uint8_t)(s_f.marvin[k].qty - ab); rest -= ab;
+                if (!s_f.marvin[k].qty) s_f.marvin[k].id = 0;
+            }
+    } else {
+        const int i = seite_hat(s_f.marvin, id);
+        if (i >= 0) { menge = s_f.marvin[i].qty; s_f.marvin[i].id = 0; s_f.marvin[i].qty = 0; }
+    }
     if (id == RE15_S3A_KEYCARD && !re15_game_flag_get(RE15_S3A_KARTE_BANK, RE15_S3A_KARTE_BIT)) {
         /* "Karte genommen" wie ROOM3040 sub01: Ck(9,0x55)=1 @0x014CE -> Set(3,0x3B) @0x014DA. sub01 laeuft nur beim Betreten von 3040
          * - nimmt Marvin die Karte und geht, steht das Bit nie, und die Kistenregel K7 (@0x020AE, Bit UND Karte im Inventar) liesse
@@ -581,8 +647,11 @@ void re15_story3a_r42_tick(void)
         }
         return;
     }
+    /* NB1 B6: ohne offene Uebergabe (Altstand v0.8.30, gemeinsames Inventar) nur, solange die Kartentuer 3010 nicht benutzt ist -
+     * hat Leon sie schon durchschritten ((3,0x3C) = 1 @0x02302), ist er laengst weiter und die Szene faellt weg. */
     if (room == RE15_S3A_RAUM_3060 && !bit9(RE15_R42_BIT_3060_UEBERGABE) &&
-        re15_game_flag_get(RE15_S3A_A0_BANK, RE15_S3A_A0_BIT) && hunde_tot() && re15_fade_done(0)) {
+        re15_game_flag_get(RE15_S3A_A0_BANK, RE15_S3A_A0_BIT) && hunde_tot() && re15_fade_done(0) &&
+        (s_f.marvin_offen || !re15_game_flag_get(RE15_S3A_KARTE_BANK, RE15_S3A_KARTE_BENUTZT))) {
         wiedersehen_bauen();
         if (starten(s_pw) >= 0) {
             s_szene = SZ_WIEDERSEHEN; s_start_bild = g_engine.frame_count;

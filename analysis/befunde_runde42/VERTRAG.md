@@ -353,7 +353,13 @@ Besonderheiten:
   wird je Fund zur Laufzeit gebaut: "You've received the <Name>." mit dem Namen aus derselben Namensbank wie "Will you take the
   <Name>?" (item_prompt_common.c re15_item_prompt_name). Ohne Keycard bei Marvin (er hat sie liegen lassen) entfallen 15/16/21.
 - L-10: die Kartentuer 3010 braucht keinen eigenen Riegel - die Kistenregel K7 (kistenregel_r37.c @0x020AE) verlangt die Karte im
-  Inventar, und die liegt bis zur Uebergabe in Marvins Seite (gemessen unit_r42_story3a_karte3010).
+  Inventar, und die liegt bis zur Uebergabe in Marvins Seite (gemessen unit_r42_story3a_karte3010). Die 30E0-Seite der Kartentuer
+  (30E0 Slot 0 @0x009F2) liegt im WEST-Ring von 30E0 (SCA @0x51C Eintraege 0..8), Marvin kommt aus 3030 in den OST-Ring (13..18):
+  kein Weg (Nachbesserung 1 B2, unit_r42_story3a_weg30e0, Kopf von re15_story3a_r42.h).
+- Nachbesserung 1: 3020 msg 0..2 und 30E0 msg 3 werden NACH re15_msg_load_room_block eingesetzt (msg_common.c, vorher vom Loader
+  ueberschrieben, B1); 30E0 msg 3 Neutext (L7) gebaut (B5); "Gunshots...?" nur direkt nach dem Rueckwechsel, Wiedersehen im
+  Altstand nur vor der Kartentuer (B6); Rueckwechsel gibt Leon Vor-Platz, Leben und Gift zurueck (RE2 FUN_80049e48
+  @0x8004a000-@0x8004a07c), H. Gun Bullets ueber Marvins 50 eigenen sind ein Fund (B8).
 - Bank 5 Signale 0x14..0x1A und Ankunftsbits 0x20/0x21 in 3020/3060 (3020-Skripte nutzen nur 5:0/5:1, 3060 keine).
 
 ## 5. Gemeinsame Dateien (nur kleine Haken, Kommentar "Runde 42 Story")

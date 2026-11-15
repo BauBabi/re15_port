@@ -27,6 +27,11 @@
  *       keinen Sonderplatz.
  *     - Die Waffe kommt aus der Sicherung: im Port ist das Messer kein Gegenstand (Runde 35 Spur E, messer_rueckfall.c,
  *       Ausruest-Platz 0x80 -> Waffe 1 nach der Commit-Regel @0x80046654-88); RE2s Regel "0x80 -> 0" wuerde es verlieren.
+ *   Leben und Gift (NB1 B8) wie RE2s AUFRUFER FUN_80049e48: Eintritt `lhu v0,0x3b66(s0)` (Leben +0x156) @0x8004a000, Gift
+ *     @0x8004a004/08 -> d46be/d46b3/d46b4 @0x8004a020/2c/38, Nebenfigur := Hoechstleben @0x8004a00c/@0x8004a040; Rueckweg (alte Figur
+ *     > 0xb, `sltiu v0,s1,0xc` @0x8004a044) zurueck @0x8004a058-@0x8004a07c. Port: HP +0x9a und Gift-Bit 0x2 von +0x98 (0x800acaec)
+ *     VOR dem RE1.5-Schwanz gesichert (der setzt HP 100 @0x80031710 und Status 0 @0x80031720), beim Rueckwechsel zurueck; dazu der
+ *     Vor-Platz des Ports (re15_inv_prev_equip_slot).
  *   Marvins Seite (PORT-STORY, Konzept T-01 "Browning HP mit 15 Schuss sowie 50 H. Gun Bullets, mit ausgeruesteter Pistole"):
  *     dieselben Mengen wie Leons Start - Starttabelle PSX.EXE @0x80074bb8 `01 03 15` / Mengen @0x80074bd0 `00 0f 32` (Lesestellen
  *     @0x80045e44 / @0x80045e98), ohne das Messer (Runde 35 Spur E); ausgeruestet Platz 0 wie Ada (@0x80069024).
@@ -141,6 +146,22 @@
 #define RE15_S3A_SIG_HELL        0x18     /* Takt -> Programm: Einblende fertig                                             */
 #define RE15_S3A_SIG_UEBERGABE   0x19     /* Programm -> Takt: Uebergabe-Schritt (s_uebergabe_schritt)                      */
 #define RE15_S3A_SIG_MARVIN_WEG  0x1A     /* Programm -> Takt: Marvin geht durch die Tuer (Aktor frei)                      */
+/* ---- L-10 gegen Marvins Weg (Pruefer pruef_s3a_r1 B2) - GEMESSEN: kein Riegel noetig ----------------------------------------
+ * Verdacht: 30E0 main00 Slot 0 @0x009F2 (Door_aot_set -> 3010 (-25190,-1800,-20200) Cut 5 = Rueckseite der Kartentuer 3010 Slot 6
+ * @0x020EA) liegt ohne Bedingung auf Marvins Weg; mit der Karte in seiner Seite oeffnete Marvin die Kartentuer (K7 @0x020AE).
+ * Messung SCA ROOM30E0 (RDT+0x20 -> @0x51C, 5 x 19 Eintraege): drei GESCHLOSSENE Wandringe.
+ *   West  Eintr. 0..8  x -29328..-17460, z -28900..-19600: Slot 0 (-18900,-23500,800,1320) in der Ostwand (Eintr. 0
+ *         -18800/-28900 1340x9300), Slot 1 -> 3070 (-27100,-21800,2700,1200) in der Nordwand (Eintr. 6 -28550/-21755 10960x1500)
+ *   Ost   Eintr. 13..18 x 1775..29450, z 275..17300: Slot 6 -> 3050 (3375,3650,650,1950) in der Westwand (Eintr. 13), Slot 7 -> 3030
+ *         (6225,1900,1800,600) in der Suedwand (Eintr. 14); Marvins Ankunft aus 3030 (3030 Slot 0 @0x001D2 -> (7025,0,2700)) liegt
+ *         im OST-Ring. Wegsuche (scratchpad story/s3a/weg.py, Band 0): kein Weg von (7025,2700) in den West-Ring.
+ *   Den West-Ring erreicht man nur aus 3010 (Kartentuer) und 3070 (30E0 Slot 1); nach 3010/3060 kommt Marvin nicht: 3040 -> 3060
+ *   ist bis (4,0xC4) kein Durchgang (main00 Ck(4,0xC4)=0 @0x01242 -> Aot_set Slot 6 sce 3 + Door_aot_set sce 0 @0x0125A), und mit
+ *   (4,0xC4) startet 3060 sub00 @0x0101A den Rueckwechsel; 3090 -> 3060 ist bis (4,8) "latched" (3090 sub00 Ck(4,8)=0 @0x0143E ->
+ *   Aot_reset Slot 1 msg 3 @0x01442); 30D0 -> 3010 erst nach (3,71) (3090 @0x01326 / 3010 @0x02036). Riegel des Ports:
+ *   unit_r42_story3a_weg30e0 (Marvin am Ankunftspunkt, gesteuert gegen den West-Ring) + Durchlauf (30E0 Ost auf Marvins Weg). */
+#define RE15_S3A_RAUM_30E0       0x30E0u
+#define RE15_S3A_30E0_OST_X0     1775     /* SCA Eintr. 13/15 x (Westwand des Ost-Rings)                                     */
 #define RE15_S3A_AN_SPIELER      0x20     /* Plc_dest-Ankunftsbits (Form ROOM2040 sub02 @0x01648)                           */
 #define RE15_S3A_AN_NPC          0x21
 
@@ -153,12 +174,18 @@ typedef struct {
     uint8_t marvin_offen;                         /* 1 = Marvins Funde noch nicht uebergeben                              */
     re15_inv_slot_t leon[RE15_INV_MAX_SLOTS];     /* RE2 ce5e4                                                           */
     re15_inv_slot_t marvin[RE15_INV_MAX_SLOTS];   /* Marvins Seite beim Rueckwechsel (Uebergabe L6)                       */
+    /* NB1 B8 (am Ende: die Lage der Felder oben bleibt): wie RE2 FUN_80049e48 (Leben/Gift sichern @0x8004a000-@0x8004a038,
+     * zurueck @0x8004a058-@0x8004a07c) und der Vor-Platz des Ports */
+    uint8_t leon_vorplatz;                        /* re15_inv_prev_equip_slot (Port), Marvin: 0x80                         */
+    uint8_t leon_gift;                            /* Bit 0x2 von +0x98 (0x800acaec; RE2 cfe12 @0x8004a004/@0x8004a078)     */
+    uint8_t leon_hp_lo, leon_hp_hi;               /* +0x9a (RE2 cfd4e @0x8004a000 -> d46be @0x8004a020, zurueck @0x8004a074) */
 } re15_s3a_figur_t;
 
 /* ---- Haken -------------------------------------------------------------------------------------------------------------- */
 int  re15_story3a_r42_figur_vor(int alt, int neu);   /* sherry_r41.c modell_setzen: 1 = Neuladen im laufenden Tausch (kein Schwanz) */
 void re15_story3a_r42_figur_nach(int alt, int neu);  /* sherry_r41.c modell_setzen: Tausch (T-01/T-02)                            */
-void re15_story3a_r42_install(uint16_t room_id);     /* scd_room_setup.c (Ende des Installer-Blocks): Texte 3020/3060, Schuesse 3020 */
+void re15_story3a_r42_install(uint16_t room_id);     /* scd_room_setup.c (Ende des Installer-Blocks): Schuesse 3020 */
+void re15_story3a_r42_texte(uint16_t room_id);       /* msg_common.c re15_msg_load_room_block (NACH den RDT-Texten): 3020/3060/30E0 */
 const uint8_t *re15_story3a_r42_ereignis(uint16_t room_id, uint8_t event_id);                 /* scd_vm.c scd_event_fire */
 const uint8_t *re15_story3a_r42_evt_exec(uint16_t room_id, uint8_t sub, const uint8_t *pc);   /* scd_vm.c op_evt_exec    */
 void re15_story3a_r42_tick(void);                    /* scd_vm.c scd_vm_tick (Gameplay-Lauf)                                      */

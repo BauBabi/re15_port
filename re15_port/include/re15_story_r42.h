@@ -94,6 +94,7 @@
 #define RE15_R42_MSG_3070_ADA         6    /* L10 (RDT 0..5) */
 #define RE15_R42_MSG_30E0_LOBBY       16   /* L8 (RDT 0..15) */
 #define RE15_R42_MSG_30E0_ADA_KOMMT   17   /* L10 optional */
+#define RE15_R42_MSG_30E0_LEON_BEIN   3    /* L7: Neutext "He's back in the lobby. Some dogs got his leg..." (RDT 3 @0x1163) */
 /* STAGE6 Zug (Block C Texte, v0.8.31) */
 #define RE15_R42_MSG_6031_ERSTE       12   /* 12..17 (RDT 0..11); 6030 nur Neutexte vorhandener Ids 2..5, 21, 22 */
 #define RE15_R42_MSG_6031_LETZTE      17
