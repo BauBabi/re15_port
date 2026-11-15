@@ -239,7 +239,8 @@ static struct {
     float    beuge[3];                         /* NB4: Beugerichtung der Startform (Einheitsvektor, Welt) */
     int      beuge_an;                         /* NB4: 1 = Startform gebogen statt Federstand */
     int32_t  dicke;                            /* NB5: Querschnitt der Glieder Q12, 0 = 4096 */
-    int      verdeckt;                         /* NB5: so viele Glieder ab der Wurzel nicht zeichnen (Querschnitt 0) */
+    int      verdeckt;                         /* NB5: so viele Glieder ab der Wurzel ohne Knick-/Rollgrenze (Stueck hinter dem Koerper);
+                                                * seit r9 gezeichnet, verdeckt nur durch den Koerper selbst */
     float    u1[3];                            /* V8 Runde 2: Richtung des ersten Glieds im Raum von Knochen 8 */
     int      u1_an;                            /* V8 Runde 2: u1 gueltig */
     int      u1_n;                             /* V8 Runde 2: Takte seit der Szenenfuehrung (Rueckkehr n x SW_V8_RUECK) */
@@ -502,7 +503,7 @@ static void glaetten(float (*p)[3], float (*q)[3], const float *laenge, float bo
             lim = kw + SW_GLATT_RAND;
         }
         if (lim < SW_GLATT_MIN) lim = SW_GLATT_MIN;
-        if (j - 1 < frei_bis) lim = 3.14159265f;          /* Schwanz-Bewegung: Vorglied verdeckt (Querschnitt 0) - Knick unsichtbar */
+        if (j - 1 < frei_bis) lim = 3.14159265f;          /* Schwanz-Bewegung: Vorglied im Stueck hinter dem Koerper - ohne Grenze */
         else if (v8) {
             if (lim > SW_V8_GLATT_MAX) lim = SW_V8_GLATT_MAX;                              /* V8: keine Knick-Ausnahme, hoechstens 25 Grad */
             if (szene_w > 0.0f && lim < SW_V8_GLATT_SZENE) lim += (SW_V8_GLATT_SZENE - lim) * szene_w;   /* Schwanz-Bewegung: Szene */
@@ -678,7 +679,7 @@ static void knick_kappen(const float u[3], float d[3], float lim)
 /* bild_n / pfeil (Schwanz-Bewegung, Bauplan 5): die Startform baucht um hoechstens `pfeil` in Richtung bild_n (Bildebene, quer zur Sehne)
  * aus, der Rest des Ueberschusses in Richtung `beuge` (Blickrichtung): so zeigt das Bild den Pfeil der Videolinie, die uebrige Laenge liegt
  * in der Tiefe. lim > 0 (V8 unter Szenenfuehrung): jedes Gelenk knickt in beiden FABRIK-Laeufen hoechstens lim ab (Gelenk a gegen das Glied
- * vor a, falls a > 0), ausser hinter den ersten frei_bis Gliedern (verdeckt, Querschnitt 0) - vorher klemmte erst glaetten() von der Wurzel
+ * vor a, falls a > 0), ausser hinter den ersten frei_bis Gliedern (Stueck hinter dem Koerper) - vorher klemmte erst glaetten() von der Wurzel
  * her und drehte damit die Restkette von der Spitze weg (Abstimmungslauf SF_belege/v8/bewegung a: alle Gelenke an der Grenze, Spitze 30-75 Videopunkte
  * daneben). */
 static void fabrik(float (*ik)[3], int a, int e, const float t[3], const float *laenge, float boden, const float *beuge,
@@ -781,8 +782,8 @@ static void ziel_anwenden(int slot, const float *laenge, float boden, float nade
             if (t[1] > boden) t[1] = boden;
         }
     }
-    /* Schwanz-Bewegung: Gelenke hinter einem verdeckten Glied (re15_schwanz_r41_verdeckt, Querschnitt 0) knicken ohne Grenze - der Knick ist
-     * unsichtbar; mit Grenze erreichte die zusammengelegte verdeckte Kette den Austritt nicht (Abstimmungslauf SF_belege/v8/bewegung g h18-h22: Gelenk 5
+    /* Schwanz-Bewegung: Gelenke hinter einem Glied des Stuecks Wurzel -> Austritt (re15_schwanz_r41_verdeckt) knicken ohne Grenze (seit r9
+     * gezeichnet; was hinter dem Koerper liegt, verdeckt der Koerper); mit Grenze erreichte die zusammengelegte verdeckte Kette den Austritt nicht (Abstimmungslauf SF_belege/v8/bewegung g h18-h22: Gelenk 5
      * 16 Videopunkte neben dem Video-Austritt) bzw. zwang die Richtung des sichtbaren Stuecks (Stand D). */
     fabrik(ik, vj, SW_J - 1, t, ll, boden, bg, bn, pf, lim, s_sw[slot].verdeckt);
     if (ll[SW_J - 1] != laenge[SW_J - 1]) {
@@ -1018,8 +1019,8 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
                 /* Verdrehung gegen das Vorglied (Bauchachse des Vorglieds kleinstmoeglich auf diese Achse gedreht) insgesamt hoechstens
                  * SW_V8_ROLLE_MAX - bzw. nicht ueber die Verdrehung des Keyframes hinaus, falls die schon groesser ist; Glied 16 gegen den
                  * Rumpf: die Rolle selbst hoechstens SW_V8_ROLLE_MAX. */
-                float t0 = 0.0f, grenze = (j > 0 && j - 1 < s_sw[slot].verdeckt) ? 3.14159265f : SW_V8_ROLLE_MAX;   /* Vorglied verdeckt:
-                                                                                                    * keine sichtbare Fuge */
+                float t0 = 0.0f, grenze = (j > 0 && j - 1 < s_sw[slot].verdeckt) ? 3.14159265f : SW_V8_ROLLE_MAX;   /* Vorglied im Stueck
+                                                                                                    * hinter dem Koerper: ohne Grenze */
                 if (j > 0 && grenze < 3.0f) {
                     float ap[3] = { neu_p[1], neu_p[4], neu_p[7] }, ep[3], et[3], Rmn[9], ec[3];
                     norm(ap);
@@ -1044,8 +1045,15 @@ int re15_schwanz_r41_pose(const re15_actor_t *a, const re15_emd_skeleton_t *skel
                 memcpy(Rn, Rt, sizeof Rn);
             }
         }
-        {   /* NB5 (Abnahme 3 B1): Querschnitt = lokale x- und z-Spalte, die Gliedachse (y) und damit die Kette bleiben */
-            const float dk = (j < s_sw[slot].verdeckt) ? 0.0f : (s_sw[slot].dicke > 0) ? (float)s_sw[slot].dicke / 4096.0f : 1.0f;
+        {   /* NB5 (Abnahme 3 B1): Querschnitt = lokale x- und z-Spalte, die Gliedachse (y) und damit die Kette bleiben.
+             * Runde 41 Schwanz r9 (Nutzer 2026-11-15: "nicht mehr sauber connected ... vorher WAR er ja sauber connected"): die Glieder
+             * Wurzel -> Austritt (re15_schwanz_r41_verdeckt) werden NICHT mehr mit Querschnitt 0 unsichtbar gemacht. Der Austritt ist ein
+             * Punkt des 80-%-Videos und liegt hinter dem VIDEO-Koerper; der Port-Koerper steht anders (h26 rund 30 Videopunkte weiter
+             * rechts). Mit Querschnitt 0 begann das sichtbare Stueck deshalb frei in der Luft (h25-h29: Teil ohne Koerperkontakt, Abstand
+             * bis 104 Bildpunkte in 960x720) oder als Schnittkante VOR der Huefte (h60-h70). Jetzt verdeckt der Koerper selbst (Tiefe), was
+             * hinter ihm liegt; Kette, Gelenke und Spitze bleiben bitgleich (Messlauf scratchpad schwanz_r9: [hangar-takt]- und
+             * Gelenk-Zeilen identisch, nur die Bilder h16-h31 / h58-h75 anders). Riegel: integration_r41_schwanz_zusammen. PORT-SZENE. */
+            const float dk = (s_sw[slot].dicke > 0) ? (float)s_sw[slot].dicke / 4096.0f : 1.0f;
             for (int r = 0; r < 3; r++) {
                 poses[b].rot[r * 3 + 0] = (int32_t)lrintf(Rn[r * 3 + 0] * s_b * dk * 4096.0f);
                 poses[b].rot[r * 3 + 1] = (int32_t)lrintf(Rn[r * 3 + 1] * s_b * 4096.0f);

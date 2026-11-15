@@ -43,8 +43,10 @@ void re15_schwanz_r41_fuehrung(int slot, const int32_t via[3], int via_j, const 
 /* Runde 41 SF NB5 (Abnahme 3 B1): Dicke der gezeichneten Glieder 16-22 (Q12, 4096 = Modell) fuer Slot `slot`; skaliert nur
  * den Querschnitt (lokale x/z-Achsen), Gliedlaengen und Kette bleiben. 0 = 4096. */
 void re15_schwanz_r41_dicke(int slot, int32_t dicke_q12);
-/* Runde 41 SF NB5 (Abnahme 3 B1): die ersten `glieder` Glieder ab der Wurzel werden ohne Querschnitt gezeichnet (verdeckt - im
- * Video liegt das Stueck Huefte -> Austritt hinter dem Koerper); Kette und Lage bleiben. 0 = alle sichtbar. */
+/* Runde 41 SF NB5 (Abnahme 3 B1): die ersten `glieder` Glieder ab der Wurzel = Stueck Huefte -> Austritt, das im Video hinter dem
+ * Koerper liegt: ihre Gelenke knicken/rollen in der Szenenfuehrung ohne Grenze. Bis r9 wurden sie zusaetzlich ohne Querschnitt
+ * gezeichnet - der Port-Koerper deckt den Video-Austritt aber nicht ab, das sichtbare Stueck hing dann frei in der Luft (Nutzer
+ * 2026-11-15 "nicht mehr sauber connected"); seit r9 werden alle Glieder gezeichnet und der Koerper verdeckt sie. 0 = keine. */
 void re15_schwanz_r41_verdeckt(int slot, int glieder);
 
 /* Runde 41 SF V8 Schwanz-Bewegung (Bauplan 3, PORT-SZENE nach Video 4): Rolle der Glieder 16-22 um ihre Achse; `punkt` = Szenenkamera

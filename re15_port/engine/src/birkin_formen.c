@@ -1163,7 +1163,11 @@ static int bf_video_welt(const bf_schwanzpunkt_t *q, const re15_actor_t *b, int3
  *   pfeil: groesster Abstand der Videolinie von ihrer Sehne Austritt -> Spitze in Videopunkten (+ = links der Sehne im Bild gesehen,
  *      - = rechts; |Pfeil| < 5 = Ablesegenauigkeit der Linien -> 0). Die Kette baucht um diesen Pfeil IN DER BILDEBENE aus (Bauplan 5:
  *      "Beugung in der Bildebene, damit Knick und Kruemmung im Bild sichtbar sind"), die uebrige Laenge liegt in der Blicktiefe (NB4).
- *   verdeckt: Glieder ab der Wurzel ohne Querschnitt (Video: Wurzel -> Austritt hinter dem Koerper). Bogen h76-h100: 0 (Video: der Bogen
+ *   verdeckt: Glieder ab der Wurzel ohne Knick-/Rollgrenze (Video: Wurzel -> Austritt hinter dem Koerper). Bis r9 auch ohne Querschnitt
+ *      gezeichnet; der Video-Austritt liegt aber nicht hinter dem Port-Koerper -> sichtbares Stueck frei in der Luft (Nutzer 2026-11-15).
+ *      Seit r9 gezeichnet und vom Koerper verdeckt (schwanz_r41.c, Riegel integration_r41_schwanz_zusammen): h36-h56 bleibt der Schwanz
+ *      so ganz hinter dem Koerper (0 Schwanzpunkte, Messlauf schwanz_r9), h74/h75 zeigt sich der Bogen (vorher 49/53 Punkte, dann h76
+ *      auf einen Schlag 11379). Bogen h76-h100: 0 (Video: der Bogen
  *      waechst aus dem Buckel; der Austritt liegt 20-30 Videopunkte links neben dem Port-Koerperrand, umriss.py).
  * h36-h56 (Video: nicht sichtbar, hinter den Knien) wie k_schwanz_bahn hinter dem Koerper, h74 (Spider-Man fliegt durchs Bild) schon im
  * Bogen h76 - beide ganz verdeckt (verdeckt 7). */
