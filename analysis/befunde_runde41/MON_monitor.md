@@ -1,4 +1,4 @@
-# Runde 41 Spur Monitor — Hangar-Szene als Monitorbild im Monitor Room (Runde 1)
+# Runde 41 Spur Monitor — Hangar-Szene als Monitorbild im Monitor Room (Runde 1 + 2)
 
 Zweig `r41/sichel_szene`, Basis 23f9da5c9 (abgenommener Stand der Sichel-Szene). Code `engine/src/monitor_r41.c`,
 `include/re15_monitor_r41.h`; Haken in `birkin_formen.c`, `room_common.c`, `re15_map_zones.c`, `platform/pc/src/render_pc.c`.
@@ -92,9 +92,48 @@ Lauf der Gruppe `ctest -R "birkin|schwanz|spinn|sichel|hangar|monitor|kartenbits
 Videos (gdigrab, echtes Fenster): Leon 5000 -> Tuer -> 5030 -> Monitorbild -> Suedtuer -> Hangar leer (Affen fuer das Video per
 Kill-Flag 8:42/8:43 aus, wie Spur H); Elza 5001 -> 5031 -> Monitorbild -> Sherry-Ereignis.
 
+## 3b. Runde 2 (Pruefer SICHT: R1 Aufploppen, R2 kein sichtbarer Monitor-Look)
+
+Befund der Pruefer (Runde 1): nach Schwarz + Einblende stand der Hangar 8 Bilder leer, dann ploppten Birkin und Spider-Man auf
+(monitor_r41.c schaltete die Raumfiguren im 1. KI-Takt ab, bf_hangar_starten setzte die Szene erst im 2.); der Original-Effekt
+(+-1 Zeile) ist mit blossem Auge nicht zu sehen, die Szene lief bildschirmfuellend wie vorher.
+
+Aenderungen (monitor_r41.c Kopf Punkt 5, render_pc.c pc_monitor_look, room_common.c):
+- Harter Schnitt wie ROOM5031 sub03 (Cut_chg 7 -> 11 @0x011A6, 11 -> 9 @0x011EA, keine Blende dazwischen): der Raumwechsel des
+  Monitorbilds laeuft ohne FUN_800217b0/FUN_800216ec-Kick und ohne State-4/5-Freeze (re15_monitor_r41_harter_schnitt).
+- Kein leerer Hangar: bis zum Szenenstart zeigt der Zeichner das gemerkte Bild von Cut 7 (Modus STANDBILD, 2 Bilder), das erste
+  Bild danach hat Birkin und Spider-Man.
+- PORT-WAHL Monitor-Rahmen: die Szene (fertiges Bild mit Original-Zeileneffekt, vor Letterbox/Text) laeuft verkleinert IN der
+  weissen Bildschirmflaeche des Monitors aus Cut 7 - Bildzeilen (jede zweite 320x240-Zeile 72 %), 35 % entsaettigt, zum
+  Schirmrand dunkler (Ecke 55 %). Kein Text, kein Logo. Flaeche gemessen am Framedump F25 ROOM5030/5031 Cut 7
+  (Ecken (73.5,53.5) (233.5,53.5) (236.5,168.5) (70.5,168.5), Helligkeitsprofile im Kopf von k_schirm).
+- Kein Vorbild in RE2: RE2 hat dieselbe Zeilen-Funktion (FUN_8002ab84, Sinus-Tabelle @0x8009d9f4 = 256 Bytes gleich RE1.5
+  @0x80072d70, Datei-Vergleich), einziger Aufrufer FUN_8002aa6c @0x8002ab04 (Wackel-Zweig), keinen Monitor-Rahmen.
+- Letterbox jetzt wie das Original: (1,0x1B) ab Cut 7 (@0x01146) bis nach Cut_auto (@0x01210); nach jedem Raumwechsel neu
+  gesetzt (Raumlader loescht Zone 1 untere 16 Bit @0x80039710-30), am Szenenende im selben Takt wieder (kein Absacken). Die
+  Pad-Sperre (2,7) hat keine Luecke mehr (Runde 1: zwischen Laden und erstem Monitor-Takt 0).
+- h135 wird gezeigt: Rueckweg einen Takt nach bf_hangar_beenden (Phase ENDE).
+- Sicherung (PORT-WAHL): Szene startet nicht binnen 60 Takten / Monitorbild laenger als 900 Takte -> zurueck ohne Szene.
+- Messhaken RE15_MONITOR_OHNE_LOOK=1 (Alias RE15_MONITOR_OHNE_ZEILEN): kein Zeileneffekt, kein Rahmen, keine Letterbox vor
+  der Szene.
+
+| Beweis | Lauf | Ergebnis |
+|---|---|---|
+| (a) Szenenbilder bitgleich | 23f9da5c9 (git archive, eigener Build, alter Ausloeser im Raum) gegen HEAD mit RE15_MONITOR_OHNE_LOOK=1, Framedump je Videobild h, 320x240 | Leon 50A0 h-8..h135: 144/144 bitgleich; Elza 50A1: 144/144 (jetzt mit Vorlauf h-8..h-1 und h135). Referenz zweimal: h-8..h110 119/119 |
+| R1 kein Aufploppen | Messzeile [monitor-bild] je Bild; gdigrab 30 Bilder/s | Hangar F0/F1 Standbild Cut 7, F3 erstes Szenenbild mit Birkin + Spider-Man (F2 gehaltenes Bild); im Video: Cut 7 (Schirm 230) -> naechstes Bild Szene im Schirm (49), kein Schwarz |
+| R2 Monitor-Look | Framedumps + gdigrab 960x720 | Szene im Monitor sichtbar, Zeilen sichtbar (Messbilder mb_mo_l.png, mb_video_l.png im Arbeitsordner) |
+| Rueckkehr | Framedump 5030 F0..F5 | F0 gehaltenes Monitorbild, F1 Cut 9 mit Letterbox, kein Schwarz |
+
+Riegel neu: unit_r41_monitor "ablauf" (harte Schnitte, kein gezeigtes Hangar-Bild ohne Figuren, Rueckweg = Szenenende + 1 Takt,
+Letterbox/Pad-Sperre ohne Luecke, Ladetakt HALTEN), Gegenprobe unit_r41_monitor_gegen_pop (RE15_MONITOR_OHNE_LOOK=1 -> rot);
+integration_r41_monitor pruefe_pop (Leon + Elza) mit Gegenprobe P (RE15_MONITOR_OHNE_LOOK=1 -> rot); unit_birkin_szenen
+Szenenende-Pruefung auf Phase ENDE umgestellt. Gruppe birkin|schwanz|spinn|sichel|hangar|monitor|kartenbits: 38/38 gruen.
+
 ## 4. Offen
 
 1. PSX-Plattform: der Zeilen-Effekt ist nur im PC-Zeichner gebaut (wie die Region-Cull-Ausnahme der Szene).
 2. FUN_80020674 (Bits 0x1C/0x1D) bleibt ungebaut (eigene Spur, betrifft 1080/2040/20B0/3080/4020/5090/6030).
-3. Der Effekt ist schwach (+-1 Zeile, wie im Original). Wirkt er dem Nutzer zu wenig nach Monitor, waere ein staerkerer
-   Look eine PORT-WAHL ueber das Original hinaus.
+3. (Runde 2 erledigt: Monitor-Rahmen als PORT-WAHL.) Elzas Original-Sherry-Bild (Cut 11) bleibt bildschirmfuellend wie im
+   Original - der Rahmen gilt nur fuer das Port-Monitorbild.
+4. Zweig r41/monitore (bdddfe887) animiert die Monitore in 5030/5031: das gemerkte Standbild von Cut 7 friert diese Animation
+   waehrend des Monitorbilds ein; beim Zusammenfuehren ansehen (keine gemeinsame Datei).
