@@ -13,8 +13,17 @@
   "bild1": 0.7230960442292033
  },
  "K5g3": {
+  "bild2": 0.6821244882964207,
+  "bild1": 0.7230113332047904
+ },
+ "hinweis_runde2": "K5g3 Runde 2 (EMD db9404a1, nur UV der Spalt-Kinder geaendert) neu gemessen 2026-11-14: gleiche Werte wie Runde 1 (Umriss haengt nicht an UV)",
+ "K5g3_r3": {
   "bild2": 0.612479848269322,
   "bild1": 0.72328203369486
  },
- "hinweis_runde2": "K5g3 Runde 2 (EMD db9404a1, nur UV der Spalt-Kinder geaendert) neu gemessen 2026-11-14: gleiche Werte wie Runde 1 (Umriss haengt nicht an UV)"
+ "R9_V1_allein": {
+  "bild2": 0.6818496673033732,
+  "bild1": 0.722825504936923
+ },
+ "hinweis_r9_einbau": "R9-Einbau 2026-11-15: K5g3 = Geometrie mit Posen-Datei R9 + Spiegelhand (geo/BAHNSTEIG_FORM.EMD sha f833a905); K5g3_r3 = Stand Runde 3 (db9404a1); R9_V1_allein = kr4 r9 Abgabe BAHNSTEIG_FORM_kr4r9.EMD (sha 2f807af5, K5e_f1-Netze, Variante 1). bank.py umriss, gleiches Verfahren."
 }

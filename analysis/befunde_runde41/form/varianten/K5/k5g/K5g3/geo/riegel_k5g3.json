@@ -1,12 +1,12 @@
 {
  "R1 Generator (Datei == Generator, zweiter Lauf gleich)": {
   "urteil": "GRUEN",
-  "text": "zwei Laeufe gleich True, == Datei True, sha256 db9404a18368f420",
+  "text": "zwei Laeufe gleich True, == Datei True, sha256 f833a90580d849ad",
   "gegenproben": [
    {
     "name": "ohne Krallen-Stufe",
     "gruen": false,
-    "text": "zwei Laeufe gleich True, == Datei False, sha256 b57936cbcd4d250a"
+    "text": "zwei Laeufe gleich True, == Datei False, sha256 5923ace89bb25981"
    }
   ]
  },
@@ -17,7 +17,7 @@
    {
     "name": "volle Geometrie",
     "gruen": false,
-    "text": "sha256 db9404a18368f420 (KAND.EMD f78e598336872111)"
+    "text": "sha256 f833a90580d849ad (KAND.EMD f78e598336872111)"
    }
   ]
  },
@@ -55,34 +55,34 @@
  },
  "R5 alle anderen Netze und Knochen == K5e_f1": {
   "urteil": "GRUEN",
-  "text": "24 Netze geprueft; abweichend keine; Knochen/Netzzahl gleich True",
+  "text": "23 Netze geprueft; abweichend keine; Knochen/Netzzahl gleich True",
   "gegenproben": [
    {
     "name": "Netz 31 eine Ecke +1",
     "gruen": false,
-    "text": "24 Netze geprueft; abweichend [31]; Knochen/Netzzahl gleich True"
+    "text": "23 Netze geprueft; abweichend [31]; Knochen/Netzzahl gleich True"
    }
   ]
  },
  "R6 EDD/EMR (Sektionen 0-6) byte-gleich": {
   "urteil": "GRUEN",
-  "text": "Sektionen 0-6 (123976 Byte) gleich K5e_f1 und K5c: ja",
+  "text": "Sektionen 0-6 (123976 Byte): alle ausser emr1 gleich K5e_f1 und K5c, emr1 == K5e_f1 + Posen-Datei (120636 Byte): ja",
   "gegenproben": [
    {
     "name": "ein Bit in emr1",
     "gruen": false,
-    "text": "Sektionen 0-6 (123976 Byte) gleich K5e_f1 und K5c: NEIN ['emr1']"
+    "text": "Sektionen 0-6 (123976 Byte): alle ausser emr1 gleich K5e_f1 und K5c, emr1 == K5e_f1 + Posen-Datei (120636 Byte): NEIN ['emr1 != K5e_f1 + Posen-Datei']"
    }
   ]
  },
- "R7 Posen == K5c (keine Posen-Datei); FORM.EMD nachgezogen": {
+ "R7 Posen == K5c + Posen-Datei (keys + n52, sha 286b2920416a); FORM.EMD nachgezogen": {
   "urteil": "GRUEN",
-  "text": "keine Posen-Datei -> Pool == K5c; FORM.EMD Key 0/1 = Key 11/542, MD1 gleich: ja",
+  "text": "Posen-Datei (43 Keys \"keys\", 52 Keys \"n52\") mit 362 Tripeln -> Pool == K5c + Datei; FORM.EMD Key 0/1 = Key 11/542, MD1 gleich: ja",
   "gegenproben": [
    {
-    "name": "Probe-Posen-Datei gegen \"== K5c\"",
+    "name": "Probe-Posen-Datei gegen die Soll-Posen",
     "gruen": false,
-    "text": "keine Posen-Datei -> Pool == K5c; FORM.EMD Key 0/1 = Key 11/542, MD1 gleich: Pool/Clips != K5c"
+    "text": "Posen-Datei (43 Keys \"keys\", 52 Keys \"n52\") mit 362 Tripeln -> Pool == K5c + Datei; FORM.EMD Key 0/1 = Key 11/542, MD1 gleich: Pool != K5c + Posen-Datei"
    },
    {
     "name": "Posen-Datei mit Key 300 (nicht erlaubt)",
@@ -93,7 +93,7 @@
  },
  "R7b Posen-Datei wirkt genau auf ihre Tripel (Mechanik)": {
   "urteil": "GRUEN",
-  "text": "Mechanik Probe-Datei (Key 542 Knochen 17): Posen-Datei mit 1 Tripeln -> Pool == K5c + Datei; FORM.EMD Key 0/1 = Key 11/542, MD1 gleich: ja",
+  "text": "Mechanik Probe-Datei (Key 542 Knochen 17): Posen-Datei (1 Keys \"keys\", 0 Keys \"n52\") mit 1 Tripeln -> Pool == K5c + Datei; FORM.EMD Key 0/1 = Key 11/542, MD1 gleich: ja",
   "gegenproben": [
    {
     "name": "Probe-Datei, aber alt falsch",
@@ -104,7 +104,7 @@
  },
  "R8 B4-Grenzen am Gesamtmodell nicht schlechter als B4 allein (Messbank voll, urteil4)": {
   "urteil": "ROT",
-  "text": "GK/B4: H1a 3578/3578, H1b 23/23, H1c 20/20, H1c_rot 0/0, H2_summe 12543/12543, H2_ueber20 162/162, H3b_rot 0/0, H3b_summe 383432/384302, H3a Gruppen 21 (ueber B4 und Grenze: 3), H7_bild2 0.61248/0.65316, H7_bild1 0.72328/0.72330, H4 7276/7318; ROT: H3a 19<->22 104 > B4 0 / Grenze 50; H3a 19<->23 535 > B4 0 / Grenze 50; H3a 20<->22 424 > B4 0 / Grenze 50; H7 bild2 0.61248 < Grenze 0.65244; H3a bei B4 gruen, am Gesamtmodell rot; H7 bei B4 gruen, am Gesamtmodell rot",
+  "text": "GK/B4: H1a 3578/3578, H1b 23/23, H1c 20/20, H1c_rot 0/0, H2_summe 12543/12543, H2_ueber20 162/162, H3b_rot 0/0, H3b_summe 383052/384302, H3a Gruppen 21 (ueber B4 und Grenze: 3), H7_bild2 0.68212/0.65316, H7_bild1 0.72301/0.72330, H4 7290/7318; ROT: H3a 19<->22 157 > B4 0 / Grenze 50; H3a 19<->23 527 > B4 0 / Grenze 50; H3a 20<->22 483 > B4 0 / Grenze 50; H3a bei B4 gruen, am Gesamtmodell rot",
   "gegenproben": [
    {
     "name": "Urteil von B3 statt GK",
@@ -115,23 +115,61 @@
  },
  "R8b Ursache der R8-Reste: nur die K5c-Krallen (G2)": {
   "urteil": "GRUEN",
-  "text": "6 Verschlechterungen, alle an den K5c-Krallen: ja; Umriss Bild 2 K5g3 0.61248 / K5c allein 0.61228 / B4 0.65316",
+  "text": "4 Verschlechterungen, alle an den K5c-Krallen: ja; Umriss Bild 2 K5g3 0.68212 / K5c allein 0.61228 / B4 0.65316",
   "gegenproben": [
    {
     "name": "Urteil von B3 statt GK",
     "gruen": false,
-    "text": "5 Verschlechterungen, alle an den K5c-Krallen: NEIN ohne Kralle: H1a 4298 > B4 3578; ohne Kralle: H2_summe 12833 > B4 12543; ohne Kralle: H2_ueber20 163 > B4 162; ohne Kralle: H9-S14 bei B4 gruen, am Gesamtmodell rot; Umriss Bild 2 K5g3 0.61248 / K5c allein 0.61228 / B4 0.65316"
+    "text": "5 Verschlechterungen, alle an den K5c-Krallen: NEIN ohne Kralle: H1a 4298 > B4 3578; ohne Kralle: H2_summe 12833 > B4 12543; ohne Kralle: H2_ueber20 163 > B4 162; ohne Kralle: H9-S14 bei B4 gruen, am Gesamtmodell rot; Umriss Bild 2 K5g3 0.68212 / K5c allein 0.61228 / B4 0.65316"
    }
   ]
  },
  "R9 Dreiecke je Bild + Spielfigur + Effekte <= 16384 mit Reserve; im Spiel 0 verworfen (G3)": {
   "urteil": "GRUEN",
-  "text": "Messbank max 7276 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9135 <= 16384 - 2048 = 14336; Spiel max 7718 (f5080_vorn 7184, f5090_s11 7718, kampf 7415, s11 7718, v5080 7184, v5080_c11 7596), verworfen 0; Reserve Messbank 7249, Spiel 8666",
+  "text": "Messung zur Geometrie: ja; Messbank max 7290 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9149 <= 16384 - 2048 = 14336; Spiel max 7748 (kampf_video 7436, v5080_c11 7606, f5090_s11 7748, f5080_vorn 7212), verworfen 0; Reserve Messbank 7235, Spiel 8636",
   "gegenproben": [
    {
     "name": "alte Grenze 8192",
     "gruen": false,
-    "text": "Messbank max 7276 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9135 <= 8192 - 2048 = 6144; Spiel max 7718 (f5080_vorn 7184, f5090_s11 7718, kampf 7415, s11 7718, v5080 7184, v5080_c11 7596), verworfen 0; Reserve Messbank -943, Spiel 474"
+    "text": "Messung zur Geometrie: ja; Messbank max 7290 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9149 <= 8192 - 2048 = 6144; Spiel max 7748 (kampf_video 7436, v5080_c11 7606, f5090_s11 7748, f5080_vorn 7212), verworfen 0; Reserve Messbank -957, Spiel 444"
+   }
+  ]
+ },
+ "R11 Netz 18 == handnetz18 == Spiegelhand(13) (R9 N33)": {
+  "urteil": "GRUEN",
+  "text": "Datei k5g3_handnetz18.json sha b4e771b87b0642b0: 124 Ecken, 44 Dreiecke, 96 Vierecke; Netz 18 == Datei == spiegelhand(Netz 13 K5e_f1, Faktor 1.3167): ja",
+  "gegenproben": [
+   {
+    "name": "K5e_f1-Netz 18",
+    "gruen": false,
+    "text": "Datei k5g3_handnetz18.json sha b4e771b87b0642b0: 124 Ecken, 44 Dreiecke, 96 Vierecke; Netz 18 == Datei == spiegelhand(Netz 13 K5e_f1, Faktor 1.3167): NEIN Netz 18 der Geometrie != Datei; UV/CLUT/Seite != Datei"
+   },
+   {
+    "name": "Datei mit einer Ecke +1",
+    "gruen": false,
+    "text": "Abbruch: SystemExit('handnetz18 != spiegelhand(Netz 13 K5e_f1) - Datei veraendert oder andere Basis')"
+   }
+  ]
+ },
+ "R12 N52 beidseitig, alle 771 Keys <= max(K5c, K5g3 ohne R9) + 25": {
+  "urteil": "GRUEN",
+  "text": "771 Keys, Bezug K5c (sha 1ab56076b20e) und K5g3 ohne R9 (sha db9404a18368): Faelle ueber max(Bezug) + 25: vor 0, rueck 0",
+  "gegenproben": [
+   {
+    "name": "R9-Abgabe (kr4 r9)",
+    "gruen": false,
+    "text": "771 Keys, Bezug K5c (sha 1ab56076b20e) und K5g3 ohne R9 (sha db9404a18368): Faelle ueber max(Bezug) + 25: vor 4, rueck 8; groesste: +157.1 Key 312 vor 19>10 (Clip 9 Bild 8), +93.1 Key 546 rueck 23>18 (Clip 12 Bild 4), +72.5 Key 729 vor 18>22 (Clip 27 Bild 58), +39.0 Key 704 vor 18>22 (Clip 27 Bild 33), +27.9 Key 447 rueck 13>18 (Clip 10 Bild 87), +20.8 Key 552 rueck 22>18 (Clip 12 Bild 10)"
+   }
+  ]
+ },
+ "R13 Boden, alle 771 Keys: 17/18/Krallen <= max(25, Bezug) unter dem Boden": {
+  "urteil": "GRUEN",
+  "text": "771 Keys: groesstes y von 17/18/Krallen ueber max(25, Bezug): 0 Keys; tiefster Punkt in Keys ohne eigenes Einsinken des Bezugs: y 20 (Key 111)",
+  "gegenproben": [
+   {
+    "name": "R9-Abgabe (kr4 r9)",
+    "gruen": false,
+    "text": "771 Keys: groesstes y von 17/18/Krallen ueber max(25, Bezug): 5 Keys; y 351 Key 332 (Bezug -58, Clip 9 Bild 28), y 232 Key 333 (Bezug -60, Clip 9 Bild 29), y 146 Key 328 (Bezug 7, Clip 9 Bild 24), y 83 Key 334 (Bezug -65, Clip 9 Bild 30), y 69 Key 327 (Bezug -38, Clip 9 Bild 23); tiefster Punkt in Keys ohne eigenes Einsinken des Bezugs: y 351 (Key 332)"
    }
   ]
  },
@@ -146,6 +184,6 @@
    }
   ]
  },
- "summe": "RIEGEL K5g3 GEOMETRIE: 11 von 12 gruen, 15 von 15 Gegenproben rot wie verlangt",
- "emd_sha256": "db9404a18368f420050cddbc45f06fca11c24c80a0d315082668280576590e00"
+ "summe": "RIEGEL K5g3 GEOMETRIE: 14 von 15 gruen, 19 von 19 Gegenproben rot wie verlangt",
+ "emd_sha256": "f833a90580d849ad954631c8f71ec194b23247c00ffe6a7b5f14862e644c9695"
 }

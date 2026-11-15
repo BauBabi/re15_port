@@ -18,6 +18,11 @@ R7 Posen         Pool == K5c (keine Posen-Datei) bzw. == Posen-Datei; FORM.EMD z
 R8 B4-Grenzen    Messbank-Urteil des Gesamtmodells (urteil4, voller Lauf) nicht schlechter als B4 allein | Gegenprobe: Urteil B3
 R9 Dreiecke      max gezeichnet je Bild (Messbank, alle Clips/Ansichten) + Spielfigur + Waffe + Effekte <= 16384 - Reserve;
                  im Spiel gezaehlt (G3-Zaehler) <= 16384 - Reserve, verworfen 0   | Gegenprobe: alte Grenze 8192
+R11 Netz 18      (R9-Einbau) Netz 18 == generator/k5g3_handnetz18.json == spiegelhand(Netz 13 K5e_f1); im Asset liest 18 die Texel von 13
+                                                                                         | Gegenproben: K5e_f1-Netz 18; Datei mit einer Ecke +1
+R12 N52 beidseitig (R9-Einbau) alle 771 Keys, Arm -> fremd UND fremd -> Arm (Strahl-Paritaet, kf_k5g3_n52), Tiefe <= max(K5c, K5g3 ohne
+                 R9) + 25 im selben Key                                                  | Gegenprobe: R9-Abgabe (kr4 r9, krallen_posen 8a434ddd)
+R13 Boden        (R9-Einbau) alle 771 Keys: groesstes y von 17/18/Krallen <= max(25, Bezug) | Gegenprobe: R9-Abgabe (Clip 9 Key 332 y 351)
 R10 UV-Stufe     (Runde 2) Kinder der Netze 10/16/21/22: (a) keine Ecke ausserhalb der UV-Flaeche der Mutter ausser den gemeldeten
                  B4-Kindern, wo im Gebiet nur eine Linie moeglich ist; (b) Linien-Dreiecke (UV-Flaeche 0) je Netz <= B4 und gesamt
                  <= 1/4 von B4; (c) Augen-Flaechen (Zone 29) lesen dieselben Augen-Texel wie K5e_f1   | Gegenprobe: B4-UV ohne uvfein
@@ -32,6 +37,7 @@ sys.dont_write_bytecode = True
 HIER = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HIER)
 import kf_k5g3_geo as K  # noqa: E402
+import kf_k5g3_n52 as N52  # noqa: E402
 
 FE, G = K.FE, K.G
 K5 = K.K5
@@ -85,6 +91,8 @@ FG, FA, FC = FE.lese_emd(EMD), FE.lese_emd(A), FE.lese_emd(C)
 TAB = json.load(open(K.GEO3_SPALT, encoding='utf-8'))
 TUV, UVBER = K.spalt_uv()                              # uvfein(B4) im Speicher
 FB4UV = K.geometrie_form(stufen=('posen', 'krallen', 'spalt'))[1]   # Gegenprobe: B4-UV ohne uvfein
+POSEN = json.load(open(K.GEO3_POSEN, encoding='utf-8')) if os.path.exists(K.GEO3_POSEN) else None
+POSEN_R9 = os.path.join(HIER, 'k5g3_krallen_posen_r9_abgabe.json')      # Gegenprobe R12/R13: R9-Abgabe (kr4 r9, sha 8a434ddd)
 import kf_k5g3_uv as UVF  # noqa: E402
 
 
@@ -141,7 +149,7 @@ def r4(f=FG):
 
 # R5
 def r5(f=FG):
-    frei = set(K.SPALT_TEILE) | set(K.KRALLEN_K5C)
+    frei = set(K.SPALT_TEILE) | set(K.KRALLEN_K5C) | ({K.HAND} if 'hand18' in K.STUFEN else set())
     ab = [t for t in range(len(FA['meshes'])) if t not in frei and f['meshes'][t] != FA['meshes'][t]]
     kn = f['knochen'] == FA['knochen'] and len(f['meshes']) == len(FA['meshes'])
     return (not ab and kn), '%d Netze geprueft; abweichend %s; Knochen/Netzzahl gleich %s' % (
@@ -150,9 +158,18 @@ def r5(f=FG):
 
 # R6
 def r6(b=EMD):
+    """Ohne Posen-Datei: Sektionen 0-6 == K5e_f1 == K5c. Mit Posen-Datei (R9-Einbau): alle ausser emr1 (Pool) == K5e_f1 == K5c, emr1 == die
+    Sektion, die kf_k5g3_geo.posen_form aus K5e_f1 + Datei schreibt (Inhalt des Pools prueft R7)."""
     s, sa, sc = FE.sektionen(b), FE.sektionen(A), FE.sektionen(C)
-    ab = [n for n in SEK06 if not (s[n] == sa[n] == sc[n])]
-    return not ab, 'Sektionen 0-6 (%d Byte) gleich K5e_f1 und K5c: %s' % (sum(len(s[n]) for n in SEK06), 'ja' if not ab else 'NEIN %s' % ab)
+    if POSEN is None:
+        ab = [n for n in SEK06 if not (s[n] == sa[n] == sc[n])]
+        return not ab, 'Sektionen 0-6 (%d Byte) gleich K5e_f1 und K5c: %s' % (sum(len(s[n]) for n in SEK06), 'ja' if not ab else 'NEIN %s' % ab)
+    sp = FE.sektionen(K.geometrie_form(stufen=('posen',))[0])
+    ab = [n for n in SEK06 if n != 'emr1' and not (s[n] == sa[n] == sc[n])]
+    if s['emr1'] != sp['emr1']:
+        ab.append('emr1 != K5e_f1 + Posen-Datei')
+    return not ab, ('Sektionen 0-6 (%d Byte): alle ausser emr1 gleich K5e_f1 und K5c, emr1 == K5e_f1 + Posen-Datei (%d Byte): %s'
+                    % (sum(len(s[n]) for n in SEK06), len(s['emr1']), 'ja' if not ab else 'NEIN %s' % ab))
 
 
 # R7
@@ -165,13 +182,13 @@ def r7(f=FG, fe=FORMEMD, posen=None):
     else:
         soll = copy.deepcopy(FC['pool'])
         n = 0
-        for key, e in posen['keys'].items():
+        for key, e in list(posen['keys'].items()) + list((posen.get('n52') or {}).items()):
             for t, w in e['neu'].items():
                 soll[int(key)]['winkel'][int(t)] = [(int(x) & 0xFFF) - 4096 if (int(x) & 0xFFF) > 2047 else int(x) & 0xFFF for x in w]
                 n += 1
         if f['pool'] != soll:
             fl.append('Pool != K5c + Posen-Datei')
-        art = 'Posen-Datei mit %d Tripeln -> Pool == K5c + Datei' % n
+        art = 'Posen-Datei (%d Keys "keys", %d Keys "n52") mit %d Tripeln -> Pool == K5c + Datei' % (len(posen['keys']), len(posen.get('n52') or {}), n)
     ff = FE.lese_emd(fe)
     for k, kb in K.FORM_KEYS:
         if ff['pool'][k]['winkel'] != f['pool'][kb]['winkel']:
@@ -198,6 +215,90 @@ def r7_mechanik():
         os.remove(p)
     f = FE.lese_emd(b)
     return f, K.form_emd_bytes(b)
+
+
+# R11 (R9-Einbau)
+def r11(f=FG, datei=K.GEO3_HAND18):
+    netz, _d = K.hand18_laden(datei)
+    soll = K.spiegelhand(FA['meshes'][K.HAND_LINKS])
+    a = K.netz_norm(f['meshes'][K.HAND])
+    gleich_datei = (a['ecken'], a['normalen'], [d['e'] for d in a['dreiecke']], [q['e'] for q in a['vierecke']]) == (
+        K.netz_norm(netz)['ecken'], K.netz_norm(netz)['normalen'], [d['e'] for d in netz['dreiecke']], [q['e'] for q in netz['vierecke']])
+    gleich_spiegel = K.netz_norm(netz) == K.netz_norm(soll)
+    fl = []
+    if not gleich_datei:
+        fl.append('Netz 18 der Geometrie != Datei')
+    if not gleich_spiegel:
+        fl.append('Datei != spiegelhand(13)')
+    if a != K.netz_norm(netz):
+        fl.append('UV/CLUT/Seite != Datei')
+    return not fl, ('Datei %s sha %s: %d Ecken, %d Dreiecke, %d Vierecke; Netz 18 == Datei == spiegelhand(Netz 13 K5e_f1, Faktor %s): %s'
+                    % (os.path.basename(datei), sha(open(datei, 'rb').read())[:16], len(netz['ecken']), len(netz['dreiecke']), len(netz['vierecke']),
+                       K.S_HAND, 'ja' if not fl else 'NEIN ' + '; '.join(fl)))
+
+
+def r11_ecke():
+    """Gegenprobe: Datei mit einer Ecke +1 -> der Generator muss abbrechen (Stufe hand18)."""
+    netz, d = K.hand18_laden()
+    d = copy.deepcopy(d)
+    d['netz']['ecken'][0][0] += 1
+    pp = os.path.join(MESS, '_probe_hand18.json')
+    os.makedirs(MESS, exist_ok=True)
+    json.dump(d, open(pp, 'w', encoding='utf-8'))
+    try:
+        K.hand18_form(FE.lese_emd(A), FA, datei=pp)
+        return True, 'Generator nimmt die veraenderte Datei an'
+    finally:
+        os.remove(pp)
+
+
+# R12/R13 (R9-Einbau)
+def n52_lauf(name, emd):
+    """kf_k5g3_n52 ueber alle Keys; Zwischenspeicher geo/messung/n52_<name>_<sha12>.json (gehoert per sha zur EMD)."""
+    h = sha(emd)
+    pp = os.path.join(MESS, 'n52_%s_%s.json' % (name, h[:12]))
+    if os.path.exists(pp):
+        d = json.load(open(pp, encoding='utf-8'))
+        if d['sha256'] == h:
+            return d['keys']
+    m = N52.lauf(emd, N52.alle_keys(emd))
+    m = {str(k): v for k, v in sorted(m.items())}
+    os.makedirs(MESS, exist_ok=True)
+    json.dump(dict(name=name, sha256=h, keys=m), open(pp, 'w', encoding='utf-8', newline='\n'))
+    return m
+
+
+def n52_bezuege():
+    ohne = K.geometrie_bytes(stufen=('krallen', 'spalt', 'uvfein'), posen='')     # K5g3 ohne R9 (Posen K5c, Netz 18 K5e_f1) = Stand Runde 3
+    return [n52_lauf('k5c', C), n52_lauf('k5g3_ohne_r9', ohne)], sha(ohne)
+
+
+def r12(emd=EMD, name='geo'):
+    refs, sh = n52_bezuege()
+    m = n52_lauf(name, emd)
+    faelle, _boden, _t = N52.bewerte(m, refs)
+    vor = [f for f in faelle if f[2] == 'vor']
+    ru = [f for f in faelle if f[2] == 'rueck']
+    return not faelle, ('%d Keys, Bezug K5c (sha %s) und K5g3 ohne R9 (sha %s): Faelle ueber max(Bezug) + 25: vor %d, rueck %d%s'
+                        % (len(m), sha(C)[:12], sh[:12], len(vor), len(ru),
+                           ('; groesste: ' + ', '.join('+%.1f Key %d %s %s (Clip %d Bild %d)' % (f[0], f[1], f[2], f[3], f[6], f[7]) for f in faelle[:6]))
+                           if faelle else ''))
+
+
+def r13(emd=EMD, name='geo'):
+    refs, _sh = n52_bezuege()
+    m = n52_lauf(name, emd)
+    _f, boden, tief = N52.bewerte(m, refs)
+    # tiefster Punkt der Keys, in denen der Bezug selbst nicht einsinkt (Clip 12 Bild 49-55 sinkt die Form ins Wasser)
+    eigen = max((max(e['boden'][str(t)] for t in N52.BODEN), int(k)) for k, e in m.items()
+                if max(max(rf[k]['boden'][str(t)] for t in N52.BODEN) for rf in refs) <= 25.0)
+    return not boden, ('%d Keys: groesstes y von 17/18/Krallen ueber max(25, Bezug): %d Keys%s; tiefster Punkt in Keys ohne eigenes Einsinken '
+                       'des Bezugs: y %.0f (Key %d)' % (len(m), len(boden), ('; ' + ', '.join('y %.0f Key %d (Bezug %.0f, Clip %d Bild %d)' % b
+                                                                                                for b in boden[:6])) if boden else '', eigen[0], eigen[1]))
+
+
+def emd_r9_abgabe():
+    return K.geometrie_bytes(posen=POSEN_R9)
 
 
 # R10
@@ -273,6 +374,7 @@ def r8(gk=None, b4=None):
     gk = gk or os.path.join(MESS, 'urteil_gk.json')
     b4 = b4 or os.path.join(MESS, 'urteil_b4.json')
     dg, ug, hg = lade_urteil(gk)
+    ug['_sha'] = dg.get('sha256')
     db, ub, hb = lade_urteil(b4)
     fl, zeilen = [], []
 
@@ -310,8 +412,12 @@ def r8(gk=None, b4=None):
         if e['gut'] and not hg.get(nr, {}).get('gut', False):
             fl.append('%s bei B4 gruen, am Gesamtmodell rot' % nr)
     h6 = hg.get('H6b', {}).get('ist', '')
-    if 'fremde Netze geaendert: [19, 20, 28, 29]' not in h6 and 'fremde Netze geaendert: keine' not in h6:
-        fl.append('H6b: fremde Netze nicht genau die Krallen 19/20/28/29 (%s)' % h6[:120])
+    # R9-Einbau: Netz 18 (Spiegelhand, Stufe hand18) ist gewollt fremd wie die Krallen (G2); Sektionen 0-6 weichen nur in emr1 ab (Posen-Datei, R6/R7)
+    erlaubt_h6 = ['fremde Netze geaendert: [19, 20, 28, 29]', 'fremde Netze geaendert: keine'] + (
+        ['fremde Netze geaendert: [18, 19, 20, 28, 29]'] if 'hand18' in K.STUFEN else [])
+    if not any(x in h6 for x in erlaubt_h6):
+        fl.append('H6b: fremde Netze nicht genau die Krallen 19/20/28/29%s (%s)' % (' (+ Hand 18)' if 'hand18' in K.STUFEN else '',
+                                                                                 h6[:120].replace(';', ',')))
     if not hg.get('H5', {}).get('gut'):
         fl.append('H5: Lauf gehoert nicht zur EMD')
     if dg['sha256'] != sha(EMD) and gk.endswith('urteil_gk.json'):
@@ -356,9 +462,12 @@ def r9(grenze=GRENZE, reserve=RESERVE, spiel=None):
     sp = spiel or json.load(open(os.path.join(MESS, 'spiel_dreiecke.json'), encoding='utf-8'))
     smax = max(l['hoechststand'] for l in sp['laeufe'])
     sverw = sum(l['verworfen'] for l in sp['laeufe'])
-    gut = summe <= grenze - reserve and smax <= grenze - reserve and sverw == 0
-    return gut, ('Messbank max %d (%s Clip %d Bild %d) + Spielerin %d + Waffe %d + Effekte %d = %d <= %d - %d = %d; Spiel max %d (%s), '
-                 'verworfen %d; Reserve Messbank %d, Spiel %d' % (m[0], m[1], m[2], m[3], SPIELERIN, WAFFE, EFFEKTE, summe, grenze, reserve,
+    # R9-Einbau: Messbank-Urteil und Spiellaeufe muessen zu DIESER Geometrie gehoeren (Spiel: Geometrie-EMD oder das daraus gebaute Asset)
+    asset = os.path.join(K5, 'k5g', 'K5g3', 'BAHNSTEIG_FORM.EMD')
+    zu = (ug.get('_sha') in (None, sha(EMD))) and sp.get('emd_sha256') in (sha(EMD), sha(open(asset, 'rb').read()) if os.path.exists(asset) else None)
+    gut = summe <= grenze - reserve and smax <= grenze - reserve and sverw == 0 and zu
+    return gut, ('Messung zur Geometrie: %s; Messbank max %d (%s Clip %d Bild %d) + Spielerin %d + Waffe %d + Effekte %d = %d <= %d - %d = %d; Spiel max %d (%s), '
+                 'verworfen %d; Reserve Messbank %d, Spiel %d' % ('ja' if zu else 'NEIN (Urteil/Spiellaeufe einer anderen EMD)', m[0], m[1], m[2], m[3], SPIELERIN, WAFFE, EFFEKTE, summe, grenze, reserve,
                                                                grenze - reserve, smax, ', '.join('%s %d' % (l['lauf'], l['hoechststand']) for l in sp['laeufe']),
                                                                sverw, grenze - summe, grenze - smax))
 
@@ -399,8 +508,13 @@ def main():
     def mech():
         g1, t1 = r7(fpos, fe_pos, posen=probe_posen())
         return g1, 'Mechanik Probe-Datei (Key 542 Knochen 17): ' + t1
-    tests.append(('R7 Posen == K5c (keine Posen-Datei); FORM.EMD nachgezogen', r7,
-                  [('Probe-Posen-Datei gegen "== K5c"', lambda: r7(fpos, fe_pos)),
+    if POSEN is None:
+        r7_haupt, r7_name = r7, 'R7 Posen == K5c (keine Posen-Datei); FORM.EMD nachgezogen'
+    else:
+        r7_haupt = lambda: r7(posen=POSEN)  # noqa: E731
+        r7_name = 'R7 Posen == K5c + Posen-Datei (keys + n52, sha %s); FORM.EMD nachgezogen' % sha(open(K.GEO3_POSEN, 'rb').read())[:12]
+    tests.append((r7_name, r7_haupt,
+                  [('Probe-Posen-Datei gegen die Soll-Posen', lambda: r7(fpos, fe_pos, posen=POSEN)),
                    ('Posen-Datei mit Key 300 (nicht erlaubt)', lambda: K.posen_form(FE.lese_emd(A), {'keys': {'300': {'alt': {'17': [0, 0, 0]}, 'neu': {'17': [1, 0, 0]}}}}) and (True, 'angenommen'))]))
     tests.append(('R7b Posen-Datei wirkt genau auf ihre Tripel (Mechanik)', mech,
                   [('Probe-Datei, aber alt falsch', lambda: K.posen_form(FE.lese_emd(A), {'keys': {'542': {'alt': {'17': [1, 2, 3]}, 'neu': {'17': [1, 2, 3]}}}}) and (True, 'angenommen'))]))
@@ -410,6 +524,14 @@ def main():
                   [('Urteil von B3 statt GK', lambda: r8b(gk=os.path.join(MESS, 'urteil_b3.json')))]))
     tests.append(('R9 Dreiecke je Bild + Spielfigur + Effekte <= 16384 mit Reserve; im Spiel 0 verworfen (G3)', r9,
                   [('alte Grenze 8192', lambda: r9(grenze=8192))]))
+    if 'hand18' in K.STUFEN:
+        tests.append(('R11 Netz 18 == handnetz18 == Spiegelhand(13) (R9 N33)', r11,
+                      [('K5e_f1-Netz 18', lambda: r11(FA)), ('Datei mit einer Ecke +1', r11_ecke)]))
+        r9e = emd_r9_abgabe()
+        tests.append(('R12 N52 beidseitig, alle 771 Keys <= max(K5c, K5g3 ohne R9) + 25', r12,
+                      [('R9-Abgabe (kr4 r9)', lambda: r12(r9e, 'r9_abgabe'))]))
+        tests.append(('R13 Boden, alle 771 Keys: 17/18/Krallen <= max(25, Bezug) unter dem Boden', r13,
+                      [('R9-Abgabe (kr4 r9)', lambda: r13(r9e, 'r9_abgabe'))]))
     tests.append(('R10 UV-Stufe uvfein: Kinder in der Mutter-UV, keine Linien-Dreiecke wo vermeidbar, Augen-Texel wie K5e_f1', r10,
                   [('B4-UV ohne uvfein', lambda: r10(FB4UV))]))
     for name, fn, gegen in tests:

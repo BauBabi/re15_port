@@ -2,7 +2,7 @@
  "lauf": "lauf_voll.json",
  "emd": "GK.EMD",
  "tabelle": "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/varianten/K5/generator/k5g3_spalt_b4_tabelle.json",
- "sha256": "db9404a18368f420050cddbc45f06fca11c24c80a0d315082668280576590e00",
+ "sha256": "f833a90580d849ad954631c8f71ec194b23247c00ffe6a7b5f14862e644c9695",
  "voll": true,
  "hart": [
   {
@@ -33,35 +33,35 @@
    "nr": "H3a",
    "punkt": "S16: 7<->22 je Ansicht <= 25 px (Summe Bericht); uebrige Gruppen je <= K5e_f1*1,05+50 (5.2)",
    "gut": false,
-   "ist": "7<->22 je Ansicht: groesste 13 ('spiel5080', 12, 14), Ansichten > 25: 0; Summe 163 (K5e_f1 101, alte Summengrenze 156, nur Bericht) | uebrige Gruppen: ROT 19<->23 535 > 50; 20<->22 424 > 50; 19<->22 104 > 50",
+   "ist": "7<->22 je Ansicht: groesste 13 ('spiel5080', 12, 14), Ansichten > 25: 0; Summe 163 (K5e_f1 101, alte Summengrenze 156, nur Bericht) | uebrige Gruppen: ROT 19<->23 527 > 50; 20<->22 483 > 50; 19<->22 157 > 50",
    "alt": {
     "gut": false,
-    "ist": "ROT: 19<->23 535 > 50 (K5e_f1 0); 20<->22 424 > 50 (K5e_f1 0); 7<->22 163 > 156 (K5e_f1 101); 19<->22 104 > 50 (K5e_f1 0)"
+    "ist": "ROT: 19<->23 527 > 50 (K5e_f1 0); 20<->22 483 > 50 (K5e_f1 0); 7<->22 163 > 156 (K5e_f1 101); 19<->22 157 > 50 (K5e_f1 0)"
    }
   },
   {
    "nr": "H3b",
    "punkt": "Schulter 16>10 + 10>16 je Ansicht <= K5e_f1*1,05+25",
    "gut": true,
-   "ist": "Ansichten rot: 0, schlimmste (Zuwachs, Ansicht, Clip, Bild, ist, K5e_f1): []; Summe 383432 (K5e_f1 1730744)"
+   "ist": "Ansichten rot: 0, schlimmste (Zuwachs, Ansicht, Clip, Bild, ist, K5e_f1): []; Summe 383052 (K5e_f1 1730744)"
   },
   {
    "nr": "H4",
    "punkt": "gezeichnete Dreiecke + 773 + 86 <= 8192",
    "gut": true,
-   "ist": "meiste 7276 (spiel5080_vorn Clip 11 Bild 30) -> 8135"
+   "ist": "meiste 7290 (spiel5080_vorn Clip 11 Bild 30) -> 8149"
   },
   {
    "nr": "H5",
    "punkt": "der Lauf gehoert zur EMD-Datei",
    "gut": true,
-   "ist": "sha256 Datei db9404a18368f420, Lauf db9404a18368f420"
+   "ist": "sha256 Datei f833a90580d849ad, Lauf f833a90580d849ad"
   },
   {
    "nr": "H7",
    "punkt": "Umriss >= K5e_f1 - 0,0005",
-   "gut": false,
-   "ist": "bild2 0.61248 (K5e_f1 0.65294, Grenze 0.65244), bild1 0.72328 (K5e_f1 0.72312, Grenze 0.72262)"
+   "gut": true,
+   "ist": "bild2 0.68212 (K5e_f1 0.65294, Grenze 0.65244), bild1 0.72301 (K5e_f1 0.72312, Grenze 0.72262)"
   },
   {
    "nr": "H8",
@@ -73,7 +73,7 @@
    "nr": "H6b",
    "punkt": "S12: Netz 16 formgleich geteilt: Ecken auf K5e_f1-Flaeche <= 2 UND an Teil 16 weg = neu = tief128 = hoch128 = 0",
    "gut": false,
-   "ist": "1945 Ansichten, Summen {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 274, 'hoch48': 205, 'abw': 479}; Sektionen 0-6 gleich; fremde Netze geaendert: [19, 20, 28, 29]; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler"
+   "ist": "1945 Ansichten, Summen {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 274, 'hoch48': 205, 'abw': 479}; Sektionen 0-6 VERSCHIEDEN; fremde Netze geaendert: [18, 19, 20, 28, 29]; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler"
   },
   {
    "nr": "H9",
@@ -91,40 +91,40 @@
    "nr": "S18",
    "punkt": "Netzguete: 0 entartete Flaechen, 0 doppelte Ecken/Ecklagen, Loecher aus eigenen Kameras = 0",
    "gut": false,
-   "ist": "statisch {10: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 605.018}, 16: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 1369.683}, 21: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 339.69}, 22: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 63.248}} | Risse (Hintergrund-Stueck ganz in K5e_f1-Figur = Durchblick) Orbit 1 (1 Ansichten) [(1, 11, 5, 8), (0, 27, 72, 25), (0, 27, 72, 24)], Spielkameras 2 [(1, 'spiel5080_vorn', 12, 0), (1, 'spiel5080_vorn', 10, 45), (0, 'spiel5090', 27, 49)] | Bericht Def. Zahlen-Pruefer R3 (inkl. 1-px-Randverschiebung vorhandener Luecken): Orbit 13 (13 Ansichten) [(1, 27, 46, 21), (1, 27, 46, 4), (1, 12, 12, 25)], Spielkameras 61 [(27, 'bild1', 27, 60), (7, 'bild2', 10, 35), (6, 'spiel5090', 9, 18)]"
+   "ist": "statisch {10: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 605.018}, 16: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 1369.683}, 21: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 339.69}, 22: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 63.248}} | Risse (Hintergrund-Stueck ganz in K5e_f1-Figur = Durchblick) Orbit 4764 (29 Ansichten) [(470, 12, 0, 25), (470, 12, 0, 0), (470, 10, 52, 25)], Spielkameras 2 [(1, 'spiel5080_vorn', 12, 0), (1, 'spiel5080_vorn', 10, 45), (0, 'spiel5090', 27, 49)] | Bericht Def. Zahlen-Pruefer R3 (inkl. 1-px-Randverschiebung vorhandener Luecken): Orbit 6252 (52 Ansichten) [(481, 12, 0, 0), (481, 10, 52, 0), (481, 10, 47, 0)], Spielkameras 234 [(175, 'spiel5090', 9, 18), (31, 'bild1', 27, 60), (7, 'bild2', 10, 35)]"
   }
  ],
  "hart_gut": false,
  "zielmarken": [
   {
    "punkt": "weg: keine Ansicht > 200",
-   "gut": true,
-   "ist": "Ansichten > 200: 0, groesste 17"
+   "gut": false,
+   "ist": "Ansichten > 200: 207, groesste 10577"
   },
   {
    "punkt": "weg: Summe <= 10 % MULDE (36702)",
-   "gut": true,
-   "ist": "Summe 17 (MULDE 367027)"
+   "gut": false,
+   "ist": "Summe 445036 (MULDE 367027)"
   },
   {
    "punkt": "tief128: Summe <= 10 % MULDE (527533)",
    "gut": true,
-   "ist": "Summe 347 (MULDE 5275332), groesste 47"
+   "ist": "Summe 234108 (MULDE 5275332), groesste 4710"
   },
   {
    "punkt": "neu: keine Ansicht > 200",
    "gut": false,
-   "ist": "groesste 10966 (['bild2', 3, 25])"
+   "ist": "groesste 17436 (['spiel5080_vorn', 12, 6])"
   },
   {
    "punkt": "hoch48: keine Ansicht > 200",
    "gut": false,
-   "ist": "groesste 24054 (['spiel5080_vorn', 8, 12])"
+   "ist": "groesste 27154 (['spiel5080_vorn', 8, 12])"
   },
   {
    "punkt": "tief48 so klein wie moeglich (Bericht)",
    "gut": true,
-   "ist": "Summe 32619 (MULDE 13380589 = 0.24 %), > 200: 0, groesste 157 (['bild2', 9, 49])"
+   "ist": "Summe 353619 (MULDE 13380589 = 2.64 %), > 200: 201, groesste 5504 (['spiel5080_vorn', 12, 4])"
   }
  ],
  "zielmarken_gut": false,
@@ -2535,40 +2535,40 @@
    }
   },
   "loch": {
-   "orbit_riss": 1,
+   "orbit_riss": 4764,
    "spiel_riss": 2,
-   "orbit_riss_ansichten": 1,
+   "orbit_riss_ansichten": 29,
    "spiel_riss_ansichten": 2,
    "orbit_riss_groesste": [
     [
-     1,
-     11,
-     5,
-     8
-    ],
-    [
+     470,
+     12,
      0,
-     27,
-     72,
      25
     ],
     [
+     470,
+     12,
      0,
-     27,
-     72,
-     24
+     0
     ],
     [
-     0,
-     27,
-     72,
-     23
+     470,
+     10,
+     52,
+     25
     ],
     [
-     0,
-     27,
-     72,
-     22
+     470,
+     10,
+     52,
+     0
+    ],
+    [
+     470,
+     10,
+     47,
+     25
     ]
    ],
    "spiel_riss_groesste": [
@@ -2603,65 +2603,71 @@
      18
     ]
    ],
-   "orbit_summe": 13,
+   "orbit_summe": 6252,
    "orbit_ansichten": 390,
-   "orbit_mit_loch": 13,
+   "orbit_mit_loch": 52,
    "orbit_groesste": [
     [
-     1,
-     27,
-     46,
-     21
-    ],
-    [
-     1,
-     27,
-     46,
-     4
-    ],
-    [
-     1,
+     481,
      12,
-     12,
-     25
-    ],
-    [
-     1,
-     12,
-     12,
+     0,
      0
     ],
     [
-     1,
-     11,
+     481,
+     10,
      52,
-     20
+     0
     ],
     [
-     1,
-     11,
-     52,
-     5
+     481,
+     10,
+     47,
+     0
     ],
     [
-     1,
-     11,
-     48,
+     470,
+     12,
+     0,
+     25
+    ],
+    [
+     470,
+     10,
+     52,
+     25
+    ],
+    [
+     470,
+     10,
+     47,
+     25
+    ],
+    [
+     328,
+     12,
+     12,
      21
     ],
     [
-     1,
-     11,
-     48,
+     328,
+     12,
+     12,
      4
     ]
    ],
-   "spiel_summe": 61,
+   "spiel_summe": 234,
    "spiel_ansichten": 21,
    "spiel_mit_loch": 10,
    "spiel_groesste": [
     [
-     27,
+     175,
+     "spiel5090",
+     9,
+     18
+    ],
+    [
+     31,
      "bild1",
      27,
      60
@@ -2671,12 +2677,6 @@
      "bild2",
      10,
      35
-    ],
-    [
-     6,
-     "spiel5090",
-     9,
-     18
     ],
     [
      6,
@@ -2709,11 +2709,11 @@
      93
     ]
    ],
-   "sekunden": 241
+   "sekunden": 206
   }
  },
  "s13": {
-  "modell": 15249,
+  "modell": 15273,
   "k5e_f1": 6386,
   "je_netz": {
    "10": 1483,
@@ -2785,30 +2785,30 @@
    "nr": "H3a",
    "punkt": "uebrige Paare mit 10/21/22/23 ungerichtet, X<->{10,21} gruppiert: je <= K5e_f1*1,05+50",
    "gut": false,
-   "ist": "ROT: 19<->23 535 > 50 (K5e_f1 0); 20<->22 424 > 50 (K5e_f1 0); 7<->22 163 > 156 (K5e_f1 101); 19<->22 104 > 50 (K5e_f1 0)",
+   "ist": "ROT: 19<->23 527 > 50 (K5e_f1 0); 20<->22 483 > 50 (K5e_f1 0); 7<->22 163 > 156 (K5e_f1 101); 19<->22 157 > 50 (K5e_f1 0)",
    "daten": {
     "zeilen": [
      [
       "T16<->{10,21}",
-      383561,
+      383182,
       1732275,
       1818938.75
      ],
      [
       "T7<->{10,21}",
-      283546,
+      283597,
       314168,
       329926.4
      ],
      [
       "22<->23",
-      60971,
+      60865,
       74092,
       77846.6
      ],
      [
       "17<->22",
-      13775,
+      12163,
       29268,
       30781.4
      ],
@@ -2820,55 +2820,49 @@
      ],
      [
       "16<->23",
-      6320,
+      5792,
       6482,
       6856.1
      ],
      [
       "10<->21",
-      4945,
+      4949,
       753008,
       790708.4
      ],
      [
-      "18<->22",
-      3654,
-      7954,
-      8401.7
-     ],
-     [
       "16<->22",
-      3348,
+      3349,
       36889,
       38783.450000000004
      ],
      [
+      "18<->22",
+      2702,
+      7954,
+      8401.7
+     ],
+     [
       "17<->23",
-      1231,
+      1113,
       1230,
       1341.5
      ],
      [
-      "18<->23",
-      542,
-      539,
-      615.95
-     ],
-     [
       "19<->23",
-      535,
+      527,
       0,
       50.0
      ],
      [
       "20<->22",
-      424,
+      483,
       0,
       50.0
      ],
      [
       "22<->31",
-      173,
+      178,
       259,
       321.95
      ],
@@ -2879,34 +2873,40 @@
       156.05
      ],
      [
-      "T17<->{10,21}",
-      121,
-      309,
-      374.45
-     ],
-     [
       "19<->22",
-      104,
+      157,
       0,
       50.0
      ],
      [
+      "18<->23",
+      131,
+      539,
+      615.95
+     ],
+     [
+      "T18<->{10,21}",
+      54,
+      7,
+      57.35
+     ],
+     [
       "23<->31",
-      56,
+      48,
       56,
       108.80000000000001
      ],
      [
-      "T19<->{10,21}",
-      5,
-      0,
-      50.0
+      "T17<->{10,21}",
+      48,
+      309,
+      374.45
      ],
      [
-      "T18<->{10,21}",
-      1,
-      7,
-      57.35
+      "T31<->{10,21}",
+      46,
+      0,
+      50.0
      ],
      [
       "13<->22",
@@ -2918,13 +2918,13 @@
     "rot": [
      [
       "19<->23",
-      535,
+      527,
       0,
       50.0
      ],
      [
       "20<->22",
-      424,
+      483,
       0,
       50.0
      ],
@@ -2936,7 +2936,7 @@
      ],
      [
       "19<->22",
-      104,
+      157,
       0,
       50.0
      ]
@@ -2947,10 +2947,10 @@
    "nr": "H3b",
    "punkt": "Schulter 16>10 + 10>16 je Ansicht <= K5e_f1*1,05+25",
    "gut": true,
-   "ist": "Ansichten rot: 0, schlimmste (Zuwachs, Ansicht, Clip, Bild, ist, K5e_f1): []; Summe 383432 (K5e_f1 1730744)",
+   "ist": "Ansichten rot: 0, schlimmste (Zuwachs, Ansicht, Clip, Bild, ist, K5e_f1): []; Summe 383052 (K5e_f1 1730744)",
    "daten": {
     "rot": [],
-    "summe": 383432,
+    "summe": 383052,
     "summe_k5e": 1730744
    }
   },
@@ -2958,10 +2958,10 @@
    "nr": "H4",
    "punkt": "gezeichnete Dreiecke + 773 + 86 <= 8192",
    "gut": true,
-   "ist": "meiste 7276 (spiel5080_vorn Clip 11 Bild 30) -> 8135",
+   "ist": "meiste 7290 (spiel5080_vorn Clip 11 Bild 30) -> 8149",
    "daten": {
     "meiste": [
-     7276,
+     7290,
      "spiel5080_vorn",
      11,
      30
@@ -2972,27 +2972,27 @@
    "nr": "H5",
    "punkt": "der Lauf gehoert zur EMD-Datei",
    "gut": true,
-   "ist": "sha256 Datei db9404a18368f420, Lauf db9404a18368f420",
+   "ist": "sha256 Datei f833a90580d849ad, Lauf f833a90580d849ad",
    "daten": {
-    "sha": "db9404a18368f420050cddbc45f06fca11c24c80a0d315082668280576590e00"
+    "sha": "f833a90580d849ad954631c8f71ec194b23247c00ffe6a7b5f14862e644c9695"
    }
   },
   {
    "nr": "H6b",
    "punkt": "Netz 16 nur formgleich fein geteilt (statt H6)",
    "gut": false,
-   "ist": "Sektionen 0-6 gleich; fremde Netze geaendert: [19, 20, 28, 29]; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler",
+   "ist": "Sektionen 0-6 VERSCHIEDEN; fremde Netze geaendert: [18, 19, 20, 28, 29]; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler",
    "daten": {}
   },
   {
    "nr": "H7",
    "punkt": "Umriss >= K5e_f1 - 0,0005",
-   "gut": false,
-   "ist": "bild2 0.61248 (K5e_f1 0.65294, Grenze 0.65244), bild1 0.72328 (K5e_f1 0.72312, Grenze 0.72262)",
+   "gut": true,
+   "ist": "bild2 0.68212 (K5e_f1 0.65294, Grenze 0.65244), bild1 0.72301 (K5e_f1 0.72312, Grenze 0.72262)",
    "daten": {
     "umriss": {
-     "bild2": 0.612479848269322,
-     "bild1": 0.72328203369486
+     "bild2": 0.6821244882964207,
+     "bild1": 0.7230113332047904
     },
     "k5e": {
      "bild2": 0.65294153335895,

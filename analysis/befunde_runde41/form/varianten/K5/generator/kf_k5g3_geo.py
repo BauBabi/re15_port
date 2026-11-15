@@ -16,12 +16,21 @@ Eingaenge (alle im Repo, mit sha256 geprueft):
   uvfein   (Runde 2, Befund "gestreckte Farbstreifen aus UV-entarteten Dreiecken"): UV der Spalt-Kinder neu gewaehlt, kf_k5g3_uv.uv_fein -
            nur UV; Ecken, Normalen, Flaechen-Indizes, CLUT, Seite bleiben die der B4-Tabelle. Die Tabelle mit diesen UV schreibt `bauen` nach
            K5/k5g/K5g3/geo/spalt_uv_tabelle.json (GEO3_SPALT_UV) - die nimmt die Textur-Stufe fuer mulde_auf_form statt GEO3_SPALT.
-Stufen: posen -> krallen -> spalt -> uvfein (Sektion 2 / Netze 19, 20, 28, 29 / Netze 10, 16, 21, 22 / UV der Kinder in 10, 16, 21, 22).
+  R9-Einbau (Nutzerentscheid 15.11.2026 "Variante1" = Krallen-Runde R9; Bericht K5/k5g/K5g3/EINBAU_R9.md):
+  Posen    generator/krallen_posen.json (Vorgabe, sha in bau.json): "keys" = Bild-2-Keys 398-425 / 542-556 (rechter Arm ohne 16),
+           dazu "n52" = N52-/Boden-Korrektur in Nachbar-Keys AUSSERHALB der Bild-2-Keys (Clip 9, 10, 27), dort NUR Knochen 17/18
+           (kleinste glatte Korrektur ueber ein Fenster, R9-Einbau Schritt 1). 'alt' muss auch dort der K5c-Wert sein.
+  hand18   Netz 18 (rechte Hand) = generator/k5g3_handnetz18.json (R9 N33: rint(1,3167 x S x Netz 13), S = diag(1, 1, -1), Normalen S x 13,
+           Flaechen von 13 mit umgedrehtem Umlauf, UV/CLUT/Seite von 13). Der Generator rechnet die Spiegelhand aus Netz 13 von K5e_f1 selbst
+           nach (spiegelhand) und bricht ab, wenn die Datei abweicht. Die Textur-Stufe (kf_k5g3.py) malt auf den K5e_f1-Flaechen und setzt
+           Netz 18 danach aus dem BEMALTEN Netz 13 neu (gleiche Ecken/Normalen/Flaechen-Ecken, UV/CLUT/Seite = die von 13 samt Kopie-Versatz).
+Stufen: posen -> krallen -> hand18 -> spalt -> uvfein (Sektion 2 / Netze 19, 20, 28, 29 / Netz 18 / Netze 10, 16, 21, 22 / UV der Kinder).
 Kein Zufall, keine Uhr: zweiter Lauf ergibt dieselben Bytes (uvfein rechnet in float64 nur die Auswahl, das Ergebnis ist ganzzahlig).
 
 Aufruf:  python kf_k5g3_geo.py bauen [--posen <datei>] [<ziel.EMD>]   -> K5/k5g/K5g3/geo/BAHNSTEIG_FORM.EMD (+ FORM.EMD daneben)
          python kf_k5g3_geo.py pruef                                 -> zwei Laeufe + Datei byte-gleich, Byte-Probe gegen KAND.EMD (Exit 1 sonst)
 """
+import copy
 import hashlib
 import json
 import os
@@ -41,7 +50,12 @@ GEO3_SPALT = os.path.join(HIER, 'k5g3_spalt_b4_tabelle.json')
 GEO3_SPALT_SHA = '99a4f142c2d01c5eb8e70dd299c0cd98c3e34268adc8473454dcfb42b4cd6d07'
 GEO3_KRALLEN = os.path.join(HIER, 'k5g3_krallen_k5c.json')
 GEO3_K5C_SHA = '1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041'   # nur Bericht/Riegel; Inhalt steckt in GEO3_KRALLEN
-GEO3_POSEN = os.path.join(HIER, 'krallen_posen.json')                                # optional (G2); fehlt heute
+GEO3_POSEN = os.path.join(HIER, 'krallen_posen.json')                                # optional (G2); seit dem R9-Einbau vorhanden
+GEO3_HAND18 = os.path.join(HIER, 'k5g3_handnetz18.json')                             # R9 N33 Spiegelhand (Stufe hand18)
+HAND = 18
+HAND_LINKS = 13
+S_HAND = 1.3167                                  # R9 N33: Faktor der Spiegelhand (kr4 R9 KRALLEN4_R9.md Schritt 1 (a), gemessen 1,3158-1,3168)
+N52_KNOCHEN = (17, 18)                           # R9-Einbau: in den "n52"-Keys nur Unterarm und Hand
 GEO3_ZIEL = os.path.join(K5, 'k5g', 'K5g3', 'geo', 'BAHNSTEIG_FORM.EMD')
 GEO3_SPALT_UV = os.path.join(K5, 'k5g', 'K5g3', 'geo', 'spalt_uv_tabelle.json')     # B4-Tabelle mit den UV der Stufe uvfein (Textur-Stufe)
 KAND_B4_SHA = 'f78e598336872111de14a7b06ec7cb3610c8777897d30fc3b5bc9f12945c1a66'      # spalt/kand_b4/KAND.EMD (Byte-Probe)
@@ -50,7 +64,7 @@ KRALLEN_K5C = (19, 20, 28, 29)
 KRALLE_GLEICH = 31
 POSEN_KEYS = tuple(range(398, 426)) + tuple(range(542, 557))
 FORM_KEYS = ((0, 11), (1, 542))                 # kleine FORM.EMD: Key 0 = BAHNSTEIG-Key 11 (Bild 1), Key 1 = Key 542 (Bild 2), Key 2 Ruhe
-STUFEN = ('posen', 'krallen', 'spalt', 'uvfein')
+STUFEN = ('posen', 'krallen', 'hand18', 'spalt', 'uvfein')
 
 
 def sha(b):
@@ -74,21 +88,26 @@ def _u12(x):
 
 
 def posen_form(form, posen):
-    """Posen-Datei (G2) in den Pool der Form. Rueckgabe: Liste (key, knochen, alt, neu) der geschriebenen Tripel."""
+    """Posen-Datei (G2) in den Pool der Form. Rueckgabe: Liste (key, knochen, alt, neu) der geschriebenen Tripel.
+    "keys": nur Bild-2-Keys (POSEN_KEYS), Knochen des rechten Arms; "n52" (R9-Einbau): nur Keys AUSSERHALB der Bild-2-Keys, nur 17/18."""
     erlaubt_k = arm_rechts(form)
     keys = sorted(int(k) for k in posen['keys'])
     fremd = [k for k in keys if k not in POSEN_KEYS]
     if fremd:
         raise SystemExit('Posen-Datei: Keys ausserhalb 398-425 / 542-556: %s' % fremd[:10])
+    n52 = posen.get('n52') or {}
+    k52 = sorted(int(k) for k in n52)
+    innen = [k for k in k52 if k in POSEN_KEYS or not 0 <= k < len(form['pool'])]
+    if innen:
+        raise SystemExit('Posen-Datei "n52": Keys innerhalb der Bild-2-Keys oder ausserhalb des Pools: %s' % innen[:10])
     pool, aus = form['pool'], []
-    for key in keys:
-        e = posen['keys'][str(key)]
+    for key, e, erlaubt in [(k, posen['keys'][str(k)], erlaubt_k) for k in keys] + [(k, n52[str(k)], N52_KNOCHEN) for k in k52]:
         if sorted(e.get('alt', {})) != sorted(e['neu']):
             raise SystemExit('Posen-Datei Key %d: alt und neu nennen verschiedene Knochen' % key)
         w = pool[key]['winkel']
         for t in sorted(int(x) for x in e['neu']):
-            if t not in erlaubt_k:
-                raise SystemExit('Posen-Datei Key %d: Knochen %d gehoert nicht zum rechten Arm %s' % (key, t, erlaubt_k))
+            if t not in erlaubt:
+                raise SystemExit('Posen-Datei Key %d: Knochen %d nicht erlaubt (erlaubt %s)' % (key, t, erlaubt))
             ist = [_u12(x) for x in w[t]]
             alt = [_u12(x) for x in e['alt'][str(t)]]
             if ist != alt:
@@ -111,6 +130,44 @@ def krallen_form(form, rezept):
     m = form['meshes'][KRALLE_GLEICH]
     if m['ecken'] != g['ecken'] or m['normalen'] != g['normalen']:
         raise SystemExit('Kralle 31: K5e_f1 ist nicht mehr gleich K5c')
+    return form
+
+
+def spiegelhand(m13, s=S_HAND):
+    """R9 N33 (= kr4 r9 krallen4r9_bauen.spiegelhand): Netz 13 -> Netz 18 (1,3167-faches Spiegelbild, S = diag(1, 1, -1)); Ecken rint
+    (half to even wie numpy.rint), Normalen S x n, Flaechen mit umgedrehtem Umlauf (Dreieck 0,2,1; Viereck 0,2,1,3), UV/CLUT/Seite von 13."""
+    import numpy as np
+    S = np.diag([1.0, 1.0, -1.0])
+    ecken = [[int(x) for x in np.rint(s * (S @ np.array(e, float)))] for e in m13['ecken']]
+    normalen = [[int(x) for x in np.rint(S @ np.array(n, float))] for n in m13['normalen']]
+    dr = [dict(e=[d['e'][k] for k in (0, 2, 1)], n=[d['n'][k] for k in (0, 2, 1)], uv=[list(d['uv'][k]) for k in (0, 2, 1)], clut=int(d['clut']),
+               page=int(d['page'])) for d in m13['dreiecke']]
+    vi = [dict(e=[q['e'][k] for k in (0, 2, 1, 3)], n=[q['n'][k] for k in (0, 2, 1, 3)], uv=[list(q['uv'][k]) for k in (0, 2, 1, 3)],
+               clut=int(q['clut']), page=int(q['page'])) for q in m13['vierecke']]
+    return dict(ecken=ecken, normalen=normalen, dreiecke=dr, vierecke=vi)
+
+
+def netz_norm(m):
+    """Vergleichsform eines Netzes (nur Ganzzahlen, Listen; Ecken/Normalen ohne Fuellwort)."""
+    return dict(ecken=[[int(x) for x in e][:3] for e in m['ecken']], normalen=[[int(x) for x in n][:3] for n in m['normalen']],
+                dreiecke=[dict(e=list(d['e']), n=list(d['n']), uv=[list(u) for u in d['uv']], clut=int(d['clut']), page=int(d['page']))
+                          for d in m['dreiecke']],
+                vierecke=[dict(e=list(q['e']), n=list(q['n']), uv=[list(u) for u in q['uv']], clut=int(q['clut']), page=int(q['page']))
+                          for q in m['vierecke']])
+
+
+def hand18_laden(datei=GEO3_HAND18):
+    d = json.load(open(datei, encoding='utf-8'))
+    return d['netz'], d
+
+
+def hand18_form(form, basis_form, datei=GEO3_HAND18):
+    """Stufe hand18: Netz 18 = Datei; die Datei muss genau spiegelhand(Netz 13 der Basis K5e_f1) sein (sonst Abbruch)."""
+    netz, _d = hand18_laden(datei)
+    soll = spiegelhand(basis_form['meshes'][HAND_LINKS])
+    if netz_norm(netz) != netz_norm(soll):
+        raise SystemExit('handnetz18 != spiegelhand(Netz 13 K5e_f1) - Datei veraendert oder andere Basis')
+    form['meshes'][HAND] = copy.deepcopy(netz)
     return form
 
 
@@ -148,6 +205,10 @@ def geometrie_form(stufen=STUFEN, posen=None, tabelle=GEO3_SPALT, krallen=GEO3_K
             raise SystemExit('Krallen-Datei gehoert zu einer anderen Basis oder nicht zu K5c')
         krallen_form(form, rez)
         ber['krallen'] = dict(datei=os.path.basename(krallen), sha256=sha(open(krallen, 'rb').read()), quelle_k5c=rez['quelle']['sha256'])
+    if 'hand18' in stufen:
+        hand18_form(form, FE.lese_emd(emd0))
+        ber['hand18'] = dict(datei=os.path.basename(GEO3_HAND18), sha256=sha(open(GEO3_HAND18, 'rb').read()),
+                             regel='spiegelhand(Netz 13 K5e_f1), Faktor %s' % S_HAND)
     sek = emd0
     if 'posen' in stufen:
         p, pfad = posen_laden(posen)
@@ -158,7 +219,7 @@ def geometrie_form(stufen=STUFEN, posen=None, tabelle=GEO3_SPALT, krallen=GEO3_K
             geschr = posen_form(pf, p)
             sek = FE.schreibe_emd(pf)
             form['pool'] = pf['pool']
-            ber['posen'] = dict(datei=pfad.replace(chr(92), '/'), sha256=sha(open(pfad, 'rb').read()), tripel=len(geschr),
+            ber['posen'] = dict(datei=os.path.basename(pfad), sha256=sha(open(pfad, 'rb').read()), tripel=len(geschr),
                                 keys=sorted(set(k for k, _t, _a, _n in geschr)))
     return sek, form, ber
 

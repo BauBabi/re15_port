@@ -18,6 +18,11 @@ Stufe 2 Textur = kf_k5g3_tex.textur (E3, V1-V6, O3-O5), Parameter K5/k5g/K5g3/k5
 Runde 2 (Befunde PRUEFUNG_K5G3_r1): Spalt mit den UV der Stufe uvfein (geo/spalt_uv_tabelle.json, GEOMETRIE.md 9.6); Kopie-Maske = konvexe Huelle der
            UV samt Spalt-Kindern (kf_k5g3_tex.lese_maske); danach die Augen als eigene Texel an den Nutzerpunkten (kf_k5g3_auge.dekal, Tabelle
            generator/k5g3_augen_mitten.json); Pruefungen im Bau: UV == Geometrie-Stufe + Kopie-Versatz, kein Zugriff auf einen ungeschriebenen Texel.
+R9-Einbau (Nutzerentscheid 15.11.2026 "Variante1"): Stufe 1 liefert zusaetzlich die Posen-Datei mit "n52"-Keys und die Stufe hand18 (Netz 18 =
+           Spiegelhand). Die Textur malt weiter auf den K5e_f1-Flaechen (Netz 18 alt, Schluessel zonen_v2/traeger_texel); nach dem Spalt setzt
+           hand18_aus_13 Netz 18 = kf_k5g3_geo.spiegelhand(BEMALTES Netz 13): Ecken/Normalen/Flaechen-Ecken wie die Geometrie-Stufe (geprueft),
+           UV/CLUT/Seite = die von 13 samt deren Kopie-Versatz (R9 N33 "UV/CLUT/Seite wie 13"). Der Pruef-Stand (pruef/) behaelt das alte Netz 18
+           (die Textur-Riegel lesen dort die K5e_f1-Flaechen-Schluessel). Basis: ruhe/K5e_f1 per sha256 (seit dem Einbau ist das Spiel-Asset K5g3).
 Ausgabe: BAHNSTEIG_FORM.EMD/.TIM (28 Clips), FORM.EMD/.TIM/form.json (3 Keys, Tafeln/Riegel), pruef/ (Textur auf den Flaechen VOR dem
 Spalt, fuer die Textur-Riegel), bau.json.
 """
@@ -42,7 +47,7 @@ FE = E.FE
 K5 = E.K5
 WT = E.WT
 K5E = os.path.join(K5, 'ruhe', 'K5e_f1')
-ASSET = os.path.join(WT, 're15_port', 'shared_assets', 'RE2', 'BAHNSTEIG_FORM')
+ASSET = os.path.join(K5, 'einbau_k5e_f1', 'BAHNSTEIG_FORM')   # Spiel-Asset K5e_f1 (E32 bis R9-Einbau 15.11.2026), gesichert in einbau_k5e_f1; shared_assets traegt seitdem K5g3 + R9
 AUS = os.path.join(K5, 'k5g', 'K5g3')
 PAR = os.path.join(AUS, 'k5g3_par.json')
 SCR = os.environ.get('K5G3_SCR', r'C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/k5g2/k5g3tex')
@@ -123,11 +128,25 @@ def abtasten(form, px, cy, n=16):
     return aus
 
 
+K5E_SHA = ('f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1', '31a35e66')    # ruhe/K5e_f1 EMD / TIM (Commit 62bd0001b)
+
+
+def hand18_aus_13(form, form_v):
+    """R9-Einbau: Netz 18 = spiegelhand(bemaltes Netz 13). Ecken, Normalen und Flaechen-Ecken muessen die der Geometrie-Stufe sein."""
+    m = G3.spiegelhand(form['meshes'][G3.HAND_LINKS])
+    v = form_v['meshes'][G3.HAND]
+    if (m['ecken'] != [list(e)[:3] for e in v['ecken']] or m['normalen'] != [list(n)[:3] for n in v['normalen']]
+            or [d['e'] for d in m['dreiecke']] != [d['e'] for d in v['dreiecke']] or [q['e'] for q in m['vierecke']] != [q['e'] for q in v['vierecke']]):
+        raise SystemExit('Netz 18 aus dem bemalten Netz 13 != Netz 18 der Geometrie-Stufe (hand18)')
+    form['meshes'][G3.HAND] = m
+    return m
+
+
 def bauen(par, aus, log=log):
     emd_a = open(os.path.join(K5E, 'BAHNSTEIG_FORM.EMD'), 'rb').read()
     tim_a = open(os.path.join(K5E, 'BAHNSTEIG_FORM.TIM'), 'rb').read()
-    if emd_a != open(ASSET + '.EMD', 'rb').read() or tim_a != open(ASSET + '.TIM', 'rb').read():
-        raise SystemExit('ruhe/K5e_f1 != Spiel-Asset (shared_assets/RE2) - G5 verletzt oder Basis veraendert')
+    if sha(emd_a) != K5E_SHA[0] or not sha(tim_a).startswith(K5E_SHA[1]):
+        raise SystemExit('ruhe/K5e_f1 hat nicht die sha256 der Basis (EMD f277916d, TIM 31a35e66) - Basis veraendert')
     # ---- Stufe 1: Geometrie (Einbau-Bauer). Flaechen vor dem Spalt fuer die Textur, fertige Geometrie zum Vergleich.
     sek, form, gber = G3.geometrie_form(stufen=('posen', 'krallen'))
     sek_v, form_v, gber_v = G3.geometrie_form()
@@ -146,6 +165,8 @@ def bauen(par, aus, log=log):
     # kinder_ausserhalb (Kind-UV ausserhalb des Mutter-Rechtecks +-1) bricht nicht mehr ab: die Kopie-Maske (kf_k5g3_tex.lese_maske) nimmt die
     # Kind-UV mit; geprueft wird unten am Ergebnis (kein Zugriff auf einen ungeschriebenen Texel).
     mber = GG.mulde_auf_form(form, tabelle=G3.GEO3_SPALT_UV)
+    if 'hand18' in gber_v:
+        hand18_aus_13(form, form_v)
     if geo_schluessel(form) != geo_schluessel(form_v):
         raise SystemExit('Geometrie nach der Textur-Stufe != Geometrie-Stufe kf_k5g3_geo')
     # ---- Augen: eigene Texel an den Nutzerpunkten (kf_k5g3_auge.dekal; E3, O4)

@@ -34,7 +34,10 @@ Wiederverwendet: riegel_k5g2.py (Stand, v3, v4, v3_fleisch, v5, v1, v6, h1, weis
  A3   Augen im echten Spielfenster 5080 von vorn (kf_k5g3_augen_spiel.py): 2 Augen, je >= 5 px, Median >= 2,5 x Haut      | f_auge Runde 1
  W1-W4, R1-R4 weisses Licht im Band der Originale, Ruhe                                                                     | K5e_f1
  Z1-Z9 Spiel 5080 im Zielband der Original-Gegner (bindend, O3)                                                            | K5e_f1 (eigener Lauf)
- T1   Zeilen <= 16, Port-Texturhoehe <= 4096 | T5 jede Flaeche liest eine gueltige Zeile | G5 Spiel-Asset = K5e_f1
+ T1   Zeilen <= 16, Port-Texturhoehe <= 4096 | T5 jede Flaeche liest eine gueltige Zeile
+ G5   (R9-Einbau) Spiel-Asset shared_assets/RE2/BAHNSTEIG_FORM.EMD/.TIM == diese Variante (vorher: bleibt K5e_f1)                | K5e_f1
+ H18  (R9-Einbau) Netz 18 des Assets = spiegelhand(Netz 13 des Assets): Ecken/Normalen/Flaechen wie die Geometrie-Stufe, UV/CLUT/Seite
+      Flaeche fuer Flaeche die von 13 (R9 N33) -> die rechte Hand liest genau die Texel der linken                                     | K5g3 Runde 3
  Runde 3 (Orchestrator-Entscheide G6-G8; Gegenprobe die Abgabe der Runde 2 aus git, Commit f48d37df1):
  G6.16/G6.19 braeunliche Musterung: cv(L*) >= 0,5 x cv(G4), ab 15 Texeln >= 5 Stufen (G6.i dieselbe Regel, uebrige Zonen, Info) | Runde 2
  G7   Zone 44 (und alle V4-Flaechen) ohne Fleck-Material, nicht roeter als die Haut                                        | Runde 2
@@ -838,10 +841,45 @@ def technik(R, var, bau):
     R.zeile('T5', 'jede Flaeche des Assets liest eine gueltige Zeile', '%d ungueltig von %d' % (len(bad), len(S.zeile)), not bad)
     a = os.path.join(E.WT, 're15_port', 'shared_assets', 'RE2', 'BAHNSTEIG_FORM')
     se, st = sha_d(a + '.EMD'), sha_d(a + '.TIM')
-    ok = se == 'f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1' and st.startswith('31a35e66')
-    R.zeile('G5', 'Spiel-Asset shared_assets/RE2/BAHNSTEIG_FORM.* bleibt K5e_f1 (EMD f277916d, TIM 31a35e66)', 'EMD %s, TIM %s' % (se[:8], st[:8]), ok,
-            gegen=('K5g3-Asset', 'EMD %s' % sha_d(os.path.join(var, 'BAHNSTEIG_FORM.EMD'))[:8],
-                   sha_d(os.path.join(var, 'BAHNSTEIG_FORM.EMD')) == 'f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1'))
+    ve, vt = sha_d(os.path.join(var, 'BAHNSTEIG_FORM.EMD')), sha_d(os.path.join(var, 'BAHNSTEIG_FORM.TIM'))
+    ke, kt = sha_d(os.path.join(K5E, 'BAHNSTEIG_FORM.EMD')), sha_d(os.path.join(K5E, 'BAHNSTEIG_FORM.TIM'))
+    R.zeile('G5', 'Spiel-Asset shared_assets/RE2/BAHNSTEIG_FORM.EMD/.TIM == diese Variante (R9-Einbau; bis dahin K5e_f1 f277916d/31a35e66)',
+            'Asset EMD %s TIM %s, Variante EMD %s TIM %s' % (se[:8], st[:8], ve[:8], vt[:8]), se == ve and st == vt,
+            gegen=('K5e_f1 (ruhe/K5e_f1)', 'EMD %s TIM %s' % (ke[:8], kt[:8]), se == ke and st == kt))
+
+
+def hand18(R, var):
+    """R9-Einbau: Netz 18 des Assets = spiegelhand(Netz 13 des Assets) - UV/CLUT/Seite Flaeche fuer Flaeche die von 13."""
+    def pruef(o):
+        f = FE.lese_emd(open(os.path.join(o, 'BAHNSTEIG_FORM.EMD'), 'rb').read())
+        soll = G3.netz_norm(G3.spiegelhand(f['meshes'][G3.HAND_LINKS]))
+        ist = G3.netz_norm(f['meshes'][G3.HAND])
+        geo = G3.netz_norm(FE.lese_emd(open(G3.GEO3_ZIEL, 'rb').read())['meshes'][G3.HAND])
+        g_ok = (ist['ecken'], ist['normalen'], [d['e'] for d in ist['dreiecke']], [q['e'] for q in ist['vierecke']]) == (
+            geo['ecken'], geo['normalen'], [d['e'] for d in geo['dreiecke']], [q['e'] for q in geo['vierecke']])
+        n_uv = sum(1 for a in ('dreiecke', 'vierecke') for x, y in zip(ist[a], soll[a]) if (x['uv'], x['clut'], x['page']) != (y['uv'], y['clut'], y['page']))
+        return ist == soll and g_ok, '%d Flaechen, UV/CLUT/Seite anders als 13: %d, Geometrie == Stufe hand18: %s' % (
+            len(ist['dreiecke']) + len(ist['vierecke']), n_uv if len(ist['dreiecke']) == len(soll['dreiecke']) else -1, 'ja' if g_ok else 'nein')
+    ok, t = pruef(var)
+    gok, gt = pruef(r2_stand_r3())
+    R.zeile('H18', 'Netz 18 des Assets = spiegelhand(Netz 13 des Assets): Geometrie == Stufe hand18, UV/CLUT/Seite == 13 (R9 N33)', t, ok,
+            gegen=('K5g3 Runde 3 (Commit %s, altes Netz 18)' % R3_COMMIT, gt, gok))
+
+
+R3_COMMIT = '968001097'     # Abgabe K5g3 Runde 3 (EMD 1981f97e, TIM c00823b3) - Gegenprobe H18
+
+
+def r2_stand_r3():
+    """Abgabe der Runde 3 aus git (Commit 968001097) in den Scratchpad holen (einmal)."""
+    import subprocess
+    d = os.path.join(K3.SCR, 'gegen_r3_' + R3_COMMIT)
+    if os.path.exists(os.path.join(d, 'bau.json')):
+        return d
+    os.makedirs(os.path.join(d, 'pruef'), exist_ok=True)
+    for n in K3.DATEIEN + ('bau.json',):
+        b = subprocess.run(['git', '-C', E.WT, 'show', '%s:%s/%s' % (R3_COMMIT, R1_PFAD, n)], capture_output=True, check=True).stdout
+        open(os.path.join(d, n), 'wb').write(b)
+    return d
 
 
 def main(argv):
@@ -893,6 +931,7 @@ def main(argv):
         spiel_messen(var, sp)
     spiel(R, var, sp)
     technik(R, var, bau)
+    hand18(R, var)
     rot_ = [z['nr'] for z in R.z if z['art'] == 'Riegel' and not z['ok']]
     gg = [z['nr'] for z in R.z if z['gegenprobe'] and z['gegenprobe'][2]]
     nr_ = [z for z in R.z if z['art'] == 'Riegel']

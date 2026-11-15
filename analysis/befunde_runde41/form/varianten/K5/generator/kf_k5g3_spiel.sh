@@ -15,7 +15,7 @@ FFMPEG=/c/ProgramData/chocolatey/bin/ffmpeg
 V=$1; A=$2; RAUM=$3; POSE=$4; SPIELER=$5; EXITB=$6; NB=$7; shift 7
 mkdir -p "$A"; A=$(cd "$A" && pwd -W)
 [ "$V" != "-" ] && V=$(cd "$V" && pwd -W)
-EXE="$W/re15_port/build/platform/pc/re15_pc.exe"
+EXE="${RE15_PC_EXE:-$W/re15_port/build/platform/pc/re15_pc.exe}"
 ID="$$_$(date +%H%M%S)"
 LAUF="$W/re15_port/build/form_spiel_k5g3/$ID"
 NAME="re15_pc_k5g3_$ID"

@@ -13,7 +13,7 @@ ID="k5g3z_${NAME}_$$"
 LAUF="$BAUM/re15_port/build/form_spiel_k5g3/$ID"
 mkdir -p "$LAUF" "$S/spiel/$NAME"
 rm -f "$S/spiel/$NAME"/dump_*.ppm
-cp "$BAUM/re15_port/build/platform/pc/re15_pc.exe" "$LAUF/re15_pc_$ID.exe"
+cp "${RE15_PC_EXE:-$BAUM/re15_port/build/platform/pc/re15_pc.exe}" "$LAUF/re15_pc_$ID.exe"
 cd "$LAUF"
 export SDL_ASSERT=always_ignore RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=2 RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
 export RE15_DEBUG_JUMP="$RAUM@250" RE15_SPAWN_DIAG=1 RE15_FRAMEDUMP="$SERIE:dump_" RE15_EXIT_AT="$((ENDE + 20))#$RAUM"

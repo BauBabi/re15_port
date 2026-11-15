@@ -42,3 +42,5 @@ re15_port/shared_assets/RE2/KARTSE.VBS -text
 analysis/befunde_runde37/orchestrator/*.js text eol=lf
 # Form K5g3: Datendateien der Geometrie-Stufe tragen ihre sha256 im Generator (kf_k5g3_geo.py GEO3_SPALT_SHA) - nie normalisieren.
 analysis/befunde_runde41/form/varianten/K5/generator/k5g3_*.json -text
+# R9-Einbau (2026-11-15): sha256-gepruefte Eingaben des K5g3-Generators (bau.json haelt ihre sha) - nie Zeilenenden umschreiben
+analysis/befunde_runde41/form/varianten/K5/generator/krallen_posen.json -text

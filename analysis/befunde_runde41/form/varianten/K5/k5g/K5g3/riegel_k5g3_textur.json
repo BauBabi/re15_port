@@ -2,7 +2,7 @@
  "zeilen": [
   {
    "nr": "TG",
-   "text": "Geometrie des Assets == Geometrie-Stufe kf_k5g3_geo (geo/BAHNSTEIG_FORM.EMD sha db9404a18368; Ecken, Normalen, Flaechen-Ecken; Sektionen 0-6)",
+   "text": "Geometrie des Assets == Geometrie-Stufe kf_k5g3_geo (geo/BAHNSTEIG_FORM.EMD sha f833a90580d8; Ecken, Normalen, Flaechen-Ecken; Sektionen 0-6)",
    "ist": "gleich",
    "ok": true,
    "art": "Riegel",
@@ -14,13 +14,13 @@
   },
   {
    "nr": "UV1",
-   "text": "UV aller Flaechen = Geometrie-Stufe uvfein (sha db9404a1) + ein Kopie-Versatz je Flaeche (ausser 11 Augen-Dreiecken mit eigener UV)",
+   "text": "UV aller Flaechen = Geometrie-Stufe uvfein (sha f833a905) + ein Kopie-Versatz je Flaeche (ausser 11 Augen-Dreiecken mit eigener UV)",
    "ist": "0 Flaechen abweichend",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
     "Runde 1 (Commit da6560372, B4-UV)",
-    "3715 Flaechen abweichend",
+    "3843 Flaechen abweichend",
     false
    ]
   },
@@ -39,7 +39,7 @@
   {
    "nr": "K1",
    "text": "Kopie-Maske (Zahlen-Pruefer r1 ROT 2): kein Zugriff auf Index 0 (= ungeschriebener Kopie-Texel, 0x7FFF) in irgendeiner Flaeche, abgetastet im Inneren aller Render-Dreiecke",
-   "ist": "0 von 457031 Zugriffen (-)",
+   "ist": "0 von 457063 Zugriffen (-)",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -51,7 +51,7 @@
   {
    "nr": "K2",
    "text": "kein Zugriff auf reinweiss 0x7FFF ausser der Zahn-Zeile (K5c bytegleich), ganzes Asset (Zahlen-Pruefer r1 Gelb 4)",
-   "ist": "0 von 457031 Zugriffen",
+   "ist": "0 von 457063 Zugriffen",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -243,7 +243,7 @@
   {
    "nr": "G8",
    "text": "fast weiss wie reinweiss: kein Zugriff auf einen Eintrag mit L* > 85 (Haut, Tausch, Fleck-Grund und Fleck-Material; ausser Zaehnen, Maul, Augen, F1-Kern), ganzes Asset",
-   "ist": "0 von 457031 Zugriffen ",
+   "ist": "0 von 457063 Zugriffen ",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -351,7 +351,7 @@
   {
    "nr": "W1",
    "text": "weiss L-cv im Band 0.409..1.128 (Originale)",
-   "ist": "0.561",
+   "ist": "0.559",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -363,7 +363,7 @@
   {
    "nr": "W2",
    "text": "weiss lokal_rel im Band 0.175..0.460 (Originale)",
-   "ist": "0.369",
+   "ist": "0.367",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -375,7 +375,7 @@
   {
    "nr": "W3",
    "text": "weiss C-std im Band 4.780..13.550 (Originale)",
-   "ist": "5.555",
+   "ist": "5.532",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -387,7 +387,7 @@
   {
    "nr": "W4",
    "text": "weiss hell %% <= 17,8 und F_hell <= 71,7 (Decke der Originale)",
-   "ist": "3.9 / 34.2",
+   "ist": "3.9 / 33.8",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": null
@@ -395,7 +395,7 @@
   {
    "nr": "W5",
    "text": "weiss C* Mittel (Info; Band Originale 8,63..23,41)",
-   "ist": "11.32",
+   "ist": "11.31",
    "ok": true,
    "art": "Info",
    "gegenprobe": null
@@ -435,7 +435,7 @@
   {
    "nr": "Z1",
    "text": "Spiel 5080 P L* im Band 5.570..18.800 der Original-Gegner (zweiseitig)",
-   "ist": "7.77",
+   "ist": "7.75",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -459,7 +459,7 @@
   {
    "nr": "Z3",
    "text": "Spiel 5080 P lokal_rel im Band 0.243..0.656 der Original-Gegner (zweiseitig)",
-   "ist": "0.361",
+   "ist": "0.36",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -471,7 +471,7 @@
   {
    "nr": "Z4",
    "text": "Spiel 5080 P C* im Band 4.410..7.590 der Original-Gegner (zweiseitig)",
-   "ist": "4.86",
+   "ist": "4.85",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -483,7 +483,7 @@
   {
    "nr": "Z5",
    "text": "Spiel 5080 P C-std im Band 2.390..7.450 der Original-Gegner (zweiseitig)",
-   "ist": "3.2",
+   "ist": "3.19",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -519,7 +519,7 @@
   {
    "nr": "Z8",
    "text": "Spiel 5080 Q C* im Band 12.090..15.050 der Original-Gegner (zweiseitig)",
-   "ist": "13.79",
+   "ist": "13.77",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -531,7 +531,7 @@
   {
    "nr": "Z9",
    "text": "Spiel 5080 Q C-std im Band 6.530..8.880 der Original-Gegner (zweiseitig)",
-   "ist": "6.58",
+   "ist": "6.57",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -555,25 +555,37 @@
   {
    "nr": "T5",
    "text": "jede Flaeche des Assets liest eine gueltige Zeile",
-   "ist": "0 ungueltig von 13173",
+   "ist": "0 ungueltig von 13185",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": null
   },
   {
    "nr": "G5",
-   "text": "Spiel-Asset shared_assets/RE2/BAHNSTEIG_FORM.* bleibt K5e_f1 (EMD f277916d, TIM 31a35e66)",
-   "ist": "EMD f277916d, TIM 31a35e66",
+   "text": "Spiel-Asset shared_assets/RE2/BAHNSTEIG_FORM.EMD/.TIM == diese Variante (R9-Einbau; bis dahin K5e_f1 f277916d/31a35e66)",
+   "ist": "Asset EMD 88c49ce1 TIM c00823b3, Variante EMD 88c49ce1 TIM c00823b3",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
-    "K5g3-Asset",
-    "EMD 1981f97e",
+    "K5e_f1 (ruhe/K5e_f1)",
+    "EMD f277916d TIM 31a35e66",
+    false
+   ]
+  },
+  {
+   "nr": "H18",
+   "text": "Netz 18 des Assets = spiegelhand(Netz 13 des Assets): Geometrie == Stufe hand18, UV/CLUT/Seite == 13 (R9 N33)",
+   "ist": "140 Flaechen, UV/CLUT/Seite anders als 13: 0, Geometrie == Stufe hand18: ja",
+   "ok": true,
+   "art": "Riegel",
+   "gegenprobe": [
+    "K5g3 Runde 3 (Commit 968001097, altes Netz 18)",
+    "128 Flaechen, UV/CLUT/Seite anders als 13: 128, Geometrie == Stufe hand18: nein",
     false
    ]
   }
  ],
  "rot": [],
  "gegenprobe_gruen": [],
- "summe": "RIEGEL K5g3 TEXTUR: 47 von 47 gruen, 41 von 41 Gegenproben rot wie verlangt; ROT: -; Gegenproben gruen: -"
+ "summe": "RIEGEL K5g3 TEXTUR: 48 von 48 gruen, 42 von 42 Gegenproben rot wie verlangt; ROT: -; Gegenproben gruen: -"
 }
