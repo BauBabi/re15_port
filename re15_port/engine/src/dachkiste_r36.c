@@ -50,6 +50,7 @@
 #include "re15_rdt.h"
 #include "re15_room.h"
 #include "re15_scd.h"
+#include "re15_msg.h"          /* re15_msg_get_raw: TIPPE sys (Systemtext 04 02) */
 
 extern scd_vm_t g_scd;
 
@@ -164,7 +165,7 @@ typedef struct {
                              * SCHIEB yaw achse(0=X,1=Z) op(0 = >=, 1 = <=) wert max */
 } wp_cmd_t;
 
-#define WP_MAX 192   /* Runde 42: Kette Ablassen -> Kampf -> Schluessel -> Szene -> Tor in EINEM Lauf */
+#define WP_MAX 384   /* Runde 42: Kette Ablassen -> Kampf -> Schluessel -> Szene -> Tor in EINEM Lauf; STAGE3a NB1: Marvins ganzer Weg */
 static wp_cmd_t s_wp[WP_MAX];
 static int      s_wp_n = 0;
 static int      s_wp_i = 0;
@@ -257,10 +258,11 @@ static void wp_parse(const char *pfad)
          * GEHE_OBJ tol = GEHE zur Lage des verfolgten Objekts (OBJ n); BLICK_OBJ = Blick auf das verfolgte Objekt. */
         else if (!strcmp(w, "SCHIESS"))   { cmd.kind = WP_SCHIESS; c = 6000; sscanf(zeile, "%*s %d %d %d", &a, &b, &c);
                                             cmd.a = a; cmd.b = b; cmd.c = c; }
-        /* Runde 42 Story STAGE3a: TIPPE bank bit max = Quadrat 3 Bilder je 30 (Meldungen bestaetigen, wie ein Spieler) bis
-         * Flag (bank,bit) = 1 oder max Bilder. */
-        else if (!strcmp(w, "TIPPE"))     { cmd.kind = WP_TIPPE; c = 6000; sscanf(zeile, "%*s %d %d %d", &a, &b, &c);
-                                            cmd.a = a; cmd.b = b; cmd.c = c; }
+        /* Runde 42 Story STAGE3a: TIPPE bank bit max [sys] = Quadrat 3 Bilder je 30 (Meldungen bestaetigen, wie ein Spieler) bis
+         * Flag (bank,bit) = 1 oder max Bilder. sys = 1 (NB1 B8): nur druecken, solange ein SYSTEMTEXT offen ist (Ctrl 04 02,
+         * Form ROOM3020 msg 3 @0x0EBD) - Untertitel (04 00) muessen dann ohne Taste auslaufen; jeder Druck steht im Log. */
+        else if (!strcmp(w, "TIPPE"))     { cmd.kind = WP_TIPPE; c = 6000; sscanf(zeile, "%*s %d %d %d %d", &a, &b, &c, &d);
+                                            cmd.a = a; cmd.b = b; cmd.c = c; cmd.d = d; }
         /* LAUF bank bit max = geradeaus gehen (OBEN gehalten) bis Flag (bank,bit) = 1 oder max Bilder - fuer Ausloese-Zonen, deren
          * Szene den Spieler uebernimmt (GEHE endet dort nie). */
         /* JAGE bank bit max [hin] [feuer] = Zielen; Feuern nur, wenn der naechste lebende Gegner naeher als feuer ist (Standard 3500;
@@ -483,7 +485,15 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
     case WP_TIPPE:
         if (re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b)) { wp_log("  TIPPE: (%d,%d) = 1 nach %d Bildern", c->a, c->b, s_wp_zaehler);
                                                                wp_naechster("Flag gesetzt"); break; }
-        if ((s_wp_zaehler % 30) < 3) out = WP_SQUARE;
+        if (c->d == 1) {
+            int len = 0;
+            const unsigned char *m = g_scd.message_active ? re15_msg_get_raw(g_scd.message_id, &len) : NULL;
+            const int sys = m && len >= 2 && m[0] == 0x04 && m[1] == 0x02;
+            if (sys && (s_wp_zaehler % 30) < 3) {
+                out = WP_SQUARE;
+                if ((s_wp_zaehler % 30) == 0) wp_log("  TIPPE: Systemtext msg %d -> Quadrat", (int)g_scd.message_id);
+            }
+        } else if ((s_wp_zaehler % 30) < 3) out = WP_SQUARE;
         if (++s_wp_zaehler >= c->c) { wp_log("  TIPPE: %d Bilder ohne (%d,%d)", s_wp_zaehler, c->a, c->b); wp_naechster("max Bilder"); }
         break;
     case WP_FLAG:   /* Nachbesserung 3: Spielflag (Bank, Bit) ins Log — z. B. der Latch (3,172) von ROOM2060 sub01 */
