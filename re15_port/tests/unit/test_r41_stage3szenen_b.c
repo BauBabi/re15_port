@@ -200,8 +200,11 @@ static void t_waffe(void)
     re15_sherry_r41_modell_setzen(2);
     CHECK(re15_player_equipped_weapon() == 3 && pl->hp == 66, "Leon 0 -> 2 (U.S.S.-Ruestung ROOM40A0 sub06): Port-Weg unveraendert");
     re15_sherry_r41_modell_setzen(13);
-    CHECK(re15_player_equipped_weapon() == 1 && pl->hp == 100 && !re15_sherry_r41_waffe_gesperrt(),
-          "Leon -> Marvin 0x0D (ROOM3020 @0x00D7A): Waffe 1 (@0x800c00d4[13]), HP 100, Ausruesten frei");
+    /* Runde 42 Story STAGE3a (T-01/T-02): nach dem Schwanz (@0x800c00d4[13] = 1) bekommt Marvin seine eigene Seite nach RE2
+     * FUN_80068f9c - Browning, Waffe 3 (Ada @0x8006901c). */
+    CHECK(re15_player_equipped_weapon() == 3 && pl->hp == 100 && !re15_sherry_r41_waffe_gesperrt(),
+          "Leon -> Marvin 0x0D (ROOM3020 @0x00D7A): Waffe 3 (T-01 Marvins Seite), HP 100, Ausruesten frei");
+    re15_sherry_r41_modell_setzen(0);   /* Rueckwechsel: Tausch beenden (Runde 42), sonst bleibt Marvins Seite fuer die Folgeteile */
     /* Weste (Port-Nachruestung +5, Flag (3,0x75)) und Figurwechsel: der Raumlader ruft danach re15_vest_hp_on_model_reload */
     re15_game_flag_set(3, 0x75, 1);
     g_scd.work_vars[0x10] = 1; re15_vest_model_mark(1);
@@ -349,8 +352,8 @@ static void t_marvin(void)
           if (g_bank_ok[w] && g_wpn_skel[w].bone_relative_pos[10][1] != 485) ok = 0;
       CHECK(ok && g_w01_skel.bone_relative_pos[10][1] == 485 && g_bank_ok[1] && g_wpn_skel[1].keyframe_count == g_w01_skel.keyframe_count,
             "W-Verbunde (PL00W**) mit Marvins Bindelage, Keyframes der PLW bleiben; alle Banken der Familie 76 bleiben"); }
-    CHECK(re15_player_equipped_weapon() == 1 && pl->hp == 100 && g_core_idx == 13,
-          "Figurwechsel: Waffe 1 (@0x800c00d4[13]), HP 100 (@0x80031718), CORE0D (@0x800316e8)");
+    CHECK(re15_player_equipped_weapon() == 3 && pl->hp == 100 && g_core_idx == 13,
+          "Figurwechsel: Waffe 3 (Runde 42 T-01: Marvins Seite nach RE2 @0x8006901c, davor @0x800c00d4[13] = 1), HP 100 (@0x80031718), CORE0D (@0x800316e8)");
     free(f);
     /* zurueck auf Leon mit Weste (ROOM3060 @0x010DE `24 10 01 00`) */
     f = psx("PLD/PL01.PLD", &n);
@@ -487,8 +490,10 @@ static void t_marvinlauf(const char *dlog)
     const char *z = strstr(d, "[sherry-r41] Spielermodell 0 -> 13, ");
     int n1 = z ? sscanf(z, "[sherry-r41] Spielermodell 0 -> 13, Waffe (aca5d) %d, HP %d, Status %x (vorher Waffe %d, HP %d, Status %x)",
                         &w, &hp, &st, &w0, &hp0, &st0) : 0;
-    CHECK(n1 == 6 && w == 1 && hp == 100 && st == 0 && w0 == 3 && hp0 < 100 && (st0 & 2),
-          "Leon -> Marvin: Waffe %d (vorher %d; @0x800c00d4[13] = 1), HP %d (vorher %d; @0x80031718), Status %x (vorher %x; @0x80031720)",
+    /* Runde 42 Story STAGE3a (T-01/T-02, re15_story3a_r42.h): nach dem Schwanz (@0x800c00d4[13] = 1) bekommt Marvin seine eigene Seite
+     * nach RE2 FUN_80068f9c (Ada: Waffe 3 @0x8006901c, Platz 0 @0x80069024) - Browning statt Messer. HP/Status wie bisher. */
+    CHECK(n1 == 6 && w == 3 && hp == 100 && st == 0 && w0 == 3 && hp0 < 100 && (st0 & 2),
+          "Leon -> Marvin: Waffe %d (vorher %d; T-01 Marvins Seite = Browning, RE2 @0x8006901c), HP %d (vorher %d; @0x80031718), Status %x (vorher %x; @0x80031720)",
           n1 == 6 ? w : -1, n1 == 6 ? w0 : -1, n1 == 6 ? hp : -1, n1 == 6 ? hp0 : -1, n1 == 6 ? st : 0xffffu, n1 == 6 ? st0 : 0xffffu);
     z = strstr(d, "[sherry-r41] Koerper -> Familie 76 (PL00): ");
     int n2 = z ? sscanf(z, "[sherry-r41] Koerper -> Familie 76 (PL00): %d Knochen, %d Clips, W00 %d Clips, Wurzel-Bind y %d (Modell 13)",

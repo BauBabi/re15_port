@@ -231,19 +231,21 @@
   C v0.8.32 ROOM6011 31 SYS    System    OK You've taken the subway map.
 
 -- Bank-9-Bits --
-  Original (Mod-Baum): 85 belegt; Port: 65 belegt; 40-%-Disc: 15 belegt
+  Original (Mod-Baum): 85 belegt; Port: 67 belegt; 40-%-Disc: 15 belegt
   Bit 118 RE15_R42_BIT_2080_SZENE      B   v0.8.31 OK  Nachgespraech 2080/2081 gesehen (L1/E1)
-          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_2080_SZENE): engine/src/story1_r42.c (Wrapper, RE15_R42_BIT_2080_SZENE), engine/src/story1_r42.c:126, engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_2080_SZENE), engine/src/story2_r42.c:137, engine/src/story2_r42.c:167
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_2080_SZENE): engine/src/story1_r42.c (Wrapper, RE15_R42_BIT_2080_SZENE), engine/src/story1_r42.c:151, engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_2080_SZENE), engine/src/story2_r42.c:137, engine/src/story2_r42.c:167
   Bit 119 RE15_R42_BIT_2080_TOR        B   v0.8.31 OK  Tor 2080/2081 mit dem Schluessel geoeffnet (K-01)
           EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_2080_TOR): engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_2080_TOR)
   Bit 120 RE15_R42_BIT_LEITER          B   v0.8.31 OK  Szene vor der Leiter 11A0/11A1 gesehen (K-07)
-          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_LEITER): engine/src/story1_r42.c (Wrapper, RE15_R42_BIT_LEITER), engine/src/story1_r42.c:126, engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_LEITER)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_LEITER): engine/src/story1_r42.c (Wrapper, RE15_R42_BIT_LEITER), engine/src/story1_r42.c:151, engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_LEITER)
   Bit 121 RE15_R42_BIT_TUER_11A        B   v0.8.31 OK  Tuer 11A0/11A1 <-> 2070/2071 von der 11A-Seite geoeffnet (K-02)
           EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_TUER_11A): engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_TUER_11A)
   Bit 122 RE15_R42_BIT_TUER_2040       B   v0.8.31 OK  Tuer 2040/2041 <-> 2070/2071 aus dem Belohnungsraum geoeffnet (K-03)
           EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_TUER_2040): engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_TUER_2040)
   Bit 123 RE15_R42_BIT_3020_SCHUESSE   B   v0.8.31 OK  3020: Leon hoert die Schuesse (L5)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_3020_SCHUESSE): engine/src/story3a_r42.c (Wrapper, RE15_R42_BIT_3020_SCHUESSE), engine/src/story3a_r42.c:275
   Bit 124 RE15_R42_BIT_3060_UEBERGABE  B   v0.8.31 OK  3060: Wiedersehen + Uebergabe, oeffnet Kartentuer 3010 (L5-L7, L-10)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_3060_UEBERGABE): engine/src/story3a_r42.c (Wrapper, RE15_R42_BIT_3060_UEBERGABE), engine/src/story3a_r42.c:341
   Bit 129 RE15_R42_BIT_FINALE_ENDE     A   v0.8.31 OK  Finale beendet, Abspann frei (T-07)
   Bit 130 RE15_R42_BIT_ZUG_ELZA        C   v0.8.31 OK  Zugstart 6031 gesehen (E9)
   Bit 131 RE15_R42_BIT_ALARM           C   v0.8.32 OK  Alarm/Durchsage 5060/5061 (L13/E4)
@@ -262,8 +264,9 @@
   Bit  17 RE15_R42_BIT_ENZYM           C   v0.8.32 OK (Disc-Bit, bewusst)  Enzym genommen = Disc-Bit ROOM40A1 @0x00ED0 pc[18] (L16)
   Bit  34 RE15_R42_BIT_PLAN_KANAL      C   v0.8.32 OK  Lageplan Kanalisation 2000/2001 (6b)
   Bit  35 RE15_R42_BIT_PLAN_FABRIK     B/C v0.8.31 OK  Lageplan Fabrik: Leon Uebergabe 3060 (L6, v0.8.31), Elza 30C1 (v0.8.32)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_PLAN_FABRIK): engine/src/story3a_r42.c (Wrapper, RE15_R42_BIT_PLAN_FABRIK)
   Bit  36 RE15_R42_BIT_PLAN_FORSCHUNG  C   v0.8.32 OK  Lageplan Forschungszentrum 4010/4011 (6b)
   Bit  37 RE15_R42_BIT_PLAN_UBAHN      C   v0.8.32 OK  Lageplan U-Bahn 6010/6011 (6b)
-  danach noch frei (Original, Port, Disc): 80 Bits, Auszug [0, 1, 3, 4, 7, 8, 9, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 137, 139, 145]
+  danach noch frei (Original, Port, Disc): 79 Bits, Auszug [0, 1, 3, 4, 7, 8, 9, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 137, 139, 145]
 
 ERGEBNIS: FREI (181 Zeilen, 27 Bits, 0 Fehler)

@@ -475,8 +475,9 @@ static int riegel_speicher(void)
     static re15_savedata_t sd, sd2;
     uint16_t raum = 0;
     int pg = -1, rc = -1;
-    CHECK(RE15_SAVE_VERSION == 9 && sizeof(re15_savedata_t) == 944,
-          "Speicherformat unveraendert: Version %d, %u Byte (Runde 30: 9 / 944)", RE15_SAVE_VERSION,
+    /* Runde 42 Story STAGE3a: v10 = v9 + story_r42[96] (Figurentausch Leon <-> Marvin); die Karten-Markierung bleibt ausserhalb. */
+    CHECK(RE15_SAVE_VERSION == 10 && sizeof(re15_savedata_t) == 1040,
+          "Speicherformat: Version %d, %u Byte (Runde 30: 9 / 944, Runde 42: 10 / 1040)", RE15_SAVE_VERSION,
           (unsigned)sizeof(re15_savedata_t));
     grundstellung();
     (void)weg_ohne_2f();

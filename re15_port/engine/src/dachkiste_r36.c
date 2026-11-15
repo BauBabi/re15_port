@@ -156,7 +156,7 @@ void re15_dachkiste_schub_log(int prop_idx, int32_t ziel_x, int32_t ziel_z, int 
 #define WP_R1     0x0800u   /* Zielen (platform/pc/src/input_pc.c RE15_PAD_R1) */
 
 enum { WP_OBJ = 1, WP_RAUM, WP_WARTE, WP_GEGNERWEG, WP_ZELLE, WP_GEHE, WP_BLICK, WP_SCHIEB, WP_AKTION, WP_AOTS, WP_FLAG, WP_ENDE,
-       WP_SCHIESS, WP_GEHE_OBJ, WP_BLICK_OBJ };
+       WP_SCHIESS, WP_GEHE_OBJ, WP_BLICK_OBJ, WP_TIPPE, WP_LAUF, WP_JAGE, WP_RAEUME };
 
 typedef struct {
     int kind;
@@ -257,6 +257,22 @@ static void wp_parse(const char *pfad)
          * GEHE_OBJ tol = GEHE zur Lage des verfolgten Objekts (OBJ n); BLICK_OBJ = Blick auf das verfolgte Objekt. */
         else if (!strcmp(w, "SCHIESS"))   { cmd.kind = WP_SCHIESS; c = 6000; sscanf(zeile, "%*s %d %d %d", &a, &b, &c);
                                             cmd.a = a; cmd.b = b; cmd.c = c; }
+        /* Runde 42 Story STAGE3a: TIPPE bank bit max = Quadrat 3 Bilder je 30 (Meldungen bestaetigen, wie ein Spieler) bis
+         * Flag (bank,bit) = 1 oder max Bilder. */
+        else if (!strcmp(w, "TIPPE"))     { cmd.kind = WP_TIPPE; c = 6000; sscanf(zeile, "%*s %d %d %d", &a, &b, &c);
+                                            cmd.a = a; cmd.b = b; cmd.c = c; }
+        /* LAUF bank bit max = geradeaus gehen (OBEN gehalten) bis Flag (bank,bit) = 1 oder max Bilder - fuer Ausloese-Zonen, deren
+         * Szene den Spieler uebernimmt (GEHE endet dort nie). */
+        /* JAGE bank bit max [hin] [feuer] = Zielen; Feuern nur, wenn der naechste lebende Gegner naeher als feuer ist (Standard 3500;
+         * keine Schuesse ins Leere); ist er weiter als hin (Standard 3500), geht der Spieler auf ihn zu (ein Hund, der im Hof stehen
+         * bleibt, kommt sonst nie in Reichweite). Grosses hin = an der Stelle bleiben und warten. */
+        else if (!strcmp(w, "JAGE"))      { cmd.kind = WP_JAGE; c = 6000; d = 3500; e = 3500;
+                                            sscanf(zeile, "%*s %d %d %d %d %d", &a, &b, &c, &d, &e);
+                                            cmd.a = a; cmd.b = b; cmd.c = c; cmd.d = d; cmd.e = e; }
+        /* RAEUME r max = an der Stelle zielen und feuern, bis kein lebender Gegner naeher als r ist (Zombies am Weg). */
+        else if (!strcmp(w, "RAEUME"))    { cmd.kind = WP_RAEUME; b = 3000; sscanf(zeile, "%*s %d %d", &a, &b); cmd.a = a; cmd.b = b; }
+        else if (!strcmp(w, "LAUF"))      { cmd.kind = WP_LAUF; c = 600; sscanf(zeile, "%*s %d %d %d", &a, &b, &c);
+                                            cmd.a = a; cmd.b = b; cmd.c = c; }
         else if (!strcmp(w, "GEHE_OBJ"))  { cmd.kind = WP_GEHE_OBJ; c = 150; sscanf(zeile, "%*s %d", &c); cmd.c = c; }
         else if (!strcmp(w, "BLICK_OBJ")) { cmd.kind = WP_BLICK_OBJ; }
         else continue;
@@ -292,6 +308,10 @@ static void wp_start(const wp_cmd_t *c)
     case WP_AOTS:  wp_log("AOTS"); break;
     case WP_FLAG:  wp_log("FLAG (%d,%d)", c->a, c->b); break;
     case WP_SCHIESS: wp_log("SCHIESS bis (%d,%d) = 1, max %d Bilder", c->a, c->b, c->c); break;
+    case WP_TIPPE: wp_log("TIPPE bis (%d,%d) = 1, max %d Bilder", c->a, c->b, c->c); break;
+    case WP_LAUF:  wp_log("LAUF bis (%d,%d) = 1, max %d Bilder", c->a, c->b, c->c); break;
+    case WP_JAGE:  wp_log("JAGE bis (%d,%d) = 1, max %d Bilder", c->a, c->b, c->c); break;
+    case WP_RAEUME: wp_log("RAEUME bis kein Gegner naeher als %d, max %d Bilder", c->a, c->b); break;
     case WP_GEHE_OBJ: wp_log("GEHE_OBJ Slot %d (%d,%d) tol %d", s_wp_obj, g_scd.props[s_wp_obj].x, g_scd.props[s_wp_obj].z, c->c); break;
     case WP_BLICK_OBJ: wp_log("BLICK_OBJ Slot %d", s_wp_obj); break;
     default: break;
@@ -362,7 +382,13 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
         if (++s_wp_zaehler >= 30) wp_naechster("Raum bereit");
         return 1;
     }
-    if (g_scd.player_mode == 2) { *bits = 0; s_wp_bits = 0; return 1; }   /* Szene: Pad weg, warten */
+    /* Szene: Pad weg, warten - ausser TIPPE (Runde 42 Story STAGE3a): Systemtexte in einer Szene ("You've received ...", Ctrl 01:END)
+     * schliesst wie im Spiel erst ein Tastendruck. */
+    {   /* ein Flag-Befehl, dessen Flag schon steht, endet auch in einer Szene (sonst kaeme das folgende TIPPE nie dran) */
+        const int flagbefehl = (c->kind == WP_JAGE || c->kind == WP_SCHIESS || c->kind == WP_LAUF);
+        if (g_scd.player_mode == 2 && c->kind != WP_TIPPE && !(flagbefehl && re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b))) {
+            *bits = 0; s_wp_bits = 0; return 1; }
+    }
 
     uint16_t out = 0;
     if (s_wp_phase == 0 && s_wp_zaehler == 0 && s_wp_runden == 0) wp_start(c);
@@ -411,6 +437,55 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
         if ((s_wp_zaehler % 24) < 3) out |= WP_SQUARE;
         if (++s_wp_zaehler >= c->c) { wp_log("  SCHIESS: %d Bilder ohne (%d,%d)", s_wp_zaehler, c->a, c->b); wp_naechster("max Bilder"); }
         break; }
+    case WP_JAGE: {
+        if (re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b)) { wp_log("  JAGE: (%d,%d) = 1 nach %d Bildern", c->a, c->b, s_wp_zaehler);
+                                                               wp_naechster("Flag gesetzt"); break; }
+        const re15_actor_t *e = NULL; double best = 1e18;
+        for (int k = 1; k < RE15_ACTOR_MAX; k++) {
+            const re15_actor_t *a = &g_actors[k];
+            if (!a->active || a->type < 0x10 || a->type >= 0x40 || a->hp <= 0) continue;
+            const double dd = (double)(a->x - pl->x) * (a->x - pl->x) + (double)(a->z - pl->z) * (a->z - pl->z);
+            if (dd < best) { best = dd; e = a; }
+        }
+        if (e && best > (double)c->d * c->d) {
+            const int err = wp_yaw_err(wp_yaw_zu(e->x - pl->x, e->z - pl->z), (int)pl->rot_y);
+            out = (abs(err) <= 300) ? WP_UP : 0;
+            if (abs(err) > 64) out |= (err > 0) ? WP_RIGHT : WP_LEFT;
+            if ((s_wp_zaehler % 120) == 0) wp_log("  JAGE: Gegner Typ 0x%02x bei (%d,%d), Abstand %.0f - hingehen", (unsigned)e->type,
+                                                  e->x, e->z, sqrt(best));
+        } else {
+            out = WP_R1;
+            if (e && best <= (double)c->e * c->e && (s_wp_zaehler % 24) < 3) out |= WP_SQUARE;
+        }
+        if (++s_wp_zaehler >= c->c) { wp_log("  JAGE: %d Bilder ohne (%d,%d)", s_wp_zaehler, c->a, c->b); wp_naechster("max Bilder"); }
+        break; }
+    case WP_RAEUME: {
+        int n = 0; double best = 1e18;
+        for (int k = 1; k < RE15_ACTOR_MAX; k++) {
+            const re15_actor_t *a = &g_actors[k];
+            if (!a->active || a->type < 0x10 || a->type >= 0x40 || a->hp <= 0) continue;
+            const double dd = (double)(a->x - pl->x) * (a->x - pl->x) + (double)(a->z - pl->z) * (a->z - pl->z);
+            if (dd < (double)c->a * c->a) n++;
+            if (dd < best) best = dd;
+        }
+        if (n == 0) { wp_log("  RAEUME: frei (naechster Gegner %.0f) nach %d Bildern", best < 1e17 ? sqrt(best) : -1.0, s_wp_zaehler);
+                      wp_naechster("frei"); break; }
+        out = WP_R1;
+        if ((s_wp_zaehler % 24) < 3) out |= WP_SQUARE;
+        if (++s_wp_zaehler >= c->b) { wp_log("  RAEUME: %d Bilder, noch %d Gegner naeher als %d", s_wp_zaehler, n, c->a); wp_naechster("max Bilder"); }
+        break; }
+    case WP_LAUF:
+        if (re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b)) { wp_log("  LAUF: (%d,%d) = 1 nach %d Bildern", c->a, c->b, s_wp_zaehler);
+                                                               wp_naechster("Flag gesetzt"); break; }
+        out = WP_UP;
+        if (++s_wp_zaehler >= c->c) { wp_log("  LAUF: %d Bilder ohne (%d,%d)", s_wp_zaehler, c->a, c->b); wp_naechster("max Bilder"); }
+        break;
+    case WP_TIPPE:
+        if (re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b)) { wp_log("  TIPPE: (%d,%d) = 1 nach %d Bildern", c->a, c->b, s_wp_zaehler);
+                                                               wp_naechster("Flag gesetzt"); break; }
+        if ((s_wp_zaehler % 30) < 3) out = WP_SQUARE;
+        if (++s_wp_zaehler >= c->c) { wp_log("  TIPPE: %d Bilder ohne (%d,%d)", s_wp_zaehler, c->a, c->b); wp_naechster("max Bilder"); }
+        break;
     case WP_FLAG:   /* Nachbesserung 3: Spielflag (Bank, Bit) ins Log — z. B. der Latch (3,172) von ROOM2060 sub01 */
         wp_log("  FLAG (%d,%d) = %d", c->a, c->b, re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b));
         wp_naechster("gelesen");
@@ -446,7 +521,9 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
             const int32_t rest = 40 + 35 * (s_wp_geh_bilder < 12 ? s_wp_geh_bilder : 12);
             const int vorbei = (s_wp_geh_bilder > 2 && dist > s_wp_geh_dist + 10);
             s_wp_geh_dist = dist;
-            if (dist > rest && !vorbei && abs(err) <= 300) {
+            /* Runde 42 Story STAGE3a: Toleranz > Auslauf (460) = "nah genug" (Tuer-Ansteuerung vor der Klemme an der Wand, deren
+             * Zittern die Klemm-Erkennung verhindert); kleinere Toleranzen wie bisher. */
+            if (dist > rest && (c->c <= 460 || dist > c->c) && !vorbei && abs(err) <= 300) {
                 out = WP_UP;
                 s_wp_geh_bilder++;
                 if (abs(err) > 96) out |= (err > 0) ? WP_RIGHT : WP_LEFT;

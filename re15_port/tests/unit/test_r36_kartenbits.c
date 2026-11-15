@@ -556,6 +556,8 @@ static const port_bit_t k_port[] = {
     { RE15_R42_BANK, RE15_R42_BIT_TUER_2040, "RE15_R42_BIT_TUER_2040", "Tuer 2040/2041-2070/2071 aus dem Belohnungsraum offen (Runde 42 Story, L1b K-03)" },
     { RE15_R42_BANK, RE15_R42_BIT_3020_SCHUESSE, "RE15_R42_BIT_3020_SCHUESSE", "3020 Leon hoert die Schuesse, gesehen (Runde 42 Story, L5)" },
     { RE15_R42_BANK, RE15_R42_BIT_3060_UEBERGABE, "RE15_R42_BIT_3060_UEBERGABE", "Wiedersehen 3060 mit Uebergabe gesehen (Runde 42 Story, L5-L7)" },
+    { RE15_R42_BANK, RE15_R42_BIT_PLAN_FABRIK, "RE15_R42_BIT_PLAN_FABRIK", "Fabrikplan aus Marvins Uebergabe 3060, story3a_r42.c geben (Runde 42 Story STAGE3a, L6/F-05)" },
+    { RE15_R42_BANK, RE15_R42_BIT_PLAN_FABRIK, "RE15_R42_BIT_PLAN_FABRIK", "Fabrikplan aus Marvins Uebergabe 3060, story3a_r42.c geben (Runde 42 Story STAGE3a, L6/F-05)" },
     { RE15_R42_BANK, RE15_R42_BIT_FINALE_ENDE, "RE15_R42_BIT_FINALE_ENDE", "Finale beendet, Abspann frei (Runde 42 Story, T-07)" },
     { RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA, "RE15_R42_BIT_ZUG_ELZA", "Zugstart 6031 Elza gesehen (Runde 42 Story, E9)" },
     { RE15_R42_BANK, RE15_R42_BIT_ALARM, "RE15_R42_BIT_ALARM", "Alarm/Durchsage 5060/5061 (Runde 42 Story, reserviert v0.8.32)" },
@@ -672,8 +674,9 @@ static void teil_s(void)
     g_current_room_id = 0x2040;
     re15_savedata_t sd, zurueck;
     re15_savedata_capture(&sd, 0, 1);
-    PRUEFE(sd.version == 9 && RE15_SAVE_VERSION == 9,
-           "Spielstand-Format v%u = v0.8.23 (RE15_SAVE_VERSION 9, re15_savedata.h/.c seit v0.8.23 unveraendert)",
+    /* Runde 42 Story STAGE3a: v10 = v9 (v0.8.23) + story_r42[96] vor checksum; v9-Staende werden beim Laden gehoben (re15_savedata.c). */
+    PRUEFE(sd.version == RE15_SAVE_VERSION && RE15_SAVE_VERSION == 10,
+           "Spielstand-Format v%u (RE15_SAVE_VERSION 10 = v0.8.23-Format v9 + story_r42[], v9 wird gehoben)",
            (unsigned)sd.version);
     const char *karte = "r36_kartenbits_v0823.mcr";
     remove(karte);

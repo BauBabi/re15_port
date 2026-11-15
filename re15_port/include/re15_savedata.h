@@ -26,7 +26,12 @@
 #include "re15_itembox.h"    /* RE15_BOX_SLOTS — ITEM BOX contents (v4)          */
 
 #define RE15_SAVE_MAGIC    0x35314552u   /* "RE15" little-endian                 */
-#define RE15_SAVE_VERSION  9             /* v9 (Runde 30, SPEICHER-VERTRAG zweier Themen):
+#define RE15_SAVE_VERSION  10            /* v10 (Runde 42 Story STAGE3a): + story_r42[96] unmittelbar vor checksum =
+                                          * der Figurentausch Leon <-> Marvin (re15_story3a_r42.h: Leons gesicherte Seite,
+                                          * Marvins Funde bis zur Uebergabe). sizeof 944 -> 1040. v9 traegt sein Pruefwort
+                                          * bei Offset 940 (= offsetof(story_r42)) ueber [0,940) und wird gehoben:
+                                          * story_r42 = 0 (kein Tausch).
+                                          * v9 (Runde 30, SPEICHER-VERTRAG zweier Themen):
                                           * + visited_floor[16] (Etagen-Bits der Karte,
                                           * Thema karten-marken) und + files[24] (FILE-
                                           * Liste, Thema irons-diary-dokument), beide
@@ -143,6 +148,8 @@ typedef struct {
                                 * das v5-Checksum-Wort sitzt bei offsetof(visited). */
     uint8_t  visited_floor[16];   /* v9: Etagen-Bits der Karte (Spur karten-marken) */
     uint8_t  files[24];           /* v9: FILE-Liste, leer = 0xFF (Spur irons-diary-dokument; RE2 24 Plaetze, sltiu v0,a1,0x18 @0x80069308) */
+    uint8_t  story_r42[96];       /* v10: Figurentausch Leon <-> Marvin (re15_story3a_r42.h re15_s3a_figur_t, Konzept T-01
+                                   * "Die Sicherung landet im Spielstand"); 0 = kein Tausch */
     uint32_t checksum;         /* additive checksum over all preceding bytes      */
 } re15_savedata_t;
 

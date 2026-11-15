@@ -202,15 +202,16 @@ int main(void)
            (unsigned)offsetof(re15_savedata_t, visited_floor),
            (unsigned)offsetof(re15_savedata_t, files),
            (unsigned)offsetof(re15_savedata_t, checksum), (unsigned)RE15_SAVE_VERSION);
-    CHECK("SPEICHER-VERTRAG v9: Version 9", RE15_SAVE_VERSION == 9);
-    CHECK("SPEICHER-VERTRAG v9: sizeof 944 (vorher 904)", sizeof(re15_savedata_t) == 944);
+    CHECK("SPEICHER-VERTRAG v10 (Runde 42 Story STAGE3a): Version 10", RE15_SAVE_VERSION == 10);
+    CHECK("SPEICHER-VERTRAG v10: sizeof 1040 (v9 944 + story_r42[96])", sizeof(re15_savedata_t) == 1040);
     CHECK("SPEICHER-VERTRAG v9: visited_floor[16] bei 900 = dort sass das Pruefwort von v7/v8",
           offsetof(re15_savedata_t, visited_floor) == 900 &&
           sizeof(((re15_savedata_t *)0)->visited_floor) == 16);
-    CHECK("SPEICHER-VERTRAG v9: files[24] bei 916, unmittelbar vor checksum bei 940",
+    CHECK("SPEICHER-VERTRAG v9: files[24] bei 916; v10: story_r42[96] bei 940 (= Pruefwort v9), checksum bei 1036",
           offsetof(re15_savedata_t, files) == 916 &&
           sizeof(((re15_savedata_t *)0)->files) == 24 &&
-          offsetof(re15_savedata_t, checksum) == 940);
+          offsetof(re15_savedata_t, story_r42) == 940 &&
+          offsetof(re15_savedata_t, checksum) == 1036);
     CHECK("der Block passt in einen Kartenblock (0x2000 - 0x100 Kopf)",
           sizeof(re15_savedata_t) <= 0x2000 - 0x100);
     {

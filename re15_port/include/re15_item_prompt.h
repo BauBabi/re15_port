@@ -28,6 +28,10 @@ typedef void (*re15_prompt_glyph_cb)(void *ctx, unsigned char code, int attr, in
 int re15_item_prompt_walk(int prompt_type, uint8_t item_id, int max_glyphs,
                           re15_prompt_glyph_cb cb, void *ctx);
 
+/* Name des Gegenstands `item_id` als Glyphen der Spielschrift (ohne den 0x07-Abschluss) nach `out` (hoechstens `max`); liefert
+ * die Zahl der Glyphen, 0 = kein Name. Dieselbe Quelle wie der Opcode 0x06 des Skript-Laufs (Runde 42 Story STAGE3a). */
+int re15_item_prompt_name(uint8_t item_id, uint8_t *out, int max);
+
 /* Ausdehnung der vendorten Original-Tabellen — fuer die Wache
  * (tests/integration/test_item_name_census.c), damit eine erneute Kuerzung auffaellt.
  * Namen: 102 = (0x800c4a28-0x800c495c)/2, die Offsettabelle endet physisch am Blob

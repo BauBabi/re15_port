@@ -87,7 +87,12 @@ void re15_sherry_r41_modell_setzen(int modell)
     int w0 = re15_player_equipped_weapon(), hp0 = (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp;
     unsigned st0 = (unsigned)g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags;
     s_modell = modell & 0x0F;
-    if (alt >= 0 && !re15_sherry_r41_ruestungswechsel(alt, s_modell)) {
+    /* Runde 42 Story STAGE3a (T-01/T-02, re15_story3a_r42.h): Figurwechsel Leon <-> Marvin nach RE2 FUN_80068f9c. Neuladen als
+     * Marvin aus dem Spielstand ist kein neuer Figurwechsel (kein Schwanz). */
+    extern int  re15_story3a_r42_figur_vor(int alt, int neu);
+    extern void re15_story3a_r42_figur_nach(int alt, int neu);
+    const int neuladen = re15_story3a_r42_figur_vor(alt, s_modell);
+    if (alt >= 0 && !neuladen && !re15_sherry_r41_ruestungswechsel(alt, s_modell)) {
         /* FIGUREN-WECHSEL (Leon <-> Marvin ROOM3020 @0x00D7A / ROOM3060 @0x010D2, Elza <-> Sherry ROOM3061 @0x011F6 /
          * ROOM3091 @0x01D9C): Schwanz von FUN_800314b0 wie im Original, bei JEDEM Neuladen (Runde 41 Spur K,
          * Nachbesserung 1 M2 - vorher PORT-WAHL "vorige Waffe zurueck, HP bleiben"):
@@ -106,6 +111,7 @@ void re15_sherry_r41_modell_setzen(int modell)
         re15_vest_model_mark((int16_t)s_modell);
         g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags = 0;
     }
+    if (alt >= 0 && (neuladen || !re15_sherry_r41_ruestungswechsel(alt, s_modell))) re15_story3a_r42_figur_nach(alt, s_modell);
     fprintf(stderr, "[sherry-r41] Spielermodell %d -> %d, Waffe (aca5d) %d, HP %d, Status %04x (vorher Waffe %d, HP %d, "
             "Status %04x)\n", alt, s_modell, re15_player_equipped_weapon(), (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp,
             (unsigned)g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags, w0, hp0, st0);

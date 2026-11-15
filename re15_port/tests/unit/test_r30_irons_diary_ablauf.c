@@ -107,13 +107,14 @@ static void teil_s(void)
     printf("\n[S] Speicherstand v9\n");
 
     /* S1 Layout */
-    CHECK(RE15_SAVE_VERSION == 9, "RE15_SAVE_VERSION = %d (Soll 9)", RE15_SAVE_VERSION);
-    CHECK(sizeof(re15_savedata_t) == 944 &&
+    /* Runde 42 Story STAGE3a: v10 = v9 + story_r42[96] vor checksum (re15_savedata.h); files[] bleibt @916 */
+    CHECK(RE15_SAVE_VERSION == 10, "RE15_SAVE_VERSION = %d (Soll 10)", RE15_SAVE_VERSION);
+    CHECK(sizeof(re15_savedata_t) == 1040 &&
           offsetof(re15_savedata_t, visited_floor) == 900 &&
           offsetof(re15_savedata_t, files) == 916 &&
-          offsetof(re15_savedata_t, checksum) == 940,
+          offsetof(re15_savedata_t, checksum) == 1036,
           "Layout: sizeof %u, visited_floor @%u, files @%u, checksum @%u "
-          "(Soll 944 / 900 / 916 / 940)",
+          "(Soll 1040 / 900 / 916 / 1036)",
           (unsigned)sizeof(re15_savedata_t),
           (unsigned)offsetof(re15_savedata_t, visited_floor),
           (unsigned)offsetof(re15_savedata_t, files),
@@ -138,7 +139,7 @@ static void teil_s(void)
         re15_files_reset();
         CHECK(re15_files_count() == 0, "Liste geleert");
         int ok = re15_memcard_load(mcr, 1, &ld) == 0 && re15_savedata_restore(&ld, &room) == 0;
-        CHECK(ok && ld.version == 9, "laden + wiederherstellen, Version %u", ld.version);
+        CHECK(ok && ld.version == RE15_SAVE_VERSION, "laden + wiederherstellen, Version %u", ld.version);
         CHECK(re15_files_get(0) == 0 && re15_files_count() == 1,
               "Rundlauf: Platz 0 = Dokument %d, belegt %d (Soll 0 / 1)",
               re15_files_get(0), re15_files_count());
@@ -167,7 +168,7 @@ static void teil_s(void)
             for (int i = 0; i < 24; i++) if (ld.files[i] != 0xFF) alle_ff = 0;
             /* ld.visited_floor = fremdes Feld (karten-marken hebt es mit echten Bits),
              * hier bewusst NICHT geprueft - s. Kopf */
-            if (ld.version == 9 && alle_ff &&
+            if (ld.version == RE15_SAVE_VERSION && alle_ff &&
                 ld.checksum == re15_savedata_checksum(&ld)) gehoben++;
         }
         printf("  Nutzer-Karte: %d belegte Plaetze, roh v8: %d, gehoben v9 mit leerer Liste: %d\n",
@@ -192,7 +193,7 @@ static void teil_s(void)
         uint32_t ck = summe(p, off);
         memcpy(p + off, &ck, sizeof ck);
         re15_savedata_t v7 = sd;
-        CHECK(re15_savedata_validate(&v7) == 0 && v7.version == 9 && v7.visited[0] == 0 &&
+        CHECK(re15_savedata_validate(&v7) == 0 && v7.version == RE15_SAVE_VERSION && v7.visited[0] == 0 &&
               v7.files[0] == 0xFF && v7.files[23] == 0xFF,
               "Hebung v7 -> v9: Version %u, visited[0] %02x (Soll 0, v<8 verworfen), "
               "files[0] %02x", v7.version, v7.visited[0], v7.files[0]);

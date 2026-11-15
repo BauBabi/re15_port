@@ -5,6 +5,8 @@
 #include "re15_map_owned.h"
 #include "re15_scd.h"        /* re15_game_flag_get */
 #include "re15_kartenitems_r36.h"  /* Runde 36 Spur N: Polizei-Lageplaene (Bank-9-Bits 87/88/89/77/78) */
+#include "re15_story3a_r42.h"     /* Runde 42 Story STAGE3a: RE15_S3A_FABRIK_BLATT */
+#define RE15_S3A_FABRIK_BLATT_OWNED RE15_S3A_FABRIK_BLATT
 
 /*-------------------------------------------------------------------------
  * DIE FUNDSTELLEN — GESUCHT, NICHT GESETZT.
@@ -93,6 +95,8 @@ int re15_map_owned_page(unsigned page)
             return 1;
     /* Runde 36 Spur N: die fuenf Polizei-Lageplaene (NUTZER-VORGABE, keine RDT-Fundstelle — deshalb
      * NICHT in s_map_funde, deren Riegel nur RDT-belegte Stellen zulaesst). */
+    { extern int re15_story3a_r42_blatt(unsigned);   /* Runde 42 Story STAGE3a: Fabrikplan aus Marvins Uebergabe (Bit 35, L6/F-05) */
+      if (re15_story3a_r42_blatt(page)) return 1; }
     return re15_kartenitems_r36_blatt_besitz(page);
 }
 
@@ -104,5 +108,7 @@ uint32_t re15_map_owned_bits(void)
         if (s_map_funde[i].page < 32 &&
             re15_game_flag_get(s_map_funde[i].bank, s_map_funde[i].bit))
             m |= (uint32_t)1u << s_map_funde[i].page;
+    { extern int re15_story3a_r42_blatt(unsigned);
+      if (re15_story3a_r42_blatt(RE15_S3A_FABRIK_BLATT_OWNED)) m |= (uint32_t)1u << RE15_S3A_FABRIK_BLATT_OWNED; }   /* Runde 42 Story STAGE3a */
     return m | re15_kartenitems_r36_besitz_bits();   /* Runde 36 Spur N */
 }

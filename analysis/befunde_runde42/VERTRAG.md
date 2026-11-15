@@ -314,7 +314,8 @@ Besonderheiten:
 - 6031 (E6): msg 0 bleibt ("Elza: Sherry! Is anyone else here?", story_r36), msg 1/2 Neutext, 12/13 neu; E9 14..17.
 - 5140/5141 msg 0: der Disc-Satz " / It's open on this end." (nie gezeigt, keine Aufnahme) wird Annettes bzw. Sherrys
   Lautsprecher-/Rufzeile.
-- 3060 msg 20 ("You've received the Super Redhawk.") ist eine Ergaenzung analog L6 (das Konzept nennt nur Marvins Satz).
+- 3060 msg 20 ("You've received the Super Redhawk.") ist eine Ergaenzung analog L6 (das Konzept nennt nur Marvins Satz); gebaut
+  als "You've received the <Name>." je Fund (4.2).
 - Elza-Saetze aus Leons Fassung abgeleitet (Kette fuer beide): 50F1 msg 0, 4091 msg 16.
 - 3020 msg 0..2: die "Glaettung" aus L5 (Vorschlag des Konzepts) - Neutext + Neuaufnahme.
 
@@ -343,6 +344,17 @@ Besonderheiten:
 - L1b/K-02: 11A0-Seite = 11A0/11A1 main00 Slot 0 (msg 2 @0x00F42 bei (3,151)=0, sonst Door_aot_set @0x00F5A). Riegel im Original
   auf der 2070-Seite (sub02 @0x0CDA). K-03: 2040/2041 Slot 4 @0x0131C (Galerie, Band 5) <-> 2070 Slot 5 @0x0B1C.
 - L3/E2 (Leiter 11A0/11A1) und E-11 (50E0/50F1): noch nicht gemessen (spaetere Stufen).
+
+### 4.2 Gemessen und gebaut (Stufe STAGE3a, 2026-11-15; Belege im Kopf von `re15_port/include/re15_story3a_r42.h`)
+- T-01/T-02: Figurwechsel nach RE2 FUN_80068f9c (Eintritt @0x80068fc8..@0x800690f4, Rueckweg @0x80069108..@0x800691e8). Die
+  Sicherung (Leons 11 Plaetze, Ausruest-Platz, Waffe; Marvins Funde bis zur Uebergabe) liegt im Spielstand v10 (`story_r42[96]`
+  vor checksum, v9 wird gehoben). Marvins Seite = Leons Startmengen @0x80074bb8/@0x80074bd0 ohne Messer, Platz 0, Waffe 3.
+- 3060 msg 19/20: msg 19 kommt, wenn Marvin ausser Keycard/Pistole/Munition IRGENDETWAS gefunden hat (F-06 "alle Funde"), msg 20
+  wird je Fund zur Laufzeit gebaut: "You've received the <Name>." mit dem Namen aus derselben Namensbank wie "Will you take the
+  <Name>?" (item_prompt_common.c re15_item_prompt_name). Ohne Keycard bei Marvin (er hat sie liegen lassen) entfallen 15/16/21.
+- L-10: die Kartentuer 3010 braucht keinen eigenen Riegel - die Kistenregel K7 (kistenregel_r37.c @0x020AE) verlangt die Karte im
+  Inventar, und die liegt bis zur Uebergabe in Marvins Seite (gemessen unit_r42_story3a_karte3010).
+- Bank 5 Signale 0x14..0x1A und Ankunftsbits 0x20/0x21 in 3020/3060 (3020-Skripte nutzen nur 5:0/5:1, 3060 keine).
 
 ## 5. Gemeinsame Dateien (nur kleine Haken, Kommentar "Runde 42 Story")
 Wie Runde 41 (VERTRAG R41 1.3). Tabu: `synchro/`, `pri/`, `Cutscenes/`, `Version_80%/`, `release/`. Neue Bits nur

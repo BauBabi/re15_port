@@ -93,6 +93,37 @@ static int re15_prompt_name_ist_schluessel(uint8_t item_id)
     return 0;
 }
 
+/* Name eines Gegenstands als Glyphen der Spielschrift, 0x07-terminiert; NULL = kein Name. Dieselbe Quellen-Reihenfolge, die der
+ * Skript-Lauf (Opcode 0x06) bis Runde 41 inline hatte - herausgezogen in Runde 42 (Story STAGE3a), damit die Uebergabe-Meldung
+ * "You've received the <Name>." (story3a_r42.c) denselben Namen liest wie "Will you take the <Name>?".
+ *   1. Dokument-Tabelle ab Id 0x48 (Runde 30, re15_files_doc; RE2 `sb a1,-30913(at)` @0x800518a0)
+ *   2. Port-Namen: Schluessel 0x42/0x45 (Runde 36 Q), leerer Loescher (37 I), Dining Room Key 0x43 (38 F), Crank 0x33 (41 O),
+ *      Water Key 0x34 (41 F)
+ *   3. ausgelieferte Namensbank (Offsettabelle 102 u16 @0x800c495c, Blob @0x800c4a28; Reader FUN_80028840 @0x80028840). */
+static const unsigned char *name_glyphen(uint8_t item_id)
+{
+    const re15_file_doc_t *d = re15_files_doc(re15_files_doc_from_item((int)item_id));
+    if (d) return d->name;
+    const uint8_t *nm = re15_schluessel_r36_name(item_id);
+    if (!nm) nm = re15_feuerloescher_r37_name(item_id);
+    if (!nm) nm = re15_dining_r38_name(item_id);
+    if (!nm) nm = re15_keyitems_r41_name(item_id);
+    if (!nm) nm = re15_gatorszene_r41_name(item_id);
+    if (nm) return nm;
+    /* Grenze = die physische Ausdehnung der Original-Offsettabelle (102); das Original maskiert nur `andi a0,a0,0xff`. */
+    if ((int)item_id < RE15_ITEM_PROMPT_NIDS) return re15_item_prompt_name_blob + re15_item_prompt_name_off[item_id];
+    return NULL;
+}
+
+int re15_item_prompt_name(uint8_t item_id, uint8_t *out, int max)
+{
+    const unsigned char *nm = name_glyphen(item_id);
+    int n = 0;
+    if (!nm) return 0;
+    for (; *nm != 0x07 && n < max; nm++) out[n++] = *nm;
+    return n;
+}
+
 int re15_item_prompt_walk(int prompt_type, uint8_t item_id, int max_glyphs,
                           re15_prompt_glyph_cb cb, void *ctx)
 {
@@ -166,35 +197,8 @@ int re15_item_prompt_walk(int prompt_type, uint8_t item_id, int max_glyphs,
              * ist der Name der Meldung die Item-Id des Dokuments (`sb a1,-30913(at)`
              * @0x800518a0 = 0x800e873f, Id = Dokument + 104). */
             {
-                const re15_file_doc_t *d =
-                    re15_files_doc(re15_files_doc_from_item((int)item_id));
-                if (d) {
-                    const unsigned char *nm = d->name;
-                    for (; *nm != 0x07; nm++) {
-                        if (cb && total < max_glyphs) cb(ctx, *nm, attr, 0);
-                        total++;
-                    }
-                    continue;
-                }
-            }
-            {   /* Runde 36 Spur Q: Port-Name der zwei Schluessel (re15_schluessel_r36.h), 0x07-terminiert. */
-                const uint8_t *nm = re15_schluessel_r36_name(item_id);
-                if (!nm) nm = re15_feuerloescher_r37_name(item_id);   /* Runde 37 Spur I: leerer Loescher */
-                if (!nm) nm = re15_dining_r38_name(item_id);          /* Runde 38 Spur F: Dining Room Key */
-                if (!nm) nm = re15_keyitems_r41_name(item_id);        /* Runde 41 Spur O: Crank (Id 0x33) */
-                if (!nm) nm = re15_gatorszene_r41_name(item_id);      /* Runde 41 Spur F: Water Key (Id 0x34) */
-                if (nm) { for (; *nm != 0x07; nm++) { if (cb && total < max_glyphs) cb(ctx, *nm, attr, 0); total++; } continue; }
-            }
-            /* Grenze = die physische Ausdehnung der Original-Offsettabelle (102, s. Kopf),
-             * nicht ein gewaehltes Limit. Das Original maskiert nur `andi a0,a0,0xff` und
-             * wuerde fuer >= 102 in den Blob hinein indizieren; der Port braucht hier eine
-             * echte Schranke, weil die Tabellen getrennte C-Arrays sind. */
-            if ((int)item_id < RE15_ITEM_PROMPT_NIDS) {
-                const unsigned char *nm = re15_item_prompt_name_blob + re15_item_prompt_name_off[item_id];
-                for (; *nm != 0x07; nm++) {
-                    if (cb && total < max_glyphs) cb(ctx, *nm, attr, 0);
-                    total++;
-                }
+                const unsigned char *nm = name_glyphen(item_id);   /* Reihenfolge der Quellen: name_glyphen */
+                if (nm) for (; *nm != 0x07; nm++) { if (cb && total < max_glyphs) cb(ctx, *nm, attr, 0); total++; }
             }
             continue;
         }

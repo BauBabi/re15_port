@@ -82,8 +82,22 @@ int re15_savedata_validate(re15_savedata_t *sd)
     if (!sd) return -1;
     if (sd->magic != RE15_SAVE_MAGIC) return -1;
 
-    if (sd->version >= 9) {
+    if (sd->version >= 10) {
         return (sd->checksum == re15_savedata_checksum(sd)) ? 0 : -1;
+    }
+    if (sd->version == 9) {
+        /* ---- HEBUNG v9 -> v10 (Runde 42 Story STAGE3a): v9 = v10 ohne story_r42[]; sein Pruefwort sitzt dort, wo story_r42
+         * beginnt (Offset 940), und deckt [0, 940). Muster: die v7/v8-Hebung unten. Ein v9-Stand hat keinen Figurentausch. */
+        size_t off = offsetof(re15_savedata_t, story_r42);
+        uint32_t old_ck, sum = 0;
+        const uint8_t *p = (const uint8_t *)sd;
+        memcpy(&old_ck, p + off, sizeof old_ck);
+        for (size_t i = 0; i < off; i++) sum += p[i];
+        if (sum != old_ck) return -1;
+        memset(sd->story_r42, 0, sizeof sd->story_r42);
+        sd->version  = RE15_SAVE_VERSION;
+        sd->checksum = re15_savedata_checksum(sd);
+        return 0;
     }
     if (sd->version == 7 || sd->version == 8) {
         /* ---- HEBUNG v7/v8 -> v9 (Runde 30, SPEICHER-VERTRAG) ------------------------
@@ -116,6 +130,7 @@ int re15_savedata_validate(re15_savedata_t *sd)
         /* files: ein Alt-Stand hat keine FILE-Liste -> alle 24 Plaetze leer (0xFF;
          * RE2 24 Plaetze, `sltiu v0,a1,0x18` @0x80069308). */
         memset(sd->files, 0xFF, sizeof sd->files);
+        memset(sd->story_r42, 0, sizeof sd->story_r42);   /* v10: kein Figurentausch */
         sd->version  = RE15_SAVE_VERSION;
         sd->checksum = re15_savedata_checksum(sd);
         return 0;
@@ -231,6 +246,8 @@ void re15_savedata_capture(re15_savedata_t *out, uint32_t playtime, uint16_t sav
      * 0x800D4B68 - 0x800D44A4; geschrieben 0x800 Byte `addiu v0,zero,2048`
      * @0x801c0c70, MEM_CARD.BIN laedt @0x801BFA18). */
     re15_files_export(out->files);
+    /* v10: Figurentausch Leon <-> Marvin (Runde 42 Story STAGE3a, re15_story3a_r42.h). */
+    { extern void re15_story3a_r42_export(uint8_t out[96]); re15_story3a_r42_export(out->story_r42); }
 
     out->checksum = re15_savedata_checksum(out);
 }
@@ -291,6 +308,9 @@ int re15_savedata_restore(const re15_savedata_t *in, uint16_t *loaded_room)
         g_scd.work_vars[0x10] = vm;
         re15_vest_model_mark(vm);
     }
+    /* v10: Figurentausch (Runde 42 Story STAGE3a). Spielt Marvin, setzt der Import work_vars[0x10] = 0x0D (im Original-Save liegt
+     * DAT_800b0ff0 bei Block+0x234 im memcpy @0x80026294-a0) - der Lade-Weg zieht das Modell danach nach (main.c CONTINUE). */
+    { extern void re15_story3a_r42_import(const uint8_t in[96]); re15_story3a_r42_import(in->story_r42); }
     re15_itembox_import(in->box);        /* v4 ITEM BOX contents survive load */
     { extern int re15_messer_aus_inventar(void);   /* Runde 35 Spur E: Messer alter Staende raus */
       (void)re15_messer_aus_inventar(); }         /* (Inventar + Kiste), re15_messer.h          */

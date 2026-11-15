@@ -4660,6 +4660,7 @@ re_title:;
      * with this. Phase 2b: the full inventory screen renders g_inv + the item classification.) */
     { extern void re15_messer_startinventar(void);   /* Runde 35 Spur E: Starttabelle @0x80074bb8 OHNE */
       re15_messer_startinventar(); }                 /* Messer, 25c8 = 0x80 -> Messer (re15_messer.h)  */
+    { extern void re15_story3a_r42_neues_spiel(void); re15_story3a_r42_neues_spiel(); }   /* Runde 42 Story STAGE3a: kein Figurentausch */
     re15_itembox_init();   /* ITEM BOX starts empty (the RE1.5 new-game zero loop shape
                             * FUN_8003e4f4 @0x8003e52c-554; a CONTINUE load overwrites
                             * it from the v4 save block right after). */
@@ -5334,10 +5335,13 @@ re_title:;
         /* TEST-HAKEN (kein Spielverhalten): RE15_SAVE_TEST_AGAIN=<frame> feuert einen ZWEITEN
          * Save-Point im selben Prozess. Der Save-Zaehler ist Sitzungs-Zustand (DAT_800b0fbd),
          * also braucht sein Pin zwei Saves in EINER Sitzung. */
-        { static int s_save_again = -2;
+        { static int s_save_again = -2; static unsigned s_save_raum = 0;   /* Runde 42 Story STAGE3a: "<bild>#<raum>" = nur in diesem Raum */
           if (s_save_again == -2) { const char *sa = getenv("RE15_SAVE_TEST_AGAIN");
-                                    s_save_again = (sa && *sa) ? atoi(sa) : -1; }
-          if (s_save_again >= 0 && (int)g_engine.frame_count == s_save_again)
+                                    s_save_again = (sa && *sa) ? atoi(sa) : -1;
+                                    const char *hs = sa ? strchr(sa, 0x23) : NULL;
+                                    if (hs) s_save_raum = (unsigned)strtoul(hs + 1, NULL, 16); }
+          if (s_save_again >= 0 && (int)g_engine.frame_count == s_save_again &&
+              (s_save_raum == 0 || (unsigned)g_current_room_id == s_save_raum))
               re15_savepoint_set_pending(1); }
         if (re15_savepoint_pending()) {
             re15_savepoint_set_pending(0);
@@ -7600,12 +7604,14 @@ re_title:;
                      * re15_room_apply_pending vorbeibootete und darum anderes zeigte als das Spiel. */
                     {
                         static int dj_room = -1, dj_frame = 0, dj_read = 0, dj_done = 0;
+                        static unsigned dj_im_raum = 0;   /* Runde 42 Story STAGE3a: "<raum>@<bild>#<aus-raum>" = erst in diesem Raum */
                         if (!dj_read) {
                             dj_read = 1;
                             const char *dj = getenv("RE15_DEBUG_JUMP");
                             if (dj && *dj) {
                                 unsigned r = 0; int f = 0;
                                 if (sscanf(dj, "%x@%d", &r, &f) >= 1) { dj_room = (int)r; dj_frame = f; }
+                                { const char *hs = strchr(dj, 0x23); if (hs) dj_im_raum = (unsigned)strtoul(hs + 1, NULL, 16); }
                                 /* "@gp" = springe, sobald das SPIEL wirklich spielbar ist. Ein fester
                                  * Frame reicht nicht: waehrend des Intros halten die Latches
                                  * flag(1,27)/flag(2,7) den Spieler jeden Frame auf player_mode 2
@@ -7615,7 +7621,7 @@ re_title:;
                                 if (strstr(dj, "@gp")) dj_frame = -1;
                             }
                         }
-                        if (dj_room >= 0 && !dj_done &&
+                        if (dj_room >= 0 && !dj_done && (dj_im_raum == 0 || (unsigned)g_current_room_id == dj_im_raum) &&
                             (dj_frame < 0 ? (g_scd.player_mode != 2 && g_engine.frame_count > 60)
                                           : ((int)g_engine.frame_count >= dj_frame))) {
                             dj_done = 1;

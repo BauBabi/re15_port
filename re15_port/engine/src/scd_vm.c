@@ -698,7 +698,9 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_ventilkette_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur C: 2030/17-27, 2050/2+4+9, 2010/20 (re15_ventilkette_r41.h; 2080 seit Nachtrag 7 Original) */
     if (!pc) pc = re15_gatorszene_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur F: 2090/2091 + 2080/2081 Ereignis 18 */
     if (!pc) { extern const uint8_t *re15_story2_r42_ereignis(uint16_t, uint8_t);
-               pc = re15_story2_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 Story STAGE2: 2080 Ereignis 2 (+Hinweis) + 30, 2070/11A0/2040 Ereignis 30 */
+               pc = re15_story2_r42_ereignis((uint16_t)g_current_room_id, event_id); }
+    if (!pc) { extern const uint8_t *re15_story3a_r42_ereignis(uint16_t, uint8_t);
+               pc = re15_story3a_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 Story STAGE3a: 3020 Ereignis 2 = sub02 mit Zeilen 7/8 (Leon) */   /* Runde 42 Story STAGE2: 2080 Ereignis 2 (+Hinweis) + 30, 2070/11A0/2040 Ereignis 30 */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -781,7 +783,8 @@ void scd_vm_tick(void)
     if (!s_vm_room_init) re15_elzazombies_r39_tick();   /* Runde 39 Spur Q: Flanke (9,97), Montage, Halten 1061 */
     if (!s_vm_room_init) { extern void re15_kanister2080_r41_tick(void); re15_kanister2080_r41_tick(); }   /* Runde 41 Spur G: Ausloeser 2090, Signale/Wurf 2080 */
     if (!s_vm_room_init) { extern void re15_story2_r42_tick(void); re15_story2_r42_tick(); }   /* Runde 42 Story STAGE2: Signale der 2080-Szene, Uhr-Hinweis 2090 */
-    if (!s_vm_room_init) { extern void re15_story1_r42_tick(void); re15_story1_r42_tick(); }   /* Runde 42 Story STAGE1: Ausloesung, Signale, Abblende der Szene an der Leiter 11A0/11A1 */
+    if (!s_vm_room_init) { extern void re15_story1_r42_tick(void); re15_story1_r42_tick(); }
+    if (!s_vm_room_init) { extern void re15_story3a_r42_tick(void); re15_story3a_r42_tick(); }   /* Runde 42 Story STAGE3a: Signale/Abblende/Schuesse 3060, Wiedersehen, "Gunshots" 3020 */   /* Runde 42 Story STAGE1: Ausloesung, Signale, Abblende der Szene an der Leiter 11A0/11A1 */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
 
@@ -1292,6 +1295,9 @@ static int op_evt_exec(scd_thread_t *t)
     /* Runde 41 Spur AN: ROOM5090 sub01 @0x01296 Evt_exec sub04 -> Annette-Szene davor; ROOM6030 sub07 @0x01132 /
      * sub06 @0x010C4 Evt_exec sub05 -> Zugstart-Szene bzw. Tuer nach 5090 noch zu (re15_annette_r41.h). */
     target_pc = re15_annette_r41_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
+    /* Runde 42 Story STAGE3a: ROOM3060 sub00 @0x0102A Evt_exec sub03 -> Marvin-Szene mit Ausruf, Schuessen, Abblende (re15_story3a_r42.h). */
+    { extern const uint8_t *re15_story3a_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
+      target_pc = re15_story3a_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
     if (!target_pc) return 1;   /* no such sub → drop */
 
     int slot;
