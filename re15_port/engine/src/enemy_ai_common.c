@@ -12343,9 +12343,12 @@ static void re15_birkin_ai_tick(int slot)
                 re15_birkin_clip(e, 3);
                 if (e->grid_id & 0x10) e->anim_frame = 0x14;           /* form-2 anim seed @0x80117600 */
                 e->anim_frac = 0xf; e->sub_state_2 = 1;
+                /* Drehung FUN_8001aac4(Spieler, 0x50) NUR hier in Phase 0 (`jal 0x8001aac4` @0x80117624, a2 = 0x50 @0x80117628):
+                 * Phase 1 beginnt bei 0x8011762c, danach dreht der Hieb nicht mehr nach (weitere Aufrufe nur beim Abbruch
+                 * @0x801176c8, in Phase 2 @0x801178a8 und Phase 5 @0x80117994). */
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x50);
             }
-            if (e->sub_state_2 == 1) {                 /* phase 1 @0x8011762c: strike */
-                re15_enemy_steer_point(e, pl->x, pl->z, 0x50);         /* steer 0x50 @0x80117624 */
+            if (e->sub_state_2 == 1) {                 /* phase 1 @0x8011762c: strike (keine Drehung) */
                 /* anim_set @0x80117640 (a3 = 0x100 @0x80117644), advance before the window read. +0x6 += Rueckgabe UNBEDINGT
                  * vor dem Tor (`lbu v1,6(a2)` @0x8011765c / `addu v1,v1,v0` @0x80117664 / `sb v1,6(a2)` @0x8011766c im
                  * Delay-Slot des arc_test): am Clip-Ende ist +0x6 = 2 -> naechstes Bild Phase 2 @0x80117888 (HUB, +0x1df = 0x1e).
@@ -12355,6 +12358,7 @@ static void re15_birkin_ai_tick(int slot)
                 /* continue-gate @0x80117668: (arc(0x400) && dist<0xfa1) || frame>=0x1e; else abort (phase 2) when frame<0x1e */
                 if (!re15_bk_arc(e, pl, 0xfa1, 0x400) && e->anim_frame < 0x1e) {
                     e->sub_state_2 = 2;                                /* abort @0x801176b8 */
+                    re15_enemy_steer_point(e, pl->x, pl->z, 0x50);     /* `jal 0x8001aac4` @0x801176c8, a2 = 0x50 @0x801176cc */
                 } else if (e->anim_frame >= 0x24 && e->anim_frame <= 0x2b) {
                     /* damage window [0x24..0x2b] tested EVERY frame (`addiu v0,v0,-36` / `sltiu v0,v0,0x8` @0x801176ec-f0),
                      * Angriffsbox @0x80117710 (Versatz (800,337,0) @0x80100390, Reichweite 900 @0x80100398) */
@@ -12394,6 +12398,7 @@ static void re15_birkin_ai_tick(int slot)
                 re15_enemy_steer_point(e, pl->x, pl->z, 0x50);         /* @0x801178a8 */
             } else if (e->sub_state_2 == 5) {          /* phase 5 @0x80117974: -> HUB, +0x1df=0x3c */
                 e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* +0x4 = 0x101 (Wort) @0x8011797c-980 */
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x50);         /* `jal 0x8001aac4` @0x80117994, a2 = 0x50 @0x80117998 */
                 e->birkin_atk_cd = 0x3c;                               /* +0x1df = 0x3c @0x801179a4-a8 */
             } else {                                   /* phase 3 @0x801178c0, faellt in Phase 4 @0x80117904 */
                 if (e->sub_state_2 == 3) {
