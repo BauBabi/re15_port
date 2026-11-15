@@ -1237,7 +1237,27 @@ static int bf_video_welt(const bf_schwanzpunkt_t *q, const re15_actor_t *b, int3
  *     (244,192) rechts neben dem Bein, Austritt wie h70; j 108 / 36,2 = 2,99 -> 5.
  *   Nachher (960x720, mass3.py): h58-h61 1330 / 1564 / 2004 / 1918, h71 1366 Schwanzpunkte (Video 30: etwa 1500-1900), ueber dem Guertel 0,
  *   vor dem Koerper hoechstens 35; frei 0; Bilder ausser h10-h17, h29-h35, h57-h61, h71 bitgleich zu Runde 3 (dazu h146 / h152 / h153: 147-520
- *   Kantenpunkte, Gelenke auf 0,01 gleich). Riegel integration_r41_schwanz_zusammen (3) F258-F316, (5b), (7). */
+ *   Kantenpunkte, Gelenke auf 0,01 gleich). Riegel integration_r41_schwanz_zusammen (3) F258-F316, (5b), (7).
+ * Runde 41 Schwanz r9 Runde 5 (Pruefer r9 Runde 4, scratchpad schwanz_r9/pruefung_r4/PRUEFUNG.md: h30-h34 "unter dem Schritt ein kurzer rosa
+ * Klumpen/Stummel zwischen den Oberschenkeln" (511-1221 Punkte 960x720), h30/h31 geknickt (Bildknick 107 / 84 Grad am Gelenk 6), h72 derselbe
+ * Klumpen (483 Punkte); im Original liegt dort ein Stueck schraeg zwischen den Knien). Gemessen (scratchpad schwanz_r9/r5, vier Laeufe 960x720,
+ * Gelenke RE15_SCHWANZ_LOG, laenge.py = Ausdehnung der Schwanzmaske entlang ihrer Hauptachse):
+ *   - Ursache h30-h34: j 6 = nur das letzte Glied und die Nadel (2,4 Glieder) ab dem Austritt hinter dem Schritt; die Spitze (Videopunkte + Jeans-
+ *     Verschiebung) lag 5-18 Punkte (320x240) unter dem Austritt. Die Kette faltete sich am Gelenk 6 unter dem Schritt: sichtbar 11-24 Punkte
+ *     (320x240) lang, 14-17 breit = Klumpen.
+ *   - Original (Video 30 links, Bild h + 8; rosa Punkte a* > 14, L* > 25 in Video x 290-440, y 300-420): h30-h34 ein Stueck 21-39 Videopunkte lang
+ *     (169-357 Punkte), unten links zwischen den Knien; h72 0 Punkte (kein Schwanz unter dem Schritt), h71 / h73 ebenso 0.
+ *   - Port-Beine (Lauf ohne Schwanz minus ohne Birkin, Zeile 190 320x240): Luecke zwischen den Knien x 172,3 .. 215,3, Schritt-Unterkante
+ *     (Spalte 195) Zeile 161,7-162,7.
+ *   Aenderung (PORT-SZENE, Sichel-Form und Szene auf keiner Disc, keine @0x-Konstante):
+ *   - h30 / h32 / h34: Spitze (art 5) Video (366,398) = Port (182,0 / 190,8): in der Kniezeile 9,7 Punkte rechts vom linken Knie innen, wie im
+ *     Original links unten; Austritt unveraendert (Jeans-Registrierung r9 R4, +600 hinter dem Schritt); j 6 -> 5 = 3,4 Glieder ab dem Austritt
+ *     (Versuche: j 4 mit Spitze am Boden (360,425) 45-46 Punkte lang = 1,8 x Original; j 5 (360,405) 37,9; j 5 (366,398) 31,5-33,0).
+ *   - h35: Zeile 35 = h36 (hinter dem Koerper). Ohne sie zeigte die Ueberblendung h34 -> h36 51 Punkte (7 davon 75 Zeilen ueber dem Guertel).
+ *   - h72: Einzelbild-Zeile (k_schwanz_v8_einzel) hinter dem Koerper wie h36 = Original h72. Als Einzelbild, weil h73 die Mitte der Zeilen 72 und
+ *     74 ist und unveraendert bleiben soll.
+ *   Nachher (960x720): h30-h34 1908-1973 Schwanzpunkte, 31,5-33,0 Punkte lang (320x240; Videolinie 20,0 / 25,0 / 20,4), Bildknick hoechstens
+ *   0,9 Grad, vor dem Koerper 0; h35 und h72 0 Punkte. Riegel integration_r41_schwanz_zusammen (4) mit kleinen Stuecken und (8). */
 typedef struct { int16_t h, sx, sy, sart, stiefe, vj, vx, vy, vart, vtiefe, pfeil, verdeckt; } bf_schwanz_v8_t;
 static const bf_schwanz_v8_t k_schwanz_v8[] = {
     /* h   Spitze              j  Austritt           pfeil verdeckt   Videolinie (Pfeil Videopunkte, sichtbare Glieder) */
@@ -1252,10 +1272,13 @@ static const bf_schwanz_v8_t k_schwanz_v8[] = {
     {  26, 245, 290, 4,    0,  5, 366, 345, 1,  600,   0, 5 },   /* (300,345) -> (245,290) Spitze hoch, 2,16; r9 R2: Austritt im Port-Bein */
     {  28, 230, 298, 4,    0,  5, 368, 338, 1,  600,   0, 5 },   /* (262,338) -> (230,298), 1,40; r9 R2: Austritt im Port-Bein */
     {  29, 230, 298, 4,    0,  5, 368, 338, 1,  600,   0, 5 },   /* r9 R4: Stand h28 (sonst h29 Stueck vor dem rechten Oberschenkel) */
-    {  30, 381, 350, 5,    0,  6, 401, 345, 6,  600,   0, 6 },   /* zwischen den Knien, 1,12; r9 R2: Austritt wie h32 (Video 318,369);
-                                                               * r9 R4: Spitze (354,350) / Austritt (374,345) + 27 (Jeans), hinten */
-    {  32, 366, 378, 5,    0,  6, 400, 340, 6,  600,   0, 6 },   /* 1,37; r9 R4: (340,378) / (374,340) + 25,5 */
-    {  34, 384, 368, 5,    0,  6, 401, 330, 6,  600,   0, 6 },   /* 1,17; r9 R4: (358,368) / (375,330) + 25,5 */
+    {  30, 366, 398, 5,    0,  5, 401, 345, 6,  600,   0, 5 },   /* zwischen den Knien, 1,12; r9 R2: Austritt wie h32 (Video 318,369);
+                                                               * r9 R4: Austritt (374,345) + 27 (Jeans), hinten; r9 R5: Spitze schraeg
+                                                               * links unten zwischen die Knie, j 6 -> 5 (Kopf, r9 Runde 5) */
+    {  32, 366, 398, 5,    0,  5, 400, 340, 6,  600,   0, 5 },   /* 1,37; r9 R4: Austritt (374,340) + 25,5; r9 R5 wie h30 */
+    {  34, 366, 398, 5,    0,  5, 401, 330, 6,  600,   0, 5 },   /* 1,17; r9 R4: Austritt (375,330) + 25,5; r9 R5 wie h30 */
+    {  35, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 },   /* r9 R5: schon hinter dem Koerper wie h36 (die Ueberblendung h34 -> h36
+                                                               * zeigte sonst 51 Punkte 960x720, 7 davon 75 Zeilen ueber dem Guertel) */
     {  36, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 },   /* h36-h56 nicht sichtbar (wie k_schwanz_bahn); ganz verdeckt: die
                                                                * zusammengelegte Kette stand sonst als roter Stummel an der Flanke
                                                                * (Sichtpruefung, h38-h56; Video: nichts) */
@@ -1296,6 +1319,11 @@ static const bf_schwanz_v8_t k_schwanz_v8[] = {
                                                                * SF_belege/v8/bewegung/notiz.txt): hinter den Koerper
                                                                * wie h36-h56, dort freigeben */
 #define BF_SCHWANZ_V8_N ((int)(sizeof k_schwanz_v8 / sizeof k_schwanz_v8[0]))
+/* r9 Runde 5: Einzelbild-Zeilen. Sie gelten nur in genau diesem Takt; die Ueberblendung der Nachbartakte rechnet weiter mit k_schwanz_v8
+ * (h73 = Mitte der Zeilen 72 und 74 bleibt so bitgleich). Kopf k_schwanz_v8, r9 Runde 5. */
+static const bf_schwanz_v8_t k_schwanz_v8_einzel[] = {
+    {  72, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 } }; /* r9 R5: h72 hinter dem Koerper wie h36 (Original h72: 0 rosa Punkte
+                                                               * unter dem Schritt, Kopf k_schwanz_v8 r9 Runde 5) */
 /* Gewicht der Szenenfuehrung (Bahn, Rolle, Gelenkgrenze) je Videobild fuer V8: Anlauf ab h15 wie Referenz 2 / V2 / V4, aber voll ab h18 =
  * erstes Videobild mit sichtbarem Schwanz (video_linien.py h16 'nein', h18 'ja'; mit dem Anlauf bis h19 lag die Spitze h18 52 Videopunkte
  * daneben, Stand D). Der Bogen ist im Video bis h100 sichtbar, h102-h104 nur als Saum, ab h106 nicht mehr (bis h134); die Kette liegt h104
@@ -1353,6 +1381,8 @@ static void bf_schwanz_ziel_v8(const re15_actor_t *b, int h)
     int i = 0;
     while (i < BF_SCHWANZ_V8_N - 1 && h >= k_schwanz_v8[i + 1].h) i++;
     const bf_schwanz_v8_t *p0 = &k_schwanz_v8[i], *p1 = &k_schwanz_v8[i < BF_SCHWANZ_V8_N - 1 ? i + 1 : i];
+    for (int k = 0; k < BF_N(k_schwanz_v8_einzel); k++)          /* r9 Runde 5: Einzelbild-Zeile (u = 0) */
+        if (k_schwanz_v8_einzel[k].h == h) { p0 = p1 = &k_schwanz_v8_einzel[k]; break; }
     const bf_schwanzpunkt_t s0 = { 0, p0->sx, p0->sy, p0->sart, p0->stiefe }, s1 = { 0, p1->sx, p1->sy, p1->sart, p1->stiefe };
     const bf_schwanzpunkt_t v0 = { 0, p0->vx, p0->vy, p0->vart, p0->vtiefe }, v1 = { 0, p1->vx, p1->vy, p1->vart, p1->vtiefe };
     int32_t a[3], e[3], va[3], ve[3], z[3], vz[3], bg[3];
