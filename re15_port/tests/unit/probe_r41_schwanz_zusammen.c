@@ -23,6 +23,21 @@
  *   (4) SICHTBARER KNICK: Gelenke 0-7 im 320x240-Bild aus dem Messhaken RE15_SCHWANZ_LOG ([schwanz-bild]-Zeilen des Laufs N). Ein Gelenk
  *       1..6 zaehlt, wenn BEIDE Glieder daran sichtbar sind: im Bild >= 4 Punkte (320x240) lang und bei 30 % und 70 % ihrer Laenge ein
  *       Schwanzpunkt im Abstand <= 2 (320x240, auf die Bildgroesse umgerechnet). Fehler, wenn der Bildwinkel dort > knick_max Grad.
+ *
+ * Runde 3 (Pruefer r9 Runde 2, scratchpad schwanz_r9/pruefung_r2/PRUEFUNG.md: "rosa Wurzelstueck an der rechten Flanke bis ueber den Guertel"
+ * h59-h70, der Schwanz kommt seitlich aus der Taille statt in Hueft-Hoehe hinter der Huefte hervor; (3) sah es nicht, weil der Streifen
+ * NEBEN der Silhouette lag; dazu Entscheid des Orchestrators zu "braune Streifen an den Raendern": der Schwanz einheitlich ueber die Breite).
+ * Weitere optionale Argumente:  <taille_f0> <taille_f1> <ueber_max> [<ton_f0> <ton_f1> <ton_max_x10>]
+ *   (5) UEBER DER AUSTRITTSZEILE: in taille_f0..taille_f1 (Takt h = F - 243, nur h58-h72) je Bild die Schwanzpunkte ueber der Zeile
+ *       y_aus(h) - 4,5 (320x240, auf die Bildgroesse umgerechnet), auch neben der Silhouette. y_aus = Austritt des Original-Videos
+ *       (k_aus_video: Videozeile 640x480 je geradem h, analysis/befunde_runde41/SF_belege/v8/bewegung/tabelle_v8.json "austritt", ungerade h
+ *       linear), Port-Zeile (vy - 1,3) / 2,079 (Registrierung bf_video_welt); 4,5 = halbe Schwanzbreite (Median 9 Punkte der sichtbaren
+ *       Zeilen h58-h70, Lauf 4f2b7a354): so weit reicht der Rand eines schraeg hervorkommenden Schwanzes ueber seine Mittellinie. Fehler bei
+ *       mehr als ueber_max Punkten (320x240-Punkte; Messung scratchpad schwanz_r9/r3: 4f2b7a354 38-190 je Bild h58-h70, Runde 3 hoechstens 3).
+ *   (6) TON MITTE/RAND: in ton_f0..ton_f1 (Bogen) Querprofile senkrecht zu jedem Glied (Gelenke aus schwanz.log, Bildlaenge >= 5 Punkte
+ *       320x240) bei t 0,2..0,8: Halbbreite je Seite bis zum Rand der Schwanzmaske (beide >= 3), Mitte = Versatz |s| <= 0,2 w (5 Proben),
+ *       Rand je Seite 0,6 w .. 0,9 w (4 Proben). sRGB -> Lab (D65). Je Bild dEab = groesster Abstand in a*b* (ohne L* = Schattierung) der
+ *       Mittel Mitte / Rand einer Seite. Fehler, wenn dEab > ton_max_x10 / 10 oder weniger als 10 Bilder messbar.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,6 +93,91 @@ static int gelenke(const char *log, int f, double P[8][2])
     return ok;
 }
 
+/* (5) Austritt des Original-Videos (Videozeile 640x480) h58, h60, ..., h72 (tabelle_v8.json "austritt" y) */
+static const int k_aus_video[8] = { 322, 320, 325, 320, 320, 322, 322, 338 };
+
+static double aus_zeile(int h)                       /* Port-Zeile 320x240 */
+{
+    if (h < 58) h = 58;
+    if (h > 72) h = 72;
+    const int i = (h - 58) / 2, i1 = i < 7 ? i + 1 : i;
+    const double vy = k_aus_video[i] + (k_aus_video[i1] - k_aus_video[i]) * ((h - 58) % 2) / 2.0;
+    return (vy - 1.3) / 2.079;
+}
+
+static double lin(double c) { c /= 255.0; return c <= 0.04045 ? c / 12.92 : pow((c + 0.055) / 1.055, 2.4); }
+static double fl(double t) { return t > 0.008856 ? cbrt(t) : 7.787 * t + 16.0 / 116.0; }
+static void lab_von(const unsigned char *q, double o[3])
+{
+    const double r = lin(q[0]), g = lin(q[1]), b = lin(q[2]);
+    const double x = (0.412453 * r + 0.357580 * g + 0.180423 * b) / 0.950456, y = 0.212671 * r + 0.715160 * g + 0.072169 * b,
+                 z = (0.019334 * r + 0.119193 * g + 0.950227 * b) / 1.088754;
+    o[0] = y > 0.008856 ? 116.0 * cbrt(y) - 16.0 : 903.3 * y;
+    o[1] = 500.0 * (fl(x) - fl(y));
+    o[2] = 200.0 * (fl(y) - fl(z));
+}
+
+/* (6) Tonunterschied Mitte/Rand eines Bilds (dEab, siehe Kopf); -1 = zu wenig Proben */
+static double ton_bild(const bild_t *n, const unsigned char *sw, const double P[8][2])
+{
+    const int w = n->w, h = n->h;
+    const double sx = w / 320.0, sy = h / 240.0;
+    double sm[3] = { 0 }, sp[3] = { 0 }, sn[3] = { 0 }, o[3];
+    int cm = 0, cp = 0, cn = 0;
+    for (int g = 0; g < 7; g++) {
+        const double ax = P[g][0] * sx, ay = P[g][1] * sy, dx = P[g + 1][0] * sx - ax, dy = P[g + 1][1] * sy - ay, L = sqrt(dx * dx + dy * dy);
+        if (L < 5.0 * sx) continue;
+        const double nx = -dy / L, ny = dx / L;
+        for (int k = 2; k <= 8; k++) {
+            const double cx = ax + dx * k / 10.0, cy = ay + dy * k / 10.0;
+            int ws[2];
+            for (int sg = 0; sg < 2; sg++) {
+                const double sv = sg ? -1.0 : 1.0;
+                int m = 0;
+                while (m < 60) {
+                    const int x = (int)lround(cx + sv * nx * (m + 1)), y = (int)lround(cy + sv * ny * (m + 1));
+                    if (x < 0 || x >= w || y < 0 || y >= h || !sw[(size_t)y * w + x]) break;
+                    m++;
+                }
+                ws[sg] = m;
+            }
+            const int wm = ws[0] < ws[1] ? ws[0] : ws[1];
+            if (wm < (int)lround(3.0 * sx)) continue;
+            const int x0 = (int)lround(cx), y0 = (int)lround(cy);
+            if (x0 < 0 || x0 >= w || y0 < 0 || y0 >= h || !sw[(size_t)y0 * w + x0]) continue;
+            for (int sg = 0; sg < 2; sg++) {
+                const double sv = sg ? -1.0 : 1.0;
+                for (int q = 0; q < 4; q++) {
+                    const double s = ws[sg] * (0.6 + 0.1 * q);
+                    const int x = (int)lround(cx + sv * nx * s), y = (int)lround(cy + sv * ny * s);
+                    if (x < 0 || x >= w || y < 0 || y >= h) continue;
+                    lab_von(n->p + 3 * ((size_t)y * w + x), o);
+                    double *acc = sg ? sn : sp;
+                    for (int c = 0; c < 3; c++) acc[c] += o[c];
+                    if (sg) cn++; else cp++;
+                }
+            }
+            for (int q = 0; q < 5; q++) {
+                const double s = -0.2 * wm + 0.1 * wm * q;
+                const int x = (int)lround(cx + nx * s), y = (int)lround(cy + ny * s);
+                if (x < 0 || x >= w || y < 0 || y >= h) continue;
+                lab_von(n->p + 3 * ((size_t)y * w + x), o);
+                for (int c = 0; c < 3; c++) sm[c] += o[c];
+                cm++;
+            }
+        }
+    }
+    if (cm < 10 || cp < 10 || cn < 10) return -1.0;
+    double best = 0.0;
+    for (int sg = 0; sg < 2; sg++) {
+        const double *acc = sg ? sn : sp;
+        const int c_ = sg ? cn : cp;
+        const double da = acc[1] / c_ - sm[1] / cm, db = acc[2] / c_ - sm[2] / cm, d = sqrt(da * da + db * db);
+        if (d > best) best = d;
+    }
+    return best;
+}
+
 int main(int argc, char **argv)
 {
     if (argc < 6) { fprintf(stderr, "Aufruf: %s <N> <T> <L> <F0> <F1> [nah] [min_teil]\n", argv[0]); return 2; }
@@ -88,6 +188,13 @@ int main(int argc, char **argv)
     const double knick_max = extra ? atof(argv[10]) : 0.0;
     const int vor_f0 = extra ? atoi(argv[11]) : 0, vor_f1 = extra ? atoi(argv[12]) : -1;
     const int vor_promille = extra ? atoi(argv[13]) : 0, vor_min = extra ? atoi(argv[14]) : 0;
+    const int r3 = extra && argc > 17;
+    const int t_f0 = r3 ? atoi(argv[15]) : 0, t_f1 = r3 ? atoi(argv[16]) : -1, ueber_max = r3 ? atoi(argv[17]) : 0;
+    const int ton = r3 && argc > 20;
+    const int n_f0 = ton ? atoi(argv[18]) : 0, n_f1 = ton ? atoi(argv[19]) : -1;
+    const double ton_max = ton ? atof(argv[20]) / 10.0 : 0.0;
+    int fehler_ueber = 0, ueber_groesst = 0, fehler_ton = 0, ton_bilder = 0;
+    double ton_groesst = 0.0;
     int fehler = 0, bilder = 0, mit_schwanz = 0, fehler_vor = 0, fehler_knick = 0;
     double knick_groesst = 0.0;
     int vor_groesst = 0;
@@ -184,6 +291,28 @@ int main(int argc, char **argv)
                     fehler_knick++;
                 }
             }
+            if (r3 && f >= t_f0 && f <= t_f1 && f - 243 >= 58 && f - 243 <= 72) {
+                const int ymax = (int)ceil((aus_zeile(f - 243) - 4.5) * sy);      /* Zeilen y < ymax liegen ueber der Grenze */
+                int ub = 0;
+                for (int yy = 0; yy < ymax && yy < h; yy++)
+                    for (int xx = 0; xx < w; xx++) ub += sw[(size_t)yy * w + xx];
+                const int ub320 = (int)lround(ub / (sx * sy));
+                if (ub320 > ueber_groesst) ueber_groesst = ub320;
+                if (ub320 > ueber_max) {
+                    printf("F%d (5) UEBER DER AUSTRITTSZEILE h%d: %d Schwanzpunkte (320x240) ueber Zeile %.1f FEHLER\n", f, f - 243, ub320,
+                           aus_zeile(f - 243) - 4.5);
+                    fehler_ueber++;
+                }
+            }
+            if (ton && f >= n_f0 && f <= n_f1) {
+                const double d = ton_bild(&n, sw, P);
+                if (d >= 0.0) {
+                    ton_bilder++;
+                    if (d > ton_groesst) ton_groesst = d;
+                    printf("F%d (6) Ton Mitte/Rand dEab %.1f%s\n", f, d, d > ton_max ? " FEHLER" : "");
+                    if (d > ton_max) fehler_ton++;
+                }
+            }
             free(bb.p);
         }
         free(sw); free(fig); free(lab); free(stapel); free(n.p); free(t.p); free(l.p);
@@ -195,5 +324,11 @@ int main(int argc, char **argv)
                "(4) sichtbarer Knick: %d Fehlergelenke (groesster %.0f Grad, Grenze %.0f) -> %s\n",
                vor_f0, vor_f1, fehler_vor, vor_groesst, fehler_vor ? "SCHWANZ-VOR-KOERPER" : "VOR-OK",
                fehler_knick, knick_groesst, knick_max, fehler_knick ? "SCHWANZ-KNICK" : "KNICK-OK");
-    return (fehler || fehler_vor || fehler_knick) ? 1 : 0;
+    if (r3)
+        printf("(5) ueber der Austrittszeile F%d-F%d (h58-h72): %d Fehlerbilder (groesster Wert %d Punkte, Grenze %d) -> %s\n", t_f0, t_f1,
+               fehler_ueber, ueber_groesst, ueber_max, fehler_ueber ? "SCHWANZ-UEBER-TAILLE" : "TAILLE-OK");
+    if (ton)
+        printf("(6) Ton Mitte/Rand F%d-F%d: %d Bilder gemessen, %d Fehlerbilder (groesster dEab %.1f, Grenze %.1f) -> %s\n", n_f0, n_f1,
+               ton_bilder, fehler_ton, ton_groesst, ton_max, (fehler_ton || ton_bilder < 10) ? "SCHWANZ-RANDTON" : "TON-OK");
+    return (fehler || fehler_vor || fehler_knick || fehler_ueber || (ton && (fehler_ton || ton_bilder < 10))) ? 1 : 0;
 }

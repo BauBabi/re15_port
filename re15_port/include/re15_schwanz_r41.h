@@ -68,6 +68,11 @@ void re15_schwanz_r41_tiefe_frei(int slot, const int32_t kamera[3]);
 /* Runde 41 Schwanz r9 Runde 2: 1 = re15_schwanz_r41_tiefe_frei nimmt den hinteren Schnittpunkt (Stueck Austritt -> Spitze hinter dem Bein,
  * Tabellen-art 5 in k_schwanz_v8), 0 = den vorderen. */
 void re15_schwanz_r41_tiefe_hinten(int slot, int an);
+/* Runde 41 Schwanz r9 Runde 3: Beugerichtung (Welt, Q12) nur fuer das Stueck Wurzel -> Austritt (erster FABRIK-Abschnitt); NULL = wie
+ * re15_schwanz_r41_fuehrung. Die Szene gibt die Kameraachse (Tabellen-art 6 in k_schwanz_v8): der Ueberschuss liegt dann gerade hinter dem
+ * Koerper und laeuft im Bild zur Bildmitte (in den Rumpf) statt zur Mitte Austritt -> Spitze (aus der Taille heraus). bild_n_q12 / pfeil
+ * (NULL / 0 = aus): wie re15_schwanz_r41_bogen, aber nur fuer dieses Stueck (Bauch in der Bildebene zur Koerpermitte). */
+void re15_schwanz_r41_beuge_wurzel(int slot, const int32_t beuge_q12[3], const int32_t bild_n_q12[3], int32_t pfeil);
 /* Runde 41 SF V8 Schwanz-Bewegung: Bauchachse +e_h der Glieder (Knochenraum) - Hauptachse x-z der Ecken der Meshes 17-21, Seite = Innenseite
  * des Ruhebogens ueber alle Keyframes (nicht die Farbe). Rueckgabe 1 = gemessen. Spiel-Asset 66db2244 / d31f9534: (0,8956, 0, 0,4449). */
 int  re15_schwanz_r41_bauchachse(const re15_md1_t *md1, const re15_emd_skeleton_t *skel, float eh[3]);

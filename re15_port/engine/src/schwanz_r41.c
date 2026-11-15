@@ -254,6 +254,10 @@ static struct {
     int32_t  kam[3];                           /* Schwanz-Bewegung: Szenenkamera (freie Spitzentiefe) */
     int      tiefe_frei;                       /* Schwanz-Bewegung: 1 = Spitze entlang ihres Sehstrahls verschieben */
     int      tiefe_hinten;                     /* Schwanz r9 Runde 2: 1 = hinterer Schnittpunkt des Sehstrahls (Stueck hinter dem Bein) */
+    float    beuge_w[3];                       /* Schwanz r9 Runde 3: Beugerichtung nur Wurzel -> Austritt (Einheitsvektor, Welt) */
+    int      beuge_w_an;                       /* Schwanz r9 Runde 3: 1 = beuge_w statt beuge im ersten FABRIK-Abschnitt */
+    float    bild_w[3];                        /* Schwanz r9 Runde 3: Bauch Wurzel -> Austritt in der Bildebene (Einheitsvektor, Welt) */
+    float    pfeil_w;                          /* Schwanz r9 Runde 3: Pfeil dazu (Welteinheiten), 0 = aus */
     int32_t  ziel_w_vor;                       /* Schwanz-Bewegung: Gewicht des Szenenziels im letzten Kettenschritt (Anlauf/Freigabe) */
 } s_sw[RE15_ACTOR_MAX];
 
@@ -331,6 +335,27 @@ void re15_schwanz_r41_tiefe_frei(int slot, const int32_t kamera[3])
 void re15_schwanz_r41_tiefe_hinten(int slot, int an)
 {
     if (slot >= 0 && slot < RE15_ACTOR_MAX) s_sw[slot].tiefe_hinten = an ? 1 : 0;
+}
+
+/* Runde 41 Schwanz r9 Runde 3 (Pruefer r9 Runde 2, scratchpad schwanz_r9/pruefung_r2/PRUEFUNG.md: "rosa Wurzelstueck an der rechten Flanke
+ * bis ueber den Guertel" h59-h70): der erste FABRIK-Abschnitt Wurzel -> Austritt beugt mit beuge_w statt mit der Blickrichtung zur Mitte
+ * Austritt -> Spitze. PORT-SZENE, Messung in birkin_formen.c (k_schwanz_v8, art 6). */
+void re15_schwanz_r41_beuge_wurzel(int slot, const int32_t beuge_q12[3], const int32_t bild_n_q12[3], int32_t pfeil)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    s_sw[slot].beuge_w_an = 0; s_sw[slot].pfeil_w = 0.0f;
+    if (!beuge_q12) return;
+    if (bild_n_q12 && pfeil > 0) {
+        float m = 0.0f;
+        for (int k = 0; k < 3; k++) { s_sw[slot].bild_w[k] = (float)bild_n_q12[k] / 4096.0f; m += s_sw[slot].bild_w[k] * s_sw[slot].bild_w[k]; }
+        if (m > 1e-6f) { m = sqrtf(m); for (int k = 0; k < 3; k++) s_sw[slot].bild_w[k] /= m; s_sw[slot].pfeil_w = (float)pfeil; }
+    }
+    float l = 0.0f;
+    for (int k = 0; k < 3; k++) { s_sw[slot].beuge_w[k] = (float)beuge_q12[k] / 4096.0f; l += s_sw[slot].beuge_w[k] * s_sw[slot].beuge_w[k]; }
+    if (l < 1e-6f) return;
+    l = sqrtf(l);
+    for (int k = 0; k < 3; k++) s_sw[slot].beuge_w[k] /= l;
+    s_sw[slot].beuge_w_an = 1;
 }
 
 void re15_schwanz_r41_szene(int slot, int an)
@@ -759,7 +784,10 @@ static void ziel_anwenden(int slot, const float *laenge, float boden, float nade
     if (vj > a0) {
         float v[3];
         for (int k = 0; k < 3; k++) v[k] = (float)s_sw[slot].via[k];
-        fabrik(ik, a0, vj, v, ll, boden, bg, NULL, 0.0f, lim, s_sw[slot].verdeckt);   /* Wurzel -> Austritt: Ueberschuss in die Tiefe */
+        /* Wurzel -> Austritt: Ueberschuss in die Tiefe; r9 Runde 3: mit beuge_w (Kameraachse, art 6) gerade hinter den Koerper */
+        const int bw_an = bg && s_sw[slot].beuge_w_an;
+        fabrik(ik, a0, vj, v, ll, boden, bw_an ? s_sw[slot].beuge_w : bg, (bw_an && s_sw[slot].pfeil_w > 0.0f) ? s_sw[slot].bild_w : NULL,
+               bw_an ? s_sw[slot].pfeil_w : 0.0f, lim, s_sw[slot].verdeckt);
     }
     if (s_sw[slot].tiefe_frei) {
         /* Schwanz-Bewegung (Bauplan 5): das Video zeigt nur die Bildlage der Spitze. Sie wird entlang ihres Sehstrahls (Kamera -> Ziel)

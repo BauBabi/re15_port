@@ -27,6 +27,13 @@
 # Gegenproben (gleicher Auswerter auf eigenen Laeufen, scratchpad schwanz_r9/r2): 93a512aef ROT (3) und (4); Verhalten 7fd592184 (Querschnitt
 # 0 der verdeckten Glieder) ROT (1), (3) und (4).
 #
+# Runde 3 (Pruefer r9 Runde 2, scratchpad schwanz_r9/pruefung_r2/PRUEFUNG.md: "rosa Wurzelstueck an der rechten Flanke zwischen Bauch und Arm
+# bis ueber den Guertel" h59-h70 - der Schwanz kam seitlich aus der Taille statt in Hueft-Hoehe hinter der Huefte hervor, Areas3.png h64;
+# (3) sah es nicht, weil der Streifen NEBEN der Silhouette lag):
+# (5) UEBER DER AUSTRITTSZEILE F301-F315 (h58-h72): je Bild hoechstens 10 Schwanzpunkte (320x240) ueber der Zeile Austritt des
+#     Original-Videos - 4,5 (halbe Schwanzbreite), auch neben der Silhouette (Auswerter: k_aus_video = tabelle_v8.json "austritt").
+#     Gemessen (scratchpad schwanz_r9/r3): 4f2b7a354 38-190 je Bild h58-h70 (14 Fehlerbilder), Runde 3 hoechstens 3.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_PRUEF_TOOL=<probe_r41_schwanz_zusammen> -DWORKDIR=<dir> -P test_r41_schwanz_zusammen.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -110,7 +117,7 @@ szene_lauf(l "figuren" _dl)
 szene_lauf(b "birkin" _db)
 
 execute_process(COMMAND "${RE15_PRUEF_TOOL}" "${_dn}" "${_dt}" "${_dl}" ${_f0} ${_f1} 2 3
-                        "${_db}" "${_dn}/../schwanz.log" 70 301 316 200 20
+                        "${_db}" "${_dn}/../schwanz.log" 70 301 316 200 20 301 315 10
                 TIMEOUT 120
                 RESULT_VARIABLE _rv
                 OUTPUT_VARIABLE _out)
@@ -118,7 +125,7 @@ message("${_out}")
 string(REGEX MATCH "mit Schwanz ([0-9]+)" _m "${_out}")
 set(_mit "${CMAKE_MATCH_1}")
 if(NOT _rv EQUAL 0)
-    message(FATAL_ERROR "schwanz_zusammen: Schwanzteil haengt frei in der Luft, liegt vor dem Koerper oder knickt sichtbar (exit=${_rv}) - Dumps ${_basis}_*")
+    message(FATAL_ERROR "schwanz_zusammen: Schwanzteil haengt frei in der Luft, liegt vor dem Koerper, knickt sichtbar oder kommt ueber der Austrittszeile aus der Taille (exit=${_rv}) - Dumps ${_basis}_*")
 endif()
 if(NOT _mit OR _mit LESS 60)
     message(FATAL_ERROR "schwanz_zusammen: Schwanz nur in '${_mit}' von 96 Bildern sichtbar (Soll >= 60) - Messhaken oder Szene kaputt")

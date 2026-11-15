@@ -1151,7 +1151,7 @@ static int bf_video_welt(const bf_schwanzpunkt_t *q, const re15_actor_t *b, int3
  * PORT-SZENE: Schwanz und Sichel-Form gibt es auf keiner Disc (SF_sichel.md), keine @0x-Adresse. Jede Zahl ist am 80-%-Video 4 gemessen
  * (Videoraum 640x480, Videobild n = 1349 + h): Linien video_linien.py (Raster 10 px, +-5 px), Nutzer-Mittellinien Areas*.png (h22/h24/h64/
  * h90, y - 40). Die V8-Kette (re15_schwanz_r41_v8_kette) faehrt ihre eigene Tabelle; Referenz 2 / V2 / V4 behalten k_schwanz_bahn.
- * Spalten: h | Spitze x, y, art, tiefe (art wie bf_video_welt, dazu 4 = wie 1, die Tiefe ist aber frei: die Spitze gleitet auf ihrem
+ * Spalten: h | Spitze x, y, art, tiefe (art wie bf_video_welt (6 = wie 1, siehe r9 Runde 3 unten), dazu 4 = wie 1, die Tiefe ist aber frei: die Spitze gleitet auf ihrem
  * Sehstrahl, bis die Kette ab dem Austritt mit dem Pfeil genau hinreicht, vor dem Koerper - re15_schwanz_r41_tiefe_frei; Spitze = Nadelspitze,
  * schwanz_r41.c ziel_anwenden; 5 = wie 4, aber hinter dem Koerper, r9 Runde 2) | Durchgangsgelenk j,
  * Austritt x, y, art, tiefe | pfeil | verdeckt.
@@ -1188,7 +1188,28 @@ static int bf_video_welt(const bf_schwanzpunkt_t *q, const re15_actor_t *b, int3
  *   h58 / h60 / h70 (fuer h71) / h72: Spitze art 5 = hinterer Schnittpunkt (re15_schwanz_r41_tiefe_hinten): das Stueck liegt hinter dem
  *     rechten Bein und kommt seitlich daneben hervor (Video h58-h62: der Schwanz kommt rechts neben dem Oberschenkel hervor).
  *   Gemessen nachher (scratchpad schwanz_r9/r2, 320x240): sichtbarer Bildknick h25-h30 hoechstens 38 Grad (vorher 95/90/87/139/154), Schwanz
- *   vor dem Koerper h58-h61 / h71-h72 0 Punkte. Riegel: integration_r41_schwanz_zusammen (3) und (4). */
+ *   vor dem Koerper h58-h61 / h71-h72 0 Punkte. Riegel: integration_r41_schwanz_zusammen (3) und (4).
+ * Runde 41 Schwanz r9 Runde 3 (Pruefer r9 Runde 2, scratchpad schwanz_r9/pruefung_r2/PRUEFUNG.md: "rosa Wurzelstueck an der rechten Flanke
+ * zwischen Bauch und Arm bis ueber den Guertel" h59-h70; Nutzerbild 2 F309/h66; Vorlage Areas3.png h64: der Schwanz kommt in Hueft-Hoehe HINTER
+ * der Huefte hervor). Ursache (Messlauf scratchpad schwanz_r9/r3, 320x240, Gelenke aus RE15_SCHWANZ_LOG, Koerpermaske RE15_SCHWANZ_MASKE):
+ *   - der Video-Austritt h58-h70 liegt 3-5 Punkte RECHTS neben dem Port-Huefrand (Zeile y_aus: Rand x 207-211, Austritt x 209-216); die Wurzel
+ *     (Gelenk 0, Ruecken) liegt im Bild bei x 204-208, y 112-119 - genau ueber dem Taillenrand (x 204-205 in den Zeilen y_aus-20 .. y_aus-5).
+ *     Das Stueck Wurzel -> Austritt (seit r9 gezeichnet) lief deshalb im Bild am Taillenrand herab, mit seiner halben Breite (4,5) neben der
+ *     Silhouette: 38-190 Schwanzpunkte je Bild ueber y_aus - 4,5 (Oberkante bis 30 Zeilen ueber dem Austritt).
+ *   - die Beuge dieses Stuecks ging in die Blickrichtung zur Mitte Austritt -> Spitze (Fluchtpunkt rechts unten) und schob es nach rechts.
+ * Aenderung h58-h70 (art 6 = wie 1, dazu Beuge Wurzel -> Austritt entlang der Kameraachse und um eine Schwanzbreite im Bild zur Koerpermitte,
+ * re15_schwanz_r41_beuge_wurzel; PORT-SZENE, keine Disc-Konstante):
+ *   - Austritt in der Video-Zeile auf Port-Huefrand - halbe Schwanzbreite (Rand aus dem Lauf 4f2b7a354 ohne Schwanz minus ohne Birkin:
+ *     h58 208, h60 207, h62 211, h64 208, h66 208, h68 210, h70 211; Schwanzbreite Median 9 Punkte der sichtbaren Zeilen y_aus-10 .. y_aus+5,
+ *     n 96) -> x 203,5 / 202,5 / 206,5 / 203,5 / 203,5 / 205,5 / 206,5 -> Video x = 2 x + 1,97; Blicktiefe +600 wie h26/h28 (r9 Runde 2);
+ *   - j nach der Tabellenregel aus der neuen sichtbaren Laenge Austritt -> Spitze (knick_video.json px_je_glied): h58 50,8 / 29,7 = 1,71 -> 6,
+ *     h60 2,54 -> 6, h62 3,59 -> 5, h64 3,89 -> 5, h66 4,23 -> 4, h68 4,17 -> 4, h70 3,81 -> 5;
+ *   - h58 / h60 Spitze (art 5) eine halbe Schwanzbreite rechts neben das rechte Port-Bein in der Zeile der Video-Spitze (Bein-Rand x 225 in
+ *     Zeile 178 bzw. 186 -> x 229,5 -> Video 461; vorher lag die Video-Spitze h58 im Port-Bein (x 208, Bein 210-225) und der Schwanz war mit dem
+ *     neuen Austritt ganz verdeckt: 2 / 1 Schwanzpunkte, Video h58-h60: der Schwanz kommt rechts neben dem Oberschenkel hervor).
+ *   Gemessen nachher (scratchpad schwanz_r9/r3, Lauf x6, 320x240): Schwanzpunkte ueber y_aus - 4,5 h58-h72 hoechstens 3 (vorher 38-190), vor dem
+ *   Koerper 0, frei 0, sichtbarer Knick hoechstens 59 Grad (unveraendert); Bilder ausserhalb h57-h71 bitgleich zu 4f2b7a354.
+ *   Riegel integration_r41_schwanz_zusammen (5). */
 typedef struct { int16_t h, sx, sy, sart, stiefe, vj, vx, vy, vart, vtiefe, pfeil, verdeckt; } bf_schwanz_v8_t;
 static const bf_schwanz_v8_t k_schwanz_v8[] = {
     /* h   Spitze              j  Austritt           pfeil verdeckt   Videolinie (Pfeil Videopunkte, sichtbare Glieder) */
@@ -1206,14 +1227,15 @@ static const bf_schwanz_v8_t k_schwanz_v8[] = {
                                                                * zusammengelegte Kette stand sonst als roter Stummel an der Flanke
                                                                * (Sichtpruefung, h38-h56; Video: nichts) */
     {  56, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 },
-    {  58, 418, 372, 5,    0,  6, 405, 322, 1,    0,   0, 6 },   /* kurz, 1,74; r9 R2: hinter dem Bein (art 5) */
-    {  60, 455, 388, 5,    0,  6, 420, 320, 1,    0,   0, 6 },   /* Pfeil 1,4, 2,33; r9 R2: art 5 */
-    {  62, 480, 425, 4,    0,  5, 430, 325, 1,    0,   0, 5 },   /* Pfeil 3,1, 3,38 */
-    {  64, 509, 427, 4,    0,  5, 426, 320, 1,    0,   0, 5 },   /* Nutzer Areas3.png, Pfeil 4,8, 3,72 (Bodenziel art 0: 12,5 Videopunkte daneben,
-                                                               * Stand E) */
-    {  66, 535, 415, 4,    0,  5, 432, 320, 1,    0, -14, 5 },   /* Pfeil -14,1, 3,83 */
-    {  68, 544, 395, 4,    0,  5, 435, 322, 1,    0,  -7, 5 },   /* Pfeil -6,6, 3,66 */
-    {  70, 528, 402, 5,    0,  5, 430, 322, 1,    0,   0, 5 },   /* Pfeil -2,3, 3,49; r9 R2: art 5 (fuer h71) */
+    {  58, 461, 372, 5,    0,  6, 409, 322, 6,  600,    0, 6 },   /* kurz, 1,74; r9 R2: hinter dem Bein (art 5); r9 R3: Austritt in der Huefte
+                                                               * (Video 405,322), Spitze neben dem Port-Bein (Video 418,372) */
+    {  60, 461, 388, 5,    0,  6, 407, 320, 6,  600,    0, 6 },   /* Pfeil 1,4, 2,33; r9 R2: art 5; r9 R3: Austritt (420,320), Spitze (455,388) */
+    {  62, 480, 425, 4,    0,  5, 415, 325, 6,  600,    0, 5 },   /* Pfeil 3,1, 3,38; r9 R3: Austritt (Video 430,325) in der Huefte */
+    {  64, 509, 427, 4,    0,  5, 409, 320, 6,  600,    0, 5 },   /* Nutzer Areas3.png, Pfeil 4,8, 3,72 (Bodenziel art 0: 12,5 Videopunkte daneben,
+                                                               * Stand E); r9 R3: Austritt (426,320) in der Huefte */
+    {  66, 535, 415, 4,    0,  4, 409, 320, 6,  600,  -14, 4 },   /* Pfeil -14,1, 3,83; r9 R3: Austritt (432,320), j 5 -> 4 */
+    {  68, 544, 395, 4,    0,  4, 413, 322, 6,  600,   -7, 4 },   /* Pfeil -6,6, 3,66; r9 R3: Austritt (435,322), j 5 -> 4 */
+    {  70, 528, 402, 5,    0,  5, 415, 322, 6,  600,    0, 5 },   /* Pfeil -2,3, 3,49; r9 R2: art 5 (fuer h71); r9 R3: Austritt (430,322) */
     {  72, 384, 355, 5,    0,  6, 395, 338, 1,    0,   0, 6 },   /* kurzer Rest, 0,69; r9 R2: art 5 */
     {  74, 280, 341, 4,    0,  2, 326, 226, 1,    0, -36, 7 },   /* Video h74 nichts (Spider-Man fliegt durchs Bild): schon in den Bogen
                                                                * h76, aber ganz verdeckt (Sichtpruefung: Rest an der Huefte) */
@@ -1278,6 +1300,8 @@ static int bf_bild_beuge(const re15_actor_t *b, const bf_schwanzpunkt_t *q, int 
     return 1;
 }
 
+#define BF_V8_PFEIL_WURZEL 18   /* r9 Runde 3: Schwanzbreite 9 Punkte (320x240, Median der sichtbaren Zeilen h58-h70, Lauf 4f2b7a354) = 18 Videopunkte */
+
 static void bf_schwanz_ziel_v8(const re15_actor_t *b, int h)
 {
     const int32_t w = bf_tab(k_schwanz_gewicht_v8, BF_N(k_schwanz_gewicht_v8), h);
@@ -1287,6 +1311,7 @@ static void bf_schwanz_ziel_v8(const re15_actor_t *b, int h)
         re15_schwanz_r41_ziel(s_h.birkin, NULL, 0); re15_schwanz_r41_fuehrung(s_h.birkin, NULL, 0, NULL);
         re15_schwanz_r41_verdeckt(s_h.birkin, 0); re15_schwanz_r41_rolle(s_h.birkin, 0, NULL, 0); re15_schwanz_r41_bogen(s_h.birkin, NULL, 0);
         re15_schwanz_r41_tiefe_frei(s_h.birkin, NULL); re15_schwanz_r41_tiefe_hinten(s_h.birkin, 0);
+        re15_schwanz_r41_beuge_wurzel(s_h.birkin, NULL, NULL, 0);
         return;
     }
     int i = 0;
@@ -1319,6 +1344,23 @@ static void bf_schwanz_ziel_v8(const re15_actor_t *b, int h)
         } else re15_schwanz_r41_bogen(s_h.birkin, NULL, 0);
     }
     re15_schwanz_r41_fuehrung(s_h.birkin, vz, p0->vj, bg);
+    {   /* r9 Runde 3, Austritt art 6: das Stueck Wurzel -> Austritt beugt entlang der Kameraachse (Zeile 2 der Kameradrehung = Blickachse im
+         * Weltraum, wie die Blicktiefe in bf_video_welt) - gerade hinter den Koerper, im Bild zur Bildmitte in den Rumpf */
+        re15_camera_view_t cv;
+        int32_t ax[3];
+        int32_t bn[3], pa[3], pb[3];
+        if (p0->vart == 6 && re15_camera_build_view(c, &cv) == 0) {
+            ax[0] = cv.rot[6]; ax[1] = cv.rot[7]; ax[2] = cv.rot[8];
+            /* Bauch in der Bildebene: quer zur senkrechten Bildsehne am Austritt, im Bild nach links (zur Koerpermitte), um BF_V8_PFEIL_WURZEL
+             * Videopunkte (Weltlaenge in der Tiefe des Austritts) */
+            bf_schwanzpunkt_t qa = v0, qb = v0;
+            qb.vx = (int16_t)(qa.vx - BF_V8_PFEIL_WURZEL);
+            if (bf_bild_beuge(b, &v0, p0->vx, p0->vy, p0->vx, p0->vy - 80, 1, bn) && bf_video_welt(&qa, b, pa) && bf_video_welt(&qb, b, pb)) {
+                const double dx = pb[0] - pa[0], dy = pb[1] - pa[1], dz = pb[2] - pa[2];
+                re15_schwanz_r41_beuge_wurzel(s_h.birkin, ax, bn, (int32_t)lrint(sqrt(dx * dx + dy * dy + dz * dz)));
+            } else re15_schwanz_r41_beuge_wurzel(s_h.birkin, ax, NULL, 0);
+        } else re15_schwanz_r41_beuge_wurzel(s_h.birkin, NULL, NULL, 0);
+    }
     re15_schwanz_r41_ziel(s_h.birkin, z, w);
     re15_schwanz_r41_verdeckt(s_h.birkin, p0->verdeckt);
     {
