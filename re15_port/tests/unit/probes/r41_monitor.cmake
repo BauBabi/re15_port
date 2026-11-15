@@ -5,6 +5,7 @@
 #   unit_r41_monitor_gegen_hangar_alt   RE15_HANGAR_IM_RAUM=1 (alter Ausloeser) -> Abschnitt "hangar" muss ROT sein (b)
 #   unit_r41_monitor_gegen_stelle       Rueckweg 300 neben die Stelle -> Abschnitt "stelle" muss ROT sein (e)
 #   unit_r41_monitor_gegen_sherry       (3,0x2F) = 1 vorab -> Abschnitt "sherry" muss ROT sein (d)
+#   unit_r41_monitor_gegen_pop          RE15_MONITOR_OHNE_LOOK=1 (Zeichner wie Runde 1) -> Aufploppen muss ROT sein (Runde 2, Pruefer SICHT R1)
 #   integration_r41_monitor             echte exe: Leon 5030 + Elza 5031 (Sherry-Ereignis msg 3 danach), Gegenprobe ohne Monitorbild
 add_executable(test_r41_monitor ${CMAKE_CURRENT_LIST_DIR}/../test_r41_monitor.c)
 target_link_libraries(test_r41_monitor PRIVATE re15_engine re15_test_support m)
@@ -20,6 +21,8 @@ add_test(NAME unit_r41_monitor_gegen_stelle COMMAND test_r41_monitor stelle gege
 set_tests_properties(unit_r41_monitor_gegen_stelle PROPERTIES TIMEOUT 120)
 add_test(NAME unit_r41_monitor_gegen_sherry COMMAND test_r41_monitor sherry gegen)
 set_tests_properties(unit_r41_monitor_gegen_sherry PROPERTIES TIMEOUT 120)
+add_test(NAME unit_r41_monitor_gegen_pop COMMAND test_r41_monitor pop gegen)
+set_tests_properties(unit_r41_monitor_gegen_pop PROPERTIES TIMEOUT 120 ENVIRONMENT "RE15_MONITOR_OHNE_LOOK=1")
 if(TARGET re15_pc)
     add_test(NAME integration_r41_monitor
              COMMAND "${CMAKE_COMMAND}"

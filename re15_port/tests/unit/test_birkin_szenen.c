@@ -310,7 +310,14 @@ static void test_hangar(unsigned raum)
     CHECK(starr_b <= 1 && starr_m <= 1, "starr in der Szene: Birkin %d, Spider-Man %d Takte ohne Posenwechsel", starr_b, starr_m);
     CHECK(sm_weg > 0 && !m->active && re15_bf_hangar_slot(0) < 0, "Spider-Man flieht nicht aus dem Bild (aktiv %d)", m->active);
     CHECK(ende > sm_weg, "Szene endet nicht nach der Flucht (Ende %d, weg %d)", ende, sm_weg);
-    CHECK(!re15_bf_hangar_riegel() && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27), "Riegel nach dem Szenenende noch zu");
+    /* Runde 41 Spur Monitor R2: der Riegel der SZENE ist auf; Pad-Sperre (2,7) und Letterbox (1,0x1B) haelt jetzt das Monitorbild bis
+     * zum Ende in 5030/5031 (ROOM5031 sub03 @0x0120C/@0x01210, monitor_r41.c Kopf Punkt 5d), der Rueckweg folgt im naechsten Takt
+     * (Phase ENDE, Punkt 5c: das letzte Szenenbild h135 wird noch gezeigt). */
+    CHECK(!re15_bf_hangar_riegel() && re15_game_flag_get(2, 7) && re15_game_flag_get(1, 27) && re15_monitor_r41_phase() == RE15_MON41_ENDE &&
+          !g_room_change.pending && re15_game_flag_get(1, 0x1E),
+          "Szenenende: Riegel %d, (2,7) %d, (1,27) %d, Phase %d, Wechsel %d, Effekt %d (Soll 0, 1, 1, ENDE, 0, 1)", re15_bf_hangar_riegel(),
+          re15_game_flag_get(2, 7), re15_game_flag_get(1, 27), re15_monitor_r41_phase(), g_room_change.pending, re15_game_flag_get(1, 0x1E));
+    re15_enemy_ai_run_all(0);                            /* Takt nach h135: Rueckweg */
     CHECK(!re15_bf_szene_besitzt(bs), "Birkin nach Szenenende noch von der Szene gefuehrt");
     CHECK(!re15_bf_szene_zeigt(b), "Region-Cull-Ausnahme nach dem Szenenende noch an");
     /* (5) Runde 41 Spur Monitor: statt Kamera-Rueckgabe + Angriff (vorher) der Rueckweg in den Monitor Room - an die gespeicherte

@@ -8,6 +8,10 @@
 #   E  Elza, ROOM5031: dasselbe, danach laeuft Elza in die Sherry-Zone (AOT Slot 6, sub00 @0x010E8) und das Original-Ereignis
 #      sub03 laeuft: Monitorbild Cut 11 (Effekt (1,0x1E) @0x011A8) und "Elza: Sherry!" (msg 3 @0x011EC) - (d).
 #   G  Gegenprobe: Lauf L mit RE15_KEIN_MONITORBILD=1 - die Pruefung von L MUSS rot sein.
+#   Runde 2 (Pruefer SICHT R1 "Birkin und Spider-Man ploppen auf"): in L und E zeigt KEIN Bild im Hangar den Raum ohne die
+#      Szenenfiguren - Messzeile [monitor-bild] je gezeichnetem Bild (Modus 2 = Standbild von Cut 7, Modus 3 = Szene im Monitor):
+#      jedes Bild mit Modus != 2 hat Birkin, das erste Szenenbild Birkin UND Spider-Man, mindestens 136 Szenenbilder.
+#   P  Gegenprobe: Lauf L mit RE15_MONITOR_OHNE_LOOK=1 (Zeichner zeigt den Hangar wie Runde 1) - die R1-Pruefung MUSS rot sein.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r41_monitor.cmake
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -82,13 +86,53 @@ function(pruefe _dir _mon _hg _x _z _gier _fehler_out)
     set(${_fehler_out} "${_f}" PARENT_SCOPE)
 endfunction()
 
+# Runde 2: kein gezeigtes Hangar-Bild ohne Szenenfiguren (Pruefer SICHT R1)
+function(pruefe_pop _dir _hg _fehler_out)
+    set(_f "")
+    file(STRINGS "${_dir}/debug.log" _zl REGEX "^\\[monitor-bild\\] F[0-9]+ ROOM${_hg} ")
+    set(_n3 0)
+    set(_leer 0)
+    set(_erstes "")
+    foreach(_z IN LISTS _zl)
+        string(REGEX MATCH "Modus ([0-9]+) Birkin ([0-9]+) Spider-Man ([0-9]+)" _m "${_z}")
+        set(_mod "${CMAKE_MATCH_1}")
+        set(_b "${CMAKE_MATCH_2}")
+        set(_s "${CMAKE_MATCH_3}")
+        if(NOT _mod STREQUAL "2")
+            if(_b STREQUAL "0")
+                math(EXPR _leer "${_leer} + 1")
+            endif()
+            if(_erstes STREQUAL "")
+                set(_erstes "${_z}")
+                if(NOT _b STREQUAL "1" OR NOT _s STREQUAL "1")
+                    math(EXPR _leer "${_leer} + 1")
+                endif()
+            endif()
+        endif()
+        if(_mod STREQUAL "3")
+            math(EXPR _n3 "${_n3} + 1")
+        endif()
+    endforeach()
+    if(_leer GREATER 0)
+        string(APPEND _f "\n  ${_hg} (R1): ${_leer} gezeigte Hangar-Bilder ohne Szenenfiguren (erstes gezeigtes Bild: '${_erstes}')")
+    endif()
+    if(_n3 LESS 136)
+        string(APPEND _f "\n  ${_hg} (R2): nur ${_n3} Bilder mit der Szene im Monitor (Modus 3, Soll >= 136)")
+    endif()
+    set(${_fehler_out} "${_f}" PARENT_SCOPE)
+endfunction()
+
 # L - Leon
 lauf(l _dl RE15_DEBUG_JUMP=5030@20 RE15_PLAYER_POS=-13846,-5474,798 "RE15_INPUT_SCRIPT=W1|W1|W1|W4,U1.5,W4" "RE15_EXIT_AT=330#5030!3")
 pruefe("${_dl}" 5030 50A0 -13846 -5474 798 _fl)
+pruefe_pop("${_dl}" 50A0 _flp)
+string(APPEND _fl "${_flp}")
 # E - Elza (Sherry-Ereignis danach)
 lauf(e _de RE15_TITLE_SHOT_CHAR=1 RE15_DEBUG_JUMP=5030@20 RE15_PLAYER_POS=-13846,-5474,1900 "RE15_INPUT_SCRIPT=W1|W1|W1|W3,U4,W20"
      "RE15_EXIT_AT=700#5031!3")
 pruefe("${_de}" 5031 50A1 -13846 -5474 1900 _fe)
+pruefe_pop("${_de}" 50A1 _fep)
+string(APPEND _fe "${_fep}")
 file(STRINGS "${_de}/state.log" _sherry REGEX "msg\\(a=1 fsm=1 id=3 ")
 file(STRINGS "${_de}/state.log" _cut11 REGEX " cam=11 ")
 if(NOT _sherry OR NOT _cut11)
@@ -98,7 +142,16 @@ endif()
 lauf(g _dg RE15_KEIN_MONITORBILD=1 RE15_DEBUG_JUMP=5030@20 RE15_PLAYER_POS=-13846,-5474,798 "RE15_INPUT_SCRIPT=W1|W4,U1.5,W4"
      "RE15_EXIT_AT=200#5030")
 pruefe("${_dg}" 5030 50A0 -13846 -5474 798 _fg)
+# P - Gegenprobe Aufploppen: Zeichner ohne Monitor-Rahmen (wie Runde 1) - pruefe_pop muss rot sein
+lauf(p _dp RE15_MONITOR_OHNE_LOOK=1 RE15_DEBUG_JUMP=5030@20 RE15_PLAYER_POS=-13846,-5474,798 "RE15_INPUT_SCRIPT=W1|W1|W1|W4"
+     "RE15_EXIT_AT=150#50A0")
+pruefe_pop("${_dp}" 50A0 _fp)
 set(_fehler "")
+if(NOT _fp)
+    string(APPEND _fehler "\n Gegenprobe ohne Monitor-Rahmen war GRUEN - die Pruefung sieht das Aufploppen nicht")
+else()
+    message(STATUS "r41_monitor: Gegenprobe Aufploppen rot wie verlangt:${_fp}")
+endif()
 if(_fl)
     string(APPEND _fehler "\n Leon:${_fl}")
 endif()

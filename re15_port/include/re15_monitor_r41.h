@@ -32,8 +32,33 @@ enum {
     RE15_MON41_HIN,         /* Raumwechsel in den Hangar angefordert */
     RE15_MON41_BILD,        /* 50A0/50A1: Monitorbild, die Hangar-Szene laeuft */
     RE15_MON41_ZURUECK,     /* Raumwechsel zurueck angefordert */
-    RE15_MON41_NACH         /* 5030/5031: Cut 9, Monitorwand, dann zurueck zum Spieler */
+    RE15_MON41_NACH,        /* 5030/5031: Cut 9, Monitorwand, dann zurueck zum Spieler */
+    RE15_MON41_ENDE         /* Runde 2: 50A0/50A1 - Szene beendet, ihr letztes Bild (h135) wird noch gezeigt, Rueckweg im naechsten Takt */
 };
+
+/* Runde 2 (Pruefer SICHT R1/R2): Darstellung des Monitorbilds im PC-Zeichner (render_pc.c pc_monitor_look), je Bild.
+ * PORT-WAHL, Herleitung monitor_r41.c Kopf Punkt 5. */
+enum {
+    RE15_MON41_LOOK_AUS = 0,    /* normales Bild */
+    RE15_MON41_LOOK_MERKEN,     /* 5030/5031 Cut 7: das fertige Bild (vor Letterbox/Text) als Standbild des Monitors merken */
+    RE15_MON41_LOOK_STANDBILD,  /* Hangar geladen, Szene noch ohne Figuren: das gemerkte Standbild statt des leeren Hangars */
+    RE15_MON41_LOOK_MONITOR,    /* Szene laeuft: Standbild + das Szenenbild verkleinert im Bildschirm des Monitors */
+    RE15_MON41_LOOK_HALTEN      /* zurueck im Monitor Room, Bild des Ladetakts: das zuletzt zusammengesetzte Bild halten */
+};
+int  re15_monitor_r41_look(void);
+/* 1 = der eben ausgefuehrte Raumwechsel ist ein Monitor-Schnitt (harter Schnitt wie Cut 7 -> Cut 11 / Cut 11 -> Cut 9 in
+ * ROOM5031 sub03 @0x011A6/@0x011EA, ohne Schwarz + Einblende); setzt die Marke zurueck (room_common.c
+ * re15_room_transition_present). */
+int  re15_monitor_r41_harter_schnitt(void);
+/* MESSHAKEN RE15_MONITOR_OHNE_LOOK=1 (Alias RE15_MONITOR_OHNE_ZEILEN): kein Zeileneffekt, kein Monitor-Rahmen, keine
+ * Letterbox vor der Szene - die Bilder der Szene wie im abgenommenen Stand (Beweis bitgleich). Kein Spielverhalten. */
+int  re15_monitor_r41_ohne_look(void);
+/* Bildschirm des Monitors in Cut 7 (logische 320x240-Koordinaten, Ecken oben links, oben rechts, unten rechts, unten links),
+ * fuer den Monitor Room raum (5030/5031). 0 = keine Flaeche bekannt. */
+int  re15_monitor_r41_schirm(unsigned raum, float ecken[8]);
+unsigned re15_monitor_r41_raum(void);
+/* Messzeile [monitor-bild] je Bild im Hangar waehrend des Monitorbilds (RE15_HANGAR_LOG). */
+void re15_monitor_r41_bild_log(unsigned bild, int modus);
 
 /* Je KI-Tick (aus re15_bf_raumtick, vor der Hangar-Szene). */
 void re15_monitor_r41_tick(void);
