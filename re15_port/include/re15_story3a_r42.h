@@ -32,6 +32,11 @@
  *     > 0xb, `sltiu v0,s1,0xc` @0x8004a044) zurueck @0x8004a058-@0x8004a07c. Port: HP +0x9a und Gift-Bit 0x2 von +0x98 (0x800acaec)
  *     VOR dem RE1.5-Schwanz gesichert (der setzt HP 100 @0x80031710 und Status 0 @0x80031720), beim Rueckwechsel zurueck; dazu der
  *     Vor-Platz des Ports (re15_inv_prev_equip_slot).
+ *     NB2 N5 (selbst gelesen): cfe10 ist das GIFT-WORT (Op 32 `sh v0(0x1518),-0x1f0(at)` @0x80020130; der Takt fragt nur `lhu`/`beq zero`
+ *     @0x8003c130/38), cfe12 der TAKT-ZAEHLER (`lbu` @0x8003c144, -1 @0x8003c14c/54, := 30 @0x8003c15c/64; Op 32 := 30 @0x80020138/40).
+ *     Gegenstueck des Gift-Worts = RE1.5-Bit 0x2 (Gift `ori v0,v0,0x2` @0x80012eac, Heilung @0x8004af8c; zustand_r39.c Kopf), des
+ *     Zaehlers = zustand_r39.c s_takt (RE2-Takt im Port). Beide werden gesichert und zurueckgelegt; RE1.5s eigener Zaehler 0x800acc27
+ *     (+0x1d3, @0x80031e5c) wird ohnehin bei jedem Raumwechsel genullt (Kommando 0 @0x8003196c) und braucht keine Sicherung.
  *   Marvins Seite (PORT-STORY, Konzept T-01 "Browning HP mit 15 Schuss sowie 50 H. Gun Bullets, mit ausgeruesteter Pistole"):
  *     dieselben Mengen wie Leons Start - Starttabelle PSX.EXE @0x80074bb8 `01 03 15` / Mengen @0x80074bd0 `00 0f 32` (Lesestellen
  *     @0x80045e44 / @0x80045e98), ohne das Messer (Runde 35 Spur E); ausgeruestet Platz 0 wie Ada (@0x80069024).
@@ -62,6 +67,15 @@
  *   Karte genommen ist (Ck(9,0x55) @0x014CE) - also schon, wenn MARVIN sie aufhebt.
  * Funde auf Marvins Weg (belege/marvin30c0): Green Keycard 0x36 x1 Bit 85 ROOM3040 @0x014B2, Super Redhawk 0x07 x6 Bit 92 ROOM3050
  *   @0x01EC6; ROOM30E0 Green Medicine 0x24 @0x00AFA und Magnum Bullets 0x17 @0x00B10; ROOM30A0 Red Master Keycard 0x46 @0x00742.
+ *
+ * ROOM3050 Rechner K8 (Red Master Keycard; NB2 N2): main00 Ck(3,0xB2)=0 @0x01F90 -> Slot 10 sce 1 msg 3; sonst Ck(3,0xB3)=0 @0x01FB0 ->
+ *   Aot_set Slot 10 sce 3 Ereignis 10 @0x01FB4 (Rechteck -25900,-16900,1000,2000, Band 0). (3,0xB2) setzt ROOM30A0 sub01 @0x0086C, sobald
+ *   die Karte genommen ist (Ck(9,180)=1 @0x00860). sub10 @0x02578 (msg 3, Frage msg 4, Ck(12,31,0) @0x02588) startet das Kran-Steuerspiel
+ *   (Cut 15 @0x02596, Bank 5 Bits 0..5 @0x02598..@0x025AC); sub01 @0x0219E..@0x0221C steuert obj 3 (Sce_key_ck -> sub11..14) und startet bei
+ *   Treffer (Member_cmp(15==0x0b) @0x0220E, Sce_key_ck 0x40 @0x02218) sub15 @0x025E4: msg 5 "You've used the Red Master Keycard." @0x02608
+ *   (Wegwerf-Frage gen/discard_sites.inc 3050/5/0x46, Ja vorbelegt), Set(3,0xB3) @0x0260E, Set(3,0xB0) @0x02612, msg 6, Slot 10 -> msg 7.
+ *   ROOM3040 sub00 Ck(3,0xB0)=0 @0x0134A: erst danach schaltet der Knopf (Ereignis 3 statt 4). Die Karte ist also im Normalfall VERBRAUCHT
+ *   (Konzept 6b); nur wer das Wegwerfen ablehnt, gibt sie Leon in der Uebergabe.
  *
  * ---- SCHUESSE (L5 Punkt 1 "Marvin ruft, man hoert Schuesse, Abblende") -----------------------------------------------------
  * PORT-STORY aus belegten Bausteinen: Abblende = die Raumwechsel-Abblende (Rampe +0x1800 @0x8001ca64-88, statisches Schwarz
@@ -98,6 +112,7 @@
 /* ---- Funde / Uebergabe (L6, F-05, F-06) --------------------------------------------------------------------------------- */
 #define RE15_S3A_KEYCARD         0x36     /* Green Keycard, ROOM3040 @0x014B2 pc[14]                                        */
 #define RE15_S3A_REDHAWK         0x07     /* Super Redhawk, ROOM3050 @0x01EC6 pc[14]                                        */
+#define RE15_S3A_ROT             0x46     /* Red Master Keycard, ROOM30A0 @0x00742 pc[14]; benutzt am Rechner K8 ROOM3050 (s. u.) */
 #define RE15_S3A_FABRIK_BLATT    7        /* Kartenblatt der Fabrik (re15_map_zones.h ROOM3000.. Spalte Blatt = 7)          */
 
 /* ---- Bedingungen -------------------------------------------------------------------------------------------------------- */
@@ -177,9 +192,16 @@ typedef struct {
     /* NB1 B8 (am Ende: die Lage der Felder oben bleibt): wie RE2 FUN_80049e48 (Leben/Gift sichern @0x8004a000-@0x8004a038,
      * zurueck @0x8004a058-@0x8004a07c) und der Vor-Platz des Ports */
     uint8_t leon_vorplatz;                        /* re15_inv_prev_equip_slot (Port), Marvin: 0x80                         */
-    uint8_t leon_gift;                            /* Bit 0x2 von +0x98 (0x800acaec; RE2 cfe12 @0x8004a004/@0x8004a078)     */
+    /* Bit 0 = Gift-Bit 0x2 von +0x98 (0x800acaec) = RE2 Gift-Wort cfe10 (@0x8004a008 -> d46b4 @0x8004a038, zurueck @0x8004a070/7c).
+     * Bits 1..5 (NB2 N5, die 96 Bytes sind voll) = RE2 Takt-Zaehler cfe12 (@0x8004a004 -> d46b3 @0x8004a02c, genullt @0x8004a010,
+     * zurueck @0x8004a064/@0x8004a078) = im Port zustand_r39.c s_takt; Wertebereich 0..30 (:= 0x1e @0x8003c15c/64, Op 32 @0x80020138),
+     * passt in 5 Bit. Altstaende (NB1: nur 0/1) lesen sich als Takt 0. */
+    uint8_t leon_gift;
     uint8_t leon_hp_lo, leon_hp_hi;               /* +0x9a (RE2 cfd4e @0x8004a000 -> d46be @0x8004a020, zurueck @0x8004a074) */
 } re15_s3a_figur_t;
+#define RE15_S3A_GIFT_BIT        0x01u
+#define RE15_S3A_TAKT_SHIFT      1
+#define RE15_S3A_TAKT_MASKE      0x1Fu
 
 /* ---- Haken -------------------------------------------------------------------------------------------------------------- */
 int  re15_story3a_r42_figur_vor(int alt, int neu);   /* sherry_r41.c modell_setzen: 1 = Neuladen im laufenden Tausch (kein Schwanz) */

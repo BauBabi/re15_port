@@ -13,24 +13,37 @@
 # Slot 2/3, Knopf sub03 (3,0xB1) = Kisten weg, Gang Band 1, Treppe Slot 4/5 hinab, Green Keycard Bit 85 @0x014B2, Schloss (4,0xC4)
 # sub02) -> orange Tuer -> 3060. Wegpunkte aus der SCA (Planer scratchpad story/s3a/weg.py) und in Einzellaeufen nachgemessen
 # (scratchpad story/nb1/d2..d16).
-# Drei Stellen, die der Wegplan-Bot NICHT spielen kann, sind als Ergebnis vorgesetzt (RE15_SET_FLAG), alles andere ist echt:
-#   - 3050 Rechner K8 (Kistenregel @0x01F90): nach USE der Red Master Keycard (keyitems_r41.c Stelle 0x3050/0x46) folgt ein
-#     Kran-Steuerspiel (sub01 @0x0219E.. Sce_key_ck 01/04/02/08 -> sub11..14 Speed_set obj 3, Treffer Member_cmp 0x0f == 0x0b @0x0220E
-#     -> sub15 @0x0260E/@0x02612 Set(3,0xB3)/(3,0xB0)). Vorgesetzt: (3,0xB3) + (3,0xB0) = "System wiederhergestellt"; die Karte
-#     bleibt dadurch bei Marvin und geht in die Uebergabe (msg 20).
+# Drei Stellen, die der Wegplan-Bot NICHT spielen kann, sind vorgesetzt - jede mit GENAU dem Zustand, den das Spiel dort liefert:
+#   - 3050 Rechner K8 (NB2 N2): Marvin geht an den Rechner (Slot 10, Rechteck -25900,-16900,1000,2000 @0x01FB4, Band 0) und BENUTZT
+#     die Red Master Keycard (Wegplan BENUTZE 0x46 = Inventar-USE ohne Menue: dieselbe Stellen-Pruefung wie die Aktionstaste,
+#     re15_keyitems_r41_use, dann sub10 @0x02578 echt: Cut 15, Bank 5 Bits 0..5). Vorgesetzt ist NUR das Kran-Steuerspiel (sub01
+#     @0x0219E.. Sce_key_ck 01/04/02/08 -> sub11..14 Speed_set obj 3, Treffer Member_cmp(15 == 0x0b) @0x0220E + Sce_key_ck 0x40 -> Evt_exec
+#     sub15 @0x0221C): Wegplan EREIGNIS 15 5 4 startet sub15, sobald sub10 das Spiel eroeffnet hat ((5,4) @0x025A8). sub15 laeuft echt:
+#     msg 5 "You've used the Red Master Keycard." @0x02608 + Wegwerf-Frage (gen/discard_sites.inc 3050/5/0x46), Set(3,0xB3) @0x0260E,
+#     Set(3,0xB0) @0x02612, msg 6, Slot 10 -> msg 7. Standardfall (Kette) = Ja (vorbelegt, weggeworfen): die Karte ist verbraucht
+#     (Konzept 6b). Behalten-Fall = speichern Lauf 2 (TIPPE .. 2 = Nein): Marvin traegt die benutzte Karte bis zur Uebergabe.
 #   - 3040 zwei kleine Affen 0x29 (main00 @0x01310/@0x01324, Kill-Ids 0x71/0x72): Bot-Laeufe d10a/d11a/d12a - 1 Treffer aus 66 Schuss,
 #     Marvin stirbt. Vorgesetzt: Kill-Bits 7:113/7:114 (Em-Status-Tor FUN_800420a0 @0x80042120-38).
 #   - 3010 sieben Zombies nach (4,0x0A) @0x01052 (main00 @0x02122..@0x021EA, Kill-Ids 0x40..0x46): Bot-Laeufe d13/d15 (Pistole) - Leon
 #     stirbt an der Ankunft (HP 100 -> 60 -> 0), d14 (SPAS-12) - drei Zombies tot, dann laedt die SPAS nicht nach (mg 0). Vorgesetzt wie
 #     bisher: Kill-Bits 7:64..7:70. Die drei Hunde in 3060 kaempft Leon echt (JAGE, F-04).
+# NB2 N5: Leon kommt VERLETZT an (RE15_START_ZUSTAND, vorgesetzt wie die Treffer aus den Abschnitten davor): Kette HP 70; speichern HP 70
+# und vergiftet (Bit 0x2 + Takt-Zaehler 30 wie RE2 Op 32 @0x80020138/40). Nach dem Rueckwechsel hat Leon genau den Wert vom Tausch
+# (RE2 FUN_80049e48 @0x8004a058-@0x8004a07c), nicht HP 100 aus dem Spieler-Lader (@0x80031710).
+# NB2 N6: "Untertitel ohne Taste" wird an der EINGABE DER SPIELSCHLEIFE gemessen (state.log pad=, g_engine.pad_current), nicht am
+# Wegplan-Log: in jedem Bild mit offenem Untertitel des Wiedersehens (Id 12..27 ausser den Systemtexten 16/18/20) ist kein Quadrat
+# (0x8000) gedrueckt, und jeder dieser Untertitel schliesst. Dass die Szene dabei bis Bit 124 durchlaeuft, ist der eigentliche Beleg.
 #
 # TEIL kette     3000 -> 3010 -> 3020 (Fensterszene, Zeilen 0..2 Neutext + 7/8, Ausloesezone per LAUF) -> Marvin (Tausch: Browning x15
 #                + 50 H. Gun Bullets, Platz 0, Waffe 3) -> Marvins Weg (s.o.) -> 3060 (Hunde, Zeile 11, 3 Schuesse, Abblende,
 #                Rueckwechsel) -> Leon 3020 ("Gunshots...?", Leons Seite zurueck) -> 3010 -> 3060 (Leon kaempft gegen die Hunde) ->
-#                Wiedersehen (12..27 mit 19/20 je Fund: Red Master Keycard, Super Redhawk; Untertitel OHNE Taste, Systemtexte mit
-#                Taste: TIPPE ... 1) -> 3010 -> Laderampe -> Kartentuer (erst jetzt offen, L-10) -> 30E0.
-# TEIL speichern Lauf 1 bis Marvin in 30C0 (direkt nach dem Tausch), Speichern als Marvin (RE15_SAVE_TEST_AGAIN, Karte im Arbeitsordner);
-#                Lauf 2 laedt (RE15_CONTINUE_TEST) und spielt Marvins ganzen Weg bis 3060 -> Rueckwechsel: Leon hat alles zurueck.
+#                Wiedersehen (12..27: 15 -> Green Keycard 16 -> 21 direkt danach (NB2 N3), Plan 17/18, 19/20 fuer den Super Redhawk;
+#                die Red Master Keycard ist an K8 verbraucht; Untertitel OHNE Taste, Systemtexte mit Taste: TIPPE ... 1) -> 3010 ->
+#                Laderampe -> Kartentuer (erst jetzt offen, L-10) -> 30E0.
+# TEIL speichern Lauf 1 bis Marvin in 30C0 (direkt nach dem Tausch; Leon verletzt + vergiftet), Speichern als Marvin
+#                (RE15_SAVE_TEST_AGAIN, Karte im Arbeitsordner); Lauf 2 laedt (RE15_CONTINUE_TEST) und spielt Marvins ganzen Weg bis 3060,
+#                an K8 BEHAELT Marvin die benutzte Red Master Keycard (Wegwerf-Frage Nein) -> Rueckwechsel: Leon hat alles zurueck,
+#                dieselben HP, Gift und Takt-Zaehler wie beim Tausch (aus dem Spielstand).
 # Kartentuer: msg 1 "You've used the Green Keycard." und die Wegwerf-Frage (gen/discard_sites.inc 3010 msg 1 -> 0x36) schliesst wie im
 # Spiel erst ein Tastendruck - TIPPE 9 255 = Quadrat je 30 Bilder fuer 200 Bilder (Bank 9 Bit 255 ist nirgends belegt, Zensus).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<teil> -P test_r42_story3a.cmake
@@ -84,7 +97,7 @@ macro(pruefe_re _text _regex)
 endmacro()
 
 set(_basis RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_EQUIP=3 "RE15_GIVE=21:200"
-           "RE15_SET_FLAG=9:90,9:111,9:112,9:113,9:118,9:119,3:245,3:206,3:151,9:121,9:120,7:64,7:65,7:66,7:67,7:68,7:69,7:70,7:113,7:114,3:176,3:179"
+           "RE15_SET_FLAG=9:90,9:111,9:112,9:113,9:118,9:119,3:245,3:206,3:151,9:121,9:120,7:64,7:65,7:66,7:67,7:68,7:69,7:70,7:113,7:114"
            RE15_GOTO_ROOM=3000 RE15_WEGPLAN_LOG=wegplan.txt)
 
 # Weg Leon 3000 -> 3020 -> (Szene) -> Marvin in 30C0. Wegpunkte aus der SCA (Planer scratchpad story/s3a/weg.py, Band 0,
@@ -210,6 +223,15 @@ GEHE -24058 -14250 100
 SCHIEB 1024 Z <= -22200 1500
 WARTE 60
 FLAG 3 93
+GEHE -24350 -15900 100
+BLICK 2048
+WARTE 10
+BENUTZE 70
+EREIGNIS 15 5 4 300
+TIPPE 3 176 900 K8WAHL
+TIPPE 9 255 120 1
+FLAG 3 179
+WARTE 30
 GEHE -24300 -18500 150
 GEHE -24390 -20875 100
 BLICK 1024
@@ -340,6 +362,124 @@ WARTE 30
 ENDE
 ")
 
+macro(pruefe_wp _text _muster)
+    string(FIND "${_wp}" "${_muster}" _p)
+    if(_p LESS 0)
+        fail("${_text} (fehlt im Wegplan-Log: '${_muster}')")
+    else()
+        ok("${_text}")
+    endif()
+endmacro()
+# NB2 N5: HP/Gift/Takt beim Tausch (Zeile "Leon: ... HP h Gift g Takt t; Marvin: ...") == nach dem Rueckwechsel (Zeile "Leon: ... HP h
+# Gift g Takt t" ohne "; Marvin"), und HP < 100 (verletzt, nicht geheilt).
+macro(pruefe_hp_gleich)
+    set(_hin "")
+    set(_zur "")
+    if(_dbg MATCHES "Leon: Ausruest-Platz 0x[0-9a-f]+ Waffe [0-9]+ Vor-Platz 0x[0-9a-f]+ HP ([0-9]+) Gift ([01]) Takt ([0-9]+); Marvin")
+        set(_hin "${CMAKE_MATCH_1}/${CMAKE_MATCH_2}/${CMAKE_MATCH_3}")
+    endif()
+    # die Rueckwechsel-Zeile endet nach "Takt t" (die Tausch-Zeile geht mit "; Marvin" weiter)
+    if(_dbg MATCHES "Leon: Ausruest-Platz 0x[0-9a-f]+ Waffe [0-9]+ Vor-Platz 0x[0-9a-f]+ HP ([0-9]+) Gift ([01]) Takt ([0-9]+)\n")
+        set(_zur "${CMAKE_MATCH_1}/${CMAKE_MATCH_2}/${CMAKE_MATCH_3}")
+    endif()
+    string(REGEX MATCH "^[0-9]+" _hp_hin "${_hin}")
+    if(NOT _hin STREQUAL "" AND _hin STREQUAL _zur AND _hp_hin LESS 100)
+        ok("N5: Leon HP/Gift/Takt beim Tausch ${_hin} = nach dem Rueckwechsel ${_zur} (nicht geheilt, RE2 @0x8004a058-@0x8004a07c)")
+    else()
+        fail("N5: Leon HP/Gift/Takt beim Tausch '${_hin}' / nach dem Rueckwechsel '${_zur}' (Soll gleich, HP < 100)")
+    endif()
+endmacro()
+# Folge der [msg]-Ids in ROOM3060 ab der ersten Zeile 12 (Wiedersehen) bis 27
+function(folge_3060 _aus)
+    file(STRINGS "${WORKDIR}/debug.log" _z REGEX "^\\[msg\\] room=3060 id=[0-9]+ ")
+    set(_l "")
+    set(_an 0)
+    foreach(_e IN LISTS _z)
+        if(_e MATCHES "id=([0-9]+) ")
+            set(_id "${CMAKE_MATCH_1}")
+            if(_id EQUAL 12)
+                set(_an 1)
+            endif()
+            if(_an)
+                list(APPEND _l "${_id}")
+            endif()
+            if(_an AND _id EQUAL 27)
+                break()
+            endif()
+        endif()
+    endforeach()
+    string(REPLACE ";" "," _l "${_l}")
+    set(${_aus} "${_l}" PARENT_SCOPE)
+endfunction()
+# NB2 N6: state.log-Block des Wiedersehens (der Raumblock, in dem id=27 offen ist; Bildzaehler faellt beim Raumwechsel): in jedem Bild mit
+# offenem Untertitel (msg a=1, Id 12..27 ohne 16/18/20) kein Quadrat im pad der Spielschleife; jeder Untertitel schliesst (a=0 oder
+# andere Id danach).
+macro(untertitel_ohne_taste)
+    file(STRINGS "${WORKDIR}/state.log" _st REGEX "^F[0-9]+ pad=")
+    set(_blk "")
+    set(_prev -1)
+    set(_treffer "")
+    foreach(_zz IN LISTS _st)
+        if(_zz MATCHES "^F([0-9]+) pad=([0-9a-f]+) .* msg\\(a=([01]) fsm=[0-9]+ id=([0-9]+) ")
+            if(CMAKE_MATCH_1 LESS _prev)
+                if(_blk MATCHES ":27")
+                    set(_treffer "${_blk}")
+                endif()
+                set(_blk "")
+            endif()
+            set(_prev "${CMAKE_MATCH_1}")
+            list(APPEND _blk "${CMAKE_MATCH_2}:${CMAKE_MATCH_3}:${CMAKE_MATCH_4}")
+        endif()
+    endforeach()
+    if(_treffer STREQUAL "" AND _blk MATCHES ":27")
+        set(_treffer "${_blk}")
+    endif()
+    set(_n_bilder 0)
+    set(_n_taste 0)
+    set(_offen "")
+    set(_geschlossen "")
+    set(_vorher "")
+    foreach(_e IN LISTS _treffer)
+        string(REPLACE ":" ";" _f "${_e}")
+        list(GET _f 0 _pad)
+        list(GET _f 1 _a)
+        list(GET _f 2 _id)
+        set(_ut 0)
+        if(_a EQUAL 1 AND _id GREATER_EQUAL 12 AND _id LESS_EQUAL 27 AND NOT _id EQUAL 16 AND NOT _id EQUAL 18 AND NOT _id EQUAL 20)
+            set(_ut 1)
+        endif()
+        if(_ut)
+            math(EXPR _n_bilder "${_n_bilder} + 1")
+            math(EXPR _q "0x${_pad} & 0x8000")
+            if(NOT _q EQUAL 0)
+                math(EXPR _n_taste "${_n_taste} + 1")
+            endif()
+            list(APPEND _offen "${_id}")
+        endif()
+        if(NOT _vorher STREQUAL "" AND NOT _vorher STREQUAL "${_a}:${_id}")
+            string(REPLACE ":" ";" _v "${_vorher}")
+            list(GET _v 1 _vid)
+            list(APPEND _geschlossen "${_vid}")
+        endif()
+        set(_vorher "${_a}:${_id}")
+    endforeach()
+    list(REMOVE_DUPLICATES _offen)
+    list(REMOVE_DUPLICATES _geschlossen)
+    set(_nicht_zu "")
+    foreach(_id IN LISTS _offen)
+        list(FIND _geschlossen "${_id}" _i)
+        if(_i LESS 0)
+            list(APPEND _nicht_zu "${_id}")
+        endif()
+    endforeach()
+    list(LENGTH _offen _n_ut)
+    if(_n_bilder GREATER 0 AND _n_taste EQUAL 0 AND _n_ut GREATER_EQUAL 13 AND _nicht_zu STREQUAL "")
+        ok("N6: ${_n_ut} Untertitel des Wiedersehens, ${_n_bilder} Bilder offen, 0 mit Quadrat (state.log pad=), alle geschlossen")
+    else()
+        fail("N6: Untertitel ${_n_ut} (Soll 13), Bilder ${_n_bilder}, davon mit Quadrat ${_n_taste}, nicht geschlossen '${_nicht_zu}'")
+    endif()
+endmacro()
+
 function(_fertig)
     file(REMOVE "${_exe_kopie}")
     list(LENGTH _fehler _nf)
@@ -350,8 +490,10 @@ function(_fertig)
 endfunction()
 
 if(TEIL STREQUAL "kette")
-    file(WRITE "${WORKDIR}/plan.txt" "${_weg_vor_30c0}${_weg_marvin}${_weg_tuer_3040}${_weg_leon}")
-    re15_start_spiel(_rv 2950 ${_basis} "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_STATE_LOG=state.log "RE15_EXIT_AT=400#30E0" "${_exe_kopie}")
+    string(REPLACE "K8WAHL" "1" _weg_marvin_k "${_weg_marvin}")   # K8: Wegwerf-Frage Ja (vorbelegt) = Standardfall
+    file(WRITE "${WORKDIR}/plan.txt" "${_weg_vor_30c0}${_weg_marvin_k}${_weg_tuer_3040}${_weg_leon}")
+    re15_start_spiel(_rv 2950 ${_basis} RE15_START_ZUSTAND=70 "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_STATE_LOG=state.log
+                     "RE15_EXIT_AT=400#30E0" "${_exe_kopie}")
     if(NOT EXISTS "${WORKDIR}/debug.log")
         fail("kein debug.log (exit=${_rv})")
         _fertig()
@@ -398,6 +540,14 @@ if(TEIL STREQUAL "kette")
             ok("B3: ${_f}")
         endif()
     endforeach()
+    # NB2 N2: K8 in 3050 - Karte benutzt (echter USE-Weg), Kran-Ergebnis = sub15, Wegwerf-Frage Ja
+    pruefe_wp("N2: K8 - Red Master Keycard benutzt (Stelle vor dem Spieler, sub10)" "BENUTZE: Item 0x46 (Platz 2) -> Stelle gefunden, Inventar schliesst, Ereignis gestartet")
+    pruefe_wp("N2: K8 - Kran-Steuerspiel eroeffnet, sub15 gestartet" "EREIGNIS: (5,4) = 1 nach")
+    pruefe("N2: K8 - msg 5 You've used the Red Master Keycard." "[msgtext] room=3050 id=5 \"You've used the Red Master Keycard.\"")
+    pruefe_wp("N2: K8 - Wegwerf-Frage Ja (Standardfall, weggeworfen)" "Wegwerf-Frage Item 0x46 beantwortet -> WEGGEWORFEN (Gegenstand nicht mehr im Inventar)")
+    pruefe_wp("N2: K8 - (3,176) gesetzt (sub15 @0x02612)" "TIPPE: (3,176) = 1")
+    pruefe_wp("N2: K8 - (3,179) gesetzt (sub15 @0x0260E)" "FLAG (3,179) = 1")
+    pruefe("N2: K8 - msg 6 The system has been successfully restored." "room=3050 id=6 ")
     if(_wp MATCHES "room=30E0 spieler=\\(7025,2700\\)")
         ok("B2: Marvin betritt 30E0 im Ost-Ring (7025,2700) - die Rueckseite der Kartentuer liegt im West-Ring")
     else()
@@ -405,11 +555,14 @@ if(TEIL STREQUAL "kette")
     endif()
     pruefe("T-01: Leons Seite gesichert" "Tausch Leon -> Marvin, Leons Seite gesichert: 03 x15 15 x200")
     pruefe("T-01: Marvin Platz 0, Waffe 3 (Browning x15, H. Gun Bullets x50)" "Marvin: Platz 0 Waffe 3 (Browning x15, H. Gun Bullets x50)")
+    # NB2 N5: Leon verletzt vor dem Tausch, nach dem Rueckwechsel derselbe Wert (nicht geheilt)
+    pruefe_re("N5: Leon kommt verletzt an (vorgesetzt)" "RE15_START_ZUSTAND F[0-9]+ Raum [0-9A-F]+: HP := 70, Gift 0")
+    pruefe_hp_gleich()
     pruefe("T-01: Raumlader meldet Waffe 3 fuer Marvin (kein Messer)" "[sherry-r41] Spielermodell 0 -> 13, Waffe (aca5d) 3,")
     pruefe("3060 Marvin: Zeile 11, 3 Schuesse, Abblende" "ROOM3060: Schuss 3/3")
     pruefe("3060 Marvin: Schwarz bis zum Rueckwechsel" "Schwarz gehalten bis zum Raumwechsel - Rueckwechsel auf Leon")
-    pruefe("T-02: Marvins Seite mit allen Funden gemerkt (Red Master Keycard, Super Redhawk, Green Keycard)"
-           "Marvins Seite (Uebergabe offen): 03 x15 15 x50 46 x1 07 x6 36 x1")
+    pruefe("T-02: Marvins Seite mit allen Funden gemerkt (Super Redhawk, Green Keycard; Red Master Keycard an K8 verbraucht)"
+           "Marvins Seite (Uebergabe offen): 03 x15 15 x50 07 x6 36 x1")
     pruefe("T-01: Leon hat alles zurueck (auch die Waffe)" "Leon: Ausruest-Platz 0x00 Waffe 3")
     pruefe("T-01: Raumlader meldet Waffe 3 fuer Leon" "[sherry-r41] Spielermodell 13 -> 0, Waffe (aca5d) 3,")
     pruefe("L-08: 3020 Leon hoert die Schuesse (msg 9)" "ROOM3020: Leon hoert die Schuesse -> msg 9")
@@ -420,14 +573,22 @@ if(TEIL STREQUAL "kette")
     endforeach()
     pruefe("L6/F-05: Keycard uebergeben" "Marvin uebergibt Item 0x36 x1 -> Leons Inventar")
     pruefe("L6/F-06: Super Redhawk uebergeben (msg 19/20)" "Marvin uebergibt Item 0x07 x6 -> Leons Inventar")
-    pruefe("L6/F-06: Red Master Keycard uebergeben (msg 20)" "Marvin uebergibt Item 0x46 x1 -> Leons Inventar")
-    pruefe("msg 20 mit Namen" "You've received the Super Redhawk.")
-    # NB1 B8 Punkt 4: im Wiedersehen drueckt der Plan NUR bei Systemtexten (TIPPE ... 1); die Untertitel 12..27 laufen ohne Taste aus
-    if(_wp MATCHES "TIPPE: Systemtext msg (1[2-579]|2[1-7]) ")
-        fail("B8: Taste bei einem Untertitel des Wiedersehens")
+    string(FIND "${_dbg}" "Marvin uebergibt Item 0x46" _p)
+    if(_p LESS 0)
+        ok("N2: keine Red Master Keycard in der Uebergabe (an K8 verbraucht und weggeworfen)")
     else()
-        ok("B8: Untertitel 12..27 ohne Taste ausgelaufen (Druecke nur bei Systemtexten)")
+        fail("N2: Red Master Keycard in der Uebergabe, obwohl an K8 weggeworfen")
     endif()
+    pruefe("msg 20 mit Namen" "You've received the Super Redhawk.")
+    # NB2 N3: Reihenfolge der Zeilen im Wiedersehen (msg-Log), 21 "A keycard..." direkt nach 16 "You've received the Green Keycard."
+    folge_3060(_folge)
+    if(_folge MATCHES "12,13,14,15,16,21,17,18,19,20,22,23,24,25,26,27")
+        ok("N3: Zeilenfolge 3060 ${_folge} - 21 direkt nach 16")
+    else()
+        fail("N3: Zeilenfolge 3060 '${_folge}' (Soll ...12,13,14,15,16,21,17,18,19,20,22,23,24,25,26,27)")
+    endif()
+    # NB2 N6: Untertitel ohne Taste - gemessen an der Eingabe der Spielschleife (state.log pad=), nicht am Wegplan-Log
+    untertitel_ohne_taste()
     string(FIND "${_wp}" "TIPPE: Systemtext msg 16" _p)
     if(_p LESS 0)
         fail("B8: Systemtext 16 nicht per Taste bestaetigt")
@@ -444,21 +605,51 @@ if(TEIL STREQUAL "kette")
 elseif(TEIL STREQUAL "speichern")
     # Lauf 1: bis Marvin in 30C0 (direkt nach dem Tausch), dort speichern.
     file(WRITE "${WORKDIR}/plan1.txt" "${_weg_vor_30c0}WARTE 400\nENDE\n")
-    re15_start_spiel(_rv 900 ${_basis} "RE15_WEGPLAN=${WORKDIR}/plan1.txt" RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
+    re15_start_spiel(_rv 900 ${_basis} RE15_START_ZUSTAND=70:1 "RE15_WEGPLAN=${WORKDIR}/plan1.txt" RE15_CARD_AUTO=1 RE15_CARD_SLOT=0
                      "RE15_SAVE_TEST_AGAIN=150#30C0" "RE15_EXIT_AT=320#30C0" "${_exe_kopie}")
     file(READ "${WORKDIR}/debug.log" _dbg)
     file(RENAME "${WORKDIR}/debug.log" "${WORKDIR}/debug_1.log")
     pruefe("Lauf 1: Tausch Leon -> Marvin" "Tausch Leon -> Marvin, Leons Seite gesichert: 03 x15 15 x200")
     pruefe("Lauf 1: gespeichert als Marvin in 30C0" "[save] saved (room 30c0)")
+    pruefe_re("N5: Leon kommt verletzt und vergiftet an (vorgesetzt)" "RE15_START_ZUSTAND F[0-9]+ Raum [0-9A-F]+: HP := 70, Gift 1")
+    set(_hin "")
+    if(_dbg MATCHES "Leon: Ausruest-Platz 0x[0-9a-f]+ Waffe [0-9]+ Vor-Platz 0x[0-9a-f]+ HP ([0-9]+) Gift ([01]) Takt ([0-9]+); Marvin")
+        set(_hin "${CMAKE_MATCH_1}/${CMAKE_MATCH_2}/${CMAKE_MATCH_3}")
+        set(_gift_hin "${CMAKE_MATCH_2}")
+        set(_hp_hin "${CMAKE_MATCH_1}")
+    endif()
+    if(NOT _hin STREQUAL "" AND _gift_hin EQUAL 1 AND _hp_hin LESS 70)
+        ok("N5: Lauf 1 Tausch: Leon HP/Gift/Takt ${_hin} (vergiftet, das Gift hat seit dem Start gezehrt)")
+    else()
+        fail("N5: Lauf 1 Tausch: Leon HP/Gift/Takt '${_hin}' (Soll Gift 1, HP < 70)")
+    endif()
     # Lauf 2: laden und Marvins ganzen Weg bis 3060 spielen (Rueckwechsel nach dem Laden).
-    file(WRITE "${WORKDIR}/plan2.txt" "RAUM 30C0\nWARTE 30\n${_weg_marvin}${_weg_tuer_3040}ENDE\n")
+    string(REPLACE "K8WAHL" "2" _weg_marvin_b "${_weg_marvin}")   # K8: Wegwerf-Frage NEIN = Behalten-Fall (NB2 N2)
+    file(WRITE "${WORKDIR}/plan2.txt" "RAUM 30C0\nWARTE 30\n${_weg_marvin_b}${_weg_tuer_3040}ENDE\n")
     re15_start_spiel(_rv2 2200 RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1 RE15_CONTINUE_TEST=1 RE15_CARD_AUTO=1
                      RE15_CARD_SLOT=0 "RE15_WEGPLAN=${WORKDIR}/plan2.txt" RE15_WEGPLAN_LOG=wegplan2.txt "RE15_EXIT_AT=400#3020"
                      "${_exe_kopie}")
     file(READ "${WORKDIR}/debug.log" _dbg)
     pruefe("Lauf 2: Spielstand laedt Marvin (work_vars[0x10] = 0x0D)" "Spielstand: Marvin spielt (Leons Seite gesichert)")
     pruefe("Lauf 2: Neuladen ohne Figurwechsel-Schwanz" "Neuladen als Marvin im laufenden Tausch")
-    pruefe("Lauf 2: Marvin traegt nach seinem Weg alle Funde" "Marvins Seite (Uebergabe offen): 03 x15 15 x50 46 x1 07 x6 36 x1")
+    set(_wp "")
+    if(EXISTS "${WORKDIR}/wegplan2.txt")
+        file(READ "${WORKDIR}/wegplan2.txt" _wp)
+    endif()
+    pruefe_wp("N2: Lauf 2 K8 - Red Master Keycard benutzt" "BENUTZE: Item 0x46 (Platz 2) -> Stelle gefunden, Inventar schliesst, Ereignis gestartet")
+    pruefe_wp("N2: Lauf 2 K8 - Wegwerf-Frage NEIN (Behalten-Fall)" "Wegwerf-Frage Item 0x46 beantwortet -> BEHALTEN (Gegenstand noch im Inventar)")
+    pruefe_wp("N2: Lauf 2 K8 - (3,176) gesetzt (sub15 @0x02612)" "TIPPE: (3,176) = 1")
+    pruefe("Lauf 2: Marvin traegt nach seinem Weg alle Funde, auch die behaltene Red Master Keycard"
+           "Marvins Seite (Uebergabe offen): 03 x15 15 x50 46 x1 07 x6 36 x1")
+    set(_zur "")
+    if(_dbg MATCHES "Leon: Ausruest-Platz 0x[0-9a-f]+ Waffe [0-9]+ Vor-Platz 0x[0-9a-f]+ HP ([0-9]+) Gift ([01]) Takt ([0-9]+)\n")
+        set(_zur "${CMAKE_MATCH_1}/${CMAKE_MATCH_2}/${CMAKE_MATCH_3}")
+    endif()
+    if(NOT _hin STREQUAL "" AND _hin STREQUAL _zur)
+        ok("N5: Lauf 2 Rueckwechsel nach dem Laden: Leon HP/Gift/Takt ${_zur} = beim Tausch in Lauf 1 ${_hin} (nicht geheilt, Gift bleibt)")
+    else()
+        fail("N5: Lauf 2 Rueckwechsel: Leon HP/Gift/Takt '${_zur}' / beim Tausch in Lauf 1 '${_hin}' (Soll gleich)")
+    endif()
     pruefe("Lauf 2: Leon hat nach dem Rueckwechsel alles zurueck" "Leons Seite zurueck: 03 x15 15 x200")
     pruefe("Lauf 2: Leons Waffe zurueck" "Leon: Ausruest-Platz 0x00 Waffe 3")
     pruefe("Lauf 2: L-08 nach dem Laden" "ROOM3020: Leon hoert die Schuesse -> msg 9")

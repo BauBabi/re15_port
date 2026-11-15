@@ -11,6 +11,11 @@
 #         -> TUER Slot 0 (@0x0127E, 4:196 gesetzt) -> ROOM3060 = der Weg des Spiels.
 #         Erwartet: Marvin-Modell PL0D, Tuer-Ankunft (2063,-17192), sub03 Plc_motion(2,6) @0x010BE spielt
 #         W-Bank-Clip 6 (PL00W01, 10 Bilder) und haelt Bild 9 (@0x80050fec) — nie PL00-Clip 6 (50 Bilder = Knien).
+#         Runde 42 STAGE3a (Story v0.8.31, NB2 N1): die Fensterszene sub02 hat die Zeilen 7/8 vor dem Wechsel @0x0D7A und ist bei
+#         Bild 1150 noch nicht fertig (Cut 6, Plc_dest) - der Sprung wartet darum auf den Tausch: "3040@30#30C0" = Bild 30 im Raum
+#         30C0, den die Szene per Aot_on 2 @0x0D7E betritt (Spielermodell dann PL0D). Marvin traegt seit T-01 die Browning (Waffe 3,
+#         @0x80074bb8 [1]); sub03 laeuft als STAGE3a-Programm (Zeile 11, Schuesse, Abblende) mit den Original-Bytes bis @0x010C5
+#         (Plc_motion(2,6) @0x010BE + Sleep 40 @0x010C2).
 #   3061  Punkt 2 (Elza): Spielstand ROOM3061 (Elza (-3500,-25500) Blick 1024 = nach -z, Bits 4:244 + 3:160) + CONTINUE;
 #         nach Sherrys/Johns Einlauf (sub09/sub10) geht Elza nach -z bis an die Wand ins Ausloese-Rechteck von Slot 1
 #         (main00 @0x00E96 (-4500,-27300) 2600x1300) und drueckt QUADRAT (Vorwaerts-620-Punkt im Rechteck, Flags 0x31) ->
@@ -116,7 +121,7 @@ if(TEIL STREQUAL "3060")
     re15_start_spiel(_rv 900
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_WINDOW_SCALE=1
         "RE15_SET_FLAG=4:199,4:196" RE15_GOTO_ROOM=3020 "RE15_FORCE_EVENT=2@150"
-        RE15_DEBUG_JUMP=3040@1150 "RE15_PLAYER_POS=-8900,-26300,1024,0"
+        "RE15_DEBUG_JUMP=3040@30#30C0" "RE15_PLAYER_POS=-8900,-26300,1024,0"
         "RE15_INPUT_SCRIPT=${_druck}" "RE15_ANIM_TRACE=anim.txt" "RE15_EXIT_AT=104#3060"
         "${_exe}")
     if(NOT EXISTS "${WORKDIR}/debug.log")
@@ -149,8 +154,8 @@ if(TEIL STREQUAL "3060")
             ok("kein RE15_FIRE_AOT: die Tuer feuerte per Quadrat")
         endif()
         string(SUBSTRING "${_d}" ${_p60} -1 _d60)
-        if(_d60 MATCHES "\\[wclip41\\] ROOM3060 F[0-9]+ Spieler Plc_motion\\(2,6\\) -> W-Bank-Clip 6 [^\n]*Waffe 1, 10 Bilder")
-            ok("ROOM3060 Plc_motion(2,6) -> W-Bank-Clip 6 (Waffe 1, 10 Bilder)")
+        if(_d60 MATCHES "\\[wclip41\\] ROOM3060 F[0-9]+ Spieler Plc_motion\\(2,6\\) -> W-Bank-Clip 6 [^\n]*Waffe 3, 10 Bilder")
+            ok("ROOM3060 Plc_motion(2,6) -> W-Bank-Clip 6 (Waffe 3 = Marvins Browning seit T-01, 10 Bilder)")
         else()
             fail("keine [wclip41]-Zeile ROOM3060 W-Bank-Clip 6 / 10 Bilder")
         endif()

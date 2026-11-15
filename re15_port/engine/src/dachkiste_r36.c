@@ -51,6 +51,9 @@
 #include "re15_room.h"
 #include "re15_scd.h"
 #include "re15_msg.h"          /* re15_msg_get_raw: TIPPE sys (Systemtext 04 02) */
+#include "re15_item_discard.h" /* NB2 N2: TIPPE an der Wegwerf-Frage (Ja/Nein ins Log; TIPPE .. 2 = Nein)            */
+#include "re15_inventory.h"    /* NB2 N2: BENUTZE nur mit dem Gegenstand im Inventar                                 */
+#include "re15_keyitems_r41.h" /* NB2 N2: BENUTZE = Inventar-USE (re15_keyitems_r41_use + _schliessen)               */
 
 extern scd_vm_t g_scd;
 
@@ -157,7 +160,7 @@ void re15_dachkiste_schub_log(int prop_idx, int32_t ziel_x, int32_t ziel_z, int 
 #define WP_R1     0x0800u   /* Zielen (platform/pc/src/input_pc.c RE15_PAD_R1) */
 
 enum { WP_OBJ = 1, WP_RAUM, WP_WARTE, WP_GEGNERWEG, WP_ZELLE, WP_GEHE, WP_BLICK, WP_SCHIEB, WP_AKTION, WP_AOTS, WP_FLAG, WP_ENDE,
-       WP_SCHIESS, WP_GEHE_OBJ, WP_BLICK_OBJ, WP_TIPPE, WP_LAUF, WP_JAGE, WP_RAEUME };
+       WP_SCHIESS, WP_GEHE_OBJ, WP_BLICK_OBJ, WP_TIPPE, WP_LAUF, WP_JAGE, WP_RAEUME, WP_BENUTZE, WP_EREIGNIS };
 
 typedef struct {
     int kind;
@@ -276,6 +279,15 @@ static void wp_parse(const char *pfad)
         else if (!strcmp(w, "LAUF"))      { cmd.kind = WP_LAUF; c = 600; sscanf(zeile, "%*s %d %d %d", &a, &b, &c);
                                             cmd.a = a; cmd.b = b; cmd.c = c; }
         else if (!strcmp(w, "GEHE_OBJ"))  { cmd.kind = WP_GEHE_OBJ; c = 150; sscanf(zeile, "%*s %d", &c); cmd.c = c; }
+        /* Runde 42 Story STAGE3a NB2 (N2): BENUTZE item = der Inventar-USE des Gegenstands, wie ihn der Spieler im Menue waehlt: dieselbe
+         * Pruefung "Stelle vor dem Spieler" wie die Aktionstaste (re15_keyitems_r41_use, FUN_80042bac-Geometrie), dann schliesst das
+         * Inventar und das Ereignis der Stelle startet (re15_keyitems_r41_schliessen). Nur das Menue selbst bedient der Wegplan nicht;
+         * ohne den Gegenstand im Inventar oder ohne Stelle passiert nichts (Log).
+         * EREIGNIS sub bank bit [max] = wartet, bis Flag (bank,bit) = 1, und startet dann sub (scd_event_fire) - fuer ein Ergebnis, das der
+         * Bot nicht spielen kann und das das Spiel selbst per Evt_exec startet (Kran-Steuerspiel ROOM3050: sub01 @0x0221C -> sub15). */
+        else if (!strcmp(w, "BENUTZE"))   { cmd.kind = WP_BENUTZE; sscanf(zeile, "%*s %i", &a); cmd.a = a; }
+        else if (!strcmp(w, "EREIGNIS"))  { cmd.kind = WP_EREIGNIS; d = 300; sscanf(zeile, "%*s %d %d %d %d", &a, &b, &c, &d);
+                                            cmd.a = a; cmd.b = b; cmd.c = c; cmd.d = d; }
         else if (!strcmp(w, "BLICK_OBJ")) { cmd.kind = WP_BLICK_OBJ; }
         else continue;
         s_wp[s_wp_n++] = cmd;
@@ -316,6 +328,8 @@ static void wp_start(const wp_cmd_t *c)
     case WP_RAEUME: wp_log("RAEUME bis kein Gegner naeher als %d, max %d Bilder", c->a, c->b); break;
     case WP_GEHE_OBJ: wp_log("GEHE_OBJ Slot %d (%d,%d) tol %d", s_wp_obj, g_scd.props[s_wp_obj].x, g_scd.props[s_wp_obj].z, c->c); break;
     case WP_BLICK_OBJ: wp_log("BLICK_OBJ Slot %d", s_wp_obj); break;
+    case WP_BENUTZE: wp_log("BENUTZE Item 0x%02x", c->a); break;
+    case WP_EREIGNIS: wp_log("EREIGNIS sub %d nach (%d,%d) = 1, max %d Bilder", c->a, c->b, c->c, c->d); break;
     default: break;
     }
 }
@@ -385,10 +399,11 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
         return 1;
     }
     /* Szene: Pad weg, warten - ausser TIPPE (Runde 42 Story STAGE3a): Systemtexte in einer Szene ("You've received ...", Ctrl 01:END)
-     * schliesst wie im Spiel erst ein Tastendruck. */
+     * schliesst wie im Spiel erst ein Tastendruck; und EREIGNIS (NB2 N2): das Kran-Steuerspiel ROOM3050 haelt den Spieler fest
+     * (sub01 Bank 5 Bit 5 -> Set(2,0)/(2,2) @0x0222E/@0x02232). */
     {   /* ein Flag-Befehl, dessen Flag schon steht, endet auch in einer Szene (sonst kaeme das folgende TIPPE nie dran) */
         const int flagbefehl = (c->kind == WP_JAGE || c->kind == WP_SCHIESS || c->kind == WP_LAUF);
-        if (g_scd.player_mode == 2 && c->kind != WP_TIPPE && !(flagbefehl && re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b))) {
+        if (g_scd.player_mode == 2 && c->kind != WP_TIPPE && c->kind != WP_EREIGNIS && !(flagbefehl && re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b))) {
             *bits = 0; s_wp_bits = 0; return 1; }
     }
 
@@ -482,10 +497,40 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
         out = WP_UP;
         if (++s_wp_zaehler >= c->c) { wp_log("  LAUF: %d Bilder ohne (%d,%d)", s_wp_zaehler, c->a, c->b); wp_naechster("max Bilder"); }
         break;
-    case WP_TIPPE:
+    case WP_TIPPE: {
+        {   /* NB2 N2: Ergebnis der Wegwerf-Frage, sobald sie zu ist (vor der Flag-Pruefung: das Skript setzt sein Flag direkt danach) */
+            static int s_dw_offen = 0; static unsigned s_dw_weg = 0; static uint8_t s_dw_item = 0;
+            uint8_t it = 0; int wa = 0;
+            if (re15_discard_prompt(&it, &wa)) {
+                static int s_dw_wahl = -1;
+                if (!s_dw_offen) { s_dw_offen = 1; s_dw_weg = (unsigned)re15_discard_weggeworfen(); s_dw_item = it; s_dw_wahl = -1; }
+                if (wa != s_dw_wahl) { wp_log("  TIPPE: Wegwerf-Frage Item 0x%02x: Auswahl %s", (unsigned)it, wa ? "Nein" : "Ja");
+                                       s_dw_wahl = wa; }
+            } else if (s_dw_offen) {
+                s_dw_offen = 0;
+                const int weg = (unsigned)re15_discard_weggeworfen() != s_dw_weg;
+                wp_log("  TIPPE: Wegwerf-Frage Item 0x%02x beantwortet -> %s (Gegenstand %s im Inventar)", (unsigned)s_dw_item,
+                       weg ? "WEGGEWORFEN" : "BEHALTEN", re15_inv_find_item(s_dw_item) >= 0 ? "noch" : "nicht mehr");
+            }
+        }
         if (re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b)) { wp_log("  TIPPE: (%d,%d) = 1 nach %d Bildern", c->a, c->b, s_wp_zaehler);
                                                                wp_naechster("Flag gesetzt"); break; }
-        if (c->d == 1) {
+        /* NB2 N2: Wegwerf-Frage ("You don't need this ... Discard it?", item_discard_common.c, Ja vorbelegt @0x8002FE88). TIPPE .. 0/1
+         * bestaetigt die Vorbelegung Ja; TIPPE .. 2 waehlt erst Nein (Steuerkreuz rechts = virtuell 0x3000 @0x800285d8), dann Quadrat.
+         * Jede Antwort steht im Log. */
+        uint8_t dw_item = 0; int dw_wahl = 0;
+        if (re15_discard_prompt(&dw_item, &dw_wahl) && re15_discard_ready()) {
+            if ((s_wp_zaehler % 30) < 3) {
+                if (c->d == 2 && dw_wahl == 0) out = WP_RIGHT;
+                else out = WP_SQUARE;
+                if ((s_wp_zaehler % 30) == 0)
+                    wp_log("  TIPPE: Wegwerf-Frage Item 0x%02x, Auswahl %s -> %s", (unsigned)dw_item, dw_wahl ? "Nein" : "Ja",
+                           out == WP_SQUARE ? (dw_wahl ? "bestaetigt: NEIN (behalten)" : "bestaetigt: JA (weggeworfen)") : "rechts");
+            }
+            if (++s_wp_zaehler >= c->c) { wp_log("  TIPPE: %d Bilder ohne (%d,%d)", s_wp_zaehler, c->a, c->b); wp_naechster("max Bilder"); }
+            break;
+        }
+        if (c->d == 1 || c->d == 2) {   /* 2 = wie 1, an der Wegwerf-Frage aber Nein (oben) */
             int len = 0;
             const unsigned char *m = g_scd.message_active ? re15_msg_get_raw(g_scd.message_id, &len) : NULL;
             const int sys = m && len >= 2 && m[0] == 0x04 && m[1] == 0x02;
@@ -495,6 +540,28 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
             }
         } else if ((s_wp_zaehler % 30) < 3) out = WP_SQUARE;
         if (++s_wp_zaehler >= c->c) { wp_log("  TIPPE: %d Bilder ohne (%d,%d)", s_wp_zaehler, c->a, c->b); wp_naechster("max Bilder"); }
+        break; }
+    case WP_BENUTZE: {
+        const int platz = re15_inv_find_item((uint8_t)c->a);
+        if (platz < 0) { wp_log("  BENUTZE: Item 0x%02x nicht im Inventar", c->a); wp_naechster("kein Gegenstand"); break; }
+        if (!re15_keyitems_r41_use((uint8_t)c->a)) {
+            wp_log("  BENUTZE: Item 0x%02x (Platz %d) - keine Stelle vor dem Spieler (You can't use it here.)", c->a, platz);
+            wp_naechster("keine Stelle"); break; }
+        const int ok = re15_keyitems_r41_schliessen();
+        wp_log("  BENUTZE: Item 0x%02x (Platz %d) -> Stelle gefunden, Inventar schliesst, Ereignis %s", c->a, platz,
+               ok ? "gestartet" : "NICHT gestartet");
+        wp_naechster(ok ? "benutzt" : "Ereignis nicht gestartet");
+        break; }
+    case WP_EREIGNIS:
+        if (re15_game_flag_get((uint8_t)c->b, (uint8_t)c->c)) {
+            extern int scd_event_fire(uint8_t event_id);
+            const int slot = scd_event_fire((uint8_t)c->a);
+            wp_log("  EREIGNIS: (%d,%d) = 1 nach %d Bildern -> sub %d %s (Slot %d)", c->b, c->c, s_wp_zaehler, c->a,
+                   slot >= 0 ? "gestartet" : "NICHT gestartet", slot);
+            wp_naechster(slot >= 0 ? "gestartet" : "nicht gestartet");
+            break;
+        }
+        if (++s_wp_zaehler >= c->d) { wp_log("  EREIGNIS: %d Bilder ohne (%d,%d)", s_wp_zaehler, c->b, c->c); wp_naechster("max Bilder"); }
         break;
     case WP_FLAG:   /* Nachbesserung 3: Spielflag (Bank, Bit) ins Log — z. B. der Latch (3,172) von ROOM2060 sub01 */
         wp_log("  FLAG (%d,%d) = %d", c->a, c->b, re15_game_flag_get((uint8_t)c->a, (uint8_t)c->b));

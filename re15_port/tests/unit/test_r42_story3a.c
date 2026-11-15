@@ -16,7 +16,11 @@
  *               ohne Schwanz (HP bleibt), Waffe aus dem Platz; danach Rueckwechsel gibt Leon alles zurueck
  *   hebung      v9-Block (Pruefwort bei 940) laedt als v10 ohne Tausch
  *   wiedersehen 3060 als Leon nach Marvins Abschnitt, Hunde tot: Marvin erscheint an der orangen Tuer, Zeilen 12..27, Keycard + Fabrikplan
- *               (Bit 35, Blatt 7) + Redhawk + Magnum (msg 20 je Fund mit Namen) in Leons Inventar, Marvin geht durch die Tuer, Bit 124
+ *               (Bit 35, Blatt 7) + Redhawk + Magnum (msg 20 je Fund mit Namen) in Leons Inventar, Marvin geht durch die Tuer, Bit 124.
+ *               Standardfall NB2 N2: die Red Master Keycard ist an K8 ROOM3050 verbraucht (weggeworfen) - keine Uebergabe; Reihenfolge
+ *               NB2 N3: 21 "A keycard..." direkt nach 16 "You've received the Green Keycard."
+ *   wiedersehen_rot  NB2 N2/N3: Marvin hat die Red Master Keycard behalten (Wegwerf-Frage abgelehnt): ihr Empfang kommt VOR der Green
+ *               Keycard (15 -> Red 20 -> Green 16 -> 21), danach Plan und die weiteren Funde
  *   karte3010   Kartentuer 3010 Platz 6: nach Marvins Abschnitt ohne Uebergabe "locked" (msg 0 @0x020B2), nach Bit 124 die Original-Wege
  *   rdttexte    NB1 B1/B5: nach dem ECHTEN Raumaufbau (scd_room_reenter + re15_msg_load_room_block) stehen in 3020 msg 0..2 und 30E0
  *               msg 3 die neuen Texte (Wortlaut), Elzas 3021 behaelt den RDT-Text
@@ -57,6 +61,7 @@
 #include "re15_story_r42.h"
 #include "re15_climb.h"
 #include "re15_npckante_r38.h"
+#include "re15_zustand_r39.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -300,18 +305,32 @@ static void teil_programme(void)
         PRUEF(!memcmp(p, g_room_rdt.raw + RE15_S3A_3060_SUB03_OFF, RE15_S3A_3060_NACH_SLEEP - RE15_S3A_3060_SUB03_OFF),
               "3060 Marvin: Original-Bytes @0x0104A..@0x010C5 unveraendert vorn (Hunde los, Plc_motion(2,6), Sleep 40)");
     }
-    static const struct { const char *name; uint8_t ids[4]; uint8_t qty[4]; const char *soll; int ueb; } fall[] = {
-        { "Keycard",           { 0x03, 0x15, 0x36, 0 },    { 15, 50, 1, 0 }, "12,13,14,15,16,17,18,21,22,23,24,25,26,27", 2 },
-        { "Keycard + Redhawk", { 0x03, 0x15, 0x36, 0x07 }, { 15, 50, 1, 6 }, "12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27", 3 },
-        { "ohne Keycard",      { 0x03, 0x15, 0, 0 },       { 15, 50, 0, 0 }, "12,13,14,17,18,22,23,24,25,26,27", 1 },
+    /* NB2 N3: 21 "A keycard... This should open the door in the loading area." folgt direkt auf 16 (Green Keycard); behaelt Marvin die
+     * Red Master Keycard (0x46), kommt ihr Empfang (20) VOR der Green Keycard. "U" = Uebergabe-Schritt (Signal 0x19) in der Folge. */
+    static const struct { const char *name; uint8_t ids[5]; uint8_t qty[5]; const char *soll; int ueb; const char *soll_u; } fall[] = {
+        { "Keycard",           { 0x03, 0x15, 0x36, 0, 0 },    { 15, 50, 1, 0, 0 }, "12,13,14,15,16,21,17,18,22,23,24,25,26,27", 2,
+          "15,U,16,21,17,U,18,22" },
+        { "Keycard + Redhawk", { 0x03, 0x15, 0x36, 0x07, 0 }, { 15, 50, 1, 6, 0 }, "12,13,14,15,16,21,17,18,19,20,22,23,24,25,26,27", 3,
+          "15,U,16,21,17,U,18,19,U,20,22" },
+        { "ohne Keycard",      { 0x03, 0x15, 0, 0, 0 },       { 15, 50, 0, 0, 0 }, "12,13,14,17,18,22,23,24,25,26,27", 1, "14,17,U,18,22" },
         /* NB1 B8: 80 H. Gun Bullets = 50 eigene + 30 gefundene -> die 30 sind ein Fund (msg 19/20) */
-        { "Munition ueber 50", { 0x03, 0x15, 0x36, 0 },    { 15, 80, 1, 0 }, "12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27", 3 },
-        { "Munition 50",       { 0x03, 0x15, 0x36, 0 },    { 15, 50, 1, 0 }, "12,13,14,15,16,17,18,21,22,23,24,25,26,27", 2 },
+        { "Munition ueber 50", { 0x03, 0x15, 0x36, 0, 0 },    { 15, 80, 1, 0, 0 }, "12,13,14,15,16,21,17,18,19,20,22,23,24,25,26,27", 3,
+          "15,U,16,21,17,U,18,19,U,20,22" },
+        { "Munition 50",       { 0x03, 0x15, 0x36, 0, 0 },    { 15, 50, 1, 0, 0 }, "12,13,14,15,16,21,17,18,22,23,24,25,26,27", 2,
+          "15,U,16,21,17,U,18,22" },
+        /* NB2 N2: Wegwerf-Frage an K8 abgelehnt -> Marvin traegt die Red Master Keycard */
+        { "Red behalten",      { 0x03, 0x15, 0x46, 0x36, 0 }, { 15, 50, 1, 1, 0 }, "12,13,14,15,20,16,21,17,18,22,23,24,25,26,27", 3,
+          "15,U,20,U,16,21,17,U,18,22" },
+        { "Red + Redhawk",     { 0x03, 0x15, 0x46, 0x07, 0x36 }, { 15, 50, 1, 6, 1 }, "12,13,14,15,20,16,21,17,18,19,20,22,23,24,25,26,27", 4,
+          "15,U,20,U,16,21,17,U,18,19,U,20,22" },
+        /* Altstand (Leon traegt die Green Keycard schon nicht im Spiel; hier: Marvin ohne Green Keycard, aber mit der Red) */
+        { "Red ohne Keycard",  { 0x03, 0x15, 0x46, 0, 0 },    { 15, 50, 1, 0, 0 }, "12,13,14,17,18,19,20,22,23,24,25,26,27", 2,
+          "14,17,U,18,19,U,20,22" },
     };
     for (size_t f = 0; f < sizeof fall / sizeof fall[0]; f++) {
         re15_s3a_figur_t s; memset(&s, 0, sizeof s);
         s.marvin_offen = 1;
-        for (int i = 0; i < 4; i++) { s.marvin[i].id = fall[f].ids[i]; s.marvin[i].qty = fall[f].qty[i]; }
+        for (int i = 0; i < 5; i++) { s.marvin[i].id = fall[f].ids[i]; s.marvin[i].qty = fall[f].qty[i]; }
         uint8_t blk[RE15_S3A_SPEICHER_BYTES]; memset(blk, 0, sizeof blk); memcpy(blk, &s, sizeof s);
         re15_game_state_init();
         re15_story3a_r42_import(blk);
@@ -323,6 +342,17 @@ static void teil_programme(void)
         }
         PRUEF(!strcmp(als_text(ids, k, t, sizeof t), fall[f].soll), "Wiedersehen %s: Zeilen %s (soll %s)", fall[f].name, t, fall[f].soll);
         PRUEF(ueb == fall[f].ueb, "Wiedersehen %s: %d Uebergaben (soll %d)", fall[f].name, ueb, fall[f].ueb);
+        {   /* Folge mit Uebergabe-Schritten */
+            char u[240] = "";
+            for (int i = 0; i + 3 < n; i++) {
+                if (p[i] == 0x2b && p[i + 2] == 0x00 && p[i + 3] == 0x00)
+                    snprintf(u + strlen(u), sizeof u - strlen(u), "%s%d", u[0] ? "," : "", p[i + 1]);
+                if (p[i] == 0x22 && p[i + 1] == 5 && p[i + 2] == RE15_S3A_SIG_UEBERGABE && p[i + 3] == 1)
+                    snprintf(u + strlen(u), sizeof u - strlen(u), "%sU", u[0] ? "," : "");
+            }
+            PRUEF(strstr(u, fall[f].soll_u) != NULL, "Wiedersehen %s: Folge mit Uebergaben enthaelt %s (%s)", fall[f].name,
+                  fall[f].soll_u, u);
+        }
         PRUEF(b124 && n >= 2 && p[n - 2] == 0x01 && p[n - 1] == 0x00, "Wiedersehen %s: Set(9,124,1) und Evt_end", fall[f].name);
     }
     re15_story3a_r42_neues_spiel();
@@ -340,6 +370,7 @@ static void teil_tausch(void)
     memcpy(leon_vorher, g_inv.slots, sizeof leon_vorher);
     g_actors[RE15_ACTOR_SLOT_PLAYER].hp = 64;
     g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags = 0x2u;              /* Gift (Bit 0x2 von 0x800acaec) */
+    re15_zustand_r39_gift_takt_setzen(17);                             /* NB2 N5: Takt-Zaehler (RE2 cfe12) mitten im Takt */
     re15_inv_set_prev_equip_slot(2);
     re15_sherry_r41_modell_init(0);
     re15_sherry_r41_modell_setzen(RE15_S3A_MODELL_MARVIN);             /* ROOM3020 @0x00D7A -> Raumlader */
@@ -351,6 +382,8 @@ static void teil_tausch(void)
           re15_inv_equipped_slot(), re15_player_equipped_weapon());
     PRUEF(g_actors[RE15_ACTOR_SLOT_PLAYER].hp == 100 && !(g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags & 0x2u),
           "Marvin: HP := 100, kein Gift (Schwanz FUN_800314b0 @0x80031710/@0x80031720 bleibt)");
+    PRUEF(re15_zustand_r39_gift_zaehler() == 0, "NB2 N5: Marvin: Takt-Zaehler 0 (RE2 `sb zero,0x3c2a(s0)` @0x8004a010) - %u",
+          (unsigned)re15_zustand_r39_gift_zaehler());
     const re15_s3a_figur_t *f = re15_story3a_r42_figur();
     PRUEF(!memcmp(f->leon, leon_vorher, sizeof leon_vorher) && f->leon_platz == 0 && f->leon_waffe == 0x03,
           "Leons Seite, Platz 0 und Waffe 3 gesichert (vor dem Schwanz)");
@@ -364,6 +397,8 @@ static void teil_tausch(void)
           "NB1 B8: Leon hat HP 64 und Gift zurueck (RE2 FUN_80049e48 @0x8004a058-@0x8004a07c; keine Heilung) - HP %d",
           (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp);
     PRUEF(re15_inv_prev_equip_slot() == 2, "NB1 B8: Vor-Platz 2 zurueck (nicht 0x80) - %d", re15_inv_prev_equip_slot());
+    PRUEF(re15_zustand_r39_gift_zaehler() == 17, "NB2 N5: Takt-Zaehler 17 zurueck (RE2 @0x8004a064/@0x8004a078) - %u",
+          (unsigned)re15_zustand_r39_gift_zaehler());
     PRUEF(f->marvin_offen && seite_menge(f->marvin, 0x36) == 1 && seite_menge(f->marvin, 0x07) == 6,
           "Marvins Funde (Keycard, Redhawk x6) fuer die Uebergabe gemerkt");
     PRUEF(inv_menge(0x36) == 0, "Leon hat die Keycard NICHT (erst die Uebergabe, L6)");
@@ -466,9 +501,12 @@ static void teil_hebung(void)
 }
 
 /* ---- wiedersehen ------------------------------------------------------------------------------------------------ */
-static void teil_wiedersehen(void)
+/* Laeuft die Szene in 3060 mit Marvins Seite (ids/qty) und schreibt die FOLGE der Ereignisse mit: jede neu geoeffnete Nachricht (Id) und
+ * jeder Gegenstand, der in Leons Inventar ankommt ("+xx"). NB2 N3 misst daran, dass 21 direkt auf "+36,16" folgt und die Red Master
+ * Keycard (behalten) VOR der Green Keycard ankommt. */
+static int wiedersehen_lauf(const uint8_t *ids, const uint8_t *qty, int n, char *folge, size_t g, int *marvin_da, int *tuer,
+                            int *cut4, int *schwarz_max)
 {
-    printf("== wiedersehen ==\n");
     re15_game_state_init();
     re15_story3a_r42_neues_spiel();
     g_gameflow.character = 0;
@@ -476,32 +514,57 @@ static void teil_wiedersehen(void)
     re15_game_flag_set(7, 0x50, 1); re15_game_flag_set(7, 0x51, 1); re15_game_flag_set(7, 0x52, 1);
     re15_s3a_figur_t s; memset(&s, 0, sizeof s);
     s.marvin_offen = 1;
-    static const uint8_t ids[5] = { 0x03, 0x15, 0x36, 0x07, 0x17 }, qty[5] = { 9, 44, 1, 6, 6 };
-    for (int i = 0; i < 5; i++) { s.marvin[i].id = ids[i]; s.marvin[i].qty = qty[i]; }
+    for (int i = 0; i < n; i++) { s.marvin[i].id = ids[i]; s.marvin[i].qty = qty[i]; }
     uint8_t blk[RE15_S3A_SPEICHER_BYTES]; memset(blk, 0, sizeof blk); memcpy(blk, &s, sizeof s);
     re15_story3a_r42_import(blk);
-    const unsigned z7 = g_re15_s3a_zaehler[7], z8 = g_re15_s3a_zaehler[8];
-    if (room_boot(0x3060, -26027, 0, -22532, 0, 0) != 0) return;
+    if (room_boot(0x3060, -26027, 0, -22532, 0, 0) != 0) return -1;
     leon_inventar();
     PRUEF(typ_zahl(0x20) == 0, "Hunde tot (Kill-Ids 0x50..0x52 @0x00FB8.. in Zone 7): kein Hund");
-    int marvin_da = 0, tuer = 0, schwarz_max = 0, schwarz = 0, cut4 = 0, f;
+    int schwarz = 0, f, offen = -1;
+    uint8_t da[256]; memset(da, 0, sizeof da);
+    for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) if (g_inv.slots[i].id) da[g_inv.slots[i].id] = 1;
+    folge[0] = 0;
+    *marvin_da = *tuer = *cut4 = *schwarz_max = 0;
     for (f = 0; f < 9000 && !bit9(RE15_R42_BIT_3060_UEBERGABE); f++) {
         const int sys = g_scd.message_active && (g_scd.message_id == 16 || g_scd.message_id == 18 || g_scd.message_id == 20);
         frame(0, (uint16_t)((sys && (f % 20) == 0) ? RE15_PAD_BIT_SQUARE : 0));
-        if (g_scd.cam_id == RE15_S3A_CUT_TUER) cut4 = 1;
-        if (g_fade_ch[RE15_S1_BLENDE_KANAL].level == RE15_S1_BLENDE_SCHWARZ) { if (++schwarz > schwarz_max) schwarz_max = schwarz; }
+        for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) {
+            const uint8_t id = g_inv.slots[i].id;
+            if (id && !da[id]) { da[id] = 1; snprintf(folge + strlen(folge), g - strlen(folge), "%s+%02x", folge[0] ? "," : "", id); }
+        }
+        if (g_scd.message_active && (int)g_scd.message_id != offen) {
+            offen = (int)g_scd.message_id;
+            snprintf(folge + strlen(folge), g - strlen(folge), "%s%d", folge[0] ? "," : "", offen);
+        }
+        if (!g_scd.message_active) offen = -1;
+        if (g_scd.cam_id == RE15_S3A_CUT_TUER) *cut4 = 1;
+        if (g_fade_ch[RE15_S1_BLENDE_KANAL].level == RE15_S1_BLENDE_SCHWARZ) { if (++schwarz > *schwarz_max) *schwarz_max = schwarz; }
         else schwarz = 0;
         for (int i = 1; i < RE15_ACTOR_MAX; i++) {
             const re15_actor_t *a = &g_actors[i];
             if (!a->active || a->type != RE15_S3A_TYP_MARVIN) continue;
-            if (!marvin_da) {
-                marvin_da = 1;
+            if (!*marvin_da) {
+                *marvin_da = 1;
                 const int dx = a->x - RE15_S3A_TUER_X, dz = a->z - RE15_S3A_TUER_Z;
-                tuer = dx * dx + dz * dz < 300 * 300;
+                *tuer = dx * dx + dz * dz < 300 * 300;
             }
         }
     }
     for (int k = 0; k < 120; k++) frame(0, 0);
+    return f;
+}
+
+static void teil_wiedersehen(void)
+{
+    printf("== wiedersehen ==\n");
+    /* Standardfall (NB2 N2): die Red Master Keycard ist an K8 ROOM3050 verbraucht und weggeworfen (sub15 msg 5 @0x02608 + Wegwerf-
+     * Frage, Ja vorbelegt) - Marvin traegt sie nicht mehr. */
+    static const uint8_t ids[5] = { 0x03, 0x15, 0x36, 0x07, 0x17 }, qty[5] = { 9, 44, 1, 6, 6 };
+    const unsigned z7 = g_re15_s3a_zaehler[7], z8 = g_re15_s3a_zaehler[8];
+    char folge[400];
+    int marvin_da, tuer, cut4, schwarz_max;
+    const int f = wiedersehen_lauf(ids, qty, 5, folge, sizeof folge, &marvin_da, &tuer, &cut4, &schwarz_max);
+    if (f < 0) return;
     PRUEF(g_re15_s3a_zaehler[7] == z7 + 1, "Wiedersehen einmal gestartet");
     PRUEF(marvin_da && tuer, "Marvin erscheint an der orangen Tuer (%d,%d) (Pos_set @0x01064)", RE15_S3A_TUER_X, RE15_S3A_TUER_Z);
     PRUEF(cut4, "Kamera %d (blickt auf die orange Tuer)", RE15_S3A_CUT_TUER);
@@ -509,6 +572,9 @@ static void teil_wiedersehen(void)
     char t[160] = "";
     for (int id = 11; id < 64; id++) if (s_msg_gesehen[id]) snprintf(t + strlen(t), sizeof t - strlen(t), "%s%d", t[0] ? "," : "", id);
     PRUEF(!strcmp(t, "12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27"), "Zeilen %s", t);
+    PRUEF(strstr(folge, "15,+36,16,21,17,18,19,+07,20,+17,20,22,23,24,25,26,27") != NULL,
+          "NB2 N3: Folge 15 -> Green Keycard (+36) -> 16 -> 21 direkt danach -> Plan 17/18 -> 19/20 je Fund: %s", folge);
+    PRUEF(!strstr(folge, "+46"), "NB2 N2: keine Red Master Keycard (an K8 verbraucht)");
     PRUEF(g_re15_s3a_zaehler[8] == z8 + 3, "drei Gegenstaende uebergeben (Keycard, Redhawk, Magnum)");
     PRUEF(inv_menge(0x36) == 1 && inv_menge(0x07) == 6 && inv_menge(0x17) == 6, "Leon: Green Keycard, Super Redhawk x6, Magnum Bullets x6");
     PRUEF(re15_game_flag_get(3, RE15_S3A_KARTE_BIT), "Keycard uebergeben -> (3,0x3B) = 1 wie ROOM3040 sub01 @0x014DA (Kartentuer 3010, K7)");
@@ -522,6 +588,25 @@ static void teil_wiedersehen(void)
     room_boot(0x3060, -26027, 0, -22532, 0, 0);
     for (int k = 0; k < 200; k++) frame(0, 0);
     PRUEF(g_re15_s3a_zaehler[7] == z7 + 1 && typ_zahl(RE15_S3A_TYP_MARVIN) == 0, "wieder betreten: keine zweite Szene");
+}
+
+static void teil_wiedersehen_rot(void)
+{
+    printf("== wiedersehen_rot ==\n");
+    /* Behalten-Fall (NB2 N2): Wegwerf-Frage an K8 abgelehnt - die benutzte Red Master Keycard liegt noch in Marvins Seite. */
+    static const uint8_t ids[5] = { 0x03, 0x15, 0x46, 0x07, 0x36 }, qty[5] = { 15, 50, 1, 6, 1 };
+    const unsigned z8 = g_re15_s3a_zaehler[8];
+    char folge[400];
+    int marvin_da, tuer, cut4, schwarz_max;
+    const int f = wiedersehen_lauf(ids, qty, 5, folge, sizeof folge, &marvin_da, &tuer, &cut4, &schwarz_max);
+    if (f < 0) return;
+    PRUEF(strstr(folge, "15,+46,20,+36,16,21,17,18,19,+07,20,22,23,24,25,26,27") != NULL,
+          "NB2 N3: Folge 15 -> Red Master Keycard (+46, 20) VOR der Green Keycard (+36, 16) -> 21 direkt danach -> Plan -> Redhawk: %s",
+          folge);
+    PRUEF(g_re15_s3a_zaehler[8] == z8 + 3, "drei Gegenstaende uebergeben (Red Master Keycard, Green Keycard, Redhawk)");
+    PRUEF(inv_menge(0x46) == 1 && inv_menge(0x36) == 1 && inv_menge(0x07) == 6, "Leon: Red Master Keycard, Green Keycard, Super Redhawk x6");
+    PRUEF(bit9(RE15_R42_BIT_3060_UEBERGABE), "Bit 124 nach %d Bildern", f);
+    PRUEF(!re15_story3a_r42_figur()->marvin_offen, "Uebergabe erledigt");
 }
 
 /* ---- karte3010 -------------------------------------------------------------------------------------------------- */
@@ -656,6 +741,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "speichern")) teil_speichern();
     else if (!strcmp(t, "hebung")) teil_hebung();
     else if (!strcmp(t, "wiedersehen")) teil_wiedersehen();
+    else if (!strcmp(t, "wiedersehen_rot")) teil_wiedersehen_rot();
     else if (!strcmp(t, "karte3010")) teil_karte3010();
     else if (!strcmp(t, "rdttexte")) teil_rdttexte();
     else if (!strcmp(t, "weg30e0")) teil_weg30e0();

@@ -27,6 +27,7 @@
 #include "re15_item_prompt.h"
 #include "re15_gameflow.h"
 #include "re15_fade.h"
+#include "re15_zustand_r39.h"       /* NB2 N5: RE2-Gift-Takt-Zaehler (cfe12) sichern */
 #include "re15_story1_r42.h"        /* RE15_S1_BLENDE_* (Bausteine der Abblende, belegt dort) */
 #include "font_width.h"             /* Vorschub DEBUG.BIN[0x4416+code] fuer msg 20 */
 
@@ -107,7 +108,11 @@ void re15_story3a_r42_figur_nach(int alt, int neu)
         {
             const int hp = s_hp_vor >= 0 ? s_hp_vor : 100;
             s_f.leon_hp_lo = (uint8_t)(hp & 0xff); s_f.leon_hp_hi = (uint8_t)((hp >> 8) & 0xff);
-            s_f.leon_gift = (uint8_t)((s_status_vor & 0x2u) ? 1 : 0);
+            /* Gift-Wort cfe10 (@0x8004a008 -> @0x8004a038) und - NB2 N5 - Takt-Zaehler cfe12 (`lbu v1,0x3c2a(s0)` @0x8004a004 ->
+             * `sb v1,..d46b3` @0x8004a02c), der fuer Marvin genullt wird (`sb zero,0x3c2a(s0)` @0x8004a010) */
+            const unsigned takt = (unsigned)re15_zustand_r39_gift_zaehler() & RE15_S3A_TAKT_MASKE;
+            s_f.leon_gift = (uint8_t)(((s_status_vor & 0x2u) ? RE15_S3A_GIFT_BIT : 0u) | (takt << RE15_S3A_TAKT_SHIFT));
+            re15_zustand_r39_gift_takt_setzen(0);
         }
         memcpy(s_f.leon, g_inv.slots, sizeof s_f.leon);
         memset(s_f.marvin, 0, sizeof s_f.marvin);
@@ -121,9 +126,11 @@ void re15_story3a_r42_figur_nach(int alt, int neu)
         re15_player_waffe_roh(RE15_S3A_PISTOLE);             /* RE2 Ada: Waffe 3 @0x8006901c */
         g_re15_s3a_zaehler[0]++;
         seite_loggen("Tausch Leon -> Marvin, Leons Seite gesichert", s_f.leon);
-        S3A_LOG("Leon: Ausruest-Platz 0x%02x Waffe %d Vor-Platz 0x%02x HP %d Gift %d; Marvin: Platz 0 Waffe %d (Browning x%d, "
+        S3A_LOG("Leon: Ausruest-Platz 0x%02x Waffe %d Vor-Platz 0x%02x HP %d Gift %d Takt %u; Marvin: Platz 0 Waffe %d (Browning x%d, "
                 "H. Gun Bullets x%d)", (unsigned)s_f.leon_platz, (int)s_f.leon_waffe, (unsigned)s_f.leon_vorplatz,
-                (int)s_f.leon_hp_lo | ((int)s_f.leon_hp_hi << 8), (int)s_f.leon_gift, re15_player_equipped_weapon(),
+                (int)s_f.leon_hp_lo | ((int)s_f.leon_hp_hi << 8), (int)(s_f.leon_gift & RE15_S3A_GIFT_BIT),
+                (unsigned)((s_f.leon_gift >> RE15_S3A_TAKT_SHIFT) & RE15_S3A_TAKT_MASKE),
+                re15_player_equipped_weapon(),
                 RE15_S3A_PISTOLE_MENGE, RE15_S3A_MUNITION_MENGE);
         return;
     }
@@ -142,16 +149,17 @@ void re15_story3a_r42_figur_nach(int alt, int neu)
         {
             const int hp = (int)s_f.leon_hp_lo | ((int)s_f.leon_hp_hi << 8);
             if (hp > 0) g_actors[RE15_ACTOR_SLOT_PLAYER].hp = (int16_t)hp;
-            if (s_f.leon_gift) g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags |= 0x2u;
+            if (s_f.leon_gift & RE15_S3A_GIFT_BIT) g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags |= 0x2u;   /* cfe10 @0x8004a070/7c */
+            re15_zustand_r39_gift_takt_setzen((uint8_t)((s_f.leon_gift >> RE15_S3A_TAKT_SHIFT) & RE15_S3A_TAKT_MASKE));   /* cfe12 @0x8004a064/78 */
         }
         s_f.aktiv = 0;
         s_rueck_frisch = 1;
         g_re15_s3a_zaehler[1]++;
         seite_loggen("Tausch Marvin -> Leon, Marvins Seite (Uebergabe offen)", s_f.marvin);
         seite_loggen("Leons Seite zurueck", g_inv.slots);
-        S3A_LOG("Leon: Ausruest-Platz 0x%02x Waffe %d Vor-Platz 0x%02x HP %d Gift %d", (unsigned)re15_inv_equipped_slot(),
+        S3A_LOG("Leon: Ausruest-Platz 0x%02x Waffe %d Vor-Platz 0x%02x HP %d Gift %d Takt %u", (unsigned)re15_inv_equipped_slot(),
                 re15_player_equipped_weapon(), (unsigned)re15_inv_prev_equip_slot(), (int)g_actors[RE15_ACTOR_SLOT_PLAYER].hp,
-                (g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags & 0x2u) ? 1 : 0);
+                (g_actors[RE15_ACTOR_SLOT_PLAYER].status_flags & 0x2u) ? 1 : 0, (unsigned)re15_zustand_r39_gift_zaehler());
     }
 }
 
@@ -344,21 +352,29 @@ static void wiedersehen_bauen(void)
 {
     s_pw_n = 0; s_ueb_n = 0; s_ueb_i = 0;
     /* Funde (F-06: alle Funde, die eigene Pistole und seine Munition behaelt Marvin, "weil er sich in der Lobby verteidigen
-     * muss" L6). Keycard zuerst (L6 Reihenfolge), dann der Fabrikplan, dann alle weiteren Funde (Redhawk zuerst). */
+     * muss" L6). Reihenfolge (NB2 N3): die Green Keycard zuerst (L6), und Leons "A keycard... This should open the door in the
+     * loading area." (21) folgt DIREKT auf "You've received the Green Keycard." (16) - die Zeile meint diese Karte. Hat Marvin die
+     * Red Master Keycard behalten (Wegwerf-Frage am Rechner K8 ROOM3050 abgelehnt; sonst ist sie verbraucht: sub15 msg 5 @0x02608,
+     * Konzept 6b), kommt ihr Empfang VOR der Green Keycard: 15 "But I found this." -> Red (20) -> Green (16) -> 21. Dann der
+     * Fabrikplan (17/18), dann alle weiteren Funde (19, 20 je Fund). */
     int karte = 0;
     if (s_f.marvin_offen && seite_hat(s_f.marvin, RE15_S3A_KEYCARD) >= 0) karte = 1;
     /* Altstand v0.8.30 (gemeinsames Inventar, kein Tausch): Marvin hat die Karte genommen (Taken-Bit 85 @0x014B2), Leon traegt sie
      * aber nicht -> sie wird trotzdem uebergeben; traegt Leon sie schon, entfaellt die Kartenuebergabe. */
     if (!karte && !s_f.marvin_offen && re15_game_flag_get(9, 85) && re15_inv_find_item(RE15_S3A_KEYCARD) < 0 &&
         !re15_game_flag_get(RE15_S3A_KARTE_BANK, RE15_S3A_KARTE_BENUTZT)) karte = 1;
+    const int rot = s_f.marvin_offen && seite_hat(s_f.marvin, RE15_S3A_ROT) >= 0;
+    if (karte && rot) s_ueb[s_ueb_n++] = RE15_S3A_ROT;
     if (karte) s_ueb[s_ueb_n++] = RE15_S3A_KEYCARD;
     s_ueb[s_ueb_n++] = S3A_PLAN;
     const int erste_weitere = s_ueb_n;
     if (s_f.marvin_offen) {
+        if (!karte && rot) s_ueb[s_ueb_n++] = RE15_S3A_ROT;
         if (seite_hat(s_f.marvin, RE15_S3A_REDHAWK) >= 0) s_ueb[s_ueb_n++] = RE15_S3A_REDHAWK;
         for (int i = 0; i < RE15_INV_MAX_SLOTS; i++) {
             const uint8_t id = s_f.marvin[i].id;
-            if (!id || id == RE15_S3A_KEYCARD || id == RE15_S3A_REDHAWK || id == RE15_S3A_PISTOLE || id == RE15_S3A_MUNITION) continue;
+            if (!id || id == RE15_S3A_KEYCARD || id == RE15_S3A_ROT || id == RE15_S3A_REDHAWK || id == RE15_S3A_PISTOLE ||
+                id == RE15_S3A_MUNITION) continue;
             s_ueb[s_ueb_n++] = id;
         }
         /* NB1 B8: Munition. F-06 "alle Funde, die eigene Pistole behaelt Marvin"; L6 "weil er sich in der Lobby verteidigen muss".
@@ -377,19 +393,22 @@ static void wiedersehen_bauen(void)
        OP_WORK(2, RE15_S3A_NPC_SLOT), OP_DESTV(M_DREH, RE15_S3A_AN_NPC, S3A_P), OP_WARTE(RE15_S3A_AN_NPC),
        OP_SET(5, RE15_S3A_SIG_EIN, 1), OP_WARTE(RE15_S3A_SIG_HELL),
        OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 2), OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 3));           /* 13, 14 */
-    if (karte) PW(OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 4), OP_UEBERGABE, OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 5));   /* 15, 16 */
+    if (karte) {
+        PW(OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 4));                                               /* 15 */
+        if (rot) PW(OP_UEBERGABE, OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 9));                        /* 20 "...Red Master Keycard." */
+        PW(OP_UEBERGABE, OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 5), OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 10));   /* 16, 21 */
+    }
     PW(OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 6), OP_UEBERGABE, OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 7));             /* 17, 18 */
     if (s_ueb_n > erste_weitere) {
         PW(OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 8));                                                               /* 19 */
         for (int k = erste_weitere; k < s_ueb_n; k++) PW(OP_UEBERGABE, OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 9));   /* 20 je Fund */
     }
-    if (karte) PW(OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 10));                                                       /* 21 */
     PW(OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 11), OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 12), OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 13),
        OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 14), OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 15), OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 16),
        /* 22..27; Marvin geht durch die orange Tuer zurueck (L5 Punkt 6 "Marvin geht in die Lobby 30C0" - ueber 3040).
         * KONZEPT L5 Punkt 4 "Marvin humpelt" NICHT gebaut (NB1 B4): die NPC-Gangarten des Originals sind nur Sub 4/5/7/8
         * (@0x80076ca0: Gehen Clip 5, Rennen, zwei Rueckwaerts-Subs); Marvins eigene Bank (CDEMD0.EMS Blob 18, 24 Clips) hat keinen
-        * belegten Hinke-Zyklus. Gebaut ist M_GEHEN (ROOM1021 sub02 @0x020B2). Offen: Clip-Katalog mit dem Nutzer. */
+        * belegten Hinke-Zyklus. Gebaut ist M_GEHEN (ROOM1021 sub02 @0x020B2). Offen beim Nutzer (NB2: N4 nicht bauen). */
        OP_WORK(2, RE15_S3A_NPC_SLOT), OP_DESTV(M_GEHEN, RE15_S3A_AN_NPC, S3A_T), OP_WARTE(RE15_S3A_AN_NPC),
        OP_SET(5, RE15_S3A_SIG_MARVIN_WEG, 1), OP_SLEEP(1),
        OP_SET(RE15_R42_BANK, RE15_R42_BIT_3060_UEBERGABE, 1),

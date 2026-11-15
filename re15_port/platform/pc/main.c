@@ -8371,6 +8371,29 @@ re_title:;
                 }
             }
             re15_keyitems_r41_testhaken();   /* Runde 41 Spur O: Messhaken RE15_USE_TEST (Gegenstueck zu RE15_FIRE_AOT) */
+            /* Runde 42 Story STAGE3a NB2 (N5): RE15_START_ZUSTAND="<hp>[:<gift>]" (DEBUG-HARNESS, kein Spielverhalten) - der
+             * vorgesetzte Zustand "der Spieler kommt verletzt (und vergiftet) aus den Abschnitten davor", den der Durchlauf ab 3000
+             * selbst nicht erzeugt. Genau einmal, im ersten Spielbild mit geladenem Raum und aktivem Spieler (nach dem Spieler-Lader
+             * FUN_800314b0, dessen Schwanz HP 100 @0x80031710 und Status 0 @0x80031720 setzt): HP := hp; gift = 1 -> Gift-Bit 0x2
+             * von +0x98 (RE1.5 `ori v0,v0,0x2` @0x80012eac) und Takt-Zaehler 30 wie der Gift-Treffer RE2 Op 32 (@0x80020138/40). */
+            {
+                static int s_sz_init = 0, s_sz_hp = -1, s_sz_gift = 0, s_sz_done = 0;
+                if (!s_sz_init) {
+                    s_sz_init = 1;
+                    const char *e = getenv("RE15_START_ZUSTAND");
+                    if (e && *e) { s_sz_hp = atoi(e); const char *k = strchr(e, ':'); if (k) s_sz_gift = atoi(k + 1); }
+                }
+                re15_actor_t *sz_pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+                if (s_sz_hp > 0 && !s_sz_done && g_room_rdt_ok && sz_pl->active && g_engine.frame_count >= 1) {
+                    extern void re15_zustand_r39_gift_setzen(void);
+                    s_sz_done = 1;
+                    sz_pl->hp = (int16_t)s_sz_hp;
+                    if (s_sz_gift) { sz_pl->status_flags |= 0x2u; re15_zustand_r39_gift_setzen(); }
+                    fprintf(stderr, "[zustand] RE15_START_ZUSTAND F%u Raum %04X: HP := %d, Gift %d (status 0x%04X)\n",
+                            (unsigned)g_engine.frame_count, (unsigned)g_current_room_id, s_sz_hp, s_sz_gift,
+                            (unsigned)sz_pl->status_flags);
+                }
+            }
             /* DEBUG: RE15_SUBSTART="N@F" — startet sub_scd[N] des AKTUELLEN Raums direkt als
              * Thread (exakt die probe_marvin_10d0-Methode scd_thread_start(3, sub_scd[N])),
              * ohne Event-Slot/Prompt-Interferenz. Fuer Render-Verifikation von Cutscenes. */

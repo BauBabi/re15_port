@@ -62,6 +62,7 @@ static void env_init(void)
 void re15_zustand_r39_gift_setzen(void) { s_takt = 30; }           /* @0x80020138-40 */
 void re15_zustand_r39_reset(void) { s_takt = 0; s_takte = 0; }
 uint8_t  re15_zustand_r39_gift_zaehler(void) { return s_takt; }
+void re15_zustand_r39_gift_takt_setzen(uint8_t v) { s_takt = v; }   /* @0x8004a010 / @0x8004a078 (Header) */
 unsigned re15_zustand_r39_gift_takte(void)   { return s_takte; }
 
 int re15_zustand_r39_spieler_takt(re15_actor_t *pl, int aktiv)

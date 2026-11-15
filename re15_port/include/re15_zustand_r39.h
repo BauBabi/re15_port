@@ -32,6 +32,10 @@ void re15_zustand_r39_reset(void);
 /* Messschiene/Test: Takt-Zaehler (= 0x800cfe12) und Zahl der HP-Abzuege seit reset. */
 uint8_t  re15_zustand_r39_gift_zaehler(void);
 unsigned re15_zustand_r39_gift_takte(void);
+/* Runde 42 Story STAGE3a (Figurwechsel Leon <-> Marvin): Takt-Zaehler 0x800cfe12 setzen. RE2 FUN_80049e48 sichert ihn beim Eintritt
+ * (`lbu v1,0x3c2a(s0)` @0x8004a004 -> `sb v1,..d46b3` @0x8004a02c), nullt ihn fuer die Nebenfigur (`sb zero,0x3c2a(s0)` @0x8004a010)
+ * und legt ihn beim Rueckweg zurueck (`lbu v1,..d46b3` @0x8004a064 -> `sb v1,0x3c2a(s0)` @0x8004a078). */
+void re15_zustand_r39_gift_takt_setzen(uint8_t v);
 
 /* ---- Kleidung ------------------------------------------------------------------------------------ */
 /* Nach dem Heil-Applier (item_use_common.c re15_item_use_apply = Tabelle @0x80010fbc): sind die HP voll
