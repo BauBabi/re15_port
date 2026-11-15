@@ -233,11 +233,11 @@
 -- Bank-9-Bits --
   Original (Mod-Baum): 85 belegt; Port: 65 belegt; 40-%-Disc: 15 belegt
   Bit 118 RE15_R42_BIT_2080_SZENE      B   v0.8.31 OK  Nachgespraech 2080/2081 gesehen (L1/E1)
-          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_2080_SZENE): engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_2080_SZENE), engine/src/story2_r42.c:137, engine/src/story2_r42.c:167
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_2080_SZENE): engine/src/story1_r42.c (Wrapper, RE15_R42_BIT_2080_SZENE), engine/src/story1_r42.c:126, engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_2080_SZENE), engine/src/story2_r42.c:137, engine/src/story2_r42.c:167
   Bit 119 RE15_R42_BIT_2080_TOR        B   v0.8.31 OK  Tor 2080/2081 mit dem Schluessel geoeffnet (K-01)
           EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_2080_TOR): engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_2080_TOR)
   Bit 120 RE15_R42_BIT_LEITER          B   v0.8.31 OK  Szene vor der Leiter 11A0/11A1 gesehen (K-07)
-          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_LEITER): engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_LEITER)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_LEITER): engine/src/story1_r42.c (Wrapper, RE15_R42_BIT_LEITER), engine/src/story1_r42.c:126, engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_LEITER)
   Bit 121 RE15_R42_BIT_TUER_11A        B   v0.8.31 OK  Tuer 11A0/11A1 <-> 2070/2071 von der 11A-Seite geoeffnet (K-02)
           EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_TUER_11A): engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_TUER_11A)
   Bit 122 RE15_R42_BIT_TUER_2040       B   v0.8.31 OK  Tuer 2040/2041 <-> 2070/2071 aus dem Belohnungsraum geoeffnet (K-03)

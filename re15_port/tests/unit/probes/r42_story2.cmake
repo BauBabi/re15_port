@@ -32,7 +32,7 @@ if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_stor
                  COMMAND ${CMAKE_COMMAND} -DRE15_PC_EXE=$<TARGET_FILE:re15_pc> -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/r42_story2_${_teil}
                          -DTEIL=${_teil} -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_story2.cmake)
         if(_teil MATCHES "^kette")
-            set_tests_properties(integration_r42_story2_${_teil} PROPERTIES TIMEOUT 2700)   # Glied 1 Ablassen bis 20A0 (bis 2300 s) + Glied 2 (600 s)
+            set_tests_properties(integration_r42_story2_${_teil} PROPERTIES TIMEOUT 3600)   # Glied 1 Ablassen bis 20A0 (bis 2300 s) + Glied 2 bis 300x (1500 s)
         else()
             set_tests_properties(integration_r42_story2_${_teil} PROPERTIES TIMEOUT 900)
         endif()

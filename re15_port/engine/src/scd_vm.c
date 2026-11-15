@@ -781,6 +781,7 @@ void scd_vm_tick(void)
     if (!s_vm_room_init) re15_elzazombies_r39_tick();   /* Runde 39 Spur Q: Flanke (9,97), Montage, Halten 1061 */
     if (!s_vm_room_init) { extern void re15_kanister2080_r41_tick(void); re15_kanister2080_r41_tick(); }   /* Runde 41 Spur G: Ausloeser 2090, Signale/Wurf 2080 */
     if (!s_vm_room_init) { extern void re15_story2_r42_tick(void); re15_story2_r42_tick(); }   /* Runde 42 Story STAGE2: Signale der 2080-Szene, Uhr-Hinweis 2090 */
+    if (!s_vm_room_init) { extern void re15_story1_r42_tick(void); re15_story1_r42_tick(); }   /* Runde 42 Story STAGE1: Ausloesung, Signale, Abblende der Szene an der Leiter 11A0/11A1 */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
 

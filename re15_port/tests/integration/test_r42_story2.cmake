@@ -19,6 +19,9 @@
 #   Glied 2 "gegenseite" - mit GENAU den Flags, die Glied 1 in 20Ax ausgibt (RE15_SET_FLAG aus dessen Wegplan-Log), an der Tuer zu
 #     11Ax: Original sub10 @0x01FE6 -> 11Ax-Ankunft am Steg (28150,1250) -> Steg hinab -> Tuer nach 207x schliesst auf (msg 11,
 #     (3,151), Bit 121) -> 207x -> Tuer nach 204x "It's locked from the other side." (Bit 122 = 0) -> Abkuerzung -> 11Ax.
+#     Stufe STAGE1: weiter in 11Ax mit der Uhr aus Glied 1 im Inventar (RE15_GIVE, weil RE15_SET_FLAG nur Flags traegt): unterer
+#     Gang -> Kante -> Szene vor der Leiter (L3/E2, bei Elza mit Rueckgabe der Uhr) -> hinab/hinauf (keine zweite) -> Leiter ->
+#     300x unveraendert (tests/integration/r42_leiter_pruefung.cmake).
 #     Das Raetsel in 20Ax zwischen Tor und Tuer (Leiter, Rolladen, Kiste) ist nicht Gegenstand der Stufe.
 # TEIL tueren | tueren_elza:
 #   Lauf bombe Zeitbomben-Weg: 2040 Halle ((3,146)/(3,53)) -> Rost-Tuer -> Treppe -> Galerie -> Tuer nach 2070 "unlocked" (msg 6,
@@ -38,6 +41,7 @@ if(NOT TEIL)
     set(TEIL kette)
 endif()
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/r42_leiter_pruefung.cmake")   # Stufe STAGE1: Glied 2 geht bis 300x weiter
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_basis "${WORKDIR}/lauf_${_lauf_id}")
@@ -349,7 +353,16 @@ ENDE
         endif()
     endforeach()
     message(STATUS "r42_story2[${TEIL}] gegenseite: Zustand aus Glied 1 = ${_flags}")
-    _lauf(gegenseite 600 "RAUM 20A${S}
+    # Stufe STAGE1 (Szene vor der Leiter, test_r42_story1.cmake / r42_leiter_pruefung.cmake): nach der Abkuerzung weiter durch 11Ax bis
+    # 300x. Die Uhr aus Glied 1 (Bit 90 genommen) liegt im Inventar - der Spielstand traegt sie, RE15_SET_FLAG nur die Flags.
+    r42_leiter_plan(_leiterweg ${S})
+    set(_uhr_inv "")
+    set(_mit_uhr 0)
+    if(",${_flags}," MATCHES ",9:90,")
+        set(_uhr_inv RE15_GIVE=63:1)
+        set(_mit_uhr 1)
+    endif()
+    _lauf(gegenseite 1500 "RAUM 20A${S}
 WARTE 30
 BLICK 3072
 WARTE 10
@@ -394,10 +407,9 @@ GEHE -18471 -19256
 BLICK 2048
 WARTE 10
 AKTION
-RAUM 11A${S}
-WARTE 30
-ENDE
-" ${_wer} RE15_DEBUG_JUMP=20A${S}@250 "RE15_SET_FLAG=${_flags}" "RE15_PLAYER_POS=25800,-1000,3072,2" "RE15_EXIT_AT=200#11A${S}!3")
+${_leiterweg}ENDE
+" ${_wer} ${_uhr_inv} RE15_DEBUG_JUMP=20A${S}@250 "RE15_SET_FLAG=${_flags}" "RE15_PLAYER_POS=25800,-1000,3072,2" RE15_SPAWN_DIAG=1
+          "RE15_EXIT_AT=1100#300${S}")
     _muss("${_dbg}" "[msgtext] room=${_ka0} id=2 \"You've opened the lock.\"" gegenseite "20A${S} sub10 @0x01FE6 schliesst die Tuer zu 11A${S} auf")
     _muss("${_dbg}" "[aot] DOOR FIRE slot=2 rect=(25800,50,hw=1000,hh=500) target_cut=9 spawn=(28150,-1800,1250)" gegenseite
           "Tuer 20A${S} -> 11A${S} (Ankunft am Steg x 28150)")
@@ -415,6 +427,8 @@ ENDE
         _fehler("[gegenseite]: 11A${S} nur ${_n11} mal geladen (soll 2: aus 20A${S} + Abkuerzung aus 207${S})")
     endif()
     message(STATUS "r42_story2[${TEIL}] gegenseite: 20A${S} -> 11A${S} (Ankunft x 28150) aufgeschlossen -> 207${S} -> 2040 zu -> Abkuerzung zurueck nach 11A${S}")
+    r42_leiter_pruefen("${_dbg}" "${_wp}" ${S} ${_mit_uhr} _leiter_bericht)
+    message(STATUS "r42_story2[${TEIL}] leiter (Stufe STAGE1): ${_leiter_bericht}")
 elseif(TEIL STREQUAL "tueren" OR TEIL STREQUAL "tueren_elza")
     if(TEIL STREQUAL "tueren")
         set(_wer ${_leon})

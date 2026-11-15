@@ -549,14 +549,23 @@ const re15_md1_vertex_t *re15_story2_r42_scheitel(uint16_t room_id, int obj_id, 
  * Der Mod-Baum stellt sie dort hin: ROOM11A0 sub00 @0x0118C `44 00 40 40 ..` (Marvin), ROOM11A1 sub00 @0x0118C `44 00 49 40 ..` (John)
  * und @0x011A0 `44 01 4b 40 ..` (Sherry); kein Skript des Raums spricht sie an (scd_dump_room.py: kein Work_set kind 2). Solange sie
  * nach der Szene in 2080/2081 warten (Bit 118 = 1, Bit 120 = 0), wird der Satz verworfen wie am Kill-Flag-Tor @0x80042120-38 (Form
- * re15_gatorszene_r41_spawn_weg). Die Szene an der Leiter (L3/E2, Bit 120) baut die naechste Stufe. */
+ * re15_gatorszene_r41_spawn_weg).
+ * Stufe STAGE1 (Szene an der Leiter, story1_r42.c): K-07 "In 11A0 und 11A1 sind die Begleiter weiterhin nicht da" gilt IMMER -
+ * vor der Szene in 2080 (Altstand), waehrend sie dort warten und nachdem sie an der Leiter vorausgegangen sind (Bit 120). Nur das
+ * Programm der Szene selbst setzt sie (re15_story1_r42_szene_laeuft). */
+#include "re15_story1_r42.h"
 int re15_story2_r42_spawn_weg(uint16_t room_id, uint8_t type)
 {
     if (!basis_ist(room_id, RE15_S2_RAUM_11A0)) return 0;
     if (type != RE15_S2_TYP_MARVIN && type != RE15_S2_TYP_JOHN && type != RE15_S2_TYP_SHERRY) return 0;
-    if (!bit9(RE15_R42_BIT_2080_SZENE) || bit9(RE15_R42_BIT_LEITER)) return 0;
-    S2_LOG("ROOM%04X: NPC 0x%02X verworfen - wartet in 208%c (Bit %d = 1, Bit %d = 0, K-07)", (unsigned)room_id, type,
-           (room_id & 1) ? '1' : '0', RE15_R42_BIT_2080_SZENE, RE15_R42_BIT_LEITER);
+    if (re15_story1_r42_szene_laeuft()) return 0;
+    if (bit9(RE15_R42_BIT_2080_SZENE) && !bit9(RE15_R42_BIT_LEITER))
+        S2_LOG("ROOM%04X: NPC 0x%02X verworfen - wartet in 208%c (Bit %d = 1, Bit %d = 0, K-07)", (unsigned)room_id, type,
+               (room_id & 1) ? '1' : '0', RE15_R42_BIT_2080_SZENE, RE15_R42_BIT_LEITER);
+    else
+        S2_LOG("ROOM%04X: NPC 0x%02X verworfen - Mod-Satz, Begleiter nicht in 11A%c (Bit %d = %d, Bit %d = %d, K-07)",
+               (unsigned)room_id, type, (room_id & 1) ? '1' : '0', RE15_R42_BIT_2080_SZENE, bit9(RE15_R42_BIT_2080_SZENE),
+               RE15_R42_BIT_LEITER, bit9(RE15_R42_BIT_LEITER));
     return 1;
 }
 

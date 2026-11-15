@@ -20,7 +20,7 @@
  *   altstand   Pruefung 1 Befund 5: Spielstand v0.8.30 mit schon geoeffnetem Tor (9,113) = 1, (9,119) = 0 -> kein Schluesselloch
  *              (kein msg 53/54), Bit 119 nachgezogen, Druck am Rechner startet die Szene einmal
  *   begleiter  Pruefung 1 Befund 8 (K-07): 11A0 Marvin (@0x0118C) / 11A1 John (@0x0118C) + Sherry (@0x011A0) fehlen, solange sie in
- *              2080/2081 warten (Bit 118 = 1, Bit 120 = 0); ohne Bit 118 und nach Bit 120 unveraendert
+ *              2080/2081 warten (Bit 118 = 1, Bit 120 = 0); seit Stufe STAGE1 auch ohne Bit 118 und nach Bit 120
  *   inszenierung Pruefung 1 Befund 1/4: Endlagen der Szene (Spieler P, Begleiter N, Sherry S) und die Reihenfolge Begleiter ->
  *              Spieler -> Drehen; Begleiter von Suedwesten, Sherry aus der Nische an der Treppe (re15_story2_r42.h)
  */
@@ -481,10 +481,12 @@ static void teil_begleiter(void)
 {
     printf("== begleiter ==\n");
     for (int e = 0; e < 2; e++) {
-        const int voll = e ? 2 : 1;                                  /* 11A1: John + Sherry (@0x0118C/@0x011A0), 11A0: Marvin */
-        begleiter_fall(e, 0, 0, voll);                               /* vor der Szene 2080: wie bisher (Mod-Satz) */
+        /* Stufe STAGE1 (K-07 "In 11A0 und 11A1 sind die Begleiter weiterhin nicht da"): der Mod-Satz 11A0 @0x0118C (Marvin) bzw.
+         * 11A1 @0x0118C/@0x011A0 (John + Sherry) bleibt in JEDEM Zustand weg - auch vor der Szene in 2080 (Altstand) und nach der
+         * Szene an der Leiter (Bit 120, test_r42_story1.c). */
+        begleiter_fall(e, 0, 0, 0);
         begleiter_fall(e, 1, 0, 0);                                  /* wartet in 2080/2081: hier nicht */
-        begleiter_fall(e, 1, 1, voll);                               /* nach der Szene an der Leiter: die naechste Stufe entscheidet */
+        begleiter_fall(e, 1, 1, 0);
     }
 }
 

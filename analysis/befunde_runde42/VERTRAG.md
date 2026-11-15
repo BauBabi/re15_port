@@ -11,7 +11,7 @@ Werte im Code: `re15_port/include/re15_story_r42.h`. Eine Quelle der Zuteilung +
 `re15_port/tools/r42_story/zensus_r42.py` (Ausgabe `belege/zensus_r42.txt`: ERGEBNIS FREI, 181 Zeilen, 27 Bits, 0 Fehler).
 Seit dem Bau der Stufe STAGE2 nutzt der Port die Vertrags-Bits selbst: der Zensus weist Stellen, deren Bit-Argument ein
 `RE15_R42_*`-Makro ist, als EIGEN aus (Zeile "EIGEN ..." unter dem Bit, auch die Wrapper-Stellen `bit9_setzen()`); B2 zaehlt
-nur fremde Stellen, B6 prueft, dass jede eigene Stelle ein Vertrags-Bit ist (Stand 2026-11-14: 118..122 EIGEN in story2_r42.c).
+nur fremde Stellen, B6 prueft, dass jede eigene Stelle ein Vertrags-Bit ist (Stand 2026-11-14: 118..122 EIGEN in story2_r42.c; seit Stufe STAGE1 2026-11-15 auch 118/120 in story1_r42.c).
 Riegel: `tests/unit/test_r36_kartenbits.c` k_port[] traegt die 23 Bits (ohne Lageplaene), `unit_r36_kartenbits` gruen
 (85 Port-Bits gegen 85 Original-Bits: 0 Kollisionen, `belege/unit_r36_kartenbits_r42.txt`).
 
@@ -83,6 +83,10 @@ Regeln zu den Bits:
 - `test_r36_kartenbits.c`: Puffer `alle[]` von 64 auf 128 erweitert (57 + 23 + 5 Lageplaene = 85 > 64 waere ein
   Ueberlauf gewesen; mit dem Moosgang-Zweig waeren es schon ohne Runde 42 genau 64).
 - Neue Bits nur nach erneutem Lauf von `zensus_r42.py` (Tabelle BITS) + Eintrag hier + k_port[].
+- Stufe STAGE1 (2026-11-15, story1_r42.c): Bit 120 wird am Ende der Szene vor der Leiter gesetzt, dazu Bit 118 (wer an der Leiter
+  war, hat den Begleiter nach dem Alligator getroffen; ein Altstand ohne 118 bekaeme sonst die 2080-Szene danach). Nachrichten
+  11A0 3..6 / 11A1 3..10 (Texte tools/r42_story/texte_stage1.py), Bank-5-Signale des Raums 0x14..0x1A (re15_story1_r42.h; die
+  11A0/11A1-Skripte nutzen nur 5:0..7). Zensus danach unveraendert FREI (belege/zensus_r42.txt).
 
 ## 2. Nachrichten-Ids
 
