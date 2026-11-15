@@ -32,6 +32,11 @@ R8e Fleisch nur   (1) Runde 8c: jede Bauch-Flaeche (Klasse aus dem Fleisch-Feld,
                   der Oberseite (487) der Meshes 16-22 im Eingang 07b6703f; Asset-Texel dort bytegleich Original bzw. Eingang;
                   (4) Runde 8e: kein Texel der Flaechen der Bauch-Zeile 493 ausser Ring-Flaechen (Rasterung KB.raster, Farbe aus ihrer CLUT-Zeile) unter L* BAUCH_L_MIN - die dunkle
                   Naht des Original-Bilds an u 54-55 (L* 11,6-27,0) gab im Spiel den Laengsstrich an der Bauchkante (Nutzer 15.11.).
+R8d/R8e Runde 8f (Nutzer 15.11. "komische braune Streifen an den Raendern", Entscheid des Orchestrators: der Schwanz wie im Original EINHEITLICH
+                  auch ueber die Breite; schwanz_r8.json felder.flanke_fleisch): Flanke und Ruecken tragen das Bauchfeld C1 (Zeile 493), grau bleibt
+                  nur die Nadel (Glied 22 ab y ENDE_Y und die Spitze). Dann pruefen R8d (3) statt des Grau-Felds: keine graue Flaeche ausser Nadel
+                  und Wurzelflaechen im Rumpf; R8e (1): keine graue Flaeche ausser Nadel/Wurzel (Bauch-Flaechen duerfen ausserhalb des Bauchsektors
+                  liegen), (2) PV Fleisch-Anteil bei Normalen-|theta| >= 100 >= 95 % (einheitlich; bis 8e <= 1 %) und bei <= 40 >= 50 %.
 R8f Bytegleich    Sektionen 0-6 (Skelett, Clips, Keyframes), TIM (Texturbild, 16 CLUT-Zeilen) und Meshes 0-15 (Mesh 9 = V7-Kopf) = Eingang 07b6703f,
                   ausser den 12-Bit-Winkeln der Knochen 17-22 in den von schwanz_r8.heben angehobenen Keyframes; Gliedlaengen 17-22 = (0, 541, 0).
 R8g Szene         (--szene) Schwanzkette der Szene gegen 7e: jede Verschiebung liegt in einem Takt, in dem die 7e-Kette mit den Mesh-Massen dieses
@@ -373,7 +378,9 @@ def r8d(blob, farbe, pv, bezug=None):
         naht_g[j] = (ge, gs, None if ge is None or gs is None else round(abs(ge - gs), 1))
     # Runde 8d Flanke: alle grauen Flaechen im EINEN Grau-Feld (schwanz_r8.json felder.grau_alle)
     ga = Q.felder_laden().get('grau_alle')
+    flanke = bool(Q.felder_laden().get('flanke_fleisch'))   # Runde 8f: Flanke/Ruecken im Bauchfeld, grau nur die Nadel
     grau_fremd = 0
+    grau_ausser_nadel = 0
     alt16 = set()
     if bezug is not None:                                  # Wurzelflaechen im Rumpf (Stufe w/u) behalten ihre UV wie 07b6703f (wie R8e)
         _d2, _o2, ms_e, _t2 = KB.teile(bezug)
@@ -386,6 +393,8 @@ def r8d(blob, farbe, pv, bezug=None):
                 if kl[b]['%s%d' % (key, i)] == 'grau' and not (ga and all(ga[0] <= u <= ga[1] for u in uv[0::3])
                                                                 and all(ga[2] <= v <= ga[3] for v in uv[1::3])):
                     grau_fremd += 1
+                if kl[b]['%s%d' % (key, i)] == 'grau' and not (b == 22 and all(ms[b]['v'][k][1] >= Q.ENDE_Y - 1.0 for k in f[1::2])):
+                    grau_ausser_nadel += 1
     gel_fuge_pv = sum(1 for j in range(1, 7) if fuge_bauch_pv[15 + j] + fuge_bauch_pv[16 + j] > 0)
     if Q.FARBEN[farbe]['band']:
         ok3 = all(not abweich[b] and band[b] > 0 for b in range(16, 23)) and gel_sicht >= 5
@@ -393,11 +402,12 @@ def r8d(blob, farbe, pv, bezug=None):
         ok3 = (all(band[b] == 0 for b in range(16, 23)) and all(set(fuge_kl[b]) <= {'bauch', 'grau'} for b in range(16, 23))
                and all(fuge_bauch[15 + j] > 0 and fuge_bauch[16 + j] > 0 for j in range(1, 7))
                and all(n_[2] is not None and n_[2] <= 1.0 for n_ in naht.values()) and gel_fuge_pv >= 5
-               and grau_fremd == 0 and all(n_[2] is not None and n_[2] <= 1.0 for n_ in naht_g.values()))
+               and (grau_ausser_nadel == 0 if flanke else
+                    (grau_fremd == 0 and all(n_[2] is not None and n_[2] <= 1.0 for n_ in naht_g.values()))))
     return dict(geometrie=geo, ok1=bool(ok1), band_flaechen=band, fugen_flaechen=fuge_n, band_ungleich_fuge=abweich, band_pv_px=band_pv,
                 gelenke_mit_band_pv=gel_sicht, band=Q.FARBEN[farbe]['band'], fugen_klassen=fuge_kl, fugen_bauch=fuge_bauch,
                 fugen_bauch_pv_px=fuge_bauch_pv, gelenke_mit_fugen_bauch_pv=gel_fuge_pv, naht_v=naht, naht_grau_v=naht_g,
-                grau_ausserhalb_feld=grau_fremd, ok3=bool(ok3))
+                grau_ausserhalb_feld=grau_fremd, flanke_fleisch=flanke, grau_ausser_nadel=grau_ausser_nadel, ok3=bool(ok3))
 
 
 def gelenk_v(m, kl_b, k0, klasse='bauch'):
@@ -455,6 +465,7 @@ def r8e(blob, bezug, pv):
     _d2, _o2, ms_e, tim_e = KB.teile(bezug)
     phi = {int(k): float(v) for k, v in json.load(open(os.path.join(HIER, 'unterseite_v8.json')))['innen_phi'].items()}
     falsch, n495 = [], 0
+    flanke = bool(Q.felder_laden().get('flanke_fleisch'))   # Runde 8f
     kl = klassen(ms)
     alt16 = {tuple(f[1::2]) for f in ms_e[16]['tf'] + ms_e[16]['qf'] if set(f[1::2]) <= set(range(22)) | {34}}
     for b in range(16, 23):
@@ -476,13 +487,13 @@ def r8e(blob, bezug, pv):
                     continue                                   # Ring umlaufend (R8d (3) prueft, dass er genau auf den Fugen liegt)
                 elif c == 'bauch':
                     n495 += 1
-                    if any(th[k] > gr[k] + TOL_GRAD for k in ring):
+                    if not flanke and any(th[k] > gr[k] + TOL_GRAD for k in ring):
                         falsch.append('%d:%s%d' % (b, key, i))
                 elif z == Q.ZEILE_GRAU:
                     if b == 22 and all(P[k][1] >= Q.ENDE_Y - 1.0 for k in e):
                         continue                               # Nadel (ab y 560) ganz grau (schwanz_r8.uv_setzen)
-                    if _ganz_bauch(ring, th, gr):
-                        falsch.append('%d:%s%d' % (b, key, i))
+                    if flanke or _ganz_bauch(ring, th, gr):
+                        falsch.append('%d:%s%d' % (b, key, i))   # Runde 8f: grau nur die Nadel
     ok1 = not falsch and n495 > 0
     # (2) PV: Normalen-theta je Bildpunkt
     A = pv['A']
@@ -492,7 +503,7 @@ def r8e(blob, bezug, pv):
     aussen = th >= 100.0; innen = th <= 40.0
     an_aussen = float(fl[aussen].mean() * 100) if aussen.any() else 0.0
     an_innen = float(fl[innen].mean() * 100) if innen.any() else 0.0
-    ok2 = an_aussen <= 1.0 and an_innen >= 50.0
+    ok2 = (an_aussen >= 95.0 if flanke else an_aussen <= 1.0) and an_innen >= 50.0
     # (3) Herkunft
     nutz = {z_: A4.nutzung(None, z_ - 13) for z_ in (493, 494, 495)}                  # 493/494/495 = Original 480/481/482 (bytegleich)
     grau = np.zeros((256, 384), bool)
@@ -534,7 +545,8 @@ def r8e(blob, bezug, pv):
     ok4 = dunkel == 0 and n495 > 0
     return dict(falsch=falsch[:30], n_falsch=len(falsch), flaechen_495=n495, ok1=bool(ok1), pv_fleisch_aussen=round(an_aussen, 2),
                 pv_fleisch_innen=round(an_innen, 1), ok2=bool(ok2), zeilen=zeilen, fremde_texel=fremd, pix_gleich=pix_gleich, ok3=bool(ok3),
-                bauch_texel_dunkel=dunkel, bauch_l_min=round(l_min, 1), ok4=bool(ok4), ok=bool(ok1 and ok2 and ok3 and ok4))
+                bauch_texel_dunkel=dunkel, bauch_l_min=round(l_min, 1), ok4=bool(ok4), flanke_fleisch=flanke,
+                ok=bool(ok1 and ok2 and ok3 and ok4))
 
 
 def ring_bloecke(b, n):
@@ -699,16 +711,18 @@ def zeilen(r):
     z.append('R8d Fugen: (1) Hochachse Endring und Manschette / Huellradius je Gelenk %s (<= 0,88) %s; (2) von vorn schmaler an den Gelenken im Mittel %s px '
              '(>= 1,0) %s; (3) Fugen (Farbe %s): Band-Flaechen je Glied %s (Soll 0), Fugen-Flaechen je Glied %s, Klassen der Fugen %s, davon mit '
              'Bauchfeld %s, Naht je Gelenk (v Ende | v Anfang | Abstand, <= 1) %s, PV Bauch-Bildpunkte auf Fugen %s, Gelenke damit %d (>= 5); '
-             'Flanke: graue Flaechen ausserhalb des einen Grau-Felds %s (Soll 0), Naht grau %s %s -> %s'
+             'Flanke: graue Flaechen ausserhalb des einen Grau-Felds %s (Soll 0 bis 8e), Naht grau %s; Runde 8f Flanke im Bauchfeld %s, graue '
+             'Flaechen ausser Nadel %s (Soll 0) %s -> %s'
              % (d['geometrie'], g(d['ok1']), d['vorn']['mittel_je_ansicht'], g(d['vorn']['ok']), 'mit Ringen (Gegenprobe 8c)' if d['band'] else 'einheitlich',
                 d['band_flaechen'], d.get('fugen_flaechen'), d.get('fugen_klassen'), d.get('fugen_bauch'), d.get('naht_v'),
-                d.get('fugen_bauch_pv_px'), d.get('gelenke_mit_fugen_bauch_pv', 0), d.get('grau_ausserhalb_feld'), d.get('naht_grau_v'), g(d['ok3']),
+                d.get('fugen_bauch_pv_px'), d.get('gelenke_mit_fugen_bauch_pv', 0), d.get('grau_ausserhalb_feld'), d.get('naht_grau_v'),
+                d.get('flanke_fleisch'), d.get('grau_ausser_nadel'), g(d['ok3']),
                 g(d['ok'])))
     for h, v in r['R8a']['ansichten'].items():
         z.append('   R8d (2) h%s Gelenke %s schmaler um %s px' % (h, v['fugen']['gelenke'], v['fugen']['schmaler_px']))
     e = r['R8e']
     z.append('R8e Fleisch nur Bauchseite: (1) %d Bauch-Flaechen (bis Runde 8b: auf 495), ausserhalb des Bauchsektors bzw. graue im Bauchsektor %d %s %s; (2) PV Fleisch-Anteil '
-             'bei Normalen-|theta| >= 100: %.2f %% (<= 1), <= 40: %.1f %% (>= 50) %s; (3) Herkunft: Flaechen je Zeile %s, fremde Texel %s, Texturbild '
+             'bei Normalen-|theta| >= 100: %.2f %% (<= 1; Runde 8f Flanke im Bauchfeld: >= 95), <= 40: %.1f %% (>= 50) %s; (3) Herkunft: Flaechen je Zeile %s, fremde Texel %s, Texturbild '
              'bytegleich %s; (4) Bauch-Texel unter L* %.0f: %d (kleinstes L* %.1f) %s -> %s' % (e['flaechen_495'], e['n_falsch'], e['falsch'][:8], g(e['ok1']),
                                       e['pv_fleisch_aussen'], e['pv_fleisch_innen'], g(e['ok2']), e['zeilen'], e['fremde_texel'],
                                       'ja' if e['pix_gleich'] else 'nein', BAUCH_L_MIN, e['bauch_texel_dunkel'], e['bauch_l_min'], g(e['ok4']), g(e['ok'])))
