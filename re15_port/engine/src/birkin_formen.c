@@ -1209,33 +1209,68 @@ static int bf_video_welt(const bf_schwanzpunkt_t *q, const re15_actor_t *b, int3
  *     neuen Austritt ganz verdeckt: 2 / 1 Schwanzpunkte, Video h58-h60: der Schwanz kommt rechts neben dem Oberschenkel hervor).
  *   Gemessen nachher (scratchpad schwanz_r9/r3, Lauf x6, 320x240): Schwanzpunkte ueber y_aus - 4,5 h58-h72 hoechstens 3 (vorher 38-190), vor dem
  *   Koerper 0, frei 0, sichtbarer Knick hoechstens 59 Grad (unveraendert); Bilder ausserhalb h57-h71 bitgleich zu 4f2b7a354.
- *   Riegel integration_r41_schwanz_zusammen (5). */
+ *   Riegel integration_r41_schwanz_zusammen (5).
+ * Runde 41 Schwanz r9 Runde 4 (Pruefer r9 Runde 3, scratchpad schwanz_r9/pruefung_r3/PRUEFUNG.md: h58-h61 / h71 "Schwanz fast unsichtbar"
+ * (960x720: 522 / 364 / 119 / 239 bzw. 4 Punkte), h15/h16 "rosa Wurzelstueck an der linken Taille zwischen Rumpf und Arm" bis 54 Zeilen ueber
+ * dem Guertel, h17 "quer vor dem Schritt" (1761 Punkte ueber der Birkin), h29-h35 "vor Schritt und linkem Oberschenkel" (98-100 %)). Gemessen
+ * (scratchpad schwanz_r9/r4, vier Laeufe 960x720 und 320x240, mass3.py des Pruefers, Gelenke RE15_SCHWANZ_LOG):
+ *   - h12-h17: das Szenengewicht lief erst h15 -> h18 an (k_schwanz_gewicht_v8). Bis h15 hing die freie Kette rechts im Bild zwischen Rumpf
+ *     und Arm (h12-h16 bis 240 Schwanzpunkte 320x240 neben der Silhouette ueber dem Guertel), h16/h17 zog die Ueberblendung (Gewicht 1/3, 2/3)
+ *     sie quer vor dem Schritt nach links. Video: h16 nicht sichtbar (video_linien.py), Original h16/h17 links unten am Bein.
+ *     Aenderung: Gewicht voll ab h10 (h9: 0 Schwanzpunkte, der Wechsel ist unsichtbar); h10-h15 hinter dem Koerper wie h36-h56 (Zeilen 10 / 15 =
+ *     Zeile 36), ab h16 der Stand h18 (Zeile 16 unveraendert). Nachher h10-h15 0 Punkte, h16/h17 wie h18 (vor dem Koerper 5 / 8 von 3473 / 3423
+ *     Punkten 960x720).
+ *   - h29-h35: die Videopunkte h30-h34 liegen am VIDEO-Koerper. Registrierung am Jeans-Bund (jprofil.py: Mitte der Jeans-Spalten Zeilen
+ *     315-335, Original-Video gegen Port 640x480): Port-Koerper h30 27, h32 / h34 25,5 Videopunkte weiter rechts (Breite 65 / 61 / 57 gegen 71;
+ *     senkrecht -2,5 / +7 / +5, nicht verschoben). Mit den Videopunkten lag das Stueck auf dem linken Port-Oberschenkel (vorn, art 4). Aenderung:
+ *     Spitze und Austritt + 27 / 25,5 / 25,5, Spitze hinten (art 5), Austritt +600 hinter dem Schritt mit Beuge zur Mitte (art 6 wie h58-h70;
+ *     mit art 1 lugte die Wurzel h30-h34 19-56 Punkte 960x720 an der linken Taille hervor). Sichtbar ist das Stueck in der Luecke zwischen den
+ *     Oberschenkeln (wie Original: zwischen den Knien). h29 = Stand h28 (die Ueberblendung h28 -> h30 legte das Stueck sonst vor den rechten
+ *     Oberschenkel, 203 Punkte 960x720). Nachher h29-h35 vor dem Koerper 0.
+ *   - h58-h61: die Spitze (art 5) lag eine halbe Schwanzbreite neben dem Port-Bein in der Zeile der Video-Spitze (Zeile 178 / 186); die
+ *     Gerade vom Austritt in der Huefte dorthin liegt hinter dem Oberschenkel und hinter der Hand (Hand x 227-238 bis Zeile 176, 320x240, Bein-Rand
+ *     225). Frei ist rechts neben dem Bein erst unter der Hand. Aenderung: Spitze h58 (485,415), h60 (500,420) = Port (241,199) / (249,201),
+ *     unter der Hand rechts neben dem Bein, zwischen Video-Spitze h60 (455,388) und h62 (480,425) bzw. h64 (509,427); Austritt +1200 hinter der
+ *     Huefte (mit +600 lag das Stueck VOR der Hand: 375-830 Punkte 960x720 ueber der Birkin; mit +2000 kam es ueber dem Guertel heraus:
+ *     276-423 Punkte). j aus der neuen sichtbaren Laenge (Tabellenregel): h58 120 / 29,7 = 4,04 -> 4, h60 136,6 / 32,7 = 4,18 -> 4.
+ *   - h71 (Wurf): zwischen h70 (528,402) und h72 (384,355) lag die Spitze auf dem Bein-Rand (4 Punkte). Neue Zeile 71: Spitze (490,400) = Port
+ *     (244,192) rechts neben dem Bein, Austritt wie h70; j 108 / 36,2 = 2,99 -> 5.
+ *   Nachher (960x720, mass3.py): h58-h61 1330 / 1564 / 2004 / 1918, h71 1366 Schwanzpunkte (Video 30: etwa 1500-1900), ueber dem Guertel 0,
+ *   vor dem Koerper hoechstens 35; frei 0; Bilder ausser h10-h17, h29-h35, h57-h61, h71 bitgleich zu Runde 3 (dazu h146 / h152 / h153: 147-520
+ *   Kantenpunkte, Gelenke auf 0,01 gleich). Riegel integration_r41_schwanz_zusammen (3) F258-F316, (5b), (7). */
 typedef struct { int16_t h, sx, sy, sart, stiefe, vj, vx, vy, vart, vtiefe, pfeil, verdeckt; } bf_schwanz_v8_t;
 static const bf_schwanz_v8_t k_schwanz_v8[] = {
     /* h   Spitze              j  Austritt           pfeil verdeckt   Videolinie (Pfeil Videopunkte, sichtbare Glieder) */
-    {  16, 285, 348, 4,    0,  5, 330, 262, 1,    0,   0, 5 },   /* Video h16 nicht sichtbar: Stand h18 (Gewicht 0 -> 4096 h15-h18) */
+    {  10, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 },   /* r9 R4: h10-h15 hinter dem Koerper wie h36 (Gewicht 4096 ab h10) */
+    {  15, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 },
+    {  16, 285, 348, 4,    0,  5, 330, 262, 1,    0,   0, 5 },   /* Video h16 nicht sichtbar: Stand h18; r9 R4: voll ab h16 (Original h16/h17
+                                                               * links unten am Bein) */
     {  18, 285, 348, 4,    0,  5, 330, 262, 1,    0,   0, 5 },   /* (330,262) -> (285,348), Pfeil -0,1, 3,37 Glieder */
     {  20, 272, 372, 4,    0,  5, 327, 263, 1,    0,   0, 5 },   /* (327,263) -> (272,372), Pfeil -3,2, 3,38 */
     {  22, 233, 410, 4,    0,  3, 330, 260, 1,    0,   7, 3 },   /* Nutzer Areas4.png, Pfeil 7,3, 5,05 */
     {  24, 199, 346, 4,    0,  3, 333, 273, 1,    0,  36, 3 },   /* Nutzer Areas2.png, Knick, Pfeil 36,4, 4,92 */
     {  26, 245, 290, 4,    0,  5, 366, 345, 1,  600,   0, 5 },   /* (300,345) -> (245,290) Spitze hoch, 2,16; r9 R2: Austritt im Port-Bein */
     {  28, 230, 298, 4,    0,  5, 368, 338, 1,  600,   0, 5 },   /* (262,338) -> (230,298), 1,40; r9 R2: Austritt im Port-Bein */
-    {  30, 354, 350, 4,    0,  6, 374, 345, 1,    0,   0, 6 },   /* zwischen den Knien, 1,12; r9 R2: Austritt wie h32 (Video 318,369) */
-    {  32, 340, 378, 4,    0,  6, 374, 340, 1,    0,   0, 6 },   /* 1,37 */
-    {  34, 358, 368, 4,    0,  6, 375, 330, 1,    0,   0, 6 },   /* 1,17 */
+    {  29, 230, 298, 4,    0,  5, 368, 338, 1,  600,   0, 5 },   /* r9 R4: Stand h28 (sonst h29 Stueck vor dem rechten Oberschenkel) */
+    {  30, 381, 350, 5,    0,  6, 401, 345, 6,  600,   0, 6 },   /* zwischen den Knien, 1,12; r9 R2: Austritt wie h32 (Video 318,369);
+                                                               * r9 R4: Spitze (354,350) / Austritt (374,345) + 27 (Jeans), hinten */
+    {  32, 366, 378, 5,    0,  6, 400, 340, 6,  600,   0, 6 },   /* 1,37; r9 R4: (340,378) / (374,340) + 25,5 */
+    {  34, 384, 368, 5,    0,  6, 401, 330, 6,  600,   0, 6 },   /* 1,17; r9 R4: (358,368) / (375,330) + 25,5 */
     {  36, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 },   /* h36-h56 nicht sichtbar (wie k_schwanz_bahn); ganz verdeckt: die
                                                                * zusammengelegte Kette stand sonst als roter Stummel an der Flanke
                                                                * (Sichtpruefung, h38-h56; Video: nichts) */
     {  56, 395, 300, 1, 1800,  3, 390, 290, 1,  900,   0, 7 },
-    {  58, 461, 372, 5,    0,  6, 409, 322, 6,  600,    0, 6 },   /* kurz, 1,74; r9 R2: hinter dem Bein (art 5); r9 R3: Austritt in der Huefte
+    {  58, 485, 415, 5,    0,  4, 409, 322, 6, 1200,    0, 4 },   /* kurz, 1,74; r9 R2: hinter dem Bein (art 5); r9 R3: Austritt in der Huefte
                                                                * (Video 405,322), Spitze neben dem Port-Bein (Video 418,372) */
-    {  60, 461, 388, 5,    0,  6, 407, 320, 6,  600,    0, 6 },   /* Pfeil 1,4, 2,33; r9 R2: art 5; r9 R3: Austritt (420,320), Spitze (455,388) */
+    {  60, 500, 420, 5,    0,  4, 407, 320, 6, 1200,    0, 4 },   /* Pfeil 1,4, 2,33; r9 R2: art 5; r9 R3: Austritt (420,320), Spitze (455,388);
+                                                               * r9 R4 h58/h60: Spitze unter der Hand neben das Bein, Austritt +1200 */
     {  62, 480, 425, 4,    0,  5, 415, 325, 6,  600,    0, 5 },   /* Pfeil 3,1, 3,38; r9 R3: Austritt (Video 430,325) in der Huefte */
     {  64, 509, 427, 4,    0,  5, 409, 320, 6,  600,    0, 5 },   /* Nutzer Areas3.png, Pfeil 4,8, 3,72 (Bodenziel art 0: 12,5 Videopunkte daneben,
                                                                * Stand E); r9 R3: Austritt (426,320) in der Huefte */
     {  66, 535, 415, 4,    0,  4, 409, 320, 6,  600,  -14, 4 },   /* Pfeil -14,1, 3,83; r9 R3: Austritt (432,320), j 5 -> 4 */
     {  68, 544, 395, 4,    0,  4, 413, 322, 6,  600,   -7, 4 },   /* Pfeil -6,6, 3,66; r9 R3: Austritt (435,322), j 5 -> 4 */
     {  70, 528, 402, 5,    0,  5, 415, 322, 6,  600,    0, 5 },   /* Pfeil -2,3, 3,49; r9 R2: art 5 (fuer h71); r9 R3: Austritt (430,322) */
+    {  71, 490, 400, 5,    0,  5, 415, 322, 6,  600,    0, 5 },   /* r9 R4: h71 rechts neben dem Bein (vorher 0-4 Punkte) */
     {  72, 384, 355, 5,    0,  6, 395, 338, 1,    0,   0, 6 },   /* kurzer Rest, 0,69; r9 R2: art 5 */
     {  74, 280, 341, 4,    0,  2, 326, 226, 1,    0, -36, 7 },   /* Video h74 nichts (Spider-Man fliegt durchs Bild): schon in den Bogen
                                                                * h76, aber ganz verdeckt (Sichtpruefung: Rest an der Huefte) */
@@ -1266,8 +1301,9 @@ static const bf_schwanz_v8_t k_schwanz_v8[] = {
  * daneben, Stand D). Der Bogen ist im Video bis h100 sichtbar, h102-h104 nur als Saum, ab h106 nicht mehr (bis h134); die Kette liegt h104
  * hinter dem Koerper und wird dort in derselben Spanne wie k_schwanz_gewicht (Referenz 2: 6 Bilder) freigegeben, h104-h110. Freigabe direkt
  * aus dem Bogen (h102-h108, Stand F) schlug sichtbar zurueck: Spitze h104 -> h106 -> h108 81 / 80 Videopunkte je 2 Bilder, h106 60 % des
- * Schwanzes sichtbar. */
-static const int16_t k_schwanz_gewicht_v8[][2] = { { 15, 0 }, { 18, 4096 }, { 104, 4096 }, { 110, 0 } };
+ * Schwanzes sichtbar. r9 Runde 4: voll ab h10 (h10-h15 hinter dem Koerper, ab h16 Stand h18) - die Ueberblendung h15-h18 zog die freie Kette
+ * h16 als Streifen zwischen Rumpf und Arm und h17 quer vor den Schritt (Messung siehe Kopf k_schwanz_v8, r9 Runde 4). */
+static const int16_t k_schwanz_gewicht_v8[][2] = { { 9, 0 }, { 10, 4096 }, { 104, 4096 }, { 110, 0 } };   /* r9 Runde 4: voll ab h10 */
 /* Rolle je Videobild: bis h72 Bauch zur Kamera (Modus 1; Video h18-h34 / h58-h72 von vorn rot-weiss gebaendert, 15-20 Videopunkte breit =
  * Schmalseite), ab h74 Bauch zur Bogeninnenseite (Modus 2; Video h76-h100 Flanke, rote Bauchkante innen; Analyse 2a). */
 #define BF_SCHWANZ_V8_BOGEN_AB 74
