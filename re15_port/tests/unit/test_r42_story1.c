@@ -7,9 +7,13 @@
  *   texte      11A0 msg 3..6, 11A1 msg 3..10: Untertitel `04 00 05 cc <Name:> 05 00 00 .. 04 01 01 63`, Sprecher je VERTRAG 2.3
  *   programme  Leon 3,4,5,6 / Elza 3,4,5,10 / Elza mit Uhr 3..10 in Reihenfolge, Set(9,118,1) + Set(9,120,1), Ende Evt_end
  *   szene      Leon: Mod-Marvin (@0x0118C) nicht da; Spieler in der Ausloesezone (Band 1, nach dem Klettern) -> Szene L3, Marvin
- *              kommt (Band 0) und steht bei N, Spieler bei P, Zeilen 3..6, Abblende, Marvin weg, Bit 120; Uhr bleibt (F-19);
+ *              kommt (Band 0) und steht bei N, Spieler bei P, Zeilen 3..6; Abgang (Nachbesserung 1, B1/B2): Marvin geht an den
+ *              Fuss der Kante K, Abblende, mindestens RE15_S1_BLENDE_HALTEN Bilder Schwarz, im Schwarz Kamera 2 und Marvin oben
+ *              (Band 1), dort geht er nach Norden bis Z, Kamera 3, dann weg; Bit 120; Uhr bleibt (F-19); nie ein Kanten-Sub;
  *              wieder betreten: keine Szene, kein Marvin; in der Kletterbewegung (231) keine Ausloesung
- *   szene_elza / szene_elza_uhr  dasselbe mit John + Sherry; mit Uhr Zeilen 6..9 und die Uhr verlaesst das Inventar
+ *   szene_elza / szene_elza_uhr  dasselbe mit John + Sherry (Sherry folgt ihm an B, oben bis ZS); mit Uhr Zeilen 6..9, Sherry an
+ *              der Kante unter Elza (H), Elza kniet (PL00 Clip 11, Form ROOM2040 sub08) und die Uhr verlaesst das Inventar (B4)
+ *   altstand   (B5) 4:198 = 1 (Szene 3000/3001 gelaufen, Bedingung sub00 @0x01188): Spieler in der Zone -> keine Szene, Bit 120 bleibt
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
 #define _DEFAULT_SOURCE 1
@@ -38,6 +42,7 @@
 #include "re15_story1_r42.h"
 #include "re15_story_r42.h"
 #include "re15_climb.h"
+#include "re15_npckante_r38.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -219,6 +224,17 @@ static void teil_programme(void)
         PRUEF(b118 && b120, "%s: Set(9,118,1) und Set(9,120,1)", name[f]);
         PRUEF(uhr == (f == 2), "%s: Uebergabe-Signal der Uhr %s", name[f], f == 2 ? "vorhanden" : "fehlt");
         PRUEF(n >= 2 && p[n - 2] == 0x01 && p[n - 1] == 0x00, "%s: Ende Evt_end `01 00`", name[f]);
+        /* Abgang (B1/B2): Cut_chg 2 im Schwarz, Sce_em_set Band 1 je Begleiter; Uebergabe (B4): Plc_motion(1,11) knien + aufstehen */
+        int cut2 = 0, oben = 0, knien = 0, rueck = 0;
+        for (int i = 0; i + 4 < n; i++) {
+            if (p[i] == 0x29 && p[i + 1] == RE15_S1_CUT_ABGANG) cut2 = 1;
+            if (p[i] == 0x44 && i + 19 < n && p[i + 3] == RE15_S1_NPC_GRID && p[i + 4] == RE15_S1_BAND_OBEN) oben++;
+            if (p[i] == 0x3f && p[i + 1] == 0x01 && p[i + 2] == 0x0b && p[i + 3] == 0x00) knien++;
+            if (p[i] == 0x43 && p[i + 1] == 0x00 && p[i + 2] == 0x80 && p[i + 3] == 0x00) rueck = 1;
+        }
+        PRUEF(cut2, "%s: Cut_chg %d (Abgang im Abschnitt)", name[f], RE15_S1_CUT_ABGANG);
+        PRUEF(oben == (f == 0 ? 1 : 2), "%s: %d Begleiter oben gesetzt (Sce_em_set Band %d)", name[f], oben, RE15_S1_BAND_OBEN);
+        PRUEF((knien == 2 && rueck) == (f == 2), "%s: Knien/Aufstehen (Plc_motion(1,11) x%d, Plc_flg 0x80 %d)", name[f], knien, rueck);
     }
 }
 
@@ -227,6 +243,10 @@ static int nahe(int32_t x, int32_t z, int32_t sx, int32_t sz, int32_t r)
 {
     const int64_t dx = (int64_t)x - sx, dz = (int64_t)z - sz;
     return dx * dx + dz * dz <= (int64_t)r * r;
+}
+static int ist_begleiter_typ(uint8_t t)
+{
+    return t == RE15_S1_TYP_MARVIN || t == RE15_S1_TYP_JOHN || t == RE15_S1_TYP_SHERRY;
 }
 static int begleiter_zahl(void)
 {
@@ -250,8 +270,17 @@ static void teil_szene(int elza, int uhr)
     PRUEF(g_re15_s1_zaehler[0] == z0, "waehrend der Kletterbewegung 231 keine Ausloesung");
     g_actors[RE15_ACTOR_SLOT_PLAYER].motion = 0;
     int npc_da = 0, f = 0, npc_bei_n = 0, sherry_bei_s = 0, pl_bei_p = 0;
-    for (f = 0; f < 6000 && !bit9(RE15_R42_BIT_LEITER); f++) {
+    int npc_bei_k = 0, sherry_bei_b = 0, sherry_bei_h = 0, knie = 0, kante_sub = 0, cut2 = 0, schwarz = 0, schwarz_max = 0;
+    int npc_oben_z = 0, sherry_oben_z = 0, weg_in_cut = -1;
+    for (f = 0; f < 8000 && !bit9(RE15_R42_BIT_LEITER); f++) {
+        const int vorher = begleiter_zahl();
         frame(0, 0);
+        if (vorher > 0 && begleiter_zahl() == 0 && weg_in_cut < 0 && cut2) weg_in_cut = (int)g_scd.cam_id;
+        if (g_scd.cam_id == RE15_S1_CUT_ABGANG) cut2 = 1;
+        /* Schwarz = statischer Pegel 0x7fff im Kanal (Takt Stufe 2) */
+        if (g_fade_ch[RE15_S1_BLENDE_KANAL].level == RE15_S1_BLENDE_SCHWARZ) { if (++schwarz > schwarz_max) schwarz_max = schwarz; }
+        else schwarz = 0;
+        if (g_actors[RE15_ACTOR_SLOT_PLAYER].motion == 11 && g_actors[RE15_ACTOR_SLOT_PLAYER].anim_use_pl00) knie = 1;
         for (int i = 1; i < RE15_ACTOR_MAX; i++) {
             const re15_actor_t *a = &g_actors[i];
             if (!a->active) continue;
@@ -262,8 +291,16 @@ static void teil_szene(int elza, int uhr)
                           "Begleiter erscheint im unteren Gang im Osten (%d,%d) Band %d", (int)a->x, (int)a->z, (int)a->floor);
                 }
                 if (nahe(a->x, a->z, RE15_S1_NPC_X, RE15_S1_NPC_Z, 400)) npc_bei_n = 1;
+                if (a->floor == RE15_S1_BAND_UNTEN && nahe(a->x, a->z, RE15_S1_KANTE_X, RE15_S1_KANTE_Z, 150)) npc_bei_k = 1;
+                if (a->floor == RE15_S1_BAND_OBEN && (int)a->z > npc_oben_z) npc_oben_z = (int)a->z;
             }
-            if (a->type == RE15_S1_TYP_SHERRY && nahe(a->x, a->z, RE15_S1_SHERRY_X, RE15_S1_SHERRY_Z, 400)) sherry_bei_s = 1;
+            if (a->type == RE15_S1_TYP_SHERRY) {
+                if (nahe(a->x, a->z, RE15_S1_SHERRY_X, RE15_S1_SHERRY_Z, 400)) sherry_bei_s = 1;
+                if (a->floor == RE15_S1_BAND_UNTEN && nahe(a->x, a->z, RE15_S1_UEBERGABE_X, RE15_S1_UEBERGABE_Z, 150)) sherry_bei_h = 1;
+                if (a->floor == RE15_S1_BAND_UNTEN && nahe(a->x, a->z, RE15_S1_HINTER_X, RE15_S1_HINTER_Z, 150)) sherry_bei_b = 1;
+                if (a->floor == RE15_S1_BAND_OBEN && (int)a->z > sherry_oben_z) sherry_oben_z = (int)a->z;
+            }
+            if (ist_begleiter_typ(a->type) && re15_npckante_aktiv(a)) kante_sub = 1;
         }
         if (nahe(g_actors[0].x, g_actors[0].z, RE15_S1_SPIELER_X, RE15_S1_SPIELER_Z, 150)) pl_bei_p = 1;
     }
@@ -280,6 +317,19 @@ static void teil_szene(int elza, int uhr)
     PRUEF(!strcmp(t, soll), "Zeilen %s (soll %s)", t, soll);
     PRUEF(bit9(RE15_R42_BIT_LEITER) && bit9(RE15_R42_BIT_2080_SZENE), "Bit 120 (und 118) = 1 nach %d Bildern", f);
     PRUEF(g_re15_s1_zaehler[2] == z2 + 1, "Abblende einmal");
+    PRUEF(npc_bei_k, "B1: Begleiter ging vor der Abblende an den Fuss der Kante K (%d,%d)", RE15_S1_KANTE_X, RE15_S1_KANTE_Z);
+    if (elza) PRUEF(sherry_bei_b, "B2: Sherry folgte ihm an B (%d,%d) vor der Abblende", RE15_S1_HINTER_X, RE15_S1_HINTER_Z);
+    PRUEF(schwarz_max >= RE15_S1_BLENDE_HALTEN, "B1: Schwarz %d Bilder (>= %d, PORT-WAHL Zeitsprung)", schwarz_max, RE15_S1_BLENDE_HALTEN);
+    PRUEF(cut2, "B1: Abgang in Kamera %d", RE15_S1_CUT_ABGANG);
+    PRUEF(npc_oben_z >= RE15_S1_ZIEL_Z - 150, "B1: Begleiter ging oben bis z %d (Ziel %d)", npc_oben_z, RE15_S1_ZIEL_Z);
+    if (elza) PRUEF(sherry_oben_z >= RE15_S1_ZIEL_SHERRY_Z - 150, "B2: Sherry ging oben bis z %d (Ziel %d)", sherry_oben_z,
+                    RE15_S1_ZIEL_SHERRY_Z);
+    PRUEF(weg_in_cut == RE15_S1_CUT_SZENE, "B1: Begleiter verlassen den Raum erst in Kamera %d (war %d)", RE15_S1_CUT_SZENE, weg_in_cut);
+    PRUEF(!kante_sub, "kein Kanten-Sub (Sonde FUN_8002d7d8 trifft nie)");
+    if (elza && uhr) {
+        PRUEF(sherry_bei_h, "B4: Sherry an der Kante unter Elza (H %d,%d)", RE15_S1_UEBERGABE_X, RE15_S1_UEBERGABE_Z);
+        PRUEF(knie, "B4: Elza kniet (PL00 Clip 11, Plc_motion(1,11) Form ROOM2040 sub08 @0x01722)");
+    } else PRUEF(!knie, "ohne Uebergabe kein Knien");
     for (int k = 0; k < 30; k++) frame(0, 0);
     PRUEF(begleiter_zahl() == 0, "Begleiter nach der Abblende nicht mehr im Raum");
     PRUEF(g_fade_ch[RE15_S1_BLENDE_KANAL].level & 0x8000u, "Blende fertig (Kanal %d Bit 15)", RE15_S1_BLENDE_KANAL);
@@ -293,6 +343,31 @@ static void teil_szene(int elza, int uhr)
     PRUEF(g_re15_s1_zaehler[0] == z0 + 1 && begleiter_zahl() == 0, "Wiederbetreten: keine zweite Szene, kein Begleiter");
 }
 
+/* ---- altstand (B5) --------------------------------------------------------------------------------------------- */
+static void teil_altstand(void)
+{
+    printf("== altstand ==\n");
+    for (int elza = 0; elza < 2; elza++) {
+        re15_game_state_init();
+        re15_inv_load_briefing();
+        re15_game_flag_set(9, RE15_R42_BIT_2080_SZENE, 1);
+        re15_game_flag_set(3, 151, 1); re15_game_flag_set(9, RE15_R42_BIT_TUER_11A, 1);
+        re15_game_flag_set(RE15_S1_BANK_3000, RE15_S1_BIT_3000, 1);   /* 3000 sub03 @0x0166E / 3001 @0x016A6 schon gelaufen */
+        const uint16_t raum = elza ? 0x11A1 : 0x11A0;
+        const unsigned z0 = g_re15_s1_zaehler[0];
+        if (room_boot(raum, 321, -1800, 338, 3072, RE15_S1_CUT_SZENE) != 0) return;
+        for (int k = 0; k < 120; k++) frame(0, 0);
+        PRUEF(g_re15_s1_zaehler[0] == z0 && begleiter_zahl() == 0 && !bit9(RE15_R42_BIT_LEITER),
+              "ROOM%04X mit 4:198 = 1 (Altstand jenseits 3000): Spieler in der Zone, keine Szene, kein Begleiter", raum);
+        /* Gegenprobe: dieselbe Lage ohne 4:198 loest aus */
+        re15_game_flag_set(RE15_S1_BANK_3000, RE15_S1_BIT_3000, 0);
+        if (room_boot(raum, 321, -1800, 338, 3072, RE15_S1_CUT_SZENE) != 0) return;
+        for (int k = 0; k < 5; k++) frame(0, 0);
+        PRUEF(g_re15_s1_zaehler[0] == z0 + 1, "ROOM%04X Gegenprobe 4:198 = 0: Szene startet", raum);
+        scd_vm_init();
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "";
@@ -301,6 +376,7 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "szene")) teil_szene(0, 1);
     else if (!strcmp(t, "szene_elza")) teil_szene(1, 0);
     else if (!strcmp(t, "szene_elza_uhr")) teil_szene(1, 1);
+    else if (!strcmp(t, "altstand")) teil_altstand();
     else { printf("unbekannter Teil '%s'\n", t); return 2; }
     printf("%s: %d Fehler\n", t, g_fail);
     return g_fail ? 1 : 0;

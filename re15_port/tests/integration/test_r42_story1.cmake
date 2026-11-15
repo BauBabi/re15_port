@@ -14,7 +14,8 @@
 # TEIL leiter            Leon mit Uhr: Szene L3 (Marvin), Zeilen 3..6, keine Rueckgabe (F-19: Leon behaelt die Uhr)
 # TEIL leiter_elza       Elza mit Uhr: Szene E2 mit Rueckgabe (6b, F-26), Zeilen 3..10, Uhr aus dem Inventar
 # TEIL leiter_elza_ohne  Elza ohne Uhr (Bit 90 = 0, nichts im Inventar): Szene E2 ohne die Zeilen 6..9
-# In allen: Mod-Begleiter in 11Ax verworfen (K-07), Bit 120 = 1, Begleiter im Schwarz entfernt, 300x unveraendert:
+# In allen: Mod-Begleiter in 11Ax verworfen (K-07), Bit 120 = 1, Abgang (Nachbesserung 1): Begleiter an die Kante, Abblende,
+#   >= 30 Bilder Schwarz, oben im Abschnitt in Kamera 2 Richtung Leiter, erst in Kamera 3 entfernt, nie im Kanten-Sub; 300x unveraendert:
 #   Vergleich mit dem Stand vor der Stufe (fa2d88eb1, dieselbe Route ab 207x) - dieselben Spawns (RE15_SPAWN_DIAG) und dieselbe
 #   Zeilenfolge (3000: 2..8, 3001: 2..9).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<teil> -P test_r42_story1.cmake
