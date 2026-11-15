@@ -208,6 +208,17 @@ target_include_directories(test_birkin_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_birkin_ai COMMAND test_birkin_ai)
 set_tests_properties(unit_birkin_ai PROPERTIES TIMEOUT 30)
 
+# --- Birkins Kralle ACT[3] (FUN_801174fc): Erholung Clip 0xa nur ueber die Klauen-Sonde @0x80117834, keine Phase-1-Drehung ---
+add_executable(test_r41_birkin_kralle test_r41_birkin_kralle.c)
+target_link_libraries(test_r41_birkin_kralle PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_r41_birkin_kralle PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r41_birkin_kralle PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+foreach(_fall frei wand wand1)
+    add_test(NAME unit_r41_birkin_kralle_${_fall} COMMAND test_r41_birkin_kralle ${_fall})
+    set_tests_properties(unit_r41_birkin_kralle_${_fall} PROPERTIES TIMEOUT 60)
+endforeach()
+
 add_executable(test_writher_ai test_writher_ai.c)
 target_link_libraries(test_writher_ai PRIVATE re15_engine re15_test_support)
 target_include_directories(test_writher_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)

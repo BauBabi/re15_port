@@ -12025,23 +12025,67 @@ static int re15_bk_arc(re15_actor_t *e, re15_actor_t *pl, int32_t range, int arc
 #define RE15_BK_SPIELER_RADIUS 450   /* 0x80073e94 + 6 (s.o.) */
 static int16_t s_bk_treffer_x = 0, s_bk_treffer_z = 0;   /* acc1c / acc1e */
 void re15_bk_treffpunkt(int16_t *x, int16_t *z) { if (x) *x = s_bk_treffer_x; if (z) *z = s_bk_treffer_z; }
-static int re15_bk_kontakt(re15_actor_t *e, re15_actor_t *pl, int32_t ox, int32_t reach, int merken)
+/* Weltpunkt der Angriffsbox (a2 nach FUN_8001a5e0, `swl/swr` @0x8001a694-6b0, s16 x/y/z): Teil 15 mit Versatz (ox,337,0),
+ * gezeichnete Lage = KF N-2 (s. Kopf). 0 = kein Punkt (Typ != 0x30 = 0x36-Masse-Pfad, oder keine Bank im Unit-Harness). */
+static int re15_bk_klauenpunkt(re15_actor_t *e, int32_t ox, int32_t w[3])
 {
     const int32_t ofs[3] = { ox, 337, 0 };
-    int32_t w[3];
-    if (e->type != 0x30)
-        return re15_bk_arc(e, pl, 2500, 0x400);                 /* Proxy (0x36-Masse-Pfad) */
+    if (e->type != 0x30) return 0;
     /* gezeichnete Matrix = KF N-2 (s. Kopf: @0x8001a5ec-638, @0x8001f35c-36c / @0x8001f618-61c, @0x8011be88 / @0x8011bea8) */
     const uint32_t fc = (uint32_t)re15_birkin_fc(e), bild = e->anim_frame;
     e->anim_frame = (uint8_t)((bild + fc - 2u) % fc);
     const int ok = re15_enemy_part_point(e, 15, ofs, w);
     e->anim_frame = (uint8_t)bild;
+    if (ok) { w[0] = (int16_t)w[0]; w[1] = (int16_t)w[1]; w[2] = (int16_t)w[2]; }   /* `sh` s16 @0x8001a620-644 */
+    return ok;
+}
+static int re15_bk_kontakt_aus(re15_actor_t *e, re15_actor_t *pl, int ok, const int32_t w[3], int32_t reach, int merken)
+{
     if (!ok)
-        return re15_bk_arc(e, pl, 2500, 0x400);                 /* Proxy (keine Bank) */
+        return re15_bk_arc(e, pl, 2500, 0x400);                 /* Proxy (0x36-Masse-Pfad / keine Bank) */
     int32_t dx = (int32_t)(int16_t)w[0] - pl->x, dz = (int32_t)(int16_t)w[2] - pl->z;
     int32_t d = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
     if (merken) { s_bk_treffer_x = (int16_t)w[0]; s_bk_treffer_z = (int16_t)w[2]; }
     return d < RE15_BK_SPIELER_RADIUS + reach;
+}
+static int re15_bk_kontakt(re15_actor_t *e, re15_actor_t *pl, int32_t ox, int32_t reach, int merken)
+{
+    int32_t w[3];
+    const int ok = re15_bk_klauenpunkt(e, ox, w);
+    return re15_bk_kontakt_aus(e, pl, ok, w, reach, merken);
+}
+
+/* KLAUEN-SONDE der Kralle ACT[3] (STAGE3 @0x80117814-858, STAGE5 bytegleich +0x814, @0x80118028-06c): in JEDEM Bild des
+ * Fensters, nach der Angriffsbox, unabhaengig von Treffer und Spieler+0x93 (alle drei Wege der Box enden @0x80117814):
+ *   `ori a1,zero,0x190` @0x80117818 (Radius 400), `lh v0/v1/a3,24/26/28(sp)` @0x8011781c-824 = der Weltpunkt, den
+ *   FUN_8001a5e0 nach a2 = sp+24 schrieb (`swl/swr` @0x8001a694-6b0), `sw` nach sp+32..40 @0x8011782c-838,
+ *   `jal 0x8001c2dc` @0x80117834 (Flag a2 = sp+48 @0x80117828; FUN_8001c2dc schreibt es immer: `sb zero,0(s2)` im
+ *   Delay-Slot @0x8001c354, `sb s4,0(s2)` @0x8001c3c0, `sb zero,0(s2)` @0x8001c3f8),
+ *   `lbu v0,48(sp)` @0x8011783c, `beq v0,zero` @0x80117844, sonst +0x6 = 3 (`ori v0,zero,0x3` @0x80117848 /
+ *   `sb v0,6(v1)` @0x80117858) -> Erholung Clip 0xa. FUN_8001c2dc = re15_affen_kd_sonde (affen_11c0.c).
+ * Ohne Weltpunkt (keine Bank im Unit-Harness, Typ != 0x30) oder ohne Raum-RDT bleibt das Flag 0. */
+#define RE15_BK_SONDE_RADIUS 0x190   /* `ori a1,zero,0x190` @0x80117818 (STAGE5 @0x8011802c) */
+static int re15_bk_klauen_sonde(const re15_actor_t *e, int ok, const int32_t w[3])
+{
+    const re15_rdt_t *rdt = g_room_rdt_ok ? &g_room_rdt : NULL;
+    const int flag = (ok && rdt) ? re15_affen_kd_sonde(rdt, w[0], w[1], w[2], RE15_BK_SONDE_RADIUS) : 0;
+    /* MESS-SCHIENE (RE15_BIRKIN_DBG, kein Spielverhalten): je Fensterbild Klauenpunkt, Band, Zellwort, Flag. */
+    {
+        static int dbg = -1;
+        if (dbg < 0) dbg = (getenv("RE15_BIRKIN_DBG") != NULL);
+        if (dbg) {
+            FILE *bf = fopen("birkin_dbg.log", "a");
+            if (bf) {
+                const int band = ok ? (int)((uint32_t)(-(w[1] / 0x708)) & 0xffu) : -1;
+                const unsigned wort = (ok && rdt) ? (unsigned)re15_collision_floor_typeword(rdt, w[0], w[2], band, RE15_BK_SONDE_RADIUS) : 0u;
+                fprintf(bf, "kralle raum=%04X ph2=%u af=%u ok=%d pt=(%d,%d,%d) band=%d wort=0x%04x flag=%d\n",
+                        (unsigned)g_current_room_id, e->sub_state_2, e->anim_frame, ok,
+                        ok ? (int)w[0] : 0, ok ? (int)w[1] : 0, ok ? (int)w[2] : 0, band, wort, flag);
+                fclose(bf);
+            }
+        }
+    }
+    return flag;
 }
 
 /* ACT[0] des Szenen-Modus 0x80118d00 (Phasen +0x6 @0x801003dc, `sltiu v0,v1,0xf` @0x80118d38). anim_set(+0x84, +0x16c)
@@ -12294,7 +12338,7 @@ static void re15_birkin_ai_tick(int slot)
             re15_birkin_anim(e);
             break;
         }
-        case 3: {  /* CLAW/LUNGE 0x801174fc: clip 3 strike, window [0x24..0x2b] -> hp-10 + grab; recovery clip 0xa */
+        case 3: {  /* CLAW/LUNGE 0x801174fc: clip 3 strike, window [0x24..0x2b] -> hp-10 + grab; recovery clip 0xa only via claw probe */
             if (e->sub_state_2 == 0) {                 /* phase 0 @0x801175b0: clip 3, +0x95=0x14 form-2, +0x8f=0xf */
                 re15_birkin_clip(e, 3);
                 if (e->grid_id & 0x10) e->anim_frame = 0x14;           /* form-2 anim seed @0x80117600 */
@@ -12302,14 +12346,22 @@ static void re15_birkin_ai_tick(int slot)
             }
             if (e->sub_state_2 == 1) {                 /* phase 1 @0x8011762c: strike */
                 re15_enemy_steer_point(e, pl->x, pl->z, 0x50);         /* steer 0x50 @0x80117624 */
-                int done = re15_birkin_anim(e);                        /* anim_set @0x80117640 (advance before the window read) */
+                /* anim_set @0x80117640 (a3 = 0x100 @0x80117644), advance before the window read. +0x6 += Rueckgabe UNBEDINGT
+                 * vor dem Tor (`lbu v1,6(a2)` @0x8011765c / `addu v1,v1,v0` @0x80117664 / `sb v1,6(a2)` @0x8011766c im
+                 * Delay-Slot des arc_test): am Clip-Ende ist +0x6 = 2 -> naechstes Bild Phase 2 @0x80117888 (HUB, +0x1df = 0x1e).
+                 * Die Erholung Clip 0xa (Phase 3) gibt es NUR ueber die Klauen-Sonde im Fenster (@0x80117834-858). */
+                int done = re15_birkin_anim(e);
+                e->sub_state_2 = (uint8_t)(e->sub_state_2 + done);
                 /* continue-gate @0x80117668: (arc(0x400) && dist<0xfa1) || frame>=0x1e; else abort (phase 2) when frame<0x1e */
                 if (!re15_bk_arc(e, pl, 0xfa1, 0x400) && e->anim_frame < 0x1e) {
                     e->sub_state_2 = 2;                                /* abort @0x801176b8 */
-                } else {
-                    /* damage window [0x24..0x2b] tested EVERY frame @0x801176ec, Angriffsbox @0x80117710 */
-                    if (e->anim_frame >= 0x24 && e->anim_frame <= 0x2b && pl->hit_react == 0
-                        && re15_bk_kontakt(e, pl, 800, 900, 0)) {
+                } else if (e->anim_frame >= 0x24 && e->anim_frame <= 0x2b) {
+                    /* damage window [0x24..0x2b] tested EVERY frame (`addiu v0,v0,-36` / `sltiu v0,v0,0x8` @0x801176ec-f0),
+                     * Angriffsbox @0x80117710 (Versatz (800,337,0) @0x80100390, Reichweite 900 @0x80100398) */
+                    int32_t klaue[3];
+                    const int klaue_ok = re15_bk_klauenpunkt(e, 800, klaue);
+                    if (re15_bk_kontakt_aus(e, pl, klaue_ok, klaue, 900, 0)   /* Box-Fehlschlag `beq` @0x80117718 -> 0x80117814 */
+                        && pl->hit_react == 0) {                               /* Spieler+0x93 `bne` @0x8011772c -> 0x80117814 */
                         /* Gier-Latch @0x80117754-7a8: s0 = FUN_8001a6d4(Birkin -> Spieler), Birkin-Gier kurz s0-0x400
                          * (quer zur Peilung), v0 = FUN_8001a780(Spieler), Birkin-Gier zurueck (@0x8011778c), Spieler-Gier
                          * acabe = s0 - (v0*0x800 - 0x400) @0x80117790-7a8 = quer zur Peilung -> der Haken schleudert Leon
@@ -12327,22 +12379,34 @@ static void re15_birkin_ai_tick(int slot)
                         pl->hp = (int16_t)(pl->hp - 10);               /* hp-=10 @0x801177f0 */
                         if (pl->hp < 0) pl->hp = 1;                    /* clamp-to-1 @0x80117810 */
                     }
+                    /* Klauen-Sonde @0x80117814-858 (alle drei Box-Wege laufen hierher): steckt die Klaue in einer
+                     * Kollisionszelle, +0x6 = 3 @0x80117848-858 -> Erholung Clip 0xa. Sonst laeuft der Hieb weiter. */
+                    if (re15_bk_klauen_sonde(e, klaue_ok, klaue))
+                        e->sub_state_2 = 3;
                     if (e->anim_frame == 0x25) re15_audio_room_se(4);  /* Se(4)@frame 0x25 @0x80117878 */
-                    if (done) e->sub_state_2 = 3;                      /* ground-probe contact proxy -> recovery @0x8011783c */
+                } else {
+                    /* Fenster-Fehlschlag `beq` @0x801176f4 -> 0x8011785c: nur noch Se(4) bei +0x95 == 0x25 (@0x80117878) */
+                    if (e->anim_frame == 0x25) re15_audio_room_se(4);
                 }
-            } else if (e->sub_state_2 == 2) {          /* phase 2 abort @0x80117888: -> HUB, +0x1df=0x1e */
-                e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
-                e->birkin_atk_cd = 0x1e;                               /* +0x1df = 0x1e @0x801179a8 */
-                re15_enemy_steer_point(e, pl->x, pl->z, 0x50);
-            } else if (e->sub_state_2 == 3) {          /* phase 3 recovery init @0x801178c0: clip 0xa, Se(6), phase->4 */
-                re15_birkin_clip(e, 0x0a); e->anim_frac = 3; e->sub_state_2 = 4;
-                re15_audio_room_se(6);                                 /* Se(6) @0x801178ec/fc */
-                re15_birkin_anim(e);
-            } else {                                   /* phase 4/5 recovery play @0x80117904: -> HUB, +0x1df=0x3c */
-                if (re15_birkin_anim(e)) {
-                    e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
-                    e->birkin_atk_cd = 0x3c;                           /* +0x1df = 0x3c @0x801179a4 */
+            } else if (e->sub_state_2 == 2) {          /* phase 2 @0x80117888 (Abbruch ODER Clip-Ende): -> HUB, +0x1df=0x1e */
+                e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* +0x4 = 0x101 (Wort) @0x80117890-894 */
+                e->birkin_atk_cd = 0x1e;                               /* `ori v0,zero,0x1e` @0x801178bc / `sb v0,479(v1)` @0x801179a8 */
+                re15_enemy_steer_point(e, pl->x, pl->z, 0x50);         /* @0x801178a8 */
+            } else if (e->sub_state_2 == 5) {          /* phase 5 @0x80117974: -> HUB, +0x1df=0x3c */
+                e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* +0x4 = 0x101 (Wort) @0x8011797c-980 */
+                e->birkin_atk_cd = 0x3c;                               /* +0x1df = 0x3c @0x801179a4-a8 */
+            } else {                                   /* phase 3 @0x801178c0, faellt in Phase 4 @0x80117904 */
+                if (e->sub_state_2 == 3) {
+                    e->sub_state_2 = 4;                                /* +0x6 = 4 @0x801178c8-cc */
+                    re15_birkin_clip(e, 0x0a);                         /* clip 0xa @0x801178d8-dc, +0x95 = 0 @0x801178ec */
+                    e->anim_frac = 3;                                  /* +0x8f = 3 @0x80117900 */
+                    re15_audio_room_se(6);                             /* Se(6) a0 = 6 @0x801178e8, jal @0x801178fc */
                 }
+                /* phase 4: anim_set (a3 = 0x400 @0x8011791c), +0x6 += Rueckgabe @0x8011792c-938 -> 5 am Clip-Ende */
+                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));
+                /* Form 2 (grid & 0x10 @0x80117948-950) beendet die Erholung bei +0x95 == 0x1e (@0x8011795c-964 -> +0x6 = 5 @0x80117970) */
+                if ((e->grid_id & 0x10) && e->anim_frame == 0x1e)
+                    e->sub_state_2 = 5;
             }
             break;
         }
