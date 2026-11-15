@@ -48,6 +48,7 @@ BAUM="$(git -C "$HIER" rev-parse --show-toplevel)" || exit 2
 ZIEL="${1:-C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/kette}"
 V7_SOLL="${V7_SOLL:-319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6}"
 SCHWANZFARBE="${SCHWANZFARBE:-b}"     # Runde 8: Farbprobe der Stufe q (a / b; Runde 8b nur noch zwei); der Pin gilt fuer b
+                                      # (Runde 8g: b = Oberseite wie 8c, Bauch inklusive Fugen einheitlich im Feld C1 u 56-65 v 51-55)
 PIN="$BAUM/release/em30_hangar.sha256"
 PIN_SOLL="$(awk 'NR==1{print $1}' "$PIN")"
 [ -n "$PIN_SOLL" ] || { echo "FEHLER: Pin $PIN leer"; exit 2; }
