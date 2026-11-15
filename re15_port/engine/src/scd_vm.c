@@ -784,7 +784,8 @@ void scd_vm_tick(void)
     if (!s_vm_room_init) { extern void re15_kanister2080_r41_tick(void); re15_kanister2080_r41_tick(); }   /* Runde 41 Spur G: Ausloeser 2090, Signale/Wurf 2080 */
     if (!s_vm_room_init) { extern void re15_story2_r42_tick(void); re15_story2_r42_tick(); }   /* Runde 42 Story STAGE2: Signale der 2080-Szene, Uhr-Hinweis 2090 */
     if (!s_vm_room_init) { extern void re15_story1_r42_tick(void); re15_story1_r42_tick(); }   /* Runde 42 Story STAGE1: Ausloesung, Signale, Abblende der Szene an der Leiter 11A0/11A1 */
-    if (!s_vm_room_init) { extern void re15_story3a_r42_tick(void); re15_story3a_r42_tick(); }   /* Runde 42 Story STAGE3a: Signale/Abblende/Schuesse 3060, Wiedersehen, "Gunshots" 3020 */
+    if (!s_vm_room_init) { extern void re15_story3a_r42_tick(void); re15_story3a_r42_tick(); }
+    if (!s_vm_room_init) { extern void re15_story3b_r42_tick(void); re15_story3b_r42_tick(); }   /* Runde 42 Story STAGE3b: Signal FREI 30E0, Zeile 3070 */   /* Runde 42 Story STAGE3a: Signale/Abblende/Schuesse 3060, Wiedersehen, "Gunshots" 3020 */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
 
@@ -1298,6 +1299,9 @@ static int op_evt_exec(scd_thread_t *t)
     /* Runde 42 Story STAGE3a: ROOM3060 sub00 @0x0102A Evt_exec sub03 -> Marvin-Szene mit Ausruf, Schuessen, Abblende (re15_story3a_r42.h). */
     { extern const uint8_t *re15_story3a_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
       target_pc = re15_story3a_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
+    /* Runde 42 Story STAGE3b: ROOM30E0 sub11 @0x0107C/@0x010B4 Evt_exec sub02/sub03 -> ein Besuch bzw. sub03 mit Warten (re15_story3b_r42.h). */
+    { extern const uint8_t *re15_story3b_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
+      target_pc = re15_story3b_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
     if (!target_pc) return 1;   /* no such sub → drop */
 
     int slot;

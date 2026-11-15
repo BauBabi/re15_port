@@ -11976,6 +11976,25 @@ void re15_r38_opfer_latch(const re15_actor_t *e, re15_actor_t *pl, int variante)
 void re15_r38_opfer_variante(uint8_t v) { g_player_victim_variant = v; }
 int  re15_r38_birkin_anim(re15_actor_t *e) { return re15_birkin_anim(e); }
 int  re15_r38_birkin_fc(const re15_actor_t *e) { return re15_birkin_fc(e); }
+/* Runde 42 Story Stufe STAGE3b, Konzept 5 T-03/T-04: Clip-Ende mit Phasenwechsel und Original-Ueberblendstaerke fuer die zwei
+ * Szenen-Maschinen des 0x30 (Emergence 0x80119378 = 3070-Auftritt, Szenen-Modus 0x80118d00 = Hand im Aufzug 3080).
+ * anim_set FUN_8001f314 posiert das Bild +0x95 (`lbu v0,149(t0)` @0x8001f35c -> `sw a2,360(t0)` @0x8001f36c, Pose FUN_8001f3bc)
+ * und zaehlt ERST DANACH hoch (@0x8001f610-1c); am Clip-Ende `sb zero,149` @0x8001f63c + Rueckgabe 1 (@0x8001f638). Im Wechselbild
+ * steht also das LETZTE Bild auf dem Schirm, der naechste Clip blendet aus dieser Pose. Der Port zeichnet anim_frame NACH dem Vorschub
+ * (re15_birkin_anim): der Umlauf zeigte im Wechselbild Bild 0 des fertigen Clips (gemessen RE15_POSE_LOG 3070: F972 Clip 16 af0 =
+ * Pruefsumme des ersten Bildes F914 = die Hocke, danach Clip 13 mit wp 4096 = 100 % Hocke bis F979). Regel wie sm_anim_halten
+ * (spiderman_r38.c) und bb_anim (birkin_bahnsteig.c): fertig -> anim_frame = fc - 1; Phasen, die den naechsten Clip OHNE
+ * +0x95-Schreiben starten, setzen das Bild selbst auf den Umlaufwert 0.
+ * Ueberblendstaerke = a3 des Aufrufs (Gewicht +0x8f * a3: `mult v0,a3` @0x8001f474 / `mult v0,v1` @0x8001f598, +0x8f -1
+ * @0x8001f5b0-b4) -> anim_blend_rate; ohne sie nimmt der Zeichenpfad 0x200 und klemmt ab frac 8 auf 100 % Vor-Pose
+ * (skeleton_common.c). */
+static int re15_birkin_anim_szene(re15_actor_t *e, uint16_t a3)
+{
+    e->anim_blend_rate = a3;
+    const int fertig = re15_birkin_anim(e);
+    if (fertig) e->anim_frame = (uint8_t)(re15_birkin_fc(e) - 1);
+    return fertig;
+}
 /* MASSE-VORLAUF des laufenden Birkin-Ticks (0 ausserhalb; Runde 4,
  * birkin-bewegung.md Plan 2): der Endkampf-G5 (0x36) traegt die MASSE (Mesh 2)
  * ~4494 Einheiten VOR dem Entity-Ursprung (gemessene Masse-Front, birkin_dbg
@@ -12064,24 +12083,27 @@ static void re15_birkin_szene(re15_actor_t *e)
         re15_audio_room_se(3); re15_audio_room_se(6);              /* @0x80118d9c / @0x80118da4 */
         /* j 0x80119278 */
     case 1:
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* anim_set a3 0x100, += @0x80119294 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x100));   /* a3 0x100 @0x80118dc4, += @0x80119294 */
         break;
     case 2:                                                        /* @0x80118dc8 */
         e->ai_timer = 0xa; e->sub_state_2 = 3; e->motion = 2; e->anim_frac = 0xf;   /* @0x80118dd8-e0c */
+        e->anim_frame = 0;                                         /* kein +0x95-Schreiben: Umlaufwert 0 @0x8001f63c (T-04) */
         re15_audio_room_se(8);                                     /* a0 = 8 @0x80118dc8, jal @0x80118e08 */
         /* faellt in [3] @0x80118e10 */
     case 3:
         re15_birkin_zucken(e);
         if (e->birkin_zuck <= 0) e->sub_state_2 = 6;               /* `bgtz` / +0x6 = 6 @0x80118f58-74 */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* j 0x80119278 @0x80118f8c */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x100));   /* j 0x80119278 @0x80118f8c, a3 0x100 @0x80118f90 */
         break;
     case 4:                                                        /* @0x80118f94 */
         e->sub_state_2 = 5; e->motion = 3; e->anim_frac = 0xf;     /* @0x80118fa0-fc8 */
+        e->anim_frame = 0;                                         /* kein +0x95-Schreiben: Umlaufwert 0 @0x8001f63c (T-04) */
         re15_audio_room_se(9);                                     /* a0 = 9, jal @0x80118fc4 */
         /* faellt in [5] @0x80118fcc */
     case 5:
         re15_birkin_zucken(e);
         if (e->birkin_zuck <= 0) e->sub_state_2 = 6;               /* @0x80119114-130 */
+        e->anim_blend_rate = 0x100;                                /* a3 0x100 @0x8011914c (Schleife, kein Halten) */
         (void)re15_birkin_anim(e);                                 /* anim_set @0x80119148, KEIN += (j @0x80119150) */
         break;
     case 6:                                                        /* @0x80119158 */
@@ -12090,21 +12112,25 @@ static void re15_birkin_szene(re15_actor_t *e)
         /* faellt in [7] @0x801191a4 */
     case 7:
         if (e->anim_frame == 0x14) re15_audio_room_se(4);         /* @0x801191b0-1c4 */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* j 0x80119278 (a3 0x100) */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x100));   /* j 0x80119278, a3 0x100 @0x801191e0 */
         break;
     case 8:                                                        /* @0x801191e4 */
         re15_game_flag_set(5, 0x1f, 1);                            /* @0x8011921c */
         e->sub_state_2 = 9; e->motion = 4; e->anim_frac = 3;       /* @0x801191f8-220 */
+        e->anim_frame = 0;                                         /* kein +0x95-Schreiben: Umlaufwert 0 @0x8001f63c (T-04) */
         re15_audio_room_se(0);                                     /* j 0x80119258, a0 = 0 @0x80119228 */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* a3 0x400 @0x80119274 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x400));   /* a3 0x400 @0x80119274 */
         break;
     case 9: case 11:                                               /* @0x80119260 */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x400));   /* a3 0x400 @0x80119274 */
         break;
     case 10:                                                       /* @0x8011922c */
+        /* T-04: zweiter Stoss = derselbe Clip 4 noch einmal (kein +0x94-Schreiben), ab Bild 0 = Umlaufwert @0x8001f63c, aus dem
+         * gehaltenen letzten Bild des ersten Stosses mit frac 3 * a3 0x400 uebergeblendet - der Arm springt nicht zurueck. */
         e->sub_state_2 = 0xb; e->anim_frac = 3;                    /* @0x80119238-250 */
+        e->anim_frame = 0;
         re15_audio_room_se(0); re15_audio_room_se(1);              /* @0x8011924c / a0 = 1 @0x80119254, jal @0x80119258 */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x400));   /* a3 0x400 @0x80119274 */
         break;
     case 12:                                                       /* @0x801192a0 */
         re15_game_flag_set(5, 0x1e, 1);                            /* @0x801192f4 */
@@ -12114,7 +12140,7 @@ static void re15_birkin_szene(re15_actor_t *e)
         /* faellt in [13] @0x80119304 */
     case 13:
         e->anim_flags |= 0x80u;                                    /* a2 = 1 @0x8011930c */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x80119318-338 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x400));   /* @0x80119318-338, a3 0x400 @0x8011931c */
         e->crow_speed = (uint16_t)(e->crow_speed + 50);            /* +0x8c += 50 @0x80119350 */
         re15_dog_advance_ofs(e, 0x800);                            /* FUN_800245d8(0x800) @0x80119354 */
         break;
@@ -12480,14 +12506,17 @@ static void re15_birkin_ai_tick(int slot)
                 re15_birkin_clip(e, 0x10); e->anim_frac = 0; e->sub_state_2 = 1;
                 re15_audio_room_se(3);                                 /* Se(3) @0x80119410 */
             }
+            /* Runde 42 STAGE3b T-03: re15_birkin_anim_szene = letztes Bild im Wechselbild + a3 0x100 (@0x80119430 / @0x801194a4).
+             * Phase 2 schreibt +0x95 nicht (Bild 0 = Umlaufwert @0x8001f63c); re15_birkin_clip setzt es. Phase 4 ruft kein anim_set:
+             * das letzte Bild von Clip 0xd bleibt stehen (der Port haelt fc - 1). */
             if (e->sub_state_2 == 1) {                 /* phase 1 @0x80119418: play clip 0x10 */
-                if (re15_birkin_anim(e)) e->sub_state_2 = 2;
+                if (re15_birkin_anim_szene(e, 0x100)) e->sub_state_2 = 2;
             } else if (e->sub_state_2 == 2) {          /* phase 2 @0x80119454: SECOND clip 0xd, Se(10) */
-                re15_birkin_clip(e, 0x0d); e->anim_frac = 0xf; e->sub_state_2 = 3;
+                re15_birkin_clip(e, 0x0d); e->anim_frac = 0xf; e->sub_state_2 = 3;   /* +0x94 0xd @0x80119464, +0x8f 0xf @0x80119488 */
                 re15_audio_room_se(10);                                /* Se(10) @0x80119484 */
-                re15_birkin_anim(e);
+                re15_birkin_anim_szene(e, 0x100);                      /* @0x801194a0, a3 0x100 @0x801194a4 */
             } else if (e->sub_state_2 == 3) {          /* phase 3 @0x8011948c: play clip 0xd */
-                if (re15_birkin_anim(e)) e->sub_state_2 = 4;
+                if (re15_birkin_anim_szene(e, 0x100)) e->sub_state_2 = 4;
             } else {                                   /* phase 4 @0x801194d0: -> LUNGE (sub 3), grid&=0xfc */
                 e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* sub=3 @0x801194d8, phase=0 @0x801194ec */
                 e->grid_id = (uint8_t)(e->grid_id & 0xfc);            /* grid&=0xfc (0x33->0x30) @0x80119504 */

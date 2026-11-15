@@ -362,6 +362,16 @@ Besonderheiten:
   @0x8004a000-@0x8004a07c), H. Gun Bullets ueber Marvins 50 eigenen sind ein Fund (B8).
 - Bank 5 Signale 0x14..0x1A und Ankunftsbits 0x20/0x21 in 3020/3060 (3020-Skripte nutzen nur 5:0/5:1, 3060 keine).
 
+### 4.3 Gemessen und gebaut (Stufe STAGE3b, 2026-11-15; Belege im Kopf von `re15_port/include/re15_story3b_r42.h`)
+- L8-L10: 30E0 in EINEM Besuch = Programm aus den Original-Bytes sub02 [@0x00CB0,@0x00E54) + Uebergang + sub03 [@0x00E62,@0x00FB4)
+  + Warten + Schluss; Ids nur aus 2.3 (30E0 3/10/11/13/16/17, 3070 6). Kein neues Bank-9-Bit: der Ablauf haengt an den Original-
+  Bits (4,194)/(3,75)/(3,180); die 3070-Zeile laeuft einmal je Uebergang (4,194) 0 -> 1 im Besuch.
+- Nutzerbefund 15.11. (Ende der Marvin-Szene): der Riegel "Satz ausreden lassen" sass nur am naechsten Message_on; nach msg 13 kommt
+  keines mehr. Jetzt wartet die Szene vor Cut_auto @0x00FB4 auf Zeile UND Stimme (gemessen: main13.wav 270 Bilder, Sleep-Kette 152).
+- T-03/T-04: enemy_ai_common.c re15_birkin_anim_szene (Auftritt 0x80119378 und Szenen-Modus 0x80118d00). Vorher/Nachher-Laeufe
+  50A0, 5080, 5090 bytegleich (Pose-Messschiene RE15_POSE_LOG + state.log).
+- Bank 5 in 30E0: FREI 0x14, Messmarke 0x15, Ankunftsbits 0x20..0x22 (30E0-Skripte nutzen nur 5:0..5:6).
+
 ## 5. Gemeinsame Dateien (nur kleine Haken, Kommentar "Runde 42 Story")
 Wie Runde 41 (VERTRAG R41 1.3). Tabu: `synchro/`, `pri/`, `Cutscenes/`, `Version_80%/`, `release/`. Neue Bits nur
 mit Eintrag in `re15_story_r42.h`, `zensus_r42.py` BITS, k_port[] und hier.

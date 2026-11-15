@@ -354,6 +354,7 @@ void re15_msg_load_room_block(const uint8_t *block, int block_size)
     /* Runde 42 Story STAGE3a NB1 B1: 3020 msg 0..2 (Glaettung), 30E0 msg 3 (L7) liegen im RDT-Bereich - erst NACH dem Laden
      * einsetzen (re15_story3a_r42.h). */
     { extern void re15_story3a_r42_texte(uint16_t); re15_story3a_r42_texte((uint16_t)g_current_room_id); }
+    { extern void re15_story3b_r42_texte(uint16_t); re15_story3b_r42_texte((uint16_t)g_current_room_id); }   /* Runde 42 STAGE3b: 30E0 msg 10/11/13/16/17, 3070 msg 6 (re15_story3b_r42.h) */
 }
 
 /* ===== BYTE-TRUE dialog typewriter FSM (FUN_80028134) ======================
