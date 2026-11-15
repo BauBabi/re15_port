@@ -37,6 +37,15 @@ R8d/R8e Runde 8f (Nutzer 15.11. "komische braune Streifen an den Raendern", Ents
                   nur die Nadel (Glied 22 ab y ENDE_Y und die Spitze). Dann pruefen R8d (3) statt des Grau-Felds: keine graue Flaeche ausser Nadel
                   und Wurzelflaechen im Rumpf; R8e (1): keine graue Flaeche ausser Nadel/Wurzel (Bauch-Flaechen duerfen ausserhalb des Bauchsektors
                   liegen), (2) PV Fleisch-Anteil bei Normalen-|theta| >= 100 >= 95 % (einheitlich; bis 8e <= 1 %) und bei <= 40 >= 50 %.
+R8d (3) Runde 8g (Farbe b, schwanz_r8.FARBEN bauch_fuge): Band-Flaechen (Ring RB) = genau die Fugen-Flaechen AUSSERHALB der Bauch-Flaechen
+                  (bauch_flaechen, aus der Geometrie), in PV an >= 5 Gelenken; die Fugen-Flaechen im Bauch alle 'bauch', an allen 6 Gelenken
+                  beidseitig, nahtlos (+-1 Texel), in PV an >= 5 Gelenken.
+R8h Runde 8g      (Nutzer 15.11. "NUR DIE UNTERSEITE WAR KOMISCH MIT DEN ABSCHNITTEN!!!!" und "Die Oberseite des Schwanzes ist wieder eher rot
+                  als dunkel ... Das war doch vorher gut"): (1) Oberseite = 8c d31f9534 (Geometrie der Meshes 16-22 bytegleich, jede Flaeche
+                  ausserhalb der Bauch-Flaechen mit UV/CLUT/Seite bytegleich; Gegenproben 8d 547acc80 / 8f 92a58f26 ROT); (2) Unterseite
+                  einheitlich: alle Bauch-Flaechen inklusive der Fugen auf Zeile 493 Seite 0 im Feld C1 u 56-65 v 51-55 (UV-Ecken und gerasterte
+                  Texel), nahtlos an den 6 Gelenken (Gegenprobe 8c d31f9534 ROT: Ringe unten, Feld u 54-65 v 48-57); (3) keine fremden Texel
+                  (R8e (3) und R8f TIM). Bauch-Flaechen = bauch_flaechen(): alle Ring-Ecken im Bauchsektor, ohne Nadel und Wurzel im Rumpf.
 R8f Bytegleich    Sektionen 0-6 (Skelett, Clips, Keyframes), TIM (Texturbild, 16 CLUT-Zeilen) und Meshes 0-15 (Mesh 9 = V7-Kopf) = Eingang 07b6703f,
                   ausser den 12-Bit-Winkeln der Knochen 17-22 in den von schwanz_r8.heben angehobenen Keyframes; Gliedlaengen 17-22 = (0, 541, 0).
 R8g Szene         (--szene) Schwanzkette der Szene gegen 7e: jede Verschiebung liegt in einem Takt, in dem die 7e-Kette mit den Mesh-Massen dieses
@@ -344,11 +353,13 @@ def r8d(blob, farbe, pv, bezug=None):
     ok1 = all(a <= 0.88 and c <= 0.88 for _j, a, c in geo) and len(ms[22]['v']) > 47
     band, fuge_n, abweich = {}, {}, {}
     kl = klassen(ms)
+    bauch_fuge = bool(Q.FARBEN[farbe].get('bauch_fuge'))       # Runde 8g: Ringe nur auf den Fugen ausserhalb des Bauchsektors
+    bauch_m = {b: (bauch_flaechen(b, ms[b], _alt16(bezug)) if bauch_fuge else set()) for b in range(16, 23)}
     for b in range(16, 23):
         fs = fugen_flaechen(b, ms[b])
         bs = {k for k, c in kl[b].items() if c == 'band'}
         band[b] = len(bs); fuge_n[b] = len(fs)
-        abweich[b] = sorted(fs ^ bs)[:6]
+        abweich[b] = sorted((fs - bauch_m[b]) ^ bs)[:6]
     A = pv['A']
     bo = A['bone'][:480]; fk = A['flaeche'][:480]
     band_pv = {b: 0 for b in range(16, 23)}
@@ -396,7 +407,15 @@ def r8d(blob, farbe, pv, bezug=None):
                 if kl[b]['%s%d' % (key, i)] == 'grau' and not (b == 22 and all(ms[b]['v'][k][1] >= Q.ENDE_Y - 1.0 for k in f[1::2])):
                     grau_ausser_nadel += 1
     gel_fuge_pv = sum(1 for j in range(1, 7) if fuge_bauch_pv[15 + j] + fuge_bauch_pv[16 + j] > 0)
-    if Q.FARBEN[farbe]['band']:
+    bauch_fuge_kl = {b: sorted({str(kl[b][k]) for k in fs_alle[b] & bauch_m[b]}) for b in range(16, 23)}
+    if Q.FARBEN[farbe]['band'] and bauch_fuge:
+        # Runde 8g: Band (Ring RB) = genau die Fugen-Flaechen AUSSERHALB des Bauchsektors, in PV an >= 5 Gelenken; die Fugen-Flaechen im
+        # Bauchsektor sind alle 'bauch' (an allen 6 Gelenken beidseitig, nahtlos wie 8d: Bauch-v am Gelenkring +-1 Texel, in PV an >= 5 Gelenken)
+        ok3 = (all(not abweich[b] and band[b] > 0 for b in range(16, 23)) and gel_sicht >= 5
+               and all(bauch_fuge_kl[b] == ['bauch'] for b in range(16, 23))
+               and all(fuge_bauch[15 + j] > 0 and fuge_bauch[16 + j] > 0 for j in range(1, 7))
+               and all(n_[2] is not None and n_[2] <= 1.0 for n_ in naht.values()) and gel_fuge_pv >= 5)
+    elif Q.FARBEN[farbe]['band']:
         ok3 = all(not abweich[b] and band[b] > 0 for b in range(16, 23)) and gel_sicht >= 5
     else:
         ok3 = (all(band[b] == 0 for b in range(16, 23)) and all(set(fuge_kl[b]) <= {'bauch', 'grau'} for b in range(16, 23))
@@ -407,7 +426,8 @@ def r8d(blob, farbe, pv, bezug=None):
     return dict(geometrie=geo, ok1=bool(ok1), band_flaechen=band, fugen_flaechen=fuge_n, band_ungleich_fuge=abweich, band_pv_px=band_pv,
                 gelenke_mit_band_pv=gel_sicht, band=Q.FARBEN[farbe]['band'], fugen_klassen=fuge_kl, fugen_bauch=fuge_bauch,
                 fugen_bauch_pv_px=fuge_bauch_pv, gelenke_mit_fugen_bauch_pv=gel_fuge_pv, naht_v=naht, naht_grau_v=naht_g,
-                grau_ausserhalb_feld=grau_fremd, flanke_fleisch=flanke, grau_ausser_nadel=grau_ausser_nadel, ok3=bool(ok3))
+                grau_ausserhalb_feld=grau_fremd, flanke_fleisch=flanke, grau_ausser_nadel=grau_ausser_nadel, bauch_fuge=bauch_fuge,
+                bauch_fugen_klassen=bauch_fuge_kl, ok3=bool(ok3))
 
 
 def gelenk_v(m, kl_b, k0, klasse='bauch'):
@@ -584,6 +604,118 @@ def _ganz_bauch(ring, th, gr):
     return all(th[k] <= gr[k] + TOL_GRAD for k in ring) and any(th[k] < gr[k] - TOL_GRAD for k in ring)
 
 
+def _alt16(bezug):
+    """Wurzelflaechen von Mesh 16 im Rumpf (Stufe w/u; Ecken 0-21 und 34) des Eingangs 07b6703f (Ecken-Tupel)."""
+    if bezug is None:
+        return set()
+    _d, _o, ms_e, _t = KB.teile(bezug)
+    return {tuple(f[1::2]) for f in ms_e[16]['tf'] + ms_e[16]['qf'] if set(f[1::2]) <= set(range(22)) | {34}}
+
+
+def bauch_flaechen(b, m, alt16):
+    """Runde 8g: Bauch-Flaechen (die Unterseite) eines Glieds aus der GEOMETRIE, unabhaengig von der UV: alle Ring-Ecken der Flaeche liegen im
+    Bauchsektor |theta| <= Grenze(u) + TOL_GRAD (ring_winkel: Parameterwinkel der Ellipse des Rings gegen die Bauchachse e_h = innen_phi von
+    unterseite_v8.json; Grenze 90 -> 60 Grad, schwanz_r8.grenze). Das sind die Sektoren j 9 / 10 / 0 / 1 des Baus (Ecken bei 0, +-theta_b / 2,
+    +-theta_b); die naechste Ruecken-Ecke liegt >= 25 Grad hinter der Grenze. Mantel UND Deckel, auch an den Fugen. Ausgenommen: die Nadel
+    (Glied 22, alle Ecken ab y ENDE_Y - 1, ganz grau wie 8c) und die Wurzelflaechen im Rumpf (alt16). -> Menge 'd<i>' / 'v<i>'."""
+    phi = {int(k): float(v) for k, v in json.load(open(os.path.join(HIER, 'unterseite_v8.json')))['innen_phi'].items()}
+    P = np.array([v[:3] for v in m['v']], float)
+    eh, eq = Q.achsen(phi[b])
+    th, gr = ring_winkel(b, P, eh, eq)
+    out = set()
+    for key, F in (('d', m['tf']), ('v', m['qf'])):
+        for i, f in enumerate(F):
+            e = list(f[1::2])
+            if b == 16 and tuple(e) in alt16:
+                continue
+            if b == 22 and all(P[k][1] >= Q.ENDE_Y - 1.0 for k in e):
+                continue
+            ring = [k for k in e if k in th]
+            if ring and all(th[k] <= gr[k] + TOL_GRAD for k in ring):
+                out.add('%s%d' % (key, i))
+    return out
+
+
+R8C_COMMIT = 'b1c2eb07e'              # Runde 8c (Nutzer zum Video 28: "fast perfekt"), Spiel-Asset d31f9534
+R8C_SHA = 'd31f95341fd8a82a4f9a0e7c0b5a11a205c9f90ac58f2bfa4d5202bb9f31af50'
+
+
+def stand_8c():
+    p = os.path.join(V.SFV8, 'emd', 'R8C_d31f9534.EMD')
+    if not os.path.exists(p) or V.sha(open(p, 'rb').read()) != R8C_SHA:
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        b = subprocess.run(['git', '-C', HIER, 'show', '%s:re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD' % R8C_COMMIT], capture_output=True).stdout
+        open(p, 'wb').write(b)
+    b = open(p, 'rb').read()
+    assert V.sha(b) == R8C_SHA
+    return b
+
+
+def r8h(blob, bezug, r8c, e, f):
+    """Runde 8g (Nutzer 15.11. "NUR DIE UNTERSEITE WAR KOMISCH MIT DEN ABSCHNITTEN!!!!", "Die Oberseite ... Das war doch vorher gut"):
+    (1) Oberseite = 8c: Meshes 16-22 mit Ecken, Normalen und Flaechen-Indizes bytegleich zu d31f9534, und jede Flaeche AUSSERHALB der Bauch-
+        Flaechen (bauch_flaechen: Ruecken, Flanken, Nadel, Wurzel im Rumpf) mit ihrem ganzen UV-/CLUT-/Seiten-Eintrag bytegleich zu d31f9534;
+    (2) Unterseite einheitlich: jede Bauch-Flaeche (auch an den Fugen, Mantel und Deckel) auf der Bauch-Zeile 493 Seite 0 mit allen UV-Ecken
+        und allen gerasterten Texeln (KB.raster) im Feld C1 felder.fleisch (u 56-65 v 51-55, ohne die Naht u 54-55) - kein Ring RB, keine
+        Feldzeile ausserhalb; in jedem Glied Fugen-Flaechen im Bauch und an allen 6 Gelenken nahtlos (Median-v der Gelenkring-Ecken beider
+        Seiten gleich +-1 Texel, wie R8d);
+    (3) keine fremden Texel: R8e (3) (jedes gerasterte Texel einer Schwanz-Flaeche in der Nutzung seiner Zeile durch Original-Flaechen bzw. die
+        Oberseite des Eingangs; Texturbild bytegleich) und R8f TIM bytegleich (keine neue Farbe, keine CLUT-Aenderung)."""
+    _d, _o, ms, _t = KB.teile(blob)
+    _d8, _o8, m8, _t8 = KB.teile(r8c)
+    alt16 = _alt16(bezug)
+    ff = Q.felder_laden()['fleisch']
+    z_b, s_b = int(ff.get('zeile', Q.ZEILE_FLEISCH)), int(ff.get('seite', Q.SEITE_FLEISCH))
+    ulo, uhi = min(ff['u_v0'], ff['u_v1']), max(ff['u_v0'], ff['u_v1']) + ff['breite'] - 1
+    vlo, vhi = int(ff['v0']), int(ff['v1'])
+    feld = np.zeros((256, 384), bool)
+    feld[vlo:vhi + 1, s_b * 128 + ulo:s_b * 128 + uhi + 1] = True
+    geo = {b: all(ms[b][k] == m8[b][k] for k in ('v', 'n', 'tf', 'qf')) for b in range(16, 23)}
+    ober, ober_anders, bsp_ober = {}, {}, []
+    bauch, bauch_aus, bsp_bauch, bauch_m = {}, {}, [], {}
+    for b in range(16, 23):
+        bm = bauch_m[b] = bauch_flaechen(b, ms[b], alt16)
+        ober[b] = ober_anders[b] = bauch[b] = bauch_aus[b] = 0
+        for key, U in (('d', 'tuv'), ('v', 'quv')):
+            for i, uv in enumerate(ms[b][U]):
+                k = '%s%d' % (key, i)
+                if k in bm:
+                    bauch[b] += 1
+                    z, s_ = (uv[2] >> 6) & 0x1FF, uv[5] & 0xF
+                    n = 3 if key == 'd' else 4
+                    us, vs = uv[0::3][:n], uv[1::3][:n]
+                    mk = KB.raster(uv, n, s_ * 128)
+                    if not ((z, s_) == (z_b, s_b) and all(ulo <= u <= uhi for u in us) and all(vlo <= v <= vhi for v in vs)
+                            and not (mk & ~feld).any()):
+                        bauch_aus[b] += 1
+                        if len(bsp_bauch) < 6:
+                            bsp_bauch.append('%d:%s Zeile %d Seite %d u %d-%d v %d-%d' % (b, k, z, s_, min(us), max(us), min(vs), max(vs)))
+                else:
+                    ober[b] += 1
+                    if not geo[b] or i >= len(m8[b][U]) or uv != m8[b][U][i]:
+                        ober_anders[b] += 1
+                        if len(bsp_ober) < 6:
+                            bsp_ober.append('%d:%s' % (b, k))
+    ok1 = all(geo.values()) and sum(ober.values()) > 0 and not any(ober_anders.values())
+    # Fugen im Bauch: Fugen-Flaechen (fugen_flaechen) im Bauchsektor je Glied, Naht je Gelenk
+    fuge_b, naht = {}, {}
+    for b in range(16, 23):
+        fuge_b[b] = len(fugen_flaechen(b, ms[b]) & bauch_m[b])
+    for j in range(1, 7):
+        kv = {k: 'bauch' for k in bauch_m[15 + j]}
+        kn = {k: 'bauch' for k in bauch_m[16 + j]}
+        ve = gelenk_v(ms[15 + j], kv, lage(15 + j)['E'])
+        vs_ = gelenk_v(ms[16 + j], kn, lage(16 + j)['S'])
+        naht[j] = (ve, vs_, None if ve is None or vs_ is None else round(abs(ve - vs_), 1))
+    ok2 = (sum(bauch.values()) > 0 and not any(bauch_aus.values()) and all(fuge_b[b] > 0 for b in range(16, 23))
+           and all(n_[2] is not None and n_[2] <= 1.0 for n_ in naht.values()))
+    ok3 = bool(e['ok3'] and f['tim'])
+    return dict(geo_gleich_8c=geo, oberseite=ober, oberseite_anders=ober_anders, oberseite_bsp=bsp_ober, ok1=bool(ok1),
+                bauch=bauch, bauch_ausserhalb_c1=bauch_aus, bauch_bsp=bsp_bauch, fugen_im_bauch=fuge_b, naht_v=naht,
+                feld='Zeile %d Seite %d u %d-%d v %d-%d' % (z_b, s_b, ulo, uhi, vlo, vhi), ok2=bool(ok2),
+                fremde_texel=e['fremde_texel'], pix_gleich=e['pix_gleich'], tim_gleich=f['tim'], ok3=ok3, ok=bool(ok1 and ok2 and ok3))
+
+
 def r8f(blob, bezug):
     """Bytegleich zum Eingang ausser Meshes 16-22 und (Runde 8b) den 12-Bit-Winkeln der Knochen 17-22 in den angehobenen Keyframes: die EMR des
     Pruefllings, in der genau diese Bits auf die Werte des Eingangs zurueckgesetzt werden, muss bytegleich zur EMR des Eingangs sein."""
@@ -686,6 +818,7 @@ def alles(blob, farbe='b', szene=None):
     r['R8d'] = d
     r['R8e'] = r8e(blob, bezug, pv)
     r['R8f'] = r8f(blob, bezug)
+    r['R8h'] = r8h(blob, bezug, stand_8c(), r['R8e'], r['R8f'])
     if szene:                             # (debug_7e, debug_neu, state_7e, state_neu)
         r['R8g'] = r8g(*szene, blob)
     return r
@@ -709,12 +842,13 @@ def zeilen(r):
                 c['soll_y'], c['auf_achse'], g(c['ok'])))
     d = r['R8d']
     z.append('R8d Fugen: (1) Hochachse Endring und Manschette / Huellradius je Gelenk %s (<= 0,88) %s; (2) von vorn schmaler an den Gelenken im Mittel %s px '
-             '(>= 1,0) %s; (3) Fugen (Farbe %s): Band-Flaechen je Glied %s (Soll 0), Fugen-Flaechen je Glied %s, Klassen der Fugen %s, davon mit '
+             '(>= 1,0) %s; (3) Fugen (Farbe %s): Band-Flaechen je Glied %s (Soll: ohne Ringe 0, 8c alle Fugen, 8g die Fugen ausserhalb des Bauchs; in PV an %d Gelenken), Fugen-Flaechen je Glied %s, Klassen der Fugen %s, davon mit '
              'Bauchfeld %s, Naht je Gelenk (v Ende | v Anfang | Abstand, <= 1) %s, PV Bauch-Bildpunkte auf Fugen %s, Gelenke damit %d (>= 5); '
-             'Flanke: graue Flaechen ausserhalb des einen Grau-Felds %s (Soll 0 bis 8e), Naht grau %s; Runde 8f Flanke im Bauchfeld %s, graue '
-             'Flaechen ausser Nadel %s (Soll 0) %s -> %s'
-             % (d['geometrie'], g(d['ok1']), d['vorn']['mittel_je_ansicht'], g(d['vorn']['ok']), 'mit Ringen (Gegenprobe 8c)' if d['band'] else 'einheitlich',
-                d['band_flaechen'], d.get('fugen_flaechen'), d.get('fugen_klassen'), d.get('fugen_bauch'), d.get('naht_v'),
+             'Flanke: graue Flaechen ausserhalb des einen Grau-Felds %s (Soll 0 nur in 8d/8e), Naht grau %s; Runde 8f Flanke im Bauchfeld %s, graue '
+             'Flaechen ausser Nadel %s (Soll 0 nur in 8f) %s -> %s'
+             % (d['geometrie'], g(d['ok1']), d['vorn']['mittel_je_ansicht'], g(d['vorn']['ok']), ('Runde 8g: Ringe nur ausserhalb des Bauchs, Bauch-Fugen im Bauchfeld' if d.get('bauch_fuge') else
+                 'mit Ringen umlaufend (Gegenprobe 8c)' if d['band'] else 'einheitlich ohne Ringe'),
+                d['band_flaechen'], d.get('gelenke_mit_band_pv', 0), d.get('fugen_flaechen'), d.get('fugen_klassen'), d.get('fugen_bauch'), d.get('naht_v'),
                 d.get('fugen_bauch_pv_px'), d.get('gelenke_mit_fugen_bauch_pv', 0), d.get('grau_ausserhalb_feld'), d.get('naht_grau_v'),
                 d.get('flanke_fleisch'), d.get('grau_ausser_nadel'), g(d['ok3']),
                 g(d['ok'])))
@@ -731,7 +865,15 @@ def zeilen(r):
              '(EMR nach Ruecksetzen dieser Winkel gleich: %s), TIM %s, Meshes 0-15 %s (Mesh 9 %s), Gliedlaengen 541 %s -> %s'
              % (f['keyframes_angehoben'], f['sektionen'], f['emr_nur_schwanzwinkel'], f['tim'], f['meshes_0_15'], f['mesh9'], f['glieder_541'],
                 g(f['ok'])))
-    keys = ['R8a', 'R8b', 'R8c', 'R8d', 'R8e', 'R8f']
+    h = r['R8h']
+    z.append('R8h Runde 8g: (1) Oberseite = 8c d31f9534: Geometrie gleich %s, Flaechen ausserhalb des Bauchs je Glied %s, davon anders %s %s %s; '
+             '(2) Unterseite einheitlich im Feld %s: Bauch-Flaechen je Glied %s, ausserhalb des Felds %s %s, Fugen im Bauch je Glied %s, Naht je '
+             'Gelenk (v Ende | v Anfang | Abstand, <= 1) %s %s; (3) keine fremden Texel: fremde Texel %s, Texturbild gleich %s, TIM gleich %s %s -> %s'
+             % (all(h['geo_gleich_8c'].values()), list(h['oberseite'].values()), list(h['oberseite_anders'].values()), h['oberseite_bsp'],
+                g(h['ok1']), h['feld'], list(h['bauch'].values()), list(h['bauch_ausserhalb_c1'].values()), h['bauch_bsp'],
+                list(h['fugen_im_bauch'].values()), h['naht_v'], g(h['ok2']), h['fremde_texel'], h['pix_gleich'], h['tim_gleich'], g(h['ok3']),
+                g(h['ok'])))
+    keys = ['R8a', 'R8b', 'R8c', 'R8d', 'R8e', 'R8f', 'R8h']
     if 'R8g' in r:
         q = r['R8g']
         keys.append('R8g')

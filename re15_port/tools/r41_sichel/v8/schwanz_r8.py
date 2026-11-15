@@ -67,7 +67,11 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
           +theta_b .. 360 - theta_b: an beiden Fleischgrenzen dieselbe Feldspalte wie der Bauch daneben, nahtlos), laengs wie der Bauch; grau
           bleibt nur die Nadel. Nur Auswahl vorhandener Original-Texel (dasselbe Feld), keine Eichung. Gemessen im Spielbild (scratchpad
           schwanz_r9/r3, Querprofile Mitte/Rand, dEab ohne L* = Schattierung): Bogen 960x720 a48e2ce5 8,4-11,3, neu 4,1-5,9; Original-Video nur
-          als Richter Mittel 2,7.
+          als Richter Mittel 2,7. Seit Runde 8g verworfen (Nutzer: "Die Oberseite des Schwanzes ist wieder eher rot als dunkel").
+  Runde 8g (Nutzer 15.11.: "NUR DIE UNTERSEITE WAR KOMISCH MIT DEN ABSCHNITTEN!!!!", "Die Oberseite ... Das war doch vorher gut"): Farbe b =
+          Oberseite/Ruecken/Flanken/Nadel wie 8c d31f9534 (grau = Feld je Glied, ungespiegelt; band = Ringe RB auf den Fugen-Sektoren
+          ausserhalb des Bauchs), Bauch = Sektoren BAUCH_J ueber alle Glieder und Fugen (Mantel und Deckel) im Bauchfeld C1 u 56-65 v 51-55
+          (wie der Bauch der Runde 8e a48e2ce5). schwanz_r8.json ohne grau_alle / flanke_fleisch. Riegel riegel_schwanz_r8 R8h.
   Bis Runde 8b:
   bauch = Bauchsektor: Original-Zeile 482 (Asset 495), schraeges Feld (Parallelogramm, suche(): v 114-123, Zeilenanfang u 1 -> 19, Breite 21, im Bau 20;
           Median L* 25,7 C* 24,2, hellere Partie des Original-Unterarm-Fleischs) - groesser als das 17 x 7-Feld der Runde 8 ("flaechig wie gemalt",
@@ -77,7 +81,7 @@ Farbe (Flaechenklassen; Texel = Original-Texel, die Original-Flaechen DERSELBEN 
           (Asset 493, bytegleich), Seite 0, Feld u 58-73 v 19-48 (>= 60 % hellrot/rosa, Median L* 48,4 C* 17,4 h 22; Runde 8: Zeile 481 fast weiss
           L* 74 = "Klebeband", Pruefer pr8); Probe a: ohne Band (Fleisch).
   Proben (Koordinator: nur noch zwei, wenn sie sich sichtbar unterscheiden): a ohne Baender, b mit rosa Baendern (STANDARD; Runde 8c: Ringe;
-  Runde 8d: b ohne Ringe = a).
+  Runde 8d: b ohne Ringe = a; Runde 8g: b = Ringe nur auf der Oberseite, Bauch einheitlich; "ring" = 8c-Regel umlaufend, nur Gegenprobe).
 """
 import os
 import sys
@@ -148,9 +152,17 @@ BAND_J = (10, 0)
 PENDEL = {9: 0.0, 10: 1.0, 0: 0.0, 1: 1.0, 2: 0.0}   # Bauch-Ecke j -> Lage im Feld quer (0 / 1), Spiegelung je Flaeche
 FELD_SATT = (4, 37, 96, 106)          # (u0, u1, v0, v1) Seite 2 = unterseite_v8.json fleisch_r7b "feld" (heutiger Ton)
 # Felder "grau" (je Glied), "gedeckt", "band": schwanz_r8.json (Ergebnis von suche() am Eingang 07b6703f, Protokoll runde8/suche.txt)
-FARBEN = {'a': dict(fleisch='gedeckt', band=False, ring=False, name='gedeckt, ohne Baender (seit Runde 8d gleich b)'),
-          'b': dict(fleisch='gedeckt', band=False, ring=False, name='gedeckt, einheitlich ueber die Gliedfugen (Runde 8d)'),
-          'ring': dict(fleisch='gedeckt', band=True, ring=True, name='Runde 8c: weiche Ringe an den Gliedfugen (verworfen, nur Gegenprobe)')}
+FARBEN = {'a': dict(fleisch='gedeckt', band=False, ring=False, name='gedeckt, ohne Ringe (Runde 8d/8e, verworfen, nur Gegenprobe)'),
+          'b': dict(fleisch='gedeckt', band=True, ring=True, bauch_fuge=True,
+                    name='Runde 8g: Oberseite wie 8c (Grau je Glied, weiche Ringe RB an den Fugen), Unterseite einheitlich im Bauchfeld C1 '
+                         'auch an den Fugen'),
+          'ring': dict(fleisch='gedeckt', band=True, ring=True, name='Runde 8c: weiche Ringe an den Gliedfugen umlaufend (verworfen, nur Gegenprobe)')}
+# Runde 8g (Nutzer 15.11. woertlich: "NUR DIE UNTERSEITE WAR KOMISCH MIT DEN ABSCHNITTEN!!!!" und "Die Oberseite des Schwanzes ist wieder eher
+# rot als dunkel ... Warum? Das war doch vorher gut...."; Auftrag Orchestrator Runde 8g): Oberseite, Ruecken, Flanken und Nadel genau wie 8c
+# (d31f9534: Grau-Feld je Glied ungespiegelt, weiche Ringe RB auf den Fugen-Sektoren AUSSERHALB des Bauchs); der Bauch (Sektoren BAUCH_J
+# zwischen -theta_b und +theta_b) ueber alle Glieder UND Fugen einheitlich im Bauchfeld C1 u 56-65 v 51-55 (= Bauch der Runde 8e a48e2ce5,
+# ohne die Naht u 54-55): die Fugen-Flaechen des Bauchsektors (Mantel S-C / D-E und Deckel) sind 'bauch' statt 'band'. Felder: schwanz_r8.json
+# (ohne grau_alle / flanke_fleisch der Runden 8d / 8f). Nur Auswahl vorhandener Original-Texel, keine Eichung, keine neue Farbe.
 # Runde 8d (Nutzer 14.11. zum Endstand 8c d31f9534, woertlich: "Im prinzip fast perfekt, aber - ich weiss nicht wo du die Streifen bei den
 # Schwanz Abschnitten von Birkin her nimmst, die gehoeren da nicht hin. Schau doch auf das Original Video, der Schwanz wirkt auch ueber die
 # Abschnitte hinweg einheitlich."): die Ringe entfallen. Die Fugenflaechen im Bauchsektor (BAUCH_J) bekommen dasselbe Bauchfeld C1 wie der
@@ -585,15 +597,16 @@ def klasse_von(f, farbe, g):
             fuge_r = art == 'deckel_anf' or (art == 'mantel' and 'S' in (ra, rb))
         else:
             fuge_r = art.startswith('deckel') or (art == 'mantel' and bool({ra, rb} & {'S', 'E'}))
-        if fuge_r:
-            return 'band'                                  # Runde 8c: Ring umlaufend (alle Sektoren j)
+        if fuge_r and not (farbe.get('bauch_fuge') and j in BAUCH_J):
+            return 'band'                                  # Runde 8c: Ring umlaufend (alle Sektoren j); Runde 8g: nur ausserhalb des Bauchs
     if j not in BAUCH_J:
         return 'grau'
     if g == 6:
         fuge = art == 'deckel_anf' or (art == 'mantel' and 'S' in (ra, rb))
     else:
         fuge = art.startswith('deckel') or (art == 'mantel' and bool({ra, rb} & {'S', 'E'}))
-    return 'band' if farbe['band'] and fuge and j in BAND_J else 'bauch'
+    # Band der Runde 8b nur ohne Ring-Modus (Runde 8c / 8g: die Bauch-Fugen sind dort schon oben entschieden; Runde 8g: 'bauch')
+    return 'band' if farbe['band'] and not farbe.get('ring') and fuge and j in BAND_J else 'bauch'
 
 
 def fleisch_uv(F_, s_um, v_seite):

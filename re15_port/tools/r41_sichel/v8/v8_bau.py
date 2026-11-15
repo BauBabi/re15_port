@@ -49,7 +49,8 @@ Stufe q) Runde 8 (Schwanz, schwanz_r8.py + schwanz_r8.json; Nutzer 2026-11-14 "w
    Schwanzmitte duenner, Einschnuerung 0,85 an den 6 Gelenken, Glied 22 = Knolle + Nadel (Runde 8b bis y 1300), Fleisch nur auf der Bauchseite (Grenze
    90 -> 60 Grad), Flanken grau (Zeile 487), Farbvariante a / b (--schwanzfarbe, Standard b = gedeckt mit rosa Baendern; Runde 8c: Bauch
    Original-Feld C1 und weiche Ringe RB umlaufend an den Fugen, beide Zeile 493 = Original 480; Runde 8d: keine Ringe, Fugen mit dem Bauchfeld
-   C1 (Zeilen 51-55), Flanke ein Grau-Feld fuer alle Glieder). Letzte Stufe,
+   C1 (Zeilen 51-55), Flanke ein Grau-Feld fuer alle Glieder; Runde 8g: Oberseite/Flanken/Nadel wie 8c - Grau-Feld je Glied, Ringe RB nur auf
+   den Fugen ausserhalb des Bauchs -, Bauch inklusive der Fugen einheitlich im Feld C1 u 56-65 v 51-55). Letzte Stufe,
    aendert nur Meshes 16-22 (Ecken, Normalen, Flaechen, UV-/CLUT-Felder) und (Runde 8b, schwanz_r8.heben) die Winkel der Knochen 17-22 in
    Keyframes, in denen Mesh 22 sonst unter der Sohle laege; Knochen 0-16, Textur, CLUT-Zeilen, Meshes 0-15 bytegleich.
    Bau Runde 8: --stufen srwaunhbpfq.

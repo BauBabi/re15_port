@@ -1,0 +1,64 @@
+Runde 8g (r41/sichel_v8) - Schwanz: Oberseite wieder wie 8c, Unterseite einheitlich im Bauchfeld C1
+====================================================================================================
+Nutzer 15.11.2026 (woertlich): "NUR DIE UNTERSEITE WAR KOMISCH MIT DEN ABSCHNITTEN!!!!" und "Die Oberseite des Schwanzes ist wieder eher rot
+als dunkel ... Warum? Das war doch vorher gut....". Zu Video 28 (8c d31f9534): "fast perfekt", aber keine Streifen an den Abschnitten. Zu
+Video 30 (8d 547acc80): "komische braune Streifen an den Raendern ... vor allem wenn er sich eindreht und man den dicken Schwanz Teil sieht".
+Die Runden 8d-8f hatten das falsch verstanden: 8d nahm die Ringe ueberall weg und setzte die Flanke auf EIN gespiegeltes Grau-Feld, 8f legte
+Flanke und Ruecken ins rosa Bauchfeld C1 (seitdem Oberseite rot).
+
+Aenderung (Werkzeug-Commit 074b5407e, schwanz_r8.py Farbe b, schwanz_r8.json ohne grau_alle / flanke_fleisch):
+- Oberseite, Ruecken, Flanken, Nadel: Regel von 8c (Grau-Feld je Glied auf Zeile 487, ungespiegelt; weiche Ringe RB Zeile 493 Seite 0
+  u 93-100 v 10-17 auf den Fugen), die Ringe nur noch auf den Fugen-Flaechen AUSSERHALB des Bauchs.
+- Unterseite = die Bauch-Flaechen: alle Flaechen, deren Ring-Ecken im Bauchsektor |theta| <= Grenze(u) liegen (Sektoren j 9/10/0/1 zwischen
+  -theta_b und +theta_b, Grenze 90 Grad an der Wurzel -> 60 Grad am Ende), Mantel und Deckel, auch an den Fugen; ohne Nadel (Glied 22 ab
+  y 759) und ohne die 22 Wurzelflaechen im Rumpf. Bestimmt aus der GEOMETRIE (riegel_schwanz_r8.bauch_flaechen: Parameterwinkel jeder
+  Ring-Ecke gegen die Bauchachse innen_phi, Toleranz 2,5 Grad; die naechste Ruecken-Ecke liegt >= 25 Grad hinter der Grenze), nicht aus der
+  UV. 188 Flaechen: 92 ohne Fuge + 96 an den Fugen (je Glied 12/28/32/28/28/28/32). Alle im Feld C1 u 56-65 v 51-55 (= Bauch von 8e).
+- Am Bau gemessen (werkzeug/vgl2.py): Geometrie, Keyframes, TIM, Meshes 0-15 bytegleich 8c; die 384 Flaechen ausserhalb des Bauchs mit
+  UV/CLUT/Seite bytegleich 8c; die 188 Bauch-Flaechen bytegleich 8e a48e2ce5; 1132 Byte anders als 8c, alle in der MD1-Sektion.
+- Spiel-Asset EM30_HANGAR.EMD a02a6df3472b99597ad520f7c76bcff62f3665ca01c495358ff5aac3c31cc744 (Kette zweimal V8-KETTE-OK, bytegleich).
+
+Woher kamen die braunen Randstreifen in 8d? (Szene 50A0 im Spiel, exe d8ef12963 = Build von r41/sichel_szene, 960x720, F317-F343 = h74-h100,
+"wenn er sich eindreht"; Asset je Lauf ueber RE15_CD_ROOT-Ueberlagerung, werkzeug/lauf.sh + cdroot.sh. Pruefung des Aufbaus: 8f-Lauf
+bitgleich zum Framedump r3/G/neu der Runde r9-3 in 27 von 27 Bildern. Nutzerbild vlcsnap 07h32m52s078 = F336: mittlere Abweichung auf den
+Schwanzpunkten gegen 8d 3,4, gegen 8g 11,5, gegen 8c 12,4 -> es ist das 8d-Video.)
+Zuordnung je Bildpunkt: Klassen-Markerlauf (werkzeug/marker.py klasse: Bauch / Bauch-Fuge / Flanke / Flanken-Fuge / Nadel / Wurzel je eine
+volle Farbe, 267280 Schwanzpunkte, 0 ohne Klasse), Glied-Markerlauf, Naht-Markerlauf je Stand (Texel u 54-55 v 46-60 gruen). Messung
+werkzeug/rand.py, kante2.py -> messung/rand.txt, kante_abstand.txt.
+  (a) Naht u 54-55 des Original-Bilds: in 8d stammen 99,5 % der Bauch-Bildpunkte am Rand zur Flanke (<= 1 px) aus der Naht, L* 11,3 a* 20,5
+      (Bauchmitte L* 19,6); 33463 Naht-Bildpunkte in den 27 Bildern, 8840 davon an der Bauchkante. Die Bauchkante -theta_b (sq 0) lag auf u 54;
+      in 8d lagen auch die Bauch-Fugen dort (47 Flaechen beruehren die Naht, durchgehend ueber alle Glieder). = die braunen Randstreifen.
+      In 8c beruehrten 23 Flaechen die Naht (Bauch ohne Fugen; die Ringe unterbrachen sie an jedem Gelenk): 29241 Naht-Bildpunkte, Kante
+      82 % Naht, L* 11,8.
+  (b) Grau-Feld der Flanke: NICHT die Ursache. Flanke/Ruecken in 8c, 8d und 8g im Spielbild gleich: L* 23,3 a* -1,7 b* 5,0 C* 5,3 h 109
+      (neutral grau, nicht braun); je Glied liegen die Flanken-Bildpunkte ohne Fuge in allen drei Staenden bei L* 20,7-24,3, C* 4,8-5,3,
+      h 109 (8d gegen 8c/8g nur in den Gliedern 17 / 19 / 21 um -1,0 / +0,7 / +2,6 L* anders). 8g-Flanke = 8c-Flanke (bytegleiche UV).
+      Markerlauf der Runde 8e (Grau-Feld-Nachbarn) 0 Bildpunkte.
+  (c) Fugenfuellung: in 8d Bauch-Fugen dunkel (L* 9,4-16,1 je Glied), weil sie die Naht u 54 mitnahmen (Teil von (a)); Flanken-Fugen grau
+      (L* 23-30, kein Braun). In 8g Bauch-Fugen L* 13,6-31,8 wie der Bauch daneben, Flanken-Fugen = Ringe von 8c (L* 39, a* 17-19).
+Beleg 8g: statisch beruehrt keine Schwanz-Flaeche die Texel u 54-55 (messung/naht_statisch.txt: 8c 23 Flaechen, 8d 47, 8g 0); im Spiel 0
+Naht-Bildpunkte in F317-F343; Bauchkante (<= 1 px) L* 31,6 a* 13,7 h 22 = Farbton der Bauchmitte (h 20), heller als die Mitte (Schattierung,
+wie die Kante ohne Naht in 8c L* 28,4); Anteil der Kante dunkler als das 5. Perzentil der Mitte: 8d 5,7 %, 8c 1,6 %, 8g 0,2 %.
+Roh-Texel an der Grenze (messung/texel_rand.txt): 8d Bauch -theta_b u 54 L* 11,6-19,9 C* 22,9 h 25; 8g u 56 L* 32,7-34,0 C* 19,4 h 22.
+
+Riegel riegel_schwanz_r8.py (r8_b.txt): 7 von 7 gruen, neu R8h:
+  (1) Oberseite = 8c: Geometrie gleich, 384 Flaechen ausserhalb des Bauchs (43/49/56/49/49/49/89), 0 anders. Gegenproben ROT: 8d 547acc80
+      (306 anders), 8f 92a58f26 (362 anders), 8e a48e2ce5 (306 anders).
+  (2) Unterseite einheitlich: 188 Bauch-Flaechen (12/28/32/28/28/28/32) alle auf 493 Seite 0 in C1 u 56-65 v 51-55 (UV-Ecken und gerasterte
+      Texel), Fugen im Bauch je Glied 8/16/16/16/16/16/8, Naht an den 6 Gelenken 0,0 Texel. Gegenprobe 8c d31f9534 ROT (150 Bauch-Flaechen
+      ausserhalb: Ringe RB u 100 v 10-13 unten, Feld u 54-65 v 48-57); 8d ROT (47).
+  (3) keine fremden Texel (R8e (3) + R8f TIM): 0. Gegenproben synthetisch ROT: ein Texel im Feld C1 umgefaerbt (Texturbild nicht gleich),
+      eine Rueckenflaeche auf ungenutzte Texel u 0-3 v 0-3 (16 fremde Texel).
+  R8d (3) im 8g-Modus: Band = genau die Fugen-Flaechen ausserhalb des Bauchs (14/28/28/28/28/28/14), in PV an 6 Gelenken; Bauch-Fugen alle
+  'bauch', nahtlos, in PV an 6 Gelenken.
+test_birkin_formen: zaehlt jetzt je Glied 493-Flaechen im Feld C1 (12/28/32/28/28/28/32) und im Ring-Feld RB (14/28/28/28/28/28/14), keine
+anderen (die Zeilen-Zahlen allein sind gleich 8c); neu OK, Gegenproben 8c / 8e / 8f ROT. ctest-Gruppe birkin|schwanz|sichel 18/18 (build_r9g).
+
+Vergleichsblatt messung/mb_vergleich_8c_8f_8g.png (Messbild - kein Ergebnis; Schwanz-Netz gestreckt, oben/Seite/unten, gleiches Licht):
+Ansicht oben 8g = 8c in 0 abweichenden Bildpunkten (8f: 39805 anders, Median a* 12,2 gegen -1,0); unten 8g gegen 8f 2301 Bildpunkte anders,
+gegen 8c 30161. messung/mb_randstreifen_F325_F336.png: Spielbild F325 / F336, 8c | 8d | 8d mit Naht magenta | 8g (Messbild - kein Ergebnis).
+Beide Bilder nicht selbst angesehen (nur Zahlen).
+
+Hinweis r41/sichel_szene: test_schwanz_r41 (13) liest die alte Farbregel aus abgelegten Dateien (SF_belege/v8/bewegung/); die Bauchachse am
+Spiel-Asset bleibt gleich (Ecken und Keyframes bytegleich 8c-8f). Die Zeilen-Zahlen von 8g sind gleich 8c (493: 356, 487: 202, 495: 14).
+Keine @0x-Konstante (Sichel-Form auf keiner Disc), PORT-WAHL; nur Auswahl vorhandener Original-Texel und CLUT, keine Eichung am Video.
