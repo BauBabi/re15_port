@@ -597,6 +597,26 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                 CHECK(seite == (z == 493 ? 0u : 2u), "%s: Schwanzglied %d Dreieck %d Zeile %u Textur-Seite %u (Soll 493 -> 0, sonst 2)", name,
                       m, t, z, seite);
             }
+            {   /* Runde 8e (Nutzer 15.11. zu 8d: "komische braune Streifen an den Raendern"): die Bauch-Flaechen (Zeile 493) liegen im Feld C1
+                 * OHNE die dunkle Naht des Original-Bilds - u 56-65, v 51-55 (schwanz_r8.json felder.fleisch). Bis 8d u 54-65: die Spalten
+                 * u 54-55 (L* 11,6-27,0) gaben im Spiel den dunkelroten Laengsstrich an der Bauchkante (Markerlauf scratchpad schwanz_r9:
+                 * 48938 Schwanzpunkte F255-F350 aus u 54-55, mit 8e 0). Gegenprobe 8d 547acc80: rot. */
+                int naht = 0;
+                for (int q = 0; q < b->quad_count; q++) {
+                    const re15_md1_quad_uv_t *u = &b->quad_uvs[q];
+                    if ((u->clut >> 6) != 493) continue;
+                    const unsigned uu[4] = { u->u0, u->u1, u->u2, u->u3 }, vv[4] = { u->v0, u->v1, u->v2, u->v3 };
+                    for (int k = 0; k < 4; k++) naht += uu[k] < 56 || uu[k] > 65 || vv[k] < 51 || vv[k] > 55;
+                }
+                for (int t = 0; t < b->triangle_count; t++) {
+                    const re15_md1_tri_uv_t *u = &b->triangle_uvs[t];
+                    if ((u->clut >> 6) != 493) continue;
+                    const unsigned uu[3] = { u->u0, u->u1, u->u2 }, vv[3] = { u->v0, u->v1, u->v2 };
+                    for (int k = 0; k < 3; k++) naht += uu[k] < 56 || uu[k] > 65 || vv[k] < 51 || vv[k] > 55;
+                }
+                CHECK(naht == 0, "%s: Schwanzglied %d: %d Bauch-UV ausserhalb von C1 u 56-65 v 51-55 (dunkle Naht u 54-55, V8 Runde 8e)", name,
+                      m, naht);
+            }
             if (m >= 17) {               /* flach: Querhalbachse <= 135 E. (+1 Rundung); Glieder 17-19 hoch >= 2 x quer */
                 const double ph = 26.43 * 3.14159265358979 / 180.0;    /* unterseite_v8.json innen_phi 26,40-26,46 je Knochen */
                 double qmax = 0.0, hmax = 0.0;

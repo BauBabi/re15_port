@@ -1,0 +1,13 @@
+547acc80fb704b4a525bbcc6bbbf4a61a898eaf9f9c5b0a0d4766b5fb8952e55 *shared_assets/PSX/EMD/EM30_HANGAR.EMD
+EM30_HANGAR.EMD: 886 von 913 Keyframes geduckt, Fussgelenk max 342 vom EM30-Ort, 900 mit bewegtem Schwanz
+FAIL: EM30_HANGAR.EMD: Schwanzglied 16: 6 Bauch-UV ausserhalb von C1 u 56-65 v 51-55 (dunkle Naht u 54-55, V8 Runde 8e)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 17: 14 Bauch-UV ausserhalb von C1 u 56-65 v 51-55 (dunkle Naht u 54-55, V8 Runde 8e)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 18: 16 Bauch-UV ausserhalb von C1 u 56-65 v 51-55 (dunkle Naht u 54-55, V8 Runde 8e)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 19: 14 Bauch-UV ausserhalb von C1 u 56-65 v 51-55 (dunkle Naht u 54-55, V8 Runde 8e)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 20: 14 Bauch-UV ausserhalb von C1 u 56-65 v 51-55 (dunkle Naht u 54-55, V8 Runde 8e)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 21: 14 Bauch-UV ausserhalb von C1 u 56-65 v 51-55 (dunkle Naht u 54-55, V8 Runde 8e)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 22: 16 Bauch-UV ausserhalb von C1 u 56-65 v 51-55 (dunkle Naht u 54-55, V8 Runde 8e)
+EM30_HANGAR.EMD: 642 Haut-CLUT-Eintraege umgefaerbt, 30 blaue grau, 13 Zusatzzeilen, Port-Texturhoehe 4096
+EM30_HANGAR.EMD: 23 Meshes, 23 Knochen, 21 Clips, 310 Tri-Vertices umgeformt, 13 Teile umtexturiert
+test_birkin_formen: 7 Fehler
+rc=1

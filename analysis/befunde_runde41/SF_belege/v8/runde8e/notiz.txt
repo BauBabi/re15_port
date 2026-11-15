@@ -1,0 +1,18 @@
+Runde 8e (r41/sichel_v8) - Schwanz ohne braune Randstreifen
+==========================================================
+Nutzer 15.11.2026 zu 8d (Videos 30_sichel_schwanz_einheitlich): "Zum einen hat er komische braune Streifen an den Raendern. Das sieht man vor
+allem wenn er sich eindreht und man den dicken Schwanz Teil sieht. Warum?" Standbild birkin_fehler/vlcsnap-...07h32m52s078.png = Video 2 Bild
+F336 (h93), per Bildvergleich gegen den Framedump l8d (mittlere Abweichung 1,3; naechstes Bild 2,1).
+
+Messung (scratchpad schwanz_r9; exe = r41/sichel_szene 7fd592184, Framedump F255-F345 bitgleich zu l8d = Nutzer-Video):
+- Markerlauf m1: Texel u 54 v 46-60 (Seite 0) auf Index 0, Index 0 in allen CLUT-Zeilen reines Gruen. Gruen erscheint genau als der
+  dunkelrote Laengsstrich an der Bauch-/Flankengrenze (mb_naht_u54_F336.png), 60-800 Bildpunkte je Bild (marker_u54_8d.txt).
+- Markerlauf m2: Grau-Feld-Nachbarn u 60-63 / 88-91 (Zeile 487 Seite 2) markiert: 0 Bildpunkte - kein Ausbluten der Flanke.
+- Feld C1 v 51-55 (c1_feld_lab.txt): Spalte u 54 L* 11,6 / 11,6 / 34 / 24 / 20, u 55 v 51 11,6 / v 55 27,0 = dunkle Naht des
+  Original-Bilds; uebrige Texel u 56-65 L* 31,8-50,4. Die Bauchkante (sq 0 in schwanz_r8.fleisch_uv) lag auf u 54.
+- Schwanzpunkte aus den Spalten u 54-55 (Marker auf u 54-55, Szene F255-F350): 8d 48938 Punkte in 70 Bildern (max 1431),
+  8e 0 (naht_schwanzpunkte.txt).
+Aenderung: felder.fleisch u 56-65 (v 51-55 wie 8d). Nur Auswahl vorhandener Original-Texel; Hautfarbe, Grau-Feld, Form, Hand unveraendert.
+Kette zweimal V8-KETTE-OK a48e2ce5 (bytegleich); riegel_schwanz_r8 6/6 (R8e (4) 0 dunkle Texel), Gegenprobe 8d 547acc80 R8e (4) 84
+dunkle Texel ROT; test_birkin_formen neu OK, Gegenprobe 547acc80 ROT (7 Glieder mit Bauch-UV auf der Naht).
+Keine @0x-Konstante (Sichel-Form auf keiner Disc), PORT-WAHL.
