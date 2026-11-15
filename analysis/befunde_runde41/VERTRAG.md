@@ -50,6 +50,7 @@ die Spur in `tests/unit/test_r36_kartenbits.c` k_port[] ein (eine Zeile) — 104
 **AN** (Orchestrator-Entscheid 2026-11-02, Nachbesserung 2 der Spur AN): **133** = Zugstart-Szene 6030 gesehen
 (`RE15_AN_ZUG_BIT`, `include/re15_annette_r41.h`; gesetzt vom Zugstart-Programm in `annette_r41.c`), in k_port[]
 eingetragen. Zensus `bank9_zensus.py` 2026-11-02: im Original frei.
+**Monitor** (2026-11-15, Zweig r41/sichel_szene): **38** = Monitorbild Hangar-Szene im Monitor Room 5030/5031 gesehen (`RE15_MON41_BIT`, `include/re15_monitor_r41.h`, gesetzt in `monitor_r41.c` beim Wechsel ins Monitorbild). Zensus `bank9_zensus.py` 2026-11-15: Original frei (23..51), Port frei, r42/story belegt 23..37 und 129..132; k_port[] eingetragen. Dossier `MON_monitor.md`.
 **ST80** (Nachbesserung 1, 2026-11-07, Orchestrator): **128** = RE15_S80_BIT_NACHTRAG (Zug 6030: Fuehrerstand vor dem Wagen besucht, Sherry-Nachtrag msg 40/25 steht aus; gesetzt in k_s80_6030_sub08_vorne, geloescht in k_s80_6030_sub09_nachtrag). Zensus: Original-Block 110..133 frei, Integrationsbaum und alle r41-Zweige ohne 128 (moosgang 126/127, annette 133); k_port[] eingetragen. Nachrichten-Ids 6030: 31 und 40 (Spur AN belegt 27..30).
 
 ### 1.2 Nachrichten-Ids (Port-Text-Plaetze)

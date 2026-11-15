@@ -2,6 +2,10 @@
 
 Zweig `r41/hangar`, Basis master 789f6e681. Fortlaufendes Dossier. Belege: `H_hangar_belege/`.
 
+⛔ **Nachtrag 2026-11-15 (Spur Monitor, `MON_monitor.md`):** der Ausloeser im Hangar (2.1) und der Kampf danach sind aus dem
+Spiel genommen. Die Szene laeuft unveraendert (bitgleich h0..h134) nur noch als Monitorbild im Monitor Room 5030/5031; den alten
+Ausloeser gibt es nur noch als Messhaken `RE15_HANGAR_IM_RAUM=1` fuer die Inhalts-Riegel.
+
 Nutzer (Wortlaut): "In 50A0 sieht man das Birkin Modell, das die Spiderman auf den Boden hauen sollte, aber sowohl
 das Modell als auch Spiderman ist starr"
 
