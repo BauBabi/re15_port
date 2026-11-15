@@ -32,6 +32,7 @@ extern int g_re15_voice_laeuft, g_re15_voice_restbilder;
                           fputc('\n', stderr); } while (0)
 
 unsigned g_re15_s3b_zaehler[6];
+unsigned g_re15_s3b_alt_stumm;   /* Zeilen, deren alte Aufnahme stumm blieb (B4) */
 
 static int leon(void) { return re15_char_variant() == 0; }
 
@@ -60,6 +61,30 @@ void re15_story3b_r42_texte(uint16_t room_id)
             n++;
         }
     if (n) S3B_LOG("ROOM%04X: %d Nachrichten eingesetzt (nach den RDT-Texten)", (unsigned)room_id, n);
+}
+
+/* ==== Alte Aufnahmen unter neuem Text (Nachbesserung 1, Pruefer B4) ======================================================
+ * VERTRAG 2.3 fuehrt 30E0 msg 3/10/11/13 als NEUAUF: der Text ist neu, im Ordner liegt noch die Aufnahme des alten Wortlauts
+ * (z. B. main10 "That wound... How careless", das Konzept L8 streicht; main03 "He can't get out", genau der Widerspruch L8). Bis zur
+ * Neuaufnahme bleibt die Zeile stumm und laeuft mit der Textdauer (VERTRAG 2.1), statt den alten Satz unter den neuen Untertitel zu
+ * legen. Erkannt wird die alte Datei an Groesse + FNV-1a-32 ueber die ganze Datei (gemessen 2026-11-15 an
+ * synchro/STAGE3/room30E0/, Stand Commit 1d1ce988e). Jede neue Aufnahme hat einen anderen Abdruck und spielt sofort. */
+static const struct { uint8_t id; int32_t groesse; uint32_t fnv; } k_s3b_alt[] = {
+    {  3, 311950, 0xC00EDFA7u },   /* main03.wav */
+    { 10, 253994, 0xF4560B28u },   /* main10.wav */
+    { 11, 358762, 0xFCCEC09Au },   /* main11.wav */
+    { 13, 578700, 0x321E845Du },   /* main13.wav */
+};
+int re15_story3b_r42_alte_aufnahme(unsigned room_id, int voice_id, const uint8_t *datei, int n)
+{
+    if ((room_id & 0xFFFFu) != RE15_S3B_RAUM_30E0 || !datei || n <= 0) return 0;
+    for (size_t i = 0; i < sizeof k_s3b_alt / sizeof k_s3b_alt[0]; i++) {
+        if (k_s3b_alt[i].id != voice_id || k_s3b_alt[i].groesse != n) continue;
+        uint32_t h = 2166136261u;
+        for (int k = 0; k < n; k++) h = (h ^ datei[k]) * 16777619u;
+        if (h == k_s3b_alt[i].fnv) { g_re15_s3b_alt_stumm++; return 1; }
+    }
+    return 0;
 }
 
 /* ==== Opcode-Formen (Satzbreiten = s_opcode_sizes, scd_vm.c; Formen wie story3a_r42.c) ====================================== */
@@ -175,7 +200,21 @@ static int altstand_bauen(void)
 }
 
 /* ---- 3070: Reaktionszeile (Form Stufe STAGE3a k_p_schuesse: Pad-Sperre Set(2,7) ROOM2080 sub02 @0x0CB6, kein Letterbox) -------- */
-static const uint8_t k_p_3070[] = { OP_SET(2, 7, 1), OP_ZEILE(RE15_R42_MSG_3070_ADA), OP_SET(2, 7, 0), OP_END };
+/* STAGE3b Nachbesserung 1 (Pruefer B3): "That came from the storage room" braucht ein hoerbares Ereignis. Form ROOM3091 sub07 (Elzas
+ * "What was that?"): Sleep 0x32 @0x01A56, Sleep 0x14 @0x01A5E, vier Toene mit Sleep 0x0A/0x14/0x08 dazwischen (@0x01A62..@0x01A92),
+ * Sleep 0x0A @0x01A9E, dann der Kopf zur Quelle (Plc_neck mode 1 @0x01AA6). Ton = Port-Bank 0x3E Satz 0x00 (RE2 DOOR0F.DO2 Tonteil
+ * Satz 0, Holzschlag; re15_dining_r39.h RE15_R39J_SATZ_KLOPFEN), Quelle = Tuer Slot 1 nach 30E0 (ROOM3070 main00 @0x03322
+ * Door_aot_set, Ziel `02 0e`, Rechteck x -13500 w 2200, z -19700 d 1200 -> Mitte). Kopf zurueck nach der Zeile wie ROOM30E0 sub02
+ * @0x00E38 (`41 00 .. 64 00`). Leon dreht nur den Kopf (Spieler frei, nur die Pad-Sperre). */
+#define OP_POLTERN         0x36, RE15_S3B_POLTERN_BANK, RE15_S3B_POLTERN_SATZ, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+#define S3B_LAGER          RE15_S3B_LAGER_X, RE15_S3B_LAGER_Z
+static const uint8_t k_p_3070[] = {
+    OP_SET(2, 7, 1), OP_SLEEP(0x32), OP_SLEEP(0x14),
+    OP_POLTERN, OP_SLEEP(0x0a), OP_POLTERN, OP_SLEEP(0x14), OP_POLTERN, OP_SLEEP(0x08), OP_POLTERN, OP_SLEEP(0x0a),
+    OP_WORK(1, 0), OP_NECKV(S3B_LAGER),
+    OP_ZEILE(RE15_R42_MSG_3070_ADA),
+    OP_WORK(1, 0), 0x41, 0x00, 0, 0, 0, 0, 0, 0, 0x64, 0x00,
+    OP_SET(2, 7, 0), OP_END };
 
 const uint8_t *re15_story3b_r42_programm(int welches, int *out_len)
 {
@@ -193,7 +232,7 @@ static int s_frisch = 0;
 static int s_4c2_vorher = 0;          /* (4,194) beim Betreten von 3070 */
 static uint32_t s_start_bild = 0, s_warte_ab = 0;
 static int s_slot = -1;               /* Ereignis-Faden der 3070-Zeile */
-static unsigned s_bilder = 0, s_warte_bild = 0;   /* Takte der laufenden Szene (frame_count springt beim Raumaufbau) */
+static unsigned s_bilder = 0, s_warte_bild = 0, s_frei_bild = 0;   /* Takte der laufenden Szene (frame_count springt beim Raumaufbau) */
 int re15_story3b_r42_szene_laeuft(void) { return s_szene; }
 
 void re15_story3b_r42_install(uint16_t room_id)
@@ -269,16 +308,17 @@ void re15_story3b_r42_tick(void)
         if (!zeile && !stimme) re15_game_flag_set(5, RE15_S3B_SIG_FREI, 1);
         if (re15_game_flag_get(5, RE15_S3B_SIG_WARTEN)) {   /* Messung: das Programm steht am WARTEN vor @0x00F86 */
             re15_game_flag_set(5, RE15_S3B_SIG_WARTEN, 0);
-            s_warte_ab = 1; s_warte_bild = s_bilder;
+            s_warte_ab = 1; s_warte_bild = s_bilder; s_frei_bild = 0;
             g_re15_s3b_zaehler[4]++;
             S3B_LOG("ROOM30E0: Sleep-Kette nach msg 13 durch (Bild %u der Szene) - Zeile aktiv %d, Stimme %d (Rest %d Bilder)",
                     s_bilder, zeile, stimme, stimme ? g_re15_voice_restbilder : 0);
         }
+        if (s_warte_ab && !s_frei_bild && !zeile && !stimme) s_frei_bild = s_bilder;   /* Ende des Wartens (danach Ausklang @0x00F86) */
         if ((s_szene == SZ_30E0 || s_szene == SZ_30E0_ALT) && !re15_game_flag_get(2, 7) && re15_game_flag_get(3, 0xB4)) {
-            const unsigned gew = s_warte_ab ? s_bilder - s_warte_bild : 0u;
+            const unsigned gew = (s_warte_ab && s_frei_bild) ? s_frei_bild - s_warte_bild : 0u;
             g_re15_s3b_zaehler[3] += gew;
-            S3B_LOG("ROOM30E0: Szene fertig nach %u Bildern (Riegel (2,7) los), davon %u Bilder auf Zeile/Stimme gewartet",
-                    s_bilder, gew);
+            S3B_LOG("ROOM30E0: Szene fertig nach %u Bildern (Riegel (2,7) los), davon %u Bilder auf Zeile/Stimme gewartet, "
+                    "danach Ausklang @0x%05X", s_bilder, gew, RE15_S3B_SUB03_WARTEN);
             s_szene = SZ_KEINE;
         }
         if (s_szene == SZ_3070 && (s_slot < 0 || !g_scd.threads[s_slot].active)) s_szene = SZ_KEINE;   /* Faden zu Ende (Evt_end) */

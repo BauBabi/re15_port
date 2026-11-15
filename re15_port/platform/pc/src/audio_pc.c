@@ -2278,6 +2278,11 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
         (wav = re15_pc_read_base(path, &wsz)) != NULL)
         fprintf(stderr, "[voice] ROOM%04X msg %d <- %s (Runde 38 Spur E)\n", (unsigned)room, voice_id, path);
     if (!wav) re15_stimmen_r39_fehlt((unsigned)room, voice_id, path);   /* Runde 39 Spur A: Messschiene "welche Datei fehlt" */
+    { extern int re15_story3b_r42_alte_aufnahme(unsigned, int, const uint8_t *, int);   /* Runde 42 STAGE3b NB1 B4 */
+      if (wav && re15_story3b_r42_alte_aufnahme((unsigned)room, voice_id, wav, wsz)) {
+          fprintf(stderr, "[voice] ROOM%04X msg %d: %s ist noch die alte Aufnahme (Text neu, VERTRAG 2.3 NEUAUF) - Zeile bleibt "
+                          "stumm, Textdauer\n", (unsigned)room, voice_id, path);
+          free(wav); return 0; } }
     int rate, ch, bits, dbytes, fmt_tag;
     const uint8_t *data = wav_find_data(wav, wsz, &rate, &ch, &bits, &dbytes, &fmt_tag);
     if (!data || dbytes < 2 || ch < 1) { free(wav); return 0; }

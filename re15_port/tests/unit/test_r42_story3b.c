@@ -17,6 +17,9 @@
  *   zeile3070  3070 als Leon: (4,194) im Besuch gesetzt -> msg 6 einmal; schon gesetzt beim Betreten -> keine Zeile; Elza 3071 keine
  *   t03        3070-Auftritt (Emergence 0x80119378): im Wechselbild steht das letzte Bild von Clip 0x10, Clip 0xd blendet mit a3 0x100
  *   t04        3080-Hand (Szenen-Modus 0x80118d00): zwei Stoesse, der zweite aus dem gehaltenen letzten Bild ab Bild 0, a3 0x400
+ *   t03labor   NB1 B2: derselbe Auftritt in 50E0 laeuft den alten Weg (STAGE5 = Endkampf, unveraendert)
+ *   altaufnahme NB1 B4: alte Aufnahmen 30E0 main03/10/11/13 unter neuem Text bleiben stumm, Textdauer; neue Datei spielt
+ * NB1 B1 (t03): nach dem Auftritt Rate 0 (Kampf wie vor T-03), Tod mit a3 0x200 @0x8011a764. NB1 B3 (programm): Poltern vor msg 6.
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
 #define _DEFAULT_SOURCE 1
@@ -295,6 +298,22 @@ static void teil_programm(void)
     p = re15_story3b_r42_programm(2, &n);
     const int k2 = msg_folge(p, n, ids, 40);
     PRUEF(k2 == 1 && ids[0] == RE15_R42_MSG_3070_ADA, "3070: eine Zeile msg %d", RE15_R42_MSG_3070_ADA);
+    /* NB1 B3: vier Holzschlaege (Se_on 0x3E/0x00) im Takt ROOM3091 sub07, Kopf zur Tuer nach 30E0, DANN die Zeile */
+    {
+        int knall = 0, erst = -1, nacken = -1, zeile = -1;
+        for (int i = 0; p && i < n;) {
+            if (p[i] == 0x36 && p[i + 1] == RE15_S3B_POLTERN_BANK && p[i + 2] == RE15_S3B_POLTERN_SATZ) { knall++; if (erst < 0) erst = i; }
+            if (p[i] == 0x41 && p[i + 1] == 0x01 && (int16_t)(p[i + 2] | p[i + 3] << 8) == RE15_S3B_LAGER_X &&
+                (int16_t)(p[i + 6] | p[i + 7] << 8) == RE15_S3B_LAGER_Z) nacken = i;
+            if (p[i] == 0x2b && zeile < 0) zeile = i;
+            const int sz = scd_opcode_size_at(p + i);
+            if (sz <= 0) break;
+            i += sz;
+        }
+        PRUEF(knall == 4 && erst >= 0 && nacken > erst && zeile > nacken,
+              "3070: 4 Holzschlaege (%d) ab %d, Kopf zur Lagertuer (%d,%d) bei %d, Zeile bei %d", knall, erst, RE15_S3B_LAGER_X,
+              RE15_S3B_LAGER_Z, nacken, zeile);
+    }
 }
 
 /* ---- besuch ------------------------------------------------------------------------------------------------------- */
@@ -429,6 +448,7 @@ static void teil_t03(void)
     const int fc10 = clip_bilder(0x30, 0x10), fc0d = clip_bilder(0x30, 0x0d);
     PRUEF(fc10 > 2 && fc0d > 2, "Clip 0x10 %d Bilder, Clip 0xd %d Bilder", fc10, fc0d);
     int b = -1, halt10 = -1, rate0d = -1, frac0d = -1, halt0d = -1, wechsel = -1, phase_alt = -1, sub9 = 0;
+    int rate_kampf = -1, rate_tod = -1, frac_tod = -1;
     for (int f = 0; f < 3000; f++) {
         if (f == 5) re15_aot_fire_slot(2);   /* Aot_set Slot 2 @0x033E2 -> sub02 (Muster probe_r30_n_room5080.c); der echte Ausloeser
                                               * laeuft im Durchlauf (integration_r42_story3b_leon) */
@@ -447,9 +467,21 @@ static void teil_t03(void)
             if (phase_alt == 3 && ph == 4) halt0d = (int)e->anim_frame;
             phase_alt = ph;
         }
-        if (ph == 5) break;
+        if (ph == 5) { rate_kampf = e->anim_blend_rate; break; }
+    }
+    /* NB1 B1: Tod nach dem Auftritt (Commit wie der Messhaken RE15_S3B_BIRKIN_TOT): Phase 0/1 mit a3 0x200 @0x8011a764 */
+    if (b >= 0 && phase_alt == 5) {
+        re15_actor_t *e = &g_actors[b];
+        e->hp = 0; e->state = 3; e->sub_state_3 = 0;
+        for (int f = 0; f < 400 && e->state == 3 && e->sub_state_3 < 2; f++) {
+            frame(0, 0);
+            if (e->state == 3 && e->sub_state_3 == 1 && e->motion == 9 && rate_tod < 0) { rate_tod = e->anim_blend_rate; frac_tod = e->anim_frac; }
+        }
     }
     PRUEF(sub9, "Auftritt (Sub 9) nach Member_set(0x0C,0x13) @0x0358E");
+    PRUEF(rate_kampf == 0, "nach dem Auftritt (Phase 4 @0x801194d0 -> Sub 3) Rate zurueck auf 0 = Kampf wie vor T-03 (Rate %#x)", rate_kampf);
+    PRUEF(rate_tod == 0x200 && frac_tod >= 6,
+          "Tod Clip 9: a3 0x200 (@0x8011a764), +0x8f 7 (@0x8011a654) -> Startgewicht 7 x 0x200 = 3584 (Rate %#x frac %d)", rate_tod, frac_tod);
     PRUEF(halt10 == fc10 - 1, "Wechselbild Clip 0x10: Bild %d = letztes (%d) statt Umlauf 0 (@0x8001f35c/@0x8001f63c)", halt10, fc10 - 1);
     PRUEF(wechsel == 0x0d && rate0d == 0x100 && frac0d == 0x0e,
           "Clip 0xd (@0x80119464) blendet mit a3 0x100 (@0x801194a4), frac 0xf -> 0xe nach dem ersten Schritt (Rate %#x frac %d)",
@@ -492,6 +524,62 @@ static void teil_t04(void)
           bild10, rate10, frac10);
 }
 
+/* ---- t03labor (NB1 B2): derselbe Auftritt in 50E0 (grid 0x33 @0xACE) laeuft den ALTEN Weg (Endkampf-Raeume unveraendert) ------- */
+static void teil_t03labor(void)
+{
+    printf("== t03labor ==\n");
+    re15_game_state_init(); g_gameflow.character = 0;
+    if (room_boot(0x50E0, -25450, 0, -14700, 0, 0) != 0) return;
+    PRUEF(bank_laden(0x30), "EM30 aus CDEMD0.EMS");
+    int b = -1;
+    for (int f = 0; f < 40 && b < 0; f++) { frame(0, 0); b = typ_slot(0x30); }
+    PRUEF(b >= 0, "50E0: Birkin (0x30) gesetzt (Sce_em_set @0xACE)");
+    if (b < 0) return;
+    re15_actor_t *e = &g_actors[b];
+    e->grid_id = 0x13; e->state = 0;      /* wie sub04 Member_set(0x0C,0x13): INIT -> nib 3 -> Sub 9 (Muster t03 re15_aot_fire_slot) */
+    const int fc10 = clip_bilder(0x30, 0x10);
+    int phase_alt = -1, wechsel10 = -1, rate_max = 0, sub9 = 0;
+    for (int f = 0; f < 3000; f++) {
+        frame(0, 0);
+        if (e->sub_state_1 == 9 && e->state == 1) sub9 = 1;
+        if (!sub9) continue;
+        if (e->anim_blend_rate > rate_max) rate_max = e->anim_blend_rate;
+        const int ph = (e->state == 1 && e->sub_state_1 == 9) ? e->sub_state_2 : 5;
+        if (ph != phase_alt) { if (phase_alt == 1 && ph == 2) wechsel10 = e->anim_frame; phase_alt = ph; }
+        if (ph == 5) break;
+    }
+    PRUEF(sub9 && phase_alt == 5, "50E0: Auftritt Sub 9 bis zum Ansprung");
+    PRUEF(wechsel10 == 0 && fc10 > 1, "50E0: Wechselbild Clip 0x10 = Umlauf 0 wie vor T-03 (Bild %d, Clip %d Bilder)", wechsel10, fc10);
+    PRUEF(rate_max == 0, "50E0: keine Szenen-Staerke (Rate %#x), Zeichenpfad-Standard wie vor T-03", rate_max);
+}
+
+/* ---- altaufnahme (NB1 B4): 30E0 msg 3/10/11/13 - alte Aufnahme unter neuem Text bleibt stumm ------------------------------- */
+static void teil_altaufnahme(void)
+{
+    printf("== altaufnahme ==\n");
+    static const int ids[] = { 3, 10, 11, 13 };
+    for (size_t i = 0; i < sizeof ids / sizeof ids[0]; i++) {
+        char pfad[400]; size_t n = 0;
+        snprintf(pfad, sizeof pfad, "%s/STAGE3/room30E0/main%02d.wav", RE15_SYNCHRO_DIR, ids[i]);
+        uint8_t *d = slurp(pfad, &n);
+        if (!d) { PRUEF(1, "%s fehlt (Nutzer-Ordner) - Abdruck nicht pruefbar", pfad); continue; }
+        const int alt = re15_story3b_r42_alte_aufnahme(0x30E0, ids[i], d, (int)n);
+        const int fremd = re15_story3b_r42_alte_aufnahme(0x30E1, ids[i], d, (int)n) || re15_story3b_r42_alte_aufnahme(0x30E0, 9, d, (int)n);
+        d[n / 2] ^= 0x01;   /* neue Aufnahme = anderer Abdruck */
+        const int neu = re15_story3b_r42_alte_aufnahme(0x30E0, ids[i], d, (int)n);
+        PRUEF(alt && !fremd && !neu, "main%02d.wav: alte Aufnahme erkannt (%d), andere Zeile/Raum nicht (%d), geaenderte Datei spielt (%d)",
+              ids[i], alt, fremd, neu);
+        free(d);
+    }
+    re15_game_state_init(); g_gameflow.character = 0;
+    if (room_boot(0x30E0, -19406, 0, -22938, 0, 0) != 0) return;
+    for (size_t i = 0; i < sizeof ids / sizeof ids[0]; i++) {
+        int len = 0; const unsigned char *raw = re15_msg_get_raw(ids[i], &len);
+        const int d = raw ? re15_msg_compute_duration(raw, (size_t)len, 0) : 0;   /* = der eingesetzte Wert (story3a/3b_r42_texte) */
+        PRUEF(d > 90, "30E0 msg %d hat die Textdauer %d Bilder (laeuft ohne Ton sauber, VERTRAG 2.1)", ids[i], d);
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "";
@@ -503,6 +591,8 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "zeile3070")) teil_zeile3070();
     else if (!strcmp(t, "t03")) teil_t03();
     else if (!strcmp(t, "t04")) teil_t04();
+    else if (!strcmp(t, "t03labor")) teil_t03labor();
+    else if (!strcmp(t, "altaufnahme")) teil_altaufnahme();
     else { printf("unbekannter Teil '%s'\n", t); return 2; }
     printf("%s: %d Fehler\n", t, g_fail);
     return g_fail ? 1 : 0;

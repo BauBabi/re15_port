@@ -9,7 +9,9 @@
 #             (Birkin-Auftritt, Kampf) -> Zeile msg 6 -> 30E0 (EIN Besuch: Ada, Glasbruch, msg 16/17, Marvin tritt ein, msg 9..13, Ende
 #             erst nach Untertitel UND Stimme) -> 3070 (Aufzug mit Ada und Marvin) -> 3080 (Birkins Hand, zwei Stoesse) -> 4000.
 #             Mit Ton (SDL_AUDIODRIVER=dummy): die Aufnahmen synchro/STAGE3/room30E0/main*.wav laufen, msg 16/17 und 3070 msg 6 haben
-#             keine Aufnahme (Untertitel mit Textdauer).
+#             keine Aufnahme (Untertitel mit Textdauer). Nachbesserung 1: main03/10/11/13 sind noch die alten Aufnahmen unter neuem Text
+#             (VERTRAG 2.3 NEUAUF) -> stumm mit Textdauer (B4); vor 3070 msg 6 poltert es viermal im Lager (B3); nach dem Auftritt
+#             kaempft Birkin ohne Szenen-Staerke, der Tod beginnt mit a3 0x200 = Gewicht 3584 (B1).
 # TEIL elza   30E1 -> 3071 (Birkin-Auftritt Sub 10, Kampf, Flucht sub17) -> 30E1 (John und Sherry, Original) -> 3071 (Aufzug) -> 3081
 #             (Hand) -> 4001. Ausser T-04 im Aufzug darf sich nichts aendern: keine Port-Szene in 30E1/3071.
 # Vorgesetzt (der Wegplan-Bot kann es nicht spielen, gemessen Lauf d2: Magazin leer ohne Nachladen, Spieler gefressen): Birkins Tod
@@ -111,7 +113,7 @@ endfunction()
 
 set(_basis RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_EQUIP=3
            RE15_S3B_BIRKIN_TOT=600 RE15_R39_MESS_SPIELER_HP=100 RE15_WEGPLAN_LOG=wegplan.txt RE15_STATE_LOG=state.log
-           RE15_POSE_LOG=pose.txt RE15_STIMME_LOG=1)
+           RE15_POSE_LOG=pose.txt RE15_STIMME_LOG=1 RE15_SE_DEBUG=1)
 
 # 3070: Birkin-Szene (Aot Platz 2 @0x033E2), Kampf bis (bank,bit), Rueckweg nach 30E0 nordlich am Block SCA 3 vorbei (dort liegt
 # Birkin). Wege aus der SCA (Planer scratchpad story/s3a/weg.py, Band 0, Radius 450).
@@ -206,6 +208,22 @@ ENDE
     # L-11 / F-08
     pruefe("F-08: 3070 nach Birkins Tod msg 6" "ROOM3070: (4,194) im Besuch gesetzt (sub01 @0x03496, Birkins Tod) -> msg 6")
     pruefe("F-08: Wortlaut msg 6" "[msgtext] room=3070 id=6 \"Leon: That came from the storage room... Ada?\"")
+    # NB1 B3: vier Holzschlaege (Port-Bank 0x3E Satz 0) zwischen dem Start der Zeile und msg 6
+    string(FIND "${_dbg}" "ROOM3070: (4,194) im Besuch gesetzt" _p0)
+    string(FIND "${_dbg}" "[msgtext] room=3070 id=6 " _p6)
+    if(_p0 GREATER -1 AND _p6 GREATER _p0)
+        math(EXPR _l "${_p6} - ${_p0}")
+        string(SUBSTRING "${_dbg}" ${_p0} ${_l} _vor6)
+        string(REGEX MATCHALL "RE2 DOOR0F Klopfen" _kl "${_vor6}")
+        list(LENGTH _kl _nkl)
+        if(_nkl EQUAL 4)
+            ok("B3: vier Holzschlaege aus dem Lager vor msg 6")
+        else()
+            fail("B3: ${_nkl} Holzschlaege vor msg 6 (soll 4)")
+        endif()
+    else()
+        fail("B3: Zeilenstart/msg 6 nicht gefunden")
+    endif()
     # L8-L10 ein Besuch
     pruefe("L10: 30E0 in einem Besuch (Programm)" "ROOM30E0: ein Besuch = sub02 + Glasbruch + Zeilen 16/17 + Marvin tritt ein + sub03 + Warten")
     pruefe_re("L8: Zeilenfolge 0..8, 16, 17, 9..13 in 30E0"
@@ -217,10 +235,15 @@ ENDE
     pruefe("L8: msg 13 Neutext" "[msgtext] room=30e0 id=13 \"Marvin: There's more of them than I thought... If they've come this far, the city's finished.\"")
     pruefe("L7: msg 3 (Stufe STAGE3a)" "[msgtext] room=30e0 id=3 \"Leon: He's back in the lobby. Some dogs got his leg... he can barely walk.\"")
     pruefe("Ton: msg 16 ohne Aufnahme -> Untertitel mit Textdauer" "ROOM30E0 msg 16: keine Aufnahme")
-    # Nutzerbefund 15.11.: Ende erst nach Zeile und Stimme
-    pruefe_re("Befund 15.11.: nach der Sleep-Kette laeuft main13.wav noch (gewartet wird)"
-        "ROOM30E0: Sleep-Kette nach msg 13 durch [(]Bild [0-9]+ der Szene[)] - Zeile aktiv 1, Stimme 1 [(]Rest [1-9][0-9]* Bilder[)]")
-    pruefe_re("Befund 15.11.: Szene endet nach dem Warten" "ROOM30E0: Szene fertig nach [0-9]+ Bildern [(]Riegel [(]2,7[)] los[)], davon [1-9][0-9]* Bilder auf Zeile/Stimme gewartet")
+    # NB1 B4: alte Aufnahmen unter neuem Text bleiben stumm (Textdauer)
+    foreach(_m 3 10 11 13)
+        pruefe_re("B4: msg ${_m} alte Aufnahme stumm" "ROOM30E0 msg ${_m}: [^\n]*main[0-9]+[.]wav ist noch die alte Aufnahme")
+    endforeach()
+    # Nutzerbefund 15.11.: Ende erst nach Zeile und Stimme (mit stummer msg 13 = Textdauer 99 < Sleep-Kette 152: kein Warten noetig;
+    # das Warten auf eine lange Stimme pruefen unit_r42_story3b_besuch und der Messlauf mit nachgebildeter Neuaufnahme)
+    pruefe_re("Befund 15.11.: Warten nach der Sleep-Kette von msg 13 erreicht"
+        "ROOM30E0: Sleep-Kette nach msg 13 durch [(]Bild [0-9]+ der Szene[)] - Zeile aktiv [01], Stimme [01]")
+    pruefe_re("Befund 15.11.: Szene endet erst danach" "ROOM30E0: Szene fertig nach [0-9]+ Bildern [(]Riegel [(]2,7[)] los[)], davon [0-9]+ Bilder auf Zeile/Stimme gewartet")
     # weiter wie im Original
     pruefe("3070 Aufzug (sub03, msg 0)" "room=3070 id=0 ")
     pruefe("3080 erreicht" "PC loaded room3080.rdt")
@@ -238,6 +261,23 @@ ENDE
             ok("T-03: kein Umlaufbild (Clip 0x10 Bild 0) vor Clip 0xd")
         else()
             fail("T-03: Umlaufbild Clip 16 af0 vor Clip 13 (${_u}x)")
+        endif()
+        # NB1 B1: nach dem Auftritt (Clips 0x10/0xd) kaempft Birkin in 3070 ohne Szenen-Staerke (Rate 0 wie vor T-03); Tod Clip 9
+        # beginnt mit +0x8f 7 (@0x8011a654) x a3 0x200 (@0x8011a764) = wp 3584
+        file(STRINGS "${WORKDIR}/pose.txt" _k3070 REGEX " R3070 s[0-9]+ t30 m([0-9]|1[0-24578-9]|[2-9][0-9]) .* ra256 ")
+        list(LENGTH _k3070 _nk)
+        if(_nk EQUAL 0)
+            ok("B1: 3070-Kampf ohne stehengebliebene Rate 0x100")
+        else()
+            list(GET _k3070 0 _k0)
+            fail("B1: ${_nk} Kampfposen mit Rate 0x100 (erste: ${_k0})")
+        endif()
+        file(STRINGS "${WORKDIR}/pose.txt" _tod REGEX " R3070 s[0-9]+ t30 m9 af0 kf[0-9]+ fr7 ra512 wp3584 ")
+        list(LENGTH _tod _nt)
+        if(_nt GREATER 0)
+            ok("B1: Tod Clip 9 mit Startgewicht 7 x 0x200 = 3584")
+        else()
+            fail("B1: Tod Clip 9 fr7 ra512 wp3584 fehlt")
         endif()
         _wechsel("${WORKDIR}/pose.txt" "36" "4" "9" "4" "1024" _n4)
         if(_n4 EQUAL 1)

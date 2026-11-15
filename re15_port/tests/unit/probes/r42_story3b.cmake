@@ -10,16 +10,19 @@
 #   unit_r42_story3b_zeile3070  3070 msg 6 einmal nach (4,194), Elza 3071 ohne
 #   unit_r42_story3b_t03        3070-Auftritt: letztes Bild im Wechselbild, Clip 0xd mit a3 0x100
 #   unit_r42_story3b_t04        3080-Hand: zweiter Stoss aus dem gehaltenen Bild, a3 0x400
+#   unit_r42_story3b_t03labor   NB1 B2: Auftritt 50E0 (STAGE5, Endkampf) alter Weg, unveraendert
+#   unit_r42_story3b_altaufnahme NB1 B4: alte Aufnahmen 30E0 main03/10/11/13 stumm, Textdauer
 #   integration_r42_story3b_leon  Durchlauf Leon 3060 -> 3010 -> 30E0 -> 3070 -> 30E0 -> 3070 -> 3080 -> 4000 (tests/integration/test_r42_story3b.cmake)
 #   integration_r42_story3b_elza  Durchlauf Elza 30E1 -> 3071 -> 30E1 -> 3071 -> 3081 -> 4001 (keine Port-Szene, T-04)
 add_executable(test_r42_story3b ${CMAKE_CURRENT_LIST_DIR}/../test_r42_story3b.c)
 target_link_libraries(test_r42_story3b PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r42_story3b PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_compile_definitions(test_r42_story3b PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+target_compile_definitions(test_r42_story3b PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+                           RE15_SYNCHRO_DIR="${CMAKE_SOURCE_DIR}/../synchro")
 if(NOT WIN32)
     target_link_libraries(test_r42_story3b PRIVATE m)
 endif()
-foreach(_teil texte programm besuch altstand elza zeile3070 t03 t04)
+foreach(_teil texte programm besuch altstand elza zeile3070 t03 t04 t03labor altaufnahme)
     add_test(NAME unit_r42_story3b_${_teil} COMMAND test_r42_story3b ${_teil} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r42_story3b_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()

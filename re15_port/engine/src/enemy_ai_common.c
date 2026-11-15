@@ -11988,8 +11988,16 @@ int  re15_r38_birkin_fc(const re15_actor_t *e) { return re15_birkin_fc(e); }
  * Ueberblendstaerke = a3 des Aufrufs (Gewicht +0x8f * a3: `mult v0,a3` @0x8001f474 / `mult v0,v1` @0x8001f598, +0x8f -1
  * @0x8001f5b0-b4) -> anim_blend_rate; ohne sie nimmt der Zeichenpfad 0x200 und klemmt ab frac 8 auf 100 % Vor-Pose
  * (skeleton_common.c). */
+/* STAGE3b Nachbesserung 1 (Pruefer B2): NUR in STAGE3 (3070 Auftritt, 3080 Hand). Derselbe Auftritt 0x80119378 laeuft in STAGE5
+ * (50E0/50F1 grid 0x33: ROOM50E0 @0xACE / ROOM50F1 @0x9AC `44 00 30 33`, gleiche a3 0x100 @0x80119c44/@0x80119cb8); der Auftrag
+ * verlangt die Endkampf-Raeume unveraendert ("muss der Fix dort etwas aendern, nicht bauen, sondern melden"). Dort laeuft der alte
+ * Weg (re15_birkin_anim ohne Halten und ohne a3). Gemessen (Weg von test_r41_labor_birkin_angriff, Pose-Messschiene): ohne diese
+ * Sperre aendert der Fix in 50E0 und 50F1 je 33 Posen (Wechselbild Clip 0x10 Bild 0 -> 58, Clip 0xd 7 Bilder 100 % Hocke ->
+ * gleitend, derselbe Fehler wie 3070); mit ihr sind Posen, Gewichte und state.log vorher/nachher gleich (Notiz s3b NB1). */
+static int re15_birkin_szene_stage3(void) { return ((g_current_room_id >> 12) & 0xFu) == 3u; }
 static int re15_birkin_anim_szene(re15_actor_t *e, uint16_t a3)
 {
+    if (!re15_birkin_szene_stage3()) return re15_birkin_anim(e);
     e->anim_blend_rate = a3;
     const int fertig = re15_birkin_anim(e);
     if (fertig) e->anim_frame = (uint8_t)(re15_birkin_fc(e) - 1);
@@ -12518,6 +12526,10 @@ static void re15_birkin_ai_tick(int slot)
             } else if (e->sub_state_2 == 3) {          /* phase 3 @0x8011948c: play clip 0xd */
                 if (re15_birkin_anim_szene(e, 0x100)) e->sub_state_2 = 4;
             } else {                                   /* phase 4 @0x801194d0: -> LUNGE (sub 3), grid&=0xfc */
+                /* STAGE3b Nachbesserung 1 (Pruefer B1): die Szenen-Staerke a3 0x100 darf nicht in den Kampf laufen. Die Port-Kampf-KI
+                 * des 0x30 setzt kein a3 (Zeichenpfad-Standard 0x200, skeleton_common.c); ihre Original-Werte je Aufruf (z. B. Lunge
+                 * 0x100 @0x80117644, Tod 0x200 @0x8011a764) sind ein eigener, alter Abstand (OFFEN). Der Kampf laeuft damit wie vor T-03. */
+                if (re15_birkin_szene_stage3()) e->anim_blend_rate = 0;
                 e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* sub=3 @0x801194d8, phase=0 @0x801194ec */
                 e->grid_id = (uint8_t)(e->grid_id & 0xfc);            /* grid&=0xfc (0x33->0x30) @0x80119504 */
             }
@@ -12723,10 +12735,12 @@ static void re15_birkin_ai_tick(int slot)
         case 0:   /* phase 0 @0x8011a618: clip 9 collapse, +0x93|=1, Se(1), phase->1 */
             re15_birkin_clip(e, 9); e->anim_frac = 7; e->hit_react |= 1;   /* clip 9 @0x8011a634, +0x93|=1 @0x8011a66c */
             re15_audio_room_se(1);                     /* Se(1) @0x8011a670 */
+            e->anim_blend_rate = 0x200;                /* j 0x8011a73c @0x8011a688 -> anim_set a3 0x200 @0x8011a764 (STAGE3b NB1 B1) */
             e->sub_state_3 = 1;
             break;
         case 1:   /* phase 1 @0x8011a678: play clip 9, Se(10)@frame 0x50, -> phase 2 */
             if (e->anim_frame == 0x50) re15_audio_room_se(10);        /* Se(10) @0x8011a744 */
+            e->anim_blend_rate = 0x200;                /* a3 0x200 @0x8011a764 (STAGE5 @0x8011af78); STAGE3b NB1 B1 */
             /* ⛔ RUNDE 34 NACHBESSERUNG (mess_geg M-B1: "Birkin steht in Todesphase 3 wieder auf",
              * F235 liegt, F240/F260 steht, Zustandslog st 3/9/1/3 mo 9 af 0). Selbst disassembliert:
              * Phase 1 ruft `jal 0x8001f314` @0x8011a760 (+0x7 += v0 @0x8011a77c-84); FUN_8001f314 ->
@@ -12774,9 +12788,11 @@ static void re15_birkin_ai_tick(int slot)
             break;
         case 4:   /* phase 4 @0x8011a6e8: SECOND collapse clip 0xc, phase->5 */
             re15_birkin_clip(e, 0x0c); e->anim_frac = 0; e->sub_state_3 = 5;   /* clip 0xc @0x8011a704 */
+            e->anim_blend_rate = 0x200;                /* faellt @0x8011a738 in anim_set a3 0x200 @0x8011a764 */
             break;
         case 5:   /* phase 5 @0x8011a728: play clip 0xc, Se(10)@frame 0x3c, -> phase 6 */
             if (e->anim_frame == 0x3c) re15_audio_room_se(10);        /* Se(10)@0x3c @0x8011a744 */
+            e->anim_blend_rate = 0x200;                /* dasselbe anim_set, a3 0x200 @0x8011a764 (STAGE5 @0x8011af78) */
             /* NACHBESSERUNG M-B1: dasselbe anim_set @0x8011a760 (Phase 4 faellt @0x8011a724 in den
              * Phase-5-Code); Phase 6 @0x8011a788 schreibt nur das Zustandswort 0xb01 -> bis zum
              * naechsten Clip bleibt das letzte Bild von Clip 0xc stehen. */

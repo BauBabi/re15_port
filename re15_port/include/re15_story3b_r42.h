@@ -52,6 +52,8 @@
  * Wenn ROOM3070 sub01 @0x03496 (4,194) im laufenden Besuch setzt (Birkins Tod: (5,0x1c) aus der Todesmaschine @0x8011a6b8, Phase 2
  * = Zusammenbruch fertig), sagt Leon msg 6. Form der Reaktionszeile = Stufe STAGE3a "Gunshots" (Pad-Sperre Set(2,7) wie ROOM2080
  * sub02 @0x0CB6, kein Letterbox). Einmalig ueber den Uebergang 0 -> 1 im Besuch (30E0 sub02 loescht (4,194) @0x00CB0).
+ * Nachbesserung 1 (B3): vor der Zeile poltert es im Lager (vier Holzschlaege, Takt ROOM3091 sub07 @0x01A56..@0x01A9E), Leon dreht
+ * den Kopf zur Tuer nach 30E0 (Plc_neck mode 1, Form @0x01AA6) und nach der Zeile zurueck (Form ROOM30E0 sub02 @0x00E38).
  */
 #ifndef RE15_STORY3B_R42_H
 #define RE15_STORY3B_R42_H
@@ -99,6 +101,13 @@
 /* Glasbruch (Port-Bank 0x3E, re15_dining_r39.h) */
 #define RE15_S3B_GLAS_BANK        0x3E
 #define RE15_S3B_GLAS_SATZ        0x21
+/* 3070 (Nachbesserung 1, B3): Poltern aus dem Lager vor msg 6 = Port-Bank 0x3E Satz 0x00 (RE2 DOOR0F.DO2 Tonteil Satz 0, Holzschlag;
+ * re15_dining_r39.h RE15_R39J_SATZ_KLOPFEN), Kopf zur Tuer Slot 1 nach 30E0 (ROOM3070 main00 @0x03322: x -13500 w 2200 = 0x0898,
+ * z -19700 d 1200 = 0x04B0 -> Mitte). */
+#define RE15_S3B_POLTERN_BANK     0x3E
+#define RE15_S3B_POLTERN_SATZ     0x00
+#define RE15_S3B_LAGER_X          (-12400)  /* -13500 + 2200/2 (@0x03328 `44 cb`, @0x0332C `98 08`)                     */
+#define RE15_S3B_LAGER_Z          (-19100)  /* -19700 + 1200/2 (@0x0332A `0c b3`, @0x0332E `b0 04`)                     */
 
 extern unsigned g_re15_s3b_zaehler[6];   /* [0] 30E0 ein Besuch [1] sub03 Altstand [2] 3070-Zeile [3] Warten am Ende (Bilder)
                                           * [4] Ende-Warten begonnen [5] Programmbau gescheitert (Bytes anders) */
@@ -110,5 +119,8 @@ void           re15_story3b_r42_tick(void);                   /* scd_vm.c je Bil
 const uint8_t *re15_story3b_r42_programm(int welches, int *out_len);   /* Tests: 0 = ein Besuch, 1 = sub03 Altstand, 2 = 3070 */
 const uint8_t *re15_story3b_r42_text(uint16_t room_id, uint8_t id, int *out_len);
 int            re15_story3b_r42_szene_laeuft(void);
+/* audio_pc.c re15_voice_load_clip: 1 = die Datei ist noch die alte Aufnahme einer NEUAUF-Zeile (30E0 msg 3/10/11/13) -> stumm */
+int            re15_story3b_r42_alte_aufnahme(unsigned room_id, int voice_id, const uint8_t *datei, int n);
+extern unsigned g_re15_s3b_alt_stumm;
 
 #endif

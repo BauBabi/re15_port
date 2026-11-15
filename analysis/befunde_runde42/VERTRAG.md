@@ -363,13 +363,23 @@ Besonderheiten:
 - Bank 5 Signale 0x14..0x1A und Ankunftsbits 0x20/0x21 in 3020/3060 (3020-Skripte nutzen nur 5:0/5:1, 3060 keine).
 
 ### 4.3 Gemessen und gebaut (Stufe STAGE3b, 2026-11-15; Belege im Kopf von `re15_port/include/re15_story3b_r42.h`)
-- L8-L10: 30E0 in EINEM Besuch = Programm aus den Original-Bytes sub02 [@0x00CB0,@0x00E54) + Uebergang + sub03 [@0x00E62,@0x00FB4)
-  + Warten + Schluss; Ids nur aus 2.3 (30E0 3/10/11/13/16/17, 3070 6). Kein neues Bank-9-Bit: der Ablauf haengt an den Original-
-  Bits (4,194)/(3,75)/(3,180); die 3070-Zeile laeuft einmal je Uebergang (4,194) 0 -> 1 im Besuch.
+- L8-L10: 30E0 in EINEM Besuch = Programm aus den Original-Bytes sub02 [@0x00CB0,@0x00E54) + Uebergang + sub03 [@0x00E62,@0x00F86)
+  + Warten + Ausklang sub03 [@0x00F86,@0x00FC0) (Nacken zurueck, Plc_ret x3, Sleep 0x1E, Cut_auto @0x00FB4, Riegel los, Evt_end);
+  Ids nur aus 2.3 (30E0 3/10/11/13/16/17, 3070 6). Kein neues Bank-9-Bit: der Ablauf haengt an den Original-Bits
+  (4,194)/(3,75)/(3,180); die 3070-Zeile laeuft einmal je Uebergang (4,194) 0 -> 1 im Besuch.
 - Nutzerbefund 15.11. (Ende der Marvin-Szene): der Riegel "Satz ausreden lassen" sass nur am naechsten Message_on; nach msg 13 kommt
-  keines mehr. Jetzt wartet die Szene vor Cut_auto @0x00FB4 auf Zeile UND Stimme (gemessen: main13.wav 270 Bilder, Sleep-Kette 152).
-- T-03/T-04: enemy_ai_common.c re15_birkin_anim_szene (Auftritt 0x80119378 und Szenen-Modus 0x80118d00). Vorher/Nachher-Laeufe
-  50A0, 5080, 5090 bytegleich (Pose-Messschiene RE15_POSE_LOG + state.log).
+  keines mehr. Jetzt wartet die Szene nach der Sleep-Kette von msg 13 und VOR dem Ausklang @0x00F86 auf Zeile UND Stimme
+  (gemessen: main13.wav 270 Bilder, Sleep-Kette 152). Ein erster Bau wartete vor Cut_auto @0x00FB4: dann liefen Marvin und Ada
+  nach ihrem Plc_ret @0x00F90/@0x00F9A schon waehrend msg 13 los.
+- 3070 msg 6 (Nachbesserung 1, B3): davor poltert es im Lager (Port-Bank 0x3E Satz 0x00, vier Schlaege im Takt ROOM3091 sub07
+  @0x01A56..@0x01A9E), Leon dreht den Kopf zur Tuer nach 30E0 (ROOM3070 main00 @0x03322, Mitte (-12400,-19100)).
+- Alte Aufnahmen (Nachbesserung 1, B4): 30E0 msg 3/10/11/13 sind NEUAUF. Solange im Ordner noch die alte Aufnahme liegt (Groesse +
+  FNV-1a-32, re15_story3b_r42_alte_aufnahme), bleibt die Zeile stumm und laeuft mit der Textdauer (2.1). Neue Aufnahme = spielt.
+- T-03/T-04: enemy_ai_common.c re15_birkin_anim_szene (Auftritt 0x80119378 und Szenen-Modus 0x80118d00), NUR STAGE3 (3070, 3080).
+  Nach dem Auftritt setzt der Port die Rate zurueck (der Kampf laeuft wie vor T-03); die Todesphasen tragen a3 0x200 @0x8011a764.
+  Vorher/Nachher-Laeufe 50A0, 5080, 5090 bytegleich (Pose-Messschiene RE15_POSE_LOG + state.log); Labor 50E0/50F1 Posen,
+  Gewichte, Pruefsummen und state.log gleich (nur das Ratenfeld der Todesposen 512 statt 0, zeichengleich). Der ungesperrte Fix
+  haette den Labor-Auftritt 50E0/50F1 geaendert (je 33 Posen, derselbe Fehler wie 3070) - gemeldet, nicht gebaut.
 - Bank 5 in 30E0: FREI 0x14, Messmarke 0x15, Ankunftsbits 0x20..0x22 (30E0-Skripte nutzen nur 5:0..5:6).
 
 ## 5. Gemeinsame Dateien (nur kleine Haken, Kommentar "Runde 42 Story")
