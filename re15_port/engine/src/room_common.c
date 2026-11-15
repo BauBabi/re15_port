@@ -148,11 +148,6 @@ void re15_room_transition_present(void)
     g_actors[RE15_ACTOR_SLOT_PLAYER].sub_state_2 = 0;
     { extern void re15_zopf_r38_kommando0(int); re15_zopf_r38_kommando0(-1); }   /* Runde 38 Spur D: Zopf-Init @0x80031a78-bf4 */
     g_re15_pauseflags = 7;                             /* @0x8001cbc4 ori 0x7 + @0x8001cbe4 sw */
-    /* Runde 41 Spur Monitor, Runde 2 (PORT-SZENE, monitor_r41.c Kopf Punkt 5a): der Raumwechsel des Monitorbilds ist ein
-     * harter Schnitt wie Cut_chg 7 -> 11 -> 9 in ROOM5031 sub03 (@0x011A6 / @0x011EA) - ohne Einblende und ohne den
-     * State-4/5-Freeze der Tuer. Alles davor (Pause-Wort, Spieler-Kommando) laeuft wie bei jeder Transition. */
-    { extern int re15_monitor_r41_harter_schnitt(void);
-      if (re15_monitor_r41_harter_schnitt()) { s_trans_state = 0; return; } }
     re15_fade_config(0, 2, 7, (int16_t)-0x1800, 0);    /* FUN_800217b0(0x200,-6144,7,0) @0x8001cc00 */
     re15_fade_kick(0, 0);                              /* FUN_800216ec(0,0,..) @0x8001cc18 */
     s_trans_state = 4;                                 /* @0x8001cc20-28 */

@@ -13,7 +13,6 @@
  * Matches PSX semantics: 320x240 logical resolution, clear color per frame.
  */
 #include <stdio.h>
-#include <math.h>              /* Runde 41 Spur Monitor R2: fabsf/sqrtf (pc_monitor_look) */
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1355,146 +1354,6 @@ static void pc_monitor_zeilen(const uint8_t quelle[240])
     SDL_RenderCopy(s_renderer, s_mon_tex, NULL, NULL);
 }
 
-/* Runde 41 Spur Monitor, Runde 2 - MONITOR-RAHMEN (PORT-WAHL, Herleitung engine/src/monitor_r41.c Kopf Punkt 5b/5e).
- * Pruefer Runde 1: der Original-Effekt (oben) ist mit blossem Auge nicht zu erkennen, die Szene lief bildschirmfuellend wie
- * vorher. Jetzt laeuft sie IM Bildschirm des Monitors, den Cut 7 gross zeigt:
- *   MERKEN     Cut 7 im Monitor Room: das fertige Bild (Hintergrund + Figuren, vor Blenden/Letterbox/Text) merken.
- *   STANDBILD  Hangar geladen, Figuren noch nicht gesetzt: das gemerkte Bild statt des leeren Hangars (Pruefer R1).
- *   MONITOR    Szene laeuft: gemerktes Bild, darin das eben gezeichnete Szenenbild (mit Zeileneffekt) in die Bildschirmflaeche
- *              (re15_monitor_r41_schirm) gerechnet - leicht entsaettigt, jede zweite Bildzeile (320x240) dunkler, zum Rand
- *              des Schirms hin dunkler. Kein Text, kein Logo.
- *   HALTEN     Ladetakt der Rueckkehr: das zuletzt zusammengesetzte Bild.
- * Letterbox, Blenden und Text zeichnet end_frame danach wie immer - die Balken liegen ueber dem ganzen Monitorbild. */
-#define PC_ML_ENTSAETTIGT  90      /* PORT-WAHL: Anteil Grau 90/256 (~35 %) */
-#define PC_ML_ZEILE_DUNKEL 184     /* PORT-WAHL: dunkle Bildzeile 184/256 (~72 %) */
-#define PC_ML_RAND         230     /* PORT-WAHL: Abdunkeln zur Schirm-Ecke, 230/256 * (du^2+dv^2) (Ecke ~55 %, Kantenmitte ~78 %) */
-static SDL_Texture *s_ml_tex = NULL;
-static uint32_t    *s_ml_still = NULL, *s_ml_szene = NULL, *s_ml_aus = NULL;
-static int          s_ml_w = 0, s_ml_h = 0, s_ml_still_ok = 0, s_ml_aus_ok = 0;
-static unsigned     s_ml_raum = 0;
-
-static float pc_ml_kreuz(float ax, float ay, float bx, float by) { return ax * by - ay * bx; }
-/* Umkehrung der bilinearen Viereck-Abbildung (Ecken a oben links, b oben rechts, c unten rechts, d unten links): (u,v) in 0..1,
- * 0 = ausserhalb. */
-static int pc_ml_uv(float px, float py, const float *q, float *u, float *v)
-{
-    const float ax = q[0], ay = q[1], bx = q[2], by = q[3], cx = q[4], cy = q[5], dx = q[6], dy = q[7];
-    const float ex = bx - ax, ey = by - ay, fx = dx - ax, fy = dy - ay;
-    const float gx = ax - bx + cx - dx, gy = ay - by + cy - dy, hx = px - ax, hy = py - ay;
-    const float k2 = pc_ml_kreuz(gx, gy, fx, fy);
-    const float k1 = pc_ml_kreuz(ex, ey, fx, fy) + pc_ml_kreuz(hx, hy, gx, gy);
-    const float k0 = pc_ml_kreuz(hx, hy, ex, ey);
-    float vv, uu;
-    if (fabsf(k2) < 1e-3f * fabsf(k1)) {
-        if (k1 == 0.0f) return 0;
-        vv = -k0 / k1;
-    } else {
-        float w = k1 * k1 - 4.0f * k0 * k2;
-        if (w < 0.0f) return 0;
-        w = sqrtf(w);
-        vv = (-k1 - w) / (2.0f * k2);
-        if (vv < 0.0f || vv > 1.0f) vv = (-k1 + w) / (2.0f * k2);
-    }
-    {   const float nx = ex + gx * vv, ny = ey + gy * vv;
-        uu = (fabsf(nx) > fabsf(ny)) ? (hx - fx * vv) / nx : (hy - fy * vv) / ny; }
-    if (uu < 0.0f || uu > 1.0f || vv < 0.0f || vv > 1.0f) return 0;
-    *u = uu; *v = vv;
-    return 1;
-}
-
-static int pc_ml_puffer(int *pw, int *ph)
-{
-    SDL_Rect vp; float sx = 1.0f, sy = 1.0f;
-    SDL_RenderGetViewport(s_renderer, &vp);
-    SDL_RenderGetScale(s_renderer, &sx, &sy);
-    const int w = (int)((float)vp.w * sx + 0.5f), h = (int)((float)vp.h * sy + 0.5f);
-    if (w <= 0 || h <= 0) return 0;
-    if (w != s_ml_w || h != s_ml_h || !s_ml_tex) {
-        if (s_ml_tex) SDL_DestroyTexture(s_ml_tex);
-        free(s_ml_still); free(s_ml_szene); free(s_ml_aus);
-        s_ml_tex   = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
-        s_ml_still = (uint32_t *)malloc((size_t)w * (size_t)h * 4u);
-        s_ml_szene = (uint32_t *)malloc((size_t)w * (size_t)h * 4u);
-        s_ml_aus   = (uint32_t *)malloc((size_t)w * (size_t)h * 4u);
-        s_ml_w = w; s_ml_h = h; s_ml_still_ok = s_ml_aus_ok = 0;
-        if (!s_ml_tex || !s_ml_still || !s_ml_szene || !s_ml_aus) { s_ml_w = s_ml_h = 0; return 0; }
-        SDL_SetTextureBlendMode(s_ml_tex, SDL_BLENDMODE_NONE);
-    }
-    *pw = w; *ph = h;
-    return 1;
-}
-
-static void pc_ml_zeigen(const uint32_t *px)
-{
-    SDL_UpdateTexture(s_ml_tex, NULL, px, s_ml_w * 4);
-    SDL_RenderCopy(s_renderer, s_ml_tex, NULL, NULL);
-}
-
-static uint32_t pc_ml_probe(const uint32_t *b, int w, int h, float fx, float fy)
-{
-    int x0 = (int)fx, y0 = (int)fy;
-    if (x0 < 0) x0 = 0; if (y0 < 0) y0 = 0;
-    if (x0 > w - 2) x0 = w - 2; if (y0 > h - 2) y0 = h - 2;
-    const int ax = (int)((fx - (float)x0) * 256.0f), ay = (int)((fy - (float)y0) * 256.0f);
-    const int wx = ax < 0 ? 0 : ax > 256 ? 256 : ax, wy = ay < 0 ? 0 : ay > 256 ? 256 : ay;
-    const uint32_t p00 = b[(size_t)y0 * w + x0], p10 = b[(size_t)y0 * w + x0 + 1];
-    const uint32_t p01 = b[(size_t)(y0 + 1) * w + x0], p11 = b[(size_t)(y0 + 1) * w + x0 + 1];
-    uint32_t r = 0;
-    for (int sh = 0; sh <= 16; sh += 8) {
-        const int c00 = (int)(p00 >> sh) & 0xff, c10 = (int)(p10 >> sh) & 0xff, c01 = (int)(p01 >> sh) & 0xff, c11 = (int)(p11 >> sh) & 0xff;
-        const int o = c00 * (256 - wx) + c10 * wx, u = c01 * (256 - wx) + c11 * wx;
-        r |= (uint32_t)(((o * (256 - wy) + u * wy) >> 16) & 0xff) << sh;
-    }
-    return r;
-}
-
-static void pc_monitor_look(int modus)
-{
-    int w = 0, h = 0;
-    if (modus == RE15_MON41_LOOK_AUS) return;
-    if (!pc_ml_puffer(&w, &h)) return;
-    if (modus == RE15_MON41_LOOK_MERKEN) {
-        if (SDL_RenderReadPixels(s_renderer, NULL, SDL_PIXELFORMAT_ARGB8888, s_ml_still, w * 4) == 0) {
-            s_ml_still_ok = 1; s_ml_raum = re15_monitor_r41_raum(); s_ml_aus_ok = 0;
-        }
-        return;
-    }
-    if (modus == RE15_MON41_LOOK_STANDBILD) { if (s_ml_still_ok) pc_ml_zeigen(s_ml_still); return; }
-    if (modus == RE15_MON41_LOOK_HALTEN)    { if (s_ml_aus_ok) pc_ml_zeigen(s_ml_aus); return; }
-    /* MONITOR */
-    float q[8];
-    if (!s_ml_still_ok || !re15_monitor_r41_schirm(s_ml_raum, q)) return;   /* ohne Standbild/Flaeche: Szene wie gezeichnet */
-    if (SDL_RenderReadPixels(s_renderer, NULL, SDL_PIXELFORMAT_ARGB8888, s_ml_szene, w * 4) != 0) return;
-    for (int i = 0; i < 8; i += 2) { q[i] = q[i] * (float)w / (float)SCREEN_XRES; q[i + 1] = q[i + 1] * (float)h / (float)SCREEN_YRES; }
-    memcpy(s_ml_aus, s_ml_still, (size_t)w * (size_t)h * 4u);
-    float x0 = q[0], x1 = q[0], y0 = q[1], y1 = q[1];
-    for (int i = 2; i < 8; i += 2) {
-        if (q[i] < x0) x0 = q[i]; if (q[i] > x1) x1 = q[i];
-        if (q[i + 1] < y0) y0 = q[i + 1]; if (q[i + 1] > y1) y1 = q[i + 1];
-    }
-    const int ix0 = x0 < 0 ? 0 : (int)x0, iy0 = y0 < 0 ? 0 : (int)y0;
-    const int ix1 = (int)x1 + 1 > w ? w : (int)x1 + 1, iy1 = (int)y1 + 1 > h ? h : (int)y1 + 1;
-    for (int y = iy0; y < iy1; y++) {
-        /* Bildzeile in 320x240-Einheiten: jede zweite logische Zeile dunkler */
-        const int zeile = ((y * SCREEN_YRES) / h) & 1;
-        for (int x = ix0; x < ix1; x++) {
-            float u, v;
-            if (!pc_ml_uv((float)x + 0.5f, (float)y + 0.5f, q, &u, &v)) continue;
-            const uint32_t c = pc_ml_probe(s_ml_szene, w, h, u * (float)(w - 1), v * (float)(h - 1));
-            int r = (int)(c >> 16) & 0xff, g = (int)(c >> 8) & 0xff, b = (int)c & 0xff;
-            const int luma = (r * 77 + g * 150 + b * 29) >> 8;
-            r += ((luma - r) * PC_ML_ENTSAETTIGT) >> 8; g += ((luma - g) * PC_ML_ENTSAETTIGT) >> 8; b += ((luma - b) * PC_ML_ENTSAETTIGT) >> 8;
-            const float du = u - 0.5f, dv = v - 0.5f;
-            int f = 256 - (int)((float)PC_ML_RAND * (du * du + dv * dv));
-            if (zeile) f = (f * PC_ML_ZEILE_DUNKEL) >> 8;
-            r = (r * f) >> 8; g = (g * f) >> 8; b = (b * f) >> 8;
-            s_ml_aus[(size_t)y * w + x] = 0xff000000u | ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
-        }
-    }
-    s_ml_aus_ok = 1;
-    pc_ml_zeigen(s_ml_aus);
-}
-
 void re15_render_end_frame(void)
 {
     /* Step 1: blit the software framebuffer (2D primitives) onto the renderer.
@@ -1814,15 +1673,12 @@ void re15_render_end_frame(void)
     if (beben_vp) SDL_RenderSetViewport(s_renderer, &beben_vp_alt);   /* BEBEN: Balken, Text, Blenden unverschoben */
     s_beben_dy = 0;
 
-    /* Runde 41 Spur Monitor: Monitor-Bild-Effekt nach Hintergrund + Figuren, vor Blenden, Letterbox und Text (pc_monitor_zeilen),
-     * danach (Runde 2) der Monitor-Rahmen (pc_monitor_look: Szene im Bildschirm des Monitors aus Cut 7, PORT-WAHL).
-     * MESSHAKEN RE15_MONITOR_OHNE_LOOK=1 (Alias RE15_MONITOR_OHNE_ZEILEN): beides aus (Beweis, dass die Szenenbilder darunter
-     * bitgleich sind). */
-    {   uint8_t quelle[SCREEN_YRES];
-        if (re15_monitor_r41_zeilen(quelle) && !re15_monitor_r41_ohne_look()) pc_monitor_zeilen(quelle);
-        const int ml = re15_monitor_r41_look();
-        pc_monitor_look(ml);
-        re15_monitor_r41_bild_log((unsigned)g_engine.frame_count, ml); }
+    /* Runde 41 Spur Monitor: Monitor-Bild-Effekt nach Hintergrund + Figuren, vor Blenden, Letterbox und Text (pc_monitor_zeilen).
+     * MESSHAKEN RE15_MONITOR_OHNE_ZEILEN=1: Effekt aus (Beweis, dass die Szenenbilder darunter bitgleich sind). */
+    {   static int s_ohne = -1;
+        uint8_t quelle[SCREEN_YRES];
+        if (s_ohne < 0) { const char *e = getenv("RE15_MONITOR_OHNE_ZEILEN"); s_ohne = (e && *e && *e != '0') ? 1 : 0; }
+        if (re15_monitor_r41_zeilen(quelle) && !s_ohne) pc_monitor_zeilen(quelle); }
 
     /* Step 2.5: ITEM-GET pickup MODAL — the zooming/spinning/flipping item quad, ON TOP of the frozen
      * 3D scene (byte-true FUN_8001db28; gameplay is paused underneath). 2 triangles from the 4 screen

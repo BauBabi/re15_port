@@ -9,19 +9,12 @@
  *              5031 (d): nach der Rueckkehr steht das Sherry-Ereignis bereit (Sherry 0x4B gesetzt, AOT Slot 6, (3,0x2F) == 0).
  *   hangar     (b) 50A0/50A1 nach dem Monitorbild, nach Wiederbetreten und nach Speichern/Laden: kein 0x30/0x2B, keine Szene.
  *   speichern  (b)+(c) Bit 38 ueberlebt re15_savedata_capture/restore; nach dem Laden loest 5030 nicht erneut aus.
- *   Runde 2 (Pruefer SICHT R1/R2) zusaetzlich in "ablauf": beide Wechsel sind harte Schnitte (re15_monitor_r41_harter_schnitt,
- *              ROOM5031 sub03 @0x011A6/@0x011EA ohne Blende); KEIN gezeigtes Hangar-Bild ohne Szenenfiguren (Zeichner-Modus
- *              STANDBILD bis zum Szenenstart, danach MONITOR mit Birkin + Spider-Man im selben Takt) - Abschnitt "pop"; der
- *              Rueckweg kommt einen Takt NACH dem Szenenende (h135 wird gezeigt); Letterbox (1,0x1B) von Cut 7 (@0x01146) bis
- *              zum Ende (@0x01210), Pad-Sperre ohne Luecke; Ladetakt der Rueckkehr HALTEN, danach normales Bild.
  *
  * Gegenproben (Aufruf mit einem Abschnittsnamen + "gegen": Erfolg nur, wenn der Abschnitt ROT ist):
  *   ablauf gegen    mit RE15_KEIN_MONITORBILD=1 (kein Monitorbild)          -> (c) rot
  *   hangar gegen    mit RE15_HANGAR_IM_RAUM=1 (alter Ausloeser im Hangar)   -> (b) rot (Birkin im Hangar)
  *   stelle gegen    Rueckweg 300 Einheiten neben die gespeicherte Stelle      -> (e) rot
  *   sherry gegen    (3,0x2F) = 1 vor dem Monitor Room                         -> (d) rot (kein Sherry-Ereignis bereit)
- *   pop gegen       mit RE15_MONITOR_OHNE_LOOK=1 (Zeichner zeigt den Raum wie Runde 1) -> Aufploppen rot (nur die pop-Pruefungen
- *                   zaehlen)
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -45,8 +38,6 @@ static int fails = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); fprintf(stderr, "\n"); fails++; } \
     else if (s_laut) { fprintf(stderr, "ok:   " __VA_ARGS__); fprintf(stderr, "\n"); } } while (0)
 static int s_laut = 0;
-static int s_pop_fehler = 0;   /* Runde 2: Pruefungen gegen das Aufploppen (Abschnitt "pop") */
-#define CHECK_POP(cond, ...) do { if (!(cond)) s_pop_fehler++; CHECK(cond, __VA_ARGS__); } while (0)
 
 static uint8_t *slurp(const char *path, size_t *out)
 {
@@ -194,16 +185,12 @@ static void t_ablauf(unsigned mon)
     pl->state = 1;
     re15_enemy_ai_run_all(0);
     CHECK(re15_monitor_r41_phase() == RE15_MON41_VOR && g_scd.work_vars[0x0A] == 7 && g_scd.cam_id == 7 && !g_scd.cut_auto_enabled &&
-          re15_game_flag_get(2, 7) && re15_game_flag_get(1, 27),
-          "%04X: Start: Phase %d Schnitt %d/%d Zonen %d Pad-Sperre %d Letterbox %d (Soll VOR, Cut 7 @0x01194, Zonen aus, (2,7) @0x01142, (1,0x1B) @0x01146)",
+          re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27),
+          "%04X: Start: Phase %d Schnitt %d/%d Zonen %d Pad-Sperre %d Letterbox %d (Soll VOR, Cut 7 @0x01194, Zonen aus, (2,7) @0x01142, keine (1,0x1B))",
           mon, re15_monitor_r41_phase(), g_scd.work_vars[0x0A], g_scd.cam_id, g_scd.cut_auto_enabled, re15_game_flag_get(2, 7),
           re15_game_flag_get(1, 27));
-    int takte = 1, merken = 0;
-    while (!g_room_change.pending && takte < 100) {
-        re15_enemy_ai_run_all(0); takte++;
-        if (!g_room_change.pending && re15_monitor_r41_look() == RE15_MON41_LOOK_MERKEN) merken++;
-    }
-    CHECK(merken >= 18, "%04X: Standbild von Cut 7 nur in %d Takten gemerkt", mon, merken);
+    int takte = 1;
+    while (!g_room_change.pending && takte < 100) { re15_enemy_ai_run_all(0); takte++; }
     CHECK(takte == 20 + 1, "%04X: Cut 7 gehalten %d Takte (Soll 20 = Sleep @0x01196, + Starttakt)", mon, takte);
     CHECK(g_room_change.pending && g_room_change.room_id == hangar && g_room_change.target_cut == 12 && g_room_change.x == -12117 &&
           g_room_change.z == 4472 && g_room_change.yaw_4096 == 1024 && re15_game_flag_get(RE15_MON41_BANK, RE15_MON41_BIT),
@@ -212,17 +199,7 @@ static void t_ablauf(unsigned mon)
           (int)g_room_change.yaw_4096, re15_game_flag_get(RE15_MON41_BANK, RE15_MON41_BIT), hangar);
     /* Hangar: Monitorbild */
     int starts = 0, ph_alt = 0, maxph = 0, bild_takte = 0, zeilen_an = 0;
-    int standbild = 0, monitor = 0, leer_gezeigt = 0, ende_takt = -1, rueck_takt = -1, luecke = 0;
     if (wechsel()) {
-        /* harter Schnitt (Kopf Punkt 5a): die Marke steht nach dem Laden und gehoert genau einem re15_room_transition_present */
-        CHECK(re15_monitor_r41_harter_schnitt() == 1 && re15_monitor_r41_harter_schnitt() == 0,
-              "%04X: Wechsel in den Hangar ist kein harter Schnitt (ROOM5031 sub03 Cut 7 -> 11 @0x011A6 ohne Blende)", hangar);
-        /* Ladetakt: der Raum ist da, die Figuren noch nicht - der Zeichner zeigt das Standbild (Pruefer R1) */
-        {   const int lk = re15_monitor_r41_look();
-            if (lk == RE15_MON41_LOOK_STANDBILD) standbild++;
-            else if (zahl(0x30u) == 0) leer_gezeigt++; }
-        CHECK(re15_game_flag_get(2, 7) && re15_game_flag_get(1, 27), "%04X: Ladetakt ohne Pad-Sperre %d / Letterbox %d", hangar,
-              re15_game_flag_get(2, 7), re15_game_flag_get(1, 27));
         CHECK(re15_monitor_r41_bild() && re15_game_flag_get(1, 0x1E) && g_scd.work_vars[0x0A] == 12 && !g_scd.cut_auto_enabled,
               "%04X: Monitorbild: bild %d Effekt %d Schnitt %d Zonen %d (Soll 1, 1 @0x011A8, 12, 0)", hangar, re15_monitor_r41_bild(),
               re15_game_flag_get(1, 0x1E), g_scd.work_vars[0x0A], g_scd.cut_auto_enabled);
@@ -233,19 +210,6 @@ static void t_ablauf(unsigned mon)
             if (ph == 1 && ph_alt == 0) starts++;
             if (ph > maxph) maxph = ph;
             ph_alt = ph;
-            /* Runde 2: was der Zeichner nach diesem Takt zeigt (Phase ENDE und BILD) */
-            if (!g_room_change.pending) {
-                const int lk = re15_monitor_r41_look();
-                if (lk == RE15_MON41_LOOK_STANDBILD) standbild++;
-                else if (lk == RE15_MON41_LOOK_MONITOR) {
-                    if (monitor == 0 && (zahl(0x30u) != 1 || zahl(0x2Bu) != 1)) leer_gezeigt++;   /* erstes Monitorbild: beide da */
-                    monitor++;
-                }
-                if (lk != RE15_MON41_LOOK_STANDBILD && zahl(0x30u) == 0) leer_gezeigt++;
-                if (!re15_game_flag_get(2, 7) || !re15_game_flag_get(1, 27)) luecke++;
-            }
-            if (ph == 7 && ende_takt < 0) ende_takt = bild_takte;
-            if (g_room_change.pending && rueck_takt < 0) rueck_takt = bild_takte;
             uint8_t q[240];
             if (re15_game_flag_get(1, 0x1E) && re15_monitor_r41_zeilen(q)) zeilen_an++;
             int fremd = 0;
@@ -255,12 +219,6 @@ static void t_ablauf(unsigned mon)
         }
     }
     CHECK(starts == 1 && maxph == 7, "%04X: Szene %d-mal gestartet, hoechste Phase %d (Soll 1, 7 = frei)", hangar, starts, maxph);
-    CHECK_POP(leer_gezeigt == 0 && standbild >= 1 && standbild <= 3 && monitor >= 136,
-              "%04X (R1): %d gezeigte Hangar-Bilder ohne Szenenfiguren, Standbild %d Takte, Monitorbild %d Takte (Soll 0, 1..3, >= 136)",
-              hangar, leer_gezeigt, standbild, monitor);
-    CHECK(rueck_takt == ende_takt + 1, "%04X: Rueckweg im Takt %d, Szenenende im Takt %d (Soll einen Takt danach: h135 wird gezeigt)",
-          hangar, rueck_takt, ende_takt);
-    CHECK(luecke == 0, "%04X: %d Takte im Monitorbild ohne Pad-Sperre (2,7) oder Letterbox (1,0x1B)", hangar, luecke);
     CHECK(zeilen_an > 130, "%04X: Monitor-Bild-Effekt nur %d Takte an (Soll die ganze Szene)", hangar, zeilen_an);
     CHECK(g_room_change.pending && g_room_change.room_id == mon && g_room_change.target_cut == 9 && !re15_game_flag_get(1, 0x1E),
           "%04X: Rueckweg: pending %d Raum %04X Schnitt %d Effekt %d (Soll %04X, 9 @0x011EA, 0 @0x011E6)", hangar, g_room_change.pending,
@@ -271,17 +229,8 @@ static void t_ablauf(unsigned mon)
         CHECK(re15_monitor_r41_phase() == RE15_MON41_NACH && g_scd.work_vars[0x0A] == 9 && !g_scd.cut_auto_enabled,
               "%04X: Rueckkehr: Phase %d Schnitt %d Zonen %d (Soll NACH, 9, aus)", mon, re15_monitor_r41_phase(), g_scd.work_vars[0x0A],
               g_scd.cut_auto_enabled);
-        CHECK(re15_monitor_r41_harter_schnitt() == 1 && re15_monitor_r41_look() == RE15_MON41_LOOK_HALTEN &&
-              re15_game_flag_get(2, 7) && re15_game_flag_get(1, 27),
-              "%04X: Rueckkehr nicht hart / Ladetakt nicht gehalten (Modus %d) / Pad-Sperre %d / Letterbox %d", mon,
-              re15_monitor_r41_look(), re15_game_flag_get(2, 7), re15_game_flag_get(1, 27));
-        int n = 0, balken = 0;
-        while (re15_monitor_r41_phase() != RE15_MON41_AUS && n < 200) {
-            re15_enemy_ai_run_all(0); n++;
-            if (n == 1) CHECK(re15_monitor_r41_look() == RE15_MON41_LOOK_AUS, "%04X: Monitorwand nach dem Ladetakt nicht normal gezeichnet", mon);
-            if (re15_monitor_r41_phase() == RE15_MON41_NACH && re15_game_flag_get(1, 27) && re15_game_flag_get(2, 7)) balken++;
-        }
-        CHECK(balken == 49, "%04X: Monitorwand %d von 49 Takten mit Letterbox + Pad-Sperre (ROOM5031 sub03 bis @0x0120C/@0x01210)", mon, balken);
+        int n = 0;
+        while (re15_monitor_r41_phase() != RE15_MON41_AUS && n < 200) { re15_enemy_ai_run_all(0); n++; }
         CHECK(n == 50, "%04X: Monitorwand %d Takte (Soll 50 = Sleep @0x011F8)", mon, n);
     }
     pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -387,14 +336,9 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "alles") || !strcmp(teil, "effekt")) t_effekt();
     if (!strcmp(teil, "alles") || !strcmp(teil, "ablauf") || !strcmp(teil, "stelle")) { t_ablauf(0x5030u); t_ablauf(0x5031u); }
     if (!strcmp(teil, "sherry")) t_ablauf(0x5031u);
-    if (!strcmp(teil, "pop")) { t_ablauf(0x5030u); t_ablauf(0x5031u); }
     if (!strcmp(teil, "alles") || !strcmp(teil, "hangar")) t_hangar();
     if (!strcmp(teil, "alles") || !strcmp(teil, "speichern")) t_speichern();
     free(s_buf);
-    if (gegen && !strcmp(teil, "pop")) {
-        fprintf(stderr, "GEGENPROBE pop: %d Aufplopp-Pruefung(en) rot -> %s\n", s_pop_fehler, s_pop_fehler ? "Riegel sieht den Befund (OK)" : "BLIND");
-        return s_pop_fehler ? 0 : 1;
-    }
     if (gegen) {
         fprintf(stderr, "GEGENPROBE %s: %d Pruefung(en) rot -> %s\n", teil, fails, fails ? "Riegel sieht den Befund (OK)" : "BLIND");
         return fails ? 0 : 1;

@@ -57,35 +57,6 @@
  *    ROOM5000 Door slot 0 @0x007FE -> 5030 nur bei Ck(3,0x4C)==0 (sonst @0x00822 -> 5110), ROOM4070 Door slot 1
  *    @0x011FE -> 50A0 nur bei Ck(3,0x4C)==0. Das Bit wird beim Wechsel in den Hangar gesetzt (Rueckkehr = erneuter
  *    Raumeintritt loest nicht wieder aus) und wird mit g_game.flags gespeichert.
- *
- * 5. RUNDE 2 (Pruefer SICHT, R1 "Figuren ploppen auf", R2 "vom Monitor-Look ist nichts zu sehen"):
- *    a) HARTER SCHNITT statt Schwarz + Einblende. Im Original schneidet ROOM5031 sub03 hart: Cut_chg 7 @0x01194 -> Cut_chg 11
- *       @0x011A6 (Monitorbild) -> Cut_chg 9 @0x011EA, ohne Blende dazwischen. Der Port-Raumwechsel des Monitorbilds laeuft deshalb
- *       ohne die Tuer-Einblende (room_common.c re15_room_transition_present: kein FUN_800217b0/FUN_800216ec-Kick, kein
- *       State-4/5-Freeze); alles andere des State-3-Rumpfs bleibt (re15_monitor_r41_harter_schnitt).
- *    b) KEIN LEERER HANGAR. Die Szene setzt ihre Figuren erst im zweiten KI-Takt nach dem Laden (birkin_formen.c
- *       re15_bf_raumtick: erster Takt Raum-Reset, zweiter bf_hangar_starten). Bis dahin zeigt der Zeichner das gemerkte Bild
- *       von Cut 7 (LOOK_STANDBILD), dann sofort das erste Szenenbild mit Birkin und Spider-Man - wie im abgenommenen Stand,
- *       wo Cut 12 im selben Takt wie die Figuren kam.
- *    c) LETZTES SZENENBILD h135: der Rueckweg wird erst im Takt NACH bf_hangar_beenden angefordert (Phase ENDE), sonst
- *       zeigte der Ladetakt des Monitor Room schon statt h135 (Runde 1: h135 fehlte).
- *    d) LETTERBOX wie das Original: ROOM5031 sub03 setzt (1,0x1B) @0x01146 VOR Cut 7 und loescht sie erst @0x01210 nach
- *       Cut_chg 1 / Cut_auto @0x01208/@0x0120A - die Balken stehen also ueber Cut 7, dem Monitorbild und Cut 9 und fahren erst
- *       beim Spieler zurueck. Der Raumlader loescht Zone 1 untere 16 Bit (@0x80039710-30, 0x1B gehoert dazu) - deshalb nach
- *       jedem der beiden Wechsel neu gesetzt (re15_monitor_r41_raum_geladen), ebenso die Pad-Sperre (2,7) (Runde 1: zwischen
- *       Laden und erstem Monitor-Takt offen). Am Szenenende loescht bf_riegel (1,27)/(2,7) - re15_monitor_r41_szene_ende setzt
- *       sie im selben Takt wieder, sonst sackte der Balken-Zaehler (FUN_80021a0c, -0x10 je Bild) kurz ab.
- *    e) MONITOR-LOOK = PORT-WAHL (render_pc.c pc_monitor_look). Der Original-Effekt (Punkt 1) bleibt, ist aber mit blossem
- *       Auge nicht zu erkennen (+-1 Zeile von 240, Pruefer-Messung Runde 1). RE2 hat kein sichtbareres Vorbild: dieselbe
- *       Zeilen-Funktion (RE2 FUN_8002ab84, Sinus-Tabelle @0x8009d9f4 = dieselben 256 Bytes wie RE1.5 @0x80072d70), einziger
- *       Aufrufer FUN_8002aa6c @0x8002ab04 (Wackel-Zweig), kein Monitor-Rahmen. Deshalb zeigt der Port die Szene IM Bildschirm
- *       des Monitors aus Cut 7 (das Standbild, das der Spieler gerade gesehen hat): das fertige Szenenbild (Hintergrund +
- *       Figuren + Zeileneffekt, vor Letterbox/Text) verkleinert in die weisse Bildschirmflaeche, dazu Bildzeilen, leicht
- *       entsaettigt und zum Rand des Schirms hin dunkler. Kein Text, kein Logo. Die Flaeche (re15_monitor_r41_schirm) ist am
- *       Hintergrundbild ROOM503x Cut 7 gemessen (Kopf der Tabelle k_schirm). Die Szene selbst bleibt unveraendert: mit
- *       RE15_MONITOR_OHNE_LOOK=1 sind ihre Bilder bitgleich zum abgenommenen Stand 23f9da5c9 (Beweis im Bericht).
- *    f) SICHERUNG (Pruefer STORY, Robustheit): startet die Szene im Hangar nicht binnen MON_START_MAX Takten (z. B. Bank
- *       nicht ladbar), geht es ohne Szene zurueck; laeuft das Monitorbild laenger als MON_BILD_MAX Takte, ebenso. PORT-WAHL.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -96,7 +67,6 @@
 #include "re15_room.h"
 #include "re15_scd.h"
 #include "re15_enemy_ai.h"
-#include "re15_birkin_formen.h"   /* re15_bf_hangar_phase (Runde 2: Standbild bis zum Szenenstart) */
 
 extern int  re15_game_flag_get(uint8_t zone, uint8_t idx);
 extern void re15_game_flag_set(uint8_t zone, uint8_t idx, int value);
@@ -111,10 +81,6 @@ extern int  re15_room_transition_active(void);
 #define MON_BILD_X           (-12117)   /* ROOM5030 Door slot 3 @0x00EC6, Nutzlast pos */
 #define MON_BILD_Z           4472
 #define MON_BILD_GIER        1024
-/* PORT-WAHL (Kopf Punkt 5f, Sicherung, keine Original-Zahl): die Szene startet regulaer im 2. Takt nach dem Laden und dauert
- * BF_VORLAUF + 136 Takte (birkin_formen.c); beide Grenzen liegen weit darueber und greifen nur, wenn etwas fehlt. */
-#define MON_START_MAX        60
-#define MON_BILD_MAX         900
 
 static struct {
     int      phase, t;
@@ -122,26 +88,7 @@ static struct {
     int32_t  x, y, z;              /* Stelle des Spielers beim Ausloesen */
     int16_t  gier;
     int      cut;                  /* Schnitt des Spielers beim Ausloesen (work_vars[0x0A]) */
-    int      hart;                 /* 1 = der naechste re15_room_transition_present ist ein Monitor-Schnitt (Kopf Punkt 5a) */
 } s_m;
-
-int re15_monitor_r41_ohne_look(void)
-{
-    static int s = -1;
-    if (s < 0) {
-        const char *e = getenv("RE15_MONITOR_OHNE_LOOK");
-        if (!(e && *e && *e != '0')) e = getenv("RE15_MONITOR_OHNE_ZEILEN");   /* Alias aus Runde 1 */
-        s = (e && *e && *e != '0') ? 1 : 0;
-    }
-    return s;
-}
-
-/* Kopf Punkt 5d: Letterbox wie ROOM5031 sub03 (1,0x1B) @0x01146 .. @0x01210 - nicht im Messhaken (Bilder wie 23f9da5c9). */
-static void mon_balken(int an)
-{
-    if (an && re15_monitor_r41_ohne_look()) return;
-    re15_game_flag_set(1, 0x1B, an ? 1 : 0);
-}
 
 static int mon_raum(unsigned r)    { return (r & 0xFFFEu) == 0x5030u; }
 static int hangar_raum(unsigned r) { return (r & 0xFFFEu) == 0x50A0u; }
@@ -167,43 +114,13 @@ void re15_monitor_r41_stelle(int32_t *x, int32_t *y, int32_t *z, int16_t *gier, 
 
 int re15_monitor_r41_bild(void)
 {
-    return (s_m.phase == RE15_MON41_BILD || s_m.phase == RE15_MON41_ENDE) && hangar_raum(g_current_room_id);
+    return s_m.phase == RE15_MON41_BILD && hangar_raum(g_current_room_id);
 }
 
 int re15_monitor_r41_unterwegs(void)
 {
-    return (s_m.phase == RE15_MON41_HIN || s_m.phase == RE15_MON41_BILD || s_m.phase == RE15_MON41_ENDE ||
-            s_m.phase == RE15_MON41_ZURUECK) && hangar_raum(g_current_room_id);   /* HIN: scd_room_setup.c markiert die Karte schon beim Laden */
-}
-
-unsigned re15_monitor_r41_raum(void) { return s_m.raum; }
-
-int re15_monitor_r41_harter_schnitt(void)
-{
-    const int h = s_m.hart;
-    s_m.hart = 0;
-    return h;
-}
-
-int re15_monitor_r41_look(void)
-{
-    if (re15_monitor_r41_ohne_look()) return RE15_MON41_LOOK_AUS;
-    switch (s_m.phase) {
-    case RE15_MON41_VOR:
-        return (g_current_room_id == s_m.raum && s_m.t > 0) ? RE15_MON41_LOOK_MERKEN : RE15_MON41_LOOK_AUS;
-    case RE15_MON41_HIN:
-    case RE15_MON41_BILD:
-        if (!hangar_raum(g_current_room_id)) return RE15_MON41_LOOK_AUS;
-        return (re15_bf_hangar_phase() == 0) ? RE15_MON41_LOOK_STANDBILD : RE15_MON41_LOOK_MONITOR;   /* 0 = BF_H_WARTEN */
-    case RE15_MON41_ENDE:
-        return hangar_raum(g_current_room_id) ? RE15_MON41_LOOK_MONITOR : RE15_MON41_LOOK_AUS;
-    case RE15_MON41_ZURUECK:
-        return RE15_MON41_LOOK_HALTEN;
-    case RE15_MON41_NACH:
-        return (s_m.t == 0) ? RE15_MON41_LOOK_HALTEN : RE15_MON41_LOOK_AUS;
-    default:
-        return RE15_MON41_LOOK_AUS;
-    }
+    return (s_m.phase == RE15_MON41_HIN || s_m.phase == RE15_MON41_BILD || s_m.phase == RE15_MON41_ZURUECK) &&
+           hangar_raum(g_current_room_id);   /* HIN: scd_room_setup.c markiert die Karte schon beim Laden */
 }
 
 /* Cut_chg-Zwilling (LAB_800402a0: alter Cut @0x800402c0/@0x800402e4, work_vars[0x0C] @0x800402ec, work_vars[0x0A]
@@ -236,8 +153,7 @@ static void mon_log(const char *was)
 static void mon_abbruch(const char *grund)
 {
     re15_game_flag_set(1, 0x1E, 0);
-    if (s_m.phase == RE15_MON41_VOR || s_m.phase == RE15_MON41_NACH) { re15_game_flag_set(2, 7, 0); mon_balken(0); }
-    s_m.hart = 0;
+    if (s_m.phase == RE15_MON41_VOR || s_m.phase == RE15_MON41_NACH) re15_game_flag_set(2, 7, 0);
     mon_log(grund);
     s_m.phase = RE15_MON41_AUS;
 }
@@ -267,7 +183,6 @@ void re15_monitor_r41_tick(void)
         s_m.x = pl->x; s_m.y = pl->y; s_m.z = pl->z; s_m.gier = pl->rot_y;
         s_m.cut = (int)g_scd.work_vars[0x0A];
         re15_game_flag_set(2, 7, 1);                                /* ROOM5031 sub03 @0x01142 */
-        mon_balken(1);                                              /* @0x01146 (Kopf Punkt 5d) */
         mon_cut_chg(MON_SCHNITT_MONITOR);                           /* @0x01194 */
         s_m.phase = RE15_MON41_VOR; s_m.t = 0;
         mon_log("Monitor Start");
@@ -286,27 +201,13 @@ void re15_monitor_r41_tick(void)
     case RE15_MON41_BILD:
         if (!hangar_raum(g_current_room_id)) { mon_abbruch("Abbruch (Raum verlassen im Monitorbild)"); return; }
         if (s_m.t++ == 0) {
-            /* erster KI-Takt nach dem Laden (harter Schnitt, Kopf Punkt 5a): nur die Szene - die Raumfiguren (Affen) aus. Die
-             * Szene setzt ihre Figuren im naechsten Takt (birkin_formen.c re15_bf_raumtick); bis dahin zeigt der Zeichner das
-             * Standbild von Cut 7 (Punkt 5b). */
+            /* erstes Bild nach der Einblende (die KI laeuft erst danach, room_common.c re15_room_transition_tick): nur die
+             * Szene - die Raumfiguren (Affen) aus, Pad-Sperre wieder (der Raumwechsel loescht das Pause-Wort @0x8001ca44). */
             for (int i = RE15_ACTOR_SLOT_PLAYER + 1; i < RE15_ACTOR_MAX; i++) g_actors[i].active = 0;
             re15_game_flag_set(2, 7, 1);
             g_scd.cut_auto_enabled = 0;
             mon_log("Monitorbild");
         }
-        /* Sicherung (Punkt 5f, PORT-WAHL) */
-        if ((re15_bf_hangar_phase() == 0 && s_m.t > MON_START_MAX) || s_m.t > MON_BILD_MAX) {
-            mon_log("Sicherung: Szene startet/endet nicht, zurueck");
-            re15_monitor_r41_szene_ende();
-        }
-        return;
-    case RE15_MON41_ENDE:
-        if (!hangar_raum(g_current_room_id)) { mon_abbruch("Abbruch (Raum verlassen nach dem Monitorbild)"); return; }
-        /* Kopf Punkt 5c: h135 ist gezeigt - jetzt zurueck */
-        re15_game_flag_set(1, 0x1E, 0);                             /* @0x011E6 */
-        re15_room_request_change(s_m.raum, s_m.x, s_m.y, s_m.z, s_m.gier, MON_SCHNITT_WAND);
-        s_m.phase = RE15_MON41_ZURUECK; s_m.t = 0;
-        mon_log("Monitorbild Ende, zurueck");
         return;
     case RE15_MON41_NACH:
         if (g_current_room_id != s_m.raum) { mon_abbruch("Abbruch (Raumwechsel nach dem Monitorbild)"); return; }
@@ -315,7 +216,6 @@ void re15_monitor_r41_tick(void)
         mon_cut_chg(s_m.cut);                                       /* @0x01208 (Schnitt des Spielers statt Cut 1) */
         g_scd.cut_auto_enabled = 1;                                 /* Cut_auto 1 @0x0120A */
         re15_game_flag_set(2, 7, 0);                                /* @0x0120C */
-        mon_balken(0);                                              /* @0x01210 (Kopf Punkt 5d) */
         s_m.phase = RE15_MON41_AUS; s_m.t = 0;
         mon_log("Monitor Ende");
         return;
@@ -333,10 +233,7 @@ void re15_monitor_r41_raum_geladen(void)
         g_scd.cut_auto_enabled = 0;                                 /* Cut 12 halten (Zonen aus wie Cut_chg @0x800402d4) */
         /* Monitor-Bild-Effekt an (Form ROOM5031 sub03 @0x011A8 Set(1,0x1E)=1) - ERST HIER: der Raumlader loescht die unteren 16
          * Bit von Zone 1 (FUN_800396fc @0x80039710-30, scd_room_setup.c), ein vorher gesetztes 0x1E ueberlebte den Wechsel nicht. */
-        if (!re15_monitor_r41_ohne_look()) re15_game_flag_set(1, 0x1E, 1);
-        re15_game_flag_set(2, 7, 1);                                /* Kopf Punkt 5d: Pad-Sperre ab dem Ladetakt */
-        mon_balken(1);                                              /* (1,0x1B) @0x01146 bleibt bis @0x01210 (Punkt 5d) */
-        s_m.hart = 1;                                               /* harter Schnitt Cut 7 -> Monitorbild (@0x011A6, Punkt 5a) */
+        re15_game_flag_set(1, 0x1E, 1);
         mon_log("Hangar geladen");
         return;
     }
@@ -344,28 +241,20 @@ void re15_monitor_r41_raum_geladen(void)
         if (g_current_room_id != s_m.raum) { mon_abbruch("Abbruch (falscher Raum statt Monitor Room)"); return; }
         s_m.phase = RE15_MON41_NACH; s_m.t = 0;
         g_scd.cut_auto_enabled = 0;                                 /* Cut 9 halten */
-        re15_game_flag_set(2, 7, 1);                                /* Kopf Punkt 5d */
-        mon_balken(1);
-        s_m.hart = 1;                                               /* harter Schnitt Monitorbild -> Cut 9 (@0x011EA, Punkt 5a) */
         mon_log("zurueck im Monitor Room");
         return;
     }
-    if (s_m.phase == RE15_MON41_VOR || s_m.phase == RE15_MON41_BILD || s_m.phase == RE15_MON41_ENDE ||
-        s_m.phase == RE15_MON41_NACH)
+    if (s_m.phase == RE15_MON41_VOR || s_m.phase == RE15_MON41_BILD || s_m.phase == RE15_MON41_NACH)
         mon_abbruch("Abbruch (Raumwechsel)");
 }
 
 void re15_monitor_r41_szene_ende(void)
 {
     if (s_m.phase != RE15_MON41_BILD) return;
-    /* Kopf Punkt 5c/5d: bf_riegel(0) hat eben (2,7)/(1,27) geloescht - das Monitorbild haelt beide bis @0x0120C/@0x01210;
-     * der Rueckweg folgt im naechsten Takt (Phase ENDE), damit das letzte Szenenbild h135 noch gezeigt wird. Den Zeileneffekt
-     * (1,0x1E) loescht erst der Rueckweg (@0x011E6), h135 traegt ihn also noch. */
-    re15_game_flag_set(2, 7, 1);
-    mon_balken(1);
-    g_scd.cut_auto_enabled = 0;                                     /* bf_hangar_beenden gibt die Zonen frei - Cut 12 halten */
-    s_m.phase = RE15_MON41_ENDE; s_m.t = 0;
-    mon_log("Szene Ende, letztes Bild");
+    re15_game_flag_set(1, 0x1E, 0);                                 /* @0x011E6 */
+    re15_room_request_change(s_m.raum, s_m.x, s_m.y, s_m.z, s_m.gier, MON_SCHNITT_WAND);
+    s_m.phase = RE15_MON41_ZURUECK; s_m.t = 0;
+    mon_log("Monitorbild Ende, zurueck");
 }
 
 /* ---- Monitor-Bild-Effekt (Punkt 1 des Kopfs) ---------------------------------------------------------------------- */
@@ -414,44 +303,4 @@ int re15_monitor_r41_zeilen(uint8_t quelle[240])
     s_phase = (uint8_t)(s_phase + MON_PHASE_SCHRITT);                            /* @0x800207e0 */
     re15_monitor_r41_zeilen_phase(s_phase, quelle);
     return 1;
-}
-
-/* ---- Bildschirm des Monitors in Cut 7 (Kopf Punkt 5e, PORT-WAHL) --------------------------------------------------------
- * Gemessen (Runde 2, kein Original-Wert, sondern die Lage im Hintergrundbild): Framedump F25 nach dem Debug-Sprung in ROOM5030 und
- * ROOM5031, Cut 7 (RE15_WINDOW_SCALE=1, 320x240), Helligkeitsprofil (77R+150G+29B)/256 quer ueber die Kanten der weissen
- * Bildschirmflaeche (Flaeche ~231, Rahmen 0..80, Fase oben/rechts 115..185):
- *   links  Zeile 60: x72 0 / x73 129 / x74 237;  Zeile 165: x69 13 / x70 174 / x71 237   -> 73.5 oben, 70.5 unten
- *   rechts Zeile 60: x233 223 / x234 175;        Zeile 165: x236 230 / x237 238 (Fase)  -> 233.5 oben, 236.5 unten
- *   oben   Spalte 160: y52 134 / y53 173 / y54 230 (Spalte 230: y53 137 / y54 221)      -> 53.5
- *   unten  Spalte 160: y168 228 / y169 111;  Spalte 75: y167 231 / y168 118              -> 168.5
- * Beide Raeume zeigen in Cut 7 denselben Monitor (gleiche Werte). */
-static const float k_schirm[8] = { 73.5f, 53.5f,  233.5f, 53.5f,  236.5f, 168.5f,  70.5f, 168.5f };
-
-int re15_monitor_r41_schirm(unsigned raum, float ecken[8])
-{
-    if (!mon_raum(raum)) return 0;
-    memcpy(ecken, k_schirm, sizeof k_schirm);
-    return 1;
-}
-
-/* Messzeile (RE15_HANGAR_LOG, kein Spielverhalten): je gezeichnetem Bild im Hangar waehrend des Monitorbilds, was der Zeichner zeigt
- * (Modus re15_monitor_r41_look) und ob die Szenenfiguren da sind - Riegel gegen das Aufploppen (Pruefer SICHT Runde 1, R1). */
-void re15_monitor_r41_bild_log(unsigned bild, int modus)
-{
-#ifdef RE15_PLATFORM_PC
-    static int an = -1;
-    if (an < 0) { const char *e = getenv("RE15_HANGAR_LOG"); an = (e && *e && *e != '0') ? 1 : 0; }
-    if (!an || !hangar_raum(g_current_room_id)) return;
-    if (s_m.phase != RE15_MON41_BILD && s_m.phase != RE15_MON41_ENDE) return;
-    int b = 0, sp = 0;
-    for (int i = RE15_ACTOR_SLOT_PLAYER + 1; i < RE15_ACTOR_MAX; i++) {
-        if (!g_actors[i].active) continue;
-        if (g_actors[i].type == 0x30u) b++;
-        if (g_actors[i].type == 0x2Bu) sp++;
-    }
-    fprintf(stderr, "[monitor-bild] F%u ROOM%04X Phase %d Modus %d Birkin %d Spider-Man %d Szenenphase %d Letterbox %d\n", bild,
-            (unsigned)g_current_room_id, s_m.phase, modus, b, sp, re15_bf_hangar_phase(), re15_game_flag_get(1, 0x1B));
-#else
-    (void)bild; (void)modus;
-#endif
 }
