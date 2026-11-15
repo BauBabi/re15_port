@@ -582,15 +582,25 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
              * Breite; schwanz_r8.json felder.flanke_fleisch): Flanke und Ruecken tragen das Bauchfeld C1, grau (487) bleibt nur die Nadel von
              * Glied 22 und die 8 Wurzelflaechen von Glied 16 im Rumpf. Gemessen am Asset 92a58f26 (Kette scratchpad schwanz_r9/r3/k1, Protokoll
              * 7_v8.json klassen): auf 493 33 / 77 / 88 / 77 / 77 / 77 / 88, auf 495 14 / 0 / ... / 0, Rest 487 (Glied 16: 8, Glied 22: 33);
-             * Ecken unveraendert. Gegenprobe Runde 8e a48e2ce5: rot (493 12 / 28 / 32 / 28 / 28 / 28 / 32). */
+             * Ecken unveraendert. Gegenprobe Runde 8e a48e2ce5: rot (493 12 / 28 / 32 / 28 / 28 / 28 / 32).
+             * Runde 8g (Nutzer 15.11. "NUR DIE UNTERSEITE WAR KOMISCH MIT DEN ABSCHNITTEN!!!!" und "Die Oberseite des Schwanzes ist wieder eher
+             * rot als dunkel ... Das war doch vorher gut"): Oberseite, Ruecken, Flanken und Nadel wie 8c d31f9534 (Grau-Feld je Glied auf 487,
+             * Ringe RB u 93-100 v 10-17 auf 493 an den Fugen ausserhalb des Bauchs), Bauch inklusive der Fugen einheitlich im Feld C1 u 56-65
+             * v 51-55 (493). Gemessen am Asset 8g (riegel_schwanz_r8 R8h): auf 493 26 / 56 / 60 / 56 / 56 / 56 / 46 (= 8c), davon Ring RB
+             * 14 / 28 / 28 / 28 / 28 / 28 / 14 und Feld C1 12 / 28 / 32 / 28 / 28 / 28 / 32, keine anderen; auf 495 14 / 0 / ... / 0, Rest 487
+             * (= 8c: 15 / 21 / 28 / 21 / 21 / 21 / 75). Die Zeilen-Zahlen allein unterscheiden 8g nicht von 8c, deshalb zaehlt der Test die Felder.
+             * Gegenproben: 8c d31f9534 rot (RB 22 / 44 / 44 / 44 / 44 / 44 / 22, 493-Flaechen ausserhalb RB und C1 4 / 6 / 8 / 6 / 9 / 6 / 15),
+             * 8f 92a58f26 rot (493 33 / 77 / 88 / 77 / 77 / 77 / 88), 8e a48e2ce5 rot (RB 0). */
             static const int ECKEN[7] = {46, 68, 79, 68, 68, 68, 112};
             static const int AUF495[7] = {14, 0, 0, 0, 0, 0, 0};
-            static const int AUF493[7] = {33, 77, 88, 77, 77, 77, 88};
+            static const int AUF493[7] = {26, 56, 60, 56, 56, 56, 46};
+            static const int AUF493_RB[7] = {14, 28, 28, 28, 28, 28, 14};
+            static const int AUF493_C1[7] = {12, 28, 32, 28, 28, 28, 32};
             CHECK(b->tri_vertex_count == ECKEN[m - 16], "%s: Schwanzglied %d: %d Ecken statt %d (V8 Runde 8b)", name, m,
                   b->tri_vertex_count, ECKEN[m - 16]);
             int auf487 = zeile_zahl(b, 487), auf495 = zeile_zahl(b, Z_X3), auf493 = zeile_zahl(b, 493);
             CHECK(auf495 == AUF495[m - 16] && auf493 == AUF493[m - 16] && auf487 + auf495 + auf493 == b->quad_count + b->triangle_count,
-                  "%s: Schwanzglied %d: %d Flaechen auf 495 (Soll %d), %d auf 493 (Soll %d), %d auf 487, %d gesamt (V8 Runde 8f)", name, m,
+                  "%s: Schwanzglied %d: %d Flaechen auf 495 (Soll %d), %d auf 493 (Soll %d), %d auf 487, %d gesamt (V8 Runde 8g)", name, m,
                   auf495, AUF495[m - 16], auf493, AUF493[m - 16], auf487, b->quad_count + b->triangle_count);
             for (int q = 0; q < b->quad_count; q++) {
                 const unsigned z = b->quad_uvs[q].clut >> 6, seite = b->quad_uvs[q].page & 0xF;
@@ -605,22 +615,35 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
             {   /* Runde 8e (Nutzer 15.11. zu 8d: "komische braune Streifen an den Raendern"): die Bauch-Flaechen (Zeile 493) liegen im Feld C1
                  * OHNE die dunkle Naht des Original-Bilds - u 56-65, v 51-55 (schwanz_r8.json felder.fleisch). Bis 8d u 54-65: die Spalten
                  * u 54-55 (L* 11,6-27,0) gaben im Spiel den dunkelroten Laengsstrich an der Bauchkante (Markerlauf scratchpad schwanz_r9:
-                 * 48938 Schwanzpunkte F255-F350 aus u 54-55, mit 8e 0). Gegenprobe 8d 547acc80: rot. */
-                int naht = 0;
+                 * 48938 Schwanzpunkte F255-F350 aus u 54-55, mit 8e 0). Gegenprobe 8d 547acc80: rot.
+                 * Runde 8g: jede Flaeche auf 493 liegt GANZ im Feld C1 (Bauch) oder GANZ im Ring-Feld RB u 93-100 v 10-17 (Fugen der Oberseite
+                 * wie 8c); gezaehlt je Feld (AUF493_C1 / AUF493_RB), jede andere 493-Flaeche ist ein Fehler. */
+                int naht = 0, c1 = 0, rb = 0;
                 for (int q = 0; q < b->quad_count; q++) {
                     const re15_md1_quad_uv_t *u = &b->quad_uvs[q];
                     if ((u->clut >> 6) != 493) continue;
                     const unsigned uu[4] = { u->u0, u->u1, u->u2, u->u3 }, vv[4] = { u->v0, u->v1, u->v2, u->v3 };
-                    for (int k = 0; k < 4; k++) naht += uu[k] < 56 || uu[k] > 65 || vv[k] < 51 || vv[k] > 55;
+                    int in_c1 = 1, in_rb = 1;
+                    for (int k = 0; k < 4; k++) {
+                        in_c1 &= uu[k] >= 56 && uu[k] <= 65 && vv[k] >= 51 && vv[k] <= 55;
+                        in_rb &= uu[k] >= 93 && uu[k] <= 100 && vv[k] >= 10 && vv[k] <= 17;
+                    }
+                    c1 += in_c1; rb += in_rb; naht += !in_c1 && !in_rb;
                 }
                 for (int t = 0; t < b->triangle_count; t++) {
                     const re15_md1_tri_uv_t *u = &b->triangle_uvs[t];
                     if ((u->clut >> 6) != 493) continue;
                     const unsigned uu[3] = { u->u0, u->u1, u->u2 }, vv[3] = { u->v0, u->v1, u->v2 };
-                    for (int k = 0; k < 3; k++) naht += uu[k] < 56 || uu[k] > 65 || vv[k] < 51 || vv[k] > 55;
+                    int in_c1 = 1, in_rb = 1;
+                    for (int k = 0; k < 3; k++) {
+                        in_c1 &= uu[k] >= 56 && uu[k] <= 65 && vv[k] >= 51 && vv[k] <= 55;
+                        in_rb &= uu[k] >= 93 && uu[k] <= 100 && vv[k] >= 10 && vv[k] <= 17;
+                    }
+                    c1 += in_c1; rb += in_rb; naht += !in_c1 && !in_rb;
                 }
-                CHECK(naht == 0, "%s: Schwanzglied %d: %d Bauch-UV ausserhalb von C1 u 56-65 v 51-55 (dunkle Naht u 54-55, V8 Runde 8e)", name,
-                      m, naht);
+                CHECK(naht == 0 && c1 == AUF493_C1[m - 16] && rb == AUF493_RB[m - 16],
+                      "%s: Schwanzglied %d: auf 493 %d Flaechen im Bauchfeld C1 u 56-65 v 51-55 (Soll %d), %d im Ring-Feld RB u 93-100 v 10-17 "
+                      "(Soll %d), %d in keinem der beiden (Soll 0; V8 Runde 8e / 8g)", name, m, c1, AUF493_C1[m - 16], rb, AUF493_RB[m - 16], naht);
             }
             if (m >= 17) {               /* flach: Querhalbachse <= 135 E. (+1 Rundung); Glieder 17-19 hoch >= 2 x quer */
                 const double ph = 26.43 * 3.14159265358979 / 180.0;    /* unterseite_v8.json innen_phi 26,40-26,46 je Knochen */
