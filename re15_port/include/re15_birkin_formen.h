@@ -145,7 +145,13 @@ void re15_bb_pose_tick(void);
 int  re15_bf_hangar_phase(void);
 int  re15_bf_hangar_slot(int birkin);    /* 1 = Birkin-Slot, 0 = Spider-Man-Slot, -1 = keiner */
 int  re15_bf_hangar_riegel(void);        /* 1 = die Szene haelt Set(2,7)/Set(1,27) */
-void re15_bf_hangar_vergessen(void);     /* Testhaken: "Szene gesehen" loeschen (Prozess-Merker) */
+/* PORT-WAHL (Zensus Bank 9, bank9_zensus.py 2026-11-15: Original frei 23..51; Port, r42/story (23..37), r41/monitore,
+ * r41/birkin_kralle, r41/form ohne Bit 38): "Hangar-Szene 50A0/50A1 gesehen" steht im Spielstand, damit die Szene nach dem
+ * Laden nicht noch einmal laeuft (Dossier H_hangar.md OFFEN 6.1). Gesetzt am Szenenende (bf_hangar_beenden), gelesen beim
+ * Betreten (re15_bf_raumtick): gesetzt -> keine Szene, Birkin sofort Angreifer wie beim Wiedereintritt. */
+#define RE15_BF_HANGAR_BANK  9
+#define RE15_BF_HANGAR_BIT   38
+void re15_bf_hangar_vergessen(void);     /* Testhaken: "Szene gesehen" loeschen (Bank-9-Bit RE15_BF_HANGAR_BIT) */
 /* 1 = der Schnitt `cut` des aktuellen Raums zeigt eine Szenenfigur (Anker-Viereck + Bild), = Ausloeser-Bedingung. */
 int  re15_bf_szene_im_schnitt(int cut);
 /* Region-Cull-Ausnahme (Zeichner): 1 = `a` ist eine Figur der Hangar-Szene und die Szene haelt Cut 12. */

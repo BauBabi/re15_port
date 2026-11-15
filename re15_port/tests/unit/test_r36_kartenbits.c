@@ -80,6 +80,7 @@
 #include <string.h>
 #include "re15_kanister2080_r41.h"   /* Runde 41 Spur G: Bits 114-117 */
 #include "re15_story80_r41.h"        /* Runde 41 Spur ST80 Nachbesserung 1: Bit 128 */
+#include "re15_birkin_formen.h"      /* Runde 41 Hangar-Rueckbau: Bit 38 (Hangar-Szene gesehen) */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -543,6 +544,7 @@ static const port_bit_t k_port[] = {
     { RE15_K2080_BANK, RE15_K2080_BIT_SUEDWURF, "RE15_K2080_BIT_SUEDWURF", "Kanister-Wurf ins Suedbecken (sonst Nord), kanister2080_r41.c (Runde 41 G NB2)" },
     { RE15_S80_BIT_BANK, RE15_S80_BIT_NACHTRAG, "RE15_S80_BIT_NACHTRAG", "6030 Sherry-Nachtrag offen (Fuehrerstand vor dem Wagen), gen/story80_szenen.inc Set (Runde 41 ST80 NB1)" },
     { RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT, "RE15_AN_ZUG_BIT", "Zugstart 6030 gesehen, annette_r41.c Zugstart-Programm Set (Runde 41 AN NB1/NB2)" },
+    { RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, "RE15_BF_HANGAR_BIT", "Hangar-Szene 50A0/50A1 gesehen, birkin_formen.c bf_hangar_beenden (Runde 41 Hangar-Rueckbau)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 

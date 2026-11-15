@@ -728,7 +728,11 @@ static struct {
     int16_t  sprung_gier0, sprung_gier1;   /* Runde 5 M2: Gier beim Aufspringen und Gesamtrichtung des Sprungs */
     int16_t  sm_gier_halt;         /* Runde 7: Spider-Man-Gier im letzten Haltetakt (BF_HALT_ENDE), Bezug von k_sm_dreh */
 } s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, 0, { 0, 0, 0 }, { 0, 0, 0 }, 0, 0, 0, 0 };
-static int s_szene_gespielt = 0;
+/* "Szene gesehen": Bank-9-Bit RE15_BF_HANGAR_BIT (PORT-WAHL, Kopf re15_birkin_formen.h). Bis Runde 41 Stand 23f9da5c9 war das
+ * ein Prozess-Merker - nach dem Laden eines Spielstands lief die Szene erneut (H_hangar.md OFFEN 6.1). Gesetzt an denselben
+ * zwei Stellen wie der alte Merker (Szenenende; Start ohne freien Slot), damit der Ablauf im Prozess gleich bleibt. */
+static int  bf_szene_gesehen(void) { return re15_game_flag_get(RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT); }
+static void bf_szene_merken(void)  { re15_game_flag_set(RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, 1); }
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_rs_kam_halt = 0;  /* Nachbesserung 4: Haltezeit nach einem Szenenschnitt */
 #define BF_RS_KAM_HALT 30      /* Gestaltung: 1 s wie die Haltezeit der Nahsicht-Wache (Nachbesserung 1) */
@@ -766,7 +770,7 @@ void re15_bf_reset(void)
 int re15_bf_hangar_phase(void) { return s_h.phase; }
 int re15_bf_hangar_slot(int birkin) { return birkin ? s_h.birkin : s_h.sm; }
 int re15_bf_hangar_riegel(void) { return s_h.riegel; }
-void re15_bf_hangar_vergessen(void) { s_szene_gespielt = 0; }
+void re15_bf_hangar_vergessen(void) { re15_game_flag_set(RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, 0); }
 
 static void bf_rueckstoss_tick(void);
 int re15_bf_szene_besitzt(int slot)
@@ -965,7 +969,7 @@ static void bf_hangar_starten(void)
     s_h.sm = (s_h.birkin >= 0) ? bf_neuer_aktor(0x2Bu, BF_SM_X, BF_SM_Z, 0x00u) : -1;
     if (s_h.birkin < 0 || s_h.sm < 0) {                  /* kein Platz: ohne Szene, Birkin (falls gesetzt) greift an */
         if (s_h.birkin >= 0) g_actors[s_h.birkin].state = 0;
-        s_h.sm = -1; s_h.phase = BF_H_FREI; s_szene_gespielt = 1;
+        s_h.sm = -1; s_h.phase = BF_H_FREI; bf_szene_merken();
         return;
     }
     re15_actor_t *b = &g_actors[s_h.birkin], *m = &g_actors[s_h.sm];
@@ -1028,7 +1032,7 @@ static void bf_hangar_beenden(void)
     re15_schwanz_r41_szene(s_h.birkin, 0);
     s_h.sm = -1;
     s_h.phase = BF_H_FREI;
-    s_szene_gespielt = 1;
+    bf_szene_merken();                                   /* Bank-9-Bit 38, s. oben: am Szenenende wie der alte Merker */
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[hangar] ROOM%04X Szene Ende: Cut %d, Birkin Zustand %d\n", (unsigned)g_current_room_id,
             s_h.cut_zurueck, (s_h.birkin >= 0) ? (int)g_actors[s_h.birkin].state : -1);
@@ -1906,7 +1910,7 @@ void re15_bf_raumtick(void)
     if (s_h.raum != g_current_room_id) {
         re15_bf_reset();
         s_h.raum = g_current_room_id;
-        if (s_szene_gespielt) {
+        if (bf_szene_gesehen()) {                        /* Bank-9-Bit 38: auch nach dem Laden eines Spielstands */
             /* Wiedereintritt nach der Szene: kein Spider-Man, Birkin sofort als Angreifer (Zustand 0 -> INIT -> HUB). */
             s_h.birkin = bf_hangar_birkin_setzen();
             s_h.phase = BF_H_FREI;
