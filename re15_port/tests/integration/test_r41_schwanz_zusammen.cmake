@@ -125,6 +125,7 @@ function(szene_lauf _name _maske _asset_ueber _out_dir)
         RE15_TITLE_SHOT_AF=2
         RE15_WINDOW_SCALE=1
         RE15_HANGAR_LOG=1
+        RE15_HANGAR_IM_RAUM=1   # Runde 41 Spur Monitor: Messhaken alter Ausloeser im Raum (Inhalt der Szene, Bildnummern wie bisher)
         RE15_SET_FLAG=8:42,8:43
         RE15_DEBUG_JUMP=50A0@20
         RE15_PLAYER_POS=-12406,4381,1024

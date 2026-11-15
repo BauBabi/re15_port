@@ -24,6 +24,7 @@
 #include "re15_enemy_ai.h"     /* Runde 41 Spur H: re15_player_is_grabbed */
 #include "re15_schwanz_r41.h"  /* Runde 41 SF N1.9: Schwanz-Kette */
 #include "re15_esp.h"          /* gruenes Blut: re15_esp_fx_spawn_ex (Bodenspritzer), re15_esp_fx_reset */
+#include "re15_monitor_r41.h"  /* Runde 41 Spur Monitor: die Szene laeuft als Monitorbild des Monitor Room 5030/5031 */
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -102,9 +103,22 @@ int re15_bf_bahnsteig_aktiv(void)
     return (g_current_room_id & 0xFFFEu) == 0x5090u && !getenv("RE15_ENDKAMPF_NUR_G5");
 }
 
+/* Runde 41 Spur Monitor (Nutzer 2026-11-15 "100%ig kein Boss Kampf ... Leon oder Elza sehen Birkin auf dem Monitor"):
+ * im Hangar gibt es Birkin nur noch im Monitorbild (monitor_r41.c, re15_monitor_r41_bild). Ein normaler Besuch in
+ * 50A0/50A1 - vor oder nach dem Monitorbild, ueber 4070 oder 5030, auch nach Laden - zeigt den Raum wie ausgeliefert.
+ * MESSHAKEN RE15_HANGAR_IM_RAUM=1 (kein Spielverhalten): der alte Ausloeser im Raum (angeforderter Schnitt 4/5/6 zeigt die
+ * Szene, danach 0x30-KI) fuer die Inhalts-Riegel der abgenommenen Szene (Schwanz/Sichel-Form, Framedumps nach Bildnummer). */
+static int bf_hangar_im_raum(void)
+{
+    static int s = -1;
+    if (s < 0) { const char *e = getenv("RE15_HANGAR_IM_RAUM"); s = (e && *e && *e != '0') ? 1 : 0; }
+    return s;
+}
+
 int re15_bf_hangar_aktiv(void)
 {
-    return (g_current_room_id & 0xFFFEu) == 0x50A0u && !getenv("RE15_KEIN_HANGAR_BIRKIN");
+    if ((g_current_room_id & 0xFFFEu) != 0x50A0u || getenv("RE15_KEIN_HANGAR_BIRKIN")) return 0;
+    return re15_monitor_r41_bild() || bf_hangar_im_raum();
 }
 
 /* Runde 41 Spur GR, Nachbesserung 2 (Kopf: re15_birkin_formen.h): Start-HP und Ende der LAUFENDEN Form eines 0x30.
@@ -1029,6 +1043,7 @@ static void bf_hangar_beenden(void)
     s_h.sm = -1;
     s_h.phase = BF_H_FREI;
     s_szene_gespielt = 1;
+    re15_monitor_r41_szene_ende();                       /* Runde 41 Spur Monitor: Monitorbild zu Ende -> zurueck in 5030/5031 */
 #ifdef RE15_PLATFORM_PC
     fprintf(stderr, "[hangar] ROOM%04X Szene Ende: Cut %d, Birkin Zustand %d\n", (unsigned)g_current_room_id,
             s_h.cut_zurueck, (s_h.birkin >= 0) ? (int)g_actors[s_h.birkin].state : -1);
@@ -1879,6 +1894,7 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
 
 void re15_bf_raumtick(void)
 {
+    re15_monitor_r41_tick();                             /* Runde 41 Spur Monitor: Monitor Room 5030/5031 -> Monitorbild im Hangar */
     re15_bb_pose_tick();                                 /* Messhaken der Sichtpruefung, im Normalpfad stumm */
     /* MESSHAKEN RE15_BIRKIN_HP_AT=<n>: n KI-Ticks nach Raumeintritt in 5090 die HP des 0x30 auf 0 (Sichtpruefung
      * der Rueckstoss-Szene ohne Durchspielen). Der Debug-Sprung setzt keinen Tuer-Schnitt, die Zonen laufen dann
@@ -1906,15 +1922,18 @@ void re15_bf_raumtick(void)
     if (s_h.raum != g_current_room_id) {
         re15_bf_reset();
         s_h.raum = g_current_room_id;
-        if (s_szene_gespielt) {
-            /* Wiedereintritt nach der Szene: kein Spider-Man, Birkin sofort als Angreifer (Zustand 0 -> INIT -> HUB). */
+        if (s_szene_gespielt && !re15_monitor_r41_bild()) {
+            /* Nur Messhaken RE15_HANGAR_IM_RAUM: Wiedereintritt nach der Szene: kein Spider-Man, Birkin sofort als Angreifer
+             * (Zustand 0 -> INIT -> HUB). Im Spiel gibt es den Hangar-Birkin ausserhalb des Monitorbilds nicht mehr. */
             s_h.birkin = bf_hangar_birkin_setzen();
             s_h.phase = BF_H_FREI;
         }
         return;                                          /* sonst: noch keine Figuren, Phase WARTEN */
     }
     if (s_h.phase == BF_H_WARTEN) {
-        if (!bf_hangar_ausloeser()) return;
+        /* Monitorbild: die Szene beginnt im ersten KI-Takt nach dem Laden (die Einblende des Raumwechsels ist dann vorbei,
+         * room_common.c re15_room_transition_tick); Cut 12 steht schon als Eintritts-Schnitt. */
+        if (!re15_monitor_r41_bild() && !bf_hangar_ausloeser()) return;
         bf_hangar_starten();
         return;
     }

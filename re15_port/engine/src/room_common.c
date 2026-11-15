@@ -431,5 +431,7 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
      * Beide Baenke sind aus dem RDT geschnitten, gelten also nur fuer DIESEN Raum. */
     re15_audio_load_room_banks();
 
+    { extern void re15_monitor_r41_raum_geladen(void); re15_monitor_r41_raum_geladen(); }   /* Runde 41 Spur Monitor: Zonen der Szene halten */
+
     return 1;
 }

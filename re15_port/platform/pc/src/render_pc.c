@@ -35,6 +35,7 @@
 #include "re15_pri_schatten_r36.h"  /* Runde 36 Spur O: Schatten in der OT-Ordnung der Masken/Dreiecke */
 #include "re15_objabe_r38.h"         /* Runde 38 Spur W: STP-Teil-Texturen halbtransparenter Raum-Objekte */
 #include "re15_titelversion_r39.h"    /* Runde 39 Spur T: Version im Titelbild */
+#include "re15_monitor_r41.h"         /* Runde 41 Spur Monitor: Monitor-Bild-Effekt Zone 1 Bit 0x1E (FUN_80020610) */
 extern unsigned g_current_room_id;   /* nur fuer die RE15_PRI_LOG-Messschiene */
 /* Der gezeigte Cut. Ohne ihn ist eine Maskenmessung nicht zuzuordnen: unsere
  * nachgezeichneten Masken liegen je Cut vor, und "0 Masken" kann heissen "Cut ohne
@@ -1313,6 +1314,46 @@ static void re15_slotdeckung(const int *order, int n, const int *mask_order, int
     fflush(fp);
 }
 
+/* Runde 41 Spur Monitor: Monitor-Bild-Effekt (Zone 1 Bit 0x1E -> FUN_80020610 @0x8001d1d8 -> FUN_80020794(0,0), Herleitung
+ * engine/src/monitor_r41.c Kopf Punkt 1). Das Original kopiert in OT 0 Eimer 7 (FUN_800209ec(0,7) @0x800207e8) 240 Zeilen des
+ * schon gezeichneten Bilds (Hintergrund + Figuren) mit Versatz -1/0/+1 Zeile; Letterbox (Eimer 4, FUN_80021a0c) und Text
+ * liegen danach und bleiben gerade. Der Port liest das bis dahin gezeichnete Bild zurueck (physische Aufloesung des
+ * Ansichtsfensters), setzt jede logische Zeile y aus der Zeile quelle[y] zusammen und zeichnet es deckend zurueck. */
+static SDL_Texture *s_mon_tex = NULL;
+static uint32_t    *s_mon_alt = NULL, *s_mon_neu = NULL;
+static int          s_mon_w = 0, s_mon_h = 0;
+static void pc_monitor_zeilen(const uint8_t quelle[240])
+{
+    SDL_Rect vp; float sx = 1.0f, sy = 1.0f;
+    SDL_RenderGetViewport(s_renderer, &vp);
+    SDL_RenderGetScale(s_renderer, &sx, &sy);
+    const int w = (int)((float)vp.w * sx + 0.5f), h = (int)((float)vp.h * sy + 0.5f);
+    if (w <= 0 || h <= 0) return;
+    if (w != s_mon_w || h != s_mon_h || !s_mon_tex) {
+        if (s_mon_tex) SDL_DestroyTexture(s_mon_tex);
+        free(s_mon_alt); free(s_mon_neu);
+        s_mon_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, w, h);
+        s_mon_alt = (uint32_t *)malloc((size_t)w * (size_t)h * 4u);
+        s_mon_neu = (uint32_t *)malloc((size_t)w * (size_t)h * 4u);
+        s_mon_w = w; s_mon_h = h;
+        if (!s_mon_tex || !s_mon_alt || !s_mon_neu) { s_mon_w = s_mon_h = 0; return; }
+        SDL_SetTextureBlendMode(s_mon_tex, SDL_BLENDMODE_NONE);
+    }
+    if (SDL_RenderReadPixels(s_renderer, NULL, SDL_PIXELFORMAT_ARGB8888, s_mon_alt, w * 4) != 0) return;
+    for (int y = 0; y < SCREEN_YRES; y++) {
+        const int r0 = y * h / SCREEN_YRES, r1 = (y + 1) * h / SCREEN_YRES;
+        const int q0 = quelle[y] * h / SCREEN_YRES, q1 = (quelle[y] + 1) * h / SCREEN_YRES;
+        for (int r = r0; r < r1; r++) {
+            int qr = q0 + (r - r0);
+            if (qr >= q1) qr = q1 - 1;
+            if (qr >= h) qr = h - 1;
+            memcpy(s_mon_neu + (size_t)r * (size_t)w, s_mon_alt + (size_t)qr * (size_t)w, (size_t)w * 4u);
+        }
+    }
+    SDL_UpdateTexture(s_mon_tex, NULL, s_mon_neu, w * 4);
+    SDL_RenderCopy(s_renderer, s_mon_tex, NULL, NULL);
+}
+
 void re15_render_end_frame(void)
 {
     /* Step 1: blit the software framebuffer (2D primitives) onto the renderer.
@@ -1631,6 +1672,13 @@ void re15_render_end_frame(void)
 
     if (beben_vp) SDL_RenderSetViewport(s_renderer, &beben_vp_alt);   /* BEBEN: Balken, Text, Blenden unverschoben */
     s_beben_dy = 0;
+
+    /* Runde 41 Spur Monitor: Monitor-Bild-Effekt nach Hintergrund + Figuren, vor Blenden, Letterbox und Text (pc_monitor_zeilen).
+     * MESSHAKEN RE15_MONITOR_OHNE_ZEILEN=1: Effekt aus (Beweis, dass die Szenenbilder darunter bitgleich sind). */
+    {   static int s_ohne = -1;
+        uint8_t quelle[SCREEN_YRES];
+        if (s_ohne < 0) { const char *e = getenv("RE15_MONITOR_OHNE_ZEILEN"); s_ohne = (e && *e && *e != '0') ? 1 : 0; }
+        if (re15_monitor_r41_zeilen(quelle) && !s_ohne) pc_monitor_zeilen(quelle); }
 
     /* Step 2.5: ITEM-GET pickup MODAL — the zooming/spinning/flipping item quad, ON TOP of the frozen
      * 3D scene (byte-true FUN_8001db28; gameplay is paused underneath). 2 triangles from the 4 screen

@@ -68,7 +68,8 @@ function(ein_lauf _raum _pos _extra)
     set(_f "${_f}${_g}" PARENT_SCOPE)
 endfunction()
 
-ein_lauf(50A0 "-3000,-15000,2048,0" "RE15_FORCE_CUT=4")
+# Runde 41 Spur Monitor: im Spiel gibt es den Hangar-Birkin nur im Monitorbild; der Modell-Riegel nimmt den Messhaken (alter Ausloeser).
+ein_lauf(50A0 "-3000,-15000,2048,0" "RE15_FORCE_CUT=4;RE15_HANGAR_IM_RAUM=1")
 ein_lauf(50E0 "-25450,-14700,0,0" "")
 
 file(REMOVE "${_exe_kopie}")

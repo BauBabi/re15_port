@@ -21,6 +21,8 @@
  *     vorher gibt es die Figuren nicht (birkin_formen.c Kopf "Spur H", Dossier analysis/befunde_runde41/H_hangar.md).
  *     Ablauf Bild fuer Bild nach dem 80%-Video (Complete Disc 4, 45.0 s): Ansprung, Halten, Wurf, Spider-Man flieht
  *     rechts an der Kamera vorbei, Birkin geht auf die Kamera zu; danach 0x30-KI.
+ *     ⛔ Runde 41 Spur Monitor (Nutzer 2026-11-15 "100%ig kein Boss Kampf"): die Szene laeuft nur noch als Monitorbild im
+ *     Monitor Room 5030/5031 (monitor_r41.c), danach Rueckweg dorthin - kein Kampf, kein Birkin bei normalen Hangar-Besuchen.
  *     Modell-Voraussetzungen (jedes EM30-Ersatzmodell): Knochen 15 = haltende Hand (Sichelhand,
  *     Runde 41 SF N1.2), Clip 0 (Stand, INIT), Clip 0x0B (Griff/Wurf,
  *     mindestens 0x2D Bilder), Clip 1 (Gang der KI); Spider-Man EM2B: Clips 0, 7, 0x0A, 0x0C.
@@ -48,7 +50,8 @@ int  re15_bf_bahnsteig_bank_faellig(uint8_t type);
 int  re15_bf_bahnsteig_aktiv(void);      /* ROOM5090/5091 und nicht RE15_ENDKAMPF_NUR_G5 */
 int  re15_bf_riesenform_raum(void);      /* 5080/5081 und re15_bf_bahnsteig_aktiv: der 0x30 traegt die Riesenform (Stufe 3) */
 int  re15_bf_flucht_raum(void);          /* 5080/5081: der Kampf endet mit der Flucht (Clip 11), nicht mit dem Tod */
-int  re15_bf_hangar_aktiv(void);         /* ROOM50A0/50A1 und nicht RE15_KEIN_HANGAR_BIRKIN */
+int  re15_bf_hangar_aktiv(void);         /* ROOM50A0/50A1, nicht RE15_KEIN_HANGAR_BIRKIN, und Monitorbild (re15_monitor_r41.h) oder
+                                          * Messhaken RE15_HANGAR_IM_RAUM - Runde 41 Spur Monitor: im Spiel kein Hangar-Birkin mehr */
 int  re15_bf_labor_aktiv(void);          /* ROOM50E0/50E1/50F0/50F1: Labor-Kampf, dieselbe Form wie im Hangar */
 
 /* Frueher 5090 Original -> Bahnsteig-Form ueber die Mutation (sub 6 Phase 2 @0x8011888c, Plattform-Haken). Seit Stufe 3
