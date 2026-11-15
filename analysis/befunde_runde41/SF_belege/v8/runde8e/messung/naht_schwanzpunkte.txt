@@ -1,0 +1,2 @@
+8d 547acc80: Schwanzpunkte aus Texelspalten u54-55: gesamt 48938, max je Bild 1431, Bilder mit >0: 70
+8e a48e2ce5: Schwanzpunkte aus Texelspalten u54-55: gesamt 0, max je Bild 0, Bilder mit >0: 0
