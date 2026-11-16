@@ -1,14 +1,15 @@
 /* form_j_posen.h - ERZEUGT von analysis/befunde_runde41/form/stufe3/gen/s3_testkopf.py, nicht von Hand aendern.
  * Referenz Formtreue seit dem R9-Einbau (2026-11-15): Riesenform K5g3 + rechte Hand Variante 1 (varianten/K5/k5g/K5g3 = Spiel-Asset,
- * Generator varianten/K5/generator/kf_k5g3.py; EINBAU_R9.md). Vorher E32 K5e_f1 (einbau_k5e_f1), E30 K5c, davor K4.
+ * Generator varianten/K5/generator/kf_k5g3.py; EINBAU_R9.md; seit 16.11.2026 mit Vorderzaehnen, Stufe zaehne_vorn: nur MD1 waechst).
+ * Vorher E32 K5e_f1 (einbau_k5e_f1), E30 K5c, davor K4.
  * MD1/TIM aus K5g3; Bild 1 von K5c, Bild 2 Winkel aus dem Asset (Key 542, Posen-Datei R9), Ruhe = Ruhe von J mit Kiefer zu.
  * Makronamen FORM_J_* wie bisher. Kein RE-Wert. */
 #ifndef FORM_J_POSEN_H
 #define FORM_J_POSEN_H
 #include <stdint.h>
 
-#define FORM_J_MD1_LEN 462572u
-#define FORM_J_MD1_CRC 0x565363c6u
+#define FORM_J_MD1_LEN 464748u
+#define FORM_J_MD1_CRC 0x6f15e974u
 #define FORM_J_TIM_LEN 138784u
 #define FORM_J_TIM_CRC 0xf428fe01u
 

@@ -31,7 +31,9 @@ def main(ordner):
                                hoechststand=int(m.group(1)), bild=int(m.group(2)), verworfen=int(m.group(3)), bilder_mit_verlust=int(m.group(4)),
                                grenze=int(m.group(5)), form_geladen='Bahnsteig-Form: 32 Meshes, 32 Knochen, 28 Clips' in t,
                                ueberlauf_zeilen=t.count('[tri-liste] UEBERLAUF')))
-    emd = os.path.join(os.path.dirname(ZIEL), '..', 'BAHNSTEIG_FORM.EMD')
+    # Die Laeufe nehmen das Spiel-Asset (shared_assets/RE2, seit dem R9-Einbau == K5/k5g/K5g3/BAHNSTEIG_FORM.EMD); dessen sha gehoert in die
+    # Messung (riegel_k5g3.py R9 nimmt Geometrie-EMD oder Asset). Seit der Stufe zaehne_vorn (16.11.2026) ist das Asset != geo/BAHNSTEIG_FORM.EMD.
+    emd = os.path.join(os.path.dirname(ZIEL), '..', '..', 'BAHNSTEIG_FORM.EMD')
     d = dict(quelle='G3-Zaehler render_pc.c (Schlusszeile [tri-liste] ENDE aus re15_testhaken_ende), Laeufe von '
                     're15_port/tests/integration/test_r41_form_dreiecke.cmake bzw. generator/kf_k5g3_spiel.sh',
              emd_sha256=hashlib.sha256(open(emd, 'rb').read()).hexdigest(), laeufe=laeufe)

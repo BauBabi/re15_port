@@ -7,7 +7,7 @@ Jede Zeile mit 'Riegel' hat eine Gegenprobe, die ROT sein MUSS (K5e_f1 = Spiel-A
 Augen, oder ein im Riegel gebauter Gegenstand). Ist eine Gegenprobe gruen, zaehlt das wie Rot (Exit 1). 'Info' blockiert nicht.
 Wiederverwendet: riegel_k5g2.py (Stand, v3, v4, v3_fleisch, v5, v1, v6, h1, weiss - unveraenderte Definitionen aus dem K5g2-Auftrag).
 
- TG   Geometrie des Assets == Geometrie-Stufe kf_k5g3_geo (Ecken, Normalen, Flaechen-Ecken aller Netze; Sektionen 0-6)    | K5e_f1
+ TG   Geometrie des Assets == Geometrie-Stufe kf_k5g3_geo + Stufe zaehne_vorn (Ecken, Normalen, Flaechen-Ecken; Sektionen 0-6) | K5e_f1
  TB   Generator: zweiter Lauf byte-gleich (kf_k5g3.pruef)                                                                    | Bau mit s + 0,01
  V3.1 Fleck-Material genau auf den Traegertexeln, keine andere Flaeche liest eine Fleck-Zeile (Pruef-Stand)              | ohne eigene Texel
  V3.1b Asset: jedes Spalt-Kind liest die Zeile/Seite seiner Mutter und bleibt im Texturstueck der Mutter; kein Kind einer  | K5e_f1-Zeilen
@@ -59,6 +59,7 @@ import kf_k5g3_geo as G3  # noqa: E402
 import kf_k5g3_tex as T3  # noqa: E402
 import kf_k5g2_tex as TX  # noqa: E402
 import kf_k5e as E  # noqa: E402
+import kf_k5g3_zaehne as ZV  # noqa: E402
 
 FE = E.FE
 K5 = E.K5
@@ -82,16 +83,23 @@ def stand_mit_namen(ordner, namen=None):
 
 
 # ------------------------------------------------------------------ Geometrie / Generator
+def geo_mit_zaehnen():
+    """Geometrie-Stufe (geo/BAHNSTEIG_FORM.EMD) + Stufe zaehne_vorn (16.11.2026, kf_k5g3_zaehne.einsetzen) - die Geometrie, die das Asset tragen muss."""
+    g = FE.lese_emd(open(G3.GEO3_ZIEL, 'rb').read())
+    ZV.einsetzen(g, ZV.vorgabe())
+    return g
+
+
 def tg(R, var):
     a = FE.lese_emd(open(os.path.join(var, 'BAHNSTEIG_FORM.EMD'), 'rb').read())
-    g = FE.lese_emd(open(G3.GEO3_ZIEL, 'rb').read())
+    g = geo_mit_zaehnen()
     s_a, s_g = FE.sektionen(open(os.path.join(var, 'BAHNSTEIG_FORM.EMD'), 'rb').read()), FE.sektionen(open(G3.GEO3_ZIEL, 'rb').read())
     sek = all(s_a[k] == s_g[k] for k in ('morph', 'edd1', 'emr1', 'edd2', 'emr2', 'edd3', 'emr3'))
     ok = K3.geo_schluessel(a) == K3.geo_schluessel(g) and sek
     e = FE.lese_emd(open(os.path.join(K5E, 'BAHNSTEIG_FORM.EMD'), 'rb').read())
     gg = K3.geo_schluessel(e) == K3.geo_schluessel(g)
-    R.zeile('TG', 'Geometrie des Assets == Geometrie-Stufe kf_k5g3_geo (geo/BAHNSTEIG_FORM.EMD sha %s; Ecken, Normalen, Flaechen-Ecken; '
-            'Sektionen 0-6)' % sha_d(G3.GEO3_ZIEL)[:12], 'gleich' if ok else 'VERSCHIEDEN', ok, gegen=('K5e_f1', 'gleich' if gg else 'verschieden', gg))
+    R.zeile('TG', 'Geometrie des Assets == Geometrie-Stufe kf_k5g3_geo (geo/BAHNSTEIG_FORM.EMD sha %s) + Stufe zaehne_vorn (Ecken, Normalen, '
+            'Flaechen-Ecken; Sektionen 0-6)' % sha_d(G3.GEO3_ZIEL)[:12], 'gleich' if ok else 'VERSCHIEDEN', ok, gegen=('K5e_f1', 'gleich' if gg else 'verschieden', gg))
 
 
 def tb(R, var):
@@ -534,7 +542,7 @@ def _zeilen_namen(o):
 
 def uv1(R, var, bau):
     """UV des Assets = UV der Geometrie-Stufe (uvfein, geo/BAHNSTEIG_FORM.EMD) + EIN Kopie-Versatz je Flaeche; ausgenommen die Augen-Dreiecke."""
-    g = FE.lese_emd(open(G3.GEO3_ZIEL, 'rb').read())
+    g = geo_mit_zaehnen()                 # 16.11.2026: die neuen Zahnflaechen tragen die UV ihres Spenders (vorderster alter Zahn)
     aus = set((22, 0, i) for i in bau['textur'].get('augen_dekal', {}).get('dreiecke', []))
 
     def n_falsch(o):

@@ -9,6 +9,8 @@
   "spalt_tabelle": "99a4f142c2d01c5eb8e70dd299c0cd98c3e34268adc8473454dcfb42b4cd6d07",
   "spalt_uv_tabelle": "616a22d7ad63769d801c3fcdc13a6ae213ecf1f3b205faf83e65f8e3660f63bc",
   "traeger_texel": "98f4b70e68cb8de632069f78d8e0a2fbb653fd3ece0e76f669fa4b7a65bbf75e",
+  "zaehne_kopf_k5c": "e064f8e98dba1f9746c8d048a320da608cbcee967fb5f100d5b034d674403937",
+  "zaehne_vorn_laengen": "f53c92e15e08ed6b0a2eb5068ccf64c21ef6ac5c446c78824503f3f797b40267",
   "zonen_v2": "4b961ea03a20965538a88dfc48ad33a65bef3a1f3b20b8e7d671427958e7276b"
  },
  "generator": "generator/kf_k5g3.py (Stufe 1 kf_k5g3_geo, Stufe 2 kf_k5g3_tex)",
@@ -359,9 +361,9 @@
  },
  "port_texturhoehe": 3840,
  "sha256": {
-  "BAHNSTEIG_FORM.EMD": "88c49ce17bfdc91af2c40c7ccf14f37d47d1957220289a85227ff14ef6d83610",
+  "BAHNSTEIG_FORM.EMD": "115f87218590669d261c01869acad302a64c055bce5500e740907ad29290141e",
   "BAHNSTEIG_FORM.TIM": "c00823b35ad80624adc0678d5a57dfe6aa23c99bb7fd970fc696a2f40ec4102c",
-  "FORM.EMD": "290b59e59da1d451dd4ac3e42d03cdf094c7e3554d6dfc6a0e047d4a7e6d4171",
+  "FORM.EMD": "ac022c51db897b59182e1d88d688871b87578820b41fed82a4b32cccb6eca2be",
   "FORM.TIM": "c00823b35ad80624adc0678d5a57dfe6aa23c99bb7fd970fc696a2f40ec4102c",
   "pruef/BAHNSTEIG_FORM.EMD": "30f13da564d8b8574097749e2e1f88a6d18b9a41a48cc37ce902c51276fd41a8",
   "pruef/BAHNSTEIG_FORM.TIM": "c00823b35ad80624adc0678d5a57dfe6aa23c99bb7fd970fc696a2f40ec4102c",
@@ -4300,9 +4302,371 @@
    "fleck_haut2_3",
    "auge"
   ],
-  "zugriffe_abgetastet": 457063,
+  "zugriffe_abgetastet": 460935,
   "zugriffe_ungeschrieben": 0
  },
  "variante": "K5g3",
+ "zaehne_vorn": {
+  "bericht": {
+   "alte_zaehne_geprueft": 34,
+   "neu": {
+    "22": 11,
+    "23": 5
+   }
+  },
+  "reihen": {
+   "22": {
+    "info": {
+     "abstand": 51.23466919101377,
+     "f_mitte": 0.7079867830634831,
+     "h_alt": 335.9292472792274,
+     "h_vorn": 237.83346711815753,
+     "linie": [
+      [
+       1520.5,
+       246.8
+      ],
+      [
+       1608.5,
+       210.1
+      ],
+      [
+       1644.5,
+       111.4
+      ],
+      [
+       1644.5,
+       0.0
+      ]
+     ],
+     "n_abstaende": 6,
+     "strecke": 311.7915084536168,
+     "versatz": 18.572628509326766
+    },
+    "zaehne": [
+     {
+      "basis": [
+       1568.4,
+       235.3,
+       -226.8
+      ],
+      "bogen": 52.0,
+      "breit": 30.4,
+      "f": 0.951,
+      "i": 11,
+      "lang": 71.2,
+      "richtung": [
+       0.195,
+       1.0,
+       -0.157
+      ],
+      "seite": -1
+     },
+     {
+      "basis": [
+       1568.4,
+       235.3,
+       226.8
+      ],
+      "bogen": 52.0,
+      "breit": 30.4,
+      "f": 0.951,
+      "i": 11,
+      "lang": 71.2,
+      "richtung": [
+       0.195,
+       1.0,
+       0.157
+      ],
+      "seite": 1
+     },
+     {
+      "basis": [
+       1611.4,
+       235.5,
+       -202.0
+      ],
+      "bogen": 103.9,
+      "breit": 36.1,
+      "f": 0.903,
+      "i": 12,
+      "lang": 75.3,
+      "richtung": [
+       0.248,
+       1.0,
+       0.037
+      ],
+      "seite": -1
+     },
+     {
+      "basis": [
+       1611.4,
+       235.5,
+       202.0
+      ],
+      "bogen": 103.9,
+      "breit": 36.1,
+      "f": 0.903,
+      "i": 12,
+      "lang": 75.3,
+      "richtung": [
+       0.248,
+       1.0,
+       -0.037
+      ],
+      "seite": 1
+     },
+     {
+      "basis": [
+       1629.3,
+       242.7,
+       -153.2
+      ],
+      "bogen": 155.9,
+      "breit": 27.3,
+      "f": 0.854,
+      "i": 13,
+      "lang": 39.0,
+      "richtung": [
+       0.248,
+       1.0,
+       0.037
+      ],
+      "seite": -1
+     },
+     {
+      "basis": [
+       1629.3,
+       242.7,
+       153.2
+      ],
+      "bogen": 155.9,
+      "breit": 27.3,
+      "f": 0.854,
+      "i": 13,
+      "lang": 39.0,
+      "richtung": [
+       0.248,
+       1.0,
+       -0.037
+      ],
+      "seite": 1
+     },
+     {
+      "basis": [
+       1644.5,
+       229.3,
+       -103.9
+      ],
+      "bogen": 207.9,
+      "breit": 25.8,
+      "f": 0.805,
+      "i": 14,
+      "lang": 55.9,
+      "richtung": [
+       0.22,
+       1.0,
+       0.12
+      ],
+      "seite": -1
+     },
+     {
+      "basis": [
+       1644.5,
+       229.3,
+       103.9
+      ],
+      "bogen": 207.9,
+      "breit": 25.8,
+      "f": 0.805,
+      "i": 14,
+      "lang": 55.9,
+      "richtung": [
+       0.22,
+       1.0,
+       -0.12
+      ],
+      "seite": 1
+     },
+     {
+      "basis": [
+       1644.5,
+       229.3,
+       -52.0
+      ],
+      "bogen": 259.8,
+      "breit": 30.3,
+      "f": 0.757,
+      "i": 15,
+      "lang": 69.2,
+      "richtung": [
+       0.22,
+       1.0,
+       0.12
+      ],
+      "seite": -1
+     },
+     {
+      "basis": [
+       1644.5,
+       229.3,
+       52.0
+      ],
+      "bogen": 259.8,
+      "breit": 30.3,
+      "f": 0.757,
+      "i": 15,
+      "lang": 69.2,
+      "richtung": [
+       0.22,
+       1.0,
+       -0.12
+      ],
+      "seite": 1
+     },
+     {
+      "basis": [
+       1644.5,
+       229.3,
+       0.0
+      ],
+      "bogen": 311.8,
+      "breit": 22.7,
+      "f": 0.708,
+      "i": 16,
+      "lang": 53.0,
+      "richtung": [
+       0.22,
+       1.0,
+       0.0
+      ],
+      "seite": 0
+     }
+    ]
+   },
+   "23": {
+    "info": {
+     "abstand": 103.33275141943109,
+     "f_mitte": 0.7079867830634831,
+     "h_alt": 335.9292472792274,
+     "h_vorn": 237.83346711815753,
+     "linie": [
+      [
+       726.2,
+       212.3
+      ],
+      [
+       811.5,
+       175.8
+      ],
+      [
+       879.6,
+       99.0
+      ],
+      [
+       879.6,
+       0.0
+      ]
+     ],
+     "n_abstaende": 3,
+     "strecke": 294.4339507186986,
+     "versatz": 28.951097295623416
+    },
+    "zaehne": [
+     {
+      "basis": [
+       815.0,
+       -120.0,
+       -171.7
+      ],
+      "bogen": 98.1,
+      "breit": 41.5,
+      "f": 0.903,
+      "i": 6,
+      "lang": 39.3,
+      "richtung": [
+       0.201,
+       -1.0,
+       -0.045
+      ],
+      "seite": -1
+     },
+     {
+      "basis": [
+       815.0,
+       -120.0,
+       171.7
+      ],
+      "bogen": 98.1,
+      "breit": 41.5,
+      "f": 0.903,
+      "i": 6,
+      "lang": 39.3,
+      "richtung": [
+       0.201,
+       -1.0,
+       0.045
+      ],
+      "seite": 1
+     },
+     {
+      "basis": [
+       879.6,
+       -118.9,
+       -98.1
+      ],
+      "bogen": 196.3,
+      "breit": 37.0,
+      "f": 0.805,
+      "i": 7,
+      "lang": 75.1,
+      "richtung": [
+       0.18,
+       -1.0,
+       0.1
+      ],
+      "seite": -1
+     },
+     {
+      "basis": [
+       879.6,
+       -118.9,
+       98.1
+      ],
+      "bogen": 196.3,
+      "breit": 37.0,
+      "f": 0.805,
+      "i": 7,
+      "lang": 75.1,
+      "richtung": [
+       0.18,
+       -1.0,
+       -0.1
+      ],
+      "seite": 1
+     },
+     {
+      "basis": [
+       879.6,
+       -91.3,
+       0.0
+      ],
+      "bogen": 294.4,
+      "breit": 32.6,
+      "f": 0.708,
+      "i": 8,
+      "lang": 102.7,
+      "richtung": [
+       0.18,
+       -1.0,
+       0.0
+      ],
+      "seite": 0
+     }
+    ]
+   }
+  },
+  "stufe": "kf_k5g3_zaehne.einsetzen"
+ },
  "zeilen": 15
 }

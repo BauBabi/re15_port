@@ -126,12 +126,12 @@
  },
  "R9 Dreiecke je Bild + Spielfigur + Effekte <= 16384 mit Reserve; im Spiel 0 verworfen (G3)": {
   "urteil": "GRUEN",
-  "text": "Messung zur Geometrie: ja; Messbank max 7290 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9149 <= 16384 - 2048 = 14336; Spiel max 7748 (kampf_video 7436, v5080_c11 7606, f5090_s11 7748, f5080_vorn 7212), verworfen 0; Reserve Messbank 7235, Spiel 8636",
+  "text": "Messung zur Geometrie: ja; Messbank max 7290 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9149 <= 16384 - 2048 = 14336; Spiel max 7770 (kampf 7457, s11 7770, v5080 7234), verworfen 0; Reserve Messbank 7235, Spiel 8614",
   "gegenproben": [
    {
     "name": "alte Grenze 8192",
     "gruen": false,
-    "text": "Messung zur Geometrie: ja; Messbank max 7290 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9149 <= 8192 - 2048 = 6144; Spiel max 7748 (kampf_video 7436, v5080_c11 7606, f5090_s11 7748, f5080_vorn 7212), verworfen 0; Reserve Messbank -957, Spiel 444"
+    "text": "Messung zur Geometrie: ja; Messbank max 7290 (spiel5080_vorn Clip 11 Bild 30) + Spielerin 773 + Waffe 86 + Effekte 1000 = 9149 <= 8192 - 2048 = 6144; Spiel max 7770 (kampf 7457, s11 7770, v5080 7234), verworfen 0; Reserve Messbank -957, Spiel 422"
    }
   ]
  },

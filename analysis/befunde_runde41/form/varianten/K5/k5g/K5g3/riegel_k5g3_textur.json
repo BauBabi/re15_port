@@ -2,7 +2,7 @@
  "zeilen": [
   {
    "nr": "TG",
-   "text": "Geometrie des Assets == Geometrie-Stufe kf_k5g3_geo (geo/BAHNSTEIG_FORM.EMD sha f833a90580d8; Ecken, Normalen, Flaechen-Ecken; Sektionen 0-6)",
+   "text": "Geometrie des Assets == Geometrie-Stufe kf_k5g3_geo (geo/BAHNSTEIG_FORM.EMD sha f833a90580d8) + Stufe zaehne_vorn (Ecken, Normalen, Flaechen-Ecken; Sektionen 0-6)",
    "ist": "gleich",
    "ok": true,
    "art": "Riegel",
@@ -39,7 +39,7 @@
   {
    "nr": "K1",
    "text": "Kopie-Maske (Zahlen-Pruefer r1 ROT 2): kein Zugriff auf Index 0 (= ungeschriebener Kopie-Texel, 0x7FFF) in irgendeiner Flaeche, abgetastet im Inneren aller Render-Dreiecke",
-   "ist": "0 von 457063 Zugriffen (-)",
+   "ist": "0 von 460935 Zugriffen (-)",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -51,7 +51,7 @@
   {
    "nr": "K2",
    "text": "kein Zugriff auf reinweiss 0x7FFF ausser der Zahn-Zeile (K5c bytegleich), ganzes Asset (Zahlen-Pruefer r1 Gelb 4)",
-   "ist": "0 von 457063 Zugriffen",
+   "ist": "0 von 460935 Zugriffen",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -243,7 +243,7 @@
   {
    "nr": "G8",
    "text": "fast weiss wie reinweiss: kein Zugriff auf einen Eintrag mit L* > 85 (Haut, Tausch, Fleck-Grund und Fleck-Material; ausser Zaehnen, Maul, Augen, F1-Kern), ganzes Asset",
-   "ist": "0 von 457063 Zugriffen ",
+   "ist": "0 von 460935 Zugriffen ",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -375,7 +375,7 @@
   {
    "nr": "W3",
    "text": "weiss C-std im Band 4.780..13.550 (Originale)",
-   "ist": "5.532",
+   "ist": "5.520",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [
@@ -395,7 +395,7 @@
   {
    "nr": "W5",
    "text": "weiss C* Mittel (Info; Band Originale 8,63..23,41)",
-   "ist": "11.31",
+   "ist": "11.30",
    "ok": true,
    "art": "Info",
    "gegenprobe": null
@@ -555,7 +555,7 @@
   {
    "nr": "T5",
    "text": "jede Flaeche des Assets liest eine gueltige Zeile",
-   "ist": "0 ungueltig von 13185",
+   "ist": "0 ungueltig von 13233",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": null
@@ -563,7 +563,7 @@
   {
    "nr": "G5",
    "text": "Spiel-Asset shared_assets/RE2/BAHNSTEIG_FORM.EMD/.TIM == diese Variante (R9-Einbau; bis dahin K5e_f1 f277916d/31a35e66)",
-   "ist": "Asset EMD 88c49ce1 TIM c00823b3, Variante EMD 88c49ce1 TIM c00823b3",
+   "ist": "Asset EMD 115f8721 TIM c00823b3, Variante EMD 115f8721 TIM c00823b3",
    "ok": true,
    "art": "Riegel",
    "gegenprobe": [

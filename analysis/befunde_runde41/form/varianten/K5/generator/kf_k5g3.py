@@ -42,6 +42,7 @@ import kf_k5g2_tex as TX  # noqa: E402
 import kf_k5g3_geo as G3  # noqa: E402
 import kf_k5g3_tex as T3  # noqa: E402
 import kf_k5g3_auge as AU  # noqa: E402
+import kf_k5g3_zaehne as ZV  # noqa: E402
 
 FE = E.FE
 K5 = E.K5
@@ -182,6 +183,10 @@ def bauen(par, aus, log=log):
     falsch = uv_gegen_geo(form, form_v, augen)
     if falsch:
         raise SystemExit('UV != Geometrie-Stufe (uvfein) + Kopie-Versatz: %s' % falsch[:10])
+    # ---- Stufe zaehne_vorn (Nutzer 16.11.2026 "ganz vorne im Maul keine Zaehne", "Oben und unten"): die Seitenreihen um die Schnauzenspitze
+    # fortsetzen (kf_k5g3_zaehne, Regeln R1-R6 dort). Nur ANGEHAENGT an Netz 22/23 (Ecken, Normalen, je Zahn 3 Dreiecke mit UV/CLUT/Seite des
+    # vordersten alten Zahns); alte Ecken/Normalen/Flaechen, Posen und TIM bleiben bytegleich. Danach wird mit abgetastet (Zahnzeile).
+    zber = ZV.einsetzen(form, ZV.vorgabe())
     # kein Zugriff auf einen Texel, den weder die Ausgangs-Form gelesen noch eine Kopie/ein Augen-Block geschrieben hat (Pruefer K5g3 r1 ROT 2:
     # 26 Zugriffe auf leere Kopie-Texel = Index 0 = 0x7FFF auf 10|1|76)
     zug = abtasten(form, px, int(T['clut_y']))
@@ -216,6 +221,7 @@ def bauen(par, aus, log=log):
                                              kinder_neue_zeile=mber['kinder_clut_neu'],
                                              kinder_ausserhalb_mutter_rechteck=len(mber['kinder_ausserhalb'])),
                                   uv_gegen_geo='gleich bis auf den Kopie-Versatz (ausser %d Augen-Dreiecke)' % len(augen)),
+                   zaehne_vorn=dict(stufe='kf_k5g3_zaehne.einsetzen', bericht=zber, reihen=ZV.bericht_reihen(ZV.vorgabe())),
                    textur=ber_t, zeilen=len(reihen), port_texturhoehe=len(reihen) * 256,
                    sha256={n: sha(open(os.path.join(aus, n), 'rb').read()) for n in DATEIEN if not n.endswith('form.json')},
                    eingang_sha256=dict(k5e_f1_bahnsteig_emd=sha(emd_a), k5e_f1_tim=sha(tim_a),
@@ -224,7 +230,9 @@ def bauen(par, aus, log=log):
                                        material_json=sha(open(E.MATERIAL, 'rb').read()),
                                        spalt_tabelle=sha(open(G3.GEO3_SPALT, 'rb').read()), krallen_k5c=sha(open(G3.GEO3_KRALLEN, 'rb').read()),
                                        spalt_uv_tabelle=sha(open(G3.GEO3_SPALT_UV, 'rb').read().rstrip(b'\r\n')),
-                                       augen_mitten=sha(open(AU.TABELLE, 'rb').read().replace(b'\r\n', b'\n'))))
+                                       augen_mitten=sha(open(AU.TABELLE, 'rb').read().replace(b'\r\n', b'\n')),
+                                       zaehne_kopf_k5c=sha(open(ZV.KOPF_JSON, 'rb').read().replace(b'\r\n', b'\n')),
+                                       zaehne_vorn_laengen=sha(open(ZV.LAENGEN, 'rb').read().replace(b'\r\n', b'\n'))))
     json.dump(bericht, open(os.path.join(aus, 'bau.json'), 'w', encoding='utf-8', newline='\n'), indent=1, ensure_ascii=False, sort_keys=True)
     log('K5g3 gebaut: %s  Zeilen %d  EMD %s  TIM %s' % (aus.replace(chr(92), '/'), len(reihen), bericht['sha256']['BAHNSTEIG_FORM.EMD'][:16],
                                                        bericht['sha256']['BAHNSTEIG_FORM.TIM'][:16]))
