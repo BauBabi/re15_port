@@ -14,7 +14,8 @@
 # "Runde 42") und startet im Raumwechsel - Weg jetzt Debug-Sprung 5030 an die Tuer + Aktionstaste, Szenentakt h0 = Raumbild F14 statt
 # F243. ALLE Bildnummern dieses Riegels (F0/F1, Pruefbereiche der beiden Auswerter) sind deshalb um 229 vorgezogen (h12-h107 =
 # F26-F121); die Kommentare unten nennen die alten Nummern F255.. = h12.. (Takt und Bild der Szene sind bitgleich zu 98391e747,
-# scratchpad hangar_aussen/BERICHT_r1.md).
+# scratchpad hangar_aussen/BERICHT_r1.md). Der Auswerter probe_r41_schwanz_zusammen bekommt h0 = F14 als 27. Wert (vorher fest 243 -
+# mit den neuen Bildnummern liefen die Pruefungen (5) und (8) sonst ins Leere).
 #   N normal, T RE15_SCHWANZ_MASKE=schwanz, L RE15_SCHWANZ_MASKE=figuren (Messhaken main.c, nur Messung).
 # (1) probe_r41_schwanz_zusammen verlangt: in keinem Bild ein Schwanzteil (N != T) ohne Figurpunkt (T != L: Birkin oder Spider-Man) im
 # Abstand <= 2 Punkte; dazu Schwanz in mindestens 60 Bildern (gemessen nach r9: 74 von 96; vor r9 ebenso - die Probe ist also nicht leer).
@@ -183,7 +184,7 @@ szene_lauf(mk "" "${_belege}/schwanz_r9_r5/EM30_HANGAR_a02a6df3_marker_klasse.EM
 szene_lauf(naht "" "${_belege}/schwanz_r9_r5/EM30_HANGAR_a02a6df3_marker_naht.EMD" _dnaht)
 
 execute_process(COMMAND "${RE15_PRUEF_TOOL}" "${_dn}" "${_dt}" "${_dl}" ${_f0} ${_f1} 2 3
-                        "${_db}" "${_dn}/../schwanz.log" 70 29 87 200 20 72 86 10 43 49 100 26 38 72 85 100 86
+                        "${_db}" "${_dn}/../schwanz.log" 70 29 87 200 20 72 86 10 43 49 100 26 38 72 85 100 86 14
                 TIMEOUT 120
                 RESULT_VARIABLE _rv
                 OUTPUT_VARIABLE _out)
