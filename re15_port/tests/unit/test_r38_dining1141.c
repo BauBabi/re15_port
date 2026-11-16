@@ -46,6 +46,7 @@
 #include "re15_emd.h"
 #include "re15_tim.h"
 #include "re15_dining_r38.h"
+#include "re15_zws_r41.h"   /* Runde 41 ZWS114: Einblenden nach dem Gorilla-Film (Teil sicht) */
 
 #include <math.h>
 #include <stdio.h>
@@ -1077,13 +1078,43 @@ static void teil_leon1140(void)
  *       je Bild) oder der Rolladen faehrt.
  *   R3  innerhalb derselben Kamera verschwindet John nur (>0 -> 0 Pixel), wenn er sich bewegt (Schritt 1..400); ein Parken
  *       (x <= -29000) oder Sprung (> 400) waehrend er sichtbar ist, ist ein Verstoss.
- * Kamerawechsel sind Schnitte: dort darf sich alles aendern. Erkannt am BILD des Laufs B (ohne John): mittlere
+ * Kamerawechsel sind Schnitte: dort darf sich alles aendern. Ebenso das Einblenden aus Schwarz nach dem Gorilla-Film
+ * (Runde 41 ZWS114, include/re15_zws_r41.h: RE2 ROOM1080 sub14 Pegel 0x7800, Schritt -0x800 -> 15 Bilder + Halt): das ganze
+ * Bild hellt auf, John wird mit ihm sichtbar statt hineinzuspringen (gemessen lauf_0e1ee53b: Film F2827, "erscheint" F2833
+ * mit 17 px bei John-Schritt 0 mitten im Einblenden). Fenster = ab dem Bild der debug.log-Zeile "[zws114] Film zu Ende:
+ * Einblenden ... F<n>" SICHT_BLENDE_BILDER Bilder.
+ * Kamerawechsel werden erkannt am BILD des Laufs B (ohne John): mittlere
  * Abweichung je Kanal zum Vorbild > SICHT_SCHNITT (gemessen Lauf e7035a6f, Grauwert: an den 9 Kamerawechseln 25,5..40,3,
  * sonst <= 3,0 — Letterbox-Balken 3,0, Textfenster 1,2). Die Kamera-Nummern des Logs taugen dafuer NICHT: ein
  * Skript-Cut_chg steht ein Bild VOR dem Bildwechsel im Log (F2119 anz=2, Bild erst F2120), ein Zonenwechsel im selben Bild
  * (F801) — gemessen, erste Fassung des Werkzeugs meldete deshalb an F2120/F2222 zwei Schein-Verstoesse.
  * Schreibt <laufA>/sicht.txt (je Bild F, Kamera, Pixel, Kasten, Lagen, Bildwechsel). */
 #define SICHT_SCHNITT 10.0
+/* Einblenden nach dem Film: Pegel / Schritt = 0x7800 / 0x800 = 15 Bilder mit Helligkeit 240..16, dazu das Bild mit 0. */
+#define SICHT_BLENDE_BILDER ((int)RE15_ZWS_BLENDE_PEGEL / -(RE15_ZWS_BLENDE_WERT) + 1)
+static int s_blende_ab[16], s_n_blende = 0;   /* Bilder "[zws114] Film zu Ende: Einblenden ... F<n>" im Lauf A */
+
+static void sicht_blenden_lesen(const char *lauf)
+{
+    char p[1024];
+    snprintf(p, sizeof p, "%s/debug.log", lauf);
+    FILE *f = fopen(p, "rb");
+    if (!f) return;
+    char z[4096];
+    while (fgets(z, sizeof z, f) && s_n_blende < 16) {
+        if (!strstr(z, "] Film zu Ende: Einblenden")) continue;
+        const char *fp = strrchr(z, 'F');
+        unsigned fr = 0;
+        if (fp && sscanf(fp, "F%u", &fr) == 1) s_blende_ab[s_n_blende++] = (int)fr;
+    }
+    fclose(f);
+}
+
+static int sicht_im_einblenden(int f)
+{
+    for (int i = 0; i < s_n_blende; i++) if (f >= s_blende_ab[i] && f <= s_blende_ab[i] + SICHT_BLENDE_BILDER) return 1;
+    return 0;
+}
 typedef struct { int da, cam, anz, jda, jx, jz, rda, ry, ex, ez; } sicht_t;
 #define SICHT_MAX 20000
 static sicht_t s_sicht_a[SICHT_MAX], s_sicht_b[SICHT_MAX];
@@ -1141,6 +1172,10 @@ static int teil_sicht(int argc, char **argv)
         if (a->da) { if (erst < 0) erst = f; letzt = f; }
     }
     PRUEF(abweich < 0, "R0 A und B mit gleichen Messzeilen (Spiel ohne Johns Bild unveraendert), erste Abweichung %d", abweich);
+    sicht_blenden_lesen(la);
+    for (int i = 0; i < s_n_blende; i++)
+        printf("  Einblenden nach dem Gorilla-Film ab Bild %d (%d Bilder, Ausnahme von R2/R3 wie ein Schnitt)\n", s_blende_ab[i],
+               SICHT_BLENDE_BILDER);
     char p[1200];
     snprintf(p, sizeof p, "%s/sicht.txt", la);
     FILE *out = fopen(p, "w");
@@ -1208,13 +1243,16 @@ static int teil_sicht(int argc, char **argv)
             if (s->jda && v->jda && !park && !park_v) schritt = abs(s->jx - v->jx) + abs(s->jz - v->jz);
             const int laeuft = schritt >= 1 && schritt <= 400;
             const int rolladen = s->rda && v->rda && s->ry != v->ry;
-            if (!schnitt && px_vor == 0 && px > 0) {
+            const int blende = sicht_im_einblenden(f);
+            if (!schnitt && blende && (px_vor == 0) != (px == 0))
+                printf("  Einblenden Bild %d (Cut %d): John %d -> %d px mit dem ganzen Bild\n", f, s->anz, px_vor, px);
+            if (!schnitt && !blende && px_vor == 0 && px > 0) {
                 erscheinen++;
                 printf("  erscheint Bild %d (Cut %d): %d px Kasten %d,%d-%d,%d, John-Schritt %d, Rolladen %s\n", f, s->anz,
                        px, x0, y0, x1, y1, schritt, rolladen ? "faehrt" : "steht");
                 if (!(laeuft || rolladen)) { r2++; verstoss++; printf("  VERSTOSS R2 Bild %d: ohne Bewegung ins Bild\n", f); }
             }
-            if (!schnitt && px_vor > 0 && px == 0) {
+            if (!schnitt && !blende && px_vor > 0 && px == 0) {
                 verschwinden++;
                 printf("  verschwindet Bild %d (Cut %d): vorher %d px, John-Schritt %d%s\n", f, s->anz, px_vor, schritt,
                        park ? ", GEPARKT" : "");

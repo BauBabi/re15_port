@@ -5412,6 +5412,10 @@ re_title:;
             re15_menu_request_box();
         }
 
+        /* Runde 41 ZWS114/ZWS11C (platform/pc/src/zws_r41_pc.c): steht ein Gorilla-Film an (ROOM1141 Zeile 60, ROOM11C0
+         * Anker @0x01982), laeuft er HIER, zwischen zwei Spielbildern (eigene Bild-/Ton-Schleife wie der Vorspann CAPCOM.STR). */
+        { extern void re15_zws_r41_pc_bild(void); re15_zws_r41_pc_bild(); }
+
         re15_render_begin_frame();
         /* R1-UMSCHALTER des Touch-Overlays (Runde 30, Thema C; touch_r1_toggle_pc.h,
          * Dossier analysis/befunde_runde30/android-r1-toggle.md Schritt 4): EIN-TICK-Freigabe
@@ -12087,8 +12091,15 @@ re_title:;
         re15_msgtakt_r41_nach_spieltakt();   /* Runde 41 Spur E: Absicherung (Bild ohne Spiel-Takt) */
         { extern void re15_render_pc_bild_halten(void);   /* Runde 41 Spur E: Apply-Bild @0x80021560 - kein DrawOTag, kein Pufferwechsel */
           extern void re15_render_pc_standbild(int bilder, uint32_t budget_ms, unsigned bild_nr);   /* NB4: Dauer @0x80021d2c/@0x80021e34 */
+          /* Runde 41 ZWS11C (platform/pc/src/zws_r41_pc.c): nach dem Gorilla-Film ROOM11C0 laeuft der Auftritt @0x01988..
+           * @0x01A5B unsichtbar - dieses Bild wird wie ein gehaltenes Apply-Bild verworfen (kein Present, Fade-Takt laeuft),
+           * ohne Standbild-Wartezeit; die Logik dieses Takts lief oben unveraendert. */
+          extern int re15_zws_r41_pc_vorspul_bild(void);
+          const int zws_unsichtbar = re15_zws_r41_pc_vorspul_bild();
           if (md1_ok && re15_kamerahalt_r41_haelt((unsigned)g_current_room_id)) { re15_render_pc_bild_halten();
-              re15_render_pc_standbild(re15_kamerahalt_r41_standbilder(), frame_budget_ms, (unsigned)g_engine.frame_count); }
+              if (!zws_unsichtbar)
+                  re15_render_pc_standbild(re15_kamerahalt_r41_standbilder(), frame_budget_ms, (unsigned)g_engine.frame_count); }
+          else if (zws_unsichtbar) re15_render_pc_bild_halten();
           else re15_render_end_frame(); }
         pc_cut_sync_log();   /* Messschiene RE15_CUT_SYNC_LOG (env-gegatet, kein Verhalten) */
 
@@ -12155,7 +12166,8 @@ re_title:;
             uint32_t budget = re15_gr2_pc_bildbudget(frame_budget_ms);   /* Runde 41 Spur B: RE2 VSync(4) in R1 @0x8010235c */
             uint32_t now = SDL_GetTicks();
             uint32_t elapsed = now - last_tick;
-            if (elapsed < budget && last_tick != 0) {
+            extern int re15_zws_r41_pc_bild_uebersprungen(void);   /* Runde 41 ZWS11C: unsichtbares Vorspulen ohne Bildtakt */
+            if (elapsed < budget && last_tick != 0 && !re15_zws_r41_pc_bild_uebersprungen()) {
                 SDL_Delay(budget - elapsed);
             }
             { extern void re15_render_pc_standbild_warten(void); re15_render_pc_standbild_warten(); }   /* Runde 41 Spur E NB4: Apply-Dauer */

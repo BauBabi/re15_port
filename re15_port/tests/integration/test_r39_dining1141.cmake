@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.16)
 #   1131 (Dining Room Key benutzen, Tuer) -> 1141 Phase H (Klopfen + help01..05, Elzas Reaktion) -> Gemaelde "ja" ->
 #   Rolladen, danach frei laufen (Nachbesserung 1 N4.1) -> Riegel der Dachtuer (msg 12) -> Elza rennt zur Kamera Cut 7,
 #   dreht sich zur Tuer, hebt die Waffe (N4.2; hier ohne Schusswaffe = Messer) -> Tuer auf/zu, Kamera auf die Tuer mit
-#   John -> Szene (Glasbruch vor msg 6, Blick ab msg 9) -> Tuersperre msg 41 -> Kampf, John schiesst ab und an (N4.3) ->
+#   John -> Szene (Gorilla-Schrei vor msg 6, Film vor msg 7 - Runde 41 ZWS114 -, Blick ab msg 9) -> Tuersperre msg 41 -> Kampf, John schiesst ab und an (N4.3) ->
 #   Kampfende per Messhaken RE15_R38F_GORILLAS_TOT (Kill-Flags (7,0xCB)/(7,0xCC), KEINE Schusszahl) -> msg 51/52 mit
 #   Heranwinken aus ROOM1171 (M2, Nutzer-Nachtrag 7), John springt nicht (M3) -> Johns Abgang -> Dachtuer -> 1171 (Musik
 #   beim Wechsel, Punkt 9).
@@ -226,16 +226,26 @@ if(_pm GREATER -1)
     endif()
 endif()
 pruef_wahr(_b5 "Nachtrag 10: erste Nachricht in 1141 = msg 13 (Gemaelde), keine Reaktion davor")
-# Punkt 6: beide Glasbruch-Saetze vor "What was that?!" (msg 6)
-string(FIND "${_r}" "(RE2 GLAS1090 Glasbruch)" _pg REVERSE)
+# Punkt 6 seit Runde 41 ZWS114 (include/re15_zws_r41.h): vor "What was that?!" (msg 6) der Gorilla-Schrei (ROOM11C0
+# snd1) statt des Glasbruchs; zwischen msg 6 und msg 7 der Film R114GORI.STR (zeigt das Zerspringen der Scheiben).
+string(FIND "${_r}" "Schrei ROOM11C0 snd1" _pg REVERSE)
 string(FIND "${_r}" "[msg] room=1141 id=6 " _p6)
+string(FIND "${_r}" "[zws114] Film zu Ende" _pf)
+string(FIND "${_r}" "[msg] room=1141 id=7 " _p7)
 set(_b6 FALSE)
 if(_pg GREATER -1 AND _p6 GREATER _pg)
     set(_b6 TRUE)
 endif()
-pruef_wahr(_b6 "Punkt 6: Glasbruch vor msg 6 \"What was that?!\"")
-# Punkt 6: der Glasbruch klingt am ENDE von Johns Sprachzeile zu msg 5 (Warte-Zeile msg 58), nicht mitten im Satz
-string(REGEX MATCH "GLAS1090 Glasbruch\\) F([0-9]+)" _gm "${_r}")
+pruef_wahr(_b6 "Punkt 6 / ZWS114: Gorilla-Schrei vor msg 6 \"What was that?!\"")
+set(_b6f FALSE)
+if(_pf GREATER _p6 AND _p7 GREATER _pf)
+    set(_b6f TRUE)
+endif()
+pruef_wahr(_b6f "ZWS114: Film R114GORI.STR nach msg 6 und vor msg 7 (Shit! that is what I was talking about!)")
+pruef_nicht(_r "(RE2 GLAS1090 Glasbruch)")
+pruef(_r "Film MOVIE/R114GORI.STR: 367 Bilder 320x240")
+# der Schrei klingt am ENDE von Johns Sprachzeile zu msg 5 (Warte-Zeile msg 58), nicht mitten im Satz
+string(REGEX MATCH "\\[zws114\\] F([0-9]+) Schrei ROOM11C0" _gm "${_r}")
 set(_glas_f "${CMAKE_MATCH_1}")
 # Runde 38 (unveraendert): Szene ab msg 40, Tuersperre msg 41, Kampfende, Tuer-Toene
 pruef(_r "[msg] room=1141 id=40")
@@ -465,7 +475,7 @@ if(NOT _glas_f STREQUAL "" AND NOT _m5_ende STREQUAL "")
         set(_b6b TRUE)
     endif()
 endif()
-pruef_wahr(_b6b "Punkt 6: Glasbruch (F${_glas_f}) erst am Ende von msg 5 (zuletzt offen F${_m5_ende}), nicht mitten in Johns Satz")
+pruef_wahr(_b6b "Punkt 6 / ZWS114: Schrei (F${_glas_f}) erst am Ende von msg 5 (zuletzt offen F${_m5_ende}), nicht mitten in Johns Satz")
 pruef_wahr(_b51_blick "Punkt 8: John blickt bei msg 51 zu Elza")
 pruef_wahr(_geste15 "Punkt 8: Geste Clip 15 zu msg 51")
 pruef_wahr(_wink2 "Punkt 8 / M2 / Nachtrag 7: Heranwinken (0,2) zu msg 52 (ROOM1171 sub02 @0x014CE)")

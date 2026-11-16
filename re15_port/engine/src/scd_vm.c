@@ -86,6 +86,7 @@
 #include "re15_tuersperre_r39.h" /* Runde 39 Spur P: Tuersperren 1041/1051 (Panikphase), Kanaldeckel 10B1 (tuersperre_r39.c) */
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: ROOM2090/2091 ohne Spinnen, Ankunftsszene (gatorszene_r41.c) */
 #include "re15_annette_r41.h"   /* Runde 41 Spur AN: Annette-Szene ROOM5090 (annette_r41.c) */
+#include "re15_zws_r41.h"      /* Runde 41 ZWS114/ZWS11C: Gorilla-Schrei + Film (ROOM1141 John/Elza, ROOM11C0 Leon/Ada; zws_r41.c) */
 
 scd_vm_t g_scd;
 
@@ -221,6 +222,9 @@ void scd_register_current_rdt(const re15_rdt_t *rdt)
     re15_elzatoene_r38_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
     /* Runde 39 Spur B: Anker ROOM11F0/11F1 @0x017B6 (Schublade), ROOM1190/1191 @0x02796/@0x0286A/@0x0288C (re15_toene_r39.h). */
     re15_toene_r39_raum_scan(rdt ? rdt->raw : NULL, rdt ? rdt->raw_size : 0, g_current_room_id);
+    /* Runde 41 ZWS11C: RDT-Anker ROOM11C0 sub02 @0x01920 (Schrei vor Sleep 20 + "What!?") / @0x01982 (Film vor dem
+     * Musikstart), Bytes geprueft (re15_zws_r41.h). In jedem anderen Raum 0 Anker. */
+    re15_zws_r41_raum_scan(rdt ? rdt->raw : NULL, rdt ? (long)rdt->raw_size : 0, g_current_room_id);
 }
 
 /* Per-frame controller press-EDGE mask, published by re15_game_step (game_step_common.c)
@@ -826,6 +830,9 @@ void scd_vm_tick(void)
             /* Runde 39 Spur J (Nachbesserung 1 N4.3): Anker in Johns Schuetzen-Faden ROOM1141 (Ziel eintragen, Schuss). */
             { extern int g_re15_r39j_anker_n; extern void re15_dining_r39_pc(const uint8_t *pc);
               if (g_re15_r39j_anker_n) re15_dining_r39_pc(t->pc); }
+            /* Runde 41 ZWS11C: ROOM11C0 sub02 - Gorilla-Schrei vor @0x01920, Film vor @0x01982; parkt (pc bleibt), danach
+             * laeuft der Original-Opcode (re15_zws_r41.h). Wachposten = Ankerzahl, ausserhalb ROOM11C0 0. */
+            if (g_re15_zws_anker_n && re15_zws_r41_pc(t->pc) == 2) break;
             /* RE15_SCD_TRACE=1: jeden ausgefuehrten Opcode mitschreiben. Die VM ist die einzige
              * verlaessliche Quelle dafuer, WAS ein Skript wirklich ausfuehrt — ein Offline-Walker
              * desynchronisiert in Daten-Regionen und erfindet Opcodes, die nie laufen. */
@@ -1933,6 +1940,8 @@ static int op_message_on(scd_thread_t *t)
       if (re15_dining_r39_message_on(t->pc)) { t->pc += 4; return 1; } }
     { const int jr = re15_johnruf_r39_message_on(t->pc);   /* Runde 39 Spur P: Rufe 1041/1131 (nur Stimme), Karte 1041 (parkt) */
       if (jr == 2) return 2; if (jr == 1) { t->pc += 4; return 1; } }
+    { const int zw = re15_zws_r41_message_on(t->pc);   /* Runde 41 ZWS114: 1141 msg 61 Gorilla-Schrei / msg 60 Film (parkt) */
+      if (zw == 2) return 2; if (zw == 1) { t->pc += 4; return 1; } }
 
     /* Plain line. FULL-TEXT cinematic captions (the intro: ROOM1240 pre-intro narrator + ROOM1170
      * helipad) use the legacy all-at-once timed display; every OTHER room's EXAMINE / gameplay text

@@ -115,6 +115,10 @@ if(NOT AUSWERTEN)
         # M2.5667 = R1 bis F4079, MA0.1 = Abzug mit leerem Magazin F4080 (Druck-Flanke @0x80033338 -> Nachladen @0x80033378),
         # M10 = R1 bis ~F4383. Messhaken F4056, Sperre F4083 (Nachtrag 17: das Szenenende wartet auf Johns laufende Salve,
         # die jetzt am Kampfbeginn steht - Lauf 14:19 "Kampfende 4056, Sperre ab 4083"), Schnitt F4113.
+        # Runde 41 ZWS114 (include/re15_zws_r41.h): die Szene ist 33 Spielbilder laenger (Schrei 37 Takte statt Glasbruch
+        # mit Sleep 5, Film-Zeile 1 Takt; der Film selbst laeuft zwischen zwei Spielbildern) - gemessen Lauf lauf_331d38e2
+        # "Kampfende 4089, Sperre ab 4116, Schnitt 4146". Deshalb Schuss F4033 (M34.4333 = R1 3000..4032), Abzug mit leerem
+        # Magazin F4113 = wieder 3 Bilder vor der Sperre.
         re15_start_spiel(_rv 1500
             RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_PSELECT_AUTO_SWITCH=1
             RE15_MSG_LOG=1 RE15_EVT_TRACE=1 RE15_STATE_LOG=state.txt RE15_R39J_LOG=r39.txt RE15_AUDIO_CAP_SYNC=cap.raw
@@ -123,8 +127,8 @@ if(NOT AUSWERTEN)
             "RE15_SET_FLAG=3:0x5F,4:0xF0,4:0xF1,4:0xEC,3:0x78" "RE15_GIVE=0x43:1,0x03:1,0x15:50" "RE15_EQUIP=3"
             "RE15_DEBUG_JUMP=1131@gp" "RE15_PLAYER_POS=-1300,-13900,0"
             "RE15_R38F_GORILLAS_TOT=600" "RE15_R38F_GORILLAS_STARR=1"
-            "RE15_INPUT_SCRIPT=M33.3333,MA0.1,M2.5667,MA0.1,M10" "RE15_INPUT_SCRIPT_BASIS=spiel" "RE15_INPUT_SCRIPT_START=3000"
-            "RE15_FRAMEDUMP=4040-4110/2:fd_"
+            "RE15_INPUT_SCRIPT=M34.4333,MA0.1,M2.5667,MA0.1,M10" "RE15_INPUT_SCRIPT_BASIS=spiel" "RE15_INPUT_SCRIPT_START=3000"
+            "RE15_FRAMEDUMP=4073-4143/2:fd_"
             "${_exe_kopie}")
         file(REMOVE "${_lauf}/cap.raw")   # nur fuer den Bildtakt noetig (RE15_AUDIO_CAP_SYNC), das Werkzeug liest ihn nicht
     else()

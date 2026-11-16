@@ -30,7 +30,8 @@
 #           Beide: genau eine Wandzeile, Rueckzug x' > -21550 (Flurseite), kein Granatenbild mit x <= -21550,
 #           Explosion im Wandtick; b zusaetzlich: der Wandpunkt liegt hinter der Zelle (x < -21825) = der Fall,
 #           den der Punkttest je Bild verfehlte (vorher: Explosion bei x -25811 in der Zelle).
-#   raute   ROOM11C0 nach der Ada-Szene (Skriptstart 1075; Abnahme 0, Lauf t11c0c), MITTE-Wurf aus der Hand
+#   raute   ROOM11C0 nach der Ada-Szene (Skriptstart 1113; Abnahme 0, Lauf t11c0c: 1075, seit Runde 41 ZWS11C +38 Bilder:
+#           Gorilla-Schrei 37 Takte + 1 Takt Film-Anker, include/re15_zws_r41.h), MITTE-Wurf aus der Hand
 #           (-6720,-13266): der Punkt liegt im Rechteck der Raute x[-15400..4799] z[-13266..4921], ausserhalb der
 #           Raute. Vorher: Wandzeile im Wurfbild (0 Flugbilder). Jetzt: >= 5 Flugbilder vor der ersten Wandzeile.
 # Boss-Slots nach RE15_DEBUG_JUMP (gemessen r35a_mess/b1_2090 + b2_5090, Bild 100): ROOM2090 Alligator = Slot 15
@@ -506,11 +507,12 @@ if(_an)
     set(_dir "${_wurzel}/raute")
     r35_exe(raute "${_dir}" 400 ${_env_basis}
         RE15_DEBUG_JUMP=11C0@250 RE15_GIVE=9:5 RE15_EQUIP=9
-        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1075 "RE15_INPUT_SCRIPT=M0.6,MA0.2,M2.5,W5"
-        "RE15_EXIT_AT=1300#11C0")
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=1113 "RE15_INPUT_SCRIPT=M0.6,MA0.2,M2.5,W5"
+        "RE15_EXIT_AT=1338#11C0")   # Runde 41 ZWS11C: Szene 38 Bilder laenger (Schrei 37 + Film-Anker 1) -> 1075/1300 + 38;
+                                    # gemessen lauf_c479d3e2: Szenenschutz aus F1109, letterbox closed F1123
     file(STRINGS "${_dir}/gr.log" _sp REGEX "SPAWN granate art=2 .* anker=")
     if(NOT _sp)
-        r35_fehler(raute "kein Wurf im Granatenlog (SPAWN fehlt) — Skriptstart 1075 liegt nicht mehr hinter der Ada-Szene?")
+        r35_fehler(raute "kein Wurf im Granatenlog (SPAWN fehlt) — Skriptstart 1113 liegt nicht mehr hinter der Ada-Szene?")
     endif()
     list(GET _sp 0 _sp0)
     if(NOT _sp0 MATCHES "anker=\\((-?[0-9]+),(-?[0-9]+),(-?[0-9]+)\\)")
