@@ -36,6 +36,25 @@ int re15_pipe_r41_treffer_ton(int weapon_id)
     return weapon_id == RE15_PIPE_R41_MESSER || weapon_id == RE15_PIPE_R41_ID;
 }
 
+int re15_pipe_r41_rohr_satz(int waffe, int arms_satz)
+{
+    /* NUTZERWUNSCH "wie bei Birkin" (Belege im Kopf von re15_pipe_r41.h): nur die Pipe, nur Treffer/Ziehen und Schwung. */
+    if (waffe != RE15_PIPE_R41_ID) return -1;
+    if (arms_satz == RE15_PIPE_R41_ARMS_TREFFER) return RE15_PIPE_R41_ROHR_SATZ_TREFFER;   /* @0x801177dc */
+    if (arms_satz == RE15_PIPE_R41_ARMS_SCHWUNG) return RE15_PIPE_R41_ROHR_SATZ_SCHWUNG;   /* @0x80117878 */
+    return -1;
+}
+
+void re15_pipe_r41_rohr_rec(const uint8_t birkin[4], const uint8_t messer[4], uint8_t out[4])
+{
+    /* Feldgrenzen wie FUN_800453d0/FUN_80045024 (re15_edt_decode): [1]&0x7f Programm, [2]>>4 Ton, [2]&0xf Prio-Nibble,
+     * [3]&0x1f Stimme, [3]>>5 Zusatzlagen. Klang = Birkin, Kanal = Messer (PORT-WAHL, re15_pipe_r41.h). */
+    out[0] = birkin[0];
+    out[1] = birkin[1];
+    out[2] = (uint8_t)((birkin[2] & 0xf0u) | (messer[2] & 0x0fu));
+    out[3] = messer[3];
+}
+
 /* ---- Messhaken RE15_PIPE_LOG (kein Spielverhalten) ------------------------------------------------------------- */
 #include "re15_actor.h"
 #include "re15_engine.h"

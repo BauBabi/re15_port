@@ -53,6 +53,40 @@ int re15_pipe_r41_arms_bank(int weapon_id);
 /* Treffer-Ton 0x01080001 (Satz 8): Original nur Waffe 1 (@0x800123C0-C4); PORT-WAHL Vorlage Messer: auch Waffe 2. */
 int re15_pipe_r41_treffer_ton(int weapon_id);
 
+/* ---- Runde 41 Spur pipe_ton: ROHR-TOENE = BIRKINS ROHR (NUTZERWUNSCH 16.11.2026, woertlich: "Natuerlich soll die Pipe
+ * nicht klingen wie ein Messer. Sondern eher ein dumpfes metallenes Aufschlag Geraeusch haben. So wie bei Birkin zum
+ * Beispiel. Der hat ja auch eine Pipe.")
+ *
+ * Birkin 0x30 (STAGE3.BIN, Version_40%), Hieb ACT[3] mit dem Rohr in der Hand (Teil 16 = Hand mit Rohr, birkin_rohr):
+ *   Treffer  `jal 0x800453d0` @0x801177dc / `ori a0,zero,0x7` @0x801177e0  -> Raum-SE 7 (snd1, FUN_800453d0)
+ *   Schwung  `ori v0,zero,0x25` @0x8011786c (Bild 0x25), `jal 0x800453d0` @0x80117878 / `ori a0,zero,0x4` @0x8011787c -> SE 4
+ *   ROOM3070.RDT snd1 (Kopf @0x14/0x18/0x1c): Satz 7 = `00 00 82 15` -> Ton 8 -> VAG 9 (1808 B, sha1 e4a8ef3a356c...),
+ *                                             Satz 4 = `00 00 51 16` -> Ton 5 -> VAG 6 (4128 B, sha1 8724f1f3c81f...);
+ *   bytegleich in ROOM3071 und in Version_40% (dort Satz 7 @RDT+0x5e1c, Satz 4 @RDT+0x5e10).
+ * RE2-G1 (Typ 0x30, ENEMSE-Bank 20 = Paar-Tabelle @0x800a7400 Zeile {0x1c,0x00}, Ton-Id +7 = 0x1c in ROOM2190/3030)
+ * spielt DIESELBEN Wellen: Rohr-Treffer auf den Spieler se 6 (`addiu a0,zero,6` @0x80101800 -> `jal 0x8005bd6c` @0x8010182c,
+ * ACT[2] 0x80101240; @0x80101c28 -> @0x80101c48, ACT[3] 0x80101a14) = VAG sha1 e4a8ef3a356c, Angriffsbeginn se 3
+ * (`addiu a0,zero,3` @0x80101344 -> @0x80101348) = VAG sha1 8724f1f3c81f.
+ *
+ * PORT-WAHL (Zusammenbau, gekennzeichnet): Welle + Ton-Attribute (Programm, Ton, Note/Mitte/Pegel) = Birkins Satz,
+ * Stimme + Prioritaet = der Messer-Satz, den die Pipe im Original-Ablauf ruft (ARMS01 Satz 8 `00 00 43 11`, Satz 5
+ * `00 00 13 11`: Stimme 1, Prio-Nibble 3) — so bleibt die Kanal-Logik der Waffe (Bank 1) unveraendert und der Rohr-Ton
+ * konkurriert nicht mit den Raum-SE-Stimmen 4..7. Ziehen (@0x800355f8) ruft im Original denselben Satz 8 wie der Treffer
+ * (@0x800123D4) -> auch das Ziehen der Pipe klingt nach dem Rohr. Das Messer (Waffe 1) bleibt unveraendert. */
+#define RE15_PIPE_R41_ROHR_RDT          "STAGE3/ROOM3070.RDT"   /* Birkin 0x30, Leon-Raum (3071 = Elza, bytegleiche Saetze) */
+#define RE15_PIPE_R41_ROHR_SATZ_TREFFER 7    /* Birkin-Hieb-Treffer Se(7) @0x801177dc/@0x801177e0                 */
+#define RE15_PIPE_R41_ROHR_SATZ_SCHWUNG 4    /* Birkin-Hieb-Schwung Se(4) @0x80117878/@0x8011787c (Bild 0x25)     */
+#define RE15_PIPE_R41_ARMS_TREFFER      8    /* 0x01080001: Treffer @0x800123D4 und Ziehen @0x800355f8            */
+#define RE15_PIPE_R41_ARMS_SCHWUNG      5    /* 0x01050001: Schwung @0x8003537c                                    */
+
+/* Birkin-snd1-Satz fuer den ARMS-Satz `arms_satz` der gefuehrten Waffe `waffe`: Waffe 2 + Satz 8 -> 7, Waffe 2 + Satz 5
+ * -> 4; sonst -1 (= unveraendert aus der ARMS-Bank, insbesondere das Messer). */
+int re15_pipe_r41_rohr_satz(int waffe, int arms_satz);
+
+/* Zusammengesetzter EDT-Satz (4 Byte) aus dem Birkin-Satz und dem Messer-Satz (s.o.): [0],[1] und Ton-Nibble [2]>>4 vom
+ * Birkin-Satz, Prio-Nibble [2]&0xf und [3] (Stimme/Zusatzlagen) vom Messer-Satz. */
+void re15_pipe_r41_rohr_rec(const uint8_t birkin[4], const uint8_t messer[4], uint8_t out[4]);
+
 /* Messhaken (kein Spielverhalten): RE15_PIPE_LOG=<datei> haengt je Nahkampf-Treffer (Waffe 1/2) eine Zeile an:
  * "[pipe] F<bild> waffe=<w> slot=<s> abstand_hand=<d> abstand_spieler=<d> reichweite=<r> hp=<hp> spieler=(x,z,rot=r)
  * gegner=(x,z)". */

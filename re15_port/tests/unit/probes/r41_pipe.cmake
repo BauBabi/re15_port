@@ -25,3 +25,18 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_pipe.cmake)
     set_tests_properties(integration_r41_pipe PROPERTIES TIMEOUT 900)
 endif()
+
+# --- Runde 41 Spur "pipe_ton" (2026-11-16). Nutzer: "Natuerlich soll die Pipe nicht klingen wie ein Messer. Sondern eher ein
+#     dumpfes metallenes Aufschlag Geraeusch haben. So wie bei Birkin zum Beispiel."
+#   unit_r41_pipe_ton  Wahl (Pipe Satz 8 -> Birkin 7, Satz 5 -> Birkin 4, Messer -1); Welle = RE2-G1 se 6 / se 3
+#                      (Bytevergleich ENEMSE.VBS); Kanal = Messer-Satz; Treffer tiefer und kurz.
+add_executable(test_pipe_ton_r41 ${CMAKE_CURRENT_LIST_DIR}/../test_pipe_ton_r41.c)
+target_link_libraries(test_pipe_ton_r41 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_pipe_ton_r41 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_pipe_ton_r41 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_pipe_ton_r41 PRIVATE m)
+endif()
+add_test(NAME unit_r41_pipe_ton COMMAND test_pipe_ton_r41)
+set_tests_properties(unit_r41_pipe_ton PROPERTIES TIMEOUT 120)
