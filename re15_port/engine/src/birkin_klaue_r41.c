@@ -466,7 +466,10 @@ static void bkk_zeile(const char *wer, const re15_actor_t *e, const re15_bkk_lag
     if (an < 0) an = (getenv("RE15_BIRKIN_DBG") != NULL);
     if (!an || !e || e->type != 0x30) return;
     re15_bkk_befund_t b; re15_bkk_sicht_t v;
-    const int sicht = re15_bkk_sicht(&v, e);
+    /* Verdeckung durch Birkins Koerper nur in der "klinge"-Zeile (Taktende, Pose = gezeichnete Pose): im Zeichner hat die
+     * Ueberblendung den Schnappschuss des Aktors schon fortgeschrieben, eine Neuberechnung der Koerper-Pose waere dort falsch.
+     * Die "zeichner"-Zeile meldet deshalb nur Bild + Wand (verdeckt=0). */
+    const int sicht = re15_bkk_sicht(&v, strcmp(wer, "zeichner") ? e : NULL);
     re15_bkk_pruefen(re15_bkk_klinge(), l, g_room_rdt_ok ? &g_room_rdt : NULL, (uint16_t)g_current_room_id, sicht ? &v : NULL, &b);
     FILE *f = fopen("birkin_dbg.log", "a");
     if (!f) return;

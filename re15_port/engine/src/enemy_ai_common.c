@@ -12103,6 +12103,7 @@ void re15_bk_kontakt_takt_ende(void)
         if (!e->active || e->type != 0x30u || e->state != 1 || e->sub_state_1 != 3) continue;
         if (e->sub_state_2 == 1 && e->motion == 3 && re15_bkk_kontakt(e))
             e->sub_state_2 = 3;
+        re15_bkk_logik_melden(e);   /* MESS-SCHIENE (RE15_BIRKIN_DBG), kein Verhalten: Befund auf dem Stand dieser Entscheidung */
     }
 }
 /* Klauenpunkt der Kralle: wie re15_bk_klauenpunkt (KF N-2, s16), aber mit dem Logik-Gerippe, wenn eins gemeldet ist. */
@@ -12499,7 +12500,7 @@ static void re15_birkin_ai_tick(int slot)
                 if ((e->grid_id & 0x10) && e->anim_frame == 0x1e)
                     e->sub_state_2 = 5;
             }
-            if (s_bk_logik_ok) re15_bkk_logik_melden(e);   /* MESS-SCHIENE gezeichnete Klaue (RE15_BIRKIN_DBG), kein Verhalten */
+            /* MESS-SCHIENE "klinge"-Zeile: seit Runde 2 am Taktende (re15_bk_kontakt_takt_ende), auf dem Stand der Entscheidung */
             break;
         }
         case 4: {  /* FAST BITE 0x801179d8: clip 4, window [0x23..0x2a] -> hp-10 + grab(<0x26)/knockdown(>=0x26) -> HUB */
