@@ -733,6 +733,11 @@ static struct {
  * zwei Stellen wie der alte Merker (Szenenende; Start ohne freien Slot), damit der Ablauf im Prozess gleich bleibt. */
 static int  bf_szene_gesehen(void) { return re15_game_flag_get(RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT); }
 static void bf_szene_merken(void)  { re15_game_flag_set(RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, 1); }
+/* "Hangar-Birkin besiegt" (Bank-9-Bit RE15_BF_BESIEGT_BIT) und "Kraftraum-Birkin besiegt" (Bank 3 Bit 0x49): Kopf
+ * re15_birkin_formen.h, Abschnitt "Hangar: liegen bleiben". */
+static int  bf_hangar_besiegt(void)    { return re15_game_flag_get(RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT); }
+static int  bf_kraftraum_besiegt(void) { return re15_game_flag_get(RE15_BF_KRAFTRAUM_BANK, RE15_BF_KRAFTRAUM_BIT); }
+static int  s_bf_hp_haken = 0;     /* Messhaken RE15_HANGAR_BIRKIN_HP schon angewandt (je Raumeintritt) */
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_rs_kam_halt = 0;  /* Nachbesserung 4: Haltezeit nach einem Szenenschnitt */
 #define BF_RS_KAM_HALT 30      /* Gestaltung: 1 s wie die Haltezeit der Nahsicht-Wache (Nachbesserung 1) */
@@ -765,6 +770,7 @@ void re15_bf_reset(void)
     re15_schwanz_r41_reset();                            /* Runde 41 SF N1.9: Feder-Ketten und Vorgaben des Raums */
     s_h.raum = 0; s_h.birkin = s_h.sm = -1; s_h.phase = BF_H_WARTEN; s_h.t = 0; s_h.birkin_start = 0;
     s_h.cut_zurueck = 0;
+    s_bf_hp_haken = 0;
 }
 
 int re15_bf_hangar_phase(void) { return s_h.phase; }
@@ -849,7 +855,7 @@ static int bf_neuer_aktor(uint8_t type, int32_t x, int32_t z, uint8_t grid)
     a->active = 1; a->type = type;
     a->x = x; a->y = 0; a->z = z;
     a->grid_id = grid;
-    a->em_flag_id = 0xFF;                                /* kein Kill-Persist */
+    a->em_flag_id = 0xFF;                                /* kein Kill-Persist ueber +0x1c6; den Hangar-Birkin merkt bf_hangar_tod_merken */
     re15_enemy_apply_hitbox(a, type);
     return frei;
 }
@@ -1881,9 +1887,42 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     }
 }
 
+/* ---- Hangar: liegen bleiben (Runde 1 "hangar_liegen", Kopf re15_birkin_formen.h) ----------------------------------------------
+ * Ein Takt nach der Szene (Phase FREI), vor der KI des Bildes (re15_enemy_ai_run_all ruft re15_bf_raumtick zuerst).
+ * Der Todesablauf selbst bleibt in enemy_ai_common.c unveraendert: Phase 3 wartet auf grid & 0xF == 2 (`lbu v0,9(a0)` /
+ * `andi v0,v0,0xf` / `bne` @0x8011aee0-ec STAGE5), das im Hangar (grid 0x10) nie kommt - Birkin liegt im letzten Bild von Clip 9. */
+static void bf_hangar_tod_merken(void)
+{
+    if (s_h.birkin < 0) return;
+    re15_actor_t *b = &g_actors[s_h.birkin];
+    if (!b->active || b->type != 0x30u) return;
+    {   /* MESSHAKEN RE15_HANGAR_BIRKIN_HP=<n> (env, kein Spielverhalten): Birkins HP einmal je Raumeintritt auf n, sobald er in seiner
+         * KI ist (INIT schreibt die HP unbedingt, `ori v0,zero,0x12c` @0x8011690c) - damit Testlauf und Video den Tod mit wenigen
+         * Schuessen erreichen. Ohne die Variable stumm. */
+        static int hp = -2;
+        if (hp == -2) { const char *v = getenv("RE15_HANGAR_BIRKIN_HP"); hp = v ? atoi(v) : -1; }
+        if (hp >= 0 && !s_bf_hp_haken && b->state == 1) {
+            b->hp = (int16_t)hp; s_bf_hp_haken = 1;
+#ifdef RE15_PLATFORM_PC
+            fprintf(stderr, "[hangar] ROOM%04X Messhaken: Birkin-HP %d\n", (unsigned)g_current_room_id, hp);
+#endif
+        }
+    }
+    /* Eintritt in den Tod = die Todesmaschine hat Phase 0 ausgefuehrt (+0x7 = 1: `ori v0,zero,0x1` / `sb v0,7(v1)` @0x8011ae34-38,
+     * STAGE5 FUN_8011adec). Erst ab hier ist der Tod endgueltig: der Revive-Waechter der Todeswurzel greift nur bei +0x7 == 0
+     * (`lbu v0,7(a2)` / `bne v0,zero` @0x8011ac48-50) und +0x1dd & 8 (`lbu v0,477(a2)` / `andi 0x8` / `beq` @0x8011ac58-64) und
+     * setzt dann Zustand und HP zurueck; Phasen 1..3 laufen nur vorwaerts. */
+    if (b->state != 3 || b->sub_state_3 < 1 || bf_hangar_besiegt()) return;
+    re15_game_flag_set(RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT, 1);
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[hangar] ROOM%04X Birkin besiegt F%u (%d,%d) Phase %d: Bank-9-Bit %d\n", (unsigned)g_current_room_id,
+            (unsigned)g_engine.frame_count, (int)b->x, (int)b->z, (int)b->sub_state_3, RE15_BF_BESIEGT_BIT);
+#endif
+}
+
 void re15_bf_raumtick(void)
 {
-    re15_bb_pose_tick();                                 /* Messhaken der Sichtpruefung, im Normalpfad stumm */
+    re15_bb_pose_tick();                                /* Messhaken der Sichtpruefung, im Normalpfad stumm */
     /* MESSHAKEN RE15_BIRKIN_HP_AT=<n>: n KI-Ticks nach Raumeintritt in 5090 die HP des 0x30 auf 0 (Sichtpruefung
      * der Rueckstoss-Szene ohne Durchspielen). Der Debug-Sprung setzt keinen Tuer-Schnitt, die Zonen laufen dann
      * nie; RE15_BIRKIN_CUT=<n> stellt beim Raumeintritt den Schnitt (12 = Kampfstart sub01 @0x1290). Stumm im Normalpfad. */
@@ -1910,6 +1949,18 @@ void re15_bf_raumtick(void)
     if (s_h.raum != g_current_room_id) {
         re15_bf_reset();
         s_h.raum = g_current_room_id;
+        if (bf_hangar_besiegt() || bf_kraftraum_besiegt()) {
+            /* Birkin hier besiegt (Bank-9-Bit RE15_BF_BESIEGT_BIT) oder im Kraftraum (Bank 3 Bit 0x49, ROOM50E0 sub01 `22 03 49 01`
+             * @0x00B1A / ROOM50F1 sub01): weder Szene noch Birkin, auch nach dem Laden (beide Banken stehen im Spielstand). Form wie
+             * das Original-Tor jedes Birkin-Raums: der Raum setzt ihn per Merker nicht mehr (50E0 sub00 `21 03 49 00` @0x00AEA vor
+             * Sce_em_set @0x00AEE; Disc ROOM3071 sub00 @0x030FC) - ein Kill-Flag ueber +0x1c6 (Tor @0x80042120-38) hat der 0x30 nie. */
+            s_h.phase = BF_H_FREI;
+#ifdef RE15_PLATFORM_PC
+            fprintf(stderr, "[hangar] ROOM%04X ohne Birkin (hier besiegt %d, Kraftraum besiegt %d)\n", (unsigned)g_current_room_id,
+                    bf_hangar_besiegt(), bf_kraftraum_besiegt());
+#endif
+            return;
+        }
         if (bf_szene_gesehen()) {                        /* Bank-9-Bit 38: auch nach dem Laden eines Spielstands */
             /* Wiedereintritt nach der Szene: kein Spider-Man, Birkin sofort als Angreifer (Zustand 0 -> INIT -> HUB). */
             s_h.birkin = bf_hangar_birkin_setzen();
@@ -1922,7 +1973,7 @@ void re15_bf_raumtick(void)
         bf_hangar_starten();
         return;
     }
-    if (s_h.phase == BF_H_FREI) return;
+    if (s_h.phase == BF_H_FREI) { bf_hangar_tod_merken(); return; }
     re15_actor_t *b = (s_h.birkin >= 0) ? &g_actors[s_h.birkin] : NULL;
     re15_actor_t *m = (s_h.sm >= 0) ? &g_actors[s_h.sm] : NULL;
     if (!b || !b->active || b->type != 0x30u || (m && (!m->active || m->type != 0x2Bu))) {   /* Figur weg: Szene frei */

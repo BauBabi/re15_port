@@ -152,6 +152,28 @@ int  re15_bf_hangar_riegel(void);        /* 1 = die Szene haelt Set(2,7)/Set(1,2
 #define RE15_BF_HANGAR_BANK  9
 #define RE15_BF_HANGAR_BIT   38
 void re15_bf_hangar_vergessen(void);     /* Testhaken: "Szene gesehen" loeschen (Bank-9-Bit RE15_BF_HANGAR_BIT) */
+/* ---- Hangar: liegen bleiben (Runde 1 "hangar_liegen", Nutzer 2026-11-16: "Besser er bleibt einfach liegen") --------------------
+ * ORIGINAL (40-%-Disc STAGE5.BIN, selbst disassembliert): Todesmaschine FUN_8011adec, Phase 0 @0x8011ae2c (+0x7 = 1 @0x8011ae38,
+ * Clip 9), Phase 2 setzt den Birkin-Fortschritt z5 0x1C (`jal 0x8004ef90` a1 = 0x1c @0x8011aeac/@0x8011aecc), Phase 3 @0x8011aed4
+ * wartet auf grid & 0xF == 2 ohne anim_set. Im Hangar (grid 0x10) kommt das Signal nie: Birkin bleibt im letzten Bild von Clip 9
+ * liegen, solange man im Raum ist. Das bleibt so (enemy_ai_common.c unveraendert; z5 0x1C bleibt im Hangar aus, sonst striche
+ * ROOM50E0 sub01 @0x00B0E / ROOM50F1 sub01 @0x009F8 ueber Set(3,0x49) den Kraftraum-Birkin).
+ * Nicht-Wiederkommen wie jeder getoetete RE-Gegner: das Original merkt den Tod und laesst den Gegner beim naechsten Betreten aus -
+ * allgemein ueber das Kill-Flag +0x1c6 (Sce_em_set-Tor `lbu a1,7(a1)` / `jal 0x8004efe4` / `beq v0,zero` @0x80042120-38, Latch
+ * `sb v0,454(s0)` @0x80042170, Setzen am Todes-Commit z. B. `lbu a1,454(v0)` / `jal 0x8004ef90` @0x80109828-30 STAGE5), beim 0x30
+ * ueber ein Raummerker-Tor (Sce_em_set mit pc[7] = 0xFF; 50E0 sub00 `21 03 49 00` @0x00AEA, Disc ROOM3071 sub00 @0x030FC).
+ * PORT-WAHL (Zensus Bank 9, scratchpad hangar_liegen/zensus/frei.py 2026-11-16: Original, 40-%-Disc, Port r41/sichel_szene,
+ * r42/story einschliesslich re15_story_r42.h, r41/birkin_kralle, r41/form, r41/monitore, master - Bit 39 von niemandem belegt):
+ * "Hangar-Birkin besiegt" - gesetzt beim Eintritt in den Tod (Phase 0 ausgefuehrt, birkin_formen.c bf_hangar_tod_merken), gelesen
+ * beim Betreten (re15_bf_raumtick): gesetzt -> keine Szene, kein Birkin, auch nach dem Laden. */
+#define RE15_BF_BESIEGT_BIT  39
+/* "Kraftraum-Birkin besiegt" = Bank 3 Bit 0x49: gesetzt nur von ROOM50E0 sub01 `22 03 49 01` @0x00B1A bzw. ROOM50F1 sub01 @0x00A04
+ * nach Ck(5,0x1C) (Todesphase 2 des Kraftraum-Birkin @0x8011aecc); danach setzt der Kraftraum ihn nicht mehr (Tor `21 03 49 00`
+ * @0x00AEA / @0x009CC). Ist es gesetzt, zeigt der Hangar weder Szene noch Birkin (Reihenfolge-Luecke). Nicht z5 0x1C: das loeschen
+ * die lesenden Raeume sofort wieder (`22 05 1c 00` @0x00B16 / @0x00A00), und es faellt auch nach dem STAGE3-Birkin (ROOM3070
+ * Sce_em_set 0x30 @0x033CE, Ck/Set(5,0x1C) @0x0348E; ROOM3071 @0x03434 / @0x0350E). */
+#define RE15_BF_KRAFTRAUM_BANK  3
+#define RE15_BF_KRAFTRAUM_BIT   0x49
 /* 1 = der Schnitt `cut` des aktuellen Raums zeigt eine Szenenfigur (Anker-Viereck + Bild), = Ausloeser-Bedingung. */
 int  re15_bf_szene_im_schnitt(int cut);
 /* Region-Cull-Ausnahme (Zeichner): 1 = `a` ist eine Figur der Hangar-Szene und die Szene haelt Cut 12. */

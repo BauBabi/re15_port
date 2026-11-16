@@ -34,6 +34,7 @@ extern int re15_g5_boss_zustand(int *sub, int *ph, int *timer);
 extern int re15_g5_blut_zaehler(int idx);
 extern int re15_g5_biss_blut_zahl(void);
 extern void re15_g5_boss_spawn(int slot);
+extern int  re15_r38_birkin_fc(const re15_actor_t *e);   /* enemy_ai_common.c: Clip-Laenge (Hangar-Liegen) */
 
 static int fails = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); \
@@ -335,6 +336,190 @@ static void test_hangar(unsigned raum)
     CHECK(!re15_bf_hangar_riegel() && re15_bf_hangar_phase() == 7, "Wiedereintritt: Szene laeuft erneut (phase %d)",
           re15_bf_hangar_phase());
     free(buf);
+    g_room_rdt_ok = 0;
+}
+
+/* ==== Hangar: liegen bleiben (Runde 1 "hangar_liegen"; Kopf re15_birkin_formen.h) ====================================================
+ * Raum laden wie raum_laden, aber mit Merkern VOR dem Raum-Init (scd_vm_init loescht alle Baenke = neues Spiel; ein Raumwechsel im
+ * Spiel tut das nicht, ein geladener Spielstand bringt sie mit). */
+typedef struct { uint8_t bank, bit, wert; } hl_merker_t;
+static uint8_t *raum_laden_mit(const char *rel, unsigned id, const hl_merker_t *m, int n)
+{
+    size_t sz = 0;
+    char p[512]; snprintf(p, sizeof p, RE15_ASSET_PSX_DIR "/%s", rel);
+    uint8_t *buf = slurp(p, &sz);
+    if (!buf || re15_rdt_parse(buf, sz, &s_rdt) != 0) { free(buf); return NULL; }
+    extern void scd_register_current_rdt(const re15_rdt_t *);
+    scd_register_current_rdt(NULL);
+    g_current_room_id = id;
+    re15_enemy_reset();
+    re15_actor_init();
+    re15_aot_init();
+    scd_vm_init();
+    for (int i = 0; i < n; i++) re15_game_flag_set(m[i].bank, m[i].bit, m[i].wert);
+    if (s_rdt.main_scd)   scd_thread_start(0, s_rdt.main_scd);
+    if (s_rdt.sub_scd[0]) scd_thread_start(1, s_rdt.sub_scd[0]);
+    g_scd.work_vars[10] = 0;
+    for (int i = 0; i < 60; i++) scd_vm_tick();
+    scd_register_current_rdt(&s_rdt);
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;
+    return buf;
+}
+static int hl_zahl(uint8_t typ)
+{
+    int n = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++) if (g_actors[s].active && g_actors[s].type == typ) n++;
+    return n;
+}
+
+/* Birkin im Hangar (Szene gesehen -> Angreifer), toedlicher Treffer, dann `bilder` Takte. Rueckgabe Slot oder -1. */
+static int hl_birkin_toeten(unsigned raum, const char *name, int revive, uint8_t **buf_out)
+{
+    char rel[64]; snprintf(rel, sizeof rel, "STAGE5/ROOM%04X.RDT", raum);
+    const hl_merker_t m[] = { { RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, 1 } };
+    *buf_out = raum_laden_mit(rel, raum, m, 1);
+    CHECK(*buf_out != NULL, "%s: ROOM%04X nicht ladbar", name, raum);
+    if (!*buf_out) return -1;
+    CHECK(bank_laden(0x30u, 0, re15_bf_emd_datei(0x30u)), "%s: EM30_HANGAR-Bank", name);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->state = 1; pl->x = -5000; pl->z = -22000; pl->hp = 100;
+    g_scd.cam_id = 5; g_scd.work_vars[0x0A] = 5;
+    for (int f = 0; f < 3; f++) re15_enemy_ai_run_all(0);
+    const int bs = re15_bf_hangar_slot(1);
+    CHECK(bs > 0 && g_actors[bs].active && g_actors[bs].type == 0x30u && g_actors[bs].state == 1, "%s: kein Birkin in der KI", name);
+    if (bs <= 0) return -1;
+    re15_actor_t *b = &g_actors[bs];
+    CHECK(!re15_game_flag_get(RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT), "%s: Bit %d vor dem Tod gesetzt", name, RE15_BF_BESIEGT_BIT);
+    b->x = -7000; b->z = -18000;
+    b->state = 1; b->sub_state_1 = 1; b->sub_state_2 = 0; b->sub_state_3 = 0; b->hit_react = 0;
+    if (revive) {   /* Revive-Waechter scharf (+0x1dd & 8 @0x8011ac58-64): der toedliche Treffer toetet nicht */
+        b->birkin_flags |= 8;
+        b->birkin_saved_state = 1; b->birkin_saved_sub = 1; b->birkin_saved_ph2 = 0; b->birkin_saved_ph3 = 0;
+    }
+    b->hp = 4;
+    re15_enemy_take_damage(b, 2);                       /* toedlicher Treffer wie test_birkin_ai (3) */
+    CHECK(b->state == 3, "%s: kein Todeseintritt (state %d)", name, b->state);
+    return bs;
+}
+
+static void test_hangar_liegen(unsigned raum, unsigned kraftraum)
+{
+    char rel[64]; snprintf(rel, sizeof rel, "STAGE5/ROOM%04X.RDT", raum);
+    uint8_t *buf = NULL;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+
+    /* (a) Tod im Hangar: Bit 39 beim Eintritt in den Tod, dann liegt er im letzten Bild von Clip 9 - 900 Takte (30 s) */
+    {
+        const int bs = hl_birkin_toeten(raum, "Liegen", 0, &buf);
+        if (bs > 0) {
+            re15_actor_t *b = &g_actors[bs];
+            int t_ph1 = -1, t_bit = -1, t_ph3 = -1, bewegt = 0, nicht3 = 0, fremd = 0;
+            int32_t lx = 0, lz = 0; int lr = 0, lb = -1;
+            for (int f = 0; f < 900; f++) {
+                pl->hp = 100; pl->x = -5000; pl->z = -22000;
+                re15_enemy_ai_run_all(0);
+                if (t_ph1 < 0 && b->state == 3 && b->sub_state_3 >= 1) t_ph1 = f;
+                if (t_bit < 0 && re15_game_flag_get(RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT)) t_bit = f;
+                if (t_ph3 < 0 && b->state == 3 && b->sub_state_3 == 3) { t_ph3 = f; lx = b->x; lz = b->z; lr = b->rot_y; lb = b->anim_frame; }
+                if (t_ph3 >= 0) {
+                    if (!b->active || b->state != 3 || b->sub_state_3 != 3 || b->motion != 9) nicht3++;
+                    if (b->x != lx || b->z != lz || b->rot_y != lr || b->anim_frame != lb) bewegt++;
+                }
+                if (hl_zahl(0x30u) != 1 || hl_zahl(0x2Bu) != 0) fremd++;
+            }
+            const int fc = re15_r38_birkin_fc(b);
+            fprintf(stderr, "Hangar-Liegen %04X: Phase 0 ab Takt %d, Bit %d ab Takt %d, Phase 3 ab Takt %d bei (%d,%d) Bild %d/%d, "
+                            "danach %d Takte bewegt, %d Takte nicht Phase 3\n", raum, t_ph1, RE15_BF_BESIEGT_BIT, t_bit, t_ph3,
+                    (int)lx, (int)lz, lb, fc, bewegt, nicht3);
+            CHECK(t_ph1 >= 0 && t_bit >= t_ph1 && t_bit <= t_ph1 + 1, "%04X: Bit %d nicht beim Eintritt in den Tod (Phase 0 Takt %d, Bit Takt %d)",
+                  raum, RE15_BF_BESIEGT_BIT, t_ph1, t_bit);
+            CHECK(t_ph3 > t_ph1, "%04X: Phase 3 (liegen) nicht erreicht", raum);
+            CHECK(lb == fc - 1, "%04X: liegt nicht im letzten Bild von Clip 9 (Bild %d von %d)", raum, lb, fc);
+            CHECK(nicht3 == 0 && bewegt == 0, "%04X: steht wieder auf oder bewegt sich (%d Takte nicht Phase 3, %d bewegt)", raum, nicht3, bewegt);
+            CHECK(fremd == 0, "%04X: Birkin entfernt oder Zusatzfigur (%d Takte)", raum, fremd);
+            CHECK(!re15_bf_hangar_riegel() && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27), "%04X: Riegel nach dem Tod", raum);
+            CHECK(!re15_game_flag_get(5, 0x1c), "%04X: z5 0x1C gesetzt (striche den Kraftraum-Birkin, ROOM50E0 sub01 @0x00B1A)", raum);
+            CHECK(!re15_game_flag_get(RE15_BF_KRAFTRAUM_BANK, RE15_BF_KRAFTRAUM_BIT), "%04X: Bank 3 Bit 0x49 gesetzt", raum);
+        }
+        free(buf); buf = NULL;
+    }
+    /* (b) Gegenprobe Revive-Waechter: der toedliche Treffer waehrend der Mutation toetet nicht -> kein Bit */
+    {
+        const int bs = hl_birkin_toeten(raum, "Revive", 1, &buf);
+        if (bs > 0) {
+            for (int f = 0; f < 5; f++) { pl->hp = 100; re15_enemy_ai_run_all(0); }
+            CHECK(g_actors[bs].state != 3, "%04X Revive: Birkin trotz Waechter im Tod (state %d)", raum, g_actors[bs].state);
+            CHECK(!re15_game_flag_get(RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT), "%04X Revive: Bit %d gesetzt", raum, RE15_BF_BESIEGT_BIT);
+        }
+        free(buf); buf = NULL;
+    }
+    /* (c) Wiederbetreten / Laden mit Merker (38 + 39, und 39 allein): kein Birkin, keine Szene - auch wenn ein Szenenschnitt kommt */
+    for (int nur39 = 0; nur39 <= 1; nur39++) {
+        const hl_merker_t m[] = { { RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT, 1 }, { RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, 1 } };
+        buf = raum_laden_mit(rel, raum, m, nur39 ? 1 : 2);
+        if (!buf) continue;
+        CHECK(bank_laden(0x30u, 0, re15_bf_emd_datei(0x30u)) && bank_laden(0x2Bu, 1, NULL), "Wiederbetreten: Banken");
+        pl->active = 1; pl->state = 1; pl->x = -12406; pl->z = 4381; pl->hp = 100;
+        g_scd.cam_id = 0; g_scd.work_vars[0x0A] = 0;
+        for (int f = 0; f < 3; f++) re15_enemy_ai_run_all(0);
+        g_scd.cam_id = 4; g_scd.work_vars[0x0A] = 3;  /* derselbe Ausloeser wie test_hangar (3) */
+        for (int f = 0; f < 30; f++) { pl->hp = 100; re15_enemy_ai_run_all(0); }
+        CHECK(hl_zahl(0x30u) == 0 && hl_zahl(0x2Bu) == 0, "%04X Wiederbetreten (%s): %d Birkin, %d Spider-Man", raum,
+              nur39 ? "nur Bit 39" : "Bit 38+39", hl_zahl(0x30u), hl_zahl(0x2Bu));
+        CHECK(!re15_bf_hangar_riegel() && re15_bf_hangar_phase() == 7 && g_scd.cam_id != 12,
+              "%04X Wiederbetreten: Szene (phase %d, cam %d)", raum, re15_bf_hangar_phase(), g_scd.cam_id);
+        free(buf); buf = NULL;
+    }
+    /* (d) Reihenfolge-Luecke: Kraftraum-Birkin besiegt (Bank 3 Bit 0x49), Hangar noch nie gesehen -> weder Szene noch Birkin */
+    {
+        const hl_merker_t m[] = { { RE15_BF_KRAFTRAUM_BANK, RE15_BF_KRAFTRAUM_BIT, 1 } };
+        buf = raum_laden_mit(rel, raum, m, 1);
+        if (buf) {
+            CHECK(bank_laden(0x30u, 0, re15_bf_emd_datei(0x30u)) && bank_laden(0x2Bu, 1, NULL), "Kraftraum-Luecke: Banken");
+            pl->active = 1; pl->state = 1; pl->x = -12406; pl->z = 4381; pl->hp = 100;
+            g_scd.cam_id = 0; g_scd.work_vars[0x0A] = 0;
+            re15_enemy_ai_run_all(0);
+            g_scd.cam_id = 4; g_scd.work_vars[0x0A] = 3;
+            for (int f = 0; f < 30; f++) { pl->hp = 100; re15_enemy_ai_run_all(0); }
+            CHECK(hl_zahl(0x30u) == 0 && hl_zahl(0x2Bu) == 0, "%04X nach Kraftraum-Sieg: %d Birkin, %d Spider-Man", raum,
+                  hl_zahl(0x30u), hl_zahl(0x2Bu));
+            CHECK(!re15_bf_hangar_riegel() && g_scd.cam_id != 12 && !re15_game_flag_get(RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT),
+                  "%04X nach Kraftraum-Sieg: Szene laeuft (cam %d)", raum, g_scd.cam_id);
+            free(buf); buf = NULL;
+        }
+        /* Gegenprobe: ohne Merker loest derselbe Schnitt die Szene aus */
+        buf = raum_laden_mit(rel, raum, NULL, 0);
+        if (buf) {
+            CHECK(bank_laden(0x30u, 0, re15_bf_emd_datei(0x30u)) && bank_laden(0x2Bu, 1, NULL), "Gegenprobe: Banken");
+            pl->active = 1; pl->state = 1; pl->x = -12406; pl->z = 4381; pl->hp = 100;
+            g_scd.cam_id = 0; g_scd.work_vars[0x0A] = 0;
+            re15_enemy_ai_run_all(0);
+            g_scd.cam_id = 4; g_scd.work_vars[0x0A] = 3;
+            for (int f = 0; f < 3; f++) { pl->hp = 100; re15_enemy_ai_run_all(0); }
+            CHECK(hl_zahl(0x30u) == 1 && hl_zahl(0x2Bu) == 1 && re15_bf_hangar_riegel(),
+                  "%04X Gegenprobe ohne Merker: Szene startet nicht (%d Birkin, %d Spider-Man)", raum, hl_zahl(0x30u), hl_zahl(0x2Bu));
+            re15_bf_reset();                             /* Riegel der angefangenen Szene loesen */
+            free(buf); buf = NULL;
+        }
+    }
+    /* (e) Kraftraum unveraendert: mit den Hangar-Merkern (38 + 39) setzt sub00 dort weiter seinen Birkin (Sce_em_set 0x30) */
+    {
+        char kr[64]; snprintf(kr, sizeof kr, "STAGE5/ROOM%04X.RDT", kraftraum);
+        const hl_merker_t m[] = { { RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, 1 }, { RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT, 1 } };
+        buf = raum_laden_mit(kr, kraftraum, m, 2);
+        CHECK(buf != NULL, "ROOM%04X nicht ladbar", kraftraum);
+        if (buf) {
+            CHECK(hl_zahl(0x30u) == 1, "ROOM%04X nach dem Hangar-Sieg: %d Birkin statt 1", kraftraum, hl_zahl(0x30u));
+            free(buf); buf = NULL;
+        }
+        /* Gegenprobe der Form: ist der Kraftraum-Birkin besiegt (Bit 0x49, 0x3D gesetzt), setzt sub00 keinen (Tor @0x00AEA / @0x009CC) */
+        const hl_merker_t m2[] = { { 3, 0x3D, 1 }, { RE15_BF_KRAFTRAUM_BANK, RE15_BF_KRAFTRAUM_BIT, 1 } };
+        buf = raum_laden_mit(kr, kraftraum, m2, 2);
+        if (buf) {
+            CHECK(hl_zahl(0x30u) == 0, "ROOM%04X mit Bit 0x49: %d Birkin (Form-Gegenprobe)", kraftraum, hl_zahl(0x30u));
+            free(buf); buf = NULL;
+        }
+    }
     g_room_rdt_ok = 0;
 }
 
@@ -656,6 +841,8 @@ int main(void)
     test_modellwahl();
     test_hangar(0x50A0u);   /* Leon */
     test_hangar(0x50A1u);   /* Elza: RDT bytegleich, eigener Raum */
+    test_hangar_liegen(0x50A0u, 0x50E0u);   /* Runde 1 hangar_liegen: Leon, Kraftraum 50E0 */
+    test_hangar_liegen(0x50A1u, 0x50F1u);   /* Elza, Kraftraum 50F1 */
     test_bahnsteig();
     test_schnitt_aus_lage("STAGE5/ROOM5090.RDT");
     test_schnitt_aus_lage("STAGE5/ROOM5091.RDT");
