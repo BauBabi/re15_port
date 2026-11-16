@@ -37,9 +37,21 @@ const re15_md1_mesh_t *re15_bkk_klinge(void)
  * g_anim_pose_actor = npc (Ueberblendung +0x8f aus prev_root/prev_angles), nyaw = {c,0,s, 0,1,0, -s,0,c} (Gier rot_y),
  * mit render_scale_q12 skaliert, nyawed_rot = nyaw * pose.rot >> 12, Welt-T = nyaw * pose.trans >> 12 + Aktorlage.
  * Die Ueberblendung schreibt in den Aktor (Schnappschuss) - deshalb rechnet diese Abfrage auf einer Kopie. */
+static int bkk_lagen(const re15_actor_t *e, re15_bkk_lage_t *alle, int max, int *n_out);
+
 int re15_bkk_lage_logik(const re15_actor_t *e, re15_bkk_lage_t *out)
 {
-    if (!e || !out || e->type != 0x30) return 0;
+    static re15_bkk_lage_t alle[RE15_EMD_MAX_BONES];
+    int n = 0;
+    if (!out || !bkk_lagen(e, alle, RE15_EMD_MAX_BONES, &n) || n <= BKK_TEIL) return 0;
+    *out = alle[BKK_TEIL];
+    return 1;
+}
+
+/* Welt-Lage JEDES Teils der gezeichneten 0x30-Bank (gleiche Rechnung wie fuer Teil 15). */
+static int bkk_lagen(const re15_actor_t *e, re15_bkk_lage_t *alle, int max, int *n_out)
+{
+    if (!e || !alle || e->type != 0x30) return 0;
     re15_enemy_bank_t *b = re15_enemy_find(0x30);
     if (!b || !b->ok || b->skel.bone_count <= BKK_TEIL || b->anim.clip_count <= 0) return 0;
     static re15_actor_t kopie;                 /* statisch: re15_actor_t ist gross */
@@ -55,18 +67,23 @@ int re15_bkk_lage_logik(const re15_actor_t *e, re15_bkk_lage_t *out)
     int32_t ny[9] = { c, 0, s, 0, 0x1000, 0, -s, 0, c };
     if (e->render_scale_q12)
         for (int k = 0; k < 9; k++) ny[k] = (ny[k] * (int32_t)e->render_scale_q12) >> 12;
-    const re15_skel_pose_t *p = &poses[BKK_TEIL];
-    for (int r = 0; r < 3; r++) {
-        for (int cc = 0; cc < 3; cc++) {
-            int64_t acc = 0;
-            for (int k = 0; k < 3; k++) acc += (int64_t)ny[r * 3 + k] * (int64_t)p->rot[k * 3 + cc];
-            out->R[r * 3 + cc] = (int32_t)(acc >> 12);
+    const int nb = b->skel.bone_count < max ? b->skel.bone_count : max;
+    for (int bi = 0; bi < nb; bi++) {
+        const re15_skel_pose_t *p = &poses[bi];
+        re15_bkk_lage_t *out = &alle[bi];
+        for (int r = 0; r < 3; r++) {
+            for (int cc = 0; cc < 3; cc++) {
+                int64_t acc = 0;
+                for (int k = 0; k < 3; k++) acc += (int64_t)ny[r * 3 + k] * (int64_t)p->rot[k * 3 + cc];
+                out->R[r * 3 + cc] = (int32_t)(acc >> 12);
+            }
+            int64_t t = 0;
+            for (int k = 0; k < 3; k++) t += (int64_t)ny[r * 3 + k] * (int64_t)p->trans[k];
+            out->T[r] = (int32_t)(t >> 12);
         }
-        int64_t t = 0;
-        for (int k = 0; k < 3; k++) t += (int64_t)ny[r * 3 + k] * (int64_t)p->trans[k];
-        out->T[r] = (int32_t)(t >> 12);
+        out->T[0] += e->x; out->T[1] += e->y; out->T[2] += e->z;
     }
-    out->T[0] += e->x; out->T[1] += e->y; out->T[2] += e->z;
+    *n_out = nb;
     return 1;
 }
 
@@ -220,7 +237,7 @@ static void bkk_welt(const re15_bkk_lage_t *l, const re15_md1_vertex_t *v, int32
 
 #define BKK_ZELLEN_MAX 256   /* SCA-Eintraege je Raum: 50E0 100, 50F1 75, 50A0 21 (Zensus Runde 2); mehr wird nicht geprueft */
 typedef struct {
-    const re15_rdt_t *rdt; uint16_t raum; re15_bkk_befund_t *b; const re15_camera_view_t *sicht;
+    const re15_rdt_t *rdt; uint16_t raum; re15_bkk_befund_t *b; const re15_bkk_sicht_t *sicht;
     int32_t tief[BKK_ZELLEN_MAX];       /* je Zelle: tiefster Pruefpunkt (kleinster Abstand), 0x7fffffff = keiner */
     int32_t tp[BKK_ZELLEN_MAX][3];      /* dieser Punkt */
     uint8_t tsicht[BKK_ZELLEN_MAX];     /* liegt er im Bild */
@@ -247,6 +264,65 @@ static int bkk_im_bild(const re15_camera_view_t *v, const int32_t p[3])
     return sx >= 0 && sx < 320 && sy >= 0 && sy < 240;
 }
 
+/* Runde 2: Verdeckung der Einschlagstelle durch Birkins EIGENEN gezeichneten Koerper (alle Teile der gezeichneten Bank ausser
+ * der Klinge, Teil 15, in der Pose dieses Bilds). Gemessen (Messbild r2/mb/kontakt_50E0.png): bei F1992 (Cut 6, Kamera hinter
+ * Birkin) lag die Einschlagstelle im Bild, aber mitten auf Birkins Ruecken - der Treffer war nicht zu sehen. Test: Strahl von der
+ * Kamera (Cut-Position RID +0x04) zur Einschlagstelle gegen jedes Dreieck/Viereck (Moeller-Trumbore); getroffen vor dem Punkt
+ * (mehr als 1 Einheit davor) = verdeckt. */
+static int bkk_dreieck(const double o[3], const double d[3], const double a[3], const double b[3], const double c[3], double tmax)
+{
+    const double e1[3] = { b[0] - a[0], b[1] - a[1], b[2] - a[2] }, e2[3] = { c[0] - a[0], c[1] - a[1], c[2] - a[2] };
+    const double pv[3] = { d[1] * e2[2] - d[2] * e2[1], d[2] * e2[0] - d[0] * e2[2], d[0] * e2[1] - d[1] * e2[0] };
+    const double det = e1[0] * pv[0] + e1[1] * pv[1] + e1[2] * pv[2];
+    if (det > -1e-9 && det < 1e-9) return 0;
+    const double inv = 1.0 / det, tv[3] = { o[0] - a[0], o[1] - a[1], o[2] - a[2] };
+    const double u = (tv[0] * pv[0] + tv[1] * pv[1] + tv[2] * pv[2]) * inv;
+    if (u < 0.0 || u > 1.0) return 0;
+    const double qv[3] = { tv[1] * e1[2] - tv[2] * e1[1], tv[2] * e1[0] - tv[0] * e1[2], tv[0] * e1[1] - tv[1] * e1[0] };
+    const double v = (d[0] * qv[0] + d[1] * qv[1] + d[2] * qv[2]) * inv;
+    if (v < 0.0 || u + v > 1.0) return 0;
+    const double t = (e2[0] * qv[0] + e2[1] * qv[1] + e2[2] * qv[2]) * inv;
+    return t > 0.0 && t < tmax;
+}
+static void bkk_welt(const re15_bkk_lage_t *l, const re15_md1_vertex_t *v, int32_t w[3]);
+static int bkk_verdeckt(const re15_bkk_sicht_t *si, const int32_t p[3])
+{
+    static re15_bkk_lage_t alle[RE15_EMD_MAX_BONES];
+    int n = 0;
+    if (!si || !si->koerper || !bkk_lagen(si->koerper, alle, RE15_EMD_MAX_BONES, &n)) return 0;
+    const re15_enemy_bank_t *bk = re15_enemy_find(0x30);
+    if (!bk || !bk->ok) return 0;
+    const double o[3] = { si->cam[0], si->cam[1], si->cam[2] };
+    const double d[3] = { p[0] - o[0], p[1] - o[1], p[2] - o[2] };
+    const double len = sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+    if (len < 2.0) return 0;
+    const double tmax = 1.0 - 1.0 / len;                     /* mehr als 1 Einheit vor der Einschlagstelle */
+    for (int k = 0; k < n && k < bk->md1.mesh_count; k++) {
+        if (k == BKK_TEIL) continue;
+        const re15_md1_mesh_t *m = &bk->md1.meshes[k];
+        int32_t w[4][3]; double a[4][3];
+        for (int i = 0; i < m->triangle_count; i++) {
+            const re15_md1_triangle_t *t = &m->triangles[i];
+            if (t->v0 >= m->tri_vertex_count || t->v1 >= m->tri_vertex_count || t->v2 >= m->tri_vertex_count) continue;
+            bkk_welt(&alle[k], &m->tri_vertices[t->v0], w[0]); bkk_welt(&alle[k], &m->tri_vertices[t->v1], w[1]);
+            bkk_welt(&alle[k], &m->tri_vertices[t->v2], w[2]);
+            for (int j = 0; j < 3; j++) for (int r = 0; r < 3; r++) a[j][r] = w[j][r];
+            if (bkk_dreieck(o, d, a[0], a[1], a[2], tmax)) return 1;
+        }
+        for (int i = 0; i < m->quad_count; i++) {
+            const re15_md1_quad_t *q = &m->quads[i];
+            if (q->v0 >= m->quad_vertex_count || q->v1 >= m->quad_vertex_count || q->v2 >= m->quad_vertex_count ||
+                q->v3 >= m->quad_vertex_count) continue;
+            bkk_welt(&alle[k], &m->quad_vertices[q->v0], w[0]); bkk_welt(&alle[k], &m->quad_vertices[q->v1], w[1]);
+            bkk_welt(&alle[k], &m->quad_vertices[q->v2], w[2]); bkk_welt(&alle[k], &m->quad_vertices[q->v3], w[3]);
+            for (int j = 0; j < 4; j++) for (int r = 0; r < 3; r++) a[j][r] = w[j][r];
+            /* PSX-Viereck: Ecken 0-1-3-2 im Umlauf = Dreiecke 0-1-2 und 1-3-2 */
+            if (bkk_dreieck(o, d, a[0], a[1], a[2], tmax) || bkk_dreieck(o, d, a[1], a[3], a[2], tmax)) return 1;
+        }
+    }
+    return 0;
+}
+
 static void bkk_punkt(bkk_ctx_t *cx, const int32_t p[3])
 {
     const re15_rdt_t *rdt = cx->rdt;
@@ -265,7 +341,7 @@ static void bkk_punkt(bkk_ctx_t *cx, const int32_t p[3])
             continue;
         }
         if (a < cx->tief[i]) {                               /* tiefster Punkt dieser Zelle */
-            if (sichtbar < 0) sichtbar = !cx->sicht || bkk_im_bild(cx->sicht, p);
+            if (sichtbar < 0) sichtbar = !cx->sicht || bkk_im_bild(&cx->sicht->v, p);
             cx->tief[i] = a; cx->tsicht[i] = (uint8_t)sichtbar;
             cx->tp[i][0] = p[0]; cx->tp[i][1] = p[1]; cx->tp[i][2] = p[2];
         }
@@ -284,7 +360,7 @@ static void bkk_kante(bkk_ctx_t *cx, const int32_t a[3], const int32_t e[3])
 }
 
 int re15_bkk_pruefen(const re15_md1_mesh_t *m, const re15_bkk_lage_t *l, const re15_rdt_t *rdt, uint16_t raum_id,
-                     const re15_camera_view_t *sicht, re15_bkk_befund_t *b)
+                     const re15_bkk_sicht_t *sicht, re15_bkk_befund_t *b)
 {
     if (!b) return 0;
     memset(b, 0, sizeof *b);
@@ -316,6 +392,7 @@ int re15_bkk_pruefen(const re15_md1_mesh_t *m, const re15_bkk_lage_t *l, const r
     for (int i = 0; i < rdt->sca_count && i < BKK_ZELLEN_MAX; i++) {
         if (cx.tief[i] >= 0) continue;
         if (!cx.tsicht[i]) { b->ausser_bild++; continue; }
+        if (sicht && bkk_verdeckt(sicht, cx.tp[i])) { b->verdeckt++; continue; }   /* hinter Birkins eigenem Koerper */
         if (!b->kontakt || cx.tief[i] < b->abstand) {
             b->kontakt = 1; b->zelle = i; b->abstand = cx.tief[i];
             b->punkt[0] = cx.tp[i][0]; b->punkt[1] = cx.tp[i][1]; b->punkt[2] = cx.tp[i][2];
@@ -329,17 +406,20 @@ int re15_bkk_pruefen(const re15_md1_mesh_t *m, const re15_bkk_lage_t *l, const r
 
 /* Kamera des laufenden Cuts (g_scd.cam_id, derselbe Wert, den state.log als cam= fuehrt und mit dem der Zeichner den Hintergrund
  * waehlt). 0 = keine Kamera (kein Raum / Cut ausserhalb der RDT-Liste). */
-int re15_bkk_sicht(re15_camera_view_t *v)
+int re15_bkk_sicht(re15_bkk_sicht_t *si, const re15_actor_t *koerper)
 {
-    if (!v || !g_room_rdt_ok || !g_room_rdt.cuts || (int)g_scd.cam_id >= g_room_rdt.cut_count) return 0;
-    return re15_camera_build_view(&g_room_rdt.cuts[g_scd.cam_id], v) == 0;
+    if (!si || !g_room_rdt_ok || !g_room_rdt.cuts || (int)g_scd.cam_id >= g_room_rdt.cut_count) return 0;
+    const re15_camera_cut_t *c = &g_room_rdt.cuts[g_scd.cam_id];
+    si->cam[0] = c->pos_x; si->cam[1] = c->pos_y; si->cam[2] = c->pos_z;
+    si->koerper = koerper;
+    return re15_camera_build_view(c, &si->v) == 0;
 }
 
 int re15_bkk_kontakt(const re15_actor_t *e)
 {
-    re15_bkk_lage_t l; re15_bkk_befund_t b; re15_camera_view_t v;
+    re15_bkk_lage_t l; re15_bkk_befund_t b; re15_bkk_sicht_t v;
     if (!g_room_rdt_ok || !re15_bkk_lage_logik(e, &l)) return 0;
-    if (!re15_bkk_sicht(&v)) return 0;                       /* ohne Kamera kein Bild, also kein sichtbarer Treffer */
+    if (!re15_bkk_sicht(&v, e)) return 0;                    /* ohne Kamera kein Bild, also kein sichtbarer Treffer */
     return re15_bkk_pruefen(re15_bkk_klinge(), &l, &g_room_rdt, (uint16_t)g_current_room_id, &v, &b);
 }
 
@@ -351,18 +431,18 @@ static void bkk_zeile(const char *wer, const re15_actor_t *e, const re15_bkk_lag
     static int an = -1;
     if (an < 0) an = (getenv("RE15_BIRKIN_DBG") != NULL);
     if (!an || !e || e->type != 0x30) return;
-    re15_bkk_befund_t b; re15_camera_view_t v;
-    const int sicht = re15_bkk_sicht(&v);
+    re15_bkk_befund_t b; re15_bkk_sicht_t v;
+    const int sicht = re15_bkk_sicht(&v, e);
     re15_bkk_pruefen(re15_bkk_klinge(), l, g_room_rdt_ok ? &g_room_rdt : NULL, (uint16_t)g_current_room_id, sicht ? &v : NULL, &b);
     FILE *f = fopen("birkin_dbg.log", "a");
     if (!f) return;
     fprintf(f, "%s F%u ss1=%d ph2=%d mo=%d af=%d frac=%d pos=(%d,%d,%d) gier=%d R=(%d,%d,%d,%d,%d,%d,%d,%d,%d) T=(%d,%d,%d) "
-            "kontakt=%d zelle=%d abstand=%d pt=(%d,%d,%d) punkte=%d cam=%d ausser_bild=%d\n", wer, (unsigned)g_engine.frame_count,
+            "kontakt=%d zelle=%d abstand=%d pt=(%d,%d,%d) punkte=%d cam=%d ausser_bild=%d verdeckt=%d\n", wer, (unsigned)g_engine.frame_count,
             (int)e->sub_state_1, (int)e->sub_state_2, (int)e->motion, (int)e->anim_frame, (int)e->anim_frac,
             (int)e->x, (int)e->y, (int)e->z, (int)e->rot_y,
             (int)l->R[0], (int)l->R[1], (int)l->R[2], (int)l->R[3], (int)l->R[4], (int)l->R[5], (int)l->R[6], (int)l->R[7], (int)l->R[8],
             (int)l->T[0], (int)l->T[1], (int)l->T[2], b.kontakt, b.zelle, (int)b.abstand,
-            (int)b.punkt[0], (int)b.punkt[1], (int)b.punkt[2], b.punkte, sicht ? (int)g_scd.cam_id : -1, b.ausser_bild);
+            (int)b.punkt[0], (int)b.punkt[1], (int)b.punkt[2], b.punkte, sicht ? (int)g_scd.cam_id : -1, b.ausser_bild, b.verdeckt);
     fclose(f);
 }
 void re15_bkk_zeichner_melden(const re15_actor_t *e, const int32_t R[9], const int32_t T[3])

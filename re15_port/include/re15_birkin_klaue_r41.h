@@ -41,6 +41,7 @@ typedef struct {
     int32_t punkt[3];     /* der Pruefpunkt dazu (Welt) */
     int     punkte;       /* Zahl der Pruefpunkte */
     int     ausser_bild;  /* Zellen, in denen die Klinge steckt, deren Einschlagstelle (tiefster Punkt) aber ausserhalb des Bilds liegt */
+    int     verdeckt;     /* Zellen, deren Einschlagstelle im Bild liegt, aber hinter Birkins eigenem Koerper */
 } re15_bkk_befund_t;
 
 /* Lage von Teil 15 der gezeichneten 0x30-Bank fuer den aktuellen Zustand des Aktors (Bild +0x95, Ueberblendung +0x8f aus dem
@@ -50,14 +51,22 @@ int re15_bkk_lage_logik(const re15_actor_t *e, re15_bkk_lage_t *out);
 /* Mesh 15 der gezeichneten 0x30-Bank (NULL = keins). */
 const re15_md1_mesh_t *re15_bkk_klinge(void);
 
-/* Klinge (Mesh m in Lage l) gegen die sichtbaren Waende des Raums raum_id (SCA aus rdt). sicht != NULL: eine Zelle zaehlt nur,
- * wenn ihre Einschlagstelle (der tiefste Punkt der Klinge in ihr) mit dieser Kamera im 320x240-Bild liegt (Runde 2: ein Treffer
- * ausserhalb des Bilds ist kein sichtbarer Treffer). */
-int re15_bkk_pruefen(const re15_md1_mesh_t *m, const re15_bkk_lage_t *l, const re15_rdt_t *rdt, uint16_t raum_id,
-                     const re15_camera_view_t *sicht, re15_bkk_befund_t *b);
+/* Kamera fuer die Sicht-Pruefung: Blick des laufenden Cuts, Kameraposition (RID +0x04) und der Aktor, dessen gezeichneter
+ * Koerper die Einschlagstelle verdecken kann (NULL = keine Verdeckungspruefung). */
+typedef struct {
+    re15_camera_view_t v;
+    int32_t cam[3];
+    const re15_actor_t *koerper;
+} re15_bkk_sicht_t;
 
-/* Kamera des laufenden Cuts (g_scd.cam_id) - 0 = keine. */
-int re15_bkk_sicht(re15_camera_view_t *v);
+/* Klinge (Mesh m in Lage l) gegen die sichtbaren Waende des Raums raum_id (SCA aus rdt). sicht != NULL: eine Zelle zaehlt nur,
+ * wenn ihre Einschlagstelle (der tiefste Punkt der Klinge in ihr) mit dieser Kamera im 320x240-Bild liegt und nicht hinter dem
+ * gezeichneten Koerper von sicht->koerper (Runde 2: ein Treffer ausserhalb des Bilds oder hinter Birkin ist kein sichtbarer Treffer). */
+int re15_bkk_pruefen(const re15_md1_mesh_t *m, const re15_bkk_lage_t *l, const re15_rdt_t *rdt, uint16_t raum_id,
+                     const re15_bkk_sicht_t *sicht, re15_bkk_befund_t *b);
+
+/* Kamera des laufenden Cuts (g_scd.cam_id) mit dem verdeckenden Koerper koerper - 0 = keine Kamera. */
+int re15_bkk_sicht(re15_bkk_sicht_t *si, const re15_actor_t *koerper);
 
 /* Art einer SCA-Zelle in der Tabelle sichtbarer Waende: 0 = nicht erfasst, 1 = Wand bis zur Decke, 2 = niedriges Hindernis
  * (Gelaender, Oberkante gemessen). Riegel schwanz_abdeckung: in 50E0/50F1/50A0/50A1 ist jede Zelle erfasst. */

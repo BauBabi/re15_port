@@ -48,6 +48,10 @@
  *                        r1). Laufender Cut 5: die Klinge trifft #3 im Bild -> Rueckzug im Kontaktbild. Dieselbe Lage mit Cut 0
  *                        (Birkin und Wand ausserhalb des Bilds): die Klinge steckt genauso in #3, aber nicht sichtbar -> kein
  *                        Rueckzug. Gegenprobe Stand r1: Rueckzug auch mit Cut 0.
+ *   schwanz_verdeckt     Hangar 50A0 wie schwanz_wand, aber laufender Cut 9 (Kamera schraeg hinter Birkin): beim Schlag (af 35)
+ *                        liegt die Einschlagstelle an der Ostwand #4 im Bild, aber hinter Birkins eigenem gezeichneten Koerper
+ *                        -> kein Rueckzug dort; der erste sichtbare Treffer kommt beim Absenken (af 67), Rueckzug im Kontaktbild.
+ *                        Gegenprobe Stand 46ead4341 (ohne Verdeckung): Rueckzug schon bei af 36.
  *   schwanz_abdeckung    jede SCA-Zelle (Band 0, solide) von ROOM50E0/50F1/50A0/50A1 steht in der Tabelle sichtbarer Waende
  *                        (re15_bkk_zelle_art != 0) - keine Zelle gilt mehr ungeprueft als Wand.
  */
@@ -169,6 +173,9 @@ typedef struct {
 } ergebnis_t;
 
 /* Ein Hieb ab Phase 0. seitlich != 0: der Spieler geht ab Phase 1 je Bild um `seitlich` in Z. */
+#ifndef BK_WAND_CUT
+#define BK_WAND_CUT 4
+#endif
 static int s_cut = 0;   /* Kamera des laufenden Cuts (g_scd.cam_id) fuer den Hieb */
 static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t pz, int32_t seitlich)
 {
@@ -196,8 +203,8 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
                 r.kontakt_af = e->anim_frame;
                 re15_bkk_lage_t l; re15_bkk_befund_t b;
 #ifndef BKK_ALT_API   /* nur fuer die Gegenprobe gegen den Merge-Commit (alte Schnittstelle ohne Kamera) */
-                re15_camera_view_t v;
-                if (re15_bkk_lage_logik(e, &l) && re15_bkk_sicht(&v) &&
+                re15_bkk_sicht_t v;
+                if (re15_bkk_lage_logik(e, &l) && re15_bkk_sicht(&v, e) &&
                     re15_bkk_pruefen(re15_bkk_klinge(), &l, &g_room_rdt, (uint16_t)g_current_room_id, &v, &b)) {
 #else
                 if (re15_bkk_lage_logik(e, &l) && re15_bkk_pruefen(re15_bkk_klinge(), &l, &g_room_rdt, (uint16_t)g_current_room_id, &b)) {
@@ -289,7 +296,7 @@ int main(int argc, char **argv)
          * gelaender: Laufsteg zwischen #2 (x <= -14245) und #12 (x >= -9725), Birkin bei (-12200, -16000), Blick +x auf #12.
          *   Neu: die gezeichnete Klinge kommt in keinem Bild unter die Oberkante 1900 von #12 -> kein Clip 0xa. Gegenprobe
          *   Merge-Commit: die Capcom-Sonde (EM30-Klauenpunkt, Radius 0x190 @0x80117818) schlaegt bei af 40 an -> Clip 0xa. */
-        s_cut = wand ? 4 : 5;                                   /* 50A0 Gang-Cut 4, 50F1 Kampf-Cut 5 (state.log cam= der Messlaeufe) */
+        s_cut = wand ? BK_WAND_CUT : 5;                                   /* 50A0 Gang-Cut 4, 50F1 Kampf-Cut 5 (state.log cam= der Messlaeufe) */
         ergebnis_t r = wand ? hieb(0x10, BK_WAND_X, -15000, BK_WAND_X + 1200, -15000, 0) : hieb(0x10, BK_GEL_X, BK_GEL_Z, BK_GEL_X + BK_GEL_DX, BK_GEL_Z + BK_GEL_DZ, 0);
         printf("%s: ticks=%d clip0xa=%d bis Bild %d kontakt_af=%d durch=%d frac_a=%d sonde_af=%d aus_sub=%d cd=0x%02x\n", fall,
                r.ticks, r.clip_a, r.clip_a_max, r.kontakt_af, r.durch, r.frac_a, r.sonde_af, r.aus_sub, r.cd);
@@ -332,6 +339,19 @@ int main(int argc, char **argv)
                   r5.kontakt_af, r5.kontakt_zelle, r5.sonde_af);
             CHECK(!r0.clip_a && r0.kontakt_af < 0, "schwanz_ausser_bild: Cut 0 - dieselbe Klinge in #3, aber ausserhalb des Bilds -> kein Rueckzug (kontakt_af %d)", r0.kontakt_af);
         }
+        re15_bk_kralle_logik_setzen(NULL, 0);
+    }
+    if (!strcmp(fall, "schwanz_verdeckt")) {
+        if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
+        re15_bk_kralle_logik_setzen(s_blob, s_blob_len);
+        if (!raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50A0.RDT", 0x50A0u)) { fprintf(stderr, "FAIL: ROOM50A0 nicht ladbar\n"); return 1; }
+        s_cut = 9;
+        ergebnis_t r = hieb(0x10, BK_WAND_X, -15000, BK_WAND_X + 1200, -15000, 0);
+        printf("%s: ticks=%d clip0xa=%d kontakt_af=%d zelle=%d durch=%d sonde_af=%d aus_sub=%d cd=0x%02x\n", fall, r.ticks, r.clip_a,
+               r.kontakt_af, r.kontakt_zelle, r.durch, r.sonde_af, r.aus_sub, r.cd);
+        CHECK(r.sonde_af < 0 || r.sonde_af >= 67, "schwanz_verdeckt: beim Schlag (af 35/36) liegt die Einschlagstelle hinter Birkins Koerper -> kein Rueckzug vor af 67, war af %d", r.sonde_af);
+        CHECK(r.kontakt_af == 67 && r.kontakt_zelle == 4, "schwanz_verdeckt: erster sichtbarer Treffer an #4 beim Absenken (af 67), war af %d Zelle %d", r.kontakt_af, r.kontakt_zelle);
+        CHECK(r.clip_a && r.sonde_af == r.kontakt_af && r.durch == 0, "schwanz_verdeckt: Rueckzug im Kontaktbild (kontakt_af %d, sonde_af %d)", r.kontakt_af, r.sonde_af);
         re15_bk_kralle_logik_setzen(NULL, 0);
     }
     if (!strcmp(fall, "schwanz_abdeckung")) {
