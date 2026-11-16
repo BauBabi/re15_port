@@ -184,7 +184,7 @@ static void emergence(const char *name, uint16_t room, int32_t px, int32_t pz, i
     PRUEF(bank_laden(0x30), "EM30 aus CDEMD0.EMS");
     const int fc10 = clip_bilder(0x30, 0x10), fc0d = clip_bilder(0x30, 0x0d);
     PRUEF(fc10 > 2 && fc0d > 2, "Clip 0x10 %d Bilder, Clip 0xd %d Bilder", fc10, fc0d);
-    int b = -1, halt10 = -1, rate0d = -1, frac0d = -1, halt0d = -1, wechsel = -1, phase_alt = -1, sub9 = 0;
+    int b = -1, halt10 = -1, rate0d = -1, frac0d = -1, halt0d = -1, wechsel = -1, phase_alt = -1, sub9 = 0, rate_kampf = -1;
     for (int f = 0; f < 3000; f++) {
         /* Ausloesefeld (im Durchlauf laeuft der Spieler hinein). 50E0 beginnt mit einer Szene (Plc_dest), in der der Ausloeser
          * nicht greift -> alle 50 Bilder erneut, bis das Member_set(0x0C,0x13) den Parkzustand grid 0x33 aufhebt. */
@@ -203,6 +203,7 @@ static void emergence(const char *name, uint16_t room, int32_t px, int32_t pz, i
             if (phase_alt == 1 && ph == 2) halt10 = (int)e->anim_frame;                     /* Wechselbild Clip 0x10 */
             if (phase_alt == 2 && ph == 3) { rate0d = e->anim_blend_rate; frac0d = e->anim_frac; wechsel = e->motion; }
             if (phase_alt == 3 && ph == 4) halt0d = (int)e->anim_frame;
+            if (ph == 5) rate_kampf = e->anim_blend_rate;
             phase_alt = ph;
         }
         if (ph == 5) break;
@@ -212,6 +213,7 @@ static void emergence(const char *name, uint16_t room, int32_t px, int32_t pz, i
     PRUEF(wechsel == 0x0d && rate0d == 0x100 && frac0d == 0x0e,
           "Clip 0xd blendet mit a3 0x100, frac 0xf -> 0xe nach dem ersten Schritt (Clip %#x Rate %#x frac %d)", wechsel, rate0d, frac0d);
     PRUEF(halt0d == fc0d - 1, "Ende Clip 0xd: letztes Bild %d (soll %d) bleibt bis zum Ansprung (Phase 4 ohne anim_set)", halt0d, fc0d - 1);
+    PRUEF(rate_kampf == 0, "Kampf (Sub 3) ohne die Auftritts-Staerke: Rate %d (r42/story NB1 B1)", rate_kampf);
 }
 
 /* ---- Auftritt Sub 10 (3071 Elza) ----------------------------------------------------------------------------------- */
@@ -222,7 +224,7 @@ static void auftritt3071(void)
     if (room_boot(0x3071, -26155, -8635, 2048, 0) != 0) return;
     PRUEF(bank_laden(0x30), "EM30 aus CDEMD0.EMS");
     const int fc0f = clip_bilder(0x30, 0x0f), fc0d = clip_bilder(0x30, 0x0d);
-    int b = -1, sub10 = 0, phase_alt = -1, halt0f = -1, halt0d = -1, rate4 = -1, rate8 = -1, af4 = -1, af8 = -1, mo8 = -1;
+    int b = -1, sub10 = 0, phase_alt = -1, halt0f = -1, halt0d = -1, rate4 = -1, rate8 = -1, af4 = -1, af8 = -1, mo8 = -1, rate_kampf = -1;
     for (int f = 0; f < 4000; f++) {
         if (f == 5) re15_aot_fire_slot(2);   /* Aot_set Slot 2 @0x0344C -> sub02 */
         frame();
@@ -239,6 +241,7 @@ static void auftritt3071(void)
             if (phase_alt == 4 && ph == 5) { rate4 = e->anim_blend_rate; af4 = e->anim_frame; }
             if (phase_alt == 7 && ph == 8) halt0d = (int)e->anim_frame;                   /* Wechselbild Clip 0xd */
             if (phase_alt == 8 && ph == 9) { rate8 = e->anim_blend_rate; af8 = e->anim_frame; mo8 = e->motion; }
+            if (ph == 14) rate_kampf = e->anim_blend_rate;
             phase_alt = ph;
         }
         if (ph == 14) break;
@@ -251,6 +254,7 @@ static void auftritt3071(void)
     PRUEF(mo8 == 0x13 && af8 == 1 && rate8 == 0x100,
           "Phase 8: Clip 0x13 ohne +0x95-Schreiben ab Umlaufwert 0 (@0x80119944-970, gezeichnet 1), a3 0x100 @0x8011998c (Clip %#x Bild %d Rate %#x)",
           mo8, af8, rate8);
+    PRUEF(rate_kampf == 0, "Kampf (Sub 3, Ende @0x80119ae0) ohne die Auftritts-Staerke: Rate %d", rate_kampf);
 }
 
 /* ---- Szenen-Modus 3080 (T-04) -------------------------------------------------------------------------------------- */

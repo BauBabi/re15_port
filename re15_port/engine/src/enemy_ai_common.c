@@ -11994,7 +11994,12 @@ int  re15_r38_birkin_fc(const re15_actor_t *e) { return re15_birkin_fc(e); }
  * Weg (re15_birkin_anim ohne Halten und ohne a3). Gemessen (Weg von test_r41_labor_birkin_angriff, Pose-Messschiene): ohne diese
  * Sperre aendert der Fix in 50E0 und 50F1 je 33 Posen (Wechselbild Clip 0x10 Bild 0 -> 58, Clip 0xd 7 Bilder 100 % Hocke ->
  * gleitend, derselbe Fehler wie 3070); mit ihr sind Posen, Gewichte und state.log vorher/nachher gleich (Notiz s3b NB1). */
-static int re15_birkin_szene_stage3(void) { return ((g_current_room_id >> 12) & 0xFu) == 3u; }
+/* Runde 41 birkin_aufrichten (Nutzerbefund 16.11.2026, Kraftraum: "wenn Birkin im Power Room runter springt und sich aufrichtet
+ * wiederholt sich noch mal die runterbeugen Animation"): die STAGE3-Sperre ist aufgehoben - die Regel gilt jetzt auch fuer den
+ * Kraftraum (STAGE5-Emergence 0x80119b8c instruktionsgleich mit STAGE3 0x80119378, a3 `ori a3,zero,0x100` @0x80119c44 /
+ * @0x80119cb8, Phasentabelle @0x80100464). Andere STAGE5-Raeume erreichen Sub 9/10/Szene nicht (5080/5090 Riesenform ueber
+ * re15_bb_tick, 50A0 Szene in birkin_formen.c); gemessen vorher/nachher bytegleich (Bericht birkin_aufrichten). */
+static int re15_birkin_szene_stage3(void) { return 1; }
 static int re15_birkin_anim_szene(re15_actor_t *e, uint16_t a3)
 {
     if (!re15_birkin_szene_stage3()) return re15_birkin_anim(e);
@@ -12626,6 +12631,7 @@ static void re15_birkin_ai_tick(int slot)
                 if (e->ai_timer-- == 0) e->sub_state_2 = 0xd;         /* @0x80119ab8-adc */
                 break;
             default:                                                   /* [13] @0x80119ae0 */
+                e->anim_blend_rate = 0;   /* wie Sub 9 Phase 4 (r42/story NB1 B1): die Auftritts-Staerke 0x100 laeuft nicht in den Kampf */
                 e->sub_state_1 = 3; e->sub_state_2 = 0;                /* +0x5 = 3 @0x80119aec, +0x6 = 0 @0x80119afc */
                 e->grid_id = (uint8_t)(e->grid_id & 0xfe);             /* @0x80119b14-18 */
                 /* Wort0 &= ~8 @0x80119b2c-34 (INIT setzt es fuer Nibble 1): Port-Gegenstueck = Sub 10 in re15_birkin_root */
