@@ -21,6 +21,7 @@
 #include "re15_inv_screen.h"
 #include "re15_inv_ui.h"
 #include "re15_inventory.h"
+#include "re15_pipe_r41.h"   /* Runde 41 Spur pipe: Messer/Rohr ohne Mengen-Ziffern (NUTZERWUNSCH) */
 #include "re15_aot.h"
 #include "re15_room.h"           /* Karten-Zonen: Marker + Rect-Zustand */
 #include "re15_actor.h"
@@ -1065,6 +1066,9 @@ static void emit_digits(emit_t *e, const re15_inv_screen_t *st, int slot, int eq
     }
     if (slot >= CAPACITY) return;                   /* @0x80048fbc-fcc */
     if (id >= 0x22) return;                         /* sltiu id,0x22 @0x80049124 */
+    /* Runde 41 Spur pipe — NUTZERWUNSCH "pipe auch wie Messer keine Anzahl, sondern unendlich": das Original zeichnet
+     * hier fuer JEDE Id < 0x22 (keine Messer-Ausnahme; Messer/Rohr-Zeilen @0x80074DB4/@0x80074DC0 Obergrenze 0). */
+    if (re15_pipe_r41_ohne_zahl(id)) return;
     qty = g_inv.slots[slot].qty;
     hund = qty / 100; tens = (qty % 100) / 10; ones = qty % 10;  /* magic divides
                                                      * 0x51eb851f/0xcccccccd @0x80048fd0+ */
@@ -1630,6 +1634,7 @@ static void box_digits(emit_t *e, int cx, int cy, uint8_t id, uint8_t qty)
 {
     int hund, tens, ones, sx, di;
     if (id == 0 || id >= 0x22) return;
+    if (re15_pipe_r41_ohne_zahl(id)) return;      /* Runde 41 Spur pipe: NUTZERWUNSCH, wie emit_digits */
     hund = qty / 100; tens = (qty % 100) / 10; ones = qty % 10;
     sx = 3;
     for (di = 2; di >= 0; di--) {
