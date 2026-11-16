@@ -94,10 +94,11 @@ static void verbunden(const re15_skel_pose_t *p, const re15_skel_pose_t *k, cons
 
 static void kette_pruefen(re15_actor_t *a, const char *wo)
 {
-    const int v4 = re15_schwanz_r41_v4_kette(&s_skel);
+    const int v4 = re15_schwanz_r41_v4_kette(&s_skel) || re15_schwanz_r41_v8_kette(&s_skel);   /* V8: Regeln der V4-Kette (SW_V4_*) */
     re15_skel_pose_t p[RE15_EMD_MAX_BONES], k[RE15_EMD_MAX_BONES];
     double sp[3], sk[3];
-    fprintf(stderr, "Schwanz [%s]: %s\n", wo, v4 ? "V4-Kette (ungleiche Glieder)" : "Kette mit gleichen Gliedern");
+    fprintf(stderr, "Schwanz [%s]: %s\n", wo, re15_schwanz_r41_v8_kette(&s_skel) ? "V8-Kette (gleiche Glieder, Wurzel oben)" :
+            v4 ? "V4-Kette (ungleiche Glieder)" : "Kette mit gleichen Gliedern");
 
     /* (1) Ruhe */
     for (int i = 0; i < 90; i++) { takt(); CHECK(pose(a, p, 1), "[%s] Kette nicht angewandt (Ruhe)", wo); }
@@ -207,15 +208,27 @@ int main(void)
     if (!blob) return 1;
     CHECK(re15_emd_parse_container(blob, len, &s_md1, &s_skel, &s_anim, NULL) == 0, "EM30_HANGAR nicht lesbar");
     CHECK(s_skel.bone_count == 23, "Knochen %d statt 23", s_skel.bone_count);
-    /* Einbau V7 (v0.8.30): das Spiel-Asset traegt die V4-Kette mit den Gliedlaengen aus V6 drei Punkte 2. (Knochen 17-22 relpos y
-     * 624/440/887/1121/350/204, gemessen am EMR von 319bbd17; Referenz 2: 467/466/466/466/466/466) */
+    /* Zweig r41/sichel_v8: das Spiel-Asset traegt die V8-Kette (Messblatt V8 6a; tools/r41_sichel/v8/kette_v8.json, Runde 3): Knochen 16
+     * relpos (-722,-145,108), 17-22 (0,541,0), gemessen am EMR von 66806bc4 (Runde 2 d0ef852c: (-714,-214,130) / 526, Runde 1 fa31156c:
+     * (-667,-342,102) / 538 - Gegenprobe rot).
+     * Gegenprobe V7 (319bbd17: 16 (-378,-602,-410), 17-22 y 624/440/887/1121/350/204): keine V8-Kette, V4-Kette (= hier rot fuer V7). */
     {
-        static const int16_t v7_y[6] = { 624, 440, 887, 1121, 350, 204 };
+        static const int16_t v8_rel[7][3] = { { -722, -145, 108 }, { 0, 541, 0 }, { 0, 541, 0 }, { 0, 541, 0 }, { 0, 541, 0 },
+                                              { 0, 541, 0 }, { 0, 541, 0 } };
+        static const int16_t v7_rel[7][3] = { { -378, -602, -410 }, { 0, 624, 0 }, { 0, 440, 0 }, { 0, 887, 0 }, { 0, 1121, 0 },
+                                              { 0, 350, 0 }, { 0, 204, 0 } };
         int abw = 0;
-        for (int b = 17; b <= 22; b++) abw += s_skel.bone_relative_pos[b][1] != v7_y[b - 17];
-        CHECK(s_skel.bone_count == 23 && abw == 0 && re15_schwanz_r41_v4_kette(&s_skel),
-              "Spiel-Asset: Schwanzglieder 17-22 nicht die V7-Kette (%d Laengen anders, V4-Kette %d)", abw,
-              re15_schwanz_r41_v4_kette(&s_skel));
+        for (int b = 16; b <= 22; b++) for (int c = 0; c < 3; c++) abw += s_skel.bone_relative_pos[b][c] != v8_rel[b - 16][c];
+        CHECK(s_skel.bone_count == 23 && abw == 0 && re15_schwanz_r41_v8_kette(&s_skel) && !re15_schwanz_r41_v4_kette(&s_skel),
+              "Spiel-Asset: Schwanzkette 16-22 nicht die V8-Kette (%d Werte anders, V8-Kette %d, V4-Kette %d)", abw,
+              re15_schwanz_r41_v8_kette(&s_skel), re15_schwanz_r41_v4_kette(&s_skel));
+        int16_t alt[7][3];
+        for (int b = 16; b <= 22; b++)
+            for (int c = 0; c < 3; c++) { alt[b - 16][c] = s_skel.bone_relative_pos[b][c]; s_skel.bone_relative_pos[b][c] = v7_rel[b - 16][c]; }
+        CHECK(!re15_schwanz_r41_v8_kette(&s_skel) && re15_schwanz_r41_v4_kette(&s_skel),
+              "Gegenprobe V7-Kette: als V8-Kette erkannt (%d) oder keine V4-Kette (%d)",
+              re15_schwanz_r41_v8_kette(&s_skel), re15_schwanz_r41_v4_kette(&s_skel));
+        for (int b = 16; b <= 22; b++) for (int c = 0; c < 3; c++) s_skel.bone_relative_pos[b][c] = alt[b - 16][c];
     }
 
     re15_schwanz_r41_reset();
@@ -332,6 +345,261 @@ int main(void)
         re15_schwanz_r41_reset();
       }
         for (int b = 17; b <= 22; b++) s_skel.bone_relative_pos[b][1] = alt[b - 17];
+    }
+
+    /* (10) V8 (Messblatt V8 6a, schwanz_r41.c SW_V8_GLATT_MAX): mit der V8-Kette (Spiel-Asset) knickt nach einer Drehung um 180 Grad in
+     *      einem Takt kein Gelenk weiter ab als min(25 Grad, max(12 Grad, Keyframe-Gelenkwinkel + 3 Grad)) (+1 Grad Rundung), es gibt
+     *      keine Knick-Ausnahme (V4: Biegung behaelt bis 73 Grad). Gegenprobe ohne V8-Erkennung (Wurzel x -800 < SW_V8_WURZEL_X -760):
+     *      nur ausgegeben. */
+    if (re15_schwanz_r41_v8_kette(&s_skel)) {
+        const int16_t wx = s_skel.bone_relative_pos[16][0];
+        for (int lauf = 0; lauf < 2; lauf++) {
+            if (lauf) s_skel.bone_relative_pos[16][0] = -800;
+            re15_schwanz_r41_reset();
+            a->motion = 0; a->anim_frame = 0;
+            for (int i = 0; i < 30; i++) { takt(); pose(a, p, 1); }
+            a->rot_y = (int16_t)(a->rot_y + 2048);
+            double ueber = -90, max_w = 0;
+            for (int i = 0; i < 60; i++) {
+                re15_skel_pose_t q[RE15_EMD_MAX_BONES];
+                double kf[8][3];
+                int32_t g[8][3];
+                takt();
+                pose(a, q, 0);
+                for (int j = 0; j < 7; j++) for (int k = 0; k < 3; k++) kf[j][k] = q[16 + j].trans[k];
+                spitze(q, kf[7]);
+                pose(a, p, 1);
+                int ok = 1;
+                for (int j = 0; j < 8; j++) ok &= re15_schwanz_r41_gelenk(20, j, g[j]);
+                if (!ok) continue;
+                for (int j = 1; j < 7; j++) {
+                    double u[3], v[3], ku[3], kv[3];
+                    for (int k = 0; k < 3; k++) {
+                        u[k] = g[j][k] - g[j - 1][k]; v[k] = g[j + 1][k] - g[j][k];
+                        ku[k] = kf[j][k] - kf[j - 1][k]; kv[k] = kf[j + 1][k] - kf[j][k];
+                    }
+                    const double w = acos((u[0] * v[0] + u[1] * v[1] + u[2] * v[2]) /
+                                          (sqrt(u[0] * u[0] + u[1] * u[1] + u[2] * u[2]) * sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]) + 1e-9))
+                                     * 180.0 / 3.14159265;
+                    const double wk = acos((ku[0] * kv[0] + ku[1] * kv[1] + ku[2] * kv[2]) /
+                                           (sqrt(ku[0] * ku[0] + ku[1] * ku[1] + ku[2] * ku[2]) *
+                                            sqrt(kv[0] * kv[0] + kv[1] * kv[1] + kv[2] * kv[2]) + 1e-9)) * 180.0 / 3.14159265;
+                    double grenze = wk + 3.0 > 12.0 ? wk + 3.0 : 12.0;
+                    if (grenze > 25.0) grenze = 25.0;
+                    if (w > max_w) max_w = w;
+                    if (w - grenze > ueber) ueber = w - grenze;
+                }
+            }
+            if (lauf == 0)
+                CHECK(ueber <= 1.0, "V8-Kette: Gelenk %.1f Grad ueber min(25, max(12, Keyframe + 3)) (groesster Gelenkwinkel %.1f)", ueber, max_w);
+            fprintf(stderr, "Schwanz %s: groesster Gelenkwinkel %.1f Grad, Abstand zur Grenze %.1f\n",
+                    lauf ? "ohne V8-Erkennung (Gegenprobe)" : "V8-Kette", max_w, ueber);
+        }
+        s_skel.bone_relative_pos[16][0] = wx;
+        re15_schwanz_r41_reset();
+    }
+
+    /* (11) V8 Runde 2 (schwanz_r41.c SW_V8_STARR, Sicht-Pruefer V8 r1 Punkt 5 "graue Dreiecke des Wurzelrohrs stechen durch die
+     *      Rueckenhaut"): ohne Szenenziel liegt das erste Glied (Gelenk 0 -> 1) nach einer Drehung um 180 Grad und waehrend des Gangs in
+     *      jedem Takt auf seinem Keyframe (Abweichung <= 1 Grad, gemessen 0); nach einer Szenenfuehrung kehrt es zurueck.
+     *      Gegenprobe ohne V8-Erkennung (Wurzel x -800): das erste Glied weicht ab (nur ausgegeben). */
+    if (re15_schwanz_r41_v8_kette(&s_skel)) {
+        const int16_t wx = s_skel.bone_relative_pos[16][0];
+        for (int lauf = 0; lauf < 2; lauf++) {
+            if (lauf) s_skel.bone_relative_pos[16][0] = -800;
+            re15_schwanz_r41_reset();
+            a->motion = 0; a->anim_frame = 0;
+            for (int i = 0; i < 20; i++) { takt(); pose(a, p, 1); }
+            a->rot_y = (int16_t)(a->rot_y + 2048);
+            a->motion = 1;
+            double max_w = 0;
+            for (int i = 0; i < 60; i++) {
+                re15_skel_pose_t q[RE15_EMD_MAX_BONES];
+                int32_t g0[3], g1[3];
+                takt();
+                a->anim_frame = i % 20;                      /* Gang (Clip 1), Bild 0-19 */
+                pose(a, q, 0);
+                pose(a, p, 1);
+                if (!re15_schwanz_r41_gelenk(20, 0, g0) || !re15_schwanz_r41_gelenk(20, 1, g1)) continue;
+                /* Keyframe-Gelenke 0/1 (Modellraum) -> Welt wie die Kette: gleiche Gier */
+                const double cs = re15_cos_q12(a->rot_y) / 4096.0, sn = re15_sin_q12(a->rot_y) / 4096.0;
+                const double kx = q[17].trans[0] - q[16].trans[0], ky = q[17].trans[1] - q[16].trans[1], kz = q[17].trans[2] - q[16].trans[2];
+                const double wx_ = cs * kx + sn * kz, wz_ = -sn * kx + cs * kz;
+                const double dx = g1[0] - g0[0], dy = g1[1] - g0[1], dz = g1[2] - g0[2];
+                const double c = (dx * wx_ + dy * ky + dz * wz_) /
+                                 (sqrt(dx * dx + dy * dy + dz * dz) * sqrt(wx_ * wx_ + ky * ky + wz_ * wz_) + 1e-9);
+                const double w = acos(c > 1 ? 1 : (c < -1 ? -1 : c)) * 180.0 / 3.14159265;
+                if (w > max_w) max_w = w;
+            }
+            if (lauf == 0) CHECK(max_w <= 1.0, "V8-Kette: erstes Glied %.1f Grad neben dem Keyframe ohne Szenenziel (Soll <= 1)", max_w);
+            fprintf(stderr, "Schwanz %s: erstes Glied hoechstens %.1f Grad neben dem Keyframe (Drehung 180 Grad, Gang)\n",
+                    lauf ? "ohne V8-Erkennung (Gegenprobe)" : "V8-Kette", max_w);
+        }
+        s_skel.bone_relative_pos[16][0] = wx;
+        a->motion = 0;
+        re15_schwanz_r41_reset();
+    }
+
+    /* (12) Runde 41 SF V8 Schwanz-Bewegung (Bauplan 3, re15_schwanz_r41_rolle): die Rolle dreht jedes Glied NUR um seine eigene Achse -
+     *      Gelenklagen (trans) und Gliedachsen (lokale y) bleiben gleich, die Bauchseite (+e_h, beim Laden aus der Flachachse der Meshes
+     *      gemessen; Spiel-Asset (0,8956, 0, 0,4449), werkzeug quer.py) zeigt zur Kamera (Modus 1, Rolle <= 10 Grad an den Gliedern 18-22,
+     *      Glied 16/17 laufen mit je hoechstens 30 Grad ein) bzw. die Flanke zur Kamera (Modus 2, 90 +- 10 Grad); Verdrehung zwischen
+     *      Nachbargliedern hoechstens 30 Grad (+1 Rundung) bzw. die des Keyframes. Gegenprobe: ohne Rolle liegt der Bauch nicht ueberall
+     *      unter 10 Grad. Dazu wird die Bank 0x30 mit dem Spiel-Asset angelegt (die Bauchachse liest die Meshes der Bank). */
+    {
+        re15_enemy_bank_t *eb = re15_enemy_find(0x30u);
+        if (!eb) eb = re15_enemy_alloc(0x30u);
+        CHECK(eb != NULL, "Rolle: Bank 0x30 nicht anlegbar");
+        if (eb) {
+            eb->md1 = s_md1; eb->skel = s_skel; eb->anim = s_anim; eb->ok = 1;
+            static const double eh[3] = { 0.8956, 0.0, 0.4449 };
+            const re15_emd_skeleton_t *sk = &eb->skel;
+            re15_schwanz_r41_reset();
+            a->motion = 0; a->anim_frame = 0; a->rot_y = 1300;
+            re15_skel_pose_t p0[RE15_EMD_MAX_BONES], p1[RE15_EMD_MAX_BONES];
+            const double cs = re15_cos_q12(a->rot_y) / 4096.0, sn = re15_sin_q12(a->rot_y) / 4096.0;
+            /* Kamera vor Birkin (Modellraum +x = vorn), 8000 E. entfernt, 1500 E. hoch - in Welt umgerechnet */
+            const double km[3] = { 8000.0, -1500.0, 0.0 };
+            const int32_t kam[3] = { (int32_t)(a->x + cs * km[0] + sn * km[2]), (int32_t)(a->y + km[1]), (int32_t)(a->z - sn * km[0] + cs * km[2]) };
+            for (int modus = 0; modus <= 2; modus++) {
+                for (int i = 0; i < 30; i++) {
+                    takt();
+                    int kf = re15_compute_actor_kf(&s_anim, sk, a, -1, a->anim_frame);
+                    re15_skel_compute_pose(sk, kf, p0);
+                    re15_schwanz_r41_rolle(20, 0, NULL, 0);
+                    re15_schwanz_r41_pose(a, sk, p0);              /* Kettenschritt dieses Takts, ohne Rolle */
+                }
+                int kf = re15_compute_actor_kf(&s_anim, sk, a, -1, a->anim_frame);
+                re15_skel_compute_pose(sk, kf, p1);
+                re15_schwanz_r41_rolle(20, modus, modus ? kam : NULL, modus ? 4096 : 0);
+                re15_schwanz_r41_pose(a, sk, p1);                  /* gleicher Takt: nur die Knochen neu, Kette unveraendert */
+                double d_lage = 0, d_achse = 0, phi_max = 0, phi_min = 180, tw_max = 0;
+                double e_vor[3] = { 0, 0, 0 }, a_vor[3] = { 0, 0, 0 };
+                for (int b = 16; b <= 22; b++) {
+                    double ax0[3], ax1[3], bauch[3], mid[3], v[3], n0 = 0, n1 = 0;
+                    for (int k = 0; k < 3; k++) {
+                        d_lage = fmax(d_lage, fabs((double)p1[b].trans[k] - p0[b].trans[k]));
+                        ax0[k] = p0[b].rot[k * 3 + 1]; ax1[k] = p1[b].rot[k * 3 + 1];
+                        n0 += ax0[k] * ax0[k]; n1 += ax1[k] * ax1[k];
+                    }
+                    n0 = sqrt(n0); n1 = sqrt(n1);
+                    double dot = 0, nb = 0;
+                    for (int k = 0; k < 3; k++) { ax0[k] /= n0; ax1[k] /= n1; dot += ax0[k] * ax1[k]; }
+                    d_achse = fmax(d_achse, acos(dot > 1 ? 1 : dot) * 180.0 / 3.14159265);
+                    for (int k = 0; k < 3; k++) bauch[k] = p1[b].rot[k * 3] * eh[0] + p1[b].rot[k * 3 + 2] * eh[2];
+                    double db = 0; for (int k = 0; k < 3; k++) db += bauch[k] * ax1[k];
+                    for (int k = 0; k < 3; k++) { bauch[k] -= db * ax1[k]; nb += bauch[k] * bauch[k]; }
+                    nb = sqrt(nb); for (int k = 0; k < 3; k++) bauch[k] /= nb;
+                    /* Kamera im Modellraum wie die Kette (zu_modell) */
+                    const double dx = kam[0] - a->x, dz = kam[2] - a->z;
+                    const double kmod[3] = { cs * dx - sn * dz, (double)kam[1] - a->y, sn * dx + cs * dz };
+                    const int16_t *r = s_skel.bone_relative_pos[b < 22 ? b + 1 : 22];
+                    const double L = sqrt((double)r[0] * r[0] + (double)r[1] * r[1] + (double)r[2] * r[2]);
+                    double dv = 0, nv = 0, c = 0;
+                    for (int k = 0; k < 3; k++) { mid[k] = p1[b].trans[k] + ax1[k] * L * 0.5; v[k] = kmod[k] - mid[k]; dv += v[k] * ax1[k]; }
+                    for (int k = 0; k < 3; k++) { v[k] -= dv * ax1[k]; nv += v[k] * v[k]; }
+                    nv = sqrt(nv);
+                    for (int k = 0; k < 3; k++) c += bauch[k] * v[k] / nv;
+                    const double phi = acos(c > 1 ? 1 : (c < -1 ? -1 : c)) * 180.0 / 3.14159265;
+                    if (b >= 18 && phi > phi_max) phi_max = phi;
+                    if (b >= 18 && phi < phi_min) phi_min = phi;
+                    if (b > 16) {                                 /* Verdrehung gegen das Vorglied: Bauch des Vorglieds parallel verschoben */
+                        double cr[3] = { a_vor[1] * ax1[2] - a_vor[2] * ax1[1], a_vor[2] * ax1[0] - a_vor[0] * ax1[2],
+                                         a_vor[0] * ax1[1] - a_vor[1] * ax1[0] };
+                        const double cc = a_vor[0] * ax1[0] + a_vor[1] * ax1[1] + a_vor[2] * ax1[2];
+                        double et[3];
+                        for (int k = 0; k < 3; k++) {
+                            const double kx = cr[(k + 1) % 3] * e_vor[(k + 2) % 3] - cr[(k + 2) % 3] * e_vor[(k + 1) % 3];
+                            const double kd = cr[0] * e_vor[0] + cr[1] * e_vor[1] + cr[2] * e_vor[2];
+                            et[k] = e_vor[k] * cc + kx + cr[k] * kd / (1.0 + cc);
+                        }
+                        double de = 0, ne = 0, ct = 0;
+                        for (int k = 0; k < 3; k++) de += et[k] * ax1[k];
+                        for (int k = 0; k < 3; k++) { et[k] -= de * ax1[k]; ne += et[k] * et[k]; }
+                        ne = sqrt(ne);
+                        for (int k = 0; k < 3; k++) ct += et[k] / ne * bauch[k];
+                        tw_max = fmax(tw_max, acos(ct > 1 ? 1 : (ct < -1 ? -1 : ct)) * 180.0 / 3.14159265);
+                    }
+                    for (int k = 0; k < 3; k++) { e_vor[k] = bauch[k]; a_vor[k] = ax1[k]; }
+                }
+                fprintf(stderr, "Schwanz Rolle Modus %d: Lage %.1f E., Achse %.2f Grad, Bauch-Kamera Glied 18-22 %.1f..%.1f Grad, Verdrehung max %.1f\n",
+                        modus, d_lage, d_achse, phi_min, phi_max, tw_max);
+                CHECK(d_lage <= 1.0 && d_achse <= 0.5, "Rolle Modus %d: Gelenklage %.1f E. / Gliedachse %.2f Grad veraendert", modus, d_lage, d_achse);
+                if (modus == 1) CHECK(phi_max <= 10.0, "Rolle Modus 1: Bauch %.1f Grad neben der Kamera (Soll <= 10)", phi_max);
+                if (modus == 2) CHECK(phi_min >= 80.0 && phi_max <= 100.0, "Rolle Modus 2: Flanke %.1f..%.1f Grad (Soll 90 +- 10)", phi_min, phi_max);
+                if (modus) CHECK(tw_max <= 31.0, "Rolle Modus %d: Verdrehung %.1f Grad zwischen Nachbargliedern (Soll <= 30)", modus, tw_max);
+                if (modus == 0) CHECK(phi_max > 10.0, "Gegenprobe ohne Rolle: Bauch ueberall unter 10 Grad (%.1f) - Pruefung waere leer", phi_max);
+            }
+            re15_schwanz_r41_rolle(20, 0, NULL, 0);
+            eb->ok = 0; eb->type = 0;
+            re15_schwanz_r41_reset();
+        }
+    }
+
+    /* (13) Bauchachse (re15_schwanz_r41_bauchachse): Hauptachse der Ecken, Seite = Innenseite des Ruhebogens ueber alle Keyframes. Dasselbe
+     *      Ergebnis (0,8956, 0, 0,4449) +-0,001 mit dem Spiel-Asset (seit Runde 8d 547acc80), Runde 8b (66db2244) und Runde 8c (d31f9534) -
+     *      beide abgelegt unter analysis/befunde_runde41/SF_belege/v8/bewegung/ (Ecken und Keyframes aller drei bytegleich, nur die Farben
+     *      verschieden). Gegenprobe: die alte Farbregel (Seite = Mitte der Flaechen ohne die haeufigste CLUT, bis c94847a31) liefert mit
+     *      66db2244 +e_h, mit d31f9534 -e_h (dort ist Bauch/Ring-CLUT 31552 die haeufigste) - muss dort ROT sein. Beim Spiel-Asset 547acc80
+     *      ist die haeufigste CLUT wieder das Grau, die alte Regel traefe zufaellig richtig; dort wird sie nur ausgegeben.
+     *      r9 Runde 5: Spiel-Asset ist 8g a02a6df3 (Merge r41/sichel_v8 83350f359; Ecken und Keyframes bytegleich zu 8c, Oberseite UV/CLUT wie 8c).
+     *      Die Bauchachse bleibt (0,8956, 0, 0,4449); die alte Farbregel trifft wie bei d31f9534 die falsche Seite (haeufigste CLUT 31552,
+     *      284 Flaechen, gemessen) - die Gegenprobe gilt damit auch fuer das Spiel-Asset. */
+    {
+        static const char *namen[3] = { RE15_ASSET_PSX_DIR "/EMD/EM30_HANGAR.EMD",
+                                        RE15_ASSET_PSX_DIR "/../../../analysis/befunde_runde41/SF_belege/v8/bewegung/EM30_HANGAR_66db2244.EMD",
+                                        RE15_ASSET_PSX_DIR "/../../../analysis/befunde_runde41/SF_belege/v8/bewegung/EM30_HANGAR_d31f9534.EMD" };
+        static const char *kurz[3] = { "Spiel-Asset", "66db2244", "d31f9534" };
+        int alt_falsch = 0;
+        for (int i = 0; i < 3; i++) {
+            size_t n = 0;
+            uint8_t *bl = slurp(namen[i], &n);
+            CHECK(bl != NULL, "Bauchachse: %s fehlt", namen[i]);
+            if (!bl) continue;
+            static re15_md1_t md; static re15_emd_skeleton_t sk; static re15_emd_animation_t an;
+            CHECK(re15_emd_parse_container(bl, n, &md, &sk, &an, NULL) == 0, "Bauchachse: %s nicht lesbar", namen[i]);
+            float eh[3] = { 0, 0, 0 };
+            const int ok = re15_schwanz_r41_bauchachse(&md, &sk, eh);
+            CHECK(ok && fabs(eh[0] - 0.8956) <= 0.001 && fabs(eh[1]) <= 0.001 && fabs(eh[2] - 0.4449) <= 0.001,
+                  "Bauchachse %s: (%.4f, %.4f, %.4f) statt (0,8956, 0, 0,4449)", kurz[i], eh[0], eh[1], eh[2]);
+            /* alte Farbregel (Gegenprobe) */
+            uint16_t cl[8]; int cn[8], ncl = 0;
+            for (int g = 17; g <= 21; g++) {
+                const re15_md1_mesh_t *m = &md.meshes[g];
+                for (int f = 0; f < m->triangle_count + m->quad_count; f++) {
+                    const uint16_t c = f < m->triangle_count ? m->triangle_uvs[f].clut : m->quad_uvs[f - m->triangle_count].clut;
+                    int k = 0; while (k < ncl && cl[k] != c) k++;
+                    if (k == ncl && ncl < 8) { cl[ncl] = c; cn[ncl++] = 0; }
+                    if (k < ncl) cn[k]++;
+                }
+            }
+            int haupt = 0;
+            for (int k = 1; k < ncl; k++) if (cn[k] > cn[haupt]) haupt = k;
+            double bx = 0, bz = 0;
+            for (int g = 17; g <= 21; g++) {
+                const re15_md1_mesh_t *m = &md.meshes[g];
+                for (int f = 0; f < m->quad_count; f++) {
+                    if (m->quad_uvs[f].clut == cl[haupt]) continue;
+                    const re15_md1_quad_t *q = &m->quads[f];
+                    bx += m->quad_vertices[q->v0].x + m->quad_vertices[q->v1].x + m->quad_vertices[q->v2].x + m->quad_vertices[q->v3].x;
+                    bz += m->quad_vertices[q->v0].z + m->quad_vertices[q->v1].z + m->quad_vertices[q->v2].z + m->quad_vertices[q->v3].z;
+                }
+                for (int f = 0; f < m->triangle_count; f++) {
+                    if (m->triangle_uvs[f].clut == cl[haupt]) continue;
+                    const re15_md1_triangle_t *t = &m->triangles[f];
+                    bx += m->tri_vertices[t->v0].x + m->tri_vertices[t->v1].x + m->tri_vertices[t->v2].x;
+                    bz += m->tri_vertices[t->v0].z + m->tri_vertices[t->v1].z + m->tri_vertices[t->v2].z;
+                }
+            }
+            const int alt_plus = bx * 0.8956 + bz * 0.4449 > 0.0;
+            fprintf(stderr, "Schwanz Bauchachse %s: (%.4f, %.4f, %.4f); alte Farbregel (haeufigste CLUT %u, %d Flaechen) -> %s\n",
+                    kurz[i], eh[0], eh[1], eh[2], (unsigned)cl[haupt], cn[haupt], alt_plus ? "+e_h" : "-e_h (falsch)");
+            if (i == 2) alt_falsch = !alt_plus;
+            else if (i == 0) CHECK(!alt_plus, "Gegenprobe Spiel-Asset 8g: alte Farbregel trifft die Bauchseite - Spiel-Asset nicht 8g?");
+            else if (i == 1) CHECK(alt_plus, "Gegenprobe: alte Farbregel mit 66db2244 nicht +e_h - Vorlage stimmt nicht");
+            free(bl);
+        }
+        CHECK(alt_falsch, "Gegenprobe: alte Farbregel trifft bei d31f9534 die Bauchseite - der Riegel prueft nichts (erwartet ROT)");
     }
 
     /* (6) EM30 mit 16 Knochen: keine Kette */

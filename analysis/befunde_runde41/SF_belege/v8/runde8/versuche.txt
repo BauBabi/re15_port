@@ -1,0 +1,49 @@
+Runde 8 (Schwanz, Stufe q) - Versuchsreihen vor der Wahl der Parameter (Ausgaben der Werkzeuge in werkzeug/, Eingang Stand 7e 07b6703f)
+Messbild-Hinweis: es wurden nur Zahlen verglichen; die Werkzeuge rendern offline mit f_rast (PV, Spielkamera 50A0/12) bzw. mit der Rollreihe der Analyse.
+
+x1_varianten.py (Riegel-Funktionen riegel_v8.s1 / s2_s3 / s2c_r5 Variante 0 / s4; Farbe b; MITTE 0,88/0,80 wenn nicht anders):
+E1 nur flach | S1 2.6/7.0 | S2a 2.8/6 b 3.1@358 c 56 | S4 w 54.6 m [39.9, 38.8, 36.6] u [31.4, 28.8] mono True
+E1r flach, Wurzel rund | S1 2.5/7.0 | S2a 2.5/6 b 2.2@361 c 2 | S4 w 56.1 m [39.9, 38.8, 36.6] u [31.4, 28.8] mono True
+E2 flach+Kerbe | S1 2.6/7.0 | S2a 2.8/6 b 3.1@358 c 56 | S4 w 54.6 m [39.9, 38.8, 36.6] u [31.4, 28.8] mono True
+E5 flach+Kerbe ohne Gelenk 1 | S1 2.6/7.0 | S2a 2.8/6 b 3.1@358 c 56 | S4 w 54.6 m [39.9, 38.8, 36.6] u [31.4, 28.8] mono True
+E3 alles | S1 2.6/6.0 | S2a 2.8/6 b 3.1@358 c 56 | S4 w 54.6 m [37.5, 34.7, 32.0] u [25.6, 23.6] mono True
+E6 Wurzel rund, D16 halb | S1 2.6/7.0 | S2a 2.4/7 b 1.9@360 c 2 | S4 w 56.1
+E7 Wurzel rund, D16 rund | S1 2.6/7.0 | S2a 2.4/7 b 1.9@360 c 2 | S4 w 56.1
+E8 Wurzel rund, D16 flach | S1 2.5/6.0 | S2a 2.5/6 b 2.2@361 c 2 | S4 w 56.1
+E9 Wurzel rund, D16 0.3 | S1 2.6/7.0 | S2a 2.4/7 b 1.9@360 c 2 | S4 w 56.1
+E10 D16 0.1 | S1 2.5/6.0 | S2a 2.2/6 b 1.9@336 c 2 | S4 w 56.1
+E11 D16 0.15 | S1 2.5/6.0 | S2a 2.2/6 b 1.9@336 c 2 | S4 w 56.1
+E12 D16 0.2 | S1 2.5/6.0 | S2a 2.3/6 b 1.9@360 c 2 | S4 w 56.1
+-> Wurzelring ganz flach: Rumpf 56 px ueber der Schwanz-Oberkante an der Naht J (S2c). Kerbe an Gelenk 1 aendert S2 nicht.
+
+x3_wurzel.py (Wurzelring teilweise flach w, Ring D16 d; dazu Vorderansicht s .1 der Rollreihe r2_rolle h22/h24/h64):
+w 1.00 d16 0.15 | S1 2.5/6.0 S2a 2.2/6 b 1.9 c 2 | S4 wurzel 56.1 | vorn s.1 h22/24/64 23.0 31.0 34.0
+w 0.60 d16 0.15 | S1 2.5/6.0 S2a 2.2/6 b 1.9 c 2 | S4 wurzel 55.5 | vorn s.1 h22/24/64 22.5 26.5 26.5   <- gewaehlt
+w 0.40 d16 0.15 | S1 2.6/6.0 S2a 2.4/6 b 3.0 c 3 | S4 wurzel 55.2 | vorn s.1 h22/24/64 22.5 24.5 24.5
+w 0.40 d16 0.00 | S1 2.7/6.0 S2a 2.8/6 b 3.1 c 3 | S4 wurzel 55.2 | vorn s.1 h22/24/64 17.0 21.0 22.0
+w 0.25 d16 0.00 | S1 2.7/6.0 S2a 2.8/6 b 3.1 c 56 | S4 wurzel 55.0 | vorn s.1 h22/24/64 17.0 19.0 19.0
+w 0.50 d16 0.15 | S1 2.6/6.0 S2a 2.4/6 b 3.0 c 3 | S4 wurzel 55.3 | vorn s.1 h22/24/64 22.5 26.0 26.0
+w 0.50 d16 0.10 | S1 2.6/6.0 S2a 2.4/6 b 3.0 c 3 | S4 wurzel 55.3 | vorn s.1 h22/24/64 20.5 24.0 25.5
+w 0.55 d16 0.10 | S1 2.6/6.0 S2a 2.4/6 b 3.0 c 3 | S4 wurzel 55.4 | vorn s.1 h22/24/64 20.5 24.5 26.5
+w 0.50 d16 0.05 | S1 2.7/6.0 S2a 2.8/6 b 3.1 c 3 | S4 wurzel 55.3 | vorn s.1 h22/24/64 20.5 23.0 23.5
+
+Einbetten des Wurzelrings (m6_wurzel.py, Tiefe unter der Haut von Mesh 8 in PV, E., + = innen):
+07b6703f [15.0, 15.3, 15.0, 15.1, 25.6, 24.1, 15.0, 15.2, 14.9, 14.9, 15.3]
+neu (w 0,6) [3.7, 68.6, 87.3, 86.1, 62.8, 12.5, 17.8, 44.2, 25.2, 24.7, 75.6] - alle innen; die zwei Ecken unter 15 E. auf 15 E. geschoben
+(Stufe-w-Regel) ergab S2b 3,7 / S2c 4 -> nicht geschoben (schwanz_r8.WURZEL_TIEF = 0).
+
+x2_mitte.py (PV f_rast, Breite s .1/.3/.5/.7/.9, 0,5-px-Schritte; 07b6703f [49.0, 41.5, 33.5, 19.5, 7.5]):
+{3: 0.88, 4: 0.8} [0.0, 39.0, 29.0, 18.5, 13.5] s.5 -13.4 %
+{3: 0.85, 4: 0.78} [0.0, 39.0, 27.0, 18.5, 13.5] s.5 -19.4 %
+{3: 0.84, 4: 0.75} [0.0, 39.0, 25.0, 18.5, 13.5] s.5 -25.4 %
+{3: 0.82, 4: 0.74} [0.0, 39.0, 25.0, 18.5, 13.5] s.5 -25.4 %
+{3: 0.86, 4: 0.72} [0.0, 39.0, 25.5, 18.5, 13.5] s.5 -23.9 %
+{3: 0.87, 4: 0.79} [0.0, 39.0, 29.0, 18.5, 13.5] s.5 -13.4 %
+{3: 0.86, 4: 0.78} [0.0, 39.0, 27.0, 18.5, 13.5] s.5 -19.4 %   <- gewaehlt (Messziel Bauplan 2: s .5 23,5 +- 4 -> 27,0 = +3,5)
+{3: 0.86, 4: 0.8} [0.0, 39.0, 28.0, 18.5, 13.5] s.5 -16.4 %    (+4,5 gegen 23,5)
+{3: 0.87, 4: 0.77} [0.0, 39.0, 29.0, 18.5, 13.5] s.5 -13.4 %
+s .1 = 0,0: die Stelle u 0,7 liegt in PV hinter dem Ruecken (ganze Figur: Knochen 8 deckt, m3_s1 im Scratch) - die Schwanz-Maske allein hat
+dort eine Luecke im Rohr von Glied 16 (07b6703f an u 0,5 ebenso). Nicht sichtbar, nur Angabe.
+
+Nadel (m5_nadel, PV): Ringe y 640 / 880 / 1020 im Bild 1,2 / 0,6 / 0,4 px Radius - die Nadel ist in PV hoechstens 2-3 px breit (Video "Breite
+<= 2 px"); f_rast trifft mit Bildpunktmitten nur bis y_bild 332, die projizierte Spitze liegt bei (286,8 / 347,0).

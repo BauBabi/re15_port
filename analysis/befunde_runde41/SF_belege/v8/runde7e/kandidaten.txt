@@ -1,0 +1,118 @@
+Runde 7e - Kandidaten der Handfarbe (Scratch sfv8/r7e, Werkzeug runde7e/werkzeug/a7_kand.py, angewandt auf Stand 7d 5c902d49;
+Laeufe lauf_v4.sh FD 360-380 je Kandidat, Marker HF_ALT; Messung riegel_handfarbe.py, a5_perz.py, a10_vert.py)
+
+K1   7031679241a4...  Mesh 12 Hand ohne Krallen und ohne Kastenfinger (24 Flaechen) 490 -> 482, nur CLUT-Feld
+K1b  65112d5216b8...  wie K1, dazu Kastenfinger mit Kappe v16 (10 Flaechen) -> 482 (V7: "Kappe v16 (Kastenfinger, keine Kralle) -> 490 wie die Hand")
+K2   07b6703f1587...  K1b + UV je Teilgruppe in die Grau-Zone (Hand M 0,92 ab (4,51) nach (6,6); Mesh 11 unteres Drittel M 0,82 ab (0,25)
+                      nach (5,3)) = Stufe f (handfarbe_r7e.py, Suche runde7e/suche.txt; bytegleich mit dem Kettenbau)
+K2h  d0dbb2ad3469...  nur der Mesh-12-Teil von K2 (Unterarm unteres Drittel unveraendert)
+Gemeinsame Abbildung beider Teilgruppen (a9_union.py): groesster Massstab 0,69, Schub (5,2) - nicht gebaut (gestreckte Texel).
+Groesster Massstab je Teilgruppe (a4_suche.py, float-Rundung): Mesh 11 unten 0,82 (5,3); Mesh 12 alle 34 0,92 (6,6); ohne Kasten 1,0 (19 Schuebe).
+
+Auswahl-Regel (vor dem Vergleich festgelegt): (1) Riegel Handfarbe (a)(b)(c) gruen; (2) Vorlage nur als Ort und Farbrichtung (E4):
+Verteilung L* von Handruecken und unterem Unterarm-Drittel, je Bild durch den L*-Median des oberen Unterarm-Drittels geteilt, gegen
+die Vorlage (mittlere Abweichung der Perzentile 10/25/50/75/90, kleiner = naeher); (3) kleinste Aenderung bei Gleichstand.
+
+== Riegel Handfarbe K1
+Riegel Handfarbe (R7e, Nutzerentscheid 2026-11-14 "wie in der Vorlage") - K1 sha256 7031679241a41dd4618f262781180b032068f349b27258253db37c0f02c89e6f: ROT
+   Soll aus den fuenf Vorlagebildern: (a) Handruecken rot <= 0.024; (b) Finger rot >= 0.393; (c) Unterarm unteres Drittel rot <= 0.000 (rot = a* >= 10)
+   (a) Handruecken ueber dem Soll: [368, 369, 371, 373, 375] -> ROT
+   (b) Finger unter dem Soll: keine -> GRUEN
+   (c) Unterarm unteres Drittel ueber dem Soll: keine -> GRUEN
+== Riegel Handfarbe K1b
+Riegel Handfarbe (R7e, Nutzerentscheid 2026-11-14 "wie in der Vorlage") - K1b sha256 65112d5216b850329240b0941390cba7dafd9a4cad6e803fa50347444473c8aa: GRUEN
+   Soll aus den fuenf Vorlagebildern: (a) Handruecken rot <= 0.024; (b) Finger rot >= 0.393; (c) Unterarm unteres Drittel rot <= 0.000 (rot = a* >= 10)
+   (a) Handruecken ueber dem Soll: keine -> GRUEN
+   (b) Finger unter dem Soll: keine -> GRUEN
+   (c) Unterarm unteres Drittel ueber dem Soll: keine -> GRUEN
+== Riegel Handfarbe K2
+Riegel Handfarbe (R7e, Nutzerentscheid 2026-11-14 "wie in der Vorlage") - K2 sha256 07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95: GRUEN
+   Soll aus den fuenf Vorlagebildern: (a) Handruecken rot <= 0.024; (b) Finger rot >= 0.393; (c) Unterarm unteres Drittel rot <= 0.000 (rot = a* >= 10)
+   (a) Handruecken ueber dem Soll: keine -> GRUEN
+   (b) Finger unter dem Soll: keine -> GRUEN
+   (c) Unterarm unteres Drittel ueber dem Soll: keine -> GRUEN
+== Riegel Handfarbe K2h
+Riegel Handfarbe (R7e, Nutzerentscheid 2026-11-14 "wie in der Vorlage") - K2h sha256 d0dbb2ad3469cdd0a4ef8b20c4b71ce13c7133a78ede314fbfcfc5ab70701059: GRUEN
+   Soll aus den fuenf Vorlagebildern: (a) Handruecken rot <= 0.024; (b) Finger rot >= 0.393; (c) Unterarm unteres Drittel rot <= 0.000 (rot = a* >= 10)
+   (a) Handruecken ueber dem Soll: keine -> GRUEN
+   (b) Finger unter dem Soll: keine -> GRUEN
+   (c) Unterarm unteres Drittel ueber dem Soll: keine -> GRUEN
+
+== Perzentile je Bereich (F368/F369/F371; a5_perz.py)
+-- K1
+F368
+   handruecken      n  2992 L p10/50/90  5.4  8.7 12.3 | a p50/90  3.4  7.9 | b p10/50  -1.4   1.0 | C>8 0.131  b<-5 0.040  a>=10 0.060  L<10 0.772
+   finger           n  1041 L p10/50/90  3.0  7.3 17.9 | a p50/90 11.9 18.2 | b p10/50   0.3   3.5 | C>8 0.736  b<-5 0.012  a>=10 0.585  L<10 0.640
+   unterarm_unten   n   919 L p10/50/90  2.9  6.8 11.1 | a p50/90  2.4  4.0 | b p10/50   0.0   0.7 | C>8 0.007  b<-5 0.010  a>=10 0.000  L<10 0.851
+   unterarm_oben    n  1174 L p10/50/90 17.2 24.6 31.3 | a p50/90  3.4  6.6 | b p10/50   1.0   1.3 | C>8 0.028  b<-5 0.000  a>=10 0.000  L<10 0.000
+F369
+   handruecken      n  2981 L p10/50/90  5.4  8.6 12.3 | a p50/90  3.5  8.8 | b p10/50  -0.3   1.1 | C>8 0.137  b<-5 0.040  a>=10 0.064  L<10 0.780
+   finger           n  1040 L p10/50/90  3.0  7.4 18.3 | a p50/90 11.8 18.2 | b p10/50   0.3   3.5 | C>8 0.734  b<-5 0.011  a>=10 0.581  L<10 0.642
+   unterarm_unten   n   939 L p10/50/90  2.9  7.2 11.3 | a p50/90  2.7  4.0 | b p10/50   0.0   0.9 | C>8 0.009  b<-5 0.011  a>=10 0.000  L<10 0.842
+   unterarm_oben    n  1041 L p10/50/90 16.8 24.7 31.4 | a p50/90  3.4  6.4 | b p10/50   0.9   1.3 | C>8 0.027  b<-5 0.000  a>=10 0.000  L<10 0.000
+F371
+   handruecken      n  2950 L p10/50/90  5.4  8.7 12.3 | a p50/90  3.4  9.4 | b p10/50  -1.4   0.9 | C>8 0.143  b<-5 0.038  a>=10 0.072  L<10 0.774
+   finger           n  1084 L p10/50/90  2.8  7.4 18.5 | a p50/90 11.6 18.8 | b p10/50   0.6   3.5 | C>8 0.717  b<-5 0.007  a>=10 0.568  L<10 0.625
+   unterarm_unten   n   991 L p10/50/90  2.7  6.8 11.3 | a p50/90  2.4  4.0 | b p10/50   0.0   0.7 | C>8 0.016  b<-5 0.009  a>=10 0.000  L<10 0.861
+   unterarm_oben    n  1149 L p10/50/90 16.3 24.1 31.4 | a p50/90  3.4  6.4 | b p10/50   0.9   1.2 | C>8 0.022  b<-5 0.000  a>=10 0.000  L<10 0.004
+-- K1b
+F368
+   handruecken      n  2992 L p10/50/90  5.4  8.2 12.3 | a p50/90  3.4  5.5 | b p10/50   0.0   1.1 | C>8 0.082  b<-5 0.030  a>=10 0.015  L<10 0.784
+   finger           n  1041 L p10/50/90  3.0  7.2 17.9 | a p50/90 11.3 18.2 | b p10/50   0.5   3.5 | C>8 0.716  b<-5 0.003  a>=10 0.565  L<10 0.641
+   unterarm_unten   n   919 L p10/50/90  2.9  6.8 11.1 | a p50/90  2.4  4.0 | b p10/50   0.0   0.7 | C>8 0.007  b<-5 0.010  a>=10 0.000  L<10 0.851
+   unterarm_oben    n  1174 L p10/50/90 17.2 24.6 31.3 | a p50/90  3.4  6.6 | b p10/50   1.0   1.3 | C>8 0.028  b<-5 0.000  a>=10 0.000  L<10 0.000
+F369
+   handruecken      n  2981 L p10/50/90  5.4  8.6 12.3 | a p50/90  3.4  5.5 | b p10/50   0.0   1.2 | C>8 0.086  b<-5 0.029  a>=10 0.017  L<10 0.791
+   finger           n  1040 L p10/50/90  3.0  7.4 18.3 | a p50/90 11.5 18.2 | b p10/50   0.5   3.5 | C>8 0.717  b<-5 0.003  a>=10 0.564  L<10 0.643
+   unterarm_unten   n   939 L p10/50/90  2.9  7.2 11.3 | a p50/90  2.7  4.0 | b p10/50   0.0   0.9 | C>8 0.009  b<-5 0.011  a>=10 0.000  L<10 0.842
+   unterarm_oben    n  1041 L p10/50/90 16.8 24.7 31.4 | a p50/90  3.4  6.4 | b p10/50   0.9   1.3 | C>8 0.027  b<-5 0.000  a>=10 0.000  L<10 0.000
+F371
+   handruecken      n  2950 L p10/50/90  5.1  8.6 12.3 | a p50/90  3.4  5.5 | b p10/50   0.0   1.0 | C>8 0.085  b<-5 0.027  a>=10 0.016  L<10 0.788
+   finger           n  1084 L p10/50/90  2.8  7.4 18.5 | a p50/90 11.3 18.7 | b p10/50   0.7   3.5 | C>8 0.705  b<-5 0.002  a>=10 0.556  L<10 0.628
+   unterarm_unten   n   991 L p10/50/90  2.7  6.8 11.3 | a p50/90  2.4  4.0 | b p10/50   0.0   0.7 | C>8 0.016  b<-5 0.009  a>=10 0.000  L<10 0.861
+   unterarm_oben    n  1149 L p10/50/90 16.3 24.1 31.4 | a p50/90  3.4  6.4 | b p10/50   0.9   1.2 | C>8 0.022  b<-5 0.000  a>=10 0.000  L<10 0.004
+-- K2
+F368
+   handruecken      n  2992 L p10/50/90 17.0 23.9 30.9 | a p50/90  3.5  7.3 | b p10/50   1.0   1.3 | C>8 0.029  b<-5 0.002  a>=10 0.015  L<10 0.038
+   finger           n  1041 L p10/50/90  3.1  8.2 18.7 | a p50/90 11.3 18.2 | b p10/50   0.8   3.5 | C>8 0.716  b<-5 0.003  a>=10 0.565  L<10 0.573
+   unterarm_unten   n   919 L p10/50/90  8.7 18.6 25.2 | a p50/90  3.2  6.5 | b p10/50  -3.0   1.1 | C>8 0.032  b<-5 0.000  a>=10 0.000  L<10 0.128
+   unterarm_oben    n  1174 L p10/50/90 17.2 24.5 30.6 | a p50/90  3.4  6.6 | b p10/50   1.0   1.3 | C>8 0.032  b<-5 0.000  a>=10 0.000  L<10 0.000
+F369
+   handruecken      n  2981 L p10/50/90 16.7 23.8 30.9 | a p50/90  3.5  7.3 | b p10/50   1.0   1.3 | C>8 0.033  b<-5 0.001  a>=10 0.017  L<10 0.042
+   finger           n  1040 L p10/50/90  3.1  8.4 19.7 | a p50/90 11.5 18.2 | b p10/50   0.8   3.5 | C>8 0.717  b<-5 0.003  a>=10 0.564  L<10 0.561
+   unterarm_unten   n   939 L p10/50/90  8.8 19.6 26.0 | a p50/90  3.2  6.5 | b p10/50  -3.0   1.1 | C>8 0.035  b<-5 0.000  a>=10 0.000  L<10 0.121
+   unterarm_oben    n  1041 L p10/50/90 16.8 24.6 31.4 | a p50/90  3.4  6.4 | b p10/50   0.9   1.3 | C>8 0.027  b<-5 0.000  a>=10 0.000  L<10 0.000
+F371
+   handruecken      n  2950 L p10/50/90 16.7 23.9 31.4 | a p50/90  3.5  7.3 | b p10/50   0.9   1.3 | C>8 0.033  b<-5 0.002  a>=10 0.016  L<10 0.049
+   finger           n  1084 L p10/50/90  2.9  8.2 19.4 | a p50/90 11.3 18.7 | b p10/50   0.8   3.5 | C>8 0.705  b<-5 0.002  a>=10 0.556  L<10 0.573
+   unterarm_unten   n   991 L p10/50/90  7.2 19.3 26.1 | a p50/90  3.2  6.5 | b p10/50  -3.0   1.1 | C>8 0.037  b<-5 0.000  a>=10 0.000  L<10 0.160
+   unterarm_oben    n  1149 L p10/50/90 16.3 24.0 30.6 | a p50/90  3.4  6.4 | b p10/50   0.9   1.3 | C>8 0.024  b<-5 0.000  a>=10 0.000  L<10 0.004
+-- K2h
+F368
+   handruecken      n  2992 L p10/50/90 17.0 23.9 30.9 | a p50/90  3.5  7.3 | b p10/50   1.0   1.3 | C>8 0.029  b<-5 0.002  a>=10 0.015  L<10 0.038
+   finger           n  1041 L p10/50/90  3.1  8.2 18.7 | a p50/90 11.3 18.2 | b p10/50   0.8   3.5 | C>8 0.716  b<-5 0.003  a>=10 0.565  L<10 0.573
+   unterarm_unten   n   919 L p10/50/90  2.9  6.8 11.1 | a p50/90  2.4  4.0 | b p10/50   0.0   0.7 | C>8 0.007  b<-5 0.010  a>=10 0.000  L<10 0.851
+   unterarm_oben    n  1174 L p10/50/90 17.2 24.6 31.3 | a p50/90  3.4  6.6 | b p10/50   1.0   1.3 | C>8 0.028  b<-5 0.000  a>=10 0.000  L<10 0.000
+F369
+   handruecken      n  2981 L p10/50/90 16.7 23.8 30.9 | a p50/90  3.5  7.3 | b p10/50   1.0   1.3 | C>8 0.033  b<-5 0.001  a>=10 0.017  L<10 0.042
+   finger           n  1040 L p10/50/90  3.1  8.4 19.7 | a p50/90 11.5 18.2 | b p10/50   0.8   3.5 | C>8 0.717  b<-5 0.003  a>=10 0.564  L<10 0.561
+   unterarm_unten   n   939 L p10/50/90  2.9  7.2 11.3 | a p50/90  2.7  4.0 | b p10/50   0.0   0.9 | C>8 0.009  b<-5 0.011  a>=10 0.000  L<10 0.842
+   unterarm_oben    n  1041 L p10/50/90 16.8 24.7 31.4 | a p50/90  3.4  6.4 | b p10/50   0.9   1.3 | C>8 0.027  b<-5 0.000  a>=10 0.000  L<10 0.000
+F371
+   handruecken      n  2950 L p10/50/90 16.7 23.9 31.4 | a p50/90  3.5  7.3 | b p10/50   0.9   1.3 | C>8 0.033  b<-5 0.002  a>=10 0.016  L<10 0.049
+   finger           n  1084 L p10/50/90  2.9  8.2 19.4 | a p50/90 11.3 18.7 | b p10/50   0.8   3.5 | C>8 0.705  b<-5 0.002  a>=10 0.556  L<10 0.573
+   unterarm_unten   n   991 L p10/50/90  2.7  6.8 11.3 | a p50/90  2.4  4.0 | b p10/50   0.0   0.7 | C>8 0.016  b<-5 0.009  a>=10 0.000  L<10 0.861
+   unterarm_oben    n  1149 L p10/50/90 16.3 24.1 31.4 | a p50/90  3.4  6.4 | b p10/50   0.9   1.2 | C>8 0.022  b<-5 0.000  a>=10 0.000  L<10 0.004
+
+== Verteilung L* normiert gegen die Vorlage (a10_vert.py; ALT = Stand 7d)
+ALT F371 {'handruecken': [0.25, 0.33, 0.36, 0.49, 0.54], 'unterarm_unten': [0.11, 0.18, 0.28, 0.36, 0.47]} Vorlage {'handruecken': [0.32, 0.44, 0.65, 0.96, 1.31], 'unterarm_unten': [0.39, 0.48, 0.55, 0.66, 0.75]}
+ALT mittlere |Abweichung| der normierten Perzentile: Handruecken 0.347  Unterarm unten 0.325  zusammen 0.336
+K1b F371 {'handruecken': [0.21, 0.28, 0.36, 0.38, 0.51], 'unterarm_unten': [0.11, 0.18, 0.28, 0.36, 0.47]} Vorlage {'handruecken': [0.32, 0.44, 0.65, 0.96, 1.31], 'unterarm_unten': [0.39, 0.48, 0.55, 0.66, 0.75]}
+K1b mittlere |Abweichung| der normierten Perzentile: Handruecken 0.388  Unterarm unten 0.325  zusammen 0.357
+K2 F371 {'handruecken': [0.7, 0.86, 0.99, 1.16, 1.31], 'unterarm_unten': [0.3, 0.55, 0.8, 0.98, 1.09]} Vorlage {'handruecken': [0.32, 0.44, 0.65, 0.96, 1.31], 'unterarm_unten': [0.39, 0.48, 0.55, 0.66, 0.75]}
+K2 mittlere |Abweichung| der normierten Perzentile: Handruecken 0.278  Unterarm unten 0.190  zusammen 0.234
+
+Ergebnis: K1 ROT in (a) (Kastenfinger auf 490 liegt vor der Krallenwurzel: 6-7 % rot); K1b, K2, K2h GRUEN in (a)-(c).
+Verteilung: K2 0,234 (Handruecken 0,278, Unterarm 0,190) < ALT 0,336 < K1b 0,357. K1b ist fast schwarz (L* 8,2-8,6, p90 12,3; Vorlage
+Median 12,4-14,3, p90 26,8-28,0 = Glanzstellen fast so hell wie der Unterarm). Gewaehlt: K2 = Stufe f.
+Pruefbild (nur Arbeitsbild, nicht fuer den Nutzer): Scratch sfv8/r7e/pruefbild_kand.png (Vorlage | ALT | K1 | K1b | K2 in F368/F371/F375).

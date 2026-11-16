@@ -73,6 +73,9 @@ Folge: auch in Cut 12 wuerden beide nicht gezeichnet (Platzhalter-Anker); die Sz
 - Raumwechsel mitten in der Szene (nur Debug-Menue): der Riegel wird geloest, damit er nicht in den naechsten Raum mitwandert.
 - Wiedereintritt: keine Szene, kein Spider-Man, Birkin sofort Angreifer (Zustand 0 -> INIT -> HUB). Der Merker
   "Szene gesehen" ist prozessweit (OFFEN 5.1: fuer Speicherstaende braeuchte er ein Bank-9-Bit, Vergabe Orchestrator).
+  ⛔ Seit 2026-11-15 (Rueckbau Monitorbild, Nutzer "Im Hangar, dann Kampf"): Bank-9-Bit 38 `RE15_BF_HANGAR_BIT` (PORT-WAHL,
+  VERTRAG 1.1), gesetzt am Szenenende - an denselben Stellen wie der alte Merker -, gelesen beim Betreten. Riegel
+  `integration_r41_hangar_laden` (Speichern nach der Szene, neuer Prozess laedt, Hangar betreten: keine zweite Szene).
 
 ### 2.2 Ablauf Bild fuer Bild nach dem 80%-Video (Nachbesserung zum Nutzer-Nachtrag)
 
@@ -156,7 +159,7 @@ Alle Werte dieser Tabelle sind Videomessung oder Gestaltung (die Szene gibt es n
 
 ## 6. Offen / Abweichungen
 
-1. "Szene gesehen" ist ein Prozess-Merker: nach Laden eines Spielstands im selben Prozess bleibt er, nach Neustart laeuft
+1. ERLEDIGT 2026-11-15 (Bank-9-Bit 38, s. 2.1). Bis dahin: "Szene gesehen" ist ein Prozess-Merker: nach Laden eines Spielstands im selben Prozess bleibt er, nach Neustart laeuft
    die Szene noch einmal. Fuer Speicherstaende braucht es ein Bank-9-Bit (VERTRAG 1.1: 126-133 vergibt der Orchestrator).
 2. Westtuer (aus 4070, Ziel-Cut 11) im echten Fenster nicht bis Cut 6 gefahren: der Autopilot blieb im Tuerbereich
    (x -25900..-23885, z -16268..-17238) haengen. Die Sicht von Cut 6 ist im Unit-Riegel geprueft (Tabelle 1.4).

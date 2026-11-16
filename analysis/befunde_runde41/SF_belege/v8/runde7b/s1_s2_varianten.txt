@@ -1,0 +1,4 @@
+emd/VOR7B.EMD S1 2.2 6.0 True | S2 a {'mittel': 2.2, 'max': 5} b (1.7, 333) c {'naht_x': 362, 'huckel_px': 4.0, 'bei_x': 377} c7 2 [2, 2, 2, 2, 2, 2, 2] | S3e 3.4 S3d (2.0, 445)
+emd/NEU.EMD S1 2.3 6.0 True | S2 a {'mittel': 2.2, 'max': 5} b (1.7, 333) c {'naht_x': 362, 'huckel_px': 4.0, 'bei_x': 377} c7 2 [2, 2, 2, 2, 2, 2, 2] | S3e 3.4 S3d (2.0, 445)
+emd/U4K2.EMD S1 2.3 6.0 True | S2 a {'mittel': 2.2, 'max': 5} b (2.4, 327) c {'naht_x': 362, 'huckel_px': 4.0, 'bei_x': 377} c7 2 [2, 2, 2, 2, 2, 2, 2] | S3e 3.4 S3d (2.0, 445)
+emd/U7c.EMD S1 2.5 7.0 True | S2 a {'mittel': 2.4, 'max': 5} b (3.0, 357) c {'naht_x': 361, 'huckel_px': 4.0, 'bei_x': 376} c7 3 [2, 2, 2, 3, 3, 3, 2] | S3e 3.4 S3d (2.0, 445)

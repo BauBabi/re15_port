@@ -1,0 +1,43 @@
+{
+ "schwanz_boden_vorlage (Ende rote Linie, Kante +8 px)": [
+  -7410,
+  0,
+  -16197
+ ],
+ "fuss_bild_links": [
+  -9355,
+  0,
+  -21146
+ ],
+ "fuss_bild_rechts": [
+  -7953,
+  0,
+  -22035
+ ],
+ "sohle_mitte": [
+  -8797,
+  0,
+  -21746
+ ],
+ "px_je_1000": 65.4,
+ "schwanz_boden_vorlage (Ende rote Linie, Kante +8 px)_modell": [
+  -3453,
+  0,
+  3805
+ ],
+ "fuss_bild_links_modell": [
+  -783,
+  0,
+  -795
+ ],
+ "fuss_bild_rechts_modell": [
+  785,
+  0,
+  -248
+ ],
+ "sohle_mitte_modell": [
+  34,
+  0,
+  -730
+ ]
+}

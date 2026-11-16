@@ -1,0 +1,6 @@
+Statisch: Schwanz-Flaechen (Meshes 16-22), deren gerasterte Texel die Naht Seite 0 u 54-55 beruehren (KB.raster)
+  8c         Flaechen  23, Naht-Texel  16
+  8d         Flaechen  47, Naht-Texel  10
+  8e         Flaechen   0, Naht-Texel   0
+  8f         Flaechen   0, Naht-Texel   0
+  8g_direkt  Flaechen   0, Naht-Texel   0

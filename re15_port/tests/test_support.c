@@ -48,8 +48,10 @@ int g_test_room_se_log[2048];
 int g_test_room_se_tickof[2048];
 int g_test_room_se_n    = 0;
 int g_test_room_se_tick = 0;
+int g_test_room_se_zahl[0x20];   /* je Satz-Nummer, ohne Obergrenze der Liste (Sherry-Ruf-Riegel, test_birkin_bahnsteig) */
 void re15_audio_room_se(int se_id)
 {
+    if (se_id >= 0 && se_id < 0x20) g_test_room_se_zahl[se_id]++;
     if (g_test_room_se_n < 2048) {
         g_test_room_se_tickof[g_test_room_se_n] = g_test_room_se_tick;
         g_test_room_se_log[g_test_room_se_n++]  = se_id;

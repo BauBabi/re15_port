@@ -235,7 +235,9 @@ typedef struct {
      * (Boden y 0) ergibt 0 = byte-gleich zum Original. memset beim Spawn -> 0. */
     int32_t  granate_boden;
     /* Runde 41 SF NB5 (Abnahme 3 B4, PORT-WAHL, kein Original-Feld): Mischart-Vorgabe des Ports fuer einen einzelnen Platz,
-     * 0 = keine (Original-Weg), 1..4 = ABE an mit ABR 0..3. Gesetzt nur vom gruenen Blut der Hangar-Szene (birkin_formen.c). */
+     * 0 = keine (Original-Weg), 1..4 = ABE an mit ABR 0..3. Derzeit setzt es NIEMAND: das gruene Blut der Hangar-Szene
+     * (birkin_formen.c) setzte 4 (ABR3, "Gas"), seit 2026-11-13 laeuft es im Original-Weg (@0x80113b08-54). Das Feld und die
+     * Zeichner-Unterstuetzung (platform/pc/main.c BLEND) bleiben; memset beim Spawn -> 0. */
     uint8_t  abr_port;
 } re15_esp_fx_t;
 

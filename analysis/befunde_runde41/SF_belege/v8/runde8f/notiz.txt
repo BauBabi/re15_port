@@ -1,0 +1,25 @@
+Runde 8f (r41/sichel_v8) - Schwanz einheitlich ueber die Breite (Flanke und Ruecken im Bauchfeld C1)
+=================================================================================================
+Nutzer 15.11.2026 zu den Videos 30_sichel_schwanz_einheitlich: "Zum einen hat er komische braune Streifen an den Raendern. Das sieht man vor
+allem wenn er sich eindreht und man den dicken Schwanz Teil sieht. Warum?" Standbild birkin_fehler/...07h32m52s078.png = Szenenbild F336 (h93).
+Runde 8e (a48e2ce5) nahm die dunkle Naht u 54-55 aus dem Bauchfeld. Pruefer r9 Runde 2: im Bogen h74-h100 wirkt die graue Flanke (Grau-Feld
+8d) grau-oliv mit Querrippen neben der rosa Bauchflaeche; das Original ist dort einheitlich. Entscheid des Orchestrators: einheitlich ueber die
+Glieder UND ueber die Breite, Flanke im Bauchton durch Auswahl von Original-Texeln.
+
+Aenderung: schwanz_r8.json felder.flanke_fleisch = true. Alle Mantel-/Deckelflaechen ausserhalb des Bauchsektors (Flanken, Ruecken) tragen
+das Bauchfeld C1 (Zeile 493 Seite 0, u 56-65 v 51-55), quer gespiegelt zurueck (an beiden Fleischgrenzen dieselbe Feldspalte, nahtlos),
+laengs je Glied gespiegelt wie der Bauch. Grau (487) bleibt nur die Nadel (Glied 22 ab y 760, Spitze) und die 8 Wurzelflaechen im Rumpf.
+
+Messung (Werkzeug werkzeug/ton2.py; Szene r41/sichel_szene, F317-F343 = h74-h100, 960x720; Querprofile senkrecht zu jedem sichtbaren Glied,
+Mitte |s| <= 0,2 w, Rand je Seite 0,6-0,9 w, dEab = a*b*-Abstand ohne L* = ohne Schattierung):
+  a48e2ce5      dEab 8,4-11,3 (F336 10,4); Mitte grau L* 25 a* 1,0, Rand Bauchseite a* 10,6     messung/ton_a48e2ce5_960.json
+  neu 92a58f26  dEab 4,1-5,9  (F336 5,4); Rest = Schattierung der Bauchseite                  messung/ton_neu_960.json
+  Original-Video nur Richter (Mittellinie bogen_v8.json links -> knolle, Halbbreite 16 Videopunkte): Mittel 2,7, max 4,6   messung/ton_original_video.json
+  320x240 (Riegel integration_r41_schwanz_zusammen (6), r41/sichel_szene): a48e2ce5 7,7-11,3, neu 3,7-5,3 -> Grenze 6,5.
+Messbild messung/mb_bogen_farbe.png (Original | a48e2ce5 | neu, h80 und h93).
+
+Pruefung: Kette zweimal V8-KETTE-OK 92a58f26 (bytegleich, kette_lauf1/2.txt); riegel_schwanz_r8 6/6 (r8_b.txt), Gegenprobe a48e2ce5 ROT R8d
+(329 graue Flaechen ausser Nadel) und R8e (PV Fleisch-Anteil |theta| >= 100 0,00 %); test_birkin_formen neu OK, Gegenprobe a48e2ce5 ROT
+(7 Glieder, Flaechen auf 493 12/28/32/28/28/28/32 statt 33/77/88/77/77/77/88); ctest-Gruppe 8/8 (build_r9e).
+Hinweis: Nutzer 09.11. "Nur die oberseite ist durchweg grau" (Runde 5 P4) ist fuer den Schwanz durch den Entscheid vom 15.11. ueberholt.
+Keine @0x-Konstante (Sichel-Form auf keiner Disc), PORT-WAHL.

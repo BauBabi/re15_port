@@ -1,0 +1,16 @@
+Runde 7b Endstand
+968d1a4fb doc(r41-sichel-v8): Runde 7b - Tafeln 14 / 14b aus echten Framedumps und Belege runde7b (Stand 87b02681)
+db62602be asset(r41-sichel-v8): Runde 7b - Spiel-Asset EM30_HANGAR.EMD 87b02681 (Werkzeuge 46537dad7), Pin und Unit-Test
+46537dad7 werkzeug(r41-sichel-v8): Runde 7b K1 - Abschnitts-Ringe nur in den Meshes 19-22 (Riegel S2 b blieb sonst rot), Abschnitte je Glied
+a526f3613 asset(r41-sichel-v8): Runde 7b - Spiel-Asset EM30_HANGAR.EMD wieder 5a358bc9 (Werkzeuge c12910e26), Pin und Unit-Test-Kommentar
+c12910e26 werkzeug(r41-sichel-v8): Runde 7b K2 - Kegel-Dreieck d14 wieder laengs (d73c04008 zurueckgenommen)
+e33aaa24e asset(r41-sichel-v8): Runde 7b K1/K2 - Spiel-Asset EM30_HANGAR.EMD f3e1ceff (Schwanz-Unterseite in Original-Dichte, Wurzeldeckel), Pin und Unit-Test
+d73c04008 werkzeug(r41-sichel-v8): Runde 7b K2 - Kegel-Dreieck d14 der Wurzel mit Haut/Fleisch-Uebergang statt laengs
+4a5e11caf asset(r41-sichel-v8): Runde 7b K1/K2 - Spiel-Asset EM30_HANGAR.EMD 5a358bc9 (Schwanz-Unterseite in Original-Dichte, Wurzeldeckel), Pin und Unit-Test
+a1371e38c werkzeug(r41-sichel-v8): Runde 7b K1/K2 - Abschnitte je Glied, Deckel-Stauchung, Grenzzone; unterseite_v8.json fleisch_r7b (U7)
+891ff69f6 werkzeug(r41-sichel-v8): Runde 7b K1/K2 - Fleisch der Schwanz-Unterseite in Original-Dichte (unterseite_r7b.py) und Glaette-Mass (glaette_r7b.py)
+1b3dd0088 doc(r41-sichel-v8): Runde 7a - Riegel, Tafeln 16/18/19, K4-Tabelle und Dossier am Stand a474188a
+023f46e95 asset(r41-sichel-v8): Runde 7a K3 - Spiel-Asset EM30_HANGAR.EMD a474188a (Krallenkeil, Daumen), Pin und Unit-Test
+87b026816352c9987e9ceace2afbcb2dc8ff9827351e87b0a1693b20c8029b10 *re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD
+87b026816352c9987e9ceace2afbcb2dc8ff9827351e87b0a1693b20c8029b10  re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD
+state.log Szene 87b02681 bytegleich V7 (sfv4/r/V7_szene/state.log)

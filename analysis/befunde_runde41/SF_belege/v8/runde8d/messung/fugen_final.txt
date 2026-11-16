@@ -1,0 +1,13 @@
+== szene
+  bauch Gelenk 1 (16|17):  1 Bilder  Kante dE Median 7.0 Max 7.0 | innen 1.9 | Stufe 0.0 | L* an der Fuge 41.2 | 39.6
+  bauch Gelenk 2 (17|18):  3 Bilder  Kante dE Median 6.1 Max 10.3 | innen 5.0 | Stufe 3.7 | L* an der Fuge 34.1 | 26.3
+  bauch Gelenk 3 (18|19):  6 Bilder  Kante dE Median 9.9 Max 21.9 | innen 3.9 | Stufe 4.0 | L* an der Fuge 16.9 | 26.1
+  bauch Gelenk 4 (19|20):  7 Bilder  Kante dE Median 3.0 Max 23.3 | innen 1.1 | Stufe 1.8 | L* an der Fuge 27.3 | 29.2
+  bauch Gelenk 5 (20|21):  8 Bilder  Kante dE Median 2.8 Max 24.2 | innen 3.7 | Stufe 2.8 | L* an der Fuge 30.2 | 32.5
+  bauch Gelenk 6 (21|22):  9 Bilder  Kante dE Median 5.4 Max 29.3 | innen 7.6 | Stufe 2.6 | L* an der Fuge 20.0 | 30.8
+  grau  Gelenk 1 (16|17):  1 Bilder  Kante dE Median 6.8 Max 6.8 | innen 6.8 | Stufe 3.7 | L* an der Fuge 16.8 | 19.6
+  grau  Gelenk 2 (17|18):  2 Bilder  Kante dE Median 3.3 Max 3.6 | innen 3.6 | Stufe 1.6 | L* an der Fuge 24.4 | 23.3
+  grau  Gelenk 3 (18|19):  2 Bilder  Kante dE Median 0.0 Max 0.0 | innen 7.1 | Stufe 0.0 | L* an der Fuge 30.4 | 30.4
+  grau  Gelenk 4 (19|20):  2 Bilder  Kante dE Median 0.5 Max 1.0 | innen 2.3 | Stufe 0.0 | L* an der Fuge 25.1 | 25.1
+  grau  Gelenk 5 (20|21):  3 Bilder  Kante dE Median 3.9 Max 4.1 | innen 6.2 | Stufe 3.3 | L* an der Fuge 28.0 | 30.4
+  grau  Gelenk 6 (21|22):  3 Bilder  Kante dE Median 4.0 Max 6.3 | innen 3.6 | Stufe 0.0 | L* an der Fuge 19.9 | 23.3

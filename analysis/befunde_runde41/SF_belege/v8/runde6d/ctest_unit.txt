@@ -1,0 +1,9 @@
+ctest unit-Suite, V8 Runde 6d, HEAD 8ca7e4ab2, Beginn 2026-11-11 03:59:18
+Aufruf: ctest --test-dir C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)"
+(1013 Testzeilen ausgelassen; alle 'Passed', kein 'Failed', kein 'Timeout'; laengster Test unit_r37_masken36_ausschluss 401.32 sec)
+
+100% tests passed, 0 tests failed out of 1013
+
+Total Test time (real) = 401.45 sec
+ctest_rc=0
+Ende 2026-11-11 04:06:00

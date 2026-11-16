@@ -1,0 +1,25 @@
+EM30_HANGAR.EMD: 886 von 913 Keyframes geduckt, Fussgelenk max 342 vom EM30-Ort, 900 mit bewegtem Schwanz
+FAIL: EM30_HANGAR.EMD: Schwanzglied 16: 43 Ecken statt 46 (V8 Runde 8b)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 16: 35 Flaechen auf 495 (Soll 14), 0 auf 493 (Soll 12), 18 auf 487, 53 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 17: 32 Ecken statt 68 (V8 Runde 8b)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 17: 30 Flaechen auf 495 (Soll 0), 0 auf 493 (Soll 28), 15 auf 487, 45 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 17 nicht flach (quer 380, hoch 405; V8 Runde 8)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 18: 47 Ecken statt 79 (V8 Runde 8b)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 18: 41 Flaechen auf 495 (Soll 0), 0 auf 493 (Soll 32), 20 auf 487, 61 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 18 nicht flach (quer 357, hoch 368; V8 Runde 8)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 19: 48 Ecken statt 68 (V8 Runde 8b)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 19: 41 Flaechen auf 495 (Soll 0), 0 auf 493 (Soll 28), 21 auf 487, 62 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 19 nicht flach (quer 347, hoch 361; V8 Runde 8)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 20: 47 Ecken statt 68 (V8 Runde 8b)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 20: 40 Flaechen auf 495 (Soll 0), 0 auf 493 (Soll 28), 20 auf 487, 60 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 20 nicht flach (quer 295, hoch 298; V8 Runde 8)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 21: 47 Ecken statt 68 (V8 Runde 8b)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 21: 40 Flaechen auf 495 (Soll 0), 0 auf 493 (Soll 28), 20 auf 487, 60 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 21 nicht flach (quer 185, hoch 187; V8 Runde 8)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 22: 47 Ecken statt 112 (V8 Runde 8b)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 22: 40 Flaechen auf 495 (Soll 0), 0 auf 493 (Soll 32), 20 auf 487, 60 gesamt (V8 Runde 8d)
+FAIL: EM30_HANGAR.EMD: Stachel (Mesh 22) Spitze y 589 (Soll 1300), Knolle Radius 121 (Soll 185-191; V8 Runde 8b)
+EM30_HANGAR.EMD: 642 Haut-CLUT-Eintraege umgefaerbt, 30 blaue grau, 13 Zusatzzeilen, Port-Texturhoehe 4096
+EM30_HANGAR.EMD: 23 Meshes, 23 Knochen, 21 Clips, 310 Tri-Vertices umgeformt, 13 Teile umtexturiert
+test_birkin_formen: 20 Fehler
+rc=1
