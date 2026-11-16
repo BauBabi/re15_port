@@ -23,6 +23,7 @@
 #include <stdlib.h>          /* getenv — RE15_RE2_DMG_MODEL (Negativ-Test-Hebel) */
 #include <string.h>          /* memset — s_re2_probe je Schuss (RE2-Applier, Runde 16) */
 #include "re15_damage.h"
+#include "re15_pipe_r41.h"     /* Runde 41 Spur pipe: Rohr-Reichweite / Treffer-Ton */
 #include "re15_math.h"       /* re15_squareroot0 — the engine's ONLY sqrt (BIOS 0x80065f60) */
 #include "re15_skeleton.h"   /* re15_skel_compute_pose / re15_skel_bone_to_world / g_anim_pose_actor */
 #include "re15_esp.h"        /* re15_esp_fx_spawn — zombie gore effect (FUN_80106a44) */
@@ -2027,7 +2028,9 @@ int re15_player_weapon_fire(int weapon_id)
     if (weapon_id < 0 || weapon_id >= 22) return 0;
     memset(s_re2_probe, 0, sizeof s_re2_probe);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    uint32_t reach = s_player_wpn_reach[weapon_id];
+    /* Runde 41 Spur pipe: Waffe 2 (Rohr) -> NUTZERWUNSCH "mehr Reichweite" (Original @0x8006E5A8 = 1000 < Messer
+     * @0x8006E5A4 = 1100; Eichung an den Netzen, include/re15_pipe_r41.h + gen/pipe_r41.inc). Alle anderen: Tabelle. */
+    uint32_t reach = re15_pipe_r41_reichweite(weapon_id, s_player_wpn_reach[weapon_id]);
     /* the melee hit-test ORIGIN = the blade/hand point (@0x800353a4-c8); guns = player pos */
     int32_t ox = pl->x, oz = pl->z;
     if (weapon_id < 3 && s_hand_valid) { ox = s_hand_world[0]; oz = s_hand_world[2]; }
@@ -2895,7 +2898,9 @@ retry_after_latch:
     }
     /* knife-only HIT SE (@0x800123c0-d8): weapon==1 && hit landed -> FUN_80045024(0x1080001)
      * = the flesh-hit SE at the player position (the whiff plays only the swing SE 0x1050001). */
-    if (weapon_id == 1) {
+    /* Runde 41 Spur pipe: PORT-WAHL Vorlage Messer — das Rohr (2) bekommt denselben Treffer-Ton; das Original
+     * prueft nur Waffe 1 (`ori v0,zero,0x1` / `bne s0,v0` @0x800123C0-C4). re15_pipe_r41_treffer_ton(1) == 1. */
+    if (re15_pipe_r41_treffer_ton(weapon_id)) {
         extern void re15_audio_weapon_se(int idx);
         re15_audio_weapon_se(8);
     }

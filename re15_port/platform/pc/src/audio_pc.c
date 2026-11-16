@@ -26,6 +26,7 @@
 #include <stdarg.h>   /* re2se_log (RE15_RE2SE_LOG-Dateilog, Phase 2) */
 #include <SDL.h>
 #include "re15_audio.h"
+#include "re15_pipe_r41.h"   /* Runde 41 Spur pipe: ARMS-Bank des Rohrs = Messer (PORT-WAHL) */
 #include "re15_scd.h"
 #include "re15_vab.h"
 #include "re15_room.h"
@@ -874,6 +875,9 @@ void re15_audio_room_se_snd0(int se_id)
  * (the EDT prefix @0) for the se_id lookup. Idempotent per weapon; frees the previous bank on change. */
 static int load_weapon_se_vab_pc(int weapon_id)
 {
+    /* Runde 41 Spur pipe: PORT-WAHL Vorlage Messer — ARMS02 ist auf der Disc die Pistolen-Bank (byte-gleich
+     * ARMS03..06/0A/0B, sha256 ff146f31...); das Rohr (2) spielt Ziehen/Schwung/Treffer aus ARMS01 (Messer). */
+    weapon_id = re15_pipe_r41_arms_bank(weapon_id);
     if (weapon_id < 0 || weapon_id > 0xff) return -1;
     if (s_weap_loaded && s_weap_id == weapon_id) return 0;
     for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
