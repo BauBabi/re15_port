@@ -198,6 +198,38 @@ int re15_skel_root_y_fix(const re15_emd_skeleton_t *skel, int keyframe_index)
 #endif
 }
 
+/* MESSSCHIENE RE15_POSE_LOG=<datei> (Runde 42 Stufe STAGE3b, KEIN Verhalten): je gezeichneter Pose eines Nicht-Spieler-Aktors
+ * eine Zeile mit Bild, Raum, Slot, Typ, Clip, anim_frame, gezeichnetem Keyframe, frac, Rate, Vor-Gewicht wp und einer Pruefsumme
+ * ueber alle Knochenlagen. Dient dem Vorher/Nachher-Vergleich der Birkin-Szenen (3070/3080 gegen 50A0/5080/5090). */
+static void re15_pose_messzeile(const re15_actor_t *a, int kf, int wp, const re15_skel_pose_t *poses, int n)
+{
+    static int an = -1;
+    static FILE *lg = NULL;
+    if (an < 0) {
+        const char *p = getenv("RE15_POSE_LOG");
+        an = (p && *p) ? 1 : 0;
+        if (an) lg = fopen(p, "w");
+        if (!lg) an = 0;
+    }
+    if (!an || a == &g_actors[0]) return;
+    uint32_t h = 2166136261u;
+    int fb = 0; int32_t fm = -1;   /* weitester Knochen (Modellraum) = Reichweite, z. B. ausgestreckter Arm */
+    for (int b = 0; b < n; b++) {
+        const int32_t m = (poses[b].trans[0] < 0 ? -poses[b].trans[0] : poses[b].trans[0]) +
+                          (poses[b].trans[1] < 0 ? -poses[b].trans[1] : poses[b].trans[1]) +
+                          (poses[b].trans[2] < 0 ? -poses[b].trans[2] : poses[b].trans[2]);
+        if (m > fm) { fm = m; fb = b; }
+        for (int i = 0; i < 3; i++) { h = (h ^ (uint32_t)poses[b].trans[i]) * 16777619u; }
+        for (int i = 0; i < 9; i++) h = (h ^ (uint32_t)poses[b].rot[i]) * 16777619u;
+    }
+    extern unsigned g_current_room_id;
+    fprintf(lg, "F%u R%04X s%d t%02X m%d af%d kf%d fr%d ra%d wp%d x%d z%d ry%d h%08X b%d(%d,%d,%d)\n", (unsigned)g_engine.frame_count,
+            g_current_room_id, (int)(a - g_actors), (unsigned)a->type, (int)a->motion, (int)a->anim_frame, kf, (int)a->anim_frac,
+            (int)a->anim_blend_rate, wp, (int)a->x, (int)a->z, (int)a->rot_y, (unsigned)h, fb, (int)poses[fb].trans[0],
+            (int)poses[fb].trans[1], (int)poses[fb].trans[2]);
+    fflush(lg);
+}
+
 int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
                             int                       keyframe_index,
                             re15_skel_pose_t          poses[RE15_EMD_MAX_BONES])
@@ -766,6 +798,7 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
      * re15_player_tick (player + NPCs), locked 1:1 with the anim_frame advance.
      * (NB: this is a render-correctness fix; it is NOT what made the ROOM1150 kneel look fast —
      * that was the wrong animation BANK, see anim_select_common.c anim_use_pl00.) */
+    if (bact) re15_pose_messzeile(bact, keyframe_index, wp, poses, skel->bone_count);
     if (bact) bact->anim_prev_valid = 1;
     return 0;
 }
