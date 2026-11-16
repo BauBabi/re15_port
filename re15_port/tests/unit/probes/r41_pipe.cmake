@@ -14,3 +14,14 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r41_pipe COMMAND test_pipe_r41)
 set_tests_properties(unit_r41_pipe PROPERTIES TIMEOUT 300)
+
+#   integration_r41_pipe  echte exe, Leon ROOM1140 + Elza ROOM1181, Zombie 2800 vor dem Spieler gehalten (RE15_GEGNER_POS),
+#                         RE2-KI: Messer trifft NICHT, Rohr trifft (RE15_PIPE_LOG); Bank W02 14 Clips; Ton-Bank ARMS01.
+if(TARGET re15_pc)
+    add_test(NAME integration_r41_pipe
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_pipe_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_pipe.cmake)
+    set_tests_properties(integration_r41_pipe PROPERTIES TIMEOUT 900)
+endif()

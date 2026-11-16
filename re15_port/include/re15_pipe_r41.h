@@ -38,11 +38,24 @@ int re15_pipe_r41_ohne_zahl(uint8_t id);
  * Reichweite", Eichung engine/src/gen/pipe_r41.inc); alle anderen -> der uebergebene Tabellenwert @0x8006E5A0. */
 uint32_t re15_pipe_r41_reichweite(int weapon_id, uint32_t tabelle);
 
+/* Tiefen-Zuschlag (Weltmass) der RE2-Messer-Boxen fuer RE2-gefuehrte Gegner (Zombie-Familie/Hund): Waffe 2 ->
+ * RE15_PIPE_R41_REICHWEITE - 1100 (Messer @0x8006E5A4) = derselbe Vorsprung wie im RE1.5-Kegel; sonst 0. Das Rohr
+ * leiht die Boxen des RE2-Messers (s_re2z_geo1 @0x800A63A8 EBEN / @0x800A657C TIEF / @0x800A64E0 HOCH); gerade aus
+ * (EBEN) begrenzt im Spiel der Kegel (gemessen ROOM1140: Messer trifft bis Spielerabstand 2700, Rohr bis 3000, mit
+ * und ohne Zuschlag gleich). Der Zuschlag haelt die Boxen beim Zielen HOCH/TIEF (fernste Kante HOCH Satz 4
+ * 1050 + 4*(326+125) = 2854) nicht kuerzer als den Rohr-Kegel. */
+int32_t re15_pipe_r41_re2_tiefe(int weapon_id);
+
 /* ARMS-Ton-Bank je Waffe. Waffe 2 -> 1 (PORT-WAHL Vorlage Messer: ARMS02 ist im Original die Pistolen-Bank);
  * sonst die Waffe selbst (FUN_80043D8C laedt ARMS<aca5d>). */
 int re15_pipe_r41_arms_bank(int weapon_id);
 
 /* Treffer-Ton 0x01080001 (Satz 8): Original nur Waffe 1 (@0x800123C0-C4); PORT-WAHL Vorlage Messer: auch Waffe 2. */
 int re15_pipe_r41_treffer_ton(int weapon_id);
+
+/* Messhaken (kein Spielverhalten): RE15_PIPE_LOG=<datei> haengt je Nahkampf-Treffer (Waffe 1/2) eine Zeile an:
+ * "[pipe] F<bild> waffe=<w> slot=<s> abstand_hand=<d> abstand_spieler=<d> reichweite=<r> hp=<hp> spieler=(x,z,rot=r)
+ * gegner=(x,z)". */
+void re15_pipe_r41_log_treffer(int weapon_id, int slot, uint32_t abstand_hand, uint32_t reichweite);
 
 #endif /* RE15_PIPE_R41_H */

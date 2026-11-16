@@ -1953,6 +1953,9 @@ void re15_dmg_mech_counts(uint32_t *gate5, uint32_t *cls, uint32_t *cls_rej)
     if (cls_rej) *cls_rej = s_cnt_class_rej;
 }
 
+/* Runde 41 Spur pipe: Tiefen-Zuschlag der RE2-Messer-Box fuer das Rohr (Weltmass), gesetzt je Aufruf von
+ * re15_player_weapon_fire (re15_pipe_r41_re2_tiefe). 0 fuer jede andere Waffe = Original-Box unveraendert. */
+static int32_t s_re2_tiefe_zuschlag = 0;
 /* FUN_800410CC-Kern fuer EINEN Kandidaten. Rueckgabe 1 = Treffer (zone/bracket gesetzt), 0 = kein
  * Treffer (Fenster, XZ-Box oder Teile-Maske verworfen). */
 static int re15_re2_gun_probe(unsigned rid, int elev, const re15_actor_t *pl, const re15_actor_t *e,
@@ -1995,6 +1998,7 @@ static int re15_re2_gun_probe(unsigned rid, int elev, const re15_actor_t *pl, co
         third = re15_re2_window(fw, g->flag[b], &lo, &hi);
         if ((uint32_t)(dy - lo) > (uint32_t)(hi - lo)) continue; /* dy im Fenster */
         int32_t depth4 = g->box[b][2] + ((b == 0) ? (rad1ee >> 2) : 0);        /* rec+8 += +0x1EE>>2 */
+        depth4 += s_re2_tiefe_zuschlag >> 2;          /* Runde 41 Spur pipe: Rohr reicht tiefer (sonst 0) */
         int32_t halfw4 = g->box[b][3] + r9a;                                   /* rec+10/12/1A += +0x9A>>2 */
         if (!re15_re2_box_inside(pl, e, g->box[b], depth4, halfw4)) continue;
         int row = 6;
@@ -2031,6 +2035,9 @@ int re15_player_weapon_fire(int weapon_id)
     /* Runde 41 Spur pipe: Waffe 2 (Rohr) -> NUTZERWUNSCH "mehr Reichweite" (Original @0x8006E5A8 = 1000 < Messer
      * @0x8006E5A4 = 1100; Eichung an den Netzen, include/re15_pipe_r41.h + gen/pipe_r41.inc). Alle anderen: Tabelle. */
     uint32_t reach = re15_pipe_r41_reichweite(weapon_id, s_player_wpn_reach[weapon_id]);
+    /* Dieselbe Verlaengerung fuer den RE2-Applier: das Rohr leiht die RE2-Messer-Boxen (Zuordnung w2 -> RE2-Id 1,
+     * enemy_ai_re2_zombie.c) und reicht um denselben Betrag tiefer wie im RE1.5-Kegel. */
+    s_re2_tiefe_zuschlag = re15_pipe_r41_re2_tiefe(weapon_id);
     /* the melee hit-test ORIGIN = the blade/hand point (@0x800353a4-c8); guns = player pos */
     int32_t ox = pl->x, oz = pl->z;
     if (weapon_id < 3 && s_hand_valid) { ox = s_hand_world[0]; oz = s_hand_world[2]; }
@@ -2911,6 +2918,7 @@ retry_after_latch:
      * Bruecke das "ueberlebt?" aus e->state lesen kann. Volle Begruendung an
      * re15_re15_re2z_gore_hit (enemy_ai_re2_zombie.c). */
     re15_re15_re2z_gore_hit(e, &g_actors[RE15_ACTOR_SLOT_PLAYER], 0, (unsigned)weapon_id);
+    re15_pipe_r41_log_treffer(weapon_id, best, best_dist, reach);   /* Messhaken RE15_PIPE_LOG (kein Spielverhalten) */
     return best + 1;                                /* hit (slot+1, non-zero) */
 }
 
