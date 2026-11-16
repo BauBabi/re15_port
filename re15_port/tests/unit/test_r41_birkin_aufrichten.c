@@ -210,8 +210,11 @@ static void emergence(const char *name, uint16_t room, int32_t px, int32_t pz, i
     }
     PRUEF(sub9, "Auftritt Sub 9 (grid-Nibble 3, INIT `05 00 50 a0` @0x801170a4 STAGE5 / @0x80116890 STAGE3)");
     PRUEF(halt10 == fc10 - 1, "Wechselbild Clip 0x10: Bild %d = letztes (%d) statt Umlauf 0 (@0x8001f35c/@0x8001f63c)", halt10, fc10 - 1);
-    PRUEF(wechsel == 0x0d && rate0d == 0x100 && frac0d == 0x0e,
-          "Clip 0xd blendet mit a3 0x100, frac 0xf -> 0xe nach dem ersten Schritt (Clip %#x Rate %#x frac %d)", wechsel, rate0d, frac0d);
+    /* Runde 2 (Pruefer R1): gezeichnet wird +0x8f VOR dem Abzug (`lbu s0,143(v1)` @0x8001f408, `mult v0,a3` @0x8001f474, Abzug erst
+     * @0x8001f5b0/@0x8001f5b4) -> das erste Bild von Clip 0xd zeigt 0xf * 0x100 = 3840 (Zeichenpfad wp = anim_frac * rate). */
+    PRUEF(wechsel == 0x0d && rate0d == 0x100 && frac0d == 0x0f,
+          "Clip 0xd blendet mit a3 0x100, erstes Bild gezeichnet mit frac 0xf = wp %d (soll 3840) (Clip %#x Rate %#x frac %d)",
+          frac0d * rate0d, wechsel, rate0d, frac0d);
     PRUEF(halt0d == fc0d - 1, "Ende Clip 0xd: letztes Bild %d (soll %d) bleibt bis zum Ansprung (Phase 4 ohne anim_set)", halt0d, fc0d - 1);
     PRUEF(rate_kampf == 0, "Kampf (Sub 3) ohne die Auftritts-Staerke: Rate %d (r42/story NB1 B1)", rate_kampf);
 }
@@ -225,6 +228,7 @@ static void auftritt3071(void)
     PRUEF(bank_laden(0x30), "EM30 aus CDEMD0.EMS");
     const int fc0f = clip_bilder(0x30, 0x0f), fc0d = clip_bilder(0x30, 0x0d);
     int b = -1, sub10 = 0, phase_alt = -1, halt0f = -1, halt0d = -1, rate4 = -1, rate8 = -1, af4 = -1, af8 = -1, mo8 = -1, rate_kampf = -1;
+    int wp6_min = 99999, wp6_max = -1, n6 = 0, wp7 = -1, n7 = 0, frac4 = -1;
     for (int f = 0; f < 4000; f++) {
         if (f == 5) re15_aot_fire_slot(2);   /* Aot_set Slot 2 @0x0344C -> sub02 */
         frame();
@@ -236,13 +240,24 @@ static void auftritt3071(void)
                                                      e->sub_state_1, e->sub_state_2, (int)e->motion, (int)e->anim_frame, e->grid_id);
         if (!sub10) continue;
         const int ph = e->sub_state_1 == 10 ? e->sub_state_2 : 14;
+        const int ph_vor = phase_alt;                    /* Phase des vorigen Bildes (das erste ph 6 zeichnet noch Phase 5) */
         if (ph != phase_alt) {
             if (phase_alt == 3 && ph == 4) halt0f = (int)e->anim_frame;                   /* Wechselbild Clip 0xf */
-            if (phase_alt == 4 && ph == 5) { rate4 = e->anim_blend_rate; af4 = e->anim_frame; }
+            if (phase_alt == 4 && ph == 5) { rate4 = e->anim_blend_rate; af4 = e->anim_frame; frac4 = e->anim_frac; }
             if (phase_alt == 7 && ph == 8) halt0d = (int)e->anim_frame;                   /* Wechselbild Clip 0xd */
             if (phase_alt == 8 && ph == 9) { rate8 = e->anim_blend_rate; af8 = e->anim_frame; mo8 = e->motion; }
             if (ph == 14) rate_kampf = e->anim_blend_rate;
             phase_alt = ph;
+        }
+        if (ph == 6 && ph_vor == 6) {                    /* gezeichnetes Gewicht der vorigen Pose (skeleton_common.c wp = frac * rate) */
+            const int wp = e->anim_frac * e->anim_blend_rate;
+            if (wp < wp6_min) wp6_min = wp;
+            if (wp > wp6_max) wp6_max = wp;
+            n6++;
+        }
+        if (ph == 7) {                                   /* n7 0 = das Bild, in dem Phase 6 fertig wurde; 1 = erstes Phase-7-Bild */
+            if (n7 == 1) wp7 = e->anim_frac * e->anim_blend_rate;
+            n7++;
         }
         if (ph == 14) break;
     }
@@ -250,6 +265,12 @@ static void auftritt3071(void)
     PRUEF(fc0f > 2 && halt0f == fc0f - 1, "Wechselbild Clip 0xf (Phase 3 -> 4): Bild %d = letztes (%d) statt Umlauf 0", halt0f, fc0f - 1);
     PRUEF(rate4 == 0x100 && af4 == 1, "Phase 4: Clip 1 ab Bild 0 (`sb zero,149` @0x801197f0, gezeichnet 1), a3 0x100 @0x8011982c (Bild %d Rate %#x)",
           af4, rate4);
+    PRUEF(frac4 == 0x0f, "Phase 4: erstes Bild von Clip 1 gezeichnet mit +0x8f 0xf vor dem Abzug (@0x801197cc-800, @0x8001f408): frac %d",
+          frac4);
+    PRUEF(n6 > 0 && wp6_min == 3840 && wp6_max == 3840,
+          "Phase 6: jedes Bild +0x8f = 0xf (`sb v0,143(v1)` @0x801198d8) * a3 0x100 (@0x80119918) = 3840 vor dem Abzug (@0x8001f408/@0x8001f474;"
+          " %d Bilder, wp %d..%d)", n6, wp6_min, wp6_max);
+    PRUEF(wp7 == 0x0e * 0x100, "Phase 7: erstes Bild mit +0x8f 0xe (Abzug des letzten Phase-6-Bildes @0x8001f5b4): wp %d (soll 3584)", wp7);
     PRUEF(fc0d > 2 && halt0d == fc0d - 1, "Wechselbild Clip 0xd (Phase 7 -> 8): Bild %d = letztes (%d) statt Umlauf 0", halt0d, fc0d - 1);
     PRUEF(mo8 == 0x13 && af8 == 1 && rate8 == 0x100,
           "Phase 8: Clip 0x13 ohne +0x95-Schreiben ab Umlaufwert 0 (@0x80119944-970, gezeichnet 1), a3 0x100 @0x8011998c (Clip %#x Bild %d Rate %#x)",
@@ -286,8 +307,9 @@ static void szene3080(void)
     PRUEF(stoesse == 2, "zwei Stoesse (Original @0x801191e4/@0x8011922c): %d", stoesse);
     PRUEF(rate9 == 0x400, "Stoss 1: a3 0x400 (@0x80119274): %#x", rate9);
     PRUEF(halt9 == fc4 - 1, "Wechselbild nach Stoss 1: letztes Bild %d (soll %d)", halt9, fc4 - 1);
-    PRUEF(bild10 == 1 && rate10 == 0x400 && frac10 == 2,
-          "Stoss 2: Clip 4 ab Bild 0 (gezeichnet 1), frac 3 * a3 0x400 (Bild %d Rate %#x frac %d)", bild10, rate10, frac10);
+    PRUEF(bild10 == 1 && rate10 == 0x400 && frac10 == 3,
+          "Stoss 2: Clip 4 ab Bild 0 (gezeichnet 1), gezeichnet frac 3 * a3 0x400 = 3072 vor dem Abzug (@0x80119238-250, @0x8001f408)"
+          " (Bild %d Rate %#x frac %d)", bild10, rate10, frac10);
 }
 
 int main(int argc, char **argv)
