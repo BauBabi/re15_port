@@ -12022,6 +12022,61 @@ static int re15_birkin_anim_szene(re15_actor_t *e, uint16_t a3)
     if (fertig) e->anim_frame = (uint8_t)(re15_birkin_fc(e) - 1);
     return fertig;
 }
+/* Runde 41 Kralle Runde 3 (Auftrag B, Bericht birkin_aufrichten offen 1/2 + Pruefung r2 H1/H2): die KAMPFWEGE des 0x30 (Gang Sub 1,
+ * Kralle Sub 3, Biss Sub 4, Wurf Sub 5, Mutation Sub 6, Rempler Sub 7, Umsetzen Sub 8) nach derselben Original-Regel wie die
+ * Szenenwege (re15_birkin_anim_szene / s_bk_frac_nach):
+ *  - Ueberblendstaerke = a3 des jeweiligen anim_set-Aufrufs (Gewicht +0x8f * a3, `mult v0,a3` @0x8001f474 `18 00 47 00`) statt des
+ *    Zeichenpfad-Rueckfalls 0x200 (skeleton_common.c; mit +0x8f 0xe/0xf auf 100 % gekappt = 7..9 Bilder Stillstand nach jedem
+ *    Clipwechsel, gemessen RE15_POSE_LOG 50E0 F1015/F1054/F1116/F1210 wp 4096). STAGE3.BIN (STAGE5 code-gleich +0x814, Bytes geprueft):
+ *      Gang Phase 0/1  `ori a3,zero,0x100` @0x80117288 `00 01 07 34` (STAGE5 @0x80117a9c)
+ *      Gang Phase 2    `ori a3,zero,0x200` @0x80117358 `00 02 07 34` (STAGE5 @0x80117b6c)
+ *      Kralle Phase 1  `ori a3,zero,0x100` @0x80117644 `00 01 07 34` (STAGE5 @0x80117e58)  = Ansprung nach dem Aufrichten
+ *      Kralle Phase 4  `ori a3,zero,0x400` @0x8011791c `00 04 07 34` (STAGE5 @0x80118130)  = Erholung Clip 0xa
+ *      Biss            `ori a3,zero,0x100` @0x80117b98 `00 01 07 34` (STAGE5 @0x801183ac)
+ *      Wurf            `ori a3,zero,0x100` @0x80117e54 `00 01 07 34` (STAGE5 @0x80118668)
+ *      Mutation        `ori a3,zero,0x100` @0x80118868 `00 01 07 34` (STAGE5 @0x8011907c)
+ *      Rempler         `ori a3,zero,0x100` @0x80118a20 `00 01 07 34` (STAGE5 @0x80119234)
+ *      Umsetzen        `ori a3,zero,0x100` @0x80118c88 `00 01 07 34` (STAGE5 @0x8011949c)
+ *  - gezeichnet wird +0x8f VOR dem Abzug (`lbu s0,143(v1)` @0x8001f408 `8f 00 70 90`, Abzug `addiu v0,v0,-1` / `sb v0,143(v1)`
+ *    @0x8001f5b0/@0x8001f5b4 erst nach der Pose): Merker s_bk_frac_nach wie die Szenenwege (Abzug am Anfang des naechsten KI-Bilds).
+ *  - Clipende mit Phasenwechsel: anim_set posiert +0x95 VOR dem Vorschub (`lbu v0,149(t0)` @0x8001f35c `95 00 02 91` -> `sw a2,360(t0)`
+ *    @0x8001f36c), zaehlt danach hoch (`addiu v0,v0,1` @0x8001f618 `01 00 42 24`) und setzt am Ende 0 (`sb zero,149(v1)` @0x8001f63c
+ *    `95 00 60 a0`, Rueckgabe 1 @0x8001f638): im Wechselbild steht das LETZTE Bild. Die Ausstiegsphasen rufen kein anim_set (Kralle
+ *    Phase 2 @0x80117888 / Phase 5 @0x80117974, Biss @0x80117cc4, Wurf @0x80117f40, Mutation @0x8011888c, Rempler @0x80118a44): die
+ *    Pose bleibt bis zum naechsten anim_set stehen. Der Port zeichnet anim_frame NACH dem Vorschub und zeigte im Wechselbild Bild 0
+ *    des fertigen Clips (gemessen 50E0: F967 Clip 3 af0, F1014 Clip 0xa af0, F1114/F1115 Clip 4 af0, F1208/F1209 Clip 0xb af0).
+ *    re15_birkin_halten setzt das letzte Bild - ERST NACH der Phasenlogik des Bilds, die (wie das Original) noch den Umlaufwert 0
+ *    liest (Kralle Tor @0x80117668 `+0x95 < 0x1e`, Fenster @0x801176ec, Biss/Wurf-Fenster). */
+static int re15_birkin_anim_kampf(re15_actor_t *e, uint16_t a3)
+{
+    e->anim_blend_rate = a3;
+    const uint8_t alt = s_bk_frac_nach;
+    s_bk_frac_nach = 1;
+    const int fertig = re15_birkin_anim(e);
+    s_bk_frac_nach = alt;
+    return fertig;
+}
+static void re15_birkin_halten(re15_actor_t *e) { e->anim_frame = (uint8_t)(re15_birkin_fc(e) - 1); }
+/* Kralle Phase 3 @0x801178c0 (faellt in Phase 4 @0x80117904): Erholung Clip 0xa. */
+static void re15_birkin_erholung(re15_actor_t *e)
+{
+    if (e->sub_state_2 == 3) {
+        e->sub_state_2 = 4;                                /* +0x6 = 4 @0x801178c8-cc */
+        re15_birkin_clip(e, 0x0a);                         /* clip 0xa @0x801178d8-dc, +0x95 = 0 @0x801178ec */
+        e->anim_frac = 3;                                  /* +0x8f = 3 @0x80117900 `8f 00 62 a0` (v0 = 3 @0x801178f8) */
+        /* Runde 3: auch fuer die Schwanz-Gestalt der Original-Wert (die PORT-WAHL +0x8f = 8 der Runde 1 war aus der
+         * Port-Rate 0x200 hergeleitet). Mit a3 0x400 und +0x8f vor dem Abzug zeigt das erste 0xa-Bild 3 * 0x400 = 3072
+         * = 3/4 Kontaktlage (re15_birkin_klaue_r41.h). */
+        re15_audio_room_se(6);                             /* Se(6) a0 = 6 @0x801178e8, jal @0x801178fc */
+    }
+    /* phase 4: anim_set (a3 = 0x400 @0x8011791c), +0x6 += Rueckgabe @0x8011792c-938 -> 5 am Clip-Ende */
+    const int fertig = re15_birkin_anim_kampf(e, 0x400);
+    e->sub_state_2 = (uint8_t)(e->sub_state_2 + fertig);
+    /* Form 2 (grid & 0x10 @0x80117948-950) beendet die Erholung bei +0x95 == 0x1e (@0x8011795c-964 -> +0x6 = 5 @0x80117970) */
+    if ((e->grid_id & 0x10) && e->anim_frame == 0x1e)
+        e->sub_state_2 = 5;
+    if (fertig) re15_birkin_halten(e);                     /* Form 1: Clipende -> letztes Bild, Phase 5 ohne anim_set */
+}
 /* MASSE-VORLAUF des laufenden Birkin-Ticks (0 ausserhalb; Runde 4,
  * birkin-bewegung.md Plan 2): der Endkampf-G5 (0x36) traegt die MASSE (Mesh 2)
  * ~4494 Einheiten VOR dem Entity-Ursprung (gemessene Masse-Front, birkin_dbg
@@ -12133,22 +12188,36 @@ int re15_bk_kralle_logik_aktiv(void) { return s_bk_logik_ok; }
 
 /* NUTZERENTSCHEID 16.11.2026 "zurueckziehen nur, wenn er gegen eine Wand schlaegt ... synchron dazu" (nur Schwanz-Gestalt =
  * s_bk_logik_ok; PORT-WAHL, kein Capcom-Code, Herleitung re15_birkin_klaue_r41.h/.c): steckt die Klinge in der Pose, die der
- * Zeichner in DIESEM Bild zeigt (Bild +0x95 nach dem Vorschub, Ueberblendung +0x8f), sichtbar in einer Wand oder unter der
- * Oberkante eines Gelaenders, dann +0x6 = 3 wie die Capcom-Sonde (@0x80117848-858) -> naechster Takt Phase 3 (Clip 0xa
- * @0x801178dc, Se(6) @0x801178fc). Gilt in jedem Bild der Phase 1.
- * Runde 2: am ENDE des Spieltakts statt im Gegner-Takt. Gemessen (Messlauf 50E0 rueck F942, 50E0 schiess F2786): der Spieler wird
- * NACH dem Gegner-Pass noch geklemmt/geschoben (re15_player_nachklemme, game_step_common.c); im Gegner-Takt sah die Pruefung die
- * Figur an einer anderen Stelle als der Zeichner -> Verdeckung durch die Figur einmal zu viel, einmal zu wenig. Am Taktende
- * stimmen Lage von Birkin, Figur und Kamera mit dem gezeichneten Bild ueberein. */
+ * Zeichner in DIESEM Bild zeigt (Bild +0x95 nach dem Vorschub, Ueberblendung +0x8f), in einer Wand oder unter der Oberkante
+ * eines Gelaenders, dann +0x6 = 3 wie die Capcom-Sonde (@0x80117848-858) -> naechster Takt Phase 3 (Clip 0xa @0x801178dc, Se(6)
+ * @0x801178fc). Gilt in jedem Bild der Phase 1.
+ * Runde 2: am ENDE des Spieltakts statt im Gegner-Takt, auf dem Stand des gezeichneten Bilds (nach Spieler-Klemme/Schub,
+ * re15_player_nachklemme in game_step_common.c).
+ * Runde 3 (Orchestrator-Auslegung): massgeblich ist der PHYSISCHE Wandschlag in Weltgeometrie - keine Bild-, Verdeckungs- oder
+ * Spielerkoerper-Rechnung mehr (birkin_klaue_r41.c). */
 void re15_bk_kontakt_takt_ende(void)
 {
     if (!s_bk_logik_ok) return;
     for (int i = 0; i < RE15_ACTOR_MAX; i++) {
         re15_actor_t *e = &g_actors[i];
-        if (!e->active || e->type != 0x30u || e->state != 1 || e->sub_state_1 != 3) continue;
-        if (e->sub_state_2 == 1 && e->motion == 3 && re15_bkk_kontakt(e))
-            e->sub_state_2 = 3;
-        re15_bkk_logik_melden(e);   /* MESS-SCHIENE (RE15_BIRKIN_DBG), kein Verhalten: Befund auf dem Stand dieser Entscheidung */
+        if (!e->active || e->type != 0x30u || e->state != 1) continue;
+        /* Runde 3, PORT-WAHL nach dem Entscheid: die Klinge kann auch im Abbruchbild der Kralle (Tor @0x80117668 -> +0x6 = 2) und
+         * im Ausstiegsbild danach (Phase 2 @0x80117888 schreibt 0x101, kein anim_set: Clip 3 bleibt stehen, die Ueberblendung
+         * laeuft weiter) in eine Wand gleiten - gemessen 50E0 F810: Ansprung nach dem Aufrichten bei af 21 abgebrochen, im
+         * Ausstiegsbild 148 tief im Gelaender #17, danach Gang. Auch dort gilt: Wandkontakt -> Rueckzug im naechsten Bild. */
+        const int abbruch = (e->sub_state_1 == 3 && e->sub_state_2 == 2);
+        const int ausstieg = (e->sub_state_1 == 1 && e->sub_state_2 == 0);
+        if (e->sub_state_1 != 3 && !ausstieg) continue;
+        if (e->motion == 3 && (e->sub_state_2 == 1 || abbruch || ausstieg) && re15_bkk_kontakt(e)) {
+            e->sub_state_1 = 3; e->sub_state_2 = 3;
+            /* Runde 3: der +0x4-Schnappschuss +0x1d8 (`sw` @0x80116698-a0, ROOT nach dem ACT) liegt im Original HINTER dem
+             * +0x6 = 3 der Sonde (@0x80117858). Der Taktende-Haken kommt nach dem Schnappschuss des Ports - ohne Nachtrag
+             * stellte ein Treffer im naechsten Bild (HURT-Soak `+0x4 = *(+0x1d8)` @0x8011a208) +0x6 = 1 wieder her und der
+             * Rueckzug fiel aus (gemessen 50F1 Elza F1276 -> F1277: ss2 3 -> 1, stun 3 -> 2, Klinge blieb in der Wand). */
+            if (e->birkin_saved_state == 1) { e->birkin_saved_sub = 3; e->birkin_saved_ph2 = 3; }
+        }
+        if (e->sub_state_1 == 3)
+            re15_bkk_logik_melden(e);   /* MESS-SCHIENE (RE15_BIRKIN_DBG), kein Verhalten: Befund auf dem Stand dieser Entscheidung */
     }
 }
 /* Klauenpunkt der Kralle: wie re15_bk_klauenpunkt (KF N-2, s16), aber mit dem Logik-Gerippe, wenn eins gemeldet ist. */
@@ -12459,6 +12528,10 @@ static void re15_birkin_ai_tick(int slot)
         switch (e->sub_state_1) {
         case 1: {  /* WALK 0x801171d4: measured two-phase approach; +0x8c += 0x14 (+10 form-2) */
             if (e->sub_state_2 == 0) { re15_birkin_clip(e, 1); e->anim_frac = 0xf; e->sub_state_2 = 1; }  /* phase 0 @0x80117220 */
+            /* Runde 3 Kralle (re15_birkin_anim_kampf): Phase 0/1 anim_set a3 0x100 @0x80117288, Phase 2 a3 0x200 @0x80117358 - die
+             * Phase, deren Code dieses Bild zeichnet, steht VOR dem Pausen-/Bogen-Wechsel unten fest (Phase 1 wechselt erst NACH
+             * ihrem anim_set auf 2 @0x80117318, Phase 2 erst nach ihrem anim_set auf 1 @0x801173c8). */
+            const uint16_t gang_a3 = (e->sub_state_2 == 2) ? 0x200 : 0x100;
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);              /* steer 0x20 @0x80117268 (toward +0x1bc/be) */
             /* STOPPLINIE (0x36, Plan 2): kein Vortrieb mehr, sobald die MASSE-Front in
              * Klauen-Triggerweite (0xc80) steht - RE2 klemmt den X-Advance an der
@@ -12474,7 +12547,7 @@ static void re15_birkin_ai_tick(int slot)
             } else if (!re15_bk_arc(e, pl, 30000, 0x400) && e->anim_frac == 0) {  /* arc(0x400)!=0 @0x801172f4 && +0x8f==0 @0x80117310 */
                 e->sub_state_2 = 2; e->birkin_pause = 0x5a;            /* phase->2, +0x9e=0x5a @0x80117318/324 */
             }
-            re15_birkin_anim(e);
+            re15_birkin_anim_kampf(e, gang_a3);                         /* Clip 1 laeuft im Kreis: kein Halten */
             break;
         }
         case 3: {  /* CLAW/LUNGE 0x801174fc: clip 3 strike, window [0x24..0x2b] -> hp-10 + grab; recovery clip 0xa only via claw probe */
@@ -12492,7 +12565,7 @@ static void re15_birkin_ai_tick(int slot)
                  * vor dem Tor (`lbu v1,6(a2)` @0x8011765c / `addu v1,v1,v0` @0x80117664 / `sb v1,6(a2)` @0x8011766c im
                  * Delay-Slot des arc_test): am Clip-Ende ist +0x6 = 2 -> naechstes Bild Phase 2 @0x80117888 (HUB, +0x1df = 0x1e).
                  * Die Erholung Clip 0xa (Phase 3) gibt es NUR ueber die Klauen-Sonde im Fenster (@0x80117834-858). */
-                int done = re15_birkin_anim(e);
+                int done = re15_birkin_anim_kampf(e, 0x100);           /* a3 0x100 @0x80117644 (Runde 3, s. re15_birkin_anim_kampf) */
                 e->sub_state_2 = (uint8_t)(e->sub_state_2 + done);
                 /* continue-gate @0x80117668: (arc(0x400) && dist<0xfa1) || frame>=0x1e; else abort (phase 2) when frame<0x1e */
                 if (!re15_bk_arc(e, pl, 0xfa1, 0x400) && e->anim_frame < 0x1e) {
@@ -12537,6 +12610,9 @@ static void re15_birkin_ai_tick(int slot)
                 /* NUTZERENTSCHEID 16.11.2026 "zurueckziehen nur, wenn er gegen eine Wand schlaegt ... synchron dazu" (nur Schwanz-
                  * Gestalt): die Pruefung der GEZEICHNETEN Klinge laeuft seit Runde 2 am Ende des Spieltakts (re15_bk_kontakt_takt_ende,
                  * aus re15_game_step), auf genau dem Stand, den der Zeichner zeigt (Spielerlage nach Klemme/Schub). */
+                /* Clipende (+0x6 += 1 -> 2 @0x8011766c): Tor und Fenster oben haben den Umlaufwert 0 gelesen wie das Original; jetzt
+                 * das LETZTE Bild in das Wechselbild (re15_birkin_halten), Phase 2 @0x80117888 ruft kein anim_set. */
+                if (done) re15_birkin_halten(e);
             } else if (e->sub_state_2 == 2) {          /* phase 2 @0x80117888 (Abbruch ODER Clip-Ende): -> HUB, +0x1df=0x1e */
                 e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* +0x4 = 0x101 (Wort) @0x80117890-894 */
                 e->birkin_atk_cd = 0x1e;                               /* `ori v0,zero,0x1e` @0x801178bc / `sb v0,479(v1)` @0x801179a8 */
@@ -12546,18 +12622,7 @@ static void re15_birkin_ai_tick(int slot)
                 re15_enemy_steer_point(e, pl->x, pl->z, 0x50);         /* `jal 0x8001aac4` @0x80117994, a2 = 0x50 @0x80117998 */
                 e->birkin_atk_cd = 0x3c;                               /* +0x1df = 0x3c @0x801179a4-a8 */
             } else {                                   /* phase 3 @0x801178c0, faellt in Phase 4 @0x80117904 */
-                if (e->sub_state_2 == 3) {
-                    e->sub_state_2 = 4;                                /* +0x6 = 4 @0x801178c8-cc */
-                    re15_birkin_clip(e, 0x0a);                         /* clip 0xa @0x801178d8-dc, +0x95 = 0 @0x801178ec */
-                    e->anim_frac = 3;                                  /* +0x8f = 3 @0x80117900 */
-                    if (s_bk_logik_ok) e->anim_frac = RE15_BKK_UEBERBLENDUNG;   /* Schwanz-Gestalt: PORT-WAHL, Herleitung im Header */
-                    re15_audio_room_se(6);                             /* Se(6) a0 = 6 @0x801178e8, jal @0x801178fc */
-                }
-                /* phase 4: anim_set (a3 = 0x400 @0x8011791c), +0x6 += Rueckgabe @0x8011792c-938 -> 5 am Clip-Ende */
-                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));
-                /* Form 2 (grid & 0x10 @0x80117948-950) beendet die Erholung bei +0x95 == 0x1e (@0x8011795c-964 -> +0x6 = 5 @0x80117970) */
-                if ((e->grid_id & 0x10) && e->anim_frame == 0x1e)
-                    e->sub_state_2 = 5;
+                re15_birkin_erholung(e);
             }
             /* MESS-SCHIENE "klinge"-Zeile: seit Runde 2 am Taktende (re15_bk_kontakt_takt_ende), auf dem Stand der Entscheidung */
             break;
@@ -12570,7 +12635,7 @@ static void re15_birkin_ai_tick(int slot)
                 re15_enemy_steer_point(e, pl->x, pl->z, 0x50);         /* steer 0x50 @0x80117afc */
             }
             if (e->sub_state_2 == 1) {
-                int done = re15_birkin_anim(e);
+                int done = re15_birkin_anim_kampf(e, 0x100);           /* a3 0x100 @0x80117b98 (Runde 3) */
                 /* continue-gate @0x80117b10: (arc(0x320) && dist<0xdad) || frame>=0xf; else abort (phase 2) frame<0xf */
                 if (!re15_bk_arc(e, pl, 0xdad, 0x320) && e->anim_frame < 0xf) {
                     e->sub_state_2 = 2;                                /* abort @0x80117b60 */
@@ -12588,8 +12653,9 @@ static void re15_birkin_ai_tick(int slot)
                         if (pl->hp < 0) pl->hp = 1;                    /* clamp @0x80117c94 */
                     }
                     if (e->anim_frame == 0x25) re15_audio_room_se(4);  /* Se(4)@0x25 @0x80117cb4 */
-                    if (done) e->sub_state_2 = 2;                      /* clip end -> exit */
+                    if (done) e->sub_state_2 = 2;                      /* clip end -> exit (+0x6 += Rueckgabe @0x80117bb4) */
                 }
+                if (done) re15_birkin_halten(e);                       /* Runde 3: letztes Bild im Wechselbild, Ausstieg ohne anim_set */
             } else {                                   /* phase 2 exit @0x80117cc4: -> HUB (no cooldown) */
                 e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
                 re15_enemy_steer_point(e, pl->x, pl->z, 0x50);
@@ -12603,7 +12669,7 @@ static void re15_birkin_ai_tick(int slot)
                 re15_enemy_steer_point(e, pl->x, pl->z, 0x50);
             }
             if (e->sub_state_2 == 1) {
-                int done = re15_birkin_anim(e);
+                int done = re15_birkin_anim_kampf(e, 0x100);           /* a3 0x100 @0x80117e54 (Runde 3) */
                 if (e->anim_frame == 0x2c) {                           /* frame 0x2c box overlap @0x80117e84 */
                     if (re15_bk_kontakt(e, pl, 1000, 700, 1)) {      /* Angriffsbox @0x80117ea0; Treffer: aca58=6 + Se(2) @0x80117ee4/f0c */
                         /* aca58 = 6 (Wort, aca59 = 0) @0x80117ee4: STAGE5 registriert cmd 6 auf denselben Haken
@@ -12615,7 +12681,7 @@ static void re15_birkin_ai_tick(int slot)
                     }
                 }
                 if (e->anim_frame == 0x25) re15_audio_room_se(4);      /* Se(4)@0x25 @0x80117f30 */
-                if (done) e->sub_state_2 = 2;
+                if (done) { e->sub_state_2 = 2; re15_birkin_halten(e); }   /* += @0x80117e70; Runde 3: letztes Bild, Ausstieg ohne anim_set */
             } else {                                   /* phase 2 exit @0x80117f40: -> HUB, release the grab latch */
                 e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
                 e->birkin_grab = 0;                                    /* throw resolved -> aca58 no longer 5 */
@@ -12641,7 +12707,10 @@ static void re15_birkin_ai_tick(int slot)
             if (e->sub_state_2 == 1) {                 /* phase 1 @0x801180b8: play clip 0x14 (SFX; bone-writhe render OPEN) */
                 if (e->anim_frame == 0x3c || e->anim_frame == 0x60 || e->anim_frame == 0x78) re15_audio_room_se(8);  /* @0x801180e4 */
                 if (e->anim_frame == 0x96) re15_audio_room_se(9);     /* @0x80118108 */
-                if (re15_birkin_anim(e)) e->sub_state_2 = 2;          /* clip end -> phase 2 @0x80118880 */
+                if (re15_birkin_anim_kampf(e, 0x100)) {               /* a3 0x100 @0x80118868 (Runde 3) */
+                    e->sub_state_2 = 2;                               /* clip end -> phase 2 @0x80118880 */
+                    re15_birkin_halten(e);                            /* Runde 3: letztes Bild, Phase 2 @0x8011888c ohne anim_set */
+                }
             } else if (e->sub_state_2 == 2) {          /* phase 2 exit @0x8011888c: -> HUB (0x101), keep form-2, clear revive bit */
                 e->state = 1; e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* +0x4 = 0x101 */
                 e->grid_id = (uint8_t)(e->grid_id | 0x10);            /* grid |= 0x10 @0x801188a4 */
@@ -12657,7 +12726,7 @@ static void re15_birkin_ai_tick(int slot)
             }
             if (e->sub_state_2 == 1) {
                 re15_dog_advance(e, 0x50);                             /* lunge forward (pos-advance @0x80118a10) */
-                int done = re15_birkin_anim(e);
+                int done = re15_birkin_anim_kampf(e, 0x100);           /* a3 0x100 @0x80118a20 (Runde 3) */
                 if (e->anim_frame == 1 || e->anim_frame == 0x12) re15_audio_room_se(4);  /* Se(4) whoosh @0x80118a94 */
                 if (((e->anim_frame >= 4 && e->anim_frame <= 13) || (e->anim_frame >= 0x12 && e->anim_frame <= 0x1b))
                     && pl->hit_react == 0 && re15_bk_kontakt(e, pl, 900, 900, 0)) {  /* Angriffsbox @0x80118adc */
@@ -12667,7 +12736,7 @@ static void re15_birkin_ai_tick(int slot)
                     pl->hp = (int16_t)(pl->hp - 5);                    /* hp-=5 @0x80118b1c */
                     if (pl->hp < 0) pl->hp = 1;                        /* clamp @0x80118b38 */
                 }
-                if (done) e->sub_state_2 = 2;
+                if (done) { e->sub_state_2 = 2; re15_birkin_halten(e); }   /* += @0x80118a40; Runde 3: letztes Bild, Ausstieg ohne anim_set */
             } else {                                   /* phase 2 exit @0x80118a44: -> HUB, +0x1df=0xa */
                 e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;
                 e->birkin_atk_cd = 0xa;                                /* +0x1df = 0xa @0x80118a68 */
@@ -12686,7 +12755,7 @@ static void re15_birkin_ai_tick(int slot)
             }
             re15_enemy_steer_point(e, pl->x, pl->z, 0x20);            /* steer 0x20 @0x80118c68 */
             re15_dog_advance(e, 30);                                  /* +0x8c += 30 @0x80118cdc */
-            re15_birkin_anim(e);
+            re15_birkin_anim_kampf(e, 0x100);                         /* a3 0x100 @0x80118c88 (Runde 3); Clip 1 im Kreis */
             if (e->ai_timer > 0) e->ai_timer--;
             else { e->sub_state_1 = 5; e->sub_state_2 = 0; e->sub_state_3 = 0; }  /* timeout -> GRAB (sub 5) @0x80118cb8 */
             break;
@@ -12878,6 +12947,10 @@ static void re15_birkin_ai_tick(int slot)
                 e->sub_state_1 = e->birkin_saved_sub;
                 e->sub_state_2 = e->birkin_saved_ph2;
                 e->sub_state_3 = e->birkin_saved_ph3;
+                /* Runde 3 Kralle, PORT-WAHL nach dem NUTZERENTSCHEID ("synchron dazu"), nur Schwanz-Gestalt (s_bk_logik_ok): das
+                 * Original ruft im Soak-Bild kein ACT (`j 0x8011a268` @0x8011a20c ins Epilog) - trifft der Schuss genau im Bild des
+                 * Wandschlags, stuende die Klinge ein Bild laenger in der Wand. Steht der Rueckzug an (+0x6 = 3), beginnt er hier. */
+                if (s_bk_logik_ok && e->state == 1 && e->sub_state_1 == 3 && e->sub_state_2 == 3) re15_birkin_erholung(e);
                 break;
             }
         }
@@ -12892,7 +12965,9 @@ static void re15_birkin_ai_tick(int slot)
             e->hit_react = (uint8_t)(e->hit_react & ~1u);
             re15_enemy_steer_point(e, pl->x, pl->z, 0x50);     /* @0x8011a3d8 */
         } else {
-            if (re15_birkin_anim(e)) {                 /* +0x7 += 1 am Clip-Ende */
+            /* Runde 3 Kralle (re15_birkin_anim_kampf): a3 0x100 (`ori a3,zero,0x100` @0x8011a368 `00 01 07 34`, STAGE5 @0x8011ab7c),
+             * +0x8f vor dem Abzug - vorher Rueckfall 0x200 = 7 Bilder 100 % Vor-Pose am Anfang des Zuckens. */
+            if (re15_birkin_anim_kampf(e, 0x100)) {    /* +0x7 += 1 am Clip-Ende (@0x8011a378-384) */
                 e->sub_state_3 = 2;
                 e->anim_frame = re15_birkin_fc(e) - 1; /* Phase 2 ruft kein anim_set: das letzte Bild bleibt stehen */
             }

@@ -56,8 +56,45 @@
  *                        die Klinge #3 sichtbar (af 37) -> Rueckzug; mit dem Trefferzylinder der Figur (EXE @0x80073e94) liegt die
  *                        Einschlagstelle hinter Leon -> kein Rueckzug. Gegenprobe Stand 2d3bcef24 (ohne Spielerkoerper): Rueckzug
  *                        auch mit Zylinder.
- *   schwanz_abdeckung    jede SCA-Zelle (Band 0, solide) von ROOM50E0/50F1/50A0/50A1 steht in der Tabelle sichtbarer Waende
+ *   schwanz_abdeckung    jede SCA-Zelle (Band 0, solide) von ROOM50E0/50F1/50A0/50A1 steht in der Wand-Tabelle
  *                        (re15_bkk_zelle_art != 0) - keine Zelle gilt mehr ungeprueft als Wand.
+ *
+ * Runde 3 Kralle (Orchestrator-Auslegung der Nutzerregel: massgeblich ist der PHYSISCHE Wandschlag der gezeichneten Klaue in
+ * Weltgeometrie, nicht ob die Kamera ihn zeigt; keine Bild-, Verdeckungs- oder Masken-Rechnung). Jeder Hieb zaehlt mit einer
+ * Welt-Pruefung OHNE Kamera (re15_bkk_pruefen auf der Lage des Takts):
+ *   durch = Takte, in denen die Klinge in einer Wand steckt und +0x6 nicht 3 wird (Soll 0);
+ *   ohne  = Rueckzuege (+0x6 1 -> 3) ohne Weltkontakt (Soll 0);
+ *   Verzug = erster 0xa-Takt - Kontakttakt (Soll 1).
+ *   schwanz_ausserhalb  (vorher schwanz_ausser_bild) 50E0 vor #3, Cut 5 UND Cut 0: in beiden Faellen Rueckzug im Kontakttakt.
+ *                       Gegenprobe Stand debcc485e: mit Cut 0 kein Rueckzug (Klinge steckt in #3).
+ *   schwanz_verdeckt    50A0 Cut 9 (Kamera hinter Birkin): Rueckzug beim ersten Weltkontakt (gleiches Bild wie Cut 4).
+ *                       Gegenprobe debcc485e: erst bei af 67.
+ *   schwanz_spieler     50E0 vor #3 mit Trefferzylinder der Figur: Rueckzug wie ohne Figur. Gegenprobe debcc485e: kein Rueckzug.
+ *   schwanz_abbruch     Ansprung nach dem Aufrichten (50E0), vom Tor bei af 21 abgebrochen; die Klinge gleitet im Ausstiegsbild ins
+ *                       Gelaender #17 -> Rueckzug im Folgebild (gemessen N_50E0steh F810 vor dem Nachtrag: 148 tief, danach Gang).
+ *   folge = Bilder mit Clip 3 + Klinge in Wand (Welt), denen kein Clip-0xa-Bild folgt - in jedem schwanz-Fall 0.
+ *   Erholung: erster 0xa-Takt +0x8f = 3 (@0x80117900) mit a3 0x400 (@0x8011791c) = 3072 vor dem Abzug (Runde 1/2: PORT-WAHL 8).
+ *   schwanz_treffer     wie schwanz_wand, im Kontakttakt trifft ein Schuss (HURT-Soak): der Schnappschuss +0x1d8 (@0x80116698-a0)
+ *                       traegt +0x6 = 3 wie im Original (Sonde @0x80117858 vor dem Schnappschuss); PORT-WAHL: die Erholung beginnt
+ *                       schon im Soak-Bild (Original `j 0x8011a268` @0x8011a20c ohne ACT), Verzug 1.
+ *                       Gegenprobe Stand vor dem Nachtrag: der Soak stellt +0x6 = 1 her, die Klinge bleibt in der Wand (gemessen
+ *                       50F1 Elza F1276/F1277).
+ *
+ * Runde 3, Auftrag B - Kampf-Clipenden (Capcom-EM30, ROOM3070; Bericht birkin_aufrichten offen 1/2): anim_set FUN_8001f314 posiert
+ * +0x95 VOR dem Vorschub (`lbu v0,149(t0)` @0x8001f35c, `sw a2,360(t0)` @0x8001f36c, `addiu v0,v0,1` @0x8001f618, Umlauf
+ * `sb zero,149(v1)` @0x8001f63c) -> im Wechselbild steht das LETZTE Bild; Gewicht +0x8f (vor dem Abzug, @0x8001f408) * a3
+ * (`mult v0,a3` @0x8001f474). Je Fall wird jedes KI-Bild mitgeschrieben:
+ *   Ruecksprung = derselbe (nicht kreisende) Clip springt von Bild > 0 auf Bild 0 (Soll 0);
+ *   Stillstand  = Bilder mit Gewicht frac * Rate >= 4096 (100 % alte Pose, Rate 0 = Zeichenpfad-Rueckfall 0x200) (Soll 0);
+ *   Wechselbild-falsch = ein nicht kreisender Clip zeigt im Wechselbild Bild 0 (Umlauf) statt seines letzten Bilds (Soll 0).
+ *   kampf_kralle   Clip 3 bis zum Ende -> Gang/Biss (a3 Kralle 0x100 @0x80117644)
+ *   kampf_erholung Wand, Form 1: 3 -> 0xa (a3 0x400 @0x8011791c) -> Clip-Ende -> Gang (a3 0x100 @0x80117288)
+ *   kampf_biss     Clip 4 bis zum Ende (a3 0x100 @0x80117b98) -> Gang
+ *   kampf_wurf     Clip 0xb bis zum Ende (a3 0x100 @0x80117e54) -> Gang
+ *   kampf_rempler  Clip 5 bis zum Ende (a3 0x100 @0x80118a20) -> Gang
+ *   kampf_ansprung Auftritt Sub 9 (0x10 -> 0xd) -> Ansprung Clip 3 mit a3 0x100 (@0x80117640/@0x80117644) statt Rueckfall 0x200
+ *                  (vorher 9 Bilder Stillstand).
+ * Gegenprobe Merge-Stand 23db6c369 (debcc485e + birkin_aufrichten f7057a708): alle kampf_* rot (Ruecksprung, Stillstand).
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -174,7 +211,12 @@ static int raum_laden(const char *datei, uint16_t id)
 typedef struct {
     int ticks, clip_a, clip_a_max, clip3_max, aus_sub, cd, gier_dreht, sonde_af;
     int kontakt_af, durch, frac_a;   /* Runde 1 synchron: erstes Kontaktbild, Takte Klinge-in-Wand ohne +0x6 = 3, +0x8f im 1. 0xa-Takt */
-    int kontakt_zelle; int32_t kontakt_y;  /* Runde 2: Zelle und Hoehe (Welt-y) des tiefsten sichtbaren Pruefpunkts im Kontaktbild */
+    int kontakt_zelle; int32_t kontakt_y;  /* Runde 2: Zelle und Hoehe (Welt-y) des tiefsten Pruefpunkts im Kontaktbild */
+    int kontakt_t, a_t, ohne, rate_a;      /* Runde 3: Takt des ersten Weltkontakts, erster 0xa-Takt, Rueckzuege ohne Weltkontakt, a3 */
+    int soak_ph2;                          /* Runde 3 schwanz_treffer: +0x6 nach dem HURT-Soak-Takt, VOR dem Taktende-Haken */
+    int folge;                             /* Runde 3: Bilder mit Clip 3 + Klinge in Wand (Welt), nach denen KEIN Clip 0xa folgt (Soll 0) */
+    int ruecksprung, stillstand, wechsel, wechsel_falsch, wechsel_ab[8];   /* Runde 3 Auftrag B (Kampf-Clipenden) */
+    char spur[512];
 } ergebnis_t;
 
 /* Ein Hieb ab Phase 0. seitlich != 0: der Spieler geht ab Phase 1 je Bild um `seitlich` in Z. */
@@ -190,10 +232,48 @@ static int s_cut = 0;   /* Kamera des laufenden Cuts (g_scd.cam_id) fuer den Hie
 #endif
 static int s_spieler_koerper = 0;   /* 1 = Trefferzylinder der Spielfigur setzen (re15_player_apply_hitbox, @0x80073e94) */
 void re15_player_apply_hitbox(re15_actor_t *p);
+/* Runde 3: Weltkontakt der Klinge in der Lage dieses Takts, OHNE Kamera (Stand debcc485e: dieselbe Rechnung mit sicht = NULL). */
+static int welt_kontakt(const re15_actor_t *e, re15_bkk_befund_t *b)
+{
+    re15_bkk_lage_t l; re15_bkk_befund_t bb;
+    if (!b) b = &bb;
+    if (!re15_bk_kralle_logik_aktiv() || !re15_bkk_lage_logik(e, &l)) return 0;
+#ifdef RE15_BKK_UEBERBLENDUNG   /* Stand debcc485e / 23db6c369 (Gegenprobe): Schnittstelle mit Kamera */
+    return re15_bkk_pruefen(re15_bkk_klinge(), &l, &g_room_rdt, (uint16_t)g_current_room_id, NULL, b);
+#else
+    return re15_bkk_pruefen(re15_bkk_klinge(), &l, &g_room_rdt, (uint16_t)g_current_room_id, b);
+#endif
+}
+/* Runde 3 Auftrag B: Kampf-Schreiber je KI-Bild (Zeichenstand nach dem Takt: anim_frame = gezeichnetes Bild, anim_frac = Gewicht). */
+typedef struct { int ok, mo, af, fr, ra; } bild_t;
+static void kampf_bild(ergebnis_t *r, bild_t *alt, const re15_actor_t *e)
+{
+    const int wp = (int)e->anim_frac * (e->anim_blend_rate ? (int)e->anim_blend_rate : 0x200);
+    if (wp >= 4096) r->stillstand++;
+    if (alt->ok && alt->mo == e->motion && e->motion != 1 && e->motion != 0 && e->anim_frame == 0 && alt->af > 0) r->ruecksprung++;
+    if (alt->ok && alt->mo != e->motion) {
+        if (r->wechsel < 8) r->wechsel_ab[r->wechsel] = alt->mo;
+        r->wechsel++;
+        /* Wechselbild eines nicht kreisenden Clips: Bild 0 kann dort nur der Umlauf sein (der Port zeichnet einen Clip ab Bild 1) */
+        if (alt->mo != 1 && alt->mo != 0 && alt->af == 0) r->wechsel_falsch++;
+        const size_t n = strlen(r->spur);
+        if (n < sizeof r->spur - 48)
+            snprintf(r->spur + n, sizeof r->spur - n, " %#x/af%d->%#x/af%d wp%d", alt->mo, alt->af, e->motion, e->anim_frame, wp);
+    }
+    alt->ok = 1; alt->mo = e->motion; alt->af = e->anim_frame; alt->fr = e->anim_frac; alt->ra = e->anim_blend_rate;
+}
+static int s_takte = 400;
+static int s_treffer = 0;
+static int s_gier = -1;     /* >= 0: Birkins Gier statt Blick zum Spieler (Fall schwanz_abbruch: Lage aus dem Messlauf) */   /* 1 = im Kontakttakt trifft ein Schuss (HURT-Soak, +0x1dc > 0) - Fall schwanz_treffer */
+static int s_weiter = 0;    /* 1 = nach dem Verlassen des Unterzustands weiterlaufen (Kampf-Faelle: Wechsel in den Gang) */
+static uint8_t s_sub = 3;   /* Unterzustand, mit dem der Lauf beginnt (Kampf-Faelle Runde 3) */
 static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t pz, int32_t seitlich)
 {
     g_scd.cam_id = (uint8_t)s_cut;
     ergebnis_t r; memset(&r, 0, sizeof r); r.sonde_af = -1; r.kontakt_af = -1; r.frac_a = -1; r.kontakt_zelle = -1;
+    r.kontakt_t = -1; r.a_t = -1; r.rate_a = -1; r.soak_ph2 = -1;
+    bild_t alt; memset(&alt, 0, sizeof alt);
+    int vor_kontakt = 0;
     memset(g_actors, 0, sizeof g_actors);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->x = px; pl->y = 0; pl->z = pz; pl->hp = 100; pl->hit_react = 1;
@@ -202,33 +282,36 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
     e->active = 1; e->type = 0x30; e->state = 0; e->grid_id = grid; e->x = bx; e->y = 0; e->z = bz;
     re15_enemy_apply_hitbox(e, 0x30);
     re15_enemy_spawn_root(1);                                   /* INIT -> BRAIN, Unterzustand 0 (Nibble 0) */
-    e->rot_y = blick(bx, bz, px, pz);
-    e->state = 1; e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0; e->birkin_atk_cd = 0;
+    e->rot_y = s_gier >= 0 ? (int16_t)s_gier : blick(bx, bz, px, pz);
+    e->state = 1; e->sub_state_1 = s_sub; e->sub_state_2 = 0; e->sub_state_3 = 0; e->birkin_atk_cd = 0;
     int16_t gier1 = 0; int gier1_ok = 0;
-    for (int f = 0; f < 400; f++) {
+    for (int f = 0; f < s_takte; f++) {
         pl->hit_react = 1;                                     /* Spieler+0x93 gesetzt: kein Treffer-Block (@0x8011772c), nur Box + Sonde */
         const uint8_t ph_vor = e->sub_state_2;
         re15_enemy_ai_run_all(0);
+        if (s_treffer && r.kontakt_t >= 0 && f == r.kontakt_t + 1) r.soak_ph2 = e->sub_state_2;   /* vor dem Taktende-Haken */
         re15_bk_kontakt_takt_ende();                           /* Taktende wie re15_game_step (Runde 2) */
         r.ticks++;
-        if (e->sub_state_1 != 3) { r.aus_sub = e->sub_state_1; r.cd = e->birkin_atk_cd; break; }
-        if (e->motion == 0x0a) { if (!r.clip_a) r.frac_a = e->anim_frac; r.clip_a = 1; if (e->anim_frame > r.clip_a_max) r.clip_a_max = e->anim_frame; }
-        if (e->motion == 3 && (e->sub_state_2 == 1 || e->sub_state_2 == 3) && re15_bk_kralle_logik_aktiv() && re15_bkk_kontakt(e)) {
-            if (r.kontakt_af < 0) {
-                r.kontakt_af = e->anim_frame;
-                re15_bkk_lage_t l; re15_bkk_befund_t b;
-#ifndef BKK_ALT_API   /* nur fuer die Gegenprobe gegen den Merge-Commit (alte Schnittstelle ohne Kamera) */
-                re15_bkk_sicht_t v;
-                if (re15_bkk_lage_logik(e, &l) && re15_bkk_sicht(&v, e) &&
-                    re15_bkk_pruefen(re15_bkk_klinge(), &l, &g_room_rdt, (uint16_t)g_current_room_id, &v, &b)) {
-#else
-                if (re15_bkk_lage_logik(e, &l) && re15_bkk_pruefen(re15_bkk_klinge(), &l, &g_room_rdt, (uint16_t)g_current_room_id, &b)) {
-#endif
-                    r.kontakt_zelle = b.zelle; r.kontakt_y = b.punkt[1];
-                }
-            }
+        kampf_bild(&r, &alt, e);
+        if (e->sub_state_1 != s_sub && !r.aus_sub) { r.aus_sub = e->sub_state_1; r.cd = e->birkin_atk_cd; if (!s_weiter) break; }
+        if (e->motion == 0x0a) {
+            if (!r.clip_a) { r.frac_a = e->anim_frac; r.rate_a = e->anim_blend_rate; r.a_t = f; }
+            r.clip_a = 1; if (e->anim_frame > r.clip_a_max) r.clip_a_max = e->anim_frame;
+        }
+        /* Runde 3: JEDES Bild mit Clip 3 und Klinge in einer Wand braucht im Folgebild Clip 0xa (auch Abbruch-/Ausstiegsbild) */
+        if (vor_kontakt && e->motion != 0x0a) r.folge++;
+        vor_kontakt = (e->motion == 3 && welt_kontakt(e, NULL));
+        /* Runde 3: Weltkontakt (ohne Kamera) im gezeichneten Bild der Phase 1 */
+        re15_bkk_befund_t wb;
+        const int wk = (e->motion == 3 && (e->sub_state_2 == 1 || e->sub_state_2 == 3)) ? welt_kontakt(e, &wb) : 0;
+        if (wk) {
+            if (r.kontakt_af < 0) { r.kontakt_af = e->anim_frame; r.kontakt_t = f; r.kontakt_zelle = wb.zelle; r.kontakt_y = wb.punkt[1]; }
             if (e->sub_state_2 == 1) r.durch++;          /* Klinge steckt (Pose dieses Takts), Rueckzug nicht ausgeloest */
         }
+        if (s_treffer && r.kontakt_t == f && e->sub_state_2 == 3) {   /* Schuss nach dem Takt: Schadensweg setzt +0x4 = 2 (HURT) */
+            e->state = 2; e->sub_state_3 = 0; if (e->hit_stun <= 0) e->hit_stun = 9;
+        }
+        if (ph_vor == 1 && e->sub_state_2 == 3 && re15_bk_kralle_logik_aktiv() && !wk) r.ohne++;   /* Rueckzug ohne Weltkontakt */
         if (e->motion == 3 && e->anim_frame > r.clip3_max) r.clip3_max = e->anim_frame;
         if (ph_vor == 1 && e->sub_state_2 == 3 && r.sonde_af < 0) r.sonde_af = e->anim_frame;
         if (e->sub_state_2 == 1) {
@@ -298,10 +381,12 @@ int main(int argc, char **argv)
         }
         re15_bk_kralle_logik_setzen(NULL, 0);
     }
-    if (!strcmp(fall, "schwanz_wand") || !strcmp(fall, "schwanz_gelaender")) {
+    if (!strcmp(fall, "schwanz_wand") || !strcmp(fall, "schwanz_gelaender") || !strcmp(fall, "schwanz_treffer")) {
         if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
         re15_bk_kralle_logik_setzen(s_blob, s_blob_len);
-        const int wand = !strcmp(fall, "schwanz_wand");
+        const int treffer = !strcmp(fall, "schwanz_treffer");
+        const int wand = !strcmp(fall, "schwanz_wand") || treffer;
+        s_treffer = treffer;
         if (wand ? !raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50A0.RDT", 0x50A0u)
                  : !raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50F1.RDT", 0x50F1u)) {
             fprintf(stderr, "FAIL: Raum nicht ladbar\n"); return 1;
@@ -313,21 +398,35 @@ int main(int argc, char **argv)
          *   Merge-Commit: die Capcom-Sonde (EM30-Klauenpunkt, Radius 0x190 @0x80117818) schlaegt bei af 40 an -> Clip 0xa. */
         s_cut = wand ? BK_WAND_CUT : 5;                                   /* 50A0 Gang-Cut 4, 50F1 Kampf-Cut 5 (state.log cam= der Messlaeufe) */
         ergebnis_t r = wand ? hieb(0x10, BK_WAND_X, -15000, BK_WAND_X + 1200, -15000, 0) : hieb(0x10, BK_GEL_X, BK_GEL_Z, BK_GEL_X + BK_GEL_DX, BK_GEL_Z + BK_GEL_DZ, 0);
-        printf("%s: ticks=%d clip0xa=%d bis Bild %d kontakt_af=%d durch=%d frac_a=%d sonde_af=%d aus_sub=%d cd=0x%02x\n", fall,
-               r.ticks, r.clip_a, r.clip_a_max, r.kontakt_af, r.durch, r.frac_a, r.sonde_af, r.aus_sub, r.cd);
-        if (wand) {
+        printf("%s: ticks=%d clip0xa=%d bis Bild %d kontakt_af=%d durch=%d ohne=%d frac_a=%d rate_a=%#x verzug=%d sonde_af=%d aus_sub=%d cd=0x%02x\n",
+               fall, r.ticks, r.clip_a, r.clip_a_max, r.kontakt_af, r.durch, r.ohne, r.frac_a, r.rate_a, r.a_t - r.kontakt_t, r.sonde_af,
+               r.aus_sub, r.cd);
+        s_treffer = 0;
+        if (treffer) {
+            /* Runde 3: der Schnappschuss +0x1d8 (@0x80116698-a0) liegt im Original hinter dem +0x6 = 3 (@0x80117858); der HURT-Soak
+             * (`+0x4 = *(+0x1d8)` @0x8011a208) setzt die Erholung fort. Der Soak-Takt selbst ruft kein anim_set (Verzug 2). */
+            CHECK(r.soak_ph2 == 4, "schwanz_treffer: im Soak-Takt muss die Erholung beginnen (+0x6 = 4; Schnappschuss +0x1d8 traegt das "
+                  "+0x6 = 3, PORT-WAHL Soak), war %d", r.soak_ph2);
+            CHECK(r.kontakt_af >= 0 && r.clip_a && r.a_t == r.kontakt_t + 1 && r.durch == 0 && r.ohne == 0 && r.folge == 0,
+                  "schwanz_treffer: Schuss im Kontakttakt - Rueckzug trotzdem im Folgebild (Kontakt Takt %d, 0xa ab Takt %d, durch %d, folge %d)",
+                  r.kontakt_t, r.a_t, r.durch, r.folge);
+        } else if (wand) {
             CHECK(r.kontakt_af >= 0, "schwanz_wand: die gezeichnete Klinge muss die Ostwand #4 erreichen (Lage pruefen)");
-            CHECK(r.durch == 0, "schwanz_wand: %d Takt(e) steckt die gezeichnete Klinge in der Wand, ohne dass +0x6 = 3 gesetzt wird", r.durch);
+            CHECK(r.durch == 0 && r.folge == 0, "schwanz_wand: %d Takt(e) steckt die gezeichnete Klinge in der Wand, ohne dass +0x6 = 3 gesetzt wird "
+                  "(ohne Clip 0xa im Folgebild: %d)", r.durch, r.folge);
             CHECK(r.clip_a && r.sonde_af == r.kontakt_af, "schwanz_wand: Rueckzug im Kontaktbild (af %d), ausgeloest bei af %d", r.kontakt_af, r.sonde_af);
-            CHECK(r.frac_a == RE15_BKK_UEBERBLENDUNG - 1, "schwanz_wand: erster 0xa-Takt +0x8f = %d erwartet, war %d", RE15_BKK_UEBERBLENDUNG - 1, r.frac_a);
+            CHECK(r.frac_a == 3 && r.rate_a == 0x400, "schwanz_wand: erster 0xa-Takt +0x8f 3 (@0x80117900) mit a3 0x400 (@0x8011791c) vor dem "
+                  "Abzug erwartet, war frac %d Rate %#x", r.frac_a, r.rate_a);
+            CHECK(r.a_t == r.kontakt_t + 1 && r.ohne == 0, "schwanz_wand: Verzug 1 Bild (Kontakt Takt %d, 0xa ab Takt %d), Rueckzug ohne Weltkontakt %d",
+                  r.kontakt_t, r.a_t, r.ohne);
             CHECK(r.aus_sub == 1 && r.cd == 0x3c, "schwanz_wand: Phase 5 -> HUB mit +0x1df 0x3c (@0x801179a4-a8), aus_sub=%d cd=0x%02x", r.aus_sub, r.cd);
         } else {
-            CHECK(r.kontakt_af < 0 && !r.clip_a, "schwanz_gelaender: Klaue ueber dem Gelaender -> kein Kontakt, kein Clip 0xa (kontakt_af %d)", r.kontakt_af);
+            CHECK(r.kontakt_af < 0 && !r.clip_a && r.ohne == 0, "schwanz_gelaender: Klaue ueber dem Gelaender -> kein Kontakt, kein Clip 0xa (kontakt_af %d)", r.kontakt_af);
             CHECK(r.aus_sub == 1 && r.cd == 0x1e, "schwanz_gelaender: Clip-Ende -> HUB mit +0x1df 0x1e (@0x801178bc), aus_sub=%d cd=0x%02x", r.aus_sub, r.cd);
         }
         re15_bk_kralle_logik_setzen(NULL, 0);
     }
-    if (!strcmp(fall, "schwanz_gelaender16") || !strcmp(fall, "schwanz_ausser_bild")) {
+    if (!strcmp(fall, "schwanz_gelaender16") || !strcmp(fall, "schwanz_ausserhalb")) {
         if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
         re15_bk_kralle_logik_setzen(s_blob, s_blob_len);
         if (!raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50E0.RDT", 0x50E0u)) { fprintf(stderr, "FAIL: ROOM50E0 nicht ladbar\n"); return 1; }
@@ -340,19 +439,25 @@ int main(int argc, char **argv)
             /* Gelaender-Oberkante -1900 (BKK_GELAENDER_OBEN, birkin_klaue_r41.c): ein Kontakt an #16 nur UNTER der Oberkante */
             CHECK(r.kontakt_af != 36, "schwanz_gelaender16: bei af 36 geht die Klinge in 2773 Hoehe ueber das Gelaender -> kein Kontakt");
             CHECK(r.kontakt_af < 0 || r.kontakt_y >= -1900, "schwanz_gelaender16: Kontakt ueber der Oberkante 1900 (y %d, Zelle %d)", (int)r.kontakt_y, r.kontakt_zelle);
-            CHECK(r.durch == 0 && (!r.clip_a || r.sonde_af == r.kontakt_af), "schwanz_gelaender16: Rueckzug nur im Kontaktbild (kontakt_af %d, sonde_af %d)", r.kontakt_af, r.sonde_af);
+            CHECK(r.durch == 0 && r.ohne == 0 && (!r.clip_a || r.sonde_af == r.kontakt_af), "schwanz_gelaender16: Rueckzug nur im Kontaktbild (kontakt_af %d, sonde_af %d)", r.kontakt_af, r.sonde_af);
         } else {
-            /* Hieb F1715 (Pruefer r1, Lauf N_50E0schiess): Birkin (-10496,-25129), Spieler (-7544,-26375); Kontakt F1723 af 29 an #3 */
+            /* Hieb F1715 (Pruefer r1, Lauf N_50E0schiess): Birkin (-10496,-25129), Spieler (-7544,-26375); Kontakt an #3 (Suedwand).
+             * Runde 3: die Wand ausserhalb des Bilds (Cut 0) ist dieselbe Wand -> Rueckzug in beiden Cuts im selben Kontakttakt. */
             s_cut = 5;
             ergebnis_t r5 = hieb(0x10, -10496, -25129, -7544, -26375, 0);
             s_cut = 0;
             ergebnis_t r0 = hieb(0x10, -10496, -25129, -7544, -26375, 0);
-            printf("%s: Cut 5 clip0xa=%d kontakt_af=%d zelle=%d sonde_af=%d durch=%d | Cut 0 clip0xa=%d kontakt_af=%d sonde_af=%d\n", fall,
-                   r5.clip_a, r5.kontakt_af, r5.kontakt_zelle, r5.sonde_af, r5.durch, r0.clip_a, r0.kontakt_af, r0.sonde_af);
-            CHECK(r5.clip_a && r5.kontakt_zelle == 3 && r5.sonde_af == r5.kontakt_af && r5.durch == 0,
-                  "schwanz_ausser_bild: Cut 5 - Klinge trifft #3 im Bild -> Rueckzug im Kontaktbild (kontakt_af %d Zelle %d, sonde_af %d)",
+            printf("%s: Cut 5 clip0xa=%d kontakt_af=%d zelle=%d sonde_af=%d durch=%d ohne=%d | Cut 0 clip0xa=%d kontakt_af=%d zelle=%d sonde_af=%d "
+                   "durch=%d ohne=%d\n", fall, r5.clip_a, r5.kontakt_af, r5.kontakt_zelle, r5.sonde_af, r5.durch, r5.ohne, r0.clip_a,
+                   r0.kontakt_af, r0.kontakt_zelle, r0.sonde_af, r0.durch, r0.ohne);
+            CHECK(r5.clip_a && r5.kontakt_zelle == 3 && r5.sonde_af == r5.kontakt_af && r5.durch == 0 && r5.ohne == 0 && r5.a_t == r5.kontakt_t + 1,
+                  "schwanz_ausserhalb: Cut 5 - Klinge trifft #3 -> Rueckzug im Kontaktbild (kontakt_af %d Zelle %d, sonde_af %d)",
                   r5.kontakt_af, r5.kontakt_zelle, r5.sonde_af);
-            CHECK(!r0.clip_a && r0.kontakt_af < 0, "schwanz_ausser_bild: Cut 0 - dieselbe Klinge in #3, aber ausserhalb des Bilds -> kein Rueckzug (kontakt_af %d)", r0.kontakt_af);
+            CHECK(r0.clip_a && r0.kontakt_zelle == 3 && r0.sonde_af == r0.kontakt_af && r0.durch == 0 && r0.ohne == 0 && r0.a_t == r0.kontakt_t + 1,
+                  "schwanz_ausserhalb: Cut 0 (Wand ausserhalb des Bilds) - derselbe Weltkontakt an #3 -> Rueckzug im Kontaktbild (kontakt_af %d "
+                  "Zelle %d, sonde_af %d, durch %d)", r0.kontakt_af, r0.kontakt_zelle, r0.sonde_af, r0.durch);
+            CHECK(r0.kontakt_af == r5.kontakt_af, "schwanz_ausserhalb: der Kontakt haengt nicht an der Kamera (Cut 5 af %d, Cut 0 af %d)",
+                  r5.kontakt_af, r0.kontakt_af);
         }
         re15_bk_kralle_logik_setzen(NULL, 0);
     }
@@ -360,13 +465,19 @@ int main(int argc, char **argv)
         if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
         re15_bk_kralle_logik_setzen(s_blob, s_blob_len);
         if (!raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50A0.RDT", 0x50A0u)) { fprintf(stderr, "FAIL: ROOM50A0 nicht ladbar\n"); return 1; }
+        /* Runde 3: Kamera schraeg hinter Birkin (Cut 9) - der Wandschlag an #4 zaehlt wie mit Cut 4 (Weltkontakt). */
+        s_cut = 4;
+        ergebnis_t r4 = hieb(0x10, BK_WAND_X, -15000, BK_WAND_X + 1200, -15000, 0);
         s_cut = 9;
         ergebnis_t r = hieb(0x10, BK_WAND_X, -15000, BK_WAND_X + 1200, -15000, 0);
-        printf("%s: ticks=%d clip0xa=%d kontakt_af=%d zelle=%d durch=%d sonde_af=%d aus_sub=%d cd=0x%02x\n", fall, r.ticks, r.clip_a,
-               r.kontakt_af, r.kontakt_zelle, r.durch, r.sonde_af, r.aus_sub, r.cd);
-        CHECK(r.sonde_af < 0 || r.sonde_af >= 67, "schwanz_verdeckt: beim Schlag (af 35/36) liegt die Einschlagstelle hinter Birkins Koerper -> kein Rueckzug vor af 67, war af %d", r.sonde_af);
-        CHECK(r.kontakt_af == 67 && r.kontakt_zelle == 4, "schwanz_verdeckt: erster sichtbarer Treffer an #4 beim Absenken (af 67), war af %d Zelle %d", r.kontakt_af, r.kontakt_zelle);
-        CHECK(r.clip_a && r.sonde_af == r.kontakt_af && r.durch == 0, "schwanz_verdeckt: Rueckzug im Kontaktbild (kontakt_af %d, sonde_af %d)", r.kontakt_af, r.sonde_af);
+        printf("%s: Cut 9 ticks=%d clip0xa=%d kontakt_af=%d zelle=%d durch=%d ohne=%d sonde_af=%d | Cut 4 kontakt_af=%d sonde_af=%d\n", fall,
+               r.ticks, r.clip_a, r.kontakt_af, r.kontakt_zelle, r.durch, r.ohne, r.sonde_af, r4.kontakt_af, r4.sonde_af);
+        CHECK(r.kontakt_af >= 0 && r.kontakt_af < 67 && r.kontakt_zelle == 4, "schwanz_verdeckt: erster Weltkontakt an #4 beim Schlag (nicht erst "
+              "beim Absenken af 67), war af %d Zelle %d", r.kontakt_af, r.kontakt_zelle);
+        CHECK(r.clip_a && r.sonde_af == r.kontakt_af && r.durch == 0 && r.ohne == 0 && r.a_t == r.kontakt_t + 1 && r.folge == 0,
+              "schwanz_verdeckt: Rueckzug im Kontaktbild auch hinter Birkins Koerper (kontakt_af %d, sonde_af %d, durch %d)", r.kontakt_af,
+              r.sonde_af, r.durch);
+        CHECK(r.sonde_af == r4.sonde_af, "schwanz_verdeckt: Rueckzug haengt nicht an der Kamera (Cut 4 af %d, Cut 9 af %d)", r4.sonde_af, r.sonde_af);
         re15_bk_kralle_logik_setzen(NULL, 0);
     }
     if (!strcmp(fall, "schwanz_spieler")) {
@@ -382,7 +493,27 @@ int main(int argc, char **argv)
         printf("%s: ohne Koerper clip0xa=%d kontakt_af=%d zelle=%d | mit Koerper clip0xa=%d kontakt_af=%d sonde_af=%d durch=%d\n", fall,
                r0.clip_a, r0.kontakt_af, r0.kontakt_zelle, r1.clip_a, r1.kontakt_af, r1.sonde_af, r1.durch);
         CHECK(r0.clip_a && r0.kontakt_zelle == 3, "schwanz_spieler: ohne Spielerkoerper trifft die Klinge #3 sichtbar (Lage pruefen), kontakt_af %d Zelle %d", r0.kontakt_af, r0.kontakt_zelle);
-        CHECK(!r1.clip_a && r1.kontakt_af < 0, "schwanz_spieler: Einschlagstelle hinter Leon -> kein Rueckzug (kontakt_af %d)", r1.kontakt_af);
+        /* Runde 3: der Wandschlag hinter Leon ist ein Wandschlag -> Rueckzug wie ohne Spielerkoerper */
+        CHECK(r1.clip_a && r1.kontakt_zelle == 3 && r1.sonde_af == r1.kontakt_af && r1.durch == 0 && r1.ohne == 0 && r1.sonde_af == r0.sonde_af,
+              "schwanz_spieler: Einschlag hinter Leon -> Rueckzug im Kontaktbild wie ohne Koerper (mit: kontakt_af %d sonde_af %d durch %d, "
+              "ohne Koerper sonde_af %d)", r1.kontakt_af, r1.sonde_af, r1.durch, r0.sonde_af);
+        re15_bk_kralle_logik_setzen(NULL, 0);
+    }
+    if (!strcmp(fall, "schwanz_abbruch")) {
+        /* Runde 3: Ansprung nach dem Aufrichten, vom Tor @0x80117668 bei af 21 abgebrochen; im Ausstiegsbild (Phase 2 @0x80117888,
+         * kein anim_set) gleitet die Klinge mit der weiterlaufenden Ueberblendung ins Gelaender #17. Lage aus dem Messlauf
+         * N_50E0steh F806-F810: Birkin (-15000,-16300) Gier 1024 (Auftritt Sub 9), Leon (-13301,-22184); gemessen F810 148 tief.
+         * Soll: auch dort Rueckzug im Folgebild (folge == 0). Gegenprobe ohne die Abbruch-/Ausstiegs-Pruefung: Gang ohne Rueckzug. */
+        if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
+        re15_bk_kralle_logik_setzen(s_blob, s_blob_len);
+        if (!raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50E0.RDT", 0x50E0u)) { fprintf(stderr, "FAIL: ROOM50E0 nicht ladbar\n"); return 1; }
+        s_cut = 5; s_sub = 9; s_weiter = 1; s_takte = 260; s_gier = 1024;
+        ergebnis_t r = hieb(0x13, -15000, -16300, -13301, -22184, 0);
+        s_sub = 3; s_weiter = 0; s_takte = 400; s_gier = -1;
+        printf("%s: ticks=%d clip0xa=%d kontakt_af=%d folge=%d ohne=%d Wechsel=%d%s\n", fall, r.ticks, r.clip_a, r.kontakt_af, r.folge, r.ohne,
+               r.wechsel, r.spur);
+        CHECK(r.folge == 0, "schwanz_abbruch: %d Bild(er) mit Clip 3 und Klinge in der Wand ohne Clip 0xa im Folgebild", r.folge);
+        CHECK(r.clip_a, "schwanz_abbruch: die Klinge muss im Abbruch-/Ausstiegsbild das Gelaender #17 treffen (Lage pruefen) -> Clip 0xa");
         re15_bk_kralle_logik_setzen(NULL, 0);
     }
     if (!strcmp(fall, "schwanz_abdeckung")) {
@@ -396,18 +527,48 @@ int main(int argc, char **argv)
                 const re15_sca_entry_t *c = &g_room_rdt.sca[i];
                 const int typ = c->type & 0x0f;
                 if ((typ != 1 && typ != 3) || !(c->u0 & 1) || (c->floor >> 4) != 0 || !c->width || !c->density) continue;
-#ifndef BKK_ALT_API
                 const int art = re15_bkk_zelle_art(R[k].id, c);
-#else
-                const int art = 0;   /* Gegenprobe: der Merge-Commit hat keine Tabelle je Zelle */
-#endif
                 n++; wand += art == 1; gel += art == 2;
-                CHECK(art != 0, "schwanz_abdeckung: ROOM%04X Zelle #%d (x %d z %d w %u d %u) fehlt in der Tabelle sichtbarer Waende",
+                CHECK(art != 0, "schwanz_abdeckung: ROOM%04X Zelle #%d (x %d z %d w %u d %u) fehlt in der Wand-Tabelle",
                       (unsigned)R[k].id, i, (int)c->x, (int)c->z, (unsigned)c->width, (unsigned)c->density);
             }
             printf("ROOM%04X: %d Zellen, Wand %d, Gelaender %d\n", (unsigned)R[k].id, n, wand, gel);
             CHECK(n > 0, "schwanz_abdeckung: ROOM%04X ohne Zellen", (unsigned)R[k].id);
         }
+    }
+    if (!strncmp(fall, "kampf_", 6)) {
+        /* Runde 3 Auftrag B: Capcom-EM30 (s_bk_logik_ok = 0), ROOM3070, jedes KI-Bild mitgeschrieben (kampf_bild). Spieler 3300 vor
+         * Birkin: Biss-/Kralle-Tor halten (dist < 0xdad / Kralle `+0x95 >= 0x1e`), danach waehlt der HUB den Gang (dist >= 0xc80,
+         * >= 0x9c4). Spieler+0x93 gesetzt: kein Treffer, kein Griff. */
+        re15_bk_kralle_logik_setzen(NULL, 0);
+        s_cut = 5; s_weiter = 1; s_takte = 330;
+        const int32_t bx = -24000, bz = -16500, px = bx + 3300, pz = bz;
+        uint8_t grid = 0x10; int soll_ab = -1; uint16_t soll_rate = 0; int sx = px;
+        if (!strcmp(fall, "kampf_kralle"))        { s_sub = 3; soll_ab = 3; soll_rate = 0x100; sx = bx + 1500; }   /* wie "frei" */
+        else if (!strcmp(fall, "kampf_erholung")) { s_sub = 3; soll_ab = 0x0a; soll_rate = 0x400; grid = 0x00; }
+        else if (!strcmp(fall, "kampf_biss"))     { s_sub = 4; soll_ab = 4; soll_rate = 0x100; }
+        else if (!strcmp(fall, "kampf_wurf"))     { s_sub = 5; soll_ab = 0x0b; soll_rate = 0x100; }
+        else if (!strcmp(fall, "kampf_rempler"))  { s_sub = 7; soll_ab = 5; soll_rate = 0x100; }
+        else if (!strcmp(fall, "kampf_ansprung")) { s_sub = 9; soll_ab = 0x0d; soll_rate = 0x100; grid = 0x13; sx = bx + 1200; }
+        /* kampf_ansprung: grid 0x13 = Nibble 3 (Auftritt Sub 9) nach dem Member_set(0x0C,0x13), das den Parkzustand 0x33 aufhebt
+         * (0x33 & 0x20 laesst die Wurzel aussteigen @0x80116268-274) */
+        else { fprintf(stderr, "FAIL: unbekannter Fall %s\n", fall); return 1; }
+        ergebnis_t r;
+        if (!strcmp(fall, "kampf_erholung")) r = hieb(grid, -21300, -15000, -20400, -15000, 0);   /* wie "wand1": Klaue in Zelle #8 */
+        else if (!strcmp(fall, "kampf_kralle")) r = hieb(grid, bx, bz, sx, bz + 1500, 0);
+        else r = hieb(grid, bx, bz, sx, pz, 0);
+        int ab_da = 0;
+        for (int k = 0; k < r.wechsel && k < 8; k++) if (r.wechsel_ab[k] == soll_ab) ab_da = 1;
+        printf("%s: ticks=%d Wechsel=%d%s | Ruecksprung=%d Stillstand=%d Wechselbild-falsch=%d\n", fall, r.ticks, r.wechsel, r.spur,
+               r.ruecksprung, r.stillstand, r.wechsel_falsch);
+        CHECK(ab_da, "%s: der Wechsel aus Clip %#x kam nicht vor (Lage pruefen)", fall, soll_ab);
+        CHECK(r.ruecksprung == 0, "%s: %d Ruecksprung(e) auf Bild 0 im Wechselbild (anim_set posiert +0x95 vor dem Vorschub @0x8001f35c/"
+              "@0x8001f618, Umlauf @0x8001f63c)", fall, r.ruecksprung);
+        CHECK(r.wechsel_falsch == 0, "%s: %d Wechsel ohne das letzte Bild des fertigen Clips im Wechselbild", fall, r.wechsel_falsch);
+        CHECK(r.stillstand == 0, "%s: %d Bild(er) mit 100 %% alter Pose (Gewicht +0x8f * a3 `mult v0,a3` @0x8001f474, a3 je Aufruf; "
+              "Rueckfall 0x200 kappt)", fall, r.stillstand);
+        (void)soll_rate;
+        s_weiter = 0; s_takte = 400; s_sub = 3;
     }
     if (fails) { fprintf(stderr, "test_r41_birkin_kralle %s: %d Fehler\n", fall, fails); return 1; }
     printf("test_r41_birkin_kralle %s: OK\n", fall);
