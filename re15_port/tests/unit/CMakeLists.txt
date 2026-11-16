@@ -4278,3 +4278,14 @@ target_include_directories(test_r41_uv_textur PRIVATE ${CMAKE_SOURCE_DIR}/includ
 target_compile_definitions(test_r41_uv_textur PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r41_uv_textur COMMAND test_r41_uv_textur)
 set_tests_properties(unit_r41_uv_textur PROPERTIES TIMEOUT 60)
+
+# --- RIEGEL Paletten-Animation Typ 3 (Nutzer 2026-11-15: "Die Monitore im Original laufen, also grieseln,
+#     bei uns sind die Bilder statisch"). FUN_8002b968/FUN_8002bc04, include/re15_clutanim.h. Sollwerte im
+#     Original gemessen (DuckStation-RAM ROOM5030: [0x800b281e]=7, Ueberlauf, Zaehler 12/17). ---
+add_executable(test_clutanim_monitore test_clutanim_monitore.c)
+target_link_libraries(test_clutanim_monitore PRIVATE re15_engine re15_test_support)
+target_include_directories(test_clutanim_monitore PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_clutanim_monitore PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_clutanim_monitore COMMAND test_clutanim_monitore)
+set_tests_properties(unit_clutanim_monitore PROPERTIES TIMEOUT 60)

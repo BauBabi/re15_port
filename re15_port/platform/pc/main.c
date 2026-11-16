@@ -35,6 +35,7 @@ extern void re15_android_bootstrap_assets(void);
 #include "re15_scd.h"
 #include "re15_fade.h"      /* fade channels + the letterbox counter (FUN_80021a0c) */
 #include "re15_md1.h"
+#include "re15_clutanim.h"  /* Paletten-Animation Typ 3 (Monitore 5030/5031, Wasser) */
 #include "re15_title_pulse.h"   /* Titelmenue: Puls (FUN_801028ec) + Titel-Tick (2 VBlanks) */
 
 re15_engine_state_t g_engine;
@@ -1606,6 +1607,52 @@ static int pc_sync_player_model(re15_md1_t *pl_md1)
     return 1;
 }
 
+/* PALETTEN-ANIMATION (include/re15_clutanim.h) — die Textur-Seite im PC-Port.
+ * Im Original kopiert ein DR_MOVE je Bild 16 Farben (sx = Unterpalette*16) aus der CLUT-Zeile der Quell-TIM
+ * an eine eigene VRAM-Zeile, auf die alle Primitive des Objekts zeigen (FUN_8002b968/FUN_8002bc04). SDL kennt
+ * kein VRAM: die Prop-Textur bekommt darum unter ihren eigenen CLUT-Streifen (render_pc.c, je Zeile eine
+ * Kopie) je erreichbare Unterpalette einen weiteren Streifen. Zeile R+u hat die Farben 0..15 = Quell-TIM
+ * Zeile qz, Eintraege 16u..16u+15 (die 16 Werte des DR_MOVE, w=0x10 @0x8002bb9c); Index >= 16 liest im
+ * Original VRAM rechts neben der Zeile — er kommt in keiner Typ-3-Textur vor (Zensus, Riegel
+ * unit_clutanim_monitore P6), steht hier deshalb auf 0.
+ * Nur 8-bpp-TIMs (CLUT-Zeile = 256 Eintraege): alle Typ-3-Texturen beider Discs sind 8 bpp. */
+static const re15_rdt_t *s_ca_rdt = NULL;               /* RDT, aus der die Prop-TIMs zuletzt geladen wurden */
+static int32_t           s_ca_key[RE15_RDT_MAX_PROPS];  /* gebauter Stand je obj_id, -1 = Original-Textur */
+
+static int pc_clutanim_clut(int oid, int qo, int qz, int unter)
+{
+    if (!s_ca_rdt || oid < 0 || oid >= RE15_RDT_MAX_PROPS || qo < 0 || qo >= RE15_RDT_MAX_PROPS) return -1;
+    if (!s_ca_rdt->prop_tim[oid] || !s_ca_rdt->prop_tim[qo]) return -1;
+    re15_tim_t eig, quelle;
+    if (re15_tim_parse(s_ca_rdt->prop_tim[oid], s_ca_rdt->prop_tim_size[oid], &eig) != 0 ||
+        re15_tim_parse(s_ca_rdt->prop_tim[qo],  s_ca_rdt->prop_tim_size[qo],  &quelle) != 0) return -1;
+    if (eig.bpp != 8 || !eig.has_clut || quelle.bpp != 8 || !quelle.has_clut) return -1;
+    const int R = eig.clut_entries / 256;
+    const int K = re15_clutanim_max_unter(oid) + 1;
+    if (R < 1 || K < 1 || qz < 0 || (qz + 1) * 256 > quelle.clut_entries) return -1;
+    if (unter < 0) unter = 0;
+    if (unter >= K) unter = K - 1;
+    const int32_t key = (qo << 16) | (qz << 8) | K;
+    if (s_ca_key[oid] != key) {
+        uint16_t *c = (uint16_t *)calloc((size_t)(R + K) * 256u, sizeof(uint16_t));
+        if (!c) return -1;
+        memcpy(c, eig.clut, (size_t)R * 256u * sizeof(uint16_t));
+        for (int k = 0; k < K; k++)
+            for (int i = 0; i < 16; i++)
+                c[(R + k) * 256 + i] = quelle.clut[qz * 256 + 16 * k + i];
+        re15_tim_t t2 = eig;
+        t2.clut = c;
+        t2.clut_entries = (R + K) * 256;
+        re15_render_pc_upload_tim_slot(&t2, RE15_TIM_SLOT_PROP(oid));
+        re15_objabe_r38_pc_textur(&t2, RE15_TIM_SLOT_PROP(oid));   /* STP-Teile mit denselben Streifen */
+        free(c);
+        s_ca_key[oid] = key;
+        fprintf(stderr, "[clutanim] ROOM%04X obj %d: Quelle obj %d Zeile %d, %d Unterpaletten\n",
+                (unsigned)g_current_room_id, oid, qo, qz, K);
+    }
+    return ((eig.clut_y + R + unter) & 0x1FF) << 6;
+}
+
 static void pc_load_room_prop_set(const re15_rdt_t *rdt,
                                   re15_md1_t md1[RE15_RDT_MAX_PROPS],
                                   int ok[RE15_RDT_MAX_PROPS])
@@ -1627,7 +1674,8 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
      * mit. Es war die POLIZEIWESTE in ROOM1190, die dadurch wegfiel — der Nutzer sah
      * an ihrer Stelle ein gelbes Viereck. Herleitung + Zensus stehen bei
      * RE15_RDT_MAX_PROPS in re15_rdt.h. */
-    for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) ok[op] = 0;
+    for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) { ok[op] = 0; s_ca_key[op] = -1; }   /* Paletten-Streifen neu */
+    s_ca_rdt = rdt;
     re15_objabe_r38_pc_raum_neu();   /* Runde 38 Spur W: STP-Teil-Texturen des alten Raums verwerfen */
     if (!rdt) return;
     int nprops = rdt->prop_count < RE15_RDT_MAX_PROPS ? rdt->prop_count
@@ -5107,6 +5155,11 @@ re_title:;
          * FUN_80044210 (Latch + Laden) — also pro Raum aus der Tabelle, nie hartkodiert.
          * Der Port macht das jetzt in room_common.c beim Raumwechsel. */
     }
+    /* PALETTEN-ANIMATION der Typ-3-Objekte am Boot-/LADE-Weg anmelden — dieselbe Stelle wie im Tuerweg
+     * (scd_room_reenter): FUN_8003ef6c ruft FUN_8002b968 @0x8003f020 direkt nach dem Init-Lauf; der Boot-Weg hier
+     * hat main00 oben und sub00 eben laufen lassen. Ohne diese Zeile griesselte ein im Monitor Room geladener
+     * Spielstand nicht. include/re15_clutanim.h */
+    if (rdt_ok) re15_clutanim_raum_anmelden(&rdt);
 
     /* ⛔ DIE SICHERUNG AUCH AM BOOT-/LADE-WEG IN DEN HEBETISCH LEGEN (Runde 30, Thema H).
      *
@@ -11490,6 +11543,15 @@ re_title:;
                         pi, oid, (int)g_scd.props[pi].obj_type, g_scd.props[pi].x, g_scd.props[pi].y, g_scd.props[pi].z,
                         g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z); }
 #endif
+                /* PALETTEN-ANIMATION (re15_clutanim.h): 2 = die Zielzeile schreibt kein getickter Eintrag ->
+                 * 0x0000 -> die GPU zeichnet keinen Texel (ROOM5030 Objekt 8/9, im Original gemessen);
+                 * 1 = Streifen der Unterpalette statt der eigenen CLUT. Gilt fuer das ERSTE Mesh: nur dessen
+                 * Primitive stellt FUN_8002b968 um (pool+0x10/+0x18, @0x8002ba60-bb00). */
+                int ca_clut = -1;
+                { int qo = -1, qz = 0, un = 0;
+                  const int ca = re15_clutanim_objekt(oid, &qo, &qz, &un);
+                  if (ca == 2) continue;
+                  if (ca == 1) ca_clut = pc_clutanim_clut(oid, qo, qz, un); }
                 const re15_md1_t *prop_md1 = NULL;
                 int prop_md1_ok = 0;
                 /* Kein 6er-Cap (ROOM11F0: 12 Props, Schalter obj 0x06..0x0B waren
@@ -11629,6 +11691,8 @@ re_title:;
                             if (irons_sort_max >= 0 && wz_for_sort > irons_sort_max)
                                 wz_for_sort = irons_sort_max;   /* Tiefen-Klemme, s.u. */
                             const re15_md1_tri_uv_t *uv = &hm->triangle_uvs[ti];
+                            re15_md1_tri_uv_t uv_ca;
+                            if (ca_clut >= 0 && hbi == 0) { uv_ca = *uv; uv_ca.clut = (uint16_t)ca_clut; uv = &uv_ca; }
                             int page_off = (int)((uv->page & 0x000F) * 128);
                             /* BF-round: per-vertex shading for prop tri. */
                             uint8_t pr0, pg0, pb0, pr1, pg1, pb1, pr2, pg2, pb2;
@@ -11683,6 +11747,8 @@ re_title:;
                             if (irons_sort_max >= 0 && wz_avg > irons_sort_max)
                                 wz_avg = irons_sort_max;        /* Tiefen-Klemme, s.u. */
                             const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];
+                            re15_md1_quad_uv_t uv_ca;
+                            if (ca_clut >= 0 && hbi == 0) { uv_ca = *uv; uv_ca.clut = (uint16_t)ca_clut; uv = &uv_ca; }
                             int page_off = (int)((uv->page & 0x000F) * 128);
                             /* BF-round: per-vertex shading for prop quad. */
                             uint8_t pqr0, pqg0, pqb0, pqr1, pqg1, pqb1;
