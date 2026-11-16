@@ -40,11 +40,21 @@
  *       a) die Disc zeigt dort nur einen allgemeinen PLATZHALTER: ITEMALL-Kachel bytegleich mit Kachel 0x03
  *          (Browning) = 0x2F 0x30 0x31 0x32 0x35 0x42 0x45; ITPS-Bild bytegleich mit der "BOSS"-Karte von Block 0x00
  *          = alle Bloecke ausser 0x08 0x09 0x15 0x16 0x36 0x3E.
- *       b) die Id bedeutet heute etwas anderes: 0x14 (Disc Feuerloescher, Mod Colt Python), 0x33/0x34 (Disc
- *          MD-Medium/-Spieler, Port Kurbel/Wasserschluessel), 0x43 (Disc Kommunikationskarte, Port Speisesaal-
- *          Schluessel), 0x42/0x45 (Port-Schluessel).
- *   - UMZUG nach Bedeutung: Disc-Icon 0x14 (しょうかき = Feuerloescher) -> heutige Id 0x31 (Fire Extinguisher);
- *     Disc-ITPS-Bild 0x3E (zeigt die Taschenuhr, Disc-Name dort Gワクチン) -> heutige Id 0x3F (Pocket Watch).
+ *       b) die Id bedeutet heute etwas anderes: 0x14 (Disc Feuerloescher, Mod Colt Python), 0x33 (Disc
+ *          MD-Medium, Port Kurbel), 0x43 (Disc Kommunikationskarte, Port Speisesaal-Schluessel), 0x42/0x45
+ *          (Port-Schluessel).
+ *       c) das Disc-Bild passt nicht zur Bedeutung: 0x46 (Disc-Name "IDカードーM" = Rote Master-Keycard, die
+ *          Disc-KACHEL 0x46 zeigt aber einen SCHLUESSEL, keine Karte). Die Disc-Kachelfolge ist am Ende gegen die
+ *          Namen versetzt: Kachel 0x45 = Browning-Kopie (Platzhalter), 0x46 = Schluessel, 0x47 = Karte "取調".
+ *          Das Original zeichnet Kachel = Id (re15_inv_screen_cache_tile, Identitaet), die Disc selbst zeigt fuer
+ *          0x46 also den Schluessel - als Kartenbild ist er falsch, die Karte behaelt ihr heutiges Bild.
+ *   - UMZUG nach Bildinhalt (wie beim Feuerloescher und der Uhr):
+ *       Disc-Icon 0x14 (しょうかき = Feuerloescher)            -> heutige Id 0x31 (Fire Extinguisher);
+ *       Disc-ITPS-Bild 0x3E (zeigt die Taschenuhr, Disc-Name dort Gワクチン) -> heutige Id 0x3F (Pocket Watch);
+ *       Disc-Icon 0x46 (zeigt den einzigen Schluessel der Disc; einziger Schluessel-Name der Disc ist 0x45
+ *       "水キー" = Mod "Water Key", den der Port unter Id 0x34 fuehrt, re15_gatorszene_r41.h)
+ *                                                             -> heutige Id 0x34 (Water Key).
+ *   - 0x47 (Disc "IDカードーL" = Blaue Master-Keycard): Disc-Kachel 0x47 ist eine Karte -> Disc-Bild.
  */
 #ifndef RE15_ULTIMATE15_H
 #define RE15_ULTIMATE15_H

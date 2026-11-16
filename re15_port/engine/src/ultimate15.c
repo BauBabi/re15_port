@@ -44,16 +44,19 @@ void re15_ultimate15_aus_text(const char *text)
 }
 
 /* ---- Zuordnung ------------------------------------------------------------------------------------------------
- * ICON (ITEMALL): gleiche Bedeutung 0x01..0x13, 0x15..0x2E, 0x36..0x41, 0x44, 0x46, 0x47; Umzug 0x31 <- 0x14.
+ * ICON (ITEMALL): gleiche Bedeutung 0x01..0x13, 0x15..0x2E, 0x36..0x41, 0x44, 0x47; Umzug nach Bildinhalt
+ * 0x31 <- 0x14 (Feuerloescher) und 0x34 <- 0x46 (Schluessel = Water Key, Runde 2).
  * Ausgenommen (Begruendung re15_ultimate15.h): 0x14, 0x2F 0x30 0x32 0x35 0x42 0x45 (Disc = Browning-Kopie),
- * 0x33 0x34 0x43 (Id heute anders belegt). 0x00 = leere Zelle, bitgleich. */
+ * 0x33 0x43 (Id heute anders belegt), 0x46 (Disc-Kachel 0x46 zeigt einen Schluessel, keine Karte -> die Disc hat
+ * fuer die Rote Master-Keycard kein Kartenbild). 0x00 = leere Zelle, bitgleich. */
 int re15_ultimate15_icon_quelle(unsigned id)
 {
-    if (id == 0x31u) return 0x14;                              /* Feuerloescher: Disc-Id 0x14 */
+    if (id == 0x31u) return 0x14;                              /* Feuerloescher: Disc-Kachel 0x14 */
+    if (id == 0x34u) return 0x46;                              /* Water Key: Disc-Kachel 0x46 (Schluessel) */
     if (id >= 0x01u && id <= 0x13u) return (int)id;
     if (id >= 0x15u && id <= 0x2Eu) return (int)id;
     if (id >= 0x36u && id <= 0x41u) return (int)id;
-    if (id == 0x44u || id == 0x46u || id == 0x47u) return (int)id;
+    if (id == 0x44u || id == 0x47u) return (int)id;
     return -1;
 }
 

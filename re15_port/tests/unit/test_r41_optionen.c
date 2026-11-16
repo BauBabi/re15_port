@@ -159,8 +159,25 @@ static void teil_c(void)
     CHECK(kachel_gleich(u15, 0x31, disc, 0x14), "0x31 Fire Extinguisher <- Disc 0x14 (Feuerloescher)");
     CHECK(kachel_gleich(u15, 0x14, mod, 0x14), "0x14 Colt Python bleibt (Disc 0x14 ist der Feuerloescher)");
     CHECK(kachel_gleich(u15, 0x2F, mod, 0x2F), "0x2F Nut bleibt (Disc = Browning-Kopie)");
-    CHECK(kachel_gleich(u15, 0x33, mod, 0x33) && kachel_gleich(u15, 0x34, mod, 0x34) && kachel_gleich(u15, 0x43, mod, 0x43),
-          "0x33/0x34/0x43 (Port-Belegung) bleiben");
+    CHECK(kachel_gleich(u15, 0x33, mod, 0x33) && kachel_gleich(u15, 0x43, mod, 0x43),
+          "0x33/0x43 (Port-Belegung) bleiben");
+    /* Runde 2 (Pruefbericht r1, rot): Disc-Kachel 0x46 zeigt einen Schluessel (Disc-Name 0x46 "IDカードーM", Bild aber
+     * kein Kartenbild; einziger Schluessel-Name der Disc = 0x45 "水キー" = Water Key, Port-Id 0x34). Nach Bedeutung:
+     * die Rote Master-Keycard behaelt ihre Karte, der Water Key bekommt den Disc-Schluessel. */
+    CHECK(re15_ultimate15_icon_quelle(0x46) == -1 && kachel_gleich(u15, 0x46, mod, 0x46) && !kachel_gleich(u15, 0x46, disc, 0x46),
+          "0x46 Rote Master-Keycard: bleibt Karte, NICHT der Disc-Schluessel (Disc-Kachel 0x46)");
+    CHECK(re15_ultimate15_icon_quelle(0x34) == 0x46 && kachel_gleich(u15, 0x34, disc, 0x46),
+          "0x34 Water Key <- Disc-Kachel 0x46 (Schluessel)");
+    CHECK(re15_ultimate15_icon_quelle(0x47) == 0x47 && kachel_gleich(u15, 0x47, disc, 0x47),
+          "0x47 Blaue Master-Keycard <- Disc-Kachel 0x47 (Karte)");
+    {   /* keine zwei heutigen Ids teilen sich eine Disc-Kachel (jede Disc-Kachel hoechstens einmal vergeben) */
+        int doppelt = 0;
+        for (unsigned a = 0; a < RE15_U15_KACHELN; a++) for (unsigned b = a + 1; b < RE15_U15_KACHELN; b++) {
+            int qa = re15_ultimate15_icon_quelle(a), qb = re15_ultimate15_icon_quelle(b);
+            if (qa >= 0 && qa == qb) doppelt++;
+        }
+        CHECK(doppelt == 0, "jede Disc-Kachel hoechstens einmal vergeben (%d doppelt)", doppelt);
+    }
 
     /* Leser: AUS bitgleich, AN Disc. */
     re15_itemall_set_pix(mod, mn);
