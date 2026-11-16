@@ -1608,46 +1608,6 @@ static int pc_sync_player_model(re15_md1_t *pl_md1)
     return 1;
 }
 
-/* Runde 41 Optionen — ULTIMATE 1.5 in der WELT (include/re15_ultimate15.h): die Props des residenten Raums, an denen
- * ein Item_aot_set einen Gegenstand mit Disc-Weltmodell zeigt (re15_ultimate15_prop_items ueber main- und sub-SCD),
- * bekommen MD1 + TIM aus der Disc-RDT. Dazu das eine Port-Prop mit festem Gegenstand derselben Art: Schrot
- * ROOM1090/1091 (re15_inhalt_r35.h, Item RE15_R35I_SCHROT_ITEM auf obj RE15_R35I_SCHROT_OBJ). Lage, Drehung, Box,
- * Aufheben und Verschwinden bleiben unberuehrt — getauscht werden nur Gitter und Textur im selben Slot.
- * AUS -> sofort zurueck, nichts angefasst (bitgleich). */
-static void pc_ultimate15_props(re15_md1_t md1[RE15_RDT_MAX_PROPS], int ok[RE15_RDT_MAX_PROPS], int nprops)
-{
-    extern const unsigned char *re15_room_pc_bytes(int *size);
-    extern int re15_ultimate15_pc_modell(unsigned item, const uint8_t **md1, int *md1n, const uint8_t **tim, int *timn);
-    if (!re15_ultimate15()) return;
-    uint8_t item[RE15_RDT_MAX_PROPS];
-    int n = 0;
-    const unsigned char *raum = re15_room_pc_bytes(&n);
-    if (raum && g_room_rdt_ok && g_room_rdt.main_scd >= raum && g_room_rdt.main_scd < raum + n)
-        re15_ultimate15_prop_items(raum, n, item, RE15_RDT_MAX_PROPS);
-    else
-        memset(item, 0xFF, sizeof item);
-    for (int op = nprops; op < RE15_RDT_MAX_PROPS; op++) item[op] = 0xFF;   /* nur RDT-Props aus dem Zensus */
-    if ((g_current_room_id == 0x1090 || g_current_room_id == 0x1091) &&
-        re15_inhalt_r35_obj_id((uint16_t)g_current_room_id) == RE15_R35I_SCHROT_OBJ &&
-        RE15_R35I_SCHROT_OBJ < RE15_RDT_MAX_PROPS && ok[RE15_R35I_SCHROT_OBJ])
-        item[RE15_R35I_SCHROT_OBJ] = RE15_R35I_SCHROT_ITEM;
-    for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) {
-        const uint8_t *mb = NULL, *tb = NULL; int msz = 0, tsz = 0;
-        if (item[op] == 0xFF || !re15_ultimate15_pc_modell(item[op], &mb, &msz, &tb, &tsz)) continue;
-        re15_md1_t neu; re15_tim_t tt;
-        if (re15_md1_parse(mb, (size_t)msz, &neu) != 0 || re15_tim_parse(tb, tsz, &tt) != 0) {
-            fprintf(stderr, "[ultimate15] Raum %04X obj %d: Disc-Modell Item 0x%02X nicht lesbar - bleibt\n",
-                    (unsigned)g_current_room_id, op, item[op]);
-            continue;
-        }
-        md1[op] = neu; ok[op] = 1;
-        re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(op));
-        re15_objabe_r38_pc_textur(&tt, RE15_TIM_SLOT_PROP(op));   /* Runde 38 Spur W: STP-Teile wie beim RDT-Prop */
-        fprintf(stderr, "[ultimate15] Raum %04X obj %d: Item 0x%02X -> Disc-Weltmodell (MD1 %d B, TIM %d B)\n",
-                (unsigned)g_current_room_id, op, item[op], msz, tsz);
-    }
-}
-
 static void pc_load_room_prop_set(const re15_rdt_t *rdt,
                                   re15_md1_t md1[RE15_RDT_MAX_PROPS],
                                   int ok[RE15_RDT_MAX_PROPS])
@@ -1818,7 +1778,11 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         const uint8_t *tb = re15_gatorszene_r41_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
         if (w_oid >= 0 && nprops <= w_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[w_oid]) == 0) ok[w_oid] = 1;
         if (w_oid >= 0 && nprops <= w_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(w_oid)); }
-    pc_ultimate15_props(md1, ok, nprops);   /* Runde 41 Optionen: ULTIMATE 1.5 — Disc-Weltmodelle (nur bei AN) */
+    {   /* Runde 41 Optionen: ULTIMATE 1.5 — Disc-Weltmodelle (nur bei AN; platform/pc/src/ultimate15_pc.c). */
+        extern void re15_ultimate15_pc_props(re15_md1_t *md1, int *ok, int nprops, const int *slot);
+        int u15_slot[RE15_RDT_MAX_PROPS];
+        for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) u15_slot[op] = RE15_TIM_SLOT_PROP(op);
+        re15_ultimate15_pc_props(md1, ok, nprops, u15_slot); }
 }
 
 /* ── FE-4 memory-card save/load ────────────────────────────────────────────── */

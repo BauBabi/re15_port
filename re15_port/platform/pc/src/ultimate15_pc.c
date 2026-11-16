@@ -4,6 +4,11 @@
  * alles beim heutigen Stand (Rueckgabe NULL / 0) und eine Zeile geht nach stderr. */
 #include "re15_ultimate15.h"
 #include "re15_rdt.h"
+#include "re15_room.h"         /* g_room_rdt / g_room_rdt_ok / g_current_room_id */
+#include "re15_md1.h"
+#include "re15_tim.h"
+#include "re15_objabe_r38.h"   /* re15_objabe_r38_pc_textur — STP-Teile wie beim RDT-Prop (Runde 38 Spur W) */
+#include "re15_inhalt_r35.h"   /* Schrot 1090/1091: Port-Prop mit festem Gegenstand 0x16 */
 #include "asset_root_pc.h"
 
 #include <stdio.h>
@@ -81,4 +86,45 @@ int re15_ultimate15_pc_modell(unsigned item, const uint8_t **md1, int *md1n, con
     *md1 = rdt.prop_md1[prop]; *md1n = rdt.prop_md1_size[prop];
     *tim = rdt.prop_tim[prop]; *timn = rdt.prop_tim_size[prop];
     return 1;
+}
+
+/* WELT (include/re15_ultimate15.h): die Props des residenten Raums, an denen ein Item_aot_set einen Gegenstand mit
+ * Disc-Weltmodell zeigt (re15_ultimate15_prop_items ueber main- und sub-SCD), bekommen MD1 + TIM aus der Disc-RDT.
+ * Dazu das eine Port-Prop mit festem Gegenstand derselben Art: Schrot ROOM1090/1091 (re15_inhalt_r35.h, Item
+ * RE15_R35I_SCHROT_ITEM auf obj RE15_R35I_SCHROT_OBJ). Lage, Drehung, Box, Aufheben und Verschwinden bleiben
+ * unberuehrt — getauscht werden nur Gitter und Textur im selben Slot (slot[op] = RE15_TIM_SLOT_PROP(op), main.c).
+ * Aufruf am Ende von main.c pc_load_room_prop_set. AUS -> sofort zurueck, nichts angefasst (bitgleich). */
+extern const unsigned char *re15_room_pc_bytes(int *size);
+extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
+
+void re15_ultimate15_pc_props(re15_md1_t *md1, int *ok, int nprops, const int *slot)
+{
+    if (!re15_ultimate15()) return;
+    uint8_t item[RE15_RDT_MAX_PROPS];
+    int n = 0;
+    const unsigned char *raum = re15_room_pc_bytes(&n);
+    if (raum && g_room_rdt_ok && g_room_rdt.main_scd >= raum && g_room_rdt.main_scd < raum + n)
+        re15_ultimate15_prop_items(raum, n, item, RE15_RDT_MAX_PROPS);
+    else
+        memset(item, 0xFF, sizeof item);
+    for (int op = nprops; op < RE15_RDT_MAX_PROPS; op++) item[op] = 0xFF;   /* nur RDT-Props aus dem Zensus */
+    if ((g_current_room_id == 0x1090 || g_current_room_id == 0x1091) &&
+        re15_inhalt_r35_obj_id((uint16_t)g_current_room_id) == RE15_R35I_SCHROT_OBJ &&
+        RE15_R35I_SCHROT_OBJ < RE15_RDT_MAX_PROPS && ok[RE15_R35I_SCHROT_OBJ])
+        item[RE15_R35I_SCHROT_OBJ] = RE15_R35I_SCHROT_ITEM;
+    for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) {
+        const uint8_t *mb = NULL, *tb = NULL; int msz = 0, tsz = 0;
+        if (item[op] == 0xFF || !re15_ultimate15_pc_modell(item[op], &mb, &msz, &tb, &tsz)) continue;
+        re15_md1_t neu; re15_tim_t tt;
+        if (re15_md1_parse(mb, msz, &neu) != 0 || re15_tim_parse(tb, tsz, &tt) != 0) {
+            fprintf(stderr, "[ultimate15] Raum %04X obj %d: Disc-Modell Item 0x%02X nicht lesbar - bleibt\n",
+                    (unsigned)g_current_room_id, op, item[op]);
+            continue;
+        }
+        md1[op] = neu; ok[op] = 1;
+        re15_render_pc_upload_tim_slot(&tt, slot[op]);
+        re15_objabe_r38_pc_textur(&tt, slot[op]);
+        fprintf(stderr, "[ultimate15] Raum %04X obj %d: Item 0x%02X -> Disc-Weltmodell (MD1 %d B, TIM %d B)\n",
+                (unsigned)g_current_room_id, op, item[op], msz, tsz);
+    }
 }
