@@ -12085,6 +12085,26 @@ void re15_bk_kralle_logik_setzen(const uint8_t *em30, size_t len)
         s_bk_logik_ok = 1;
 }
 int re15_bk_kralle_logik_aktiv(void) { return s_bk_logik_ok; }
+
+/* NUTZERENTSCHEID 16.11.2026 "zurueckziehen nur, wenn er gegen eine Wand schlaegt ... synchron dazu" (nur Schwanz-Gestalt =
+ * s_bk_logik_ok; PORT-WAHL, kein Capcom-Code, Herleitung re15_birkin_klaue_r41.h/.c): steckt die Klinge in der Pose, die der
+ * Zeichner in DIESEM Bild zeigt (Bild +0x95 nach dem Vorschub, Ueberblendung +0x8f), sichtbar in einer Wand oder unter der
+ * Oberkante eines Gelaenders, dann +0x6 = 3 wie die Capcom-Sonde (@0x80117848-858) -> naechster Takt Phase 3 (Clip 0xa
+ * @0x801178dc, Se(6) @0x801178fc). Gilt in jedem Bild der Phase 1.
+ * Runde 2: am ENDE des Spieltakts statt im Gegner-Takt. Gemessen (Messlauf 50E0 rueck F942, 50E0 schiess F2786): der Spieler wird
+ * NACH dem Gegner-Pass noch geklemmt/geschoben (re15_player_nachklemme, game_step_common.c); im Gegner-Takt sah die Pruefung die
+ * Figur an einer anderen Stelle als der Zeichner -> Verdeckung durch die Figur einmal zu viel, einmal zu wenig. Am Taktende
+ * stimmen Lage von Birkin, Figur und Kamera mit dem gezeichneten Bild ueberein. */
+void re15_bk_kontakt_takt_ende(void)
+{
+    if (!s_bk_logik_ok) return;
+    for (int i = 0; i < RE15_ACTOR_MAX; i++) {
+        re15_actor_t *e = &g_actors[i];
+        if (!e->active || e->type != 0x30u || e->state != 1 || e->sub_state_1 != 3) continue;
+        if (e->sub_state_2 == 1 && e->motion == 3 && re15_bkk_kontakt(e))
+            e->sub_state_2 = 3;
+    }
+}
 /* Klauenpunkt der Kralle: wie re15_bk_klauenpunkt (KF N-2, s16), aber mit dem Logik-Gerippe, wenn eins gemeldet ist. */
 static int re15_bk_klauenpunkt_kralle(re15_actor_t *e, int32_t ox, int32_t w[3])
 {
@@ -12455,12 +12475,8 @@ static void re15_birkin_ai_tick(int slot)
                     if (e->anim_frame == 0x25) re15_audio_room_se(4);
                 }
                 /* NUTZERENTSCHEID 16.11.2026 "zurueckziehen nur, wenn er gegen eine Wand schlaegt ... synchron dazu" (nur Schwanz-
-                 * Gestalt; PORT-WAHL, kein Capcom-Code, Herleitung re15_birkin_klaue_r41.h/.c): steckt die Klinge in der Pose, die
-                 * der Zeichner in DIESEM Bild zeigt (Bild +0x95 nach dem Vorschub, Ueberblendung +0x8f), in einer sichtbaren Wand
-                 * oder unter der Oberkante eines Gelaenders, dann +0x6 = 3 wie die Capcom-Sonde (@0x80117848-858) -> naechster Takt
-                 * Phase 3 (Clip 0xa @0x801178dc, +0x8f = 3 @0x80117900, Se(6) @0x801178fc). Gilt in jedem Bild der Phase 1. */
-                if (s_bk_logik_ok && e->sub_state_2 == 1 && e->motion == 3 && re15_bkk_kontakt(e))
-                    e->sub_state_2 = 3;
+                 * Gestalt): die Pruefung der GEZEICHNETEN Klinge laeuft seit Runde 2 am Ende des Spieltakts (re15_bk_kontakt_takt_ende,
+                 * aus re15_game_step), auf genau dem Stand, den der Zeichner zeigt (Spielerlage nach Klemme/Schub). */
             } else if (e->sub_state_2 == 2) {          /* phase 2 @0x80117888 (Abbruch ODER Clip-Ende): -> HUB, +0x1df=0x1e */
                 e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* +0x4 = 0x101 (Wort) @0x80117890-894 */
                 e->birkin_atk_cd = 0x1e;                               /* `ori v0,zero,0x1e` @0x801178bc / `sb v0,479(v1)` @0x801179a8 */

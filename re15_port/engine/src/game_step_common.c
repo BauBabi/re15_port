@@ -2689,6 +2689,11 @@ void re15_game_step(const re15_game_ctx_t *c)
      * Notch-Stempel, damit die Schalterbits des laufenden Bildes schon stehen.
      * Belege: include/re15_panel_zeiger.h. */
     re15_panel_zeiger_tick();
+    {   /* Runde 41 Kralle "synchron" Runde 2: gezeichnete Klinge der Schwanz-Gestalt gegen sichtbare Waende, auf dem Stand des
+         * gezeichneten Bilds (nach Spieler-Klemme/Schub) - enemy_ai_common.c re15_bk_kontakt_takt_ende */
+        extern void re15_bk_kontakt_takt_ende(void);
+        if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI)) re15_bk_kontakt_takt_ende();
+    }
     schritt_station(RE15_SCHRITT_ENDE, pl->x, pl->z);
 }
 

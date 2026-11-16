@@ -114,6 +114,7 @@ static uint8_t s_blob[0x80000];
 static size_t s_blob_len = 0;
 static uint8_t *s_hangar = NULL;
 void re15_bk_kralle_logik_setzen(const uint8_t *em30, size_t len);   /* enemy_ai_common.c */
+void re15_bk_kontakt_takt_ende(void);                                 /* enemy_ai_common.c, Runde 2 */
 int re15_bk_kralle_logik_aktiv(void);
 /* gezeichnete 0x30-Bank = EM30_HANGAR.EMD (Ersatzmodell Labor/Hangar); s_blob behaelt das EM30 fuer das Logik-Gerippe */
 static int hangar_bank(void)
@@ -208,6 +209,7 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
         pl->hit_react = 1;                                     /* Spieler+0x93 gesetzt: kein Treffer-Block (@0x8011772c), nur Box + Sonde */
         const uint8_t ph_vor = e->sub_state_2;
         re15_enemy_ai_run_all(0);
+        re15_bk_kontakt_takt_ende();                           /* Taktende wie re15_game_step (Runde 2) */
         r.ticks++;
         if (e->sub_state_1 != 3) { r.aus_sub = e->sub_state_1; r.cd = e->birkin_atk_cd; break; }
         if (e->motion == 0x0a) { if (!r.clip_a) r.frac_a = e->anim_frac; r.clip_a = 1; if (e->anim_frame > r.clip_a_max) r.clip_a_max = e->anim_frame; }
