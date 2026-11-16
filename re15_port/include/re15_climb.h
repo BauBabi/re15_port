@@ -71,6 +71,10 @@ int  re15_climb_standing_probe(int32_t x, int32_t z);
 /* Raumwechsel/Reset. */
 void re15_climb_reset(void);
 
+/* Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 1): ein Treffer ersetzt die Spieler-Routine - der Wort-Store auf PL+4
+ * (RE2 @0x801015c4, RE1.5 @0x80012ed4/@0x80012ee0) loescht den Kletter-Substate +5 und +6/+7. Nur diese drei Bytes, sonst nichts. */
+void re15_climb_routine_ersetzt(void);
+
 /* Diagnose fuer die Sonden/Tests: Substate (0/9/10), KIND (+0x06), PHASE (+0x07),
  * das getroffene Objekt (DAT_800ac78c) und das Standobjekt (DAT_800ac788). */
 int  re15_climb_dbg_sub(void);

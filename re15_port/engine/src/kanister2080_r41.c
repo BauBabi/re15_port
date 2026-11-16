@@ -511,12 +511,17 @@ int re15_k2080_werfer_gier(void)
 /* Wurfrichtung = Weltrichtung der RE2-Bahn (die Vektoren werden um sie gedreht; seit Nachbesserung 3 NICHT mehr die Gier des
  * Werfers, G-E2). Nachbesserung 2 (N3): gewaehlt beim Bau des Szenen-Programms (re15_k2080_wurf_gier_wahl), gemerkt in Bit 117
  * fuer den Raumaufbau ohne Laufzeit-Bahn. */
+/* Nachtrag K1 (Gator-Nutzerbefunde 2026-11-09, s. Header RE15_K2080_WURF_GIER_NORD): Pruefhaken der Gegenprobe - 1 = alte Gieren 3072/1024. */
+static int s_wurf_alt = 0;
+void re15_k2080_wurf_alt_setzen(int an) { s_wurf_alt = an; }
+int  re15_k2080_wurf_gier_nord(void) { return s_wurf_alt ? RE15_K2080_WURF_GIER_NORD_ALT : RE15_K2080_WURF_GIER_NORD; }
+int  re15_k2080_wurf_gier_sued(void) { return s_wurf_alt ? RE15_K2080_WURF_GIER_SUED_ALT : RE15_K2080_WURF_GIER_SUED; }
 static int wurf_gier(void)
 {
     const int m = wurf_gier_messhaken();
     if (m >= 0) return m;
     if (s_wurf_gier >= 0) return s_wurf_gier;
-    return bit(RE15_K2080_BIT_SUEDWURF) ? RE15_K2080_WURF_GIER_SUED : RE15_K2080_WURF_GIER_NORD;
+    return bit(RE15_K2080_BIT_SUEDWURF) ? re15_k2080_wurf_gier_sued() : re15_k2080_wurf_gier_nord();
 }
 /* Nennbahn einer Wurfrichtung g (Wurf-Stand RE15_K2080_NPC_WURF_X/STAND_Z + Haende am Ende von Eigen c6, gedreht um die Gier des
  * Werfers - seit Nachbesserung 3 die der Kamera zugewandte, G-E2) bis zur 2090-Landeflaeche (RE2 sub13 @0x088E-08B0) - dieselbe
@@ -535,12 +540,12 @@ static void nenn_landung(int g, int32_t out[2])
  * Nordbecken (Stand Nachbesserung 1). */
 int re15_k2080_wurf_gier_wahl(int gslot, int32_t gx, int32_t gz)
 {
-    if (gslot <= 0) return RE15_K2080_WURF_GIER_NORD;
+    if (gslot <= 0) return re15_k2080_wurf_gier_nord();
     int32_t ln[2], ls[2];
-    nenn_landung(RE15_K2080_WURF_GIER_NORD, ln);
-    nenn_landung(RE15_K2080_WURF_GIER_SUED, ls);
+    nenn_landung(re15_k2080_wurf_gier_nord(), ln);
+    nenn_landung(re15_k2080_wurf_gier_sued(), ls);
     const int64_t nx = (int64_t)ln[0] - gx, nz = (int64_t)ln[1] - gz, sx = (int64_t)ls[0] - gx, sz = (int64_t)ls[1] - gz;
-    return (sx * sx + sz * sz > nx * nx + nz * nz) ? RE15_K2080_WURF_GIER_SUED : RE15_K2080_WURF_GIER_NORD;
+    return (sx * sx + sz * sz > nx * nx + nz * nz) ? re15_k2080_wurf_gier_sued() : re15_k2080_wurf_gier_nord();
 }
 
 /* ---- NPC -------------------------------------------------------------------------------------------------------------- */
@@ -1195,10 +1200,10 @@ void re15_kanister2080_r41_install(uint16_t room_id)
             s_kan_zustand = 0; s_ziel_slot = -1; s_ziel_n = 0; s_kopf_ab = 0; s_z42_an = s_z42_aus = -1; s_blick7_log = 0;
             /* Nachbesserung 2 (N3): Wurfrichtung nach der Lage des Alligators beim Ausloesen (Header RE15_K2080_WURF_GIER_NORD/_SUED) */
             s_wurf_gier = re15_k2080_wurf_gier_wahl(s_gator_slot, s_gator.x, s_gator.z);
-            bit_setzen(RE15_K2080_BIT_SUEDWURF, s_wurf_gier == RE15_K2080_WURF_GIER_SUED);
+            bit_setzen(RE15_K2080_BIT_SUEDWURF, s_wurf_gier == re15_k2080_wurf_gier_sued());
             {   int32_t l[2]; nenn_landung(wurf_gier(), l);
                 K_LOG("Wurfrichtung %d (%s, Alligator beim Ausloesen (%d,%d)) -> Nennlandung (%d,%d)%s", wurf_gier(),
-                      wurf_gier() == RE15_K2080_WURF_GIER_SUED ? "Suedbecken" : "Nordbecken", (int)s_gator.x, (int)s_gator.z,
+                      wurf_gier() == re15_k2080_wurf_gier_sued() ? "Suedbecken" : "Nordbecken", (int)s_gator.x, (int)s_gator.z,
                       (int)l[0], (int)l[1], wurf_gier_messhaken() >= 0 ? " [MESSHAKEN RE15_K2080_WURF_GIER]" : ""); }
             baue_szene();
             const int slot = starten(s_prog_szene, s_prog_szene_n);

@@ -1758,6 +1758,26 @@ int re15_gr2_dash_tick(int slot, re15_actor_t *e)
     return 1;
 }
 int re15_gr2_im_dash(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].im_dash : 0; }
+/* Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 2, PORT-WAHL mit dem Nutzer-Wortlaut "Eigentlich sollte er den Behälter aufnehmen, sobald die Position
+ * erreicht ist, wo der Behälter liegt."): der Fenstertreffer (Stufe 1) beendet einen laufenden Zonen-Dash - dieselben Felder wie das Dash-Ende (Routine 0x101
+ * @0x80100ee4: +0x225 = 0), ohne die Ende-Aktion yaw += 1024 (@0x80100eb0-c0): die Gier bleibt fuer die Aufnahme gesperrt (re15_gr2_aufnahme_lenksperre). */
+void re15_gr2_dash_abbrechen(int slot)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return;
+    gr2_t *g = &s_g[slot];
+    g->im_dash = 0; g->dash_vor = 0; g->dash_phase = 0; g->dash_endbild = 0;
+    re15_gr2_log("DASH abgebrochen (Kanister-Aufnahme) F%u", (unsigned)g_engine.frame_count);
+}
+/* 1 = der liegende Kanister ist der der Marvin/John-Szene (kanister2080_r41.c) und noch nicht aufgenommen (Stufe 0) */
+int re15_gr2_kan_szene_liegt(void) { return s_kan.aktiv && s_kan.stufe == 0 && s_kan_szene_fn && s_kan_szene_fn(); }
+static int s_kan_phasen_alt = 0;
+void re15_gr2_kan_phasen_alt_setzen(int an) { s_kan_phasen_alt = an; }
+int  re15_gr2_kan_phasen_alt(void)
+{   /* Messhaken der exe-Gegenprobe: RE15_G2_KAN_PHASEN_ALT=1 = Stand 0b86e36c6 (kein Spielweg) */
+    static int env = -1;
+    if (env < 0) { const char *v = getenv("RE15_G2_KAN_PHASEN_ALT"); env = (v && *v && *v != '0'); }
+    return s_kan_phasen_alt || env;
+}
 /* Messhaken (Nachbesserung 2): Bone-Weltlage MIT der Zeichen-Skala +0x166 (ScaleMatrix um den Ursprung @0x8001e904-40) -
  * re15_enemy_bone_world_pos (re15_damage.c) rechnet in voller Groesse, der Boss wird mit 2731/4096 gezeichnet. */
 int re15_gr2_bone_welt_pub(const re15_actor_t *e, int bone, int32_t pos[3]) { int32_t r[9]; return gr2_bone_welt(e, bone, r, pos); }

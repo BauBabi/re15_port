@@ -152,6 +152,13 @@ int  re15_gator_boss_nb3_alt(void) { return s_gb_nb3_alt; }
  * lief die direkte Anfahrt (Vorgabe B) an die Pier-Westkante in die Kopf-Klemme und endete rueckwaerts an der Westwand (Riegel fuzz, Lage P-mitte:
  * 92 2-s-Fenster ab t673 bei (-7416,-15904), Clip 10). Im Spiel ist kein Pruefhaken gesetzt. */
 static int gb_nb3_aus(void) { return s_gb_nb3_alt || re15_gr2_v4_alt(); }
+/* Nachtrag H3 (s. Kanister-Aufnahme im Dash): Messhaken RE15_G2_DASH_BLEND_ALT=1 = Dash-Abbruch ohne Blend (Stand b29263046), nur fuer Gegenproben */
+static int gb_dash_blend_alt(void)
+{
+    static int env = -1;
+    if (env < 0) { const char *v = getenv("RE15_G2_DASH_BLEND_ALT"); env = (v && *v && *v != '0'); }
+    return env;
+}
 /* Runde 41 Spur G2-RE2 NB4 Runde 3 (Abnahme 8 M1): EIN TREFFER JE BISS-CLIP-LAUF wie RE2 ein Treffer je Kiefer-Lauf +0x224 (EM23_OVL_0000.BIN, Dossier
  * G2_gatorfix.md "NB4 Runde 3 - RE2-Bissmechanismus"). T1 0x801012fc macht den Kiefer-Lauf scharf (`01000224 / 240282a0 sb v0,0x224(a0)` @0x80101378-7c) nur
  * bei Kontakt PL+0xE (`06fc4294 lhu v0,-0x3fa(v0)` @0x80101300), ohne Reaktionssperre PL+0x1D3 (`cbfd4290 lbu v0,-0x235(v0) / 12004014 bnez` @0x8010132c-34)
@@ -483,6 +490,10 @@ static int gb_seg_hits_ramp(int32_t x0, int32_t z0, int32_t x1, int32_t z1, int3
  * (Abnahme 7). Zeile "BISSLAUF" in gator_boss.log. Kein Spielverhalten. */
 static re15_gb_bisslauf_t s_gb_bl = { 0, 0, 0, 0, -1, -1, -1, -1, -1 };
 void re15_gator_boss_bisslauf_reset(void) { const re15_gb_bisslauf_t z = { 0, 0, 0, 0, -1, -1, -1, -1, -1 }; s_gb_bl = z; }
+/* Messhaken der Riegel (kein Spielweg): Boss-Zustand frisch wie beim Raumwechsel (gb_takt "Raumwechsel: Boss-Zustand frisch"). Harness-Laeufe booten denselben
+ * Raum mehrfach, ohne dass die Raum-ID wechselt - der Zustand des vorigen Laufs (Phase, Biss) lief sonst in den naechsten hinein (Integration Runde 41,
+ * unit_r41_alligator2_weg: Lage 4 nach Lage 2 rot, auch mit der Lagewahl von 0b86e36c6). */
+void re15_gator_boss_zustand_frisch(void) { s_gb_room = 0xFFFFFFFFu; }
 void re15_gator_boss_bisslauf_info(re15_gb_bisslauf_t *out) { if (out) *out = s_gb_bl; }
 static void gb_lauf_ende(gb_state_t *g)
 {
@@ -653,6 +664,10 @@ static int gb_lunge_b2(void)
     return s;
 }
 
+/* Runde 41 Integration, Nachbesserung zu Abnahme 0 B2: Pruefhaken der Riegel (kein Spielweg) - 1 = Stand 80c7394ab, ein Kanister-Fenstertreffer im Biss bricht
+ * den Biss ab (Phase CHASE, Clip 0 Bild 0). */
+static int s_kan_biss_abbruch_alt = 0;
+void re15_gator_kan_biss_abbruch_alt_setzen(int an) { s_kan_biss_abbruch_alt = an; }
 static int32_t gb_maul_dist(const re15_actor_t *e, const re15_actor_t *pl)
 {
     int32_t fc = re15_cos_q12((int)e->rot_y);
@@ -1866,7 +1881,51 @@ static void gb_takt(int slot)
     /* Runde 41 Spur B: Ereignis-Maschine, Schuetteln, Rumble, Putz, Zaehler, Kanister-Vorpass */
     /* Nachbesserung 3 (M1, B9): untergetaucht kein Kanister-Fenster - RE2 Sub-0-Pre = `jr ra` (Tafel @0x8010463c[0] =
      * 0x801007fc), das Fenster liegt nur im Sub-1/2-Pre @0x80100ab8-b18. */
-    re15_gr2_takt(slot, e, pl, g->phase == GBP_CHASE || (g->phase == GBP_LURK && !g->untergetaucht));
+    {   /* Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 2, woertlich: "Ich musste diverse runden mit dem Aligator drehen, bis er letzendlich den Behälter
+         * aufnahm. Eigentlich sollte er den Behälter aufnehmen, sobald die Position erreicht ist, wo der Behälter liegt."). Gemessen (15 exe-Laeufe, Bericht
+         * gator_nb/kanister): das Fenster lief nur in CHASE/LURK; 4 Passagen mit dem Kanister im Fenster fielen in den Zonen-Dash (die Liegestelle (-6870,-12651)
+         * liegt 1849 hinter der Zonenlinie GB_RAMP_Z1), 1 in den Biss. Fuer den Szenen-Kanister jetzt auch:
+         *  - im Biss (LUNGE): RE2-belegt - das Fenster im Sub-1/2-Pre (@0x80100ab8-b1c: @0x80100ae4 67de4224 addiu -8601, @0x80100ae8 8f01422c sltiu 0x18f,
+         *    @0x80100af4 26020292 lbu +0x226) fragt den Kiefer-Lauf +0x224 nicht, der Biss T1 laeuft im selben Pre (@0x80100974 bf04040c jal 0x801012fc);
+         *  - im Zonen-Dash (RE2_DASH): PORT-WAHL, Beleg ist der Nutzer-Wortlaut oben (RE2 Sub 3 0x80100d30-0x80100ee0 hat kein Fenster).
+         * Fenster, Vorhalt und Stufen bleiben (8601/0x18f, 8100 @0x801018a4-c0). Pruefhaken re15_gr2_kan_phasen_alt_setzen(1) = Stand 0b86e36c6. */
+        int kan_fenster = g->phase == GBP_CHASE || (g->phase == GBP_LURK && !g->untergetaucht);
+        const int kan_neu = !re15_gr2_kan_phasen_alt() && re15_gr2_kan_szene_liegt()
+                         && ((g->phase == GBP_LUNGE && !gb_lunge_b2()) || g->phase == GBP_RE2_DASH);
+        if (kan_neu) kan_fenster = 1;
+        re15_gr2_takt(slot, e, pl, kan_fenster);
+        if (kan_neu && re15_gr2_aufnahme_lenksperre(slot)) {
+            /* Fenstertreffer im Dash (PORT-WAHL, s. oben): Uebergang in die Verfolgung wie das Dash-Ende (Routine 0x101 @0x80100ee4, Clip 0 Bild 0); ab hier die
+             * RE2-Stufen 1-6 wie in CHASE (Clip 0 Blend 32 @0x80100c34-40, Lenksperre, Vorhalt).
+             * Fenstertreffer im Biss (Abnahme 0 B2): der laufende Biss laeuft zu Ende und kann treffen - nur das Fenster geht auf. RE2 (EM23_OVL_0000.BIN, selbst
+             * disassembliert): die Wurzel ruft je Takt T2 (Kanister-Stufen) @0x80100320 `f105040c jal 0x801017c4` und danach unbedingt die Kiefer-Maschine
+             * @0x80100328 `e204040c jal 0x80101388`; diese liest nur +0x224 (@0x80101398 `24020382 lb v1,0x224(s0)`, Sprungtafel @0x80100004 = 0x80101564,
+             * 0x801013c4, 0x801013d4, 0x80101418, 0x80101488, 0x801014f8), nie +0x226, und ruft in Stufe 5 den Treffer (@0x80101558 `240200a2 sb zero,0x224(s0)`,
+             * @0x8010155c `5e05040c jal 0x80101578`). +0x226 sperrt nur den NEUEN Biss: T1 @0x8010133c `24028280 lb v0,0x224(a0)` / @0x80101344 bnez (laeuft schon
+             * einer: nichts), @0x80101360 `26028390 lbu v1,0x226(a0)` / @0x80101368 beqz / @0x80101370 bne v1,7 -> @0x8010137c `240282a0 sb v0,0x224(a0)`.
+             * Pruefhaken re15_gator_kan_biss_abbruch_alt_setzen(1) = Stand 80c7394ab (der Biss brach ab). */
+            const int abbruch = g->phase == GBP_RE2_DASH || s_kan_biss_abbruch_alt;
+            if (g->phase == GBP_RE2_DASH) re15_gr2_dash_abbrechen(slot);
+            if (!s_gb_stumm) { FILE *fl = fopen("gator_boss.log", "a");
+                if (fl) { fprintf(fl, "KANISTER-AUFNAHME aus Phase %d F%u pos=(%d,%d) gier %d%s\n", (int)g->phase, (unsigned)g_engine.frame_count, (int)e->x, (int)e->z,
+                                  (int)e->rot_y & 0xfff, abbruch ? "" : " - Biss laeuft weiter"); fclose(fl); } }
+            if (abbruch) {
+                const int war_dash = g->phase == GBP_RE2_DASH;
+                g->phase = GBP_CHASE; g->timer = 0;
+                e->motion = 0; e->anim_frame = 0;
+                /* Gator-Nutzerbefunde 2026-11-09 Nachtrag H3 (Abnahme 0/1 "Dash-Abbruch ohne yaw += 1024, Pose-Kante nicht per gdigrab geprueft"). RE2 Sub 3
+                 * (EM23_OVL_0000.BIN 0x80100d30-0x80100ee8, selbst disassembliert): yaw += 0x400 steht NUR am normalen Ende - nach dem Clip-3-Endflag
+                 * (@0x80100ea8 `0f000012 beqz s0`) @0x80100eb0 `76002296 lhu v0,0x76(s1)` / @0x80100ebc `00044224 addiu v0,v0,0x400` / @0x80100ec0
+                 * `760022a6 sh v0,0x76(s1)`; einen anderen Ausgang hat Sub 3 nicht (kein Fenster, kein Abbruch) - der Abbruch bleibt ohne Drehung. Gemessen
+                 * (gdigrab des eigenen Fensters, Lauf dash_alt_cut6: Abbruch in Clip 2 Bild 39 -> Clip 0 Bild 0): die Blickrichtung bleibt, aber die Pose
+                 * springt in EINEM Bild vom Anlauf (Kopf hoch, Maul offen) ins Schwimmen. RE2 betritt nach dem Dash-Ende (Routine 0x101 @0x80100ee4) Sub 1,
+                 * und Sub 1 setzt Clip 0 mit Blend 0x20: @0x80100c38 `20000624 addiu a2,zero,0x20`, @0x80100c3c `cc68000c jal 0x8001a330` - darum hier
+                 * Clip 0 mit Blend 32 wie Sub 1 (Form wie die Lauerpause oben, anim_frac / anim_blend_rate 4096/33). Messhaken RE15_G2_DASH_BLEND_ALT=1 =
+                 * Stand b29263046 (harter Wechsel). Das normale Dash-Ende (re15_gr2_dash_tick) bleibt unveraendert (gelobter Kampf). */
+                if (war_dash && !gb_dash_blend_alt()) { e->anim_frac = 32; e->anim_blend_rate = 4096 / 33; }
+            }
+        }
+    }
     {   /* Runde 41 Spur F (Haken): die 2090-Ankunftsszene fuehrt den Gator (re15_gatorszene_r41.h) - 1 = untergetaucht halten,
          * 2 = Szene bewegt ihn (auftauchen), 3 = Szene vorbei -> Verfolgung wie nach dem RE2-Intro (Routine 0x101 @0x80100928-2c) */
         const int sz = re15_gatorszene_r41_boss(slot, e);

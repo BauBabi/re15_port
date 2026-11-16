@@ -67,6 +67,21 @@ void re15_climb_reset(void)
     s_fall_t = 0; s_obj = -1; s_stand = -1; s_on_obj = 0; s_floor_y = 0;
 }
 
+/* Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 1 "Wenn ich direkt an der Kante hochklettere auf die Platform und dann vom Aligator
+ * erwischt werde, ist es möglich das er mich in die Wand schiebt."): ein Treffer ERSETZT die Spieler-Routine. Der Treffer-Einstieg schreibt
+ * das Routinen-Wort PL+4 als Ganzes und ueberschreibt damit PL+5 (Unterzustand = der Kletter-Substate 9/10), PL+6 und PL+7:
+ *   RE2 EM23_OVL_0000.BIN  @0x801015b4 `05020224` addiu v0,zero,0x205 / @0x801015c4 `fcfb22ac` sw v0,-0x404(at) (Wort-Store PL+4, +5 = 2, +6/+7 = 0);
+ *                          Tod-Zweig ebenso @0x80103938-48;
+ *   RE1.5 PSX.EXE          @0x80012ebc `040022a2` sb v0,4(s1) / @0x80012ed4 `050022a2` sb v0,5(s1) / @0x80012ee0 `060020a2` sb zero,6(s1).
+ * Der Spiegel s_sub/s_kind/s_phase (= +0x05/+0x06/+0x07, s.o.) wird darum geloescht; y, Band, Boden-Zaehler und Standobjekt beruehrt der
+ * Wort-Store nicht. Der Biss trifft nur bei +0x93 == 0, also vor Kletterbild 0x11 (@0x80038164-80) oder ab 0x25 (@0x80038238-58) bzw. vor
+ * Ph2 / nach Ph4 des Substate 10 (@0x80038414-1c / @0x80038748-54): y und Band springen in EINEM Bild (0x1d, @0x800381e4-ec / @0x80038200-08),
+ * es bleibt kein Zwischenzustand. */
+void re15_climb_routine_ersetzt(void)
+{
+    s_sub = 0; s_kind = 0; s_phase = 0;
+}
+
 /* Objekt aktiv = `obj[0x00] & 1` (@0x8002d59c / @0x8002d680 / @0x8002d170). */
 static int obj_live(int p)
 {

@@ -99,6 +99,10 @@ static int32_t sqrt_i(int64_t v)
 static int s_alt = 0;
 void re15_gator_treffer_alt_setzen(int an) { s_alt = an; }
 int  re15_gator_treffer_alt(void) { return s_alt; }
+/* Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 1): Pruefhaken der Gegenprobe des Riegels kletterbiss - 1 = Stand 0b86e36c6 (der Treffer laesst
+ * ein laufendes Klettern weiterlaufen). Kein Spielweg. */
+static int s_kletter_alt = 0;
+void re15_gator_treffer_kletter_alt_setzen(int an) { s_kletter_alt = an; }
 
 const uint8_t *(*re15_gator_treffer_r41_rbj_hook)(int *size) = NULL;
 
@@ -194,6 +198,12 @@ int re15_gator_treffer_r41_einstieg(const re15_actor_t *gator, re15_actor_t *pl,
     const int achse = hinten ? a : ((a + 2048) & 0xfff);                          /* @0x80101604-80: wahr -> a, falsch -> a + 2048 */
     const int dmg = geschwaecht ? 30 : 60;                                         /* @0x8010168c-a0 */
     const int16_t gier_vor = pl->rot_y;
+    /* Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 1 "Wenn ich direkt an der Kante hochklettere auf die Platform und dann vom Aligator erwischt
+     * werde, ist es möglich das er mich in die Wand schiebt."): der Wort-Store PL+4 (@0x801015b4 addiu v0,zero,0x205 / @0x801015c4 sw v0,-0x404(at); Tod-
+     * Zweig @0x80103938-48; RE1.5 @0x80012ed4 sb v0,5(s1) / @0x80012ee0 sb zero,6(s1)) ueberschreibt +5 = den Kletter-Substate 9/10 - der Treffer BEENDET das
+     * Klettern. Vorher lief die Kletter-FSM (Dispatcher prueft sie vor der Reaktion, game_step_common.c) mit der Treffer-Gier weiter und setzte die Figur in
+     * Kletterbild 0x1d (Schritt 0x47c @0x800381b0-bc, y -1800 @0x800381e4-ec) in die Ostwand bzw. die Plattform. Fuer beide Ausgaenge (Treffer und Tod). */
+    if (!s_kletter_alt) re15_climb_routine_ersetzt();
     const int ret = re15_re2_player_damage(pl, dmg);                               /* FUN_800401d4(dmg, 0) @0x80103918 */
     if (ret & 2) {                                                                 /* PL+4 = 3 @0x80103938-48: Tod -> Fressen (Aufrufer) */
         pl->state = 3; pl->sub_state_1 = 0; pl->sub_state_2 = 0;                   /* Wort-Store +4 = 3, +5/+6 = 0 */

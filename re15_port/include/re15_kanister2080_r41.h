@@ -203,8 +203,25 @@
  * holt ihn ueber das Fenster 8601..9000 (@0x80100ad8-ec), also aus dem Anlauf.
  *   NORD 3072: Aufschlag (-7515,-12304), 14 von 39 Fall-Bildern in 2090 Cut 12;
  *   SUED 1024: Aufschlag (-6821,-22914), Fall samt Aufschlag in Cut 12 (17-19 Bilder, Dossier 8.9). */
-#define RE15_K2080_WURF_GIER_NORD  RE15_K2080_WURF_GIER
-#define RE15_K2080_WURF_GIER_SUED  1024
+/* Gator-Nutzerbefunde 2026-11-09, Nachtrag K1 (PORT-WAHL, Beleg Nutzer-Wortlaut 2026-11-09 Punkt 2: "Wenn das so nicht so einfach ist, lege den
+ * Behälter zentraler in die Mitte, damit er ihn auf jeden Fall aufnehmen muss, sobald der Spieler den Aligator dort hingelockt hat."): der Kanister
+ * landet (und liegt, FG-E3) auf der MITTELLINIE DES WESTKANALS statt 2030 vor der Westwand. Kanalmitte aus der Kollision GEMESSEN (ROOM2090.RDT SCA
+ * @0x6DC, Werkzeug test_r41_kanister2080 wurfscan): Westwand Kasten [0] @0x6F4 x -10900..-8900 (Innenkante -8900), Plattform-Block Kasten [4] @0x724
+ * x -1700..1850 z -20000..-12450 -> Kanalmitte x = (-8900 + -1700) / 2 = -5300. Die Wurfrichtung dreht nur die RE2-Bahn (v (25,10) / a (5,0) als
+ * ganze Zahlen gedreht, vektor_drehen) - die Landestellen liegen darum auf einem Gitter (Nennbahn, Start (-6428,-17123), 38 Bilder):
+ *   Nord: Gier 3320..3340 -> (-5725,-13323), 3341..3344 -> (-5022,-13323) (12 von 39 Fall-Bildern in Cut 12), 3345..3368 -> (-4984,-13323);
+ *   Sued: Gier 871..885 -> (-5155,-21512), 886..891 -> (-5193,-21512) (18 von 39 in Cut 12), 892..914 -> (-5896,-21512).
+ * Gewaehlt je Richtung die Gitter-Landestelle mit dem kleinsten Abstand zur Kanalmitte (Mitte des Gier-Bereichs): Nord 3342 -> (-5022,-13323),
+ * 278 oestlich der Mitte, 873 im Kanal (Plattform-Nordkante z -12450); Sued 888 -> (-5193,-21512), 107 oestlich der Mitte, an der Suedmuendung
+ * des Kanals (Plattform-Suedkante z -20000). Vorher Nord 3072 -> (-6808,-12658) (1892 vor der Westwand-Klemme, Abnahme 1 K1) / Sued 1024 ->
+ * (-6048,-21588). Das Aufnahmefenster selbst bleibt (8601/0x18f @0x80100ae4-e8). Pruefhaken re15_k2080_wurf_alt_setzen(1) = die alten Gieren. */
+#define RE15_K2080_WURF_GIER_NORD  3342
+#define RE15_K2080_WURF_GIER_SUED  888
+#define RE15_K2080_WURF_GIER_NORD_ALT  RE15_K2080_WURF_GIER   /* Stand b29263046 (Pruefhaken) */
+#define RE15_K2080_WURF_GIER_SUED_ALT  1024
+void re15_k2080_wurf_alt_setzen(int an);
+int  re15_k2080_wurf_gier_nord(void);   /* RE15_K2080_WURF_GIER_NORD bzw. _ALT im Pruefhaken */
+int  re15_k2080_wurf_gier_sued(void);
 /* Nachbesserung 3 (Abnahme 2 M2, Orchestrator-Entscheid G-E2 "Marvin/John stehen beim Satz 42 und beim Wurf in 2080 Cut 7 der
  * Kamera zugewandt wie Ada ... die Kanister-Bahn laeuft in Weltrichtung zur Landestelle, unabhaengig von der Gier des Werfers"):
  * RE2 ROOM7020 Cut 7 (selbst gelesen): Ada Pos_set `32 00 a0 92 b4 e2 14 ba` = (-28000,-7500,-17900) @SCD 0x0740, Dir_set

@@ -68,12 +68,43 @@ endforeach()
 # K-Gegenprobe RUNDE des Zwillings (re15_k2080_runde_alt_setzen) "RE2 KANISTER Zielmodus 1 ... F0" in dieselbe Datei: unter
 # ctest -j 6 war nb4_elza einmal rot; nachgestellt (G2_NB4_TEIL=K, nb4 und 2-3 s spaeter nb4_elza im selben Ordner) 3 von 3 rot
 # mit K1 (0/0/1), in getrennten Ordnern 2 von 2 gruen. Darum je Teil ein eigener Ordner (VERTRAG.md §2 "parallel-fest").
+#   unit_r41_gatorfix_kletterbiss(_elza)  Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 1 "er mich in die Wand schiebt"): Biss beim Hochklettern an der
+#                                     Rampen-Suedkante (Harness MIT PL00/PL00W01-Baenken) - (a) natuerlicher Biss, (b) eingespeist in Kletterbild 0..50 x 3 Lagen x 4 Gieren:
+#                                     0 Bilder in/hinter der Wand, kein Klettern nach dem Biss; Gegenprobe Pruefhaken re15_gator_treffer_kletter_alt_setzen = 0b86e36c6 rot
+foreach(_teil kletterbiss kletterbiss_elza)
+    add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 1800)   # 1226 Kampf-Aufbauten; unter Fremdlast gemessen 16 min (allein 3 min)
+endforeach()
+#   unit_r41_gatorfix_kanbiss(_elza)  Runde 41 Integration, Nachbesserung zu Abnahme 0 B2: Kanister-Fenstertreffer im Biss - der Biss laeuft Bild fuer Bild wie ohne
+#                                     Kanister zu Ende und trifft im selben Bild (RE2 Kiefer-Maschine @0x80100328 liest +0x226 nicht); Gegenprobe Pruefhaken
+#                                     re15_gator_kan_biss_abbruch_alt_setzen = Stand 80c7394ab rot. Eigener Ordner (gator_boss.log, parallel-fest).
+foreach(_teil kanbiss kanbiss_elza)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)
+    add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)
+    set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 1200)
+endforeach()
 foreach(_teil nb4 nb4_elza)
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)
     add_test(NAME unit_r41_gatorfix_${_teil} COMMAND test_r41_gatorfix ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/r41_gatorfix_${_teil}_wd)
     set_tests_properties(unit_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()
+# Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 2 "sobald die Position erreicht ist, wo der Behälter liegt"): exe-Riegel kanister_vorbei(_elza) -
+# Kanister-Fenster auch im Biss (RE2 @0x80100ab8-b1c) und im Zonen-Dash (PORT-WAHL); Auswerter test_r41_gatorfix kanpass (Aufnahme im ersten Fensterbild)
+if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix_kanister.cmake)
+    foreach(_teil kanister_vorbei kanister_vorbei_elza kanister_mitte kanister_mitte_elza)   # kanister_mitte(_elza): Nachtrag K1 (Kanister in der Kanalmitte)
+        add_test(NAME integration_r41_gatorfix_${_teil}
+                 COMMAND "${CMAKE_COMMAND}"
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DRE15_TOOL=$<TARGET_FILE:test_r41_gatorfix>
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_gatorfix_${_teil}_wd
+                         -DTEIL=${_teil}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix_kanister.cmake)
+        set_tests_properties(integration_r41_gatorfix_${_teil} PROPERTIES TIMEOUT 2400)
+    endforeach()
+endif()
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_gatorfix.cmake)
     foreach(_teil gang_montage gang_montage_elza gang_szene gang_szene_elza frei frei_elza rampe rampe_elza
                   abn2_leiterecke abn2_wand_elza abn2_nordbecken abn2_rampe_west abn2_rampe_west_elza abn2_ecken abn2_wand   # NB1/NB2

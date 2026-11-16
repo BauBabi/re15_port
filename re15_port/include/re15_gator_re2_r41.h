@@ -108,6 +108,13 @@ int  re15_gr2_dash_planen(int slot, const re15_actor_t *e, const re15_actor_t *p
 void re15_gr2_dash_start(int slot, re15_actor_t *e, const re15_actor_t *pl);   /* dreht erst auf die Plan-Gier */
 int  re15_gr2_dash_tick(int slot, re15_actor_t *e);       /* 1 = laeuft, 0 = fertig (0x101, yaw += 1024 @0x80100eb0-c0) */
 int  re15_gr2_im_dash(int slot);                          /* +0x225 */
+/* Runde 41 Integration (Nutzerbefund 2026-11-09 Punkt 2): Kanister-Fenster auch im Biss (LUNGE, RE2: Fenster im Sub-1/2-Pre fragt +0x224 nicht,
+ * @0x80100ab8-b1c / T1 im selben Pre @0x80100974) und im Zonen-Dash (PORT-WAHL, Nutzer-Wortlaut) - nur fuer den Szenen-Kanister.
+ * dash_abbrechen = Dash-Ende ohne yaw += 1024; kan_szene_liegt = Szenen-Kanister liegt (Stufe 0); Pruefhaken _kan_phasen_alt_setzen(1) = Stand 0b86e36c6. */
+void re15_gr2_dash_abbrechen(int slot);
+int  re15_gr2_kan_szene_liegt(void);
+void re15_gr2_kan_phasen_alt_setzen(int an);
+int  re15_gr2_kan_phasen_alt(void);
 int  re15_gr2_bone_welt_pub(const re15_actor_t *e, int bone, int32_t pos[3]);   /* Messhaken: Bone-Welt mit Zeichen-Skala */
 int  re15_gr2_dash_vordrehung(int slot);                  /* Nachbesserung 2: Drehung auf die Plan-Gier vor Clip 2 laeuft */
 

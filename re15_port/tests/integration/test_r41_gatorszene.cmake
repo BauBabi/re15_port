@@ -29,6 +29,10 @@
 #   gleich; state.log cam=K in F<s+1>..F<e-3> und cam=L in F<e+1>..F<e+20> (Cut_old FUN_8004032c @0x8004033c/@0x80040364);
 #   bilddiff in den Bildern der Einstellung: jedes Bild mit Schluessel, Puls >= 1,40, Kasten mindestens 10 x 9 Bildpunkte (= der
 #   Ankunfts-Schluessel ~10,4 x 9,5, gatorszene_r41.c GSZ_KEY_AUF_*; Abnahme 1 mass 4 x 6 bzw. 6 x 4).
+# Gator-Nutzerbefunde 2026-11-09, Nachtrag K2 und Nachbesserung zu Abnahme 2 (B1): die Lage heisst "an der Leiche" (Nutzer: "na er soll naeher bei
+#   der Leiche liegen"), die Schwelle 10,4 und der Kasten 10 x 9 gelten dem Stand b29263046 und werden nur noch gemessen. Verlangt ist stattdessen:
+#   bilddiff-Kasten mindestens 2 x 2 Bildpunkte UND im Ecken-Kasten der Endlage (debug.log "Schluessel-Bild", ein Bildpunkt Rasterrand) - der
+#   Stand ae9e17c9e zeigte fuer die Todesrolle genau einen Bildpunkt (75,94) und galt mit der Schranke 0 x 0 als OK (Abnahme 2 B1).
 # Nachbesserung 3 (Abnahme F 2, M1 "Zwischenbild der Zonenkamera zwischen Explosionsschnitt und Schluessel-Einstellung"):
 #   NEU tod_explosion/tod_explosion_elza (Rezept KW/KWE der Abnahme 2: natuerliche Leiter-Kamera Cut 0 nach dem Sprung, Kanister-
 #   Testhaken der Spur B, Schuesse ab F151). B's R1 P0 schneidet auf die Explosions-Kamera E (Kopf in Cut 0 nicht im Bild, RE2
@@ -561,18 +565,20 @@ if(TEIL MATCHES "^tod")
         message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - keine Zeile 'Schluessel-Lage' (Alligator nicht tot?), ${_dir}/mit")
     endif()
     list(GET _lage 0 _lage0)
-    if(NOT _lage0 MATCHES "Kamera ([0-9]+) \\(groesstes Bild, laufende ([0-9]+)\\), Lage [(][-0-9,]+[)] Tiefe ([0-9]+),.*Blink-Spitze ([0-9]+) ")
-        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel nicht fuer die Kamera mit dem groessten Bild gelegt: ${_lage0}")
+    # Nachtrag K2 (Gator-Nutzerbefunde 2026-11-09): "an der Leiche" = der Leiche naechster Punkt im Gebiet seiner Kamera (Stand b29263046: "groesstes Bild")
+    if(NOT _lage0 MATCHES "Kamera ([0-9]+) \\((groesstes Bild|an der Leiche), laufende ([0-9]+)\\), Lage [(][-0-9,]+[)] Tiefe ([0-9]+),.*Blink-Spitze ([0-9]+) ")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel-Lage unlesbar: ${_lage0}")
     endif()
     set(_kam "${CMAKE_MATCH_1}")
-    set(_lauf_cut "${CMAKE_MATCH_2}")
-    set(_tiefe "${CMAKE_MATCH_3}")
-    if(CMAKE_MATCH_4 GREATER 128)
-        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Blink-Spitze ${CMAKE_MATCH_4} > 0x80 (Kappung, Plateau): ${_lage0}")
+    set(_lauf_cut "${CMAKE_MATCH_3}")
+    set(_tiefe "${CMAKE_MATCH_4}")
+    if(CMAKE_MATCH_5 GREATER 128)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Blink-Spitze ${CMAKE_MATCH_5} > 0x80 (Kappung, Plateau): ${_lage0}")
     endif()
     math(EXPR _quad10 "1800 * 208 / ${_tiefe}")      # Quadrat 180 x H / Tiefe, x10 (H = fov 26684 >> 7, RID @0x060)
+    # Nachtrag K2 (Nutzer 2026-11-09 "na er soll näher bei der Leiche liegen ..."): die Bildschwelle 10,4 (FG-E7) tritt zurueck - nur gemessen und berichtet
     if(_quad10 LESS 104)
-        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel-Quadrat ${_quad10}/10 Bildpunkte < 10,4 (Ankunfts-Schluessel): ${_lage0}")
+        message(STATUS "r41_gatorszene: Lauf ${TEIL} - Schluessel-Quadrat ${_quad10}/10 Bildpunkte (unter 10,4, nur gemessen - Nachtrag K2)")
     endif()
     foreach(_v mit ohne)
         file(STRINGS "${_dir}/${_v}/debug.log" _e REGEX "\\[gatorszene\\] Schluessel-Einstellung: Cut [0-9]+ ")
@@ -655,14 +661,40 @@ if(TEIL MATCHES "^tod")
     if(_b1_rest)
         math(EXPR _b1 "${_b1} - 1")
     endif()
-    execute_process(COMMAND "${RE15_TOOL}" bilddiff "${_dir}/mit" "${_dir}/ohne" ${_b0} ${_b1} 2 10 9
+    execute_process(COMMAND "${RE15_TOOL}" bilddiff "${_dir}/mit" "${_dir}/ohne" ${_b0} ${_b1} 2 2 2   # Nachbesserung zu Abnahme 2 (B1), s. unten
                     RESULT_VARIABLE _br OUTPUT_VARIABLE _bo ERROR_VARIABLE _be)
     string(REGEX MATCH "bilddiff: [^\n]*" _bz "${_bo}")
     if(NOT _br EQUAL 0)
         message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel in der Einstellung nicht sichtbar/pulsierend/zu klein: ${_bz}\n${_bo}")
     endif()
+    # Nachbesserung zu Abnahme 2 (B1 "Am echten Weg ... zeigt die Einstellung genau EINEN Bildpunkt ... der Integrations-Riegel laesst das durch, weil
+    # ae9e17c9e die Bildschranke von 10 x 9 auf 0 x 0 gesetzt hat"; verlangt: "wieder eine Bildschranke groesser als 0 x 0 setzen, damit ein Schluessel mit
+    # einem Bildpunkt nicht als OK gilt"): der Kasten aller Unterschiede ist mindestens 2 x 2 Bildpunkte (mehr als EIN Bildpunkt in jeder Richtung) UND
+    # liegt im Ecken-Kasten der ENDLAGE (debug.log "Schluessel-Bild", gekipptes Quadrat der Halbseite 135 = 90 x 6144/4096, MD1 ROOM7040 @0x354C+0x38;
+    # ein Bildpunkt Rasterrand). Die alte Schranke 10 x 9 gilt dem Stand b29263046 (groesstes Bild) und ist durch den Nutzer-Wortlaut "na er soll
+    # naeher bei der Leiche liegen" abgeloest; gemessen ist die Textur des Quadrats ein Umriss (15,0 % der 2092 Texel im UV-Viereck @0x354C+0x7C decken),
+    # die naehere Lage zeigt deshalb wenige Bildpunkte (Kasten am echten Weg: tod 8 x 5, tod_r1 3 x 2, k3 7 x 5) - die Groesse selbst ist Befund K-2 (Nutzerentscheid).
+    file(STRINGS "${_dir}/mit/debug.log" _kb REGEX "\\[gatorszene\\] Schluessel-Bild: Kamera [0-9]+, Ecken-Kasten ")
+    if(NOT _kb)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - keine Zeile 'Schluessel-Bild' (Ecken-Kasten der Endlage) in ${_dir}/mit/debug.log")
+    endif()
+    list(GET _kb 0 _kb0)
+    if(NOT _kb0 MATCHES "Kamera ([0-9]+), Ecken-Kasten [(]([-0-9]+),([-0-9]+)[)]-[(]([-0-9]+),([-0-9]+)[)]")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Zeile 'Schluessel-Bild' unlesbar: ${_kb0}")
+    endif()
+    set(_eb_kam "${CMAKE_MATCH_1}")
+    math(EXPR _ex0 "${CMAKE_MATCH_2} - 1")
+    math(EXPR _ey0 "${CMAKE_MATCH_3} - 1")
+    math(EXPR _ex1 "${CMAKE_MATCH_4} + 1")
+    math(EXPR _ey1 "${CMAKE_MATCH_5} + 1")
+    if(NOT _bz MATCHES "Kasten [(]([0-9]+),([0-9]+)[)]-[(]([0-9]+),([0-9]+)[)]")
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - bilddiff-Zeile unlesbar: ${_bz}")
+    endif()
+    if(NOT _eb_kam EQUAL _kam OR CMAKE_MATCH_1 LESS _ex0 OR CMAKE_MATCH_2 LESS _ey0 OR CMAKE_MATCH_3 GREATER _ex1 OR CMAKE_MATCH_4 GREATER _ey1)
+        message(FATAL_ERROR "r41_gatorszene: Lauf ${TEIL} - Schluessel-Unterschied nicht an der Endlage: ${_bz} gegen ${_kb0} (Einstellung Cut ${_kam})")
+    endif()
     message(STATUS "r41_gatorszene: Lauf ${TEIL} - ${_lage0}; Einstellung Cut ${_kam} F${_es_mit}-F${_ee_mit} (${_halt} Bilder), "
-                   "danach Cut ${_lauf_cut}; Quadrat ${_quad10}/10 Bildpunkte; ${_bz}")
+                   "danach Cut ${_lauf_cut}; Quadrat ${_quad10}/10 Bildpunkte; ${_bz}; ${_kb0}")
     return()
 endif()
 
