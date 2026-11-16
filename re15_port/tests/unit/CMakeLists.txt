@@ -4166,6 +4166,14 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_hangar_liegen_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_hangar_liegen.cmake)
     set_tests_properties(integration_r41_hangar_liegen PROPERTIES TIMEOUT 1500)
+    # Sherry-Ruf (Runde 1 "sherry_ruf", Nutzerwunsch 2026-11-16): die Hangar-Szene ruft genau einmal "Sherry" im ersten Gangtakt h119
+    # (ROOM3070 snd1 Satz 10 = Disc-Ruf des 0x30, STAGE3 @0x8011a744). Leon und Elza, je 1 Lauf mit Ton. Gegenprobe exe 98391e747 = ROT.
+    add_test(NAME integration_r41_hangar_sherry
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_hangar_sherry_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_hangar_sherry.cmake)
+    set_tests_properties(integration_r41_hangar_sherry PROPERTIES TIMEOUT 600)
     # Integration Runde 41 (INT_labor_birkin.md): Labor-Birkin 50E0/50F1 auf dem echten Weg - nach dem Haken trifft der Biss
     # den stehenden Spieler bei +0x95 = 0x23 (Box = gezeichnete Matrix = KF N-2, @0x8001a5ec / @0x8001f35c-36c / @0x801183e0),
     # Birkin stirbt, (3,73)/(3,84). Zwei Laeufe a 3000 Bilder.

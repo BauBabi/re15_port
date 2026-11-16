@@ -1657,6 +1657,24 @@ static int bf_wurf_punkt(const re15_actor_t *b, int i, int32_t out[3])
     return 1;
 }
 
+/* NUTZERWUNSCH 2026-11-16, Kopf re15_bf_ruf_hook (re15_birkin_formen.h). Startbild h == BF_H_GANG (Gestaltung): der Nutzer will den Ruf
+ * "waehrend er Richtung Kamera laeuft nachdem er den Spiderman weg gehauen hat"; der Gang auf die Kamera zu beginnt in diesem Takt
+ * (WALK-Clip 1 @0x80117a64, Videobild h119 nach Runde 3 N2) - vorher steht er (h105..h118) bzw. dreht sich zur Kamera, danach geht er
+ * bis zum Szenenende h135. Ein einziger Takt je Szene, also genau ein Ruf. Der Ruf (1,458 s = 44 Takte) laeuft ueber das Szenenende
+ * hinaus weiter, wie jeder SE nach einer Original-Szene. */
+static void (*s_bf_ruf_fn)(void) = 0;
+void re15_bf_ruf_hook(void (*fn)(void)) { s_bf_ruf_fn = fn; }
+static void bf_sherry_ruf(int h)
+{
+#ifdef RE15_PLATFORM_PC
+    fprintf(stderr, "[hangar] ROOM%04X Sherry-Ruf h%d F%u (Nutzerwunsch, Raum-Ton 10 der Disc-Birkinraeume)\n",
+            (unsigned)g_current_room_id, h, (unsigned)g_engine.frame_count);
+#else
+    (void)h;
+#endif
+    if (s_bf_ruf_fn) s_bf_ruf_fn();
+}
+
 static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
 {
     const int h = s_h.t - BF_VORLAUF;                    /* Videobild */
@@ -1703,7 +1721,8 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
     } else {                                                              /* Gang auf die Kamera zu (Video h88..135) */
         const re15_camera_cut_t *c = bf_szenenkamera();
         int32_t schritt = 0;
-        if (h == BF_H_GANG) { bf_clip(b, 1); b->anim_frame = BF_GANG_BILD0; b->anim_frac = 0xf; }   /* WALK-Clip 1, +0x8f = 15 @0x80117a64 */
+        if (h == BF_H_GANG) { bf_clip(b, 1); b->anim_frame = BF_GANG_BILD0; b->anim_frac = 0xf;   /* WALK-Clip 1, +0x8f = 15 @0x80117a64 */
+                              bf_sherry_ruf(h); }                     /* NUTZERWUNSCH 2026-11-16 (Kopf bf_sherry_ruf) */
         else {                                                            /* Runde 7: Fussschritt (Kopf BF_GANG_MISCH) */
             static const int32_t null3[3] = { 0, 0, 0 };
             int32_t alt[3], neu[3];

@@ -1371,7 +1371,13 @@ static void test_n1_biss_kiefer(unsigned raum, const char *rdt)
     free(buf);
 }
 
-/* M3: G4-EDD-Ids 9-15 (Bank 24 FFFFFFFF) -> Raum-Ton 10; Clip 10 traegt Id 11/10/12/11 in Bild 30/51/81/113 (G4-Daten). */
+/* M3: G4-EDD-Ids 9-15 (Bank 24 FFFFFFFF); Clip 10 traegt Id 11/10/12/11 in Bild 30/51/81/113 (G4-Daten).
+ * NUTZERWUNSCH 2026-11-16 ("dass der 4 Beiner nicht mehr "Sherry" ruft"): Raum-Ton 10 ist in 5080/5090 Birkins Sherry-Ruf
+ * (ROOM5090 snd1 EDT @0xF53C -> VAG 12 @0x20C14, sha1 d19adfc8010d = Disc ROOM3070 @0x16640; birkin_bahnsteig.c bb_bild_ton).
+ * Die vier Gebruell-Bilder werden weiter erreicht (Zaehler 4), Raum-Ton 10 faellt dabei 0-mal (Stand 98391e747: 4-mal = ROT). */
+extern int g_test_room_se_zahl[0x20];
+static int s_ruf_gesamt_bilder = 0;
+static int s_ruf_zweibeiner = 0;     /* Raum-Ton 10 des EM30-Zweibeiners in test_sub10_tor (Gegenprobe, darf bleiben) */   /* Gebruell-Bilder ueber alle Auftritte (re15_bb_reset nullt den Zaehler je Lauf) */
 static void test_n1_gebruell(unsigned raum, const char *rdt)
 {
     uint8_t *buf; re15_actor_t *b = form_start(&buf, raum, rdt), *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -1379,9 +1385,14 @@ static void test_n1_gebruell(unsigned raum, const char *rdt)
     stelle(b, pl, 9000);
     b->state = 1; b->sub_state_1 = 0; b->sub_state_2 = 0;
     {
-        const int n0 = re15_bb_ton_zaehler();
+        const int n0 = re15_bb_ton_zaehler(), r0 = g_test_room_se_zahl[10];
         for (int f = 0; f < 130 && b->sub_state_1 == 0; f++) { pl->x = b->x + 9000; pl->z = b->z; tick(1); }
-        CHECK(re15_bb_ton_zaehler() - n0 == 4, "M3 %s: Auftritt %d Gebruelle (Raum-Ton 10) statt 4", rdt, re15_bb_ton_zaehler() - n0);
+        CHECK(re15_bb_ton_zaehler() - n0 == 4, "M3 %s: Auftritt %d Gebruell-Bilder statt 4", rdt, re15_bb_ton_zaehler() - n0);
+        CHECK(g_test_room_se_zahl[10] - r0 == 0, "Sherry-Ruf %s: die Riesenform spielt im Auftritt %d-mal Raum-Ton 10 (Soll 0, Nutzerwunsch)",
+              rdt, g_test_room_se_zahl[10] - r0);
+        fprintf(stderr, "%s Sherry-Ruf: Auftritt %d Gebruell-Bilder, Raum-Ton 10 %d-mal\n", rdt, re15_bb_ton_zaehler() - n0,
+                g_test_room_se_zahl[10] - r0);
+        s_ruf_gesamt_bilder += re15_bb_ton_zaehler() - n0;
     }
     free(buf);
 }
@@ -1547,7 +1558,13 @@ int main(void)
         };
         for (unsigned i = 0; i < sizeof g_kampf / sizeof g_kampf[0]; i++) test_m2_zucken(g_kampf[i].id, g_kampf[i].rdt);
     }
-    test_sub10_tor();
+    {   /* Gegenprobe Sherry-Ruf: der 0x30-ZWEIBEINER (EM30, ROOM3071 sub 10 -> @0x8011987c `ori a0,zero,0xa` / jal @0x8011989c)
+         * ruft weiter - nur die Riesenform ist stumm (Nutzerwunsch 2026-11-16). */
+        const int r0 = g_test_room_se_zahl[10];
+        test_sub10_tor();
+        s_ruf_zweibeiner = g_test_room_se_zahl[10] - r0;
+        CHECK(s_ruf_zweibeiner >= 1, "Sherry-Ruf: der Zweibeiner (ROOM3071 sub 10) ruft nicht mehr (%d-mal Raum-Ton 10)", s_ruf_zweibeiner);
+    }
     for (int r = 0; r < 2; r++) {
         const unsigned id = r ? 0x5091u : 0x5090u;
         const char *rdt = r ? "STAGE5/ROOM5091.RDT" : "STAGE5/ROOM5090.RDT";
@@ -1577,6 +1594,13 @@ int main(void)
     test_flucht(0x5080u, "STAGE5/ROOM5080.RDT");
     test_flucht(0x5081u, "STAGE5/ROOM5081.RDT");
     test_wartet(0x5080u, "STAGE5/ROOM5080.RDT");
+    /* Sherry-Ruf-Riegel ueber die GANZE Datei (Nutzerwunsch 2026-11-16): alle Laeufe oben ticken die Riesenform (Auftritt, Gehen, Hieb,
+     * Biss, Griff, Rennen, Taumeln, Sturz, Flucht, Tod) - Raum-Ton 10 faellt dabei nie, die Gebruell-Bilder werden erreicht. */
+    fprintf(stderr, "Sherry-Ruf gesamt: Raum-Ton 10 Riesenform %d-mal, Zweibeiner %d-mal, Gebruell-Bilder in den Auftritten %d\n",
+            g_test_room_se_zahl[10] - s_ruf_zweibeiner, s_ruf_zweibeiner, s_ruf_gesamt_bilder);
+    CHECK(g_test_room_se_zahl[10] - s_ruf_zweibeiner == 0 && s_ruf_gesamt_bilder > 0,
+          "Sherry-Ruf gesamt: Raum-Ton 10 der Riesenform %d-mal (Soll 0), Gebruell-Bilder %d (Soll > 0)",
+          g_test_room_se_zahl[10] - s_ruf_zweibeiner, s_ruf_gesamt_bilder);
     if (fails) { fprintf(stderr, "test_birkin_bahnsteig: %d Fehler\n", fails); return 1; }
     fprintf(stderr, "test_birkin_bahnsteig: OK\n");
     return 0;

@@ -45,6 +45,7 @@
 #include "re15_math.h"          /* re15_squareroot0 */
 #include "re15_audio.h"         /* re15_audio_room_se */
 #include "re15_esp.h"           /* re15_esp_fx_spawn_ex = FUN_8001bf10-Packung */
+#include "re15_engine.h"        /* g_engine.frame_count: Messzeile "Sherry-Ruf weggelassen" */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -211,13 +212,32 @@ static int bb_anim(re15_actor_t *e, uint32_t a3)
  * G4-EDD-Ids 9-12 der Gebruelle (Clip 10 Bild 30/51/81/113, Clip 27 Bild 36/60, Clip 11 Bild 5 und Clip 12 Bild 2) sind also
  * auch in RE2 stumm. PORT-WAHL: dort spielt die Form den Birkin-Schrei des Raums, Raum-Ton 10 (STAGE5 @0x8011af58-5c
  * `jal 0x800453d0` / `ori a0,zero,0xa`, Todesphase des 0x30 bei Bild 0x3c; vor Stufe 3 schon der Ton am Wagenende).
- * Die EDD-Daten bleiben G4-gleich. Testhaken: re15_bb_ton_zaehler. */
+ * Die EDD-Daten bleiben G4-gleich. Testhaken: re15_bb_ton_zaehler.
+ *
+ * ⛔ NUTZERWUNSCH 2026-11-16 (Gestaltung, kein Original): "ich moechte das der 4 Beiner nicht mehr "Sherry" ruft". Raum-Ton 10
+ * IST in 5080/5090 Birkins Sherry-Ruf: ROOM5090.RDT snd1 EDT @0xF53C `00 00 b2 16` -> Prog 0 Ton 11 @0xFEF4 -> VAG 12 @0x20C14
+ * (9200 B, sha1 d19adfc8010d, 16072 Abtastwerte @11025 Hz = 1,458 s; ROOM5080 EDT @0x1B68 bytegleich). Dieselbe Welle ist auf der
+ * 40-%-Disc Raum-Ton 10 von ROOM3070/3080/3081 (ROOM3070 EDT @0x5E28 `00 00 b2 16` -> VAG 12 @0x16640, sha1 d19adfc8010d), dem
+ * Raum, in dem die Disc den 0x30 setzt (sub @0x3064 `44 00 30 ..` Sce_em_set); der 0x30 spielt ihn in seiner Todesmaschine
+ * (STAGE3 @0x8011a744 `jal 0x800453d0` / @0x8011a748 `ori a0,zero,0xa`, STAGE5 @0x8011af58/5c). Spracherkennung (Whisper
+ * medium.en / large-v3-turbo): "SHARON LEE!" / "Cherokee." = "Sherry!". Die Riesenform spielt ihn deshalb nicht mehr: die Ids 9-15
+ * bleiben stumm wie in RE2 (Bank 24 FFFFFFFF, s. oben). Alle anderen Toene der Form (bb_se, Bank 24) bleiben; der 0x30-Zweibeiner
+ * ruft weiter (enemy_ai_common.c). s_bb_schrei zaehlt weiter die Gebruell-Bilder (Testhaken); die Logzeile ist nur Messung. */
 static int s_bb_schrei = 0;
 int re15_bb_ton_zaehler(void) { return s_bb_schrei; }
 static void bb_bild_ton(void)
 {
     if (!(s_bb.wort & BB_FL_TON)) return;
-    if ((s_bb.wort >> 28) >= 9u) { s_bb_schrei++; re15_audio_room_se(10); return; }
+    if ((s_bb.wort >> 28) >= 9u) {
+        s_bb_schrei++;
+#ifdef RE15_PLATFORM_PC
+        if (s_bb.slot >= 0)
+            fprintf(stderr, "[bb] F%u Clip %d Bild %d: Gebruell-Id %u - Sherry-Ruf (Raum-Ton 10) weggelassen (Nutzerwunsch)\n",
+                    (unsigned)g_engine.frame_count, g_actors[s_bb.slot].motion, g_actors[s_bb.slot].anim_frame,
+                    (unsigned)(s_bb.wort >> 28));
+#endif
+        return;
+    }
     bb_se((int)(s_bb.wort >> 28));
 }
 

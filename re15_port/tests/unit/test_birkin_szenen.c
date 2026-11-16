@@ -126,6 +126,16 @@ static uint64_t pose_kennung(const re15_actor_t *e)
            ((uint64_t)(uint32_t)e->y << 12) ^ (uint64_t)(uint32_t)e->z ^ ((uint64_t)(uint16_t)e->rot_y << 40);
 }
 
+/* Sherry-Ruf der Hangar-Szene (NUTZERWUNSCH 2026-11-16, re15_bf_ruf_hook): Zaehler + Birkins Clip/Bild beim Aufruf. */
+static int s_ruf_n = 0, s_ruf_clip = -1, s_ruf_bild = -1, s_ruf_sm = -1;
+static void test_ruf(void)
+{
+    const int bs = re15_bf_hangar_slot(1);
+    s_ruf_n++;
+    if (bs > 0) { s_ruf_clip = g_actors[bs].motion; s_ruf_bild = g_actors[bs].anim_frame; }
+    s_ruf_sm = re15_bf_hangar_slot(0);
+}
+
 static void test_hangar(unsigned raum)
 {
     char rel[64]; snprintf(rel, sizeof rel, "STAGE5/ROOM%04X.RDT", raum);
@@ -209,7 +219,11 @@ static void test_hangar(unsigned raum)
     int letzt_clip = -1, letzt_bild = -1;
     unsigned char fx_vorher[RE15_ESP_FX_MAX];
     re15_esp_fx_reset();
+    s_ruf_n = 0; s_ruf_clip = s_ruf_bild = s_ruf_sm = -1;
+    re15_bf_ruf_hook(test_ruf);
+    int ruf_takt = -1;
     for (int f = 0; f < 200 && ende < 0; f++) {
+        const int ruf_vor = s_ruf_n;
         static const int32_t null3[3] = { 0, 0, 0 };
         int32_t t0[3];
         const int t0_ok = m->active && re15_enemy_part_point(m, 0, null3, t0);   /* Stand, den der Takt beim Spawn sieht */
@@ -262,6 +276,7 @@ static void test_hangar(unsigned raum)
             }
         } else if (sm_weg < 0) sm_weg = f;
         if (ph == 7 && ende < 0) ende = f;
+        if (s_ruf_n != ruf_vor && ruf_takt < 0) ruf_takt = f;
         if (re15_bf_hangar_riegel()) {
             uint64_t nb = pose_kennung(b), nm = pose_kennung(m);
             lauf_b = (nb == kb) ? lauf_b + 1 : 0;
@@ -272,6 +287,16 @@ static void test_hangar(unsigned raum)
         }
     }
     for (int p = 1; p <= 7; p++) CHECK(ph_seen[p], "Phase %d nie erreicht", p);
+    /* Sherry-Ruf (NUTZERWUNSCH 2026-11-16, birkin_formen.c bf_sherry_ruf): genau einmal, im ersten Gangtakt - Birkin in WALK-Clip 1
+     * Bild BF_GANG_BILD0 = 16 (@0x80117a64), der Spider-Man ist schon weg, die Szene laeuft noch. Stand 98391e747: 0-mal = ROT. */
+    re15_bf_ruf_hook(NULL);
+    CHECK(s_ruf_n == 1, "%04X Sherry-Ruf: %d-mal in der Szene (Soll 1)", raum, s_ruf_n);
+    CHECK(s_ruf_clip == 1 && s_ruf_bild == 16, "%04X Sherry-Ruf: Birkin dabei in Clip %d Bild %d (Soll Gang, Clip 1 Bild 16)", raum,
+          s_ruf_clip, s_ruf_bild);
+    CHECK(s_ruf_sm < 0 && sm_weg >= 0 && ruf_takt > sm_weg && ruf_takt <= ende,
+          "%04X Sherry-Ruf: Takt %d nicht zwischen Abgang des Spider-Man (%d) und Szenenende (%d)", raum, ruf_takt, sm_weg, ende);
+    fprintf(stderr, "Hangar %04X Sherry-Ruf: %d-mal, Takt %d (Spider-Man weg %d, Ende %d), Birkin Clip %d Bild %d\n", raum, s_ruf_n,
+            ruf_takt, sm_weg, ende, s_ruf_clip, s_ruf_bild);
     /* Runde 5: Griff bis h72 (Handhoehe ~2190), der Schleuder-Scheitel der Runden 3/4 (y -3305 frei in der Luft) entfaellt. */
     CHECK(max_hoehe > 2000, "Spider-Man nie hochgehalten (max %d)", max_hoehe);
     CHECK(sm_am_boden, "Spider-Man nie am Boden aufgeschlagen");
