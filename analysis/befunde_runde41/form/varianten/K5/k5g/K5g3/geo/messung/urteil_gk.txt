@@ -1,0 +1,78 @@
+== URTEIL4 lauf_voll.json | EMD GK.EMD
+== URTEIL2 lauf_voll.json | EMD sha256 f833a90580d849ad | Ansichten 3995 (ALLE)
+  GUT  H1a  ab4-Summe <= 1 % der K5e_f1-Summe ueber alle Ansichten (1043153 -> 10431)
+            Summe 3578 (K5e_f1 auf denselben Ansichten 1043153, MULDE 547)
+  GUT  H1b  ab4 groesstes zusammenhaengendes Streifenstueck je Ansicht <= 25 px
+            groesstes 23 (bild1 Clip 12 Bild 17); Ansichten > 25: 0 []
+  GUT  H1c  ab4-Summe je Ansicht ausserhalb der Clips 10/12 <= 20 px
+            Ansichten > 20: 0 []; groesste 20 (spiel5080_vorn Clip 11 Bild 24)
+  GUT  H2   ab5: Summe <= MULDE*1,05+50 und Ansichten > 20 <= MULDE*1,05+2
+            Summe 12543 (MULDE 41765, Grenze 43903), > 20: 162 (MULDE 302, Grenze 319.1), groesste 159 (MULDE 618)
+  ROT  H3a  uebrige Paare mit 10/21/22/23 ungerichtet, X<->{10,21} gruppiert: je <= K5e_f1*1,05+50
+            ROT: 19<->23 527 > 50 (K5e_f1 0); 20<->22 483 > 50 (K5e_f1 0); 7<->22 163 > 156 (K5e_f1 101); 19<->22 157 > 50 (K5e_f1 0)
+  GUT  H3b  Schulter 16>10 + 10>16 je Ansicht <= K5e_f1*1,05+25
+            Ansichten rot: 0, schlimmste (Zuwachs, Ansicht, Clip, Bild, ist, K5e_f1): []; Summe 383052 (K5e_f1 1730744)
+  GUT  H4   gezeichnete Dreiecke + 773 + 86 <= 8192
+            meiste 7290 (spiel5080_vorn Clip 11 Bild 30) -> 8149
+  GUT  H5   der Lauf gehoert zur EMD-Datei
+            sha256 Datei f833a90580d849ad, Lauf f833a90580d849ad
+  ROT  H6b  Netz 16 nur formgleich fein geteilt (statt H6)
+            Sektionen 0-6 VERSCHIEDEN; fremde Netze geaendert: [18, 19, 20, 28, 29]; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler
+  GUT  H7   Umriss >= K5e_f1 - 0,0005
+            bild2 0.68212 (K5e_f1 0.65294, Grenze 0.65244), bild1 0.72301 (K5e_f1 0.72312, Grenze 0.72262)
+  GUT  H8   Tabelle taugt fuer die Textur-Stufe (bank.tabelle_pruefen fuer 10/21/22 + gleiche Regeln fuer 16, H6b)
+            (1) 10/21/22 per bank.tabelle_pruefen: GUT - 9689 Flaechen, jede mit Mutter; UV ausserhalb des Mutter-Rechtecks: 0; Dehnung gegen die Mutter {"10": {"port_dreiecke": 1483, "groesste": 7.18, "ueber2": 51, "ueber4": 7, "ueber8": 0, "uv_entartet": 45}, "21": {"port_dreiecke": 2981, "groesste": 3.67, "ueber2": 31, "ueber4": 0, "ueber8": 0, "uv_entartet": 37}, "22": {"port_dreiecke": 5073, "groesste": 16.9, "ueber2": 76, "ueber4": 2, "ueber8": 1, "uv_entartet": 1463}} | (2) Netz 16: 720 Flaechen, Fehler 0 [], UV ausserhalb des Mutter-Rechtecks 0 | (3) G.mulde_auf_form auf der echten Tabelle ohne Abbruch
+  HARTE GRENZEN 5.2: NICHT ERFUELLT
+  ZIELMARKEN (gegen MULDE): NICHT ERREICHT
+    ROT  weg: keine Ansicht > 200: Ansichten > 200: 207, groesste 10577
+    ROT  weg: Summe <= 10 % MULDE (36702): Summe 445036 (MULDE 367027)
+    GUT  tief128: Summe <= 10 % MULDE (527533): Summe 234108 (MULDE 5275332), groesste 4710
+    ROT  neu: keine Ansicht > 200: groesste 17436 (['spiel5080_vorn', 12, 6])
+    ROT  hoch48: keine Ansicht > 200: groesste 27154 (['spiel5080_vorn', 8, 12])
+    GUT  tief48 so klein wie moeglich (Bericht): Summe 353619 (MULDE 13380589 = 2.64 %), > 200: 201, groesste 5504 (['spiel5080_vorn', 12, 4])
+  Bild-2-Haltung Clip 10 Bild 45-52, ab4 je Kamera (groesste): {'bild1': 0, 'bild2': 8, 'spiel5080': 0, 'spiel5080_vorn': 9, 'spiel5090': 3}
+  H3a Gruppen (Gruppe: ist / K5e_f1 / Grenze): T16<->{10,21} 383182/1732275/1818939; T7<->{10,21} 283597/314168/329926; 22<->23 60865/74092/77847; 17<->22 12163/29268/30781; T11<->{10,21} 7017/7033/7435; 16<->23 5792/6482/6856; 10<->21 4949/753008/790708; 16<->22 3349/36889/38783; 18<->22 2702/7954/8402; 17<->23 1113/1230/1342; 19<->23 527/0/50; 20<->22 483/0/50; 22<->31 178/259/322; 7<->22 163/101/156; 19<->22 157/0/50; 18<->23 131/539/616
+   S12/H6b Teil 16 (1945 Ansichten): {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 274, 'hoch48': 205, 'abw': 479} | schlimmste [['bild1', 0, 0, {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 0, 'hoch48': 0, 'abw': 0}], ['bild1', 0, 3, {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 0, 'hoch48': 0, 'abw': 0}], ['bild1', 0, 6, {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 0, 'hoch48': 0, 'abw': 0}]] | Sektionen 0-6 VERSCHIEDEN; fremde Netze geaendert: [18, 19, 20, 28, 29]; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler
+  ---- S9 nach S19 (Bezug K5e_f1-Tiefenpuffer; M = Maler/Spiel- und Nur-Licht-Stueckkarte, P = Puffer, a = alter Bezug R3):
+   S9 spiel5080_vorn:27:72   hals/M 11.1(4.1) 2.83(2.44) ROT | hals/P 6.2(4.1) 2.83(2.44) ROT | hals/a 11.1(3.0) 2.83(2.65) (rot) | schulter/M 9.3(4.0) 2.59(2.23) ROT | schulter/P 6.4(4.0) 2.33(2.23) ROT | schulter/a 9.3(3.0) 2.59(2.68) (rot) | dach/M 8.2(0.0) 2.15(2.69) ROT | dach/P 1.5(0.0) 2.44(2.69) | dach/a 8.2(1.0) 2.15(2.83) (rot)
+   S9 bild2:27:40            hals/M 15.3(3.8) 2.33(2.39) ROT | hals/P 7.5(3.8) 2.33(2.39) ROT | hals/a 15.3(3.0) 2.33(2.47) (rot) | schulter/M 0.0(0.0) 2.83(2.83) | schulter/P 0.0(0.0) 2.83(2.83) | schulter/a 0.0(0.0) 2.83(2.83) | dach/M 9.7(0.0) 2.83(2.83) ROT | dach/P 5.7(0.0) 2.69(2.83) ROT | dach/a 9.7(1.1) 2.83(2.83) (rot)
+   S9 spiel5080_vorn:11:5    hals/M 12.8(2.6) 2.59(2.33) ROT | hals/P 5.3(2.6) 2.59(2.33) ROT | hals/a 12.8(2.0) 2.59(2.53) (rot) | schulter/M 8.6(3.2) 2.83(2.74) ROT | schulter/P 6.2(3.2) 2.83(2.74) ROT | schulter/a 8.6(2.1) 2.83(2.74) (rot) | dach/M 8.3(0.0) 2.83(2.56) ROT | dach/P 2.6(0.0) 2.69(2.56) ROT | dach/a 8.3(1.3) 2.83(2.83) (rot)
+   S9 spiel5080:12:16        hals/M 3.0(1.0) 2.44(2.39) | hals/P 0.0(1.0) 2.44(2.39) | hals/a 3.0(0.0) 2.44(2.33) (rot) | schulter/M 7.6(4.4) 2.76(2.44) ROT | schulter/P 5.8(4.4) 2.15(2.44) | schulter/a 7.6(1.4) 2.76(2.83) (rot) | dach/M 0.0(0.0) 0.00(0.00) | dach/P 0.0(0.0) 0.00(0.00) | dach/a 0.0(0.0) 0.00(0.00)
+   S9 nah2048:10:46          hals/M 14.8(2.1) 2.09(2.83) ROT | hals/P 5.7(2.1) 2.09(2.83) ROT | hals/a 14.8(3.2) 2.09(2.56) (rot) | schulter/M 8.2(2.5) 2.44(2.44) ROT | schulter/P 2.8(2.5) 2.69(2.44) | schulter/a 8.2(3.5) 2.44(2.85) (rot) | dach/M 1.0(0.0) 2.00(2.09) | dach/P 0.0(0.0) 2.09(2.09) | dach/a 1.0(0.0) 2.00(2.15)
+   S9 bild2:10:45            hals/M 15.8(2.0) 2.27(2.69) ROT | hals/P 6.1(2.0) 2.04(2.69) ROT | hals/a 15.8(2.6) 2.27(2.44) (rot) | schulter/M 7.7(2.7) 2.36(2.15) ROT | schulter/P 2.6(2.7) 2.56(2.15) | schulter/a 7.7(2.9) 2.36(2.59) (rot) | dach/M 0.0(0.0) 0.00(2.33) | dach/P 0.0(0.0) 0.00(2.33) | dach/a 0.0(0.0) 0.00(2.15)
+   S9 spiel5080_vorn:10:46   hals/M 16.5(2.4) 2.75(2.83) ROT | hals/P 4.1(2.4) 2.20(2.83) | hals/a 16.5(3.4) 2.75(2.69) (rot) | schulter/M 11.1(2.7) 2.51(2.44) ROT | schulter/P 3.5(2.7) 2.33(2.44) | schulter/a 11.1(4.4) 2.51(2.69) (rot) | dach/M 0.0(0.0) 2.56(2.33) | dach/P 0.0(0.0) 2.24(2.33) | dach/a 0.0(0.0) 2.56(2.44)
+   S9 spiel5080_vorn:10:82   hals/M 0.0(0.0) 0.00(0.00) | hals/P 0.0(0.0) 0.00(0.00) | hals/a 0.0(0.0) 0.00(0.00) | schulter/M 8.5(3.1) 2.75(2.27) ROT | schulter/P 8.3(3.1) 2.15(2.27) ROT | schulter/a 8.5(2.0) 2.75(2.71) (rot) | dach/M 0.0(0.0) 0.00(0.00) | dach/P 0.0(0.0) 0.00(0.00) | dach/a 0.0(0.0) 0.00(0.00)
+   S9 spiel5080_vorn:12:40   hals/M 8.0(0.0) 2.17(2.69) ROT | hals/P 6.0(0.0) 2.44(2.69) ROT | hals/a 8.0(0.0) 2.17(2.83) (rot) | schulter/M 0.0(0.0) 0.00(0.00) | schulter/P 0.0(0.0) 0.00(0.00) | schulter/a 0.0(0.0) 0.00(0.00) | dach/M 0.0(0.0) 0.00(0.00) | dach/P 0.0(0.0) 0.00(0.00) | dach/a 0.0(0.0) 0.00(0.00)
+   S9 spiel5080:12:18        hals/M 0.0(0.0) 2.15(2.56) | hals/P 0.0(0.0) 2.24(2.56) | hals/a 0.0(3.0) 2.15(2.33) | schulter/M 5.2(3.1) 2.56(2.83) ROT | schulter/P 2.6(3.1) 2.83(2.83) | schulter/a 5.2(0.0) 2.56(2.69) (rot) | dach/M 0.0(0.0) 0.00(0.00) | dach/P 0.0(0.0) 0.00(0.00) | dach/a 0.0(0.0) 0.00(0.00)
+   S9 bild1:12:22            hals/M 0.0(0.0) 0.00(0.00) | hals/P 0.0(0.0) 0.00(0.00) | hals/a 0.0(0.0) 0.00(0.00) | schulter/M 10.2(3.5) 2.35(2.56) ROT | schulter/P 2.6(3.5) 2.24(2.56) | schulter/a 10.2(1.9) 2.35(3.14) (rot) | dach/M 0.0(0.0) 0.00(0.00) | dach/P 0.0(0.0) 0.00(0.00) | dach/a 0.0(0.0) 0.00(0.00)
+  ---- S14 dach_licht:
+   dach_licht spiel5080_vorn:10:45   Gebiet 14793 | Maler 2.8 (Bezug K5e-Puffer 1.9) Abw 2.83(2.83) Splitter 94(92) | Kand-Puffer 2.8 Spl 94 | K5e-Maler 1.5 Spl 92
+   dach_licht nah2048:10:46          Gebiet 14747 | Maler 2.8 (Bezug K5e-Puffer 2.0) Abw 2.83(2.83) Splitter 97(95) | Kand-Puffer 2.8 Spl 97 | K5e-Maler 1.7 Spl 95
+   dach_licht bild2:12:0             Gebiet 11392 | Maler 5.4 (Bezug K5e-Puffer 4.0) Abw 2.83(2.41) Splitter 0(0) | Kand-Puffer 5.4 Spl 0 | K5e-Maler 3.5 Spl 0
+  ---- Schulter-Licht (Bericht zu S15):
+   schulter_licht spiel5080_vorn:27:72   Gebiet 16156 | Maler 3.8 (Bezug K5e-Puffer 2.1) Abw 2.83(2.56) Splitter 417(342) | Kand-Puffer 2.2 Spl 428 | K5e-Maler 2.4 Spl 342
+   schulter_licht spiel5080_vorn:11:5    Gebiet 16318 | Maler 5.3 (Bezug K5e-Puffer 2.6) Abw 2.83(2.83) Splitter 365(300) | Kand-Puffer 5.5 Spl 344 | K5e-Maler 2.9 Spl 309 ROT
+   schulter_licht spiel5080:12:16        Gebiet  2713 | Maler 6.9 (Bezug K5e-Puffer 2.9) Abw 2.69(2.85) Splitter 23(17) | Kand-Puffer 6.2 Spl 20 | K5e-Maler 5.7 Spl 16 ROT
+   schulter_licht nah2048:10:46          Gebiet  3457 | Maler 5.3 (Bezug K5e-Puffer 1.7) Abw 2.32(2.99) Splitter 1(1) | Kand-Puffer 4.3 Spl 2 | K5e-Maler 2.1 Spl 0 ROT
+   schulter_licht bild2:10:45            Gebiet  2742 | Maler 7.4 (Bezug K5e-Puffer 2.0) Abw 2.83(2.91) Splitter 7(0) | Kand-Puffer 4.6 Spl 0 | K5e-Maler 1.6 Spl 0 ROT
+   schulter_licht spiel5080_vorn:10:46   Gebiet  3442 | Maler 6.3 (Bezug K5e-Puffer 2.2) Abw 2.51(2.78) Splitter 5(0) | Kand-Puffer 5.5 Spl 2 | K5e-Maler 2.5 Spl 0 ROT
+   schulter_licht spiel5080_vorn:10:82   Gebiet  3239 | Maler 0.0 (Bezug K5e-Puffer 1.5) Abw 2.36(2.32) Splitter 153(162) | Kand-Puffer 0.0 Spl 150 | K5e-Maler 0.0 Spl 120
+   schulter_licht spiel5080:12:18        Gebiet  2666 | Maler 7.4 (Bezug K5e-Puffer 2.8) Abw 2.44(2.83) Splitter 21(19) | Kand-Puffer 7.5 Spl 19 | K5e-Maler 5.5 Spl 17 ROT
+   schulter_licht bild1:12:22            Gebiet  2212 | Maler 0.0 (Bezug K5e-Puffer 0.0) Abw 2.22(2.22) Splitter 117(93) | Kand-Puffer 0.0 Spl 120 | K5e-Maler 0.0 Spl 102
+   S18 Risse (ganz in K5e_f1-Figur): Orbit 4764 px in 29 Ansichten [(470, 12, 0, 25), (470, 12, 0, 0), (470, 10, 52, 25)] | Spielkameras 2 px [(1, 'spiel5080_vorn', 12, 0), (1, 'spiel5080_vorn', 10, 45), (0, 'spiel5090', 27, 49)]
+   S18 Loecher (Def. Zahlen-Pruefer R3): Orbit 6252 px in 52 von 390 Ansichten [(481, 12, 0, 0), (481, 10, 52, 0), (481, 10, 47, 0), (470, 12, 0, 25)] | Spielkameras 234 px in 10 von 21 [(175, 'spiel5090', 9, 18), (31, 'bild1', 27, 60), (7, 'bild2', 10, 35), (6, 'bild2', 27, 59)] (206 s)
+  ---- Runde 4 (H3a nach S16, H6b nach S12, H9 nach S9/S19 + S14, S18):
+  ROT  H3a    S16: 7<->22 je Ansicht <= 25 px (Summe Bericht); uebrige Gruppen je <= K5e_f1*1,05+50 (5.2)
+            7<->22 je Ansicht: groesste 13 ('spiel5080', 12, 14), Ansichten > 25: 0; Summe 163 (K5e_f1 101, alte Summengrenze 156, nur Bericht) | uebrige Gruppen: ROT 19<->23 527 > 50; 20<->22 483 > 50; 19<->22 157 > 50
+  ROT  H6b    S12: Netz 16 formgleich geteilt: Ecken auf K5e_f1-Flaeche <= 2 UND an Teil 16 weg = neu = tief128 = hoch128 = 0
+            1945 Ansichten, Summen {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 274, 'hoch48': 205, 'abw': 479}; Sektionen 0-6 VERSCHIEDEN; fremde Netze geaendert: [18, 19, 20, 28, 29]; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler
+  ROT  H9     S9/S19 gerade Kanten (hals 21/22, schulter 16/kugel_r, dach schaedel/22.ell; Maler und Puffer gegen K5e_f1-Puffer; <= +2 / +2 px)
+            rote Zeilen 30 {'hals/Maler': 7, 'hals/Puffer': 6, 'schulter/Maler': 9, 'schulter/Puffer': 3, 'dach/Maler': 3, 'dach/Puffer': 2}; alter Bezug (R3, nur Bericht) rot {'hals/alt': 8, 'schulter/alt': 9, 'dach/alt': 3}
+  GUT  H9-S14 S14 dach_licht: Helligkeitsgrenze Stirn/Schaedeldach im Nur-Licht-Bild 5080 (Maler) <= K5e_f1-Puffer + 2 Wechsel
+            rot 0 von 3: [('spiel5080_vorn:10:45', 2.84, 1.88), ('nah2048:10:46', 2.78, 1.96), ('bild2:12:0', 5.38, 3.99)]
+  ROT  S18    Netzguete: 0 entartete Flaechen, 0 doppelte Ecken/Ecklagen, Loecher aus eigenen Kameras = 0
+            statisch {10: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 605.018}, 16: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 1369.683}, 21: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 339.69}, 22: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 63.248}} | Risse (Hintergrund-Stueck ganz in K5e_f1-Figur = Durchblick) Orbit 4764 (29 Ansichten) [(470, 12, 0, 25), (470, 12, 0, 0), (470, 10, 52, 25)], Spielkameras 2 [(1, 'spiel5080_vorn', 12, 0), (1, 'spiel5080_vorn', 10, 45), (0, 'spiel5090', 27, 49)] | Bericht Def. Zahlen-Pruefer R3 (inkl. 1-px-Randverschiebung vorhandener Luecken): Orbit 6252 (52 Ansichten) [(481, 12, 0, 0), (481, 10, 52, 0), (481, 10, 47, 0)], Spielkameras 234 [(175, 'spiel5090', 9, 18), (31, 'bild1', 27, 60), (7, 'bild2', 10, 35)]
+  Schulter-Licht (Bericht; Ansicht, Wechsel, Bezug, Splitter, Bezug-Splitter): ueber +2: 6 [('spiel5080_vorn:27:72', 3.79, 2.07, 417, 342), ('spiel5080_vorn:11:5', 5.26, 2.64, 365, 300), ('spiel5080:12:16', 6.92, 2.92, 23, 17), ('nah2048:10:46', 5.3, 1.71, 1, 1), ('bild2:10:45', 7.41, 1.96, 7, 0), ('spiel5080_vorn:10:46', 6.29, 2.16, 5, 0), ('spiel5080_vorn:10:82', 0.0, 1.47, 153, 162), ('spiel5080:12:18', 7.43, 2.78, 21, 19), ('bild1:12:22', 0.0, 0.0, 117, 93)]
+  S13 Dreieckszahl Modell (Port-Dreiecke): {'modell': 15273, 'k5e_f1': 6386, 'je_netz': {10: 1483, 16: 800, 21: 2981, 22: 5073}}
+  HARTE GRENZEN Runde 4 (5.2 + S12 + S14 + S16 + S18 + S19): NICHT ERFUELLT | rot: ['H3a', 'H6b', 'H9', 'S18']
+URTEILFERTIG

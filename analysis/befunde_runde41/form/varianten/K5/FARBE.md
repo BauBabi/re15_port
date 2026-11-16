@@ -1606,3 +1606,360 @@ K5c gesichert: `varianten/K5/einbau_k5c/` (BAHNSTEIG_FORM.EMD/.TIM = Asset bis E
    (Hautton). Im Spielfenster ist das gesamte geaenderte Feld noch 2,6-2,8 L\* dunkler als der Umkreis. Der Riegel begrenzt nur nach unten (Auftrag).
 5. **28 Fleisch-Randtexel bleiben K5c**, weil ihre Eintraege auch Kerntexel tragen (Kern bytegleich hat Vorrang). Ein Teil des dunklen Fleischrands
    bleibt damit, sichtbar in 09 als feiner dunkler Saum direkt am Kern.
+
+## K5f - nicht blass (Nutzer 2026-11-09)
+
+Auftrag: Nutzer nach dem Spielen von K5e_f1 "Komplett augeblasst ... Null wie die restlichen Gegner im Spiel" und "auf der Unterseite am
+Hals ... komische rote streifen". Messblatt: `k5f/MESSBLATT_K5F.md` (Commit 45d1accc7). Runde 1 von 2. Das Spiel-Asset ist unveraendert
+(`re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD` f277916d7d6518b5..., `.TIM` 31a35e66428bac1e..., nach dem Bau nachgerechnet).
+
+### K5f.1 Bau
+
+- Generator `generator/kf_k5f.py` (haengt sich an `kf_k5e.bauen`, nur Zeilenplan und Rampen neu; NZ 12), Parameter
+  `k5f/K5f/k5f_par.json` (Quelle je Wert, Feld `verlauf` mit der Bisektionsfolge), Ausgabe `k5f/K5f/` (FORM.EMD/.TIM, BAHNSTEIG_FORM.EMD/.TIM,
+  form.json, bau.json, sha256.txt). Zweiter Lauf in einen anderen Ordner: alle sechs Dateien byte-gleich.
+- sha256: BAHNSTEIG_FORM.TIM = FORM.TIM 64b8d8bd9539471d..., BAHNSTEIG_FORM.EMD 9045b6dcceebf7d5..., FORM.EMD e85ab12c024d75ee...
+- Gegenprobe gegen die Vorschau: mit den v7-Werten (f 2,46, s 0,52, rf 1,60) und der naechsten 15-Bit-Farbe sind alle 12 Zeilen und alle 3828
+  CLUT-Woerter je Flaeche byte-gleich der Vorschau v7 (nur die leere Zeile 12 entfaellt).
+- Zeilen 0-11, Port-Texturhoehe 3072. Flaechen je Zeile 93/249/1606/579/6/360/314/92/6/114/81/328 (= Messblatt 3.4). Material: Haut 2434
+  (mit den 6 Hals-Aussenflaechen), Grau 409, Gelenk 680, Fleisch 92, Auge 64, Maulinneres 29, Zahn 114, F1 6.
+
+### K5f.2 Abweichungen vom Messblatt-Plan (gemessen, mit Grund)
+
+1. **Rundung mit Farbtonfenster** (`kf_k5f.runde15_zeile`, par `rundung`). Lauf 1 mit der naechsten 15-Bit-Farbe (= v7): Riegel H4 ROT
+   (Haut 88,4 / Grau 55,9 / Gelenk 88,9 / Fleisch 16,2 Grad, Soll <= 15) und H5 ROT (17 Rangvertauschungen). Ursache gemessen: im 15-Bit-Raster
+   nahe Grau (C* 3-9, L* 5-30) gibt es nur die Farbtoene -68,1 / -34,6 / +20,3 (und -13,7 erst ab L* 30). Die Messblatt-Angabe "H4 v7 gruen"
+   war aus den Zielwerten, nicht aus den gerundeten Woertern.
+   - Neue Rundung: je Klasse (haut/hell/ader) aufsteigend nach G4-L*, Bedingungen Farbtonfenster (C* >= 3 nur im Fenster, unbunt immer),
+     Rangfolge, Ader von unten; bei Gelenk und Grau zusaetzlich "nie bunter als das Ziel". Alle 2304 Eintraege erfuellen alle Bedingungen.
+   - Fenster um -22,9 +- 7,5: 41 % der Haut-Texelzugriffe unbunt, Spiel Q C* 11,35 / Q C-std 8,77; s 0,56 ergab 12,03 / 9,18, also Z8 und Z9
+     nicht zugleich. Darum Fenster [-35,3; -20,3] (enthaelt -22,9 und die Rasterstufe -34,6): s 0,52 ergab 11,89 / 7,52, s 0,56 12,94 / 8,11.
+   - Folge: **der gerundete Hautton ist -29,5 Grad (Plan -22,9), Gelenk -32,2**, also violetter als geplant.
+   - "nie bunter" fuer alle Materialien wurde verworfen (W2 49,9 %, W3 29,4 %, Spiel Q C-std/C* 0,82, Z8/Z9 unvereinbar); fuer Gelenk
+     wegen W1b (ohne: Gelenk-Albedo C* 8,41 > 8).
+2. **Bisektionen neu** (par `verlauf`): s im Spiel (`kf_k5f_spielmass.py --s`, kleinste mit Z4/Z8) = **0,536**; f (`kf_k5f.py --f`, Bild 2
+   Video >= 15,37) = **2,502**; rf (`kf_k5f.py --rf`, K4-Abstaende +6,89 / +4,77) = **1,540**. Mehrere Runden, bis f/rf stabil (f 2,500 -> 2,502,
+   rf 1,541 -> 1,540). Die Messblatt-Angabe "rf 1,51 ergab Buckel +3,57" war nicht nachzustellen: mit der Haut von Lauf 1 ergab rf 1,50 Buckel +7,42
+   (Median-Sprung zwischen rf 1,37207 und 1,37231).
+3. **HU4 bindet am Ruhe-Clip 2.** Die Messblatt-Zahlen (705-2879, "max 38") sind die Clip-2-Spalte von `maulinneres_sicht.json`. In Clip 0
+   hat das echte Maulinnere 22|1|98 48 px (schon im Messblatt-Lauf, Spalte 3); als Info im Riegel.
+
+### K5f.3 Riegel (`generator/riegel_k5f.py`, `k5f/K5f/riegel_k5f.txt`/`.json`): 38/39 GRUEN, EXIT 1
+
+| Zeile | K5f | Band | K5e_f1 | K5c |
+|---|---|---|---|---|
+| Z1 P L* | 8,97 | 5,57..18,80 | 9,45 | ROT 2,77 |
+| Z2 P L-cv | 0,746 | 0,481..1,431 | ROT 0,409 | 0,816 |
+| Z3 P lokal_rel | 0,329 | 0,243..0,656 | ROT 0,168 | 0,297 |
+| Z4 P C* | 4,45 | 4,41..7,59 | ROT 4,33 | ROT 1,93 |
+| Z5 P C-std | 3,41 | 2,39..7,45 | ROT 1,76 | ROT 2,27 |
+| Z6 Q L-cv | 0,557 | 0,369..1,020 | ROT 0,238 | 0,757 |
+| Z7 Q lokal_rel | 0,273 | 0,210..0,528 | ROT 0,116 | 0,306 |
+| Z8 Q C* | 12,15 | 12,09..15,05 | ROT 11,51 | ROT 8,38 |
+| Z9 Q C-std | 7,83 | 6,53..8,88 | ROT 3,98 | ROT 9,02 |
+| WK1-WK4 weiss | 0,668 / 0,360 / 6,63 / 3,9 % und 55,1 | | ROT | |
+| R1-R4 | 3 / 0 / 15,3 / 4,5 | <= 5 / 7,4 / 76,8 / 16,3 | gruen | ROT |
+| H4 | Haut 14,8 / Grau 0 / Gelenk 12,4 / Fleisch 10,8 Grad | <= 15 | | |
+| HU1-HU4 | Zeile 1 / 0 px von 30393 / 0 von 963 / max 38 px | | ROT | ROT (HU1/HU2) |
+| W1 / W1b | min 6,77, Mittel 9,45 / C* 6,12, +13,08 | | | |
+| W2 / W3 | 76,6 %, +18,65 / Ton -8,5, 57,0 %, +6,94 | | | |
+| W4 | 0 %, 41,8 <= 54,4 | | | |
+| **W5 Krallen** | **ROT dE 7,04** (Kralle 20,5/0/0, Hand 17,8/5,4/-3,7) | <= 6 | | |
+| W6 / W8 | 15,37 >= 15,37 / -6,98 gegen -7,39 | | | |
+| T1-T4 | 12 Zeilen, 3072; neue 0x0000 0; Geometrie = K5d; EDD/EMR/Morph = Asset, 32/32/28 | | | |
+
+- Spielwerte aus eigenem Normal-/Schluessel-Paar (`kf_k5f_spiel.sh` + `kf_k5f_spielmass.py`, `k5f/K5f/spiel_k5f.json`; der Riegel nimmt sie nur
+  bei gleichem TIM/EMD-sha an). Die Gegenproben K5e_f1 und K5c reproduzieren die Messblatt-Werte exakt (`spiel_k5e_f1.json`, `spiel_k5c.json`).
+- Gegenprobe (`riegel_k5f.py --gegenprobe`, `k5f/K5f/riegel_gegenprobe.txt`): K5e_f1 ROT in Z2-Z9, WK1-WK3, HU1-HU4; K5c ROT in Z1/Z4/Z5/Z8/Z9,
+  R1-R4, HU1/HU2 -> erfuellt, EXIT 0.
+- **W5 ROT, Ursache gemessen:** Die Krallen sind Grau (meist Ader-Eintraege, C* = kappa x cgr x s x L' < 3, also unbunt), die Hand ist Haut. Mit der
+  Farbtonfenster-Rundung bekommt die Hand die Rasterstufe -34,6 (C* 6,5); in v7 hob sich der Ton im Median zufaellig auf (Hand 17,4/3,9/-2,5,
+  dE 5,54). "nie bunter" fuer die Haut machte die Hand unbunt (W5 3,96), brach aber Z8/Z9 (Q C-std/C* 0,82). Nicht geloest; Entscheid noetig
+  (Krallen-Buntheit oder W5-Schwelle), keine Zahl nach Gefuehl gesetzt.
+
+### K5f.4 Spiel und Tests
+
+- Tafeln (roh) in `k5f/`: 01_bild1, 02_bild2, 03_details_nah, 04_spiel (gdigrab, `kf_k5f_fenster.sh`, Bilder in `k5f/spiel/`), 05_kopf,
+  06_rundum, 07_familie, 08_gegner_spiellicht (`kf_k5f_tafeln.py`).
+- ctest `-R "form|bahnsteig|birkin_form|r41_form" -j 3` mit `RE15_RE2_ASSET_ROOT=k5f/K5f`: 11/11 bestanden (`k5f/ctest_k5f.log`).
+- `RE15_SOFTWARE_RENDER=1`, 5090 Schnitt 11, Clip 10 abgespielt: rc 0, Form geladen (32/32/28), t601 Clip 10 Bild 113, kein Absturz
+  (`k5f/softrender_lauf.log`).
+
+### K5f.5 Gesehen auf den Tafeln (eigene Sicht, nicht gemessen)
+
+- 04: im Spiel 5080 dunkler und kontrastreicher als K5e_f1, violett-dunkel; 5090 Griff-Pose ohne rote Stelle unter dem Hals.
+- 05/07 (weisses Licht): Haut deutlich rosa-violett mit hellen rosa Stellen (helle G4-Eintraege durch das Knie), Lippensaum und Maulraender fast
+  schwarz (Grau uebernimmt die dunkle Haut-L'). Das liegt nahe am Nutzersatz zu K5c ("wie ein Pokemon") und an "Hautprobleme"; vor jedem Einbau
+  braucht es das Spielbild fuer den Nutzer.
+
+### K5f.6 Offen
+
+1. W5 Krallen dE 7,04 (siehe K5f.3).
+2. Hautton nach der Rundung -29,5 Grad statt -22,9 (violetter); Fenster ist eine Folge des 15-Bit-Rasters, kein Farbwunsch.
+3. Knappe Raender: Z4 4,45 gegen 4,41, Z8 12,15 gegen 12,09, W6 15,37 gegen 15,37, W8 -6,98 gegen -7,39.
+4. Bild 1 Video 44,11 gegen Vorlage 18,29 (unveraendert Offen 1).
+5. Einbau in das Spiel-Asset erst nach Ja des Nutzers (T4).
+
+## K5g3 - Textur auf der B4-Geometrie (2026-11-14)
+
+Auftrag K5g3 Textur-Bauer Runde 1 von 2: E3 (Grundlage v2 Zone fuer Zone), V1-V6, O3-O5 auf der eingebauten Geometrie K5g3
+(Spalt B4 G1, rechte Krallen K5c G2, Posen = K5c = K5e_f1). Spiel-Asset bleibt K5e_f1 (G5; Riegel G5 gruen).
+
+### K5g3.0 Abgabe
+
+| Datei (k5g/K5g3/) | sha256 |
+|---|---|
+| BAHNSTEIG_FORM.EMD (28 Clips) | 37407afd3c414373fb4df8d35f0abf3b3739d7d0155fd2a022f6a92a8fe18384 |
+| BAHNSTEIG_FORM.TIM = FORM.TIM (15 Zeilen, Port-Hoehe 3840) | 2f7b244463e4e7216e840c72e3670fdf70a375e806841b3258d834bb71cb0275 |
+| FORM.EMD (3 Keys) | 62fa1e67657c796202cc9ed606576565ffbb4198a17fb0a863e63dd93dae8e3e |
+
+Generator: `python generator/kf_k5g3.py bauen`. Stufe 1 = kf_k5g3_geo unveraendert: geometrie_form(stufen=('posen','krallen')) fuer die
+Flaechen vor dem Spalt. Stufe 2 = kf_k5g3_tex.textur. Danach kf_k5g2_geo.mulde_auf_form(tabelle=GEO3_SPALT): 10257 Spalt-Kinder erben
+Zeile/Seite/UV-Verschiebung der Mutter (78 Muetter verschoben = Fleck-Kopien, 1544 Kinder verschoben, 0 ausserhalb des Mutter-Stuecks).
+Der Bau prueft, dass Ecken/Normalen/Flaechen-Ecken aller Netze genau die von geo/BAHNSTEIG_FORM.EMD (eadfac31) sind, sonst Abbruch.
+`python generator/kf_k5g3.py pruef`: "zwei Laeufe und Abgabe byte-gleich: JA". Parameter mit Quelle je Wert: k5g/K5g3/k5g3_par.json.
+`pruef/` = dieselbe Textur auf den Flaechen VOR dem Spalt (Schluessel wie zonen_v2) fuer die Textur-Riegel.
+
+### K5g3.1 Was gegen K5g2 (Runde 2, angehalten) anders ist - jeder Wert mit Messung
+
+| Punkt | K5g2 | K5g3 | Beleg |
+|---|---|---|---|
+| Helligkeit f (O3) | 1,339 aus W6 (Video Bild 2) | 1,86 = kleinster Faktor mit Spiel 5080 P L* >= 7,71 (Median der vier Original-Gegner Zombie 8,04 / Gorilla 7,38 / EM30 18,80 / Tyrant 5,57) | f 1,339 (s 0,3): P L* 5,41, Z1 ROT (unter dem dunkelsten Original). `kf_k5g3.py --f` [f, P L*]: 2,0 8,51 / 1,8348 7,70 / 1,9174 8,05 / 1,8761 7,83 / 1,8555 7,77 |
+| Buntheit s (O3) | C* 2-6 (k 0,128) | 0,5225 = kleinstes s mit Z4, Z8, Z5 und Z9 im Spiel | `kf_k5g3.py --s`: s 0,4375 erreicht Z4/Z8, aber Z9 Q C-std 5,72 (< 6,53); s 0,515 6,40 / 0,5188 6,49 / 0,5207 6,52 / 0,5225 6,53 |
+| Hautton | 20,5 Grad | 20,5 Grad (Mitte des Bandes [14, 27]); Albedo der Hautflaechen gemessen 22,1 (K5e_f1 -34,0, K5f -26,8) | Riegel V2.1 |
+| Sattel Huefte/Ruecken (O3) | haut0 L* 11 / C* 0,1 | je G4-Seite g_s = Median L* Hautklasse Seite 1 / Seite s (Seite 0: 12,702/5,205 = 2,4402; Seite 2: 12,702/9,268 = 1,3705); Teile 0/7 Median 23,3 in Haut-P25..P75 18,4..31,6 | Riegel S1 (Gegenprobe ohne Angleich: 9,5) |
+| Schwarz 0x8000 (V4) | G4-Eintrag 255 = 0x8000 bleibt schwarz (829 Zugriffe, vor allem Teil 0) | Untergrenze: deckend schwarze Eintraege = dunkelster nicht schwarzer Eintrag derselben Zeile (ausser Maul-Zeilen und F1-Kern) | Riegel V4.4: 0 |
+| Krallen 19/20/29/31 | Flaechen der linken Partner | eigene K5e_f1-Flaechen (G2); Material = Rang-Tausch auf die Hautrampe wie die Haende | Riegel V5: dE76 Kralle/Hand 3,6, 0x7FFF 0, roeter als Haut 0 % |
+| Haende (O5) | fast weiss (Pruefer r1) | Rang-Tausch auf die Hautrampe; Median L* 26,9 in Haut-P25..P75 14,7..31,6, 0 reinweiss | Riegel H1 (Gegenprobe K5g2 r1: 900 reinweiss) |
+| Augen (O4) | f der Haut, Augen dunkel | eigenes f_auge 1,9844 = kleinstes mit Bild-2-Augenmaximum >= 2 x Kopfhaut daneben an beiden Nutzerpunkten | Riegel A1: 25,8 / 5,7 und 12,9 / 5,7 (K5e_f1 15,0 / 9,4 und 9,4 / 6,6) |
+| Buckel-Fleisch (Eichung b) | C* 18,5 | k 0,7825 = kleinstes k mit Median C* >= 24 der Zone-27-Material-Texelzugriffe (am Bau gemessen; Rundung und Verteilung verschieben den Quellmedian) | Riegel V3.3: L* 36,2, C* 25,0; `kf_k5g3.py --fleisch` [k, C*]: 0,7378 22,35 / 0,7806 22,35 / 0,7825 24,99 |
+
+### K5g3.2 Riegel (`python generator/riegel_k5g3.py textur`, Protokoll k5g/K5g3/riegel_k5g3_textur.txt/.json)
+
+Summenzeile: **"RIEGEL K5g3 TEXTUR: 36 von 36 gruen, 30 von 30 Gegenproben rot wie verlangt"**, Exit 0.
+
+Zeilen: TG Geometrie == Geometrie-Stufe; TB Generator byte-gleich; V3.1 Fleck-Material genau auf den Traegertexeln (10646 richtig, 0 fehlend,
+0 ausserhalb, 0 fremde Leser); V3.1b Spalt-Kinder erben (10257, 0 falsch); V3.3 Fleisch; V4.1 Hals/Lippe/Unterkiefer/Zone 45 nicht roeter
+als die Haut (0 %); V4.2 nicht schwarz; V4.3 Maul-Zeilen nur Zone 30; V4.4 kein 0x8000 / keine Mundfleisch-Zeile ausser Zone 30; V2.1
+Hautton; V5 Krallen; H1 Haende; S1 Sattel; V1 Adern multiplikativ (|a| 0,48); V6 F1 (Kern bytegleich, Rand 19,6 gegen Haut 23,3); A1 Augen;
+W1-W4 weisses Licht; R1-R4 Ruhe (1 / 0,0 / 1,1 / 1,0); Z1-Z9 Spiel; T1; T5; G5.
+
+Spiel 5080 Bild-1-Lage (eigenes Normal-/Schluessel-Paar, kf_k5g3_zlauf.sh mit RE15_FORCE_CUT=1). Der Gegenlauf K5e_f1 reproduziert das
+Messblatt K5F genau (9,45 / 0,409 / 0,168 / 4,33 / 1,76 / 0,238 / 0,116 / 11,51 / 3,98); K5c P L* 2,77 wie dort.
+
+| Z1 P L* | Z2 P L-cv | Z3 P lokal | Z4 P C* | Z5 P C-std | Z6 Q L-cv | Z7 Q lokal | Z8 Q C* | Z9 Q C-std |
+|---|---|---|---|---|---|---|---|---|
+| 7,80 | 0,708 | 0,361 | 4,91 | 3,18 | 0,520 | 0,289 | 13,93 | **6,54** (Grenze 6,53) |
+
+Gegen den K5g2-Riegel geaenderte Definitionen (Grund im Code):
+- V4.1/V5 "rot" = roeter als die Haut (C* > s L* + 6; gemessen C* - s L* der Haut-/Tausch-Zeilen hoechstens +2,4) statt der absoluten
+  Rotklasse a* > 12 / C* > 15. Die absolute Klasse trifft bei s 0,52 die warme Haut selbst (Info: 24,97 % der Hals-/Lippen-Zugriffe).
+- V4.2 schwarz relativ zur uebrigen Haut; V1 mit f je Seite und unter dem Knie; V3.1/V6 mit dem F1-Kern-Vorrang des Generators.
+- W6 (Bild 2 Video) ist nach O3 nur Pruefung: 18,56 gegen Vorlage 15,37.
+
+### K5g3.3 Tests und Spiellauf
+
+- `local_build.sh build`: "no work to do", OK. `ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3` mit RE15_RE2_ASSET_ROOT=k5g/K5g3:
+  "100% tests passed, 0 tests failed out of 12" (279,6 s; integration_r41_form_dreiecke setzt seine eigene Geometrie-Umleitung).
+- RE15_SOFTWARE_RENDER=1, 5090 Schnitt 11, Form Clip 12, Schuesse, bis Bild 1300: "[render] SDL-Renderer software", "EXIT_AT: Bild 1300",
+  "[tri-liste] ENDE hoechststand=7718 verworfen=0" - kein Absturz.
+- Fensterbilder (gdigrab nur auf das eigene Fenster, kein AUTOSHOT/SOFTWARE_RENDER, Spielerin ausserhalb, schiesst nicht): k5g/K5g3/spiel/
+  {heute,k5g}_{pose1_r5080,vorn_r5080,pose2_r5090_s11,griff_r5090_s11}.png (generator/kf_k5g3_fenster.sh).
+
+### K5g3.4 Tafeln (k5g/K5g3/tafeln/, roh, `python generator/kf_k5g3_tafeln.py k5g/K5g3 k5g/K5g3/tafeln`)
+
+01_bild1, 02_bild2 (Vorlage | K5e heute | K5g3, ohne Filter und mit Videofilter), 03_details_nah, 04_spiel (echtes Fenster), 05_kopf_hals_unten,
+06_rundum, 07_familie (RE2-G4 | Hangar-Birkin | K5e | K5g3), 08_gegner_spiellicht, 09_zonen. 10_geometrie ist vom Einbau-Bauer.
+
+Selbst angesehen (02, 03, 04, 05, 07): Im Spielfenster ist die Form dunkel rotbraun mit sichtbarer Hautstruktur, die Hals-Unterseite hat keine
+roten Streifen mehr (K5e hat sie). Unter weissem Licht wirkt die ganze Haut rostbraun mit hellen rosa Adern; der Buckel hebt sich dadurch
+weniger ab. Mit Videofilter ist der Buckel in Bild 2 heller und roeter als die Vorlage.
+
+### K5g3.5 Offen
+
+1. Farbeindruck: Das Zielband (Z8 Q C* >= 12,09, Z9 Q C-std >= 6,53) verlangt s 0,5225. Unter weissem Licht ist die Haut damit rostbraun
+   (Albedo-Median C* 12,0 bei L* 23,3), nicht "warm-dunkelgrau". Das folgt aus O3 (Band bindend) und muss am Spielbild gezeigt werden.
+2. Knappe Raender: Z9 6,54 gegen 6,53; A1 rechtes Auge 12,9 gegen 11,5; Z4 4,91 gegen 4,41.
+3. Bild 2 Video 18,56 gegen Vorlage 15,37 (W6 nur Pruefung): f kommt nach O3 aus dem Median der Originale, die Figur ist im Video heller als
+   die Vorlage.
+4. Texel-Konflikt 14/15 (19 Texel) nach "kleinere Zone" an 15; Zone 14 (Schleife 2 = Kralle 14) traegt dadurch nur 1 Texel-Flaeche-Paar.
+5. Rechte Hand: Die Posen-Datei fehlt noch (G2, Nutzer-Entscheid). Danach Geometrie und Textur neu bauen; die Textur haengt nur an den
+   Flaechen, nicht an den Posen.
+6. Netz 22 hat 1463 UV-entartete Port-Dreiecke aus dem Spalt (GEOMETRIE.md 7): Farbstreifen statt Texturstueck, im Texelraum nicht heilbar.
+
+## K5g3 Runde 2 - Befunde der Pruefung r1 behoben (2026-11-14)
+
+Auftrag K5g3 Textur-Bauer Runde 2 von 2. Grundlage: PRUEFUNG_K5G3_r1_zahlen.md (2 ROT, 4 Gelb) und PRUEFUNG_K5G3_r1_sicht.md (Augen
+verschwunden, schwarzer Fleck rechts), Geometrie Runde 2 des Einbau-Bauers (geo/BAHNSTEIG_FORM.EMD db9404a1, Stufe uvfein). Spiel-Asset
+bleibt K5e_f1 (G5, Riegel G5 gruen). Arbeitswerkzeuge der Messungen: scratchpad k5g2/t3r2/w/ (auge1.py, schwarz.py, feld*.py, dunkel.py,
+ana2.py, augmess.py, dichte.py, rtest.py).
+
+### K5g3R2.0 Abgabe
+
+| Datei (k5g/K5g3/) | sha256 |
+|---|---|
+| BAHNSTEIG_FORM.EMD (28 Clips) | 482bd63fa93dfd5a008c4c4837029f313a40e2b09ea2ee278877e6afb2fd38ef |
+| BAHNSTEIG_FORM.TIM = FORM.TIM (15 Zeilen, Port-Hoehe 3840) | ce9a1dc9285a05196a750d1b34e8b7ef6b73e351c5a481e7dd291a9a599b83ce |
+| FORM.EMD (3 Keys) | 9eab983e22154c630da02a851d321db21797977226109d0100b8a2cfcfa062f1 |
+| generator/k5g3_augen_mitten.json (Augen-Tabelle) | 8546521e687c0acc55eadd010e22ad9ab8bc890777c60a06df4c49e91ea39027 |
+
+Aufruf `python generator/kf_k5g3.py bauen` (Stufe Geometrie kf_k5g3_geo unveraendert, Stufe Textur kf_k5g3_tex, dann Spalt mit uvfein-UV,
+dann Augen kf_k5g3_auge.dekal). `python generator/kf_k5g3.py pruef`: "zwei Laeufe und Abgabe byte-gleich: JA".
+Zeilen: maul0, maul1, zahn0, f12, haut0-2, tausch0-2, fleck_f12_0, fleck_haut1_1, fleck_haut1_2, fleck_haut2_3, auge (die Zone-29-Fleckzeile
+fleck_tausch0_4 der Runde 1 entfaellt). 150 Kopien, 81 Muetter verschoben, 1544 Kinder verschoben, 0 Kinder ausserhalb des Mutter-Rechtecks.
+
+### K5g3R2.1 Befund fuer Befund
+
+| Befund (Pruefer r1) | Ursache (gemessen) | Behebung | Ergebnis (Riegel) |
+|---|---|---|---|
+| ROT 2 weisser Strich 10/1/76 | Kopie-Maske = Polygon (0,1,3,2); bei der "Fliege" 10/1/76 bleibt ein Streifen der Render-Dreiecke leer (Index 0 = 0x7FFF), GEOMETRIE.md 9.3 | Maske = konvexe Huelle aller UV-Ecken (deckt beide Zerlegungen) vereinigt mit den UV-Dreiecken der Spalt-Kinder, 3x3 gedehnt (kf_k5g3_tex.lese_maske); der Bau bricht ab, wenn ein Zugriff einen ungeschriebenen Texel trifft | K1: 0 von 457031 Zugriffen auf Index 0 (Runde 1: 11 auf 10/0/342-344); bau.json zugriffe_ungeschrieben 0 |
+| ROT 1 weisse Musterung so bunt wie Fleisch | C' = s_haut x L' (s 0,5225) auch fuer "weiss" | nur helle G4-Gelenk-Eintraege mit Quell-C* <= 6 (Obergrenze Eichung (a)), Buntheit der Quelle (k 1), Helligkeit f_s der Seite | W6: C* 0,0 (Haut 12,0), L* 38,3 (Haut-P75 31,6); Runde 1 C* 18,5 |
+| Gelb braeunlich = beige | braeunliche G4-Eintraege sind auf Seite 2 2,7-mal heller als die Haut (L* 24,7 gegen 9,3) | nur braeunliche Eintraege bis P90 der Haut ihrer Seite, eine Rampe aus allen Seiten (Seite 2 allein: 2 Eintraege) | B1: L* 31,9 (Haut 23,3), C* 6,4, Ton 71,3 Grad; Runde 1 L* 72,6 |
+| Gelb reinweiss auf der Haut (76 Zugriffe) | Faktor 4,54 auf hellen Seite-0-Eintraegen; die 15-Bit-Wahl traf 0x7FFF | nie_weiss in allen Haut- und Fleck-Worten (Rangfolge bleibt) | K2: 0 Zugriffe auf 0x7FFF ausser Zahn-Zeile (Runde 1: 128) |
+| Sicht: schwarzer Fleck rechte Augenhoehle | 22/0/28-35 (der Augenwulst) lesen G4-Seite 1, Eintraege 204 (L* 1,7), 213 (2,4), 255 (0x8000) - ein schwarzes G4-Detail; multiplikativ bleibt es schwarz (K5e_f1 zeigte dort L* 22,9) | Flaechen mit >= 50 % Texeln unter dem 1-%-Quantil der Haut ihrer Seite (gemessen: genau diese 8; naechste 16/0/23 mit 0,32) bekommen eigene Texel mit Haut (Rang-Tausch auf die Hautzeile, E3 "Rest des Augenfelds wird Haut") | A2: weisses Licht von vorn 5 nahezu schwarze Netz-22-Pixel (K5e_f1 6, Runde 1 57) |
+| Sicht: Augen verschwunden | Zone-29-Traeger 22/0/82 und 83 sind schon in K5e_f1 UV-entartet (v = 72), 22/1/152 liest einen Augen-Texel; in Bild 2 trafen 5 Pixel; Augen-Material L* 16-38 x 1,98 zu dunkel | eigene Augen-Texel (kf_k5g3_auge.py): Mitte und Groesse aus den Nutzerpunkten (zonen_v2 augen.nutzerpunkte, punkt_px_vorlage 6,5 / 12,3) auf die fertige Geometrie zurueckgerechnet (Tabelle generator/k5g3_augen_mitten.json, Radius 17,5 / 18,8 Einheiten); jedes Dreieck, das die Augenscheibe beruehrt (7 + 4), bekommt eine eigene laengentreue UV (4 Texel je Augenradius; alte UV 0,03-0,09 Texel je Einheit), innen G4-Augen-Material per Rang, aussen Rueckabtastung der alten Farbe; f_auge 2,6972 per Bisektion | A1 Bild 2: 8 px (Nutzer 6,5) und 12 px (12,3), Mitte 0,4 / 0,2 px vom Punkt, Median L* 17,5 / 20,5 gegen Kopfhaut 5,7; A3 Spielfenster 5080 von vorn: 9 px Median 15,5 gegen 4,7 und 15 px Median 17,3 gegen 4,1 (mit f der Runde 1: 10,1 / 11,2) |
+| Sicht: gestreckte Farbstreifen | B4-UV (GEOMETRIE.md 9.2) | Spalt mit den uvfein-UV der Geometrie-Stufe | UV1: 0 Flaechen weichen von uvfein + Kopie-Versatz ab (Runde 1: 3715) |
+
+Aufruf `kf_k5g3.py --auge 1,98 3,0 6`, Protokoll [f, Median1, Ring1, Median2, Ring2]: 3,0 20,21/5,74 23,21/5,74; 2,49 15,63 18,11; 2,745
+18,18 20,54; 2,6175 17,0 19,5; 2,6813 17,0 20,02; 2,7131 18,18 20,54; 2,6972 17,52 20,54 -> 2,6972 (Schwelle 3 x 5,74 = 17,22). Augen-Rampe
+L* 45-95 (oberster Eintrag 0x77BF, nicht 0x7FFF).
+
+### K5g3R2.2 Riegel
+
+Aufruf `python generator/riegel_k5g3.py textur` (Protokoll k5g/K5g3/riegel_k5g3_textur.txt/.json): **"RIEGEL K5g3 TEXTUR: 43 von 43 gruen,
+37 von 37 Gegenproben rot wie verlangt"**, Exit 0. Neu: UV1, K1, K2, W6, B1, A1 (neu definiert: Groesse 0,5-2 x Nutzerflaeche, Abstand
+<= 2 px, Median >= 3 x Kopfhaut), A2, A3 (Spielfenster, generator/kf_k5g3_augen_spiel.py mit Markierungslauf). V3.1/V3.1b ohne Zone 29 (Augen
+ueber A1-A3) und mit den Loch-Flaechen als Traeger. Gegenproben der neuen Riegel: die Abgabe der Runde 1 aus git (Commit da6560372) bzw.
+derselbe Bau mit f_auge der Runde 1.
+
+Spiel 5080 Bild-1-Lage (neues Normal-/Schluessel-Paar): Z1 7,79 / Z2 0,708 / Z3 0,363 / Z4 4,84 / Z5 3,19 / Z6 0,517 / Z7 0,290 / Z8 13,73 /
+Z9 6,57 (Grenze 6,53). Ruhe R1-R4 1 / 0,0 / 1,1 / 1,1. Hautton Albedo 22,1 Grad.
+
+### K5g3R2.3 Tests und Spiellauf
+
+- local_build.sh build: "no work to do" (keine C-Aenderung in dieser Runde).
+- ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3 mit RE15_RE2_ASSET_ROOT=k5g/K5g3: "100% tests passed, 0 tests failed out of 12"
+  (277,3 s; integration_r41_form_dreiecke 277,2 s).
+- RE15_SOFTWARE_RENDER=1, 5090 Schnitt 11, Form Clip 12, bis Bild 1300 (kf_k5g3_spiel.sh): "[render] SDL-Renderer software", "EXIT_AT: Bild
+  1300", "[tri-liste] ENDE hoechststand=7318 verworfen=0" - kein Absturz.
+- Fensterbilder neu (kf_k5g3_fenster.sh, gdigrab nur auf das eigene Fenster): k5g/K5g3/spiel/k5g_*.png; Augen-Laeufe unter scratchpad
+  k5g2/t3r2/augen_spiel/ (Ergebnis k5g/K5g3/spiel_augen.json).
+
+### K5g3R2.4 Tafeln (k5g/K5g3/tafeln/, roh, neu gerendert)
+
+01-09 wie Runde 1. Neu: 04_spiel mit einer Zeile "Kopf von vorn x4" (Ihr Bild "Gesicht vorne" | K5e | K5g3, echtes Spielfenster), 09_zonen
+mit einer dritten Kachel je Fleck, in der das Fleck-Material tuerkis umrandet ist (Sicht-Pruefer r1: die Nahkacheln zeigten keine Markierung).
+Selbst angesehen: 02 (Form wie Runde 1, Augen als kleine helle Punkte), 04 unterste Zeile (zwei kleine helle Augenpunkte auf den Wuelsten,
+kein schwarzer Fleck mehr; K5e zeigt grosse dunkle gemalte Augen mit rotem Rand), 09 unten (Umrandungen auf Buckel, Augen, Schulter, Beinen).
+
+### K5g3R2.5 Offen
+
+1. V1 "eine Transformation je Material" (Zahlen-Pruefer Gelb 1): die Haut behaelt drei Seitenfaktoren f_s 4,54 / 1,86 / 2,55 - ohne sie faellt
+   Huefte/Ruecken auf L* 9,5 unter die Haut-P25 14,7 (Riegel S1, Gegenprobe "ohne Seitenangleich"). Entscheid beim Orchestrator.
+2. Augen: im Spielfenster kleine helle Punkte (9 und 15 Pixel) an den Stellen Ihrer Punkte, aber deutlich unauffaelliger als die grossen
+   gemalten Augen von K5e. Groesser wuerden sie nur gegen die Nutzerpunkte (E3).
+3. Unter weissem Licht ist die Haut weiter rostbraun mit rosa Adern (O3 gegen V2, Runde 1 Offen 1) - unveraendert.
+4. Leuchtstelle F1 "lila-grau mit grauen Bloecken" (Sicht-Pruefer r1, klein): nicht bearbeitet.
+5. Zone 44 (Hals-Unterseite) traegt auf 5 Flaechen Zone-27-Fleisch (Zahlen-Pruefer r1 Hinweis): unveraendert, Vorrang Zone 27 bitte bestaetigen.
+6. Rechte Hand: Posen-Datei (G2) fehlt weiter; Geometrie-Riegel R8 bleibt deshalb rot (GEOMETRIE.md 9.7).
+
+## K5g3 Runde 3 - Entscheide G6-G9 nach der Pruefung r2 (2026-11-14)
+
+Auftrag K5g3 Textur-Bauer Runde 3: nur G6-G9 (Orchestrator), aufgebaut auf dem committeten Stand der Runde 2 (f48d37df1). Grundlage:
+PRUEFUNG_K5G3_r2_zahlen.md (1 ROT: braeunliche Musterung flach; Gelb: fast weisse Haut, Seitenfaktoren, Zone 44/27) und
+PRUEFUNG_K5G3_r2_sicht.md (BESTANDEN). Geometrie unveraendert (Stufe kf_k5g3_geo, geo/BAHNSTEIG_FORM.EMD db9404a1, Riegel TG gruen). Spiel-Asset
+bleibt K5e_f1 (G5 gruen). Messwerkzeuge und Ergebnisse dieser Runde: k5g/K5g3/messung_r3/ (gelaufen im Scratchpad k5g2/r3/).
+
+### K5g3R3.0 Abgabe
+
+| Datei (k5g/K5g3/) | sha256 |
+|---|---|
+| BAHNSTEIG_FORM.EMD (28 Clips) | 1981f97ea6fac8d1a377cf53a10e4358419dbff69c23e1418372f55915ec5024 |
+| BAHNSTEIG_FORM.TIM = FORM.TIM (15 Zeilen, Port-Hoehe 3840) | c00823b35ad80624adc0678d5a57dfe6aa23c99bb7fd970fc696a2f40ec4102c |
+| FORM.EMD (3 Keys) | 26e310fe335ef4302868101f92bb3c026e42d49c5ce3685067490dace2caa85f |
+
+Die EMD aendert sich gegen Runde 2 nur in UV/Seite: die 5 Hals-Unterseiten-Flaechen (G7) werden nicht mehr kopiert (Kopien 150 -> 145), die
+uebrigen Kopien liegen dadurch teils an anderen freien Plaetzen. Ecken, Normalen, Flaechen-Ecken = Geometrie-Stufe (TG, UV1, V3.1b gruen).
+`python generator/kf_k5g3.py pruef`: "zwei Laeufe und Abgabe byte-gleich: JA". Zeilen wie Runde 2.
+
+### K5g3R3.1 Entscheid fuer Entscheid
+
+| Entscheid | Ursache (gemessen) | Umsetzung (generator/kf_k5g3_tex.py) | Ergebnis |
+|---|---|---|---|
+| G6 braeunliche Musterung (Zonen 16/19) = flache Insel | Rang-Tausch auf eine Rampe aus nur 3 braeunlichen G4-Eintraegen (1:148, 2:123, 2:170) -> 2 Werte (L* 32/36) | EINE Transformation auf die G4-Helligkeit der Zonen-Texel selbst: je Zonen-Texel sein G4-Eintrag (23 verschiedene Quellen, 110 Texel-Flaechen-Paare), L = knie(b x f_s x L_G4), C = r x L, Ton h. Aus den braeunlichen G4-Eintraegen (wie Runde 2, texelgewichtet): h 70,21 Grad (Kreismittel), r 0,4189 (Median C*/L*), b 0,7576 (Median b f_s L_G4 der Zonen-Texel = Median f_s L der braeunlichen Eintraege 32,06 = Niveau der Runde 2) | G6.16: cv 0,412 (G4 0,416), 14 Stufen (G4 23); G6.19: cv 0,264 (G4 0,270), 5 Stufen (G4 7); Runde 2: 0,062 / 0,061 mit 2 Stufen. B1: L* 32,6 (R2 31,9), Ton 71,2 (71,3), C* 13,2 (R2 6,4) |
+| G7 Zone 44 traegt Zone-27-Fleisch | 21/0/0, 21/1/0, 21/1/8, 21/1/56, 21/1/64 stehen in zonen_v2 sowohl in Zone 44 (Hals-Unterseite) als auch in Zone 27 (traeger_texel: 39+106+72+186+566 Texel) | V4 vor Fleck: die Flaechen der Zonen 31/42/44/45 und Lippensaum/Maul_Band tragen kein rotes Fleck-Material (fleisch, wunde, rotfleisch); sie behalten die Haut, das Fleisch bleibt auf den Kopien der uebrigen Traeger (V4_ZONEN, ROT_MATERIAL; bau.json flecken.v4_vorrang). Gemessen: nur diese 5 Flaechen betroffen | G7: Zone 44 0 von 13072 Zugriffen Fleck-Material, 0,00 % roeter als die Haut; alle V4-Flaechen 0 von 26541 (Runde 2: 949 Zugriffe, 3,60 %) |
+| G8 fast weisse Haut (L* 95-99) | Faktor f_s auf helle G4-Eintraege (Seite 0: 4,54); die 15-Bit-Wahl nahm 0x7FFE/0x7BDF/0x77BF | kf_k5g3_tex.deckel: entlang der Rampe (nach Quell-L*) bekommt jeder Eintrag mit L* > 85 (par haut.L_max) das Wort des naechsten Rangs darunter, der unter 85 liegt (Rangfolge bleibt, die obersten Raenge fallen zusammen; Eintraege darunter bytegleich). Auf die Hautzeilen (davon erben Tausch, Loch-Haut, Fleck-Grund), die umgefaerbten F1-Randeintraege und alle Fleck-Materialrampen ausser Auge und rotem Fleisch (F1-Kern K5c). Gedeckelt: haut0 237, haut1 129, haut2 160, f1 2, muster1 11, muster2 12, weiss2 4, fleisch1 3, wunde1 3 Eintraege; Ersatzwort meist 0x631F (L* 84,5) | G8: 0 von 457031 Zugriffen mit L* > 85 (ausser Zaehnen, Maul, Augen, F1-Kern; Runde 2: 1856). Im Spiel (5080, 5 Bilder, Q): L* > 90 0 Pixel (Runde 2: 535 = 107 je Bild), L* > 85 65 (Runde 2: 690), K5e_f1 0 |
+| G9 Seitenfaktoren der Haut | siehe K5g3R3.2 | **gemeldet, nicht gebaut** (Bedingung nicht voll erfuellt) | Faktoren unveraendert 4,54 / 1,86 / 2,55 |
+
+Die uebrigen Werte bleiben (G10): f 1,86, s 0,5225, Fleisch k 0,7825, f_auge 2,6972 unveraendert; Z1-Z9 neu gemessen (eigenes Normal-/
+Schluessel-Paar, kf_k5g3_zlauf.sh): Z1 7,77 / Z2 0,703 / Z3 0,361 / Z4 4,86 / Z5 3,20 / Z6 0,514 / Z7 0,288 / Z8 13,79 / Z9 6,58 (Grenze 6,53;
+Runde 2 6,57). Augen im Spielfenster 5080 von vorn: 9 px Median L* 15,5 gegen 4,7 und 15 px 17,3 gegen 4,1 (wie Runde 2).
+
+**Braun im echten Spiel** (messung_r3/braun_spiel.py, 5080 Bild-1-Lage, Framedump des eigenen Fensters, Marker = Braun-Eintraege gruen,
+103 Pixel, Bild 400; Messbild messung_r3/braun_z5080_messbild.png):
+
+| | Q cv | Q L* Median | Q Ton | Q Farben | P cv |
+|---|---|---|---|---|---|
+| K5g3 Runde 3 | **0,412** | 25,3 | 70,8 | 50 | 0,507 |
+| K5g3 Runde 2 | 0,062 | 32,1 | 70,4 | 37 | 0,149 |
+| K5e_f1 | 0,234 | 33,5 | -35,6 | 48 | 0,333 |
+
+Pruefer-Vorgabe "Q-cv nicht unter etwa 0,5 x K5e_f1 (0,23)": erfuellt. Ton bleibt. Q-L* der sichtbaren 103 Pixel sinkt von 32,1 auf 25,3:
+im Bild liegen die dunkleren Texel des Flecks (der Median aller Zonen-Texel bleibt 32,6, Riegel B1).
+
+### K5g3R3.2 G9 - Herleitung der Seitenfaktoren (Ergebnis: nicht nur Grundhelligkeit der Seiten, darum gemeldet)
+
+Heute (bau.json textur.haut): g_s = texelgewichteter Median L* der G4-Hautklasse, gewichtet mit den Texeln, die die **K5-Hautflaechen** auf
+Seite s lesen: Seite 0 5,205 / Seite 1 12,702 / Seite 2 9,268 -> g 2,4402 / 1 / 1,3705, f_s = 1,86 g_s = 4,54 / 1,86 / 2,55. Quelle sind
+Original-Texel (G4-Atlas und G4-CLUT, kein Video, kein Zielwert je Koerperregion).
+
+Gegenrechnung mit der Grundhelligkeit der Original-Seiten selbst (messung_r3/seiten_g4.py, seiten_g4.json): dieselbe Statistik, aber gewichtet
+mit den Texeln, die das **RE2-G4-Modell selbst** liest (CDEMD0.EMS Typ 0x34; 564 / 924 / 384 Dreiecke auf Seite 0 / 1 / 2; Atlas = K5e-Atlas
+Seiten 0-2 bytegleich): Median Hautklasse 9,847 / 13,105 / 12,508 -> g 1,3308 / 1 / 1,0477.
+
+| Seitenfaktor f_s | Seite 0 | Seite 1 | Seite 2 | Huefte/Ruecken (Teile 0/7) Median L* | uebrige Haut P25/Median/P75 |
+|---|---|---|---|---|---|
+| Abgabe (K5-Hautflaechen) | 4,539 | 1,86 | 2,549 | 23,3 | 18,4 / 24,2 / 32,2 |
+| G4-eigene Seitenstatistik | 2,475 | 1,86 | 1,949 | **12,7** | 16,5 / 23,6 / 31,3 |
+| ohne Angleich | 1,86 | 1,86 | 1,86 | 9,6 | 15,7 / 23,6 / 31,3 |
+
+(messung_r3/g9_sattel.py, L* = knie(f_s L_G4) je Zugriff wie die Hautzeile.) Die Grundhelligkeit der Seiten erklaert nur einen Teil der
+Faktoren (Seite 0: 1,33 von 2,44; Seite 2: 1,05 von 1,37). Der Rest kommt daher, dass die K5c-UV Huefte und Ruecken auf dunklere Stellen der
+Seite 0 legt, als das G4-Modell dort selbst nutzt. Mit Faktoren nur aus der Seitenstatistik kaeme der Sattel zurueck (Teile 0/7 L* 12,7 unter
+der Haut-P25 16,5; Riegel S1 waere rot, Sicht-Pruefer K5g2 r1 "fast schwarzer Sattel"). Nach G9 ("ist das nicht so, melden statt bauen")
+bleibt der Stand der Runde 2 unveraendert; Entscheid beim Orchestrator.
+
+### K5g3R3.3 Riegel
+
+`python generator/riegel_k5g3.py textur` (Protokoll k5g/K5g3/riegel_k5g3_textur.txt/.json): **"RIEGEL K5g3 TEXTUR: 47 von 47 gruen, 41 von
+41 Gegenproben rot wie verlangt"**, Exit 0. Neu (Gegenprobe = Abgabe der Runde 2 aus git, Commit f48d37df1, riegel_k5g3_tex.r2_stand):
+G6.16, G6.19 (cv >= 0,5 x cv(G4) und ab 15 Texeln >= 5 Stufen, gegen die G4-CLUT der EMS am Original-Index), G6.i (Info, dieselbe Regel fuer
+die uebrigen Fleck-Zonen), G7, G8. V3.1 rechnet die Fleck-Zuordnung mit derselben V4-Regel wie der Generator (je_mit_kern; fehlende
+Fleck-Texel 0, Material ausserhalb 0).
+
+### K5g3R3.4 Tests und Spiellauf
+
+- local_build.sh build: "ninja: no work to do" (keine C-Aenderung in dieser Runde).
+- ctest -R "form|bahnsteig|birkin_form|r41_form" -j 3 mit RE15_RE2_ASSET_ROOT=k5g/K5g3: "100% tests passed, 0 tests failed out of 12"
+  (377,7 s; integration_r41_form_dreiecke 377,6 s, integration_r41_form_wagenweg 127,5 s).
+- RE15_SOFTWARE_RENDER=1, 5090 Schnitt 11, Form Clip 12, bis Bild 1300 (kf_k5g3_spiel.sh): "[render] SDL-Renderer software", "EXIT_AT: Bild
+  1300 in Raum 5090 erreicht", "[tri-liste] ENDE hoechststand=7318 (F6) verworfen=0" - kein Absturz.
+- Fensterbilder neu (kf_k5g3_fenster.sh, gdigrab nur auf das eigene Fenster, kein AUTOSHOT/SOFTWARE_RENDER): k5g/K5g3/spiel/k5g_*.png;
+  Zielband-Paar (kf_k5g3_zlauf.sh) f80_riegel_c00823b3; Augen-Laeufe kf_k5g3_augen_spiel.py; Braun-Laeufe messung_r3/braun_spiel.py.
+
+### K5g3R3.5 Tafeln (k5g/K5g3/tafeln/, roh, neu gerendert)
+
+01-09 mit `python generator/kf_k5g3_tafeln.py k5g/K5g3 k5g/K5g3/tafeln` auf dem Asset 1981f97e/c00823b3 (04 mit neuen Fensterbildern
+k5g/K5g3/spiel/k5g_*.png, 08 mit dem neuen Paar f80_riegel_c00823b3). Selbst angesehen: 01 (Form wie Runde 2) und das Messbild zur
+braunen Stelle (der Fleck am Bein zeigt jetzt hellere und dunklere Texel statt einer glatten Flaeche).
+
+### K5g3R3.6 Offen
+
+1. G9: Seitenfaktoren gleichen nicht nur die Grundhelligkeit der Seiten aus (K5g3R3.2) - Entscheid beim Orchestrator.
+2. G6.i (Info): Zonen 3 (cv 0,272 gegen G4 0,842) und 4 (0,191 gegen 0,385) liegen unter 0,5 x cv(G4) (Musterung/Maserung, Rang-Tausch
+   auf die Aderrampe, Zahlen-Pruefer r2 Gelb 4); alle uebrigen Fleck-Zonen erfuellen die Regel. Nicht angefasst (Auftrag: nur G6-G9).
+3. G8: das Deckel-Wort ist meist 0x631F (L* 84,5, rosa-weiss); im Spiel 65 Q-Pixel mit L* 85-90 in 5 Bildern (Runde 2: 690). Die Regel
+   "naechster Rang darunter" laesst die hellsten Raenge zusammenfallen.
+4. Braun: C* steigt von 6,4 auf 13,2 (r = C*/L* der braeunlichen Quelle, wie vom Pruefer vorgeschlagen; Haut C* 12,0 bei L* 23,3).
+5. Z9 bleibt knapp (6,58 bei Grenze 6,53).
+6. Rechte Hand: Posen-Datei (G2/G11) fehlt weiter; Geometrie-Riegel R8 bleibt rot (nicht angefasst).

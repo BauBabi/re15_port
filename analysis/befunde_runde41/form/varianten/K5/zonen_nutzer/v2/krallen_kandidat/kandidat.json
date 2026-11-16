@@ -1,0 +1,874 @@
+{
+ "regel": "Auftrag 3: Krallen-Vorschlag als Geometrie-Kandidat (nicht im Asset).\nvorn links: 28 mit K5c-Geometrie zurueck. vorn rechts: 31 bleibt; 19 mit K5c-Lage zurueck und genau EIN Laengenfaktor entlang der eigenen\nAchse (Wurzel -> Spitze) aus der gemessenen Nutzer-Spitze; 20 und 29 nur um ihre Wurzel (Knochen-Ursprung an der Hand) gedreht, Laenge wie K5c,\nbis sie in Bild 2 ganz in der vom Schriftzug verdeckten Flaeche liegen und kein Pixel ueber sichtbarem Hintergrund (Annahme nach Nutzer-Wortlaut\n\"vorne rechts hat er wahrscheinlich auch 4 krallen. Man sieht es nur nicht wegen der Schrift.\"). hinten unveraendert.\nRunde 2: 20 und 29 bleiben eingezogen (Asset), weil keine Drehung die Annahme erfuellt (Pruefer r1 Nr. 12); Frage an den Nutzer.\nRunde 3 (Pruefer r2 Nr. 12): 19 mit K5c-Lage und einem Faktor liegt ueber Ihrer Hand (g_kralle19.py: 710 Video-px sichtbare Hand verdeckt,\n8 Ecken in der Hand bei Wurzelradius 98); auch keine Drehung um die Wurzel mit Spitze an Ihrem Strichende vermeidet das. 19 bleibt deshalb im\nKandidaten EINGEZOGEN wie im Asset (Frage an den Nutzer); die gekuerzte K5c-Lage wird nur als Variante fuer die Tafel geschrieben\n(OUT/variante_19_k5c_gekuerzt/, nicht der Kandidat).\nRunde 4 (Pruefer r3 Nr. 7): Sichtbarkeit in Bild 2 im fertigen Bild des Standes (Krallen verdecken sich gegenseitig und die Hand);\ndazu, was die zurueckgeholte 28 verdeckt (Kralle 15, Hand 13).",
+ "wasserzeichen_px_vorlage": 9192,
+ "kralle19": {
+  "laengenfaktor": 0.4898,
+  "achse": "Knochen-Ursprung (Wurzel an der Hand) -> fernste Ecke (Spitze)",
+  "spitze_k5c_vorlage": [
+   203.3,
+   499.1
+  ],
+  "nutzer_spitze_vorlage": [
+   202.96,
+   457.33
+  ],
+  "spitze_variante_vorlage": [
+   218.1,
+   462.5
+  ],
+  "rest_abstand_px": 16.01,
+  "laenge_k5c": 713.5,
+  "laenge_variante": 349.5,
+  "stand_im_kandidaten": "eingezogen wie im Spiel-Asset (Runde 3); Variante nur in variante_19_k5c_gekuerzt/"
+ },
+ "kralle20_29": {
+  "stand": "eingezogen wie im Spiel-Asset (unveraendert)",
+  "grund": "Drehen um die Wurzel erfuellt die Annahme nicht (Runde 1: bestes Ergebnis 135 / 12 px ueber Hintergrund, 2 / 1 Ecken in der Hand, in Bild 1 330 / 683 px ueber Hintergrund); Entscheidung beim Nutzer (Frage)"
+ },
+ "durchdringung": {
+  "28": {
+   "hand": 13,
+   "ecken_in_der_hand": 2,
+   "ecken_geprueft": 17,
+   "wurzelradius": 200.0
+  },
+  "19_variante": {
+   "hand": 18,
+   "ecken_in_der_hand": 8,
+   "ecken_geprueft": 25,
+   "wurzelradius": 98.0
+  }
+ },
+ "emd": {
+  "datei": "BAHNSTEIG_FORM.EMD",
+  "meshes_mit_anderen_ecken": [
+   28
+  ],
+  "bytes_verschieden": 125,
+  "laenge_gleich": true
+ },
+ "ecken": {
+  "28": {
+   "tv": [
+    [
+     -41,
+     86,
+     -71
+    ],
+    [
+     -6,
+     66,
+     -144
+    ],
+    [
+     -9,
+     -24,
+     -138
+    ],
+    [
+     -41,
+     -39,
+     -71
+    ],
+    [
+     -60,
+     -5,
+     -34
+    ],
+    [
+     -60,
+     44,
+     -33
+    ],
+    [
+     207,
+     108,
+     -9
+    ],
+    [
+     259,
+     73,
+     -115
+    ],
+    [
+     254,
+     -58,
+     -106
+    ],
+    [
+     207,
+     -91,
+     -9
+    ],
+    [
+     176,
+     -36,
+     54
+    ],
+    [
+     174,
+     48,
+     59
+    ],
+    [
+     398,
+     75,
+     49
+    ],
+    [
+     440,
+     39,
+     -38
+    ],
+    [
+     438,
+     -70,
+     -33
+    ],
+    [
+     398,
+     -109,
+     49
+    ],
+    [
+     367,
+     -58,
+     113
+    ],
+    [
+     366,
+     25,
+     115
+    ],
+    [
+     535,
+     10,
+     100
+    ],
+    [
+     559,
+     -17,
+     53
+    ],
+    [
+     559,
+     -78,
+     52
+    ],
+    [
+     535,
+     -107,
+     100
+    ],
+    [
+     514,
+     -75,
+     144
+    ],
+    [
+     515,
+     -20,
+     143
+    ],
+    [
+     -69,
+     19,
+     -85
+    ],
+    [
+     671,
+     -21,
+     288
+    ]
+   ],
+   "qv": [
+    [
+     -41,
+     86,
+     -71
+    ],
+    [
+     -6,
+     66,
+     -144
+    ],
+    [
+     -9,
+     -24,
+     -138
+    ],
+    [
+     -41,
+     -39,
+     -71
+    ],
+    [
+     -60,
+     -5,
+     -34
+    ],
+    [
+     -60,
+     44,
+     -33
+    ],
+    [
+     207,
+     108,
+     -9
+    ],
+    [
+     259,
+     73,
+     -115
+    ],
+    [
+     254,
+     -58,
+     -106
+    ],
+    [
+     207,
+     -91,
+     -9
+    ],
+    [
+     176,
+     -36,
+     54
+    ],
+    [
+     174,
+     48,
+     59
+    ],
+    [
+     398,
+     75,
+     49
+    ],
+    [
+     440,
+     39,
+     -38
+    ],
+    [
+     438,
+     -70,
+     -33
+    ],
+    [
+     398,
+     -109,
+     49
+    ],
+    [
+     367,
+     -58,
+     113
+    ],
+    [
+     366,
+     25,
+     115
+    ],
+    [
+     535,
+     10,
+     100
+    ],
+    [
+     559,
+     -17,
+     53
+    ],
+    [
+     559,
+     -78,
+     52
+    ],
+    [
+     535,
+     -107,
+     100
+    ],
+    [
+     514,
+     -75,
+     144
+    ],
+    [
+     515,
+     -20,
+     143
+    ],
+    [
+     -69,
+     19,
+     -85
+    ],
+    [
+     671,
+     -21,
+     288
+    ]
+   ]
+  }
+ },
+ "bild1_kontrolle": {
+  "19": {
+   "asset": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "k5c": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "vorschlag": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "variante_19": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   }
+  },
+  "20": {
+   "asset": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "k5c": {
+    "sichtbar_px": 4,
+    "ueber_hintergrund_px": 0
+   },
+   "vorschlag": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "variante_19": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   }
+  },
+  "28": {
+   "asset": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "k5c": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "vorschlag": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "variante_19": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   }
+  },
+  "29": {
+   "asset": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "k5c": {
+    "sichtbar_px": 10,
+    "ueber_hintergrund_px": 10
+   },
+   "vorschlag": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   },
+   "variante_19": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0
+   }
+  }
+ },
+ "bild2_je_stand": {
+  "asset": {
+   "14": {
+    "sichtbar_px": 357,
+    "ueber_hintergrund_px": 17,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 326,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 5,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 333
+   },
+   "15": {
+    "sichtbar_px": 699,
+    "ueber_hintergrund_px": 25,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 699,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 209,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 433
+   },
+   "28": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 0,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "30": {
+    "sichtbar_px": 2,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 2,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 1,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "19": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 0,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "20": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 0,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "29": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 0,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "31": {
+    "sichtbar_px": 419,
+    "ueber_hintergrund_px": 126,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 419,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   }
+  },
+  "k5c": {
+   "14": {
+    "sichtbar_px": 357,
+    "ueber_hintergrund_px": 17,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 326,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 5,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 333
+   },
+   "15": {
+    "sichtbar_px": 461,
+    "ueber_hintergrund_px": 21,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 699,
+    "von_anderen_teilen_verdeckt": {
+     "28": 238
+    },
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 209,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 200
+   },
+   "28": {
+    "sichtbar_px": 292,
+    "ueber_hintergrund_px": 12,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 312,
+    "von_anderen_teilen_verdeckt": {
+     "15": 20
+    },
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 8
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 268
+   },
+   "30": {
+    "sichtbar_px": 2,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 2,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 1,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "19": {
+    "sichtbar_px": 1521,
+    "ueber_hintergrund_px": 161,
+    "im_schriftzug_px": 449,
+    "sichtbar_ohne_andere_krallen_px": 1521,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "20": {
+    "sichtbar_px": 1734,
+    "ueber_hintergrund_px": 1686,
+    "im_schriftzug_px": 35,
+    "sichtbar_ohne_andere_krallen_px": 1734,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "29": {
+    "sichtbar_px": 1479,
+    "ueber_hintergrund_px": 1479,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 1782,
+    "von_anderen_teilen_verdeckt": {
+     "20": 303
+    },
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "31": {
+    "sichtbar_px": 419,
+    "ueber_hintergrund_px": 126,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 419,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   }
+  },
+  "vorschlag": {
+   "14": {
+    "sichtbar_px": 357,
+    "ueber_hintergrund_px": 17,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 326,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 5,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 333
+   },
+   "15": {
+    "sichtbar_px": 461,
+    "ueber_hintergrund_px": 21,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 699,
+    "von_anderen_teilen_verdeckt": {
+     "28": 238
+    },
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 209,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 200
+   },
+   "28": {
+    "sichtbar_px": 292,
+    "ueber_hintergrund_px": 12,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 312,
+    "von_anderen_teilen_verdeckt": {
+     "15": 20
+    },
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 8
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 268
+   },
+   "30": {
+    "sichtbar_px": 2,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 2,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 1,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "19": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 0,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "20": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 0,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "29": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 0,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "31": {
+    "sichtbar_px": 419,
+    "ueber_hintergrund_px": 126,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 419,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   }
+  },
+  "variante_19": {
+   "14": {
+    "sichtbar_px": 357,
+    "ueber_hintergrund_px": 17,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 326,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 5,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 333
+   },
+   "15": {
+    "sichtbar_px": 461,
+    "ueber_hintergrund_px": 21,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 699,
+    "von_anderen_teilen_verdeckt": {
+     "28": 238
+    },
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 209,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 200
+   },
+   "28": {
+    "sichtbar_px": 292,
+    "ueber_hintergrund_px": 12,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 312,
+    "von_anderen_teilen_verdeckt": {
+     "15": 20
+    },
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 8
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 268
+   },
+   "30": {
+    "sichtbar_px": 2,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 2,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 1,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "19": {
+    "sichtbar_px": 838,
+    "ueber_hintergrund_px": 28,
+    "im_schriftzug_px": 142,
+    "sichtbar_ohne_andere_krallen_px": 838,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "20": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 0,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "29": {
+    "sichtbar_px": 0,
+    "ueber_hintergrund_px": 0,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 0,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   },
+   "31": {
+    "sichtbar_px": 419,
+    "ueber_hintergrund_px": 126,
+    "im_schriftzug_px": 0,
+    "sichtbar_ohne_andere_krallen_px": 419,
+    "von_anderen_teilen_verdeckt": {},
+    "in_schleife_px": {
+     "1": 0,
+     "2": 0,
+     "3": 0,
+     "4": 0
+    },
+    "im_fussabschnitt_ohne_schleifen_px": 0
+   }
+  }
+ },
+ "kralle28_verdeckt_bild2": {
+  "13": 38,
+  "15": 238
+ },
+ "kralle28_ueber_hintergrund_bild2": 12,
+ "kralle28_in_schleife4_anteil": 0.0274,
+ "kralle15_fussabschnitt": {
+  "asset": 433,
+  "vorschlag": 200
+ }
+}

@@ -3206,6 +3206,7 @@ static void re15_testhaken_ende(void)
      * weg und bekam "resource busy or locked", das Spiel startete gar nicht erst
      * (gemessen: Abbruch nach 0.86 s, kein debug.log im Arbeitsverzeichnis).
      * fclose gibt den Griff sofort zurueck. */
+    { extern void re15_render_pc_textri_bilanz(void); re15_render_pc_textri_bilanz(); }   /* G3 (Runde 41 Form K5g3): Schlusszeile [tri-liste] */
     fflush(NULL);
     fclose(stderr);
 #if defined(_WIN32)

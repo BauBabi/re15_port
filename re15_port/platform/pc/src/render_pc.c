@@ -227,10 +227,20 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
  *   5. end_frame: RenderPresent
  *
  * The queue is bounded to keep per-frame allocations off the heap. */
-#define TEXTRI_QUEUE_MAX 8192   /* was 2048 ("~700 quads" = ONE actor) — ROOM1140 draws 7 actors
+#define TEXTRI_QUEUE_MAX 16384  /* was 2048 ("~700 quads" = ONE actor) — ROOM1140 draws 7 actors
                                  * (Leon + W01 + 5 zombies + corpses) and saturated the queue, which
                                  * silently dropped everything queued after it (the effect sprites:
-                                 * muzzle/smoke/shell + gore were never drawn). 8192 ≈ 4 rooms' worth. */
+                                 * muzzle/smoke/shell + gore were never drawn). 8192 ≈ 4 rooms' worth.
+                                 * 8192 -> 16384 (Runde 41 Form K5g3, Orchestrator-Entscheid G3 vom
+                                 * 2026-11-14): die Riesenform mit dem Spalt B4 zeichnet rund 2,2-mal so
+                                 * viele Dreiecke wie K5e_f1 (Messbank: bis 7318 Form-Dreiecke in einem
+                                 * Bild); mit Spielfigur und Effekten reichte 8192 nicht mehr, der Rest
+                                 * fiele STILL weg. Das ist ein PUFFER DES PC-PORTS, kein Spielwert
+                                 * (die PSX zeichnet ueber die OT, ohne diese Liste). Ueberlauf wird jetzt
+                                 * gezaehlt (s_textri_verworfen, Zeile "[tri-liste]" im debug.log).
+                                 * Speicher: je Eintrag 3 SDL_Vertex (60 B) + depth 4 + slot 1 + blend 1
+                                 * + Flush-Puffer 60 + order 4 = 130 B; Liste + Standbild-Kopie (s_sb_*,
+                                 * 66 B je Eintrag) = 196 B x 16384 = 3,06 MiB statt 1,53 MiB. */
 
 /* TIM slot pool — allows multiple characters/props to have their own
  * textures. Slot 0 = player default (Leon); other slots for NPCs/props. */
@@ -467,6 +477,24 @@ static float          s_textri_depth[TEXTRI_QUEUE_MAX];
 static uint8_t        s_textri_slot [TEXTRI_QUEUE_MAX];  /* TIM slot per tri */
 static uint8_t        s_textri_blend[TEXTRI_QUEUE_MAX];  /* PSX-ABR-Ableitung je Tri (s.u.) */
 static int            s_textri_count = 0;
+/* G3-Zaehler (Runde 41 Form K5g3): Dreiecke, die wegen voller Liste NICHT eingereiht wurden. Vorher fielen sie still weg.
+ * s_textri_grenze = TEXTRI_QUEUE_MAX; nur der Messhaken RE15_TRILISTE_GRENZE=<n> (Gegenprobe des Tests) setzt sie kleiner. */
+static int            s_textri_grenze = -1;
+static unsigned long  s_textri_verworfen_bild = 0, s_textri_verworfen_gesamt = 0, s_textri_bilder_mit_verlust = 0;
+static int            s_textri_hoch = 0;            /* hoechste Zahl eingereihter Dreiecke in einem Bild */
+static unsigned       s_textri_hoch_bild = 0;       /* Bildzaehler (g_engine.frame_count) dazu */
+static unsigned       s_textri_meldung = 0;
+static int re15_textri_grenze(void)
+{
+    if (s_textri_grenze < 0) {
+        const char *e = getenv("RE15_TRILISTE_GRENZE");
+        int n = (e && *e) ? atoi(e) : 0;
+        s_textri_grenze = (n > 0 && n < TEXTRI_QUEUE_MAX) ? n : TEXTRI_QUEUE_MAX;
+        if (s_textri_grenze != TEXTRI_QUEUE_MAX)
+            fprintf(stderr, "[tri-liste] Messhaken RE15_TRILISTE_GRENZE: Grenze %d statt %d\n", s_textri_grenze, TEXTRI_QUEUE_MAX);
+    }
+    return s_textri_grenze;
+}
 
 /* STANDBILD fuer die RE2-Tuersequenz (analysis/tor_1170/08_re_blende.md 6): RE2 dunkelt vor der
  * Tuerszene das STEHENDE letzte Bild ab - ohne die Welt neu zu zeichnen zieht jeder Durchlauf
@@ -550,6 +578,15 @@ static int s_dbg_bbox_valid = 0;
 static int s_dbg_last_min_sx = 0, s_dbg_last_max_sx = 0;
 static int s_dbg_last_min_sy = 0, s_dbg_last_max_sy = 0;
 int re15_render_pc_dbg_textri_count(void)    { return s_dbg_last_textri_count; }
+/* G3: Abfrage des Ueberlauf-Zaehlers (Tests, Messlaeufe). */
+unsigned long re15_render_pc_textri_verworfen(void) { return s_textri_verworfen_gesamt; }
+int re15_render_pc_textri_hoechststand(void)        { return s_textri_hoch; }
+int re15_render_pc_textri_grenze(void)              { return re15_textri_grenze(); }
+void re15_render_pc_textri_bilanz(void)
+{
+    fprintf(stderr, "[tri-liste] ENDE hoechststand=%d (F%u) verworfen=%lu bilder_mit_verlust=%lu grenze=%d\n",
+            s_textri_hoch, s_textri_hoch_bild, s_textri_verworfen_gesamt, s_textri_bilder_mit_verlust, re15_textri_grenze());
+}
 /* Discard the queued textured tris (3D meshes) for this frame — used by a full-screen framebuffer
  * overlay (the inventory) so the meshes, which end_frame draws ON TOP of the framebuffer, don't
  * cover it. Call after the scene render + overlay draw, before re15_render_end_frame. */
@@ -1618,6 +1655,21 @@ void re15_render_end_frame(void)
     }
 
     s_dbg_last_textri_count = s_textri_count;
+    {   /* G3: Hoechststand und Ueberlauf je Bild ins debug.log (erste 20 Verlust-Bilder einzeln, danach jedes 300.; Stand je 120 Bilder) */
+        unsigned fc = (unsigned)g_engine.frame_count;
+        if (s_textri_count > s_textri_hoch) { s_textri_hoch = s_textri_count; s_textri_hoch_bild = fc; }
+        if (s_textri_verworfen_bild > 0) {
+            s_textri_verworfen_gesamt += s_textri_verworfen_bild;
+            s_textri_bilder_mit_verlust++;
+            if (s_textri_bilder_mit_verlust <= 20u || (s_textri_bilder_mit_verlust % 300u) == 0u)
+                fprintf(stderr, "[tri-liste] UEBERLAUF F%u: %lu Dreiecke verworfen (eingereiht %d, Grenze %d)\n",
+                        fc, s_textri_verworfen_bild, s_textri_count, re15_textri_grenze());
+        }
+        if ((s_textri_meldung++ % 120u) == 0u)
+            fprintf(stderr, "[tri-liste] F%u hoechststand=%d (F%u) verworfen=%lu bilder_mit_verlust=%lu grenze=%d\n",
+                    fc, s_textri_hoch, s_textri_hoch_bild, s_textri_verworfen_gesamt, s_textri_bilder_mit_verlust, re15_textri_grenze());
+        s_textri_verworfen_bild = 0;
+    }
     s_dbg_last_min_sx       = s_dbg_min_sx;
     s_dbg_last_max_sx       = s_dbg_max_sx;
     s_dbg_last_min_sy       = s_dbg_min_sy;
@@ -3079,7 +3131,8 @@ void re15_render_textured_tri(int x0, int y0, int u0, int v0,
                               uint8_t r, uint8_t g, uint8_t b)
 {
     (void) tpage;
-    if (!s_tim_texture || s_textri_count >= TEXTRI_QUEUE_MAX) return;
+    if (!s_tim_texture) return;
+    if (s_textri_count >= re15_textri_grenze()) { s_textri_verworfen_bild++; return; }   /* G3: Ueberlauf zaehlen, nicht still */
     if (s_tim_w == 0 || s_tim_h == 0) return;
     if (s_cpu_rasterer && re15_gpu_dreieck_verwerfen((unsigned)g_engine.frame_count, s_active_slot, &x0, &y0, &x1, &y1, &x2, &y2)) return;   /* Runde 41 Spur Q: Schutz vor SDL_triangle.c:618 */
 
@@ -3182,7 +3235,8 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
                                   uint8_t r2, uint8_t g2, uint8_t b2)
 {
     (void) tpage;
-    if (!s_tim_texture || s_textri_count >= TEXTRI_QUEUE_MAX) return;
+    if (!s_tim_texture) return;
+    if (s_textri_count >= re15_textri_grenze()) { s_textri_verworfen_bild++; return; }   /* G3: Ueberlauf zaehlen, nicht still */
     if (s_tim_w == 0 || s_tim_h == 0) return;
     if (s_cpu_rasterer && re15_gpu_dreieck_verwerfen((unsigned)g_engine.frame_count, s_active_slot, &x0, &y0, &x1, &y1, &x2, &y2)) return;   /* Runde 41 Spur Q: Schutz vor SDL_triangle.c:618 */
 

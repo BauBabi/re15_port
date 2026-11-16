@@ -1,0 +1,35 @@
+{
+ "name": "griff_5090",
+ "raum": "5090",
+ "pose": "941,-23776,3874,27,20,11",
+ "aufnahme": "C:\\Users\\MJOEDI~1\\AppData\\Local\\Temp\\claude\\1ad3836299811990\\c41eae99-e724-4cb3-afb9-119709f20a9d\\scratchpad\\streifen\\spiel\\griff_5090\\hwnd_08.png",
+ "figur_px": 52071,
+ "uebereinstimmend": {
+  "px": 20892,
+  "abweichung_spiel_zu_maler": 1.5478492564937136,
+  "abweichung_spiel_zu_tiefenpuffer": 1.5478492564937136,
+  "unterscheidbare_px": 0,
+  "anteil_spiel_naeher_an_maler": 0.0
+ },
+ "keil_kopf_ueber_brust_hals": {
+  "px": 87,
+  "abweichung_spiel_zu_maler": 2.3371647509578546,
+  "abweichung_spiel_zu_tiefenpuffer": 10.084291187739463,
+  "unterscheidbare_px": 84,
+  "anteil_spiel_naeher_an_maler": 0.8690476190476191
+ },
+ "brust_hals_ueber_kopf": {
+  "px": 31,
+  "abweichung_spiel_zu_maler": 3.182795698924731,
+  "abweichung_spiel_zu_tiefenpuffer": 12.258064516129032,
+  "unterscheidbare_px": 31,
+  "anteil_spiel_naeher_an_maler": 0.9032258064516129
+ },
+ "alle_ordnungsfehler": {
+  "px": 1031,
+  "abweichung_spiel_zu_maler": 1.22664080181054,
+  "abweichung_spiel_zu_tiefenpuffer": 4.365341092790171,
+  "unterscheidbare_px": 441,
+  "anteil_spiel_naeher_an_maler": 0.9115646258503401
+ }
+}

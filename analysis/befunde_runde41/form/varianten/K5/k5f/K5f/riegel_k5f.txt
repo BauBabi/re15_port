@@ -1,0 +1,50 @@
+== Riegel K5f nicht blass: k5f/K5f
+  Z1 P L* im Spiel 5080 (Bilder 360-440) in 5.57..18.8                                                 GRUEN  8.970 (n 5, Maske 35480 px)
+  Z2 P L-cv im Spiel 5080 (Bilder 360-440) in 0.481..1.43                                              GRUEN  0.746 (n 5, Maske 35480 px)
+  Z3 P Lokalkontrast lokal5_rel im Spiel 5080 (Bilder 360-440) in 0.243..0.656                         GRUEN  0.329 (n 5, Maske 35480 px)
+  Z4 P C* im Spiel 5080 (Bilder 360-440) in 4.41..7.59                                                 GRUEN  4.450 (n 5, Maske 35480 px)
+  Z5 P C-std im Spiel 5080 (Bilder 360-440) in 2.39..7.45                                              GRUEN  3.410 (n 5, Maske 35480 px)
+  Z6 Q L-cv im Spiel 5080 (Bilder 360-440) in 0.369..1.02                                              GRUEN  0.557 (n 5, Maske 35480 px)
+  Z7 Q Lokalkontrast im Spiel 5080 (Bilder 360-440) in 0.21..0.528                                     GRUEN  0.273 (n 5, Maske 35480 px)
+  Z8 Q C* im Spiel 5080 (Bilder 360-440) in 12.1..15.1                                                 GRUEN  12.150 (n 5, Maske 35480 px)
+  Z9 Q C-std im Spiel 5080 (Bilder 360-440) in 6.53..8.88                                              GRUEN  7.830 (n 5, Maske 35480 px)
+  WK1 weiss L-cv in 0,409..1,128                                                                       GRUEN  0.668
+  WK2 weiss Lokalkontrast lokal5_rel in 0,175..0,460                                                   GRUEN  0.360
+  WK3 weiss C-std in 4,78..13,55                                                                       GRUEN  6.63
+  WK4 weiss hell % <= 17,8 und F_hell <= 71,7                                                          GRUEN  3.9 % / 55.1
+  R1 Sektoren gepoolt (weiss) <= 5                                                                     GRUEN  3 (je Winkel [3, 3, 2, 2])
+  R2 farbfremde Flecken (weiss) <= 7,4 je 10k und <= 0,64 %                                            GRUEN  0.0 / 0.00 %
+  R3 Farbtonspanne 90 % (weiss) <= 76,8 Grad                                                           GRUEN  15.3
+  R4 Block-Farbton (weiss) <= 16,3 Grad                                                                GRUEN  4.5
+  H1 TIM-Pixel bytegleich Spiel-Asset K5c (keine Insel)                                                GRUEN  0 Texel abweichend
+  H2 UV/Seite/Eckreihenfolge je Flaeche = K5c (nur CLUT-Wort neu)                                      GRUEN  3828/3828 gleich
+  H3 Zeilen = kf_k5f.zeilen(par) aus den G4-Originalrampen (neu berechnet); Z0 = G4-0, Z8-Kern = K5c-5, Z9 = K5c-7 GRUEN  Abweichung je Zeile {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0}; Z0 True, Z8-Kern True, Z9 True
+  H4 ein Farbton je Material: Spanne genutzter Eintraege (C* >= 3) <= 15 Grad                          GRUEN  {'Haut': '14.8 Grad (Ton -29.5, 135 von 311 C* >= 3)', 'Grau': '0.0 Grad (Ton nan, 0 von 248 C* >= 3)', 'Gelenk': '12.4 Grad (Ton -32.2, 43 von 189 C* >= 3)', 'Fleisch': '10.8 Grad (Ton -12.8, 84 von 95 C* >= 3)'}
+  H5 Rangfolge je Zeile/Klasse 0 Vertauschungen; Adern dunkler, nicht roeter (dL < 0, da* <= 0, RV6)   GRUEN  Vertauschungen {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 10: 0, 11: 0}; Ader-Haut (dL, da*) {1: (-9.7, -5.87), 2: (-16.31, -13.52), 3: (-18.06, -12.66), 5: (-22.26, -5.37), 6: (-24.1, -5.03), 7: (-23.43, -8.31), 10: (-4.03, -0.01), 11: (-31.56, -0.8)}
+  HU1 Mesh 22 qf 1/8/9/194/201/209 lesen die Hautzeile der G4-Seite 0 (nicht Zeile 0)                  GRUEN  Zeilen [1] (Hautzeilen [1, 2, 3])
+  HU2 weiss, 5 Ansichten von unten: warm-rot auf Mesh 21-23 ausser Zahn/29 echtem Maulinneren = 0      GRUEN  0 px von 30393 ({'0/-85': 0, '90/-45': 0, '45/-40': 0, '0/-60': 0, '-90/-45': 0})
+  HU3 Spiel 5090 Clip 27 Bild 20: warm-rot (a* > 6, Ton > -10) an den Zeile-0-Orten des K5e_f1 = 0     GRUEN  0 / 963 px (Lab-Mittel [1.46, 0.1, -0.05])
+  HU4 Rundum (12 x 6 Winkel, Ruhe-Clip 2, 400 px): jede Zeile-0-Flaeche ausser Auge <= 40 px           GRUEN  29 Flaechen auf Zeile 0, max 38 px; ueber 40: {}
+  W1 Gelenk heller als Nachbarglied (weiss): dL* >= 5 je Winkel, Mittel >= 6                           GRUEN  min 6.77 / Mittel 9.45
+  W1b Gelenk weisslich: Albedo C* <= 8 und L* >= Nachbar + 6                                           GRUEN  C* 6.12, dL +13.08
+  W2 Schwanzspitze Mesh 6: Fleischanteil >= 50 %, dL >= +6,89 (K4)                                     GRUEN  76.6 %, +18.65 (Spitze [49.7, 18.0, -2.5])
+  W3 Buckel: 12 Flaechen, 1 Komponente, Ton -8 +- 15, Anteil >= 40 %, dL >= +4,77 (K4)                 GRUEN  12 Fl., 1 Komp., Ton -8.5, 57.0 %, +6.94
+  W4 Lippe + Unterkiefer: Rotklasse 0 %, L*-p95 <= Haut-p95                                            GRUEN  0.0 %, 41.8 <= 54.4
+  W5 Krallen = Hand: Albedo dE76 <= 6, Rotklasse 0 %                                                   ROT    dE 7.04, Rot 0.0 % (Kralle [20.5, 0.0, 0.0], Hand [17.8, 5.4, -3.7])
+  W6 Helligkeit Bild 2 Figur: Video >= Vorlage und ohne Filter >= Vorlage (Pixelmenge V4F 3.1)         GRUEN  Video 15.37 (>= 15.37), ohne 7.68 (>= 7.33)
+  W7 F1: Kern-Eintraege (56) bytegleich K5c-Zeile 5, 6 Flaechen, UV gleich                             GRUEN  6 Flaechen, Zeile [8], Kern gleich True, UV gleich True
+  W8 F1-Rand (weiss Seite): Nicht-Kern-F1 gegen Mesh-0-Nachbarhaut >= -lokal5 der Figur                GRUEN  dL -6.98 gegen -7.39 (F1 786 px)
+  T1 Zeilen <= 16, Port-Texturhoehe <= 4096 (riegel_einbau E-Z1)                                       GRUEN  Zeilen 12 (<= 16), Port-Texturhoehe 256 x 12 = 3072 (<= 4096)
+  T2 jede Flaeche liest gueltige Zeile (E-Z2), 0x0000 nur wo G4 0x0000                                 GRUEN  3828 Flaechen, Zeilen 0:93 1:249 2:1606 3:579 4:6 5:360 6:314 7:92 8:6 9:114 10:81 11:328; neue 0x0000: 0
+  T3 Ecken/Normalen = K5d, Eckindizes = K5c                                                            GRUEN  andere Geometrie als K5d []; Eckindizes = K5c True
+  T4 Asset EDD/EMR/Morph byte-gleich Spiel-Asset, 32/32/28, MD1 = FORM.EMD, TIM = FORM.TIM             GRUEN  gleich ['morph', 'edd1', 'emr1', 'edd2', 'emr2', 'edd3', 'emr3']; Meshes 32 Knochen 32 Clips 28; MD1 True; TIM True
+  Info 5090 Bild-2-Pose (Feuer in der Maske, nur Info): P L* / L-cv / C* / C-std / Q lokal_rel         Info   10.78 / 1.171 / 9.77 / 17.64 / 0.245
+  Info weiss L* / C* (Band 8,63..23,41, nur Info) / lokal5                                             Info   20.51 / 7.67 / 7.39
+  Info Flecken alle (<= 148,6) / C*-Std (<= 16,9) / L* Mittel (weiss)                                  Info   131.7 / 6.63 / 20.5
+  Info HU4 Clip 0 (Messblatt-Zahlen "705-2879" / "max 38" sind Clip 2; maulinneres_sicht.json Spalte 3 = Clip 0) Info   max 48 px; ueber 40: {'22|1|98': 48}
+  Info Helligkeit Bild 1 Video / ohne Filter (Vorlage; Messblatt Offen 1)                              Info   44.11 (18.29) / 16.18 (7.62)
+  Info riegel_k5d (b) Schwanzspitze Rot-Anteil Kette T (K5d-Fenster 25..50 %)                          Info   29.7 % (Vorlage 27.9) -> im Fenster
+  Info riegel_k5d (e) Buckel B2-F01 Kette T (L >= 80 %, a* >= 70 %, Ton +-20)                          Info   [31.9, 17.2, -2.9] h -10 (Vorlage [41.4, 15.7, -4.3] h -15) -> nicht erfuellt
+  Info riegel_k5d (e) Buckel B2-F02 Kette T (L >= 80 %, a* >= 70 %, Ton +-20)                          Info   [32.9, 18.9, -2.9] h -9 (Vorlage [33.2, 22.2, -6.4] h -16) -> erfuellt
+  -> 38/39 bindende Zeilen GRUEN
+EXIT 1

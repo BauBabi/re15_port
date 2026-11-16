@@ -1,0 +1,473 @@
+{
+ "lage": {
+  "ncc": 0.7381,
+  "clip": 0,
+  "bild": 8,
+  "gier": 128,
+  "versatz_px": [
+   2,
+   16
+  ],
+  "weltlage": [
+   1166,
+   0,
+   -25211
+  ]
+ },
+ "schattierung_disc": [
+  82,
+  78,
+  78
+ ],
+ "box": [
+  175,
+  310,
+  130,
+  220
+ ],
+ "A_hintergrund_fit_frau_test": {
+  "diag": {
+   "gesamt": {
+    "pixel": 2133,
+    "dE76_median": 39.72,
+    "dE76_p90": 48.67
+   },
+   "klassen": {
+    "Kittel (Albedo L* > 65, C* < 14)": {
+     "pixel": 1324,
+     "video_median": [
+      184.0,
+      115.0,
+      133.0
+     ],
+     "modell_median": [
+      154.4,
+      166.0,
+      138.7
+     ],
+     "dE76_der_mediane": 41.92,
+     "dE76_pixel_median": 43.27,
+     "dE76_pixel_p90": 50.57,
+     "spiel_e_median": [
+      64.0,
+      63.0,
+      63.0
+     ],
+     "textur_median": [
+      200.0,
+      208.0,
+      208.0
+     ]
+    },
+    "dunkel: Oberteil (Albedo L* < 30)": {
+     "pixel": 418,
+     "video_median": [
+      68.2,
+      11.0,
+      24.0
+     ],
+     "modell_median": [
+      28.2,
+      9.2,
+      30.9
+     ],
+     "dE76_der_mediane": 24.57,
+     "dE76_pixel_median": 26.26,
+     "dE76_pixel_p90": 43.09,
+     "spiel_e_median": [
+      5.0,
+      4.0,
+      4.0
+     ],
+     "textur_median": [
+      16.0,
+      16.0,
+      16.0
+     ]
+    },
+    "Kopf: Haar und Haut (oberste 34 px der Figur)": {
+     "pixel": 391,
+     "video_median": [
+      191.0,
+      107.0,
+      102.8
+     ],
+     "modell_median": [
+      122.1,
+      61.4,
+      69.1
+     ],
+     "dE76_der_mediane": 23.46,
+     "dE76_pixel_median": 27.1,
+     "dE76_pixel_p90": 37.22,
+     "spiel_e_median": [
+      54.0,
+      39.0,
+      24.0
+     ],
+     "textur_median": [
+      168.0,
+      128.0,
+      80.0
+     ]
+    }
+   }
+  },
+  "ridge": {
+   "gesamt": {
+    "pixel": 2133,
+    "dE76_median": 49.95,
+    "dE76_p90": 59.06
+   },
+   "klassen": {
+    "Kittel (Albedo L* > 65, C* < 14)": {
+     "pixel": 1324,
+     "video_median": [
+      184.0,
+      115.0,
+      133.0
+     ],
+     "modell_median": [
+      17.3,
+      36.5,
+      56.2
+     ],
+     "dE76_der_mediane": 54.57,
+     "dE76_pixel_median": 53.73,
+     "dE76_pixel_p90": 60.43,
+     "spiel_e_median": [
+      64.0,
+      63.0,
+      63.0
+     ],
+     "textur_median": [
+      200.0,
+      208.0,
+      208.0
+     ]
+    },
+    "dunkel: Oberteil (Albedo L* < 30)": {
+     "pixel": 418,
+     "video_median": [
+      68.2,
+      11.0,
+      24.0
+     ],
+     "modell_median": [
+      14.7,
+      3.5,
+      14.3
+     ],
+     "dE76_der_mediane": 27.73,
+     "dE76_pixel_median": 29.09,
+     "dE76_pixel_p90": 47.82,
+     "spiel_e_median": [
+      5.0,
+      4.0,
+      4.0
+     ],
+     "textur_median": [
+      16.0,
+      16.0,
+      16.0
+     ]
+    },
+    "Kopf: Haar und Haut (oberste 34 px der Figur)": {
+     "pixel": 391,
+     "video_median": [
+      191.0,
+      107.0,
+      102.8
+     ],
+     "modell_median": [
+      93.8,
+      23.6,
+      26.1
+     ],
+     "dE76_der_mediane": 34.22,
+     "dE76_pixel_median": 35.97,
+     "dE76_pixel_p90": 46.85,
+     "spiel_e_median": [
+      54.0,
+      39.0,
+      24.0
+     ],
+     "textur_median": [
+      168.0,
+      128.0,
+      80.0
+     ]
+    }
+   }
+  },
+  "frei": {
+   "gesamt": {
+    "pixel": 2133,
+    "dE76_median": 53.3,
+    "dE76_p90": 62.15
+   },
+   "klassen": {
+    "Kittel (Albedo L* > 65, C* < 14)": {
+     "pixel": 1324,
+     "video_median": [
+      184.0,
+      115.0,
+      133.0
+     ],
+     "modell_median": [
+      11.7,
+      34.7,
+      43.3
+     ],
+     "dE76_der_mediane": 57.32,
+     "dE76_pixel_median": 56.84,
+     "dE76_pixel_p90": 62.82,
+     "spiel_e_median": [
+      64.0,
+      63.0,
+      63.0
+     ],
+     "textur_median": [
+      200.0,
+      208.0,
+      208.0
+     ]
+    },
+    "dunkel: Oberteil (Albedo L* < 30)": {
+     "pixel": 418,
+     "video_median": [
+      68.2,
+      11.0,
+      24.0
+     ],
+     "modell_median": [
+      14.0,
+      4.1,
+      12.3
+     ],
+     "dE76_der_mediane": 27.99,
+     "dE76_pixel_median": 29.46,
+     "dE76_pixel_p90": 47.91,
+     "spiel_e_median": [
+      5.0,
+      4.0,
+      4.0
+     ],
+     "textur_median": [
+      16.0,
+      16.0,
+      16.0
+     ]
+    },
+    "Kopf: Haar und Haut (oberste 34 px der Figur)": {
+     "pixel": 391,
+     "video_median": [
+      191.0,
+      107.0,
+      102.8
+     ],
+     "modell_median": [
+      91.6,
+      23.4,
+      24.3
+     ],
+     "dE76_der_mediane": 34.82,
+     "dE76_pixel_median": 36.58,
+     "dE76_pixel_p90": 47.08,
+     "spiel_e_median": [
+      54.0,
+      39.0,
+      24.0
+     ],
+     "textur_median": [
+      168.0,
+      128.0,
+      80.0
+     ]
+    }
+   }
+  }
+ },
+ "A_bestand_video_filter": {
+  "gesamt": {
+   "pixel": 2133,
+   "dE76_median": 18.4,
+   "dE76_p90": 34.19
+  },
+  "klassen": {
+   "Kittel (Albedo L* > 65, C* < 14)": {
+    "pixel": 1324,
+    "video_median": [
+     184.0,
+     115.0,
+     133.0
+    ],
+    "modell_median": [
+     145.0,
+     93.0,
+     125.0
+    ],
+    "dE76_der_mediane": 14.96,
+    "dE76_pixel_median": 16.55,
+    "dE76_pixel_p90": 24.22,
+    "spiel_e_median": [
+     64.0,
+     63.0,
+     63.0
+    ],
+    "textur_median": [
+     200.0,
+     208.0,
+     208.0
+    ]
+   },
+   "dunkel: Oberteil (Albedo L* < 30)": {
+    "pixel": 418,
+    "video_median": [
+     68.2,
+     11.0,
+     24.0
+    ],
+    "modell_median": [
+     37.0,
+     8.0,
+     27.0
+    ],
+    "dE76_der_mediane": 18.46,
+    "dE76_pixel_median": 20.76,
+    "dE76_pixel_p90": 38.09,
+    "spiel_e_median": [
+     5.0,
+     4.0,
+     4.0
+    ],
+    "textur_median": [
+     16.0,
+     16.0,
+     16.0
+    ]
+   },
+   "Kopf: Haar und Haut (oberste 34 px der Figur)": {
+    "pixel": 391,
+    "video_median": [
+     191.0,
+     107.0,
+     102.8
+    ],
+    "modell_median": [
+     119.0,
+     42.0,
+     51.0
+    ],
+    "dE76_der_mediane": 26.14,
+    "dE76_pixel_median": 29.24,
+    "dE76_pixel_p90": 41.04,
+    "spiel_e_median": [
+     54.0,
+     39.0,
+     24.0
+    ],
+    "textur_median": [
+     168.0,
+     128.0,
+     80.0
+    ]
+   }
+  }
+ },
+ "B_frau_fit_k": {
+  "k": [
+   17.7304,
+   2.7117,
+   2.4394
+  ],
+  "frau_klassen": {
+   "Kittel (Albedo L* > 65, C* < 14)": {
+    "pixel": 1324,
+    "video_median": [
+     184.0,
+     115.0,
+     133.0
+    ],
+    "modell_median": [
+     148.2,
+     117.2,
+     137.8
+    ],
+    "dE76_der_mediane": 16.52,
+    "dE76_pixel_median": 23.19,
+    "dE76_pixel_p90": 37.88,
+    "spiel_e_median": [
+     64.0,
+     63.0,
+     63.0
+    ],
+    "textur_median": [
+     200.0,
+     208.0,
+     208.0
+    ]
+   },
+   "dunkel: Oberteil (Albedo L* < 30)": {
+    "pixel": 418,
+    "video_median": [
+     68.2,
+     11.0,
+     24.0
+    ],
+    "modell_median": [
+     189.6,
+     18.6,
+     28.3
+    ],
+    "dE76_der_mediane": 56.25,
+    "dE76_pixel_median": 52.3,
+    "dE76_pixel_p90": 63.87,
+    "spiel_e_median": [
+     5.0,
+     4.0,
+     4.0
+    ],
+    "textur_median": [
+     16.0,
+     16.0,
+     16.0
+    ]
+   },
+   "Kopf: Haar und Haut (oberste 34 px der Figur)": {
+    "pixel": 391,
+    "video_median": [
+     191.0,
+     107.0,
+     102.8
+    ],
+    "modell_median": [
+     227.0,
+     91.4,
+     68.5
+    ],
+    "dE76_der_mediane": 29.4,
+    "dE76_pixel_median": 26.99,
+    "dE76_pixel_p90": 47.37,
+    "spiel_e_median": [
+     54.0,
+     39.0,
+     24.0
+    ],
+    "textur_median": [
+     168.0,
+     128.0,
+     80.0
+    ]
+   }
+  },
+  "hintergrund_test": {
+   "dE76_median": 53.31,
+   "dE76_p90": 89.64
+  },
+  "hintergrund_mit_k1": {
+   "dE76_median": 9.03,
+   "dE76_p90": 25.31
+  }
+ }
+}

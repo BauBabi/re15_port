@@ -1,0 +1,3011 @@
+{
+ "lauf": "lauf_voll.json",
+ "emd": "GK.EMD",
+ "tabelle": "C:/workspace/git/reAi_v2/.claude/worktrees/r41_form/analysis/befunde_runde41/form/varianten/K5/generator/k5g3_spalt_b4_tabelle.json",
+ "sha256": "f833a90580d849ad954631c8f71ec194b23247c00ffe6a7b5f14862e644c9695",
+ "voll": true,
+ "hart": [
+  {
+   "nr": "H1a",
+   "punkt": "ab4-Summe <= 1 % der K5e_f1-Summe ueber alle Ansichten (1043153 -> 10431)",
+   "gut": true,
+   "ist": "Summe 3578 (K5e_f1 auf denselben Ansichten 1043153, MULDE 547)"
+  },
+  {
+   "nr": "H1b",
+   "punkt": "ab4 groesstes zusammenhaengendes Streifenstueck je Ansicht <= 25 px",
+   "gut": true,
+   "ist": "groesstes 23 (bild1 Clip 12 Bild 17); Ansichten > 25: 0 []"
+  },
+  {
+   "nr": "H1c",
+   "punkt": "ab4-Summe je Ansicht ausserhalb der Clips 10/12 <= 20 px",
+   "gut": true,
+   "ist": "Ansichten > 20: 0 []; groesste 20 (spiel5080_vorn Clip 11 Bild 24)"
+  },
+  {
+   "nr": "H2",
+   "punkt": "ab5: Summe <= MULDE*1,05+50 und Ansichten > 20 <= MULDE*1,05+2",
+   "gut": true,
+   "ist": "Summe 12543 (MULDE 41765, Grenze 43903), > 20: 162 (MULDE 302, Grenze 319.1), groesste 159 (MULDE 618)"
+  },
+  {
+   "nr": "H3a",
+   "punkt": "S16: 7<->22 je Ansicht <= 25 px (Summe Bericht); uebrige Gruppen je <= K5e_f1*1,05+50 (5.2)",
+   "gut": false,
+   "ist": "7<->22 je Ansicht: groesste 13 ('spiel5080', 12, 14), Ansichten > 25: 0; Summe 163 (K5e_f1 101, alte Summengrenze 156, nur Bericht) | uebrige Gruppen: ROT 19<->23 527 > 50; 20<->22 483 > 50; 19<->22 157 > 50",
+   "alt": {
+    "gut": false,
+    "ist": "ROT: 19<->23 527 > 50 (K5e_f1 0); 20<->22 483 > 50 (K5e_f1 0); 7<->22 163 > 156 (K5e_f1 101); 19<->22 157 > 50 (K5e_f1 0)"
+   }
+  },
+  {
+   "nr": "H3b",
+   "punkt": "Schulter 16>10 + 10>16 je Ansicht <= K5e_f1*1,05+25",
+   "gut": true,
+   "ist": "Ansichten rot: 0, schlimmste (Zuwachs, Ansicht, Clip, Bild, ist, K5e_f1): []; Summe 383052 (K5e_f1 1730744)"
+  },
+  {
+   "nr": "H4",
+   "punkt": "gezeichnete Dreiecke + 773 + 86 <= 8192",
+   "gut": true,
+   "ist": "meiste 7290 (spiel5080_vorn Clip 11 Bild 30) -> 8149"
+  },
+  {
+   "nr": "H5",
+   "punkt": "der Lauf gehoert zur EMD-Datei",
+   "gut": true,
+   "ist": "sha256 Datei f833a90580d849ad, Lauf f833a90580d849ad"
+  },
+  {
+   "nr": "H7",
+   "punkt": "Umriss >= K5e_f1 - 0,0005",
+   "gut": true,
+   "ist": "bild2 0.68212 (K5e_f1 0.65294, Grenze 0.65244), bild1 0.72301 (K5e_f1 0.72312, Grenze 0.72262)"
+  },
+  {
+   "nr": "H8",
+   "punkt": "Tabelle taugt fuer die Textur-Stufe (bank.tabelle_pruefen fuer 10/21/22 + gleiche Regeln fuer 16, H6b)",
+   "gut": true,
+   "ist": "(1) 10/21/22 per bank.tabelle_pruefen: GUT - 9689 Flaechen, jede mit Mutter; UV ausserhalb des Mutter-Rechtecks: 0; Dehnung gegen die Mutter {\"10\": {\"port_dreiecke\": 1483, \"groesste\": 7.18, \"ueber2\": 51, \"ueber4\": 7, \"ueber8\": 0, \"uv_entartet\": 45}, \"21\": {\"port_dreiecke\": 2981, \"groesste\": 3.67, \"ueber2\": 31, \"ueber4\": 0, \"ueber8\": 0, \"uv_entartet\": 37}, \"22\": {\"port_dreiecke\": 5073, \"groesste\": 16.9, \"ueber2\": 76, \"ueber4\": 2, \"ueber8\": 1, \"uv_entartet\": 1463}} | (2) Netz 16: 720 Flaechen, Fehler 0 [], UV ausserhalb des Mutter-Rechtecks 0 | (3) G.mulde_auf_form auf der echten Tabelle ohne Abbruch"
+  },
+  {
+   "nr": "H6b",
+   "punkt": "S12: Netz 16 formgleich geteilt: Ecken auf K5e_f1-Flaeche <= 2 UND an Teil 16 weg = neu = tief128 = hoch128 = 0",
+   "gut": false,
+   "ist": "1945 Ansichten, Summen {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 274, 'hoch48': 205, 'abw': 479}; Sektionen 0-6 VERSCHIEDEN; fremde Netze geaendert: [18, 19, 20, 28, 29]; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler"
+  },
+  {
+   "nr": "H9",
+   "punkt": "S9/S19 gerade Kanten (hals 21/22, schulter 16/kugel_r, dach schaedel/22.ell; Maler und Puffer gegen K5e_f1-Puffer; <= +2 / +2 px)",
+   "gut": false,
+   "ist": "rote Zeilen 30 {'hals/Maler': 7, 'hals/Puffer': 6, 'schulter/Maler': 9, 'schulter/Puffer': 3, 'dach/Maler': 3, 'dach/Puffer': 2}; alter Bezug (R3, nur Bericht) rot {'hals/alt': 8, 'schulter/alt': 9, 'dach/alt': 3}"
+  },
+  {
+   "nr": "H9-S14",
+   "punkt": "S14 dach_licht: Helligkeitsgrenze Stirn/Schaedeldach im Nur-Licht-Bild 5080 (Maler) <= K5e_f1-Puffer + 2 Wechsel",
+   "gut": true,
+   "ist": "rot 0 von 3: [('spiel5080_vorn:10:45', 2.84, 1.88), ('nah2048:10:46', 2.78, 1.96), ('bild2:12:0', 5.38, 3.99)]"
+  },
+  {
+   "nr": "S18",
+   "punkt": "Netzguete: 0 entartete Flaechen, 0 doppelte Ecken/Ecklagen, Loecher aus eigenen Kameras = 0",
+   "gut": false,
+   "ist": "statisch {10: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 605.018}, 16: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 1369.683}, 21: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 339.69}, 22: {'entartet': 0, 'doppelte_ecke': 0, 'doppelte_lage': 0, 'kanten_ueber2': 0, 'kleinste_flaeche': 63.248}} | Risse (Hintergrund-Stueck ganz in K5e_f1-Figur = Durchblick) Orbit 4764 (29 Ansichten) [(470, 12, 0, 25), (470, 12, 0, 0), (470, 10, 52, 25)], Spielkameras 2 [(1, 'spiel5080_vorn', 12, 0), (1, 'spiel5080_vorn', 10, 45), (0, 'spiel5090', 27, 49)] | Bericht Def. Zahlen-Pruefer R3 (inkl. 1-px-Randverschiebung vorhandener Luecken): Orbit 6252 (52 Ansichten) [(481, 12, 0, 0), (481, 10, 52, 0), (481, 10, 47, 0)], Spielkameras 234 [(175, 'spiel5090', 9, 18), (31, 'bild1', 27, 60), (7, 'bild2', 10, 35)]"
+  }
+ ],
+ "hart_gut": false,
+ "zielmarken": [
+  {
+   "punkt": "weg: keine Ansicht > 200",
+   "gut": false,
+   "ist": "Ansichten > 200: 207, groesste 10577"
+  },
+  {
+   "punkt": "weg: Summe <= 10 % MULDE (36702)",
+   "gut": false,
+   "ist": "Summe 445036 (MULDE 367027)"
+  },
+  {
+   "punkt": "tief128: Summe <= 10 % MULDE (527533)",
+   "gut": true,
+   "ist": "Summe 234108 (MULDE 5275332), groesste 4710"
+  },
+  {
+   "punkt": "neu: keine Ansicht > 200",
+   "gut": false,
+   "ist": "groesste 17436 (['spiel5080_vorn', 12, 6])"
+  },
+  {
+   "punkt": "hoch48: keine Ansicht > 200",
+   "gut": false,
+   "ist": "groesste 27154 (['spiel5080_vorn', 8, 12])"
+  },
+  {
+   "punkt": "tief48 so klein wie moeglich (Bericht)",
+   "gut": true,
+   "ist": "Summe 353619 (MULDE 13380589 = 2.64 %), > 200: 201, groesste 5504 (['spiel5080_vorn', 12, 4])"
+  }
+ ],
+ "zielmarken_gut": false,
+ "bild2_haltung": {
+  "bild1": 0,
+  "bild2": 8,
+  "spiel5080": 0,
+  "spiel5080_vorn": 9,
+  "spiel5090": 3
+ },
+ "s9": {
+  "gut": false,
+  "rot": 30,
+  "je_stelle": {
+   "hals/Maler": 7,
+   "hals/Puffer": 6,
+   "schulter/Maler": 9,
+   "schulter/Puffer": 3,
+   "dach/Maler": 3,
+   "dach/Puffer": 2
+  },
+  "alt_rot": {
+   "hals/alt": 8,
+   "schulter/alt": 9,
+   "dach/alt": 3
+  },
+  "zeilen": [
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "hals",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 4.09,
+     "abw": 2.44,
+     "laenge": 342,
+     "w_roh": 14
+    },
+    "ist": {
+     "wechsel": 11.14,
+     "abw": 2.83,
+     "laenge": 386,
+     "w_roh": 43
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 4.09,
+     "abw": 2.44,
+     "laenge": 342,
+     "w_roh": 14
+    },
+    "ist": {
+     "wechsel": 6.23,
+     "abw": 2.83,
+     "laenge": 337,
+     "w_roh": 21
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "hals",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 3.05,
+     "abw": 2.65,
+     "laenge": 884,
+     "w_roh": 27
+    },
+    "ist": {
+     "wechsel": 11.14,
+     "abw": 2.83,
+     "laenge": 386,
+     "w_roh": 43
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "schulter",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 4.01,
+     "abw": 2.23,
+     "laenge": 424,
+     "w_roh": 17
+    },
+    "ist": {
+     "wechsel": 9.31,
+     "abw": 2.59,
+     "laenge": 806,
+     "w_roh": 75
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 4.01,
+     "abw": 2.23,
+     "laenge": 424,
+     "w_roh": 17
+    },
+    "ist": {
+     "wechsel": 6.41,
+     "abw": 2.33,
+     "laenge": 468,
+     "w_roh": 30
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "schulter",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 2.95,
+     "abw": 2.68,
+     "laenge": 848,
+     "w_roh": 25
+    },
+    "ist": {
+     "wechsel": 9.31,
+     "abw": 2.59,
+     "laenge": 806,
+     "w_roh": 75
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "dach",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.69,
+     "laenge": 128,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 8.18,
+     "abw": 2.15,
+     "laenge": 159,
+     "w_roh": 13
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.69,
+     "laenge": 128,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 1.46,
+     "abw": 2.44,
+     "laenge": 137,
+     "w_roh": 2
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "dach",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.96,
+     "abw": 2.83,
+     "laenge": 209,
+     "w_roh": 2
+    },
+    "ist": {
+     "wechsel": 8.18,
+     "abw": 2.15,
+     "laenge": 159,
+     "w_roh": 13
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "hals",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 3.83,
+     "abw": 2.39,
+     "laenge": 261,
+     "w_roh": 10
+    },
+    "ist": {
+     "wechsel": 15.28,
+     "abw": 2.33,
+     "laenge": 288,
+     "w_roh": 44
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 3.83,
+     "abw": 2.39,
+     "laenge": 261,
+     "w_roh": 10
+    },
+    "ist": {
+     "wechsel": 7.46,
+     "abw": 2.33,
+     "laenge": 268,
+     "w_roh": 20
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "hals",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 3.04,
+     "abw": 2.47,
+     "laenge": 789,
+     "w_roh": 24
+    },
+    "ist": {
+     "wechsel": 15.28,
+     "abw": 2.33,
+     "laenge": 288,
+     "w_roh": 44
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "schulter",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 93,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 95,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 93,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 95,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "schulter",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 93,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 95,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "dach",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 99,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 9.73,
+     "abw": 2.83,
+     "laenge": 113,
+     "w_roh": 11
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 99,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 5.66,
+     "abw": 2.69,
+     "laenge": 106,
+     "w_roh": 6
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "dach",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 1.1,
+     "abw": 2.83,
+     "laenge": 181,
+     "w_roh": 2
+    },
+    "ist": {
+     "wechsel": 9.73,
+     "abw": 2.83,
+     "laenge": 113,
+     "w_roh": 11
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "hals",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 2.61,
+     "abw": 2.33,
+     "laenge": 230,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 12.75,
+     "abw": 2.59,
+     "laenge": 251,
+     "w_roh": 32
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 2.61,
+     "abw": 2.33,
+     "laenge": 230,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 5.33,
+     "abw": 2.59,
+     "laenge": 225,
+     "w_roh": 12
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "hals",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 2.0,
+     "abw": 2.53,
+     "laenge": 699,
+     "w_roh": 14
+    },
+    "ist": {
+     "wechsel": 12.75,
+     "abw": 2.59,
+     "laenge": 251,
+     "w_roh": 32
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "schulter",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 3.21,
+     "abw": 2.74,
+     "laenge": 499,
+     "w_roh": 16
+    },
+    "ist": {
+     "wechsel": 8.56,
+     "abw": 2.83,
+     "laenge": 748,
+     "w_roh": 64
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 3.21,
+     "abw": 2.74,
+     "laenge": 499,
+     "w_roh": 16
+    },
+    "ist": {
+     "wechsel": 6.21,
+     "abw": 2.83,
+     "laenge": 499,
+     "w_roh": 31
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "schulter",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 2.06,
+     "abw": 2.74,
+     "laenge": 775,
+     "w_roh": 16
+    },
+    "ist": {
+     "wechsel": 8.56,
+     "abw": 2.83,
+     "laenge": 748,
+     "w_roh": 64
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "dach",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.56,
+     "laenge": 132,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 8.29,
+     "abw": 2.83,
+     "laenge": 181,
+     "w_roh": 15
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.56,
+     "laenge": 132,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 2.56,
+     "abw": 2.69,
+     "laenge": 156,
+     "w_roh": 4
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "dach",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 1.29,
+     "abw": 2.83,
+     "laenge": 310,
+     "w_roh": 4
+    },
+    "ist": {
+     "wechsel": 8.29,
+     "abw": 2.83,
+     "laenge": 181,
+     "w_roh": 15
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "hals",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 1.0,
+     "abw": 2.39,
+     "laenge": 57,
+     "w_roh": 1
+    },
+    "ist": {
+     "wechsel": 3.0,
+     "abw": 2.44,
+     "laenge": 61,
+     "w_roh": 3
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 1.0,
+     "abw": 2.39,
+     "laenge": 57,
+     "w_roh": 1
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.44,
+     "laenge": 60,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "hals",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.33,
+     "laenge": 59,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 3.0,
+     "abw": 2.44,
+     "laenge": 61,
+     "w_roh": 3
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "schulter",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 4.41,
+     "abw": 2.44,
+     "laenge": 136,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 7.64,
+     "abw": 2.76,
+     "laenge": 288,
+     "w_roh": 22
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 4.41,
+     "abw": 2.44,
+     "laenge": 136,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 5.76,
+     "abw": 2.15,
+     "laenge": 139,
+     "w_roh": 8
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "schulter",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 1.44,
+     "abw": 2.83,
+     "laenge": 278,
+     "w_roh": 4
+    },
+    "ist": {
+     "wechsel": 7.64,
+     "abw": 2.76,
+     "laenge": 288,
+     "w_roh": 22
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "dach",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "dach",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "hals",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 2.08,
+     "abw": 2.83,
+     "laenge": 240,
+     "w_roh": 5
+    },
+    "ist": {
+     "wechsel": 14.79,
+     "abw": 2.09,
+     "laenge": 338,
+     "w_roh": 50
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 2.08,
+     "abw": 2.83,
+     "laenge": 240,
+     "w_roh": 5
+    },
+    "ist": {
+     "wechsel": 5.73,
+     "abw": 2.09,
+     "laenge": 314,
+     "w_roh": 18
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "hals",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 3.21,
+     "abw": 2.56,
+     "laenge": 343,
+     "w_roh": 11
+    },
+    "ist": {
+     "wechsel": 14.79,
+     "abw": 2.09,
+     "laenge": 338,
+     "w_roh": 50
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "schulter",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 2.54,
+     "abw": 2.44,
+     "laenge": 236,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 8.25,
+     "abw": 2.44,
+     "laenge": 388,
+     "w_roh": 32
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 2.54,
+     "abw": 2.44,
+     "laenge": 236,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 2.83,
+     "abw": 2.69,
+     "laenge": 247,
+     "w_roh": 7
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "schulter",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 3.55,
+     "abw": 2.85,
+     "laenge": 282,
+     "w_roh": 10
+    },
+    "ist": {
+     "wechsel": 8.25,
+     "abw": 2.44,
+     "laenge": 388,
+     "w_roh": 32
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "dach",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.09,
+     "laenge": 10,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 1.0,
+     "abw": 2.0,
+     "laenge": 16,
+     "w_roh": 1
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.09,
+     "laenge": 10,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.09,
+     "laenge": 14,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "dach",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.15,
+     "laenge": 41,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 1.0,
+     "abw": 2.0,
+     "laenge": 16,
+     "w_roh": 1
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "hals",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 1.97,
+     "abw": 2.69,
+     "laenge": 203,
+     "w_roh": 4
+    },
+    "ist": {
+     "wechsel": 15.85,
+     "abw": 2.27,
+     "laenge": 366,
+     "w_roh": 58
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 1.97,
+     "abw": 2.69,
+     "laenge": 203,
+     "w_roh": 4
+    },
+    "ist": {
+     "wechsel": 6.08,
+     "abw": 2.04,
+     "laenge": 296,
+     "w_roh": 18
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "hals",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 2.58,
+     "abw": 2.44,
+     "laenge": 310,
+     "w_roh": 8
+    },
+    "ist": {
+     "wechsel": 15.85,
+     "abw": 2.27,
+     "laenge": 366,
+     "w_roh": 58
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "schulter",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 2.69,
+     "abw": 2.15,
+     "laenge": 223,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 7.69,
+     "abw": 2.36,
+     "laenge": 390,
+     "w_roh": 30
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 2.69,
+     "abw": 2.15,
+     "laenge": 223,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 2.56,
+     "abw": 2.56,
+     "laenge": 234,
+     "w_roh": 6
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "schulter",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 2.9,
+     "abw": 2.59,
+     "laenge": 241,
+     "w_roh": 7
+    },
+    "ist": {
+     "wechsel": 7.69,
+     "abw": 2.36,
+     "laenge": 390,
+     "w_roh": 30
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "dach",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.33,
+     "laenge": 10,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.33,
+     "laenge": 10,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "dach",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.15,
+     "laenge": 33,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "hals",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 2.37,
+     "abw": 2.83,
+     "laenge": 253,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 16.5,
+     "abw": 2.75,
+     "laenge": 394,
+     "w_roh": 65
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 2.37,
+     "abw": 2.83,
+     "laenge": 253,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 4.06,
+     "abw": 2.2,
+     "laenge": 320,
+     "w_roh": 13
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "hals",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 3.38,
+     "abw": 2.69,
+     "laenge": 355,
+     "w_roh": 12
+    },
+    "ist": {
+     "wechsel": 16.5,
+     "abw": 2.75,
+     "laenge": 394,
+     "w_roh": 65
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "schulter",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 2.7,
+     "abw": 2.44,
+     "laenge": 222,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 11.05,
+     "abw": 2.51,
+     "laenge": 389,
+     "w_roh": 43
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 2.7,
+     "abw": 2.44,
+     "laenge": 222,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 3.45,
+     "abw": 2.33,
+     "laenge": 232,
+     "w_roh": 8
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "schulter",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 4.44,
+     "abw": 2.69,
+     "laenge": 293,
+     "w_roh": 13
+    },
+    "ist": {
+     "wechsel": 11.05,
+     "abw": 2.51,
+     "laenge": 389,
+     "w_roh": 43
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "dach",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.33,
+     "laenge": 12,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.56,
+     "laenge": 12,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.33,
+     "laenge": 12,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.24,
+     "laenge": 12,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "dach",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.44,
+     "laenge": 48,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.56,
+     "laenge": 12,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "hals",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "hals",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "schulter",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 3.08,
+     "abw": 2.27,
+     "laenge": 195,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 8.49,
+     "abw": 2.75,
+     "laenge": 483,
+     "w_roh": 41
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 3.08,
+     "abw": 2.27,
+     "laenge": 195,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 8.33,
+     "abw": 2.15,
+     "laenge": 204,
+     "w_roh": 17
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "schulter",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 2.0,
+     "abw": 2.71,
+     "laenge": 400,
+     "w_roh": 8
+    },
+    "ist": {
+     "wechsel": 8.49,
+     "abw": 2.75,
+     "laenge": 483,
+     "w_roh": 41
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "dach",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "dach",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "hals",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.69,
+     "laenge": 38,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 8.0,
+     "abw": 2.17,
+     "laenge": 96,
+     "w_roh": 8
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.69,
+     "laenge": 38,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 6.0,
+     "abw": 2.44,
+     "laenge": 90,
+     "w_roh": 6
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "hals",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 22,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 8.0,
+     "abw": 2.17,
+     "laenge": 96,
+     "w_roh": 8
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "schulter",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "schulter",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "dach",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "dach",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "hals",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.56,
+     "laenge": 51,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.15,
+     "laenge": 50,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.56,
+     "laenge": 51,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.24,
+     "laenge": 48,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "hals",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 3.0,
+     "abw": 2.33,
+     "laenge": 69,
+     "w_roh": 3
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.15,
+     "laenge": 50,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "schulter",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 3.1,
+     "abw": 2.83,
+     "laenge": 129,
+     "w_roh": 4
+    },
+    "ist": {
+     "wechsel": 5.24,
+     "abw": 2.56,
+     "laenge": 248,
+     "w_roh": 13
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 3.1,
+     "abw": 2.83,
+     "laenge": 129,
+     "w_roh": 4
+    },
+    "ist": {
+     "wechsel": 2.65,
+     "abw": 2.83,
+     "laenge": 151,
+     "w_roh": 4
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "schulter",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 2.69,
+     "laenge": 316,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 5.24,
+     "abw": 2.56,
+     "laenge": 248,
+     "w_roh": 13
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "dach",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "dach",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "hals",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "hals",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "schulter",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 3.52,
+     "abw": 2.56,
+     "laenge": 227,
+     "w_roh": 8
+    },
+    "ist": {
+     "wechsel": 10.16,
+     "abw": 2.35,
+     "laenge": 364,
+     "w_roh": 37
+    },
+    "gut": false,
+    "hart": true
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 3.52,
+     "abw": 2.56,
+     "laenge": 227,
+     "w_roh": 8
+    },
+    "ist": {
+     "wechsel": 2.58,
+     "abw": 2.24,
+     "laenge": 233,
+     "w_roh": 6
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "schulter",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 1.91,
+     "abw": 3.14,
+     "laenge": 314,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 10.16,
+     "abw": 2.35,
+     "laenge": 364,
+     "w_roh": 37
+    },
+    "gut": false,
+    "hart": false
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "dach",
+    "karte": "Maler",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": true
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "dach",
+    "karte": "alt",
+    "bezug": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true,
+    "hart": false
+   }
+  ]
+ },
+ "s14": {
+  "gut": true,
+  "rot": 0,
+  "zeilen": [
+   {
+    "ansicht": "spiel5080_vorn:10:45",
+    "gebiet": 14793,
+    "stufen": [
+     48.3,
+     50.0,
+     58.3
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 1.88,
+     "abw": 2.83,
+     "laenge": 851,
+     "w_roh": 16,
+     "splitter": 92
+    },
+    "ist_maler": {
+     "wechsel": 2.84,
+     "abw": 2.83,
+     "laenge": 881,
+     "w_roh": 25,
+     "splitter": 94
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 2.84,
+     "abw": 2.83,
+     "laenge": 881,
+     "w_roh": 25,
+     "splitter": 94
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 1.48,
+     "abw": 2.83,
+     "laenge": 1146,
+     "w_roh": 17,
+     "splitter": 92
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "gebiet": 14747,
+    "stufen": [
+     48.3,
+     49.3,
+     58.3
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 1.96,
+     "abw": 2.83,
+     "laenge": 918,
+     "w_roh": 18,
+     "splitter": 95
+    },
+    "ist_maler": {
+     "wechsel": 2.78,
+     "abw": 2.83,
+     "laenge": 936,
+     "w_roh": 26,
+     "splitter": 97
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 2.78,
+     "abw": 2.83,
+     "laenge": 936,
+     "w_roh": 26,
+     "splitter": 97
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 1.66,
+     "abw": 2.83,
+     "laenge": 1208,
+     "w_roh": 20,
+     "splitter": 95
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild2:12:0",
+    "gebiet": 11392,
+    "stufen": [
+     73.3,
+     80.0,
+     86.3
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 3.99,
+     "abw": 2.41,
+     "laenge": 1203,
+     "w_roh": 48,
+     "splitter": 0
+    },
+    "ist_maler": {
+     "wechsel": 5.38,
+     "abw": 2.83,
+     "laenge": 1190,
+     "w_roh": 64,
+     "splitter": 0
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 5.38,
+     "abw": 2.83,
+     "laenge": 1190,
+     "w_roh": 64,
+     "splitter": 0
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 3.55,
+     "abw": 2.69,
+     "laenge": 1352,
+     "w_roh": 48,
+     "splitter": 0
+    },
+    "gut": true
+   }
+  ]
+ },
+ "schulter_licht": {
+  "gut": false,
+  "rot": 6,
+  "zeilen": [
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "gebiet": 16156,
+    "stufen": [
+     48.3,
+     48.3,
+     53.3
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 2.07,
+     "abw": 2.56,
+     "laenge": 920,
+     "w_roh": 19,
+     "splitter": 342
+    },
+    "ist_maler": {
+     "wechsel": 3.79,
+     "abw": 2.83,
+     "laenge": 1161,
+     "w_roh": 44,
+     "splitter": 417
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 2.16,
+     "abw": 2.83,
+     "laenge": 1158,
+     "w_roh": 25,
+     "splitter": 428
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 2.38,
+     "abw": 2.56,
+     "laenge": 923,
+     "w_roh": 22,
+     "splitter": 342
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "gebiet": 16318,
+    "stufen": [
+     48.3,
+     48.3,
+     52.3
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 2.64,
+     "abw": 2.83,
+     "laenge": 1021,
+     "w_roh": 27,
+     "splitter": 300
+    },
+    "ist_maler": {
+     "wechsel": 5.26,
+     "abw": 2.83,
+     "laenge": 1026,
+     "w_roh": 54,
+     "splitter": 365
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 5.48,
+     "abw": 2.83,
+     "laenge": 912,
+     "w_roh": 50,
+     "splitter": 344
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 2.9,
+     "abw": 2.83,
+     "laenge": 827,
+     "w_roh": 24,
+     "splitter": 309
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "gebiet": 2713,
+    "stufen": [
+     48.3,
+     49.3,
+     57.0
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 2.92,
+     "abw": 2.85,
+     "laenge": 342,
+     "w_roh": 10,
+     "splitter": 17
+    },
+    "ist_maler": {
+     "wechsel": 6.92,
+     "abw": 2.69,
+     "laenge": 491,
+     "w_roh": 34,
+     "splitter": 23
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 6.2,
+     "abw": 2.69,
+     "laenge": 371,
+     "w_roh": 23,
+     "splitter": 20
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 5.67,
+     "abw": 2.83,
+     "laenge": 353,
+     "w_roh": 20,
+     "splitter": 16
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "gebiet": 3457,
+    "stufen": [
+     48.7,
+     53.3,
+     60.0
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 1.71,
+     "abw": 2.99,
+     "laenge": 527,
+     "w_roh": 9,
+     "splitter": 1
+    },
+    "ist_maler": {
+     "wechsel": 5.3,
+     "abw": 2.32,
+     "laenge": 585,
+     "w_roh": 31,
+     "splitter": 1
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 4.31,
+     "abw": 2.5,
+     "laenge": 511,
+     "w_roh": 22,
+     "splitter": 2
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 2.12,
+     "abw": 2.44,
+     "laenge": 519,
+     "w_roh": 11,
+     "splitter": 0
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "gebiet": 2742,
+    "stufen": [
+     76.3,
+     81.3,
+     85.0
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 1.96,
+     "abw": 2.91,
+     "laenge": 663,
+     "w_roh": 13,
+     "splitter": 0
+    },
+    "ist_maler": {
+     "wechsel": 7.41,
+     "abw": 2.83,
+     "laenge": 931,
+     "w_roh": 69,
+     "splitter": 7
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 4.59,
+     "abw": 2.83,
+     "laenge": 719,
+     "w_roh": 33,
+     "splitter": 0
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 1.63,
+     "abw": 2.83,
+     "laenge": 735,
+     "w_roh": 12,
+     "splitter": 0
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "gebiet": 3442,
+    "stufen": [
+     49.3,
+     54.3,
+     60.3
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 2.16,
+     "abw": 2.78,
+     "laenge": 510,
+     "w_roh": 11,
+     "splitter": 0
+    },
+    "ist_maler": {
+     "wechsel": 6.29,
+     "abw": 2.51,
+     "laenge": 604,
+     "w_roh": 38,
+     "splitter": 5
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 5.46,
+     "abw": 2.54,
+     "laenge": 531,
+     "w_roh": 29,
+     "splitter": 2
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 2.55,
+     "abw": 2.83,
+     "laenge": 548,
+     "w_roh": 14,
+     "splitter": 0
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "gebiet": 3239,
+    "stufen": [
+     48.3,
+     48.3,
+     48.3
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 1.47,
+     "abw": 2.32,
+     "laenge": 204,
+     "w_roh": 3,
+     "splitter": 162
+    },
+    "ist_maler": {
+     "wechsel": 0.0,
+     "abw": 2.36,
+     "laenge": 114,
+     "w_roh": 0,
+     "splitter": 153
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 0.0,
+     "abw": 2.36,
+     "laenge": 132,
+     "w_roh": 0,
+     "splitter": 150
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 0.0,
+     "abw": 2.99,
+     "laenge": 96,
+     "w_roh": 0,
+     "splitter": 120
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "gebiet": 2666,
+    "stufen": [
+     48.3,
+     49.3,
+     56.8
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 2.78,
+     "abw": 2.83,
+     "laenge": 360,
+     "w_roh": 10,
+     "splitter": 19
+    },
+    "ist_maler": {
+     "wechsel": 7.43,
+     "abw": 2.44,
+     "laenge": 404,
+     "w_roh": 30,
+     "splitter": 21
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 7.54,
+     "abw": 2.83,
+     "laenge": 358,
+     "w_roh": 27,
+     "splitter": 19
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 5.45,
+     "abw": 2.83,
+     "laenge": 330,
+     "w_roh": 18,
+     "splitter": 17
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "gebiet": 2212,
+    "stufen": [
+     48.3,
+     48.3,
+     48.3
+    ],
+    "bezug_k5e_puffer": {
+     "wechsel": 0.0,
+     "abw": 2.22,
+     "laenge": 81,
+     "w_roh": 0,
+     "splitter": 93
+    },
+    "ist_maler": {
+     "wechsel": 0.0,
+     "abw": 2.22,
+     "laenge": 144,
+     "w_roh": 0,
+     "splitter": 117
+    },
+    "zusatz_kand_puffer": {
+     "wechsel": 0.0,
+     "abw": 2.22,
+     "laenge": 144,
+     "w_roh": 0,
+     "splitter": 120
+    },
+    "zusatz_k5e_maler": {
+     "wechsel": 0.0,
+     "abw": 2.22,
+     "laenge": 105,
+     "w_roh": 0,
+     "splitter": 102
+    },
+    "gut": true
+   }
+  ]
+ },
+ "s18": {
+  "statisch": {
+   "10": {
+    "entartet": 0,
+    "doppelte_ecke": 0,
+    "doppelte_lage": 0,
+    "kanten_ueber2": 0,
+    "kleinste_flaeche": 605.018
+   },
+   "16": {
+    "entartet": 0,
+    "doppelte_ecke": 0,
+    "doppelte_lage": 0,
+    "kanten_ueber2": 0,
+    "kleinste_flaeche": 1369.683
+   },
+   "21": {
+    "entartet": 0,
+    "doppelte_ecke": 0,
+    "doppelte_lage": 0,
+    "kanten_ueber2": 0,
+    "kleinste_flaeche": 339.69
+   },
+   "22": {
+    "entartet": 0,
+    "doppelte_ecke": 0,
+    "doppelte_lage": 0,
+    "kanten_ueber2": 0,
+    "kleinste_flaeche": 63.248
+   }
+  },
+  "loch": {
+   "orbit_riss": 4764,
+   "spiel_riss": 2,
+   "orbit_riss_ansichten": 29,
+   "spiel_riss_ansichten": 2,
+   "orbit_riss_groesste": [
+    [
+     470,
+     12,
+     0,
+     25
+    ],
+    [
+     470,
+     12,
+     0,
+     0
+    ],
+    [
+     470,
+     10,
+     52,
+     25
+    ],
+    [
+     470,
+     10,
+     52,
+     0
+    ],
+    [
+     470,
+     10,
+     47,
+     25
+    ]
+   ],
+   "spiel_riss_groesste": [
+    [
+     1,
+     "spiel5080_vorn",
+     12,
+     0
+    ],
+    [
+     1,
+     "spiel5080_vorn",
+     10,
+     45
+    ],
+    [
+     0,
+     "spiel5090",
+     27,
+     49
+    ],
+    [
+     0,
+     "spiel5090",
+     10,
+     93
+    ],
+    [
+     0,
+     "spiel5090",
+     9,
+     18
+    ]
+   ],
+   "orbit_summe": 6252,
+   "orbit_ansichten": 390,
+   "orbit_mit_loch": 52,
+   "orbit_groesste": [
+    [
+     481,
+     12,
+     0,
+     0
+    ],
+    [
+     481,
+     10,
+     52,
+     0
+    ],
+    [
+     481,
+     10,
+     47,
+     0
+    ],
+    [
+     470,
+     12,
+     0,
+     25
+    ],
+    [
+     470,
+     10,
+     52,
+     25
+    ],
+    [
+     470,
+     10,
+     47,
+     25
+    ],
+    [
+     328,
+     12,
+     12,
+     21
+    ],
+    [
+     328,
+     12,
+     12,
+     4
+    ]
+   ],
+   "spiel_summe": 234,
+   "spiel_ansichten": 21,
+   "spiel_mit_loch": 10,
+   "spiel_groesste": [
+    [
+     175,
+     "spiel5090",
+     9,
+     18
+    ],
+    [
+     31,
+     "bild1",
+     27,
+     60
+    ],
+    [
+     7,
+     "bild2",
+     10,
+     35
+    ],
+    [
+     6,
+     "bild2",
+     27,
+     59
+    ],
+    [
+     6,
+     "bild1",
+     27,
+     58
+    ],
+    [
+     5,
+     "spiel5090",
+     3,
+     6
+    ],
+    [
+     1,
+     "spiel5090",
+     27,
+     49
+    ],
+    [
+     1,
+     "spiel5090",
+     10,
+     93
+    ]
+   ],
+   "sekunden": 206
+  }
+ },
+ "s13": {
+  "modell": 15273,
+  "k5e_f1": 6386,
+  "je_netz": {
+   "10": 1483,
+   "16": 800,
+   "21": 2981,
+   "22": 5073
+  }
+ },
+ "urteil2": [
+  {
+   "nr": "H1a",
+   "punkt": "ab4-Summe <= 1 % der K5e_f1-Summe ueber alle Ansichten (1043153 -> 10431)",
+   "gut": true,
+   "ist": "Summe 3578 (K5e_f1 auf denselben Ansichten 1043153, MULDE 547)",
+   "daten": {
+    "summe": 3578,
+    "grenze": 10431
+   }
+  },
+  {
+   "nr": "H1b",
+   "punkt": "ab4 groesstes zusammenhaengendes Streifenstueck je Ansicht <= 25 px",
+   "gut": true,
+   "ist": "groesstes 23 (bild1 Clip 12 Bild 17); Ansichten > 25: 0 []",
+   "daten": {
+    "groesstes": 23,
+    "wo": [
+     "bild1",
+     12,
+     17
+    ],
+    "ueber25": []
+   }
+  },
+  {
+   "nr": "H1c",
+   "punkt": "ab4-Summe je Ansicht ausserhalb der Clips 10/12 <= 20 px",
+   "gut": true,
+   "ist": "Ansichten > 20: 0 []; groesste 20 (spiel5080_vorn Clip 11 Bild 24)",
+   "daten": {
+    "rot": [],
+    "groesste": [
+     20,
+     "spiel5080_vorn",
+     11,
+     24
+    ]
+   }
+  },
+  {
+   "nr": "H2",
+   "punkt": "ab5: Summe <= MULDE*1,05+50 und Ansichten > 20 <= MULDE*1,05+2",
+   "gut": true,
+   "ist": "Summe 12543 (MULDE 41765, Grenze 43903), > 20: 162 (MULDE 302, Grenze 319.1), groesste 159 (MULDE 618)",
+   "daten": {
+    "ist": {
+     "summe": 12543,
+     "ueber20": 162,
+     "groesste": 159
+    },
+    "mulde": {
+     "summe": 41765,
+     "ueber20": 302,
+     "groesste": 618
+    }
+   }
+  },
+  {
+   "nr": "H3a",
+   "punkt": "uebrige Paare mit 10/21/22/23 ungerichtet, X<->{10,21} gruppiert: je <= K5e_f1*1,05+50",
+   "gut": false,
+   "ist": "ROT: 19<->23 527 > 50 (K5e_f1 0); 20<->22 483 > 50 (K5e_f1 0); 7<->22 163 > 156 (K5e_f1 101); 19<->22 157 > 50 (K5e_f1 0)",
+   "daten": {
+    "zeilen": [
+     [
+      "T16<->{10,21}",
+      383182,
+      1732275,
+      1818938.75
+     ],
+     [
+      "T7<->{10,21}",
+      283597,
+      314168,
+      329926.4
+     ],
+     [
+      "22<->23",
+      60865,
+      74092,
+      77846.6
+     ],
+     [
+      "17<->22",
+      12163,
+      29268,
+      30781.4
+     ],
+     [
+      "T11<->{10,21}",
+      7017,
+      7033,
+      7434.650000000001
+     ],
+     [
+      "16<->23",
+      5792,
+      6482,
+      6856.1
+     ],
+     [
+      "10<->21",
+      4949,
+      753008,
+      790708.4
+     ],
+     [
+      "16<->22",
+      3349,
+      36889,
+      38783.450000000004
+     ],
+     [
+      "18<->22",
+      2702,
+      7954,
+      8401.7
+     ],
+     [
+      "17<->23",
+      1113,
+      1230,
+      1341.5
+     ],
+     [
+      "19<->23",
+      527,
+      0,
+      50.0
+     ],
+     [
+      "20<->22",
+      483,
+      0,
+      50.0
+     ],
+     [
+      "22<->31",
+      178,
+      259,
+      321.95
+     ],
+     [
+      "7<->22",
+      163,
+      101,
+      156.05
+     ],
+     [
+      "19<->22",
+      157,
+      0,
+      50.0
+     ],
+     [
+      "18<->23",
+      131,
+      539,
+      615.95
+     ],
+     [
+      "T18<->{10,21}",
+      54,
+      7,
+      57.35
+     ],
+     [
+      "23<->31",
+      48,
+      56,
+      108.80000000000001
+     ],
+     [
+      "T17<->{10,21}",
+      48,
+      309,
+      374.45
+     ],
+     [
+      "T31<->{10,21}",
+      46,
+      0,
+      50.0
+     ],
+     [
+      "13<->22",
+      0,
+      4,
+      54.2
+     ]
+    ],
+    "rot": [
+     [
+      "19<->23",
+      527,
+      0,
+      50.0
+     ],
+     [
+      "20<->22",
+      483,
+      0,
+      50.0
+     ],
+     [
+      "7<->22",
+      163,
+      101,
+      156.05
+     ],
+     [
+      "19<->22",
+      157,
+      0,
+      50.0
+     ]
+    ]
+   }
+  },
+  {
+   "nr": "H3b",
+   "punkt": "Schulter 16>10 + 10>16 je Ansicht <= K5e_f1*1,05+25",
+   "gut": true,
+   "ist": "Ansichten rot: 0, schlimmste (Zuwachs, Ansicht, Clip, Bild, ist, K5e_f1): []; Summe 383052 (K5e_f1 1730744)",
+   "daten": {
+    "rot": [],
+    "summe": 383052,
+    "summe_k5e": 1730744
+   }
+  },
+  {
+   "nr": "H4",
+   "punkt": "gezeichnete Dreiecke + 773 + 86 <= 8192",
+   "gut": true,
+   "ist": "meiste 7290 (spiel5080_vorn Clip 11 Bild 30) -> 8149",
+   "daten": {
+    "meiste": [
+     7290,
+     "spiel5080_vorn",
+     11,
+     30
+    ]
+   }
+  },
+  {
+   "nr": "H5",
+   "punkt": "der Lauf gehoert zur EMD-Datei",
+   "gut": true,
+   "ist": "sha256 Datei f833a90580d849ad, Lauf f833a90580d849ad",
+   "daten": {
+    "sha": "f833a90580d849ad954631c8f71ec194b23247c00ffe6a7b5f14862e644c9695"
+   }
+  },
+  {
+   "nr": "H6b",
+   "punkt": "Netz 16 nur formgleich fein geteilt (statt H6)",
+   "gut": false,
+   "ist": "Sektionen 0-6 VERSCHIEDEN; fremde Netze geaendert: [18, 19, 20, 28, 29]; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler",
+   "daten": {}
+  },
+  {
+   "nr": "H7",
+   "punkt": "Umriss >= K5e_f1 - 0,0005",
+   "gut": true,
+   "ist": "bild2 0.68212 (K5e_f1 0.65294, Grenze 0.65244), bild1 0.72301 (K5e_f1 0.72312, Grenze 0.72262)",
+   "daten": {
+    "umriss": {
+     "bild2": 0.6821244882964207,
+     "bild1": 0.7230113332047904
+    },
+    "k5e": {
+     "bild2": 0.65294153335895,
+     "bild1": 0.7231187980882574
+    }
+   }
+  },
+  {
+   "nr": "H8",
+   "punkt": "Tabelle taugt fuer die Textur-Stufe (bank.tabelle_pruefen fuer 10/21/22 + gleiche Regeln fuer 16, H6b)",
+   "gut": true,
+   "ist": "(1) 10/21/22 per bank.tabelle_pruefen: GUT - 9689 Flaechen, jede mit Mutter; UV ausserhalb des Mutter-Rechtecks: 0; Dehnung gegen die Mutter {\"10\": {\"port_dreiecke\": 1483, \"groesste\": 7.18, \"ueber2\": 51, \"ueber4\": 7, \"ueber8\": 0, \"uv_entartet\": 45}, \"21\": {\"port_dreiecke\": 2981, \"groesste\": 3.67, \"ueber2\": 31, \"ueber4\": 0, \"ueber8\": 0, \"uv_entartet\": 37}, \"22\": {\"port_dreiecke\": 5073, \"groesste\": 16.9, \"ueber2\": 76, \"ueber4\": 2, \"ueber8\": 1, \"uv_entartet\": 1463}} | (2) Netz 16: 720 Flaechen, Fehler 0 [], UV ausserhalb des Mutter-Rechtecks 0 | (3) G.mulde_auf_form auf der echten Tabelle ohne Abbruch",
+   "daten": {}
+  }
+ ]
+}

@@ -1,0 +1,406 @@
+{
+ "zone30_neu": [
+  "22|1|186",
+  "22|1|187",
+  "22|1|192",
+  "22|1|193",
+  "22|1|20",
+  "22|1|29",
+  "22|1|30",
+  "22|1|39",
+  "23|1|14",
+  "23|1|15",
+  "23|1|23",
+  "23|1|24",
+  "23|1|25",
+  "23|1|33",
+  "23|1|34",
+  "23|1|35",
+  "23|1|36",
+  "23|1|43",
+  "23|1|44",
+  "23|1|45",
+  "23|1|46"
+ ],
+ "sechs_darin": [],
+ "alte_zone30_darin": [],
+ "klassen": {
+  "zu": {
+   "aussen": 4,
+   "Gelenkspalt": 11,
+   "Maulhoehle": 6
+  },
+  "griff": {
+   "aussen": 8,
+   "Maulhoehle": 13
+  },
+  "bild2": {
+   "aussen": 8,
+   "Maulhoehle": 13
+  }
+ },
+ "je_flaeche": {
+  "22|1|186": [
+   "aussen",
+   "aussen",
+   "aussen",
+   "Haut"
+  ],
+  "22|1|187": [
+   "aussen",
+   "aussen",
+   "aussen",
+   "Haut"
+  ],
+  "22|1|192": [
+   "aussen",
+   "aussen",
+   "aussen",
+   "Haut"
+  ],
+  "22|1|193": [
+   "aussen",
+   "aussen",
+   "aussen",
+   "Haut"
+  ],
+  "22|1|20": [
+   "Gelenkspalt",
+   "aussen",
+   "aussen",
+   "Haut"
+  ],
+  "22|1|29": [
+   "Gelenkspalt",
+   "aussen",
+   "aussen",
+   "Haut"
+  ],
+  "22|1|30": [
+   "Gelenkspalt",
+   "aussen",
+   "aussen",
+   "Haut"
+  ],
+  "22|1|39": [
+   "Gelenkspalt",
+   "aussen",
+   "aussen",
+   "Haut"
+  ],
+  "23|1|14": [
+   "Maulhoehle",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|15": [
+   "Maulhoehle",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|23": [
+   "Gelenkspalt",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|24": [
+   "Maulhoehle",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|25": [
+   "Maulhoehle",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|33": [
+   "Gelenkspalt",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|34": [
+   "Maulhoehle",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|35": [
+   "Maulhoehle",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|36": [
+   "Gelenkspalt",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|43": [
+   "Gelenkspalt",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|44": [
+   "Gelenkspalt",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|45": [
+   "Gelenkspalt",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ],
+  "23|1|46": [
+   "Gelenkspalt",
+   "Maulhoehle",
+   "Maulhoehle",
+   "Haut"
+  ]
+ },
+ "richtungen_zu_griff_bild2": {
+  "alt": {
+   "22|0|0": [
+    65,
+    64,
+    63
+   ],
+   "22|0|9": [
+    59,
+    60,
+    60
+   ],
+   "22|1|1": [
+    79,
+    79,
+    79
+   ],
+   "22|1|194": [
+    57,
+    61,
+    60
+   ],
+   "22|1|201": [
+    59,
+    62,
+    63
+   ],
+   "22|1|209": [
+    78,
+    78,
+    78
+   ],
+   "22|1|210": [
+    81,
+    81,
+    81
+   ],
+   "22|1|217": [
+    80,
+    80,
+    80
+   ],
+   "22|1|8": [
+    80,
+    80,
+    80
+   ],
+   "22|1|9": [
+    74,
+    72,
+    73
+   ],
+   "23|0|10": [
+    2,
+    2,
+    0
+   ],
+   "23|0|19": [
+    0,
+    3,
+    1
+   ],
+   "23|0|3": [
+    27,
+    0,
+    0
+   ],
+   "23|0|4": [
+    24,
+    0,
+    0
+   ],
+   "23|0|5": [
+    23,
+    0,
+    0
+   ],
+   "23|0|6": [
+    25,
+    0,
+    0
+   ],
+   "23|1|3": [
+    12,
+    0,
+    0
+   ],
+   "23|1|50": [
+    11,
+    11,
+    10
+   ],
+   "23|1|59": [
+    13,
+    13,
+    11
+   ],
+   "23|1|60": [
+    8,
+    9,
+    9
+   ],
+   "23|1|69": [
+    5,
+    8,
+    7
+   ]
+  },
+  "neu": {
+   "22|1|186": [
+    7,
+    31,
+    31
+   ],
+   "22|1|187": [
+    6,
+    19,
+    19
+   ],
+   "22|1|192": [
+    5,
+    20,
+    24
+   ],
+   "22|1|193": [
+    7,
+    28,
+    29
+   ],
+   "22|1|20": [
+    14,
+    41,
+    42
+   ],
+   "22|1|29": [
+    13,
+    41,
+    43
+   ],
+   "22|1|30": [
+    15,
+    43,
+    44
+   ],
+   "22|1|39": [
+    14,
+    43,
+    45
+   ],
+   "23|1|14": [
+    2,
+    11,
+    15
+   ],
+   "23|1|15": [
+    2,
+    11,
+    13
+   ],
+   "23|1|23": [
+    19,
+    37,
+    42
+   ],
+   "23|1|24": [
+    3,
+    30,
+    29
+   ],
+   "23|1|25": [
+    6,
+    29,
+    34
+   ],
+   "23|1|33": [
+    14,
+    42,
+    46
+   ],
+   "23|1|34": [
+    9,
+    36,
+    42
+   ],
+   "23|1|35": [
+    10,
+    38,
+    42
+   ],
+   "23|1|36": [
+    15,
+    41,
+    43
+   ],
+   "23|1|43": [
+    0,
+    32,
+    32
+   ],
+   "23|1|44": [
+    6,
+    31,
+    37
+   ],
+   "23|1|45": [
+    3,
+    28,
+    29
+   ],
+   "23|1|46": [
+    0,
+    30,
+    31
+   ]
+  }
+ },
+ "zuwachs_beim_oeffnen": {
+  "alt": {
+   "flaechen": 21,
+   "mehr_sichtbar_offen": 0,
+   "gleich_sichtbar": 14,
+   "weniger_sichtbar_offen": 5
+  },
+  "neu": {
+   "flaechen": 21,
+   "mehr_sichtbar_offen": 21,
+   "gleich_sichtbar": 0,
+   "weniger_sichtbar_offen": 0
+  },
+  "sechs": {
+   "flaechen": 6,
+   "mehr_sichtbar_offen": 0,
+   "gleich_sichtbar": 4,
+   "weniger_sichtbar_offen": 0
+  }
+ }
+}

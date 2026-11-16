@@ -1,0 +1,412 @@
+{
+ "lang_max": {
+  "23|-1|6": 39.32,
+  "23|+1|6": 39.32,
+  "23|-1|7": 75.12,
+  "23|+1|7": 75.12,
+  "23|+0|8": 102.74,
+  "22|-1|12": 75.32,
+  "22|+1|12": 75.32,
+  "22|-1|13": 39.05,
+  "22|+1|13": 39.05,
+  "22|-1|14": 55.89,
+  "22|+1|14": 55.89,
+  "22|-1|15": 69.25,
+  "22|+1|15": 69.25
+ },
+ "rand": 2.0,
+ "schritte": 10,
+ "posen_emd_sha256": "f833a90580d849ad954631c8f71ec194b23247c00ffe6a7b5f14862e644c9695",
+ "keys": 771,
+ "quelle": "R6 (kf_k5g3_zaehne.laengen_eichen): groesste Laenge <= Nennlaenge (R4), mit der der Zahn in KEINEM der 771 Keys (Posen der K5g3-Geometrie-EMD, Sektionen 0-6 == Spiel-Asset) (a) um RAND verlaengert in das Gegenrohr ein- und wieder austritt, (b) um RAND verlaengert im Rohr des Gegenkiefers liegt (alte obere: in keinem Key) und (c) tiefer in einen Zahn der Gegenreihe eindringt als die alten Zaehne untereinander im selben Key, (d) als unterer Zahn um RAND verlaengert vor der Schnauze (x > L) hoeher steht als deren Mundlinie. Bisektion 10 Schritte.",
+ "protokoll": [
+  {
+   "zahn": "23|-1|6",
+   "nenn": 180.53,
+   "kappe": 39.32,
+   "verletzungen_nenn": 643,
+   "arten": [
+    "austritt",
+    "drin",
+    "zahn"
+   ],
+   "beispiel": [
+    [
+     0,
+     "drin",
+     3
+    ],
+    [
+     0,
+     "austritt",
+     1
+    ],
+    [
+     0,
+     "zahn",
+     0.95
+    ]
+   ]
+  },
+  {
+   "zahn": "23|+1|6",
+   "nenn": 180.53,
+   "kappe": 39.32,
+   "verletzungen_nenn": 582,
+   "arten": [
+    "austritt",
+    "drin",
+    "zahn"
+   ],
+   "beispiel": [
+    [
+     0,
+     "drin",
+     3
+    ],
+    [
+     0,
+     "austritt",
+     1
+    ],
+    [
+     0,
+     "zahn",
+     0.8
+    ]
+   ]
+  },
+  {
+   "zahn": "23|-1|7",
+   "nenn": 128.85,
+   "kappe": 76.25,
+   "verletzungen_nenn": 251,
+   "arten": [
+    "vor_nase"
+   ],
+   "beispiel": [
+    [
+     10,
+     "vor_nase",
+     8
+    ],
+    [
+     11,
+     "vor_nase",
+     16
+    ],
+    [
+     12,
+     "vor_nase",
+     11
+    ]
+   ]
+  },
+  {
+   "zahn": "23|+1|7",
+   "nenn": 128.85,
+   "kappe": 75.12,
+   "verletzungen_nenn": 255,
+   "arten": [
+    "austritt",
+    "drin",
+    "vor_nase"
+   ],
+   "beispiel": [
+    [
+     10,
+     "vor_nase",
+     8
+    ],
+    [
+     11,
+     "vor_nase",
+     16
+    ],
+    [
+     12,
+     "vor_nase",
+     12
+    ]
+   ]
+  },
+  {
+   "zahn": "23|+0|8",
+   "nenn": 141.6,
+   "kappe": 102.74,
+   "verletzungen_nenn": 239,
+   "arten": [
+    "vor_nase"
+   ],
+   "beispiel": [
+    [
+     10,
+     "vor_nase",
+     4
+    ],
+    [
+     11,
+     "vor_nase",
+     12
+    ],
+    [
+     12,
+     "vor_nase",
+     8
+    ]
+   ]
+  },
+  {
+   "zahn": "23|+1|6 / 23|-1|6",
+   "spiegelgleich": 39.32
+  },
+  {
+   "zahn": "23|+1|7 / 23|-1|7",
+   "spiegelgleich": 75.12
+  },
+  {
+   "zahn": "22|-1|11",
+   "nenn": 71.16,
+   "kappe": null,
+   "verletzungen_nenn": 0
+  },
+  {
+   "zahn": "22|+1|11",
+   "nenn": 71.16,
+   "kappe": null,
+   "verletzungen_nenn": 0
+  },
+  {
+   "zahn": "22|-1|12",
+   "nenn": 109.72,
+   "kappe": 79.4,
+   "verletzungen_nenn": 376,
+   "arten": [
+    "austritt",
+    "drin"
+   ],
+   "beispiel": [
+    [
+     11,
+     "drin",
+     1
+    ],
+    [
+     11,
+     "austritt",
+     1
+    ],
+    [
+     18,
+     "drin",
+     1
+    ]
+   ]
+  },
+  {
+   "zahn": "22|+1|12",
+   "nenn": 109.72,
+   "kappe": 75.32,
+   "verletzungen_nenn": 388,
+   "arten": [
+    "austritt",
+    "drin"
+   ],
+   "beispiel": [
+    [
+     11,
+     "drin",
+     1
+    ],
+    [
+     11,
+     "austritt",
+     1
+    ],
+    [
+     18,
+     "drin",
+     1
+    ]
+   ]
+  },
+  {
+   "zahn": "22|-1|13",
+   "nenn": 63.88,
+   "kappe": 39.05,
+   "verletzungen_nenn": 215,
+   "arten": [
+    "drin"
+   ],
+   "beispiel": [
+    [
+     11,
+     "drin",
+     16
+    ],
+    [
+     12,
+     "drin",
+     4
+    ],
+    [
+     18,
+     "drin",
+     15
+    ]
+   ]
+  },
+  {
+   "zahn": "22|+1|13",
+   "nenn": 63.88,
+   "kappe": 39.05,
+   "verletzungen_nenn": 215,
+   "arten": [
+    "drin"
+   ],
+   "beispiel": [
+    [
+     11,
+     "drin",
+     16
+    ],
+    [
+     12,
+     "drin",
+     4
+    ],
+    [
+     18,
+     "drin",
+     16
+    ]
+   ]
+  },
+  {
+   "zahn": "22|-1|14",
+   "nenn": 60.24,
+   "kappe": 56.94,
+   "verletzungen_nenn": 175,
+   "arten": [
+    "drin"
+   ],
+   "beispiel": [
+    [
+     11,
+     "drin",
+     4
+    ],
+    [
+     18,
+     "drin",
+     4
+    ],
+    [
+     19,
+     "drin",
+     4
+    ]
+   ]
+  },
+  {
+   "zahn": "22|+1|14",
+   "nenn": 60.24,
+   "kappe": 55.89,
+   "verletzungen_nenn": 178,
+   "arten": [
+    "drin"
+   ],
+   "beispiel": [
+    [
+     11,
+     "drin",
+     4
+    ],
+    [
+     18,
+     "drin",
+     4
+    ],
+    [
+     19,
+     "drin",
+     4
+    ]
+   ]
+  },
+  {
+   "zahn": "22|-1|15",
+   "nenn": 91.97,
+   "kappe": 72.39,
+   "verletzungen_nenn": 206,
+   "arten": [
+    "drin"
+   ],
+   "beispiel": [
+    [
+     11,
+     "drin",
+     8
+    ],
+    [
+     18,
+     "drin",
+     10
+    ],
+    [
+     19,
+     "drin",
+     10
+    ]
+   ]
+  },
+  {
+   "zahn": "22|+1|15",
+   "nenn": 91.97,
+   "kappe": 69.25,
+   "verletzungen_nenn": 211,
+   "arten": [
+    "drin"
+   ],
+   "beispiel": [
+    [
+     11,
+     "drin",
+     11
+    ],
+    [
+     12,
+     "drin",
+     4
+    ],
+    [
+     18,
+     "drin",
+     11
+    ]
+   ]
+  },
+  {
+   "zahn": "22|+0|16",
+   "nenn": 52.96,
+   "kappe": null,
+   "verletzungen_nenn": 0
+  },
+  {
+   "zahn": "22|+1|12 / 22|-1|12",
+   "spiegelgleich": 75.32
+  },
+  {
+   "zahn": "22|+1|13 / 22|-1|13",
+   "spiegelgleich": 39.05
+  },
+  {
+   "zahn": "22|+1|14 / 22|-1|14",
+   "spiegelgleich": 55.89
+  },
+  {
+   "zahn": "22|+1|15 / 22|-1|15",
+   "spiegelgleich": 69.25
+  }
+ ]
+}

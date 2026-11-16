@@ -1,0 +1,202 @@
+{
+ "staende": [
+  {
+   "name": "erste Riesenform",
+   "commit": "0e10882f9",
+   "datum": "2026-11-02",
+   "clips": 28,
+   "schritt": 2,
+   "flaechen_an_der_stelle": 0,
+   "davon_rot": 0,
+   "zeilen": [],
+   "von_unten": [
+    0,
+    380,
+    0.0,
+    0
+   ],
+   "spiel_5090": [
+    0,
+    380,
+    0.0,
+    0
+   ],
+   "rot_hals_kopf_kiefer_von_unten": [
+    267,
+    4.0
+   ]
+  },
+  {
+   "name": "Nachschliff",
+   "commit": "6200b3d35",
+   "datum": "2026-11-02",
+   "clips": 28,
+   "schritt": 2,
+   "flaechen_an_der_stelle": 0,
+   "davon_rot": 0,
+   "zeilen": [],
+   "von_unten": [
+    0,
+    380,
+    0.0,
+    0
+   ],
+   "spiel_5090": [
+    0,
+    380,
+    0.0,
+    0
+   ],
+   "rot_hals_kopf_kiefer_von_unten": [
+    276,
+    4.0
+   ]
+  },
+  {
+   "name": "K3",
+   "commit": "a452893f1",
+   "datum": "2026-11-02",
+   "clips": 28,
+   "schritt": 2,
+   "flaechen_an_der_stelle": 3,
+   "davon_rot": 0,
+   "zeilen": [
+    3
+   ],
+   "von_unten": [
+    0,
+    400,
+    0.0,
+    0
+   ],
+   "spiel_5090": [
+    0,
+    400,
+    0.0,
+    0
+   ],
+   "rot_hals_kopf_kiefer_von_unten": [
+    331,
+    2.0
+   ]
+  },
+  {
+   "name": "K4",
+   "commit": "67408cfcb",
+   "datum": "2026-11-03",
+   "clips": 28,
+   "schritt": 2,
+   "flaechen_an_der_stelle": 3,
+   "davon_rot": 0,
+   "zeilen": [
+    3
+   ],
+   "von_unten": [
+    0,
+    400,
+    0.0,
+    0
+   ],
+   "spiel_5090": [
+    0,
+    400,
+    0.0,
+    0
+   ],
+   "rot_hals_kopf_kiefer_von_unten": [
+    375,
+    11.0
+   ]
+  },
+  {
+   "name": "K5c",
+   "commit": "a005b357a",
+   "datum": "2026-11-07",
+   "clips": 28,
+   "schritt": 2,
+   "flaechen_an_der_stelle": 6,
+   "davon_rot": 6,
+   "zeilen": [
+    0
+   ],
+   "von_unten": [
+    326,
+    400,
+    61.0,
+    574
+   ],
+   "spiel_5090": [
+    296,
+    400,
+    75.0,
+    2349
+   ],
+   "rot_hals_kopf_kiefer_von_unten": [
+    400,
+    632.5
+   ]
+  },
+  {
+   "name": "K5e_f1 (heute)",
+   "commit": "62bd0001b",
+   "datum": "2026-11-09",
+   "clips": 28,
+   "schritt": 1,
+   "flaechen_an_der_stelle": 6,
+   "davon_rot": 6,
+   "zeilen": [
+    0
+   ],
+   "von_unten": [
+    654,
+    799,
+    64.0,
+    581
+   ],
+   "spiel_5090": [
+    588,
+    799,
+    76.0,
+    2349
+   ],
+   "rot_hals_kopf_kiefer_von_unten": [
+    698,
+    68.0
+   ]
+  },
+  {
+   "name": "Krallen-Kandidat",
+   "commit": "-",
+   "datum": "-",
+   "clips": 28,
+   "schritt": 1,
+   "flaechen_an_der_stelle": 6,
+   "davon_rot": 6,
+   "zeilen": [
+    0
+   ],
+   "von_unten": [
+    654,
+    799,
+    64.0,
+    575
+   ],
+   "spiel_5090": [
+    588,
+    799,
+    76.0,
+    2349
+   ],
+   "rot_hals_kopf_kiefer_von_unten": [
+    698,
+    68.0
+   ]
+  }
+ ],
+ "k5e_gegen_krallen": {
+  "ansichten": 1598,
+  "abweichend": 25,
+  "max_abweichung_px": 175,
+  "bilder_mit_rot_gleich": true
+ }
+}

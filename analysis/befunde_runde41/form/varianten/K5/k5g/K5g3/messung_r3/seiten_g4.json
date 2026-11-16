@@ -1,0 +1,26 @@
+{
+ "0": {
+  "median_haut": 9.847,
+  "median_alle": 35.985,
+  "texel_haut": 11149,
+  "texel_alle": 32923,
+  "g_haut": 1.3308,
+  "g_alle": 0.5459
+ },
+ "1": {
+  "median_haut": 13.105,
+  "median_alle": 19.643,
+  "texel_haut": 33801,
+  "texel_alle": 56548,
+  "g_haut": 1.0,
+  "g_alle": 1.0
+ },
+ "2": {
+  "median_haut": 12.508,
+  "median_alle": 13.99,
+  "texel_haut": 18710,
+  "texel_alle": 26721,
+  "g_haut": 1.0477,
+  "g_alle": 1.4041
+ }
+}

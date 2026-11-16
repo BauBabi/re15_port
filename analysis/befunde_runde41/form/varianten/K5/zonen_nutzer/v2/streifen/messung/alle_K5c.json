@@ -1,0 +1,50 @@
+[
+{
+"clip": 0,
+"bild": 0,
+"schnitt_22_10": 151,
+"schnitt_22_21": 309,
+"schnitt_23_21": 0,
+"schnitt_23_10": 0,
+"ecken_22_innen": 24,
+"ecken_22_tiefe_max": 218.1418093922267,
+"ecken_23_innen": 0,
+"ecken_23_tiefe_max": 0.0,
+"keil_px": 643,
+"keil_tiefe_max": 184.20426852914625,
+"brust_ueber_hals_px": 295,
+"figur_px": 33235
+},
+{
+"clip": 1,
+"bild": 0,
+"schnitt_22_10": 306,
+"schnitt_22_21": 324,
+"schnitt_23_21": 24,
+"schnitt_23_10": 28,
+"ecken_22_innen": 43,
+"ecken_22_tiefe_max": 296.43762349988725,
+"ecken_23_innen": 5,
+"ecken_23_tiefe_max": 163.3067633151125,
+"keil_px": 742,
+"keil_tiefe_max": 124.21376463663455,
+"brust_ueber_hals_px": 913,
+"figur_px": 25335
+},
+{
+"clip": 2,
+"bild": 0,
+"schnitt_22_10": 148,
+"schnitt_22_21": 293,
+"schnitt_23_21": 0,
+"schnitt_23_10": 0,
+"ecken_22_innen": 19,
+"ecken_22_tiefe_max": 209.9287789343472,
+"ecken_23_innen": 0,
+"ecken_23_tiefe_max": 0.0,
+"keil_px": 36,
+"keil_tiefe_max": 160.38952663016426,
+"brust_ueber_hals_px": 134,
+"figur_px": 31292
+}
+]

@@ -1,0 +1,3 @@
+Abgabe (K5c-Hautflaechen je Seite)         f_s {0: 4.539, 1: 1.86, 2: 2.549}  Teile 0/7 Median L* 23.3   uebrige Haut P25/Median/P75 18.4/24.2/32.2
+G4-eigene Seitenstatistik (Hautklasse)     f_s {0: 2.475, 1: 1.86, 2: 1.949}  Teile 0/7 Median L* 12.7   uebrige Haut P25/Median/P75 16.5/23.6/31.3
+ohne Angleich                              f_s {0: 1.86, 1: 1.86, 2: 1.86}  Teile 0/7 Median L* 9.6   uebrige Haut P25/Median/P75 15.7/23.6/31.3
