@@ -410,6 +410,18 @@ Besonderheiten:
 - Pruefhinweis H4: Nachlauf `04 01 01 N` der neuen Untertitel aus den Original-Zeilen desselben Raums (tools/r42_story/nachlauf_r42.py):
   ROOM3060 0x3C, ROOM3020 einzeilig 0x59 / zweizeilig 0x63, ROOM30E0/3070/6030/6031 0x63; Raeume ohne Original-Untertitel
   (11A0/11A1, 2080/2081) nach dem Belegraum der Begleiter-Kette (3000 bzw. 3001, 0x63). Geaendert sind nur Bytes von 3020/3060.
+- Nachbesserung 1 (Pruefer Kleinkram R1):
+  - T-09 im Bild: das oeffnende Anfuehrungszeichen 0x61 (Original 0x47 @0x800c5e53, auch Taschenuhr F-19 Seite 2 und Original 0x07
+    "Ruger & Company" mit 0x64) erschien als fremdes Zeichen. Ursache im PC-Inventar-Renderer: die Schriftseite s_font4 hielt nur
+    128 Zeilen (`v & 127`), Glyphen ab Code 0x60 liegen bei v = (code & 0xf0) + 0x20 >= 0x80 (FUN_80028868). Gemessen: Savestate
+    stage_saves/inv_states/psx_inv_check.sav, Schriftseite VRAM (768,256) == TEX.TIM Spalten 256..511, Zelle 0x61 bei v = 0x80 ist
+    das Anfuehrungszeichen. Behoben in platform/pc/src/inv_render_pc.c (256 Zeilen); Riegel integration_r42_klein_glyphe_karte /
+    _glyphe_uhr (Software-Framebuffer gegen die nachgezeichnete Seite, 0 abweichende Pixel; der alte Renderer weicht um 70 ab).
+  - T-08: Ada und Marvin stehen in 6020 in keinem Kamerabild, das der Spieler erreicht (cam 0/1); der Beleg sind Spawn-Log und
+    Aktorliste. Fuer L18 (Schutzraum-Dialog, v0.8.32) offen: Stellplatz bzw. Kamera der Szene.
+  - H4: Abwaegung gegen ROOM2000/2001/11B0/11B1 im Kopf von tools/r42_story/nachlauf_r42.py (Punkt 4); Belegraum bleibt 3000/3001.
+  - Zensus: Bits 38/39 (Bank 9, RE15_BF_HANGAR_BIT / RE15_BF_BESIEGT_BIT der Zweige r41/sichel_szene, r42/hangar_aussen,
+    r41/birkin_kralle) stehen jetzt in ZWEIG_BITS; belege/zensus_r42.txt neu (76 statt 78 freie Bits).
 
 ## 5. Gemeinsame Dateien (nur kleine Haken, Kommentar "Runde 42 Story")
 Wie Runde 41 (VERTRAG R41 1.3). Tabu: `synchro/`, `pri/`, `Cutscenes/`, `Version_80%/`, `release/`. Neue Bits nur

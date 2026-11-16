@@ -18,6 +18,22 @@ Original-Untertiteln (Nachrichtenblock @RDT+0x3C, Kopf `04 00`) des Raums:
      (Leon/Marvin, 7 x `01 63`), 2081 -> 11A1 -> Leiter -> ROOM3001 (Elza/John/Sherry, einzeilig 3 x `01 63` gegen 1 x `01 32`,
      zweizeilig 4 x `01 63`). Konzept 2 / K-07: die Szene vor der Leiter endet damit, dass die Begleiter als Erste hinaufgehen,
      "deshalb sind sie in 3000/3001 schon oben".
+  4. ABWAEGUNG gegen die naeher liegenden Raeume derselben Stage (Nachbesserung Kleinkram R1, Pruefer-Hinweis; Zahlen druckt
+     `python nachlauf_r42.py`, Abschnitt ABWAEGUNG, aus den RDTs):
+     - Elza-Seite: ROOM2001 (vor 2081, Elza/John/Sherry) 15 x `01 63`, ROOM11B1 (Elza/Sherry) 11 x `01 63`, ROOM3001 wie oben - jeder
+       Kandidat ergibt 0x63. Die Wahl des Belegraums aendert dort nichts.
+     - Leon-Seite: ROOM2000 (Leon/Marvin/Ada, Eingang der Kanalisation) zweizeilig 6 x `01 77` / 2 x `01 63`, einzeilig 4 x `01 63`;
+       ROOM11B0 (Leon/Marvin am Kanaldeckel) sechs verschiedene Werte 0x3b..0x87 fuer 13 Zeilen. Beide Raeume setzen N je Zeile
+       verschieden (2000: `01 77` an den sechs laengsten zweizeiligen Zeilen msg 2/4/7/8/9/11, `01 63` an den kuerzeren msg 5/6;
+       11B0: einzeilig 0x3b/0x55/0x5f, zweizeilig 0x5f/0x69, dreizeilig 0x69/0x87). Eine Regel dafuer steht in keinem Code - N ist
+       Datenbyte je Zeile (msg_common.c re15_msg_compute_duration, FUN_80028134 Zustand 6) -, eine Uebertragung auf neue Zeilen
+       waere geraten. (Je Zeile verschieden sind auch ROOM10D0, 1150 und 11C0 in STAGE1.) Die Begleiter-Kette ab der Trennung ist
+       dagegen gleichfoermig (ROOM3000 7 x 0x63, ROOM30E0 14 x 0x63, ROOM3070 5 x 0x63).
+     - Spiegel: 2080/2081 und 11A0/11A1 sind Szene fuer Szene gespiegelt (2080/2081 msg 43..45 bis auf die Namen gleich, 11A0/11A1 msg 5 wortgleich). Die Elza-Seite
+       ist eindeutig 0x63; mit ROOM2000/11B0 als Leon-Beleg bekaemen wortgleiche Zeilen je Figur verschiedene Nachlaeufe.
+     - Geschichte: 2080 -> 11A0 -> Leiter -> 3000 ist der Weg DIESER Szenen (K-07: die Unterhaltung in 11A0 geht in 3000 weiter);
+       11B0 (vor dem Abstieg) und 2000 (die Trennung am Kanaleingang, "better to separate") liegen davor, beide vor dem Alligator.
+     Ergebnis: Belegraum bleibt ROOM3000/ROOM3001 (Werte unveraendert 0x63).
 """
 import collections
 import os
@@ -83,7 +99,25 @@ def nachlauf(raum, zeilen):
     return n, text
 
 
+# Kandidaten der Abwaegung (Punkt 4): Raum ohne eigene Untertitel -> (gewaehlter Belegraum, naeher liegende Raeume derselben Stage)
+ABWAEGUNG = {0x2080: (0x3000, (0x2000,)), 0x2081: (0x3001, (0x2001,)), 0x11A0: (0x3000, (0x11B0,)), 0x11A1: (0x3001, (0x11B1,))}
+
+
+def muster(raum):
+    """{Zeilen: Counter(N)} der Original-Untertitel eines Raums."""
+    m = collections.defaultdict(collections.Counter)
+    for _mid, z, n, _o in original_untertitel(raum):
+        m[z][n] += 1
+    return m
+
+
 if __name__ == '__main__':
+    print('ABWAEGUNG (Punkt 4):')
+    for r, (gew, andere) in ABWAEGUNG.items():
+        for k in (gew,) + andere:
+            m = muster(k)
+            print('  ROOM%04X <- ROOM%04X%s: %s' % (r, k, ' (gewaehlt)' if k == gew else '', '; '.join(
+                '%d-zeilig %s' % (z, ', '.join('%d x 0x%02x' % (c, n) for n, c in m[z].most_common())) for z in sorted(m))))
     for r in (0x11A0, 0x11A1, 0x2080, 0x2081, 0x3020, 0x3060, 0x30E0, 0x3070, 0x6030, 0x6031):
         for z in (1, 2, 3):
             try:

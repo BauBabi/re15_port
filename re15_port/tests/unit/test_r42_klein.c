@@ -9,6 +9,14 @@
  *   ada      ROOM6020 als Leon mit (3,76): (3,0x62)=0 -> Marvin (0x40) und Ada (0x42) da; (3,0x62)=1 -> nur Marvin
  *   elza     ROOM6021 als Elza mit (3,76) und (3,0x62)=1: beide Saetze (0x49/0x4B) wie im Original
  *   karte    re15_inv_desc_entry(0x47) = Neutext ("Michael", 3 Zeilen, 1 Seite, Ende 01 00); 0x46/0x45 unveraendert
+ *   glyphe <bmp> <item> <seite>
+ *            BILD-Pruefung (Nachbesserung Kleinkram R1): <bmp> = reiner Software-Framebuffer des Inventars (RE15_INV_FB_SHOT,
+ *            320x240) nach CHECK auf <item>. Die Beschreibungsseite <seite> wird unabhaengig vom Port-Renderer nachgezeichnet -
+ *            Ursprung (0x13,0xa0) aus FUN_80027e68 a0=0x00a00013 @0x800c6728-3c, Zelle u=(c&0xf)<<4 / v=(c&0xf0)+0x20 und
+ *            Zeilensprung 0x10 aus FUN_80028868, Vorschub DEBUG.BIN[0x4416+c] (= 0x800c4416), Schrift = TEX.TIM Spalten 256..511,
+ *            Zeilen 0..255 (Savestate stage_saves/inv_states/psx_inv_check.sav: VRAM (768,256) == TEX.TIM, Zelle 0x61 bei v=0x80),
+ *            CLUT = TEX.TIM Zeile 0 (0x7810), fruehere Glyphe oben (addPrim). Jedes deckende Soll-Pixel muss im Bild stehen. Gegenprobe: dieselbe Seite mit dem
+ *            alten Faltfehler (v & 127) muss sich vom Bild unterscheiden, sobald die Seite einen Code >= 0x60 traegt.
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
 #define _DEFAULT_SOURCE 1
@@ -30,6 +38,7 @@
 #include "re15_gameflow.h"
 #include "re15_light.h"
 #include "re15_story_klein_r42.h"
+#include "re15_tim.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -212,9 +221,106 @@ static void teil_karte(void)
           "Haken nur fuer 0x47 (Figur egal: Leon und Elza)");
 }
 
+/* ---- glyphe --------------------------------------------------------------------------------------------------------------------- */
+#define GL_W 320
+#define GL_H 240
+/* Soll-Bild der Seite: 0xFFFF = kein deckendes Soll-Pixel, sonst RGB555. falten = alter Fehler (v & 127) fuer die Gegenprobe. */
+static int gl_zeichnen(uint16_t soll[GL_H][GL_W], const uint8_t *s, const uint8_t *font, int fpitch, int fh, const uint16_t *clut,
+                       const uint8_t *breite, int falten, int *hoch)
+{
+    int x = 0x13, y = 0xa0, n = 0;
+    *hoch = 0;
+    for (int i = 0; i < 400; i++) {
+        const uint8_t c = s[i];
+        if (c == 0x01 || c == 0x02) break;
+        if (c == 0x08) { x = 0x13; y += 0x10; continue; }
+        if (c == 0x00) { x += breite[0]; continue; }
+        const int u0 = (c & 0x0f) << 4, v0 = ((c & 0xf0) + 0x20) & 0xff;
+        if (v0 >= 0x80) (*hoch)++;
+        for (int gy = 0; gy < 16; gy++)
+            for (int gx = 0; gx < 16; gx++) {
+                int v = (v0 + gy) & 0xff;
+                if (falten) v &= 127;
+                if (v >= fh) continue;
+                const int vx = 256 + u0 + gx;
+                const uint8_t bb = font[v * fpitch + (vx >> 1)];
+                const int idx = (vx & 1) ? (bb >> 4) : (bb & 0x0f);
+                const uint16_t col = (uint16_t)(clut[idx] & 0x7fff);
+                if (clut[idx] == 0) continue;               /* CLUT-Wert 0 = durchsichtig */
+                const int px = x + gx, py = y + gy;
+                if (px < 0 || px >= GL_W || py < 0 || py >= GL_H) continue;
+                /* addPrim haengt jede Glyphe VOR die bisherigen in den OT-Eimer (FUN_80028868: *puVar10 = .. *puVar8,
+                 * *puVar8 = puVar10) - die zuerst gesetzte Glyphe wird zuletzt gezeichnet und liegt oben. */
+                if (soll[py][px] != 0xFFFF) continue;
+                soll[py][px] = col;
+                n++;
+            }
+        x += breite[c];
+    }
+    return n;
+}
+static int gl_vergleich(uint16_t soll[GL_H][GL_W], const uint8_t *bmp, int *deckend)
+{
+    int fehl = 0;
+    *deckend = 0;
+    for (int y = 0; y < GL_H; y++)
+        for (int x = 0; x < GL_W; x++) {
+            if (soll[y][x] == 0xFFFF) continue;
+            const uint8_t *p = bmp + 54 + ((GL_H - 1 - y) * GL_W + x) * 3;   /* BMP von unten, B G R */
+            const uint16_t ist = (uint16_t)((p[2] >> 3) | ((p[1] >> 3) << 5) | ((p[0] >> 3) << 10));
+            (*deckend)++;
+            if (ist != soll[y][x]) fehl++;
+        }
+    return fehl;
+}
+static void teil_glyphe(const char *bmpfad, int item, int seite)
+{
+    printf("== glyphe %s item 0x%02X seite %d ==\n", bmpfad, item, seite);
+    size_t nb = 0, nt = 0, nd = 0;
+    uint8_t *bmp = slurp(bmpfad, &nb);
+    uint8_t *tex = slurp(RE15_ASSET_PSX_DIR "/DATA/TEX.TIM", &nt);
+    uint8_t *dbg = slurp(RE15_ASSET_PSX_DIR "/BIN/DEBUG.BIN", &nd);
+    re15_tim_t tim;
+    if (!bmp || nb < 54 + GL_W * GL_H * 3 || bmp[0] != 'B' || bmp[1] != 'M' || (bmp[18] | (bmp[19] << 8)) != GL_W ||
+        (bmp[22] | (bmp[23] << 8)) != GL_H) {
+        PRUEF(0, "Bild %s fehlt oder ist kein 320x240-BMP", bmpfad);
+        return;
+    }
+    if (!tex || re15_tim_parse(tex, (int)nt, &tim) != 0 || tim.bpp != 4 || !tim.has_clut || tim.width < 512) {
+        PRUEF(0, "TEX.TIM nicht lesbar");
+        return;
+    }
+    if (!dbg || nd < 0x4416 + 256) { PRUEF(0, "DEBUG.BIN nicht lesbar"); return; }
+    const uint8_t *s = re15_inv_desc_entry(item);
+    if (!s) { PRUEF(0, "keine Beschreibung fuer 0x%02X", item); return; }
+    for (int p = 1, i = 0; p < seite && i < 400; i++) {             /* Seitenwechsel 02 xx */
+        if (s[i] == 0x01) { PRUEF(0, "Seite %d gibt es nicht", seite); return; }
+        if (s[i] == 0x02) { s += i + 2; i = -1; p++; }
+    }
+    static uint16_t soll[GL_H][GL_W], alt[GL_H][GL_W];
+    int hoch = 0, hoch2 = 0, deck = 0, deck2 = 0;
+    memset(soll, 0xff, sizeof soll);
+    memset(alt, 0xff, sizeof alt);
+    const int n = gl_zeichnen(soll, s, (const uint8_t *)tim.pixels, tim.width / 2, tim.height, tim.clut, dbg + 0x4416, 0, &hoch);
+    gl_zeichnen(alt, s, (const uint8_t *)tim.pixels, tim.width / 2, tim.height, tim.clut, dbg + 0x4416, 1, &hoch2);
+    const int fehl = gl_vergleich(soll, bmp, &deck);
+    const int fehl_alt = gl_vergleich(alt, bmp, &deck2);
+    PRUEF(n > 0 && fehl == 0, "Seite %d von 0x%02X steht im Bild wie nachgezeichnet: %d deckende Soll-Pixel, %d abweichend "
+          "(davon %d Zeichen mit Code >= 0x60, Zelle v >= 0x80)", seite, item, deck, fehl, hoch);
+    if (hoch > 0)
+        PRUEF(fehl_alt > 0, "Gegenprobe alter Faltfehler (v & 127): %d von %d Pixeln weichen ab - der Riegel faengt ihn", fehl_alt, deck2);
+    free(bmp); free(tex); free(dbg);
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "";
+    if (!strcmp(t, "glyphe")) {
+        if (argc < 5) { printf("Aufruf: glyphe <bmp> <item> <seite>\n"); return 2; }
+        teil_glyphe(argv[2], (int)strtol(argv[3], NULL, 0), atoi(argv[4]));
+        printf("%s: %d Fehler\n", t, g_fail);
+        return g_fail ? 1 : 0;
+    }
     if (!strcmp(t, "belege")) teil_belege();
     else if (!strcmp(t, "ada")) teil_ada();
     else if (!strcmp(t, "elza")) teil_elza();

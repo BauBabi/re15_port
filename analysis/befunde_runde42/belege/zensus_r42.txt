@@ -268,6 +268,6 @@
           EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_PLAN_FABRIK): engine/src/story3a_r42.c (Wrapper, RE15_R42_BIT_PLAN_FABRIK)
   Bit  36 RE15_R42_BIT_PLAN_FORSCHUNG  C   v0.8.32 OK  Lageplan Forschungszentrum 4010/4011 (6b)
   Bit  37 RE15_R42_BIT_PLAN_UBAHN      C   v0.8.32 OK  Lageplan U-Bahn 6010/6011 (6b)
-  danach noch frei (Original, Port, Disc): 78 Bits, Auszug [0, 3, 4, 7, 8, 9, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 137, 139, 145, 156]
+  danach noch frei (Original, Port, Disc): 76 Bits, Auszug [0, 3, 4, 7, 8, 9, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 137, 139, 145, 156, 157, 158]
 
 ERGEBNIS: FREI (181 Zeilen, 27 Bits, 0 Fehler)

@@ -8,6 +8,7 @@
 #   unit_r42_klein_elza     6021: Original-Saetze 0x49/0x4B unveraendert
 #   unit_r42_klein_karte    Beschreibung 0x47 "Michael" (3 Zeilen, 1 Seite); 0x46 unveraendert
 #   integration_r42_klein_szene / _lebt / _tot   Durchlaeufe: Adas Szene 50B0; 5130 -> 6020 (tests/integration/test_r42_klein.cmake)
+#   integration_r42_klein_glyphe_karte / _uhr    Bildpruefung CHECK 0x47 / 0x3F Seite 2 (Anfuehrungszeichen 0x61, Schriftseite 256 Zeilen)
 add_executable(test_r42_klein ${CMAKE_CURRENT_LIST_DIR}/../test_r42_klein.c)
 target_link_libraries(test_r42_klein PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r42_klein PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/engine/src ${CMAKE_CURRENT_LIST_DIR}/..)
@@ -20,10 +21,11 @@ foreach(_teil belege ada elza karte)
     set_tests_properties(unit_r42_klein_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_klein.cmake)
-    foreach(_teil szene lebt tot)
+    foreach(_teil szene lebt tot glyphe_karte glyphe_uhr)
         add_test(NAME integration_r42_klein_${_teil}
                  COMMAND ${CMAKE_COMMAND} -DRE15_PC_EXE=$<TARGET_FILE:re15_pc> -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/r42_klein_${_teil}
-                         -DTEIL=${_teil} -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_klein.cmake)
+                         -DTEIL=${_teil} -DPRUEFER=$<TARGET_FILE:test_r42_klein>
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_klein.cmake)
         set_tests_properties(integration_r42_klein_${_teil} PROPERTIES TIMEOUT 3000)
     endforeach()
 endif()

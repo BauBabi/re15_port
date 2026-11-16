@@ -62,9 +62,15 @@ extern void re15_pc_put_pixel(int x, int y, uint32_t rgba);
 /* ---- decoded assets (lazy, once) ---- */
 static int      s_ready = 0;        /* 0 = not tried, 1 = ok, -1 = failed */
 static uint8_t  s_tex4[256][256];   /* 4bpp texel indices */
-static uint8_t  s_font4[128][256];  /* message-FONT page: TEX.TIM texel cols 256-511,
-                                     * rows 0-127 (glyph cells at v=32.., 16x16 —
-                                     * the grid item-NAME print, wave 2) */
+static uint8_t  s_font4[256][256];  /* message-FONT page: TEX.TIM texel cols 256-511,
+                                     * rows 0-255 (glyph cells at v=32.., 16x16 —
+                                     * the grid item-NAME print, wave 2). Volle 256
+                                     * Zeilen (Runde 42 Kleinkram): Glyphen ab Code 0x60
+                                     * liegen bei v = (code & 0xf0) + 0x20 >= 0x80
+                                     * (FUN_80028868 `(bVar1 & 0xf0) + 0x20`, Seite
+                                     * 256 hoch = VRAM (768,256)..(831,511)); vorher
+                                     * faltete v & 127 sie auf die TEX.TIM-Zeilen 0..15
+                                     * (oeffnendes Anfuehrungszeichen 0x61, '&' 0x64). */
 static uint8_t  s_exam4[256][256];  /* wave 4: 4bpp texpage 0x1d = VRAM (832,256) =
                                      * TEX.TIM texel cols 512-767 (halfword cols 128+)
                                      * — the CHECK panel chrome (elements @0x800c6b64
@@ -250,7 +256,7 @@ static int inv_assets_init(void)
         /* message-FONT page = TEX.TIM texel columns 256-511 (font_atlas_psx.h region;
          * glyph cells at v=32.. — the name print's byte-true uv lands here) */
         memset(s_font4, 0, sizeof s_font4);
-        for (y = 0; y < 128 && y < tim.height; y++)
+        for (y = 0; y < 256 && y < tim.height; y++)
             for (u = 0; u < 256 && 256 + u < tim.width; u++) {
                 int vx = 256 + u;
                 uint8_t bb = px[y * pitch + (vx >> 1)];
@@ -1229,7 +1235,7 @@ static void raster_op(const re15_inv_op_t *o)
             for (pxx = 0; pxx < o->w; pxx++) {
                 int u = (o->u + pxx) & 255;
                 uint8_t t = (o->page == RE15_INV_PAGE_TEX4)   ? s_tex4[v][u]
-                          : (o->page == RE15_INV_PAGE_FONT4)  ? s_font4[v & 127][u]
+                          : (o->page == RE15_INV_PAGE_FONT4)  ? s_font4[v][u]
                           : (o->page == RE15_INV_PAGE_EXAM4)  ? s_exam4[v][u]
                           : (o->page == RE15_INV_PAGE_MAP4)   ? s_map4[v][u]
                           : (o->page == RE15_INV_PAGE_PHOTO8) ?

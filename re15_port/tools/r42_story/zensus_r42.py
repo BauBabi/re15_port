@@ -305,8 +305,13 @@ BITS = [  # (makro, bit, block, gebaut, zweck)
     ("RE15_R42_BIT_PLAN_UBAHN", 37, "C", V32, "Lageplan U-Bahn 6010/6011 (6b)"),
 ]
 DISC_BIT_OK = {17}
-# Bank-9-Bits offener, noch nicht integrierter Zweige (git diff HEAD...<zweig> -- test_r36_kartenbits.c, 2026-11-14)
-ZWEIG_BITS = {126: "r41/moosgang RE15_MG_BIT_GENOMMEN", 127: "r41/moosgang RE15_MG_BIT_TOR"}
+# Bank-9-Bits offener, noch nicht integrierter Zweige (git diff HEAD...<zweig> -- test_r36_kartenbits.c, 2026-11-14).
+# 38/39 nachgetragen 2026-11-16 (Pruefer Kleinkram R1): include/re15_birkin_formen.h `#define RE15_BF_HANGAR_BANK 9`,
+# `#define RE15_BF_HANGAR_BIT 38`, `#define RE15_BF_BESIEGT_BIT 39` in r41/sichel_szene (Z. 153/174), r42/hangar_aussen
+# (Z. 160/183) und r41/birkin_kralle (Z. 153/169); r41/form und r41/monitore ohne die zwei Bits.
+ZWEIG_BITS = {126: "r41/moosgang RE15_MG_BIT_GENOMMEN", 127: "r41/moosgang RE15_MG_BIT_TOR",
+              38: "r41/sichel_szene, r42/hangar_aussen, r41/birkin_kralle RE15_BF_HANGAR_BIT (Hangar-Szene gesehen)",
+              39: "r41/sichel_szene, r42/hangar_aussen, r41/birkin_kralle RE15_BF_BESIEGT_BIT (Hangar-Birkin besiegt)"}
 
 
 def u16(d, o): return d[o] | (d[o + 1] << 8)

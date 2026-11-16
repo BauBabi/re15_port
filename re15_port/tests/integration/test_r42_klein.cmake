@@ -19,7 +19,19 @@
 #     die Tueren). Den Kampf gewinnt der Bot nicht (gemessen Laeufe tot1/tot2: Leon stirbt, hp -5). Vorher gesetzte Kill-Flags in 50B0
 #     selbst sind KEIN normaler Zustand (sub04 laeuft dann schon beim Betreten, Lauf tot4) - deshalb setzt der Lauf in 5130 ein.
 #     Kein anderer Leser: 6020 fragt nur (3,76) und jetzt (3,0x62); die 5130-Gegner tragen die Kill-Flags 0xA2/0xA3 (@0x00A1E/@0x00A32).
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<szene|lebt|tot> -P test_r42_klein.cmake
+#
+# T-09 BILD (Nachbesserung Kleinkram R1: das oeffnende Anfuehrungszeichen 0x61 erschien als fremdes Zeichen, weil der Inventar-Renderer
+# die Schriftseite nur 128 Zeilen hoch hielt; inv_render_pc.c s_font4 jetzt 256 Zeilen):
+# TEIL=glyphe_karte  ROOM4010 als Leon, Blue Master Keycard im Inventar, START / ITEM / Karte / CHECK; der reine Software-Framebuffer
+#                    (RE15_INV_FB_SHOT) wird mit test_r42_klein glyphe gegen die nachgezeichnete Beschreibung verglichen.
+# TEIL=glyphe_uhr    dasselbe mit der Taschenuhr 0x3F (F-19, story2), Seite 2 '"For Sherry. Love, Mom."' (beginnt mit 61 22).
+#   Vorgesetzt (der Wegplan-Bot nimmt die Karte nicht vom Pult, Pruefer-Lauf R1): Gegenstand im Inventar per RE15_GIVE = Zustand nach
+#   dem Aufheben (Karte: ROOM4010 Item_aot_set Slot 9 @0x00592, Taken-Bit (9,6) gesetzt; Uhr: ROOM2090 @0x00A12, Taken-Bit 90).
+#   Zustand der Geschichte vor 4010 wie im Pruefer-Lauf: (4,34), (3,72), (3,76), (3,79). Die CHECK-Darstellung liest keinen davon.
+#   Tasten (menu_common.c command_select): A = Viereck = Bestaetigen (virtuell 0x4000), D = Platz 2 im Raster, L = CHECK (25d6 = 1
+#   -> 25c2 = 9, @0x8004a558-64).
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<szene|lebt|tot|glyphe_karte|glyphe_uhr> [-DPRUEFER=<test_r42_klein>]
+#         -P test_r42_klein.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -110,6 +122,51 @@ ENDE
     pruefe("Ende des Laufs erreicht" "EXIT_AT: Bild 2700 in Raum 50b0")
     set(_dbg "${_wp}")
     pruefe_re("(3,98) vor der Szene 0, danach 1 (das Spiel setzt es: sub02 @0x005A6)" "FLAG [(]3,98[)] = 0.*FLAG [(]3,98[)] = 1")
+    _fertig()
+    return()
+endif()
+
+if(TEIL MATCHES "^glyphe_")
+    if(NOT PRUEFER OR NOT EXISTS "${PRUEFER}")
+        message(FATAL_ERROR "r42_klein[${TEIL}]: PRUEFER (test_r42_klein) fehlt: '${PRUEFER}'")
+    endif()
+    if(TEIL STREQUAL "glyphe_karte")
+        set(_item 0x47)
+        set(_seite 1)
+        set(_flags "RE15_SET_FLAG=4:34,3:72,3:76,3:79,9:6")
+        set(_give "RE15_GIVE=71:1")
+        set(_tasten "RE15_PAD_AT=500:S,620:A,740:D,860:A,980:L,1100:A")
+        set(_bild 900)
+        set(_ende 1600)
+    else()
+        set(_item 0x3F)
+        set(_seite 2)
+        set(_flags "RE15_SET_FLAG=4:34,3:72,3:76,3:79,9:90")
+        set(_give "RE15_GIVE=63:1")
+        set(_tasten "RE15_PAD_AT=500:S,620:A,740:D,860:A,980:L,1100:A,1500:A")
+        set(_bild 1300)
+        set(_ende 2000)
+    endif()
+    re15_start_spiel(_rv 900 RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 SDL_AUDIODRIVER=dummy
+        RE15_DEBUG_JUMP=4010@250 "${_flags}" "${_give}" "${_tasten}" "RE15_INV_FB_SHOT=${WORKDIR}/check.bmp"
+        "RE15_INV_FB_SHOT_AT=${_bild}" "RE15_EXIT_AT=${_ende}#4010" "${_exe_kopie}")
+    if(NOT EXISTS "${WORKDIR}/debug.log")
+        fail("kein debug.log (exit=${_rv})")
+        _fertig()
+        return()
+    endif()
+    file(READ "${WORKDIR}/debug.log" _dbg)
+    pruefe("Gegenstand im Inventar" "[give] item")
+    pruefe("Inventarbild geschrieben" "[inv] fb shot (inv frame")
+    pruefe("Ende des Laufs erreicht" "EXIT_AT: Bild ${_ende} in Raum 4010")
+    execute_process(COMMAND "${PRUEFER}" glyphe "${WORKDIR}/check.bmp" ${_item} ${_seite} TIMEOUT 60
+                    RESULT_VARIABLE _rvg OUTPUT_VARIABLE _outg ERROR_VARIABLE _errg)
+    message(STATUS "${_outg}")
+    if(NOT _rvg EQUAL 0)
+        fail("Bildvergleich der Beschreibung ${_item} Seite ${_seite}: rv=${_rvg}")
+    else()
+        ok("Beschreibung ${_item} Seite ${_seite} im Bild wie nachgezeichnet")
+    endif()
     _fertig()
     return()
 endif()
