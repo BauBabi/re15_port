@@ -12026,6 +12026,16 @@ re_title:;
                     if (g_actors[bi].active && g_actors[bi].type == 0x30u)
                         n += snprintf(bh + n, sizeof bh - (size_t)n, "  CLIP %d BILD %d", (int)g_actors[bi].motion, (int)g_actors[bi].anim_frame);
                 re15_render_pc_debug_text(4, 228, bh);
+                {   /* Bildnummern-Streifen (Runde 2): 17 Felder zu 5x5 Bildpunkten ab (4,218): Marke weiss-schwarz-weiss, dann
+                     * 14 Bit der Spielbildnummer (hoechstes zuerst, weiss = 1). Die Videoauswertung liest ihn aus JEDEM
+                     * aufgenommenen Bild und beschriftet nach dem Spielbild, das das Bild wirklich zeigt. */
+                    extern void re15_render_pc_debug_fill(int x, int y, int w, int h, uint32_t rgb);
+                    const unsigned fn = (unsigned)g_engine.frame_count & 0x3FFFu;
+                    for (int bi = 0; bi < 17; bi++) {
+                        const int weiss = bi < 3 ? (bi != 1) : (int)((fn >> (13 - (bi - 3))) & 1u);
+                        re15_render_pc_debug_fill(4 + 5 * bi, 218, 5, 5, weiss ? 0xFFFFFFu : 0x000000u);
+                    }
+                }
                 {   /* bild_zeit.log: Spielbild + Wanduhr (UTC, ms) - gdigrab mit -copyts stempelt die Videobilder mit derselben
                      * Wanduhr, so ordnet die Auswertung jedes Videobild dem gezeigten Spielbild zu. */
                     static FILE *s_bz = NULL;
