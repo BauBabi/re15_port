@@ -24,8 +24,10 @@ Riegel: `tests/unit/test_r36_kartenbits.c` k_port[] traegt die 23 Bits (ohne Lag
 - F-24: Umfang v0.8.31 = Block A + Block B + Texte aus Block C (Konzept Abschnitt 7 Punkt 11: 6030 L21, 6031 E6, E9).
   Block C uebrig = v0.8.32; Ids/Bits sind hier schon zugeteilt und die Stimmen stehen in der Aufnahmeliste.
 - Implizit nach Empfehlung (nicht auf der Offen-Liste): F-04, F-05, F-06, F-08, F-09, F-12..F-16, F-18, F-20, F-25.
-- NICHT bauen (offen): F-07 (Glasbruch Elza), F-10 (PRI-Maske Liege), F-11 (Streckung), F-17 (Ersatz Head of Akuma),
+- NICHT bauen (offen): F-07 (Glasbruch Elza), F-11 (Streckung), F-17 (Ersatz Head of Akuma),
   F-22 (Schlussszene), F-23 (Fan-Abspann).
+- F-10 (PRI-Maske Liege): Nutzer 2026-11-14 "ja" (nur die Tiefe der Rechtecke ueber Marvin, Form bleibt) -> gebaut in Stufe STAGE6
+  (4.4 unten).
 
 ## 1. Bank-9-Bits
 
@@ -385,6 +387,19 @@ Besonderheiten:
   Gewichte, Pruefsummen und state.log gleich (nur das Ratenfeld der Todesposen 512 statt 0, zeichengleich). Der ungesperrte Fix
   haette den Labor-Auftritt 50E0/50F1 geaendert (je 33 Posen, derselbe Fehler wie 3070) - gemeldet, nicht gebaut.
 - Bank 5 in 30E0: FREI 0x14, Messmarke 0x15, Ankunftsbits 0x20..0x22 (30E0-Skripte nutzen nur 5:0..5:6).
+
+### 4.4 Gebaut (Stufe STAGE6, 2026-11-16; Belege im Kopf von `re15_port/include/re15_story6_r42.h`)
+- L21 (6030): Wagen-Programm k_s80_6030_sub02 (tools/r41_story80/szenen_bauen.py) mit den Ids 21, 2, 3, 22, 4, 5 nach 2.3; Folge
+  unveraendert. Sprecherwechsel: msg 2 Leon (Leon-Gesten @0x00ECA, Blick bleibt bei John), msg 22 Sherry (Blick @0x00DEC, Sleep 100
+  @0x00E84). 6030 msg 4 (Nutzersatz, vier Zeilen) = zweiseitiger Untertitel in der Form des einzigen Original-Vorbilds ROOM3060 msg 7
+  @0x1244 `04 01 02 3c 04 00`, Seitenwartezeit 0x63 = Nachlauf der 6030-Zeilen (`01 63` @0x13F5); 139 Byte > PSX MSG_RAW_LEN 128 (PC 192).
+- E6/E9 (6031): engine/src/story6_r42.c, Programme tools/r42_story/szenen_stage6.py (Wagen msg 0,1,2,12,13; Zugstart 14..17 einmalig
+  ueber Bit 130; Wagen nach dem Tor und vor dem Zugstart: Tuer nach 5091 = msg 4 wie Leons k_tuer). Texte tools/r42_story/texte_stage6.py.
+  Die Runde-36/41-Fassungen 6030 3/5/21/22 und 6031 1 sind aus tools/r36_p/texte_bauen.py entfernt (eine Quelle je Text).
+- Bank 5 in 6031: 0x10 Zug-an-Ton, 0x11 Krachen (6031-Skripte nutzen nur 0x20/0x21). Kein neues Bit: 130 (1.2), EIGEN im Zensus.
+- T-05 (F-10): Tiefe der Port-Masken Cut 9 in shared_assets/PSX/MASKS/ROOM6030.MSK und ROOM6031.MSK (die Rechtecke liegen dort, nicht
+  in `pri/` - die pri/*_port.png sind Uebersichtsbilder der Form, die Form bleibt, also unveraendert; pri_hashes.py ohne Aenderung).
+  Werkzeug tools/maske/liege_tiefe_r42.py: 51 von 91 Rechtecken (nur die Tiefen-Halbwoerter), Vorderkante und Seitenholme bleiben.
 
 ## 5. Gemeinsame Dateien (nur kleine Haken, Kommentar "Runde 42 Story")
 Wie Runde 41 (VERTRAG R41 1.3). Tabu: `synchro/`, `pri/`, `Cutscenes/`, `Version_80%/`, `release/`. Neue Bits nur

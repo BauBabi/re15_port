@@ -172,10 +172,7 @@ UMSCHREIBEN = [
     # Runde 41 ST80-T, 6030 Wagen-Szene (Leon, sub02): Nutzer-Lueckenfueller, Folge in gen/story80_szenen.inc.
     ("6030", 1, "k_s36_6030_m1", ["Who are you two?"],
      "ST80-T 6030 Wagen (Nutzer): Leon kennt John und Sherry nicht; Runde 36 'Is anyone else with you?' entfaellt"),
-    ("6030", 3, "k_s41_6030_m3", ["She's trying to keep the outside", "clear so we can escape."],
-     "ST80-T 6030 Wagen (Nutzer): ohne 'Yeah!'"),
-    ("6030", 5, "k_s41_6030_m5", ["She told me to stay with the kid...", "and look after your friend here."],
-     "ST80-T 6030 Wagen (Nutzer): Leon kennt Marvin, John nennt ihn nicht beim Namen"),
+    # Runde 42 Story STAGE6 (Konzept L21): 6030 msg 3/5 (und 2/4/21/22) stehen jetzt in tools/r42_story/texte_stage6.py.
     ("6030", 7, "k_s41_6030_m7", ["The woman in the lab coat?", "Up front, trying to start the train."],
      "ST80-T 6030 Wagen (Nutzer): John kennt Annettes Namen nicht"),
     ("6030", 8, "k_s41_6030_m8", ["I'll find out. Stay here."],
@@ -188,8 +185,7 @@ UMSCHREIBEN = [
      "ST80-T 6030 Fuehrerstand (Nutzer): Runde 36 'I've never met her. Can you start this thing?' entfaellt"),
     ("6031", 0, "k_s36_6031_m0", ["Sherry! Is anyone else here?"],
      "Elza fragte nach Leon"),
-    ("6031", 1, "k_s36_6031_m1", ["A policeman! He's fighting off", "monsters. He wants us to start the train."],
-     "'He wants you to start the train' = Leon kennt Elza"),
+    # Runde 42 Story STAGE6 (Konzept E6): 6031 msg 1 (und 2, 12..17) stehen jetzt in tools/r42_story/texte_stage6.py.
     ("50B0", 1, "k_s36_50b0_m1", ["Some other survivors are", "down there with her too."],
      "'Your other friends' = Leon kennt die Ueberlebenden am Zug (Elza/John/Sherry)"),
     ("6000", 0, "k_s36_6000_m0", ["You must be that cop.", "Your friend is already here."],
@@ -202,10 +198,7 @@ UMSCHREIBEN = [
 
 # (Raum, Id, C-Name, Vorlage-Id (Kopf/Schwanz), Zeilen, Grund) — Runde 41 ST80-T DIALOG_NEU
 DIALOG_NEU = [
-    ("6030", 21, "k_s41_6030_m21", 3, ["Name's John. This is Sherry.", "We made it down here with", "a girl named Elza."],
-     "ST80-T 6030 Wagen Zeile 3 (Nutzer); Kopf John = msg 3 @0x0144E"),
-    ("6030", 22, "k_s41_6030_m22", 3, ["She said she'd catch up with us."],
-     "ST80-T 6030 Wagen Zeile 6 (Nutzer, Elzas Verbleib Variante a); Kopf John = msg 3"),
+    # Runde 42 Story STAGE6 (Konzept L21): 6030 msg 21/22 (Sprecherwechsel 22 John -> Sherry) in tools/r42_story/texte_stage6.py.
     ("6030", 23, "k_s41_6030_m23", 2, ["A lab coat...? Is it Mom?!"],
      "ST80-T 6030 Wagen Zeile 11 (Nutzer); Kopf Sherry = msg 2 @0x01416"),
     ("6030", 24, "k_s41_6030_m24", 3, ["Easy, kid. Stay with me."],

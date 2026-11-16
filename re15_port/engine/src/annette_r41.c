@@ -451,6 +451,9 @@ static void ton(int satz)
 #endif
 }
 
+/* Runde 42 Story STAGE6 (E9, re15_story6_r42.h): Elzas Zugstart in 6031 spielt dieselben Saetze wie Leons Zugstart. */
+void re15_annette_r41_ton_spielen(int satz) { ton(satz); }
+
 void re15_annette_r41_reset(void)
 {
     s_an.phase = RE15_AN_AUS; s_an.t = 0; s_an.form = s_an.frau = -1;

@@ -23,6 +23,7 @@
 #include <string.h>
 
 #include "re15_story_r36.h"
+#include "re15_story6_r42.h"   /* Runde 42 STAGE6: 6030/6031-Zeilen der Stufe (L21/E6/E9) liegen nach story_r36 */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -389,6 +390,7 @@ static int teil_texte(void)
         int nmsg = (blk[0] | (blk[1] << 8)) / 2, fremd = 0;
         for (int k = 0; k < nmsg; k++) {
             if (zeile(t->raum, k)) continue;
+            if (re15_story6_r42_text(t->raum, (uint8_t)k, NULL)) continue;   /* Runde 42 STAGE6: Neutext der Stufe (eigener Riegel) */
             int ok0 = blk[k * 2] | (blk[k * 2 + 1] << 8);
             int ok1 = (k + 1 < nmsg) ? (blk[(k + 1) * 2] | (blk[(k + 1) * 2 + 1] << 8)) : bs;
             if (ok1 <= ok0) ok1 = bs;
@@ -399,9 +401,10 @@ static int teil_texte(void)
         CHECK(fremd == 0, "ROOM%04X: alle anderen %d Nachrichten bytegleich zur RDT", t->raum, nmsg - 1);
         free(r.buf);
     }
-    CHECK(umgeschrieben == 19, "P4: %d umgeschriebene Nachrichten (Runde 41 ST80-T: 30C1 2/3/4/5, 30E1 2/3, "
-          "6030 1/3/5/7/8/11/12; Runde 36: 6031 0/1, 50B0 1, 6000 0/3; Runde 37 Spur F: 50B1 0)", umgeschrieben);
-    CHECK(neu_dialog == 8, "Runde 41 ST80-T: %d neue Dialog-Ids (6030 21..26; Nachbesserung 1: 31, 40)", neu_dialog);
+    /* Runde 42 STAGE6: 6030 3/5/21/22 und 6031 1 stehen jetzt in tools/r42_story/texte_stage6.py (test_r42_story6 texte) */
+    CHECK(umgeschrieben == 16, "P4: %d umgeschriebene Nachrichten (Runde 41 ST80-T: 30C1 2/3/4/5, 30E1 2/3, "
+          "6030 1/7/8/11/12; Runde 36: 6031 0, 50B0 1, 6000 0/3; Runde 37 Spur F: 50B1 0)", umgeschrieben);
+    CHECK(neu_dialog == 6, "Runde 41 ST80-T: %d neue Dialog-Ids (6030 23..26; Nachbesserung 1: 31, 40)", neu_dialog);
     return 0;
 }
 
@@ -412,7 +415,8 @@ static const erlaubt_t k_erlaubt[] = {
     { 0x3060, 1, "unbenutzt (einziges Message_on @0x01034 = msg 9)" },
     { 0x3060, 2, "unbenutzt" }, { 0x3060, 3, "unbenutzt" }, { 0x3060, 4, "unbenutzt" },
     { 0x3060, 5, "unbenutzt" }, { 0x3060, 6, "unbenutzt" }, { 0x3060, 7, "unbenutzt" }, { 0x3060, 8, "unbenutzt" },
-    { 0x6030, 21, "John nennt Elza (Runde 41 ST80-T, Nutzer-Lueckenfueller)" },
+    { 0x6030, 21, "John nennt Elza (Runde 41 ST80-T, Nutzer-Lueckenfueller; Runde 42 STAGE6 L21 Neutext)" },
+    { 0x6030, 22, "Sherry: Elza's still out there (Runde 42 STAGE6, Konzept L21: Elza im Feuer getrennt, keine Begegnung)" },
     { 0x30C1, 7, "unbenutzt seit Runde 41 ST80-T: die kurze Fassung (k_s80_30c1_sub03) ruft nur msg 1..5" },
 };
 static const char *const k_verboten[] = {
@@ -481,8 +485,9 @@ static int teil_reihenfolge(void)
         CHECK(text_ist(20, zeile(0x1091, 20)->neu) && g_aot.slots[5].event_id == 20,
               "%s ROOM1091: msg 20 + Slot 5 stehen", weg);
         hochfahren_ex(&m, -18930, 0, -22420, 0, NULL, 0, tuer);
-        CHECK(text_ist(1, zeile(0x6030, 1)->neu) && text_ist(21, zeile(0x6030, 21)->neu),
-              "%s ROOM6030: msg 1 umgeschrieben, msg 21 neu (Runde 41 ST80-T)", weg);
+        CHECK(text_ist(1, zeile(0x6030, 1)->neu) &&
+              text_ist(21, "John: Name's John. This is Sherry. We came down here with a girl named Elza."),
+              "%s ROOM6030: msg 1 umgeschrieben (Runde 41 ST80-T), msg 21 Neutext (Runde 42 STAGE6 L21)", weg);
     }
     return 0;
 }

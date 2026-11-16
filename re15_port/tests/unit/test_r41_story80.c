@@ -293,12 +293,14 @@ static const zeile_t k_liste[] = {
     { 0x30C1,  5, "Elza: Then I hope they make it out." },
     { 0x6030,  0, "Leon: Hang on, Marvin. We're getting out of here." },
     { 0x6030,  1, "Leon: Who are you two?" },
-    { 0x6030, 21, "John: Name's John. This is Sherry. We made it down here with a girl named Elza." },
-    { 0x6030,  2, "Sherry: She's out there fighting the monsters!" },
-    { 0x6030,  3, "John: She's trying to keep the outside clear so we can escape." },
-    { 0x6030, 22, "John: She said she'd catch up with us." },
-    { 0x6030,  4, "Leon: Why aren't you out there?" },
-    { 0x6030,  5, "John: She told me to stay with the kid... and look after your friend here." },
+    /* Runde 42 Story STAGE6 (Konzept L21, VERTRAG 2.3): 21/2/3/22/4/5 neu (tools/r42_story/texte_stage6.py); Sprecherwechsel
+     * msg 2 Sherry -> Leon, msg 22 John -> Sherry; msg 4 hat zwei Seiten (Form ROOM3060 msg 7 @0x1244, Seiten ohne Leerzeichen). */
+    { 0x6030, 21, "John: Name's John. This is Sherry. We came down here with a girl named Elza." },
+    { 0x6030,  2, "Leon: Where is she now?" },
+    { 0x6030,  3, "John: We got split up in the fire. One second she was right behind us..." },
+    { 0x6030, 22, "Sherry: Elza's still out there...!" },
+    { 0x6030,  4, "Leon: If she's as tough as you say, she'll find another way out.But we can't wait. When that reactor goes, nobody gets out." },
+    { 0x6030,  5, "John: Then I'm staying with the kid. And I'll keep an eye on your friend here." },
     { 0x6030,  6, "Leon: Where's Annette?" },
     { 0x6030,  7, "John: The woman in the lab coat? Up front, trying to start the train." },
     { 0x6030, 23, "Sherry: A lab coat...? Is it Mom?!" },
@@ -326,17 +328,20 @@ static const char *soll_text(uint16_t raum, int id)
 #include "font_width.h"
 static int max_zeilenbreite(const unsigned char *b, int n, int *zeilen)
 {
-    int w = 0, mx = 0, z = 1;
+    int w = 0, mx = 0, z = 1, zmax = 1;
     for (int i = 0; i < n; i++) {
         const unsigned char c = b[i];
         if (c == 0x01) break;
-        if (c == 0x02 || c == 0x04 || c == 0x05 || c == 0x06 || c == 0x09 || c == 0x0A || c == 0x0B) { i++; continue; }
+        /* Runde 42 Story STAGE6: `02 N` = neue Seite (Form ROOM3060 msg 7 @0x1244) -> Zeilen je Seite zaehlen */
+        if (c == 0x02) { if (w > mx) mx = w; w = 0; if (z > zmax) zmax = z; z = 1; i++; continue; }
+        if (c == 0x04 || c == 0x05 || c == 0x06 || c == 0x09 || c == 0x0A || c == 0x0B) { i++; continue; }
         if (c == 0x03 || c == 0x07) continue;
         if (c == 0x08) { if (w > mx) mx = w; w = 0; z++; continue; }
         w += re15_font_width[c];
     }
     if (w > mx) mx = w;
-    if (zeilen) *zeilen = z;
+    if (z > zmax) zmax = z;
+    if (zeilen) *zeilen = zmax;
     return mx;
 }
 
@@ -355,7 +360,9 @@ static void teil_texte(void)
             int len = 0, z = 0;
             const unsigned char *raw = re15_msg_get_raw(k_liste[i].id, &len);
             const int px = raw ? max_zeilenbreite(raw, len, &z) : -1;
-            PRUEF(t && strcmp(t, k_liste[i].text) == 0 && raw && len <= 128 && px > 0 && px <= 271 && z <= 3,
+            /* Runde 42 STAGE6: 6030 msg 4 (Nutzersatz, zwei Seiten) hat 139 B - PC MSG_RAW_LEN 192, PSX 128 schneidet ab (gemeldet) */
+            const int maxlen = (k_liste[i].raum == 0x6030 && k_liste[i].id == 4) ? 192 : 128;
+            PRUEF(t && strcmp(t, k_liste[i].text) == 0 && raw && len <= maxlen && px > 0 && px <= 271 && z <= 3,
                   "ROOM%04X msg %2d (%d B, %d Zeilen, max %d px <= 271): \"%s\"", k_liste[i].raum, k_liste[i].id, len, z,
                   px, t ? t : "(fehlt)");
         }

@@ -108,6 +108,8 @@ enum {
     RE15_AN_SE_N      = 4
 };
 void re15_annette_r41_se_hook(void (*fn)(int satz));                                                /* platform/pc/main.c */
+/* Runde 42 Story STAGE6 (E9): Elzas Zugstart 6031 spielt dieselben Saetze (Zug an, Krachen) - re15_story6_r42.h */
+void re15_annette_r41_ton_spielen(int satz);
 void re15_annette_r41_stimme_hook(void (*fn)(uint16_t room, int voice_id));                         /* platform/pc/main.c */
 /* NB4 N4: laedt den Tonteil von DOOR2A in die RE2-Tuerbank (Port-Bank 0x0E); 1 = geladen (annette_se_pc.c) */
 void re15_annette_r41_tuerbank_hook(int (*fn)(void));                                               /* platform/pc/main.c */

@@ -107,21 +107,27 @@ P_6030_WAGEN = [
     orig(0x0D7A, 0x0E5C, "sub02 @0x00D7A..: Sperren, Leon geht zu Marvin, msg 0 'Hang on, Marvin...' + Gesten, Cut 9, "
                          "Leon blickt zu Sherry @0x00DEC, geht zur Marke, Cut 10, John und Sherry blicken zu Leon"),
     orig(0x0E5C, 0x0E80, "Zeile 2: msg 1 Leon + Gesten 4/4/7 (@0x00E5C..)"),
-    # Zeile 3 (neu, msg 21 John)
+    # Runde 42 Story STAGE6 (Konzept L21, VERTRAG 2.3): Zeilen 3..8 = 21 John, 2 Leon, 3 John, 22 Sherry, 4 Leon, 5 John.
+    # Sprecherwechsel msg 2 Sherry -> Leon und msg 22 John -> Sherry: Blick und Gesten nach dem neuen Sprecher (Bloecke
+    # desselben Sprechers aus sub02).
+    # Zeile 3 (msg 21 John)
     LEON_SIEHT_JOHN,
     msg_on(21, 0x0E9A, 3, "Zeile 3: msg 21 John (Form msg 3 @0x00E9A)"),
     orig(0x0EEE, 0x0F22, "John-Gesten 3/3/1/1/7 wie nach msg 5 (@0x00EEE..)"),
-    # Zeile 4 (msg 2 Sherry, Original-Satz)
-    LEON_SIEHT_SHERRY[0], LEON_SIEHT_SHERRY[1],
-    orig(0x0E80, 0x0E88, "Zeile 4: msg 2 Sherry + Sleep 100 (@0x00E80, Original)"),
+    # Zeile 4 (msg 2, jetzt Leon "Where is she now?"): Leon blickt weiter zu John
+    orig(0x0E80, 0x0E84, "Zeile 4: Message_on msg 2 (@0x00E80, Original-Bytes)"),
+    orig(0x0ECA, 0x0EEA, "Leon-Gesten 1/1/7 wie nach msg 4 (Work_set 1 @0x00ECA..)"),
     # Zeile 5 (msg 3 John)
     orig(0x0E88, 0x0EC6, "Zeile 5: Leon blickt zu John, msg 3 John + Gesten 0/0/2/7 (@0x00E88.., Original)"),
-    # Zeile 6 (neu, msg 22 John)
-    msg_on(22, 0x0E9A, 3, "Zeile 6: msg 22 John (Form msg 3 @0x00E9A)"),
-    orig(0x0E9E, 0x0EC6, "John-Gesten 0/0/2/7 wie nach msg 3 (@0x00E9E..)"),
-    # Zeilen 7..10 (Original-Folge msg 4..7)
+    # Zeile 6 (msg 22, jetzt Sherry "Elza's still out there...!"): Leon blickt zu Sherry
+    LEON_SIEHT_SHERRY[0], LEON_SIEHT_SHERRY[1],
+    msg_on(22, 0x0E80, 2, "Zeile 6: msg 22 Sherry (Form msg 2 @0x00E80)"),
+    orig(0x0E84, 0x0E88, "Sleep 100 wie nach msg 2 (@0x00E84; Sherry hat in sub02 keinen Gestenblock)"),
+    # Zeile 7 (msg 4 Leon, antwortet Sherry) und Zeile 8 (msg 5 John): Leon blickt vor msg 5 zu John
     orig(0x0EC6, 0x0EEA, "Zeile 7: msg 4 Leon + Gesten 1/1/7 (@0x00EC6.., Original)"),
+    LEON_SIEHT_JOHN,
     orig(0x0EEA, 0x0F22, "Zeile 8: msg 5 John + Gesten 3/3/1/1/7 (@0x00EEA.., Original)"),
+    # Zeilen 9..10 (Original-Folge msg 6..7)
     orig(0x0F22, 0x0F46, "Zeile 9: msg 6 Leon + Gesten 4/4/7 (@0x00F22.., Original)"),
     orig(0x0F46, 0x0F7E, "Zeile 10: msg 7 John + Gesten 0/0/1/1/7 (@0x00F46.., Original)"),
     # Zeile 11 (neu, msg 23 Sherry): Sherry dreht sich zu Leon, Leon blickt zu ihr
