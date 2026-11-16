@@ -18,6 +18,7 @@
  * (no tick side effects → no 1170 risk; same stance as re15_damage.c).
  */
 #include "re15_enemy_ai.h"
+#include "re15_birkin_klaue_r41.h"
 #include "re15_fussanker_r41.h"   /* Runde 41 Spur J: Glied-Anker FUN_800369f8 */
 #include "re15_annette_r41.h"     /* Runde 41 Spur AN: Annette-Szene 5090 */
 #include "re15_ai_flavor.h"
@@ -12471,6 +12472,7 @@ static void re15_birkin_ai_tick(int slot)
                 if ((e->grid_id & 0x10) && e->anim_frame == 0x1e)
                     e->sub_state_2 = 5;
             }
+            if (s_bk_logik_ok) re15_bkk_logik_melden(e);   /* MESS-SCHIENE gezeichnete Klaue (RE15_BIRKIN_DBG), kein Verhalten */
             break;
         }
         case 4: {  /* FAST BITE 0x801179d8: clip 4, window [0x23..0x2a] -> hp-10 + grab(<0x26)/knockdown(>=0x26) -> HUB */

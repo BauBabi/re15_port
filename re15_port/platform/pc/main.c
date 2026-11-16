@@ -11102,6 +11102,10 @@ re_title:;
                     if (npc_lit)
                         re15_light_ctx_rotate_for_bone(&lctx_npc_world, nyawed_rot,
                                                        &lctx_npc);
+                    if (npc->type == 0x30u && nbi == 15) {   /* Runde 41 Kralle "synchron": Messhaken gezeichnete Klaue (RE15_BIRKIN_DBG) */
+                        extern void re15_bkk_zeichner_melden(const re15_actor_t *e, const int32_t R[9], const int32_t T[3]);
+                        re15_bkk_zeichner_melden(npc, nyawed_rot, nbone_world_trans);
+                    }
                     int32_t ncomb_rot[9];
                     int32_t ncomb_trans[3];
                     re15_camera_compose_view_bone(&cam_view, nyawed_rot, nbone_world_trans,
