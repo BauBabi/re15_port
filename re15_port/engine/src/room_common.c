@@ -357,6 +357,9 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
     re15_audio_bgm_status_reset();
     scd_room_reenter(c->rdt, g_room_change.x, g_room_change.z,
                      (uint8_t)g_room_change.target_cut);
+    /* (7b) Runde 42 PORT-SZENE (kein Original, birkin_formen.c Kopf "Runde 42"): Hangar-Szene 50A0/50A1 beim Betreten durch die
+     * Nordtuer aus dem Monitorraum. Hier, damit ihr Cut_chg-Zwilling wie der Cut_chg eines Raumskripts in Schritt 8 Vorrang hat. */
+    { extern void re15_bf_raum_eintritt(int); re15_bf_raum_eintritt(g_room_change.target_cut); }
 
     /* (8) Camera precedence (byte-true, RE'd 2026-07-22 from the ROOM1170 pre-intro trace):
      * the new room's SCD init may have issued its OWN Cut_chg — e.g. ROOM1170 main00 ->

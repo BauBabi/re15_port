@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include "re15_rdt.h"          /* Runde 41 Spur H: re15_rdt_get_region_quad (Anker-Viereck = FUN_80014324) */
 #include "re15_math.h"         /* re15_atan2_q12 / re15_sin_q12 */
-#include "re15_enemy_ai.h"     /* Runde 41 Spur H: re15_player_is_grabbed */
+#include "re15_enemy_ai.h"     /* Runde 42: RE15_AI_STATE_CORPSE (bis 98391e747: re15_player_is_grabbed im Ausloeser) */
 #include "re15_schwanz_r41.h"  /* Runde 41 SF N1.9: Schwanz-Kette */
 #include "re15_esp.h"          /* gruenes Blut: re15_esp_fx_spawn_ex (Bodenspritzer), re15_esp_fx_reset */
 #include <math.h>
@@ -688,21 +688,32 @@ static int bf_schwanz_v4(void)
  * PORT-WAHL (Gestaltung, kein Original): die Szene ist eine Zwischensequenz in Cut 12 wie im 80%-Video (Complete Disc 4
  * 0:46-0:51: Letterbox-Balken, kein Spieler im Bild, Birkin kommt am Ende auf die Kamera zu).
  *   - Birkin und Spider-Man gibt es erst ab dem Ausloeser (vorher kein Aktor, kein Schatten, keine Kollision).
- *   - Ausloeser: der angeforderte Schnitt (g_scd.cam_id, RVD-Scan @0x80014300 schreibt nur ihn) zeigt eine der beiden
- *     Szenenfiguren: Lage im Anker-Viereck des Schnitts UND ein Punkt der Figur im Bild (bf_szene_im_schnitt). ROOM50A0:
- *     Cut 4, 5 (beide) und 6 (Birkin); Weg aus 5030 (Nordtuer, Cut 0) loest in Cut 4 aus, aus 4070 (Westtuer, Cut 11) in Cut 6.
+ *   - Ausloeser: s. "Runde 42" unten (bis 98391e747: der angeforderte Schnitt zeigte eine Szenenfigur, Cut 4/5/6 - entfernt).
  *   - Riegel wie die Original-Zwischensequenzen: Set(2,7) + Set(1,27) (Form ROOM1150 sub08 @0x01114/@0x01118; Pad-Sperre
  *     @0x800304f4-0x80030500, Letterbox FUN_80021a0c), Ende Set(2,7,0) + Set(1,27,0) (@0x012E4/@0x012E8).
  *   - Kamera: Cut_chg-Zwilling auf Cut 12 (LAB_800402a0: work_vars[0x0C] @0x800402ec, work_vars[0x0A] @0x800402fc,
- *     Zonen aus @0x800402d4), am Ende Cut_chg auf den angeforderten Schnitt des Spielers + Zonen an (Form ROOM1150 sub08
+ *     Zonen aus @0x800402d4), am Ende Cut_chg auf den Eintritts-Schnitt der Tuer + Zonen an (Form ROOM1150 sub08
  *     `29 05` @0x012C4, Cut_auto `3c 01` @0x012E2), wie gatorszene_r41.c kam_uebergabe.
- *   - Der Spieler muss frei sein (Zustand 1, nicht gegriffen, keine andere Zwischensequenz) - sonst wartet der Ausloeser;
- *     bis dahin gibt es keine Figuren, die starr stehen koennten. */
+ *
+ * ⛔ RUNDE 42 "hangar_aussen" - PORT-SZENE nach Gestaltung des Nutzers (16.11.2026, woertlich: "Bei Szene aussen muss das aber
+ * vom Monitor Raum aus erfolgen, wenn man zurueck laeuft, sonst fragt man sich - wenn er Richtung Kamera zum anderen Ausgang hin
+ * geht wo er denn hin ist..."). Kein Original: die Szene gibt es nur im 80%-Video, der Raum ist auf der 40%-Disc leer.
+ *   - Ausloeser NUR beim Betreten durch die Nordtuer aus dem Monitorraum 5030/5031 (Tuersatz ROOM5030 main00 Slot 3 @0x00EC6:
+ *     Ziel Stage 4 / Raum 0x0A / Cut 0 bei (-12117,0,4472), Blick 1024), "Szene gesehen" (Bank-9-Bit 38) nicht gesetzt, Birkin
+ *     weder hier (Bit 39, alte Spielstaende) noch im Kraftraum (Bank 3 Bit 0x49) besiegt. Gestartet wird im Raumwechsel selbst
+ *     (re15_bf_raum_eintritt, room_common.c direkt nach dem SCD-Init): der Cut_chg-Zwilling liegt dann vor dem Kamera-Vorrang des
+ *     Raumladers (Schritt 8, Muster ROOM1170-Erzaehler) - die Einblendung zeigt schon Cut 12, der Spieler steht ungesehen an der
+ *     Nordtuer (ausserhalb des Platzhalter-Ankers, s. oben) und hat keinen Takt Kontrolle (Riegel ab dem ersten Bild).
+ *   - Durch die Westtuer (aus 4070/4071) gibt es nie eine Szene; einen Ausloeser im Raum gibt es nicht mehr.
+ *   - Szeneninhalt unveraendert (Takt fuer Takt wie 98391e747). Ende: KEIN Kampf - Birkin wird entfernt (er ist zum anderen
+ *     Ausgang gegangen), der Spider-Man bleibt fuer diesen Besuch tot liegen, wo er aus dem Bild flog (bf_sm_leiche), Kamera
+ *     zurueck auf den Schnitt der Nordtuer, Riegel auf. Spaetere Besuche und nach dem Laden: Gang leer (Bit 38 genuegt, kein
+ *     neues Bit). */
 #define BF_VORLAUF       8           /* Standbilder des Kamera-Applys (kamerahalt_r41.c KH_STANDBILDER): Videobild h0 = Takt 6 */
 /* Schritt 4 nach Referenz 2 (Zeitversatz): mit 6 wurde der Takt h im Bild h - 2 gezeichnet (Lauf G2/R6: Messzeile "h-1 F240",
  * erstes Letterbox-Bild F243) - die Szene lief 2 Bilder vor dem Video. Mit 8 liegt Takt h im Bild h; nur der Start verschiebt
  * sich, BF_BILD_VERSATZ ist dafuer 0 (Schwanz, Blut und Wurfbahn bleiben auf denselben Bildern). */
-#define BF_KOPF_DY       2000        /* Gestaltung: Kopfpunkt des Sichttests ueber dem Fuss */
+#define BF_MONITORRAUM   0x5030u     /* ROOM5030 (Leon) / ROOM5031 (Elza), Vergleich ohne Varianten-Bit */
 
 /* Phasen (re15_bf_hangar_phase). */
 enum { BF_H_WARTEN = 0, BF_H_VORLAUF, BF_H_SPRUNG, BF_H_GRIFF, BF_H_STURZ, BF_H_LIEGT, BF_H_ABGANG, BF_H_FREI };
@@ -716,9 +727,9 @@ static struct {
     int32_t  vy;                   /* Sturz */
     int      birkin_start;         /* Birkin-Clip laeuft */
     int      riegel;               /* 1 = die Szene haelt Set(2,7)/Set(1,27) */
-    int      cut_zurueck;          /* angeforderter Schnitt beim Ausloesen = Ziel am Szenenende */
+    int      cut_zurueck;          /* Eintritts-Schnitt der Nordtuer (Runde 42; bis 98391e747 angeforderter Schnitt) = Ziel am Szenenende */
     int16_t  gier0;                /* Birkins Blick auf den Spider-Man-Start (Bezug von k_birkin_gier) */
-    int32_t  lx, lz;               /* Spider-Man: Aufschlagstelle */
+    int32_t  lx, lz;               /* Runde 42: Spider-Man, Lage beim Verlassen des Bilds (Takt BF_H_WEG) = Lage der Leiche */
     int32_t  ex, ez;               /* Spider-Man: Fluchtziel neben der Kamera */
     int32_t  w0[3], wv[3], wvor[3]; /* Neuaufbau ab NB2: Loslassen (Lage, Handtempo je Takt), Lage im Takt davor */
     int32_t  wtiefe;               /* Runde 3 N7: Blicktiefe beim Loslassen (k_wurf_luft) */
@@ -727,17 +738,21 @@ static struct {
     int      halt_wechsel;         /* Takt des letzten Wiedereinstiegs (0 = keiner) */
     int16_t  sprung_gier0, sprung_gier1;   /* Runde 5 M2: Gier beim Aufspringen und Gesamtrichtung des Sprungs */
     int16_t  sm_gier_halt;         /* Runde 7: Spider-Man-Gier im letzten Haltetakt (BF_HALT_ENDE), Bezug von k_sm_dreh */
-} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, 0, { 0, 0, 0 }, { 0, 0, 0 }, 0, 0, 0, 0 };
+    int16_t  lgier;                /* Runde 42: Spider-Man-Gier beim Verlassen des Bilds = Gier der Leiche */
+    int      sm_weg;               /* Runde 42: 1 = der Spider-Man hat das Bild verlassen (lx/lz/lgier gueltig) */
+} s_h = { 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, 0, { 0, 0, 0 }, { 0, 0, 0 }, 0, 0, 0, 0, 0, 0 };
 /* "Szene gesehen": Bank-9-Bit RE15_BF_HANGAR_BIT (PORT-WAHL, Kopf re15_birkin_formen.h). Bis Runde 41 Stand 23f9da5c9 war das
  * ein Prozess-Merker - nach dem Laden eines Spielstands lief die Szene erneut (H_hangar.md OFFEN 6.1). Gesetzt an denselben
  * zwei Stellen wie der alte Merker (Szenenende; Start ohne freien Slot), damit der Ablauf im Prozess gleich bleibt. */
 static int  bf_szene_gesehen(void) { return re15_game_flag_get(RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT); }
 static void bf_szene_merken(void)  { re15_game_flag_set(RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, 1); }
-/* "Hangar-Birkin besiegt" (Bank-9-Bit RE15_BF_BESIEGT_BIT) und "Kraftraum-Birkin besiegt" (Bank 3 Bit 0x49): Kopf
- * re15_birkin_formen.h, Abschnitt "Hangar: liegen bleiben". */
+/* "Hangar-Birkin besiegt" (Bank-9-Bit RE15_BF_BESIEGT_BIT, seit Runde 42 nur noch gelesen: Spielstaende aus 98391e747) und
+ * "Kraftraum-Birkin besiegt" (Bank 3 Bit 0x49): Kopf re15_birkin_formen.h. */
 static int  bf_hangar_besiegt(void)    { return re15_game_flag_get(RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT); }
 static int  bf_kraftraum_besiegt(void) { return re15_game_flag_get(RE15_BF_KRAFTRAUM_BANK, RE15_BF_KRAFTRAUM_BIT); }
-static int  s_bf_hp_haken = 0;     /* Messhaken RE15_HANGAR_BIRKIN_HP schon angewandt (je Raumeintritt) */
+/* Runde 42: Raum des letzten KI-Takts (re15_bf_raumtick). Beim Raumwechsel (re15_bf_raum_eintritt) ist das noch der Raum, aus dem
+ * der Spieler kommt - die KI laeuft waehrend Tuersequenz und Einblendung nicht (RE15_PAUSE_AI, game_step_common.c). */
+static unsigned s_bf_ki_raum = 0;
 static struct { int slot, phase, t; } s_rs = { -1, 0, 0 };   /* Rueckstoss-Szene 5090, s. unten */
 static int s_rs_kam_halt = 0;  /* Nachbesserung 4: Haltezeit nach einem Szenenschnitt */
 #define BF_RS_KAM_HALT 30      /* Gestaltung: 1 s wie die Haltezeit der Nahsicht-Wache (Nachbesserung 1) */
@@ -770,7 +785,7 @@ void re15_bf_reset(void)
     re15_schwanz_r41_reset();                            /* Runde 41 SF N1.9: Feder-Ketten und Vorgaben des Raums */
     s_h.raum = 0; s_h.birkin = s_h.sm = -1; s_h.phase = BF_H_WARTEN; s_h.t = 0; s_h.birkin_start = 0;
     s_h.cut_zurueck = 0;
-    s_bf_hp_haken = 0;
+    s_h.sm_weg = 0;
 }
 
 int re15_bf_hangar_phase(void) { return s_h.phase; }
@@ -855,63 +870,22 @@ static int bf_neuer_aktor(uint8_t type, int32_t x, int32_t z, uint8_t grid)
     a->active = 1; a->type = type;
     a->x = x; a->y = 0; a->z = z;
     a->grid_id = grid;
-    a->em_flag_id = 0xFF;                                /* kein Kill-Persist ueber +0x1c6; den Hangar-Birkin merkt bf_hangar_tod_merken */
+    a->em_flag_id = 0xFF;                                /* kein Kill-Persist ueber +0x1c6; den Gang merkt Bank-9-Bit 38 (Runde 42) */
     re15_enemy_apply_hitbox(a, type);
     return frei;
 }
 
 static void bf_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
 
-/* ---- Hangar: Sichttest, Start, Ende (Spur H, s. Kopf) ------------------------------------------------------------ */
-/* Bildpunkt eines Weltpunkts in der RID-Kamera `cut` (Projektion wie der Zeichner: sx = 160 + H*x/z, H = fov>>7,
- * camera_common.c re15_camera_build_view = FUN_80053ca4). 1 = vor der Kamera und im 320x240-Bild. */
-static int bf_punkt_im_bild(const re15_camera_cut_t *c, int32_t x, int32_t y, int32_t z)
-{
-    re15_camera_view_t v;
-    if (re15_camera_build_view(c, &v) != 0) return 0;
-    int64_t vx = (((int64_t)v.rot[0] * x + (int64_t)v.rot[1] * y + (int64_t)v.rot[2] * z) >> 12) + v.trans[0];
-    int64_t vy = (((int64_t)v.rot[3] * x + (int64_t)v.rot[4] * y + (int64_t)v.rot[5] * z) >> 12) + v.trans[1];
-    int64_t vz = (((int64_t)v.rot[6] * x + (int64_t)v.rot[7] * y + (int64_t)v.rot[8] * z) >> 12) + v.trans[2];
-    if (vz <= 0) return 0;
-    int64_t sx = 160 + vx * v.fov_screen_dist / vz, sy = 120 + vy * v.fov_screen_dist / vz;
-    return sx >= 0 && sx < 320 && sy >= 0 && sy < 240;
-}
-
-/* Waere eine Szenenfigur (Fuss- oder Kopfpunkt) im Schnitt `cut` zu sehen? Lage im Anker-Viereck des Schnitts (derselbe Test
- * wie der Region-Cull des Zeichners, FUN_80014324 + FUN_80014368) UND ein Punkt im Bild. */
-static int bf_figur_im_schnitt(int cut, int32_t x, int32_t z)
-{
-    int16_t qx[4], qz[4];
-    if (!g_room_rdt_ok || !g_room_rdt.cuts || cut < 0 || cut >= g_room_rdt.cut_count) return 0;
-    if (re15_rdt_get_region_quad(&g_room_rdt, cut, qx, qz) && !re15_aot_point_in_quad(x, z, qx, qz)) return 0;
-    const re15_camera_cut_t *c = &g_room_rdt.cuts[cut];
-    return bf_punkt_im_bild(c, x, 0, z) || bf_punkt_im_bild(c, x, -BF_KOPF_DY, z);
-}
-
-int re15_bf_szene_im_schnitt(int cut)
-{
-    if (cut == BF_HANGAR_CUT) return 0;                  /* der Szenenschnitt selbst loest nicht aus */
-    return bf_figur_im_schnitt(cut, BF_BIRKIN_X, BF_BIRKIN_Z) || bf_figur_im_schnitt(cut, BF_SM_X, BF_SM_Z);
-}
-
-/* Ausloeser: angeforderter Schnitt zeigt die Szene, Spieler frei. */
-static int bf_hangar_ausloeser(void)
-{
-    const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    if (!re15_bf_szene_im_schnitt((int)g_scd.cam_id)) return 0;
-    if (pl->hp <= 0 || pl->state != 1) return 0;         /* Zustand 1 = Pad-Zweig (@0x80073f90[1]), kein Treffer/Tod/Skript */
-    if (re15_player_is_grabbed() || re15_cine_active()) return 0;
-    return 1;
-}
-
+/* ---- Hangar: Start, Ende (Spur H, s. Kopf; Ausloeser seit Runde 42 re15_bf_raum_eintritt) ------------------------------ */
 /* Birkin an seinem Szenenplatz. grid 0x10 = Form-2-Bit (@0x801164e8 sperrt die HP-Mutation), Nibble 0 -> INIT-HUB
- * (@0x80116880-8b8): ein gewoehnlicher Angreifer, sobald die Szene ihn freigibt (state 0). */
+ * (@0x80116880-8b8). Seit Runde 42 gibt die Szene ihn nicht mehr frei (kein Kampf, bf_hangar_beenden entfernt ihn). */
 static int bf_hangar_birkin_setzen(void)
 {
     int s = bf_neuer_aktor(0x30u, BF_BIRKIN_X, BF_BIRKIN_Z, 0x10u);
     if (s < 0) return -1;
     re15_actor_t *b = &g_actors[s];
-    b->hp = RE15_BIRKIN_HP_INIT;                         /* INIT-Wert 0x12c @0x8011690c (x Faktor, GR NB3 2fb07b019), laeuft im INIT erneut */
+    b->hp = RE15_BIRKIN_HP_INIT;                         /* INIT-Wert 0x12c: STAGE5 `2c 01 02 34` @0x80117120 (STAGE3 @0x8011690c), x Faktor GR NB3 2fb07b019 */
     b->rot_y = bf_blick(b, BF_SM_X, BF_SM_Z);
     bf_clip(b, 0);                                       /* Clip 0 wie INIT @0x8011683c */
     return s;
@@ -969,13 +943,13 @@ static void bf_hocken_lage(re15_actor_t *m)
     m->z = k_sm_gleit[0][2] + ((BF_GLEIT_DZ * k_sm_flug[0][2]) >> 12);
 }
 
-static void bf_hangar_starten(void)
+static void bf_hangar_starten(int cut_zurueck)
 {
     s_h.birkin = bf_hangar_birkin_setzen();
     s_h.sm = (s_h.birkin >= 0) ? bf_neuer_aktor(0x2Bu, BF_SM_X, BF_SM_Z, 0x00u) : -1;
-    if (s_h.birkin < 0 || s_h.sm < 0) {                  /* kein Platz: ohne Szene, Birkin (falls gesetzt) greift an */
-        if (s_h.birkin >= 0) g_actors[s_h.birkin].state = 0;
-        s_h.sm = -1; s_h.phase = BF_H_FREI; bf_szene_merken();
+    if (s_h.birkin < 0 || s_h.sm < 0) {                  /* kein Platz: ohne Szene und ohne Figuren (Runde 42: kein Kampf) */
+        if (s_h.birkin >= 0) g_actors[s_h.birkin].active = 0;
+        s_h.birkin = s_h.sm = -1; s_h.phase = BF_H_FREI;
         return;
     }
     re15_actor_t *b = &g_actors[s_h.birkin], *m = &g_actors[s_h.sm];
@@ -987,7 +961,8 @@ static void bf_hangar_starten(void)
     m->rot_z = 0; s_sm_schatten[0] = 0; s_h.halt_wechsel = 0;
     bf_hocken_lage(m);
     bf_bild(m, BF_SM_ANGRIFF, BF_SM_ANGRIFF_H0); m->anim_frac = 0;     /* hockt: Angriffs-Clip 0x17 B8 (Video h0) */
-    s_h.cut_zurueck = (int)g_scd.cam_id;                 /* der Schnitt, den der RVD-Scan gerade angefordert hat */
+    s_h.cut_zurueck = cut_zurueck;                       /* Runde 42: Eintritts-Schnitt der Nordtuer (ROOM5030 @0x00EC6: Cut 0) */
+    s_h.sm_weg = 0;
     bf_riegel(1);
     /* Cut_chg-Zwilling (LAB_800402a0) auf den Szenenschnitt */
     g_scd.cam_id_prev        = (uint8_t)g_scd.work_vars[0x0A];   /* @0x800402c0 / @0x800402e4 */
@@ -1000,14 +975,36 @@ static void bf_hangar_starten(void)
     g_scd.cut_auto_enabled   = 0;                                /* @0x800402d4 `ori ...,0x100` */
     s_h.phase = BF_H_VORLAUF; s_h.t = 0;
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[hangar] ROOM%04X Szene Start: Schnitt %d angefordert -> Cut %d, Birkin Slot %d, Spider-Man Slot %d, "
-                    "Spieler (%d,%d)\n", (unsigned)g_current_room_id, s_h.cut_zurueck, BF_HANGAR_CUT, s_h.birkin, s_h.sm,
-            (int)g_actors[RE15_ACTOR_SLOT_PLAYER].x, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z);
+    fprintf(stderr, "[hangar] ROOM%04X Szene Start: Nordtuer aus %04X, Schnitt %d -> Cut %d, Birkin Slot %d, Spider-Man Slot %d, "
+                    "Spieler (%d,%d)\n", (unsigned)g_current_room_id, s_bf_ki_raum & 0xFFFFu, s_h.cut_zurueck, BF_HANGAR_CUT,
+            s_h.birkin, s_h.sm, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].x, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].z);
 #endif
 }
 
-/* Szenenende: Schnitt zurueck auf den Schnitt des Spielers + Zonen an (ROOM1150 sub08 `29 05` @0x012C4, `3c 01` @0x012E2),
- * Riegel auf (@0x012E4/@0x012E8). Birkin geht in seine 0x30-KI (state 0 -> INIT -> HUB). */
+/* Runde 42 (PORT-SZENE, Kopf "Runde 42"): der Spider-Man bleibt fuer diesen Besuch tot liegen, wo er das Bild verlassen hat (Lage
+ * und Gier des Takts BF_H_WEG, bf_hangar_takt). Senkrecht auf den Boden (y 0 = ROOM50A0-Boden, Bezug von re15_bf_schatten_y), Haltung
+ * = das letzte Bild der Szene (Rueckenlage-Clip 0x0B Bild 30, k_wurf_bahn). Leiche = Zustand 7 (RE15_AI_STATE_CORPSE, "+0x4==7"
+ * @0x80107ec8): keine Zielhilfe (re15_player_aim_target), kein Schusstreffer (re15_player_weapon_fire), kein Koerperschub
+ * (re15_enemy_body_push_tail / kollision_r41.c), kein Bildvorschub (re15_actors_anim_advance); die KI ueberspringt den Slot
+ * ohnehin (re15_bf_szene_besitzt, s_h.sm bis zum Raumwechsel). Gestaltung: Lage, Haltung, keine Kollision. */
+static int bf_sm_leiche(void)
+{
+    if (!s_h.sm_weg) return -1;
+    const int s = bf_neuer_aktor(0x2Bu, s_h.lx, s_h.lz, 0x00u);
+    if (s < 0) return -1;
+    re15_actor_t *m = &g_actors[s];
+    m->y = 0;
+    m->rot_y = s_h.lgier;
+    m->hp = 0;
+    m->state = (uint8_t)RE15_AI_STATE_CORPSE;
+    m->motion = BF_SM_LIEGT; m->anim_frame = 30; m->anim_frac = 0;
+    s_sm_schatten[0] = 0;                                /* Schatten am Aktor (re15_bf_schatten_xz aus) */
+    return s;
+}
+
+/* Szenenende: Schnitt zurueck auf den Eintritts-Schnitt der Nordtuer + Zonen an (ROOM1150 sub08 `29 05` @0x012C4, `3c 01`
+ * @0x012E2), Riegel auf (@0x012E4/@0x012E8). Runde 42: kein Kampf - Birkin wird entfernt (er ist zum anderen Ausgang gegangen),
+ * der Spider-Man liegt tot (bf_sm_leiche). Bis 98391e747 ging Birkin hier in seine 0x30-KI (state 0 -> INIT -> HUB). */
 static void bf_hangar_beenden(void)
 {
     if (s_h.riegel) {
@@ -1022,12 +1019,8 @@ static void bf_hangar_beenden(void)
         g_scd.cut_auto_enabled   = 1;
         bf_riegel(0);
     }
-    if (s_h.birkin >= 0 && g_actors[s_h.birkin].active && g_actors[s_h.birkin].type == 0x30u) {
-        re15_actor_t *b = &g_actors[s_h.birkin];
-        b->state = 0; b->sub_state_1 = b->sub_state_2 = b->sub_state_3 = 0;
-        b->anim_blend_rate = 0;                          /* Runde 7: Mischschritt des Szenen-Gangs (BF_GANG_MISCH) zurueck */
-    }
     if (s_h.sm >= 0 && g_actors[s_h.sm].active && g_actors[s_h.sm].type == 0x2Bu) g_actors[s_h.sm].active = 0;
+    const int leiche = bf_sm_leiche();                  /* vor dem Entfernen Birkins: die Leiche bekommt den Slot des Spider-Man */
     re15_schwanz_r41_seite(s_h.birkin, 0);
     re15_schwanz_r41_ziel(s_h.birkin, NULL, 0);          /* Neuaufbau ab NB2: Schwanzbahn und Verdecken aus */
     re15_schwanz_r41_dicke(s_h.birkin, 0);
@@ -1036,12 +1029,15 @@ static void bf_hangar_beenden(void)
     re15_schwanz_r41_bogen(s_h.birkin, NULL, 0);
     re15_schwanz_r41_tiefe_frei(s_h.birkin, NULL);
     re15_schwanz_r41_szene(s_h.birkin, 0);
-    s_h.sm = -1;
+    if (s_h.birkin >= 0 && g_actors[s_h.birkin].active && g_actors[s_h.birkin].type == 0x30u) g_actors[s_h.birkin].active = 0;
+    s_h.birkin = -1;
+    s_h.sm = leiche;                                     /* -1 oder die Leiche: bleibt bis zum Raumwechsel bei der Szene */
     s_h.phase = BF_H_FREI;
     bf_szene_merken();                                   /* Bank-9-Bit 38, s. oben: am Szenenende wie der alte Merker */
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[hangar] ROOM%04X Szene Ende: Cut %d, Birkin Zustand %d\n", (unsigned)g_current_room_id,
-            s_h.cut_zurueck, (s_h.birkin >= 0) ? (int)g_actors[s_h.birkin].state : -1);
+    fprintf(stderr, "[hangar] ROOM%04X Szene Ende: Cut %d, Birkin entfernt, Spider-Man liegt: Slot %d (%d,%d) Gier %d\n",
+            (unsigned)g_current_room_id, s_h.cut_zurueck, leiche, leiche >= 0 ? (int)g_actors[leiche].x : 0,
+            leiche >= 0 ? (int)g_actors[leiche].z : 0, leiche >= 0 ? (int)g_actors[leiche].rot_y : 0);
 #endif
 }
 
@@ -1122,7 +1118,7 @@ static void bf_heben_ziel(const re15_actor_t *b, const re15_actor_t *m, int h, i
 }
 
 /* Runde 41 SF NB3: Videopunkt (640x480; Registrierung der Abnahme 1: x_v = 2 x_psx + 1,97, y_v = 2,079 y_psx + 1,3) ->
- * Weltpunkt durch die Szenenkamera (Umkehrung von bf_punkt_im_bild). art 0 = Boden (y = -100, Schwanzradius), 1 = Blicktiefe
+ * Weltpunkt durch die Szenenkamera (Umkehrung der Zeichner-Projektion sx = 160 + H*x/z, camera_common.c FUN_80053ca4; bis Runde 41 bf_punkt_im_bild). art 0 = Boden (y = -100, Schwanzradius), 1 = Blicktiefe
  * der Birkin-Wurzel (Hoehe -1000) + tiefe, 2 = hinter dem Koerper (Modellraum (-1500,-150,200)). */
 static int bf_video_welt(const bf_schwanzpunkt_t *q, const re15_actor_t *b, int32_t out[3])
 {
@@ -1640,7 +1636,7 @@ static void bf_wurzel_ausgleich(re15_actor_t *m)
     }
 }
 
-/* Blicktiefe (Kameraraum z) eines Weltpunkts in der Szenenkamera, wie bf_punkt_im_bild. */
+/* Blicktiefe (Kameraraum z) eines Weltpunkts in der Szenenkamera (Projektion wie der Zeichner, camera_common.c FUN_80053ca4). */
 static int32_t bf_blicktiefe(int32_t x, int32_t y, int32_t z)
 {
     const re15_camera_cut_t *c = bf_szenenkamera();
@@ -1882,46 +1878,38 @@ static void bf_hangar_takt(re15_actor_t *b, re15_actor_t *m)
             }
         }
     } else if (m->active) {                                               /* aus dem Bild: Spider-Man ist weg */
+        s_h.lx = m->x; s_h.lz = m->z; s_h.lgier = m->rot_y; s_h.sm_weg = 1;   /* Runde 42: Lage der Leiche (bf_sm_leiche) */
         m->active = 0;
         s_h.sm = -1;
     }
 }
 
-/* ---- Hangar: liegen bleiben (Runde 1 "hangar_liegen", Kopf re15_birkin_formen.h) ----------------------------------------------
- * Ein Takt nach der Szene (Phase FREI), vor der KI des Bildes (re15_enemy_ai_run_all ruft re15_bf_raumtick zuerst).
- * Der Todesablauf selbst bleibt in enemy_ai_common.c unveraendert: Phase 3 wartet auf grid & 0xF == 2 (`lbu v0,9(a0)` /
- * `andi v0,v0,0xf` / `bne` @0x8011aee0-ec STAGE5), das im Hangar (grid 0x10) nie kommt - Birkin liegt im letzten Bild von Clip 9. */
-static void bf_hangar_tod_merken(void)
+/* ---- Hangar: Ausloeser (Runde 42 "hangar_aussen", PORT-SZENE, Kopf "Runde 42") ----------------------------------------------
+ * Aufruf aus dem Raumwechsel (room_common.c re15_room_apply_pending), direkt nach dem SCD-Init des neuen Raums und vor dem
+ * Kamera-Vorrang (Schritt 8): ein hier angeforderter Cut_chg-Zwilling wird wie der Cut_chg eines Raumskripts uebernommen (Schritt 8
+ * "the scripted cut is authoritative", Schritt 12 laesst die Zonen aus), die Einblendung zeigt Cut 12. Der Riegel steht ab dem ersten
+ * Bild (scd_room_reenter hat (2,7)/(1,27) davor geloescht) - der Spieler bekommt keinen Takt Kontrolle. Takt h-8 ff. laeuft ab dem
+ * ersten KI-Takt nach der Einblendung (re15_bf_raumtick), wie bis 98391e747 ab dem Takt nach dem Ausloesen. `tuer_cut` = Eintritts-
+ * Schnitt der Tuer (g_room_change.target_cut) = Ziel am Szenenende. */
+void re15_bf_raum_eintritt(int tuer_cut)
 {
-    if (s_h.birkin < 0) return;
-    re15_actor_t *b = &g_actors[s_h.birkin];
-    if (!b->active || b->type != 0x30u) return;
-    {   /* MESSHAKEN RE15_HANGAR_BIRKIN_HP=<n> (env, kein Spielverhalten): Birkins HP einmal je Raumeintritt auf n, sobald er in seiner
-         * KI ist (INIT schreibt die HP unbedingt, `ori v0,zero,0x12c` @0x8011690c) - damit Testlauf und Video den Tod mit wenigen
-         * Schuessen erreichen. Ohne die Variable stumm. */
-        static int hp = -2;
-        if (hp == -2) { const char *v = getenv("RE15_HANGAR_BIRKIN_HP"); hp = v ? atoi(v) : -1; }
-        if (hp >= 0 && !s_bf_hp_haken && b->state == 1) {
-            b->hp = (int16_t)hp; s_bf_hp_haken = 1;
+    if (!re15_bf_hangar_aktiv()) return;
+    if ((s_bf_ki_raum & 0xFFFEu) != BF_MONITORRAUM) {   /* Westtuer (4070/4071), Laden, Debug-Sprung: nie eine Szene */
 #ifdef RE15_PLATFORM_PC
-            fprintf(stderr, "[hangar] ROOM%04X Messhaken: Birkin-HP %d\n", (unsigned)g_current_room_id, hp);
+        fprintf(stderr, "[hangar] ROOM%04X betreten aus %04X: keine Szene (nur durch die Nordtuer aus dem Monitorraum)\n",
+                (unsigned)g_current_room_id, s_bf_ki_raum & 0xFFFFu);
 #endif
-        }
+        return;
     }
-    /* Eintritt in den Tod = die Todesmaschine hat Phase 0 ausgefuehrt (+0x7 = 1: `ori v0,zero,0x1` / `sb v0,7(v1)` @0x8011ae34-38,
-     * STAGE5 FUN_8011adec). Erst ab hier ist der Tod endgueltig: der Revive-Waechter der Todeswurzel greift nur bei +0x7 == 0
-     * (`lbu v0,7(a2)` / `bne v0,zero` @0x8011ac48-50) und +0x1dd & 8 (`lbu v0,477(a2)` / `andi 0x8` / `beq` @0x8011ac58-64) und
-     * setzt dann Zustand und HP zurueck; Phasen 1..3 laufen nur vorwaerts. */
-    if (b->state != 3 || b->sub_state_3 < 1 || bf_hangar_besiegt()) return;
-    re15_game_flag_set(RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT, 1);
-#ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[hangar] ROOM%04X Birkin besiegt F%u (%d,%d) Phase %d: Bank-9-Bit %d\n", (unsigned)g_current_room_id,
-            (unsigned)g_engine.frame_count, (int)b->x, (int)b->z, (int)b->sub_state_3, RE15_BF_BESIEGT_BIT);
-#endif
+    if (bf_szene_gesehen() || bf_hangar_besiegt() || bf_kraftraum_besiegt()) return;   /* Meldung in re15_bf_raumtick */
+    re15_bf_reset();                                     /* lief schon im Raumwechsel (re15_enemy_reset); hier fuer Tests */
+    s_h.raum = g_current_room_id;
+    bf_hangar_starten(tuer_cut);
 }
 
 void re15_bf_raumtick(void)
 {
+    s_bf_ki_raum = g_current_room_id;                    /* Runde 42: Vorraum fuer re15_bf_raum_eintritt */
     re15_bb_pose_tick();                                /* Messhaken der Sichtpruefung, im Normalpfad stumm */
     /* MESSHAKEN RE15_BIRKIN_HP_AT=<n>: n KI-Ticks nach Raumeintritt in 5090 die HP des 0x30 auf 0 (Sichtpruefung
      * der Rueckstoss-Szene ohne Durchspielen). Der Debug-Sprung setzt keinen Tuer-Schnitt, die Zonen laufen dann
@@ -1949,31 +1937,23 @@ void re15_bf_raumtick(void)
     if (s_h.raum != g_current_room_id) {
         re15_bf_reset();
         s_h.raum = g_current_room_id;
-        if (bf_hangar_besiegt() || bf_kraftraum_besiegt()) {
-            /* Birkin hier besiegt (Bank-9-Bit RE15_BF_BESIEGT_BIT) oder im Kraftraum (Bank 3 Bit 0x49, ROOM50E0 sub01 `22 03 49 01`
-             * @0x00B1A / ROOM50F1 sub01): weder Szene noch Birkin, auch nach dem Laden (beide Banken stehen im Spielstand). Form wie
-             * das Original-Tor jedes Birkin-Raums: der Raum setzt ihn per Merker nicht mehr (50E0 sub00 `21 03 49 00` @0x00AEA vor
-             * Sce_em_set @0x00AEE; Disc ROOM3071 sub00 @0x030FC) - ein Kill-Flag ueber +0x1c6 (Tor @0x80042120-38) hat der 0x30 nie. */
+        if (bf_szene_gesehen() || bf_hangar_besiegt() || bf_kraftraum_besiegt()) {
+            /* Runde 42: nach der Szene (Bank-9-Bit 38), mit einem Spielstand aus 98391e747, in dem der Hangar-Birkin besiegt ist
+             * (Bit 39), oder nach dem Kraftraum-Sieg (Bank 3 Bit 0x49, ROOM50E0 sub01 `22 03 49 01` @0x00B1A / ROOM50F1 sub01 @0x00A04):
+             * der Gang ist leer - kein Birkin, kein Spider-Man, keine Szene, auch nach dem Laden (alle drei stehen im Spielstand). Form
+             * wie das Original-Tor jedes Birkin-Raums: der Raum setzt ihn per Merker nicht mehr (50E0 sub00 `21 03 49 00` @0x00AEA vor
+             * Sce_em_set @0x00AEE; Disc ROOM3071 sub00 @0x030FC) - ein Kill-Flag ueber +0x1c6 (Tor @0x80042120-38) hat der 0x30 nie.
+             * Bis 98391e747 setzte Bit 38 allein Birkin als Angreifer. */
             s_h.phase = BF_H_FREI;
 #ifdef RE15_PLATFORM_PC
-            fprintf(stderr, "[hangar] ROOM%04X ohne Birkin (hier besiegt %d, Kraftraum besiegt %d)\n", (unsigned)g_current_room_id,
-                    bf_hangar_besiegt(), bf_kraftraum_besiegt());
+            fprintf(stderr, "[hangar] ROOM%04X ohne Birkin (hier besiegt %d, Kraftraum besiegt %d, Szene gesehen %d)\n",
+                    (unsigned)g_current_room_id, bf_hangar_besiegt(), bf_kraftraum_besiegt(), bf_szene_gesehen());
 #endif
             return;
         }
-        if (bf_szene_gesehen()) {                        /* Bank-9-Bit 38: auch nach dem Laden eines Spielstands */
-            /* Wiedereintritt nach der Szene: kein Spider-Man, Birkin sofort als Angreifer (Zustand 0 -> INIT -> HUB). */
-            s_h.birkin = bf_hangar_birkin_setzen();
-            s_h.phase = BF_H_FREI;
-        }
-        return;                                          /* sonst: noch keine Figuren, Phase WARTEN */
+        return;                                          /* nicht aus dem Monitorraum: Gang leer, Phase WARTEN, nie eine Szene */
     }
-    if (s_h.phase == BF_H_WARTEN) {
-        if (!bf_hangar_ausloeser()) return;
-        bf_hangar_starten();
-        return;
-    }
-    if (s_h.phase == BF_H_FREI) { bf_hangar_tod_merken(); return; }
+    if (s_h.phase == BF_H_WARTEN || s_h.phase == BF_H_FREI) return;   /* Runde 42: kein Ausloeser im Raum, kein Kampf */
     re15_actor_t *b = (s_h.birkin >= 0) ? &g_actors[s_h.birkin] : NULL;
     re15_actor_t *m = (s_h.sm >= 0) ? &g_actors[s_h.sm] : NULL;
     if (!b || !b->active || b->type != 0x30u || (m && (!m->active || m->type != 0x2Bu))) {   /* Figur weg: Szene frei */
