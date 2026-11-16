@@ -324,7 +324,7 @@ Besonderheiten:
 ## 3. Texte ohne Nachrichten-Id (Beschreibungen, Dokumente, Gegenstaende)
 - Taschenuhr (Item 0x3F, ROOM2090/2091 main00 @0x00A12 Slot 5, Taken-Bit 90): Beschreibung Leon mit Gravur
   "A pocket watch. Something's engraved on the back: "For Sherry. Love, Mom."" (F-19), Bank gen/inv_desc_bank.inc.
-- T-09 Blue Master Keycard: "An ID card for the research center. It belongs to someone named "Michael."".
+- T-09 Blue Master Keycard: "An ID card for the research center. It belongs to someone named "Michael."" (gebaut, 4.5).
 - Neue Gegenstaende (v0.8.32): Enzyme (0x3C, Disc), T-Virus, G-Virus, T-Vaccine, G-Vaccine, Research Center ID Card
   (Nummer der Communications Card, Konzept 6b), Rocket Launcher (Name vorhanden) - Beschreibungen woertlich aus
   Konzept 6b; Item-Nummern teilt die Laborketten-Spur nach eigenem Zensus zu.
@@ -400,6 +400,16 @@ Besonderheiten:
 - T-05 (F-10): Tiefe der Port-Masken Cut 9 in shared_assets/PSX/MASKS/ROOM6030.MSK und ROOM6031.MSK (die Rechtecke liegen dort, nicht
   in `pri/` - die pri/*_port.png sind Uebersichtsbilder der Form, die Form bleibt, also unveraendert; pri_hashes.py ohne Aenderung).
   Werkzeug tools/maske/liege_tiefe_r42.py: 51 von 91 Rechtecken (nur die Tiefen-Halbwoerter), Vorderkante und Seitenholme bleiben.
+
+### 4.5 Gebaut (Stufe Kleinkram, 2026-11-16; Belege im Kopf von `re15_port/include/re15_story_klein_r42.h`)
+- T-08: ROOM6020 sub00 @0x00BAA (Sce_em_set Slot 1 Typ 0x42 = Ada) wird verworfen, wenn der Merker (3,0x62) gesetzt ist. Einziger
+  Schreiber im Spiel: ROOM50B0 sub02 @0x005A6 `22 03 62 01` (Adas Szene; Zensus aller RDTs: sonst nur Ck @0x004E6). Marvin (@0x00B96)
+  bleibt; ROOM6021 (Typ 0x49/0x4B) unberuehrt. Kein neues Bit (Bank 3 ist ein Original-Merker), Zensus unveraendert FREI.
+- T-09: Item 0x47 (Blue Master Keycard, ROOM4010 Slot 9 @0x00592) Beschreibung "An ID card for the research / center. It belongs to /
+  someone named "Michael."" in der Form der Original-Beschreibung 0x47 @0x800c5e53 (3 Zeilen, 1 Seite); Leon und Elza.
+- Pruefhinweis H4: Nachlauf `04 01 01 N` der neuen Untertitel aus den Original-Zeilen desselben Raums (tools/r42_story/nachlauf_r42.py):
+  ROOM3060 0x3C, ROOM3020 einzeilig 0x59 / zweizeilig 0x63, ROOM30E0/3070/6030/6031 0x63; Raeume ohne Original-Untertitel
+  (11A0/11A1, 2080/2081) nach dem Belegraum der Begleiter-Kette (3000 bzw. 3001, 0x63). Geaendert sind nur Bytes von 3020/3060.
 
 ## 5. Gemeinsame Dateien (nur kleine Haken, Kommentar "Runde 42 Story")
 Wie Runde 41 (VERTRAG R41 1.3). Tabu: `synchro/`, `pri/`, `Cutscenes/`, `Version_80%/`, `release/`. Neue Bits nur

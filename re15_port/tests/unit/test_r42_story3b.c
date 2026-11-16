@@ -203,6 +203,8 @@ static int clip_bilder(uint8_t type, int clip)
 /* ---- texte ------------------------------------------------------------------------------------------------------- */
 static int kopf_ok(const uint8_t *b, int l, const char *nm, uint8_t farbe)
 {
+    /* Nachlauf (Pruefhinweis H4) = Original-Zeilen desselben Raums: ROOM30E0 alle 14 Untertitel `04 01 01 63` (msg 0 @0x1107),
+     * ROOM3070 alle 5 (msg 0 @0x39C0) - tools/r42_story/nachlauf_r42.py */
     static const uint8_t halt[4] = { 0x04, 0x01, 0x01, 0x63 };
     int ok = b && l > 8 && b[0] == 0x04 && b[1] == 0x00 && b[2] == 0x05 && b[3] == farbe && !memcmp(b + l - 4, halt, 4);
     for (int j = 0; ok && nm[j]; j++) {

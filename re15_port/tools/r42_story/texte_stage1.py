@@ -47,12 +47,13 @@ def main():
            ' * 4.2 E2, 6b; K-07, K-08, F-26; VERTRAG analysis/befunde_runde42/VERTRAG.md 2.3). */']
     tab = []
     for raum, mid, farbe, name, text in UNTERTITEL:
-        b, zeilen, bw = t2.untertitel(farbe, name, text)
+        b, zeilen, bw = t2.untertitel(farbe, name, text, raum)
         for i, w in enumerate(bw):
             if w > t2.MAX_PX:
                 fehler.append('ROOM%04X msg %d Zeile %d = %d px > %d' % (raum, mid, i + 1, w, t2.MAX_PX))
         n = 'k_s1_%04x_msg%d' % (raum, mid)
-        out += t2.carr(n, b, 'ROOM%04X %d %s: %s  (Zeilen %s px)' % (raum, mid, name, ' / '.join(zeilen), '/'.join(map(str, bw))))
+        out += t2.carr(n, b, 'ROOM%04X %d %s: %s  (Zeilen %s px; %s)' % (raum, mid, name, ' / '.join(zeilen), '/'.join(map(str, bw)),
+                                    t2.nachlauf_r42.nachlauf(raum, len(zeilen))[1]))
         tab.append((raum, mid, n))
     out.append('typedef struct { uint16_t raum; uint8_t id; const uint8_t *b; uint16_t n; } s1_text_t;')
     out.append('static const s1_text_t k_s1_texte[] = {')

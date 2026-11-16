@@ -78,11 +78,11 @@ def rdt_msg(raum, mid):
     return d, a, b
 
 
-def untertitel_seiten(farbe, name, text):
+def untertitel_seiten(farbe, name, text, raum):
     """Untertitel mit 1..n Seiten ('|'); Seite 1 mit Sprecherkopf (texte_stage3a.untertitel), weitere ohne Kopf."""
     seiten = text.split('|')
-    b, z1, bw = T.untertitel(farbe, name, seiten[0])
-    b = b[:-4]                                   # Schwanz erst am Ende
+    b, z1, bw = T.untertitel(farbe, name, seiten[0], raum)
+    b = b[:-4]                                   # Schwanz erst am Ende (SCHWANZ, Beleg oben)
     zeilen = [z1]
     for s in seiten[1:]:
         z = T.umbruch(s, 0, T.MAX_PX)
@@ -107,7 +107,7 @@ def main():
            ' * (ROOM6030 msg 0 @0x13F5, ROOM6031 msg 0 @0x1161). */']
     tab = []
     for raum, mid, (farbe, name), text in UNTERTITEL:
-        b, zeilen, bw = untertitel_seiten(farbe, name, text)
+        b, zeilen, bw = untertitel_seiten(farbe, name, text, raum)
         if len(b) > PSX_LEN:
             print('Hinweis: ROOM%04X msg %d hat %d Byte > %d (PSX MSG_RAW_LEN schneidet ab; PC 192)' % (raum, mid, len(b), PSX_LEN))
         for i, w in enumerate(bw):

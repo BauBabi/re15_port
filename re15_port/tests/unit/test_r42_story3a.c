@@ -216,18 +216,31 @@ static void leon_inventar(void)
 static void teil_texte(void)
 {
     printf("== texte ==\n");
-    static const struct { uint16_t r; int id; const char *name; } k[] = {
-        { 0x3020, 0, "Leon:" }, { 0x3020, 1, "Marvin:" }, { 0x3020, 2, "Marvin:" }, { 0x3020, 7, "Marvin:" }, { 0x3020, 8, "Leon:" },
-        { 0x3020, 9, "Leon:" },
-        { 0x3060, 11, "Marvin:" }, { 0x3060, 12, "Marvin:" }, { 0x3060, 13, "Leon:" }, { 0x3060, 14, "Marvin:" },
-        { 0x3060, 15, "Marvin:" }, { 0x3060, 17, "Marvin:" }, { 0x3060, 19, "Marvin:" }, { 0x3060, 21, "Leon:" },
-        { 0x3060, 22, "Marvin:" }, { 0x3060, 23, "Leon:" }, { 0x3060, 24, "Marvin:" }, { 0x3060, 25, "Marvin:" },
-        { 0x3060, 26, "Leon:" }, { 0x3060, 27, "Marvin:" }, { 0x30E0, 3, "Leon:" } };
-    static const uint8_t halt[4] = { 0x04, 0x01, 0x01, 0x63 };
+    /* Pruefhinweis H4: Schwanz `04 01 01 N` = Nachlauf der Original-Zeilen DESSELBEN Raums (tools/r42_story/nachlauf_r42.py).
+     * Beleg je Zeile = Datei-Offset eines Original-Schwanzes mit derselben Zeilenzahl; der Test liest die 4 Bytes aus dem RDT:
+     *   ROOM3020 einzeilig msg 0 @0x0E45 `04 01 01 59`, zweizeilig msg 1 @0x0E92 `04 01 01 63` (gemischter Raum);
+     *   ROOM3060 msg 1 @0x1131 `04 01 01 3c` (alle 8 Original-Untertitel 0x3C); ROOM30E0 msg 3 @0x11C9 `04 01 01 63` (3-zeilig). */
+    static const struct { uint16_t r; int id; const char *name; uint32_t beleg; } k[] = {
+        { 0x3020, 0, "Leon:", 0x0E45 }, { 0x3020, 1, "Marvin:", 0x0E92 }, { 0x3020, 2, "Marvin:", 0x0E45 }, { 0x3020, 7, "Marvin:", 0x0E92 },
+        { 0x3020, 8, "Leon:", 0x0E45 }, { 0x3020, 9, "Leon:", 0x0E45 },
+        { 0x3060, 11, "Marvin:", 0x1131 }, { 0x3060, 12, "Marvin:", 0x1131 }, { 0x3060, 13, "Leon:", 0x1131 }, { 0x3060, 14, "Marvin:", 0x1131 },
+        { 0x3060, 15, "Marvin:", 0x1131 }, { 0x3060, 17, "Marvin:", 0x1131 }, { 0x3060, 19, "Marvin:", 0x1131 }, { 0x3060, 21, "Leon:", 0x1131 },
+        { 0x3060, 22, "Marvin:", 0x1131 }, { 0x3060, 23, "Leon:", 0x1131 }, { 0x3060, 24, "Marvin:", 0x1131 }, { 0x3060, 25, "Marvin:", 0x1131 },
+        { 0x3060, 26, "Leon:", 0x1131 }, { 0x3060, 27, "Marvin:", 0x1131 }, { 0x30E0, 3, "Leon:", 0x11C9 } };
     for (size_t i = 0; i < sizeof k / sizeof k[0]; i++) {
         int l = 0;
+        uint8_t halt[4] = { 0, 0, 0, 0 };
+        {
+            char rp[600];
+            size_t n = 0;
+            snprintf(rp, sizeof rp, "%s/STAGE3/ROOM%04X.RDT", RE15_ASSET_PSX_DIR, (unsigned)k[i].r);
+            uint8_t *d = slurp(rp, &n);
+            if (d && k[i].beleg + 4 <= n) memcpy(halt, d + k[i].beleg, 4);
+            free(d);
+        }
         const uint8_t *b = re15_story3a_r42_text(k[i].r, (uint8_t)k[i].id, &l);
-        int ok = b && l > 8 && b[0] == 0x04 && b[1] == 0x00 && b[2] == 0x05 && !memcmp(b + l - 4, halt, 4);
+        int ok = halt[0] == 0x04 && halt[1] == 0x01 && halt[2] == 0x01 &&
+                 b && l > 8 && b[0] == 0x04 && b[1] == 0x00 && b[2] == 0x05 && !memcmp(b + l - 4, halt, 4);
         const char *nm = k[i].name;
         /* Farbe wie die ausgelieferten Zeilen ROOM3020 (Leon 01 msg 0 @0x0E1A, Marvin 07 msg 1 @0x0E49) */
         if (ok) ok = b[3] == (nm[0] == 'L' ? 0x01 : 0x07);
@@ -236,7 +249,8 @@ static void teil_texte(void)
             const uint8_t g = (c >= 'A' && c <= 'Z') ? (uint8_t)(0x1D + c - 'A') : (c >= 'a' && c <= 'z') ? (uint8_t)(0x3D + c - 'a') : 0x16;
             if (b[4 + j] != g) ok = 0;
         }
-        PRUEF(ok, "ROOM%04X msg %d: Untertitel mit Kopf %s", k[i].r, k[i].id, k[i].name);
+        PRUEF(ok, "ROOM%04X msg %d: Untertitel mit Kopf %s, Schwanz 04 01 01 %02x = Original @0x%04X", k[i].r, k[i].id, k[i].name,
+              halt[3], (unsigned)k[i].beleg);
     }
     for (int id = 16; id <= 18; id += 2) {
         int l = 0;

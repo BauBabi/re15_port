@@ -11,7 +11,10 @@ ROOM3020 msg 0..2 Neutext (Glaettung L5), 7..9 neu; ROOM3060 msg 11..27 neu (RDT
 Nur Leons Fassung (ROOM3020/3060); Elzas ROOM3021/3061 bleiben unveraendert.
 
 Kodierung wie texte_stage2.py (Vorbild tools/r41_annette/texte_bauen.py, Glyphen = msg_common.c re15_msg_glyph):
-  Untertitel  04 00 05 <Farbe> <Name:> 05 00 00 <Text> [08 <Text>] 04 01 01 63
+  Untertitel  04 00 05 <Farbe> <Name:> 05 00 00 <Text> [08 <Text>] 04 01 01 N
+              N = Nachlauf der Original-Zeilen desselben Raums (nachlauf_r42.py, Pruefhinweis H4; bis 2026-11-16 fest 0x63 ohne Beleg):
+              ROOM3060 0x3C (8 Originale `04 01 01 3c` ab @0x1131), ROOM3020 einzeilig 0x59 (@0x0E45/@0x0EB9) / zweizeilig 0x63
+              (@0x0E92), ROOM30E0 0x63 (14 Originale, msg 0 @0x1107). Je Zeile im Kommentar der .inc.
               Farben aus den ausgelieferten Zeilen derselben Raeume (rdt_msgdump.py ROOM3020): Leon 01 (msg 0 @0x0E1A `05 01`),
               Marvin 07 (msg 1 @0x0E49 `05 07`).
   Systemtext  04 02 <Text> [08 <Text>] 01 00   (Form ROOM3020 msg 3 @0x0EBD "It's locked from the other side.", ctrl 04:02 .. 01:END)
@@ -20,6 +23,9 @@ msg 20 ("You've received the <Name>.") wird zur Laufzeit je Fund gebaut (story3a
 import os
 import re
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import nachlauf_r42  # noqa: E402  (H4: Nachlauf aus den Original-Zeilen desselben Raums)
 
 HIER = os.path.dirname(os.path.abspath(__file__))
 PORT = os.path.normpath(os.path.join(HIER, '..', '..'))
@@ -120,7 +126,8 @@ def umbruch(text, erste_breite_vorweg, maxpx):
     return zeilen
 
 
-def untertitel(farbe, name, text):
+def untertitel(farbe, name, text, raum):
+    """Untertitel; der Nachlauf N im Schwanz `04 01 01 N` kommt aus den Original-Zeilen desselben Raums (nachlauf_r42.py, H4)."""
     kopf = name + ': '
     zeilen = umbruch(text, px(kopf), MAX_PX)
     b = [0x04, 0x00, 0x05, farbe] + kod(name + ':') + [0x05, 0x00, 0x00]
@@ -129,7 +136,8 @@ def untertitel(farbe, name, text):
             b.append(0x08)
         b += kod(z)
     bw = [px(kopf) + px(zeilen[0])] + [px(z) for z in zeilen[1:]]
-    return b + [0x04, 0x01, 0x01, 0x63], zeilen, bw
+    n, _ = nachlauf_r42.nachlauf(raum, len(zeilen))
+    return b + [0x04, 0x01, 0x01, n], zeilen, bw
 
 
 def systemtext(text):
@@ -169,12 +177,13 @@ def main():
            ' * VERTRAG analysis/befunde_runde42/VERTRAG.md 2.3). */']
     tab = []
     for raum, mid, farbe, name, text in UNTERTITEL:
-        b, zeilen, bw = untertitel(farbe, name, text)
+        b, zeilen, bw = untertitel(farbe, name, text, raum)
         for i, w in enumerate(bw):
             if w > MAX_PX:
                 fehler.append('ROOM%04X msg %d Zeile %d = %d px > %d' % (raum, mid, i + 1, w, MAX_PX))
         n = 'k_s3a_%04x_msg%d' % (raum, mid)
-        out += carr(n, b, 'ROOM%04X %d %s: %s  (Zeilen %s px)' % (raum, mid, name, ' / '.join(zeilen), '/'.join(map(str, bw))))
+        out += carr(n, b, 'ROOM%04X %d %s: %s  (Zeilen %s px; %s)' % (raum, mid, name, ' / '.join(zeilen), '/'.join(map(str, bw)),
+                                    nachlauf_r42.nachlauf(raum, len(zeilen))[1]))
         tab.append((raum, mid, n))
     for raum, mid, text in SYSTEM:
         b, zeilen, bw = systemtext(text)
