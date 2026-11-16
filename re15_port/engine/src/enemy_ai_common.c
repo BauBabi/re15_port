@@ -11948,6 +11948,17 @@ static void re15_cockroach_ai_tick(int slot)
  *    sharing this root is 0x36 — STAGE3 registration @0x8011cec0 stores root 0x80116230 to slot 0x30
  *    (sw @0x8011cf48 -> 0x80072c6c) AND slot 0x36 (sw @0x8011cf50 -> 0x80072c84), never 0x33 (raw-verified). */
 static void re15_birkin_clip(re15_actor_t *e, uint8_t c) { e->motion = c; e->anim_frame = 0; e->anim_frac = 7; }
+/* Runde 41 birkin_aufrichten Runde 2 (Pruefer R1): +0x8f-Abzug ERST NACH dem Zeichnen auf den Szenenwegen (Sub 9 Emergence,
+ * Sub 10 Auftritt, Szenen-Modus). FUN_8001f3bc liest +0x8f VOR dem Abzug (`lbu s0,143(v1)` @0x8001f408, `andi a3,s0,0xff`
+ * @0x8001f410), Gewicht der vorigen Pose = (short)Rate * +0x8f (`mult v0,a3` @0x8001f474, `0x1000 - w` @0x8001f4a8-4b0; Knochen
+ * `mult v0,v1` @0x8001f598 mit v1 = s0 & 0xff @0x8001f53c), und zieht erst danach ab (`addiu v0,v0,-1` / `sb v0,143(v1)`
+ * @0x8001f5b0/@0x8001f5b4; bei +0x8f == 0 `bne v1,zero` @0x8001f540 -> kein Abzug). Der Port zeichnet nach dem KI-Bild: zog
+ * re15_birkin_anim schon im KI-Bild ab, sah der Zeichenpfad (skeleton_common.c wp = anim_frac * rate) einen Schritt zu wenig -
+ * gemessen 3071 Sub 10 Phase 6 (+0x8f = 0xf jedes Bild `sb v0,143(v1)` @0x801198d8, a3 0x100 @0x80119918): wp 3584 statt 3840.
+ * Auf diesen Wegen merkt sich re15_birkin_anim den Abzug; re15_birkin_ai_tick holt ihn am Anfang des naechsten KI-Bildes nach,
+ * VOR jedem Phasen-Schreiben (= nach dem Zeichnen, wie @0x8001f5b4 am Ende des vorigen anim_set). Kampfwege unveraendert. */
+static uint8_t s_bk_frac_nach = 0;
+static uint8_t s_bk_frac_offen[RE15_ACTOR_MAX];
 static int re15_birkin_anim(re15_actor_t *e)
 {
     re15_enemy_bank_t *bb = re15_enemy_find(e->type);     /* EM030 clip lengths from the loaded bank */
@@ -11956,7 +11967,9 @@ static int re15_birkin_anim(re15_actor_t *e)
         fc = bb->anim.clips[e->motion].frame_count;
     int done = (e->anim_frame + 1 >= fc);
     e->anim_frame = (uint8_t)((e->anim_frame + 1) % fc);
-    if (e->anim_frac > 0) e->anim_frac--;
+    const int bk_slot = (int)(e - g_actors);
+    if (s_bk_frac_nach && bk_slot >= 0 && bk_slot < RE15_ACTOR_MAX) s_bk_frac_offen[bk_slot] = 1;   /* Abzug nach dem Zeichnen */
+    else if (e->anim_frac > 0) e->anim_frac--;
     return done;
 }
 /* Clip-Laenge wie re15_birkin_anim (Bank, sonst deren Rueckfall 40) — zum Halten des letzten
@@ -11976,6 +11989,38 @@ void re15_r38_opfer_latch(const re15_actor_t *e, re15_actor_t *pl, int variante)
 void re15_r38_opfer_variante(uint8_t v) { g_player_victim_variant = v; }
 int  re15_r38_birkin_anim(re15_actor_t *e) { return re15_birkin_anim(e); }
 int  re15_r38_birkin_fc(const re15_actor_t *e) { return re15_birkin_fc(e); }
+/* Runde 42 Story Stufe STAGE3b, Konzept 5 T-03/T-04: Clip-Ende mit Phasenwechsel und Original-Ueberblendstaerke fuer die zwei
+ * Szenen-Maschinen des 0x30 (Emergence 0x80119378 = 3070-Auftritt, Szenen-Modus 0x80118d00 = Hand im Aufzug 3080).
+ * anim_set FUN_8001f314 posiert das Bild +0x95 (`lbu v0,149(t0)` @0x8001f35c -> `sw a2,360(t0)` @0x8001f36c, Pose FUN_8001f3bc)
+ * und zaehlt ERST DANACH hoch (@0x8001f610-1c); am Clip-Ende `sb zero,149` @0x8001f63c + Rueckgabe 1 (@0x8001f638). Im Wechselbild
+ * steht also das LETZTE Bild auf dem Schirm, der naechste Clip blendet aus dieser Pose. Der Port zeichnet anim_frame NACH dem Vorschub
+ * (re15_birkin_anim): der Umlauf zeigte im Wechselbild Bild 0 des fertigen Clips (gemessen RE15_POSE_LOG 3070: F972 Clip 16 af0 =
+ * Pruefsumme des ersten Bildes F914 = die Hocke, danach Clip 13 mit wp 4096 = 100 % Hocke bis F979). Regel wie sm_anim_halten
+ * (spiderman_r38.c) und bb_anim (birkin_bahnsteig.c): fertig -> anim_frame = fc - 1; Phasen, die den naechsten Clip OHNE
+ * +0x95-Schreiben starten, setzen das Bild selbst auf den Umlaufwert 0.
+ * Ueberblendstaerke = a3 des Aufrufs (Gewicht +0x8f * a3: `mult v0,a3` @0x8001f474 / `mult v0,v1` @0x8001f598, +0x8f -1
+ * @0x8001f5b0-b4) -> anim_blend_rate; ohne sie nimmt der Zeichenpfad 0x200 und klemmt ab frac 8 auf 100 % Vor-Pose
+ * (skeleton_common.c). */
+/* STAGE3b Nachbesserung 1 (Pruefer B2): NUR in STAGE3 (3070 Auftritt, 3080 Hand). Derselbe Auftritt 0x80119378 laeuft in STAGE5
+ * (50E0/50F1 grid 0x33: ROOM50E0 @0xACE / ROOM50F1 @0x9AC `44 00 30 33`, gleiche a3 0x100 @0x80119c44/@0x80119cb8); der Auftrag
+ * verlangt die Endkampf-Raeume unveraendert ("muss der Fix dort etwas aendern, nicht bauen, sondern melden"). Dort laeuft der alte
+ * Weg (re15_birkin_anim ohne Halten und ohne a3). Gemessen (Weg von test_r41_labor_birkin_angriff, Pose-Messschiene): ohne diese
+ * Sperre aendert der Fix in 50E0 und 50F1 je 33 Posen (Wechselbild Clip 0x10 Bild 0 -> 58, Clip 0xd 7 Bilder 100 % Hocke ->
+ * gleitend, derselbe Fehler wie 3070); mit ihr sind Posen, Gewichte und state.log vorher/nachher gleich (Notiz s3b NB1). */
+/* Runde 41 birkin_aufrichten (Nutzerbefund 16.11.2026, Kraftraum: "wenn Birkin im Power Room runter springt und sich aufrichtet
+ * wiederholt sich noch mal die runterbeugen Animation"): die STAGE3-Sperre ist aufgehoben - die Regel gilt jetzt auch fuer den
+ * Kraftraum (STAGE5-Emergence 0x80119b8c instruktionsgleich mit STAGE3 0x80119378, a3 `ori a3,zero,0x100` @0x80119c44 /
+ * @0x80119cb8, Phasentabelle @0x80100464). Andere STAGE5-Raeume erreichen Sub 9/10/Szene nicht (5080/5090 Riesenform ueber
+ * re15_bb_tick, 50A0 Szene in birkin_formen.c); gemessen vorher/nachher bytegleich (Bericht birkin_aufrichten). */
+static int re15_birkin_szene_stage3(void) { return 1; }
+static int re15_birkin_anim_szene(re15_actor_t *e, uint16_t a3)
+{
+    if (!re15_birkin_szene_stage3()) return re15_birkin_anim(e);
+    e->anim_blend_rate = a3;
+    const int fertig = re15_birkin_anim(e);
+    if (fertig) e->anim_frame = (uint8_t)(re15_birkin_fc(e) - 1);
+    return fertig;
+}
 /* MASSE-VORLAUF des laufenden Birkin-Ticks (0 ausserhalb; Runde 4,
  * birkin-bewegung.md Plan 2): der Endkampf-G5 (0x36) traegt die MASSE (Mesh 2)
  * ~4494 Einheiten VOR dem Entity-Ursprung (gemessene Masse-Front, birkin_dbg
@@ -12064,24 +12109,27 @@ static void re15_birkin_szene(re15_actor_t *e)
         re15_audio_room_se(3); re15_audio_room_se(6);              /* @0x80118d9c / @0x80118da4 */
         /* j 0x80119278 */
     case 1:
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* anim_set a3 0x100, += @0x80119294 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x100));   /* a3 0x100 @0x80118dc4, += @0x80119294 */
         break;
     case 2:                                                        /* @0x80118dc8 */
         e->ai_timer = 0xa; e->sub_state_2 = 3; e->motion = 2; e->anim_frac = 0xf;   /* @0x80118dd8-e0c */
+        e->anim_frame = 0;                                         /* kein +0x95-Schreiben: Umlaufwert 0 @0x8001f63c (T-04) */
         re15_audio_room_se(8);                                     /* a0 = 8 @0x80118dc8, jal @0x80118e08 */
         /* faellt in [3] @0x80118e10 */
     case 3:
         re15_birkin_zucken(e);
         if (e->birkin_zuck <= 0) e->sub_state_2 = 6;               /* `bgtz` / +0x6 = 6 @0x80118f58-74 */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* j 0x80119278 @0x80118f8c */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x100));   /* j 0x80119278 @0x80118f8c, a3 0x100 @0x80118f90 */
         break;
     case 4:                                                        /* @0x80118f94 */
         e->sub_state_2 = 5; e->motion = 3; e->anim_frac = 0xf;     /* @0x80118fa0-fc8 */
+        e->anim_frame = 0;                                         /* kein +0x95-Schreiben: Umlaufwert 0 @0x8001f63c (T-04) */
         re15_audio_room_se(9);                                     /* a0 = 9, jal @0x80118fc4 */
         /* faellt in [5] @0x80118fcc */
     case 5:
         re15_birkin_zucken(e);
         if (e->birkin_zuck <= 0) e->sub_state_2 = 6;               /* @0x80119114-130 */
+        e->anim_blend_rate = 0x100;                                /* a3 0x100 @0x8011914c (Schleife, kein Halten) */
         (void)re15_birkin_anim(e);                                 /* anim_set @0x80119148, KEIN += (j @0x80119150) */
         break;
     case 6:                                                        /* @0x80119158 */
@@ -12090,21 +12138,25 @@ static void re15_birkin_szene(re15_actor_t *e)
         /* faellt in [7] @0x801191a4 */
     case 7:
         if (e->anim_frame == 0x14) re15_audio_room_se(4);         /* @0x801191b0-1c4 */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* j 0x80119278 (a3 0x100) */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x100));   /* j 0x80119278, a3 0x100 @0x801191e0 */
         break;
     case 8:                                                        /* @0x801191e4 */
         re15_game_flag_set(5, 0x1f, 1);                            /* @0x8011921c */
         e->sub_state_2 = 9; e->motion = 4; e->anim_frac = 3;       /* @0x801191f8-220 */
+        e->anim_frame = 0;                                         /* kein +0x95-Schreiben: Umlaufwert 0 @0x8001f63c (T-04) */
         re15_audio_room_se(0);                                     /* j 0x80119258, a0 = 0 @0x80119228 */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* a3 0x400 @0x80119274 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x400));   /* a3 0x400 @0x80119274 */
         break;
     case 9: case 11:                                               /* @0x80119260 */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x400));   /* a3 0x400 @0x80119274 */
         break;
     case 10:                                                       /* @0x8011922c */
+        /* T-04: zweiter Stoss = derselbe Clip 4 noch einmal (kein +0x94-Schreiben), ab Bild 0 = Umlaufwert @0x8001f63c, aus dem
+         * gehaltenen letzten Bild des ersten Stosses mit frac 3 * a3 0x400 uebergeblendet - der Arm springt nicht zurueck. */
         e->sub_state_2 = 0xb; e->anim_frac = 3;                    /* @0x80119238-250 */
+        e->anim_frame = 0;
         re15_audio_room_se(0); re15_audio_room_se(1);              /* @0x8011924c / a0 = 1 @0x80119254, jal @0x80119258 */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x400));   /* a3 0x400 @0x80119274 */
         break;
     case 12:                                                       /* @0x801192a0 */
         re15_game_flag_set(5, 0x1e, 1);                            /* @0x801192f4 */
@@ -12114,7 +12166,7 @@ static void re15_birkin_szene(re15_actor_t *e)
         /* faellt in [13] @0x80119304 */
     case 13:
         e->anim_flags |= 0x80u;                                    /* a2 = 1 @0x8011930c */
-        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x80119318-338 */
+        e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x400));   /* @0x80119318-338, a3 0x400 @0x8011931c */
         e->crow_speed = (uint16_t)(e->crow_speed + 50);            /* +0x8c += 50 @0x80119350 */
         re15_dog_advance_ofs(e, 0x800);                            /* FUN_800245d8(0x800) @0x80119354 */
         break;
@@ -12156,6 +12208,11 @@ static void re15_birkin_ai_tick(int slot)
     re15_actor_t *e  = &g_actors[slot];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     s_bk_masse = (e->type == 0x36) ? 4494 : 0;
+    s_bk_frac_nach = 0;
+    if (s_bk_frac_offen[slot]) {                       /* +0x8f-Abzug des vorigen Szenen-anim_set (@0x8001f5b0/@0x8001f5b4), */
+        s_bk_frac_offen[slot] = 0;                     /* nach dessen Zeichnen und vor jedem Phasen-Schreiben (s. re15_birkin_anim) */
+        if (e->anim_frac > 0) e->anim_frac--;
+    }
 
     /* ============================ ROOT pre-dispatch (0x80116230) ============================ */
     if (e->birkin_hurt_cd > 0) {                       /* +0x1de countdown @0x801163c8-3d4 */
@@ -12246,7 +12303,9 @@ static void re15_birkin_ai_tick(int slot)
          * Typ 0x36 grid 0x24 @0x007D4; Member_set(0x0c,4) @0x00934). Vorher kaempfte der Port dort normal und
          * griff Leon/Elza mitten in der Szene an. */
         if ((e->grid_id & 0xf) == 4) {
+            s_bk_frac_nach = 1;                        /* Szenen-Modus: +0x8f vor dem Abzug ins Gewicht (s. re15_birkin_anim) */
             if (e->sub_state_1 == 0) re15_birkin_szene(e);
+            s_bk_frac_nach = 0;
             break;
         }
         /* ---- DECIDE[0] 0x80116ec4: promote sub 0 -> sub 1 ---- */
@@ -12476,22 +12535,34 @@ static void re15_birkin_ai_tick(int slot)
             break;
         }
         case 9: {  /* EMERGENCE 0x80119378: clip 0x10 (Se3) -> clip 0xd (Se10) -> immediate LUNGE (sub 3), grid&=0xfc */
+            s_bk_frac_nach = 1;                        /* Szenenweg: +0x8f vor dem Abzug ins Gewicht (s. re15_birkin_anim) */
             if (e->sub_state_2 == 0) {                 /* phase 0 @0x801193d4: clip 0x10, Se(3) */
                 re15_birkin_clip(e, 0x10); e->anim_frac = 0; e->sub_state_2 = 1;
                 re15_audio_room_se(3);                                 /* Se(3) @0x80119410 */
             }
+            /* Runde 42 STAGE3b T-03: re15_birkin_anim_szene = letztes Bild im Wechselbild + a3 0x100 (@0x80119430 / @0x801194a4).
+             * Phase 2 schreibt +0x95 nicht (Bild 0 = Umlaufwert @0x8001f63c); re15_birkin_clip setzt es. Phase 4 ruft kein anim_set:
+             * das letzte Bild von Clip 0xd bleibt stehen (der Port haelt fc - 1). */
             if (e->sub_state_2 == 1) {                 /* phase 1 @0x80119418: play clip 0x10 */
-                if (re15_birkin_anim(e)) e->sub_state_2 = 2;
+                if (re15_birkin_anim_szene(e, 0x100)) e->sub_state_2 = 2;
             } else if (e->sub_state_2 == 2) {          /* phase 2 @0x80119454: SECOND clip 0xd, Se(10) */
-                re15_birkin_clip(e, 0x0d); e->anim_frac = 0xf; e->sub_state_2 = 3;
+                re15_birkin_clip(e, 0x0d); e->anim_frac = 0xf; e->sub_state_2 = 3;   /* +0x94 0xd @0x80119464, +0x8f 0xf @0x80119488 */
                 re15_audio_room_se(10);                                /* Se(10) @0x80119484 */
-                re15_birkin_anim(e);
+                re15_birkin_anim_szene(e, 0x100);                      /* @0x801194a0, a3 0x100 @0x801194a4 */
             } else if (e->sub_state_2 == 3) {          /* phase 3 @0x8011948c: play clip 0xd */
-                if (re15_birkin_anim(e)) e->sub_state_2 = 4;
+                if (re15_birkin_anim_szene(e, 0x100)) e->sub_state_2 = 4;
             } else {                                   /* phase 4 @0x801194d0: -> LUNGE (sub 3), grid&=0xfc */
+                /* STAGE3b Nachbesserung 1 (Pruefer B1): die Szenen-Staerke a3 0x100 darf nicht in den Kampf laufen. Die Port-Kampf-KI
+                 * des 0x30 setzt kein a3 (Zeichenpfad-Standard 0x200, skeleton_common.c); ihre Original-Werte je Aufruf (z. B. Lunge
+                 * 0x100 @0x80117644, Tod 0x200 @0x8011a764) sind ein eigener, alter Abstand (OFFEN). Der Kampf laeuft damit wie vor T-03.
+                 * OFFEN (Pruefer STAGE3b Runde 2, R2-2): der Uebergang Auftritt -> Kampf steht dadurch 12 Bilder still (frac 14 x 0x200
+                 * auf 100 % gekappt); im Original blendet der Lunge mit a3 0x100 @0x80117644 (14 x 0x100 = 3584). Behoben wird das NICHT
+                 * hier, sondern im Umbau des Klauenhiebs (case 3) auf Zweig r41/birkin_kralle. */
+                if (re15_birkin_szene_stage3()) e->anim_blend_rate = 0;
                 e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* sub=3 @0x801194d8, phase=0 @0x801194ec */
                 e->grid_id = (uint8_t)(e->grid_id & 0xfc);            /* grid&=0xfc (0x33->0x30) @0x80119504 */
             }
+            s_bk_frac_nach = 0;
             break;
         }
         case 10: {  /* AUFTRITT 0x80119524 (grid-Nibble 1, z.B. ROOM3071 sub02 Member_set(0x0c,1) @0x03645): 14 Phasen
@@ -12502,6 +12573,14 @@ static void re15_birkin_ai_tick(int slot)
                      * Schuessen trafen (Runde 41 Spur R, Nachbesserung). ROOM3071 sub02 WARTET auf die beiden Flags
                      * (While/Ck(5,31)==0 @0x0364D, Ck(5,30) @0x03669) — der verdichtete Auftritt setzte sie zu spaet bzw.
                      * nie (Nutzer-Report "Elza Stage 3 bleibt bei der Birkin-Szene haengen"). */
+            /* Runde 41 birkin_aufrichten (Nutzerbefund 16.11.2026), Regel wie T-03/T-04 (re15_birkin_anim_szene): alle sechs
+             * anim_set-Aufrufe des Auftritts tragen a3 0x100 (`ori a3,zero,0x100` @0x801195e8 / @0x801196fc / @0x8011982c /
+             * @0x80119918 / @0x8011998c / @0x80119a7c, STAGE3; STAGE5 code-gleich +0x814) -> Ueberblendgewicht +0x8f * 0x100
+             * (`mult v0,a3` @0x8001f474) statt des Port-Rueckfalls 0x200 (100 % Vor-Pose ab frac 8, skeleton_common.c).
+             * Clipenden mit Phasenwechsel (3 -> 4 Clip 0xf, 7 -> 8 Clip 0xd) halten das letzte Bild im Wechselbild (anim_set
+             * posiert +0x95 vor dem ++ @0x8001f35c/@0x8001f618); gemessen vorher: Bild 0 von Clip 0xf bzw. 0xd im Wechselbild. */
+            e->anim_blend_rate = 0x100;
+            s_bk_frac_nach = 1;                        /* Szenenweg: +0x8f vor dem Abzug ins Gewicht (s. re15_birkin_anim) */
             switch (e->sub_state_2) {
             case 0:                                                    /* @0x80119580 */
                 e->sub_state_2 = 1; e->motion = 1; e->anim_frame = 0; e->anim_frac = 0xf;   /* @0x80119588-5bc */
@@ -12518,7 +12597,7 @@ static void re15_birkin_ai_tick(int slot)
                 e->ai_timer = 0x96;                                    /* @0x801196dc-6e0 */
                 /* faellt in [3] */
             case 3:                                                    /* @0x801196e4 */
-                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x801196f8-718 */
+                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x100));   /* @0x801196f8-718, a3 @0x801196fc */
                 if (e->anim_frame == 0x5b) {                           /* @0x80119728-730 */
                     re15_audio_room_se(6);                             /* @0x80119738 */
                     e->birkin_rohr = 1;                                /* Teil 16 -> 15 @0x80119754-7b8 */
@@ -12542,14 +12621,22 @@ static void re15_birkin_ai_tick(int slot)
                 if (e->anim_frame == 0x3c) re15_audio_room_se(3);     /* @0x801198e8-8fc */
                 /* faellt in [7] @0x80119900 */
             case 7:
-                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x80119914-938 */
-                {   int32_t d[2];                              /* 8011b5c4(0,1) @0x80119934 */
-                    re15_birkin_fuss_schritt(e, d);
-                    e->x -= d[0]; e->z -= d[1];
+                /* Phase 6 setzt +0x94/+0x6/+0x8f JEDES Bild und laesst Clip 0xd vom Bild des Gangs weiterlaufen (kein
+                 * +0x95-Schreiben @0x801198ac-8d8); sein Ende ist KEIN Clipwechsel (Phase 7 spielt denselben Clip ab dem
+                 * Umlaufwert 0 noch einmal = Original) -> Vorschub wie im Kreis. Erst das Ende in Phase 7 wechselt auf Clip 0x13:
+                 * dort steht das letzte Bild im Wechselbild. */
+                {   const int halten = (e->sub_state_2 == 7);
+                    const int fertig = re15_birkin_anim(e);            /* anim_set @0x80119914, a3 0x100 (Rate oben) */
+                    int32_t d[2];                              /* 8011b5c4(0,1) @0x80119934 - NACH anim_set, liest den gerade */
+                    re15_birkin_fuss_schritt(e, d);            /* gezeichneten Schritt (Bild - 1) -> mit dem Umlaufwert, VOR dem */
+                    e->x -= d[0]; e->z -= d[1];                /* Halten (sonst zaehlte der vorletzte Schritt doppelt) */
+                    if (halten && fertig) e->anim_frame = (uint8_t)(re15_birkin_fc(e) - 1);   /* wie re15_birkin_anim_szene */
+                    e->sub_state_2 = (uint8_t)(e->sub_state_2 + fertig);   /* += @0x80119938 */
                 }
                 break;
             case 8:                                                    /* @0x80119944 */
                 e->motion = 0x13; e->sub_state_2 = 9; e->anim_frac = 0xf;   /* @0x8011994c-970 */
+                e->anim_frame = 0;                                     /* kein +0x95-Schreiben: Umlaufwert 0 @0x8001f63c (Phase 7 hielt fc - 1) */
                 /* faellt in [9] @0x80119974 */
             case 9:
                 (void)re15_birkin_anim(e);                             /* @0x80119988 */
@@ -12569,11 +12656,13 @@ static void re15_birkin_ai_tick(int slot)
                 if (e->ai_timer-- == 0) e->sub_state_2 = 0xd;         /* @0x80119ab8-adc */
                 break;
             default:                                                   /* [13] @0x80119ae0 */
+                e->anim_blend_rate = 0;   /* wie Sub 9 Phase 4 (r42/story NB1 B1): die Auftritts-Staerke 0x100 laeuft nicht in den Kampf */
                 e->sub_state_1 = 3; e->sub_state_2 = 0;                /* +0x5 = 3 @0x80119aec, +0x6 = 0 @0x80119afc */
                 e->grid_id = (uint8_t)(e->grid_id & 0xfe);             /* @0x80119b14-18 */
                 /* Wort0 &= ~8 @0x80119b2c-34 (INIT setzt es fuer Nibble 1): Port-Gegenstueck = Sub 10 in re15_birkin_root */
                 break;
             }
+            s_bk_frac_nach = 0;
             break;
         }
         case 11: {  /* RUN-OFF 0x80119b50: run to the fixed morph point (-22000,-12000), freeze there (next-form handoff) */
@@ -12694,10 +12783,12 @@ static void re15_birkin_ai_tick(int slot)
         case 0:   /* phase 0 @0x8011a618: clip 9 collapse, +0x93|=1, Se(1), phase->1 */
             re15_birkin_clip(e, 9); e->anim_frac = 7; e->hit_react |= 1;   /* clip 9 @0x8011a634, +0x93|=1 @0x8011a66c */
             re15_audio_room_se(1);                     /* Se(1) @0x8011a670 */
+            e->anim_blend_rate = 0x200;                /* j 0x8011a73c @0x8011a688 -> anim_set a3 0x200 @0x8011a764 (STAGE3b NB1 B1) */
             e->sub_state_3 = 1;
             break;
         case 1:   /* phase 1 @0x8011a678: play clip 9, Se(10)@frame 0x50, -> phase 2 */
             if (e->anim_frame == 0x50) re15_audio_room_se(10);        /* Se(10) @0x8011a744 */
+            e->anim_blend_rate = 0x200;                /* a3 0x200 @0x8011a764 (STAGE5 @0x8011af78); STAGE3b NB1 B1 */
             /* ⛔ RUNDE 34 NACHBESSERUNG (mess_geg M-B1: "Birkin steht in Todesphase 3 wieder auf",
              * F235 liegt, F240/F260 steht, Zustandslog st 3/9/1/3 mo 9 af 0). Selbst disassembliert:
              * Phase 1 ruft `jal 0x8001f314` @0x8011a760 (+0x7 += v0 @0x8011a77c-84); FUN_8001f314 ->
@@ -12745,9 +12836,11 @@ static void re15_birkin_ai_tick(int slot)
             break;
         case 4:   /* phase 4 @0x8011a6e8: SECOND collapse clip 0xc, phase->5 */
             re15_birkin_clip(e, 0x0c); e->anim_frac = 0; e->sub_state_3 = 5;   /* clip 0xc @0x8011a704 */
+            e->anim_blend_rate = 0x200;                /* faellt @0x8011a738 in anim_set a3 0x200 @0x8011a764 */
             break;
         case 5:   /* phase 5 @0x8011a728: play clip 0xc, Se(10)@frame 0x3c, -> phase 6 */
             if (e->anim_frame == 0x3c) re15_audio_room_se(10);        /* Se(10)@0x3c @0x8011a744 */
+            e->anim_blend_rate = 0x200;                /* dasselbe anim_set, a3 0x200 @0x8011a764 (STAGE5 @0x8011af78) */
             /* NACHBESSERUNG M-B1: dasselbe anim_set @0x8011a760 (Phase 4 faellt @0x8011a724 in den
              * Phase-5-Code); Phase 6 @0x8011a788 schreibt nur das Zustandswort 0xb01 -> bis zum
              * naechsten Clip bleibt das letzte Bild von Clip 0xc stehen. */

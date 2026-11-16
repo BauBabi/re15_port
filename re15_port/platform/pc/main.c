@@ -12124,6 +12124,14 @@ re_title:;
                      (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->rot_y, nmask);
             re15_render_pc_debug_text(4, 4, hud);
         }
+        /* MESSHAKEN RE15_BILD_HUD=1 (Runde 41 birkin_aufrichten, KEIN Verhalten): Spielbildnummer oben links, damit eine
+         * gdigrab-Aufnahme in Zeitlupe jedes Bild der Pose-Messschiene (RE15_POSE_LOG, Spalte F) zuordnen kann. */
+        if (getenv("RE15_BILD_HUD")) {
+            extern int re15_render_pc_debug_text(int x, int y, const char *str);
+            char bh[24];
+            snprintf(bh, sizeof bh, "F%u", (unsigned)g_engine.frame_count);
+            re15_render_pc_debug_text(4, 14, bh);
+        }
         if (re15_debug_menu_open()) {
             extern int  re15_render_pc_debug_text(int x, int y, const char *str);
             extern void re15_render_pc_debug_box(int rg);
