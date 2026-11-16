@@ -284,6 +284,39 @@ static int bkk_dreieck(const double o[3], const double d[3], const double a[3], 
     const double t = (e2[0] * qv[0] + e2[1] * qv[1] + e2[2] * qv[2]) * inv;
     return t > 0.0 && t < tmax;
 }
+/* Verdeckung durch die SPIELFIGUR (Messbild r2/mb/kontakt2_50E0.png: F1477 und F1730 lag die Einschlagstelle an der Suedwand
+ * hinter Leon). Das Spielermodell liegt nur im PC-Zeichner; die Engine kennt den Koerper der Figur als Trefferzylinder des
+ * Originals: EXE-Struktur @0x80073e94 (PSX.EXE Datei-Offset 0x64694) = Mittelpunkt-Versatz (0,-1530,0), Radius 450, halbe
+ * Hoehe 1530 (re15_player_apply_hitbox, re15_damage.c; Felder +0x78/+0x7c). Strahl Kamera -> Einschlagstelle schneidet diesen
+ * Zylinder vor der Stelle = verdeckt. */
+static int bkk_zylinder(const double o[3], const double d[3], double tmax, const re15_actor_t *a)
+{
+    if (!a || !a->active || !a->hit_radius_max || !a->hit_height) return 0;
+    const double cx = a->x + a->hit_offset_x, cy = a->y + a->hit_offset_y, cz = a->z + a->hit_offset_z;
+    const double r = a->hit_radius_max, h = a->hit_height;
+    double t0 = 0.0, t1 = tmax;
+    /* waagerecht: |(o + t d) - c|_xz <= r */
+    const double fx = o[0] - cx, fz = o[2] - cz;
+    const double A = d[0] * d[0] + d[2] * d[2], B = 2.0 * (fx * d[0] + fz * d[2]), C = fx * fx + fz * fz - r * r;
+    if (A < 1e-9) { if (C > 0.0) return 0; }
+    else {
+        const double disk = B * B - 4.0 * A * C;
+        if (disk < 0.0) return 0;
+        const double q = sqrt(disk), a1 = (-B - q) / (2.0 * A), a2 = (-B + q) / (2.0 * A);
+        if (a1 > t0) t0 = a1;
+        if (a2 < t1) t1 = a2;
+    }
+    /* senkrecht: cy - h <= o.y + t d.y <= cy + h */
+    if (d[1] > -1e-9 && d[1] < 1e-9) { if (o[1] < cy - h || o[1] > cy + h) return 0; }
+    else {
+        double b1 = (cy - h - o[1]) / d[1], b2 = (cy + h - o[1]) / d[1];
+        if (b1 > b2) { const double tt = b1; b1 = b2; b2 = tt; }
+        if (b1 > t0) t0 = b1;
+        if (b2 < t1) t1 = b2;
+    }
+    return t0 < t1 && t1 > 0.0;
+}
+
 static void bkk_welt(const re15_bkk_lage_t *l, const re15_md1_vertex_t *v, int32_t w[3]);
 static int bkk_verdeckt(const re15_bkk_sicht_t *si, const int32_t p[3])
 {
@@ -297,6 +330,7 @@ static int bkk_verdeckt(const re15_bkk_sicht_t *si, const int32_t p[3])
     const double len = sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
     if (len < 2.0) return 0;
     const double tmax = 1.0 - 1.0 / len;                     /* mehr als 1 Einheit vor der Einschlagstelle */
+    if (bkk_zylinder(o, d, tmax, &g_actors[RE15_ACTOR_SLOT_PLAYER])) return 1;
     for (int k = 0; k < n && k < bk->md1.mesh_count; k++) {
         if (k == BKK_TEIL) continue;
         const re15_md1_mesh_t *m = &bk->md1.meshes[k];

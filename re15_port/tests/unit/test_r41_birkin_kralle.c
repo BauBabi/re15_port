@@ -52,6 +52,10 @@
  *                        liegt die Einschlagstelle an der Ostwand #4 im Bild, aber hinter Birkins eigenem gezeichneten Koerper
  *                        -> kein Rueckzug dort; der erste sichtbare Treffer kommt beim Absenken (af 67), Rueckzug im Kontaktbild.
  *                        Gegenprobe Stand 46ead4341 (ohne Verdeckung): Rueckzug schon bei af 36.
+ *   schwanz_spieler      50E0 vor der Suedwand #3, Birkin (-8000,-25200), Leon (-6800,-26500), Cut 5. Ohne Spielerkoerper trifft
+ *                        die Klinge #3 sichtbar (af 37) -> Rueckzug; mit dem Trefferzylinder der Figur (EXE @0x80073e94) liegt die
+ *                        Einschlagstelle hinter Leon -> kein Rueckzug. Gegenprobe Stand 2d3bcef24 (ohne Spielerkoerper): Rueckzug
+ *                        auch mit Zylinder.
  *   schwanz_abdeckung    jede SCA-Zelle (Band 0, solide) von ROOM50E0/50F1/50A0/50A1 steht in der Tabelle sichtbarer Waende
  *                        (re15_bkk_zelle_art != 0) - keine Zelle gilt mehr ungeprueft als Wand.
  */
@@ -177,6 +181,14 @@ typedef struct {
 #define BK_WAND_CUT 4
 #endif
 static int s_cut = 0;   /* Kamera des laufenden Cuts (g_scd.cam_id) fuer den Hieb */
+#ifndef BK_SP_BX
+#define BK_SP_BX (-8000)    /* Lage aus einer Suche ueber 32 Lagen vor der Suedwand #3 (r2/probe_vd), Cut 5 */
+#define BK_SP_BZ (-25200)
+#define BK_SP_PX (-6800)
+#define BK_SP_PZ (-26500)
+#endif
+static int s_spieler_koerper = 0;   /* 1 = Trefferzylinder der Spielfigur setzen (re15_player_apply_hitbox, @0x80073e94) */
+void re15_player_apply_hitbox(re15_actor_t *p);
 static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t pz, int32_t seitlich)
 {
     g_scd.cam_id = (uint8_t)s_cut;
@@ -184,6 +196,7 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
     memset(g_actors, 0, sizeof g_actors);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->x = px; pl->y = 0; pl->z = pz; pl->hp = 100; pl->hit_react = 1;
+    if (s_spieler_koerper) re15_player_apply_hitbox(pl);
     re15_actor_t *e = &g_actors[1];
     e->active = 1; e->type = 0x30; e->state = 0; e->grid_id = grid; e->x = bx; e->y = 0; e->z = bz;
     re15_enemy_apply_hitbox(e, 0x30);
@@ -352,6 +365,22 @@ int main(int argc, char **argv)
         CHECK(r.sonde_af < 0 || r.sonde_af >= 67, "schwanz_verdeckt: beim Schlag (af 35/36) liegt die Einschlagstelle hinter Birkins Koerper -> kein Rueckzug vor af 67, war af %d", r.sonde_af);
         CHECK(r.kontakt_af == 67 && r.kontakt_zelle == 4, "schwanz_verdeckt: erster sichtbarer Treffer an #4 beim Absenken (af 67), war af %d Zelle %d", r.kontakt_af, r.kontakt_zelle);
         CHECK(r.clip_a && r.sonde_af == r.kontakt_af && r.durch == 0, "schwanz_verdeckt: Rueckzug im Kontaktbild (kontakt_af %d, sonde_af %d)", r.kontakt_af, r.sonde_af);
+        re15_bk_kralle_logik_setzen(NULL, 0);
+    }
+    if (!strcmp(fall, "schwanz_spieler")) {
+        if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
+        re15_bk_kralle_logik_setzen(s_blob, s_blob_len);
+        if (!raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50E0.RDT", 0x50E0u)) { fprintf(stderr, "FAIL: ROOM50E0 nicht ladbar\n"); return 1; }
+        s_cut = 5;
+        s_spieler_koerper = 0;
+        ergebnis_t r0 = hieb(0x10, BK_SP_BX, BK_SP_BZ, BK_SP_PX, BK_SP_PZ, 0);
+        s_spieler_koerper = 1;
+        ergebnis_t r1 = hieb(0x10, BK_SP_BX, BK_SP_BZ, BK_SP_PX, BK_SP_PZ, 0);
+        s_spieler_koerper = 0;
+        printf("%s: ohne Koerper clip0xa=%d kontakt_af=%d zelle=%d | mit Koerper clip0xa=%d kontakt_af=%d sonde_af=%d durch=%d\n", fall,
+               r0.clip_a, r0.kontakt_af, r0.kontakt_zelle, r1.clip_a, r1.kontakt_af, r1.sonde_af, r1.durch);
+        CHECK(r0.clip_a && r0.kontakt_zelle == 3, "schwanz_spieler: ohne Spielerkoerper trifft die Klinge #3 sichtbar (Lage pruefen), kontakt_af %d Zelle %d", r0.kontakt_af, r0.kontakt_zelle);
+        CHECK(!r1.clip_a && r1.kontakt_af < 0, "schwanz_spieler: Einschlagstelle hinter Leon -> kein Rueckzug (kontakt_af %d)", r1.kontakt_af);
         re15_bk_kralle_logik_setzen(NULL, 0);
     }
     if (!strcmp(fall, "schwanz_abdeckung")) {
