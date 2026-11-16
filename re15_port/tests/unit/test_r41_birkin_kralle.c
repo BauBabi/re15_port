@@ -27,7 +27,17 @@
  *   hangar       gezeichnete Bank = EM30_HANGAR.EMD, Logik-Gerippe = EM30, Birkin so weit vor Zelle #8, dass nur der Hangar-Arm
  *                sie erreicht: KEIN Clip 0xa, +0x1df 0x1e. Gegenprobe (Stand r1 45dbd9e10, ohne Logik-Gerippe): Clip 0xa.
  *   hangar_ohne  dieselbe Lage ohne Logik-Gerippe: Clip 0xa (die Lage trennt die beiden Arme wirklich).
- *   hangar_wand  Logik-Gerippe, Birkin an Zelle #8 wie `wand`: die Sonde wirkt weiter (Clip 0xa bis 0x1e, +0x1df 0x3c).
+ *   hangar_wand  Logik-Gerippe, Birkin an Zelle #8 wie `wand`: Clip 0xa bis 0x1e, +0x1df 0x3c. Seit Runde 1 "synchron" loest das
+ *                die GEZEICHNETE Klaue aus (ROOM3070 steht nicht in der Tabelle sichtbarer Waende -> alle Zellen Wand).
+ *
+ * Runde 1 "synchron" (NUTZERENTSCHEID 16.11.2026: Rueckzug nur, wenn die Klaue sichtbar gegen eine Wand schlaegt, synchron dazu;
+ * nur Schwanz-Gestalt = Ersatzmodell gezeichnet, re15_birkin_klaue_r41.h). Echte Raeume ROOM50A0 / ROOM50F1:
+ *   schwanz_wand       Hangar 50A0, Birkin vor der Ostwand #4 (x >= -2700): in keinem Takt der Phase 1 steckt die gezeichnete
+ *                      Klinge in der Wand, ohne dass im SELBEN Takt +0x6 = 3 gesetzt wird; der naechste Takt laeuft Clip 0xa mit
+ *                      +0x8f = RE15_BKK_UEBERBLENDUNG - 1. Gegenprobe Merge-Commit e7858c897: die Klinge steckt Takte lang in der
+ *                      Wand, bevor die Capcom-Sonde (erst ab +0x95 0x24) anschlaegt.
+ *   schwanz_gelaender  Labor 50F1, Birkin vor dem Gelaender #12 (Oberkante 1900 gemessen): die gezeichnete Klinge kommt nicht
+ *                      unter die Oberkante -> kein Clip 0xa. Gegenprobe Merge-Commit: die Capcom-Sonde schlaegt bei af 40 an.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -43,6 +53,7 @@
 #include "re15_emd.h"
 #include "re15_damage.h"
 #include "re15_collision.h"
+#include "re15_birkin_klaue_r41.h"
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -51,6 +62,21 @@
 extern int16_t re15_atan2_q12(int32_t, int32_t);
 
 static int fails = 0;
+#ifndef BK_WAND_X
+#define BK_WAND_X (-4000)
+#endif
+#ifndef BK_GEL_X
+#define BK_GEL_X (-12200)
+#endif
+#ifndef BK_GEL_DX
+#define BK_GEL_DX 1200
+#endif
+#ifndef BK_GEL_DZ
+#define BK_GEL_DZ 0
+#endif
+#ifndef BK_GEL_Z
+#define BK_GEL_Z (-16000)
+#endif
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); fprintf(stderr, "\n"); fails++; } } while (0)
 
 static uint8_t *slurp(const char *p, size_t *n)
@@ -67,6 +93,7 @@ static uint8_t s_blob[0x80000];
 static size_t s_blob_len = 0;
 static uint8_t *s_hangar = NULL;
 void re15_bk_kralle_logik_setzen(const uint8_t *em30, size_t len);   /* enemy_ai_common.c */
+int re15_bk_kralle_logik_aktiv(void);
 /* gezeichnete 0x30-Bank = EM30_HANGAR.EMD (Ersatzmodell Labor/Hangar); s_blob behaelt das EM30 fuer das Logik-Gerippe */
 static int hangar_bank(void)
 {
@@ -108,14 +135,29 @@ static int16_t blick(int32_t ex, int32_t ez, int32_t tx, int32_t tz)
     return (int16_t)((((int)re15_atan2_q12(tz - ez, tx - ex) - 0x400)) & 0xfff);
 }
 
+static uint8_t *s_raum_raw = NULL;
+static int raum_laden(const char *datei, uint16_t id)
+{
+    size_t n = 0;
+    free(s_raum_raw);
+    s_raum_raw = slurp(datei, &n);
+    if (!s_raum_raw || re15_rdt_parse(s_raum_raw, n, &g_room_rdt) != 0) return 0;
+    g_room_rdt_ok = 1;
+    g_current_room_id = id;
+    re15_collision_reset_band();
+    re15_collision_set_band(0);
+    return 1;
+}
+
 typedef struct {
     int ticks, clip_a, clip_a_max, clip3_max, aus_sub, cd, gier_dreht, sonde_af;
+    int kontakt_af, durch, frac_a;   /* Runde 1 synchron: erstes Kontaktbild, Takte Klinge-in-Wand ohne +0x6 = 3, +0x8f im 1. 0xa-Takt */
 } ergebnis_t;
 
 /* Ein Hieb ab Phase 0. seitlich != 0: der Spieler geht ab Phase 1 je Bild um `seitlich` in Z. */
 static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t pz, int32_t seitlich)
 {
-    ergebnis_t r; memset(&r, 0, sizeof r); r.sonde_af = -1;
+    ergebnis_t r; memset(&r, 0, sizeof r); r.sonde_af = -1; r.kontakt_af = -1; r.frac_a = -1;
     memset(g_actors, 0, sizeof g_actors);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->x = px; pl->y = 0; pl->z = pz; pl->hp = 100; pl->hit_react = 1;
@@ -132,7 +174,11 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
         re15_enemy_ai_run_all(0);
         r.ticks++;
         if (e->sub_state_1 != 3) { r.aus_sub = e->sub_state_1; r.cd = e->birkin_atk_cd; break; }
-        if (e->motion == 0x0a) { r.clip_a = 1; if (e->anim_frame > r.clip_a_max) r.clip_a_max = e->anim_frame; }
+        if (e->motion == 0x0a) { if (!r.clip_a) r.frac_a = e->anim_frac; r.clip_a = 1; if (e->anim_frame > r.clip_a_max) r.clip_a_max = e->anim_frame; }
+        if (e->motion == 3 && (e->sub_state_2 == 1 || e->sub_state_2 == 3) && re15_bk_kralle_logik_aktiv() && re15_bkk_kontakt(e)) {
+            if (r.kontakt_af < 0) r.kontakt_af = e->anim_frame;
+            if (e->sub_state_2 == 1) r.durch++;          /* Klinge steckt (Pose dieses Takts), Rueckzug nicht ausgeloest */
+        }
         if (e->motion == 3 && e->anim_frame > r.clip3_max) r.clip3_max = e->anim_frame;
         if (ph_vor == 1 && e->sub_state_2 == 3 && r.sonde_af < 0) r.sonde_af = e->anim_frame;
         if (e->sub_state_2 == 1) {
@@ -198,6 +244,34 @@ int main(int argc, char **argv)
         } else {
             CHECK(r.clip_a && r.clip_a_max == 0x1e, "hangar_wand: die Sonde wirkt mit dem Logik-Gerippe weiter, Clip 0xa bis 0x1e (@0x8011795c-970), war %d/%d", r.clip_a, r.clip_a_max);
             CHECK(r.aus_sub == 1 && r.cd == 0x3c, "hangar_wand: +0x1df 0x3c (@0x801179a4-a8), aus_sub=%d cd=0x%02x", r.aus_sub, r.cd);
+        }
+        re15_bk_kralle_logik_setzen(NULL, 0);
+    }
+    if (!strcmp(fall, "schwanz_wand") || !strcmp(fall, "schwanz_gelaender")) {
+        if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
+        re15_bk_kralle_logik_setzen(s_blob, s_blob_len);
+        const int wand = !strcmp(fall, "schwanz_wand");
+        if (wand ? !raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50A0.RDT", 0x50A0u)
+                 : !raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50F1.RDT", 0x50F1u)) {
+            fprintf(stderr, "FAIL: Raum nicht ladbar\n"); return 1;
+        }
+        /* wand: Ostwand #4 (x -2700..-700, z -28700..-8200), Birkin 1300 davor (x -4000), Blick +x, Spieler 1200 vor ihm.
+         *   Gegenprobe Merge-Commit (Lagesuche suche/): Klinge 3 Takte in der Wand (af 35..37), Sonde erst bei af 38, +0x8f 2.
+         * gelaender: Laufsteg zwischen #2 (x <= -14245) und #12 (x >= -9725), Birkin bei (-12200, -16000), Blick +x auf #12.
+         *   Neu: die gezeichnete Klinge kommt in keinem Bild unter die Oberkante 1900 von #12 -> kein Clip 0xa. Gegenprobe
+         *   Merge-Commit: die Capcom-Sonde (EM30-Klauenpunkt, Radius 0x190 @0x80117818) schlaegt bei af 40 an -> Clip 0xa. */
+        ergebnis_t r = wand ? hieb(0x10, BK_WAND_X, -15000, BK_WAND_X + 1200, -15000, 0) : hieb(0x10, BK_GEL_X, BK_GEL_Z, BK_GEL_X + BK_GEL_DX, BK_GEL_Z + BK_GEL_DZ, 0);
+        printf("%s: ticks=%d clip0xa=%d bis Bild %d kontakt_af=%d durch=%d frac_a=%d sonde_af=%d aus_sub=%d cd=0x%02x\n", fall,
+               r.ticks, r.clip_a, r.clip_a_max, r.kontakt_af, r.durch, r.frac_a, r.sonde_af, r.aus_sub, r.cd);
+        if (wand) {
+            CHECK(r.kontakt_af >= 0, "schwanz_wand: die gezeichnete Klinge muss die Ostwand #4 erreichen (Lage pruefen)");
+            CHECK(r.durch == 0, "schwanz_wand: %d Takt(e) steckt die gezeichnete Klinge in der Wand, ohne dass +0x6 = 3 gesetzt wird", r.durch);
+            CHECK(r.clip_a && r.sonde_af == r.kontakt_af, "schwanz_wand: Rueckzug im Kontaktbild (af %d), ausgeloest bei af %d", r.kontakt_af, r.sonde_af);
+            CHECK(r.frac_a == RE15_BKK_UEBERBLENDUNG - 1, "schwanz_wand: erster 0xa-Takt +0x8f = %d erwartet, war %d", RE15_BKK_UEBERBLENDUNG - 1, r.frac_a);
+            CHECK(r.aus_sub == 1 && r.cd == 0x3c, "schwanz_wand: Phase 5 -> HUB mit +0x1df 0x3c (@0x801179a4-a8), aus_sub=%d cd=0x%02x", r.aus_sub, r.cd);
+        } else {
+            CHECK(r.kontakt_af < 0 && !r.clip_a, "schwanz_gelaender: Klaue ueber dem Gelaender -> kein Kontakt, kein Clip 0xa (kontakt_af %d)", r.kontakt_af);
+            CHECK(r.aus_sub == 1 && r.cd == 0x1e, "schwanz_gelaender: Clip-Ende -> HUB mit +0x1df 0x1e (@0x801178bc), aus_sub=%d cd=0x%02x", r.aus_sub, r.cd);
         }
         re15_bk_kralle_logik_setzen(NULL, 0);
     }

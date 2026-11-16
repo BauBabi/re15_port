@@ -12,8 +12,11 @@
  *   - Lage von Teil 15 so, wie der PC-Zeichner sie im selben Takt zeichnet (platform/pc/main.c Gegner-Zeichner: Pose des
  *     aktuellen Bilds +0x95 mit Ueberblendung +0x8f aus dem Zeichen-Schnappschuss, Gier-Matrix, Massstab +0x166).
  *   - Mesh 15 der gezeichneten Bank (die Klinge) in Welt; Pruefpunkte = Ecken + Kantenpunkte.
- *   - Sichtbare Waende des Raums: SCA-Zellen (Band 0, Rechteck, solide), je Zelle eingeordnet nach den Messbildern
- *     (Zellen auf dem Hintergrund der Kampf-Cuts), mit Oberkante, falls die Zelle im Bild ein niedriges Hindernis ist.
+ *   - Sichtbare Waende des Raums: SCA-Zellen (Band 0, Rechteck/Kreis, solide), je Zelle eingeordnet nach den Messbildern
+ *     (Zellen auf dem Hintergrund der Kampf-Cuts), mit Oberkante, falls die Zelle im Bild ein niedriges Hindernis ist
+ *     (Gelaender der Labor-Laufstege, Oberkante 1900 gemessen, s. .c).
+ *   - Kontakt = mindestens ein Pruefpunkt der Klinge (Ecken von Mesh 15 + Kantenpunkte <= 64 auseinander) liegt in der Zelle
+ *     unterhalb ihrer Oberkante. Kein Zuschlag: der Abstand ist die Klingengeometrie selbst.
  */
 #ifndef RE15_BIRKIN_KLAUE_R41_H
 #define RE15_BIRKIN_KLAUE_R41_H
@@ -52,9 +55,21 @@ int re15_bkk_pruefen(const re15_md1_mesh_t *m, const re15_bkk_lage_t *l, const r
 /* 1 = die Klinge steckt in der Pose, die der Zeichner in diesem Takt zeigt, in einer sichtbaren Wand des aktuellen Raums. */
 int re15_bkk_kontakt(const re15_actor_t *e);
 
-/* Bilder von Clip 3, in denen ein Klingenkontakt den Rueckzug ausloest (Schlagfenster der gezeichneten Klaue, s. .c). */
-#define RE15_BKK_FENSTER_AB  0x22
-#define RE15_BKK_FENSTER_BIS 0x2b
+/* Schlagfenster der gezeichneten Klaue = JEDES Bild der Phase 1 von Clip 3 (PORT-WAHL nach dem NUTZERENTSCHEID 16.11.2026):
+ * gemessen (Runde 1 "synchron", Merge-Commit e7858c897) steckt die gezeichnete Klinge nicht nur im Capcom-Fenster 0x24..0x2b
+ * (@0x801176ec-f0) in Waenden/Gelaendern, sondern schon beim Ausholen (af 21..35, Ueberblendung +0x8f = 0xf @0x80117600-08)
+ * und beim Absenken nach dem Schlag (af 51..68). Jede dieser Lagen ist ein sichtbares Durchdringen; deshalb prueft die Kralle
+ * in jedem gezeichneten Bild der Phase 1. */
+
+/* Ueberblendung in die Erholung (Clip 0xa) der Schwanz-Gestalt, PORT-WAHL nach dem NUTZERENTSCHEID ("synchron dazu"):
+ * Bild 0 von Clip 0xa (Klaue links vorn, halbhoch) passt nur zu Kontakten beim Ausholen links (af 28..36). Gemessen auf dem
+ * Merge-Commit-Stand mit Capcom-Wert +0x8f = 3 (@0x80117900): Spitzensprung Kontaktbild -> erstes 0xa-Bild 1092..4999,
+ * Klinge im ersten 0xa-Bild bis 2977 von der Wand weg (Kontakte af 21, 40..55). Neu: +0x8f = 8. Herleitung: der Zeichner
+ * mischt die alte Pose mit wp = +0x8f * 0x200 (Port-Rate, skeleton_common.c), gekappt bei 0x1000; 0x1000 / 0x200 = 8 ist die
+ * laengste Ueberblendung, die die Rate erlaubt. Phase 4 zaehlt +0x8f vor dem Zeichnen um 1 herunter (re15_birkin_anim), das
+ * erste gezeichnete 0xa-Bild zeigt also 7/8 Kontaktlage + 1/8 Clip 0xa: die Bewegung beginnt im naechsten Bild, die Klaue
+ * liegt dabei noch an der Wand und gleitet ohne Sprung in den Clip. */
+#define RE15_BKK_UEBERBLENDUNG 8
 
 /* Messhaken des PC-Zeichners: tatsaechlich gezeichnete Lage von Teil 15 des Typs 0x30 (RE15_BIRKIN_DBG -> birkin_dbg.log). */
 void re15_bkk_zeichner_melden(const re15_actor_t *e, const int32_t R[9], const int32_t T[3]);

@@ -84,8 +84,24 @@ typedef struct {
     int16_t  oben;            /* BKK_HINDERNIS: Oberkante (Welt-y, negativ = ueber dem Boden y 0) */
 } bkk_wand_t;
 
+/* Gelaender-Oberkante der Labor-Laufstege (50E0/50F1), GEMESSEN (Messbilder Runde 1 "synchron", tools/kandidaten.py: waagerechte
+ * Kandidatenlinien 800..2000 auf der Gangkante der Zelle, in ZWEI Cuts gegen das obere Rohr des Gelaenders gelesen):
+ *   50E0 #17 (x -16750..-15470), Gangkante x -15470: Cut 4 oberes Rohr auf 1800, Cut 5 auf 1900 (Zellmitte x -16110: 1700/1900);
+ *   50F1 #5 (z -11435..-10415), Gangkante z -10415: Cut 7 1800..2100, Cut 6 1500..1800.
+ * Genommen wird der obere Wert der Zwei-Cut-Messung an #17 (1900): darunter steckt die Klinge sichtbar im Gelaender, darueber
+ * geht sie ueber das Gelaender hinweg (Pit dahinter). Dieselbe Gelaender-Bauart (Bild) traegt #2 und #12 in 50F1. */
+#define BKK_GELAENDER_OBEN (-1900)
+
+/* Zellen nach den Messbildern (Pfosten je 250 auf den Zellkanten, Klinge auf Bildabzuegen der Kampf-Cuts, Runde 1 "synchron"):
+ *   50E0 #17: Gelaender des Laufstegs (Cut 5 hinter Leon, Cut 4 links vom Steg), dahinter offener Schacht.
+ *   50E0 #3 : Suedwand, volle Hoehe (Cut 6 rechts, Cut 5 links) -> nicht eingetragen = Wand.
+ *   50F1 #2 (x -14850..-14245), #12 (x -9725..-7725), #5 (z -11435..-10415): Gelaender der Laufstege (Cut 5/6/7).
+ *   50A0/50A1 #2/#3/#4: Hangarwaende bis zur Decke (Cut 3/4/9, Tor "C-2 HANGAR") -> nicht eingetragen = Wand. */
 static const bkk_wand_t k_waende[] = {
-    { 0, 0, 0, 0, 0, BKK_WAND, 0 }   /* Platzhalter (Tabelle wird nach den Messbildern gefuellt) */
+    { 0x50E0, -16750, -28895, 1280, 11100, BKK_HINDERNIS, BKK_GELAENDER_OBEN },   /* 50E0 #17 */
+    { 0x50F0, -14850, -23990,  605, 19280, BKK_HINDERNIS, BKK_GELAENDER_OBEN },   /* 50F1 #2  */
+    { 0x50F0,  -9725, -23000, 2000, 12575, BKK_HINDERNIS, BKK_GELAENDER_OBEN },   /* 50F1 #12 */
+    { 0x50F0,  -9240, -11435, 16770, 1020, BKK_HINDERNIS, BKK_GELAENDER_OBEN },   /* 50F1 #5  */
 };
 
 static const bkk_wand_t *bkk_eintrag(uint16_t raum, const re15_sca_entry_t *c)

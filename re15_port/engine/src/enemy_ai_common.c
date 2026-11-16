@@ -12444,13 +12444,23 @@ static void re15_birkin_ai_tick(int slot)
                     }
                     /* Klauen-Sonde @0x80117814-858 (alle drei Box-Wege laufen hierher): steckt die Klaue in einer
                      * Kollisionszelle, +0x6 = 3 @0x80117848-858 -> Erholung Clip 0xa. Sonst laeuft der Hieb weiter. */
-                    if (re15_bk_klauen_sonde(e, klaue_ok, klaue))
+                    /* NUTZERENTSCHEID 16.11.2026 (Schwanz-Gestalt = Ersatzmodell gezeichnet, s_bk_logik_ok): die Sonde laeuft weiter
+                     * (Messschiene RE15_BIRKIN_DBG), entscheidet dort aber nicht - den Rueckzug loest unten die GEZEICHNETE Klaue an
+                     * einer SICHTBAREN Wand aus. Mit dem Capcom-Modell (3070/3071) unveraendert. */
+                    if (re15_bk_klauen_sonde(e, klaue_ok, klaue) && !s_bk_logik_ok)
                         e->sub_state_2 = 3;
                     if (e->anim_frame == 0x25) re15_audio_room_se(4);  /* Se(4)@frame 0x25 @0x80117878 */
                 } else {
                     /* Fenster-Fehlschlag `beq` @0x801176f4 -> 0x8011785c: nur noch Se(4) bei +0x95 == 0x25 (@0x80117878) */
                     if (e->anim_frame == 0x25) re15_audio_room_se(4);
                 }
+                /* NUTZERENTSCHEID 16.11.2026 "zurueckziehen nur, wenn er gegen eine Wand schlaegt ... synchron dazu" (nur Schwanz-
+                 * Gestalt; PORT-WAHL, kein Capcom-Code, Herleitung re15_birkin_klaue_r41.h/.c): steckt die Klinge in der Pose, die
+                 * der Zeichner in DIESEM Bild zeigt (Bild +0x95 nach dem Vorschub, Ueberblendung +0x8f), in einer sichtbaren Wand
+                 * oder unter der Oberkante eines Gelaenders, dann +0x6 = 3 wie die Capcom-Sonde (@0x80117848-858) -> naechster Takt
+                 * Phase 3 (Clip 0xa @0x801178dc, +0x8f = 3 @0x80117900, Se(6) @0x801178fc). Gilt in jedem Bild der Phase 1. */
+                if (s_bk_logik_ok && e->sub_state_2 == 1 && e->motion == 3 && re15_bkk_kontakt(e))
+                    e->sub_state_2 = 3;
             } else if (e->sub_state_2 == 2) {          /* phase 2 @0x80117888 (Abbruch ODER Clip-Ende): -> HUB, +0x1df=0x1e */
                 e->sub_state_1 = 1; e->sub_state_2 = 0; e->sub_state_3 = 0;  /* +0x4 = 0x101 (Wort) @0x80117890-894 */
                 e->birkin_atk_cd = 0x1e;                               /* `ori v0,zero,0x1e` @0x801178bc / `sb v0,479(v1)` @0x801179a8 */
@@ -12464,6 +12474,7 @@ static void re15_birkin_ai_tick(int slot)
                     e->sub_state_2 = 4;                                /* +0x6 = 4 @0x801178c8-cc */
                     re15_birkin_clip(e, 0x0a);                         /* clip 0xa @0x801178d8-dc, +0x95 = 0 @0x801178ec */
                     e->anim_frac = 3;                                  /* +0x8f = 3 @0x80117900 */
+                    if (s_bk_logik_ok) e->anim_frac = RE15_BKK_UEBERBLENDUNG;   /* Schwanz-Gestalt: PORT-WAHL, Herleitung im Header */
                     re15_audio_room_se(6);                             /* Se(6) a0 = 6 @0x801178e8, jal @0x801178fc */
                 }
                 /* phase 4: anim_set (a3 = 0x400 @0x8011791c), +0x6 += Rueckgabe @0x8011792c-938 -> 5 am Clip-Ende */
