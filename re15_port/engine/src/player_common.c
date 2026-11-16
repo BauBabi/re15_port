@@ -458,6 +458,64 @@ void re15_player_fire_start(void)
 extern int16_t re15_atan2_q12(int32_t dz, int32_t dx);
 static int16_t re15_atan2_q12_pl(int32_t dz, int32_t dx) { return re15_atan2_q12(dz, dx); }
 
+/* Runde 41 "zielhilfe" (Nutzer 2026-11-16: Gegner 180 Grad hinter Leon, Waffe heben -> Leon dreht nur
+ * teilweise). Ursache im Original RE1.5 = Zeitlimit, kein Erfassungskegel: FUN_8003703c hat keine Winkelgrenze,
+ * gedreht wird nur in den Bildern des Heben-Clips (Gun-Sub 0 @0x80032f18: `ori a1,zero,0xc8` @0x80032fe0 /
+ * `jal 0x8001a8f8` @0x80032fec vor anim_set @0x800330a8, `aca5b += anim_set()` @0x800330c0-cc, Phase 2 ->
+ * HALTEN @0x80033168 ohne a8f8). Pistole PL00W03 Clip 6 = 10 Bilder (EDD @Datei 0x20 = 0x000a): 10 x 200 = 2000
+ * < 2048 -> 4,2 Grad Rest; Messer wiederheben (0xC0 @0x80034fb0) 10 x 192 = 1920.
+ * BETA -> RETAIL (RE2): der eine Heben-Sub @0x8004326c (alle Waffen-Tabellen 0x800a702c/48/68/80/98/b0, das
+ * Messer = Waffe 1 nur mit eigenem Radius @0x800432f8) dreht mit `li a3,0xd8` @0x800434a0 ueber
+ * `jal 0x80015558` @0x800434b0 (gleicher Algorithmus wie 0x8001a8f8); Heben-Clip 9 = 10 Bilder (PL00W02.PLW
+ * EDD @Datei 0x2c = 0x000a) -> 10 x 216 = 2160 >= 2048: RE2 dreht bis 180 Grad vollstaendig (0x120 @0x800434ac
+ * nur fuer Waffe 0xd mit 8-Bild-Hebung). Heben-Clips der Port-Baenke (shared_assets PL00/PL04 W01..W14, EDD-Tabellen
+ * gelesen): Clip 6 = 10..20 Bilder, einzig PL00W07 = 8; Ziehen Clip 0xD = 15 -> mit 0xd8 bzw. 0x120 jeweils >= 2048.
+ * Erfassung, Radien, Sichtlinie, L1-Neuzielen (0xC8) bleiben RE1.5/Runde 39. */
+#define RE15_ZIEL_HEBEN_SCHRITT    0xd8    /* RE2 @0x800434a0 (Beta -> Retail; RE1.5: 0xC8 @0x80032fe0, 0xC0 @0x80034fb0/@0x80035614/@0x80034128) */
+#define RE15_ZIEL_HEBEN_SCHRITT_8  0x120   /* RE2 @0x800434ac: Waffe 0xd, deren Heben-Clip 9 als einziger 8 Bilder hat
+                                            * (PL01W0D.PLW EDD-Eintrag 9 @Datei 0x2c = 0x0008; alle anderen RE2-Heben >= 10) */
+/* Heben-Schritt nach der RE2-Paarung Clip-Laenge <-> Schritt: 10 Bilder x 0xd8 = 2160, 8 Bilder x 0x120 = 2304 (beide
+ * >= 2048 = 180 Grad). Port-Uebertragung auf die RE1.5-Baenke ueber die Clip-Laenge statt der RE2-Waffen-Id (die Ids
+ * sind andere): einzige 8-Bild-Hebung der Port-Baenke = PL00W07 Clip 6 (SUPER REDHAWK, Revolver wie der RE2-Colt). */
+static int32_t heben_schritt(void)
+{
+    return aim_cur_fc() == 8 ? RE15_ZIEL_HEBEN_SCHRITT_8 : RE15_ZIEL_HEBEN_SCHRITT;
+}
+static void zielhilfe_drehen(re15_actor_t *p, int32_t slew)
+{
+    extern int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz);
+    int32_t radius = s_aim_melee ? (s_aim_cur_clip == 0x0d ? 2000 : 5000) : 30000;
+    int32_t tx, tz;
+    if (re15_player_aim_target(radius, &tx, &tz)) {
+        int bearing = ((int)re15_atan2_q12_pl(tz - p->z, tx - p->x) - 0x400) & 0xfff;
+        /* Runde 34 A NACHBESSERUNG (Gegenpruefung H-1, Bauer-OFFEN 5) — FUN_8001a8f8
+         * byte-true (re15_disasm.py dis 0x8001a8f8 52; Aufrufer gun sub0 `ori a1,zero,
+         * 0xc8` @0x80032fe0 / `jal 0x8001a8f8` @0x80032fec, L1 @0x80033f94, melee `ori
+         * a1,zero,0xc0` @0x80034fb0 / `jal` @0x80034fbc):
+         *   8001a958 lhu a2,106(v1)            rot (u16 +0x6a)
+         *   8001a960 subu v0,a0,a2 / addu v0,s1,v0 / andi a1,v0,0xfff
+         *                          a1 = (t - rot + s) & 0xfff
+         *   8001a96c-74 sll/sra 15 / slt       a1 < 2*s ?
+         *   8001a984 sh a0,106(v1)             ja:   rot := t (atan2 & 0xfff @0x8001a768)
+         *   8001a97c subu v0,a2,s1 / 8001a988 sh v0,106(v1)
+         *                          nein: rot := rot - s   (16 Bit, OHNE Maske)
+         *   8001a98c sltiu v0,a1,0x801 / 8001a994 sll a0,s1,1 / 8001a9ac addu / 8001a9b0 sh
+         *                          a1 <= 0x800: rot += 2*s (netto rot + s)
+         * Vorher maskierte der Port jeden Schritt (& 0xfff) und drehte per zentrierter
+         * Differenz: (1) nach einem Schritt ueber 0 lag die Gier bei 4096-k statt -k
+         * (anderer RotMatrix-Zweig fuer die Granate, s. esp_trig); (2) fuer Ziele mit
+         * (t - rot) & 0xfff in [0x801 - s, 0x7ff] (Ziel knapp unter +180 Grad) drehte er
+         * +s, das Original -s (die Halbebenen-Grenze ist um s verschoben). */
+        int a1 = (bearing - (int)p->rot_y + (int)slew) & 0xfff;
+        if (a1 < 2 * (int)slew)
+            p->rot_y = (int16_t)bearing;                          /* @0x8001a984 */
+        else if (a1 <= 0x800)
+            p->rot_y = (int16_t)((int)p->rot_y + (int)slew);      /* @0x8001a988 + @0x8001a9b0 */
+        else
+            p->rot_y = (int16_t)((int)p->rot_y - (int)slew);      /* @0x8001a988 */
+    }
+}
+
 int re15_player_aim_ready(void) { return s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil; }
 
 /* ---- DAUERFEUER-Exporte (game_step_common.c konsumiert sie je Frame) ---------------
@@ -1101,47 +1159,19 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
              * doppelt laufenden Lauf-Anteil aus (HOLD: -96 + 48 = -48). */
             if (pad_bits & RE15_PAD_BIT_LEFT)  p->rot_y = (int16_t)((int)p->rot_y - rate);
             if (pad_bits & RE15_PAD_BIT_RIGHT) p->rot_y = (int16_t)((int)p->rot_y + rate);
-            /* AUTO-TRACK toward the latched front target — byte-true ONLY during the RAISE/DRAW
-             * sub (@0x80034fa0-c0 melee slew 0xC0 / gun sub0 slew 0xC8); the HOLD subs have no
-             * a8f8 call. Latch radii: gun 30000, melee draw 2000, melee re-raise 5000.
+            /* AUTO-TRACK toward the latched target — byte-true ONLY during the RAISE/DRAW sub (gun sub0
+             * @0x80032fec, melee sub0 @0x80034fbc, draw sub4 @0x80035620, auto sub0 @0x80034134); the HOLD subs
+             * have no a8f8 call. Latch radii: gun 30000, melee draw 2000, melee re-raise 5000.
              * L1 RETARGET (gun sub5 @0x80033eec, HOLD writer of 5 @0x800332f8): holding L1 in
-             * HOLD re-runs the a8f8 slew + arc-test until aligned -> back to HOLD — the quick
-             * re-face onto the nearest target. Port: L1 held in READY re-enables the track. */
+             * HOLD re-runs the a8f8 slew (0xC8 @0x80033f90) + arc-test until aligned -> back to HOLD — the
+             * quick re-face onto the nearest target. Port: L1 held in READY re-enables the track.
+             * Runde 41 "zielhilfe": im HEBEN dreht der Port mit dem RE2-Schritt (s. zielhilfe_drehen); das
+             * Eintrittsbild des Hebens dreht unten im Eintritts-Zweig mit (Phase 0 faellt durch). */
             if (s_player_aim_phase == RE15_AIM_RAISE ||
                 (s_player_aim_phase == RE15_AIM_READY && !s_aim_recoil &&
                  !s_aim_melee && (pad_bits & RE15_PAD_BIT_L1))) {
-                extern int re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz);
-                int32_t radius = s_aim_melee ? (s_aim_cur_clip == 0x0d ? 2000 : 5000) : 30000;
-                int32_t slew   = s_aim_melee ? 0xc0 : 0xc8;
-                int32_t tx, tz;
-                if (re15_player_aim_target(radius, &tx, &tz)) {
-                    int bearing = ((int)re15_atan2_q12_pl(tz - p->z, tx - p->x) - 0x400) & 0xfff;
-                    /* Runde 34 A NACHBESSERUNG (Gegenpruefung H-1, Bauer-OFFEN 5) — FUN_8001a8f8
-                     * byte-true (re15_disasm.py dis 0x8001a8f8 52; Aufrufer gun sub0 `ori a1,zero,
-                     * 0xc8` @0x80032fe0 / `jal 0x8001a8f8` @0x80032fec, L1 @0x80033f94, melee `ori
-                     * a1,zero,0xc0` @0x80034fb0 / `jal` @0x80034fbc):
-                     *   8001a958 lhu a2,106(v1)            rot (u16 +0x6a)
-                     *   8001a960 subu v0,a0,a2 / addu v0,s1,v0 / andi a1,v0,0xfff
-                     *                                      a1 = (t - rot + s) & 0xfff
-                     *   8001a96c-74 sll/sra 15 / slt       a1 < 2*s ?
-                     *   8001a984 sh a0,106(v1)             ja:   rot := t (atan2 & 0xfff @0x8001a768)
-                     *   8001a97c subu v0,a2,s1 / 8001a988 sh v0,106(v1)
-                     *                                      nein: rot := rot - s   (16 Bit, OHNE Maske)
-                     *   8001a98c sltiu v0,a1,0x801 / 8001a994 sll a0,s1,1 / 8001a9ac addu / 8001a9b0 sh
-                     *                                      a1 <= 0x800: rot += 2*s (netto rot + s)
-                     * Vorher maskierte der Port jeden Schritt (& 0xfff) und drehte per zentrierter
-                     * Differenz: (1) nach einem Schritt ueber 0 lag die Gier bei 4096-k statt -k
-                     * (anderer RotMatrix-Zweig fuer die Granate, s. esp_trig); (2) fuer Ziele mit
-                     * (t - rot) & 0xfff in [0x801 - s, 0x7ff] (Ziel knapp unter +180 Grad) drehte er
-                     * +s, das Original -s (die Halbebenen-Grenze ist um s verschoben). */
-                    int a1 = (bearing - (int)p->rot_y + (int)slew) & 0xfff;
-                    if (a1 < 2 * (int)slew)
-                        p->rot_y = (int16_t)bearing;                          /* @0x8001a984 */
-                    else if (a1 <= 0x800)
-                        p->rot_y = (int16_t)((int)p->rot_y + (int)slew);      /* @0x8001a988 + @0x8001a9b0 */
-                    else
-                        p->rot_y = (int16_t)((int)p->rot_y - (int)slew);      /* @0x8001a988 */
-                }
+                zielhilfe_drehen(p, s_player_aim_phase == RE15_AIM_RAISE ? heben_schritt()
+                                                                       : 0xc8 /* L1 @0x80033f90 */);
             }
         }
 
@@ -1178,6 +1208,14 @@ void re15_player_tick(const re15_camera_view_t *view, uint16_t pad_bits)
                 } else {
                     s_aim_cur_clip = 6;                             /* RAISE (sub0; melee @0x80034ee8) */
                 }
+                /* Runde 41 "zielhilfe": das EINTRITTSBILD dreht mit. Phase 0 faellt in beiden Originalen
+                 * ohne Sprung in den Dreh-Rumpf durch — RE1.5 Gun @0x80032fc8 -> @0x80032fcc (a8f8
+                 * @0x80032fec), Messer @0x80034f98 -> @0x80034f9c (a8f8 @0x80034fbc), Ziehen @0x800355f8 -> @0x80035600
+                 * (a8f8 @0x80035620), Dauerfeuer @0x80034110 -> @0x80034114 (a8f8 @0x80034134); RE2
+                 * @0x80043358 -> LAB_8004335c (FUN_80015558 @0x800434b0). Der Dreh-Block oben lief in diesem
+                 * Bild noch mit Phase NONE, also drehte der Port nur Clip-Laenge - 1 Mal (gemessen: Pistole
+                 * 9 statt 10 Schritte, test_r41_zielhilfe mess). */
+                zielhilfe_drehen(p, heben_schritt());
             }
             want_motion = RE15_MOTION_AIM_W;
             if (s_player_aim_phase == RE15_AIM_RAISE &&
