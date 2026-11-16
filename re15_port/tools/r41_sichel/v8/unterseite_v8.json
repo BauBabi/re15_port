@@ -1,0 +1,33 @@
+{
+ "quelle": "unterseite_r5.py json EM30_HANGAR.EMD (sha256 823f4f277b0ace20e95a967a4b9fa7b174fd1c21d18c9d43ea4971b03d8726de), Pose PV | Runde 6: deckel = teilen (gemessen gegen schwerpunkt: Deckel-Kanten da* 7,04 gegen 18,06; Szenenposen mit grauem Deckel unten 0 gegen 44 von 144)",
+ "innen_phi": {
+  "16": 26.459,
+  "17": 26.433,
+  "18": 26.418,
+  "19": 26.425,
+  "20": 26.403,
+  "21": 26.401,
+  "22": 26.46
+ },
+ "deckel": "teilen",
+ "fleisch_r7b": {
+  "feld": [
+   4,
+   37,
+   96,
+   106
+  ],
+  "je_durchgang": 2,
+  "abschnitte": [
+   1,
+   1,
+   2,
+   2,
+   2,
+   2,
+   2
+  ],
+  "diagonale": false,
+  "quelle": "Runde 7b K1/K2 (unterseite_r7b.py): Fleisch der Unterseite in Original-Dichte um den Umfang (0,066 je E.); Abschnitts-Ringe nur in den Meshes 19-22 (Mesh 18 hat seinen Mittelring), Meshes 16/17 ungeteilt: jede Teilung dort hob Riegel S2 b (Sattel 1,7 -> 2,4 / 3,0 px; Probe U4K2 / U7c). Proben im Spiel (relative oertliche Streuung, glaette_r7b.py): Stand a474188a 0,079 | U4 0,116 | U5 0,087 | U7 0,141"
+ }
+}

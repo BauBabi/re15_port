@@ -1,0 +1,727 @@
+{
+ "quelle": "adern_r4.py Runde 4 (Basis V7 319bbd17, Kette kette_v8.json, Ruecken ruecken_v8.json): Mesh 8 ausser Brust auf Original-Zeilen, Gruppen Feld C / Unterarmband / Rueckenfleisch / Huegel / blass (W)-rechts mit einem Schub auf Texel von Original-Flaechen; Runde 5 (adern_r5.py, Basis V7 319bbd17, Kette/Ruecken Runde 5): Brust 488 -> Original-Zeile 481 mit eigener UV; von vorn sichtbare fast weisse Texel (L* > 75, Chroma < 12) durch Abbildungen auf Original-Haut ohne Weiss ersetzt (kleinster Ecken-Versatz, an der Brustgrenze Feinwahl am Riegel S14a); blass_r5 fuer S7c/S7d. Ablauf: suche + feinwahl (FEIN_POSEN P1/F354, dann P1/F344/F354/F364 mit --nur-fein) + --nur-blass, Protokolle sfv8/r5 adern_r5f/g/l.log",
+ "modus": "original_r5",
+ "zeilen": [
+  0,
+  1,
+  2
+ ],
+ "flaechen": {
+  "8": [
+   "d0",
+   "d1",
+   "d3",
+   "d4",
+   "d5",
+   "d6",
+   "d7",
+   "d9",
+   "d10",
+   "d11",
+   "d12",
+   "d13",
+   "d14",
+   "d16",
+   "d18",
+   "d19",
+   "d20",
+   "d21",
+   "d22",
+   "d23",
+   "d24",
+   "d25",
+   "d28",
+   "d29",
+   "d30",
+   "d31",
+   "d33",
+   "d34",
+   "d35",
+   "d36",
+   "d37",
+   "d38",
+   "d39",
+   "d40",
+   "d41",
+   "d42",
+   "d44",
+   "d45",
+   "d46",
+   "d47",
+   "d48",
+   "d51",
+   "d52",
+   "d53",
+   "d54",
+   "d55",
+   "d57",
+   "d58",
+   "d59",
+   "d61",
+   "d62",
+   "d63",
+   "d64",
+   "d67",
+   "d68",
+   "d70",
+   "d71",
+   "d72",
+   "d73",
+   "d74",
+   "d75",
+   "d76",
+   "v2",
+   "v3",
+   "v5",
+   "v6",
+   "v9",
+   "v10",
+   "v12",
+   "v15",
+   "v17",
+   "v18",
+   "v19",
+   "v22",
+   "v23",
+   "v26"
+  ],
+  "13": [
+   "d0",
+   "d1",
+   "d4",
+   "d5",
+   "d6",
+   "d9",
+   "d10",
+   "d11",
+   "d13",
+   "d14",
+   "d15",
+   "d20",
+   "d21",
+   "d22",
+   "d24",
+   "d26",
+   "d27",
+   "d28",
+   "d29",
+   "d31",
+   "v0",
+   "v1",
+   "v2",
+   "v4",
+   "v5",
+   "v8",
+   "v9",
+   "v15",
+   "v16",
+   "v19",
+   "v20",
+   "v21"
+  ],
+  "14": [
+   "d0",
+   "d1",
+   "d2",
+   "d3",
+   "d4",
+   "d5",
+   "d6",
+   "d7",
+   "d8",
+   "d9",
+   "d10",
+   "d11",
+   "d12",
+   "d13",
+   "d14",
+   "d15",
+   "d16",
+   "d17",
+   "d18",
+   "d20",
+   "d21",
+   "d23",
+   "v0",
+   "v1",
+   "v2",
+   "v3",
+   "v4",
+   "v5",
+   "v6",
+   "v7",
+   "v8",
+   "v11",
+   "v12"
+  ]
+ },
+ "gruppen": [
+  {
+   "name": "unterarmband",
+   "mesh": 14,
+   "flaechen": [
+    "v9",
+    "v10",
+    "d19",
+    "d22"
+   ],
+   "skal": 0.6,
+   "schub": [
+    11,
+    -63
+   ],
+   "rot15": 0.0027,
+   "erlaubt": "Original-Mesh-14-Texel (Zeile 482) ohne Klingenleiste"
+  },
+  {
+   "name": "feld_c",
+   "mesh": 13,
+   "flaechen": [
+    "d2",
+    "d3",
+    "d7",
+    "d8",
+    "d12",
+    "d16",
+    "d17",
+    "d18",
+    "d19",
+    "d23",
+    "d25",
+    "d30",
+    "d32",
+    "d33",
+    "v3",
+    "v6",
+    "v7",
+    "v10",
+    "v11",
+    "v12",
+    "v13",
+    "v14",
+    "v17",
+    "v18"
+   ],
+   "skal": 1.0,
+   "schub": [
+    -66,
+    5
+   ],
+   "oberarm": 49.1,
+   "flecken13": 17,
+   "erlaubt": "Original-Mesh-13-Texel (Zeile 480) ausserhalb Feld C",
+   "kandidaten": 456,
+   "im_band": 456
+  },
+  {
+   "name": "rueckenfleisch",
+   "mesh": 8,
+   "flaechen": [
+    "v16",
+    "v11"
+   ],
+   "skal": 1.0,
+   "schub": [
+    0,
+    64
+   ],
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, Seite 0, ohne Feld C",
+   "kachel_original": {
+    "328": 234,
+    "332": 296
+   },
+   "ohne_r5": [
+    "d50",
+    "v0"
+   ]
+  },
+  {
+   "name": "huegel",
+   "mesh": 8,
+   "flaechen": [
+    "v8"
+   ],
+   "skal": 1.0,
+   "schub": [
+    54,
+    2
+   ],
+   "s3f": 58.3,
+   "kappe": 0,
+   "kachel": -55,
+   "kachel_original": {
+    "328": 234,
+    "332": 296
+   },
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, Seite 0, ohne Feld C"
+  },
+  {
+   "name": "blass_rechts",
+   "mesh": 8,
+   "flaechen": [
+    "d43",
+    "d56",
+    "d15"
+   ],
+   "skal": 1.0,
+   "schub": [
+    -15,
+    11
+   ],
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, Seite 0, ohne Feld C",
+   "ohne_r5": [
+    "v24",
+    "v21"
+   ]
+  },
+  {
+   "name": "weiss_v21",
+   "mesh": 8,
+   "flaechen": [
+    "v21"
+   ],
+   "skal": 1.0,
+   "schub": [
+    -21,
+    14
+   ],
+   "basis": [
+    -15,
+    11
+   ],
+   "versatz": 6.71,
+   "weiss_vorher": 3,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "weiss_v24",
+   "mesh": 8,
+   "flaechen": [
+    "v24"
+   ],
+   "skal": 0.9,
+   "schub": [
+    -25,
+    13
+   ],
+   "basis": [
+    -15,
+    11
+   ],
+   "versatz": 12.0,
+   "weiss_vorher": 22,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege",
+   "flecken_r5": {
+    "rot15": 0.37,
+    "kandidaten": 12
+   }
+  },
+  {
+   "name": "weiss_d2",
+   "mesh": 8,
+   "flaechen": [
+    "d2"
+   ],
+   "skal": 1.0,
+   "schub": [
+    -2,
+    7
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 7.28,
+   "weiss_vorher": 6,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 481, ohne Feld C, ohne fast weisse Eintraege",
+   "feinwahl": {
+    "kandidaten": 12,
+    "runden": 2,
+    "kanten_sprung": 31.535
+   }
+  },
+  {
+   "name": "weiss_d32",
+   "mesh": 8,
+   "flaechen": [
+    "d32"
+   ],
+   "skal": 1.0,
+   "schub": [
+    -12,
+    -3
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 12.37,
+   "weiss_vorher": 26,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 481, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "weiss_d60",
+   "mesh": 8,
+   "flaechen": [
+    "d60"
+   ],
+   "skal": 1.0,
+   "schub": [
+    -16,
+    -9
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 18.36,
+   "weiss_vorher": 18,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 481, ohne Feld C, ohne fast weisse Eintraege",
+   "feinwahl": {
+    "kandidaten": 12,
+    "runden": 2,
+    "kanten_sprung": 31.535
+   }
+  },
+  {
+   "name": "weiss_d8",
+   "mesh": 8,
+   "flaechen": [
+    "d8"
+   ],
+   "skal": 0.8,
+   "schub": [
+    5,
+    -4
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 7.81,
+   "weiss_vorher": 13,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege",
+   "feinwahl": {
+    "kandidaten": 12,
+    "runden": 2,
+    "kanten_sprung": 31.535
+   }
+  },
+  {
+   "name": "weiss_d49",
+   "mesh": 8,
+   "flaechen": [
+    "d49"
+   ],
+   "skal": 1.0,
+   "schub": [
+    -8,
+    1
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 8.06,
+   "weiss_vorher": 1,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "weiss_v7",
+   "mesh": 8,
+   "flaechen": [
+    "v7"
+   ],
+   "skal": 0.75,
+   "schub": [
+    1,
+    -1
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 5.39,
+   "weiss_vorher": 9,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "weiss_v20",
+   "mesh": 8,
+   "flaechen": [
+    "v20"
+   ],
+   "skal": 0.8,
+   "schub": [
+    4,
+    3
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 4.24,
+   "weiss_vorher": 10,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "weiss_d17",
+   "mesh": 8,
+   "flaechen": [
+    "d17"
+   ],
+   "skal": 1.0,
+   "schub": [
+    0,
+    11
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 11.0,
+   "weiss_vorher": 28,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 481, ohne Feld C, ohne fast weisse Eintraege",
+   "feinwahl": {
+    "kandidaten": 12,
+    "runden": 2,
+    "kanten_sprung": 31.535
+   }
+  },
+  {
+   "name": "weiss_d27",
+   "mesh": 8,
+   "flaechen": [
+    "d27"
+   ],
+   "skal": 0.85,
+   "schub": [
+    3,
+    4
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 4.24,
+   "weiss_vorher": 7,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 481, ohne Feld C, ohne fast weisse Eintraege",
+   "feinwahl": {
+    "kandidaten": 12,
+    "runden": 2,
+    "kanten_sprung": 31.535
+   }
+  },
+  {
+   "name": "weiss_d65",
+   "mesh": 8,
+   "flaechen": [
+    "d65"
+   ],
+   "skal": 0.65,
+   "schub": [
+    8,
+    -2
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 14.42,
+   "weiss_vorher": 29,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 481, ohne Feld C, ohne fast weisse Eintraege",
+   "feinwahl": {
+    "kandidaten": 12,
+    "runden": 2,
+    "kanten_sprung": 31.535
+   }
+  },
+  {
+   "name": "weiss_d69",
+   "mesh": 8,
+   "flaechen": [
+    "d69"
+   ],
+   "skal": 1.0,
+   "schub": [
+    -1,
+    11
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 11.05,
+   "weiss_vorher": 25,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 481, ohne Feld C, ohne fast weisse Eintraege",
+   "feinwahl": {
+    "kandidaten": 12,
+    "runden": 2,
+    "kanten_sprung": 31.535
+   }
+  },
+  {
+   "name": "weiss_d66",
+   "mesh": 8,
+   "flaechen": [
+    "d66"
+   ],
+   "skal": 0.95,
+   "schub": [
+    -2,
+    7
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 7.62,
+   "weiss_vorher": 16,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege",
+   "flecken_r5": {
+    "rot15": 0.15,
+    "kandidaten": 12
+   }
+  },
+  {
+   "name": "weiss_v1",
+   "mesh": 8,
+   "flaechen": [
+    "v1"
+   ],
+   "skal": 1.0,
+   "schub": [
+    3,
+    8
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 8.54,
+   "weiss_vorher": 6,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "weiss_v4",
+   "mesh": 8,
+   "flaechen": [
+    "v4"
+   ],
+   "skal": 0.8,
+   "schub": [
+    12,
+    1
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 12.17,
+   "weiss_vorher": 20,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "weiss_v14",
+   "mesh": 8,
+   "flaechen": [
+    "v14"
+   ],
+   "skal": 1.0,
+   "schub": [
+    -4,
+    1
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 4.12,
+   "weiss_vorher": 3,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "weiss_v25",
+   "mesh": 8,
+   "flaechen": [
+    "v25"
+   ],
+   "skal": 0.95,
+   "schub": [
+    4,
+    1
+   ],
+   "basis": [
+    0,
+    0
+   ],
+   "versatz": 4.12,
+   "weiss_vorher": 4,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "weiss_d50",
+   "mesh": 8,
+   "flaechen": [
+    "d50"
+   ],
+   "skal": 1.0,
+   "schub": [
+    -2,
+    60
+   ],
+   "basis": [
+    0,
+    64
+   ],
+   "versatz": 4.47,
+   "weiss_vorher": 12,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "weiss_v0",
+   "mesh": 8,
+   "flaechen": [
+    "v0"
+   ],
+   "skal": 0.75,
+   "schub": [
+    14,
+    63
+   ],
+   "basis": [
+    0,
+    64
+   ],
+   "versatz": 15.23,
+   "weiss_vorher": 18,
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "blass_r5_v13",
+   "mesh": 8,
+   "flaechen": [
+    "v13"
+   ],
+   "skal": 1.0,
+   "schub": [
+    3,
+    65
+   ],
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, Seite 0, ohne Feld C, ohne fast weisse Eintraege"
+  },
+  {
+   "name": "blass_r5_d26",
+   "mesh": 8,
+   "flaechen": [
+    "d26"
+   ],
+   "skal": 1.0,
+   "schub": [
+    -47,
+    65
+   ],
+   "erlaubt": "Texel der Original-Flaechen mit Zeile 480, Seite 0, ohne Feld C, ohne fast weisse Eintraege"
+  }
+ ]
+}

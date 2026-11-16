@@ -4160,6 +4160,23 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_sichel_form_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_sichel_form.cmake)
     set_tests_properties(integration_r41_sichel_form PROPERTIES TIMEOUT 400)
+    # Rueckbau Monitorbild (Runde 41, Stand 23f9da5c9 + Bank-9-Bit 38): Hangar-Szene, Speichern, neuer Prozess laedt, Hangar erneut
+    # betreten -> keine zweite Szene, Birkin wie beim Wiedereintritt. Leon und Elza, je 2 Laeufe. Gegenprobe exe 23f9da5c9 = ROT.
+    add_test(NAME integration_r41_hangar_laden
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_hangar_laden_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_hangar_laden.cmake)
+    set_tests_properties(integration_r41_hangar_laden PROPERTIES TIMEOUT 900)
+    # Hangar: Birkin bleibt liegen (Runde 1 "hangar_liegen", Nutzer 2026-11-16): Tod -> liegt in Phase 3 (@0x8011aed4) bis zum
+    # Speichern, Bank-9-Bit 39; Laden + Wiederbetreten leer, Kraftraum 50E0/50F1 unveraendert, Reihenfolge-Luecke (Bank 3 Bit 0x49).
+    # Leon und Elza, je 4 Laeufe. Gegenprobe exe 53fa8a984 = ROT.
+    add_test(NAME integration_r41_hangar_liegen
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_hangar_liegen_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_hangar_liegen.cmake)
+    set_tests_properties(integration_r41_hangar_liegen PROPERTIES TIMEOUT 1500)
     # Integration Runde 41 (INT_labor_birkin.md): Labor-Birkin 50E0/50F1 auf dem echten Weg - nach dem Haken trifft der Biss
     # den stehenden Spieler bei +0x95 = 0x23 (Box = gezeichnete Matrix = KF N-2, @0x8001a5ec / @0x8001f35c-36c / @0x801183e0),
     # Birkin stirbt, (3,73)/(3,84). Zwei Laeufe a 3000 Bilder.

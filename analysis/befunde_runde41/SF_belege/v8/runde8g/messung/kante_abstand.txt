@@ -1,0 +1,21 @@
+== 8c: Bauch-Bildpunkte nach Abstand zur Flanke (px, 960x720): Anteil Naht-Texel u 54-55 | L* Naht | L* sonst (Median, 10. Perzentil) | a*
+  d 1:   4552 px, Naht  82.1 %, L* Naht  11.8   9.7, L* sonst  28.4  17.8, alle L*  16.5   9.8 a* 14.2
+  d 2:   4348 px, Naht  84.7 %, L* Naht  11.3   8.5, L* sonst  26.6  16.3, alle L*  12.5   9.0 a* 14.2
+  d 3:   4656 px, Naht  84.6 %, L* Naht  11.3   7.4, L* sonst  26.1  13.4, alle L*  13.3   7.4 a* 13.3
+  d 4:   4198 px, Naht  81.8 %, L* Naht  11.3   7.2, L* sonst  26.4  10.4, alle L*  14.8   7.4 a* 12.9
+  d 6:   4073 px, Naht  59.7 %, L* Naht  10.9   6.3, L* sonst  22.0   7.8, alle L*  17.0   6.8 a* 12.2
+  d 8:   4035 px, Naht  39.8 %, L* Naht  11.9   4.9, L* sonst  20.1   9.6, alle L*  19.0   6.7 a* 12.2
+== 8d: Bauch-Bildpunkte nach Abstand zur Flanke (px, 960x720): Anteil Naht-Texel u 54-55 | L* Naht | L* sonst (Median, 10. Perzentil) | a*
+  d 1:   4552 px, Naht  99.5 %, L* Naht  11.3   8.7, L* sonst  12.4   8.4, alle L*  11.3   8.7 a* 20.5
+  d 2:   4348 px, Naht  99.1 %, L* Naht  11.1   8.4, L* sonst  14.4   9.0, alle L*  11.1   8.4 a* 19.9
+  d 3:   4656 px, Naht  97.2 %, L* Naht  15.0   7.6, L* sonst  25.1  11.7, alle L*  15.8   7.9 a* 18.0
+  d 4:   4198 px, Naht  91.6 %, L* Naht  23.9   7.4, L* sonst  25.7  13.1, alle L*  24.5   7.9 a* 15.6
+  d 6:   4073 px, Naht  66.1 %, L* Naht  23.6   9.0, L* sonst  24.8  14.2, alle L*  24.3  10.1 a* 12.9
+  d 8:   4035 px, Naht  44.8 %, L* Naht  25.2   7.4, L* sonst  22.3  11.8, alle L*  22.9  10.0 a* 12.3
+== 8g: Bauch-Bildpunkte nach Abstand zur Flanke (px, 960x720): Anteil Naht-Texel u 54-55 | L* Naht | L* sonst (Median, 10. Perzentil) | a*
+  d 1:   4552 px, Naht   0.0 %, L* Naht     -     -, L* sonst  31.6  21.3, alle L*  31.6  21.3 a* 13.7
+  d 2:   4348 px, Naht   0.0 %, L* Naht     -     -, L* sonst  31.2  21.4, alle L*  31.2  21.4 a* 13.7
+  d 3:   4656 px, Naht   0.0 %, L* Naht     -     -, L* sonst  29.8  20.3, alle L*  29.8  20.3 a* 13.3
+  d 4:   4198 px, Naht   0.0 %, L* Naht     -     -, L* sonst  29.3  19.3, alle L*  29.3  19.3 a* 13.2
+  d 6:   4073 px, Naht   0.0 %, L* Naht     -     -, L* sonst  27.3  16.1, alle L*  27.3  16.1 a* 13.7
+  d 8:   4035 px, Naht   0.0 %, L* Naht     -     -, L* sonst  24.7  13.5, alle L*  24.7  13.5 a* 13.7

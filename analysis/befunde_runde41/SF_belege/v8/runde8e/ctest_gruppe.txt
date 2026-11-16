@@ -1,0 +1,23 @@
+a48e2ce565661b46d58e9e4b008a8bc8b5cea7862befec7e19f8cf187243bf24 *shared_assets/PSX/EMD/EM30_HANGAR.EMD
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build_r9e
+    Start   44: unit_birkin_ai
+    Start 1372: unit_birkin_formen
+1/8 Test   #44: unit_birkin_ai ...................   Passed    0.01 sec
+    Start 1373: unit_birkin_bahnsteig
+2/8 Test #1372: unit_birkin_formen ...............   Passed    0.02 sec
+    Start 1377: unit_birkin_szenen
+3/8 Test #1377: unit_birkin_szenen ...............   Passed    0.10 sec
+    Start 1378: unit_schwanz_r41
+4/8 Test #1373: unit_birkin_bahnsteig ............   Passed    0.13 sec
+    Start 1379: integration_r41_birkin_pistole
+5/8 Test #1378: unit_schwanz_r41 .................   Passed    0.05 sec
+    Start 1380: integration_r41_sichel_form
+6/8 Test #1380: integration_r41_sichel_form ......   Passed   64.37 sec
+    Start 1384: unit_birkin_opfer
+7/8 Test #1384: unit_birkin_opfer ................   Passed    0.01 sec
+8/8 Test #1379: integration_r41_birkin_pistole ...   Passed  240.61 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Total Test time (real) = 240.79 sec
+rc=0

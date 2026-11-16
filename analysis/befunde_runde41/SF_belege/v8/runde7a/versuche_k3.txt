@@ -1,0 +1,267 @@
+== exp1.py
+import sys, copy
+sys.path.insert(0, '.')
+import bewert as BW
+Bt = (186, 963, -149)
+def var(wA, wC, rA, dyA=-35, dyC=-25):
+    cfg = copy.deepcopy(BW.CFG0); k = cfg['hand']['krallen']
+    k['A'].update(ziel=[Bt[0]-90, Bt[1]+dyA, -130], wurzel_schub=[0,wA,0], ring=rA)
+    k['C'].update(ziel=[Bt[0]-70, Bt[1]+dyC, -135], wurzel_schub=[0,wC,0])
+    return cfg
+if __name__ == "__main__":
+    for args in ((60,0,1.6), (0,0,1.6)):
+        r,_ = BW.bewerten(var(*args))
+        print(BW.zeile('w%d/%d r%.2f' % args, r), flush=True)
+== exp1.txt
+w60/0 r1.60    eeb4a1b5 KW [26.0, 27.0, 45.0, 45.0, 45.2] KM [22.0, 22.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 8.0] aus {'h125': ['krallenwurzel'], 'h126': ['krallenwurzel']} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.2, 23.8), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (14.3, 14.3)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (18.0, 20.0), 'laenge': (20.8, 23.6), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+w0/0 r1.60     bd2fa30a KW [43.0, 44.0, 45.0, 44.0, 44.2] KM [19.0, 20.0, 21.0, 21.0, 20.0] spitzen [7.0, 7.0, 9.0, 6.0, 7.0] aus {} aG cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (26.4, 27.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (14.3, 14.3)} | duenn ['h130 A'] lang_aus ['h125 A', 'h126 A', 'h128 A', 'h130 A', 'h132 A'] | Daumen {'gabel_ab_handgelenk': (18.2, 20.0), 'laenge': (20.8, 25.5), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+== exp2.py
+import sys, copy
+sys.path.insert(0, '.')
+import bewert as BW
+from exp1 import var
+for args in ((30,0,1.8,-35), (40,0,1.6,-35), (0,0,1.8,-65), (20,0,1.8,-55)):
+    r,_ = BW.bewerten(var(*args))
+    print(BW.zeile('w%d/%d r%.2f dy%d' % args, r), flush=True)
+== exp2.txt
+w30/0 r1.80 dy-35 f90684c0 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 21.0, 23.0, 22.0, 22.0] spitzen [7.0, 7.0, 9.0, 7.0, 8.0] aus {} aG cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (24.8, 25.4), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (14.3, 14.3)} | duenn [] lang_aus ['h125 A', 'h126 A', 'h128 A', 'h130 A', 'h132 A'] | Daumen {'gabel_ab_handgelenk': (18.0, 20.0), 'laenge': (20.8, 23.7), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+w40/0 r1.60 dy-35 9832343a KW [43.0, 44.0, 45.0, 44.0, 45.0] KM [22.0, 22.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.2, 9.0, 7.0] aus {'h128': ['spitzen']} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (24.3, 24.9), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (14.3, 14.3)} | duenn [] lang_aus ['h125 A', 'h126 A', 'h128 A', 'h130 A', 'h132 A'] | Daumen {'gabel_ab_handgelenk': (18.0, 20.0), 'laenge': (20.8, 23.8), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+w0/0 r1.80 dy-65 d4cf5553 KW [43.0, 44.0, 45.0, 44.0, 44.2] KM [19.0, 19.0, 20.0, 20.0, 19.2] spitzen [5.0, 7.0, 1.0, 6.0, 7.0] aus {'h128': ['spitzen']} aR cG dR eR fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (24.8, 25.4), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (14.3, 14.3)} | duenn [] lang_aus ['h125 A', 'h126 A', 'h128 A', 'h130 A', 'h132 A'] | Daumen {'gabel_ab_handgelenk': (18.2, 20.0), 'laenge': (20.8, 25.5), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {'h100': ['AC'], 'h110': ['AC']}
+w20/0 r1.80 dy-55 78b88af0 KW [43.0, 44.0, 45.0, 44.0, 44.2] KM [22.0, 20.0, 21.0, 21.0, 21.0] spitzen [7.0, 7.0, 1.0, 2.0, 7.0] aus {'h128': ['spitzen'], 'h130': ['spitzen']} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (24.3, 24.9), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (14.3, 14.3)} | duenn [] lang_aus ['h125 A', 'h126 A', 'h128 A', 'h130 A', 'h132 A'] | Daumen {'gabel_ab_handgelenk': (18.2, 20.0), 'laenge': (20.8, 23.5), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+== exp3.py
+import sys
+sys.path.insert(0, '.')
+import bewert as BW
+from exp1 import var
+for args in ((45,0,1.8,-35), (50,0,1.8,-45), (45,0,1.7,-45)):
+    r,_ = BW.bewerten(var(*args))
+    print(BW.zeile('w%d/%d r%.2f dy%d' % args, r), flush=True)
+== exp3.txt
+w45/0 r1.80 dy-35 65383607 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 22.0, 23.0, 23.0, 22.0] spitzen [7.0, 7.0, 10.0, 9.0, 8.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (24.0, 24.6), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (14.3, 14.3)} | duenn [] lang_aus ['h126 A', 'h128 A', 'h130 A', 'h132 A'] | Daumen {'gabel_ab_handgelenk': (18.0, 20.0), 'laenge': (20.8, 23.8), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+w50/0 r1.80 dy-45 7ea18a9b KW [43.0, 27.0, 45.0, 44.0, 44.0] KM [23.0, 21.0, 24.0, 23.0, 23.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {'h126': ['krallenwurzel']} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.2, 23.8), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (14.3, 14.3)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (18.0, 20.0), 'laenge': (20.8, 23.7), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+w45/0 r1.70 dy-45 95eb0a57 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (14.3, 14.3)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (18.0, 20.0), 'laenge': (20.8, 23.8), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+== exp5.py
+import sys, copy
+sys.path.insert(0, '.')
+import bewert as BW
+Bt = (186, 963, -149)
+def var2(wA, wC, rA, dyA, dxA=-90, dxC=-70, dyC=-25, rC=1.6):
+    cfg = copy.deepcopy(BW.CFG0); k = cfg['hand']['krallen']
+    k['A'].update(ziel=[Bt[0]+dxA, Bt[1]+dyA, -130], wurzel_schub=[0,wA,0], ring=rA)
+    k['C'].update(ziel=[Bt[0]+dxC, Bt[1]+dyC, -135], wurzel_schub=[0,wC,0], ring=rC)
+    return cfg
+if __name__ == '__main__':
+    for args in ((45,0,1.7,-45,-100), (40,0,1.7,-45,-90), (45,0,1.7,-45,-90,-70,-35), (45,0,1.7,-45,-90,-70,-25,1.7)):
+        r,_ = BW.bewerten(var2(*args))
+        print(BW.zeile(str(args), r), flush=True)
+== exp5.txt
+(45, 0, 1.7, -45, -100) 8d1c0189 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 21.0, 23.0, 23.0, 22.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.0, 23.7), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (14.3, 14.3)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (18.0, 20.0), 'laenge': (20.8, 23.8), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+(40, 0, 1.7, -45, -90) edcca6f1 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.2, 9.0, 7.0] aus {'h128': ['spitzen']} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.7, 24.3), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (14.3, 14.3)} | duenn [] lang_aus ['h128 A', 'h130 A'] | Daumen {'gabel_ab_handgelenk': (18.0, 20.0), 'laenge': (20.8, 23.8), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+(45, 0, 1.7, -45, -90, -70, -35) 78a3ff1e eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (22.4, 23.2), 'T': (14.3, 14.3)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (18.0, 20.0), 'laenge': (20.8, 23.8), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+(45, 0, 1.7, -45, -90, -70, -25, 1.7) 37651426 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.9), 'T': (14.3, 14.3)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (18.0, 20.0), 'laenge': (20.8, 23.8), 'dicke_wurzel': (11.0, 13.0)} aus 10 | kreuz {}
+== exp6.py
+import sys, copy
+sys.path.insert(0, '.')
+import bewert as BW
+from exp5 import var2
+DAUMEN = [13,14,15,16,23,24,25,26,18,19,20,21,22]
+UM = [346, 467, -146]
+def var3(sk, T=None, um=UM, ecken=DAUMEN, dz=0.0, schub=(0,0,0), basis=(45,0,1.7,-45)):
+    cfg = var2(*basis)
+    cfg['hand']['gruppen'] = [dict(ecken=ecken, um=um, skala=list(sk), dreh_z=dz, schub=list(schub))]
+    if T: cfg['hand']['krallen']['T'] = dict(T)
+    return cfg
+if __name__ == '__main__':
+    for nm, a, kw in (('s1', ([1,0.75,1],), {}), ('s2', ([1.15,0.7,1.15],), {}), ('s3', ([1.15,0.7,1.15], dict(faktor=0.85, ring=1.4)), {})):
+        r,_ = BW.bewerten(var3(*a, **kw))
+        print(BW.zeile(nm, r), flush=True)
+== exp6.txt
+s1             414fbfae eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [26.0, 27.0, 28.0, 28.0, 26.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {'h125': ['krallenwurzel'], 'h126': ['krallenwurzel'], 'h128': ['krallenwurzel'], 'h130': ['krallenwurzel'], 'h132': ['krallenwurzel']} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (11.2, 11.2)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (19.0, 21.8), 'laenge': (17.5, 20.5), 'dicke_wurzel': (10.0, 12.0)} aus 5 | kreuz {}
+s2             74dde7e3 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [26.0, 27.0, 28.0, 28.0, 26.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {'h125': ['krallenwurzel'], 'h126': ['krallenwurzel'], 'h128': ['krallenwurzel'], 'h130': ['krallenwurzel'], 'h132': ['krallenwurzel']} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (10.9, 11.0)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (19.5, 22.8), 'laenge': (18.7, 20.7), 'dicke_wurzel': (10.0, 12.0)} aus 4 | kreuz {}
+s3             b08173e5 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [26.0, 27.0, 28.0, 28.0, 26.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {'h125': ['krallenwurzel'], 'h126': ['krallenwurzel'], 'h128': ['krallenwurzel'], 'h130': ['krallenwurzel'], 'h132': ['krallenwurzel']} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (9.3, 9.3)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (19.5, 22.8), 'laenge': (17.3, 19.7), 'dicke_wurzel': (10.0, 12.0)} aus 3 | kreuz {}
+== exp7.py
+import sys
+sys.path.insert(0, '.')
+import bewert as BW
+from exp6 import var3
+P20 = [415, 635, -178]
+for nm, a, kw in (('t1', ([1,0.75,1],), dict(um=P20)), ('t2', ([1,0.65,1],), dict(um=P20)), ('t3', ([1.15,0.7,1.15], dict(faktor=0.9, ring=1.4)), dict(um=P20))):
+    r,_ = BW.bewerten(var3(*a, **kw))
+    print(BW.zeile(nm, r), flush=True)
+== exp7.txt
+t1             7f52a3f3 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (11.2, 11.2)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (19.5, 23.8), 'laenge': (17.8, 24.3), 'dicke_wurzel': (10.0, 11.0)} aus 6 | kreuz {}
+t2             1a796a6e eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (10.0, 10.0)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (20.5, 23.8), 'laenge': (20.2, 23.5), 'dicke_wurzel': (9.0, 10.0)} aus 4 | kreuz {}
+t3             2d5d4199 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 27.0, 45.0, 45.0, 43.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {'h126': ['krallenwurzel']} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (9.8, 9.9)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (20.5, 26.8), 'laenge': (17.2, 22.5), 'dicke_wurzel': (10.0, 11.0)} aus 5 | kreuz {}
+== exp8.py
+import sys
+sys.path.insert(0, '.')
+import bewert as BW
+from exp6 import var3
+P20 = [415, 635, -178]
+def var4(sk, schub89, T=None):
+    cfg = var3(sk, T, um=P20)
+    cfg['hand']['gruppen'].append(dict(ecken=[8, 9], um=[0, 0, 0], skala=[1, 1, 1], schub=list(schub89)))
+    return cfg
+if __name__ == '__main__':
+    for nm, a in (('u1', ([1.1,0.75,1.1], [20,50,0])), ('u2', ([1.1,0.75,1.1], [30,80,0])), ('u3', ([1.1,0.75,1.1], [40,110,0]))):
+        r,_ = BW.bewerten(var4(*a))
+        print(BW.zeile(nm, r), flush=True)
+== exp8.txt
+u1             9904c6a1 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (11.4, 11.4)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (22.5, 24.8), 'laenge': (17.3, 22.3), 'dicke_wurzel': (10.0, 12.0)} aus 2 | kreuz {}
+u2             206397c2 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (11.4, 11.4)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (24.0, 26.8), 'laenge': (14.8, 21.4), 'dicke_wurzel': (10.0, 11.0)} aus 2 | kreuz {}
+u3             b9e6a2d8 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 44.0, 44.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (11.4, 11.4)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (25.0, 26.8), 'laenge': (14.8, 19.4), 'dicke_wurzel': (10.0, 11.0)} aus 1 | kreuz {}
+== exp10.py
+import sys
+sys.path.insert(0, '.')
+import bewert as BW
+from exp8 import var4
+from exp9 import detail
+DAUMEN = [13,14,15,16,23,24,25,26,18,19,20,21,22]
+WURZEL = [192, 246, -27]
+def var5(dz, sk, schub89):
+    cfg = var4(sk, schub89)
+    cfg['hand']['gruppen'].insert(0, dict(ecken=DAUMEN, um=WURZEL, skala=[1,1,1], dreh_z=dz))
+    return cfg
+if __name__ == '__main__':
+    for nm, a in (('v1', (10, [1.25,0.75,1.25], [40,110,0])), ('v2', (-10, [1.25,0.75,1.25], [40,110,0]))):
+        r,_ = BW.bewerten(var5(*a))
+        print(BW.zeile(nm, r), flush=True)
+        detail(var5(*a), nm)
+== exp10.txt
+v1             e663e10e eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [37.0, 38.0, 39.0, 39.0, 38.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cR dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (11.3, 11.4)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (29.5, 31.0), 'laenge': (12.6, 14.6), 'dicke_wurzel': (8.0, 11.0)} aus 6 | kreuz {}
+v1 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 30.8 L 14.4 dick 8.0 w -17.2
+v1 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 31.0 L 13.7 dick 11.0 w -21.4
+v1 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 30.5 L 12.6 dick 10.0 w -27.1
+v1 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 31.0 L 13.2 dick 10.0 w -22.2
+v1 h132 hg 21.0 um 35.2 eng 0.5966 daumen gab 29.5 L 14.6 dick 11.0 w -20.0
+v2             ca1bed25 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [26.0, 27.0, 28.0, 28.0, 26.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {'h125': ['krallenwurzel'], 'h126': ['krallenwurzel'], 'h128': ['krallenwurzel'], 'h130': ['krallenwurzel'], 'h132': ['krallenwurzel']} aR cG dG eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (12.7, 12.7)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (23.5, 25.8), 'laenge': (16.7, 20.3), 'dicke_wurzel': (11.0, 13.0)} aus 0 | kreuz {}
+v2 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 25.8 L 17.5 dick 12.0 w -47.9
+v2 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 24.0 L 19.3 dick 11.0 w -48.7
+v2 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 23.5 L 20.3 dick 11.0 w -46.5
+v2 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 25.0 L 16.7 dick 13.0 w -49.9
+v2 h132 hg 21.0 um 35.2 eng 0.5966 daumen gab 25.2 L 19.8 dick 13.0 w -52.7
+== exp11.py
+import sys
+sys.path.insert(0, '.')
+import bewert as BW
+from exp10 import var5
+from exp9 import detail
+for nm, a in (('w1', (8, [1.25,0.85,1.25], [20,50,0])), ('w2', (6, [1.3,0.8,1.3], [30,70,0])), ('w3', (8, [1.3,0.9,1.3], [10,30,0]))):
+    r,_ = BW.bewerten(var5(*a))
+    print(BW.zeile(nm, r), flush=True)
+    detail(var5(*a), nm)
+== exp11.txt
+w1             61e696a0 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [38.0, 39.0, 40.0, 41.0, 39.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cR dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (12.7, 12.7)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (25.5, 29.0), 'laenge': (12.7, 19.6), 'dicke_wurzel': (9.0, 13.0)} aus 2 | kreuz {}
+w1 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 28.8 L 12.7 dick 9.0 w -22.0
+w1 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 26.0 L 17.2 dick 9.0 w -24.0
+w1 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 26.5 L 16.5 dick 11.0 w -30.1
+w1 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 29.0 L 15.4 dick 13.0 w -24.9
+w1 h132 hg 21.0 um 35.2 eng 0.5966 daumen gab 25.5 L 19.6 dick 11.0 w -24.9
+w2             b2a419b4 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [39.0, 39.0, 41.0, 41.0, 41.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cR dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (12.1, 12.2)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (26.5, 31.0), 'laenge': (7.3, 17.6), 'dicke_wurzel': (9.0, 13.0)} aus 4 | kreuz {}
+w2 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 28.8 L 14.0 dick 9.0 w -24.3
+w2 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 31.0 L 11.9 dick 11.0 w -24.9
+w2 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 26.5 L 17.6 dick 12.0 w -29.8
+w2 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 29.0 L 13.6 dick 13.0 w -28.4
+w2 h132 hg 21.0 um 35.2 eng 0.5966 daumen gab 27.5 L 7.3 dick 11.0 w 8.8
+w3             80225342 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [38.0, 38.0, 39.0, 40.0, 39.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cR dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (13.4, 13.5)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (25.5, 28.0), 'laenge': (15.8, 19.2), 'dicke_wurzel': (10.0, 12.0)} aus 1 | kreuz {}
+w3 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 25.8 L 16.9 dick 10.0 w -21.6
+w3 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 28.0 L 15.9 dick 11.0 w -22.1
+w3 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 27.5 L 15.8 dick 12.0 w -25.3
+w3 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 26.0 L 18.0 dick 10.0 w -16.9
+w3 h132 hg 21.0 um 35.2 eng 0.5966 daumen gab 25.5 L 19.2 dick 11.0 w -22.2
+== exp12.py
+import sys
+sys.path.insert(0, '.')
+import bewert as BW
+from exp10 import var5
+from exp9 import detail
+for nm, a in (('x1', (8, [1.15,0.9,1.15], [10,30,0])), ('x2', (8, [1.0,0.9,1.0], [10,30,0])), ('x3', (7, [1.15,0.9,1.15], [15,40,0]))):
+    r,_ = BW.bewerten(var5(*a))
+    print(BW.zeile(nm, r), flush=True)
+    detail(var5(*a), nm)
+== exp12.txt
+x1             656140ba eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [39.0, 40.0, 41.0, 41.0, 40.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cR dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] BL [0.648, 0.636, 0.672, 0.647, 0.675] HB [42.0, 42.0, 44.0, 42.2, 44.2] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (13.3, 13.3)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (22.5, 24.0), 'laenge': (19.4, 22.4), 'dicke_wurzel': (9.0, 11.2)} aus 4 | kreuz {}
+x1 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 23.8 L 19.4 dick 9.0 w -23.6
+x1 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 24.0 L 20.6 dick 10.0 w -24.4
+x1 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 22.5 L 21.5 dick 11.0 w -26.3
+x1 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 24.0 L 20.6 dick 11.2 w -22.5
+x1 h132 hg 21.0 um 35.2 eng 0.5966 daumen gab 22.5 L 22.4 dick 11.0 w -22.3
+x2             ae54dc8b eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [39.0, 40.0, 41.0, 41.0, 41.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cR dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] BL [0.648, 0.636, 0.672, 0.647, 0.675] HB [42.0, 42.0, 44.0, 42.2, 44.2] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (13.2, 13.2)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (21.0, 23.0), 'laenge': (21.0, 23.8), 'dicke_wurzel': (11.0, 12.0)} aus 6 | kreuz {}
+x2 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 21.5 L 21.6 dick 12.0 w -22.4
+x2 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 23.0 L 21.0 dick 11.0 w -19.5
+x2 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 21.5 L 22.0 dick 11.0 w -22.8
+x2 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 21.0 L 23.8 dick 11.0 w -22.2
+x2 h132 hg 21.0 um 35.2 eng 0.5966 daumen gab 21.5 L 23.3 dick 12.0 w -22.7
+x3             fc7965ca eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [39.0, 40.0, 41.0, 41.0, 41.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cR dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] BL [0.648, 0.636, 0.672, 0.647, 0.675] HB [42.0, 42.0, 44.0, 42.2, 44.2] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (13.3, 13.3)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (22.5, 25.0), 'laenge': (17.4, 22.8), 'dicke_wurzel': (9.0, 12.0)} aus 3 | kreuz {}
+x3 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 23.8 L 19.4 dick 9.0 w -23.6
+x3 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 23.0 L 21.7 dick 11.0 w -24.5
+x3 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 22.5 L 21.5 dick 11.0 w -26.3
+x3 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 25.0 L 17.4 dick 9.0 w -22.9
+x3 h132 hg 21.0 um 35.2 eng 0.5966 daumen gab 22.5 L 22.8 dick 12.0 w -26.0
+== exp13.py
+import sys, copy
+sys.path.insert(0, '.')
+import bewert as BW
+from exp5 import var2
+from exp9 import detail
+DAUMEN = [13,14,15,16,23,24,25,26,18,19,20,21,22]
+P20 = [415, 635, -178]
+ACHSE = [133, 284, -74]           # Mitte Ring 13-16 [282, 351, -104] -> Spitze 20
+def var6(f, q, s89, T=None):
+    cfg = var2(45, 0, 1.7, -45)
+    cfg['hand']['gruppen'] = [dict(ecken=DAUMEN, um=P20, achse=ACHSE, laengs=f, quer=q),
+                              dict(ecken=[8, 9], um=[0, 0, 0], schub=list(s89))]
+    if T: cfg['hand']['krallen']['T'] = dict(T)
+    return cfg
+if __name__ == '__main__':
+    for nm, a in (('y1', (0.75, 1.15, [40,110,0])), ('y2', (0.8, 1.15, [30,90,0])), ('y3', (0.75, 1.25, [30,90,0]))):
+        r,_ = BW.bewerten(var6(*a))
+        print(BW.zeile(nm, r), flush=True)
+        detail(var6(*a), nm)
+== exp13.txt
+y1             2f260b4f eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 45.0, 45.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] BL [0.71, 0.697, 0.733, 0.709, 0.736] HB [46.0, 46.0, 48.0, 46.2, 48.2] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (10.8, 10.9)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (23.5, 25.8), 'laenge': (15.5, 19.0), 'dicke_wurzel': (12.0, 15.0)} aus 1 | kreuz {}
+y1 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 25.8 L 15.5 dick 12.0 w -27.8
+y1 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 24.0 L 19.0 dick 15.0 w -28.2
+y1 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 23.5 L 19.0 dick 14.0 w -31.0
+y1 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 25.0 L 18.0 dick 13.0 w -29.1
+y1 h132 hg 21.0 um 35.2 eng 0.5966 daumen gab 25.2 L 17.9 dick 13.0 w -30.1
+y2             97ecec30 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 45.0, 45.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] BL [0.71, 0.697, 0.733, 0.709, 0.736] HB [46.0, 46.0, 48.0, 46.2, 48.2] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (11.5, 11.6)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (22.5, 24.2), 'laenge': (9.3, 19.9), 'dicke_wurzel': (12.0, 16.0)} aus 1 | kreuz {}
+y2 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 22.5 L 19.9 dick 16.0 w -31.1
+y2 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 24.0 L 19.3 dick 14.0 w -29.6
+y2 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 24.2 L 17.3 dick 12.0 w -26.6
+y2 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 24.0 L 9.3 dick 12.2 w -6.2
+y2 h132 hg 21.0 um 35.2 eng 0.5966 daumen gab 24.2 L 18.6 dick 12.2 w -27.6
+y3             1cff1f10 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.597, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 44.0, 45.0, 45.2, 45.0] KM [22.0, 21.0, 23.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 9.0, 7.0] aus {} aR cG dG eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] BL [0.71, 0.697, 0.733, 0.739, 0.736] HB [46.0, 46.0, 48.0, 48.2, 48.2] | Krallen {'A': (23.4, 24.0), 'B': (15.9, 17.0), 'C': (23.1, 23.8), 'T': (10.9, 11.0)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (24.0, 25.0), 'laenge': (16.7, 19.4), 'dicke_wurzel': (12.0, 15.2)} aus 0 | kreuz {}
+y3 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 24.8 L 16.7 dick 13.0 w -27.7
+y3 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 24.0 L 19.0 dick 15.0 w -28.2
+y3 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 24.2 L 17.3 dick 12.0 w -26.6
+y3 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 25.0 L 17.6 dick 15.0 w -26.2
+y3 h132 hg 21.0 um 35.2 eng 0.5966 daumen gab 24.2 L 19.4 dick 15.2 w -31.5
+== exp14.py
+import sys
+sys.path.insert(0, '.')
+import bewert as BW
+from exp13 import var6
+from exp9 import detail
+def var7(wB, **kw):
+    cfg = var6(0.75, 1.25, [30, 90, 0])
+    if wB: cfg['hand']['krallen']['B']['wurzel_schub'] = [0, wB, 0]
+    return cfg
+if __name__ == '__main__':
+    for nm, wB in (('z1', -45), ('z2', -25)):
+        r,_ = BW.bewerten(var7(wB), s20=(nm == 'z1'))
+        print(BW.zeile(nm, r), r.get('s20'), flush=True)
+        detail(var7(wB), nm)
+== exp14.txt
+z1             0b1fafb7 eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.624, 'h132': 0.602, 'h100': 0.615, 'h110': 0.643, 'h135': 0.614}/0.597 KW [43.0, 45.0, 46.0, 46.0, 45.0] KM [22.0, 22.0, 24.0, 23.0, 21.2] spitzen [7.0, 7.0, 10.0, 8.0, 7.0] aus {} aG cG dR eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] BL [0.71, 0.697, 0.733, 0.739, 0.736] HB [46.0, 46.0, 48.0, 48.2, 48.2] | Krallen {'A': (23.4, 24.0), 'B': (19.1, 20.3), 'C': (23.1, 23.8), 'T': (10.9, 11.0)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (24.0, 25.0), 'laenge': (10.7, 19.0), 'dicke_wurzel': (12.2, 15.0)} aus 1 | kreuz {} {'ok': True, 'rot': [], 'winkel': {'h125': -6.0, 'h126': -5.6, 'h128': -5.0, 'h130': -4.4, 'h132': -4.5}, 'breit': {'h125': 46.0, 'h126': 46.0, 'h128': 48.0, 'h130': 48.2, 'h132': 48.2}, 'hg': {'h125': 0.475, 'h126': 0.478, 'h128': 0.485, 'h130': 0.487, 'h132': 0.484}, 'sp': {'h125': 0.275, 'h126': 0.274, 'h128': 0.283, 'h130': 0.285, 'h132': 0.282}}
+z1 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 24.8 L 16.7 dick 13.0 w -27.7
+z1 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 24.0 L 19.0 dick 15.0 w -28.2
+z1 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 24.5 L 17.2 dick 12.2 w -27.3
+z1 h130 hg 21.2 um 34.0 eng 0.6235 daumen gab 25.0 L 17.9 dick 14.0 w -26.6
+z1 h132 hg 21.2 um 35.2 eng 0.6023 daumen gab 24.2 L 10.7 dick 15.0 w -21.2
+z2             a474188a eng {'h125': 0.647, 'h126': 0.636, 'h128': 0.629, 'h130': 0.618, 'h132': 0.602, 'h100': 0.615, 'h110': 0.643, 'h135': 0.62}/0.597 KW [43.0, 45.0, 45.0, 46.0, 45.0] KM [22.0, 22.0, 24.0, 23.0, 21.0] spitzen [7.0, 7.0, 10.0, 8.0, 7.0] aus {} aG cG dG eG fG | HL [64.8, 66.0, 65.5, 65.2, 65.5] BL [0.71, 0.697, 0.733, 0.739, 0.736] HB [46.0, 46.0, 48.0, 48.2, 48.2] | Krallen {'A': (23.4, 24.0), 'B': (17.7, 18.8), 'C': (23.1, 23.8), 'T': (10.9, 11.0)} | duenn [] lang_aus [] | Daumen {'gabel_ab_handgelenk': (24.0, 25.0), 'laenge': (16.7, 19.4), 'dicke_wurzel': (12.0, 15.0)} aus 0 | kreuz {} None
+z2 h125 hg 22.0 um 34.0 eng 0.6471 daumen gab 24.8 L 16.7 dick 13.0 w -27.7
+z2 h126 hg 21.0 um 33.0 eng 0.6364 daumen gab 24.0 L 19.0 dick 15.0 w -28.2
+z2 h128 hg 22.0 um 35.0 eng 0.6286 daumen gab 24.5 L 17.1 dick 12.0 w -26.9
+z2 h130 hg 21.0 um 34.0 eng 0.6176 daumen gab 25.0 L 17.8 dick 14.0 w -26.2
+z2 h132 hg 21.2 um 35.2 eng 0.6023 daumen gab 24.2 L 19.4 dick 15.0 w -31.8

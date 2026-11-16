@@ -1,0 +1,23 @@
+Framedumps NEU (r7e/szene) gegen Stand 7d (r7d/szene) F360-F380: geaenderte Bildpunkte innerhalb / ausserhalb der Marker-Masken Mesh 11 + 12 (HF_NEU)
+F360 geaendert 4323, davon in Arm-Maske (+1 px) 4323, ausserhalb 0
+F361 geaendert 4442, davon in Arm-Maske (+1 px) 4442, ausserhalb 0
+F362 geaendert 4463, davon in Arm-Maske (+1 px) 4463, ausserhalb 0
+F363 geaendert 4433, davon in Arm-Maske (+1 px) 4433, ausserhalb 0
+F364 geaendert 4588, davon in Arm-Maske (+1 px) 4588, ausserhalb 0
+F365 geaendert 4564, davon in Arm-Maske (+1 px) 4564, ausserhalb 0
+F366 geaendert 4764, davon in Arm-Maske (+1 px) 4764, ausserhalb 0
+F367 geaendert 4719, davon in Arm-Maske (+1 px) 4719, ausserhalb 0
+F368 geaendert 4663, davon in Arm-Maske (+1 px) 4663, ausserhalb 0
+F369 geaendert 4630, davon in Arm-Maske (+1 px) 4630, ausserhalb 0
+F370 geaendert 4706, davon in Arm-Maske (+1 px) 4706, ausserhalb 0
+F371 geaendert 4765, davon in Arm-Maske (+1 px) 4765, ausserhalb 0
+F372 geaendert 4695, davon in Arm-Maske (+1 px) 4695, ausserhalb 0
+F373 geaendert 4700, davon in Arm-Maske (+1 px) 4700, ausserhalb 0
+F374 geaendert 4609, davon in Arm-Maske (+1 px) 4609, ausserhalb 0
+F375 geaendert 4680, davon in Arm-Maske (+1 px) 4680, ausserhalb 0
+F376 geaendert 4735, davon in Arm-Maske (+1 px) 4735, ausserhalb 0
+F377 geaendert 4739, davon in Arm-Maske (+1 px) 4739, ausserhalb 0
+F378 geaendert 4739, davon in Arm-Maske (+1 px) 4739, ausserhalb 0
+F379 geaendert 0, davon in Arm-Maske (+1 px) 0, ausserhalb 0
+F380 geaendert 0, davon in Arm-Maske (+1 px) 0, ausserhalb 0
+Summe innen 87957, ausserhalb 0

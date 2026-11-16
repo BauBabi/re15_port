@@ -1,0 +1,40 @@
+== 8c
+  +tb  Bauch  Zeile 493 Seite 0 Spalte u  65 (v 48-56,  46 Ecken): L* min 38.5 Median 46.1, C* 17.4, h  22
+  +tb  Bauch  Zeile 493 Seite 0 Spalte u  93 (v 12-13,  12 Ecken): L* min 23.5 Median 24.1, C* 20.6, h  15
+  +tb  Bauch  Zeile 493 Seite 0 Spalte u 100 (v 12-13,  24 Ecken): L* min 58.7 Median 62.3, C* 19.0, h  29
+  +tb  Flanke Zeile 487 Seite 2 Spalte u  64 (v 56-252,  56 Ecken): L* min 16.4 Median 20.5, C*  5.3, h 109
+  +tb  Flanke Zeile 493 Seite 0 Spalte u  93 (v 12-13,  12 Ecken): L* min 23.5 Median 24.1, C* 20.6, h  15
+  +tb  Flanke Zeile 493 Seite 0 Spalte u 100 (v 12-13,  24 Ecken): L* min 58.7 Median 62.3, C* 19.0, h  29
+  -tb  Bauch  Zeile 493 Seite 0 Spalte u  54 (v 49-56,  46 Ecken): L* min  4.7 Median 16.1, C* 16.7, h  24
+  -tb  Bauch  Zeile 493 Seite 0 Spalte u  93 (v 12-13,  12 Ecken): L* min 23.5 Median 24.1, C* 20.6, h  15
+  -tb  Bauch  Zeile 493 Seite 0 Spalte u 100 (v 12-13,  24 Ecken): L* min 58.7 Median 62.3, C* 19.0, h  29
+  -tb  Flanke Zeile 487 Seite 2 Spalte u  76 (v 223-235,   6 Ecken): L* min 16.4 Median 20.2, C*  5.6, h 109
+  -tb  Flanke Zeile 487 Seite 2 Spalte u  77 (v 237-252,  22 Ecken): L* min 24.0 Median 24.5, C*  5.4, h 109
+  -tb  Flanke Zeile 487 Seite 2 Spalte u  87 (v 87-125,  22 Ecken): L* min 16.7 Median 25.1, C*  5.3, h 109
+  -tb  Flanke Zeile 487 Seite 2 Spalte u  90 (v 56-80,   6 Ecken): L* min 16.4 Median 24.0, C*  5.4, h 109
+  -tb  Flanke Zeile 493 Seite 0 Spalte u  93 (v 12-13,  12 Ecken): L* min 23.5 Median 24.1, C* 20.6, h  15
+  -tb  Flanke Zeile 493 Seite 0 Spalte u 100 (v 12-13,  24 Ecken): L* min 58.7 Median 62.3, C* 19.0, h  29
+== 8d
+  +tb  Bauch  Zeile 493 Seite 0 Spalte u  65 (v 51-55,  82 Ecken): L* min 38.5 Median 46.1, C* 17.9, h  22
+  +tb  Flanke Zeile 487 Seite 2 Spalte u  64 (v 76-130,  92 Ecken): L* min 16.4 Median 21.4, C*  5.6, h 109
+  -tb  Bauch  Zeile 493 Seite 0 Spalte u  54 (v 51-55,  82 Ecken): L* min 11.6 Median 19.9, C* 22.9, h  25
+  -tb  Flanke Zeile 487 Seite 2 Spalte u  87 (v 77-130,  92 Ecken): L* min 16.7 Median 27.6, C*  5.3, h 109
+== 8f
+  +tb  Bauch  Zeile 493 Seite 0 Spalte u  65 (v 51-55,  82 Ecken): L* min 38.5 Median 46.1, C* 17.9, h  22
+  +tb  Flanke Zeile 487 Seite 2 Spalte u  64 (v 109-123,  10 Ecken): L* min 16.4 Median 20.2, C*  5.7, h 109
+  +tb  Flanke Zeile 493 Seite 0 Spalte u  65 (v 51-55,  82 Ecken): L* min 38.5 Median 46.1, C* 17.9, h  22
+  -tb  Bauch  Zeile 493 Seite 0 Spalte u  56 (v 51-55,  82 Ecken): L* min 32.7 Median 34.0, C* 19.4, h  22
+  -tb  Flanke Zeile 487 Seite 2 Spalte u  87 (v 109-123,  10 Ecken): L* min 16.7 Median 25.1, C*  5.3, h 109
+  -tb  Flanke Zeile 493 Seite 0 Spalte u  56 (v 51-55,  82 Ecken): L* min 32.7 Median 34.0, C* 19.4, h  22
+== 8g_direkt
+  +tb  Bauch  Zeile 493 Seite 0 Spalte u  65 (v 51-55,  82 Ecken): L* min 38.5 Median 46.1, C* 17.9, h  22
+  +tb  Flanke Zeile 487 Seite 2 Spalte u  64 (v 56-252,  56 Ecken): L* min 16.4 Median 20.5, C*  5.3, h 109
+  +tb  Flanke Zeile 493 Seite 0 Spalte u  93 (v 12-13,  12 Ecken): L* min 23.5 Median 24.1, C* 20.6, h  15
+  +tb  Flanke Zeile 493 Seite 0 Spalte u 100 (v 12-13,  24 Ecken): L* min 58.7 Median 62.3, C* 19.0, h  29
+  -tb  Bauch  Zeile 493 Seite 0 Spalte u  56 (v 51-55,  82 Ecken): L* min 32.7 Median 34.0, C* 19.4, h  22
+  -tb  Flanke Zeile 487 Seite 2 Spalte u  76 (v 223-235,   6 Ecken): L* min 16.4 Median 20.2, C*  5.6, h 109
+  -tb  Flanke Zeile 487 Seite 2 Spalte u  77 (v 237-252,  22 Ecken): L* min 24.0 Median 24.5, C*  5.4, h 109
+  -tb  Flanke Zeile 487 Seite 2 Spalte u  87 (v 87-125,  22 Ecken): L* min 16.7 Median 25.1, C*  5.3, h 109
+  -tb  Flanke Zeile 487 Seite 2 Spalte u  90 (v 56-80,   6 Ecken): L* min 16.4 Median 24.0, C*  5.4, h 109
+  -tb  Flanke Zeile 493 Seite 0 Spalte u  93 (v 12-13,  12 Ecken): L* min 23.5 Median 24.1, C* 20.6, h  15
+  -tb  Flanke Zeile 493 Seite 0 Spalte u 100 (v 12-13,  24 Ecken): L* min 58.7 Median 62.3, C* 19.0, h  29

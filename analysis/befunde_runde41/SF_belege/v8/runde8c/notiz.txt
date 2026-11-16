@@ -1,0 +1,35 @@
+Runde 8c (Schwanz Sichel-Form V8, Farbe nach Nutzerwahl Probe b) - Notiz. Zweig r41/sichel_v8.
+Auftrag Koordinator 2026-11-14: Nutzer waehlt b ("Ich wuerde auch sagen b, wobei das Original Video der Schwanz noch etwas heller ist und nicht
+ganz so rot"). Pruefer gruenblut: Port-Bauch im Spiel Saettigung 0,50-0,55 gegen Video 0,38-0,41, Video-Mitte RGB (89-108, 51-66, 52-67);
+Baender "2-4 kleine Flecken seitlich, keine weichen Ringe an den Gliedfugen". Vorgabe: heller / weniger rot NUR durch AUSWAHL anderer
+Original-Texel bzw. CLUT-Eintraege, keine Farbverschiebung, keine Eichung am Video; helle Stellen als weiche Ringe umlaufend an den Fugen.
+Kein RE-Befund: die Sichel-Form gibt es auf keiner Disc; alles PORT-WAHL, keine @0x-Adresse.
+
+[1] Eingang 07b6703f (Stand 7e) wie Runde 8/8b; Form, Nadel, Fugen-Geometrie, heben() unveraendert (nur UV/CLUT der Meshes 16-22).
+[2] Vorhersage aus den Texeln reicht nicht: das Spiellicht wirkt je Feld verschieden (gemessen Spielbild / Texel-Mittel 0,74-1,17 je Kanal),
+    weil je Bild nur ein Teil des Felds sichtbar ist. Darum Auswahl nach MESSUNG im echten Spielbild: je Kandidat Stufe q mit anderem Feld
+    (werkzeug/x15_kandidaten.py, Messproben, kein Spiel-Asset), Szenenlauf F255-F320, Bauch-Bildpunkte aus einem Masken-Lauf (x10_maske.py:
+    Bauch-Flaechen einfarbig, Differenz zum Bezugslauf), Median je Bild (x16_messen.py, x19_reihe.py). 17 Felder der Original-Zeilen 480/481/482
+    (alle in der Original-Nutzung, Asset-Texel = Disc-Original): messung/messung_kandidaten.txt, reihe_kandidaten.txt.
+    - grosse gefleckte Felder (K3 640 Texel, G1-G3): je Bild sehr verschiedene Toene (G2 F265 L* 16 / F307 L* 30) - verworfen;
+    - ruhige Felder (K1, K2, K5, K6, E1): zu grau/braun (C* 9-13) oder zu hell (K8 L* 53);
+    - quer und laengs gespiegelte Abbildung (C1s): regelmaessiges Augenmuster (messung/mb_c1s.png) - verworfen;
+    - gewaehlt C1 = Zeile 480 (Asset 493), Seite 0, u 54-65 v 48-57: ueber 9 Bilder Median S 0,35 [0,27-0,41], V 0,39, L* 31,2, C* 16,0,
+      Lab-Abstand zur Video-Mitte 5,1 [2,8-16,4] (vorher 66db2244: S 0,54, V 0,32, L* 21,7, C* 22,1, Abstand 8,7). Endlauf des Spiel-Assets
+      (messung/reihe_final.txt) = genau diese Werte.
+[3] Ringe (Probe b): Band-Klasse auf ALLEN 11 Sektoren der Fugen (Mantel S-C und D-E = KERBE_LAENGE x L um jedes Gelenk, dazu die Deckel),
+    UV quer |theta| / 180, laengs vom hellen Ende am Gelenk zum dunklen am vollen Querschnitt. Erstes Feld R1 (u 38-49 v 66-75) hatte eine
+    dunkle Ader (L* 4) am dunklen Ende -> dunkle Flecken am Ringrand (messung/mb_ring_nah.png). x20_ringfeld.py sucht Felder mit Verlauf
+    hell L* 42-52 -> dunkel 27-33, kein Texel unter L* 18 (ringfeld.json). Gewaehlt RB = Zeile 480, Seite 0, u 93-100 v 10-17, hell bei
+    u 100 (messung/mb_ringe.png: R1 | RB | RC). Im Spiel Ring L* 34-39, C* 15-21 (messung_final.txt).
+[4] Riegel (riegel_schwanz_r8.py): R8d (3) jetzt "Band-Flaechen = genau die Fugen-Flaechen aller Sektoren" (aus den Ring-Lagen) + in PV an
+    >= 5 Gelenken sichtbar; R8e Klassen aus den UV-Feldern (Bauch und Ring liegen beide auf Zeile 493), Herkunft 493/494/495 -> 480/481/482.
+    r8_b.txt: 7 von 7 gruen (R8d: Band 22/44/44/44/44/44/22 = Fugen, PV an 6 Gelenken; R8e: 92 Bauch-Flaechen, 0 ausserhalb, PV aussen 0,00 %,
+    innen 75,4 %, fremde Texel 0). Gegenproben: 07b6703f 1 von 6 (rot R8a-R8e), 66db2244 4 von 6 (rot R8d, R8e).
+    riegel_v8r8c.txt 18 von 24 wie Runde 8b (GELB S3, ROT S9/S14/S16/S18/S19 = Erbe frueherer Runden, unveraendert); S15 (= R8e) gruen.
+[5] Herkunft (messung/herkunft_final.txt): Bauch 100 Texel, Ring 57 Texel, alle = Disc-Original und in der Nutzung der Original-Zeile 480
+    durch Original-Flaechen; CLUT-Zeile 493 == Original 480. Auf 495 nur noch die 14 Wurzelflaechen von Glied 16 (Stufe w/u).
+[6] Kette zweimal (kette_lauf1/2.txt): V8-KETTE-OK sha256 d31f95341fd8a82a4f9a0e7c0b5a11a205c9f90ac58f2bfa4d5202bb9f31af50 = Pin.
+    Bau OK; ctest-Gruppe 8/8 (ctest_gruppe.txt). test_birkin_formen: neu OK; Gegenprobe 07b6703f 20 Fehler, 66db2244 7 Fehler.
+[7] Tafel 21 neu: ../21_schwanz_farbe_r8c.png (Nutzerbild | vorher Probe b 66db2244 | neu; h22 / h24 / h64 Spiel, PV offline). Nicht selbst
+    angesehen (Pruefer). Messbilder messung/mb_*.png sind Arbeitsbilder, kein Ergebnis.

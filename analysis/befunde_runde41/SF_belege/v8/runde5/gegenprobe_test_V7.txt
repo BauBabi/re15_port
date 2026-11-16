@@ -1,0 +1,47 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build
+    Start 1372: unit_birkin_formen
+1/2 Test #1372: unit_birkin_formen ...............***Failed    0.03 sec
+EM30_HANGAR.EMD: 886 von 913 Keyframes geduckt, Fussgelenk max 342 vom EM30-Ort, 912 mit bewegtem Schwanz
+FAIL: EM30_HANGAR.EMD: Mesh 8 Elementzahlen 77/27/69/69 weichen von EM30 77/27/69/69 + Einsatz 12/6/14 ab
+FAIL: EM30_HANGAR.EMD: Oberarm (Mesh 13) 0 Flaechen auf 493 (Soll 56), 13 auf 480, 43 auf 489 (Soll 0)
+FAIL: EM30_HANGAR.EMD: Oberarm (Mesh 13) 0 Flaechen mit anderer UV (Soll 24, Feld C)
+FAIL: EM30_HANGAR.EMD: Mesh 14 nicht umtexturiert
+FAIL: EM30_HANGAR.EMD: Unterarm (Mesh 14) 0 Flaechen auf X3 (Soll 37), 37 auf 482 (Soll 0)
+FAIL: EM30_HANGAR.EMD: Unterarm (Mesh 14) 0 Flaechen mit anderer UV (Soll 4, Band)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 16: 0 Flaechen auf 495 (Soll 8), 33 auf 487, 33 gesamt (V8 Runde 5 Unterseite)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 17: 0 Flaechen auf 495 (Soll 8), 33 auf 487, 33 gesamt (V8 Runde 5 Unterseite)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 18: 0 Flaechen auf 495 (Soll 16), 44 auf 487, 44 gesamt (V8 Runde 5 Unterseite)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 19: 0 Flaechen auf 495 (Soll 8), 33 auf 487, 33 gesamt (V8 Runde 5 Unterseite)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 20: 0 Flaechen auf 495 (Soll 8), 33 auf 487, 33 gesamt (V8 Runde 5 Unterseite)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 21: 0 Flaechen auf 495 (Soll 8), 33 auf 487, 33 gesamt (V8 Runde 5 Unterseite)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 22: 0 Flaechen auf 495 (Soll 16), 33 auf 487, 33 gesamt (V8 Runde 5 Unterseite)
+FAIL: EM30_HANGAR.EMD: CLUT 3328 Eintraege (Soll 16 x 256) ab y 480
+EM30_HANGAR.EMD: 23 Meshes, 23 Knochen, 21 Clips, 241 Tri-Vertices umgeformt, 11 Teile umtexturiert
+test_birkin_formen: 14 Fehler
+
+    Start 1378: unit_schwanz_r41
+2/2 Test #1378: unit_schwanz_r41 .................***Failed    0.06 sec
+FAIL: Spiel-Asset: Schwanzkette 16-22 nicht die V8-Kette (9 Werte anders, V8-Kette 0, V4-Kette 1)
+Schwanz [Spiel-Asset]: V4-Kette (ungleiche Glieder)
+Schwanz [Spiel-Asset]: Nachlauf max 189, Rest 4; Glieder bis 1 von der gezeichneten Laenge; Freigabe Mitte nach 0, links nach -1 Takten
+Schwanz [Spiel-Asset]: Szenenziel getroffen auf 380 (ohne Ziel 1400), Freigabe-Schritt 165
+Schwanz [Gliederung Referenz 2]: Kette mit gleichen Gliedern
+Schwanz [Gliederung Referenz 2]: Nachlauf max 1007, Rest 5; Glieder bis 1 von der gezeichneten Laenge; Freigabe Mitte nach 6, links nach -1 Takten
+Schwanz [Gliederung Referenz 2]: Szenenziel getroffen auf 0 (ohne Ziel 1497), Freigabe-Schritt 108
+Schwanz [Spiel-Asset, zweiter Lauf]: V4-Kette (ungleiche Glieder)
+Schwanz [Spiel-Asset, zweiter Lauf]: Nachlauf max 189, Rest 4; Glieder bis 1 von der gezeichneten Laenge; Freigabe Mitte nach 0, links nach -1 Takten
+Schwanz [Spiel-Asset, zweiter Lauf]: Szenenziel getroffen auf 380 (ohne Ziel 1400), Freigabe-Schritt 165
+Schwanz: flachstes Glied ohne Ziel 76 Grad (Abstand zur Grenze -5.2)
+Schwanz V4-Gliederung: groesster Gelenkwinkel 78.0 Grad, Abstand zur Grenze 0.1
+Schwanz gleiche Glieder (Gegenprobe, ungeglaettet): groesster Gelenkwinkel 132.8 Grad, Abstand zur Grenze 115.5
+test_schwanz_r41: 1 Fehler
+
+
+0% tests passed, 2 tests failed out of 2
+
+Total Test time (real) =   0.19 sec
+
+The following tests FAILED:
+	1372 - unit_birkin_formen (Failed)
+	1378 - unit_schwanz_r41 (Failed)
+Errors while running CTest

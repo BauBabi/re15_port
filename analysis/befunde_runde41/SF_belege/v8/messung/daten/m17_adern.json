@@ -1,0 +1,130 @@
+{
+ "A Arm-Adernbaum p0 Zeile 480 (u 0-77 v 0-155)": {
+  "texel_benutzt": 10046,
+  "ader": 1313,
+  "flaechenrot": 92,
+  "ader_anteil": 13.1,
+  "zeilen": {
+   "480": 1313
+  },
+  "meshes": [
+   2,
+   5,
+   7,
+   8,
+   9,
+   10,
+   13
+  ],
+  "indizes": 54,
+  "ader_lab_median": [
+   22.8,
+   21.9,
+   10.4
+  ],
+  "haut_lab_median": [
+   51.4,
+   10.8,
+   5.5
+  ]
+ },
+ "B Brust-Adern p1 Zeile 481 (u 128-255 v 0-90)": {
+  "texel_benutzt": 7713,
+  "ader": 605,
+  "flaechenrot": 233,
+  "ader_anteil": 7.8,
+  "zeilen": {
+   "481": 605
+  },
+  "meshes": [
+   8
+  ],
+  "indizes": 48,
+  "ader_lab_median": [
+   20.7,
+   23.3,
+   11.2
+  ],
+  "haut_lab_median": [
+   46.3,
+   8.2,
+   6.9
+  ]
+ },
+ "C Augapfel/Schulter p0 (u 78-127 v 0-100)": {
+  "texel_benutzt": 2415,
+  "ader": 225,
+  "flaechenrot": 342,
+  "ader_anteil": 9.3,
+  "zeilen": {
+   "480": 225
+  },
+  "meshes": [
+   13
+  ],
+  "indizes": 31,
+  "ader_lab_median": [
+   28.7,
+   30.5,
+   15.3
+  ],
+  "haut_lab_median": [
+   55.0,
+   12.8,
+   7.2
+  ]
+ },
+ "D Bein/Hose p1+p0 Rest": {
+  "texel_benutzt": 15327,
+  "ader": 1088,
+  "flaechenrot": 285,
+  "ader_anteil": 7.1,
+  "zeilen": {
+   "480": 1081,
+   "481": 7
+  },
+  "meshes": [
+   3,
+   6,
+   9,
+   16
+  ],
+  "indizes": 57,
+  "ader_lab_median": [
+   19.7,
+   23.3,
+   14.6
+  ],
+  "haut_lab_median": [
+   17.3,
+   3.7,
+   -2.1
+  ]
+ },
+ "E Klauenarm p2 Zeile 482 (u 256-300)": {
+  "texel_benutzt": 5462,
+  "ader": 571,
+  "flaechenrot": 1065,
+  "ader_anteil": 10.5,
+  "zeilen": {
+   "482": 571
+  },
+  "meshes": [
+   11,
+   12,
+   14,
+   15
+  ],
+  "indizes": 60,
+  "ader_lab_median": [
+   16.3,
+   18.5,
+   -2.4
+  ],
+  "haut_lab_median": [
+   19.9,
+   5.2,
+   1.3
+  ]
+ }
+}

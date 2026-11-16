@@ -1,0 +1,75 @@
+Runde 41 SF V8 "Schwanz-Bewegung" (Code-Bauer, Zweig r41/sichel_szene, Basis bb19de74c = Wurf ede4bd8f2 + Asset 66db2244) - Belege.
+Nutzer 2026-11-14 woertlich: "weder mit dem rot der Schwanzfarbe noch mit dem etwas zu steifen grossen Schwanz zufrieden"; Vorlagen
+Version_80%/Areas.png (h90), Areas2.png (h24), Areas3.png (h64), Areas4.png (h22), Areas_Tip.png (nur gelesen). Auftrag: Bauplan 3 (Rolle),
+5 (Bahn), 6 (Biegsamkeit) der Analyse 2026-11-14 auf den Massen des Assets 66db2244. Asset, Wurf, Spider-Man, Anflug/Fang/Zappeln unveraendert.
+Kein RE-Befund: Sichel-Form und Schwanz gibt es auf keiner Disc; alles PORT-SZENE nach dem 80-%-Video 4, keine @0x-Adresse.
+
+Messweg (tools/r41_sichel/v8/bewegung/): szene_lauf_fd.sh (Debug-Sprung 50A0, Framedump F225-F400 960x720, RE15_POSE_LOG = gezeichnete
+Knochen je Bild, state.log), messen.py (Videobild h = F - 243; Knochen-Id-Maske b2.zeichne mit der gezeichneten Pose; Spitze = Nadelspitze
+projiziert; Austritt = erster sichtbarer Punkt; Breite quer zur Mittellinie an s .1-.9 des sichtbaren Stuecks; Rolle phi je Glied = Bauchachse
+gegen Sehstrahl quer zur Achse; Gelenkwinkel; Verdrehung gegen das Vorglied), tabelle_md.py -> messtabelle_bewegung.md.
+
+[1] Vorher (bb19de74c): Spitze h18-h34 35-180 Videopunkte neben dem Video, h58-h72 66-125, Bogen h76-h100 fehlt (Spitze 58-109 rechts
+    daneben, haengt hinter dem Koerper). Ursachen gemessen: (a) Bahnziel = Gelenk 7, die Nadel von Asset 8b reicht aber 759 E. weiter
+    (y 1300); (b) Gelenkgrenze praktisch Keyframe + 3 Grad (12-17 Grad), nicht 25; (c) kein Bahnziel ab h74; (d) Rolle nicht gefuehrt
+    (phi 25-53 Grad, Bauch nicht zur Kamera).
+[2] Bauchachse (quer.py): Hauptachse x-z der Meshes 17-21 (0,8956, 0, 0,4449) = 26,42 Grad, mit und ohne Deckel-Mitten gleich; Ruecken
+    Zeile 487 = haeufigste CLUT, Bauch 495 / Baender 493 auf +e_h. Im Code beim Laden gemessen (sw_bauchachse), keine Konstante.
+[3] Gelenkgrenze unter Szenenfuehrung (knick_video.py -> knick_video.json): Mittellinien in Sehnen der Gliedlaenge (Bildmassstab aus der
+    Blicktiefe), groesster Knick je Gelenk: h24 Nutzer-Umriss 39,4 Grad (23,6/6,6/39,4), Linienablesung Bogen h76 35,1, h78-h90 bis 31,5,
+    h22 14,1, h64-h70 bis 14,2 -> SW_V8_GLATT_SZENE 39,4 Grad.
+[4] Bahn (tabelle_v8.py -> tabelle_v8.json): Spitze/Austritt = Endpunkte der Videolinie, Durchgangsgelenk aus der sichtbaren Laenge, Pfeil
+    = groesster Abstand der Linie von der Sehne (+ links, < 5 = Ablesegenauigkeit -> 0). Bogen h76-h100 neu (bogen_v8.py -> bogen_v8.json):
+    die Linienablesung lag 20-40 Videopunkte zu weit links (Sichtpruefung 1: Zucken um h90, weil h88/h92 25-30 links vom Nutzer-Umriss);
+    einheitliche Pixel-Ablesung zweier Rasterblaetter (gitter_bogen.py, Augen-Agent: Spitze/Knolle/Bogenrand +-3, Ansatz +-8-10), Spitzen,
+    die an der Schattenoberkante enden (h88-h94, h98), mit dem Versatz Nutzer-Umriss h90 (286,349) gegen dieselbe Ablesung (283,322) =
+    (+3,+27); h82 (Spitze vom Spider-Man verdeckt) und h96 (unsicher) nicht abgelesen.
+[5] Abstimmungslaeufe (Werte messen.py, Spitze = Abstand zur jeweiligen Video-Spitze):
+    a  Rolle + Nadelziel + Tabelle + 39,4 Grad nur in glaetten(): Bogen erstmals da, aber alle Gelenke an der Grenze, Spitze bis 75 daneben
+       (glaetten klemmt nach FABRIK von der Wurzel her und dreht die Restkette weg).
+    b  FABRIK mit Gelenkgrenze, Pfeil in der Bildebene: h20-h24 / h76-h96 meist < 10; sichtbare Laenge h26-h34 / h58-h72 bis 3,6x Video
+       (Ueberschuss als Bogen in der Tiefe).
+    c  freie Spitzentiefe auf dem Sehstrahl: Bogen 2,6-4,7; Vorderansichten 14-82 daneben.
+    cd Diagnose (Messzeilen, wieder entfernt): Gelenk 1 springt im Anlauf auf den Keyframe zurueck (h18), glaetten knickt am verdeckten
+       Austritt zurueck; Abstand Wurzel -> Austritt im Bogen 523-1043 E. -> Durchgangsgelenk 2.
+    d/e vorderer Schnittpunkt, Bodenpunkt, Anlauf voll ab h18, keine Grenze hinter verdeckten Gliedern: Spitze h18-h100 1,8-9,1.
+    f  Rolle Modus 2 exakt quer zu Achse und Sehstrahl: Flanke 90 Grad (vorher 52-77).
+    g  Freigabe hinter dem Koerper h104-h110 (direkt aus dem Bogen h102-h108: Rueckschlag 80 Videopunkte je 2 Bilder, h106 60 % sichtbar);
+       h106-h112 geprueft, nicht besser.
+    i  Glieder hinter dem verdeckten Stueck ohne Grenze auch in FABRIK: Austritt h18-h22 3,7-3,8 (vorher 16).
+    k  h36-h56 und h74 ganz verdeckt (Sichtpruefung 1: Stummel an der Flanke, Rest h74).
+    l  = Endstand: Bogen nach [4] neu.
+[6] Endstand (messtabelle_bewegung.md): Spitze h18-h34 1,8-5,2, h58-h72 5,2-9,0, Bogen h76-h100 2,9-5,2 (h82/h96 ohne Videowert); Austritt
+    vorn 3,7-5,6, Bogen 4,3-15,1 (Ansatz +-8-10); Rolle vorn 0 Grad (Soll < 10), Bogen 90 Grad (Flanke); Verdrehung zwischen Nachbargliedern
+    hoechstens 30 Grad; sichtbare Knicke vorn bis 27 Grad, Bogen 39-40 Grad an Gelenk 1-3 (Video h76-h90 27-35). Breite vorn s .3/.5:
+    14,5-21,5 Videopunkte (Video 15-20,5); s .7 6-10 (Video 15-23,5) = Nadel, siehe Offen.
+[7] Unveraendert ausserhalb des Schwanzes: state.log bytegleich (8c3160cf...), alle [hangar-takt]-Zeilen ausser "Schwanz" gleich, pose.log
+    nur Knochen 16-22 verschieden, ab F399 (h156) bitgleich; die freigegebene Kette laeuft auf den alten Stand zu (groesste Gelenkabweichung
+    h112 796, h120 55, h128 3, h132-h135 1 E.), nach dem Szenenende (h135) hoechstens 1 E. Rundung ->
+    Kampf 50A0 danach, Labor 50E0/50F1 und 5090 laufen mit den unveraenderten Kampfwerten (alle neuen Wege nur mit Szenenziel und
+    re15_schwanz_r41_szene). Framedump-Diff (fd_diff_vorher_nachher.txt): 594 633 geaenderte Punkte, 228 ausserhalb der um 4 Videopunkte
+    erweiterten Schwanzmaske (Rundung am Maskenrand; F382-F384 nach dem Kameraschnitt, Maske in falscher Kamera, Pose nur Knochen 16-22).
+[8] Spaltenmass (spalten_szene.py, Verfahren v6drei/spalten.py an den gezeichneten Szenenposen, nur Schwanz gerendert): Gelenke 17-22
+    vorher 56 948, nachher 32 049 Lueckenpunkte; Gelenke ab 18 13 546 -> 8 243; mehr als vorher nur in der Freigabe h102-h106 / h109 /
+    h112-h113 (hinter dem Koerper, sichtbar 3-62 %).
+[9] Sichtpruefung 1 (Augen-Agent): "knapp nicht bestanden" - deutlicher Fortschritt in allen Abschnitten; Stummel h38-h56, Zucken h88-h92,
+    Reste h74/h102/h104 -> [5] k, [4] Bogen neu.
+[10] Sichtpruefung 2 (derselbe Augen-Agent, Endstand l): "bestanden". Stummel h38-h56 und Rest h74 weg (pixelgleich vorher bzw. kein rotes
+    Pixel), Spitze h88/h90/h92 288/286/284 (vorher 262/286/254), linker Bogenrand ruhig 255-273, keine Spalten, kein Durchstossen.
+    Offen klein: Spitze h78 20-30 hoeher als h76/h80 (= Ablesung h78 (278,323), endet ueber dem Schatten); Reste h102 (24 Punkte an der
+    Huefte), h104, h106 (22 x 12) in der Freigabe; Gelenk 2 im Bogen Kerbe 3-5 Videopunkte an der Innenseite, Gelenk 3 kleine Stufe.
+[11] Behebung Bauchachse nach der Schwanzfarbe Runde 8c (Asset d31f9534, Merge 3648b1d09; Befund Koordinator 2026-11-14): sw_bauchachse
+    nahm die Seite von der Farbe (Flaechen ohne die haeufigste CLUT = Bauch). In 66db2244 war die haeufigste CLUT 31168 (grauer Ruecken,
+    252 Flaechen), in d31f9534 ist es 31552 (Bauch und Ringe, 284 Flaechen) -> Achse auf -e_h, Bauch 180 Grad verdreht (rolle_vergleich_8c.md,
+    Spalte "ohne Behebung": vorn 180 Grad, Bogen bis 169 Grad; unit_schwanz_r41 rot). Kandidaten (bauchachse_8c.txt, beide Assets): Ecken
+    und Keyframes bytegleich; Eckenschwerpunkt -19,5 (haengt an der Teilung 4 Bauch- / 7 Rueckenfelder je Ring), Keyframe-Beugung +794 =
+    4967 von 5467 Gelenken zu +e_h. Gewaehlt: Innenseite des Ruhebogens (so definiert die Asset-Stufe q die Bauchachse, schwanz_r8.py),
+    jetzt re15_schwanz_r41_bauchachse (schwanz_r41.c) und messen.py (hatte dieselbe Farbregel). Ergebnis: beide Assets (0,8956, 0, 0,4449);
+    Szenenlauf: Rolle h16-h104 gleich c94847a31 (45 von 45 Bildern), Lagen/Breiten gleich; Framedump bis h118 176 041 Punkte anders, 35
+    ausserhalb der Schwanzmaske (Rand) = nur Farbe; ab h119 Gangvortrieb b84fcc83c (anderer Auftrag). Test test_schwanz_r41 (13): beide
+    Assets, Gegenprobe alte Farbregel beim Spiel-Asset -e_h (rot); altes Asset abgelegt als EM30_HANGAR_66db2244.EMD.
+[12] Runde 8d (Asset 547acc80, Merge 4026c7288, keine Ringe): die haeufigste CLUT ist wieder Grau 31168 (252 Flaechen); die alte Farbregel
+    traefe beim Spiel-Asset zufaellig richtig, die Gegenprobe in test_schwanz_r41 (13) wurde rot. Gegenprobe jetzt auf d31f9534 (abgelegt
+    als EM30_HANGAR_d31f9534.EMD, alte Regel -e_h), Hauptpruefung mit 547acc80 / 66db2244 / d31f9534: (0,8956, 0, 0,4449) (bauchachse_8d.txt;
+    Ecken und Keyframes aller drei bytegleich). Szenenlauf 547acc80 gegen 109695330: state.log gleich, Posen 201/201 bitgleich, Rolle/Spitze/
+    Breite 45/45 gleich, Framedump in der Szene 181 059 Punkte anders, 30 ausserhalb der Schwanzmaske (Rand) = nur Farbe.

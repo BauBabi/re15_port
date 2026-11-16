@@ -1,0 +1,12 @@
+gdigrab-Bilder 2275 fps (Datei) 45.51517172390797
+F262 -> gdigrab-Bild 446 (t 9.799 s; gleiche Bilder 446-447), mittlere Abweichung 320x240 0.88 (naechstes anderes Bild 1.37), 960x720 1.34 -> gdi_fenster_F262.png
+F300 -> gdigrab-Bild 502 (t 11.029 s; gleiche Bilder 501-503), mittlere Abweichung 320x240 0.89 (naechstes anderes Bild 1.32), 960x720 1.36 -> gdi_fenster_F300.png
+F328 -> gdigrab-Bild 545 (t 11.974 s; gleiche Bilder 545-545), mittlere Abweichung 320x240 0.94 (naechstes anderes Bild 6.39), 960x720 1.54 -> gdi_fenster_F328.png
+F334 -> gdigrab-Bild 553 (t 12.150 s; gleiche Bilder 553-554), mittlere Abweichung 320x240 0.91 (naechstes anderes Bild 2.21), 960x720 1.44 -> gdi_fenster_F334.png
+F354 -> gdigrab-Bild 586 (t 12.875 s; gleiche Bilder 586-586), mittlere Abweichung 320x240 0.89 (naechstes anderes Bild 2.37), 960x720 1.38 -> gdi_fenster_F354.png
+F366 -> gdigrab-Bild 606 (t 13.314 s; gleiche Bilder 605-606), mittlere Abweichung 320x240 0.90 (naechstes anderes Bild 1.63), 960x720 1.40 -> gdi_fenster_F366.png
+F368 -> gdigrab-Bild 608 (t 13.358 s; gleiche Bilder 608-608), mittlere Abweichung 320x240 0.92 (naechstes anderes Bild 1.96), 960x720 1.47 -> gdi_fenster_F368.png
+F369 -> gdigrab-Bild 610 (t 13.402 s; gleiche Bilder 609-610), mittlere Abweichung 320x240 0.90 (naechstes anderes Bild 2.11), 960x720 1.40 -> gdi_fenster_F369.png
+F371 -> gdigrab-Bild 614 (t 13.490 s; gleiche Bilder 612-614), mittlere Abweichung 320x240 0.90 (naechstes anderes Bild 2.04), 960x720 1.42 -> gdi_fenster_F371.png
+F373 -> gdigrab-Bild 616 (t 13.534 s; gleiche Bilder 616-617), mittlere Abweichung 320x240 0.90 (naechstes anderes Bild 1.67), 960x720 1.42 -> gdi_fenster_F373.png
+F375 -> gdigrab-Bild 620 (t 13.622 s; gleiche Bilder 620-621), mittlere Abweichung 320x240 0.90 (naechstes anderes Bild 1.45), 960x720 1.40 -> gdi_fenster_F375.png

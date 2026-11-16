@@ -553,7 +553,7 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
          * Routine 3 flags:=0x13, TPAGE bleibt hdr-Seed 0x001F) = ABR0 50/50.
          * Legacy-Fx (ohne Row-VM, flags==0) behalten den alten Pfad (Global 2/3 = 50/50). */
         int abe, abr;
-        if (f->abr_port) {                            /* Runde 41 SF Neuaufbau ab NB2 (NB5): Mischart-Vorgabe des gruenen Blutes */
+        if (f->abr_port) {                            /* Runde 41 SF NB5: Mischart-Vorgabe des Ports (derzeit setzt sie niemand, re15_esp.h) */
             abe = 1;
             abr = (f->abr_port - 1) & 3;
         } else if (f->rows_base) {
@@ -10352,11 +10352,14 @@ re_title:;
                     re15_wasserzombie_schatten_y(npc, &nsh_y);   /* Runde 38 Spur U: Hochziehen -> +0x1ba (`lh a1,442` @0x801004fc) */
                     re15_r39_schatten_y(npc, &nsh_y);            /* Runde 39 Spur E: Gorilla 0x27 / Affe 0x29 -> +0x1ba (`lh a1,442` @0x80116f30 / @0x80110c78) */
                     re15_spinnenanim_r41_schatten_y(npc, &nsh_y); /* Runde 41 Spur L: Spinne -> +0x1ba (`lh a1,442` @0x80110b4c) */
+                    re15_bf_schatten_y(npc, &nsh_y);             /* Hangar-Szene: Spider-Man -> Boden (+0x1ba @0x80111bc0, STAGE5) */
                     if (npc->type == 0x21)
                         nsh_y = re15_ai_re2_for_type(npc->type)
                                   ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */
                                   : (int32_t)npc->crow_floor;      /* +0x1BA @0x8011221c-234 */
-                    int32_t nsh_world[3] = { npc->x, nsh_y, npc->z };
+                    int32_t nsh_x = npc->x, nsh_z = npc->z;
+                    re15_bf_schatten_xz(npc, &nsh_x, &nsh_z);    /* Hangar-Szene Runde 4: Schattenpunkt bei gekipptem Spider-Man */
+                    int32_t nsh_world[3] = { nsh_x, nsh_y, nsh_z };
                     int32_t nsh_rot[9], nsh_trans[3];
                     /* byte-true: RotMatrixY(ACTOR rot_y) via the trig LUT (FUN_8001b064 @0x8001b0e4
                      * uses entity+0x6a, NOT the camera yaw — RE'd wf_13911cba). nyaw above IS that
@@ -10634,6 +10637,53 @@ re_title:;
                     re15_g5_tentakel_kette_strecken(npc_skel, npc_poses, npc_skel->bone_count, re15_g5_tentakel_scale_x(npc_i));
                 (void)re15_bissarm_r37_handkontakt(npc, npc_skel, npc_kf, npc_poses, npc_skel->bone_count);   /* Runde 37 Spur J: RE2-Handkontakt im Griff (re15_bissarm_r37.h) */
                 (void)re15_schwanz_r41_pose(npc, npc_skel, npc_poses);   /* Runde 41 SF N1.9: Schwanzkette 16-22 der Sichel-Form schwingt nach (PORT-WAHL, re15_schwanz_r41.h) */
+                {   /* Runde 41 Schwanz r9 Messhaken (Nutzer 2026-11-15: "taucht der schwanz jetzt garnicht mehr auf, oder ist nicht mehr
+                     * sauber connected"). Nur Messung, im Normalpfad stumm, kein Verhalten:
+                     *   RE15_SCHWANZ_MASKE=schwanz | birkin | figuren: Knochen 16-22 bzw. alle Knochen der V8-Sichel-Form bzw. Sichel-Form und
+                     *     Spider-Man (Typ 0x2B) mit Drehung 0 (alle Ecken auf dem Knochenpunkt, keine Flaeche) - die Differenz zweier Framedumps
+                     *     sind die Schwanz- bzw. Koerperpunkte des Bilds (Riegel integration_r41_schwanz_zusammen).
+                     *   RE15_SCHWANZ_LOG=<datei>: je gezeichnetem Bild die Gelenke 0-7 im 320x240-Bild (sx sy Blicktiefe, Kamera des Zeichners)
+                     *     und die Glieder ohne Querschnitt ab der Wurzel (re15_schwanz_r41_verdeckt: x- und z-Spalte 0). */
+                    static int s_sm_an = -1; static FILE *s_sl_fp = NULL;
+                    if (s_sm_an < 0) {
+                        const char *e = getenv("RE15_SCHWANZ_MASKE"), *lp = getenv("RE15_SCHWANZ_LOG");
+                        s_sm_an = !e ? 0 : !strcmp(e, "schwanz") ? 1 : !strcmp(e, "birkin") ? 2 : !strcmp(e, "figuren") ? 3 : 0;
+                        if (lp && *lp) s_sl_fp = fopen(lp, "w");
+                    }
+                    const int sw_v8 = npc->type == 0x30u && npc_skel->bone_count == 23 && re15_schwanz_r41_v8_kette(npc_skel);
+                    if (s_sl_fp && sw_v8) {
+                        int verd = 0;
+                        while (verd < 7 && !npc_poses[16 + verd].rot[0] && !npc_poses[16 + verd].rot[3] && !npc_poses[16 + verd].rot[6]) verd++;
+                        fprintf(s_sl_fp, "[schwanz-bild] F%u verdeckt %d", (unsigned)g_engine.frame_count, verd);
+                        for (int j = 0; j < 8; j++) {
+                            const int b = 16 + (j < 7 ? j : 6);
+                            int32_t l[3] = { npc_poses[b].trans[0], npc_poses[b].trans[1], npc_poses[b].trans[2] }, gw[3];
+                            if (j == 7) {   /* Gelenk 7 = Ende von Knochen 22 entlang seiner y-Spalte (Gliedlaenge relpos 22) */
+                                const int16_t *rl = npc_skel->bone_relative_pos[22];
+                                const double ll = sqrt((double)rl[0] * rl[0] + (double)rl[1] * rl[1] + (double)rl[2] * rl[2]);
+                                const double sy = sqrt((double)npc_poses[b].rot[1] * npc_poses[b].rot[1] + (double)npc_poses[b].rot[4] * npc_poses[b].rot[4]
+                                                       + (double)npc_poses[b].rot[7] * npc_poses[b].rot[7]);
+                                if (sy > 0.0) for (int k = 0; k < 3; k++) l[k] += (int32_t)lrint(npc_poses[b].rot[k * 3 + 1] / sy * ll);
+                            }
+                            if (npc->render_scale_q12) for (int k = 0; k < 3; k++) l[k] = (int32_t)(((int64_t)l[k] * npc->render_scale_q12) >> 12);
+                            if (npc->rot_x || npc->rot_z) {
+                                int32_t M[9]; re15_skel_euler_matrix((int)npc->rot_x, (int)npc->rot_y, (int)npc->rot_z, M);
+                                const int32_t ap[3] = { npc->x, npc->y, npc->z };
+                                for (int k = 0; k < 3; k++)
+                                    gw[k] = ap[k] + (int32_t)(((int64_t)M[k * 3] * l[0] + (int64_t)M[k * 3 + 1] * l[1] + (int64_t)M[k * 3 + 2] * l[2]) >> 12);
+                            } else re15_skel_bone_to_world(l, npc->rot_y, npc->x, npc->y, npc->z, gw);
+                            const long vx = ((long)gw[0] * cam_view.rot[0] + (long)gw[1] * cam_view.rot[1] + (long)gw[2] * cam_view.rot[2]) / 4096 + cam_view.trans[0];
+                            const long vy = ((long)gw[0] * cam_view.rot[3] + (long)gw[1] * cam_view.rot[4] + (long)gw[2] * cam_view.rot[5]) / 4096 + cam_view.trans[1];
+                            const long vz = ((long)gw[0] * cam_view.rot[6] + (long)gw[1] * cam_view.rot[7] + (long)gw[2] * cam_view.rot[8]) / 4096 + cam_view.trans[2];
+                            if (vz > 64) fprintf(s_sl_fp, " %d(%.2f,%.2f,%ld)", j, 160.0 + (double)vx * cam_view.fov_screen_dist / vz,
+                                                 120.0 + (double)vy * cam_view.fov_screen_dist / vz, vz);
+                            else fprintf(s_sl_fp, " %d(-,-,%ld)", j, vz);
+                        }
+                        fputc('\n', s_sl_fp); fflush(s_sl_fp);
+                    }
+                    if ((s_sm_an && sw_v8) || (s_sm_an == 3 && npc->type == 0x2Bu))
+                        for (int q = s_sm_an == 1 ? 16 : 0; q < npc_skel->bone_count; q++) memset(npc_poses[q].rot, 0, sizeof npc_poses[q].rot);
+                }
                 {   /* Runde 41 SF NB6 Messhaken RE15_GRIFF_LOG=<datei>: Griffpunkte der Hangar-Szene je gezeichnetem Bild nach allen
                      * Posen-Haken - Typ 0x30 Knochen 15/13/8 (Sichelhand, Schulter, Brust), Typ 0x2B Knochen 0 und 20 (Griffknochen),
                      * Weltkoordinaten mit Figurmatrix und Massstab wie der Zeichner. Nur Messung, im Normalpfad stumm, kein Verhalten. */
@@ -10656,6 +10706,25 @@ re_title:;
                             fprintf(s_griff_fp, " %d(%d,%d,%d)", kn[q], (int)gw[0], (int)gw[1], (int)gw[2]);
                         }
                         fputc('\n', s_griff_fp); fflush(s_griff_fp);
+                    }
+                }
+                {   /* Runde 41 SF Runde 7 (Wurf eindrehend) Messhaken RE15_POSE_LOG=<datei>: gezeichnete Pose der Hangar-Figuren je Bild
+                     * nach allen Posen-Haken - Typ 0x30 und 0x2B, Aktorlage, Gier/Kippung, Massstab und je Knochen Drehung (Q12, 9 Werte)
+                     * und Lage im Modellraum (wie re15_skel_compute_pose). Damit rechnet die Messung Mesh, Kopf, Brust und Mitte genau
+                     * so, wie der Zeichner sie zeigt. Nur Messung, im Normalpfad stumm, kein Verhalten. */
+                    static FILE *s_pose_fp = NULL; static int s_pose_tried = 0;
+                    if (!s_pose_tried) { s_pose_tried = 1; const char *pp = getenv("RE15_POSE_LOG"); if (pp && *pp) s_pose_fp = fopen(pp, "w"); }
+                    if (s_pose_fp && (npc->type == 0x30u || npc->type == 0x2Bu)) {
+                        fprintf(s_pose_fp, "[pose] F%u typ%02X mo=%d af=%d frac=%d lage %d %d %d rot %d %d %d s %d n %d",
+                                (unsigned)g_engine.frame_count, (unsigned)npc->type, (int)npc->motion, (int)npc->anim_frame,
+                                (int)npc->anim_frac, (int)npc->x, (int)npc->y, (int)npc->z, (int)npc->rot_x, (int)npc->rot_y,
+                                (int)npc->rot_z, (int)npc->render_scale_q12, (int)npc_skel->bone_count);
+                        for (int q = 0; q < npc_skel->bone_count; q++) {
+                            const re15_skel_pose_t *pq = &npc_poses[q];
+                            fprintf(s_pose_fp, " |%d %d %d %d %d %d %d %d %d %d %d %d", pq->rot[0], pq->rot[1], pq->rot[2], pq->rot[3],
+                                    pq->rot[4], pq->rot[5], pq->rot[6], pq->rot[7], pq->rot[8], pq->trans[0], pq->trans[1], pq->trans[2]);
+                        }
+                        fputc('\n', s_pose_fp); fflush(s_pose_fp);
                     }
                 }
                 {   /* Runde 41 SF NB6 Messhaken RE15_BEIN_LOG=<datei>: Beingelenke (Knochen 0-6: Becken, Huefte/Knie/Knoechel
@@ -10716,7 +10785,8 @@ re_title:;
                  * (@0x8010143c-5c), Speer/Wedeln/Zug aus den Tabellen @0x80105740/@0x80105770.
                  * Yaw-only (nyaw) == RotMatrix(0, yaw, 0), also fuer alle anderen Typen unveraendert. */
                 if (npc->type == 0x37u || re15_spinnenanim_r41_volle_drehung(npc)   /* Runde 41 Spur L: Spinne RotMatrix(+0x68) @0x8001e8f4 */
-                    || re15_annette_r41_volle_drehung(npc))                      /* Runde 41 Spur AN: Leiche gekippt (re15_annette_r41.h) */
+                    || re15_annette_r41_volle_drehung(npc)                       /* Runde 41 Spur AN: Leiche gekippt (re15_annette_r41.h) */
+                    || re15_bf_volle_drehung(npc))                               /* Hangar-Szene Runde 4: Spider-Man gekippt (re15_birkin_formen.h) */
                     re15_skel_euler_matrix((int)npc->rot_x, npc_yaw_eff, (int)npc->rot_z, nyaw);
                 /* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800): das Original skaliert die
                  * Root-Matrix VOR der Bone-Schleife uniform per ScaleMatrix (FUN_8001e8c8

@@ -17,6 +17,47 @@
  *     mit b > r unveraendert), Zusatzzeilen 483 (Schwanz, Meshes 16-22), 484 (Sichel, Mesh 15), 485 (Kopf, Mesh 9),
  *   - die Geometrie ist tatsaechlich anders (sonst waere die Datei nutzlos).
  *
+ * V8 Runde 7e (Handfarbe, Stufe f = tools/r41_sichel/v8/handfarbe_r7e.py; Nutzerentscheid 2026-11-14 woertlich "wie in der Vorlage" =
+ * grauer Handruecken, nur die Finger/Krallen rot): die 34 Flaechen der Klauenhand Mesh 12 ohne Krallen (bis 7d Zeile 490) und die 8 Flaechen
+ * von Mesh 11 im unteren Unterarm-Drittel (d0 d1 d16 d17 v1 v2 v3 v4) liegen auf der Unterarm-Zeile 482, ihre UV = EM30-UV mit EINER
+ * ganzzahligen Abbildung je Teilgruppe (Massstab M/100 und Schub, Ergebnis der Suche handfarbe_r7e.py suche): Hand M 92 ab (4,51) nach (6,6),
+ * Unterarm M 82 ab (0,25) nach (5,3) - Texel der 17 uebrigen Unterarm-Flaechen. Krallen 491 / 492 und alle anderen UV = EM30.
+ * Gemessen am Asset 07b6703f (sfv8/r7e). Gegenprobe Stand 7d 5c902d49: rot (Mesh 12 34 Flaechen auf 490, Mesh 11/12 UV = EM30).
+ * Bis Runde 7d: Mesh 12 nur im CLUT-Feld umtexturiert (490 / 491 / 492), Mesh 11 UV und CLUT = V7.
+ * V8 Runde 7c (P5, Stufe p = tools/r41_sichel/v8/p5_stufe.py: Kandidat R3 des P5-Ablaufs + Pflicht-Korrekturen K-a..K-e; Nutzer
+ * "smooth straight to head without further hills...."): das Nackenstueck der Runde 6b ist wieder weg (Mesh 8 = 69 Ecken wie EM30); an
+ * Mesh 8 haengen 4 Ergaenzungsdreiecke d77-d80 = die Haelften (0,1,3) / (0,3,2) der Vierecke v8 und v17 mit gleichen Ecken, Normalen,
+ * Texeln und Zeile (Entscheid E11: der Port verwirft ein verdrehtes Viereck nach dem Testdreieck, engine/src/nclip_r38.c). Zeilen 493/494
+ * 60/48 Flaechen, 31 EM30-Flaechen mit anderer UV (Runde 6b 29; neu d48 v2 v15 v17 v18 aus der UV-Mitfuehrung von R3, wieder Original
+ * d26 d66 v4 durch den UV-Rueckbau auf r4). Gemessen am Asset 0c307f80, 5c902d49 und 07b6703f (sfv8/r7c/w,
+ * Abschnitt "Unit-Test" der NOTIZ). Gegenprobe Stand 7b 87b02681: rot (87 Dreiecke, 76 Ecken, Nackenstueck).
+ * V8 Runde 6b (P5-neu / P4-neu nach Pruefung V8 r5d "Kragen", "graue Reifen"; gemessen am Asset 95a783a6, sfv8/r6b pins.py / pins2.py,
+ * Ausgabe sfv8/r6c/pins.out; erster Stand der Runde 6b 382bbfe7: Mesh 16 noch 20 Flaechen auf 495, sonst gleiche Zahlen):
+ * Mesh 8 traegt statt des Einsatzes der Runde 5d (14 Ecken, 12 Dreiecke, 6 Vierecke, Zeile 494) EIN geschlossenes Nackenstueck
+ * (tools/r41_sichel/v8/nacken_r6.py, nacken_v8.json: 7 Ecken ab Index 69, 10 Dreiecke ab Index 77, kein Viereck, Zeile 493, Textur-Seite 0,
+ * UV im Rechteck u 43-53 / v 88-101); 29 EM30-Flaechen mit anderer UV (Runde 5: 28, dazu d53). Schwanz (unterseite_r5.py Runde 6):
+ * Mantel, Dorn und Ring-Deckel an den Grenzen theta 110 / 120 geteilt, Flaechen auf Zeile 495 je Glied 21 / 30 / 41 / 31 / 30 / 30 / 30
+ * (Runde 5d: 8 / 8 / 16 / 8 / 8 / 8 / 16). Gegenprobe V8 r6a 7a65e3f0 und V8 r5d c4976c62: rot (Mesh 8 83 Ecken / 89 Dreiecke / 33 Vierecke,
+ * Schwanz 72 Flaechen auf 495).
+ * V8 Runde 6a (P6, Nutzer 2026-11-10 "Die Vorlage hat eine breite Hand mit breiten Unterarmt. [...] Bei uns ist die Hand ganz klein und
+ * zierlich und wirkt dadurch verkümmert."): Klauenhand Mesh 12 und Unterarm Mesh 11 neu geformt (tools/r41_sichel/v8/hand_r6.py, Stufe h,
+ * hand_v8.json; Messblatt analysis/befunde_runde41/SF_MESSBLATT_HAND.md): nur Ecken und Normalen, Flaechen / UV / CLUT-Zeilen wie zuvor.
+ * Gemessen am Asset 7a65e3f0 (sfv8/r6h): Mesh 12 Spanne x / y / z 484 / 716 / 433, Wurzelring y -22; Mesh 11 Spanne x / z 444 / 407.
+ * Gegenprobe V8 r5d c4976c62 und V7: rot (Mesh 12 Spanne 343 / 594 / 235, Wurzelring y 16-19; Mesh 11 Spanne 516 / 472).
+ * V8 Runde 5d (P5, Nutzer 2026-11-09 "es gibt immer noch eine Lücke zwischen Rücken und Kopf beim 2 beiner Birkin"): Mesh 8 traegt
+ * hinter seinen EM30-Elementen einen geschlossenen Einsatz (tools/r41_sichel/v8/nacken_r5.py: 14 Ecken, 12 Dreiecke, 6 Vierecke,
+ * alle auf Zeile 494 mit Texeln der Wirtsflaeche Dreieck 65); gemessen am Asset c4976c62 (sfv8/r5p6). Gegenprobe V8 Runde 4
+ * 10d02173, Stand 91885ed8c (5fd35ff1) und V7: rot (Mesh 8 ohne Einsatz).
+ * Zweig r41/sichel_v8 (V8 Runde 5 nach Pruefung V8 r4: Brust auf Original-Zeile 481 mit eigener UV, fast weisse Texel durch Abbildungen
+ * auf Original-Haut ersetzt; dazu P4 Schwanz-Unterseite fleischig auf Zeile 495 (72 Flaechen der Meshes 16-22, Oberseite 487); Gegenprobe
+ * V8 Runde 4 10d02173: rot, Brust 34 Flaechen auf 488, Schwanz 0 Flaechen auf 495).
+ * Bis Runde 4 (V8 Koerperbau nach Nutzer-Skizze, Runde 4 nach Pruefung V8 r3): Spiel-Asset = V8 Runde 4 (sha256 10d02173...,
+ * v8_kette.sh); dazu CLUT_ZEILEN 16, Zeilen 493 / 494 / 495 = Original-EM30-Zeilen 480 / 481 / 482 BYTEGLEICH (Orchestrator O1: "dessen
+ * Texelstruktur UND dessen Original-Paletteneintraege der Zeilen 480-482"). Runde 4 (tools/r41_sichel/v8/adern_r4.py): Mesh 8 ausser der
+ * Brust ganz auf 493/494 (Sicht-Pruefer r3 "harte Farbnaht rosa/grau"; 56 + 14 Flaechen, davon 10 mit UV-Schub: Rueckenfleisch 4, Huegel 1,
+ * blass (W)-rechts 5), Mesh 13 alle 56 auf 493 (Feld C mit einem Schub auf Original-Oberarm-Haut, 24 Flaechen), Mesh 14 alle 37 auf 495
+ * (Unterarmband 4 Flaechen mit Schub/Skalierung), gemessen am Asset 10d02173 (sfv8/r4). Gegenprobe V8 Runde 3 (66806bc4): rot (Mesh 8
+ * 20 + 7 Flaechen auf 480/481, Mesh 13 Feld C auf 480/489, 3 statt 10 Flaechen mit UV-Schub).
  * Seit v0.8.30 (Einbau V7, Nutzerfreigabe 2026-11-08 woertlich "Naja, gehen wir so erst mal ins rennnen.") ist das Spiel-Asset die
  * Sichel-Form V7 (sha256 319bbd17..., Pin release/em30_hangar.sha256, Bau re15_port/tools/r41_sichel/v7_kette.sh), nicht mehr die
  * Ausgabe von birkin_formen.py (Referenz 2, cfd1ac42). Die Erwartungen unten sind an V7 gemessen (eigener Leser in Python:
@@ -25,7 +66,8 @@
  * PORT-WAHL / Gestaltung, keine @0x-Konstante (die Form gibt es auf keiner Disc):
  *   - Kopf Mesh 9 = Original-Kopf des RE1.5-Birkin (UV bis auf das CLUT-Feld = EM30, hoechstens 4 Ecken geglaettet), CLUT-Zeile 486
  *     (= EM30-Zeile 0 bytegleich) - V6 Kopf Schritt 1/3, T-H6;
- *   - Brust Mesh 8 / Oberarm Mesh 13 / Klauenhand Mesh 12 nur im CLUT-Feld umtexturiert (488 / 489 / 490) - V5 wie Foto b);
+ *   - Brust Mesh 8 / Oberarm Mesh 13 / Klauenhand Mesh 12 nur im CLUT-Feld umtexturiert (488 / 489 / 490) - V5 wie Foto b; seit V8 Runde 7e
+ *     Klauenhand auf 482 mit der UV der Stufe f, siehe oben);
  *   - Daumenkralle 6 Flaechen auf Zeile 491 (grau), Fingerkrallen 18 Flaechen auf Zeile 492 (rot) - V7 linke Hand 2.;
  *   - Schwanzglieder 16-22 (Mantel und die V6-Deckel-Dreiecke) auf Zeile 487 - V5 wie Foto a) Farbe, V6 drei Punkte 2. Deckel;
  *   - 13 CLUT-Zeilen (<= 16, Port-Texturhoehe tex_h = tim->height x n_cluts = 3328 <= 4096, render_pc.c
@@ -74,14 +116,40 @@ typedef struct {
 static modell_t s_basis, s_form;
 
 #define KETTE 7                  /* Schwanzglieder, birkin_formen.py FORMEN['hangar'] schwanz_kette glieder */
+static int spanne(const re15_md1_mesh_t *b, int achse)   /* V8 Runde 6a: groesste minus kleinste Ecken-Koordinate (0 x, 1 y, 2 z) */
+{
+    int lo = 32767, hi = -32768;
+    for (int v = 0; v < b->tri_vertex_count; v++) {
+        int w = achse == 0 ? b->tri_vertices[v].x : achse == 1 ? b->tri_vertices[v].y : b->tri_vertices[v].z;
+        if (w < lo) lo = w;
+        if (w > hi) hi = w;
+    }
+    return hi - lo;
+}
 static int umtexturiert(int m)   /* birkin_formen.py FORMEN['hangar'] umtexturieren (1-6, 9, 15); V7: dazu 8, 12, 13 (V5 wie Foto b) */
 {
-    return (m >= 1 && m <= 6) || m == 8 || m == 9 || m == 12 || m == 13 || m == 15;
+    return (m >= 1 && m <= 6) || m == 8 || m == 9 || m >= 11;   /* V8 Runde 2: dazu 14 (X3); V8 Runde 7e: dazu 11 (Stufe f) */
 }
 static int nur_clut(int m)       /* V7: UV bis auf das CLUT-Feld = EM30 (V6 Kopf Schritt 1: Mesh 9 = Original-Mesh; V5 wie Foto b):
                                   * nur CLUT-Felder fuer 8/12/13; Sichel 15 wie Referenz 2). Gemessen: genau 8, 9, 12, 13, 15 */
 {
-    return m == 8 || m == 9 || m == 12 || m == 13 || m == 15;
+    return m == 9 || m == 15;   /* V8 Runde 4: Meshes 8 / 13 / 14 haben Flaechen mit UV-Schub (eigene Pruefung je Mesh); V8 Runde 7e: 11 / 12
+                                 * mit der Abbildung der Stufe f (eigene Pruefung hf_pruefen) */
+}
+static int uv_ohne_clut_anders(const re15_md1_mesh_t *a, const re15_md1_mesh_t *b)   /* V8: Zahl der Flaechen mit anderer UV */
+{
+    int n = 0;
+    for (int t = 0; t < a->triangle_count; t++) {
+        re15_md1_tri_uv_t x = a->triangle_uvs[t], y = b->triangle_uvs[t];
+        x.clut = y.clut = 0;
+        n += memcmp(&x, &y, sizeof x) != 0;
+    }
+    for (int q = 0; q < a->quad_count; q++) {
+        re15_md1_quad_uv_t x = a->quad_uvs[q], y = b->quad_uvs[q];
+        x.clut = y.clut = 0;
+        n += memcmp(&x, &y, sizeof x) != 0;
+    }
+    return n;
 }
 static int uv_ohne_clut_gleich(const re15_md1_mesh_t *a, const re15_md1_mesh_t *b)
 {
@@ -111,9 +179,94 @@ static int geteilt(int m)        /* birkin_formen.py FORMEN['hangar'] teilen (ku
 #define CLUT_SCHWANZ (487u << 6)  /* V7 (V5 wie Foto a) Farbe: Zeile 487; Referenz 2: 483). Gemessen: Meshes 16-22 alle Flaechen 487 */
 #define CLUT_SICHEL  (484u << 6)  /* birkin_formen.py umtexturieren Mesh 15 (V7 unveraendert, gemessen 484:50) */
 #define CLUT_KOPF    (486u << 6)  /* V7 (V6 Kopf Schritt 1/3: Original-Kopf auf Zeile 486 = EM30-Zeile 0; Referenz 2: 485). Gemessen 486:91 */
-#define CLUT_ZEILEN  13           /* V7 linke Hand T-V7f: 13 Zeilen 480-492 (gemessen: 3328 Eintraege) */
+#define CLUT_ZEILEN  16           /* V8 Runde 2 Adern: 16 Zeilen 480-495 = V7 (13) + X1 493 / X2 494 / X3 495 (gemessen: 4096 Eintraege,
+                                   * Port-Texturhoehe 256 x 16 = 4096 = TEX_H_MAX); V7 13, V8 Runde 1 15 (Gegenprobe: hier rot) */
+#define EINSATZ_D 4               /* V8 Runde 7c: 4 Ergaenzungsdreiecke an Mesh 8 (p5_stufe.py ERGAENZEN, Haelften von v8 und v17) - Dreiecke
+                                   * (Runde 6b: Nackenstueck nacken_r6.py 10) */
+#define EINSATZ_V 0               /* ... Vierecke (Runde 5d: 12 / 6 / 14) */
+#define EINSATZ_E 0               /* ... Ecken (Runde 7c: keine neuen; Runde 6b 7) */
+#define ERG_QUAD_A 8              /* V8 Runde 7c: d77/d78 = Haelften von v8 [30,0,50,49], d79/d80 = Haelften von v17 [51,17,50,30] */
+#define ERG_QUAD_B 17
+#define EINSATZ_U0 43             /* UV-Rechteck des Nackenstuecks, gemessen am Asset 95a783a6 (sfv8/r6b pins.py): u 43-53, v 88-101, */
+#define EINSATZ_U1 53             /* Textur-Seite 0, Zeile 493 (= Original-EM30-Zeile 480, Rueckenhaut) */
+#define EINSATZ_V0 88
+#define EINSATZ_V1 101
+#define Z_X1 493u                 /* V8: Ader-Zeile X1 = V7-Zeile 480 + 62 Original-EM30-Ader-Eintraege (a* >= 15, L* <= 38) */
+#define Z_X2 494u                 /* V8: Ader-Zeile X2 = V7-Zeile 481 + 50 Original-EM30-Ader-Eintraege */
+#define Z_X3 495u                 /* V8 Runde 2: Ader-Zeile X3 = V7-Zeile 482 + 88 Original-EM30-Ader-Eintraege (Unterarm-Wulst Mesh 14) */
 #define TEX_H_MAX    4096         /* Port-Texturhoehe tex_h = tim->height x n_cluts (render_pc.c re15_render_pc_upload_tim_slot);
                                    * Grenze 4096 = 16 Paletten 480..495 x 256 (render_pc.c Kommentar tpage 0x1e/0x1f; Dossier V6 Kopf T-K1c) */
+
+/* V8 Runde 7e (Stufe f, tools/r41_sichel/v8/handfarbe_r7e.py ABBILDUNG; Suche SF_belege/v8/runde7e/suche.txt): u' = (M (u - U0) + 100 SU + 50) / 100,
+ * v' = (M (v - V0) + 100 SV + 50) / 100 (ganzzahlig, Zaehler >= 0), CLUT-Feld -> Zeile 482. PORT-WAHL, keine @0x-Konstante. */
+#define HF_ZEILE 482u             /* Zeile aller 25 Flaechen von Mesh 11 (V7) = Referenz-2-Zeile 482 mit der V5-Grau-Regel */
+static const int HF_HAND[5] = {92, 4, 51, 6, 6};       /* M, U0, V0, SU, SV: 34 Handflaechen Mesh 12, u 4-39 v 51-86 -> u 6-38 v 6-38 */
+static const int HF_UNTERARM[5] = {82, 0, 25, 5, 3};   /* 8 Flaechen Mesh 11 unteres Drittel, u 0-38 v 25-87 -> u 5-36 v 3-54 */
+static uint8_t hf_abb(uint8_t x, int m, int x0, int s)
+{
+    const int z = m * ((int)x - x0) + 100 * s + 50;
+    return (uint8_t)(z >= 0 ? z / 100 : 255);
+}
+static int hf_kralle(const uint16_t *ecken, int n)    /* Flaeche nur aus den 5 Ecken einer Kralle (Ring + Spitzen)? 1 Daumen, 2 Finger, 0 nein */
+{
+    static const int K[4][5] = {{18, 19, 20, 21, 22}, {45, 46, 47, 48, 49}, {27, 28, 29, 30, 31}, {40, 41, 42, 43, 44}};
+    for (int k = 0; k < 4; k++) {
+        int alle = 1;
+        for (int i = 0; i < n && alle; i++) {
+            int drin = 0;
+            for (int j = 0; j < 5; j++) drin |= ecken[i] == K[k][j];
+            alle = drin;
+        }
+        if (alle) return k == 0 ? 1 : 2;
+    }
+    return 0;
+}
+/* Zahl der Flaechen von Mesh m (11 oder 12), deren UV (mit CLUT-Feld) NICHT dem Soll der Stufe f entspricht; *um = Zahl der umgelegten
+ * Flaechen. Krallen (Mesh 12): CLUT-Feld prueft der Block m == 12 (491 / 492), u/v muessen EM30 sein. */
+static int hf_pruefen(int m, const re15_md1_mesh_t *a, const re15_md1_mesh_t *b, int *um)
+{
+    int fehl = 0, ymin = 32767, ymax = -32768;
+    *um = 0;
+    for (int v = 0; v < a->tri_vertex_count; v++) {
+        if (a->tri_vertices[v].y < ymin) ymin = a->tri_vertices[v].y;
+        if (a->tri_vertices[v].y > ymax) ymax = a->tri_vertices[v].y;
+    }
+    for (int t = 0; t < a->triangle_count && t < b->triangle_count; t++) {
+        const re15_md1_triangle_t *f = &a->triangles[t];
+        const uint16_t e[3] = {f->v0, f->v1, f->v2};
+        int unten = 0;
+        for (int i = 0; i < 3; i++) unten |= 3 * a->tri_vertices[e[i]].y > 3 * ymin + 2 * (ymax - ymin);
+        const int *h = m == 12 ? (hf_kralle(e, 3) ? NULL : HF_HAND) : (unten ? HF_UNTERARM : NULL);
+        re15_md1_tri_uv_t x = a->triangle_uvs[t];
+        if (h) {
+            x.u0 = hf_abb(x.u0, h[0], h[1], h[3]); x.u1 = hf_abb(x.u1, h[0], h[1], h[3]); x.u2 = hf_abb(x.u2, h[0], h[1], h[3]);
+            x.v0 = hf_abb(x.v0, h[0], h[2], h[4]); x.v1 = hf_abb(x.v1, h[0], h[2], h[4]); x.v2 = hf_abb(x.v2, h[0], h[2], h[4]);
+            (*um)++;
+        }
+        if (h || m == 11) x.clut = (uint16_t)((HF_ZEILE << 6) | (x.clut & 0x3F));
+        else x.clut = b->triangle_uvs[t].clut;
+        fehl += memcmp(&x, &b->triangle_uvs[t], sizeof x) != 0;
+    }
+    for (int q = 0; q < a->quad_count && q < b->quad_count; q++) {
+        const re15_md1_quad_t *f = &a->quads[q];
+        const uint16_t e[4] = {f->v0, f->v1, f->v2, f->v3};
+        int unten = 0;
+        for (int i = 0; i < 4; i++) unten |= 3 * a->quad_vertices[e[i]].y > 3 * ymin + 2 * (ymax - ymin);
+        const int *h = m == 12 ? (hf_kralle(e, 4) ? NULL : HF_HAND) : (unten ? HF_UNTERARM : NULL);
+        re15_md1_quad_uv_t x = a->quad_uvs[q];
+        if (h) {
+            x.u0 = hf_abb(x.u0, h[0], h[1], h[3]); x.u1 = hf_abb(x.u1, h[0], h[1], h[3]);
+            x.u2 = hf_abb(x.u2, h[0], h[1], h[3]); x.u3 = hf_abb(x.u3, h[0], h[1], h[3]);
+            x.v0 = hf_abb(x.v0, h[0], h[2], h[4]); x.v1 = hf_abb(x.v1, h[0], h[2], h[4]);
+            x.v2 = hf_abb(x.v2, h[0], h[2], h[4]); x.v3 = hf_abb(x.v3, h[0], h[2], h[4]);
+            (*um)++;
+        }
+        if (h || m == 11) x.clut = (uint16_t)((HF_ZEILE << 6) | (x.clut & 0x3F));
+        else x.clut = b->quad_uvs[q].clut;
+        fehl += memcmp(&x, &b->quad_uvs[q], sizeof x) != 0;
+    }
+    return fehl;
+}
 
 static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
 {
@@ -121,7 +274,7 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
     snprintf(pfad, sizeof pfad, RE15_ASSET_PSX_DIR "/EMD/%s", name);
     size_t len = 0;
     uint8_t *blob = slurp(pfad, &len);
-    CHECK(blob != NULL, "%s fehlt (Spiel-Asset V7, re15_port/tools/r41_sichel/v7_kette.sh)", pfad);
+    CHECK(blob != NULL, "%s fehlt (Spiel-Asset V8, re15_port/tools/r41_sichel/v8_kette.sh)", pfad);
     if (!blob) return;
     CHECK(len >= em30_len, "%s: Laenge %zu < EM30 %zu", name, len, em30_len);
 
@@ -254,10 +407,13 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                     geaendert += memcmp(&a->tri_vertices[v], &b->tri_vertices[v], sizeof *a->tri_vertices) != 0;
                 continue;
             }
-            CHECK(b->triangle_count == a->triangle_count && b->quad_count == a->quad_count &&
-                  b->tri_vertex_count == a->tri_vertex_count && b->quad_vertex_count == a->quad_vertex_count,
-                  "%s: Mesh %d Elementzahlen weichen von EM30 ab", name, m);
-            if (b->triangle_count != a->triangle_count || b->quad_count != a->quad_count) continue;
+            const int zd = m == 8 ? EINSATZ_D : 0, zv = m == 8 ? EINSATZ_V : 0, ze = m == 8 ? EINSATZ_E : 0;   /* V8 Runde 6b */
+            CHECK(b->triangle_count == a->triangle_count + zd && b->quad_count == a->quad_count + zv &&
+                  b->tri_vertex_count == a->tri_vertex_count + ze && b->quad_vertex_count == a->quad_vertex_count + ze,
+                  "%s: Mesh %d Elementzahlen %d/%d/%d/%d weichen von EM30 %d/%d/%d/%d + Einsatz %d/%d/%d ab", name, m, b->triangle_count,
+                  b->quad_count, b->tri_vertex_count, b->quad_vertex_count, a->triangle_count, a->quad_count, a->tri_vertex_count,
+                  a->quad_vertex_count, zd, zv, ze);
+            if (b->triangle_count != a->triangle_count + zd || b->quad_count != a->quad_count + zv) continue;
             if (a->triangle_count > 0)
                 CHECK(!memcmp(a->triangles, b->triangles, sizeof *a->triangles * (size_t)a->triangle_count),
                       "%s: Mesh %d Dreieckstopologie weicht ab", name, m);
@@ -272,18 +428,98 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
             if (umtexturiert(m)) { CHECK(!uv_gleich, "%s: Mesh %d nicht umtexturiert", name, m); uv_neu++; }
             else CHECK(uv_gleich, "%s: Mesh %d UVs weichen ab", name, m);
             if (nur_clut(m))
-                CHECK(uv_ohne_clut_gleich(a, b), "%s: Mesh %d UVs ausser dem CLUT-Feld weichen von EM30 ab", name, m);
-            if (m == 8)                  /* V5 wie Foto b): Brust 34 Flaechen -> Zeile 488 (gemessen 480:56, 481:14, 488:34) */
-                CHECK(zeile_zahl(b, 488) == 34, "%s: Brust (Mesh 8) %d Flaechen auf CLUT 488 statt 34", name, zeile_zahl(b, 488));
-            if (m == 13)                 /* V5 wie Foto b): Oberarm ohne Schulterkuppe 43 Flaechen -> 489 (gemessen 480:13, 489:43) */
-                CHECK(zeile_zahl(b, 489) == 43, "%s: Oberarm (Mesh 13) %d Flaechen auf CLUT 489 statt 43", name, zeile_zahl(b, 489));
-            if (m == 12) {               /* V7 linke Hand 2.: Daumenkralle T 6 Flaechen -> 491 (grau), Fingerkrallen A/B/C 18 -> 492 (rot),
-                                          * Rest der Klauenhand 490 (V5 wie Foto b, Kappe v16 zurueck auf 490); gemessen 490:34, 491:6, 492:18 */
+                CHECK(uv_ohne_clut_gleich(a, b) && uv_ohne_clut_anders(a, b) == 0,
+                      "%s: Mesh %d UVs ausser dem CLUT-Feld weichen von EM30 ab (%d Flaechen)", name, m, uv_ohne_clut_anders(a, b));
+            if (m == 8) {                /* V8 Runde 5 (adern_r5.py, Sicht-Pruefer r4 (3) "graue Platte ... weisse Keile"): auch die Brust (34
+                                          * Flaechen, bis Runde 4 Zeile 488) auf ihrer Original-Zeile 481 -> 494 mit eigener UV; Mesh 8 ganz auf
+                                          * 493/494 (gemessen 493:56, 494:48, 488/480/481: 0); 28 Flaechen mit anderer UV als das Original-EM30
+                                          * (rueckenfleisch 2, huegel 1, blass_rechts 3, weiss 20, blass_r5 2) */
+                CHECK(zeile_zahl(b, 488) == 0, "%s: Brust (Mesh 8) %d Flaechen noch auf CLUT 488 (Soll 0, Runde 5: Original-Zeile 481)", name,
+                      zeile_zahl(b, 488));
+                CHECK(zeile_zahl(b, Z_X1) == 56 + EINSATZ_D + EINSATZ_V && zeile_zahl(b, Z_X2) == 48,
+                      "%s: Mesh 8 Zeilen 493/494 %d/%d Flaechen statt %d/48 (V8 Runde 7c: 56 + Ergaenzungsdreiecke)", name, zeile_zahl(b, Z_X1),
+                      zeile_zahl(b, Z_X2), 56 + EINSATZ_D + EINSATZ_V);
+                /* V8 Runde 7c (E11): die angehaengten Dreiecke sind genau die Haelften (0,1,3) und (0,3,2) der Vierecke v8 und v17 - gleiche
+                 * Ecken- und Normalen-Indizes, gleiche UV, CLUT und Seite; keine eigene Geometrie, keine eigenen Texel (Runde 6b: Nackenstueck) */
+                {
+                    int fehl = 0;
+                    static const int H[2][3] = {{0, 1, 3}, {0, 3, 2}};
+                    for (int t = a->triangle_count; t < b->triangle_count; t++) {
+                        const int k = t - a->triangle_count, qi = k < 2 ? ERG_QUAD_A : ERG_QUAD_B;
+                        if (k >= 4 || qi >= b->quad_count) { fehl++; continue; }
+                        const re15_md1_quad_t *q = &b->quads[qi];
+                        const re15_md1_quad_uv_t *qu = &b->quad_uvs[qi];
+                        const uint16_t qv[4] = {q->v0, q->v1, q->v2, q->v3}, qn[4] = {q->n0, q->n1, q->n2, q->n3};
+                        const uint8_t uu[4] = {qu->u0, qu->u1, qu->u2, qu->u3}, vv[4] = {qu->v0, qu->v1, qu->v2, qu->v3};
+                        const int *h = H[k & 1];
+                        const re15_md1_triangle_t *f = &b->triangles[t];
+                        const re15_md1_tri_uv_t *u = &b->triangle_uvs[t];
+                        fehl += !(f->v0 == qv[h[0]] && f->v1 == qv[h[1]] && f->v2 == qv[h[2]] &&
+                                  f->n0 == qn[h[0]] && f->n1 == qn[h[1]] && f->n2 == qn[h[2]]);
+                        fehl += !(u->u0 == uu[h[0]] && u->v0 == vv[h[0]] && u->u1 == uu[h[1]] && u->v1 == vv[h[1]] &&
+                                  u->u2 == uu[h[2]] && u->v2 == vv[h[2]] && u->clut == qu->clut && u->page == qu->page);
+                    }
+                    CHECK(fehl == 0, "%s: Ergaenzungsdreiecke an Mesh 8: %d Verstoesse (nicht die Haelften von v8/v17 mit gleichen Ecken, "
+                          "Normalen, UV, CLUT und Seite)", name, fehl);
+                }
+                CHECK(zeile_zahl(b, 480) == 0 && zeile_zahl(b, 481) == 0, "%s: Mesh 8 %d/%d Flaechen noch auf V7-Zeile 480/481 (Naht, Runde 4)",
+                      name, zeile_zahl(b, 480), zeile_zahl(b, 481));
+                CHECK(uv_ohne_clut_anders(a, b) == 31, "%s: Mesh 8 %d Flaechen mit anderer UV (Soll 31, V8 Runde 7c: 29 + 5 - 3)",
+                      name, uv_ohne_clut_anders(a, b));
+            }
+            if (m == 14) {               /* V8 Runde 4: alle 37 Flaechen auf 495 (= Original-Zeile 482); Band v9/v10/d19/d22 mit Schub */
+                CHECK(zeile_zahl(b, Z_X3) == 37 && zeile_zahl(b, 482) == 0, "%s: Unterarm (Mesh 14) %d Flaechen auf X3 (Soll 37), %d auf 482 (Soll 0)",
+                      name, zeile_zahl(b, Z_X3), zeile_zahl(b, 482));
+                CHECK(uv_ohne_clut_anders(a, b) == 4, "%s: Unterarm (Mesh 14) %d Flaechen mit anderer UV (Soll 4, Band)", name, uv_ohne_clut_anders(a, b));
+            }
+            if (m == 13) {               /* V8 Runde 4: alle 56 Flaechen auf 493; Feld C (24 Flaechen) mit einem Schub auf Oberarm-Haut */
+                CHECK(zeile_zahl(b, Z_X1) == 56 && zeile_zahl(b, 480) == 0 && zeile_zahl(b, 489) == 0,
+                      "%s: Oberarm (Mesh 13) %d Flaechen auf 493 (Soll 56), %d auf 480, %d auf 489 (Soll 0)", name, zeile_zahl(b, Z_X1),
+                      zeile_zahl(b, 480), zeile_zahl(b, 489));
+                CHECK(uv_ohne_clut_anders(a, b) == 24, "%s: Oberarm (Mesh 13) %d Flaechen mit anderer UV (Soll 24, Feld C)", name,
+                      uv_ohne_clut_anders(a, b));
+            }
+            if (m == 12) {               /* V7 linke Hand 2.: Daumenkralle T 6 Flaechen -> 491 (grau), Fingerkrallen A/B/C 18 -> 492 (rot);
+                                          * V8 Runde 7e (Stufe f): Rest der Klauenhand (34, mit Kastenfinger und Kappe v16) auf 482 statt 490 (V5
+                                          * wie Foto b, bis 7d); gemessen am Asset 07b6703f 482:34, 491:6, 492:18, 490:0 */
                 CHECK(zeile_zahl(b, 491) == 6, "%s: Daumenkralle (Mesh 12) %d Flaechen auf CLUT 491 statt 6", name, zeile_zahl(b, 491));
                 CHECK(zeile_zahl(b, 492) == 18, "%s: Fingerkrallen (Mesh 12) %d Flaechen auf CLUT 492 statt 18", name,
                       zeile_zahl(b, 492));
-                CHECK(zeile_zahl(b, 490) == b->quad_count + b->triangle_count - 24, "%s: Klauenhand (Mesh 12) %d Flaechen auf 490 statt %d",
-                      name, zeile_zahl(b, 490), b->quad_count + b->triangle_count - 24);
+                CHECK(zeile_zahl(b, HF_ZEILE) == b->quad_count + b->triangle_count - 24 && zeile_zahl(b, 490) == 0,
+                      "%s: Klauenhand (Mesh 12) %d Flaechen auf 482 statt %d, %d noch auf 490 (V8 Runde 7e Handfarbe)", name, zeile_zahl(b, HF_ZEILE),
+                      b->quad_count + b->triangle_count - 24, zeile_zahl(b, 490));
+                {
+                    int um = 0, fehl = hf_pruefen(12, a, b, &um);
+                    CHECK(fehl == 0 && um == 34, "%s: Klauenhand (Mesh 12) %d Flaechen mit UV ungleich EM30 bzw. Abbildung der Stufe f, %d umgelegt "
+                          "(Soll 0 / 34, V8 Runde 7e)", name, fehl, um);
+                }
+                /* V8 Runde 6c (P7, Nutzer 2026-11-10: "sieht es so aus als waere die linke Hand verkehrt herum gedreht"; hand_r6.py /
+                 * hand_v8.json skala 0.77 0.72 0.77, dreh_grad 0, Krallen-Wurzelring 1.6): breite Hand in Capcoms Lage - Spanne der
+                 * 52 Ecken und Wurzelring (Ecken 1-4) hinter dem Gelenk; gemessen am Asset e9e71bca. Gegenproben: der um 118 Grad
+                 * verdrehte Stand 95a783a6 hatte 484 / 716 / 433 (Spanne z = Dicke der Hand fast so gross wie x), r5d / V7
+                 * 343 / 594 / 235, y 16-19.
+                 * V8 Runde 7a (K3, hand_v8.json quelle.krallen_r7a / daumen_r7a: Krallenspitzen A/C an der B-Spitze, Daumen entlang
+                 * seiner Achse laengs 0.75 quer 1.25): Spanne x 453 -> 462, z 241 -> 261, y bleibt 716; gemessen am Asset a474188a */
+                CHECK(b->tri_vertex_count == 52 && spanne(b, 0) == 462 && spanne(b, 1) == 716 && spanne(b, 2) == 261,
+                      "%s: Klauenhand (Mesh 12) %d Ecken, Spanne %d / %d / %d statt 52, 462 / 716 / 261", name, b->tri_vertex_count,
+                      spanne(b, 0), spanne(b, 1), spanne(b, 2));
+                for (int v = 1; v <= 4 && v < b->tri_vertex_count; v++)
+                    CHECK(b->tri_vertices[v].y == -22, "%s: Klauenhand (Mesh 12) Wurzelring-Ecke %d y %d statt -22", name, v,
+                          b->tri_vertices[v].y);
+            }
+            if (m == 11) {               /* V8 Runde 7e (Stufe f): alle 25 Flaechen auf 482; die 8 im unteren Drittel (eine Ecke y > y_min + 2/3
+                                          * Spanne, EM30-Ecken; gemessen d0 d1 d16 d17 v1 v2 v3 v4) mit der Abbildung, die 17 uebrigen UV = EM30 */
+                int um = 0, fehl = hf_pruefen(11, a, b, &um);
+                CHECK(zeile_zahl(b, HF_ZEILE) == b->quad_count + b->triangle_count && fehl == 0 && um == 8,
+                      "%s: Unterarm (Mesh 11) %d/%d Flaechen auf 482, %d mit UV ungleich EM30 bzw. Abbildung, %d umgelegt (Soll 8, V8 Runde 7e)",
+                      name, zeile_zahl(b, HF_ZEILE), b->quad_count + b->triangle_count, fehl, um);
+            }
+            if (m == 11) {               /* V8 Runde 6c (P7): Unterarm nach dem Breitenprofil der Vorlage in den echten Szenenposen
+                                          * (hand_v8.json unterarm verlauf, Ellbogen-Ende 1.2 / 1.15); gemessen am Asset e9e71bca,
+                                          * Gegenproben: Stand 95a783a6 444 / 640 / 407, r5d / V7 Spanne x / z 516 / 472 */
+                CHECK(b->tri_vertex_count == 18 && spanne(b, 0) == 464 && spanne(b, 1) == 640 && spanne(b, 2) == 426,
+                      "%s: Unterarm (Mesh 11) %d Ecken, Spanne %d / %d / %d statt 18, 464 / 640 / 426", name, b->tri_vertex_count,
+                      spanne(b, 0), spanne(b, 1), spanne(b, 2));
             }
             if (m == 9) {                /* N1.10: Kopf auf eigener CLUT-Zeile; V7: 486 (V6 Kopf) */
                 int kopf = 0, ecken = 0;
@@ -307,13 +543,131 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
                 geaendert += memcmp(&a->tri_vertices[v], &b->tri_vertices[v], sizeof *a->tri_vertices) != 0;
         } else {
             CHECK(b->quad_count > 0, "%s: Schwanzglied-Mesh %d leer", name, m);
-            for (int q = 0; q < b->quad_count; q++)
-                CHECK(b->quad_uvs[q].clut == CLUT_SCHWANZ, "%s: Schwanzglied %d Quad %d CLUT %04x statt 487", name, m, q,
-                      b->quad_uvs[q].clut);
-            /* V6 drei Punkte 2. (Deckel je Rohrende auf Zeile 487): auch die Dreiecke der Glieder liegen auf der Schwanzzeile */
-            for (int t = 0; t < b->triangle_count; t++)
-                CHECK(b->triangle_uvs[t].clut == CLUT_SCHWANZ, "%s: Schwanzglied %d Dreieck %d CLUT %04x statt 487", name, m, t,
-                      b->triangle_uvs[t].clut);
+            /* V8 Runde 5 (P4, Nutzer 2026-11-09 "Die Unterseite des großen Schwanzes ist fleischig ... Nur die oberseite ist durchweg grau";
+             * tools/r41_sichel/v8/unterseite_r5.py): die Flaechen der Unterseite (Mittel |theta| < 130 Grad gegen die Innenrichtung des Bogens,
+             * ohne Deckel und Wurzelflaechen) liegen auf Zeile 495 (= Original-EM30-Zeile 482) mit UV auf dem Haut/Fleisch-Verlauf des
+             * Original-Unterarms (Textur-Seite 2); alle uebrigen (Oberseite, V6-Deckel) bleiben auf der Schwanzzeile 487. Gemessen am Asset
+             * (v8_bau.py Protokoll "unterseite"): 16: 8, 17: 8, 18: 16, 19: 8, 20: 8, 21: 8, 22: 16 = 72 Flaechen.
+             * V8 Runde 6b (P4-neu, Pruefung r5d "graue Reifen"): Grenze 110 / 120 Grad, Mantel / Dorn / Ring-Deckel an ihr geteilt, auch
+             * die Deckel-Haelften der Unterseite auf 495; gemessen am Asset 95a783a6: 21 / 30 / 41 / 31 / 30 / 30 / 30 = 213 Flaechen
+             * (erster Stand 382bbfe7: Glied 16 nur 20 - das Bandstueck v22 zwischen 110 und 120 Grad galt dem Bau noch als Wurzelflaeche
+             * und blieb auf 487; szene_marker.wurzel_flaechen kennt seit 118fad898 die Teilungs-Ecken),
+             * Ecken je Glied 43 / 32 / 47 / 32 / 32 / 32 / 32 (Runde 5d: 35 / 24 / 35 / 24 / 24 / 24 / 24).
+             * V8 Runde 7b (K1 "Unterseite wie Fleisch, nicht wie eine glatte rote Flaeche", K2 "7 graue Deckel-Dreiecke";
+             * tools/r41_sichel/v8/unterseite_r7b.py, unterseite_v8.json fleisch_r7b): Fleisch in Original-Dichte um den Umfang,
+             * Abschnitts-Ringe (neue Ecken auf den Laengskanten, Form gleich) in den Gliedern 19-22, die 7 Kegel-Dreiecke und die
+             * Rohr-Vierecke der Wurzel unter der Grenze auf 495. Gemessen am Asset 87b02681 (sfv8/r7b): 35 / 30 / 41 / 41 / 40 / 40 / 40
+             * = 267 Flaechen auf 495, Ecken 43 / 32 / 47 / 48 / 47 / 47 / 47. Gegenprobe Stand a474188a: rot (213 Flaechen, Ecken 32 in 19-22). */
+            /* V8 Runde 8 (Nutzer 2026-11-14 woertlich "weder mit dem rot der Schwanzfarbe noch mit dem etwas zu steifen grossen Schwanz
+             * zufrieden" + Version_80%/Areas*.png; Stufe q = tools/r41_sichel/v8/schwanz_r8.py, schwanz_r8.json): Meshes 16-22 neu gebaut -
+             * Querschnitt flach quer zur Bauchachse (innen_phi 26,4 Grad, Querhalbachse <= 135 E. = Querdicke 270), Einschnuerung an den 6
+             * Gelenken, Fleisch nur im Bauchsektor (Zeile 495 = Original 482, Seite 2), Ruecken/Flanken Zeile 487 (Seite 2).
+             * Runde 8b (Pruefer pr8): Zwischenringe Z1/Z2 in den Gliedern 17-21 (Fleisch gependelt), Glied 22 = Knolle (Radius 190) + Nadel bis
+             * y 1300 auf der Achse, rosa Band nur in den mittleren Bauchfeldern der Fugen (Zeile 493 = Original 480, Seite 0), Keyframes mit
+             * Mesh 22 unter der Sohle angehoben (schwanz_r8.heben, nur Winkel der Knochen 17-22).
+             * Gemessen am Asset der Runde 8b (Farbprobe b, sfv8/r8/r8b): Ecken 46 / 68 / 79 / 68 / 68 / 68 / 112; Flaechen auf 495 22 / 20 / 24 /
+             * 20 / 20 / 20 / 28 (Glied 16: 14 Wurzelflaechen aus Stufe w/u mit ihrer UV), auf 493 4 / 8 / 8 / 8 / 8 / 8 / 4, Rest 487.
+             * Gegenprobe Stand 7e 07b6703f und Runde 8 4cf28242: rot (Ecken 43 / 32 / 47 / 48 / 47 / 47 / 47 bzw. 46 / 46 / 57 / 46 / 46 / 46 / 101).
+             * Bis Runde 7e: 267 Flaechen auf 495 (Unterseite bis theta 110 / 120, unterseite_r5.py / unterseite_r7b.py).
+             * Runde 8c (Koordinator 14.11., Nutzer waehlt Probe b "wobei das Original Video der Schwanz noch etwas heller ist und nicht ganz so
+             * rot"): nur UV/CLUT - Bauch auf ein anderes Original-Feld (Zeile 493 = Original 480, Seite 0, Feld C1), helle Stellen als Ringe auf
+             * ALLEN 11 Sektoren der Fugen (Mantel S-C / D-E und Deckel, Zeile 493, Feld RB). Auf 495 bleiben nur die 14 Wurzelflaechen von
+             * Glied 16. Gemessen am Asset der Runde 8c (sfv8/r8/r8d NEU_b): auf 493 26 / 56 / 60 / 56 / 56 / 56 / 46, auf 495 14 / 0 / ... / 0,
+             * Rest 487; Ecken unveraendert. Gegenprobe Runde 8b 66db2244: rot (495 22 / 20 / 24 / 20 / 20 / 20 / 28).
+             * Runde 8d (Nutzer 14.11. zum Endstand 8c: "ich weiss nicht wo du die Streifen bei den Schwanz Abschnitten von Birkin her nimmst,
+             * die gehoeren da nicht hin"): keine Ringe - die Fugenflaechen im Bauchsektor tragen das Bauchfeld C1, die uebrigen grau. Gemessen
+             * am Asset der Runde 8d (sfv8/r8/r8e NEU_b): auf 493 12 / 28 / 32 / 28 / 28 / 28 / 32 (nur Bauch), auf 495 14 / 0 / ... / 0,
+             * Rest 487; Ecken unveraendert. Gegenprobe Runde 8c d31f9534: rot (493 26 / 56 / 60 / 56 / 56 / 56 / 46).
+             * Runde 8f (Nutzer 15.11. "komische braune Streifen an den Raendern", Entscheid des Orchestrators: einheitlich auch ueber die
+             * Breite; schwanz_r8.json felder.flanke_fleisch): Flanke und Ruecken tragen das Bauchfeld C1, grau (487) bleibt nur die Nadel von
+             * Glied 22 und die 8 Wurzelflaechen von Glied 16 im Rumpf. Gemessen am Asset 92a58f26 (Kette scratchpad schwanz_r9/r3/k1, Protokoll
+             * 7_v8.json klassen): auf 493 33 / 77 / 88 / 77 / 77 / 77 / 88, auf 495 14 / 0 / ... / 0, Rest 487 (Glied 16: 8, Glied 22: 33);
+             * Ecken unveraendert. Gegenprobe Runde 8e a48e2ce5: rot (493 12 / 28 / 32 / 28 / 28 / 28 / 32).
+             * Runde 8g (Nutzer 15.11. "NUR DIE UNTERSEITE WAR KOMISCH MIT DEN ABSCHNITTEN!!!!" und "Die Oberseite des Schwanzes ist wieder eher
+             * rot als dunkel ... Das war doch vorher gut"): Oberseite, Ruecken, Flanken und Nadel wie 8c d31f9534 (Grau-Feld je Glied auf 487,
+             * Ringe RB u 93-100 v 10-17 auf 493 an den Fugen ausserhalb des Bauchs), Bauch inklusive der Fugen einheitlich im Feld C1 u 56-65
+             * v 51-55 (493). Gemessen am Asset 8g (riegel_schwanz_r8 R8h): auf 493 26 / 56 / 60 / 56 / 56 / 56 / 46 (= 8c), davon Ring RB
+             * 14 / 28 / 28 / 28 / 28 / 28 / 14 und Feld C1 12 / 28 / 32 / 28 / 28 / 28 / 32, keine anderen; auf 495 14 / 0 / ... / 0, Rest 487
+             * (= 8c: 15 / 21 / 28 / 21 / 21 / 21 / 75). Die Zeilen-Zahlen allein unterscheiden 8g nicht von 8c, deshalb zaehlt der Test die Felder.
+             * Gegenproben: 8c d31f9534 rot (RB 22 / 44 / 44 / 44 / 44 / 44 / 22, 493-Flaechen ausserhalb RB und C1 4 / 6 / 8 / 6 / 9 / 6 / 15),
+             * 8f 92a58f26 rot (493 33 / 77 / 88 / 77 / 77 / 77 / 88), 8e a48e2ce5 rot (RB 0). */
+            static const int ECKEN[7] = {46, 68, 79, 68, 68, 68, 112};
+            static const int AUF495[7] = {14, 0, 0, 0, 0, 0, 0};
+            static const int AUF493[7] = {26, 56, 60, 56, 56, 56, 46};
+            static const int AUF493_RB[7] = {14, 28, 28, 28, 28, 28, 14};
+            static const int AUF493_C1[7] = {12, 28, 32, 28, 28, 28, 32};
+            CHECK(b->tri_vertex_count == ECKEN[m - 16], "%s: Schwanzglied %d: %d Ecken statt %d (V8 Runde 8b)", name, m,
+                  b->tri_vertex_count, ECKEN[m - 16]);
+            int auf487 = zeile_zahl(b, 487), auf495 = zeile_zahl(b, Z_X3), auf493 = zeile_zahl(b, 493);
+            CHECK(auf495 == AUF495[m - 16] && auf493 == AUF493[m - 16] && auf487 + auf495 + auf493 == b->quad_count + b->triangle_count,
+                  "%s: Schwanzglied %d: %d Flaechen auf 495 (Soll %d), %d auf 493 (Soll %d), %d auf 487, %d gesamt (V8 Runde 8g)", name, m,
+                  auf495, AUF495[m - 16], auf493, AUF493[m - 16], auf487, b->quad_count + b->triangle_count);
+            for (int q = 0; q < b->quad_count; q++) {
+                const unsigned z = b->quad_uvs[q].clut >> 6, seite = b->quad_uvs[q].page & 0xF;
+                CHECK(seite == (z == 493 ? 0u : 2u), "%s: Schwanzglied %d Quad %d Zeile %u Textur-Seite %u (Soll 493 -> 0, sonst 2)", name, m,
+                      q, z, seite);
+            }
+            for (int t = 0; t < b->triangle_count; t++) {
+                const unsigned z = b->triangle_uvs[t].clut >> 6, seite = b->triangle_uvs[t].page & 0xF;
+                CHECK(seite == (z == 493 ? 0u : 2u), "%s: Schwanzglied %d Dreieck %d Zeile %u Textur-Seite %u (Soll 493 -> 0, sonst 2)", name,
+                      m, t, z, seite);
+            }
+            {   /* Runde 8e (Nutzer 15.11. zu 8d: "komische braune Streifen an den Raendern"): die Bauch-Flaechen (Zeile 493) liegen im Feld C1
+                 * OHNE die dunkle Naht des Original-Bilds - u 56-65, v 51-55 (schwanz_r8.json felder.fleisch). Bis 8d u 54-65: die Spalten
+                 * u 54-55 (L* 11,6-27,0) gaben im Spiel den dunkelroten Laengsstrich an der Bauchkante (Markerlauf scratchpad schwanz_r9:
+                 * 48938 Schwanzpunkte F255-F350 aus u 54-55, mit 8e 0). Gegenprobe 8d 547acc80: rot.
+                 * Runde 8g: jede Flaeche auf 493 liegt GANZ im Feld C1 (Bauch) oder GANZ im Ring-Feld RB u 93-100 v 10-17 (Fugen der Oberseite
+                 * wie 8c); gezaehlt je Feld (AUF493_C1 / AUF493_RB), jede andere 493-Flaeche ist ein Fehler. */
+                int naht = 0, c1 = 0, rb = 0;
+                for (int q = 0; q < b->quad_count; q++) {
+                    const re15_md1_quad_uv_t *u = &b->quad_uvs[q];
+                    if ((u->clut >> 6) != 493) continue;
+                    const unsigned uu[4] = { u->u0, u->u1, u->u2, u->u3 }, vv[4] = { u->v0, u->v1, u->v2, u->v3 };
+                    int in_c1 = 1, in_rb = 1;
+                    for (int k = 0; k < 4; k++) {
+                        in_c1 &= uu[k] >= 56 && uu[k] <= 65 && vv[k] >= 51 && vv[k] <= 55;
+                        in_rb &= uu[k] >= 93 && uu[k] <= 100 && vv[k] >= 10 && vv[k] <= 17;
+                    }
+                    c1 += in_c1; rb += in_rb; naht += !in_c1 && !in_rb;
+                }
+                for (int t = 0; t < b->triangle_count; t++) {
+                    const re15_md1_tri_uv_t *u = &b->triangle_uvs[t];
+                    if ((u->clut >> 6) != 493) continue;
+                    const unsigned uu[3] = { u->u0, u->u1, u->u2 }, vv[3] = { u->v0, u->v1, u->v2 };
+                    int in_c1 = 1, in_rb = 1;
+                    for (int k = 0; k < 3; k++) {
+                        in_c1 &= uu[k] >= 56 && uu[k] <= 65 && vv[k] >= 51 && vv[k] <= 55;
+                        in_rb &= uu[k] >= 93 && uu[k] <= 100 && vv[k] >= 10 && vv[k] <= 17;
+                    }
+                    c1 += in_c1; rb += in_rb; naht += !in_c1 && !in_rb;
+                }
+                CHECK(naht == 0 && c1 == AUF493_C1[m - 16] && rb == AUF493_RB[m - 16],
+                      "%s: Schwanzglied %d: auf 493 %d Flaechen im Bauchfeld C1 u 56-65 v 51-55 (Soll %d), %d im Ring-Feld RB u 93-100 v 10-17 "
+                      "(Soll %d), %d in keinem der beiden (Soll 0; V8 Runde 8e / 8g)", name, m, c1, AUF493_C1[m - 16], rb, AUF493_RB[m - 16], naht);
+            }
+            if (m >= 17) {               /* flach: Querhalbachse <= 135 E. (+1 Rundung); Glieder 17-19 hoch >= 2 x quer */
+                const double ph = 26.43 * 3.14159265358979 / 180.0;    /* unterseite_v8.json innen_phi 26,40-26,46 je Knochen */
+                double qmax = 0.0, hmax = 0.0;
+                for (int v = 0; v < b->tri_vertex_count; v++) {
+                    const double x = b->tri_vertices[v].x, z = b->tri_vertices[v].z;
+                    const double qq = fabs(-x * sin(ph) + z * cos(ph)), hh = fabs(x * cos(ph) + z * sin(ph));
+                    if (qq > qmax) qmax = qq;
+                    if (hh > hmax) hmax = hh;
+                }
+                CHECK(qmax <= 136.0 && (m > 19 || hmax >= 2.0 * qmax), "%s: Schwanzglied %d nicht flach (quer %.0f, hoch %.0f; V8 Runde 8)",
+                      name, m, qmax, hmax);
+            }
+            if (m == 22) {               /* Runde 8b: Nadelspitze y 1300 auf der Achse, Knolle Radius 190 */
+                int ymax = -32768, rmax = 0;
+                for (int v = 0; v < b->tri_vertex_count; v++) {
+                    const re15_md1_vertex_t *e = &b->tri_vertices[v];
+                    if (e->y > ymax) ymax = e->y;
+                    const int r = (int)lrint(sqrt((double)e->x * e->x + (double)e->z * e->z));
+                    if (r > rmax) rmax = r;
+                }
+                CHECK(ymax == 1300 && rmax >= 185 && rmax <= 191, "%s: Stachel (Mesh 22) Spitze y %d (Soll 1300), Knolle Radius %d (Soll 185-191; "
+                      "V8 Runde 8b)", name, ymax, rmax);
+            }
             for (int q = 0; q < b->quad_count; q++) {
                 const re15_md1_quad_t *f = &b->quads[q];
                 CHECK(f->v0 < b->quad_vertex_count && f->v1 < b->quad_vertex_count &&
@@ -365,6 +719,12 @@ static void vergleiche(const char *name, const uint8_t *em30, size_t em30_len)
         CHECK(haut_anders > 200, "%s: nur %d Haut-Eintraege umgefaerbt", name, haut_anders);
         CHECK(!memcmp(s_form.tim.clut + 6 * 256, s_basis.tim.clut, 256 * sizeof(uint16_t)),
               "%s: CLUT-Zeile 486 ist nicht die EM30-Zeile 0 (Original-Kopf, V6 Kopf)", name);
+        /* V8 Runde 3 (O1): Zeilen 493/494/495 = EM30-Zeilen 480/481/482 (CDEMD0.EMS Typ 0x30) bytegleich - jeder Eintrag aus dem Original */
+        for (int k = 0; k < 3; k++) {
+            int fremd = 0;
+            for (int i = 0; i < 256; i++) fremd += s_form.tim.clut[(13 + k) * 256 + i] != s_basis.tim.clut[k * 256 + i];
+            CHECK(fremd == 0, "%s: Zeile %d: %d Eintraege nicht = EM30-Zeile %d (V8 Runde 3: volle Original-Zeile)", name, 493 + k, fremd, 480 + k);
+        }
         fprintf(stderr, "%s: %d Haut-CLUT-Eintraege umgefaerbt, %d blaue grau, %d Zusatzzeilen, Port-Texturhoehe %d\n", name,
                 haut_anders, blau_anders, zeilen - 3, s_form.tim.height * zeilen);
     }

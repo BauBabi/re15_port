@@ -1,0 +1,106 @@
+{
+ "zeile": 493,
+ "seite": 0,
+ "koerper": [
+  {
+   "name": "rechts",
+   "punkte": [
+    [
+     -150,
+     -1180,
+     -300
+    ],
+    [
+     -70,
+     -1185,
+     -370
+    ],
+    [
+     30,
+     -1210,
+     -250
+    ],
+    [
+     60,
+     -1250,
+     -230
+    ],
+    [
+     -120.0,
+     -1330.0,
+     -325.0
+    ],
+    [
+     -30.0,
+     -1340.0,
+     -355.0
+    ],
+    [
+     -180.0,
+     -1270.0,
+     -340.0
+    ]
+   ],
+   "blick": [
+    -0.4,
+    -1,
+    -0.3
+   ],
+   "nachbarn": [
+    "v8",
+    "v18"
+   ],
+   "uv_ort": [
+    48,
+    94
+   ],
+   "drehung": 3,
+   "abstand": 0.06,
+   "kandidaten": 16169
+  }
+ ],
+ "quelle": "Runde 6 (Bauer, Teil b): EIN geschlossenes Nackenstueck rechts (7 Punkte, konvexe Huelle, 10 Dreiecke an Mesh 8) schliesst die Kerbe zwischen Buckel-Vorderkante und Hinterkopf; vorderes Ende im Hinterkopf (hinter Mesh 9). Haut: Original-Texel der Rueckenhaut neben v8/v18 (Huegel), Ort per ort_suche. Das linke Stueck der Versuche 3a/3b ist verworfen: ohne Anker im Kopf, und es hob das PV-Profil bei x 445 von 201 auf 199 (S3 (b) rot: H 6,5 bei x 425). haut_neu: d26 (Ursache des hellen Keils: Gruppe blass_r5_d26, Lab-Abstand zu den Nachbarn 13,41 -> 0,38) und drei Flaechen mit hell-blaeulichen Einzeltexeln (d53, v4, v20; Schub <= FARBTREU 1,5). Der Schub von v24 (-15, -18) ist zurueckgenommen: er hob den Rot-Anteil von v24 in PV von 335 auf 498 von 614 Bildpunkten und damit Riegel S7 (c) auf 50,9 % (Soll <= Original 49,3); ohne ihn 46,3 %, helle Bildpunkte offline Takt F346/F354/F360/F366 13/14/23/21 statt 11/13/21/20 (r4 16/13/21/23). Einsatz der Runde 5 (nacken_r5.py, 18 Flaechen) entfaellt.",
+ "haut_neu": [
+  {
+   "flaeche": "d26",
+   "nachbarn": [
+    "v4",
+    "v24",
+    "d66"
+   ],
+   "schub": [
+    11,
+    -88
+   ],
+   "abstand": 0.38,
+   "vorher": 13.41
+  },
+  {
+   "flaeche": "d53",
+   "schub": [
+    -7,
+    1
+   ],
+   "abstand": 1.24,
+   "vorher": 0.0
+  },
+  {
+   "flaeche": "v4",
+   "schub": [
+    -39,
+    7
+   ],
+   "abstand": 0.91,
+   "vorher": 0.0
+  },
+  {
+   "flaeche": "v20",
+   "schub": [
+    2,
+    55
+   ],
+   "abstand": 1.41,
+   "vorher": 0.0
+  }
+ ]
+}

@@ -1,0 +1,2615 @@
+{
+ "gewaehlt": "D 0.93 0.72 / 118",
+ "varianten": {
+  "A 0.80 / 90": {
+   "ausser": 7,
+   "breite_durch_laenge": 0.75,
+   "cfg": {
+    "hand": {
+     "dreh_grad": 90,
+     "schub_y": 0,
+     "skala": [
+      0.8,
+      0.8,
+      0.8
+     ]
+    },
+    "unterarm": {
+     "grund": [
+      1.229,
+      0.8,
+      1.229
+     ],
+     "verlauf": [
+      [
+       0,
+       0,
+       1.0
+      ],
+      [
+       700,
+       700,
+       1.0
+      ]
+     ]
+    }
+   },
+   "groesse_ausser": 0,
+   "hand_breit": 43.5,
+   "hand_laenge": 58.0,
+   "krallen_ausser": 2,
+   "krallen_laenge_p1": {
+    "A": 13.9,
+    "B": 7.2,
+    "C": 17.9,
+    "T": 13.5
+   },
+   "kreuzen": {
+    "P1": [],
+    "P2": [],
+    "PV": []
+   },
+   "kreuzt": false,
+   "posen": {
+    "P1": {
+     "E": [
+      490.6,
+      300.1
+     ],
+     "T": [
+      470.0,
+      388.0
+     ],
+     "W": [
+      496.7,
+      337.3
+     ],
+     "abstand_spitzen": [
+      9.5,
+      4.1
+     ],
+     "abstand_wurzeln": [
+      7.2,
+      12.1
+     ],
+     "bis_krallenwurzel": 39.0,
+     "daumen": {
+      "abstand_spitze": 32.5,
+      "abstand_wurzel": 21.0,
+      "dicke_wurzel": 12.5,
+      "fingerblock_breite": 27.0,
+      "fingerblock_laenge": 38.5,
+      "gabel_ab_handgelenk": 19.5,
+      "laenge": 21.7,
+      "seite": "Bild-links (zum Koerper)",
+      "spalt_spitze": 25.5,
+      "spalt_wurzel": 1.2,
+      "winkel_zur_handachse": -22.7
+     },
+     "ellbogen_ueber_boden": 147.9,
+     "engstelle_bei": 0.382,
+     "figur_hoehe": 289.0,
+     "hand_breit_bei": 27.8,
+     "hand_laenge": 58.0,
+     "hand_ohne_daumen": 27.8,
+     "handgelenk_ueber_boden": 110.7,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 7.1,
+       "laenge": 13.9,
+       "px": 54,
+       "spitze": [
+        480.0,
+        388.2
+       ],
+       "winkel_zur_handachse": -18.5,
+       "wurzel": [
+        490.1,
+        378.6
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 6.3,
+       "laenge": 7.2,
+       "px": 61,
+       "spitze": [
+        469.2,
+        385.7
+       ],
+       "winkel_zur_handachse": 12.5,
+       "wurzel": [
+        471.1,
+        378.7
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 7.2,
+       "laenge": 17.9,
+       "px": 96,
+       "spitze": [
+        470.6,
+        389.6
+       ],
+       "winkel_zur_handachse": -16.7,
+       "wurzel": [
+        483.1,
+        376.9
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 5.0,
+       "laenge": 13.5,
+       "px": 24,
+       "spitze": [
+        454.5,
+        364.6
+       ],
+       "winkel_zur_handachse": -11.3,
+       "wurzel": [
+        463.0,
+        354.1
+       ]
+      }
+     },
+     "krallen_zone": 19.0,
+     "kreuzen": [],
+     "profil_hand": [
+      14.5,
+      22.5,
+      28.8,
+      36.5,
+      42.0,
+      43.8,
+      41.8,
+      39.5,
+      18.5,
+      13.0
+     ],
+     "profil_hand_lauf": [
+      14.5,
+      22.5,
+      28.8,
+      36.5,
+      27.0,
+      27.0,
+      25.8,
+      13.5,
+      5.8,
+      3.2
+     ],
+     "profil_unterarm": [
+      34.5,
+      39.5,
+      42.5,
+      40.5,
+      36.5,
+      33.2,
+      30.5,
+      27.5,
+      24.2,
+      28.2
+     ],
+     "px_hand": 1401,
+     "px_hand_sichtbar": 1401,
+     "px_unterarm": 1347,
+     "px_unterarm_sichtbar": 1347,
+     "spitze_ueber_boden": 60.0,
+     "stationen": {
+      "ellbogen": 33.5,
+      "hand_breit": 43.5,
+      "handgelenk": 20.5,
+      "handwurzel": 28.8,
+      "krallen_mitte": 17.5,
+      "krallenwurzel": 39.8,
+      "spitzen": 1.0,
+      "unterarm_mitte": 36.5
+     },
+     "unterarm_laenge": 37.7,
+     "unterarm_max": 43.5,
+     "unterarm_min": 22.2,
+     "winkel_hand": -27.7,
+     "winkel_unterarm": 9.2
+    },
+    "P2": {
+     "E": [
+      415.7,
+      266.2
+     ],
+     "T": [
+      461.0,
+      331.0
+     ],
+     "W": [
+      444.7,
+      291.1
+     ],
+     "abstand_spitzen": [
+      8.1,
+      2.8
+     ],
+     "abstand_wurzeln": [
+      5.6,
+      10.5
+     ],
+     "bis_krallenwurzel": 31.5,
+     "daumen": {
+      "abstand_spitze": 16.9,
+      "abstand_wurzel": 14.1,
+      "dicke_wurzel": 6.5,
+      "fingerblock_breite": 19.2,
+      "fingerblock_laenge": 19.0,
+      "gabel_ab_handgelenk": 24.8,
+      "laenge": 9.6,
+      "seite": "Bild-links (zum Koerper)",
+      "spalt_spitze": 14.0,
+      "spalt_wurzel": 1.2,
+      "winkel_zur_handachse": -14.4
+     },
+     "ellbogen_ueber_boden": 167.8,
+     "engstelle_bei": 0.44,
+     "figur_hoehe": 258.0,
+     "hand_breit_bei": 25.5,
+     "hand_laenge": 43.8,
+     "hand_ohne_daumen": 26.5,
+     "handgelenk_ueber_boden": 142.9,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 6.4,
+       "laenge": 9.9,
+       "px": 45,
+       "spitze": [
+        466.5,
+        326.9
+       ],
+       "winkel_zur_handachse": -4.5,
+       "wurzel": [
+        463.5,
+        317.4
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 5.6,
+       "laenge": 5.6,
+       "px": 31,
+       "spitze": [
+        460.4,
+        333.3
+       ],
+       "winkel_zur_handachse": 43.0,
+       "wurzel": [
+        455.3,
+        331.0
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 6.4,
+       "laenge": 13.2,
+       "px": 44,
+       "spitze": [
+        463.1,
+        334.2
+       ],
+       "winkel_zur_handachse": -6.7,
+       "wurzel": [
+        459.6,
+        321.4
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 4.0,
+       "laenge": 11.0,
+       "px": 22,
+       "spitze": [
+        444.9,
+        330.9
+       ],
+       "winkel_zur_handachse": -9.7,
+       "wurzel": [
+        442.5,
+        320.2
+       ]
+      }
+     },
+     "krallen_zone": 12.2,
+     "kreuzen": [],
+     "profil_hand": [
+      11.2,
+      16.0,
+      19.5,
+      22.5,
+      24.8,
+      26.0,
+      26.8,
+      26.0,
+      17.2,
+      13.5
+     ],
+     "profil_hand_lauf": [
+      11.2,
+      16.0,
+      19.5,
+      22.5,
+      24.8,
+      26.0,
+      19.5,
+      19.5,
+      6.5,
+      3.8
+     ],
+     "profil_unterarm": [
+      23.5,
+      28.0,
+      29.0,
+      25.8,
+      21.2,
+      18.5,
+      18.2,
+      16.2,
+      15.2,
+      13.5
+     ],
+     "px_hand": 809,
+     "px_hand_sichtbar": 809,
+     "px_unterarm": 813,
+     "px_unterarm_sichtbar": 646,
+     "spitze_ueber_boden": 103.0,
+     "stationen": {
+      "ellbogen": 22.2,
+      "hand_breit": 26.8,
+      "handgelenk": 10.5,
+      "handwurzel": 19.5,
+      "krallen_mitte": 15.2,
+      "krallenwurzel": 25.8,
+      "spitzen": 5.5,
+      "unterarm_mitte": 21.2
+     },
+     "unterarm_laenge": 38.2,
+     "unterarm_max": 30.2,
+     "unterarm_min": 11.5,
+     "winkel_hand": 22.2,
+     "winkel_unterarm": 49.4
+    },
+    "PV": {
+     "E": [
+      422.4,
+      268.8
+     ],
+     "T": [
+      492.0,
+      300.0
+     ],
+     "W": [
+      456.7,
+      274.4
+     ],
+     "abstand_spitzen": [
+      8.6,
+      2.8
+     ],
+     "abstand_wurzeln": [
+      5.8,
+      11.0
+     ],
+     "bis_krallenwurzel": 30.2,
+     "daumen": {
+      "abstand_spitze": 16.4,
+      "abstand_wurzel": 13.2,
+      "dicke_wurzel": 5.0,
+      "fingerblock_breite": 20.5,
+      "fingerblock_laenge": 17.8,
+      "gabel_ab_handgelenk": 26.2,
+      "laenge": 9.2,
+      "seite": "Bild-links (zum Koerper)",
+      "spalt_spitze": 13.5,
+      "spalt_wurzel": 0.5,
+      "winkel_zur_handachse": -17.4
+     },
+     "ellbogen_ueber_boden": 165.2,
+     "engstelle_bei": 0.419,
+     "figur_hoehe": 254.0,
+     "hand_breit_bei": 23.0,
+     "hand_laenge": 44.0,
+     "hand_ohne_daumen": 27.2,
+     "handgelenk_ueber_boden": 159.6,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 6.7,
+       "laenge": 10.9,
+       "px": 41,
+       "spitze": [
+        493.4,
+        294.0
+       ],
+       "winkel_zur_handachse": -3.2,
+       "wurzel": [
+        485.0,
+        287.2
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 5.9,
+       "laenge": 6.4,
+       "px": 45,
+       "spitze": [
+        491.8,
+        303.2
+       ],
+       "winkel_zur_handachse": 41.4,
+       "wurzel": [
+        485.4,
+        303.8
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 6.7,
+       "laenge": 14.3,
+       "px": 69,
+       "spitze": [
+        494.5,
+        302.5
+       ],
+       "winkel_zur_handachse": -6.2,
+       "wurzel": [
+        483.9,
+        292.9
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 4.7,
+       "laenge": 11.3,
+       "px": 18,
+       "spitze": [
+        478.8,
+        309.7
+       ],
+       "winkel_zur_handachse": -11.4,
+       "wurzel": [
+        471.2,
+        301.3
+       ]
+      }
+     },
+     "krallen_zone": 13.8,
+     "kreuzen": [],
+     "profil_hand": [
+      13.5,
+      17.0,
+      19.8,
+      22.5,
+      25.8,
+      26.5,
+      26.0,
+      24.8,
+      17.0,
+      9.8
+     ],
+     "profil_hand_lauf": [
+      13.5,
+      17.0,
+      19.8,
+      22.5,
+      25.8,
+      26.5,
+      20.5,
+      19.0,
+      5.5,
+      4.8
+     ],
+     "profil_unterarm": [
+      26.5,
+      31.2,
+      31.5,
+      27.2,
+      22.5,
+      20.2,
+      19.2,
+      18.2,
+      16.2,
+      16.2
+     ],
+     "px_hand": 850,
+     "px_hand_sichtbar": 850,
+     "px_unterarm": 810,
+     "px_unterarm_sichtbar": 606,
+     "spitze_ueber_boden": 134.0,
+     "stationen": {
+      "ellbogen": 24.2,
+      "hand_breit": 26.5,
+      "handgelenk": 12.5,
+      "handwurzel": 19.8,
+      "krallen_mitte": 16.0,
+      "krallenwurzel": 25.2,
+      "spitzen": 3.8,
+      "unterarm_mitte": 22.5
+     },
+     "unterarm_laenge": 34.8,
+     "unterarm_max": 32.5,
+     "unterarm_min": 15.8,
+     "winkel_hand": 54.1,
+     "winkel_unterarm": 80.8
+    }
+   },
+   "spitze_ueber_boden_H": 0.208,
+   "summe": 86.5,
+   "teile": {
+    "hand_profil": {
+     "ausser": 2,
+     "summe": 28.3,
+     "werte": [
+      14.5,
+      22.5,
+      28.8,
+      36.5,
+      42.0,
+      43.8,
+      41.8,
+      39.5,
+      18.5,
+      13.0
+     ]
+    },
+    "stationen": {
+     "ausser": 1,
+     "summe": 22.4,
+     "werte": [
+      33.5,
+      36.5,
+      20.5,
+      28.8,
+      43.5,
+      39.8,
+      17.5,
+      1.0
+     ]
+    },
+    "unterarm_profil": {
+     "ausser": 2,
+     "summe": 35.8,
+     "werte": [
+      34.5,
+      39.5,
+      42.5,
+      40.5,
+      36.5,
+      33.2,
+      30.5,
+      27.5,
+      24.2,
+      28.2
+     ]
+    }
+   },
+   "vorlage_breite_durch_laenge": [
+    0.739,
+    0.655,
+    0.783
+   ],
+   "vorlage_handlaenge": [
+    59.5,
+    56.9,
+    68.5
+   ]
+  },
+  "B 0.80 / 105": {
+   "ausser": 6,
+   "breite_durch_laenge": 0.644,
+   "cfg": {
+    "hand": {
+     "dreh_grad": 105,
+     "krallen": {
+      "A": {
+       "faktor": 1.33
+      },
+      "B": {
+       "anteil": 0.5,
+       "faktor": 2.0,
+       "nach": "C"
+      }
+     },
+     "schub_y": 0,
+     "skala": [
+      0.8,
+      0.8,
+      0.8
+     ],
+     "wurzelring": {
+      "1": [
+       -30,
+       1.0
+      ],
+      "2": [
+       -30,
+       1.0
+      ],
+      "3": [
+       -30,
+       1.0
+      ],
+      "4": [
+       -30,
+       1.0
+      ]
+     }
+    },
+    "unterarm": {
+     "grund": [
+      1.229,
+      0.8,
+      1.229
+     ],
+     "verlauf": [
+      [
+       0,
+       0,
+       1.0
+      ],
+      [
+       90,
+       90,
+       1.0
+      ],
+      [
+       236,
+       236,
+       0.86
+      ],
+      [
+       442,
+       442,
+       0.92
+      ],
+      [
+       627,
+       627,
+       1.0
+      ],
+      [
+       700,
+       700,
+       1.0
+      ]
+     ]
+    }
+   },
+   "groesse_ausser": 1,
+   "hand_breit": 42.2,
+   "hand_laenge": 65.5,
+   "krallen_ausser": 0,
+   "krallen_laenge_p1": {
+    "A": 18.5,
+    "B": 16.9,
+    "C": 17.9,
+    "T": 13.7
+   },
+   "kreuzen": {
+    "P1": [],
+    "P2": [],
+    "PV": []
+   },
+   "kreuzt": false,
+   "posen": {
+    "P1": {
+     "E": [
+      490.6,
+      300.1
+     ],
+     "T": [
+      462.0,
+      392.0
+     ],
+     "W": [
+      496.7,
+      337.3
+     ],
+     "abstand_spitzen": [
+      7.6,
+      9.1
+     ],
+     "abstand_wurzeln": [
+      7.8,
+      13.4
+     ],
+     "bis_krallenwurzel": 38.8,
+     "daumen": {
+      "abstand_spitze": 27.4,
+      "abstand_wurzel": 20.1,
+      "dicke_wurzel": 12.2,
+      "fingerblock_breite": 26.0,
+      "fingerblock_laenge": 43.8,
+      "gabel_ab_handgelenk": 21.8,
+      "laenge": 24.6,
+      "seite": "Bild-links (zum Koerper)",
+      "spalt_spitze": 24.8,
+      "spalt_wurzel": 1.0,
+      "winkel_zur_handachse": -15.3
+     },
+     "ellbogen_ueber_boden": 147.9,
+     "engstelle_bei": 0.371,
+     "figur_hoehe": 289.0,
+     "hand_breit_bei": 34.5,
+     "hand_laenge": 65.5,
+     "hand_ohne_daumen": 28.5,
+     "handgelenk_ueber_boden": 110.7,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 8.3,
+       "laenge": 18.5,
+       "px": 72,
+       "spitze": [
+        478.7,
+        392.5
+       ],
+       "winkel_zur_handachse": -7.3,
+       "wurzel": [
+        490.5,
+        378.2
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 7.2,
+       "laenge": 16.9,
+       "px": 99,
+       "spitze": [
+        463.3,
+        395.1
+       ],
+       "winkel_zur_handachse": 10.7,
+       "wurzel": [
+        469.6,
+        379.4
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 8.2,
+       "laenge": 17.9,
+       "px": 68,
+       "spitze": [
+        471.3,
+        390.7
+       ],
+       "winkel_zur_handachse": -7.4,
+       "wurzel": [
+        482.8,
+        376.9
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 5.5,
+       "laenge": 13.7,
+       "px": 30,
+       "spitze": [
+        454.5,
+        367.6
+       ],
+       "winkel_zur_handachse": -5.9,
+       "wurzel": [
+        463.0,
+        356.8
+       ]
+      }
+     },
+     "krallen_zone": 26.8,
+     "kreuzen": [],
+     "profil_hand": [
+      17.5,
+      23.8,
+      29.5,
+      36.8,
+      40.2,
+      41.2,
+      39.0,
+      21.2,
+      17.8,
+      3.2
+     ],
+     "profil_hand_lauf": [
+      17.5,
+      23.8,
+      29.5,
+      36.8,
+      27.2,
+      28.0,
+      13.5,
+      6.0,
+      6.0,
+      3.2
+     ],
+     "profil_unterarm": [
+      33.5,
+      37.5,
+      39.5,
+      36.5,
+      33.0,
+      30.2,
+      28.2,
+      26.2,
+      25.2,
+      29.2
+     ],
+     "px_hand": 1583,
+     "px_hand_sichtbar": 1583,
+     "px_unterarm": 1170,
+     "px_unterarm_sichtbar": 1164,
+     "spitze_ueber_boden": 56.0,
+     "stationen": {
+      "ellbogen": 33.5,
+      "hand_breit": 42.2,
+      "handgelenk": 21.0,
+      "handwurzel": 29.5,
+      "krallen_mitte": 18.0,
+      "krallenwurzel": 39.2,
+      "spitzen": 1.0,
+      "unterarm_mitte": 33.0
+     },
+     "unterarm_laenge": 37.7,
+     "unterarm_max": 39.5,
+     "unterarm_min": 24.2,
+     "winkel_hand": -32.4,
+     "winkel_unterarm": 9.2
+    },
+    "P2": {
+     "E": [
+      415.7,
+      266.2
+     ],
+     "T": [
+      462.0,
+      337.0
+     ],
+     "W": [
+      444.7,
+      291.1
+     ],
+     "abstand_spitzen": [
+      6.1,
+      5.8
+     ],
+     "abstand_wurzeln": [
+      5.2,
+      10.1
+     ],
+     "bis_krallenwurzel": 31.5,
+     "daumen": {
+      "abstand_spitze": 12.2,
+      "abstand_wurzel": 11.2,
+      "dicke_wurzel": 2.0,
+      "fingerblock_breite": 18.0,
+      "fingerblock_laenge": 21.2,
+      "gabel_ab_handgelenk": 28.5,
+      "laenge": 5.5,
+      "seite": "Bild-links (zum Koerper)",
+      "spalt_spitze": 9.5,
+      "spalt_wurzel": 1.2,
+      "winkel_zur_handachse": -6.5
+     },
+     "ellbogen_ueber_boden": 167.8,
+     "engstelle_bei": 0.405,
+     "figur_hoehe": 258.0,
+     "hand_breit_bei": 18.5,
+     "hand_laenge": 49.8,
+     "hand_ohne_daumen": 23.5,
+     "handgelenk_ueber_boden": 142.9,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 6.3,
+       "laenge": 13.1,
+       "px": 66,
+       "spitze": [
+        468.9,
+        329.2
+       ],
+       "winkel_zur_handachse": 5.9,
+       "wurzel": [
+        463.0,
+        317.5
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 5.5,
+       "laenge": 12.4,
+       "px": 46,
+       "spitze": [
+        465.3,
+        339.4
+       ],
+       "winkel_zur_handachse": 26.4,
+       "wurzel": [
+        456.2,
+        331.0
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 6.3,
+       "laenge": 13.1,
+       "px": 47,
+       "spitze": [
+        464.7,
+        333.6
+       ],
+       "winkel_zur_handachse": 1.6,
+       "wurzel": [
+        459.7,
+        321.5
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 4.9,
+       "laenge": 10.9,
+       "px": 17,
+       "spitze": [
+        448.8,
+        329.7
+       ],
+       "winkel_zur_handachse": -5.2,
+       "wurzel": [
+        445.9,
+        319.2
+       ]
+      }
+     },
+     "krallen_zone": 18.2,
+     "kreuzen": [],
+     "profil_hand": [
+      12.8,
+      15.0,
+      17.0,
+      20.2,
+      23.5,
+      22.5,
+      21.2,
+      17.0,
+      14.2,
+      2.2
+     ],
+     "profil_hand_lauf": [
+      12.8,
+      15.0,
+      17.0,
+      20.2,
+      23.5,
+      22.5,
+      18.2,
+      5.8,
+      4.2,
+      2.2
+     ],
+     "profil_unterarm": [
+      22.0,
+      26.0,
+      26.0,
+      21.2,
+      18.5,
+      17.0,
+      17.0,
+      16.2,
+      16.0,
+      14.8
+     ],
+     "px_hand": 800,
+     "px_hand_sichtbar": 800,
+     "px_unterarm": 717,
+     "px_unterarm_sichtbar": 563,
+     "spitze_ueber_boden": 97.0,
+     "stationen": {
+      "ellbogen": 21.2,
+      "hand_breit": 23.5,
+      "handgelenk": 12.5,
+      "handwurzel": 17.0,
+      "krallen_mitte": 14.0,
+      "krallenwurzel": 21.2,
+      "spitzen": 1.2,
+      "unterarm_mitte": 18.5
+     },
+     "unterarm_laenge": 38.2,
+     "unterarm_max": 27.8,
+     "unterarm_min": 13.8,
+     "winkel_hand": 20.7,
+     "winkel_unterarm": 49.4
+    },
+    "PV": {
+     "E": [
+      422.4,
+      268.8
+     ],
+     "T": [
+      497.0,
+      304.0
+     ],
+     "W": [
+      456.7,
+      274.4
+     ],
+     "abstand_spitzen": [
+      6.4,
+      6.7
+     ],
+     "abstand_wurzeln": [
+      5.5,
+      10.8
+     ],
+     "bis_krallenwurzel": 30.2,
+     "daumen": {
+      "abstand_spitze": 4.5,
+      "abstand_wurzel": 8.9,
+      "dicke_wurzel": 5.0,
+      "fingerblock_breite": 11.8,
+      "fingerblock_laenge": 18.8,
+      "gabel_ab_handgelenk": 31.8,
+      "laenge": 11.1,
+      "seite": "Bild-links (zum Koerper)",
+      "spalt_spitze": 2.5,
+      "spalt_wurzel": 0.5,
+      "winkel_zur_handachse": 8.4
+     },
+     "ellbogen_ueber_boden": 165.2,
+     "engstelle_bei": 0.372,
+     "figur_hoehe": 254.0,
+     "hand_breit_bei": 17.0,
+     "hand_laenge": 50.5,
+     "hand_ohne_daumen": 22.5,
+     "handgelenk_ueber_boden": 159.6,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 6.5,
+       "laenge": 14.5,
+       "px": 76,
+       "spitze": [
+        496.9,
+        294.8
+       ],
+       "winkel_zur_handachse": 5.7,
+       "wurzel": [
+        484.4,
+        287.4
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 5.7,
+       "laenge": 13.7,
+       "px": 63,
+       "spitze": [
+        500.1,
+        306.1
+       ],
+       "winkel_zur_handachse": 24.8,
+       "wurzel": [
+        486.7,
+        303.4
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 6.5,
+       "laenge": 14.2,
+       "px": 64,
+       "spitze": [
+        495.7,
+        301.1
+       ],
+       "winkel_zur_handachse": 0.9,
+       "wurzel": [
+        484.1,
+        292.9
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 5.4,
+       "laenge": 11.3,
+       "px": 24,
+       "spitze": [
+        482.5,
+        306.6
+       ],
+       "winkel_zur_handachse": -7.6,
+       "wurzel": [
+        474.3,
+        298.7
+       ]
+      }
+     },
+     "krallen_zone": 20.2,
+     "kreuzen": [],
+     "profil_hand": [
+      14.8,
+      16.2,
+      18.2,
+      21.2,
+      21.2,
+      20.8,
+      21.0,
+      20.0,
+      15.0,
+      2.5
+     ],
+     "profil_hand_lauf": [
+      14.8,
+      16.2,
+      18.2,
+      21.2,
+      21.2,
+      20.8,
+      21.0,
+      5.0,
+      5.0,
+      2.5
+     ],
+     "profil_unterarm": [
+      22.2,
+      25.2,
+      25.2,
+      21.2,
+      19.2,
+      17.2,
+      16.2,
+      16.0,
+      16.2,
+      16.5
+     ],
+     "px_hand": 836,
+     "px_hand_sichtbar": 836,
+     "px_unterarm": 651,
+     "px_unterarm_sichtbar": 476,
+     "spitze_ueber_boden": 130.0,
+     "stationen": {
+      "ellbogen": 21.5,
+      "hand_breit": 22.2,
+      "handgelenk": 14.5,
+      "handwurzel": 18.2,
+      "krallen_mitte": 15.0,
+      "krallenwurzel": 21.0,
+      "spitzen": 1.2,
+      "unterarm_mitte": 19.2
+     },
+     "unterarm_laenge": 34.8,
+     "unterarm_max": 26.5,
+     "unterarm_min": 15.0,
+     "winkel_hand": 53.7,
+     "winkel_unterarm": 80.8
+    }
+   },
+   "spitze_ueber_boden_H": 0.194,
+   "summe": 79.2,
+   "teile": {
+    "hand_profil": {
+     "ausser": 3,
+     "summe": 38.4,
+     "werte": [
+      17.5,
+      23.8,
+      29.5,
+      36.8,
+      40.2,
+      41.2,
+      39.0,
+      21.2,
+      17.8,
+      3.2
+     ]
+    },
+    "stationen": {
+     "ausser": 1,
+     "summe": 20.1,
+     "werte": [
+      33.5,
+      33.0,
+      21.0,
+      29.5,
+      42.2,
+      39.2,
+      18.0,
+      1.0
+     ]
+    },
+    "unterarm_profil": {
+     "ausser": 1,
+     "summe": 20.7,
+     "werte": [
+      33.5,
+      37.5,
+      39.5,
+      36.5,
+      33.0,
+      30.2,
+      28.2,
+      26.2,
+      25.2,
+      29.2
+     ]
+    }
+   },
+   "vorlage_breite_durch_laenge": [
+    0.739,
+    0.655,
+    0.783
+   ],
+   "vorlage_handlaenge": [
+    59.5,
+    56.9,
+    68.5
+   ]
+  },
+  "C 0.93 / 118": {
+   "ausser": 5,
+   "breite_durch_laenge": 0.665,
+   "cfg": {
+    "hand": {
+     "dreh_grad": 118,
+     "krallen": {
+      "A": {
+       "faktor": 1.33
+      },
+      "B": {
+       "anteil": 0.5,
+       "faktor": 2.0,
+       "nach": "C"
+      }
+     },
+     "schub_y": 0,
+     "skala": [
+      0.93,
+      0.8,
+      0.93
+     ],
+     "wurzelring": {
+      "1": [
+       -30,
+       1.0
+      ],
+      "2": [
+       -30,
+       1.0
+      ],
+      "3": [
+       -30,
+       1.0
+      ],
+      "4": [
+       -30,
+       1.0
+      ]
+     }
+    },
+    "unterarm": {
+     "grund": [
+      1.229,
+      0.8,
+      1.229
+     ],
+     "verlauf": [
+      [
+       0,
+       0,
+       1.0
+      ],
+      [
+       90,
+       90,
+       1.0
+      ],
+      [
+       236,
+       236,
+       0.86
+      ],
+      [
+       442,
+       442,
+       0.92
+      ],
+      [
+       627,
+       627,
+       1.0
+      ],
+      [
+       700,
+       700,
+       1.0
+      ]
+     ]
+    }
+   },
+   "groesse_ausser": 0,
+   "hand_breit": 44.0,
+   "hand_laenge": 66.2,
+   "krallen_ausser": 0,
+   "krallen_laenge_p1": {
+    "A": 19.1,
+    "B": 17.6,
+    "C": 18.5,
+    "T": 14.1
+   },
+   "kreuzen": {
+    "P1": [],
+    "P2": [],
+    "PV": []
+   },
+   "kreuzt": false,
+   "posen": {
+    "P1": {
+     "E": [
+      490.6,
+      300.1
+     ],
+     "T": [
+      462.0,
+      393.0
+     ],
+     "W": [
+      496.7,
+      337.3
+     ],
+     "abstand_spitzen": [
+      9.6,
+      9.5
+     ],
+     "abstand_wurzeln": [
+      9.3,
+      15.7
+     ],
+     "bis_krallenwurzel": 40.0,
+     "daumen": {
+      "abstand_spitze": 29.5,
+      "abstand_wurzel": 22.1,
+      "dicke_wurzel": 10.0,
+      "fingerblock_breite": 31.8,
+      "fingerblock_laenge": 37.8,
+      "gabel_ab_handgelenk": 28.5,
+      "laenge": 23.0,
+      "seite": "Bild-links (zum Koerper)",
+      "spalt_spitze": 26.8,
+      "spalt_wurzel": 1.2,
+      "winkel_zur_handachse": -16.8
+     },
+     "ellbogen_ueber_boden": 147.9,
+     "engstelle_bei": 0.344,
+     "figur_hoehe": 289.0,
+     "hand_breit_bei": 38.2,
+     "hand_laenge": 66.2,
+     "hand_ohne_daumen": 43.5,
+     "handgelenk_ueber_boden": 110.7,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 10.4,
+       "laenge": 19.1,
+       "px": 88,
+       "spitze": [
+        480.5,
+        393.7
+       ],
+       "winkel_zur_handachse": -3.1,
+       "wurzel": [
+        491.4,
+        378.1
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 9.0,
+       "laenge": 17.6,
+       "px": 125,
+       "spitze": [
+        463.0,
+        396.6
+       ],
+       "winkel_zur_handachse": 19.7,
+       "wurzel": [
+        466.7,
+        379.4
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 10.3,
+       "laenge": 18.5,
+       "px": 106,
+       "spitze": [
+        471.1,
+        391.6
+       ],
+       "winkel_zur_handachse": -5.2,
+       "wurzel": [
+        482.2,
+        376.9
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 6.3,
+       "laenge": 14.1,
+       "px": 42,
+       "spitze": [
+        451.8,
+        369.7
+       ],
+       "winkel_zur_handachse": -7.3,
+       "wurzel": [
+        460.7,
+        358.8
+       ]
+      }
+     },
+     "krallen_zone": 26.2,
+     "kreuzen": [],
+     "profil_hand": [
+      21.2,
+      27.8,
+      35.2,
+      40.0,
+      43.0,
+      43.0,
+      43.5,
+      41.2,
+      24.0,
+      4.8
+     ],
+     "profil_hand_lauf": [
+      21.2,
+      27.8,
+      35.2,
+      40.0,
+      43.0,
+      30.5,
+      29.5,
+      7.5,
+      8.2,
+      4.8
+     ],
+     "profil_unterarm": [
+      33.5,
+      37.5,
+      39.5,
+      36.5,
+      33.0,
+      30.2,
+      28.2,
+      26.2,
+      31.5,
+      34.5
+     ],
+     "px_hand": 1901,
+     "px_hand_sichtbar": 1901,
+     "px_unterarm": 1137,
+     "px_unterarm_sichtbar": 1131,
+     "spitze_ueber_boden": 55.0,
+     "stationen": {
+      "ellbogen": 33.5,
+      "hand_breit": 44.0,
+      "handgelenk": 23.0,
+      "handwurzel": 35.2,
+      "krallen_mitte": 24.0,
+      "krallenwurzel": 43.5,
+      "spitzen": 2.2,
+      "unterarm_mitte": 33.0
+     },
+     "unterarm_laenge": 37.7,
+     "unterarm_max": 39.5,
+     "unterarm_min": 25.2,
+     "winkel_hand": -31.9,
+     "winkel_unterarm": 9.2
+    },
+    "P2": {
+     "E": [
+      415.7,
+      266.2
+     ],
+     "T": [
+      464.0,
+      337.0
+     ],
+     "W": [
+      444.7,
+      291.1
+     ],
+     "abstand_spitzen": [
+      6.8,
+      5.8
+     ],
+     "abstand_wurzeln": [
+      5.4,
+      10.4
+     ],
+     "bis_krallenwurzel": 35.8,
+     "daumen": {
+      "abstand_spitze": 13.8,
+      "abstand_wurzel": 9.5,
+      "dicke_wurzel": 4.8,
+      "fingerblock_breite": 12.2,
+      "fingerblock_laenge": 17.8,
+      "gabel_ab_handgelenk": 32.8,
+      "laenge": 7.1,
+      "seite": "Bild-rechts (vom Koerper weg)",
+      "spalt_spitze": 10.2,
+      "spalt_wurzel": 1.0,
+      "winkel_zur_handachse": 11.1
+     },
+     "ellbogen_ueber_boden": 167.8,
+     "engstelle_bei": 0.33,
+     "figur_hoehe": 258.0,
+     "hand_breit_bei": 17.0,
+     "hand_laenge": 50.5,
+     "hand_ohne_daumen": 24.0,
+     "handgelenk_ueber_boden": 142.9,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 7.0,
+       "laenge": 13.5,
+       "px": 73,
+       "spitze": [
+        470.6,
+        328.3
+       ],
+       "winkel_zur_handachse": 12.2,
+       "wurzel": [
+        462.8,
+        317.3
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 6.0,
+       "laenge": 13.3,
+       "px": 60,
+       "spitze": [
+        467.5,
+        338.8
+       ],
+       "winkel_zur_handachse": 34.1,
+       "wurzel": [
+        456.3,
+        331.5
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 6.9,
+       "laenge": 13.2,
+       "px": 49,
+       "spitze": [
+        465.9,
+        333.2
+       ],
+       "winkel_zur_handachse": 5.7,
+       "wurzel": [
+        459.6,
+        321.6
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 6.2,
+       "laenge": 10.9,
+       "px": 21,
+       "spitze": [
+        451.6,
+        329.5
+       ],
+       "winkel_zur_handachse": -5.5,
+       "wurzel": [
+        448.3,
+        319.1
+       ]
+      }
+     },
+     "krallen_zone": 14.8,
+     "kreuzen": [],
+     "profil_hand": [
+      17.0,
+      18.5,
+      20.5,
+      22.8,
+      23.8,
+      22.8,
+      21.8,
+      20.0,
+      17.2,
+      3.2
+     ],
+     "profil_hand_lauf": [
+      17.0,
+      18.5,
+      20.5,
+      22.8,
+      23.8,
+      22.8,
+      21.8,
+      12.0,
+      6.2,
+      3.2
+     ],
+     "profil_unterarm": [
+      22.0,
+      26.0,
+      26.0,
+      21.2,
+      18.5,
+      17.0,
+      17.0,
+      16.2,
+      17.2,
+      18.8
+     ],
+     "px_hand": 908,
+     "px_hand_sichtbar": 908,
+     "px_unterarm": 709,
+     "px_unterarm_sichtbar": 555,
+     "spitze_ueber_boden": 97.0,
+     "stationen": {
+      "ellbogen": 21.2,
+      "hand_breit": 23.8,
+      "handgelenk": 17.0,
+      "handwurzel": 20.5,
+      "krallen_mitte": 8.8,
+      "krallenwurzel": 18.5,
+      "spitzen": 1.2,
+      "unterarm_mitte": 18.5
+     },
+     "unterarm_laenge": 38.2,
+     "unterarm_max": 27.8,
+     "unterarm_min": 15.8,
+     "winkel_hand": 22.8,
+     "winkel_unterarm": 49.4
+    },
+    "PV": {
+     "E": [
+      422.4,
+      268.8
+     ],
+     "T": [
+      500.0,
+      303.0
+     ],
+     "W": [
+      456.7,
+      274.4
+     ],
+     "abstand_spitzen": [
+      7.1,
+      6.8
+     ],
+     "abstand_wurzeln": [
+      5.6,
+      11.4
+     ],
+     "bis_krallenwurzel": 30.5,
+     "daumen": {
+      "abstand_spitze": 4.9,
+      "abstand_wurzel": 7.8,
+      "dicke_wurzel": 5.0,
+      "fingerblock_breite": 5.5,
+      "fingerblock_laenge": 17.5,
+      "gabel_ab_handgelenk": 34.8,
+      "laenge": 9.8,
+      "seite": "Bild-rechts (vom Koerper weg)",
+      "spalt_spitze": 2.2,
+      "spalt_wurzel": 2.5,
+      "winkel_zur_handachse": -0.7
+     },
+     "ellbogen_ueber_boden": 165.2,
+     "engstelle_bei": 0.339,
+     "figur_hoehe": 254.0,
+     "hand_breit_bei": 15.5,
+     "hand_laenge": 52.2,
+     "hand_ohne_daumen": 22.2,
+     "handgelenk_ueber_boden": 159.6,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 7.1,
+       "laenge": 15.0,
+       "px": 81,
+       "spitze": [
+        497.9,
+        293.1
+       ],
+       "winkel_zur_handachse": 11.1,
+       "wurzel": [
+        484.0,
+        287.4
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 6.4,
+       "laenge": 14.6,
+       "px": 75,
+       "spitze": [
+        502.3,
+        304.4
+       ],
+       "winkel_zur_handachse": 31.3,
+       "wurzel": [
+        487.7,
+        303.9
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 7.0,
+       "laenge": 14.6,
+       "px": 60,
+       "spitze": [
+        497.0,
+        300.1
+       ],
+       "winkel_zur_handachse": 4.4,
+       "wurzel": [
+        484.3,
+        293.0
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 6.6,
+       "laenge": 11.5,
+       "px": 5,
+       "spitze": [
+        485.9,
+        305.0
+       ],
+       "winkel_zur_handachse": -8.0,
+       "wurzel": [
+        477.3,
+        297.4
+       ]
+      }
+     },
+     "krallen_zone": 21.8,
+     "kreuzen": [],
+     "profil_hand": [
+      15.8,
+      17.5,
+      19.0,
+      22.8,
+      21.0,
+      18.5,
+      19.2,
+      16.8,
+      15.2,
+      2.5
+     ],
+     "profil_hand_lauf": [
+      15.8,
+      17.5,
+      19.0,
+      22.8,
+      21.0,
+      18.5,
+      19.2,
+      5.2,
+      6.0,
+      2.5
+     ],
+     "profil_unterarm": [
+      22.2,
+      25.2,
+      25.2,
+      21.2,
+      19.2,
+      17.2,
+      16.2,
+      16.0,
+      16.2,
+      18.2
+     ],
+     "px_hand": 884,
+     "px_hand_sichtbar": 884,
+     "px_unterarm": 632,
+     "px_unterarm_sichtbar": 457,
+     "spitze_ueber_boden": 131.0,
+     "stationen": {
+      "ellbogen": 21.5,
+      "hand_breit": 22.8,
+      "handgelenk": 15.2,
+      "handwurzel": 19.0,
+      "krallen_mitte": 15.5,
+      "krallenwurzel": 19.2,
+      "spitzen": 1.2,
+      "unterarm_mitte": 19.2
+     },
+     "unterarm_laenge": 34.8,
+     "unterarm_max": 26.5,
+     "unterarm_min": 15.0,
+     "winkel_hand": 56.6,
+     "winkel_unterarm": 80.8
+    }
+   },
+   "spitze_ueber_boden_H": 0.19,
+   "summe": 82.9,
+   "teile": {
+    "hand_profil": {
+     "ausser": 2,
+     "summe": 35.7,
+     "werte": [
+      21.2,
+      27.8,
+      35.2,
+      40.0,
+      43.0,
+      43.0,
+      43.5,
+      41.2,
+      24.0,
+      4.8
+     ]
+    },
+    "stationen": {
+     "ausser": 1,
+     "summe": 14.9,
+     "werte": [
+      33.5,
+      33.0,
+      23.0,
+      35.2,
+      44.0,
+      43.5,
+      24.0,
+      2.2
+     ]
+    },
+    "unterarm_profil": {
+     "ausser": 2,
+     "summe": 32.3,
+     "werte": [
+      33.5,
+      37.5,
+      39.5,
+      36.5,
+      33.0,
+      30.2,
+      28.2,
+      26.2,
+      31.5,
+      34.5
+     ]
+    }
+   },
+   "vorlage_breite_durch_laenge": [
+    0.739,
+    0.655,
+    0.783
+   ],
+   "vorlage_handlaenge": [
+    59.5,
+    56.9,
+    68.5
+   ]
+  },
+  "D 0.93 0.72 / 118": {
+   "ausser": 5,
+   "breite_durch_laenge": 0.756,
+   "cfg": {
+    "hand": {
+     "dreh_grad": 118,
+     "krallen": {
+      "A": {
+       "faktor": 1.33
+      },
+      "B": {
+       "anteil": 0.5,
+       "faktor": 2.0,
+       "nach": "C"
+      }
+     },
+     "schub_y": 0,
+     "skala": [
+      0.93,
+      0.72,
+      0.93
+     ],
+     "wurzelring": {
+      "1": [
+       -30,
+       1.0
+      ],
+      "2": [
+       -30,
+       1.0
+      ],
+      "3": [
+       -30,
+       1.0
+      ],
+      "4": [
+       -30,
+       1.0
+      ]
+     }
+    },
+    "unterarm": {
+     "grund": [
+      1.229,
+      0.8,
+      1.229
+     ],
+     "verlauf": [
+      [
+       0,
+       0,
+       1.0
+      ],
+      [
+       90,
+       90,
+       1.0
+      ],
+      [
+       236,
+       236,
+       0.86
+      ],
+      [
+       442,
+       442,
+       0.92
+      ],
+      [
+       627,
+       627,
+       1.0
+      ],
+      [
+       700,
+       700,
+       1.0
+      ]
+     ]
+    }
+   },
+   "groesse_ausser": 0,
+   "hand_breit": 45.5,
+   "hand_laenge": 60.2,
+   "krallen_ausser": 0,
+   "krallen_laenge_p1": {
+    "A": 17.6,
+    "B": 16.3,
+    "C": 17.1,
+    "T": 12.8
+   },
+   "kreuzen": {
+    "P1": [],
+    "P2": [],
+    "PV": []
+   },
+   "kreuzt": false,
+   "posen": {
+    "P1": {
+     "E": [
+      490.6,
+      300.1
+     ],
+     "T": [
+      464.0,
+      387.0
+     ],
+     "W": [
+      496.7,
+      337.3
+     ],
+     "abstand_spitzen": [
+      9.6,
+      9.0
+     ],
+     "abstand_wurzeln": [
+      9.1,
+      15.3
+     ],
+     "bis_krallenwurzel": 34.0,
+     "daumen": {
+      "abstand_spitze": 29.2,
+      "abstand_wurzel": 28.2,
+      "dicke_wurzel": 11.5,
+      "fingerblock_breite": 18.0,
+      "fingerblock_laenge": 31.5,
+      "gabel_ab_handgelenk": 28.8,
+      "laenge": 18.6,
+      "seite": "Bild-links (zum Koerper)",
+      "spalt_spitze": 27.2,
+      "spalt_wurzel": 13.5,
+      "winkel_zur_handachse": -17.2
+     },
+     "ellbogen_ueber_boden": 147.9,
+     "engstelle_bei": 0.368,
+     "figur_hoehe": 289.0,
+     "hand_breit_bei": 32.8,
+     "hand_laenge": 60.2,
+     "hand_ohne_daumen": 42.2,
+     "handgelenk_ueber_boden": 110.7,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 10.4,
+       "laenge": 17.6,
+       "px": 100,
+       "spitze": [
+        482.1,
+        388.2
+       ],
+       "winkel_zur_handachse": -3.2,
+       "wurzel": [
+        492.5,
+        374.0
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 8.9,
+       "laenge": 16.3,
+       "px": 116,
+       "spitze": [
+        464.9,
+        390.3
+       ],
+       "winkel_zur_handachse": 21.5,
+       "wurzel": [
+        468.3,
+        374.4
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 10.3,
+       "laenge": 17.1,
+       "px": 78,
+       "spitze": [
+        472.8,
+        385.9
+       ],
+       "winkel_zur_handachse": -5.6,
+       "wurzel": [
+        483.5,
+        372.7
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 6.2,
+       "laenge": 12.8,
+       "px": 33,
+       "spitze": [
+        453.0,
+        365.8
+       ],
+       "winkel_zur_handachse": -8.0,
+       "wurzel": [
+        461.5,
+        356.2
+       ]
+      }
+     },
+     "krallen_zone": 26.2,
+     "kreuzen": [],
+     "profil_hand": [
+      21.5,
+      27.5,
+      33.8,
+      38.0,
+      41.5,
+      43.0,
+      43.2,
+      39.5,
+      21.5,
+      4.8
+     ],
+     "profil_hand_lauf": [
+      21.5,
+      27.5,
+      33.8,
+      38.0,
+      41.5,
+      18.0,
+      17.2,
+      6.5,
+      8.2,
+      4.8
+     ],
+     "profil_unterarm": [
+      33.5,
+      37.5,
+      39.5,
+      36.5,
+      33.0,
+      30.2,
+      28.2,
+      26.2,
+      31.5,
+      34.5
+     ],
+     "px_hand": 1687,
+     "px_hand_sichtbar": 1687,
+     "px_unterarm": 1137,
+     "px_unterarm_sichtbar": 1131,
+     "spitze_ueber_boden": 61.0,
+     "stationen": {
+      "ellbogen": 33.5,
+      "hand_breit": 45.5,
+      "handgelenk": 23.0,
+      "handwurzel": 33.8,
+      "krallen_mitte": 23.2,
+      "krallenwurzel": 45.2,
+      "spitzen": 2.2,
+      "unterarm_mitte": 33.0
+     },
+     "unterarm_laenge": 37.7,
+     "unterarm_max": 39.5,
+     "unterarm_min": 25.2,
+     "winkel_hand": -33.3,
+     "winkel_unterarm": 9.2
+    },
+    "P2": {
+     "E": [
+      415.7,
+      266.2
+     ],
+     "T": [
+      462.0,
+      331.0
+     ],
+     "W": [
+      444.7,
+      291.1
+     ],
+     "abstand_spitzen": [
+      6.6,
+      5.4
+     ],
+     "abstand_wurzeln": [
+      5.3,
+      10.1
+     ],
+     "bis_krallenwurzel": 32.2,
+     "daumen": {
+      "abstand_spitze": 12.4,
+      "abstand_wurzel": 10.6,
+      "dicke_wurzel": 5.5,
+      "fingerblock_breite": 14.8,
+      "fingerblock_laenge": 17.2,
+      "gabel_ab_handgelenk": 27.0,
+      "laenge": 10.3,
+      "seite": "Bild-rechts (vom Koerper weg)",
+      "spalt_spitze": 9.2,
+      "spalt_wurzel": 0.5,
+      "winkel_zur_handachse": 2.8
+     },
+     "ellbogen_ueber_boden": 167.8,
+     "engstelle_bei": 0.355,
+     "figur_hoehe": 258.0,
+     "hand_breit_bei": 15.2,
+     "hand_laenge": 44.2,
+     "hand_ohne_daumen": 23.0,
+     "handgelenk_ueber_boden": 142.9,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 7.0,
+       "laenge": 12.2,
+       "px": 61,
+       "spitze": [
+        468.3,
+        324.4
+       ],
+       "winkel_zur_handachse": 12.2,
+       "wurzel": [
+        461.2,
+        314.4
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 6.0,
+       "laenge": 12.4,
+       "px": 54,
+       "spitze": [
+        465.0,
+        334.3
+       ],
+       "winkel_zur_handachse": 35.7,
+       "wurzel": [
+        454.4,
+        328.0
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 6.9,
+       "laenge": 12.0,
+       "px": 41,
+       "spitze": [
+        463.7,
+        329.1
+       ],
+       "winkel_zur_handachse": 5.0,
+       "wurzel": [
+        458.0,
+        318.6
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 6.1,
+       "laenge": 9.9,
+       "px": 12,
+       "spitze": [
+        450.0,
+        326.7
+       ],
+       "winkel_zur_handachse": -7.3,
+       "wurzel": [
+        447.3,
+        317.2
+       ]
+      }
+     },
+     "krallen_zone": 12.0,
+     "kreuzen": [],
+     "profil_hand": [
+      16.5,
+      17.5,
+      18.5,
+      20.0,
+      21.8,
+      21.8,
+      20.2,
+      18.5,
+      16.5,
+      5.8
+     ],
+     "profil_hand_lauf": [
+      16.5,
+      17.5,
+      18.5,
+      20.0,
+      21.8,
+      21.8,
+      19.8,
+      7.5,
+      5.5,
+      3.5
+     ],
+     "profil_unterarm": [
+      22.0,
+      26.0,
+      26.0,
+      21.2,
+      18.5,
+      17.0,
+      17.0,
+      16.2,
+      17.2,
+      18.8
+     ],
+     "px_hand": 776,
+     "px_hand_sichtbar": 776,
+     "px_unterarm": 709,
+     "px_unterarm_sichtbar": 555,
+     "spitze_ueber_boden": 103.0,
+     "stationen": {
+      "ellbogen": 21.2,
+      "hand_breit": 22.5,
+      "handgelenk": 16.8,
+      "handwurzel": 18.5,
+      "krallen_mitte": 14.2,
+      "krallenwurzel": 18.5,
+      "spitzen": 2.0,
+      "unterarm_mitte": 18.5
+     },
+     "unterarm_laenge": 38.2,
+     "unterarm_max": 27.8,
+     "unterarm_min": 15.8,
+     "winkel_hand": 23.4,
+     "winkel_unterarm": 49.4
+    },
+    "PV": {
+     "E": [
+      422.4,
+      268.8
+     ],
+     "T": [
+      493.0,
+      301.0
+     ],
+     "W": [
+      456.7,
+      274.4
+     ],
+     "abstand_spitzen": [
+      7.0,
+      6.2
+     ],
+     "abstand_wurzeln": [
+      5.6,
+      10.8
+     ],
+     "bis_krallenwurzel": 27.2,
+     "daumen": {
+      "abstand_spitze": 14.5,
+      "abstand_wurzel": 9.6,
+      "dicke_wurzel": 3.8,
+      "fingerblock_breite": 13.0,
+      "fingerblock_laenge": 16.2,
+      "gabel_ab_handgelenk": 29.2,
+      "laenge": 6.9,
+      "seite": "Bild-rechts (vom Koerper weg)",
+      "spalt_spitze": 11.2,
+      "spalt_wurzel": 1.2,
+      "winkel_zur_handachse": 10.5
+     },
+     "ellbogen_ueber_boden": 165.2,
+     "engstelle_bei": 0.367,
+     "figur_hoehe": 254.0,
+     "hand_breit_bei": 12.2,
+     "hand_laenge": 45.5,
+     "hand_ohne_daumen": 21.2,
+     "handgelenk_ueber_boden": 159.6,
+     "krallen": {
+      "A": {
+       "dicke_wurzel": 7.1,
+       "laenge": 13.8,
+       "px": 77,
+       "spitze": [
+        494.0,
+        290.8
+       ],
+       "winkel_zur_handachse": 14.6,
+       "wurzel": [
+        481.2,
+        285.7
+       ]
+      },
+      "B": {
+       "dicke_wurzel": 6.3,
+       "laenge": 13.6,
+       "px": 69,
+       "spitze": [
+        497.8,
+        301.7
+       ],
+       "winkel_zur_handachse": 36.3,
+       "wurzel": [
+        484.2,
+        301.7
+       ]
+      },
+      "C": {
+       "dicke_wurzel": 7.0,
+       "laenge": 13.3,
+       "px": 52,
+       "spitze": [
+        493.0,
+        297.7
+       ],
+       "winkel_zur_handachse": 7.4,
+       "wurzel": [
+        481.3,
+        291.3
+       ]
+      },
+      "T": {
+       "dicke_wurzel": 6.6,
+       "laenge": 10.4,
+       "px": 1,
+       "spitze": [
+        483.2,
+        303.3
+       ],
+       "winkel_zur_handachse": -6.1,
+       "wurzel": [
+        475.5,
+        296.3
+       ]
+      }
+     },
+     "krallen_zone": 18.2,
+     "kreuzen": [],
+     "profil_hand": [
+      17.2,
+      18.2,
+      19.8,
+      21.2,
+      20.2,
+      19.8,
+      18.5,
+      17.2,
+      11.0,
+      4.8
+     ],
+     "profil_hand_lauf": [
+      17.2,
+      18.2,
+      19.8,
+      21.2,
+      20.2,
+      19.8,
+      18.5,
+      5.8,
+      6.2,
+      3.8
+     ],
+     "profil_unterarm": [
+      22.2,
+      25.2,
+      25.2,
+      21.2,
+      19.2,
+      17.2,
+      16.2,
+      16.0,
+      16.2,
+      18.2
+     ],
+     "px_hand": 787,
+     "px_hand_sichtbar": 787,
+     "px_unterarm": 632,
+     "px_unterarm_sichtbar": 457,
+     "spitze_ueber_boden": 133.0,
+     "stationen": {
+      "ellbogen": 21.5,
+      "hand_breit": 21.2,
+      "handgelenk": 15.5,
+      "handwurzel": 19.8,
+      "krallen_mitte": 11.0,
+      "krallenwurzel": 18.5,
+      "spitzen": 2.5,
+      "unterarm_mitte": 19.2
+     },
+     "unterarm_laenge": 34.8,
+     "unterarm_max": 26.5,
+     "unterarm_min": 15.0,
+     "winkel_hand": 53.8,
+     "winkel_unterarm": 80.8
+    }
+   },
+   "spitze_ueber_boden_H": 0.211,
+   "summe": 73.5,
+   "teile": {
+    "hand_profil": {
+     "ausser": 2,
+     "summe": 26.3,
+     "werte": [
+      21.5,
+      27.5,
+      33.8,
+      38.0,
+      41.5,
+      43.0,
+      43.2,
+      39.5,
+      21.5,
+      4.8
+     ]
+    },
+    "stationen": {
+     "ausser": 1,
+     "summe": 14.9,
+     "werte": [
+      33.5,
+      33.0,
+      23.0,
+      33.8,
+      45.5,
+      45.2,
+      23.2,
+      2.2
+     ]
+    },
+    "unterarm_profil": {
+     "ausser": 2,
+     "summe": 32.3,
+     "werte": [
+      33.5,
+      37.5,
+      39.5,
+      36.5,
+      33.0,
+      30.2,
+      28.2,
+      26.2,
+      31.5,
+      34.5
+     ]
+    }
+   },
+   "vorlage_breite_durch_laenge": [
+    0.739,
+    0.655,
+    0.783
+   ],
+   "vorlage_handlaenge": [
+    59.5,
+    56.9,
+    68.5
+   ]
+  }
+ },
+ "vorlage": {
+  "hand_profil": {
+   "max": [
+    25.6,
+    27.9,
+    34.8,
+    42.2,
+    46.8,
+    49.8,
+    49.2,
+    37.4,
+    27.6,
+    20.6
+   ],
+   "median": [
+    21.8,
+    25.8,
+    31.4,
+    36.4,
+    40.5,
+    43.5,
+    44.5,
+    31.1,
+    20.2,
+    12.6
+   ],
+   "min": [
+    20.1,
+    21.2,
+    26.6,
+    30.6,
+    33.9,
+    36.9,
+    37.8,
+    25.9,
+    17.6,
+    11.9
+   ]
+  },
+  "stationen": {
+   "max": [
+    40.8,
+    39.1,
+    25.5,
+    34.8,
+    50.6,
+    50.6,
+    29.1,
+    9.0
+   ],
+   "median": [
+    34.8,
+    33.5,
+    21.1,
+    31.4,
+    44.5,
+    43.5,
+    21.8,
+    6.9
+   ],
+   "min": [
+    34.0,
+    32.5,
+    20.0,
+    26.6,
+    37.8,
+    37.8,
+    18.2,
+    5.1
+   ]
+  },
+  "unterarm_profil": {
+   "max": [
+    40.8,
+    40.8,
+    41.2,
+    41.8,
+    39.1,
+    35.6,
+    32.6,
+    30.1,
+    27.1,
+    25.6
+   ],
+   "median": [
+    35.6,
+    36.6,
+    36.6,
+    35.6,
+    33.5,
+    30.0,
+    27.0,
+    24.1,
+    22.5,
+    22.0
+   ],
+   "min": [
+    34.5,
+    35.1,
+    35.1,
+    35.0,
+    32.5,
+    29.2,
+    26.1,
+    23.5,
+    21.5,
+    20.5
+   ]
+  }
+ }
+}

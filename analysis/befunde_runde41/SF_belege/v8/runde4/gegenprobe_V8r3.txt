@@ -1,0 +1,15 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build
+    Start 1372: unit_birkin_formen
+1/2 Test #1372: unit_birkin_formen ...............***Failed    0.02 sec
+    Start 1378: unit_schwanz_r41
+2/2 Test #1378: unit_schwanz_r41 .................   Passed    0.03 sec
+
+50% tests passed, 1 tests failed out of 2
+
+Total Test time (real) =   0.09 sec
+
+The following tests FAILED:
+	1372 - unit_birkin_formen (Failed)
+Errors while running CTest
+Output from these tests are in: C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build/Testing/Temporary/LastTest.log
+Use "--rerun-failed --output-on-failure" to re-run the failed cases verbosely.

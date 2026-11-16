@@ -1,0 +1,452 @@
+{
+ "18": {
+  "sicht": "ja",
+  "spitze": [
+   285,
+   348
+  ],
+  "austritt": [
+   330,
+   262
+  ],
+  "via_j": 5,
+  "glieder": 3.37,
+  "pfeil": -0.1,
+  "seite": 0
+ },
+ "20": {
+  "sicht": "ja",
+  "spitze": [
+   272,
+   372
+  ],
+  "austritt": [
+   327,
+   263
+  ],
+  "via_j": 5,
+  "glieder": 3.38,
+  "pfeil": -3.2,
+  "seite": -1
+ },
+ "22": {
+  "sicht": "nutzer",
+  "spitze": [
+   233,
+   410
+  ],
+  "austritt": [
+   330,
+   260
+  ],
+  "via_j": 3,
+  "glieder": 5.05,
+  "pfeil": 7.3,
+  "seite": 1
+ },
+ "24": {
+  "sicht": "nutzer",
+  "spitze": [
+   199,
+   346
+  ],
+  "austritt": [
+   333,
+   273
+  ],
+  "via_j": 3,
+  "glieder": 4.92,
+  "pfeil": 36.4,
+  "seite": 1
+ },
+ "26": {
+  "sicht": "ja",
+  "spitze": [
+   245,
+   290
+  ],
+  "austritt": [
+   300,
+   345
+  ],
+  "via_j": 6,
+  "glieder": 2.16,
+  "pfeil": 0.0,
+  "seite": 0
+ },
+ "28": {
+  "sicht": "ja",
+  "spitze": [
+   230,
+   298
+  ],
+  "austritt": [
+   262,
+   338
+  ],
+  "via_j": 6,
+  "glieder": 1.4,
+  "pfeil": 0.0,
+  "seite": 0
+ },
+ "30": {
+  "sicht": "kurz",
+  "spitze": [
+   354,
+   350
+  ],
+  "austritt": [
+   318,
+   369
+  ],
+  "via_j": 6,
+  "glieder": 1.12,
+  "pfeil": -0.4,
+  "seite": 0
+ },
+ "32": {
+  "sicht": "kurz",
+  "spitze": [
+   340,
+   378
+  ],
+  "austritt": [
+   374,
+   340
+  ],
+  "via_j": 6,
+  "glieder": 1.37,
+  "pfeil": 1.4,
+  "seite": 0
+ },
+ "34": {
+  "sicht": "kurz",
+  "spitze": [
+   358,
+   368
+  ],
+  "austritt": [
+   375,
+   330
+  ],
+  "via_j": 6,
+  "glieder": 1.17,
+  "pfeil": -0.0,
+  "seite": 0
+ },
+ "58": {
+  "sicht": "kurz",
+  "spitze": [
+   418,
+   372
+  ],
+  "austritt": [
+   405,
+   322
+  ],
+  "via_j": 6,
+  "glieder": 1.74,
+  "pfeil": -1.7,
+  "seite": 0
+ },
+ "60": {
+  "sicht": "ja",
+  "spitze": [
+   455,
+   388
+  ],
+  "austritt": [
+   420,
+   320
+  ],
+  "via_j": 6,
+  "glieder": 2.33,
+  "pfeil": 1.4,
+  "seite": 0
+ },
+ "62": {
+  "sicht": "ja",
+  "spitze": [
+   480,
+   425
+  ],
+  "austritt": [
+   430,
+   325
+  ],
+  "via_j": 5,
+  "glieder": 3.38,
+  "pfeil": 3.1,
+  "seite": 1
+ },
+ "64": {
+  "sicht": "nutzer",
+  "spitze": [
+   509,
+   427
+  ],
+  "austritt": [
+   426,
+   320
+  ],
+  "via_j": 5,
+  "glieder": 3.72,
+  "pfeil": 4.8,
+  "seite": 1
+ },
+ "66": {
+  "sicht": "ja",
+  "spitze": [
+   535,
+   415
+  ],
+  "austritt": [
+   432,
+   320
+  ],
+  "via_j": 5,
+  "glieder": 3.83,
+  "pfeil": -14.1,
+  "seite": -1
+ },
+ "68": {
+  "sicht": "ja",
+  "spitze": [
+   544,
+   395
+  ],
+  "austritt": [
+   435,
+   322
+  ],
+  "via_j": 5,
+  "glieder": 3.66,
+  "pfeil": -6.6,
+  "seite": -1
+ },
+ "70": {
+  "sicht": "ja",
+  "spitze": [
+   528,
+   402
+  ],
+  "austritt": [
+   430,
+   322
+  ],
+  "via_j": 5,
+  "glieder": 3.49,
+  "pfeil": -2.3,
+  "seite": 0
+ },
+ "72": {
+  "sicht": "kurz",
+  "spitze": [
+   384,
+   355
+  ],
+  "austritt": [
+   395,
+   338
+  ],
+  "via_j": 6,
+  "glieder": 0.69,
+  "pfeil": 0.1,
+  "seite": 0
+ },
+ "76": {
+  "sicht": "bogen",
+  "spitze": [
+   275,
+   340
+  ],
+  "austritt": [
+   330,
+   200
+  ],
+  "via_j": 2,
+  "glieder": 5.99,
+  "pfeil": -38.2,
+  "seite": -1
+ },
+ "78": {
+  "sicht": "bogen",
+  "spitze": [
+   285,
+   325
+  ],
+  "austritt": [
+   335,
+   205
+  ],
+  "via_j": 3,
+  "glieder": 5.22,
+  "pfeil": -35.4,
+  "seite": -1
+ },
+ "80": {
+  "sicht": "bogen",
+  "spitze": [
+   270,
+   330
+  ],
+  "austritt": [
+   340,
+   210
+  ],
+  "via_j": 3,
+  "glieder": 5.46,
+  "pfeil": -36.0,
+  "seite": -1
+ },
+ "82": {
+  "sicht": "bogen",
+  "spitze": [
+   262,
+   330
+  ],
+  "austritt": [
+   330,
+   215
+  ],
+  "via_j": 3,
+  "glieder": 5.12,
+  "pfeil": -29.4,
+  "seite": -1
+ },
+ "84": {
+  "sicht": "bogen",
+  "spitze": [
+   258,
+   330
+  ],
+  "austritt": [
+   340,
+   212
+  ],
+  "via_j": 3,
+  "glieder": 5.48,
+  "pfeil": -34.2,
+  "seite": -1
+ },
+ "86": {
+  "sicht": "bogen",
+  "spitze": [
+   250,
+   325
+  ],
+  "austritt": [
+   340,
+   215
+  ],
+  "via_j": 3,
+  "glieder": 5.29,
+  "pfeil": -30.4,
+  "seite": -1
+ },
+ "88": {
+  "sicht": "bogen",
+  "spitze": [
+   262,
+   330
+  ],
+  "austritt": [
+   330,
+   205
+  ],
+  "via_j": 3,
+  "glieder": 5.5,
+  "pfeil": -35.3,
+  "seite": -1
+ },
+ "90": {
+  "sicht": "nutzer",
+  "spitze": [
+   286,
+   349
+  ],
+  "austritt": [
+   376,
+   188
+  ],
+  "via_j": 2,
+  "glieder": 6.84,
+  "pfeil": -35.4,
+  "seite": -1
+ },
+ "92": {
+  "sicht": "bogen",
+  "spitze": [
+   250,
+   330
+  ],
+  "austritt": [
+   335,
+   205
+  ],
+  "via_j": 3,
+  "glieder": 5.52,
+  "pfeil": -27.0,
+  "seite": -1
+ },
+ "94": {
+  "sicht": "bogen",
+  "spitze": [
+   245,
+   335
+  ],
+  "austritt": [
+   335,
+   208
+  ],
+  "via_j": 3,
+  "glieder": 5.66,
+  "pfeil": -25.9,
+  "seite": -1
+ },
+ "96": {
+  "sicht": "bogen",
+  "spitze": [
+   245,
+   345
+  ],
+  "austritt": [
+   330,
+   215
+  ],
+  "via_j": 3,
+  "glieder": 5.58,
+  "pfeil": -21.6,
+  "seite": -1
+ },
+ "98": {
+  "sicht": "bogen",
+  "spitze": [
+   248,
+   335
+  ],
+  "austritt": [
+   330,
+   220
+  ],
+  "via_j": 3,
+  "glieder": 5.0,
+  "pfeil": -15.6,
+  "seite": -1
+ },
+ "100": {
+  "sicht": "bogen",
+  "spitze": [
+   280,
+   310
+  ],
+  "austritt": [
+   335,
+   225
+  ],
+  "via_j": 5,
+  "glieder": 3.59,
+  "pfeil": -11.6,
+  "seite": -1
+ }
+}

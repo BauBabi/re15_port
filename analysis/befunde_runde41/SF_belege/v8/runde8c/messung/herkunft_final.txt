@@ -1,0 +1,6 @@
+C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD
+Texturbild Asset == Disc-Original: False ; Pixel verschieden (Erbe der Stufen bis 7e): 23470
+Zeile 487 grau               202 Flaechen,  2465 Texel, davon gleich Disc-Original     3
+Zeile 493 band               264 Flaechen,    57 Texel, davon gleich Disc-Original    57, in Nutzung der Original-Zeile 480 durch Original-Flaechen 57; CLUT-Zeile 493 == Original 480: True
+Zeile 493 bauch               92 Flaechen,   100 Texel, davon gleich Disc-Original   100, in Nutzung der Original-Zeile 480 durch Original-Flaechen 100; CLUT-Zeile 493 == Original 480: True
+Zeile 495 Wurzel (Stufe w/u)  14 Flaechen,   259 Texel, davon gleich Disc-Original   259, in Nutzung der Original-Zeile 482 durch Original-Flaechen 259; CLUT-Zeile 495 == Original 482: True
