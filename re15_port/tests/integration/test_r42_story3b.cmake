@@ -9,8 +9,10 @@
 #             (Birkin-Auftritt, Kampf) -> Zeile msg 6 -> 30E0 (EIN Besuch: Ada, Glasbruch, msg 16/17, Marvin tritt ein, msg 9..13, Ende
 #             erst nach Untertitel UND Stimme) -> 3070 (Aufzug mit Ada und Marvin) -> 3080 (Birkins Hand, zwei Stoesse) -> 4000.
 #             Mit Ton (SDL_AUDIODRIVER=dummy): die Aufnahmen synchro/STAGE3/room30E0/main*.wav laufen, msg 16/17 und 3070 msg 6 haben
-#             keine Aufnahme (Untertitel mit Textdauer). Nachbesserung 1: main03/10/11/13 sind noch die alten Aufnahmen unter neuem Text
-#             (VERTRAG 2.3 NEUAUF) -> stumm mit Textdauer (B4); vor 3070 msg 6 poltert es viermal im Lager (B3); nach dem Auftritt
+#             keine Aufnahme (Untertitel mit Textdauer). main03/10/11/13 sind NEUAUF (VERTRAG 2.3): bis zur Neuaufnahme spielt die
+#             vorhandene Aufnahme unter dem neuen Text weiter, wie 3020 msg 0..2 (Nachbesserung 2, R2-1: keine Stummschaltung). Mit der
+#             echten main13.wav (ca. 270 Bilder) wartet die letzte Marvin-Szene nach der Sleep-Kette (152 Bilder) auf Untertitel UND
+#             Stimme und endet erst danach (R2-3, Befund 15.11.). Vor 3070 msg 6 poltert es viermal im Lager (B3); nach dem Auftritt
 #             kaempft Birkin ohne Szenen-Staerke, der Tod beginnt mit a3 0x200 = Gewicht 3584 (B1).
 # TEIL elza   30E1 -> 3071 (Birkin-Auftritt Sub 10, Kampf, Flucht sub17) -> 30E1 (John und Sherry, Original) -> 3071 (Aufzug) -> 3081
 #             (Hand) -> 4001. Ausser T-04 im Aufzug darf sich nichts aendern: keine Port-Szene in 30E1/3071.
@@ -235,15 +237,45 @@ ENDE
     pruefe("L8: msg 13 Neutext" "[msgtext] room=30e0 id=13 \"Marvin: There's more of them than I thought... If they've come this far, the city's finished.\"")
     pruefe("L7: msg 3 (Stufe STAGE3a)" "[msgtext] room=30e0 id=3 \"Leon: He's back in the lobby. Some dogs got his leg... he can barely walk.\"")
     pruefe("Ton: msg 16 ohne Aufnahme -> Untertitel mit Textdauer" "ROOM30E0 msg 16: keine Aufnahme")
-    # NB1 B4: alte Aufnahmen unter neuem Text bleiben stumm (Textdauer)
+    # Nachbesserung 2 (R2-1): die vorhandenen Aufnahmen spielen unter dem neuen Text (keine Stummschaltung)
+    pruefe_nicht("R2-1: keine Stummschaltung alter Aufnahmen" "ist noch die alte Aufnahme")
     foreach(_m 3 10 11 13)
-        pruefe_re("B4: msg ${_m} alte Aufnahme stumm" "ROOM30E0 msg ${_m}: [^\n]*main[0-9]+[.]wav ist noch die alte Aufnahme")
+        pruefe("R2-1: msg ${_m} spielt die Aufnahme" "[voice] Start ROOM30E0 Id ${_m} ")
     endforeach()
-    # Nutzerbefund 15.11.: Ende erst nach Zeile und Stimme (mit stummer msg 13 = Textdauer 99 < Sleep-Kette 152: kein Warten noetig;
-    # das Warten auf eine lange Stimme pruefen unit_r42_story3b_besuch und der Messlauf mit nachgebildeter Neuaufnahme)
-    pruefe_re("Befund 15.11.: Warten nach der Sleep-Kette von msg 13 erreicht"
-        "ROOM30E0: Sleep-Kette nach msg 13 durch [(]Bild [0-9]+ der Szene[)] - Zeile aktiv [01], Stimme [01]")
-    pruefe_re("Befund 15.11.: Szene endet erst danach" "ROOM30E0: Szene fertig nach [0-9]+ Bildern [(]Riegel [(]2,7[)] los[)], davon [0-9]+ Bilder auf Zeile/Stimme gewartet")
+    pruefe("R2-1: main13.wav geladen" "[voice] clip loaded: main13.wav")
+    # Nutzerbefund 15.11. / R2-3 (streng): nach der Sleep-Kette von msg 13 laeuft main13.wav noch; die Szene wartet (> 0 Bilder),
+    # das Warten endet erst mit Zeile UND Stimme, das Szenenende (Riegel (2,7) los) kommt danach.
+    set(_r_kette "ROOM30E0: Sleep-Kette nach msg 13 durch [(]Bild ([0-9]+) der Szene[)] - Zeile aktiv [01], Stimme 1 [(]Rest ([1-9][0-9]*) Bilder[)]")
+    set(_r_ende  "ROOM30E0: Zeile und Stimme zu Ende [(]Bild ([0-9]+) der Szene, ([1-9][0-9]*) Bilder gewartet[)]")
+    set(_r_fertig "ROOM30E0: Szene fertig nach ([0-9]+) Bildern [(]Riegel [(]2,7[)] los[)], davon ([1-9][0-9]*) Bilder auf Zeile/Stimme gewartet")
+    if(_dbg MATCHES "${_r_kette}")
+        set(_k_bild ${CMAKE_MATCH_1})
+        set(_k_rest ${CMAKE_MATCH_2})
+        ok("R2-3: nach der Sleep-Kette (Szenenbild ${_k_bild}) laeuft main13.wav noch (Rest ${_k_rest} Bilder)")
+    else()
+        fail("R2-3: Sleep-Kette nach msg 13 mit laufender Stimme (Rest > 0) fehlt (/${_r_kette}/)")
+    endif()
+    if(_dbg MATCHES "${_r_ende}")
+        set(_e_bild ${CMAKE_MATCH_1})
+        set(_e_gew ${CMAKE_MATCH_2})
+        ok("R2-3: Zeile und Stimme zu Ende bei Szenenbild ${_e_bild}, ${_e_gew} Bilder gewartet")
+    else()
+        fail("R2-3: Ende des Wartens (Zeile und Stimme zu Ende, > 0 Bilder) fehlt (/${_r_ende}/)")
+    endif()
+    if(_dbg MATCHES "${_r_fertig}")
+        set(_f_bild ${CMAKE_MATCH_1})
+        set(_f_gew ${CMAKE_MATCH_2})
+        ok("R2-3: Szene fertig nach ${_f_bild} Bildern, ${_f_gew} gewartet")
+    else()
+        fail("R2-3: Szenenende mit > 0 Wartebildern fehlt (/${_r_fertig}/)")
+    endif()
+    if(DEFINED _k_bild AND DEFINED _e_bild AND DEFINED _f_bild)
+        if(_e_bild GREATER _k_bild AND _f_bild GREATER _e_bild AND _f_gew EQUAL _e_gew)
+            ok("R2-3: Reihenfolge Sleep-Kette ${_k_bild} < Stimmende ${_e_bild} < Szenenende ${_f_bild}")
+        else()
+            fail("R2-3: Reihenfolge falsch (Sleep-Kette ${_k_bild}, Stimmende ${_e_bild}, Szenenende ${_f_bild}, gewartet ${_e_gew}/${_f_gew})")
+        endif()
+    endif()
     # weiter wie im Original
     pruefe("3070 Aufzug (sub03, msg 0)" "room=3070 id=0 ")
     pruefe("3080 erreicht" "PC loaded room3080.rdt")

@@ -12528,7 +12528,10 @@ static void re15_birkin_ai_tick(int slot)
             } else {                                   /* phase 4 @0x801194d0: -> LUNGE (sub 3), grid&=0xfc */
                 /* STAGE3b Nachbesserung 1 (Pruefer B1): die Szenen-Staerke a3 0x100 darf nicht in den Kampf laufen. Die Port-Kampf-KI
                  * des 0x30 setzt kein a3 (Zeichenpfad-Standard 0x200, skeleton_common.c); ihre Original-Werte je Aufruf (z. B. Lunge
-                 * 0x100 @0x80117644, Tod 0x200 @0x8011a764) sind ein eigener, alter Abstand (OFFEN). Der Kampf laeuft damit wie vor T-03. */
+                 * 0x100 @0x80117644, Tod 0x200 @0x8011a764) sind ein eigener, alter Abstand (OFFEN). Der Kampf laeuft damit wie vor T-03.
+                 * OFFEN (Pruefer STAGE3b Runde 2, R2-2): der Uebergang Auftritt -> Kampf steht dadurch 12 Bilder still (frac 14 x 0x200
+                 * auf 100 % gekappt); im Original blendet der Lunge mit a3 0x100 @0x80117644 (14 x 0x100 = 3584). Behoben wird das NICHT
+                 * hier, sondern im Umbau des Klauenhiebs (case 3) auf Zweig r41/birkin_kralle. */
                 if (re15_birkin_szene_stage3()) e->anim_blend_rate = 0;
                 e->sub_state_1 = 3; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* sub=3 @0x801194d8, phase=0 @0x801194ec */
                 e->grid_id = (uint8_t)(e->grid_id & 0xfc);            /* grid&=0xfc (0x33->0x30) @0x80119504 */

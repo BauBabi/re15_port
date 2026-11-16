@@ -32,7 +32,6 @@ extern int g_re15_voice_laeuft, g_re15_voice_restbilder;
                           fputc('\n', stderr); } while (0)
 
 unsigned g_re15_s3b_zaehler[6];
-unsigned g_re15_s3b_alt_stumm;   /* Zeilen, deren alte Aufnahme stumm blieb (B4) */
 
 static int leon(void) { return re15_char_variant() == 0; }
 
@@ -61,30 +60,6 @@ void re15_story3b_r42_texte(uint16_t room_id)
             n++;
         }
     if (n) S3B_LOG("ROOM%04X: %d Nachrichten eingesetzt (nach den RDT-Texten)", (unsigned)room_id, n);
-}
-
-/* ==== Alte Aufnahmen unter neuem Text (Nachbesserung 1, Pruefer B4) ======================================================
- * VERTRAG 2.3 fuehrt 30E0 msg 3/10/11/13 als NEUAUF: der Text ist neu, im Ordner liegt noch die Aufnahme des alten Wortlauts
- * (z. B. main10 "That wound... How careless", das Konzept L8 streicht; main03 "He can't get out", genau der Widerspruch L8). Bis zur
- * Neuaufnahme bleibt die Zeile stumm und laeuft mit der Textdauer (VERTRAG 2.1), statt den alten Satz unter den neuen Untertitel zu
- * legen. Erkannt wird die alte Datei an Groesse + FNV-1a-32 ueber die ganze Datei (gemessen 2026-11-15 an
- * synchro/STAGE3/room30E0/, Stand Commit 1d1ce988e). Jede neue Aufnahme hat einen anderen Abdruck und spielt sofort. */
-static const struct { uint8_t id; int32_t groesse; uint32_t fnv; } k_s3b_alt[] = {
-    {  3, 311950, 0xC00EDFA7u },   /* main03.wav */
-    { 10, 253994, 0xF4560B28u },   /* main10.wav */
-    { 11, 358762, 0xFCCEC09Au },   /* main11.wav */
-    { 13, 578700, 0x321E845Du },   /* main13.wav */
-};
-int re15_story3b_r42_alte_aufnahme(unsigned room_id, int voice_id, const uint8_t *datei, int n)
-{
-    if ((room_id & 0xFFFFu) != RE15_S3B_RAUM_30E0 || !datei || n <= 0) return 0;
-    for (size_t i = 0; i < sizeof k_s3b_alt / sizeof k_s3b_alt[0]; i++) {
-        if (k_s3b_alt[i].id != voice_id || k_s3b_alt[i].groesse != n) continue;
-        uint32_t h = 2166136261u;
-        for (int k = 0; k < n; k++) h = (h ^ datei[k]) * 16777619u;
-        if (h == k_s3b_alt[i].fnv) { g_re15_s3b_alt_stumm++; return 1; }
-    }
-    return 0;
 }
 
 /* ==== Opcode-Formen (Satzbreiten = s_opcode_sizes, scd_vm.c; Formen wie story3a_r42.c) ====================================== */
@@ -313,7 +288,11 @@ void re15_story3b_r42_tick(void)
             S3B_LOG("ROOM30E0: Sleep-Kette nach msg 13 durch (Bild %u der Szene) - Zeile aktiv %d, Stimme %d (Rest %d Bilder)",
                     s_bilder, zeile, stimme, stimme ? g_re15_voice_restbilder : 0);
         }
-        if (s_warte_ab && !s_frei_bild && !zeile && !stimme) s_frei_bild = s_bilder;   /* Ende des Wartens (danach Ausklang @0x00F86) */
+        if (s_warte_ab && !s_frei_bild && !zeile && !stimme) {   /* Ende des Wartens (danach Ausklang @0x00F86) */
+            s_frei_bild = s_bilder;
+            S3B_LOG("ROOM30E0: Zeile und Stimme zu Ende (Bild %u der Szene, %u Bilder gewartet) -> Ausklang @0x%05X",
+                    s_bilder, s_frei_bild - s_warte_bild, RE15_S3B_SUB03_WARTEN);   /* Messschiene Nachbesserung 2 (R2-3) */
+        }
         if ((s_szene == SZ_30E0 || s_szene == SZ_30E0_ALT) && !re15_game_flag_get(2, 7) && re15_game_flag_get(3, 0xB4)) {
             const unsigned gew = (s_warte_ab && s_frei_bild) ? s_frei_bild - s_warte_bild : 0u;
             g_re15_s3b_zaehler[3] += gew;

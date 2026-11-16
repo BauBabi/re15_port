@@ -119,8 +119,5 @@ void           re15_story3b_r42_tick(void);                   /* scd_vm.c je Bil
 const uint8_t *re15_story3b_r42_programm(int welches, int *out_len);   /* Tests: 0 = ein Besuch, 1 = sub03 Altstand, 2 = 3070 */
 const uint8_t *re15_story3b_r42_text(uint16_t room_id, uint8_t id, int *out_len);
 int            re15_story3b_r42_szene_laeuft(void);
-/* audio_pc.c re15_voice_load_clip: 1 = die Datei ist noch die alte Aufnahme einer NEUAUF-Zeile (30E0 msg 3/10/11/13) -> stumm */
-int            re15_story3b_r42_alte_aufnahme(unsigned room_id, int voice_id, const uint8_t *datei, int n);
-extern unsigned g_re15_s3b_alt_stumm;
 
 #endif

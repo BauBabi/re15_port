@@ -18,7 +18,6 @@
  *   t03        3070-Auftritt (Emergence 0x80119378): im Wechselbild steht das letzte Bild von Clip 0x10, Clip 0xd blendet mit a3 0x100
  *   t04        3080-Hand (Szenen-Modus 0x80118d00): zwei Stoesse, der zweite aus dem gehaltenen letzten Bild ab Bild 0, a3 0x400
  *   t03labor   NB1 B2: derselbe Auftritt in 50E0 laeuft den alten Weg (STAGE5 = Endkampf, unveraendert)
- *   altaufnahme NB1 B4: alte Aufnahmen 30E0 main03/10/11/13 unter neuem Text bleiben stumm, Textdauer; neue Datei spielt
  * NB1 B1 (t03): nach dem Auftritt Rate 0 (Kampf wie vor T-03), Tod mit a3 0x200 @0x8011a764. NB1 B3 (programm): Poltern vor msg 6.
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
@@ -553,33 +552,6 @@ static void teil_t03labor(void)
     PRUEF(rate_max == 0, "50E0: keine Szenen-Staerke (Rate %#x), Zeichenpfad-Standard wie vor T-03", rate_max);
 }
 
-/* ---- altaufnahme (NB1 B4): 30E0 msg 3/10/11/13 - alte Aufnahme unter neuem Text bleibt stumm ------------------------------- */
-static void teil_altaufnahme(void)
-{
-    printf("== altaufnahme ==\n");
-    static const int ids[] = { 3, 10, 11, 13 };
-    for (size_t i = 0; i < sizeof ids / sizeof ids[0]; i++) {
-        char pfad[400]; size_t n = 0;
-        snprintf(pfad, sizeof pfad, "%s/STAGE3/room30E0/main%02d.wav", RE15_SYNCHRO_DIR, ids[i]);
-        uint8_t *d = slurp(pfad, &n);
-        if (!d) { PRUEF(1, "%s fehlt (Nutzer-Ordner) - Abdruck nicht pruefbar", pfad); continue; }
-        const int alt = re15_story3b_r42_alte_aufnahme(0x30E0, ids[i], d, (int)n);
-        const int fremd = re15_story3b_r42_alte_aufnahme(0x30E1, ids[i], d, (int)n) || re15_story3b_r42_alte_aufnahme(0x30E0, 9, d, (int)n);
-        d[n / 2] ^= 0x01;   /* neue Aufnahme = anderer Abdruck */
-        const int neu = re15_story3b_r42_alte_aufnahme(0x30E0, ids[i], d, (int)n);
-        PRUEF(alt && !fremd && !neu, "main%02d.wav: alte Aufnahme erkannt (%d), andere Zeile/Raum nicht (%d), geaenderte Datei spielt (%d)",
-              ids[i], alt, fremd, neu);
-        free(d);
-    }
-    re15_game_state_init(); g_gameflow.character = 0;
-    if (room_boot(0x30E0, -19406, 0, -22938, 0, 0) != 0) return;
-    for (size_t i = 0; i < sizeof ids / sizeof ids[0]; i++) {
-        int len = 0; const unsigned char *raw = re15_msg_get_raw(ids[i], &len);
-        const int d = raw ? re15_msg_compute_duration(raw, (size_t)len, 0) : 0;   /* = der eingesetzte Wert (story3a/3b_r42_texte) */
-        PRUEF(d > 90, "30E0 msg %d hat die Textdauer %d Bilder (laeuft ohne Ton sauber, VERTRAG 2.1)", ids[i], d);
-    }
-}
-
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "";
@@ -592,7 +564,6 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "t03")) teil_t03();
     else if (!strcmp(t, "t04")) teil_t04();
     else if (!strcmp(t, "t03labor")) teil_t03labor();
-    else if (!strcmp(t, "altaufnahme")) teil_altaufnahme();
     else { printf("unbekannter Teil '%s'\n", t); return 2; }
     printf("%s: %d Fehler\n", t, g_fail);
     return g_fail ? 1 : 0;

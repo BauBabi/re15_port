@@ -373,8 +373,12 @@ Besonderheiten:
   nach ihrem Plc_ret @0x00F90/@0x00F9A schon waehrend msg 13 los.
 - 3070 msg 6 (Nachbesserung 1, B3): davor poltert es im Lager (Port-Bank 0x3E Satz 0x00, vier Schlaege im Takt ROOM3091 sub07
   @0x01A56..@0x01A9E), Leon dreht den Kopf zur Tuer nach 30E0 (ROOM3070 main00 @0x03322, Mitte (-12400,-19100)).
-- Alte Aufnahmen (Nachbesserung 1, B4): 30E0 msg 3/10/11/13 sind NEUAUF. Solange im Ordner noch die alte Aufnahme liegt (Groesse +
-  FNV-1a-32, re15_story3b_r42_alte_aufnahme), bleibt die Zeile stumm und laeuft mit der Textdauer (2.1). Neue Aufnahme = spielt.
+- Alte Aufnahmen: 30E0 msg 3/10/11/13 sind NEUAUF. Bis zur Neuaufnahme spielt die vorhandene Aufnahme unter dem neuen Text weiter,
+  wie 3020 msg 0..2 (so in der AUFNAHMELISTE angekuendigt). Eine neue Aufnahme im Ordner spielt sofort. Die Stummschaltung aus
+  Nachbesserung 1 (B4) ist in Nachbesserung 2 (Pruefer R2-1) ganz entfernt. Mit der echten main13.wav wartet die letzte
+  Marvin-Szene nach der Sleep-Kette auf Untertitel UND Stimme (Durchlauf integration_r42_story3b_leon, R2-3).
+- OFFEN (R2-2): Uebergang Auftritt -> Kampf in 3070 steht 12 Bilder still (Lunge a3 0x100 @0x80117644 fehlt der Port-Kampf-KI);
+  wird im Klauenhieb-Umbau (case 3) auf Zweig r41/birkin_kralle behoben, nicht auf r42/story.
 - T-03/T-04: enemy_ai_common.c re15_birkin_anim_szene (Auftritt 0x80119378 und Szenen-Modus 0x80118d00), NUR STAGE3 (3070, 3080).
   Nach dem Auftritt setzt der Port die Rate zurueck (der Kampf laeuft wie vor T-03); die Todesphasen tragen a3 0x200 @0x8011a764.
   Vorher/Nachher-Laeufe 50A0, 5080, 5090 bytegleich (Pose-Messschiene RE15_POSE_LOG + state.log); Labor 50E0/50F1 Posen,
