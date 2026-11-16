@@ -38,6 +38,18 @@
  *                      Wand, bevor die Capcom-Sonde (erst ab +0x95 0x24) anschlaegt.
  *   schwanz_gelaender  Labor 50F1, Birkin vor dem Gelaender #12 (Oberkante 1900 gemessen): die gezeichnete Klinge kommt nicht
  *                      unter die Oberkante -> kein Clip 0xa. Gegenprobe Merge-Commit: die Capcom-Sonde schlaegt bei af 40 an.
+ *
+ * Runde 2 "synchron" (Pruefbericht r1: 5 Kontakte ausserhalb des Kamerabilds; Gelaender 50E0 #16 galt als Wand bis zur Decke).
+ * Die Kralle prueft jetzt mit der Kamera des laufenden Cuts (g_scd.cam_id); jeder Fall setzt den Cut, den das Spiel dort zeigt.
+ *   schwanz_gelaender16  50E0, Birkin bei (-13500,-10500), Blick nach Westen auf #16 (Pruefer-Probe r1, Cut 4). Stand r1: Kontakt
+ *                        bei af 36 in 2773 Hoehe ueber der Oberkante 1900 -> Clip 0xa. Neu: kein Kontakt ueber der Oberkante;
+ *                        der erste Kontakt liegt unter 1900 (die Klinge senkt sich bei af 38 ins Gelaender, 1871 hoch).
+ *   schwanz_ausser_bild  50E0 vor der Suedwand #3, Birkin (-10496,-25129), Spieler (-7544,-26375) (Lage des Hiebs F1715, Pruefer
+ *                        r1). Laufender Cut 5: die Klinge trifft #3 im Bild -> Rueckzug im Kontaktbild. Dieselbe Lage mit Cut 0
+ *                        (Birkin und Wand ausserhalb des Bilds): die Klinge steckt genauso in #3, aber nicht sichtbar -> kein
+ *                        Rueckzug. Gegenprobe Stand r1: Rueckzug auch mit Cut 0.
+ *   schwanz_abdeckung    jede SCA-Zelle (Band 0, solide) von ROOM50E0/50F1/50A0/50A1 steht in der Tabelle sichtbarer Waende
+ *                        (re15_bkk_zelle_art != 0) - keine Zelle gilt mehr ungeprueft als Wand.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -54,6 +66,7 @@
 #include "re15_damage.h"
 #include "re15_collision.h"
 #include "re15_birkin_klaue_r41.h"
+#include "re15_scd.h"
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -152,12 +165,15 @@ static int raum_laden(const char *datei, uint16_t id)
 typedef struct {
     int ticks, clip_a, clip_a_max, clip3_max, aus_sub, cd, gier_dreht, sonde_af;
     int kontakt_af, durch, frac_a;   /* Runde 1 synchron: erstes Kontaktbild, Takte Klinge-in-Wand ohne +0x6 = 3, +0x8f im 1. 0xa-Takt */
+    int kontakt_zelle; int32_t kontakt_y;  /* Runde 2: Zelle und Hoehe (Welt-y) des tiefsten sichtbaren Pruefpunkts im Kontaktbild */
 } ergebnis_t;
 
 /* Ein Hieb ab Phase 0. seitlich != 0: der Spieler geht ab Phase 1 je Bild um `seitlich` in Z. */
+static int s_cut = 0;   /* Kamera des laufenden Cuts (g_scd.cam_id) fuer den Hieb */
 static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t pz, int32_t seitlich)
 {
-    ergebnis_t r; memset(&r, 0, sizeof r); r.sonde_af = -1; r.kontakt_af = -1; r.frac_a = -1;
+    g_scd.cam_id = (uint8_t)s_cut;
+    ergebnis_t r; memset(&r, 0, sizeof r); r.sonde_af = -1; r.kontakt_af = -1; r.frac_a = -1; r.kontakt_zelle = -1;
     memset(g_actors, 0, sizeof g_actors);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->x = px; pl->y = 0; pl->z = pz; pl->hp = 100; pl->hit_react = 1;
@@ -176,7 +192,19 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
         if (e->sub_state_1 != 3) { r.aus_sub = e->sub_state_1; r.cd = e->birkin_atk_cd; break; }
         if (e->motion == 0x0a) { if (!r.clip_a) r.frac_a = e->anim_frac; r.clip_a = 1; if (e->anim_frame > r.clip_a_max) r.clip_a_max = e->anim_frame; }
         if (e->motion == 3 && (e->sub_state_2 == 1 || e->sub_state_2 == 3) && re15_bk_kralle_logik_aktiv() && re15_bkk_kontakt(e)) {
-            if (r.kontakt_af < 0) r.kontakt_af = e->anim_frame;
+            if (r.kontakt_af < 0) {
+                r.kontakt_af = e->anim_frame;
+                re15_bkk_lage_t l; re15_bkk_befund_t b;
+#ifndef BKK_ALT_API   /* nur fuer die Gegenprobe gegen den Merge-Commit (alte Schnittstelle ohne Kamera) */
+                re15_camera_view_t v;
+                if (re15_bkk_lage_logik(e, &l) && re15_bkk_sicht(&v) &&
+                    re15_bkk_pruefen(re15_bkk_klinge(), &l, &g_room_rdt, (uint16_t)g_current_room_id, &v, &b)) {
+#else
+                if (re15_bkk_lage_logik(e, &l) && re15_bkk_pruefen(re15_bkk_klinge(), &l, &g_room_rdt, (uint16_t)g_current_room_id, &b)) {
+#endif
+                    r.kontakt_zelle = b.zelle; r.kontakt_y = b.punkt[1];
+                }
+            }
             if (e->sub_state_2 == 1) r.durch++;          /* Klinge steckt (Pose dieses Takts), Rueckzug nicht ausgeloest */
         }
         if (e->motion == 3 && e->anim_frame > r.clip3_max) r.clip3_max = e->anim_frame;
@@ -233,6 +261,7 @@ int main(int argc, char **argv)
         /* Blick +x auf Zelle #8 (x >= -20100). Groesster x-Vorlauf der Klaue im Fenster: EM30 2092, Hangar 2478 (af 40,
          * r2/tools/klauenpunkt.py); mit Sondenradius 400 erreicht von -22800 aus nur der Hangar-Arm die Zelle. */
         const int32_t bx = an_wand ? -21300 : -22800;
+        s_cut = 5;                                              /* 3070: Kampfschnitt (Messlaeufe RE15_FORCE_CUT=5) */
         ergebnis_t r = hieb(0x10, bx, -15000, -20400, -15000, 0);
         printf("%s: ticks=%d clip0xa=%d bis Bild %d sonde_af=%d clip3_max=%d aus_sub=%d cd=0x%02x\n", fall, r.ticks, r.clip_a,
                r.clip_a_max, r.sonde_af, r.clip3_max, r.aus_sub, r.cd);
@@ -260,6 +289,7 @@ int main(int argc, char **argv)
          * gelaender: Laufsteg zwischen #2 (x <= -14245) und #12 (x >= -9725), Birkin bei (-12200, -16000), Blick +x auf #12.
          *   Neu: die gezeichnete Klinge kommt in keinem Bild unter die Oberkante 1900 von #12 -> kein Clip 0xa. Gegenprobe
          *   Merge-Commit: die Capcom-Sonde (EM30-Klauenpunkt, Radius 0x190 @0x80117818) schlaegt bei af 40 an -> Clip 0xa. */
+        s_cut = wand ? 4 : 5;                                   /* 50A0 Gang-Cut 4, 50F1 Kampf-Cut 5 (state.log cam= der Messlaeufe) */
         ergebnis_t r = wand ? hieb(0x10, BK_WAND_X, -15000, BK_WAND_X + 1200, -15000, 0) : hieb(0x10, BK_GEL_X, BK_GEL_Z, BK_GEL_X + BK_GEL_DX, BK_GEL_Z + BK_GEL_DZ, 0);
         printf("%s: ticks=%d clip0xa=%d bis Bild %d kontakt_af=%d durch=%d frac_a=%d sonde_af=%d aus_sub=%d cd=0x%02x\n", fall,
                r.ticks, r.clip_a, r.clip_a_max, r.kontakt_af, r.durch, r.frac_a, r.sonde_af, r.aus_sub, r.cd);
@@ -274,6 +304,59 @@ int main(int argc, char **argv)
             CHECK(r.aus_sub == 1 && r.cd == 0x1e, "schwanz_gelaender: Clip-Ende -> HUB mit +0x1df 0x1e (@0x801178bc), aus_sub=%d cd=0x%02x", r.aus_sub, r.cd);
         }
         re15_bk_kralle_logik_setzen(NULL, 0);
+    }
+    if (!strcmp(fall, "schwanz_gelaender16") || !strcmp(fall, "schwanz_ausser_bild")) {
+        if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
+        re15_bk_kralle_logik_setzen(s_blob, s_blob_len);
+        if (!raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50E0.RDT", 0x50E0u)) { fprintf(stderr, "FAIL: ROOM50E0 nicht ladbar\n"); return 1; }
+        if (!strcmp(fall, "schwanz_gelaender16")) {
+            /* Pruefer-Probe r1 (probe16/t16.c): Birkin (-13500,-10500), Spieler 1200 westlich auf dem Steg, Cut 4 (Messbild e0_16_c4) */
+            s_cut = 4;
+            ergebnis_t r = hieb(0x10, -13500, -10500, -14700, -10500, 0);
+            printf("%s: ticks=%d clip0xa=%d kontakt_af=%d zelle=%d y=%d durch=%d sonde_af=%d aus_sub=%d cd=0x%02x\n", fall, r.ticks,
+                   r.clip_a, r.kontakt_af, r.kontakt_zelle, (int)r.kontakt_y, r.durch, r.sonde_af, r.aus_sub, r.cd);
+            /* Gelaender-Oberkante -1900 (BKK_GELAENDER_OBEN, birkin_klaue_r41.c): ein Kontakt an #16 nur UNTER der Oberkante */
+            CHECK(r.kontakt_af != 36, "schwanz_gelaender16: bei af 36 geht die Klinge in 2773 Hoehe ueber das Gelaender -> kein Kontakt");
+            CHECK(r.kontakt_af < 0 || r.kontakt_y >= -1900, "schwanz_gelaender16: Kontakt ueber der Oberkante 1900 (y %d, Zelle %d)", (int)r.kontakt_y, r.kontakt_zelle);
+            CHECK(r.durch == 0 && (!r.clip_a || r.sonde_af == r.kontakt_af), "schwanz_gelaender16: Rueckzug nur im Kontaktbild (kontakt_af %d, sonde_af %d)", r.kontakt_af, r.sonde_af);
+        } else {
+            /* Hieb F1715 (Pruefer r1, Lauf N_50E0schiess): Birkin (-10496,-25129), Spieler (-7544,-26375); Kontakt F1723 af 29 an #3 */
+            s_cut = 5;
+            ergebnis_t r5 = hieb(0x10, -10496, -25129, -7544, -26375, 0);
+            s_cut = 0;
+            ergebnis_t r0 = hieb(0x10, -10496, -25129, -7544, -26375, 0);
+            printf("%s: Cut 5 clip0xa=%d kontakt_af=%d zelle=%d sonde_af=%d durch=%d | Cut 0 clip0xa=%d kontakt_af=%d sonde_af=%d\n", fall,
+                   r5.clip_a, r5.kontakt_af, r5.kontakt_zelle, r5.sonde_af, r5.durch, r0.clip_a, r0.kontakt_af, r0.sonde_af);
+            CHECK(r5.clip_a && r5.kontakt_zelle == 3 && r5.sonde_af == r5.kontakt_af && r5.durch == 0,
+                  "schwanz_ausser_bild: Cut 5 - Klinge trifft #3 im Bild -> Rueckzug im Kontaktbild (kontakt_af %d Zelle %d, sonde_af %d)",
+                  r5.kontakt_af, r5.kontakt_zelle, r5.sonde_af);
+            CHECK(!r0.clip_a && r0.kontakt_af < 0, "schwanz_ausser_bild: Cut 0 - dieselbe Klinge in #3, aber ausserhalb des Bilds -> kein Rueckzug (kontakt_af %d)", r0.kontakt_af);
+        }
+        re15_bk_kralle_logik_setzen(NULL, 0);
+    }
+    if (!strcmp(fall, "schwanz_abdeckung")) {
+        static const struct { const char *datei; uint16_t id; } R[] = {
+            { RE15_ASSET_PSX_DIR "/STAGE5/ROOM50E0.RDT", 0x50E0u }, { RE15_ASSET_PSX_DIR "/STAGE5/ROOM50F1.RDT", 0x50F1u },
+            { RE15_ASSET_PSX_DIR "/STAGE5/ROOM50A0.RDT", 0x50A0u }, { RE15_ASSET_PSX_DIR "/STAGE5/ROOM50A1.RDT", 0x50A1u } };
+        for (size_t k = 0; k < sizeof R / sizeof R[0]; k++) {
+            if (!raum_laden(R[k].datei, R[k].id)) { fprintf(stderr, "FAIL: %s nicht ladbar\n", R[k].datei); return 1; }
+            int n = 0, wand = 0, gel = 0;
+            for (int i = 0; i < g_room_rdt.sca_count; i++) {
+                const re15_sca_entry_t *c = &g_room_rdt.sca[i];
+                const int typ = c->type & 0x0f;
+                if ((typ != 1 && typ != 3) || !(c->u0 & 1) || (c->floor >> 4) != 0 || !c->width || !c->density) continue;
+#ifndef BKK_ALT_API
+                const int art = re15_bkk_zelle_art(R[k].id, c);
+#else
+                const int art = 0;   /* Gegenprobe: der Merge-Commit hat keine Tabelle je Zelle */
+#endif
+                n++; wand += art == 1; gel += art == 2;
+                CHECK(art != 0, "schwanz_abdeckung: ROOM%04X Zelle #%d (x %d z %d w %u d %u) fehlt in der Tabelle sichtbarer Waende",
+                      (unsigned)R[k].id, i, (int)c->x, (int)c->z, (unsigned)c->width, (unsigned)c->density);
+            }
+            printf("ROOM%04X: %d Zellen, Wand %d, Gelaender %d\n", (unsigned)R[k].id, n, wand, gel);
+            CHECK(n > 0, "schwanz_abdeckung: ROOM%04X ohne Zellen", (unsigned)R[k].id);
+        }
     }
     if (fails) { fprintf(stderr, "test_r41_birkin_kralle %s: %d Fehler\n", fall, fails); return 1; }
     printf("test_r41_birkin_kralle %s: OK\n", fall);

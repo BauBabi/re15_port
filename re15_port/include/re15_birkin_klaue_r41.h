@@ -25,6 +25,7 @@
 #include "re15_actor.h"
 #include "re15_md1.h"
 #include "re15_rdt.h"
+#include "re15_camera.h"
 
 /* Welt-Lage eines Teils: welt = R * lokal >> 12 + T (wie nyawed_rot / nbone_world_trans im Zeichner). */
 typedef struct {
@@ -39,6 +40,7 @@ typedef struct {
     int32_t abstand;      /* < 0: Eindringtiefe (waagerecht bis zur Wandflaeche), >= 0: kleinster Abstand Klinge - Wand */
     int32_t punkt[3];     /* der Pruefpunkt dazu (Welt) */
     int     punkte;       /* Zahl der Pruefpunkte */
+    int     ausser_bild;  /* Zellen, in denen die Klinge steckt, deren Einschlagstelle (tiefster Punkt) aber ausserhalb des Bilds liegt */
 } re15_bkk_befund_t;
 
 /* Lage von Teil 15 der gezeichneten 0x30-Bank fuer den aktuellen Zustand des Aktors (Bild +0x95, Ueberblendung +0x8f aus dem
@@ -48,9 +50,18 @@ int re15_bkk_lage_logik(const re15_actor_t *e, re15_bkk_lage_t *out);
 /* Mesh 15 der gezeichneten 0x30-Bank (NULL = keins). */
 const re15_md1_mesh_t *re15_bkk_klinge(void);
 
-/* Klinge (Mesh m in Lage l) gegen die sichtbaren Waende des Raums raum_id (SCA aus rdt). */
+/* Klinge (Mesh m in Lage l) gegen die sichtbaren Waende des Raums raum_id (SCA aus rdt). sicht != NULL: eine Zelle zaehlt nur,
+ * wenn ihre Einschlagstelle (der tiefste Punkt der Klinge in ihr) mit dieser Kamera im 320x240-Bild liegt (Runde 2: ein Treffer
+ * ausserhalb des Bilds ist kein sichtbarer Treffer). */
 int re15_bkk_pruefen(const re15_md1_mesh_t *m, const re15_bkk_lage_t *l, const re15_rdt_t *rdt, uint16_t raum_id,
-                     re15_bkk_befund_t *b);
+                     const re15_camera_view_t *sicht, re15_bkk_befund_t *b);
+
+/* Kamera des laufenden Cuts (g_scd.cam_id) - 0 = keine. */
+int re15_bkk_sicht(re15_camera_view_t *v);
+
+/* Art einer SCA-Zelle in der Tabelle sichtbarer Waende: 0 = nicht erfasst, 1 = Wand bis zur Decke, 2 = niedriges Hindernis
+ * (Gelaender, Oberkante gemessen). Riegel schwanz_abdeckung: in 50E0/50F1/50A0/50A1 ist jede Zelle erfasst. */
+int re15_bkk_zelle_art(uint16_t raum_id, const re15_sca_entry_t *c);
 
 /* 1 = die Klinge steckt in der Pose, die der Zeichner in diesem Takt zeigt, in einer sichtbaren Wand des aktuellen Raums. */
 int re15_bkk_kontakt(const re15_actor_t *e);

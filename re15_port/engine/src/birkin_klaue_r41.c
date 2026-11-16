@@ -11,6 +11,8 @@
 #include "re15_anim_select.h"
 #include "re15_engine.h"
 #include "re15_room.h"
+#include "re15_camera.h"
+#include "re15_scd.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -72,12 +74,15 @@ int re15_bkk_lage_logik(const re15_actor_t *e, re15_bkk_lage_t *out)
  * SICHTBARE WAENDE. Grundlage: die SCA-Zellen (RDT +0x20, 12 B, re15_sca_entry_t) sind die Waende und Hindernisse des
  * Raums (Memory reai-v2-kollisionszellen-sind-waende). In 50E0/50F1/50A0/50A1 tragen alle Zellen Band 0 und das Wort 0x0300
  * (gemessen, Bericht Runde 3). Ob eine Zelle im BILD eine Wand ist und wie hoch sie reicht, steht nicht in den Daten; das
- * entscheidet die Tabelle unten nach den Messbildern (Zellen auf dem Hintergrund der Kampf-Cuts). Zellen, die nicht in der
- * Tabelle stehen, gelten als Wand bis zur Decke.
+ * entscheidet die Tabelle unten nach den Messbildern (Zellen auf dem Hintergrund der Kampf-Cuts).
+ * Runde 2 (Pruefbericht r1 rot 2: 50E0 #16 galt ungeprueft als Wand bis zur Decke): JEDE Zelle der drei Raeume steht jetzt in der
+ * Tabelle, je mit Messbild-Beleg (Runde 2 r2/mb/c_*.png: Zelle als Quader mit Hoehen 1000/1900/3000/4000 auf dem Hintergrund
+ * der Cuts, in denen sie am groessten liegt). Der Riegel unit_r41_birkin_kralle_schwanz_abdeckung prueft, dass keine Zelle
+ * dieser Raeume fehlt. Nur Zellen anderer Raeume (3070 im Test hangar_wand) gelten weiter als Wand.
  * ------------------------------------------------------------------------------------------------------------------- */
 enum { BKK_KEINE = 0, BKK_WAND = 1, BKK_HINDERNIS = 2 };
 typedef struct {
-    uint16_t raum;            /* 4-stellige Raum-Id, Spieler-Ziffer ignoriert (50A0 == 50A1) */
+    uint16_t raum;            /* 4-stellige Raum-Id, Spieler-Ziffer ignoriert (50A0 == 50A1, 50F0 == 50F1) */
     int16_t  x, z;            /* Zell-Ecke */
     uint16_t w, d;            /* Zell-Ausdehnung */
     uint8_t  art;
@@ -88,20 +93,68 @@ typedef struct {
  * Kandidatenlinien 800..2000 auf der Gangkante der Zelle, in ZWEI Cuts gegen das obere Rohr des Gelaenders gelesen):
  *   50E0 #17 (x -16750..-15470), Gangkante x -15470: Cut 4 oberes Rohr auf 1800, Cut 5 auf 1900 (Zellmitte x -16110: 1700/1900);
  *   50F1 #5 (z -11435..-10415), Gangkante z -10415: Cut 7 1800..2100, Cut 6 1500..1800.
+ *   Runde 2 dazu 50E0 #10, Gangkante z -22315: in Cut 5 und Cut 6 liegt das obere Rohr zwischen den Kandidaten 1600 und 1900
+ *   (r2/mb/t_k10_16.png).
  * Genommen wird der obere Wert der Zwei-Cut-Messung an #17 (1900): darunter steckt die Klinge sichtbar im Gelaender, darueber
- * geht sie ueber das Gelaender hinweg (Pit dahinter). Dieselbe Gelaender-Bauart (Bild) traegt #2 und #12 in 50F1. */
+ * geht sie ueber das Gelaender hinweg (Schacht dahinter). Die Gelaender unten haben im Bild dieselbe Bauart (zwei waagerechte
+ * Rohre auf Pfosten). */
 #define BKK_GELAENDER_OBEN (-1900)
+#define BKK_G(raum, x, z, w, d) { raum, x, z, w, d, BKK_HINDERNIS, BKK_GELAENDER_OBEN }
+#define BKK_W(raum, x, z, w, d) { raum, x, z, w, d, BKK_WAND, 0 }
 
-/* Zellen nach den Messbildern (Pfosten je 250 auf den Zellkanten, Klinge auf Bildabzuegen der Kampf-Cuts, Runde 1 "synchron"):
- *   50E0 #17: Gelaender des Laufstegs (Cut 5 hinter Leon, Cut 4 links vom Steg), dahinter offener Schacht.
- *   50E0 #3 : Suedwand, volle Hoehe (Cut 6 rechts, Cut 5 links) -> nicht eingetragen = Wand.
- *   50F1 #2 (x -14850..-14245), #12 (x -9725..-7725), #5 (z -11435..-10415): Gelaender der Laufstege (Cut 5/6/7).
- *   50A0/50A1 #2/#3/#4: Hangarwaende bis zur Decke (Cut 3/4/9, Tor "C-2 HANGAR") -> nicht eingetragen = Wand. */
+/* Jede Zelle (Index wie im RDT; die Eintraege ab #20 / #15 / #8 wiederholen dieselben Rechtecke) nach den Messbildern
+ * r2/mb/c_*.png: Gelaender = im Bild Rohr-Gelaender, dahinter Schacht oder offener Raum; Wand = im Bild bis ueber 4000
+ * geschlossen (Raumwand, Pfeiler, Turm, Maschine, Gangwand). */
 static const bkk_wand_t k_waende[] = {
-    { 0x50E0, -16750, -28895, 1280, 11100, BKK_HINDERNIS, BKK_GELAENDER_OBEN },   /* 50E0 #17 */
-    { 0x50F0, -14850, -23990,  605, 19280, BKK_HINDERNIS, BKK_GELAENDER_OBEN },   /* 50F1 #2  */
-    { 0x50F0,  -9725, -23000, 2000, 12575, BKK_HINDERNIS, BKK_GELAENDER_OBEN },   /* 50F1 #12 */
-    { 0x50F0,  -9240, -11435, 16770, 1020, BKK_HINDERNIS, BKK_GELAENDER_OBEN },   /* 50F1 #5  */
+    /* ROOM50E0 (Labor, Leon) */
+    BKK_G(0x50E0, -10490, -21655, 11565, 11815),   /* #0  Schacht Ost mit Gelaender an der Gangkante x -10490 (Cut 5/6) */
+    BKK_W(0x50E0, -30600, -18595,  8810,  1070),   /* #1  Maschinenwand mit Warnstreifen (Cut 1), Pfeiler bis ueber 4000 (Cut 8) */
+    BKK_W(0x50E0, -32000, -31975,  6030, 34890),   /* #2  Westwand (Cut 3/5) */
+    BKK_W(0x50E0, -32000, -32000, 44860,  5175),   /* #3  Suedwand, volle Hoehe (Cut 6 rechts, Cut 5 links) */
+    BKK_W(0x50E0,   6620, -31975,  6260, 34860),   /* #4  Ostwand (Cut 6/7) */
+    BKK_G(0x50E0,   -180, -15165,  9140,  1080),   /* #5  Gelaender mit Warnstreifen-Sockel (Cut 7) */
+    BKK_G(0x50E0,  -7880, -10435,  1050,  6020),   /* #6  Gelaender am Schacht (Cut 3 vorn links) */
+    BKK_W(0x50E0, -31960,  -4795, 44830,  7750),   /* #7  Nordwand (Cut 4/5) */
+    BKK_W(0x50E0, -18475, -12845,  2390,  1150),   /* #8  Pfeiler am Turmfuss (Cut 0/3) */
+    BKK_W(0x50E0, -18475, -19285,  2390,  1150),   /* #9  Maschinenpfeiler bis ueber 4000 (Cut 4) */
+    BKK_G(0x50E0, -10485, -22315, 12330,  1110),   /* #10 Gelaender an der Gangkante z -22315 (Cut 5/6, Hoehe s. oben) */
+    BKK_G(0x50E0, -10490, -10435,  3660,  1540),   /* #11 Gelaender am Schacht (Cut 3 vorn links, Cut 4) */
+    BKK_G(0x50E0, -28800,  -5435, 13330,  1060),   /* #12 Gelaender vor der Nordwand (Cut 4 hinter dem Pult) */
+    BKK_G(0x50E0, -23470,  -9005,  8000,  1060),   /* #13 Pult und Gelaender (Cut 4) */
+    BKK_W(0x50E0, -26600,  -9935,  1110,  5560),   /* #14 Maschinenwand mit Warnstreifen (Cut 2/3) */
+    BKK_G(0x50E0, -23470, -19525,  1230, 11580),   /* #15 Pult und Gelaender am Steg (Cut 8), Gitterlaufsteg darunter (Cut 0) */
+    BKK_G(0x50E0, -16750, -13125,  1280,  5180),   /* #16 Gelaender, setzt #17 auf derselben Linie fort (Cut 4, Pruefer r1) */
+    BKK_G(0x50E0, -16750, -28895,  1280, 11100),   /* #17 Gelaender des Laufstegs, dahinter offener Schacht (Cut 4/5) */
+    BKK_G(0x50E0,    245, -22315,  1600,  8190),   /* #18 Gelaender mit Warnstreifen-Sockel (Cut 7) */
+    BKK_W(0x50E0, -23275, -19305,  7790,  7790),   /* #19 Kreis = Turm (Cut 0: Turm bis zur Decke; Cut 3/5) */
+    /* ROOM50F1 (Labor, Elza) */
+    BKK_G(0x50F0, -26925, -19020,  4660,   350),   /* #0  Gelaender neben dem Tor TYPE-P (Cut 0/1) */
+    BKK_W(0x50F0, -31200, -29405,  6030, 26460),   /* #1  Westwand mit Tor TYPE-P (Cut 0/2) */
+    BKK_G(0x50F0, -14850, -23990,   605, 19280),   /* #2  Gelaender Laufsteg (Cut 5/6) */
+    BKK_W(0x50F0, -31100, -29325, 38610,  2600),   /* #3  Suedwand (Cut 3/9) */
+    BKK_W(0x50F0,   5195, -29325,  2340, 26310),   /* #4  Ostwand (Cut 4/8) */
+    BKK_G(0x50F0,  -9240, -11435, 16770,  1020),   /* #5  Gelaender Laufsteg (Cut 4/7) */
+    BKK_W(0x50F0, -31110,  -6370, 38630,  3380),   /* #6  Nordwand (Cut 5/7) */
+    BKK_W(0x50F0, -18475, -12845,  2390,  1150),   /* #7  Saeule bis ueber 4000 (Cut 6) */
+    BKK_W(0x50F0, -18475, -19285,  2390,  1150),   /* #8  Pfeiler am Turm (Cut 0/2) */
+    BKK_G(0x50F0, -22595, -23990,   405,  6770),   /* #9  Gelaender (Cut 1) */
+    BKK_G(0x50F0, -22595, -23990,  8195,   415),   /* #10 Gelaender (Cut 0/2) */
+    BKK_W(0x50F0,  -9300, -23000,  7725,  1050),   /* #11 grosse Maschine mit schraeger Oberseite (Cut 4/9) */
+    BKK_G(0x50F0,  -9725, -23000,  2000, 12575),   /* #12 Gelaender Laufsteg (Cut 5); das Suedende ueberlappt #11 = Maschine */
+    BKK_W(0x50F0,  -3625, -29325,  2000,  7375),   /* #13 Maschine hinter #11 (Cut 4/9) */
+    BKK_W(0x50F0, -23275, -19305,  7790,  7790),   /* #14 Kreis = Turm (Cut 0: Turmfuss; Cut 5) */
+    /* ROOM50A0/50A1 (Hangar-Gaenge): alle Zellen Gangwaende bis zur Decke (r2/mb/c_a_0.png, t_a_rest.png) */
+    BKK_W(0x50A0, -15300, -23500,  2900, 11000),   /* #0  Gangwand (Cut 2/6) */
+    BKK_W(0x50A0, -16300,   4940,  6800,  2000),   /* #1  Stirnwand mit Tuer (Cut 0/1) */
+    BKK_W(0x50A0, -11060, -10090,  2000, 17100),   /* #2  Wand am Tor (Cut 4/12) */
+    BKK_W(0x50A0, -10900, -10090, 10100,  2000),   /* #3  Wand mit Tor "C-2 HANGAR" (Cut 4/12) */
+    BKK_W(0x50A0,  -2700, -28700,  2000, 20500),   /* #4  Ostwand (Cut 3/4) */
+    BKK_W(0x50A0, -28300, -15800,  6400,  1500),   /* #5  Gangwand (Cut 3/7) */
+    BKK_W(0x50A0, -28500, -27800,  1999, 13300),   /* #6  Gangwand (Cut 7/10) */
+    BKK_W(0x50A0, -23400, -23000,  2000,  8500),   /* #7  Gangwand (Cut 7/8) */
+    BKK_W(0x50A0, -15580, -13400,  2000, 19600),   /* #9  Gangwand (Cut 4/8) */
+    BKK_W(0x50A0, -28300, -28600, 27000,  2000),   /* #12 Suedwand (Cut 6/7) */
+    BKK_W(0x50A0, -23500, -23400, 10900,  2000),   /* #13 Gangwand (Cut 3/7) */
 };
 
 static const bkk_wand_t *bkk_eintrag(uint16_t raum, const re15_sca_entry_t *c)
@@ -112,6 +165,12 @@ static const bkk_wand_t *bkk_eintrag(uint16_t raum, const re15_sca_entry_t *c)
             return w;
     }
     return NULL;
+}
+
+int re15_bkk_zelle_art(uint16_t raum_id, const re15_sca_entry_t *c)
+{
+    const bkk_wand_t *w = c ? bkk_eintrag(raum_id, c) : NULL;
+    return w ? (int)w->art : 0;
 }
 
 /* Abstand eines Punkts zur Zelle (waagerecht, mit Oberkante): < 0 = Eindringtiefe, sonst Abstand. */
@@ -159,13 +218,41 @@ static void bkk_welt(const re15_bkk_lage_t *l, const re15_md1_vertex_t *v, int32
                                 * 350 tief (50F1 #0), ein Klingendreieck kann eine Zelle also nicht zwischen zwei Punkten
                                 * ueberspringen */
 
-typedef struct { const re15_rdt_t *rdt; uint16_t raum; re15_bkk_befund_t *b; } bkk_ctx_t;
+#define BKK_ZELLEN_MAX 256   /* SCA-Eintraege je Raum: 50E0 100, 50F1 75, 50A0 21 (Zensus Runde 2); mehr wird nicht geprueft */
+typedef struct {
+    const re15_rdt_t *rdt; uint16_t raum; re15_bkk_befund_t *b; const re15_camera_view_t *sicht;
+    int32_t tief[BKK_ZELLEN_MAX];       /* je Zelle: tiefster Pruefpunkt (kleinster Abstand), 0x7fffffff = keiner */
+    int32_t tp[BKK_ZELLEN_MAX][3];      /* dieser Punkt */
+    uint8_t tsicht[BKK_ZELLEN_MAX];     /* liegt er im Bild */
+    int32_t naechst; int nzelle; int32_t np[3];   /* kleinster Abstand >= 0 (nur fuer die Messschiene, wenn kein Kontakt) */
+} bkk_ctx_t;
+
+/* Runde 2 (Pruefbericht r1 rot 1: 5 von 53 Kontakten lagen ausserhalb des Kamerabilds - man sah den Rueckzug, aber keinen
+ * Treffer). NUTZERENTSCHEID "nur, wenn er gegen eine Wand schlaegt": sichtbar ist ein Treffer nur, wenn die EINSCHLAGSTELLE im
+ * Bild liegt. Einschlagstelle je Zelle = der tiefste Pruefpunkt der Klinge in dieser Zelle (dasselbe Mass, mit dem der Pruefer
+ * r1 die 5 Faelle fand: sicht.py projiziert den tiefsten Punkt pt=). Ein Kontakt zaehlt, wenn fuer mindestens eine Zelle ihr
+ * tiefster Punkt im Bild liegt. Gemessen (Runde 2, sichtmass.py) reicht "irgendein eindringender Punkt im Bild" NICHT: bei F1723
+ * lagen 140 Bildpunkte des Eindringens bis 15 Bildpunkte vom linken Rand im Bild, die Einschlagstelle aber links ausserhalb,
+ * und im Video ist kein Treffer zu sehen (Pruefer-Messbild eig_50E0_z3).
+ * Projektion wie der Zeichner und wie bf_punkt_im_bild (birkin_formen.c): Kamera des laufenden Cuts (re15_camera_build_view =
+ * FUN_80053ca4), sx = 160 + H*vx/vz, sy = 120 + H*vy/vz, H = fov_screen_dist; im Bild = vz > 0 und 0 <= sx < 320, 0 <= sy < 240
+ * (Bildgroesse 320x240 des Spiels). PORT-WAHL nach dem Entscheid; kein Capcom-Code. */
+static int bkk_im_bild(const re15_camera_view_t *v, const int32_t p[3])
+{
+    const int64_t vx = (((int64_t)v->rot[0] * p[0] + (int64_t)v->rot[1] * p[1] + (int64_t)v->rot[2] * p[2]) >> 12) + v->trans[0];
+    const int64_t vy = (((int64_t)v->rot[3] * p[0] + (int64_t)v->rot[4] * p[1] + (int64_t)v->rot[5] * p[2]) >> 12) + v->trans[1];
+    const int64_t vz = (((int64_t)v->rot[6] * p[0] + (int64_t)v->rot[7] * p[1] + (int64_t)v->rot[8] * p[2]) >> 12) + v->trans[2];
+    if (vz <= 0) return 0;
+    const int64_t sx = 160 + vx * v->fov_screen_dist / vz, sy = 120 + vy * v->fov_screen_dist / vz;
+    return sx >= 0 && sx < 320 && sy >= 0 && sy < 240;
+}
 
 static void bkk_punkt(bkk_ctx_t *cx, const int32_t p[3])
 {
     const re15_rdt_t *rdt = cx->rdt;
     cx->b->punkte++;
-    for (int i = 0; i < rdt->sca_count; i++) {
+    int sichtbar = -1;                                       /* erst bei Bedarf projizieren */
+    for (int i = 0; i < rdt->sca_count && i < BKK_ZELLEN_MAX; i++) {
         const re15_sca_entry_t *c = &rdt->sca[i];
         const int typ = c->type & 0x0f;
         if ((typ != 1 && typ != 3) || !(c->u0 & 1) || (c->floor >> 4) != 0 || !c->width || !c->density) continue;
@@ -173,9 +260,14 @@ static void bkk_punkt(bkk_ctx_t *cx, const int32_t p[3])
         const int art = w ? w->art : BKK_WAND;
         if (art == BKK_KEINE) continue;
         const int32_t a = bkk_abstand(c, art, w ? w->oben : 0, p);
-        if (cx->b->zelle < 0 || a < cx->b->abstand) {
-            cx->b->zelle = i; cx->b->abstand = a;
-            cx->b->punkt[0] = p[0]; cx->b->punkt[1] = p[1]; cx->b->punkt[2] = p[2];
+        if (a >= 0) {
+            if (cx->nzelle < 0 || a < cx->naechst) { cx->nzelle = i; cx->naechst = a; cx->np[0] = p[0]; cx->np[1] = p[1]; cx->np[2] = p[2]; }
+            continue;
+        }
+        if (a < cx->tief[i]) {                               /* tiefster Punkt dieser Zelle */
+            if (sichtbar < 0) sichtbar = !cx->sicht || bkk_im_bild(cx->sicht, p);
+            cx->tief[i] = a; cx->tsicht[i] = (uint8_t)sichtbar;
+            cx->tp[i][0] = p[0]; cx->tp[i][1] = p[1]; cx->tp[i][2] = p[2];
         }
     }
 }
@@ -192,13 +284,16 @@ static void bkk_kante(bkk_ctx_t *cx, const int32_t a[3], const int32_t e[3])
 }
 
 int re15_bkk_pruefen(const re15_md1_mesh_t *m, const re15_bkk_lage_t *l, const re15_rdt_t *rdt, uint16_t raum_id,
-                     re15_bkk_befund_t *b)
+                     const re15_camera_view_t *sicht, re15_bkk_befund_t *b)
 {
     if (!b) return 0;
     memset(b, 0, sizeof *b);
     b->zelle = -1; b->abstand = 0x7fffffff;
     if (!m || !l || !rdt || !rdt->sca || rdt->sca_count <= 0) return 0;
-    bkk_ctx_t cx = { rdt, raum_id, b };
+    static bkk_ctx_t cx;                                     /* statisch: ~4 KB; die Kralle prueft einen Aktor je Aufruf */
+    memset(&cx, 0, sizeof cx);
+    cx.rdt = rdt; cx.raum = raum_id; cx.b = b; cx.sicht = sicht; cx.nzelle = -1; cx.naechst = 0x7fffffff;
+    for (int i = 0; i < BKK_ZELLEN_MAX; i++) cx.tief[i] = 0x7fffffff;
     int32_t w[4][3];
     for (int i = 0; i < m->tri_vertex_count; i++) { bkk_welt(l, &m->tri_vertices[i], w[0]); bkk_punkt(&cx, w[0]); }
     for (int i = 0; i < m->quad_vertex_count; i++) { bkk_welt(l, &m->quad_vertices[i], w[0]); bkk_punkt(&cx, w[0]); }
@@ -217,15 +312,35 @@ int re15_bkk_pruefen(const re15_md1_mesh_t *m, const re15_bkk_lage_t *l, const r
         /* PSX-Viereck: Ecken 0-1-3-2 im Umlauf */
         bkk_kante(&cx, w[0], w[1]); bkk_kante(&cx, w[1], w[3]); bkk_kante(&cx, w[3], w[2]); bkk_kante(&cx, w[2], w[0]);
     }
-    b->kontakt = (b->zelle >= 0 && b->abstand < 0);
+    /* Kontakt = tiefste Einschlagstelle unter den Zellen, deren Einschlagstelle im Bild liegt */
+    for (int i = 0; i < rdt->sca_count && i < BKK_ZELLEN_MAX; i++) {
+        if (cx.tief[i] >= 0) continue;
+        if (!cx.tsicht[i]) { b->ausser_bild++; continue; }
+        if (!b->kontakt || cx.tief[i] < b->abstand) {
+            b->kontakt = 1; b->zelle = i; b->abstand = cx.tief[i];
+            b->punkt[0] = cx.tp[i][0]; b->punkt[1] = cx.tp[i][1]; b->punkt[2] = cx.tp[i][2];
+        }
+    }
+    if (!b->kontakt && cx.nzelle >= 0) {                     /* Messschiene: naechste Zelle ohne Eindringen */
+        b->zelle = cx.nzelle; b->abstand = cx.naechst; b->punkt[0] = cx.np[0]; b->punkt[1] = cx.np[1]; b->punkt[2] = cx.np[2];
+    }
     return b->kontakt;
+}
+
+/* Kamera des laufenden Cuts (g_scd.cam_id, derselbe Wert, den state.log als cam= fuehrt und mit dem der Zeichner den Hintergrund
+ * waehlt). 0 = keine Kamera (kein Raum / Cut ausserhalb der RDT-Liste). */
+int re15_bkk_sicht(re15_camera_view_t *v)
+{
+    if (!v || !g_room_rdt_ok || !g_room_rdt.cuts || (int)g_scd.cam_id >= g_room_rdt.cut_count) return 0;
+    return re15_camera_build_view(&g_room_rdt.cuts[g_scd.cam_id], v) == 0;
 }
 
 int re15_bkk_kontakt(const re15_actor_t *e)
 {
-    re15_bkk_lage_t l; re15_bkk_befund_t b;
+    re15_bkk_lage_t l; re15_bkk_befund_t b; re15_camera_view_t v;
     if (!g_room_rdt_ok || !re15_bkk_lage_logik(e, &l)) return 0;
-    return re15_bkk_pruefen(re15_bkk_klinge(), &l, &g_room_rdt, (uint16_t)g_current_room_id, &b);
+    if (!re15_bkk_sicht(&v)) return 0;                       /* ohne Kamera kein Bild, also kein sichtbarer Treffer */
+    return re15_bkk_pruefen(re15_bkk_klinge(), &l, &g_room_rdt, (uint16_t)g_current_room_id, &v, &b);
 }
 
 /* MESS-SCHIENE (RE15_BIRKIN_DBG, kein Spielverhalten). Zeilen in birkin_dbg.log:
@@ -236,17 +351,18 @@ static void bkk_zeile(const char *wer, const re15_actor_t *e, const re15_bkk_lag
     static int an = -1;
     if (an < 0) an = (getenv("RE15_BIRKIN_DBG") != NULL);
     if (!an || !e || e->type != 0x30) return;
-    re15_bkk_befund_t b;
-    re15_bkk_pruefen(re15_bkk_klinge(), l, g_room_rdt_ok ? &g_room_rdt : NULL, (uint16_t)g_current_room_id, &b);
+    re15_bkk_befund_t b; re15_camera_view_t v;
+    const int sicht = re15_bkk_sicht(&v);
+    re15_bkk_pruefen(re15_bkk_klinge(), l, g_room_rdt_ok ? &g_room_rdt : NULL, (uint16_t)g_current_room_id, sicht ? &v : NULL, &b);
     FILE *f = fopen("birkin_dbg.log", "a");
     if (!f) return;
     fprintf(f, "%s F%u ss1=%d ph2=%d mo=%d af=%d frac=%d pos=(%d,%d,%d) gier=%d R=(%d,%d,%d,%d,%d,%d,%d,%d,%d) T=(%d,%d,%d) "
-            "kontakt=%d zelle=%d abstand=%d pt=(%d,%d,%d) punkte=%d\n", wer, (unsigned)g_engine.frame_count,
+            "kontakt=%d zelle=%d abstand=%d pt=(%d,%d,%d) punkte=%d cam=%d ausser_bild=%d\n", wer, (unsigned)g_engine.frame_count,
             (int)e->sub_state_1, (int)e->sub_state_2, (int)e->motion, (int)e->anim_frame, (int)e->anim_frac,
             (int)e->x, (int)e->y, (int)e->z, (int)e->rot_y,
             (int)l->R[0], (int)l->R[1], (int)l->R[2], (int)l->R[3], (int)l->R[4], (int)l->R[5], (int)l->R[6], (int)l->R[7], (int)l->R[8],
             (int)l->T[0], (int)l->T[1], (int)l->T[2], b.kontakt, b.zelle, (int)b.abstand,
-            (int)b.punkt[0], (int)b.punkt[1], (int)b.punkt[2], b.punkte);
+            (int)b.punkt[0], (int)b.punkt[1], (int)b.punkt[2], b.punkte, sicht ? (int)g_scd.cam_id : -1, b.ausser_bild);
     fclose(f);
 }
 void re15_bkk_zeichner_melden(const re15_actor_t *e, const int32_t R[9], const int32_t T[3])
