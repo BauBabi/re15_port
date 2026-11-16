@@ -207,6 +207,10 @@ void re15_audio_core_se(int se_id);
 #define RE15_PANEL_SE_BESTAET  0x0C   /* RE2 sub04+0x0652 @ROOM2130.RDT 0x01762 */
 void re15_audio_re2_panel_se(int se_id);
 
+/* NUTZERWUNSCH 2026-11-16: Birkins Sherry-Ruf (Raum-Ton 10 der Disc-Birkinraeume, snd1 von STAGE3/ROOM3070.RDT) fuer die
+ * Hangar-Szene (re15_bf_ruf_hook). Belege: audio_pc.c / birkin_bahnsteig.c bb_bild_ton. PC-only; PSX: Folge-Stub. */
+void re15_audio_birkin_ruf(void);
+
 /* ⛔ RE2-ERGAENZUNG (Beta -> Retail): die Toene der RE2-Tuersequenz (Gittertor DOOR2E) fuer das
  * Tor in ROOM1170. shared_assets/RE2/TORSE.VBS = DOOR2E-Tonteil unveraendert; se 0 = Skript-Se_on
  * (Bild 100), se 1 = Door_exit. Belege: analysis/tor_1170/08_re_ton.md. PSX: Folge-Stub. */

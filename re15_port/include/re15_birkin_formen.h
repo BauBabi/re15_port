@@ -159,6 +159,11 @@ int  re15_bf_hangar_riegel(void);        /* 1 = die Szene haelt Set(2,7)/Set(1,2
 #define RE15_BF_HANGAR_BANK  9
 #define RE15_BF_HANGAR_BIT   38
 void re15_bf_hangar_vergessen(void);     /* Testhaken: "Szene gesehen" loeschen (Bank-9-Bit RE15_BF_HANGAR_BIT) */
+/* ⛔ NUTZERWUNSCH 2026-11-16 (Gestaltung, kein Original; die Szene gibt es nur im 80%-Video): "kann 2 Beiner Birkin mit Schwanz
+ * waehrend er Richtung Kamera laeuft nachdem er den Spiderman weg gehauen hat noch mal Sherry rufen". Die Hangar-Szene ruft den
+ * Haken genau einmal, im ersten Gangtakt (Videobild h == BF_H_GANG, WALK-Clip 1 gesetzt). Der Ton ist Birkins eigener Sherry-Ruf
+ * der Disc (Raum-Ton 10 der 0x30-Raeume, Belege birkin_bahnsteig.c bb_bild_ton); PC: re15_audio_birkin_ruf. NULL = stumm. */
+void re15_bf_ruf_hook(void (*fn)(void));
 /* ---- Hangar: liegen bleiben (Runde 1 "hangar_liegen", Nutzer 2026-11-16: "Besser er bleibt einfach liegen") --------------------
  * ⛔ GESCHICHTE seit Runde 42 "hangar_aussen": im Hangar gibt es keinen Kampf mehr (Kopf "Runde 42" in birkin_formen.c), Birkin
  * stirbt dort nicht. Der Abschnitt bleibt als Beleg fuer Bit 39 und das Raummerker-Tor (beides wird weiter gelesen).

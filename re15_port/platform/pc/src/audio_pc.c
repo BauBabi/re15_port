@@ -1054,6 +1054,59 @@ void re15_audio_re2_panel_se(int se_id)
     se_play_layers(s_panel_edt, &s_panel_vab, s_panel_decoded, s_panel_decoded_len, se_id);
 }
 
+/* ===== NUTZERWUNSCH 2026-11-16: Birkins Sherry-Ruf in der Hangar-Szene (re15_bf_ruf_hook) ==================
+ * Der Ruf ist Raum-Ton 10 der Raeume, in denen die Disc den 0x30 setzt: 40-%-Disc ROOM3070 snd1 EDT @0x5E28 `00 00 b2 16`
+ * (Prog 0 = byte1 & 0x7f @0x80045490-98, Ton 11 = byte2 >> 4 @0x80045474, Stimme 6 = (byte3 & 0x1f) - 16 @0x80045478-7c,
+ * Prio 2 = byte2 & 0xf @0x800454b0) -> Ton @0x67E0 -> VAG 12 @0x16640, 9200 B, sha1 d19adfc8010d; gespielt vom 0x30 ueber
+ * FUN_800453d0(10) (STAGE3 @0x8011a744/48). Die Hangar-Raumbank (ROOM50A0/50A1 snd1) traegt auf Satz 10 einen anderen Ton
+ * (Asset: VAG 12 @0x166D0, 3056 B, sha1 940a7ffcc5a1; Disc: @0x1E914, 10288 B, sha1 d33761692d08), also kommt der Satz aus der
+ * snd1-Bank von STAGE3/ROOM3070.RDT des Asset-Baums (EDT-Satz, Ton und Welle bytegleich mit der Disc: EDT @0x131A0 `00 00 b2 16`,
+ * VAG 12 @0x239B8, sha1 d19adfc8010d). Abgespielt ueber denselben FUN_800453d0-Pfad wie jeder Raum-Ton (se_play_layers). */
+#define RE15_BIRKIN_RUF_RDT "STAGE3/ROOM3070.RDT"
+#define RE15_BIRKIN_RUF_SATZ 10                 /* a0 = 0xa @0x8011a748 (STAGE3) */
+static re15_vab_t s_bruf_vab;
+static int16_t  *s_bruf_decoded[RE15_VAB_MAX_SAMPLES];
+static int       s_bruf_decoded_len[RE15_VAB_MAX_SAMPLES];
+static const uint8_t *s_bruf_edt = NULL;
+static int       s_bruf_state = 0;          /* 0 = ungeprueft, 1 = geladen, -1 = fehlt */
+
+static int load_birkin_ruf_pc(void)
+{
+    if (s_bruf_state) return (s_bruf_state == 1) ? 0 : -1;
+    s_bruf_state = -1;
+    int sz = 0;
+    uint8_t *d = re15_pc_read_cd(RE15_BIRKIN_RUF_RDT, &sz);
+    static re15_rdt_t rdt;                   /* Zeiger zeigen in d - d bleibt geladen */
+    if (!d || re15_rdt_parse(d, (size_t)sz, &rdt) != 0 || !rdt.snd_edt[1] || !rdt.snd_vh[1] || !rdt.snd_vb[1] ||
+        rdt.snd_edt_size[1] < (RE15_BIRKIN_RUF_SATZ + 1) * 4 ||
+        re15_vab_parse(rdt.snd_vh[1], (size_t)rdt.snd_vh_size[1], &s_bruf_vab) != 0) {
+        fprintf(stderr, "[birkinruf] %s snd1 fehlt -> Sherry-Ruf stumm\n", RE15_BIRKIN_RUF_RDT);
+        free(d); return -1;
+    }
+    for (int i = 0; i < s_bruf_vab.vag_count; i++) {
+        uint32_t off = s_bruf_vab.samples[i].offset, n = s_bruf_vab.samples[i].size;
+        if (off + n > (uint32_t)rdt.snd_vb_size[1]) continue;
+        size_t cap = (n / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        s_bruf_decoded[i]     = pcm;
+        s_bruf_decoded_len[i] = re15_vag_adpcm_decode(rdt.snd_vb[1] + off, n, pcm, cap);
+    }
+    s_bruf_edt   = rdt.snd_edt[1];
+    s_bruf_state = 1;
+    {   const uint8_t *r = s_bruf_edt + RE15_BIRKIN_RUF_SATZ * 4;
+        fprintf(stderr, "[birkinruf] %s snd1 geladen: Satz %d = %02x %02x %02x %02x\n", RE15_BIRKIN_RUF_RDT, RE15_BIRKIN_RUF_SATZ,
+                r[0], r[1], r[2], r[3]); }
+    return 0;
+}
+
+void re15_audio_birkin_ruf(void)
+{
+    if (!g_audio.initialized) return;
+    if (load_birkin_ruf_pc() != 0) return;
+    se_play_layers(s_bruf_edt, &s_bruf_vab, s_bruf_decoded, s_bruf_decoded_len, RE15_BIRKIN_RUF_SATZ);
+}
+
 /* ===== Runde 35 Spur M: die GLASBRUCH-Bank (RE2 ROOM1090 snd0) ========================
  * RE2 room1090 sub15 @0x0208/@0x0218 `36 02 21 01 ...` -> Se_on 0x02210001 = Raumbank (Bank 2,
  * `srl t1,a0,24` @0x8005ba30) Satz 0x21 (EDT @0x84 `00 00 7c 60` = Prog 0 Ton 7 + 3 Zusatzlagen).
