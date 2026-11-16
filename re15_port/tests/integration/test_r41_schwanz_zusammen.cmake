@@ -10,6 +10,11 @@
 #
 # Der Riegel faehrt die ECHTE exe dreimal durch die Hangar-Szene (Weg wie scratchpad vorschau_v8_szene/gd_v8.sh: Debug-Sprung 50A0,
 # Affen per Kill-Flag aus, Eingabeskript nach Sueden -> Szene) mit Framedump F255-F350 (Szenentakt h12-h107), Fenster 320x240:
+# ⛔ Runde 42 "hangar_aussen": die Szene laeuft nur noch beim Betreten durch die Nordtuer aus dem Monitorraum (birkin_formen.c Kopf
+# "Runde 42") und startet im Raumwechsel - Weg jetzt Debug-Sprung 5030 an die Tuer + Aktionstaste, Szenentakt h0 = Raumbild F14 statt
+# F243. ALLE Bildnummern dieses Riegels (F0/F1, Pruefbereiche der beiden Auswerter) sind deshalb um 229 vorgezogen (h12-h107 =
+# F26-F121); die Kommentare unten nennen die alten Nummern F255.. = h12.. (Takt und Bild der Szene sind bitgleich zu 98391e747,
+# scratchpad hangar_aussen/BERICHT_r1.md).
 #   N normal, T RE15_SCHWANZ_MASKE=schwanz, L RE15_SCHWANZ_MASKE=figuren (Messhaken main.c, nur Messung).
 # (1) probe_r41_schwanz_zusammen verlangt: in keinem Bild ein Schwanzteil (N != T) ohne Figurpunkt (T != L: Birkin oder Spider-Man) im
 # Abstand <= 2 Punkte; dazu Schwanz in mindestens 60 Bildern (gemessen nach r9: 74 von 96; vor r9 ebenso - die Probe ist also nicht leer).
@@ -99,8 +104,8 @@ set(_belege "${CMAKE_CURRENT_LIST_DIR}/../../../analysis/befunde_runde41/SF_bele
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(_basis "${WORKDIR}/lauf_${_lauf_id}")
-set(_f0 255)
-set(_f1 350)
+set(_f0 26)    # Runde 42: h12 (vorher F255)
+set(_f1 121)   # Runde 42: h107 (vorher F350)
 
 # _asset_ueber: leer = Spiel-Asset, sonst EMD-Datei, die per RE15_CD_ROOT-Ueberlagerung (<lauf>/cd/EMD/EM30_HANGAR.EMD) das Schwanz-Asset ersetzt
 function(szene_lauf _name _maske _asset_ueber _out_dir)
@@ -126,10 +131,10 @@ function(szene_lauf _name _maske _asset_ueber _out_dir)
         RE15_WINDOW_SCALE=1
         RE15_HANGAR_LOG=1
         RE15_SET_FLAG=8:42,8:43
-        RE15_DEBUG_JUMP=50A0@20
-        RE15_PLAYER_POS=-12406,4381,1024
-        "RE15_INPUT_SCRIPT=W0.5,UX3.6,W0.3,L0.27,W0.3,UX2.5,W12,UX1.5,W10"
-        RE15_EXIT_AT=360
+        RE15_DEBUG_JUMP=5030@20
+        RE15_PLAYER_POS=-15300,-26300,1024
+        "RE15_INPUT_SCRIPT=W1,A0.2"
+        RE15_EXIT_AT=131#50A0
         "RE15_FRAMEDUMP=${_f0}-${_f1}/1:fd/f"
         ${_menv}
         "${RE15_PC_EXE}")
@@ -178,7 +183,7 @@ szene_lauf(mk "" "${_belege}/schwanz_r9_r5/EM30_HANGAR_a02a6df3_marker_klasse.EM
 szene_lauf(naht "" "${_belege}/schwanz_r9_r5/EM30_HANGAR_a02a6df3_marker_naht.EMD" _dnaht)
 
 execute_process(COMMAND "${RE15_PRUEF_TOOL}" "${_dn}" "${_dt}" "${_dl}" ${_f0} ${_f1} 2 3
-                        "${_db}" "${_dn}/../schwanz.log" 70 258 316 200 20 301 315 10 272 278 100 255 267 301 314 100 315
+                        "${_db}" "${_dn}/../schwanz.log" 70 29 87 200 20 72 86 10 43 49 100 26 38 72 85 100 86
                 TIMEOUT 120
                 RESULT_VARIABLE _rv
                 OUTPUT_VARIABLE _out)
@@ -188,7 +193,7 @@ set(_mit "${CMAKE_MATCH_1}")
 if(NOT _rv EQUAL 0)
     message(FATAL_ERROR "schwanz_zusammen: Schwanzteil haengt frei in der Luft, liegt vor dem Koerper, knickt sichtbar, kommt ueber der Austrittszeile aus der Taille oder ist ein Klumpen (exit=${_rv}) - Dumps ${_basis}_*")
 endif()
-execute_process(COMMAND "${RE15_FARB_TOOL}" "${_dn}" "${_dt}" "${_dc8}" "${_dmk}" "${_dnaht}" ${_f0} ${_f1} 317 343 10 80 0
+execute_process(COMMAND "${RE15_FARB_TOOL}" "${_dn}" "${_dt}" "${_dc8}" "${_dmk}" "${_dnaht}" ${_f0} ${_f1} 88 114 10 80 0
                 TIMEOUT 120
                 RESULT_VARIABLE _rvf
                 OUTPUT_VARIABLE _outf)
