@@ -12531,6 +12531,13 @@ static void re15_birkin_ai_tick(int slot)
                      * Schuessen trafen (Runde 41 Spur R, Nachbesserung). ROOM3071 sub02 WARTET auf die beiden Flags
                      * (While/Ck(5,31)==0 @0x0364D, Ck(5,30) @0x03669) — der verdichtete Auftritt setzte sie zu spaet bzw.
                      * nie (Nutzer-Report "Elza Stage 3 bleibt bei der Birkin-Szene haengen"). */
+            /* Runde 41 birkin_aufrichten (Nutzerbefund 16.11.2026), Regel wie T-03/T-04 (re15_birkin_anim_szene): alle sechs
+             * anim_set-Aufrufe des Auftritts tragen a3 0x100 (`ori a3,zero,0x100` @0x801195e8 / @0x801196fc / @0x8011982c /
+             * @0x80119918 / @0x8011998c / @0x80119a7c, STAGE3; STAGE5 code-gleich +0x814) -> Ueberblendgewicht +0x8f * 0x100
+             * (`mult v0,a3` @0x8001f474) statt des Port-Rueckfalls 0x200 (100 % Vor-Pose ab frac 8, skeleton_common.c).
+             * Clipenden mit Phasenwechsel (3 -> 4 Clip 0xf, 7 -> 8 Clip 0xd) halten das letzte Bild im Wechselbild (anim_set
+             * posiert +0x95 vor dem ++ @0x8001f35c/@0x8001f618); gemessen vorher: Bild 0 von Clip 0xf bzw. 0xd im Wechselbild. */
+            e->anim_blend_rate = 0x100;
             switch (e->sub_state_2) {
             case 0:                                                    /* @0x80119580 */
                 e->sub_state_2 = 1; e->motion = 1; e->anim_frame = 0; e->anim_frac = 0xf;   /* @0x80119588-5bc */
@@ -12547,7 +12554,7 @@ static void re15_birkin_ai_tick(int slot)
                 e->ai_timer = 0x96;                                    /* @0x801196dc-6e0 */
                 /* faellt in [3] */
             case 3:                                                    /* @0x801196e4 */
-                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x801196f8-718 */
+                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim_szene(e, 0x100));   /* @0x801196f8-718, a3 @0x801196fc */
                 if (e->anim_frame == 0x5b) {                           /* @0x80119728-730 */
                     re15_audio_room_se(6);                             /* @0x80119738 */
                     e->birkin_rohr = 1;                                /* Teil 16 -> 15 @0x80119754-7b8 */
@@ -12571,7 +12578,12 @@ static void re15_birkin_ai_tick(int slot)
                 if (e->anim_frame == 0x3c) re15_audio_room_se(3);     /* @0x801198e8-8fc */
                 /* faellt in [7] @0x80119900 */
             case 7:
-                e->sub_state_2 = (uint8_t)(e->sub_state_2 + re15_birkin_anim(e));   /* @0x80119914-938 */
+                /* Phase 6 setzt +0x94/+0x6/+0x8f JEDES Bild und laesst Clip 0xd vom Bild des Gangs weiterlaufen (kein
+                 * +0x95-Schreiben @0x801198ac-8d8); sein Ende ist KEIN Clipwechsel (Phase 7 spielt denselben Clip ab dem
+                 * Umlaufwert 0 noch einmal = Original) -> Vorschub wie im Kreis. Erst das Ende in Phase 7 wechselt auf Clip 0x13:
+                 * dort steht das letzte Bild im Wechselbild. */
+                e->sub_state_2 = (uint8_t)(e->sub_state_2 + ((e->sub_state_2 == 7) ? re15_birkin_anim_szene(e, 0x100)
+                                                                                   : re15_birkin_anim(e)));   /* @0x80119914-938 */
                 {   int32_t d[2];                              /* 8011b5c4(0,1) @0x80119934 */
                     re15_birkin_fuss_schritt(e, d);
                     e->x -= d[0]; e->z -= d[1];
@@ -12579,6 +12591,7 @@ static void re15_birkin_ai_tick(int slot)
                 break;
             case 8:                                                    /* @0x80119944 */
                 e->motion = 0x13; e->sub_state_2 = 9; e->anim_frac = 0xf;   /* @0x8011994c-970 */
+                e->anim_frame = 0;                                     /* kein +0x95-Schreiben: Umlaufwert 0 @0x8001f63c (Phase 7 hielt fc - 1) */
                 /* faellt in [9] @0x80119974 */
             case 9:
                 (void)re15_birkin_anim(e);                             /* @0x80119988 */
