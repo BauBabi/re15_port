@@ -1,4 +1,4 @@
-# Riesenform (Vierbeiner): Zähne bis vorn ins Maul - Runde 1
+# Riesenform (Vierbeiner): Zähne bis vorn ins Maul - Runde 1, berichtigt in Runde 2
 
 Stand 16.11.2026, Zweig r41/form (Worktree r41_form), Commit siehe unten. Kein Push.
 
@@ -9,8 +9,17 @@ Die vierbeinige Birkin hat jetzt auch vorne im Maul Zähne, oben und unten. Insg
 - unten 5: je 2 links und rechts, dazu einer in der Mitte.
 
 Die Reihen laufen jetzt von den Seiten ohne Lücke um die Schnauzenspitze herum, wie beim Vorbild RE2-G4. Die neuen Zähne sind dasselbe Bauteil wie
-die alten, sitzen am selben Kieferknochen und tragen dieselbe Zahnfarbe. Zur Spitze hin werden sie kleiner, im selben Verhältnis, in dem
-die Schnauze niedriger wird.
+die alten, sitzen am selben Kieferknochen und tragen dieselbe Zahnfarbe.
+
+**Wichtig zur Größe (berichtigt in Runde 2, die erste Fassung stimmte hier nicht):** Die neuen Zähne sind deutlich kleiner als die alten
+Seitenzähne, vor allem unten.
+- Unten ragt das erste neue Paar nur 25 heraus, der alte Nachbar 144. Danach kommen 59 und in der Mitte 86. Die unteren werden zur
+  Mitte hin also wieder **größer**, nicht kleiner.
+- Oben sind es 65, 69, 34, 50, 63 und in der Mitte 47 (alte Nachbarn 69 und 115).
+
+Der Grund: Beim Zubeißen liegen die Kiefer an den Seiten fast aufeinander (Abstand 12 bis 24). Ein längerer Zahn stäche dort in den
+anderen Kiefer. Zur Spitze hin ist mehr Platz, deshalb dürfen die mittleren unteren länger sein. Ob die unteren Vorderzähne so kurz
+bleiben, entscheidet der Nutzer (Abschnitt 8).
 
 Alles andere ist geblieben, wie es abgenommen war: Textur, Haut, Augen, Hand, Bewegungen und alle alten Zähne sind Byte für Byte gleich.
 Neu sind nur die angehängten Zahnflächen.
@@ -46,7 +55,7 @@ Port-Gestaltung (die Riesenform gibt es auf keiner Disc), daher keine @0x-Adress
 | R1 Linie | Lippenumriss der Stationen bis L bzw. Lj, dann Vorderkante quer, nach innen versetzt um den Abstand der alten Reihe an O1/U1 | oben 0,07 w = 18,6, unten 0,12 w_k = 29,0 (k5_kopf z = 0,93 w / 0,88 w_k). Der Fächer davor ist Nase bzw. Kinn; Messbild m1: dort saßen die Mittelzähne auf der Nase |
 | R2 Abstand | Abstand der zwei vordersten alten Zähne in der Draufsicht | O1-O2 51,2 → 6 Abstände auf 311,8; U1-U2 103,3 → 3 Abstände auf 294,4; Mitte besetzt, links und rechts gleich |
 | R3 Höhe | oben Unterseite Kopfrohr minus Wurzeltiefe O1, unten Oberseite Kieferrohr + 15 | Wurzeltiefe O1 gemessen 6,94; unten wie k5_kopf `yr + 15` |
-| R4 Größe | Muster der alten Reihe (oben groß bei i%3==0, unten lang bei i%2==0) mal f; f linear 1 → 0,708 | 0,708 = Schnauzenhöhe an L 237,8 / an O1 335,9 |
+| R4 Nenngröße | Muster der alten Reihe (oben groß bei i%3==0, unten lang bei i%2==0) mal f; f linear 1 → 0,708. **Nur die Nennlänge**: die gebaute Länge setzt R6 (Tabelle unten, Abschnitt 8) | 0,708 = Schnauzenhöhe an L 237,8 / an O1 335,9 |
 | R5 Richtung | wie die alte Reihe, auf die Linie gedreht | oben 0,12 t + y + 0,22 n, unten 0,1 t - y + 0,18 n (k5_kopf.py:128/:166) |
 | R6 Kappe | größte Länge ≤ Nennlänge ohne Verletzung in einem der 771 Keys (siehe 3) | `generator/k5g3_zaehne_vorn.json`, Bisektion 10 Schritte, RAND 2 = Ganzzahl-Rundung (Ecke ±0,5, Pose >> 12 bis 1) |
 
@@ -156,9 +165,7 @@ Boden- und N52-Regel bleiben grün. R12/R13 (Geometrie) sind gleich, ZV5 rechnet
 
 ## 6 Offen
 
-1. Der erste neue untere Zahn ist links und rechts nur 39 lang (R6). Einen langen Zahn lässt der Platz neben der Oberkiefer-Flanke nicht zu,
-   ohne dass er beim Zubeißen in den Kopf sticht oder herauskommt. Die Alternative wäre, ihn wie die alten im Kopf stecken zu lassen. Er wäre
-   dann 92 lang, im Maler-Scan aber 46 Pixel sichtbar durch die Schnauze.
+1. Der erste neue untere Zahn ist links und rechts nur 39 lang (R6). Entscheidung des Nutzers, siehe Abschnitt 8.
 2. Gezählt sind es 16 statt der genannten etwa 12–16, also am oberen Rand. Die Schätzung von 12–16 maß die Lücke nur in x (182 / 223). Der
    Bogen um die Spitze ist länger (311,8 / 294,4), und der Abstand der alten Zähne ist beibehalten.
 3. Befund U2 (5): Er gehört nicht zu diesem Auftrag. Ob er behoben werden soll, entscheidet der Nutzer.
@@ -173,3 +180,60 @@ Boden- und N52-Regel bleiben grün. R12/R13 (Geometrie) sind gleich, ZV5 rechnet
   `geo/messung/spiel_dreiecke.json` und `n52_asset_115f8721_*.json`.
 - Spiel: `re15_port/shared_assets/RE2/BAHNSTEIG_FORM.EMD` (115f8721), `re15_port/tests/unit/form_j_posen.h`,
   `stufe3/gen/s3_testkopf.py` (Kommentar).
+
+## 8 Runde 2: Größe der Vorderzähne und Entscheidung (Prüfer r1 Zahlen ROT)
+
+Der Prüfer hat zu Recht beanstandet: Die unteren Vorderzähne sind Stummel, und die Kurzfassung behauptete "kleiner im Verhältnis der
+Schnauze" (Faktor bis 0,708). Gemessen ist der erste untere neue Zahn auf 0,22 seiner Nennlänge gekürzt (39 statt 180). Die Kurzfassung oben
+ist berichtigt. Das Spiel-Asset ist in Runde 2 **unverändert** (EMD 115f8721, TIM c00823b3), nur Text und zwei Mess-Befehle im Generator
+sind neu (`kf_k5g3_zaehne.py platz` und `variante_lang`; die Ausgabe von `kf_k5g3.py bauen` bleibt bytegleich 115f8721).
+
+**Gebaute Größe** (Prüfer `p4_eigen.py`: Länge / sichtbar außerhalb der eigenen Haut):
+
+| oben | alt O2 | alt O1 | neu 1 | neu 2 | neu 3 | neu 4 | neu 5 | Mitte |
+|---|---|---|---|---|---|---|---|---|
+| Länge | 121,7 | 75,5 | 70,9 | 75,6 | 39,5 | 56,6 | 68,7 | 52,9 |
+| sichtbar | 115,0 | 69,1 | 64,6 | 68,9 | 34,0 | 50,4 | 62,9 | 47,1 |
+
+| unten | alt U2 | alt U1 | neu 1 | neu 2 | Mitte |
+|---|---|---|---|---|---|
+| Länge | 200,1 | 160,4 | 40,2 | 74,5 | 102,3 |
+| sichtbar | 184,2 | 144,4 | 24,6 | 59,3 | 86,0 |
+
+**Warum unten nicht länger ohne Durchstechen** (`python kf_k5g3_zaehne.py platz`): größte Länge eines unteren Zahns nach R6 (kein Kontakt
+mit dem Oberkiefer in allen 771 Keys, kein Austritt, nicht vor der Nase) entlang der unteren Zahnlinie, s = Bogen ab U1:
+
+| s | 40 | 60 | 80 | 100 | 120 | 140 | 160 | 180 | 200 | 220 | 240 | 260 | 280 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| größte Länge | 32 | 34 | 36 | 39 | 41 | 53 | 73 | 91 | 76 | 81 | 86 | 92 | 98 |
+
+Der erste neue untere Zahn steht bei s 98. Beim Zubeißen (Key 25, Kiefer 0°) liegt die Unterkiefer-Oberseite dort nur 12 bis 24 unter der
+Schnauzen-Unterseite (`r2/e5_spalt.py`); zur Spitze steigt die Schnauzen-Unterseite an, zur Mitte fällt der Mundboden ab. Daher wachsen die
+unteren Vorderzähne zur Mitte. Eine andere Lage hilft nicht: weiter innen (z 80) wären es höchstens etwa 60, weiter vorn (ab s 160) entsteht
+neben U1 eine Lücke von über 155 (Riegel ZV1).
+
+**Variante B für den Nutzerentscheid** (`python kf_k5g3_zaehne.py variante_lang <88c49ce1.EMD> <aus.EMD>`, sha256 01f8b0d7…, nicht im
+Spiel): Der erste untere Vorderzahn je Seite darf beim Zubeißen im Oberkiefer stecken wie die alten unteren, tritt aber nie auf der anderen
+Seite aus und steht nie vor der Nase. Das ergibt 92,4 statt 39 (ohne Austritt: +1 bis 92,41, −1 bis 95,45). Länger geht nicht: mit 110 tritt
+er in 4 Keys seitlich aus der Oberkiefer-Flanke, mit 163 in 76 Keys.
+
+Maler-Scan (Port-Zeichenweg, alle 771 Keys; Pixel, an denen ein neuer Zahn über den Oberkiefer gemalt wird, also sichtbar durchsticht):
+
+| Ansicht | nah vorn | nah schräg l | nah schräg r | nah Seite l | nah Seite r | 5080 | 5080 vorn | 5090 | Bild 2 |
+|---|---|---|---|---|---|---|---|---|---|
+| A Spiel-Asset (39) | 0 | 0 | 4 | 28 | 0 | 1 | 0 | 9 | 4 |
+| B (92,4) | 403 | 160 | 31 | 30 | 0 | 1 | 0 | 21 | 28 |
+| Zwischenlänge 60 | 553 | 1 | 208 | 28 | 0 | 1 | 0 | 13 | 7 |
+| Zwischenlänge 80 | 431 | 17 | 62 | 28 | 0 | 1 | 0 | 20 | 11 |
+| alte Zähne (zum Vergleich) | 60 299 | 1 972 | 6 | 6 256 | 3 936 | 6 | 2 539 | 1 035 | 1 421 |
+
+- B: höchstens 3 bis 4 Pixel je Pose, in nah vorn in 223 von 771 Posen, in 5090 in 13 Posen. Es ist die Spitze des Zahns, die beim
+  Zubeißen durch die Oberlippe schimmert.
+- Jede Länge über der R6-Kappe zeigt solche Pixel (schon 60). Ein "langer, aber unsichtbarer" Zahn geht an dieser Stelle also nicht.
+- B würde Riegel ZV3 (kein Kontakt) und ZV4 (nah schräg rechts 31 > 6 der alten) rot machen. Deshalb bleibt A im Spiel, bis der Nutzer
+  entscheidet.
+
+**Frage an den Nutzer** (Blatt `riesenform_zaehne/neu/4_wahl_unten_vorn.png`): Unten vorn so kurz lassen (A, sticht nie durch), oder den
+ersten unteren Vorderzahn links und rechts gut doppelt so lang machen (B, 92 statt 39), wobei aus der Nähe beim Zubeißen ein paar Pixel der
+Spitze durch die Oberlippe zu sehen sind? Mit "Länge wie die alten" (180) käme die Spitze sichtbar seitlich aus der Schnauze; das wird nicht
+angeboten.

@@ -29,9 +29,16 @@ Regeln der neuen Zaehne (je Reihe; i = fortlaufende Nummer der Reihe, die alten 
  R3 Hoehe der Zahnbasis: oben Unterseite des Kopfrohrs an (x, z) minus die Wurzeltiefe von O1 (6,9, wurzel_o1); unten Oberseite des
     Kieferrohrs an (x, z) + 15 wie k5_kopf (yr + 15). (Erste Fassung "Unterkante - 30": Wurzeln an der Vorderkante 30 tief in der Lippe,
     Maler-Scan probe3 2-3 x so viele falsch gemalte Pixel wie die alten.)
- R4 Groesse: Laenge und Grundbreite nach dem Muster der alten Reihe (oben gross/klein nach i % 3 == 0, unten lang/kurz nach i % 2) mal f;
-    f faellt linear ueber die Linie vom vordersten alten Zahn (1) bis zur Mitte auf 0,708 = Hoehe der Schnauze an der letzten Station L
-    (237,8) / an O1 (335,9): die Schnauze wird zur Spitze niedriger, die Zaehne im selben Verhaeltnis kleiner (beide Reihen).
+ R4 NENNgroesse: Laenge und Grundbreite nach dem Muster der alten Reihe (oben gross/klein nach i % 3 == 0, unten lang/kurz nach i % 2) mal
+    f; f faellt linear ueber die Linie vom vordersten alten Zahn (1) bis zur Mitte auf 0,708 = Hoehe der Schnauze an der letzten Station L
+    (237,8) / an O1 (335,9). ACHTUNG (Pruefer r1 Zahlen ROT 2): das ist nur die Nennlaenge. Die gebaute Laenge setzt R6 (Platz zwischen den
+    Kiefern beim Zubeissen) und weicht stark ab - die Breite bleibt die Nennbreite:
+      oben  (von der Seite zur Mitte) Nenn 71/110/64/60/92/53  -> gebaut 71/75/39/56/69/53
+      unten (von der Seite zur Mitte) Nenn 181/129/142         -> gebaut 39/75/103 (Faktor 0,22/0,58/0,73; U1 daneben 160)
+    Die unteren werden zur Mitte hin GROESSER, nicht kleiner: der Platz waechst dort (Messung 'platz', Kiefer zu, Rand der Linie
+    s 40..120 -> 32..41, s 160..180 -> 73..91, Mitte -> 98), weil die Schnauzen-Unterseite zur Spitze ansteigt und der Mundboden zur Mitte
+    abfaellt. Ein langer erster unterer Zahn geht nur, wenn er beim Zubeissen im Oberkiefer steckt wie die alten (variante_lang: 92 ohne
+    Austritt; Maler zeigt ihn dann durch die Schnauze) - Entscheidung des Nutzers, Bericht zaehne_vorn/ZAEHNE_VORN.md 8.
  R5 Richtung wie die alte Reihe, auf die Linie gedreht: oben 0,12 t + 1 y + 0,22 n, unten 0,1 t - 1 y + 0,18 n (k5_kopf.py:128/:166);
     t = Linie nach vorn/zur Mitte, n = nach aussen (Draufsicht); in der Mitte t = 0, n = vorn.
  R6 Kein Durchstich: Laenge = hoechstens die Nennlaenge (R4), gekappt auf die groesste Laenge, mit der der Zahn in KEINEM Key (alle 771,
@@ -558,11 +565,81 @@ def laengen_eichen(schritte=10, log=print):
     return d
 
 
+def platz(p, schritte=8, log=print):
+    """Messung (Runde 2, Pruefer r1 Zahlen ROT): groesste Laenge eines unteren Zahns nach R6 (ohne Zahn-in-Zahn) entlang der unteren
+    Zahnlinie, s = Bogenlaenge ab U1 in 20er-Schritten. Zeigt, warum die unteren Vorderzaehne zur Mitte hin laenger werden: der Platz
+    zwischen den Kiefern beim Zubeissen waechst dort. Richtung/Hoehe wie neue_reihe (R3/R5), Nennbreite 40."""
+    KP = Keypose(p)
+    H = huelle_unten(p)
+    alt = [z for z in alte_unten(p) if z['seite'] == 1]
+    L, _d = zahnlinie(p, UNTEN, alt[-1]['basis'][0], 0.88)
+    seg = np.hypot(np.diff(L[:, 0]), np.diff(L[:, 1]))
+    s = np.concatenate([[0.0], np.cumsum(seg)])
+    ref = {k: 0.0 for k in KP.keys}
+    out = []
+    for sj in np.arange(40.0, s[-1] + 1.0, 20.0):
+        q = int(min(np.searchsorted(s, sj, side='right') - 1, len(seg) - 1))
+        t2 = (L[q + 1] - L[q]) / seg[q]
+        x, z = L[q] + (sj - s[q]) * t2
+        n2 = np.array([-t2[1], t2[0]])
+        n2 = -n2 if n2[1] < 0 else n2
+        mitte = abs(z) < 1.0
+        tv = np.zeros(3) if mitte else np.array([t2[0], 0.0, t2[1]])
+        nv = np.array([1.0, 0.0, 0.0]) if mitte else np.array([n2[0], 0.0, n2[1]])
+        zz = dict(netz=UNTEN, seite=1, i=99, basis=(float(x), basis_y(p, UNTEN, x, 0.0 if mitte else z, H), float(z)),
+                  richtung=tuple(0.1 * tv + np.array([0.0, -1.0, 0.0]) + 0.18 * nv), breit=40.0)
+        lo, hi = 0.0, 200.0
+        for _ in range(schritte):
+            m = 0.5 * (lo + hi)
+            if verletzung(KP, zz, m, [], ref, alle=False):
+                hi = m
+            else:
+                lo = m
+        out.append(dict(s=float(sj), x=round(float(x), 1), z=round(float(z), 1), laenge_max=round(lo, 1)))
+        log('  s %5.0f  x %6.1f  z %6.1f  -> groesste Laenge %.0f' % (sj, x, z, lo))
+    return out
+
+
+def variante_lang(p, schritte=10, log=print):
+    """Variante B fuer den Nutzerentscheid (NICHT im Spiel-Asset): der erste neue untere Zahn je Seite (23|+-1|6) so lang, wie es geht, wenn er
+    beim Zubeissen wie die alten unteren im Oberkiefer stecken darf ('drin' erlaubt), aber nie auf der anderen Seite austritt und nie vor der
+    Nase steht; links und rechts die kleinere Laenge. Gemessen 92,35 (+1) / 95,39 (-1) -> 92,35. Laenger (Nennlaenge 180,5 wie U1/U2) tritt
+    er seitlich aus der Oberkiefer-Flanke (163: 76 Keys). Rueckgabe Kappen-dict (alle anderen Zaehne wie LAENGEN)."""
+    KP = Keypose(p)
+    ref = {k: 1e9 for k in KP.keys}
+    kap = kappen_laden()
+    neu = neue_reihe(p, UNTEN, kappen={})[0]
+    lang = []
+    for vz in (1, -1):
+        z = [q for q in neu if q['seite'] == vz and q['i'] == 6][0]
+        lo, hi = kap[name(z)], z['lang_nenn']
+        for _ in range(schritte):
+            m = 0.5 * (lo + hi)
+            if [v for v in verletzung(KP, z, m, [], ref) if v[1] != 'drin']:
+                hi = m
+            else:
+                lo = m
+        lang.append(round(lo, 2))
+        log('  %s ohne Austritt bis %.2f' % (name(z), lo))
+    kap['23|+1|6'] = kap['23|-1|6'] = min(lang)
+    return kap
+
+
 if __name__ == '__main__':
     a = sys.argv[1:]
     p = vorgabe()
     if a and a[0] == 'reihen':
         print(json.dumps(bericht_reihen(p), indent=1))
+    elif a and a[0] == 'platz':
+        platz(p)
+    elif a and a[0] == 'variante_lang':   # variante_lang <ein.EMD (abgenommen 88c49ce1)> <aus.EMD>: Variante B fuer den Nutzerentscheid
+        import kf_k5g2_geo as GG
+        emd = open(a[1], 'rb').read()
+        form = FE.lese_emd(emd)
+        kap = variante_lang(p)
+        einsetzen(form, p, neue_reihe(p, OBEN, kappen=kap)[0] + neue_reihe(p, UNTEN, kappen=kap)[0])
+        open(a[2], 'wb').write(GG.emd_mit_md1(emd, form))
+        print('Variante B geschrieben: %s (sha256 %s)' % (a[2], sha(open(a[2], 'rb').read())))
     elif a and a[0] == 'eichen':
         laengen_eichen()
     elif a and a[0] == 'probe':           # probe <ein.EMD> <aus.EMD>: an ein fertiges Asset anhaengen (Erkundung)
