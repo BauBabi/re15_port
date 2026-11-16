@@ -40,3 +40,6 @@ analysis/befunde_runde36/orchestrator/*.js text eol=lf
 # RE2-Aufschliess-Toene (Runde 36 Spur G): Mini-Bank aus RE2-Raumbank-Wellen (re15_port/tools/re2_karten_se_cut.py).
 re15_port/shared_assets/RE2/KARTSE.VBS -text
 analysis/befunde_runde37/orchestrator/*.js text eol=lf
+# Runde 41 Optionen (ULTIMATE 1.5): UNVERAENDERTE Kopien der 40-%-Disc (Version_40%/PSX, sha256 im Commit
+# und in include/re15_ultimate15.h). NIE normalisieren.
+re15_port/shared_assets/PSX/DISC40/** -text

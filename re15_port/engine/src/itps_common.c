@@ -13,6 +13,7 @@
 #include "re15_dining_r38.h"     /* re15_dining_r38_bild_einsetzen (Runde 38 Spur F) */
 #include "re15_gatorszene_r41.h" /* re15_gatorszene_r41_bild_einsetzen (Runde 41 Spur F) */
 #include "re15_keyitems_r41.h"   /* re15_keyitems_r41_bild_einsetzen (Runde 41 Spur O) */
+#include "re15_ultimate15.h"     /* Runde 41 Optionen: ULTIMATE 1.5 waehlt den Disc-Puffer */
 #include <stddef.h>
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
@@ -24,6 +25,12 @@ extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 #define ITPS_SIZE     ((size_t)ITPS_STRIDE * ITPS_TILES)   /* 884736 */
 
 static const uint8_t *s_itps  = NULL;
+/* Runde 41 Optionen (ULTIMATE 1.5, re15_ultimate15.h): zweiter Puffer = s_itps + Disc-Bilder; NUR bei AN gelesen. */
+static const uint8_t *s_itps_u15 = NULL;
+void re15_itps_set_data_u15(const uint8_t *data, int size)
+{
+    if (data && (size_t)size >= ITPS_SIZE) s_itps_u15 = data;
+}
 static int            s_loaded = 0;
 static int            s_tried  = 0;
 
@@ -76,8 +83,9 @@ int re15_itps_pixel(uint8_t id, int u, int v, uint8_t *r, uint8_t *g, uint8_t *b
     if (id >= ITPS_TILES) return 0;
     if (!s_loaded && re15_itps_load() != 0) return 0;
     size_t base = (size_t)id * ITPS_STRIDE;
-    uint8_t  idx = s_itps[base + ITPS_IMG_OFF + (size_t)v * RE15_ITPS_W + u];
-    const uint8_t *clut = s_itps + base + ITPS_CLUT_OFF;
+    const uint8_t *bild = (s_itps_u15 && re15_ultimate15()) ? s_itps_u15 : s_itps;   /* Runde 41 Optionen */
+    uint8_t  idx = bild[base + ITPS_IMG_OFF + (size_t)v * RE15_ITPS_W + u];
+    const uint8_t *clut = bild + base + ITPS_CLUT_OFF;
     uint16_t c = (uint16_t)(clut[idx * 2] | (clut[idx * 2 + 1] << 8));   /* BGR555 (little-endian) */
     if (c == 0) return 0;                                               /* CLUT entry 0 = transparent */
     if (r) *r = (uint8_t)((c & 0x1f) << 3);

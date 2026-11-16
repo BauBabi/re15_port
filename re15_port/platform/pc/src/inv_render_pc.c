@@ -58,6 +58,7 @@ extern void re15_pc_put_pixel(int x, int y, uint32_t rgba);
 #include "re15_keyitems_r41.h"   /* Runde 41 Spur O: Icon + Bild der Kurbel (0x33), Rechtecke Block 0x35 */
 #include "re15_kiste2feld_r37.h" /* Runde 37 Spur R: 2-Feld-Symbol (Kiste) + Haelften je Zelle (Gitter) */
 #include "re15_inventar_r39.h"   /* Runde 39 Spur C: Status-Bild je Figur (STPIC_<k>.TIM) */
+#include "re15_ultimate15.h"      /* Runde 41 Optionen: ULTIMATE 1.5 (Disc-Bilder) */
 
 /* ---- decoded assets (lazy, once) ---- */
 static int      s_ready = 0;        /* 0 = not tried, 1 = ok, -1 = failed */
@@ -125,6 +126,16 @@ static int      s_mixitem_size = 0;
 static uint8_t *s_itps = NULL;      /* ITEM/ITPS.ITP raw — wide-weapon 80x30 icons at
                                      * block(id*0x3000)+0x21A0 (wave 2)               */
 static int      s_itps_size = 0;
+/* Runde 41 Optionen (ULTIMATE 1.5, re15_ultimate15.h): je ein zweiter Puffer = heutiger Stand + Disc-Bilder,
+ * gebaut in inv_assets_init NACH den Port-Einsaetzen. Gelesen NUR bei AN; bei AUS liefern die Makros die alten
+ * Puffer, also bitgleich zum bisherigen Stand. */
+static uint8_t *s_itemall_u15 = NULL, *s_mixitem_u15 = NULL, *s_itps_u15 = NULL;
+#define INV_ITEMALL() ((s_itemall_u15 && re15_ultimate15()) ? s_itemall_u15 : s_itemall)
+#define INV_MIXITEM() ((s_mixitem_u15 && re15_ultimate15()) ? s_mixitem_u15 : s_mixitem)
+#define INV_ITPS()    ((s_itps_u15    && re15_ultimate15()) ? s_itps_u15    : s_itps)
+extern uint8_t *re15_ultimate15_pc_itemall(const uint8_t *basis, int n);
+extern uint8_t *re15_ultimate15_pc_mixitem(const uint8_t *basis, int n);
+extern uint8_t *re15_ultimate15_pc_itps(const uint8_t *basis, int n);
 
 /* 2026-08-24: dieser Lader kannte GENAU EINE Wurzel (env RE15_CD_ROOT bzw. den einkompilierten
  * Default) und gab danach NULL zurueck — kein einziger Fallback. Im ausgelieferten Paket zeigt
@@ -361,6 +372,11 @@ static int inv_assets_init(void)
             re15_sicherung_icon_abweichung(s_itemall, s_itemall_size),
             re15_sicherung_bild_abweichung(s_itps, s_itps_size));
 
+    /* Runde 41 Optionen: ULTIMATE-1.5-Puffer (re15_ultimate15.h) — immer gebaut, damit ein Umschalten im
+     * OPTIONS-Schirm ohne Neuladen wirkt; fehlt eine Disc-Datei, bleibt der Zeiger NULL (= heutiger Stand). */
+    s_itemall_u15 = re15_ultimate15_pc_itemall(s_itemall, s_itemall_size);
+    s_mixitem_u15 = re15_ultimate15_pc_mixitem(s_mixitem, s_mixitem_size);
+    s_itps_u15    = re15_ultimate15_pc_itps(s_itps, s_itps_size);
     s_ready = 1;
     return s_ready;
 }
@@ -380,8 +396,8 @@ static void inv_compose_cells(void)
              * engine-side event state re15_inv_screen_cache_mix_pic). Decoded with the
              * same ST_00 row-0 CLUT the cell SPRT selects. */
             int pic = re15_inv_screen_cache_mix_pic(k);
-            if (pic > 0 && s_mixitem && pic * 1200 <= s_mixitem_size) {
-                const uint8_t *src = s_mixitem + (pic - 1) * 1200;
+            if (pic > 0 && INV_MIXITEM() && pic * 1200 <= s_mixitem_size) {
+                const uint8_t *src = INV_MIXITEM() + (pic - 1) * 1200;
                 for (r = 0; r < 30; r++)
                     memcpy(&s_icon8[v0 + r][u0], src + r * 40, 40);
                 continue;
@@ -399,10 +415,10 @@ static void inv_compose_cells(void)
              * alten Inhalt (gemessen: Spraydose / leer). Fuer Kopf in Spalte 0/1 bitgleich wie vorher. */
             uint8_t id = 0;
             int spalte0 = 0;
-            if (re15_kiste2feld_zelle(k, &id, &spalte0) && s_itps &&
+            if (re15_kiste2feld_zelle(k, &id, &spalte0) && INV_ITPS() &&
                 ((long)id * RE15_KISTE2FELD_ITPS_BLOCK + RE15_KISTE2FELD_ITPS_BREITBILD +
                  RE15_KISTE2FELD_BREIT_W * RE15_KISTE2FELD_BREIT_H) <= s_itps_size) {
-                const uint8_t *src = s_itps + (long)id * RE15_KISTE2FELD_ITPS_BLOCK +
+                const uint8_t *src = INV_ITPS() + (long)id * RE15_KISTE2FELD_ITPS_BLOCK +
                                      RE15_KISTE2FELD_ITPS_BREITBILD + spalte0;
                 for (r = 0; r < 30; r++)
                     memcpy(&s_icon8[v0 + r][u0], src + r * RE15_KISTE2FELD_BREIT_W,
@@ -412,7 +428,7 @@ static void inv_compose_cells(void)
         }
         if (tile < 0 || (tile + 1) * 1200 > s_itemall_size) tile = 0;
         for (r = 0; r < 30; r++)
-            memcpy(&s_icon8[v0 + r][u0], s_itemall + tile * 1200 + r * 40, 40);
+            memcpy(&s_icon8[v0 + r][u0], INV_ITEMALL() + tile * 1200 + r * 40, 40);
     }
 }
 
@@ -432,8 +448,8 @@ static void photo_upload_check(void)
     int cx, cy, pxr, pyr, pw, ph, y;
     if (s_photo_seq == g_inv_screen.exam_upload_seq) return;
     s_photo_seq = g_inv_screen.exam_upload_seq;
-    if (!s_itps || (int)g_inv_screen.exam_item * 0x3000 + 0x3000 > s_itps_size) return;
-    b = s_itps + (int)g_inv_screen.exam_item * 0x3000;
+    if (!INV_ITPS() || (int)g_inv_screen.exam_item * 0x3000 + 0x3000 > s_itps_size) return;
+    b = INV_ITPS() + (int)g_inv_screen.exam_item * 0x3000;
     if ((b[0] | (b[1] << 8)) != 0x10) return;                 /* TIM magic */
     flags = (uint32_t)b[4] | ((uint32_t)b[5] << 8);
     if (!(flags & 8)) return;                                 /* all blocks ship a CLUT */
@@ -1199,10 +1215,10 @@ static void raster_op(const re15_inv_op_t *o)
         const uint8_t *src = NULL;
         if (breit) {
             long ofs = (long)tile * RE15_KISTE2FELD_ITPS_BLOCK + RE15_KISTE2FELD_ITPS_BREITBILD;
-            if (s_itps && ofs + RE15_KISTE2FELD_BREIT_W * RE15_KISTE2FELD_BREIT_H <= s_itps_size)
-                src = s_itps + ofs;
-        } else if (s_itemall && (tile + 1) * 1200 <= s_itemall_size) {
-            src = s_itemall + tile * 1200;
+            if (INV_ITPS() && ofs + RE15_KISTE2FELD_BREIT_W * RE15_KISTE2FELD_BREIT_H <= s_itps_size)
+                src = INV_ITPS() + ofs;
+        } else if (INV_ITEMALL() && (tile + 1) * 1200 <= s_itemall_size) {
+            src = INV_ITEMALL() + tile * 1200;
         }
         for (py = 0; src && py < o->h; py++) {
             int syp = re15_kiste2feld_texel(RE15_KISTE2FELD_SPANNE_HOCH, o->h, py);

@@ -26,6 +26,7 @@
 #include "re15_fade.h"          /* the screen-fade channel engine (SCD 0x56/0x57, FUN_80021880) */
 #include "re15_abtastphase.h"   /* Abtastphase der texturierten Dreiecke (PSX-geeicht) */
 #include "re15_title_pulse.h"   /* Titelmenue: Pulswert der aktiven Zeile (FUN_801028ec) — nur lesen */
+#include "re15_ultimate15.h"     /* Runde 41 Optionen: Generation fuer den Bild-Cache */
 #include "re15_itps.h"          /* re15_itps_pixel — the item-get modal quad picture (ITPS.ITP, U11) */
 #include "re15_item_prompt.h"   /* re15_item_prompt_walk — replay the prompt glyphs in the game font */
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
@@ -112,6 +113,7 @@ static int          s_item_modal_on = 0;
 static int          s_item_modal_x[4], s_item_modal_y[4];
 static SDL_Texture *s_item_modal_tex = NULL;
 static int          s_item_modal_tex_type = -1;
+static unsigned     s_item_modal_tex_u15  = 0;   /* Runde 41 Optionen: ULTIMATE-1.5-Generation des Bildes */
 
 /* BJ-round 2026-05-29: CINEMATIC LETTERBOX bars.
  * RE2/RE1.5 cutscenes (the intro etc.) draw black bars at the top & bottom of
@@ -1085,7 +1087,8 @@ void re15_render_begin_frame(void)
 /* Build (or rebuild on type change) the 112×72 ABGR item-picture texture (ITPS.ITP) for the modal quad. */
 static void item_modal_build_tex(uint8_t type)
 {
-    if (s_item_modal_tex && s_item_modal_tex_type == (int)type) return;
+    if (s_item_modal_tex && s_item_modal_tex_type == (int)type &&
+        s_item_modal_tex_u15 == re15_ultimate15_generation()) return;   /* Runde 41 Optionen: Wechsel baut neu */
     if (!s_item_modal_tex) {
         s_item_modal_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ABGR8888,
                                              SDL_TEXTUREACCESS_STATIC, ITEM_MODAL_TW, ITEM_MODAL_TH);
@@ -1109,6 +1112,7 @@ static void item_modal_build_tex(uint8_t type)
     }
     SDL_UpdateTexture(s_item_modal_tex, NULL, px, ITEM_MODAL_TW * (int)sizeof(uint32_t));
     s_item_modal_tex_type = (int)type;
+    s_item_modal_tex_u15  = re15_ultimate15_generation();
 }
 
 /* Main-loop hook: set the current-frame item-modal quad (4 screen corners TL,TR,BL,BR), or clear it

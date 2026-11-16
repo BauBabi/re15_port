@@ -1,6 +1,7 @@
 /* lautstaerke_r41.c — Runde 41 Spur D: Lautstaerke-Option (Zustand + Datei). Belege: include/re15_lautstaerke_r41.h,
  * analysis/befunde_runde41/D_kleinkram_a.md §1. Kein SDL: die Endstufe liest nur re15_lautstaerke_r41_q15(). */
 #include "re15_lautstaerke_r41.h"
+#include "re15_ultimate15.h"   /* Runde 41 Optionen: Schluessel ultimate= in derselben Datei */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -69,6 +70,7 @@ void re15_lautstaerke_r41_reset(void)
 {
     s_arbeit = s_gespeichert = re15_lautstaerke_r41_voreinstellung();
     s_stereo = 1;
+    re15_ultimate15_set(0);                      /* Runde 41 Optionen: ohne Datei AUS */
 }
 
 void re15_lautstaerke_r41_laden(void)
@@ -78,6 +80,7 @@ void re15_lautstaerke_r41_laden(void)
     FILE *f = fopen(pfad, "rb");
     if (!f) {
         fprintf(stderr, "[lautstaerke] %s fehlt -> %d %%, Stereo\n", pfad, s_arbeit);
+        re15_ultimate15_aus_text(NULL);          /* Runde 41 Optionen: AUS (Messhaken RE15_ULTIMATE15 darf uebersteuern) */
         return;
     }
     char text[1024];
@@ -88,6 +91,7 @@ void re15_lautstaerke_r41_laden(void)
     int n = re15_lautstaerke_r41_parse(text, &p, &st);
     s_gespeichert = s_arbeit = klemmen(p);
     s_stereo = st ? 1 : 0;
+    re15_ultimate15_aus_text(text);              /* Runde 41 Optionen: ultimate=on|off, fehlt -> AUS */
     fprintf(stderr, "[lautstaerke] %s gelesen (%d Schluessel): %d %%, %s\n", pfad, n, s_arbeit,
             s_stereo ? "Stereo" : "Mono");
 }
@@ -95,8 +99,10 @@ void re15_lautstaerke_r41_laden(void)
 int re15_lautstaerke_r41_speichern(void)
 {
     const char *pfad = re15_lautstaerke_r41_pfad();
-    char text[64];
+    char text[96];
     if (re15_lautstaerke_r41_format(text, sizeof text, s_gespeichert, s_stereo) < 0) return -1;
+    /* Runde 41 Optionen: die Zeile ultimate=on NUR bei AN — bei AUS bleibt die Datei Byte fuer Byte wie bisher. */
+    if (re15_ultimate15()) strcat(text, RE15_U15_SCHLUESSEL "on\n");
     FILE *f = fopen(pfad, "wb");
     if (!f) {
         fprintf(stderr, "[lautstaerke] %s nicht schreibbar\n", pfad);
@@ -104,7 +110,8 @@ int re15_lautstaerke_r41_speichern(void)
     }
     fputs(text, f);
     fclose(f);
-    fprintf(stderr, "[lautstaerke] %s geschrieben: %d %%, %s\n", pfad, s_gespeichert, s_stereo ? "Stereo" : "Mono");
+    fprintf(stderr, "[lautstaerke] %s geschrieben: %d %%, %s%s\n", pfad, s_gespeichert, s_stereo ? "Stereo" : "Mono",
+            re15_ultimate15() ? ", ULTIMATE 1.5 an" : "");
     return 0;
 }
 
