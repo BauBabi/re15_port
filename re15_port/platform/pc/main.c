@@ -96,6 +96,8 @@ static inline int RNDI(float f) {
 #include "re15_panel_zeiger.h"  /* der rote Leistungs-Zeiger, ROOM11F0 Cut 10 */
 #include "re15_msg_select.h"  /* re15_msg_select_layout — die EINE Ja/Nein-Auswahl (LAB_80028564) */
 #include "re15_itps.h"        /* re15_itps_set_data — the per-item modal picture sheet (ITPS.ITP, U11) */
+#include "re15_ultimate15.h"     /* Runde 41 Optionen: ULTIMATE 1.5 (Disc-Bilder + -Weltmodelle), AI ohne MIXED */
+#include "re15_lautstaerke_r41.h" /* Runde 41 Optionen: re15_lautstaerke_r41_speichern schreibt auch ultimate=on */
 #include "re15_item_use.h"    /* heal classifier gate + applier table (wave 3: prompt-less direct heal) */
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
 #include "asset_root_pc.h"    /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ, 2026-08-24) */
@@ -1824,6 +1826,11 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         const uint8_t *tb = re15_gatorszene_r41_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
         if (w_oid >= 0 && nprops <= w_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[w_oid]) == 0) ok[w_oid] = 1;
         if (w_oid >= 0 && nprops <= w_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(w_oid)); }
+    {   /* Runde 41 Optionen: ULTIMATE 1.5 — Disc-Weltmodelle (nur bei AN; platform/pc/src/ultimate15_pc.c). */
+        extern void re15_ultimate15_pc_props(re15_md1_t *md1, int *ok, int nprops, const int *slot);
+        int u15_slot[RE15_RDT_MAX_PROPS];
+        for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) u15_slot[op] = RE15_TIM_SLOT_PROP(op);
+        re15_ultimate15_pc_props(md1, ok, nprops, u15_slot); }
 }
 
 /* ── FE-4 memory-card save/load ────────────────────────────────────────────── */
@@ -2783,47 +2790,51 @@ enum { CFG_TOP = 0, CFG_PICKER, CFG_SOUND, CFG_EDIT, CFG_AI };
 static const int k_cfg_top_x[3]  = { 147, 198, 248 };            /* DAT_80073d6c.x (y=24) */
 #define CFG_AI_X 14
 #define CFG_AI_Y 225
-/* 2026-08-23 (dritte Stufe "AI  MIXED"): die breiteste Beschriftung ist jetzt "AI  MIXED".
+/* 2026-08-23 (dritte Stufe "AI  MIXED"): die breiteste Beschriftung war "AI  MIXED".
  * Breiten GEMESSEN aus der Glyphen-Vorschubtabelle, die der Renderer selbst benutzt
  * (BIN/DEBUG.BIN Datei-Offset 0x4416 == RAM 0x800c4416, render_pc.c:2300 — s_msgfont_w[code],
  * Code-Abbildung pc_font_code; Summe der Advance-Bytes je Glyph):
- *   "AI  RE1.5" = 56 px | "AI  RE2" = 46 px | "AI  MIXED" = 62 px
- * Text beginnt bei CFG_AI_X+5 = 19, also Kasten-Ende >= 19+62+5 = 86 -> Breite >= 72.
- * 96 REICHT und bleibt unveraendert (der byte-true OPTIONS-Kasten endet bei y=220, dieser
+ *   "AI  RE1.5" = 56 px | "AI  RE2" = 46 px  (| "AI  MIXED" = 62 px, seit Runde 41 Optionen weg)
+ * Text beginnt bei CFG_AI_X+5 = 19, also Kasten-Ende >= 19+56+5 = 80 -> Breite >= 66.
+ * 96 bleibt unveraendert (der byte-true OPTIONS-Kasten endet bei y=220, dieser
  * Streifen liegt darunter; x=14..110 bleibt weit innerhalb der 320er-Breite). */
 #define CFG_AI_W 96
+/* Runde 41 Optionen: die Zeile "ULTIMATE 1.5" (re15_ultimate15.h) im selben freien Streifen rechts neben der
+ * AI-Zeile, gleiche Hoehe, gleicher Rand. Breiten aus derselben Vorschubtabelle BIN/DEBUG.BIN@0x4416 (nachgemessen):
+ *   "ULTIMATE 1.5  ON" = 114 px | "ULTIMATE 1.5  OFF" = 121 px
+ * Text ab CFG_ULT_X+5 = 125, Ende 125+121 = 246, + 5 Rand = 251 -> Kasten 120..256 (136 breit), Abstand zur
+ * AI-Zeile (Ende 110) 10 px, rechts bleiben 64 px bis 320. */
+#define CFG_ULT_X 120
+#define CFG_ULT_W 136
 static const int k_cfg_pick_x[5] = { 147, 164, 181, 198, 248 }; /* DAT_80073d78.x (y=24) */
 
-/* Der AI-Schalter hat DREI Zustaende (Menue-Index == re15_ai_flavor_t, 1:1):
- *   0 = RE1.5-Gehirn      + RE1.5-Modelle   ("AI  RE1.5")
- *   1 = RE2-Gehirn/-Anim  + RE1.5-Modelle   ("AI  RE2")     <- Hybrid-Rig, DEFAULT
- *   2 = RE1.5 ueberall AUSSER dem HUND 0x20 ("AI  MIXED")   <- 2026-08-23, Nutzer-Auftrag
+/* Der AI-Schalter hat ZWEI Zustaende (Menue-Index == re15_ai_flavor_t, 1:1):
+ *   0 = RE1.5-Gehirn      + RE1.5-Modelle   ("AI  RE1.5") — die Original-KI
+ *   1 = RE2-Gehirn/-Anim  + RE1.5-Modelle   ("AI  RE2")   <- Hybrid-Rig, DEFAULT
  *
- * ⚠️ MIXED ist ein VOLLWERTIGES drittes Flavor-Enum-Glied, KEIN zweites orthogonales Flag.
- * Welle G hatte fuer die (spaeter entfernte) "RE2 MODELS"-Stufe bewusst ein Zweitflag gewaehlt,
- * weil damals 17 Stellen `== RE15_AI_FLAVOR_RE2` verglichen und einzeln haetten geprueft werden
- * muessen. Genau dieses Problem ist jetzt an der Wurzel geloest: es gibt keinen globalen
- * Flavor-Vergleich mehr, alle Stellen fragen re15_ai_re2_for_type(typ) (s. re15_ai_flavor.h).
+ * ⛔ ENTFERNT Runde 41 Optionen (Nutzer 16.11.2026: "im Konfigurationsmenu das AI Mixed herausnehmen ... RE 2 AI
+ * ... bleibt unser Standard ... RE 1.5 AI koennen wir auch behalten"): die dritte Stufe "AI  MIXED". Jeder Weg,
+ * auf dem ein MIXED-Wert noch ankommen kann, landet bei RE2: der Menue-Index 2 (pc_ai_mode_set klemmt auf [0,1],
+ * also RE15_CONFIG_AI=2 -> RE2), das Env RE15_AI_FLAVOR=m/mixed (enemy_ai_re2_zombie.c re15_ai_flavor) und ein
+ * Flavor, der beim Betreten des Schirms MIXED ist (pc_ai_mode -> 1, s. dort). Die KI selbst (Enum-Glied
+ * RE15_AI_FLAVOR_MIXED + typ-bezogene Aufloesung re15_ai_re2_for_type) bleibt als TEST-Haken stehen —
+ * sechs Riegel (test_ai_flavor_mixed, test_r37_beretta, test_r38_griff_alle, test_r41_granate,
+ * test_r41_zombiefresser, probe_hund_trefferluecke) pinnen damit die Typ-Aufloesung; das Spiel erreicht sie nicht.
+ * (Gespeichert wird die KI-Wahl nicht: weder re15_options.cfg noch der Spielstand tragen sie — jeder Start ist RE2.)
  *
  * ⛔ ENTFERNT 2026-08-21: die alte dritte Stufe "AI  RE2 MODELS". Der Port faehrt unter dem
  * RE2-Flavor IMMER das Hybrid-Rig; das orthogonale re15_ai_models() liest main.c nicht mehr.
- * ROBUSTHEIT: pc_ai_mode() liefert nur 0/1/2 (unbekannter Flavor -> 0 = byte-true RE1.5),
- * pc_ai_mode_set() KLEMMT jeden Fremdwert auf [0,2]. */
+ * ROBUSTHEIT: pc_ai_mode() liefert nur 0/1 (RE1.5 -> 0, alles andere -> 1 = RE2),
+ * pc_ai_mode_set() KLEMMT jeden Fremdwert auf [0,1]. */
 static int pc_ai_mode(void)
 {
-    switch (re15_ai_flavor()) {
-        case RE15_AI_FLAVOR_RE2:   return 1;
-        case RE15_AI_FLAVOR_MIXED: return 2;
-        default:                   return 0;
-    }
+    return (re15_ai_flavor() == RE15_AI_FLAVOR_RE15) ? 0 : 1;   /* MIXED (nur noch Test-Haken) zeigt RE2 */
 }
 static void pc_ai_mode_set(int m)
 {
     if (m < 0) m = 0;
-    if (m > 2) m = 2;                     /* Fremdwert -> hoechster gueltiger Index */
-    re15_ai_flavor_set(m == 0 ? RE15_AI_FLAVOR_RE15
-                     : m == 1 ? RE15_AI_FLAVOR_RE2
-                              : RE15_AI_FLAVOR_MIXED);
+    if (m > 1) m = 1;                     /* Fremdwert, auch der alte MIXED-Index 2 -> RE2 */
+    re15_ai_flavor_set(m == 0 ? RE15_AI_FLAVOR_RE15 : RE15_AI_FLAVOR_RE2);
 }
 
 /* EDIT custom-remap screen (FUN_8002ebbc). s_edit_phase: 0=slot-select, 1=panel A (basic action), 2=panel B
@@ -2904,11 +2915,24 @@ static void pc_config_draw_ai_row(int lit)
     extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
     if (lit) re15_render_pc_config_rect(CFG_AI_X, CFG_AI_Y, CFG_AI_W, 14, 0, 0, 0x80, 128);
     unsigned char b[20]; int n = 0;
-    static const char *k_ai_top[3] = { "AI  RE1.5", "AI  RE2", "AI  MIXED" };
-    int mode = pc_ai_mode(); if (mode < 0 || mode > 2) mode = 0;
+    static const char *k_ai_top[2] = { "AI  RE1.5", "AI  RE2" };   /* Runde 41 Optionen: ohne "AI  MIXED" */
+    int mode = pc_ai_mode(); if (mode < 0 || mode > 1) mode = 1;
     const char *s = k_ai_top[mode];
     for (const char *p = s; *p && n < 20; p++) b[n++] = (unsigned char)pc_font_code(*p);
     re15_render_pc_config_text(CFG_AI_X + 5, CFG_AI_Y + 2, b, n, 0);
+}
+
+/* Runde 41 Optionen — die Zeile "ULTIMATE 1.5  ON|OFF" (re15_ultimate15.h) rechts neben der AI-Zeile, gleiche Art:
+ * Spielschrift attr 0, blauer 50-%-Kasten wie die Original-Reiter, wenn der Cursor darauf steht (TOP cur 4). */
+static void pc_config_draw_ultimate_row(int lit)
+{
+    extern void re15_render_pc_config_rect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
+    if (lit) re15_render_pc_config_rect(CFG_ULT_X, CFG_AI_Y, CFG_ULT_W, 14, 0, 0, 0x80, 128);
+    unsigned char b[24]; int n = 0;
+    const char *s = re15_ultimate15() ? "ULTIMATE 1.5  ON" : "ULTIMATE 1.5  OFF";
+    for (const char *p = s; *p && n < 24; p++) b[n++] = (unsigned char)pc_font_code(*p);
+    re15_render_pc_config_text(CFG_ULT_X + 5, CFG_AI_Y + 2, b, n, 0);
 }
 
 /* Draw the current sub-screen's CONFIG.TIM tiles + selected-item highlight + text over the backdrop
@@ -2922,25 +2946,24 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
     extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
     if (screen == CFG_TOP) {
         pc_config_draw_ai_row(cur == 3);          /* PORT EXTENSION, below the byte-true panel */
+        pc_config_draw_ultimate_row(cur == 4);    /* Runde 41 Optionen: ULTIMATE 1.5 */
         if (cur < 3)
             re15_render_pc_config_rect(k_cfg_top_x[cur], 24, 48, 16, 0, 0, 0x80, 128); /* blue tab cursor @50% */
     } else if (screen == CFG_AI) {
         /* PORT EXTENSION — AI picker, laid out like the SOUND screen (same CONFIG.TIM label
          * boxes at uv 0,232 88x18), with the row-below marker kept lit so it is obvious where
-         * this screen was entered from. 2026-08-23: DRITTE Zeile "MIXED" bei y=89 — exakt das
-         * 19-px-Raster (51/70/89) und exakt die Koordinaten, die die (entfernte) WELLE-G-Zeile
-         * schon benutzt hat (23c20b0f), also kein neu geratenes Layout. Beschriftungen GEMESSEN
-         * gegen die Vorschubtabelle BIN/DEBUG.BIN@0x4416 (render_pc.c:2300):
-         * "RE1.5" 34 px | "RE2" 24 px | "MIXED" 40 px. Kasten x=116..204, Text ab x=124 ->
-         * die laengste Zeile endet bei 164, bleibt in der 88-px-Kachel. */
-        static const struct { const char *s; int tile_y, text_y; } k_ai_rows[3] = {
+         * this screen was entered from. Runde 41 Optionen: die dritte Zeile "MIXED" (y=89, 2026-08-23) ist
+         * entfernt — es bleiben die zwei Zeilen im 19-px-Raster 51/70 wie vor der MIXED-Erweiterung.
+         * Beschriftungen GEMESSEN gegen die Vorschubtabelle BIN/DEBUG.BIN@0x4416 (render_pc.c:2300):
+         * "RE1.5" 34 px | "RE2" 24 px. Kasten x=116..204, Text ab x=124 -> endet bei 158, in der 88-px-Kachel. */
+        static const struct { const char *s; int tile_y, text_y; } k_ai_rows[2] = {
             { "RE1.5", 51, 53 }, { "RE2", 70, 71 },
-            { "MIXED", 89, 90 },                      /* Raster 19 px, wie 23c20b0f */
         };
-        for (int r = 0; r < 3; r++)
+        for (int r = 0; r < 2; r++)
             re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, k_ai_rows[r].tile_y);
         pc_config_draw_ai_row(1);
-        for (int r = 0; r < 3; r++) {
+        pc_config_draw_ultimate_row(0);           /* Runde 41 Optionen: Streifen bleibt vollstaendig */
+        for (int r = 0; r < 2; r++) {
             unsigned char b[16]; int n = 0;
             for (const char *p = k_ai_rows[r].s; *p && n < 16; p++) b[n++] = (unsigned char)pc_font_code(*p);
             re15_render_pc_config_text(124, k_ai_rows[r].text_y, b, n, (pc_ai_mode() == r) ? 0 : 3);
@@ -3041,6 +3064,10 @@ static void pc_run_config(void)
     /* keep the live label array in sync with the active preset A/B/C on entry (EDIT keeps its custom map). */
     if (s_config_type >= 0 && s_config_type <= 2) memcpy(s_config_d08, s_config_preset[s_config_type], 16);
 
+    /* Runde 41 Optionen: ein MIXED-Flavor (nur noch ueber Test-Haken setzbar) wird beim Betreten zu RE2 —
+     * der Schirm kennt nur RE1.5 / RE2 (pc_ai_mode). */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_MIXED) re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+
     int screen = CFG_TOP, cur = 0;
     /* debug: start the INTERACTIVE options screen on a given tab, so a gdigrab capture of the REAL
      * window can inspect a screen without depending on synthetic key injection (SDL does not see
@@ -3052,6 +3079,7 @@ static void pc_run_config(void)
           else if (t == 3) { screen = CFG_PICKER; cur = 0; }
           else if (t == 4) { screen = CFG_SOUND; s_config_sound = re15_lautstaerke_r41_pc_eintritt(); }   /* Runde 41 Spur D: wie der TOP->SOUND-Eintritt */
           else if (t == 8) { screen = CFG_AI;     cur = 3; }
+          else if (t == 9) { screen = CFG_TOP;    cur = 4; }   /* Runde 41 Optionen: Cursor auf ULTIMATE 1.5 */
       } }
     int fade_level = 0x7fff;   /* brightness = fade_level>>7; fade IN from black */
     int fading_out = 0;
@@ -3092,10 +3120,16 @@ static void pc_run_config(void)
                 else if (cancel)                                  re15_audio_core_se(5);
             }
             if (screen == CFG_TOP) {
-                if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 3; }
-                if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 3) cur = 0; }
+                /* Runde 41 Optionen: fuenfter Eintrag cur 4 = ULTIMATE 1.5 (Port-Erweiterung, rechts neben AI). */
+                if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 4; }
+                if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 4) cur = 0; }
                 if (confirm) {
-                    if (cur == 0)      { screen = CFG_PICKER; cur = 0; }   /* CONFIG -> preset picker (cursor 0) */
+                    if (cur == 4) {                                        /* ULTIMATE 1.5: umschalten + sofort speichern */
+                        re15_ultimate15_set(!re15_ultimate15());
+                        (void)re15_lautstaerke_r41_speichern();            /* re15_options.cfg: ultimate=on (nur bei AN) */
+                        fprintf(stderr, "[optionen] ULTIMATE 1.5 %s\n", re15_ultimate15() ? "AN" : "AUS");
+                    }
+                    else if (cur == 0) { screen = CFG_PICKER; cur = 0; }   /* CONFIG -> preset picker (cursor 0) */
                     else if (cur == 1) { screen = CFG_SOUND; s_config_sound = re15_lautstaerke_r41_pc_eintritt(); }   /* SOUND -> sound screen; Runde 41 Spur D: Arbeitskopie aus dem Gespeicherten (@0x8002f244-4c) */
                     else if (cur == 2) { fading_out = 1; }                 /* EXIT   -> leave config */
                     else               { screen = CFG_AI; }                /* AI (port extension) */
@@ -3110,12 +3144,9 @@ static void pc_run_config(void)
                     else               { screen = CFG_TOP; cur = 0; }      /* EXIT -> back to top */
                 }
             } else if (screen == CFG_AI) {
-                /* PORT EXTENSION: pick the AI mode. 2026-08-23: wieder DREI Zustaende (RE1.5 /
-                 * RE2 / MIXED), also wieder ein ZYKLUS statt des Toggles — DOWN = +1, UP = -1
-                 * (== +2) modulo 3, genau wie in WELLE G (23c20b0f). Der `^1`-Toggle haette die
-                 * dritte Zeile unerreichbar gemacht. */
-                if (pp & RE15_PAD_BIT_DOWN)    pc_ai_mode_set((pc_ai_mode() + 1) % 3);
-                else if (pp & RE15_PAD_BIT_UP) pc_ai_mode_set((pc_ai_mode() + 2) % 3);
+                /* PORT EXTENSION: pick the AI mode. Runde 41 Optionen: nur noch ZWEI Zustaende (RE1.5 / RE2,
+                 * "AI MIXED" entfernt) — UP und DOWN schalten um, wie der SOUND-Schirm (raw 0x5000 toggle). */
+                if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) pc_ai_mode_set(pc_ai_mode() ^ 1);
                 if (confirm || cancel) { screen = CFG_TOP; cur = 3; }
             } else if (screen == CFG_SOUND) {
                 if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) s_config_sound ^= 1;   /* raw 0x5000 toggle */
@@ -3741,18 +3772,23 @@ re_title:;
                        * RE15_CONFIG_AI=0|1|2 waehlt den Zustand fuer den Shot vor, damit die
                        * Beschriftungs-BREITE aller Zustaende am gerenderten Bild und nicht nach
                        * Gefuehl geprueft werden kann. Das ist der MENUE-INDEX (== re15_ai_flavor_t):
-                       * 0 RE1.5 / 1 RE2 / 2 MIXED. ⚠️ Die 2 hiess bis WELLE G "RE2 MODELS" — diese
-                       * Stufe ist seit 2026-08-21 weg und hatte ausserhalb dieses Screenshot-
-                       * Harness keinen Konsumenten, die Zahl ist damit frei neu belegt.
-                       * pc_ai_mode_set KLEMMT alles ausserhalb [0,2]. */
+                       * 0 RE1.5 / 1 RE2. Runde 41 Optionen: die 2 (bis dahin "MIXED", davor "RE2 MODELS")
+                       * gibt es nicht mehr — pc_ai_mode_set KLEMMT alles ausserhalb [0,1], die 2 wird RE2.
+                       * 9 = TOP mit dem Cursor auf ULTIMATE 1.5 (Runde 41 Optionen); RE15_CONFIG_ULTIMATE=0|1
+                       * schaltet die Option fuer den Shot vor (ohne die Options-Datei zu schreiben). */
                       if (t == 8) { const char *ai = getenv("RE15_CONFIG_AI");
                                     pc_ai_mode_set(ai ? atoi(ai) : 0); }
+                      { const char *u = getenv("RE15_CONFIG_ULTIMATE"); if (u && *u) re15_ultimate15_set(atoi(u) != 0); }
                       int screen = (t == 8) ? CFG_AI
-                                 : (t <= 2) ? CFG_TOP
+                                 : (t <= 2 || t == 9) ? CFG_TOP
                                  : (t == 3) ? CFG_PICKER : (t == 4 ? CFG_SOUND : CFG_EDIT);
                       if (t == 4) s_config_sound = re15_lautstaerke_r41_pc_eintritt();   /* Runde 41 Spur D: Shot zeigt den gespeicherten Sound-Modus (@0x8002f244-4c) */
-                      int cur = (t == 8) ? 3
+                      int cur = (t == 8) ? 3 : (t == 9) ? 4
                               : (t <= 2) ? t : atoi(getenv("RE15_CONFIG_CUR")?getenv("RE15_CONFIG_CUR"):"0");
+                      /* PRUEFZEILE (Runde 41 Optionen, eingefroren von integration_optionen_r41_menue): was der Schirm
+                       * zeigt — KI-Stufen des AI-Schirms, der gewaehlte KI-Index und die ULTIMATE-Zeile. */
+                      fprintf(stderr, "[optionen] KI-Stufen 2 (RE1.5 RE2) gewaehlt %d, ULTIMATE 1.5 %s, Schirm %d Cursor %d\n",
+                              pc_ai_mode(), re15_ultimate15() ? "ON" : "OFF", t, cur);
                       if (t >= 5 && t <= 7) { s_config_type = 3; s_edit_phase = t - 5; s_edit_slot = cur;
                                     s_edit_code = atoi(getenv("RE15_CONFIG_CODE")?getenv("RE15_CONFIG_CODE"):"0"); }
                       for (int f=0; f<4; f++) {   /* render a few frames so the shot reads a presented buffer, not stale black */
@@ -4772,6 +4808,10 @@ re_title:;
         if (ipix) re15_keyitems_r41_icon_einsetzen(ipix, isz);     /* Runde 41 Spur O: Tile 0x33 (Crank) */
         if (ipix) re15_gatorszene_r41_icon_einsetzen(ipix, isz);   /* Runde 41 Spur F: Tile 0x34 (Water Key) */
         if (ipix) re15_itemall_set_pix(ipix, isz);   /* buffer intentionally kept for the program's life */
+        /* Runde 41 Optionen (ULTIMATE 1.5, re15_ultimate15.h): zweiter Puffer = obiger Stand + Disc-Icons. */
+        { extern uint8_t *re15_ultimate15_pc_itemall(const uint8_t *basis, int n);
+          uint8_t *u15 = ipix ? re15_ultimate15_pc_itemall(ipix, isz) : NULL;
+          if (u15) re15_itemall_set_pix_u15(u15, isz); }
     }
     /* Item-get modal per-item PICTURE sheet (ITEM/ITPS.ITP, U11) — same cwd-independent root as the
      * icons. The modal draws the 112×72 TIM at id×0x3000 (re15_itps_pixel). */
@@ -4785,6 +4825,10 @@ re_title:;
         if (ipic) re15_keyitems_r41_bild_einsetzen(ipic, psz);     /* Runde 41 Spur O: Block 0x33 (Crank), Rechtecke Block 0x35 */
         if (ipic) re15_gatorszene_r41_bild_einsetzen(ipic, psz);   /* Runde 41 Spur F: Block 0x34 (Water Key) */
         if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
+        /* Runde 41 Optionen (ULTIMATE 1.5): zweiter Puffer = obiger Stand + Disc-Bilder (Item-Modal). */
+        { extern uint8_t *re15_ultimate15_pc_itps(const uint8_t *basis, int n);
+          uint8_t *u15 = ipic ? re15_ultimate15_pc_itps(ipic, psz) : NULL;
+          if (u15) re15_itps_set_data_u15(u15, psz); }
     }
     /* PRUEFZEILE der beiden Ladestellen oben (Runde 30, Nachbesserung): gelesen wird ueber
      * DIESELBEN Leser, aus denen gezeichnet wird — das Modal ueber re15_itps_pixel, das Icon

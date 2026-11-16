@@ -130,9 +130,12 @@ re15_ai_flavor_t re15_ai_flavor(void)
      * MIXED hat keine Spielnummer und bekommt deshalb NUR Wortformen:
      *     "0" | "1" | "1.5" | "re15"        -> RE15_AI_FLAVOR_RE15
      *     "2" | "r…" | "re2"                -> RE15_AI_FLAVOR_RE2
-     *     "m" | "M" | "mix" | "mixed"       -> RE15_AI_FLAVOR_MIXED
-     * (Die ORDINALZAHL 0/1/2 gibt es weiterhin — aber in RE15_CONFIG_AI, dem Menue-Index-Env,
-     * s. platform/pc/main.c pc_ai_mode_set.) */
+     *     "m" | "M" | "mix" | "mixed"       -> RE15_AI_FLAVOR_RE2   (Runde 41 Optionen, s.u.)
+     * (Die ORDINALZAHL 0/1 gibt es weiterhin — aber in RE15_CONFIG_AI, dem Menue-Index-Env,
+     * s. platform/pc/main.c pc_ai_mode_set.)
+     * ⛔ Runde 41 Optionen (Nutzer 16.11.2026: "das AI Mixed herausnehmen ... RE 2 AI ... bleibt unser Standard"):
+     * ein gespeicherter/gesetzter MIXED-Wert wird beim Lesen zu RE2. RE15_AI_FLAVOR_MIXED bleibt nur als Test-Haken
+     * ueber re15_ai_flavor_set erreichbar (Riegel der typ-bezogenen Aufloesung, s. platform/pc/main.c pc_ai_mode). */
     if (!s_flavor_env_read) {
         const char *v = getenv("RE15_AI_FLAVOR");
         s_flavor_env_read = 1;
@@ -141,7 +144,7 @@ re15_ai_flavor_t re15_ai_flavor(void)
             if (v[0] == '0' || v[0] == '1') s_flavor = RE15_AI_FLAVOR_RE15;   /* "0", "1.5" */
             if ((v[0] == 'r' || v[0] == 'R') && (v[1] == 'e' || v[1] == 'E')
                 && v[2] == '1') s_flavor = RE15_AI_FLAVOR_RE15;               /* "re15" */
-            if (v[0] == 'm' || v[0] == 'M') s_flavor = RE15_AI_FLAVOR_MIXED;  /* "m", "mixed" */
+            if (v[0] == 'm' || v[0] == 'M') s_flavor = RE15_AI_FLAVOR_RE2;    /* "m", "mixed" -> RE2 (Runde 41 Optionen) */
         }
     }
     return s_flavor;
