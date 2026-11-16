@@ -17,6 +17,9 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+#ifndef _WIN32
+#include <sys/time.h>   /* gettimeofday: Mess-Anzeige RE15_BILD_HUD */
+#endif
 #ifdef _WIN32
 #include <windows.h>      /* AttachConsole — GUI-Subsystem-Begleiter, siehe main() */
 #endif
@@ -12012,6 +12015,32 @@ re_title:;
          * Solange die fehlt, waere jede Aenderung an einer Maskentiefe geraten. Mit dieser
          * Zeile im Bild enthaelt EIN Screenshot alles: Raum, Cut, Weltlage, Blickrichtung
          * und wie viele Masken der Cut gerade zeichnet. */
+        {   /* MESS-ANZEIGE RE15_BILD_HUD=1 (Runde 41 Kralle "synchron", im Normalpfad stumm, kein Verhalten): Spielbild und Birkins
+             * Clip/Bild im Fenster, damit Videos (gdigrab) Bild fuer Bild mit state.log / birkin_dbg.log zusammenpassen. */
+            static int s_bh = -1;
+            if (s_bh < 0) s_bh = getenv("RE15_BILD_HUD") != NULL;
+            if (s_bh) {
+                extern int re15_render_pc_debug_text(int x, int y, const char *str);
+                char bh[64]; int n = snprintf(bh, sizeof bh, "F%u", (unsigned)g_engine.frame_count);
+                for (int bi = 0; bi < RE15_ACTOR_MAX && n < 40; bi++)
+                    if (g_actors[bi].active && g_actors[bi].type == 0x30u)
+                        n += snprintf(bh + n, sizeof bh - (size_t)n, "  CLIP %d BILD %d", (int)g_actors[bi].motion, (int)g_actors[bi].anim_frame);
+                re15_render_pc_debug_text(4, 228, bh);
+                {   /* bild_zeit.log: Spielbild + Wanduhr (UTC, ms) - gdigrab mit -copyts stempelt die Videobilder mit derselben
+                     * Wanduhr, so ordnet die Auswertung jedes Videobild dem gezeigten Spielbild zu. */
+                    static FILE *s_bz = NULL;
+                    if (!s_bz) s_bz = fopen("bild_zeit.log", "w");
+                    long long ms = 0;
+#ifdef _WIN32
+                    { FILETIME ft; GetSystemTimeAsFileTime(&ft);   /* 100 ns seit 1601 -> ms seit 1970 */
+                      ms = (long long)((((unsigned long long)ft.dwHighDateTime << 32) | ft.dwLowDateTime) / 10000ULL) - 11644473600000LL; }
+#else
+                    { struct timeval tv; gettimeofday(&tv, NULL); ms = (long long)tv.tv_sec * 1000 + tv.tv_usec / 1000; }
+#endif
+                    if (s_bz) { fprintf(s_bz, "F%u %lld.%03lld\n", (unsigned)g_engine.frame_count, ms / 1000, ms % 1000); fflush(s_bz); }
+                }
+            }
+        }
         if (getenv("RE15_POS_HUD")) {
             extern int re15_render_pc_debug_text(int x, int y, const char *str);
             extern int re15_pri_log_cut(void);
