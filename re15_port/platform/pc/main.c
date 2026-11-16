@@ -953,9 +953,21 @@ static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
     {
         const char *datei = re15_bf_emd_datei(type);
         int sz = 0; uint8_t *buf;
+        /* Runde 41 Kralle r2: Logik-Gerippe der Kralle ACT[3] = Capcom-EM30, solange ein Ersatzmodell gezeichnet wird
+         * (enemy_ai_common.c re15_bk_kralle_logik_setzen; das residente CDEMD0.EMS haelt den Block). */
+        extern void re15_bk_kralle_logik_setzen(const uint8_t *em30, size_t len);
+        if (type == 0x30u) re15_bk_kralle_logik_setzen(NULL, 0);
         if (datei && (buf = pc_read_shared(datei, &sz)) != NULL) {
             if (out_len) *out_len = (size_t)sz;
             fprintf(stderr, "[enemy] EM%02X: Ersatzmodell %s (Raum %04X)\n", type, datei, g_current_room_id);
+            if (type == 0x30u) {
+                size_t es = 0, eo = 0, el = 0; const uint8_t *ems = pc_cdemd(&es);
+                const int ix = re15_ems_index_for_type(type);
+                if (ems && ix >= 0 && re15_ems_get_entry(ems, es, ix, &eo, &el) == 0) {
+                    re15_bk_kralle_logik_setzen(ems + eo, el);
+                    fprintf(stderr, "[enemy] EM30: Kralle rechnet mit dem Capcom-EM30 (CDEMD0.EMS Block %d)\n", ix);
+                }
+            }
             return buf;
         }
         if (datei) fprintf(stderr, "[enemy] EM%02X: %s fehlt -> Auslieferungsmodell\n", type, datei);

@@ -20,6 +20,14 @@
  *   wand   Birkin schlaegt gegen Zelle #8 (x >= -20100): Sonde im Fenster -> Clip 0xa; Form 2 endet bei +0x95 == 0x1e, +0x1df 0x3c.
  *   wand1  wie wand mit Form 1 (grid 0x00): Clip 0xa bis zum letzten Bild, +0x1df 0x3c.
  * Gegenprobe: die master-exe (0b86e36c6) faellt in frei (Clip 0xa), drehen (Gier dreht), wand (Clip 0xa bis Bild 46).
+ *
+ * Runde 2 (Pruefbericht r1: im Labor 50E0/50F1 zog die Schwanz-Gestalt weiter bei 8 von 11 Hieben zurueck): der Port zeichnet dort
+ * das Ersatzmodell EM30_HANGAR.EMD (laengerer Arm, geduckte Keyframes); der Klauenpunkt lag bis 590 weiter vom Birkin weg. Die
+ * Kralle rechnet jetzt mit dem Capcom-EM30 als Logik-Gerippe (enemy_ai_common.c re15_bk_kralle_logik_setzen, PORT-WAHL dort).
+ *   hangar       gezeichnete Bank = EM30_HANGAR.EMD, Logik-Gerippe = EM30, Birkin so weit vor Zelle #8, dass nur der Hangar-Arm
+ *                sie erreicht: KEIN Clip 0xa, +0x1df 0x1e. Gegenprobe (Stand r1 45dbd9e10, ohne Logik-Gerippe): Clip 0xa.
+ *   hangar_ohne  dieselbe Lage ohne Logik-Gerippe: Clip 0xa (die Lage trennt die beiden Arme wirklich).
+ *   hangar_wand  Logik-Gerippe, Birkin an Zelle #8 wie `wand`: die Sonde wirkt weiter (Clip 0xa bis 0x1e, +0x1df 0x3c).
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -56,12 +64,26 @@ static uint8_t *slurp(const char *p, size_t *n)
 }
 
 static uint8_t s_blob[0x80000];
+static size_t s_blob_len = 0;
+static uint8_t *s_hangar = NULL;
+void re15_bk_kralle_logik_setzen(const uint8_t *em30, size_t len);   /* enemy_ai_common.c */
+/* gezeichnete 0x30-Bank = EM30_HANGAR.EMD (Ersatzmodell Labor/Hangar); s_blob behaelt das EM30 fuer das Logik-Gerippe */
+static int hangar_bank(void)
+{
+    size_t n = 0;
+    s_hangar = slurp(RE15_ASSET_PSX_DIR "/EMD/EM30_HANGAR.EMD", &n);
+    re15_enemy_bank_t *eb = re15_enemy_find(0x30);
+    if (!eb) eb = re15_enemy_alloc(0x30);
+    if (!s_hangar || !eb || re15_emd_parse_container(s_hangar, n, &eb->md1, &eb->skel, &eb->anim, NULL) != 0) return 0;
+    eb->ok = 1; eb->buf = NULL;
+    return eb->skel.bone_count > 16;
+}
 static int em30_bank(void)
 {
     size_t esz = 0, off = 0, len = 0;
     uint8_t *ems = slurp(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", &esz);
     if (!ems || re15_ems_get_entry(ems, esz, re15_ems_index_for_type(0x30), &off, &len) != 0 || len > sizeof s_blob) { free(ems); return 0; }
-    memcpy(s_blob, ems + off, len); free(ems);
+    memcpy(s_blob, ems + off, len); free(ems); s_blob_len = len;
     re15_enemy_bank_t *eb = re15_enemy_find(0x30);
     if (!eb) eb = re15_enemy_alloc(0x30);
     if (!eb || re15_emd_parse_container(s_blob, len, &eb->md1, &eb->skel, &eb->anim, NULL) != 0) return 0;
@@ -157,6 +179,27 @@ int main(int argc, char **argv)
         printf("wand1: ticks=%d clip0xa=%d bis Bild %d aus_sub=%d cd=0x%02x\n", r.ticks, r.clip_a, r.clip_a_max, r.aus_sub, r.cd);
         CHECK(r.clip_a && r.clip_a_max == fca - 1, "wand1: Form 1 spielt Clip 0xa bis zum letzten Bild %d (+0x6 += Rueckgabe @0x8011792c-938), lief bis %d", fca - 1, r.clip_a_max);
         CHECK(r.aus_sub == 1 && r.cd == 0x3c, "wand1: Phase 5 -> HUB mit +0x1df 0x3c (@0x801179a4-a8), aus_sub=%d cd=0x%02x", r.aus_sub, r.cd);
+    }
+    if (!strcmp(fall, "hangar") || !strcmp(fall, "hangar_ohne") || !strcmp(fall, "hangar_wand")) {
+        if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
+        const int mit = strcmp(fall, "hangar_ohne") != 0, an_wand = !strcmp(fall, "hangar_wand");
+        re15_bk_kralle_logik_setzen(mit ? s_blob : NULL, mit ? s_blob_len : 0);
+        /* Blick +x auf Zelle #8 (x >= -20100). Groesster x-Vorlauf der Klaue im Fenster: EM30 2092, Hangar 2478 (af 40,
+         * r2/tools/klauenpunkt.py); mit Sondenradius 400 erreicht von -22800 aus nur der Hangar-Arm die Zelle. */
+        const int32_t bx = an_wand ? -21300 : -22800;
+        ergebnis_t r = hieb(0x10, bx, -15000, -20400, -15000, 0);
+        printf("%s: ticks=%d clip0xa=%d bis Bild %d sonde_af=%d clip3_max=%d aus_sub=%d cd=0x%02x\n", fall, r.ticks, r.clip_a,
+               r.clip_a_max, r.sonde_af, r.clip3_max, r.aus_sub, r.cd);
+        if (!strcmp(fall, "hangar")) {
+            CHECK(!r.clip_a, "hangar: mit dem EM30-Logik-Gerippe erreicht die Klaue Zelle #8 nicht -> kein Clip 0xa (gezeichnet: Hangar-Arm)");
+            CHECK(r.aus_sub == 1 && r.cd == 0x1e, "hangar: Clip-Ende -> HUB mit +0x1df 0x1e (@0x801178bc), aus_sub=%d cd=0x%02x", r.aus_sub, r.cd);
+        } else if (!mit) {
+            CHECK(r.clip_a, "hangar_ohne: ohne Logik-Gerippe reicht der Hangar-Arm in Zelle #8 -> Clip 0xa (die Lage trennt die Arme)");
+        } else {
+            CHECK(r.clip_a && r.clip_a_max == 0x1e, "hangar_wand: die Sonde wirkt mit dem Logik-Gerippe weiter, Clip 0xa bis 0x1e (@0x8011795c-970), war %d/%d", r.clip_a, r.clip_a_max);
+            CHECK(r.aus_sub == 1 && r.cd == 0x3c, "hangar_wand: +0x1df 0x3c (@0x801179a4-a8), aus_sub=%d cd=0x%02x", r.aus_sub, r.cd);
+        }
+        re15_bk_kralle_logik_setzen(NULL, 0);
     }
     if (fails) { fprintf(stderr, "test_r41_birkin_kralle %s: %d Fehler\n", fall, fails); return 1; }
     printf("test_r41_birkin_kralle %s: OK\n", fall);

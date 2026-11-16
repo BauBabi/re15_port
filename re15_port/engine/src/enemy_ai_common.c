@@ -12055,6 +12055,64 @@ static int re15_bk_kontakt(re15_actor_t *e, re15_actor_t *pl, int32_t ox, int32_
     return re15_bk_kontakt_aus(e, pl, ok, w, reach, merken);
 }
 
+/* LOGIK-GERIPPE DER KRALLE (PORT-WAHL Runde 41 Kralle r2, nur ACT[3]). FUN_8001a5e0 nimmt den Klauenpunkt aus der
+ * GEZEICHNETEN Matrix von Teil 15 (`addiu a0,s0,64` @0x8001a5ec, `jal 0x80067a28` @0x8001a604, `lhu` +84/+88/+92
+ * @0x8001a610-638). Im Original ist das Gezeichnete immer ein Capcom-Gerippe: EM30 (CDEMD0.EMS Block 16) - auch im
+ * Labor-Kampf der Mod (info/Re1.5 README Z. 380 "Added Birkin battle in room 50E"; deren zweites Birkin-Modell M1
+ * CDEMD1.EMS Sektor 2015 hat die Bindversaetze des EM30 und im Fenster bitgleiche Klauenpunkte, gerechnet
+ * r2/tools/klauenpunkt.py). Der Port zeichnet in 50A0/50A1/50E0/50F1 statt dessen das Ersatzmodell EM30_HANGAR.EMD
+ * (Gestaltung, kein Disc-Asset, re15_bf_emd_datei): laengerer Arm (Bindversaetze Knochen 8/13/14/15 (0,-715,0)/
+ * (107,-796,-1136)/(0,757,0)/(0,839,0) statt EM30 (0,-650,0)/(82,-637,-988)/(0,676,0)/(0,749,0)) und geduckte Keyframes.
+ * Damit lag der Klauenpunkt (Versatz (800,337,0) @0x801003d8 STAGE5) im Fenster bis 590 weiter vom Birkin weg und bis
+ * 350 tiefer, und die Klauen-Sonde (@0x80118048 STAGE5) fand die Gangwand des Labors bei 8 von 11 Hieben. Versatz,
+ * Reichweite 900 (@0x801003e0) und Sondenradius 0x190 (@0x8011802c) gehoeren zum EM30-Arm. Deshalb rechnet die Kralle
+ * Angriffsbox UND Sonde (beide aus demselben Punkt a2 = sp+24, @0x80117f10 / `lh` 24/26/28(sp) @0x80118030-38) mit Gerippe
+ * und Keyframes des Capcom-EM30, solange der PC-Lader fuer den 0x30 ein Ersatzmodell geladen hat und das EM30 meldet
+ * (platform/pc/main.c pc_enemy_read_re15_emd). Bild, Biss, Wurf und Tackle bleiben beim gezeichneten Modell. Ohne
+ * Meldung (3070/3071, Unit-Harness, PSX) gilt die gezeichnete Bank wie bisher. */
+static re15_md1_t           s_bk_logik_md1;
+static re15_emd_skeleton_t  s_bk_logik_skel;
+static re15_emd_animation_t s_bk_logik_anim;
+static int                  s_bk_logik_ok = 0;
+void re15_bk_kralle_logik_setzen(const uint8_t *em30, size_t len)
+{
+    s_bk_logik_ok = 0;
+    if (!em30 || !len) return;
+    /* der Puffer bleibt beim Aufrufer resident (Skelett/Clips zeigen hinein) */
+    if (re15_emd_parse_container(em30, len, &s_bk_logik_md1, &s_bk_logik_skel, &s_bk_logik_anim, NULL) == 0 &&
+        s_bk_logik_skel.bone_count > 15 && s_bk_logik_anim.clip_count > 3)
+        s_bk_logik_ok = 1;
+}
+int re15_bk_kralle_logik_aktiv(void) { return s_bk_logik_ok; }
+/* Klauenpunkt der Kralle: wie re15_bk_klauenpunkt (KF N-2, s16), aber mit dem Logik-Gerippe, wenn eins gemeldet ist. */
+static int re15_bk_klauenpunkt_kralle(re15_actor_t *e, int32_t ox, int32_t w[3])
+{
+    if (!s_bk_logik_ok || e->type != 0x30 || e->motion < 0 || e->motion >= s_bk_logik_anim.clip_count)
+        return re15_bk_klauenpunkt(e, ox, w);
+    const int fc_i = s_bk_logik_anim.clips[e->motion].frame_count;
+    if (fc_i <= 0) return re15_bk_klauenpunkt(e, ox, w);
+    const int32_t ofs[3] = { ox, 337, 0 };
+    const uint32_t fc = (uint32_t)fc_i, bild = e->anim_frame;
+    e->anim_frame = (uint8_t)((bild + fc - 2u) % fc);          /* KF N-2 wie re15_bk_klauenpunkt */
+    const int kf = re15_compute_actor_kf(&s_bk_logik_anim, &s_bk_logik_skel, e, -1, e->anim_frame);
+    e->anim_frame = (uint8_t)bild;
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor;
+    g_anim_pose_actor = NULL;                                   /* Abfrage wie re15_enemy_part_point */
+    const int rv = re15_skel_compute_pose(&s_bk_logik_skel, kf, poses);
+    g_anim_pose_actor = save;
+    w[0] = e->x; w[1] = e->y; w[2] = e->z;
+    if (rv != 0) return 0;
+    const int32_t *m = poses[15].rot;
+    const int32_t lokal[3] = {
+        poses[15].trans[0] + ((m[0] * ofs[0] + m[1] * ofs[1] + m[2] * ofs[2]) >> 12),
+        poses[15].trans[1] + ((m[3] * ofs[0] + m[4] * ofs[1] + m[5] * ofs[2]) >> 12),
+        poses[15].trans[2] + ((m[6] * ofs[0] + m[7] * ofs[1] + m[8] * ofs[2]) >> 12) };
+    re15_skel_bone_to_world(lokal, e->rot_y, e->x, e->y, e->z, w);
+    w[0] = (int16_t)w[0]; w[1] = (int16_t)w[1]; w[2] = (int16_t)w[2];   /* `sh` s16 @0x8001a620-644 */
+    return 1;
+}
+
 /* KLAUEN-SONDE der Kralle ACT[3] (STAGE3 @0x80117814-858, STAGE5 bytegleich +0x814, @0x80118028-06c): in JEDEM Bild des
  * Fensters, nach der Angriffsbox, unabhaengig von Treffer und Spieler+0x93 (alle drei Wege der Box enden @0x80117814):
  *   `ori a1,zero,0x190` @0x80117818 (Radius 400), `lh v0/v1/a3,24/26/28(sp)` @0x8011781c-824 = der Weltpunkt, den
@@ -12363,7 +12421,7 @@ static void re15_birkin_ai_tick(int slot)
                     /* damage window [0x24..0x2b] tested EVERY frame (`addiu v0,v0,-36` / `sltiu v0,v0,0x8` @0x801176ec-f0),
                      * Angriffsbox @0x80117710 (Versatz (800,337,0) @0x80100390, Reichweite 900 @0x80100398) */
                     int32_t klaue[3];
-                    const int klaue_ok = re15_bk_klauenpunkt(e, 800, klaue);
+                    const int klaue_ok = re15_bk_klauenpunkt_kralle(e, 800, klaue);   /* Logik-Gerippe EM30, s. dort */
                     if (re15_bk_kontakt_aus(e, pl, klaue_ok, klaue, 900, 0)   /* Box-Fehlschlag `beq` @0x80117718 -> 0x80117814 */
                         && pl->hit_react == 0) {                               /* Spieler+0x93 `bne` @0x8011772c -> 0x80117814 */
                         /* Gier-Latch @0x80117754-7a8: s0 = FUN_8001a6d4(Birkin -> Spieler), Birkin-Gier kurz s0-0x400

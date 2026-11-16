@@ -214,7 +214,7 @@ target_link_libraries(test_r41_birkin_kralle PRIVATE re15_engine re15_test_suppo
 target_include_directories(test_r41_birkin_kralle PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_r41_birkin_kralle PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
-foreach(_fall frei drehen wand wand1)
+foreach(_fall frei drehen wand wand1 hangar hangar_ohne hangar_wand)
     add_test(NAME unit_r41_birkin_kralle_${_fall} COMMAND test_r41_birkin_kralle ${_fall})
     set_tests_properties(unit_r41_birkin_kralle_${_fall} PROPERTIES TIMEOUT 60)
 endforeach()
