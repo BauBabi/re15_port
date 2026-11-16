@@ -12602,11 +12602,13 @@ static void re15_birkin_ai_tick(int slot)
                  * +0x95-Schreiben @0x801198ac-8d8); sein Ende ist KEIN Clipwechsel (Phase 7 spielt denselben Clip ab dem
                  * Umlaufwert 0 noch einmal = Original) -> Vorschub wie im Kreis. Erst das Ende in Phase 7 wechselt auf Clip 0x13:
                  * dort steht das letzte Bild im Wechselbild. */
-                e->sub_state_2 = (uint8_t)(e->sub_state_2 + ((e->sub_state_2 == 7) ? re15_birkin_anim_szene(e, 0x100)
-                                                                                   : re15_birkin_anim(e)));   /* @0x80119914-938 */
-                {   int32_t d[2];                              /* 8011b5c4(0,1) @0x80119934 */
-                    re15_birkin_fuss_schritt(e, d);
-                    e->x -= d[0]; e->z -= d[1];
+                {   const int halten = (e->sub_state_2 == 7);
+                    const int fertig = re15_birkin_anim(e);            /* anim_set @0x80119914, a3 0x100 (Rate oben) */
+                    int32_t d[2];                              /* 8011b5c4(0,1) @0x80119934 - NACH anim_set, liest den gerade */
+                    re15_birkin_fuss_schritt(e, d);            /* gezeichneten Schritt (Bild - 1) -> mit dem Umlaufwert, VOR dem */
+                    e->x -= d[0]; e->z -= d[1];                /* Halten (sonst zaehlte der vorletzte Schritt doppelt) */
+                    if (halten && fertig) e->anim_frame = (uint8_t)(re15_birkin_fc(e) - 1);   /* wie re15_birkin_anim_szene */
+                    e->sub_state_2 = (uint8_t)(e->sub_state_2 + fertig);   /* += @0x80119938 */
                 }
                 break;
             case 8:                                                    /* @0x80119944 */
