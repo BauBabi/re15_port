@@ -1,0 +1,51 @@
+Runde 8 (Schwanz Sichel-Form V8, Asset-Stufe q) - Notiz, fortlaufend. Zweig r41/sichel_v8, Worktree .claude/worktrees/r41_sichel_v8.
+Auftrag Nutzer 2026-11-14 (woertlich): "weder mit dem rot der Schwanzfarbe noch mit dem etwas zu steifen grossen Schwanz zufrieden" + Areas*.png.
+Grundlage: Analyse scratchpad/schwanz_v8/analyse/ANALYSE.md (Bauplan 1, 2, 4 = Asset). Nicht Teil: Rolle, Bahn, Biegsamkeit (Code, Bauplan 3/5/6).
+Kein RE-Befund: die Sichel-Form gibt es auf keiner Disc; alles PORT-WAHL, keine @0x-Adresse.
+
+[1] Eingang: Spiel-Asset 07b6703f (Stand 7e, Pin). Stufe q (schwanz_r8.py) hinter f; nur Meshes 16-22 neu.
+[2] Versuche (versuche.txt): Wurzelring ganz flach -> S2c 56 px (Naht J); Wurzel 0,6 / D16 0,15 gewaehlt; Schwanzmitte 0,86/0,78 (PV s .5 27,0 px =
+    -19,4 %, Bauplan-Messziel 23,5 +- 4); Nadel 550 E. ueber das heutige Ende (Spitze PV 286,8 / 347,0 - 2 px ueber dem Zielkasten, mehr laesst
+    der Auftrag 450-550 nicht zu); Texelfelder aus suche.txt.
+[3] Werkzeug-Commits 6cf418dd8 (Stufe q), 46d259880 (Profil 0,86/0,78, Riegel R8a-R8f, S4/S6/S15 fuer den Schwanz der Runde 8).
+[4] Kette zweimal (kette_lauf1.txt, kette_lauf2.txt): V8-KETTE-OK 4cf282427d345d47d35dd471d2fd26dc5ccca46420a5737d68e3635465b52d7d, bytegleich.
+    Farbproben: a e5bcda6062513ee55b7e7588d873f9eca477b50c4fc01b4a1cc0bdffc6fd6ff6, c aea9bb65d2b1de60d2582e8c8f5536611e94d41da45d4ae41b03a6e273000b40
+    (kette_probe_a.txt / kette_probe_c.txt; "ABWEICHUNG" dort nur gegen den Pin b).
+[5] Schwanz-Riegel R8 (r8_a/b/c.txt): je 6 von 6 gruen; Gegenprobe 07b6703f (r8_gegenprobe_07b6703f.txt): 1 von 6, ROT R8a-R8e.
+[6] test_birkin_formen: 4cf28242 OK, Gegenprobe 07b6703f 20 FAIL (test_formen_gegenprobe_07b6703f.txt).
+[7] Bau re15_port/build_r8 (local_build.sh, RE15_BUILD_DIR, RE15_JOBS 2), exe sha256 1150f87b...; ctest-Gruppe 8/8 am Asset 4cf28242
+    (ctest_gruppe.txt, 304,9 s). Asset-Commit 14bba8783.
+[8] Spiellaeufe (werkzeug/laeufe_r8.sh, lauf_v4.sh, eine Instanz nacheinander, alle EXIT=0): Szene FD 200-1100 (901 Bilder, 56 s), Proben a/c
+    FD 255-320 (Overlay-EMD), Marker LM/KO (225-450), MK_A/MK_B/GR (300-380) aus 4cf28242 gebaut (bauen.txt, 22 Wurzelflaechen wie 7e).
+    state.log der Szene sha256 e48e1cad... = V7 = 7e (bytegleich, 1131 Zeilen).
+    Schwanzkette der Szene gegen 7e (szene_kette_7e_r8.txt): 70 von 144 Takten anders, bis ~630 E. (h17-h18, h31-h61, h69-h70): die Bodenregel
+    des Codes nimmt die Nadel (dorn_y 1139 statt 589) und hebt die Kette frueher; tiefste Nadelspitze y -11 (Boden 0) - nichts unter dem Boden.
+[9] Tafeln 20_schwanz_r8.png, 21_schwanz_farbe_r8.png (SF_belege/v8, selbst angesehen). Bauchfarbe im Spielbild (farbe_spiel.txt):
+    a L* 22-23 C* 17-21 h 23-24, b (zwischen den Baendern) L* 25-26 C* 11-19, c L* 18-21 C* 16-23 h 27 - a und c liegen im Spiellicht nah
+    beieinander (beide klar rot); Video vorn L* 24-37 C* 11-20 (nur Richtung, keine Eichung).
+
+Fuer den Code-Bauer (Bauplan 3/5/6; gemessen am Asset 4cf28242, Werkzeug schwanz_r8.py):
+- Knochen, Keyframes, Gliedlaengen (16: rel (-722,-145,108); 17-22: (0,541,0)) unveraendert -> re15_schwanz_r41_v8_kette erkennt V8 wie bisher.
+- Querschnitt je Glied = Ellipse in der Ringebene x-z des Knochens: Hochachse e_h = (cos phi, 0, sin phi), phi = innen_phi je Knochen
+  (unterseite_v8.json 26,40-26,46 Grad) = (0,896, 0, 0,445); Bauch (Fleisch, Zeilen 495/494) in +e_h, Ruecken in -e_h; Querachse
+  e_q = (-0,445, 0, 0,896), Querhalbachse <= 135 E. (Querdicke 270). Hochhalbachse = V8-Profil (Glied 17 ~381, 18 ~360/353, 19 ~301-250,
+  20 ~230-195, 21 ~180-125). Glied 16: Wurzelring an der Haut teilweise rund (Querhalbachse 135 + 0,6 x (heute - 135)), Ring D zu 0,15.
+  -> Die Bauchachse kann der Code aus dem Mesh messen: Mittelrichtung der Ecken der Flaechen auf Zeile 495/494 in x-z (zeigt nach +e_h).
+- Rolle: mit Bauch zur Kamera (Winkel e_h zum Sehstrahl 0) ist der Schwanz von vorn 15,5-17 px breit (Rollreihe R8a, h22/h24/h64 an
+  s .3-.7); mit der geerbten Keyframe-Rolle (h18-h28 34-61 Grad, ANALYSE 3.4) sagt die Analyse 25-40 px voraus. In PV (Rolle 55-89 Grad)
+  zeigt der Schwanz die Breitseite von selbst (39 / 27 / 18,5 px an s .3 / .5 / .7).
+- Fugen: Einschnuerung 0,85 an jedem Gelenk, voller Querschnitt ab 65 E. (0,12 L) vor/hinter dem Gelenk; Manschette 0,2 ra zurueck,
+  Radius 0,99 x 0,85; Deckel an Manschette und Endring wie bisher. Bei Knicken ueber die heutigen 25 Grad (Bauplan 6: 35-40) mit dem
+  Spaltenmass pruefen.
+- Stachel: Glied 22 = Kerbe (98) -> Knolle Radius 135 bei y 200 -> 118 (330) -> 80 (450) -> 45 (560) -> Nadel 26 (640) / 17 (880) / 10 (1020)
+  -> Spitze y 1139 auf der Achse. sw_mesh_mass: radius[6] = 136 (vorher 121), dorn_y = 1139 (vorher 589) -> die Bodenregel des Codes hebt die
+  Kette mit der Nadel frueher (siehe Szenenlauf); offline liegt die Nadel in 213 von 912 Keyframes unter der Sohle (Riegel S6 Runde 8, Angabe; Spitze + Knollen-Ende y 560: 0).
+- Wurzel/Austritt: von vorn ist das Wurzelglied an s .1 noch 22-27 px breit (Kompromiss mit S2 "Tail directly smooth into the back");
+  Bauplan 5 (Wurzel -> Austritt an der Huefte verdecken) nimmt es aus dem Bild.
+
+[10] Voll-Riegel (riegel_v8r8.txt, werkzeug/riegel_alle_r8.sh, RE15_RIEGEL_JOBS=2, mit --szene und --farbe b):
+     SUMME: 18 von 24 gruen; GELB: S3; ROT: S9, S14, S16, S18, S19 (= 7e). S5 gruen. S4/S6/S15 nach den Regeln der Runde 8 gruen; die alte
+     S4-Regel (s 90-130 >= 36 / s 140-160 >= 27) waere ROT (Widerspruch zum Auftrag s .5 15-20 % duenner). Teil-Riegel R7c (riegel_r7c_NEU.txt)
+     Urteile wie 7e; S18 (b) helle Punkte F344 7 statt 4 (GELB-Liste).
+[11] Tafel 20 mit Zeile Spitze (Areas_Tip | vorher | neu, PV 4x): die Nadel ist in PV nur ein kurzer Stummel (Glied-22-Achse verkuerzt).
+[12] Dossier SF_sichel.md Abschnitt "V8 Runde 8".

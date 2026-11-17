@@ -26,6 +26,9 @@ int  re15_itemall_load(void);
  * which resolves the cwd-independent asset root — re15_asset_read_file only fopen's a raw path). Call
  * once at boot; supersedes the lazy load. `pix` must remain valid for the program's lifetime. */
 void re15_itemall_set_pix(const uint8_t *pix, int size);
+/* Runde 41 Optionen: der ULTIMATE-1.5-Puffer (re15_ultimate15_itemall_bauen). Die Leser nehmen ihn nur, solange
+ * re15_ultimate15() AN ist; bei AUS bleibt alles beim Puffer aus re15_itemall_set_pix. Lebensdauer wie dort. */
+void re15_itemall_set_pix_u15(const uint8_t *pix, int size);
 
 /* Decode one icon pixel for item `id` at (u,v) in [0,40)×[0,30). On an OPAQUE pixel: writes the
  * byte-true 8-bit RGB (0..255 each) and returns 1. On a TRANSPARENT pixel (or if the id has no

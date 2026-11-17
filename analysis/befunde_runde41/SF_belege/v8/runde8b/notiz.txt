@@ -1,0 +1,83 @@
+Runde 8b (Schwanz Sichel-Form V8, Nachbesserung nach Pruefer pr8 "NICHT BESTANDEN") - Notiz, fortlaufend. Zweig r41/sichel_v8.
+Auftrag Koordinator 2026-11-14: 1 Stachel und Nadel (Knolle in PV sichtbar, Schwanz in PV bis y ~350, Nadel keine 1-2-px-Linie, S6 streng mit
+Nadel: 0 von 912 Keyframes unter der Sohle; Szenenkette gegen 7e - Verschiebung begruendet oder beseitigt), 2 Baender hellrot/rosa statt weiss,
+3 Rot: Ton a, groesseres Original-Feld statt 17 x 7 gestreckt, 4 Riegel (R8b feste Abstaende, R8c sichtbare Laenge, S6 streng, Szenenkette
+gegen 7e, Gegenproben), 5 Kette zweimal, Pin, Tests, Szene, Tafeln 20/21, eine Standardfarbe, nur zwei Proben.
+Kein RE-Befund: die Sichel-Form gibt es auf keiner Disc; alles PORT-WAHL, keine @0x-Adresse.
+
+[1] Eingang: 07b6703f (Stand 7e), wie Runde 8. Pruefbericht scratchpad/sfv8/pr8/PRUEFUNG.md (nur gelesen).
+[2] Nadel-Richtung (werkzeug/n1_richtung.py, n2_pv_marge.py): Richtungen, die in PV im Bild nach unten zeigen, zeigen in 855-897 von 912
+    Keyframes auch in der Welt nach unten - eine abgewinkelte Nadel bringt gegen die Sohle nichts. Gewaehlt: gerade Nadel auf der
+    Gliedachse (der Code nimmt sie als Dornspitze, schwanz_r41.c sw_mesh_mass dorn_y), Knolle Radius 185-191 (STACHEL), Spitze y 1300.
+[3] S6 streng: schwanz_r8.heben() hebt in jedem Keyframe, in dem eine Ecke von Mesh 22 unter der tiefsten Koerperecke liegt, die Glieder 17-22
+    um eine waagerechte Achse (Bodenregel der Stufe s, Gelenke <= 25 Grad) - "Form-Anpassung an unserem eigenen Modell" (Koordinator).
+    289 von 912 Keyframes, nur die 12-Bit-Winkel der Knochen 17-22; PV-Keyframe 777 nicht (heben_je_clip.txt: Median 1-20 Grad je Clip,
+    Max 41 Grad in Clip 11, 29 in Clip 7 / 17). Pruefer-Werkzeug c_nadel.py am Asset (c_nadel_pruefer_r8b.txt): Nadel unter der Sohle
+    0 von 912 (Runde 8: 213), Knolle 0, Spitze 0. Info: Nadel tiefer als y 0 in 273 Keyframes - dort liegt sie zwischen y 0 und der Sohle
+    (Sohle = tiefste Ecke der Meshes 0-15, Median y 46), nicht unter den Fuessen.
+[4] Szene und Bodenregel (werkzeug/n3_szene_boden.py, n4_grenzen.py; szene_bodenregel_grenzen.txt): mit den Massen von 07b6703f verletzt die
+    7e-Szenenkette die Bodenregel nie. Unveraenderte Szene nur mit radius[7] <= 121 und dorn_y <= 687 (n4) - jede sichtbare Knolle
+    (Video ~18 px = ~185 E.) oder Nadel ueber 687 verschiebt die Szene zwangslaeufig. Darum ist die Verschiebung nicht beseitigt, sondern
+    begruendet und festgenagelt: Riegel R8g (riegel_schwanz_r8.py) verlangt, dass jeder in der Kette gegen 7e andere Takt ein Takt ist, in dem
+    die 7e-Kette mit den NEUEN Massen die Bodenregel verletzt, oder hoechstens 40 Takte danach (Abklingen der Glaettung), und state.log
+    bytegleich 7e. Gegenprobe: der Lauf der Runde 8 (4cf28242) gegen die Masse von 07b6703f muss ROT sein.
+[5] Baender (suche_r8b.txt): Original-Zeile 480 (Asset 493 bytegleich), Seite 0, u 58-73 v 19-48, groesstes Rechteck in Original-Nutzung mit
+    >= 60 % hellrot/rosa (L* 40-56, C* 12-28, h 5-35 - die Klasse aus b_bandfeld.py des Pruefers), Median L* 48,4 C* 17,4 h 22. Nur die zwei
+    mittleren Bauchfelder je Fuge (BAND_J), kein Ring; die Kanten liegen im gemischten Feld (61 % rosa, Rest dunkleres Rot).
+[6] Rot (suche_r8b.txt, Runde 8b2 Commit c1deca441): Original-Zeile 482 (Asset 495), schraeges Feld v 114-123, Zeilenanfang u 1 -> 19
+    (suche: Breite 21; im Bau 20, weil mit 21 nach der UV-Rundung 1 Texel ausserhalb der Original-Nutzung lag), 200 Texel statt 17 x 7 = 119,
+    Median L* 25,7 C* 24,2. Ein Feld quer ueber den Bauch und einmal laengs je Glied (je Glied gespiegelt). Der erste Bau der Runde 8b pendelte
+    das Feld je Flaeche -> Rautenmuster im Spiel, verworfen.
+[7] Proben: nur noch a (ohne Baender) und b (rosa Baender, STANDARD); c entfernt. Im Spielbild (farbe_spiel.txt, Messung, keine Eichung):
+    Band L* 41,1-44,9 C* 13,7-15,0 h 22 (Video L* 41-53 C* ~21 h ~20; Runde 8: L* 68-80 C* ~6); Bauch L* 22,6-25,0 C* 19,8-20,3 h 24
+    (Video L* 23-25 C* 12,8-16,5). a und b unterscheiden sich sichtbar (Baender ja/nein), darum beide.
+[8] Kette (kette_lauf1.txt, kette_lauf2.txt, kette_lauf3.txt): Lauf 1 lief vor dem Pin-Wechsel und meldet deshalb ABWEICHUNG gegen den alten
+    Pin 0813cca3 (erster Bau 8b); seine sha256 ist 66db2244 = Lauf 2 = Lauf 3 ("V8-KETTE-OK"). Probe a (kette_probe_a.txt): d6802ad4...
+[9] test_birkin_formen (Runde 8b: Ecken 46 / 68 / 79 / 68 / 68 / 68 / 112, Flaechen 495 / 493 / 487, Seite 0 fuer 493, flach, Mesh 22
+    Spitze y 1300, Knolle 185-191): am Asset OK (test_formen_neu.txt); Gegenproben 07b6703f 20 FAIL, 4cf28242 110 FAIL.
+    ctest-Gruppe (8 Tests) am Asset 66db2244: 8/8 (ctest_gruppe.txt). Asset-Commit 045274d9d.
+[10] Szenenlauf 50A0 (werkzeug/laeufe_r8c.sh, eine Instanz, EXIT=0, 901 Bilder): state.log sha256 e48e1cad... = 7e (bytegleich).
+[11] Herkunft gegen das Disc-Original (herkunft_disc.txt, werkzeug/x9_herkunft.py; Pruefer-Werkzeug b_herkunft.py -> b_herkunft_pruefer_66db.json):
+    Zeile 495 465 Texel, alle gleich Disc-Original und in der Nutzung der Original-Zeile 482 durch Original-Flaechen; Zeile 493 480 Texel,
+    ebenso (Original-Zeile 480); CLUT 495 = Original 482, 493 = Original 480 bytegleich. Zeile 487 (Ruecken/Flanke grau) ist wie bisher das
+    Erbe der Referenz 2 (Texel des Stands 07b6703f, nicht Disc-Original; Pruefer pr8 "kein neuer Verstoss dieser Runde"). Pruefer-Werkzeug:
+    Farbe 493 L* 48,1 C* 17,3 h 21,7 (Runde 8: 494 L* ~74 C* ~6), 495 L* 25,5 C* 24,0 h 25,2; Index-Abweichungen nur auf 487.
+[12] suche neu (suche_r8b.txt, nach dem Einbau der Rasterprobe): Fleisch Breite 21 (im Bau 20, siehe [6]), Band u 58-73 v 19-48, alle
+    Asset-Texel in den Feldern bytegleich Original (band, fleisch, Zeile 493 = Original 480: True).
+[13] Riegel (werkzeug/riegel_alle_r8c.sh, riegel_v8_neu.sh, rest_r8c.sh; RE15_RIEGEL_JOBS=2):
+    - riegel_v8 (riegel_v8r8b.txt/.json): "SUMME: 18 von 24 gruen; GELB: S3; ROT: S9, S14, S16, S18, S19" = 7e = Runde 8. S5 Gesicht gruen
+      (Mesh 9, Zeile 486, 6501 Texel). Gegen Runde 8 anders: S1 2,7 / 6,0 (R8 2,5 / 6,0), S2 (b) Sattel 2,0 (R8 1,9; Grenze <= 2),
+      S4 Ende 6,9 (R8 4,2), S4 Runde 8b mit R8b in festen Abstaenden, S6 streng 0 von 912 mit Nadel (Szene: tiefstes Gelenk y -192,
+      Nadelspitze -6,9, Gelenkwinkel max 25,2 = 7e), S15 = R8e 140 Flaechen auf 495.
+      Der erste Lauf scheiterte nach der Rechnung an der Ausgabezeile "S4 Runde 8" (KeyError 1, R8b ist jetzt ein Woerterbuch je Abstand);
+      behoben in Commit 911a3b07b, Lauf wiederholt.
+    - riegel_r7c teil (riegel_r7c_NEU.txt): bis auf die sha256 gleich 7e (S3 GELB Erbe, S9/S16/S18 ROT, S21 GRUEN).
+    - Schwanz-Riegel R8 mit Szene (r8_b.txt/.json): 7 von 7 gruen. R8g: 144 Takte, 100 anders (groesste Verschiebung 1005 E.), state.log
+      gleich; Bodenregel-Takte der 7e-Kette mit den neuen Massen (radius 457,5 / 457,5 / 381,0 / 352,9 / 292,5 / 226,7 / 190,1 / 190,1,
+      dorn_y 1300): h9-h18, h22-h23, h31-h67, h70, h104-h108, h130-h135; unbegruendet 0; die neue Kette verletzt die Bodenregel nie.
+    - Gegenprobe R8g (r8g_gegenprobe_lauf4cf28242_masse07b6703f.txt): Lauf der Runde 8 mit den Massen von 07b6703f -> 1 von 7, ROT R8a-R8e
+      und R8g (62 Takte anders, alle unbegruendet).
+[14] Kette Lauf 3 (kette_lauf3.txt, nach dem Pin-Wechsel und Commit 911a3b07b): V8-KETTE-OK 66db2244..., bytegleich Lauf 1 und 2.
+[15] Schwanz-Riegel ohne Szene: Probe a d6802ad4 (r8_a.txt/.json) 6 von 6 gruen; Gegenproben (Werkzeugstand 73768c3f6, Riegel seitdem
+    unveraendert) 07b6703f 1 von 6, ROT R8a-R8e (r8_gegenprobe_07b6703f.txt); 4cf28242 2 von 6, ROT R8b-R8e (r8_gegenprobe_4cf28242.txt).
+
+Fuer den Code-Bauer (Bauplan 3/5/6; gemessen am Asset 66db2244):
+- sw_mesh_mass liest jetzt radius[7] 190 (Knolle; vorher 121) und dorn_y 1300 (Nadel; vorher 589, Runde 8 1139). Damit greift die Bodenregel
+  (schwanz_r41.c glaetten) in der 7e-Szenenkette in 61 von 144 Takten; die Szene bewegt sich in 100 Takten anders als 7e (bis 1005 E.), alle
+  durch die Bodenregel begruendet (R8g). Jede Bahn-/Biegungsabstimmung muss auf diesen Massen gemessen werden, nicht auf 7e.
+- Unveraenderte Szene ginge nur mit radius[7] <= 121 und dorn_y <= 687 (n4_grenzen.py) - also ohne sichtbare Knolle und Nadel.
+- Keyframes: 289 von 912 in den Knochen 17-22 angehoben (heben_je_clip.txt), nur dort, wo Mesh 22 sonst unter der Sohle laege; Gelenkwinkel
+  <= 25 Grad; PV-Keyframe 777 unveraendert. Knochen, Gliedlaengen (541), Clips und alle anderen Keyframe-Bits wie 07b6703f.
+- Bauchachse e_h = (0,896, 0, 0,445) je Knochen wie Runde 8; Flaechen auf 495 (Bauch) und 493 (Baender, Seite 0) liegen in +e_h.
+- Nadel = gerade Spitze auf der Gliedachse von Glied 22 (Ecke y 1300), Knolle Ringe T200-T1100 (STACHEL), Radius bis 190.
+
+Offen:
+1. Die Szene bewegt sich anders als 7e (100 von 144 Takten, bis 1005 E.). Begruendet (Bodenregel mit sichtbarem Stachel, R8g), aber nicht
+   beseitigt - beseitigen geht nur ohne sichtbare Knolle/Nadel (radius[7] <= 121, dorn_y <= 687). Freigabe durch Orchestrator/Nutzer noetig.
+2. PV sichtbare Laenge 185,8 statt 216,9 px (Video), Knolle bei 150/170 px 12,0 / 12,6 statt ~18 px: in PV liegt die Knolle teils hinter
+   Glied 21 und die Gliedachse 22 ist verkuerzt. Tiefster Punkt y 350 (Video 351) erreicht.
+3. Von vorn ist die Nadel ein langer grauer Dorn (in PV kurz); Baender im Spiel als rosa Flecken in der Fuge (L* 41-45, C* 14-15) - weicher als
+   Runde 8, aber nicht ganz so bunt wie das Video (C* ~21).
+4. Bauch C* ~20 gegen Video 12,8-16,5 (+4 bis +7) wie Runde 8; Fleckung jetzt aus einem 20 x 10-Feld je Glied, nicht gestreckt.
+5. Wurzelglied von vorn weiter 22-27 px (S2-Kompromiss, Runde 8).
+6. Angehobene Keyframes: in Clip 11 bis 41 Grad, Clip 7 / 17 bis 29 Grad Drehung der Kette - im Kampf sichtbar hoeher getragener Schwanz.

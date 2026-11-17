@@ -1,0 +1,6 @@
+== szene
+  bauch Streifen L*(Fugen) - L*(Mitte): Median +2.6 [-13.6 .. +15.0] ueber 10 Bilder; je Gelenk 1:+3.2(1) 2:+13.0(3) 3:-0.6(7) 4:+5.4(7) 5:+4.2(8) 6:+4.8(8)
+  grau  Streifen L*(Fugen) - L*(Mitte): Median +10.6 [+7.3 .. +16.1] ueber 5 Bilder; je Gelenk 1:+2.2(1) 2:+8.0(2) 3:+13.4(2) 4:+15.8(3) 5:+15.2(4) 6:+9.0(5)
+== szene
+  bauch Streifen L*(Fugen) - L*(Mitte): Median -3.2 [-14.0 .. +3.7] ueber 10 Bilder; je Gelenk 1:-0.2(1) 2:-1.8(3) 3:-6.8(7) 4:-5.2(7) 5:-1.1(8) 6:-2.3(8)
+  grau  Streifen L*(Fugen) - L*(Mitte): Median +3.6 [+1.0 .. +9.1] ueber 5 Bilder; je Gelenk 1:-1.1(1) 2:+3.6(2) 3:+7.1(2) 4:+0.0(3) 5:+7.1(4) 6:-1.5(5)

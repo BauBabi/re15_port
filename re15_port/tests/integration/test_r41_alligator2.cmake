@@ -18,7 +18,7 @@
 #
 # TEIL=tragen|tragen_elza  Abnahme G 4 O1 (Lagespruenge mit dem Kanister im Maul): echter Ablauf bis zur Aufnahme (Messhaken RE15_K2080_GATOR_HP=24990: EIN Treffer
 #     bis zur Szene, Rezept integration_r41_kanister2080_kampf), Schussbloecke erst ab F900, damit er lange traegt. Auswerter `test_r41_alligator2 tragelog`: zwischen
-#     "KANISTER angehaengt" und dem R1 kein Wurzelschritt > 340 (groesster authored Wurzelschritt, unit_r41_re2gator_lauer; gemessen mit der harten Klemme derselben
+#     "KANISTER angehaengt" und dem R1 (das R1-Bild nur, wenn dort kein Explosions-Schnitt liegt; s. unten) kein Wurzelschritt > 340 (groesster authored Wurzelschritt, unit_r41_re2gator_lauer; gemessen mit der harten Klemme derselben
 #     Laeufe 446 bzw. 429, Abnahme G 4 v1 bis 1517); der Kanister beim R1 liegt innerhalb der Aussenwaende (G-E5, debug.log "Kanister Stufe 13 pos=").
 #
 # TEIL=schluessel|schluessel_elza|schluessel_west_elza  Nachbesserung 1 (M2, M3; AUFTRAG.md Nachtrag 35 Punkt 1, Pflicht fuer das Release): natuerlicher Kampf bis zum R1-Tod, Lauf 1 misst Figur und Schluessel, `test_r41_alligator2 wegplan`
@@ -388,12 +388,32 @@ if(TEIL MATCHES "^tragen")
     if(_f_a LESS 0 OR _f_r LESS 0)
         r41p_fehler("keine Aufnahme (F${_f_a}) oder kein R1 (F${_f_r}) bis RE15_EXIT_AT")
     endif()
-    execute_process(COMMAND "${RE15_TOOL}" tragelog "${_dir}/state.log" ${_f_a} ${_f_r}
+    # Tragen = Bildpaare bis VOR das R1-Bild. Das R1-Bild selbst ist die Explosion (Kanister nicht mehr im Maul): Todes-Start,
+    # KOPF-KLEMME (Riegel unit_r41_kanister2080_kopfklemme) und der Schnitt auf die Explosions-Kamera fallen in dieses eine Bild.
+    # Gemessen (Release v0.8.30, je derselbe Lauf): ohne r41/zielhilfe R1 F1411, Tragen max 257, R1-Bild 278; mit r41/zielhilfe
+    # (Heben dreht mit RE2 0xd8 @0x800434a0, Leon trifft frueher) R1 F933, Tragen max 256, R1-Bild 369 - beide Male mit Schnitt
+    # "KAMERA R1 EXPLOSION ... -> Cut 6" im R1-Bild. Ohne Schnitt im R1-Bild gilt die 340 auch fuer das R1-Bild (alte Pruefung).
+    file(STRINGS "${_dir}/gator_boss.log" _kam REGEX "KAMERA R1 G-E1 laufender Cut [0-9]+|KAMERA R1 EXPLOSION RE2-Cut [0-9]+ -> Cut [0-9]+ F${_f_r} ")
+    set(_cut_vor -1)
+    set(_cut_nach -1)
+    foreach(_l IN LISTS _kam)
+        if(_l MATCHES "laufender Cut ([0-9]+)")
+            set(_cut_vor "${CMAKE_MATCH_1}")
+        elseif(_l MATCHES "-> Cut ([0-9]+) F${_f_r} ")
+            set(_cut_nach "${CMAKE_MATCH_1}")
+        endif()
+    endforeach()
+    set(_f_ende ${_f_r})
+    if(_cut_vor GREATER_EQUAL 0 AND _cut_nach GREATER_EQUAL 0 AND NOT _cut_vor EQUAL _cut_nach)
+        math(EXPR _f_ende "${_f_r} - 1")
+    endif()
+    execute_process(COMMAND "${RE15_TOOL}" tragelog "${_dir}/state.log" ${_f_a} ${_f_ende}
                     RESULT_VARIABLE _tr OUTPUT_VARIABLE _to ERROR_VARIABLE _te)
     string(REGEX MATCH "tragelog: [^\n]*" _tz "${_to}")
     if(NOT _tr EQUAL 0)
-        r41p_fehler("Lagesprung mit dem Kanister im Maul: ${_tz}")
+        r41p_fehler("Lagesprung mit dem Kanister im Maul: ${_tz} (R1 F${_f_r}, Schnitt Cut ${_cut_vor} -> ${_cut_nach})")
     endif()
+    message(STATUS "r41_alligator2: Lauf ${TEIL}: ${_tz} (R1 F${_f_r}, Schnitt im R1-Bild Cut ${_cut_vor} -> ${_cut_nach})")
     file(STRINGS "${_dir}/debug.log" _k13 REGEX "\\[gator-re2\\] Kanister Stufe 13 pos=\\(-?[0-9]+,-?[0-9]+,-?[0-9]+\\)")
     if(NOT _k13)
         r41p_fehler("keine Zeile 'Kanister Stufe 13 pos='")

@@ -11,6 +11,7 @@
 #include "re15_dining_r38.h"     /* re15_dining_r38_icon_einsetzen (Runde 38 Spur F) */
 #include "re15_keyitems_r41.h"   /* re15_keyitems_r41_icon_einsetzen (Runde 41 Spur O) */
 #include "re15_gatorszene_r41.h" /* re15_gatorszene_r41_icon_einsetzen (Runde 41 Spur F) */
+#include "re15_ultimate15.h"     /* Runde 41 Optionen: ULTIMATE 1.5 waehlt den Disc-Puffer */
 #include <stddef.h>
 
 /* Platform asset reader (re15_asset_read_file lives in the PC/PSX backend; test_support stubs it). */
@@ -21,6 +22,14 @@ extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 #define ITEMALL_SIZE        (ITEMALL_TILE_BYTES * ITEMALL_TILES)   /* 86400 */
 
 static const uint8_t *s_pix = NULL;   /* the raw ITEMALL.PIX */
+/* Runde 41 Optionen (ULTIMATE 1.5, re15_ultimate15.h): zweiter Puffer = s_pix + Disc-Icons. Gelesen NUR bei AN;
+ * bei AUS greifen alle Leser unveraendert auf s_pix zu. */
+static const uint8_t *s_pix_u15 = NULL;
+static const uint8_t *icon_puffer(void) { return (s_pix_u15 && re15_ultimate15()) ? s_pix_u15 : s_pix; }
+void re15_itemall_set_pix_u15(const uint8_t *pix, int size)
+{
+    if (pix && size >= ITEMALL_TILE_BYTES * ITEMALL_TILES) s_pix_u15 = pix;
+}
 static int            s_loaded = 0;
 static int            s_tried  = 0;   /* fail-once: don't retry a failed lazy load every pixel */
 
@@ -96,7 +105,7 @@ const uint8_t *re15_itemall_tile_raw(uint8_t tile)
 {
     if (tile >= ITEMALL_TILES) return NULL;
     if (!s_loaded && re15_itemall_load() != 0) return NULL;
-    return s_pix + (size_t)tile * ITEMALL_TILE_BYTES;
+    return icon_puffer() + (size_t)tile * ITEMALL_TILE_BYTES;
 }
 
 int re15_item_icon_available(uint8_t id)
@@ -113,7 +122,7 @@ int re15_item_icon_pixel(uint8_t id, int u, int v, uint8_t *r, uint8_t *g, uint8
     if (!pal) return 0;
     uint8_t tile = item_tile(id);
     if (tile >= ITEMALL_TILES) return 0;
-    uint8_t idx = s_pix[(size_t)tile * ITEMALL_TILE_BYTES + (size_t)v * 40 + u];
+    uint8_t idx = icon_puffer()[(size_t)tile * ITEMALL_TILE_BYTES + (size_t)v * 40 + u];
     if (idx == 0 || idx == 0xe3 || idx == 0xe4 || idx == 0xe6) return 0;   /* transparent */
     uint16_t c = pal[idx];
     if (c == 0) return 0;                                                   /* uncaptured index */

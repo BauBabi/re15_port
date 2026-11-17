@@ -45,7 +45,8 @@
 #include "re15_pri.h"
 
 /* OT-Index des Schattens aus der Summe der vier Ecken-Kamera-z (AVSZ4, ZSF4=256 @0x80066c7c/80,
- * srl 4 @0x8001b2d8). Negative Summe = kein Schatten (nie der Fall nach der Nahklemme vz >= 64). */
+ * srl 4 @0x8001b2d8). Negative Summe = kein Schatten (nie der Fall: die Summe ist SZ0..SZ3, je 0..FFFFh gesaettigt,
+ * re15_objpoly_r38_schatten). */
 static inline int re15_schatten_bucket(int32_t vz_summe4)
 {
     if (vz_summe4 < 0) return -1;
@@ -72,5 +73,9 @@ static inline int re15_schatten_dreieck_darueber(long tri_vz, int schatten_bucke
 /* PC-Renderer: Tiefe fuer das NAECHSTE re15_render_shadow_quad(_c) setzen (verbraucht sich).
  * vz_summe4 < 0 = untagged -> alter Weg (vor allen Dreiecken und Masken). */
 void re15_render_pc_shadow_tiefe(int32_t vz_summe4, int ist_spieler);
+
+/* PC-Renderer (Release v0.8.30): GPU-Dreiecke des NAECHSTEN re15_render_shadow_quad(_c) (Bit 0 = (0,1,2), Bit 1 = (1,2,3),
+ * aus re15_objpoly_r38_schatten). 3 = beide (bisheriger Weg). Verbraucht sich. */
+void re15_render_pc_shadow_dreiecke(uint8_t maske);
 
 #endif /* RE15_PRI_SCHATTEN_R36_H */

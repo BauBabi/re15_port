@@ -1,0 +1,95 @@
+/*
+ * RE1.5 Rebuilt — Runde 41 Spur "pipe": die PIPE (Item 2) als Nahkampfwaffe wie das Messer, mit mehr Reichweite.
+ *
+ * NUTZER 2026-11-16 (woertlich): "Mir ist ausserdem noch aufgefallen das wir die Pipe als Waffe im Inventar spawnen
+ * koennen, aber sie ist noch nicht nutzbar. Eigentlich sollte die Pipe so aehnlich funktionieren wie ein Messer, aber
+ * mit mehr Reichweite. [...] Ausserdem sollte pipe auch wie Messer keine Anzahl haben, sondern halt einfach unendlich
+ * da sein."
+ *
+ * WAS DAS ORIGINAL HERGIBT (echte Disc Version_40%/PSX.EXE, Mod-Exe info/Re1.5/PSX.EXE an allen Stellen gleich):
+ *   Klasse      @0x80074038 = 0x80034E70  Nahkampf-FSM wie das Messer (@0x80074034); Schusswaffen 0x80032E9C
+ *   Tester      @0x8006E550 = 0x800127FC  Nahkampf-KEGEL wie das Messer (@0x8006E54C)
+ *   Schaden     @0x8006E658 = 24          Zombiezeile (Messer @0x8006E654 = 6)
+ *   Item-Zeile  @0x80074DC0 = 00 00 00 00 88 4c 07 80 00 00 00 00  byte-gleich zur Messerzeile @0x80074DB4
+ *               (Obergrenze 0 = kein Magazin, Ziffern-CLUT-Index 0)
+ * WAS DAS ORIGINAL NICHT HERGIBT (= die Pipe ist im 40%-Stand unfertig):
+ *   Reichweite  @0x8006E5A8 = 1000 = Grundwert (Messer @0x8006E5A4 = 1100) — KEIN Vorsprung
+ *   Drehsatz    @0x80074095 = 00 00 00 00 00 (Messer @0x80074090 = 18 30 00 01 01; Leser @0x80034FF8/@0x80035270)
+ *   Bank        PL00W02/PL04W02.PLW = 11-Clip-Schusswaffen-Platzhalter ohne Rohr-Netz (s. tools/pipe_r41/)
+ *   Ton-Bank    SOUND/ARMS02 = byte-gleich ARMS03..06/0A/0B (Pistolen-Bank, sha256 ff146f31...)
+ *   Treffer-Ton nur Waffe 1: `ori v0,zero,0x1` / `bne s0,v0` @0x800123C0-C4 -> SE 0x01080001 @0x800123D4
+ * Die Zahl im Inventar zeichnet das Original fuer JEDE Id < 0x22 (`sltiu v0,v0,0x22` @0x80049124, keine Ausnahme
+ * fuer Messer oder Rohr). "Keine Anzahl" ist damit NUTZERWUNSCH, kein Original-Merkmal.
+ */
+#ifndef RE15_PIPE_R41_H
+#define RE15_PIPE_R41_H
+
+#include <stdint.h>
+
+#define RE15_PIPE_R41_ID      0x02   /* "PIPE" s_item_names[2] (DAT_800c4a28-Katalog); Dispatch-Index 2 @0x80074038 */
+#define RE15_PIPE_R41_MESSER  0x01   /* COMBAT KNIFE (re15_messer.h RE15_MESSER_ID) */
+
+/* NUTZERWUNSCH "keine Anzahl, unendlich wie Messer": 1 = keine Mengen-Ziffern (Inventar-Gitter, Ausruest-Feld,
+ * Kisten-Liste). Gilt fuer die beiden Nahkampf-Ids 1 und 2 (Tester 0x800127FC @0x8006E54C/@0x8006E550, Item-Zeilen
+ * @0x80074DB4/@0x80074DC0 mit Obergrenze 0). Alle anderen Ids: unveraendert das Original-Gate @0x80049124. */
+int re15_pipe_r41_ohne_zahl(uint8_t id);
+
+/* Reichweite des Nahkampf-Kegels FUN_800127FC je Waffe. Waffe 2 -> RE15_PIPE_R41_REICHWEITE (NUTZERWUNSCH "mehr
+ * Reichweite", Eichung engine/src/gen/pipe_r41.inc); alle anderen -> der uebergebene Tabellenwert @0x8006E5A0. */
+uint32_t re15_pipe_r41_reichweite(int weapon_id, uint32_t tabelle);
+
+/* Tiefen-Zuschlag (Weltmass) der RE2-Messer-Boxen fuer RE2-gefuehrte Gegner (Zombie-Familie/Hund): Waffe 2 ->
+ * RE15_PIPE_R41_REICHWEITE - 1100 (Messer @0x8006E5A4) = derselbe Vorsprung wie im RE1.5-Kegel; sonst 0. Das Rohr
+ * leiht die Boxen des RE2-Messers (s_re2z_geo1 @0x800A63A8 EBEN / @0x800A657C TIEF / @0x800A64E0 HOCH); gerade aus
+ * (EBEN) begrenzt im Spiel der Kegel (gemessen ROOM1140: Messer trifft bis Spielerabstand 2700, Rohr bis 3000, mit
+ * und ohne Zuschlag gleich). Der Zuschlag haelt die Boxen beim Zielen HOCH/TIEF (fernste Kante HOCH Satz 4
+ * 1050 + 4*(326+125) = 2854) nicht kuerzer als den Rohr-Kegel. */
+int32_t re15_pipe_r41_re2_tiefe(int weapon_id);
+
+/* ARMS-Ton-Bank je Waffe. Waffe 2 -> 1 (PORT-WAHL Vorlage Messer: ARMS02 ist im Original die Pistolen-Bank);
+ * sonst die Waffe selbst (FUN_80043D8C laedt ARMS<aca5d>). */
+int re15_pipe_r41_arms_bank(int weapon_id);
+
+/* Treffer-Ton 0x01080001 (Satz 8): Original nur Waffe 1 (@0x800123C0-C4); PORT-WAHL Vorlage Messer: auch Waffe 2. */
+int re15_pipe_r41_treffer_ton(int weapon_id);
+
+/* ---- Runde 41 Spur pipe_ton: ROHR-TOENE = BIRKINS ROHR (NUTZERWUNSCH 16.11.2026, woertlich: "Natuerlich soll die Pipe
+ * nicht klingen wie ein Messer. Sondern eher ein dumpfes metallenes Aufschlag Geraeusch haben. So wie bei Birkin zum
+ * Beispiel. Der hat ja auch eine Pipe.")
+ *
+ * Birkin 0x30 (STAGE3.BIN, Version_40%), Hieb ACT[3] mit dem Rohr in der Hand (Teil 16 = Hand mit Rohr, birkin_rohr):
+ *   Treffer  `jal 0x800453d0` @0x801177dc / `ori a0,zero,0x7` @0x801177e0  -> Raum-SE 7 (snd1, FUN_800453d0)
+ *   Schwung  `ori v0,zero,0x25` @0x8011786c (Bild 0x25), `jal 0x800453d0` @0x80117878 / `ori a0,zero,0x4` @0x8011787c -> SE 4
+ *   ROOM3070.RDT snd1 (Kopf @0x14/0x18/0x1c): Satz 7 = `00 00 82 15` -> Ton 8 -> VAG 9 (1808 B, sha1 e4a8ef3a356c...),
+ *                                             Satz 4 = `00 00 51 16` -> Ton 5 -> VAG 6 (4128 B, sha1 8724f1f3c81f...);
+ *   bytegleich in ROOM3071 und in Version_40% (dort Satz 7 @RDT+0x5e1c, Satz 4 @RDT+0x5e10).
+ * RE2-G1 (Typ 0x30, ENEMSE-Bank 20 = Paar-Tabelle @0x800a7400 Zeile {0x1c,0x00}, Ton-Id +7 = 0x1c in ROOM2190/3030)
+ * spielt DIESELBEN Wellen: Rohr-Treffer auf den Spieler se 6 (`addiu a0,zero,6` @0x80101800 -> `jal 0x8005bd6c` @0x8010182c,
+ * ACT[2] 0x80101240; @0x80101c28 -> @0x80101c48, ACT[3] 0x80101a14) = VAG sha1 e4a8ef3a356c, Angriffsbeginn se 3
+ * (`addiu a0,zero,3` @0x80101344 -> @0x80101348) = VAG sha1 8724f1f3c81f.
+ *
+ * PORT-WAHL (Zusammenbau, gekennzeichnet): Welle + Ton-Attribute (Programm, Ton, Note/Mitte/Pegel) = Birkins Satz,
+ * Stimme + Prioritaet = der Messer-Satz, den die Pipe im Original-Ablauf ruft (ARMS01 Satz 8 `00 00 43 11`, Satz 5
+ * `00 00 13 11`: Stimme 1, Prio-Nibble 3) — so bleibt die Kanal-Logik der Waffe (Bank 1) unveraendert und der Rohr-Ton
+ * konkurriert nicht mit den Raum-SE-Stimmen 4..7. Ziehen (@0x800355f8) ruft im Original denselben Satz 8 wie der Treffer
+ * (@0x800123D4) -> auch das Ziehen der Pipe klingt nach dem Rohr. Das Messer (Waffe 1) bleibt unveraendert. */
+#define RE15_PIPE_R41_ROHR_RDT          "STAGE3/ROOM3070.RDT"   /* Birkin 0x30, Leon-Raum (3071 = Elza, bytegleiche Saetze) */
+#define RE15_PIPE_R41_ROHR_SATZ_TREFFER 7    /* Birkin-Hieb-Treffer Se(7) @0x801177dc/@0x801177e0                 */
+#define RE15_PIPE_R41_ROHR_SATZ_SCHWUNG 4    /* Birkin-Hieb-Schwung Se(4) @0x80117878/@0x8011787c (Bild 0x25)     */
+#define RE15_PIPE_R41_ARMS_TREFFER      8    /* 0x01080001: Treffer @0x800123D4 und Ziehen @0x800355f8            */
+#define RE15_PIPE_R41_ARMS_SCHWUNG      5    /* 0x01050001: Schwung @0x8003537c                                    */
+
+/* Birkin-snd1-Satz fuer den ARMS-Satz `arms_satz` der gefuehrten Waffe `waffe`: Waffe 2 + Satz 8 -> 7, Waffe 2 + Satz 5
+ * -> 4; sonst -1 (= unveraendert aus der ARMS-Bank, insbesondere das Messer). */
+int re15_pipe_r41_rohr_satz(int waffe, int arms_satz);
+
+/* Zusammengesetzter EDT-Satz (4 Byte) aus dem Birkin-Satz und dem Messer-Satz (s.o.): [0],[1] und Ton-Nibble [2]>>4 vom
+ * Birkin-Satz, Prio-Nibble [2]&0xf und [3] (Stimme/Zusatzlagen) vom Messer-Satz. */
+void re15_pipe_r41_rohr_rec(const uint8_t birkin[4], const uint8_t messer[4], uint8_t out[4]);
+
+/* Messhaken (kein Spielverhalten): RE15_PIPE_LOG=<datei> haengt je Nahkampf-Treffer (Waffe 1/2) eine Zeile an:
+ * "[pipe] F<bild> waffe=<w> slot=<s> abstand_hand=<d> abstand_spieler=<d> reichweite=<r> hp=<hp> spieler=(x,z,rot=r)
+ * gegner=(x,z)". */
+void re15_pipe_r41_log_treffer(int weapon_id, int slot, uint32_t abstand_hand, uint32_t reichweite);
+
+#endif /* RE15_PIPE_R41_H */

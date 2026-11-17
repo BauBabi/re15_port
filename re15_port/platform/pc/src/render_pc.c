@@ -26,6 +26,7 @@
 #include "re15_fade.h"          /* the screen-fade channel engine (SCD 0x56/0x57, FUN_80021880) */
 #include "re15_abtastphase.h"   /* Abtastphase der texturierten Dreiecke (PSX-geeicht) */
 #include "re15_title_pulse.h"   /* Titelmenue: Pulswert der aktiven Zeile (FUN_801028ec) — nur lesen */
+#include "re15_ultimate15.h"     /* Runde 41 Optionen: Generation fuer den Bild-Cache */
 #include "re15_itps.h"          /* re15_itps_pixel — the item-get modal quad picture (ITPS.ITP, U11) */
 #include "re15_item_prompt.h"   /* re15_item_prompt_walk — replay the prompt glyphs in the game font */
 #include "shadow_blob_data.h"   /* RE1.5 char shadow blob, extracted from TEX.TIM */
@@ -93,6 +94,25 @@ static int           s_light_quad_count = 0;
 static int           s_shadow_next_spieler = 0;
 /* Runde 41 Spur S NB3 (Messschiene RE15_LACHE_LOG der Babyflecken): Laenge der Schatten-Warteschlange dieses Bildes. */
 int re15_render_pc_shadow_quads_eingereiht(void);
+/* Release v0.8.30 (Pruefung R1): welche GPU-Dreiecke des NAECHSTEN Schatten-Vierecks die GPU rastert (Bit 0 = (0,1,2),
+ * Bit 1 = (1,2,3); re15_objpoly_r38_schatten, Groessengrenze je Dreieck). 3 = beide = bisheriger Weg (Port-Diagonale 0-3,
+ * unveraendert). Genau ein Bit: nur dieses GPU-Dreieck, das andere wird ein leeres Dreieck. Verbraucht sich beim Einreihen. */
+static uint8_t       s_shadow_next_dreiecke = 3;
+void re15_render_pc_shadow_dreiecke(uint8_t maske)
+{
+    s_shadow_next_dreiecke = (uint8_t)(maske & 3u);
+}
+/* Ecken-Indizes der Port-Zerlegung bzw. des einen GPU-Dreiecks (+ leeres Dreieck aus Ecke 0). */
+static const int *shadow_idx_naechstes(void)
+{
+    static const int beide[6] = { 0, 2, 3, 0, 3, 1 };
+    static const int gpu_a[6] = { 0, 1, 2, 0, 0, 0 };   /* GPU (0,1,2) */
+    static const int gpu_b[6] = { 1, 2, 3, 1, 1, 1 };   /* GPU (1,2,3) */
+    const uint8_t m = s_shadow_next_dreiecke;
+    s_shadow_next_dreiecke = 3;
+    return m == 1 ? gpu_a : (m == 2 ? gpu_b : beide);
+}
+
 void re15_render_pc_shadow_tiefe(int32_t vz_summe4, int ist_spieler)
 {
     s_shadow_next_vz = vz_summe4;
@@ -112,6 +132,7 @@ static int          s_item_modal_on = 0;
 static int          s_item_modal_x[4], s_item_modal_y[4];
 static SDL_Texture *s_item_modal_tex = NULL;
 static int          s_item_modal_tex_type = -1;
+static unsigned     s_item_modal_tex_u15  = 0;   /* Runde 41 Optionen: ULTIMATE-1.5-Generation des Bildes */
 
 /* BJ-round 2026-05-29: CINEMATIC LETTERBOX bars.
  * RE2/RE1.5 cutscenes (the intro etc.) draw black bars at the top & bottom of
@@ -225,10 +246,20 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
  *   5. end_frame: RenderPresent
  *
  * The queue is bounded to keep per-frame allocations off the heap. */
-#define TEXTRI_QUEUE_MAX 8192   /* was 2048 ("~700 quads" = ONE actor) — ROOM1140 draws 7 actors
+#define TEXTRI_QUEUE_MAX 16384  /* was 2048 ("~700 quads" = ONE actor) — ROOM1140 draws 7 actors
                                  * (Leon + W01 + 5 zombies + corpses) and saturated the queue, which
                                  * silently dropped everything queued after it (the effect sprites:
-                                 * muzzle/smoke/shell + gore were never drawn). 8192 ≈ 4 rooms' worth. */
+                                 * muzzle/smoke/shell + gore were never drawn). 8192 ≈ 4 rooms' worth.
+                                 * 8192 -> 16384 (Runde 41 Form K5g3, Orchestrator-Entscheid G3 vom
+                                 * 2026-11-14): die Riesenform mit dem Spalt B4 zeichnet rund 2,2-mal so
+                                 * viele Dreiecke wie K5e_f1 (Messbank: bis 7318 Form-Dreiecke in einem
+                                 * Bild); mit Spielfigur und Effekten reichte 8192 nicht mehr, der Rest
+                                 * fiele STILL weg. Das ist ein PUFFER DES PC-PORTS, kein Spielwert
+                                 * (die PSX zeichnet ueber die OT, ohne diese Liste). Ueberlauf wird jetzt
+                                 * gezaehlt (s_textri_verworfen, Zeile "[tri-liste]" im debug.log).
+                                 * Speicher: je Eintrag 3 SDL_Vertex (60 B) + depth 4 + slot 1 + blend 1
+                                 * + Flush-Puffer 60 + order 4 = 130 B; Liste + Standbild-Kopie (s_sb_*,
+                                 * 66 B je Eintrag) = 196 B x 16384 = 3,06 MiB statt 1,53 MiB. */
 
 /* TIM slot pool — allows multiple characters/props to have their own
  * textures. Slot 0 = player default (Leon); other slots for NPCs/props. */
@@ -465,6 +496,24 @@ static float          s_textri_depth[TEXTRI_QUEUE_MAX];
 static uint8_t        s_textri_slot [TEXTRI_QUEUE_MAX];  /* TIM slot per tri */
 static uint8_t        s_textri_blend[TEXTRI_QUEUE_MAX];  /* PSX-ABR-Ableitung je Tri (s.u.) */
 static int            s_textri_count = 0;
+/* G3-Zaehler (Runde 41 Form K5g3): Dreiecke, die wegen voller Liste NICHT eingereiht wurden. Vorher fielen sie still weg.
+ * s_textri_grenze = TEXTRI_QUEUE_MAX; nur der Messhaken RE15_TRILISTE_GRENZE=<n> (Gegenprobe des Tests) setzt sie kleiner. */
+static int            s_textri_grenze = -1;
+static unsigned long  s_textri_verworfen_bild = 0, s_textri_verworfen_gesamt = 0, s_textri_bilder_mit_verlust = 0;
+static int            s_textri_hoch = 0;            /* hoechste Zahl eingereihter Dreiecke in einem Bild */
+static unsigned       s_textri_hoch_bild = 0;       /* Bildzaehler (g_engine.frame_count) dazu */
+static unsigned       s_textri_meldung = 0;
+static int re15_textri_grenze(void)
+{
+    if (s_textri_grenze < 0) {
+        const char *e = getenv("RE15_TRILISTE_GRENZE");
+        int n = (e && *e) ? atoi(e) : 0;
+        s_textri_grenze = (n > 0 && n < TEXTRI_QUEUE_MAX) ? n : TEXTRI_QUEUE_MAX;
+        if (s_textri_grenze != TEXTRI_QUEUE_MAX)
+            fprintf(stderr, "[tri-liste] Messhaken RE15_TRILISTE_GRENZE: Grenze %d statt %d\n", s_textri_grenze, TEXTRI_QUEUE_MAX);
+    }
+    return s_textri_grenze;
+}
 
 /* STANDBILD fuer die RE2-Tuersequenz (analysis/tor_1170/08_re_blende.md 6): RE2 dunkelt vor der
  * Tuerszene das STEHENDE letzte Bild ab - ohne die Welt neu zu zeichnen zieht jeder Durchlauf
@@ -548,6 +597,15 @@ static int s_dbg_bbox_valid = 0;
 static int s_dbg_last_min_sx = 0, s_dbg_last_max_sx = 0;
 static int s_dbg_last_min_sy = 0, s_dbg_last_max_sy = 0;
 int re15_render_pc_dbg_textri_count(void)    { return s_dbg_last_textri_count; }
+/* G3: Abfrage des Ueberlauf-Zaehlers (Tests, Messlaeufe). */
+unsigned long re15_render_pc_textri_verworfen(void) { return s_textri_verworfen_gesamt; }
+int re15_render_pc_textri_hoechststand(void)        { return s_textri_hoch; }
+int re15_render_pc_textri_grenze(void)              { return re15_textri_grenze(); }
+void re15_render_pc_textri_bilanz(void)
+{
+    fprintf(stderr, "[tri-liste] ENDE hoechststand=%d (F%u) verworfen=%lu bilder_mit_verlust=%lu grenze=%d\n",
+            s_textri_hoch, s_textri_hoch_bild, s_textri_verworfen_gesamt, s_textri_bilder_mit_verlust, re15_textri_grenze());
+}
 /* Discard the queued textured tris (3D meshes) for this frame — used by a full-screen framebuffer
  * overlay (the inventory) so the meshes, which end_frame draws ON TOP of the framebuffer, don't
  * cover it. Call after the scene render + overlay draw, before re15_render_end_frame. */
@@ -948,13 +1006,13 @@ void re15_render_shadow_quad_c(int x0, int y0, int x1, int y1,
                                int x2, int y2, int x3, int y3,
                                uint8_t r, uint8_t g, uint8_t b)
 {
-    if (!s_shadow_tex) return;
-    if (s_shadow_quad_count >= SHADOW_QUAD_MAX) { s_shadow_verworfen++; return; }
+    if (!s_shadow_tex) { s_shadow_next_dreiecke = 3; return; }
+    if (s_shadow_quad_count >= SHADOW_QUAD_MAX) { s_shadow_verworfen++; s_shadow_next_dreiecke = 3; return; }
     const SDL_Color col = { r, g, b, 255 };
     SDL_FPoint p[4] = { {(float)x0,(float)y0}, {(float)x1,(float)y1},
                         {(float)x2,(float)y2}, {(float)x3,(float)y3} };
     SDL_FPoint t[4] = { {0.f,0.f}, {1.f,0.f}, {0.f,1.f}, {1.f,1.f} };
-    const int idx[6] = { 0, 2, 3, 0, 3, 1 };
+    const int *idx = shadow_idx_naechstes();   /* Release v0.8.30: GPU-Dreiecke (re15_render_pc_shadow_dreiecke) */
     s_shadow_vz[s_shadow_quad_count] = s_shadow_next_vz;             /* Runde 36 Spur O: Tag */
     s_shadow_spieler[s_shadow_quad_count] = (uint8_t)s_shadow_next_spieler;
     s_shadow_next_vz = -1; s_shadow_next_spieler = 0;
@@ -1028,14 +1086,14 @@ void re15_render_light_quad(int x0, int y0, int x1, int y1,
 void re15_render_shadow_quad(int x0, int y0, int x1, int y1,
                              int x2, int y2, int x3, int y3)
 {
-    if (!s_shadow_tex) return;
-    if (s_shadow_quad_count >= SHADOW_QUAD_MAX) { s_shadow_verworfen++; return; }
+    if (!s_shadow_tex) { s_shadow_next_dreiecke = 3; return; }
+    if (s_shadow_quad_count >= SHADOW_QUAD_MAX) { s_shadow_verworfen++; s_shadow_next_dreiecke = 3; return; }
     const SDL_Color white = { 255, 255, 255, 255 };  /* no extra modulation (0x808080 prim = neutral) */
     SDL_FPoint p[4] = { {(float)x0,(float)y0}, {(float)x1,(float)y1},
                         {(float)x2,(float)y2}, {(float)x3,(float)y3} };
     SDL_FPoint t[4] = { {0.f,0.f}, {1.f,0.f}, {0.f,1.f}, {1.f,1.f} };
     /* quad corners in space: 0(-X,+Z) 2(+X,+Z) 3(+X,-Z) 1(-X,-Z) → tris (0,2,3),(0,3,1) */
-    const int idx[6] = { 0, 2, 3, 0, 3, 1 };
+    const int *idx = shadow_idx_naechstes();   /* Release v0.8.30: GPU-Dreiecke (re15_render_pc_shadow_dreiecke) */
     s_shadow_vz[s_shadow_quad_count] = s_shadow_next_vz;             /* Runde 36 Spur O: Tag */
     s_shadow_spieler[s_shadow_quad_count] = (uint8_t)s_shadow_next_spieler;
     s_shadow_next_vz = -1; s_shadow_next_spieler = 0;
@@ -1085,7 +1143,8 @@ void re15_render_begin_frame(void)
 /* Build (or rebuild on type change) the 112×72 ABGR item-picture texture (ITPS.ITP) for the modal quad. */
 static void item_modal_build_tex(uint8_t type)
 {
-    if (s_item_modal_tex && s_item_modal_tex_type == (int)type) return;
+    if (s_item_modal_tex && s_item_modal_tex_type == (int)type &&
+        s_item_modal_tex_u15 == re15_ultimate15_generation()) return;   /* Runde 41 Optionen: Wechsel baut neu */
     if (!s_item_modal_tex) {
         s_item_modal_tex = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_ABGR8888,
                                              SDL_TEXTUREACCESS_STATIC, ITEM_MODAL_TW, ITEM_MODAL_TH);
@@ -1109,6 +1168,7 @@ static void item_modal_build_tex(uint8_t type)
     }
     SDL_UpdateTexture(s_item_modal_tex, NULL, px, ITEM_MODAL_TW * (int)sizeof(uint32_t));
     s_item_modal_tex_type = (int)type;
+    s_item_modal_tex_u15  = re15_ultimate15_generation();
 }
 
 /* Main-loop hook: set the current-frame item-modal quad (4 screen corners TL,TR,BL,BR), or clear it
@@ -1614,6 +1674,21 @@ void re15_render_end_frame(void)
     }
 
     s_dbg_last_textri_count = s_textri_count;
+    {   /* G3: Hoechststand und Ueberlauf je Bild ins debug.log (erste 20 Verlust-Bilder einzeln, danach jedes 300.; Stand je 120 Bilder) */
+        unsigned fc = (unsigned)g_engine.frame_count;
+        if (s_textri_count > s_textri_hoch) { s_textri_hoch = s_textri_count; s_textri_hoch_bild = fc; }
+        if (s_textri_verworfen_bild > 0) {
+            s_textri_verworfen_gesamt += s_textri_verworfen_bild;
+            s_textri_bilder_mit_verlust++;
+            if (s_textri_bilder_mit_verlust <= 20u || (s_textri_bilder_mit_verlust % 300u) == 0u)
+                fprintf(stderr, "[tri-liste] UEBERLAUF F%u: %lu Dreiecke verworfen (eingereiht %d, Grenze %d)\n",
+                        fc, s_textri_verworfen_bild, s_textri_count, re15_textri_grenze());
+        }
+        if ((s_textri_meldung++ % 120u) == 0u)
+            fprintf(stderr, "[tri-liste] F%u hoechststand=%d (F%u) verworfen=%lu bilder_mit_verlust=%lu grenze=%d\n",
+                    fc, s_textri_hoch, s_textri_hoch_bild, s_textri_verworfen_gesamt, s_textri_bilder_mit_verlust, re15_textri_grenze());
+        s_textri_verworfen_bild = 0;
+    }
     s_dbg_last_min_sx       = s_dbg_min_sx;
     s_dbg_last_max_sx       = s_dbg_max_sx;
     s_dbg_last_min_sy       = s_dbg_min_sy;
@@ -3075,7 +3150,8 @@ void re15_render_textured_tri(int x0, int y0, int u0, int v0,
                               uint8_t r, uint8_t g, uint8_t b)
 {
     (void) tpage;
-    if (!s_tim_texture || s_textri_count >= TEXTRI_QUEUE_MAX) return;
+    if (!s_tim_texture) return;
+    if (s_textri_count >= re15_textri_grenze()) { s_textri_verworfen_bild++; return; }   /* G3: Ueberlauf zaehlen, nicht still */
     if (s_tim_w == 0 || s_tim_h == 0) return;
     if (s_cpu_rasterer && re15_gpu_dreieck_verwerfen((unsigned)g_engine.frame_count, s_active_slot, &x0, &y0, &x1, &y1, &x2, &y2)) return;   /* Runde 41 Spur Q: Schutz vor SDL_triangle.c:618 */
 
@@ -3178,7 +3254,8 @@ void re15_render_textured_tri_lit(int x0, int y0, int u0, int v0,
                                   uint8_t r2, uint8_t g2, uint8_t b2)
 {
     (void) tpage;
-    if (!s_tim_texture || s_textri_count >= TEXTRI_QUEUE_MAX) return;
+    if (!s_tim_texture) return;
+    if (s_textri_count >= re15_textri_grenze()) { s_textri_verworfen_bild++; return; }   /* G3: Ueberlauf zaehlen, nicht still */
     if (s_tim_w == 0 || s_tim_h == 0) return;
     if (s_cpu_rasterer && re15_gpu_dreieck_verwerfen((unsigned)g_engine.frame_count, s_active_slot, &x0, &y0, &x1, &y1, &x2, &y2)) return;   /* Runde 41 Spur Q: Schutz vor SDL_triangle.c:618 */
 
@@ -3619,6 +3696,19 @@ int re15_render_pc_game_text(int x, int y, const char *str, int attr)
  * bei TIM-Texel x = (768-704)*4 = 256 — exakt der Bereich, den s_msgfont_idx laedt. Die 8x8-Glyphen
  * sind dessen Zeilen 0..31 (der 16x16-Spielfont beginnt erst bei v=32), Palette = CLUT-Zeile 0
  * = s_msgfont_pal[0] (re15_msgfont_attr_row(0)==0). */
+/* MESS-ANZEIGE (RE15_BILD_HUD, Runde 41 Kralle "synchron" Runde 2, kein Spielverhalten): deckendes Rechteck in der
+ * Text-Ebene - fuer den maschinenlesbaren Bildnummern-Streifen, mit dem die Videoauswertung jedes aufgenommene Bild dem
+ * Spielbild zuordnet, das es WIRKLICH zeigt (gdigrab zeigt das zuletzt dargestellte Bild, nicht das gerade gerechnete). */
+void re15_render_pc_debug_fill(int x, int y, int w, int h, uint32_t rgb)
+{
+    for (int yy = y; yy < y + h; yy++)
+        for (int xx = x; xx < x + w; xx++)
+            if ((unsigned)xx < (unsigned)SCREEN_XRES && (unsigned)yy < (unsigned)SCREEN_YRES) {
+                s_text_overlay[yy * SCREEN_XRES + xx] = (rgb << 8) | 0xFFu;
+                s_text_overlay_used = 1;
+            }
+}
+
 int re15_render_pc_debug_text(int x, int y, const char *str)
 {
     re15_msgfont_ensure();

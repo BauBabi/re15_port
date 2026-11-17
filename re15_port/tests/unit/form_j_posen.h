@@ -1,16 +1,17 @@
 /* form_j_posen.h - ERZEUGT von analysis/befunde_runde41/form/stufe3/gen/s3_testkopf.py, nicht von Hand aendern.
- * Referenz Formtreue seit E32 (2026-11-09): Riesenform K5e ruhige Haut mit F1-Hautrand, 10 CLUT-Zeilen (varianten/K5/ruhe/K5e_f1,
- * Generator varianten/K5/generator/kf_k5e.py; Geometrie K5d, Texel/UV K5c). Vorher E30 K5c V3 Runde 5 (stufe3/basis_k5c), davor K4.
- * MD1/TIM aus K5e_f1; Posen Bild 1/Bild 2 von K5c (Clips bytegleich), Ruhe = Ruhe von J mit Kiefer zu.
+ * Referenz Formtreue seit dem R9-Einbau (2026-11-15): Riesenform K5g3 + rechte Hand Variante 1 (varianten/K5/k5g/K5g3 = Spiel-Asset,
+ * Generator varianten/K5/generator/kf_k5g3.py; EINBAU_R9.md; seit 16.11.2026 mit Vorderzaehnen, Stufe zaehne_vorn: nur MD1 waechst).
+ * Vorher E32 K5e_f1 (einbau_k5e_f1), E30 K5c, davor K4.
+ * MD1/TIM aus K5g3; Bild 1 von K5c, Bild 2 Winkel aus dem Asset (Key 542, Posen-Datei R9), Ruhe = Ruhe von J mit Kiefer zu.
  * Makronamen FORM_J_* wie bisher. Kein RE-Wert. */
 #ifndef FORM_J_POSEN_H
 #define FORM_J_POSEN_H
 #include <stdint.h>
 
-#define FORM_J_MD1_LEN 169500u
-#define FORM_J_MD1_CRC 0x634cd4c3u
-#define FORM_J_TIM_LEN 136224u
-#define FORM_J_TIM_CRC 0x330ea1c5u
+#define FORM_J_MD1_LEN 464748u
+#define FORM_J_MD1_CRC 0x6f15e974u
+#define FORM_J_TIM_LEN 138784u
+#define FORM_J_TIM_CRC 0xf428fe01u
 
 static const int16_t FORM_J_BILD1_WURZEL[3] = { -9, -1887, -22 };
 static const int16_t FORM_J_BILD1_WINKEL[32][3] = {
@@ -29,10 +30,10 @@ static const int16_t FORM_J_BILD2_WINKEL[32][3] = {
     { -10, 50, 146 }, { -4, 37, 150 }, { -3, 24, 120 }, { 136, -66, 109 },
     { -232, -510, -773 }, { 355, 442, -603 }, { -181, 356, 349 }, { 9, -196, 310 },
     { 263, -64, -49 }, { -171, 218, -52 }, { 33, -337, 104 }, { 27, -24, 128 },
-    { -656, 797, 1258 }, { 12, -163, -1035 }, { -183, -266, 442 }, { -35, -202, -99 },
-    { 34, -155, -336 }, { -518, 1241, 271 }, { 103, -705, 773 }, { 0, -60, 200 },
+    { -656, 797, 1258 }, { -412, -191, -693 }, { -13, 103, -47 }, { 58, -82, -218 },
+    { 52, -190, 161 }, { -518, 1241, 271 }, { 103, -705, 773 }, { 0, -60, 200 },
     { -55, -176, 511 }, { 1077, -359, 296 }, { -139, 198, 1323 }, { 548, 782, -1243 },
-    { 54, 416, -174 }, { -32, 399, -380 }, { 50, -394, 64 }, { 35, 45, -43 },
+    { 54, 416, -174 }, { 25, -358, 308 }, { 50, -394, 64 }, { -35, 252, -97 },
 };
 static const int16_t FORM_J_RUHE_WURZEL[3] = { 0, -1828, 0 };
 static const int16_t FORM_J_RUHE_WINKEL[32][3] = {

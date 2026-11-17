@@ -1,0 +1,21 @@
+Band {'name': 'unterarmband', 'mesh': 14, 'flaechen': ['v9', 'v10', 'd19', 'd22'], 'skal': 0.6, 'schub': [11, -63], 'rot15': 0.0027, 'erlaubt': 'Original-Mesh-14-Texel (Zeile 482) ohne Klingenleiste'}
+Feld C: 24 Flaechen, 456 Schuebe
+Feld C Wahl (-66, 5, 49.1, 17) von 456 im Band
+Rueckenfleisch: Gruppe [], Ueberschuss (511.0, 332)
+Rueckenfleisch: Gruppe ['v16'], Ueberschuss (52.0, 328)
+Rueckenfleisch: Gruppe ['v16', 'v11'], Ueberschuss None
+Kappe von vorn (ohne Huegel): {'d50': 2, 'v0': 2}
+Kappe von vorn (ohne Huegel): {'v0': 2}
+Kappe von vorn (ohne Huegel): {}
+Huegel-Flaechen ['v8'] {'v8': 108, 'v18': 4, 'd48': 11, 'v15': 1}
+Huegel: 9417 Schuebe, 8913 mit a*>=30 <= 15 %
+Huegel: 80 gerendert, 72 erfuellen (Kappe <= 0, Kachel <= Original {328: 234, 332: 296}, S3f >= 45)
+Huegel Wahl (54, 2, 58.3, 0, -55, 59.6)
+Rumpf (W)-rechts 59.6, Original 49.3
+Flecken-Ueberschuss je 1000 px -0.47
+Blass (W)-rechts: ['v24'] -> Rumpf (W)-rechts 50.7, Flecken-Ueberschuss -0.27
+Blass (W)-rechts: ['v24', 'd43'] -> Rumpf (W)-rechts 47.7, Flecken-Ueberschuss 0.08
+Blass (W)-rechts: ['v24', 'd43', 'd56'] -> Rumpf (W)-rechts 44.2, Flecken-Ueberschuss 0.35
+Blass (W)-rechts: ['v24', 'd43', 'd56', 'd15'] -> Rumpf (W)-rechts 42.7, Flecken-Ueberschuss 0.22
+Blass (W)-rechts: ['v24', 'd43', 'd56', 'd15', 'v21'] -> Rumpf (W)-rechts 42.9, Flecken-Ueberschuss -0.27
+{'8': 60, '13': 32, '14': 33} [('unterarmband', 4, 0.6, [11, -63]), ('feld_c', 24, 1.0, [-66, 5]), ('rueckenfleisch', 4, 1.0, [0, 64]), ('huegel', 1, 1.0, [54, 2]), ('blass_rechts', 5, 1.0, [-15, 11])]

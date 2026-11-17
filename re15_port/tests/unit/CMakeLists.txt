@@ -208,6 +208,19 @@ target_include_directories(test_birkin_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_birkin_ai COMMAND test_birkin_ai)
 set_tests_properties(unit_birkin_ai PROPERTIES TIMEOUT 30)
 
+# --- Birkins Kralle ACT[3] (FUN_801174fc): Erholung Clip 0xa nur ueber die Klauen-Sonde @0x80117834, keine Phase-1-Drehung ---
+add_executable(test_r41_birkin_kralle test_r41_birkin_kralle.c)
+target_link_libraries(test_r41_birkin_kralle PRIVATE re15_engine re15_test_support m)
+target_include_directories(test_r41_birkin_kralle PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r41_birkin_kralle PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+foreach(_fall frei drehen wand wand1 hangar hangar_ohne hangar_wand schwanz_wand schwanz_gelaender
+              schwanz_gelaender16 schwanz_ausserhalb schwanz_verdeckt schwanz_spieler schwanz_abdeckung
+              schwanz_treffer schwanz_zucken schwanz_abbruch schwanz_ausholen schwanz_ausholen_schlag kampf_kralle kampf_erholung kampf_biss kampf_wurf kampf_rempler kampf_ansprung)
+    add_test(NAME unit_r41_birkin_kralle_${_fall} COMMAND test_r41_birkin_kralle ${_fall})
+    set_tests_properties(unit_r41_birkin_kralle_${_fall} PROPERTIES TIMEOUT 60)
+endforeach()
+
 add_executable(test_writher_ai test_writher_ai.c)
 target_link_libraries(test_writher_ai PRIVATE re15_engine re15_test_support)
 target_include_directories(test_writher_ai PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -4149,6 +4162,31 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_sichel_form_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_sichel_form.cmake)
     set_tests_properties(integration_r41_sichel_form PROPERTIES TIMEOUT 400)
+    # Rueckbau Monitorbild (Runde 41, Stand 23f9da5c9 + Bank-9-Bit 38): Hangar-Szene, Speichern, neuer Prozess laedt, Hangar erneut
+    # betreten -> keine zweite Szene, Birkin wie beim Wiedereintritt. Leon und Elza, je 2 Laeufe. Gegenprobe exe 23f9da5c9 = ROT.
+    add_test(NAME integration_r41_hangar_laden
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_hangar_laden_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_hangar_laden.cmake)
+    set_tests_properties(integration_r41_hangar_laden PROPERTIES TIMEOUT 900)
+    # Hangar: Birkin bleibt liegen (Runde 1 "hangar_liegen", Nutzer 2026-11-16): Tod -> liegt in Phase 3 (@0x8011aed4) bis zum
+    # Speichern, Bank-9-Bit 39; Laden + Wiederbetreten leer, Kraftraum 50E0/50F1 unveraendert, Reihenfolge-Luecke (Bank 3 Bit 0x49).
+    # Leon und Elza, je 4 Laeufe. Gegenprobe exe 53fa8a984 = ROT.
+    add_test(NAME integration_r41_hangar_liegen
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_hangar_liegen_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_hangar_liegen.cmake)
+    set_tests_properties(integration_r41_hangar_liegen PROPERTIES TIMEOUT 1500)
+    # Sherry-Ruf (Runde 1 "sherry_ruf", Nutzerwunsch 2026-11-16): die Hangar-Szene ruft genau einmal "Sherry" im ersten Gangtakt h119
+    # (ROOM3070 snd1 Satz 10 = Disc-Ruf des 0x30, STAGE3 @0x8011a744). Leon und Elza, je 1 Lauf mit Ton. Gegenprobe exe 98391e747 = ROT.
+    add_test(NAME integration_r41_hangar_sherry
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_hangar_sherry_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_hangar_sherry.cmake)
+    set_tests_properties(integration_r41_hangar_sherry PROPERTIES TIMEOUT 600)
     # Integration Runde 41 (INT_labor_birkin.md): Labor-Birkin 50E0/50F1 auf dem echten Weg - nach dem Haken trifft der Biss
     # den stehenden Spieler bei +0x95 = 0x23 (Box = gezeichnete Matrix = KF N-2, @0x8001a5ec / @0x8001f35c-36c / @0x801183e0),
     # Birkin stirbt, (3,73)/(3,84). Zwei Laeufe a 3000 Bilder.
@@ -4158,6 +4196,14 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_labor_birkin_angriff_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_labor_birkin_angriff.cmake)
     set_tests_properties(integration_r41_labor_birkin_angriff PROPERTIES TIMEOUT 900)
+    # Form K5g3 G3 (Orchestrator 2026-11-14): Dreiecks-Liste 16384 + Ueberlauf-Zaehler; 5090 Kampf/Schnitt 11 und 5080 Clip 12 ohne
+    # verworfene Dreiecke mit dem K5g3-Geometrie-Modell (analysis/.../K5/k5g/K5g3/geo), Gegenprobe Grenze 2000 muss rot sein.
+    add_test(NAME integration_r41_form_dreiecke
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_form_dreiecke_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_form_dreiecke.cmake)
+    set_tests_properties(integration_r41_form_dreiecke PROPERTIES TIMEOUT 900)
     # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
     add_test(NAME integration_r41_g5_westen
              COMMAND "${CMAKE_COMMAND}"
@@ -4278,3 +4324,14 @@ target_include_directories(test_r41_uv_textur PRIVATE ${CMAKE_SOURCE_DIR}/includ
 target_compile_definitions(test_r41_uv_textur PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r41_uv_textur COMMAND test_r41_uv_textur)
 set_tests_properties(unit_r41_uv_textur PROPERTIES TIMEOUT 60)
+
+# --- RIEGEL Paletten-Animation Typ 3 (Nutzer 2026-11-15: "Die Monitore im Original laufen, also grieseln,
+#     bei uns sind die Bilder statisch"). FUN_8002b968/FUN_8002bc04, include/re15_clutanim.h. Sollwerte im
+#     Original gemessen (DuckStation-RAM ROOM5030: [0x800b281e]=7, Ueberlauf, Zaehler 12/17). ---
+add_executable(test_clutanim_monitore test_clutanim_monitore.c)
+target_link_libraries(test_clutanim_monitore PRIVATE re15_engine re15_test_support)
+target_include_directories(test_clutanim_monitore PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_clutanim_monitore PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_clutanim_monitore COMMAND test_clutanim_monitore)
+set_tests_properties(unit_clutanim_monitore PROPERTIES TIMEOUT 60)

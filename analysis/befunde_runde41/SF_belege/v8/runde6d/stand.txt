@@ -1,0 +1,11 @@
+STAND V8 Runde 6d (Abgabe), 2026-11-11 03:50
+Zweig r41/sichel_v8, HEAD beim Start 2a675d291
+Asset Arbeitsbaum  : e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83  (274644 Bytes)
+Asset Commit 6c    : e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83  (7a08e71b5)
+Asset HEAD         : e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83
+Pin release/em30_hangar.sha256: e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83  re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD
+git diff HEAD -- Asset: 0 Zeilen (0 = unveraendert)
+Kette Lauf A: V8-KETTE-OK sha256 e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83
+Kette Lauf B: V8-KETTE-OK sha256 e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83
+cmp Lauf A / Lauf B: bytegleich
+cmp Lauf A / Spiel-Asset: bytegleich

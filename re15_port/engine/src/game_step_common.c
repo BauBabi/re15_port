@@ -24,6 +24,7 @@
 #include "re15_audio.h"         /* re15_audio_footstep */
 #include "re15_wasser_r38.h"    /* Runde 38 Spur N: FUN_80045630-Zwilling (Wasser-Effekt + Tonindex) */
 #include "re15_rdt.h"           /* re15_rdt_floor_sound */
+#include "re15_clutanim.h"      /* FUN_8002bc04 je Bild */
 #include "re15_enemy_ai.h"      /* re15_enemy_ai_run_all — the LIVE-zombie per-frame pass (8.6) */
 #include "re15_fenster1120.h"   /* Runde 35 Spur M */
 #include "re15_hund1121_r39.h"  /* Runde 39 Spur R */
@@ -1202,6 +1203,11 @@ void re15_game_step(const re15_game_ctx_t *c)
     schritt_station(RE15_SCHRITT_ANFANG, pl->x, pl->z);   /* Mess-Schiene, s. Kopf */
     s_klemme_ende.da = 0;
     re15_wasser_r38_bildanfang(c);   /* Runde 38 Spur N: Schnappschuss + Stempel +0x88 latchen/loeschen @0x80031da4 */
+    /* PALETTEN-ANIMATION (Monitore 5030/5031, Wasser): FUN_8002bc04 laeuft je Bild am Kopf des Objekt-Passes
+     * (`jal 0x8002bda0` in FUN_8002bd44, das die Hauptschleife @0x8001ce14 OHNE Pausen-Gate ruft) — darum HIER,
+     * vor den Freeze-Returns (Item-Modal/Wegwerf-Abfrage) weiter unten. Ohne angemeldete Objekte ein No-Op
+     * (nOmodel 0 -> @0x8002bd80). include/re15_clutanim.h */
+    re15_clutanim_tick();
 
     /* PL00-Baenke an den Spieler-FSM spiegeln: der Schiebe-Substate 8 braucht die Cliplaengen
      * 0x11/0x12 und die Wurzel-Translation der EMR-Keyframes (FUN_800369f8 Modus 0). */
@@ -2689,6 +2695,11 @@ void re15_game_step(const re15_game_ctx_t *c)
      * Notch-Stempel, damit die Schalterbits des laufenden Bildes schon stehen.
      * Belege: include/re15_panel_zeiger.h. */
     re15_panel_zeiger_tick();
+    {   /* Runde 41 Kralle "synchron" Runde 2: gezeichnete Klinge der Schwanz-Gestalt gegen sichtbare Waende, auf dem Stand des
+         * gezeichneten Bilds (nach Spieler-Klemme/Schub) - enemy_ai_common.c re15_bk_kontakt_takt_ende */
+        extern void re15_bk_kontakt_takt_ende(void);
+        if (c->rdt_ok && !(g_re15_pauseflags & RE15_PAUSE_AI)) re15_bk_kontakt_takt_ende();
+    }
     schritt_station(RE15_SCHRITT_ENDE, pl->x, pl->z);
 }
 

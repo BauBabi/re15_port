@@ -55,6 +55,10 @@ file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
 
 set(_fehler "")
 set(_skript "M0.3,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M1,W10")
+# L7 (Lache RE2 "sichtbar") laeuft OHNE Vorlauf (Pruefung R1 v0.8.30: der Vorlauf W1.5 aus 8c54123dd wich nur dem Port-Ausschnitt
+# `_vz < 64` aus). Seit r41/zielhilfe stirbt die Spinne Platz 2 in F14 am Austritt (-500,-6400); dort liegen Ecken der vollen Lache
+# vor/hinter der Kamera. Die Original-Zeichner haben keine Nahgrenze (RE1.5 FUN_8001b064 RotAverage4 @0x8001b2c8, RE2 FUN_8001699c
+# RTPT/RTPS/AVSZ4 @0x80016b30-6c); der Port rechnet seit v0.8.30 GTE-Saettigung + GPU-Grenze je Dreieck (re15_objpoly_r38_schatten).
 
 function(r41s_lauf _name _raum _waffe _art _lache)
     set(WORKDIR "${_basis}_${_name}")

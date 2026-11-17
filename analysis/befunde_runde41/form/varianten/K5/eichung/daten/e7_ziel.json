@@ -1,0 +1,1273 @@
+{
+ "regel": "E7: Zielfarben je Material aus e5 (Hauptmodell je Szene) und Vergleich mit K5c, K5e_f1, K5f (dieselbe Kette).\nZiel-Lab = pixelgewichtetes Mittel der Lab-Mediane beider Szenen (nur Szenen mit >= 40 gueltigen Pixeln).\nUnsicherheit dE = max(halber Szenenabstand, Modellabstand Haupt/Zweitmodell, halbe L*-Spanne p10..p90 / 2).\nVergleich je Stand: Kettenwert (Stand vorwaerts durch das Modell und zurueck, gleiche Pixel) gegen den Videowert, je Szene und gewichtet:\ndE76, dL*, dC*, dh (Grad). Ausgang daten/e7_ziel.json.",
+ "materialien": {
+  "Haut": {
+   "staende": {
+    "K5c": {
+     "je_szene": [
+      {
+       "bild": 1,
+       "kette_lab": [
+        9.72,
+        5.61,
+        -2.53
+       ],
+       "textur_lab": [
+        9.16,
+        6.58,
+        -4.5
+       ],
+       "dE76": 11.36,
+       "dL": -11.14,
+       "dC": 2.09,
+       "dh": -9.1
+      },
+      {
+       "bild": 2,
+       "kette_lab": [
+        13.79,
+        13.36,
+        -1.33
+       ],
+       "textur_lab": [
+        14.42,
+        9.28,
+        -2.28
+       ],
+       "dE76": 21.27,
+       "dL": -21.24,
+       "dC": -0.08,
+       "dh": -4.6
+      }
+     ],
+     "lab": [
+      10.46,
+      7.01,
+      -2.31
+     ],
+     "median": [
+      36.4,
+      25.1,
+      31.6
+     ],
+     "dE76_zum_ziel": 13.12,
+     "dL": -12.97,
+     "dC": 1.66,
+     "dh": -9.0,
+     "ausserhalb_unsicherheit": true
+    },
+    "K5e_f1": {
+     "je_szene": [
+      {
+       "bild": 1,
+       "kette_lab": [
+        30.12,
+        8.42,
+        -4.92
+       ],
+       "textur_lab": [
+        29.17,
+        10.16,
+        -7.0
+       ],
+       "dE76": 11.0,
+       "dL": 9.26,
+       "dC": 5.69,
+       "dh": -15.2
+      },
+      {
+       "bild": 2,
+       "kette_lab": [
+        27.78,
+        11.98,
+        -4.52
+       ],
+       "textur_lab": [
+        29.17,
+        10.16,
+        -7.0
+       ],
+       "dE76": 8.55,
+       "dL": -7.25,
+       "dC": -0.7,
+       "dh": -19.6
+      }
+     ],
+     "lab": [
+      29.7,
+      9.07,
+      -4.85
+     ],
+     "median": [
+      80.8,
+      65.4,
+      77.6
+     ],
+     "dE76_zum_ziel": 8.15,
+     "dL": 6.27,
+     "dC": 4.55,
+     "dh": -18.9,
+     "ausserhalb_unsicherheit": false
+    },
+    "K5f": {
+     "je_szene": [
+      {
+       "bild": 1,
+       "kette_lab": [
+        27.15,
+        11.28,
+        -4.5
+       ],
+       "textur_lab": [
+        22.11,
+        10.58,
+        -7.23
+       ],
+       "dE76": 10.27,
+       "dL": 6.29,
+       "dC": 8.08,
+       "dh": -6.6
+      },
+      {
+       "bild": 2,
+       "kette_lab": [
+        22.53,
+        16.17,
+        -4.09
+       ],
+       "textur_lab": [
+        22.11,
+        10.58,
+        -7.23
+       ],
+       "dE76": 13.35,
+       "dL": -12.5,
+       "dC": 3.18,
+       "dh": -13.1
+      }
+     ],
+     "lab": [
+      26.31,
+      12.17,
+      -4.43
+     ],
+     "median": [
+      77.6,
+      55.9,
+      69.2
+     ],
+     "dE76_zum_ziel": 7.94,
+     "dL": 2.88,
+     "dC": 7.22,
+     "dh": -10.8,
+     "ausserhalb_unsicherheit": false
+    }
+   },
+   "bild1": {
+    "pixel": 2010,
+    "median": [
+     55.4,
+     48.7,
+     52.2
+    ],
+    "p10": [
+     34.6,
+     29.0,
+     31.8
+    ],
+    "p90": [
+     109.3,
+     96.9,
+     100.9
+    ],
+    "lab_median": [
+     20.86,
+     3.92,
+     -1.06
+    ],
+    "L_p10_p90": [
+     11.8,
+     42.5
+    ],
+    "modell": "form_video EX an Leon",
+    "zweitmodell": {
+     "name": "form_video Bestand (EX farbe.md)",
+     "lab_median": [
+      20.57,
+      3.3,
+      2.28
+     ],
+     "dE76_zum_hauptmodell": 3.41
+    },
+    "schattierung_median": [
+     172,
+     172,
+     172
+    ]
+   },
+   "bild2": {
+    "pixel": 445,
+    "median": [
+     103.3,
+     75.1,
+     83.3
+    ],
+    "p10": [
+     86.9,
+     46.6,
+     58.4
+    ],
+    "p90": [
+     117.2,
+     112.7,
+     103.3
+    ],
+    "lab_median": [
+     35.03,
+     13.5,
+     -0.25
+    ],
+    "L_p10_p90": [
+     26.5,
+     47.0
+    ],
+    "modell": "form_video Bestand",
+    "schattierung_median": [
+     82,
+     78,
+     78
+    ]
+   },
+   "ziel": {
+    "lab": [
+     23.43,
+     5.66,
+     -0.91
+    ],
+    "L": 23.43,
+    "C": 5.73,
+    "h": -9.2,
+    "rgb_textur": [
+     63.8,
+     53.0,
+     57.3
+    ],
+    "unsicherheit_dE": 8.56,
+    "szenen": [
+     1,
+     2
+    ]
+   }
+  },
+  "Gelenk": {
+   "staende": {
+    "K5c": {
+     "je_szene": [
+      {
+       "bild": 1,
+       "kette_lab": [
+        10.46,
+        5.59,
+        -3.28
+       ],
+       "textur_lab": [
+        9.47,
+        5.86,
+        -4.03
+       ],
+       "dE76": 18.76,
+       "dL": -18.35,
+       "dC": 2.93,
+       "dh": 31.0
+      },
+      {
+       "bild": 2,
+       "kette_lab": [
+        14.74,
+        15.44,
+        6.3
+       ],
+       "textur_lab": [
+        14.14,
+        7.72,
+        3.06
+       ],
+       "dE76": 27.16,
+       "dL": -26.04,
+       "dC": 2.71,
+       "dh": 27.5
+      }
+     ],
+     "lab": [
+      10.91,
+      6.64,
+      -2.26
+     ],
+     "median": [
+      36.9,
+      26.3,
+      32.5
+     ],
+     "dE76_zum_ziel": 19.52,
+     "dL": -19.17,
+     "dC": 2.82,
+     "dh": 25.5,
+     "ausserhalb_unsicherheit": true
+    },
+    "K5e_f1": {
+     "je_szene": [
+      {
+       "bild": 1,
+       "kette_lab": [
+        39.47,
+        5.55,
+        -2.8
+       ],
+       "textur_lab": [
+        38.24,
+        4.86,
+        -3.42
+       ],
+       "dE76": 11.34,
+       "dL": 10.66,
+       "dC": 2.66,
+       "dh": 34.6
+      },
+      {
+       "bild": 2,
+       "kette_lab": [
+        36.04,
+        6.03,
+        -2.69
+       ],
+       "textur_lab": [
+        38.24,
+        4.86,
+        -3.42
+       ],
+       "dE76": 9.3,
+       "dL": -4.74,
+       "dC": -7.37,
+       "dh": -18.8
+      }
+     ],
+     "lab": [
+      39.11,
+      5.6,
+      -2.79
+     ],
+     "median": [
+      99.4,
+      89.3,
+      96.7
+     ],
+     "dE76_zum_ziel": 9.39,
+     "dL": 9.03,
+     "dC": 2.07,
+     "dh": 17.8,
+     "ausserhalb_unsicherheit": true
+    },
+    "K5f": {
+     "je_szene": [
+      {
+       "bild": 1,
+       "kette_lab": [
+        38.85,
+        5.44,
+        -1.88
+       ],
+       "textur_lab": [
+        34.9,
+        4.94,
+        -3.47
+       ],
+       "dE76": 10.79,
+       "dL": 10.04,
+       "dC": 2.2,
+       "dh": 42.4
+      },
+      {
+       "bild": 2,
+       "kette_lab": [
+        33.72,
+        12.23,
+        -4.19
+       ],
+       "textur_lab": [
+        31.5,
+        5.03,
+        -3.53
+       ],
+       "dE76": 7.82,
+       "dL": -7.06,
+       "dC": -1.04,
+       "dh": -13.7
+      }
+     ],
+     "lab": [
+      38.31,
+      6.16,
+      -2.13
+     ],
+     "median": [
+      98.8,
+      87.0,
+      93.7
+     ],
+     "dE76_zum_ziel": 8.85,
+     "dL": 8.23,
+     "dC": 2.33,
+     "dh": 25.3,
+     "ausserhalb_unsicherheit": true
+    }
+   },
+   "bild1": {
+    "pixel": 1389,
+    "median": [
+     68.5,
+     67.3,
+     73.0
+    ],
+    "p10": [
+     34.9,
+     31.7,
+     35.8
+    ],
+    "p90": [
+     100.8,
+     97.2,
+     105.6
+    ],
+    "lab_median": [
+     28.81,
+     1.7,
+     -3.12
+    ],
+    "L_p10_p90": [
+     12.6,
+     41.6
+    ],
+    "modell": "form_video EX an Leon",
+    "zweitmodell": {
+     "name": "form_video Bestand (EX farbe.md)",
+     "lab_median": [
+      28.2,
+      1.41,
+      0.86
+     ],
+     "dE76_zum_hauptmodell": 4.04
+    },
+    "schattierung_median": [
+     148,
+     147,
+     147
+    ]
+   },
+   "bild2": {
+    "pixel": 165,
+    "median": [
+     117.9,
+     88.4,
+     99.1
+    ],
+    "p10": [
+     102.1,
+     52.5,
+     76.8
+    ],
+    "p90": [
+     141.3,
+     151.9,
+     145.5
+    ],
+    "lab_median": [
+     40.78,
+     13.91,
+     -1.28
+    ],
+    "L_p10_p90": [
+     29.8,
+     61.8
+    ],
+    "modell": "form_video Bestand",
+    "schattierung_median": [
+     82,
+     78,
+     78
+    ]
+   },
+   "ziel": {
+    "lab": [
+     30.08,
+     3.0,
+     -2.92
+    ],
+    "L": 30.08,
+    "C": 4.19,
+    "h": -44.3,
+    "rgb_textur": [
+     73.6,
+     69.5,
+     75.4
+    ],
+    "unsicherheit_dE": 8.6,
+    "szenen": [
+     1,
+     2
+    ]
+   }
+  },
+  "Schwanzspitze": {
+   "staende": {},
+   "bild1": {
+    "pixel": 1,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   },
+   "bild2": {
+    "pixel": 0,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   }
+  },
+  "Buckel": {
+   "staende": {
+    "K5c": {
+     "je_szene": [
+      {
+       "bild": 2,
+       "kette_lab": [
+        12.51,
+        17.73,
+        -6.17
+       ],
+       "textur_lab": [
+        10.92,
+        11.42,
+        -7.66
+       ],
+       "dE76": 25.87,
+       "dL": -24.23,
+       "dC": -5.28,
+       "dh": -20.0
+      }
+     ],
+     "lab": [
+      12.51,
+      17.73,
+      -6.17
+     ],
+     "median": [
+      51.9,
+      22.5,
+      41.4
+     ],
+     "dE76_zum_ziel": 25.87,
+     "dL": -24.23,
+     "dC": -5.28,
+     "dh": -20.0,
+     "ausserhalb_unsicherheit": true
+    },
+    "K5e_f1": {
+     "je_szene": [
+      {
+       "bild": 2,
+       "kette_lab": [
+        32.12,
+        15.62,
+        -3.36
+       ],
+       "textur_lab": [
+        31.07,
+        16.61,
+        -3.97
+       ],
+       "dE76": 10.3,
+       "dL": -4.62,
+       "dC": -8.07,
+       "dh": -12.9
+      }
+     ],
+     "lab": [
+      32.12,
+      15.62,
+      -3.36
+     ],
+     "median": [
+      97.2,
+      66.8,
+      81.2
+     ],
+     "dE76_zum_ziel": 10.3,
+     "dL": -4.62,
+     "dC": -8.07,
+     "dh": -12.9,
+     "ausserhalb_unsicherheit": false
+    },
+    "K5f": {
+     "je_szene": [
+      {
+       "bild": 2,
+       "kette_lab": [
+        31.33,
+        18.12,
+        -3.53
+       ],
+       "textur_lab": [
+        25.38,
+        8.62,
+        -2.25
+       ],
+       "dE76": 8.91,
+       "dL": -5.41,
+       "dC": -5.59,
+       "dh": -11.8
+      }
+     ],
+     "lab": [
+      31.33,
+      18.12,
+      -3.53
+     ],
+     "median": [
+      98.6,
+      63.3,
+      79.7
+     ],
+     "dE76_zum_ziel": 8.91,
+     "dL": -5.41,
+     "dC": -5.59,
+     "dh": -11.8,
+     "ausserhalb_unsicherheit": false
+    }
+   },
+   "bild1": {
+    "pixel": 0,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   },
+   "bild2": {
+    "pixel": 1058,
+    "median": [
+     122.9,
+     71.5,
+     87.0
+    ],
+    "p10": [
+     105.4,
+     46.9,
+     65.8
+    ],
+    "p90": [
+     155.1,
+     97.2,
+     118.7
+    ],
+    "lab_median": [
+     36.74,
+     24.05,
+     0.33
+    ],
+    "L_p10_p90": [
+     29.7,
+     44.9
+    ],
+    "modell": "form_video Bestand",
+    "zweitmodell": {
+     "name": "em_frei (BG + Frau)",
+     "lab_median": [
+      39.56,
+      5.44,
+      -6.08
+     ],
+     "dE76_zum_hauptmodell": 19.88
+    },
+    "schattierung_median": [
+     82,
+     78,
+     78
+    ]
+   },
+   "ziel": {
+    "lab": [
+     36.74,
+     24.05,
+     0.33
+    ],
+    "L": 36.74,
+    "C": 24.05,
+    "h": 0.8,
+    "rgb_textur": [
+     122.5,
+     71.2,
+     86.7
+    ],
+    "unsicherheit_dE": 19.88,
+    "szenen": [
+     2
+    ]
+   }
+  },
+  "Krallen": {
+   "staende": {},
+   "bild1": {
+    "pixel": 0,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   },
+   "bild2": {
+    "pixel": 0,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   }
+  },
+  "Kopf": {
+   "staende": {
+    "K5c": {
+     "je_szene": [
+      {
+       "bild": 2,
+       "kette_lab": [
+        12.28,
+        13.98,
+        -1.05
+       ],
+       "textur_lab": [
+        11.88,
+        15.47,
+        -6.08
+       ],
+       "dE76": 23.77,
+       "dL": -21.41,
+       "dC": -7.14,
+       "dh": -25.0
+      }
+     ],
+     "lab": [
+      12.28,
+      13.98,
+      -1.05
+     ],
+     "median": [
+      49.4,
+      24.4,
+      33.9
+     ],
+     "dE76_zum_ziel": 23.77,
+     "dL": -21.41,
+     "dC": -7.14,
+     "dh": -25.0,
+     "ausserhalb_unsicherheit": false
+    },
+    "K5e_f1": {
+     "je_szene": [
+      {
+       "bild": 2,
+       "kette_lab": [
+        29.58,
+        12.19,
+        -4.7
+       ],
+       "textur_lab": [
+        32.6,
+        9.98,
+        -6.89
+       ],
+       "dE76": 14.93,
+       "dL": -4.11,
+       "dC": -8.1,
+       "dh": -41.8
+      }
+     ],
+     "lab": [
+      29.58,
+      12.19,
+      -4.7
+     ],
+     "median": [
+      85.2,
+      63.3,
+      77.2
+     ],
+     "dE76_zum_ziel": 14.93,
+     "dL": -4.11,
+     "dC": -8.1,
+     "dh": -41.8,
+     "ausserhalb_unsicherheit": false
+    },
+    "K5f": {
+     "je_szene": [
+      {
+       "bild": 2,
+       "kette_lab": [
+        25.38,
+        15.94,
+        -4.12
+       ],
+       "textur_lab": [
+        30.08,
+        13.38,
+        -5.53
+       ],
+       "dE76": 14.77,
+       "dL": -8.31,
+       "dC": -4.7,
+       "dh": -35.2
+      }
+     ],
+     "lab": [
+      25.38,
+      15.94,
+      -4.12
+     ],
+     "median": [
+      80.8,
+      51.3,
+      66.7
+     ],
+     "dE76_zum_ziel": 14.77,
+     "dL": -8.31,
+     "dC": -4.7,
+     "dh": -35.2,
+     "ausserhalb_unsicherheit": false
+    }
+   },
+   "bild1": {
+    "pixel": 0,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   },
+   "bild2": {
+    "pixel": 273,
+    "median": [
+     112.4,
+     67.0,
+     68.5
+    ],
+    "p10": [
+     84.9,
+     46.4,
+     46.8
+    ],
+    "p90": [
+     144.7,
+     96.6,
+     88.5
+    ],
+    "lab_median": [
+     33.69,
+     19.8,
+     7.47
+    ],
+    "L_p10_p90": [
+     25.9,
+     44.0
+    ],
+    "modell": "form_video Bestand",
+    "zweitmodell": {
+     "name": "em_frei (BG + Frau)",
+     "lab_median": [
+      40.78,
+      -2.36,
+      -4.34
+     ],
+     "dE76_zum_hauptmodell": 26.09
+    },
+    "schattierung_median": [
+     82,
+     78,
+     78
+    ]
+   },
+   "ziel": {
+    "lab": [
+     33.69,
+     19.8,
+     7.47
+    ],
+    "L": 33.69,
+    "C": 21.16,
+    "h": 20.7,
+    "rgb_textur": [
+     112.1,
+     66.8,
+     68.2
+    ],
+    "unsicherheit_dE": 26.09,
+    "szenen": [
+     2
+    ]
+   }
+  },
+  "Lippe/Unterkiefer": {
+   "staende": {},
+   "bild1": {
+    "pixel": 1,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   },
+   "bild2": {
+    "pixel": 0,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   }
+  },
+  "Hals": {
+   "staende": {
+    "K5c": {
+     "je_szene": [
+      {
+       "bild": 2,
+       "kette_lab": [
+        14.8,
+        11.64,
+        2.69
+       ],
+       "textur_lab": [
+        9.47,
+        5.86,
+        -4.03
+       ],
+       "dE76": 20.69,
+       "dL": -20.58,
+       "dC": -1.92,
+       "dh": 4.0
+      }
+     ],
+     "lab": [
+      14.8,
+      11.64,
+      2.69
+     ],
+     "median": [
+      53.9,
+      30.9,
+      33.9
+     ],
+     "dE76_zum_ziel": 20.69,
+     "dL": -20.58,
+     "dC": -1.92,
+     "dh": 4.0,
+     "ausserhalb_unsicherheit": true
+    },
+    "K5e_f1": {
+     "je_szene": [
+      {
+       "bild": 2,
+       "kette_lab": [
+        27.7,
+        13.34,
+        -4.94
+       ],
+       "textur_lab": [
+        25.68,
+        10.34,
+        -7.11
+       ],
+       "dE76": 10.47,
+       "dL": -7.68,
+       "dC": 0.35,
+       "dh": -29.3
+      }
+     ],
+     "lab": [
+      27.7,
+      13.34,
+      -4.94
+     ],
+     "median": [
+      82.2,
+      58.3,
+      73.2
+     ],
+     "dE76_zum_ziel": 10.47,
+     "dL": -7.68,
+     "dC": 0.36,
+     "dh": -29.3,
+     "ausserhalb_unsicherheit": false
+    },
+    "K5f": {
+     "je_szene": [
+      {
+       "bild": 2,
+       "kette_lab": [
+        22.17,
+        20.8,
+        -6.27
+       ],
+       "textur_lab": [
+        16.04,
+        0.0,
+        0.0
+       ],
+       "dE76": 17.21,
+       "dL": -13.21,
+       "dC": 7.85,
+       "dh": -25.8
+      }
+     ],
+     "lab": [
+      22.17,
+      20.8,
+      -6.27
+     ],
+     "median": [
+      78.2,
+      40.9,
+      62.7
+     ],
+     "dE76_zum_ziel": 17.21,
+     "dL": -13.21,
+     "dC": 7.85,
+     "dh": -25.8,
+     "ausserhalb_unsicherheit": true
+    }
+   },
+   "bild1": {
+    "pixel": 0,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   },
+   "bild2": {
+    "pixel": 534,
+    "median": [
+     105.8,
+     75.4,
+     80.2
+    ],
+    "p10": [
+     86.1,
+     53.9,
+     64.6
+    ],
+    "p90": [
+     125.5,
+     96.9,
+     99.9
+    ],
+    "lab_median": [
+     35.38,
+     13.7,
+     2.17
+    ],
+    "L_p10_p90": [
+     27.7,
+     42.3
+    ],
+    "modell": "form_video Bestand",
+    "zweitmodell": {
+     "name": "em_frei (BG + Frau)",
+     "lab_median": [
+      37.93,
+      3.0,
+      -7.06
+     ],
+     "dE76_zum_hauptmodell": 14.36
+    },
+    "schattierung_median": [
+     82,
+     78,
+     78
+    ]
+   },
+   "ziel": {
+    "lab": [
+     35.38,
+     13.7,
+     2.17
+    ],
+    "L": 35.38,
+    "C": 13.87,
+    "h": 9.0,
+    "rgb_textur": [
+     105.6,
+     75.2,
+     80.2
+    ],
+    "unsicherheit_dE": 14.36,
+    "szenen": [
+     2
+    ]
+   }
+  },
+  "F1": {
+   "staende": {
+    "K5c": {
+     "je_szene": [
+      {
+       "bild": 1,
+       "kette_lab": [
+        33.85,
+        13.88,
+        -0.44
+       ],
+       "textur_lab": [
+        25.34,
+        20.47,
+        -2.09
+       ],
+       "dE76": 11.56,
+       "dL": -8.01,
+       "dC": -8.28,
+       "dh": 3.2
+      }
+     ],
+     "lab": [
+      33.85,
+      13.88,
+      -0.44
+     ],
+     "median": [
+      100.7,
+      71.7,
+      80.7
+     ],
+     "dE76_zum_ziel": 11.56,
+     "dL": -8.01,
+     "dC": -8.28,
+     "dh": 3.2,
+     "ausserhalb_unsicherheit": true
+    },
+    "K5e_f1": {
+     "je_szene": [
+      {
+       "bild": 1,
+       "kette_lab": [
+        38.14,
+        15.28,
+        -4.33
+       ],
+       "textur_lab": [
+        33.18,
+        13.59,
+        -5.3
+       ],
+       "dE76": 8.11,
+       "dL": -3.72,
+       "dC": -6.28,
+       "dh": -10.8
+      }
+     ],
+     "lab": [
+      38.14,
+      15.28,
+      -4.33
+     ],
+     "median": [
+      111.1,
+      81.2,
+      97.1
+     ],
+     "dE76_zum_ziel": 8.11,
+     "dL": -3.72,
+     "dC": -6.29,
+     "dh": -10.8,
+     "ausserhalb_unsicherheit": false
+    },
+    "K5f": {
+     "je_szene": [
+      {
+       "bild": 1,
+       "kette_lab": [
+        38.4,
+        15.3,
+        -3.0
+       ],
+       "textur_lab": [
+        31.07,
+        16.61,
+        -3.97
+       ],
+       "dE76": 7.68,
+       "dL": -3.46,
+       "dC": -6.57,
+       "dh": -6.0
+      }
+     ],
+     "lab": [
+      38.4,
+      15.3,
+      -3.0
+     ],
+     "median": [
+      112.6,
+      81.7,
+      95.6
+     ],
+     "dE76_zum_ziel": 7.68,
+     "dL": -3.46,
+     "dC": -6.58,
+     "dh": -6.1,
+     "ausserhalb_unsicherheit": false
+    }
+   },
+   "bild1": {
+    "pixel": 1149,
+    "median": [
+     132.0,
+     85.3,
+     102.8
+    ],
+    "p10": [
+     71.9,
+     35.8,
+     46.0
+    ],
+    "p90": [
+     182.6,
+     151.9,
+     167.5
+    ],
+    "lab_median": [
+     41.86,
+     22.08,
+     -1.95
+    ],
+    "L_p10_p90": [
+     19.9,
+     64.8
+    ],
+    "modell": "form_video EX an Leon",
+    "zweitmodell": {
+     "name": "form_video Bestand (EX farbe.md)",
+     "lab_median": [
+      41.28,
+      22.22,
+      4.59
+     ],
+     "dE76_zum_hauptmodell": 6.57
+    },
+    "schattierung_median": [
+     101,
+     100,
+     100
+    ]
+   },
+   "bild2": {
+    "pixel": 0,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   },
+   "ziel": {
+    "lab": [
+     41.86,
+     22.08,
+     -1.95
+    ],
+    "L": 41.86,
+    "C": 22.17,
+    "h": -5.0,
+    "rgb_textur": [
+     132.0,
+     85.2,
+     102.6
+    ],
+    "unsicherheit_dE": 11.22,
+    "szenen": [
+     1
+    ]
+   }
+  },
+  "Sonder": {
+   "staende": {},
+   "bild1": {
+    "pixel": 0,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   },
+   "bild2": {
+    "pixel": 0,
+    "hinweis": "weniger als 40 gueltige Pixel"
+   }
+  }
+ }
+}

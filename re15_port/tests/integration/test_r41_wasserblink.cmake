@@ -13,7 +13,8 @@
 #   TEIL=leon / elza   Debug-Sprung 2000 (Elza -> 2001), Spawn (-7000,-25659) Band 1: die RVD-Zonen 0->1 (@0x0028C) und
 #                      1->2 (@0x002C8) bringen die Kamera auf Cut 2 = Blick der Marke. Bildserie F300..F419:
 #                      - Kanal-Fenster x 104..230, y 100..200 (Leon steht links davon) springt in keinem Bildwechsel
-#                        um mehr als 8 (master aa88a1b6a: 16 von 119 Wechseln, groesster Sprung 131),
+#                        um mehr als 16 (master aa88a1b6a: 16 von 119 Wechseln, groesster Sprung 131; 16 = groesster
+#                        Schritt der Original-Paletten-Animation des Wassers, Runde 41 "monitore"),
 #                      - Bild F360 im Fenster gleich dem Lauf mit RE15_KEIN_RAUMLICHT=1 (Raumlicht traegt dort nichts bei),
 #                      - der Wasserlauf der Spur N laeuft weiter ("[wasserlauf41] ROOM200x: 6 Strahlen").
 #   TEIL=gegen         Gegenprobe: ROOM50B0 Cut 2 traegt den Raumlicht-Schein weiter; Bild F150 mit und ohne
@@ -106,7 +107,13 @@ if("${TEIL}" STREQUAL "leon" OR "${TEIL}" STREQUAL "elza")
         set(_fehler "${_fehler}\n[an] nur ${_n} von 120 Bildern")
     else()
         list(SORT _bilder)
-        execute_process(COMMAND "${RE15_TOOL}" flacker 104 230 100 200 8 0 ${_bilder}
+        # Grenze 16 statt 8 (Runde 41 "monitore", Nutzer 2026-11-15 "Die Monitore im Original laufen"): die drei
+        # Wasserflaechen (Obj_model_set Typ 3) laufen jetzt wie im Original durch die Paletten-Animation FUN_8002bc04
+        # (`jal` @0x8002bda0, Original-RAM ROOM2000: [0x800b281e]=3, Takt 4, Laenge 7; include/re15_clutanim.h).
+        # Groesster Farbschritt zwischen zwei Unterpaletten 0..6 der Wasser-TIM: 2 Stufen von 5 Bit (ROOM2000 TIM
+        # @0x53A9C / ROOM2001 @0x53EB4, Eintraege 0x98C6/0x9CE7/0xA108 = 6/7/8) = 16 in 8 Bit. Die ausgedachten
+        # Glanzpunkte, gegen die dieser Riegel steht, sprangen um bis zu 131 (master aa88a1b6a) - die bleiben rot.
+        execute_process(COMMAND "${RE15_TOOL}" flacker 104 230 100 200 16 0 ${_bilder}
                         TIMEOUT 120 RESULT_VARIABLE _r1 OUTPUT_VARIABLE _o1)
         message(STATUS "r41_wasserblink[${TEIL} flacker]:\n${_o1}")
         if(NOT _r1 EQUAL 0)

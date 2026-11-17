@@ -1,0 +1,10 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build
+          Start  743: unit_r37_masken36_ausschluss
+          Start 1376: unit_r41_birkin_wand_griff
+[... gekuerzt: Einzelzeilen der 1013 Tests ...]
+1013/1013 Test  #743: unit_r37_masken36_ausschluss ............   Passed  452.90 sec
+
+100% tests passed, 0 tests failed out of 1013
+
+Total Test time (real) = 453.03 sec
+rc=0

@@ -3042,3 +3042,2099 @@ Labor 50E0: Lauf aus integration_r41_sichel_form (Software-Renderer) - Ersatzmod
 7. analysis/befunde_runde41/NUTZER_ENTSCHEIDE.md liegt in diesem Zweig nicht vor und SF_sichel.md hat keinen Entscheid-Abschnitt -
    der Entscheid steht nur hier.
 8. Software-Renderer-Fix 4dde57452 fehlt in r41/sichel_nb2 (fuer V7 nicht noetig); kommt mit der Integration.
+
+## V8 Koerperbau nach Nutzer-Skizze (2026-11-08) (Bauer, Runde 1 von 2, Zweig r41/sichel_v8)
+
+### Wortlaut (bindend)
+- (A) "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber mit Schwanz und sowas bin ich immer noch 0 zufrieden.... Ich verstehe
+  das auch nicht. Es ist doch eigentlich KLAR erkennbar. Siehe Darstellung.png und Darstellung_Vorlage.png. Man sieht ganz klar den
+  Körper Aufbau...."
+- (B) "und wenn du schon dabei bist, am überarbeiten, man sieht ebenfalls beim vorlage Bild, das die Rechte Seite auch mehr rottöne hat,
+  also quasi mehr adern an verschiedenen Stellen, am Arm und Körper, nicht nur grau. Übernehme die die Textur Sachen die du dafür
+  brauchst vom originalen Birkin von Resident Evil 1.5"
+- Skizze Version_80%/Darstellung.png: T ("tail area 1/2"), J ("Tail directly smooth into the back - no hill or anything..."), H ("Little
+  red hill from the back"), K ("smooth straight to head without further hills....").
+Messblatt: SF_MESSBLATT_V8.md (09b04bc1c). Kein RE-Befund; jede Zahl ist PORT-WAHL (Nutzer-Wortlaut oder Messung), keine @0x-Adresse.
+
+### Ergebnis
+- Spiel-Asset EMD/EM30_HANGAR.EMD = **V8, sha256 fa31156c3b17dd4fe0946f3fad334e597eac91bdc9aa5168280566fd4b33a8ff** (270 500 Byte), Pin
+  release/em30_hangar.sha256. Bau: re15_port/tools/r41_sichel/v8_kette.sh (V7-Kette Stufen 1-6, dann v8/v8_bau.py) -> "V8-KETTE-OK".
+  Zwei Bauten aus V7 bytegleich (Determinismus geprueft).
+- Riegel (v8/riegel_v8.py, SF_belege/v8/riegel_v8.txt): **6 von 8 gruen** (S1, S4, S5, S6, S7, S8), **rot S2 und S3** (siehe Offen).
+- Szene Hangar 50A0 (lauf_v4.sh FD 200-1100, Ende F1110): EXIT 0, 901 Bilder, state.log **bytegleich** zum freigegebenen V7-Lauf
+  (1131 Zeilen, 0 Unterschiede), Spieler am Ende frei (pst=1). Labor 50E0: Form geladen (23/23/21), state.log V7 = V8 (0 Unterschiede).
+
+### Achsen (Korrektur zum Messblatt)
+Gemessen (sfv8/bau/x2.py, x3.py): im Knochenraum 8 ist **z die Seitenachse** (Oberarm Knochen 13 relpos z -1136, Knochen 10 z +943,
+Huefte 1/4 z -229/+229), x = vorn/hinten (Kopf Mesh 9 x -156..353, Ruecken bis x -1075), y entlang der Wirbelsaeule. In PV steht die
+Kamera im Knochenraum 8 in Richtung (0,27, -0,50, -0,82). **(W)-rechts = z < 0** = die zur Kamera gewandte Flanke (bestaetigt das
+Messblatt in der Sache: Knochen 13 sichtbar). Das Messblatt nannte die Seitenachse x ("Wurzel 378 E. (W)-rechts", "Schwerpunkt x < 0");
+x < 0 ist die hintere Rumpfhaelfte. S7c misst weiter wie im Messblatt definiert (lok x < 0); daneben ausgegeben lok z < 0.
+
+### Verfahren und PORT-WAHL-Werte
+1. **Schwanz** (v8/kette_suche.py -> kette_v8.json; Stufe s in v8_bau.py):
+   - Modell der Suche: Kette aus 7 gleich langen Gliedern im Knochenraum 8, Bild = Kreise entlang der Kette (Radius x Bildmassstab am
+     Ort), Pose PV, Residuen: S1 (22 T-Stationen), 0,5 x Oberkontur x 330-445 gegen die Vorlage-Maske, Naht (S2c), Spitze an (283,334),
+     Wurzelmitte an J-Mitte (366,215), S4-Mindestdurchmesser, Rueckenmitte (z-Gewicht 2,0), Boden. scipy least_squares (soft_l1).
+     Laeufe sfv8/bau ks1-ks11; verworfen: freie Radien (fetter Schwanz ueber dem ganzen Ruecken, ks1), z-Gewicht 0,5 (Gelenke bis
+     z -1300 an der Flanke, ks5), gerades Wurzelrohr B 1,2-1,7 (Deckel ragte in der Ansicht von vorn ueber die Schulter, t5/t6).
+   - Ergebnis: Wurzel relpos **(-667, -342, 102)**, Gliedlaenge **L 538** (alle 7), Ruhe-Biegung je Gelenk (Suche) 23,2 / 23,7 / 20,8 /
+     -11,7 / 16,9 / -18,8 Grad (Betrag <= 25 Grad, Bauplan); Ruhe-Lokaldrehungen im Asset 21,9 / 22,2 / 19,5 / 11,1 / 18,8 / 26,9 Grad
+     (die Ruhe ist so gesetzt, dass PV mit der V7-Bewegung genau die Suchkette zeigt; das letzte Gelenk liegt dadurch 1,9 Grad ueber 25).
+   - Radien je Gelenk (E.) **450 / 417 / 362 / 350 / 193 / 83 / 63 / 60** aus dem Bauplan-Profil (Wurzel 450, s 90-130 **350**,
+     s 140 250, s 150-160 90, Ende 60) mit Steigungsknick <= 15 Grad. 350 statt ~305 bei s 90-130: mit 305 nur 34,7-37,5 px (Lauf ks10,
+     die Glieder liegen tiefer im Bild als der Koerper; S4 verlangt >= 36).
+   - Mesh 16 (Wurzel) = Topologie von Mesh 18 (3 Ringe): Rohr im Rumpf **1,5 r0** hinter der Wurzel, verjuengt auf **0,6 r0**, Kegel
+     **0,3** x Radius; Ringe der Glieder auf der Gehrung der Ruhekette, Manschette 0,45 r, Dorn 0,8 r, Normalen radial; Flaechen/UV/
+     Zeile 487 wie V7 (Schwanzfarbe unveraendert).
+   - Keyframes der Knochen 16-22 = Ruhe x (V7-Keyframe gegen den Clip-Median); Bodenregel offline: in **151** Keyframes Knochen 16 um
+     eine waagerechte Achse hochgedreht, bis Ringunterkanten, Spitze und Dornspitze nicht unter der tiefsten Koerperecke liegen.
+2. **Ruecken** (v8/ruecken_suche.py -> ruecken_v8.json): Ecken von Mesh 8 senkrecht zum Sehstrahl verschoben (Koordinatensuche, 1 px):
+   Runde 1 Rumpf allein gegen die Vorlage-Oberkontur x 372-445 (Kosten 8,37 -> 5,55), Runde 2 mit Schwanz und den Formtermen (H,
+   Sattel, Kuppe), nur Bild-x >= 395. Verschoben: Ecken 7, 29, 30, 45, 47, 49, 50, 53, 58 (je 10-74 E.).
+3. **Adern** (v8/adern_v8.py, adern_suche.py -> adern_v8.json): Zeile **493 = X1** (V7-Zeile 480 + **62** Original-EM30-Ader-Eintraege
+   der Zeile 480, a* >= 15, L* <= 38, bytegleich), **494 = X2** (V7-Zeile 481 + **50** Eintraege der Zeile 481); 15 Zeilen, Port-
+   Texturhoehe 3840. Mesh 13: 13 Flaechen 480 -> X1. Mesh 8: die in PV sichtbaren (>= 10 px) Hautflaechen mit z < 0 (26), 23 -> X1,
+   3 -> X2, je Teil-UV-Insel (<= **900** Texel, 9 Inseln) ein Schub auf aderreiche Original-Texel derselben Seite und Zeile (keine
+   Flaechen-Rot-Texel, nicht Bereich C Schulter-Augapfel). 900 statt ganzer Inseln (3, S7c 17,4 %) bzw. je Flaeche (S7c 62,7 %, Tafel
+   sfv8/bau/za.png: rotes Netz "wie drauf gemalt"): Probe zc.png, ruhigster Stand mit S7c >= 25 %. Texel bytegleich V7, keine neue Farbe.
+4. **Code**: schwanz_r41.c V8-Kettenmodus (re15_schwanz_r41_v8_kette: gleiche Glieder max/min <= 1,10, Glied >= 500 E., Wurzel y < 0,
+   x >= -700; V4-Mitnahme/-Feder/-Erhalt, haengen() aus, glaetten() Keyframe-Winkel + 3 Grad, hoechstens 25 Grad, ohne Knick-Ausnahme,
+   Bodenregel mit Mesh-Radien); birkin_formen.c: V8 nimmt die V4/V7-Szenenfuehrung (k_schwanz_gewicht_v4), nie die V2-Fuehrung.
+
+### Riegel Soll/Ist (riegel_v8.py; Gegenprobe V7 in tools/r41_sichel/v8/riegel_v8_V7_gegenprobe.txt)
+| Riegel | Soll | V8 | V7 (Gegenprobe) |
+|---|---|---|---|
+| S1 Kontur T | Mittel <= 4, Max <= 8 | **3,0 / 7,0 gruen** | 16,8 / 50 rot |
+| S2 J | (a) <= 4/6, (b) <= 2, (c) <= 3 | (a) 3,7 / 7, (b) 3,7 bei x 358, (c) 5,0 bei x 406 **rot** | 7,3/13; 6,6; 7,0 rot |
+| S3 Ruecken/H/K | (a) <= 4, (b) H 5-10 bei x 428-445, (c) keine, (d) <= 2, (e) <= 3 | (a) 3,0, (b) **3,0 bei x 423**, (c) keine, (d) **2,3**, (e) 3,0 **rot** | 8,0; 4,6 bei 427; 6,4; 3,0 rot |
+| S4 Breite | Wurzel >= 55, s 90-130 >= 36, monoton, Ende <= 10 | **59,0; 42,6/40,0/40,3; ja; 6,0 gruen** | 44,3; 24,1; nein rot |
+| S5 Gesicht | bytegleich V7 | **gruen** (6501 Texel) | V5f: Texel anders, rot |
+| S6 Boden | 0 Keyframes, Szene y <= 0 | **0 von 912; Szene tiefstes y -66 gruen** | 70 von 912 rot (Szene -108) |
+| S7 Adern | Herkunft; 35-59 %; 25-80 %; Flecken <= Original | **ok; 43,3 %; 29,8 % (lok z < 0: 32,7 %); 19 <= 27 gruen** | 22,8 %; 0,0 % rot |
+| S8 Technik | <= 16 Zeilen, <= 4096, 23/23/21 | **15, 3840, gruen** | 13, 3328 gruen |
+
+Praezisierung S2c: das Messblatt-Werkzeug m26 setzte die Schwanz-Oberkante hinter ihrem rechten Ende als Gerade fort und mass damit den im
+Rumpf liegenden Rohrrand (V7 34 px bei x 410, Messblatt-Tabelle "6-14"); riegel_v8 misst an der Naht (rechteste Spalte x 330-420, in
+der der Schwanz oben liegt, +-15 Spalten): V7 7,0, V8 5,0. S3c nimmt Kuppe (x 385-425, -> a) und H (x 428-445, -> b) aus; S3e ueber
+y 212-243 wie m25 (V7 3,0).
+
+### Tests
+- configure + build: LOCAL-BUILD-OK.
+- ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  "100% tests passed, 0 tests failed out of 8".
+- ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)":
+  "100% tests passed, 0 tests failed out of 1013".
+- Neu: unit_birkin_formen (15 Zeilen, X1/X2 62/50 Eintraege aus EM30, Mesh 13 13 Flaechen X1, Mesh 8 23 + 3, 26 UV-Schuebe),
+  unit_schwanz_r41 (V8-Kette erkannt, V7-relpos nicht; (10) Gelenk <= min(25, max(12, Keyframe + 3)) Grad: 24,9 / +0,1).
+  Gegenprobe mit V7 als Asset: beide rot (SF_belege/v8/tests_gegenprobe_V7.txt).
+
+### Spiel
+- Szene: sfv8/szene_v8 (Video sfv8/spiderman_szene_v8.mp4, F225-F450, 226 Bilder, 30 fps, 960 x 720); Tafeln 06 und 07 (jedes 7. Bild):
+  Ablauf wie V7, Schwanz nie im Boden (tiefstes Gelenk y -66), in groben Zuegen kein Durchstossen von Leon/Spider-Man/Wand gesehen.
+  Bilder per RE15_FRAMEDUMP wie der freigegebene V7-Lauf (kein AUTOSHOT/SOFTWARE_RENDER); ein gdigrab-Lauf steht aus.
+- Labor 50E0 (sfv8/labor_v8, 1000 Takte ohne Eingabe): Form geladen; Birkin st=1 ss1=9 an (-15000,12200) unveraendert, wie V7
+  (sfv8/labor_v7, state.log 0 Unterschiede). Der Kampf selbst laeuft in integration_r41_birkin_pistole (gruen, 240 s).
+
+### Tafeln (SF_belege/v8, roh, selbst angesehen)
+01_darstellung.png, 02_foto2_seite.jpg, 03_foto1_vorn.jpg, 04_rundum.jpg, 05_adern_rechts.png, 06_spiel.jpg, 07_bogen_jedes7.jpg.
+Sicht: V8 zeigt einen durchgehenden Bogen vom oberen Ruecken nach hinten unten (statt der V7-L-Form), die Oberkante liegt auf T; die
+(W)-rechte Flanke traegt rote Original-Adern.
+
+### Offen (Runde 2)
+1. S2 rot: Schwanz-Oberkante x 345-365 3-7 px ueber der Vorlage (Suchmodell mit Kreisen weicht dort 3-4 px vom Mesh ab), Sattel 3,7
+   bei x 358, Naht 5,0 bei x 406 (Rumpf ueber dem Wurzelrohr). Weg: Feinsuche mit dem gerenderten Mesh statt Kreisen.
+2. S3 rot: Huegel H nur 3,0 px bei x 423 (Soll 5-10 bei 428-445), Sattel Ruecken -> Kopf 2,3 (Soll <= 2). Grenze: der Kopf (bytegleich)
+   setzt die Sehne bei x 447; eine Gittersuche ueber die Ecken 0/30/46/51/53/54 erreichte H 4,5 bei x 438 mit Sattel 4,0.
+3. In P2 (Foto 2) endet der Schwanz hoeher als im Foto und das Ende biegt hoch (Bewegung aus dem V7-Clip-Median auf die neue Kette);
+   die Bewegungsdeltas der L-Kette passen nicht ganz zum Bogen.
+4. Letztes Ruhe-Gelenk 26,9 Grad (> 25); glaetten() begrenzt im Spiel auf 25.
+5. Adern: 9 Teil-Inseln erzeugen UV-Naehte zwischen den Inseln; Eindruck "ruhig" am Nutzerbild pruefen (Memory Texturen nie aus Video eichen).
+6. gdigrab-Aufnahme des echten Fensters fehlt noch (Bilder hier aus RE15_FRAMEDUMP wie der V7-Referenzlauf).
+
+## V8 Runde 2 nach Pruefung V8 r1 (Bauer, Runde 2 von 2, Zweig r41/sichel_v8, 2026-11-09)
+
+### Wortlaut (bindend, unveraendert)
+- (A) "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber mit Schwanz und sowas bin ich immer noch 0 zufrieden.... Es ist doch
+  eigentlich KLAR erkennbar. Siehe Darstellung.png und Darstellung_Vorlage.png. Man sieht ganz klar den Körper Aufbau...."
+- (B) "... die Rechte Seite auch mehr rottöne hat, also quasi mehr adern an verschiedenen Stellen, am Arm und Körper, nicht nur grau.
+  Übernehme die die Textur Sachen die du dafür brauchst vom originalen Birkin von Resident Evil 1.5"
+Befunde der Pruefung V8 r1 (SF_PRUEFUNG_V8_r1_zahlen.md, SF_PRUEFUNG_V8_r1_sicht.md): S2 rot, S3 rot (b, d), Ruhekette mit Umkehr am
+Gelenk 20 (gelb), P2-Schwanz waagerecht mit Haken (Spitze ~(247,273)), Adern "Flickenteppich", Oberarm-Wulst und untere Flanke grau,
+Wurzelrohr sticht im Spiel (F334/F340) durch die Rueckenhaut, Balken- und Hornlagen F322-F340.
+Kein RE-Befund: jede Zahl ist PORT-WAHL (Nutzer-Wortlaut oder Messung), keine @0x-Adresse.
+
+### Ergebnis
+- Spiel-Asset EMD/EM30_HANGAR.EMD = **V8 Runde 2, sha256 d0ef852c9070c7a970b53301c961c059f02f166befb525792ecbd19705e2911a** (271 012 Byte),
+  Pin release/em30_hangar.sha256 (Commit baf91e8aa). v8_kette.sh -> "V8-KETTE-OK sha256 d0ef852c..." (Stufen 1-6 wie bisher, V7
+  319bbd17); zwei Bauten bytegleich.
+- Riegel (riegel_v8.py, SF_belege/v8/riegel_v8.txt, mit Szene): **7 von 8 gruen, rot S7 (nur c)** - siehe Offen 1.
+- Szene Hangar 50A0 (lauf_v4.sh FD 200-1100, Ende F1110): EXIT 0, 901 Bilder, state.log **0 Unterschiede** zum freigegebenen V7-Lauf
+  (1131 Zeilen), "Szene Ende: Cut 4", Spieler am Ende pst=1. Labor 50E0: 23/23/21, Birkin st=1 ss1=9 an (-15000,12200), state.log
+  F1-F1010 gleich Runde 1.
+
+### Verfahren und PORT-WAHL-Werte (Befund -> Behebung)
+1. **Ruhekette ohne Umkehr** (Zahlen-Pruefer, gelb): kette_suche.py jetzt EBEN - eine Biegeachse, 6 Biegungen gleichsinnig 0..25 Grad
+   (Bauplan 6a "je hoechstens 25 Grad ... ohne Umkehr"). Gemessen am Asset in PV: Bild-Drehwinkel -25,4 / -9,5 / -17,0 / -9,4 / -9,1 /
+   -16,1 Grad (Runde 1 mit +8,3 am Gelenk 20), Spitze (283,335) (Ziel 283,334).
+2. **Feinsuche am Mesh statt Kreisen** (S2 rot): kette_fein.py (neu), (1+1)-Evolution mit fester Saat auf den riegel_v8-Massen der
+   gerenderten Silhouette (Kosten im Werkzeugkopf). Ergebnis kette_v8.json: Wurzel (-714,-214,130), Glied 526 E., Radien 442/413/366/350/
+   191/83/63/60 E., Rohr hinten 1,5 r0, Rohrknick rohr_grad (v8_bau.rohr_drehung, Ring 0 zur Bogenaussenseite = zum Buckel),
+   Verjuengung. Suchkette und Protokolle: SF_belege/v8/runde2/suche (k1 kette_suche eben -> k2/k3 Powell -> k4/k5 Evolution).
+3. **Manschette** (Messung sfv8/r2 vtx.py, fein.py): die Manschette von Glied 17 lag entlang der EIGENEN Achse 0,45 ra zurueck und stand
+   in PV 5-7 px ueber der Oberkante (Huckel am Gelenk), danach eine Delle (Sattel 3,2 bei x 329). Jetzt: Gehrungsring entlang des
+   VORGLIEDS um 0,2 ra zurueckgesetzt, Radius 0,99 (v8_bau MANSCHETTE_S/_R); deckt bis etwa 11 Grad Nachknicken ohne Spalt.
+4. **Keyframes** (Sicht (1b) P2-Haken, (5) Horn/Balken und Durchstossen; Zahlen 714/912 Keyframes > 25 Grad): keine V7-Bewegung mehr.
+   Knochen 16 in jedem Keyframe auf der Ruhe gegen Knochen 8 (das Rohr liegt immer wie in PV im Rumpf); Glieder 17-22 haengen im
+   Modellraum wie in PV, um die Hochachse mit dem Kurs von Knochen 8 gedreht (Messblatt V8: "Schwanzband steht n1435-n1440 still", Foto 2
+   und die Vorlage im selben Schnitt); je Gelenk <= 25 Grad; Bodenregel dreht die Zielrichtungen gemeinsam hoch (109 Keyframes),
+   Knochen 16 bleibt. Gemessen: 0 von 912 Keyframes mit einem Gelenk > 25,5 Grad (max 25,2 = 12-Bit-Rundung, Median 18,5; Runde 1:
+   683 / 95,5 / 28,3). P2 (Clip 12 Bild 48): Spitze (271,339), tiefster Schwanzpunkt (269,340) - faellt zum Boden (Runde 1 (253,294),
+   V7 (296,320); Beschreibung2 "Schwanzspitze Ende" etwa (282,320)).
+5. **Ruecken** (S3 b/d): die Koordinatensuche ruecken_suche.py --riegel (Kosten = Riegelgroessen S2/S3) blieb an einer Stufe 187 -> 192
+   bei x 429/430 haengen; ruecken_ecken.py (neu) setzt die Silhouetten-Ecken 46/51/30/53/50/49/47/48 auf Bildpunkte der Kuppel: obere
+   Huelle der Vorlage-Oberkontur x 400-447 (m13b_oben.json), Huegel mit groesster Hoehe ueber der Sehne x 405 -> 447 bei x ~435,
+   Ecke 53 an den Kopfrand (447,200); Mesh 9 bleibt bytegleich. Ziele und Verschiebungen in ruecken_v8.json "ecken_ziele".
+6. **Adern** (Sicht (3)): ganze V7-UV-Inseln wechseln die Zeile, UV unveraendert - keine neue Naht, die Original-Textur liegt
+   durchgehend wie beim RE1.5-Birkin. Mesh 8: Inseln d0 (23 Flaechen) und d26 (12) -> X1 493, d28 (6) -> X2 494; Mesh 13: 13 Flaechen
+   -> X1; Mesh 14 (Unterarm-Wulst unter dem Buckel, diag1.py 14/482): 37 Flaechen -> X3 495 = V7-Zeile 482 + 88 Original-Ader-Eintraege.
+   16 CLUT-Zeilen, Port-Texturhoehe 4096 (= Grenze). Proben (adp2/adp3/adp4.py): ein starrer Schub je ganzer Insel (19 gueltige Schuebe
+   der groessten Rumpfinsel) hob S7c nur auf 14,3 % und die Flecken auf 30 > 27 - verworfen. riegel_v8 S7a (adern_v8.herkunft) erlaubt
+   jetzt 3 neue Zeilen (Regel je Eintrag unveraendert) und prueft Mesh 14 mit.
+7. **Spiel** (schwanz_r41.c, nur V8-Kette): erstes Glied ohne Szenenfuehrung starr auf dem Keyframe im Raum von Knochen 8 (SW_V8_STARR);
+   unter der Szenenfuehrung (h19-h74) folgt es der FABRIK (mit starrem Glied blieb der Schwanz h19-h30 hinter dem Koerper, Zwischenlauf
+   szene_v8r2) und kehrt danach im n-ten Takt um hoechstens n x 5 Grad zurueck (SW_V8_RUECK; Unit-Test Freigabe-Sprung 1621 -> 630 E.,
+   Grenze 700). Bodenregel zuerst verteilt (1 Grad je Schritt um das Gelenk mit dem kleinsten Knick <= 25 Grad), Rest starr wie V4.
+   Erkennung SW_V8_WURZEL_X -760 (Wurzel jetzt x -714; V2 -986, Gegenprobe -800).
+
+### Riegel Soll/Ist (riegel_v8.py; Gegenproben: V7 tools/r41_sichel/v8/riegel_v8_V7_gegenprobe.txt, V8 r1 SF_belege/v8/runde2/riegel_V8r1_gegenprobe.txt)
+| Riegel | Soll | V8 Runde 2 | V8 Runde 1 | V7 |
+|---|---|---|---|---|
+| S1 Kontur T | Mittel <= 4, Max <= 8 | **1,8 / 5,0 gruen** | 3,0 / 7,0 gruen | 16,8 / 50 rot |
+| S2 J | (a) <= 4/6, (b) <= 2, (c) <= 3 | **(a) 1,7/5, (b) 1,7 bei x 382, (c) 3,0 bei x 397 gruen** | 3,7/7; 3,7; 5,0 rot | 7,3/13; 6,6; 7,0 rot |
+| S3 Ruecken/H/K | (a) <= 4, (b) 5-10 bei x 428-445, (c) keine, (d) <= 2, (e) <= 3 | **4,0; 6,8 bei x 437; keine; 1,5; 3,0 gruen** | 3,0; 3,0 bei 423; keine; 2,3; 3,0 rot | 8,0; 4,6 bei 427; keine; 6,4; 3,0 rot |
+| S4 Breite | Wurzel >= 55, s 90-130 >= 36, monoton, Ende <= 10 | **56,9; 38,8/37,9; ja; 5,9 gruen** | 59,0; 42,6/40,0/40,3 gruen | 44,3; 24,1; nein rot |
+| S5 Gesicht | bytegleich V7 | **gruen** (6501 Texel) | gruen | - |
+| S6 Boden | 0 Keyframes, Szene y <= 0 | **0 von 912; Szene tiefstes y -66 gruen** | 0; -66 gruen | 70; -108 rot |
+| S7 Adern | (a) Herkunft; (b) 35-59 %; (c) 25-80 %; (d) <= Original | (a) ok; (b) 42,7 %; **(c) 5,3 % (lok z<0 5,0 %) ROT**; (d) 26 <= 27 | ok; 43,3; 29,8; 19 gruen | ok; 22,8; 0,0; 15 rot |
+| S8 Technik | <= 16 Zeilen, <= 4096, 23/23/21 | **16, 4096, gruen** | 15, 3840 gruen | 13, 3328 gruen |
+
+### Ausserhalb der Riegel (Pruefer-Befunde, gemessen)
+- Szene (tools/r41_sichel/v8/szene_mass.py, SF_belege/v8/runde2/szene_mass.txt): 144 Takte, tiefstes Gelenk y -66, Gelenk max 39,3 Grad
+  (nur h69/h70: die Szene fuehrt die Spitze zum Boden, die verteilte Bodenregel stoesst an 25 Grad, der Rest dreht starr um Gelenk 1),
+  Median des Takt-Maximums 20,4 Grad, 2 Takte > 30 Grad (Runde 1: 0, Median 25,0 an der Grenze; V7: 144); die Biegeebene wechselt das
+  Vorzeichen in 40 von 144 Takten (Runde 1: 121, V7: 144) - diese 40 liegen in der FABRIK-Fuehrung.
+- Ruecken von hinten (Tafel 08, F322-F346): kein Durchstossen des Wurzelrohrs gesehen; der Schwanz steigt als Bogen aus dem Ruecken und
+  faellt links nach unten (F328/F334), kein senkrechtes Horn. Gegen V7 steht der Bogen hoeher ueber dem Ruecken.
+
+### Tests
+- build: "=== LOCAL-BUILD-OK (build)" (Baum aus Runde 1 konfiguriert).
+- Summenzeilen der Gruppe und der Unit-Suite: SF_belege/v8/tests_v8.txt.
+- Gegenprobe (SF_belege/v8/runde2/tests_gegenprobe.txt): Spiel-Asset V8 Runde 1 bzw. V7 -> unit_birkin_formen und unit_schwanz_r41 rot.
+- Neu unit_schwanz_r41 (11): erstes Glied ohne Szenenziel nach 180-Grad-Drehung und im Gang hoechstens 0,1 Grad am Keyframe (Soll <= 1);
+  ohne V8-Erkennung (Gegenprobe) 147,5 Grad.
+
+### Spiel
+- Szene: sfv8/szene_v8r2 (lauf_v4.sh, BAUM r41_sichel_v8, EMD "-"); Video sfv8/spiderman_szene_v8.mp4 (F225-F450, 226 Bilder, 30 fps);
+  Tafeln 06 (V7 | V8, gleiche Bildnummern), 07 (jedes 7. Bild), 08 (Ruecken von hinten). Ablauf und state.log wie V7; Schwanz nie im
+  Boden; in groben Zuegen kein Durchstossen von Leon, Spider-Man oder Wand gesehen. Bilder per RE15_FRAMEDUMP wie der Referenzlauf.
+- Labor 50E0: sfv8/labor_v8r2 (1010 Takte ohne Eingabe): Form geladen, Birkin wie Runde 1; der Kampf laeuft in
+  integration_r41_birkin_pistole.
+
+### Tafeln (SF_belege/v8, roh, selbst angesehen)
+01_darstellung.png, 02_foto2_seite.jpg, 03_foto1_vorn.jpg, 04_rundum.jpg, 05_adern_rechts.png, 06_spiel.jpg, 07_bogen_jedes7.jpg,
+08_ruecken_hinten.jpg; dazu runde2/szene_v7_v8r1_v8r2.jpg, runde2/ruecken_v7_v8r1_v8r2.jpg, runde2/adern_varianten_V7_V8r1_A_C.png
+(Zeilen V7 | V8 r1 | ganze Inseln ohne Schub | mit Schub), runde2/adern_V7_V8r2.png, runde2/posen_V7_V8r2.png.
+
+### Offen
+1. **S7c rot (5,3 % statt 25-80 %)** - Zielkonflikt im Messblatt: S7a erlaubt nur V7-Eintraege und Original-Ader-Eintraege (a* >= 15,
+   L* <= 38). Ruhig (ganze Inseln, keine neue Naht) erreichen die Adern in PV 5,3 %, mit starrem Schub je ganzer Insel hoechstens 14,3 %
+   (dann S7d 30 > 27); 25 % erreichte nur Runde 1 mit 9 Teil-Inseln - der vom Sicht-Pruefer abgelehnte Flickenteppich. Gemessen: das
+   Original-EM30 (volle Original-Zeile, Original-UV) hat dort 60,5 % (Mesh 13 57,7 %); die "Rottoene" der Vorlage sind die blassrosa
+   Original-Haut, nicht nur die Adern. Zu entscheiden (Nutzer/Orchestrator): (a) so lassen (ruhig, wenig Rot in PV), (b) fuer die
+   (W)-rechten Inseln die VOLLE Original-Zeile 480/481/482 (bytegleich EM30; S7a muesste dafuer erweitert werden), (c) Teil-Inseln
+   (S7c gruen, Flickenteppich).
+2. Unterarm (Mesh 14, X3): eine lange rote Ader laeuft sichtbar am Unterarm entlang (Tafel 01/02) - Original-Texel, aber kraeftig; am
+   Nutzerbild pruefen.
+3. Gelenk 1 in h69/h70 bis 39 Grad (Boden-Rest, siehe oben).
+4. gdigrab-Aufnahme des echten Fensters fuer Runde 2 nicht gemacht (Bilder per RE15_FRAMEDUMP wie der V7-Referenzlauf).
+
+## V8 Runde 3 nach Pruefung V8 r2 (Bauer, Zweig r41/sichel_v8, 2026-11-09)
+
+### Wortlaut (bindend, unveraendert)
+- (A) "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber mit Schwanz und sowas bin ich immer noch 0 zufrieden.... Es ist doch
+  eigentlich KLAR erkennbar. Siehe Darstellung.png und Darstellung_Vorlage.png. Man sieht ganz klar den Körper Aufbau...."
+- (B) "... die Rechte Seite auch mehr rottöne hat, also quasi mehr adern an verschiedenen Stellen, am Arm und Körper, nicht nur grau.
+  Übernehme die die Textur Sachen die du dafür brauchst vom originalen Birkin von Resident Evil 1.5"
+Pruefberichte V8 r2 (SF_PRUEFUNG_V8_r2_sicht.md, SF_PRUEFUNG_V8_r2_zahlen.md, beide NICHT BESTANDEN), Vorgaben O1-O8 des Orchestrators.
+Seite: "Die Rechte Seite" = (W)-rechts = Knochenraum 8 z < 0 (Oberarm Knochen 13 relpos z -1136); in der Vorlage/PV und in Foto 2 die
+zur Kamera gewandte Flanke (in PV sichtbar Knochen 13 3642 px, Knochen 10 235 px). Kein RE-Befund: jede Zahl ist PORT-WAHL (Nutzer-
+Wortlaut oder Messung), keine @0x-Adresse.
+
+### Ergebnis
+- Spiel-Asset EMD/EM30_HANGAR.EMD = **V8 Runde 3, sha256 66806bc4ae2537809ce2ebd827a661974ca560d024fccaca4ee79c559134fab3** (271 012 Byte),
+  Pin release/em30_hangar.sha256. v8_kette.sh (Stufe 7 jetzt --stufen srea) zweimal (sfv8/kette_r3a, kette_r3b): bytegleich, "V8-KETTE-OK".
+- Riegel (riegel_v8.py, SF_belege/v8/riegel_v8.txt, mit Szene): **9 von 10 gruen, ROT S10 (Wurzel von hinten)** - siehe Offen 1.
+- Szene Hangar 50A0 (lauf_v4.sh FD 200-1100, Ende F1110): EXIT 0, 901 Bilder, state.log 1131 Zeilen, **0 Unterschiede** zum freigegebenen
+  V7-Lauf, "Szene Ende: Cut 4", Spieler am Ende pst=1. Schwanz: 144 Takte, tiefstes Gelenk y -118, **Gelenk max 25,1 Grad** (V8 r2 39,3).
+
+### Vorgaben -> Umsetzung (Werkzeuge re15_port/tools/r41_sichel/v8, Commit 13f57529b)
+- **O1 Adern rechts** (adern_r3.py, adern_v8.adern_original/herkunft_r3): Zeilen 493/494/495 = Original-EM30-Zeilen 480/481/482
+  **bytegleich** (alle Eintraege, nicht nur Adern). Flaechen (UV unveraendert = Original-UV, Texel unter ihnen = Original-Texel, gemessen
+  sfv8/r3 e2.py: 0 abweichende Texel unter allen Flaechen der Meshes 8/13/14): Mesh 8 alle Flaechen der V7-Zeilen 480/481 mit Schwerpunkt
+  z < 0 (Brust 488 bleibt V7) -> 493/494; Mesh 13 alle Flaechen ausserhalb Feld C (Seite 0, u 78-127, v 0-100) -> 493 (32), Feld C bleibt V7
+  (Schulterkuppe 13 Flaechen grau 480, 11 Flaechen 489); Mesh 14 alle 37 -> 495 (das V8-r2-Band entfaellt). Zaehlung am Asset: Mesh 8
+  480:20 481:7 488:34 493:36 494:7; Mesh 13 480:13 489:11 493:32; Mesh 14 495:37. Tafeln 05 und 10: die (W)-rechte Flanke traegt jetzt die
+  blassrosa Original-Haut mit roten Adern wie der RE1.5-Birkin.
+- **O2 Huegel** (adern_r3.huegel_wahl): Flaechen von Mesh 8 (nicht Brust), die in PV die obersten 8 px x 428-445 bilden: v8 (89 px),
+  v18 (10), v14 (8); je ein ganzer UV-Schub auf Seite 0 auf Original-Fleisch (Original-Zeile 480, a* >= 20, Oeffnung 5 x 5), nicht Feld C,
+  nicht Kopftexel, kein durchsichtiger Texel: v8 (-9,-15) 95,8 % Fleisch, v18 (-14,-21) 58,1 %, v14 (-29,-18) 93,5 %; Zeile 493. Gemessen
+  (Riegel S3f): oberste 8 px x 428-445 **79,0 %** a* >= 10 (Vorlage 58,3 %, V8 r2 0,0 %).
+- **O3 Kamm weg** (ruecken_r3.py, ruecken_v8.json = Lauf rs2): Koordinatensuche ueber 19 Ecken mit PV-Riegeln UND Vorderansicht (P1 und
+  Szene Takt F344/F354/F364: Oberkontur Knochen 0-15 x 395-515 gegen V7). Die Runde-2-Ecken 51/53/38/41 sind praktisch zurueck (|d| <= 2 E.),
+  der Huegel kommt aus 30 (45,-120,-1) und 46 (-117,-111,-1). Gemessen: P1 hoechstens **2 px** ueber V7 (V8 r2 17 px), Szene vorn 0 px,
+  keine neue konvexe Ecke (V8 r2: 10 Spalten). Tafel 09 (nah am Kopf, P1 und Szene Takt F354): runde Kuppe wie V7, keine Platte.
+  Nicht genommen: die "P1-neutrale" Loesung je Ecke (sfv8/r3 e5.py: bis 573 E. seitlich, Ecke 51) - eine andere Form von der Seite.
+- **O4 unten breiter** (kette_suche.PROFIL r3): s 140 320, s 150 290, s 170 175, s 200 95, Spitze 60 E. (Bildmassstab 0,050-0,053 px/E.
+  am Schwanz unten). Gemessen (S4b): s 140-160 **31,6 / 31,0 px** (Vorlage s 140 33, Zeile y 270 ~30; V8 r2 20,4), s 170-200 18,7 / 18,4 /
+  10,7 / 10,6 px (V8 r2 8,6-6,2), Ende 5,6, monoton.
+- **O5 Wurzel** (v8_bau Stufe e, kette_fein Wurzel-Term): Ring 0 und Kegelspitze von Mesh 16 liegen jetzt 20 E. unter der Haut (vorher bis
+  121 E. ausserhalb). **Nicht erreicht**: S10 von hinten weiter 8729 sichtbare Wurzel-Bildpunkte (V8 r2 9671) - siehe Offen 1.
+- **O6 Gelenk 0** (schwanz_r41.c glaetten, Commit 61cc6af85): starre Bodendrehung um Gelenk 1 nur, wenn der Knick dort <= 25 Grad bleibt,
+  sonst um die Wurzel. Szene h69/h70: 25,1/25,0 Grad (V8 r2 31,7/39,3); 0 Takte > 30 Grad; Median Takt-Max 18,2.
+- **O7 Schlauch** (kette_fein Term LOES): Gelenk 2 haengt mit 314 E. Luft frei (V8 r2 213), Gelenk 1 taucht noch 210 E. seines Radius in
+  den Ruecken (Ziel 150, V8 r2 265) - nur soweit S1/S2 in PV halten.
+- **O8** Kappe u1_n kommentiert, Kopfkommentar mit Runde-3-Werten (Glied 541, Ruhe-Gelenkwinkel 18,1/11,6/15,3/7,9/4,9/15,3 Grad,
+  Wurzel (-722,-145,108)), toter Parameter v8 aus ziel_anwenden() entfernt.
+- Kette (kette_fein.py, Lauf kf3, 2400 Schritte Saat 7, Start kette Runde 2): Wurzel (-722,-145,108), Glied 541, Radien 472/391/361/350/301/
+  187/112/60, Rohr hinten 1,5 r0, Rohrknick 35,6 Grad, Verjuengung 0,525.
+
+### Riegel Soll/Ist (riegel_v8.py; Gegenproben SF_belege/v8/runde3/riegel_V8r2_gegenprobe.txt, riegel_V7_gegenprobe.txt)
+| Riegel | Soll | V8 Runde 3 | V8 r2 | V7 |
+|---|---|---|---|---|
+| S1 Kontur T | <= 4 / <= 8 | **3,0 / 7,0 gruen** | gruen | rot |
+| S2 J | (a) <= 4/6 (b) <= 2 (c) <= 3 | **2,0/5; 1,6; 3,0 gruen** | gruen | rot |
+| S3 Ruecken/H/K + (f) Huegel rot >= 40 % | wie bisher | **4,0; 6,6 bei x 429; keine; 1,5; 3,0; 79,0 % gruen** | rot (f 0,0) | rot |
+| S4 Breite + (b) unten | s 140-160 >= 27, s 170-200 >= 9 | **60,6; 40,4/38,2/37,9; 31,6/31,0; 18,7..10,6; 5,6 gruen** | rot (b) | rot |
+| S5 Gesicht | bytegleich V7 | **gruen** (6501 Texel) | gruen | gruen |
+| S6 Boden + (c) Szene-Gelenk <= 25,5 | 0 / y <= 0 / 25,5 | **0 von 912; y -118; 25,1 gruen** | rot (39,3) | rot |
+| S7 Adern (Runde 3) | (a) Original; (b) Oberarm >= V7 22,8, <= Original; (c) Rumpf 25-80, Unterarm <= Original; (d) Flecken je 1000 px <= Original | **ok; 24,0 (Orig 57,7); 61,3 (Unterarm 20,2 <= 22,5); 3,98 <= 4,37 gruen** | rot | rot |
+| S8 Technik | <= 16, <= 4096 | **16, 4096 gruen** | gruen | gruen |
+| S9 Vorderansicht | <= 2 px ueber V7, keine neue Ecke | **P1 2, Szene 0/0/0, keine gruen** | rot (17) | gruen (= Referenz) |
+| S10 Wurzel von hinten | 0 px | **8729 ROT** | rot 9671 | rot |
+
+S7 nur ausgegeben: Oberarm im Vorlage-Band 35-59 % ist ohne Feld C nicht erreichbar (Original-Oberarm 57,7 % = der Augapfel); Rumpf
+(W)-rechts 61,3 % gegen Original gleiche Pose 49,3 % - Textur und Palette je Flaeche sind bytegleich Original, die Geometrie nicht (V7-Rumpf
+x 1,25, in PV 3826 statt 1963 Bildpunkte). Daher misst S7d je 1000 Bildpunkte bei gleicher Aufloesung (V8 auf die Flaeche des Originals
+verkleinert).
+
+### Tests
+- configure + build: "=== LOCAL-BUILD-OK (configure)", "=== LOCAL-BUILD-OK (build)".
+- ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  "100% tests passed, 0 tests failed out of 8" (310 s, SF_belege/v8/runde3/ctest_gruppe.txt).
+- ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)":
+  "100% tests passed, 0 tests failed out of 1013" (227 s, SF_belege/v8/runde3/ctest_unit.txt).
+- test_birkin_formen: Zeilen 493-495 = EM30-Zeilen bytegleich, Zaehlungen wie oben, 3 Huegel-Flaechen mit UV-Schub; test_schwanz_r41:
+  relpos Runde 3. Gegenprobe V8 r2 im Asset: rot nach Konstruktion (Zeilen V7 + Ader-Eintraege, 13 Kuppenflaechen auf X1, relpos -714/526).
+
+### Spiel
+- Szene sfv8/szene_v8r3; Video **sfv8/spiderman_szene_v8_r3.mp4** (F225-F450, 226 Bilder, 30 fps, 960 x 720); Tafeln 06/07/08.
+- **gdigrab des echten Fensters** (eigene exe-Kopie, Fenster per eigener PID, Client-Bereich 960 x 720 bei (480,180); sfv8/r3/gdi.sh,
+  Video sfv8/r3/gdi_szene_v8r3.mp4, 50 s): Tafel 11_gdigrab_echtes_fenster.jpg - von vorn (t 11 / 13-14 s), seitlich (t 12 s), hinten
+  (t 12,5 s). Kein AUTOSHOT/SOFTWARE_RENDER.
+- Szenen-Messung SF_belege/v8/runde3/szene_mass.txt.
+
+### Tafeln (SF_belege/v8, roh, selbst angesehen)
+01-08 wie Runde 2 (neu gerechnet), 09_vorn_kopf.png (Foto 1 | V7 | V8 r2 | neu in P1 nah am Kopf, darunter Szene Takt F354),
+10_adern_rechts_original.png (Vorlage | Original-EM30 gleiche Pose | V8 r2 | neu), 11_gdigrab_echtes_fenster.jpg, runde3/
+wurzel_hinten_offline.png (Szene Takt F322/F328/F332 offline, Wurzelflaechen blau, V8 r2 | neu).
+
+### Offen
+1. **S10 / O5 rot**: Von hinten bleibt das Wurzelrohr (Mesh 16 Band Ring 0 -> Ring 1) sichtbar. Gemessen: in PV bildet genau dieses Rohr
+   den glatten Uebergang an J. Ring 1 einbetten (kf2): S2b 4,1, S2c 5,0, S2a 3,4/7 rot; kurzes Rohr B <= 0,25 (kf4): S1 Max 9, S2a Max 9 rot.
+   Naechster Weg: die Rueckenhaut (Mesh 8) ueber dem Rohr anheben, damit Haut statt Rohr den Uebergang bildet (eigene Suche mit S2 + S10).
+2. Oberarm (W)-rechts 24,0 % rot: Vorlage-Band 35-59 % ohne Feld C nicht erreichbar; Feld C blieb ausgeschlossen (Nutzer V5).
+3. Grenze (W)-rechts rosa / (W)-links grau entlang der Rueckenmitte ist von hinten sichtbar (Tafel 08/11); am Nutzerbild pruefen.
+4. Die Huegel-Flaechen (UV auf Original-Fleisch) erscheinen von hinten als rote Flaechen auf dem oberen Ruecken (Tafel 08).
+5. Knappe Werte: S2c 3,0 (Schwelle 3), S3a 4,0 (Schwelle 4), Huegel bei x 429 (Fenster ab 428); keine Halbpixel-Probe gerechnet.
+6. Gelenk 1 taucht weiter 210 E. in den Ruecken (O7-Ziel 150 nicht ganz).
+
+## V8 Runde 4 nach Pruefung V8 r3 (Bauer, Zweig r41/sichel_v8, 2026-11-09)
+
+### Wortlaut (bindend, unveraendert)
+- (A) "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber mit Schwanz und sowas bin ich immer noch 0 zufrieden.... Es ist doch
+  eigentlich KLAR erkennbar. Siehe Darstellung.png und Darstellung_Vorlage.png. Man sieht ganz klar den Körper Aufbau...."
+- (B) "... die Rechte Seite auch mehr rottöne hat, also quasi mehr adern an verschiedenen Stellen, am Arm und Körper, nicht nur grau.
+  Übernehme die die Textur Sachen die du dafür brauchst vom originalen Birkin von Resident Evil 1.5"
+Pruefberichte V8 r3 (SF_PRUEFUNG_V8_r3_zahlen.md, SF_PRUEFUNG_V8_r3_sicht.md, beide NICHT BESTANDEN; Commit a5afacd57), Vorgaben O1-O8
+gelten weiter. Seite: "Die Rechte Seite" = (W)-rechts = Knochenraum 8 z < 0 (Oberarm Knochen 13 relpos z -1136); in PV/Foto 2 die zur
+Kamera gewandte Flanke (Sicht-Pruefer r3 an der Vorlage bestaetigt: Knochen 13 in PV 3671 px, Knochen 10 234 px). Kein RE-Befund: jede
+Zahl ist PORT-WAHL (Nutzer-Wortlaut oder Messung), keine @0x-Adresse.
+
+### Ergebnis
+- Spiel-Asset EMD/EM30_HANGAR.EMD = **V8 Runde 4, sha256 10d021738731e7be2bf6ac79de7da77637cc16f6c08f640073dd4d1242d1843f** (271 012 Byte),
+  Pin release/em30_hangar.sha256 (Commit 457b82aba). v8_kette.sh (Stufe 7 jetzt --stufen srwa) zweimal (sfv8/kette_r4a, kette_r4b):
+  bytegleich, "V8-KETTE-OK".
+- Riegel (riegel_v8.py mit Szene und echten Framedumps, SF_belege/v8/riegel_v8.txt): **14 von 15 gruen, ROT S2 nur Teil (c) 4,0 px**
+  (Soll <= 3) - siehe Offen 1.
+- Szene Hangar 50A0 (lauf_v4.sh FD 200-1100, Ende F1110): EXIT 0, 901 Bilder, state.log 1131 Zeilen **bytegleich** zum freigegebenen
+  V7-Lauf, "Szene Ende: Cut 4". Schwanz: 144 Takte, tiefstes Gelenk y -122, Gelenk max 25,2 Grad (12-Bit-Rundung), 0 Takte > 30 Grad.
+
+### Befunde r3 -> Behebung (Werkzeuge re15_port/tools/r41_sichel/v8, Commits 397c323cb, 6ced0be88)
+1. **S10/O5 Wurzel von hinten (ROT, 46 090 px in echten Framedumps)** - Mechanismus gemessen (sfv8/r4): der Port zeichnet in
+   Maler-Reihenfolge (render_pc.c "SDL_RenderGeometry has no depth buffer, so painter's draw order decides"); das 708 E. lange
+   Wurzelrohr (Mesh 16 Ring 0 -> Ring 1) wurde ueber die Haut gemalt, auch wenn es ganz im Rumpf lag (Probe H1: alle Wurzel-Ecken
+   >= 20 E. unter der Haut, trotzdem 12 636 px offline). Neu wurzel_r4.py (Stufe w, ersetzt e): Ring 1 wird die Schnittlinie
+   Schwanz/Haut (Gleiten entlang der Gliedachse auf 15 E. unter der Haut; Ecken ohne Schnitt radial 0,70-1,40 r0, gemessen 0,86-0,98),
+   Ring 0 = Ring 1 (das Rohr hat keine Flaeche), Kegelspitze 150 E. im Schwanz und umgekehrt gewunden (Probe: 0 -> 18 px, +100..+350 in
+   den Rumpf 64-198 px, -150 -> 1 px, umgekehrt 0 px). Die Haut von Mesh 8 deckt Ring 1 (Rueckensuche, Kosten "Bedeckung").
+   Gemessen: **echte Framedumps F328-F346 0 px** (Marker MK_A/MK_B wie Zahlen-Pruefer, szene_marker.py; V8 r3 46 090, V8 r2 48 331),
+   offline Takt F314-F345 0 px (V8 r3 20 471). Im Spiel liegt Knochen 16 in Takt F318-F360 auf dem Keyframe (debug.log: Glied 0->1 gegen
+   das Ziel 0,0-0,1 Grad). Tafel 12_wurzel_hinten.jpg: kein Keil, keine Luecke.
+2. **O3 Schlitz ueber dem Kopf (ROT, 807 Loch-Pixel)** - Ursache gemessen (sfv8/r4 ana3.py): die Huegel-Flaeche v14 ist von vorn eine
+   Rueckseite (Culling wie im Port), hinter ihr liegt nichts. Neu r4_gemein.schlitz (Bildpunkte, die ohne Rueckseiten-Culling belegt sind
+   und mit nicht, ohne V7-Gegenstueck) als Kosten der Rueckensuche (ruecken_r4.py) und als Riegel S9b. Gemessen: offline P1 + Takt
+   F336-F372 **0 px**; echte Framedumps (gruene Silhouette, obere 120 Zeilen der Figur) **9 px** Ueberschuss gegen V7 in 35 Bildern
+   (V8 r3 381, V8 r2 432 nach derselben Messung der Pruefer-Laeufe pr3).
+3. **O1 Oberarm 13 (ROT, 24,3 %)** - adern_r4.py: die ganze Feld-C-Gruppe (24 Flaechen der Schulterkuppe, eine UV-Insel) bekommt EINEN
+   Schub (-66, +5) auf Texel, die Original-Flaechen von Mesh 13 mit Zeile 480 ausserhalb Feld C benutzen (456 moegliche Schuebe, alle
+   gerendert; Wahl: Anteil im Band 38-54, dann wenigste rote Flecken auf Knochen 13). Feld C (Augapfel) bleibt unbenutzt. Gemessen
+   **48,5 %** (Band 35-59, Original 57,7).
+4. **O1 Rumpf (W)-rechts (ROT, 62,2 %)** - Gruppe blass_rechts: gierig die (W)-rechte Flaeche mit den meisten roten Bildpunkten, ein
+   gemeinsamer Schub auf Original-Haut mit Adern (Anteil a* >= 10 nahe 0,40), bis Rumpf <= Original - 2 und rote Flecken je 1000 px
+   unter dem Original: v24, d43, d56, d15, v21, Schub (-15, +11). Gemessen **42,9 %** (Original gleiche Pose 49,3).
+5. **O2 Huegel / Herkunft (GELB)** - Huegel-Flaeche jetzt nur v8 (die obersten 8 px x 428-445; Brust-Flaechen ausgeschlossen), Schub
+   (54, 2) auf Texel von Original-Flaechen mit Zeile 480 (80 Schuebe gerendert, 72 erfuellen Kappe 0 / Fleck <= Original / S3f >= 45):
+   S3f **58,3 %** (Vorlage 58,3). Herkunft (Riegel S7a Runde 4): **0 Texel** unter neuen Zeilen ausserhalb der Texel von Original-
+   Flaechen derselben Zeile (V8 r3 210).
+6. **O1 Flecken (GELB)** - je 1000 px 8+13 **5,79** (Original 6,10), 8+13+14 **4,69** (Original 4,96); absolut 44 / 47 (Original 27 / 31;
+   V8-Rumpf 1,25-mal groesser, 10 017 statt 6 248 Bildpunkte).
+7. **S1 (GELB, 3,05/7,0)** - kette_r4.py (nur Biegungen, dann Radius Wurzel/Gelenk 17; Wurzel, Glied 541, Rohr fest): **2,2 / 6,0 px**
+   (r2 1,8 / 5,0 nicht ganz erreicht; Rest bei s 150/160 -5/-6 px = Breite O4 nach aussen).
+8. **S2/S3 Schwelle (GELB)** - S2 (a) 2,2/5, (b) 1,7 - aber (c) 4,0 ROT (Offen 1). S3 Kuppe 4,0 (Schwelle), H 7,6 bei x 429
+   (Fenster ab 428, Offen 3), Sattel Kopf 2,0 (Schwelle), K 3,0 (Schwelle).
+9. **S9 Szene bis 4 px (GELB)** - offline P1 1 px, Takt F344 2 px, F354/F364 0 px; keine neue Ecke.
+10. **Sicht (2) rote Kappe / rote Kacheln** - Gruppe rueckenfleisch (v16, v11 aus dem groessten Fleck von hinten, d50, v0 aus der Kappe
+    von vorn), Schub (0, 64) auf Original-Haut. Gemessen: kraeftig rot (a* >= 30) ueber der Kopfoberkante **P1 0, F354 0 px** (V8 r3
+    306 / 214, V7 0); groesster Fleck von hinten **F328 144, F332 241 px** (Original 234 / 296, V8 r3 623 / 706). Riegel S11.
+11. **Sicht (3) Unterarmband** - die vier Klingenleisten-Flaechen v9/v10/d19/d22 als Gruppe, Skalierung 0,6 und Schub (11, -63) auf
+    Original-Unterarm-Haut ohne Klingenleiste (bei 1,0-0,7 passte kein Schub): **0 rote px** auf Knochen 14 in P2 (V8 r3 384, V7 0).
+    Riegel S12. Unterarm-Rotanteil 1,0 % (Original 22,5 = die Leiste).
+12. **Sicht (3) Naht rosa/grau** - alle Flaechen von Mesh 8 ausser der Brust (Zeile 488 bleibt V7, O1) auf den Original-Zeilen 493/494
+    ("Original-Zeilen beidseitig", Vorschlag Sicht-Pruefer). Riegel S13: 0 Flaechen von Mesh 8 auf V7-Zeilen (V8 r3 27).
+13. **Sicht (5) Schlauch von schraeg hinten** - die Haut steigt jetzt um den Ring 1 an (Bedeckung), der Schwanz waechst aus dem oberen
+    Ruecken; Glied 1 taucht 205 E. seines Radius in den Ruecken (kette_v8.json "fein", gemessen mit Ruecken rs4a; Ziel 150, V8 r3 210). Tafeln 08/12, gdigrab t 12,50/12,75.
+
+### Riegel Soll/Ist (riegel_v8.py; Gegenproben SF_belege/v8/runde4/riegel_V7_gegenprobe.txt, _V8r2_, _V8r3_)
+| Riegel | Soll | V8 Runde 4 | V8 r3 | V8 r2 | V7 |
+|---|---|---|---|---|---|
+| S1 Kontur T | <= 4 / <= 8 | **2,2 / 6,0 gruen** | gruen (3,0/7) | gruen | rot |
+| S2 J | (a) <= 4/6 (b) <= 2 (c) <= 3 | (a) 2,2/5; (b) 1,7; **(c) 4,0 ROT** | gruen | gruen | rot |
+| S3 + (f) | wie Runde 3 | **4,0; 7,6 bei x 429; keine; 2,0; 3,0; 58,3 % gruen** | rot | rot | rot |
+| S4 + (b) | wie Runde 3 | **58,9; 40,4/38,2/37,9; 31,3/30,9; 18,8..11,0; 5,6 gruen** | rot | rot | rot |
+| S5 Gesicht | bytegleich V7 | **gruen** (6501 Texel) | gruen | gruen | gruen |
+| S6 Boden + Szene | 0 / y <= 0 / <= 25,5 | **0 von 912; y -122; 25,2 gruen** | gruen | (ohne Szene) | rot |
+| S7 Runde 4 | (a) Herkunft inkl. Original-Flaechen; (b) 35-59 UND <= Original; (c) 25-80 UND <= Original; (d) <= Original | **ok; 48,5; 42,9 / Unterarm 1,0; 5,79 / 4,69 gruen** | **rot** (210 Texel; 24,0; 61,3) | rot | rot |
+| S8 Technik | <= 16, <= 4096 | **16, 4096 gruen** | gruen | gruen | gruen |
+| S9 + (b) Schlitz | <= 2 px, keine Ecke, Schlitz 0 | **P1 1, F344 2, 0, 0; Schlitz 0 gruen** | **rot** | rot | (Referenz) |
+| S10 Takt F314-F345 | 0 | **0 gruen** | rot | rot | rot |
+| S11 Kappe/Kacheln | 0 / <= Original | **0 / 0; 144 <= 234, 241 <= 296 gruen** | rot | rot | gruen |
+| S12 Band | <= V7 + 20 | **0 gruen** | rot (384) | rot | gruen |
+| S13 Naht | 0 | **0 gruen** | rot | rot | rot |
+| S10s echte Framedumps | 0 | **0 gruen** | rot (46 090) | rot (48 331) | - |
+| S9s echte Framedumps | <= 20 | **9 gruen** | rot (381) | rot (432) | 0 |
+
+### Tests
+- configure + build: "=== LOCAL-BUILD-OK (configure)", "=== LOCAL-BUILD-OK (build)" (keine C-Aenderung am Spiel).
+- ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  "100% tests passed, 0 tests failed out of 8" (311 s, SF_belege/v8/runde4/ctest_gruppe.txt).
+- ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)":
+  "100% tests passed, 0 tests failed out of 1013" (263 s, SF_belege/v8/runde4/ctest_unit.txt).
+- test_birkin_formen (Commit 6abb117a8): Mesh 8 488:34, 493:56, 494:14, 480/481: 0, 10 Flaechen mit UV-Schub; Mesh 13 alle 56 auf 493,
+  24 mit Schub; Mesh 14 alle 37 auf 495, 4 mit Schub. Gegenprobe (Asset getauscht): V8 r3 -> unit_birkin_formen rot; V7 ->
+  unit_birkin_formen und unit_schwanz_r41 rot (runde4/gegenprobe_*.txt).
+
+### Spiel
+- Szene sfv8/szene_v8r4 (lauf_v4.sh, BAUM r41_sichel_v8, EMD "-"); Video **sfv8/spiderman_szene_v8_r4.mp4** (F225-F450, 226 Bilder,
+  30 fps, 960 x 720); Tafeln 06/07/08/12.
+- Marker-Laeufe (szene_marker.py bauen; lauf_v4.sh mit EMD-Overlay, FD 300-380): sfv8/r4/mk/lauf_MK_A, _MK_B, _GR, _GR_V7; die Zeilen
+  "Schwanz B y" von MK_A sind gleich dem normalen Lauf.
+- **gdigrab des echten Fensters** (r4/gdi.sh: eigene exe-Kopie, Fenster per eigener PID gefunden und per SetWindowPos nach oben gelegt,
+  Client 960 x 720 bei (480,180), state.log bytegleich): Video sfv8/r4/gdi/gdi_szene_v8r4.mp4, Tafel 11_gdigrab_echtes_fenster.jpg -
+  seitlich t 10,25/11,75, hinten t 12,50/12,75, vorn t 13,25/14,00. Kein AUTOSHOT/SOFTWARE_RENDER.
+- Labor 50E0: nicht neu gelaufen (der Kampf laeuft in integration_r41_birkin_pistole, gruen).
+
+### Tafeln (SF_belege/v8, roh, selbst angesehen)
+01-08 wie Runde 3 (neu gerechnet), 09_vorn_kopf.png (Foto 1 | V7 | V8 r2 | neu, darunter Takt F354), 10_adern_rechts_original.png
+(Vorlage | Original-EM30 gleiche Pose | V8 r2 | neu), 11_gdigrab_echtes_fenster.jpg, 12_wurzel_hinten.jpg (V8 r3 | neu, F322-F340).
+
+### Offen
+1. **S2c 4,0 px (Soll <= 3)**. Gemessen (sfv8/r4 jd.py): ohne Wurzelrohr endet der Schwanz unter der Haut; j_huckel vergleicht die
+   Rumpf-Oberkante mit der VERDECKTEN Schwanz-Oberkante (Rumpf und Schwanz getrennt gerastert) - bei x 377 liegt der verdeckte rechte Rand
+   von Ring 1 (y 191) 4 px unter der Rumpf-Silhouette (y 187), die dort vom hinteren Teil des Buckels gebildet wird (nicht von der Haut
+   direkt ueber dem Ring). Sichtbar ist die Kontur glatt (S2a 2,2/5, S2b 1,7). Alle Proben (Raster der Ecken 31/34/38/40/41/42/43/58,
+   Ring-Einzug/-Aufweitung, Gleiten nach hinten, Radien) fanden nur (b) 1,7 / (c) 4,0 oder (b) 2,3 / (c) 3,0 (Lauf rs4h). Gewaehlt: die
+   sichtbar glatte Variante. Zu entscheiden (Orchestrator): (c) fuer den Ansatz ohne Rohr an der sichtbaren Kontur messen, oder (b) 2,3
+   (sichtbare Stufe an der Naht) hinnehmen.
+2. Die Brust (Zeile 488, V7 nach O1) grenzt von vorn jetzt an die rosa Original-Haut (vorher grau an grau); gdigrab t 13,25 zeigt rechts
+   neben dem Kopf eine graue Brust-Ecke. Am Nutzerbild pruefen.
+3. Knappe Werte: S3a 4,0, S3d 2,0, S3e 3,0 auf der Schwelle; Huegel bei x 429 (Fenster ab 428); keine Halbpixel-Probe gerechnet.
+4. Am Schwanzansatz zeigt die gehobene Haut von hinten das rot-weisse Streifenmuster der Original-Textur (Original-UV; Tafel 12,
+   gdigrab t 12,50) - am Original-EM30 liegt dasselbe Muster oben am Ruecken (Tafel 08 Original-Vergleich k_r4 in sfv8/r4).
+5. In der Szenenfuehrung h20-h35 (Takt F263-F278, von der Seite) weicht das erste Glied bis 126 Grad vom Keyframe ab (debug.log V8 r3,
+   unveraendert); ohne Rohr kann dabei nichts mehr aus dem Rumpf stechen, Ring 1 dreht aber mit - nicht gemessen.
+6. Ruhige Ruecken-Ecken (ruecken_v8.json) stammen aus Koordinatensuche plus zwei Rasterschritten (Ecke 49 (0,-35,+40), Ecke 41 z +10;
+   Protokolle runde4/suche/raster_49.*, grid_j*.txt, gj*.py).
+
+## V8 Runde 5 nach Pruefung V8 r4 und zwei Nutzer-Befunden (Bauer, Zweig r41/sichel_v8, 2026-11-10)
+
+### Wortlaut (bindend, unveraendert)
+- (A), (B) wie Runde 4 (Koerperbau nach Darstellung.png; rechte Seite mit Adern aus Original-EM30-Texeln).
+- (P4) Nutzer 2026-11-09 nach der V8-Vorschau: "Der 2 Beiner Birkin sieht in der Vorschau schon mal super aus. Nur eine Sache passt noch
+  nicht so ganz. Die Unterseite des großen Schwanzes ist fleischig wenn man in die Vorlagen Bilder schaut. Nur die oberseite ist
+  durchweg grau."
+- (P5) Nutzer 2026-11-09 kurz darauf: "Das einzige was mir noch auffällt, es gibt immer noch eine Lücke zwischen Rücken und Kopf beim
+  2 beiner Birkin. Das ist in der Vorlage so wie es aussieht nicht so." Frueher dazu: "Auch der obere Rücken geht im original screenshot
+  direkt mehr oder weniger in den Kopf über."
+- (P1)-(P3) aus den Pruefberichten V8 r4 (SF_PRUEFUNG_V8_r4_sicht.md, SF_PRUEFUNG_V8_r4_zahlen.md, beide NICHT BESTANDEN, Commit
+  c29e05f4d): P1 Brust von vorn als graue Platte mit weissen Keilen; P2 Naht Schwanz/Rumpf S2c 8,0 px; P3 gelbe Punkte, wenn ohne Risiko.
+Zu halten: Gesicht/Kopf (Mesh 9 und seine CLUT-Zeilen bytegleich V7), linke Hand V7, Beine/Hose, Clips, KI; Koerperbau, Bogen, Huegel,
+Adern rechts. Kein RE-Befund: die Form gibt es auf keiner Disc; jede Zahl ist PORT-WAHL (Nutzer-Wortlaut oder Messung), keine
+@0x-Adresse. Texturen nur Original-EM30-Texel (CDEMD0.EMS Typ 0x30).
+
+### Ergebnis
+- Spiel-Asset EMD/EM30_HANGAR.EMD = **V8 Runde 5d, sha256 c4976c6214c74fb1ac341fc0ed4ec0768e15c34b0b1939c53b68e04aabd9526a**
+  (271 716 Byte), Pin release/em30_hangar.sha256 (Commit 06a1e1be1). v8_kette.sh (Stufe 7 --stufen srwaun) dreimal gelaufen
+  (sfv8/kette_r5d_a vor dem Pin, _b und _c danach): EM30_V8.EMD jedes Mal dieselbe Summe; Protokolle runde5/kette_r5d_a.txt,
+  kette_r5d_b.txt je "V8-KETTE-OK".
+- Riegel (riegel_v8.py mit Szene, Markern und echten Framedumps, SF_belege/v8/riegel_v8.txt): **18 von 19 gruen, ROT S16** - nur Teil
+  (a), nur Szenentakt **F311: 63 px / 37 tiefer als 1,5 px / groesste Tiefe 6,3 px** gegen das Soll 21 / 7 / 3,2 (1 von 177 Ansichten;
+  V8 r4 und 91885ed8c: 69 von 177). Das Soll ist nicht verbogen, keine Ausnahme je Bild. Siehe Offen 1.
+- Szene Hangar 50A0 (lauf_v4.sh FD 200-1100, Ende F1110): EXIT 0, 901 Bilder, state.log 1131 Zeilen **bytegleich** zum freigegebenen
+  V7-Lauf, "[hangar] ROOM50A0 Szene Ende: Cut 4, Birkin Zustand 0". Schwanz: 144 Takte, tiefstes Gelenk y -122, Gelenk max 25,2 Grad,
+  0 Takte > 30 Grad (runde5/szene_mass.txt).
+
+### Vorgaben P1-P5 -> Umsetzung (Werkzeuge re15_port/tools/r41_sichel/v8)
+1. **P1 Brust von vorn** (Commits 7adafeb6e, 7f596ef19, 1a8ca8ac5; frueherer Bauer) - adern_r5.py: die 34 Brust-Flaechen von der
+   V7-Zeile 488 auf die Original-Zeile 481 (Spiel-Asset 494) mit ihrer Original-UV; fast weisse Original-Eintraege (L* > 75, Chroma
+   < 12) unter von vorn sichtbaren Flaechen von Mesh 8 durch Abbildungen auf Original-Haut ohne Weiss ersetzt. Am Asset gemessen
+   (Riegel S14): Kanten-Sprung Brust/Flanke dL / da* P1 2,68 / 2,57 (V7 2,18 / 2,95), F344 2,90 / 2,58 (2,30 / 3,02), F354 2,76 / 2,36
+   (2,20 / 3,15), F364 2,56 / 2,54 (2,11 / 2,93); fast weisse Texel 0; echte Framedumps F344-F372 fast weisse Bildpunkte 22 (V7 22;
+   V8 r4 4089). V8 r4 dL 13,3 ROT. Der Riegel laesst dL bis V7 + 1,5 zu; die strenge Lesart "hoechstens wie V7" ist fuer dL NICHT
+   erfuellt (0,45-0,60 ueber V7), fuer da* erfuellt - Offen 4. Tafel 13.
+2. **P2 Naht Schwanz/Rumpf** (Commits 7adafeb6e, 82828ad9b, 6d0d6da88, 4f2dd7bfa) - S2c wird seit Runde 5 mit Culling in 7 Halbpixel-
+   Lagen gemessen (wie Zahlen-Pruefer r4). Am Asset: **2 px bei x 367, alle 7 Lagen [2,2,2,2,2,2,2]** (Soll <= 3; V8 r4 und
+   91885ed8c 8 px bei x 376, ROT). S1 2,2 / 6,0; S2a 2,2 / 5; S2b 1,7 bei x 333; S3 Kuppe 3,0, H 8,0 bei x 429, Sattel Kopf 0,9, K 3,0,
+   Huegel rot 45,8 % - gruen.
+3. **P3 gelbe Punkte** - erledigt: Beleg-Kommentare W_SCHLITZ / W_BEDECKT / SCHRITTE (ruecken_r4.py, 7adafeb6e); Szenenkontur von vorn
+   (S9): P1 2 px, F344 / F354 / F364 0 px ueber V7, keine neue Ecke, Schlitz 0; echte Framedumps S9s 11 (Soll <= 20). NICHT bearbeitet:
+   Farbkante olivgrau/rosa an der Wurzel und Giebelform ueber dem Kopf (keine eigene Messung; Offen 5).
+4. **P4 Schwanz-Unterseite** (Commits a33b8b99a, 91885ed8c, 500998f51; frueherer Bauer; Messblatt Abschnitt 10) - unterseite_r5.py
+   (Stufe u): Flaechen mit |theta| < 130 um die Gliedachse (72 Flaechen der Meshes 16-22) auf die Original-Zeile 482 (Asset 495), UV auf
+   dem Haut/Fleisch-Verlauf des Original-Unterarms; Oberseite, Deckel, Wurzel bleiben grau (Zeile 487). Am Asset (Riegel S15): fremde
+   Texel 0; Unterseite 72 Flaechen, ohne Fleisch 0, Fleisch-Texel 2285; Oberseite 38 Flaechen, Fehler 0; Fleisch-Texel-Anteil
+   |theta| <= 100 / >= 135: PV 53,1 / 0,0 %, P2 52,5 / 0,0 %; L*-Sprung PV 4,8 (Vorlage 6,8), P2 4,3 (8,3). V8 r4 ROT (72 Flaechen ohne
+   Fleisch). Tafel 14, gdigrab t 10,25.
+5. **P5 Luecke Ruecken/Kopf** (Commits b276c0fe6, 82828ad9b, 6d0d6da88, 4f2dd7bfa, 06a1e1be1, 3022778f2; Messblatt Abschnitte 11, 11a,
+   11b):
+   - Mass luecke_r5.py (Kerbe = Huelle aus Kopf und nahem Ruecken minus Umriss, Spalt = Schliessung; Tiefe = Abstand zum freien
+     Hintergrund), Riegel S16 ueber 177 Ansichten (PV, P1, P2, Szene F235-F378, rundum) in je 7 Halbpixel-Lagen.
+   - **Soll aus der Vorlage, selbst nachgemessen** (vorlage_luecke_r5.py, runde5/vorlage_luecke.txt/.png): dE > 9, n-1..n+1, Stuecke
+     "am Kopf": 21 px / 7 tiefer als 1,5 px / groesste Tiefe 3,2 px (n1439 PV (448,206) 21 / 7 / 2,8; n1433 14 / 6 / 3,2; n1435 10 / 3 /
+     2,2); dE > 6: 15 / 6 / 3,2; dE > 12: 11 / 3 / 2,8. Gleich der Messung des Orchestrators. Soll je Ansicht und Lage: Summe <= 21 px
+     UND tief <= 7 UND groesste Tiefe <= 3,2 px. Fuer die schnelle Drehung F310-F314 gibt es KEINE Vorlagen-Messung dieser Haltung
+     (n1433-n1441 zeigen die stehende Haltung von der Seite) - es gilt dasselbe Soll.
+   - **Ausgang**: Suchlauf i gegen Suchlauf h am Vollbau mit riegel_v8.py (sfv8/r5p6/riegel_i.txt): h 14 von 16 gruen (rot S7, S16),
+     i 15 von 16 (rot S16: F311, F332, Gesicht P2+3840 161 statt 165 Bildpunkte). Ausgang i (ruecken_v8.json). Keine weitere globale
+     Suche.
+   - **Gesicht P2+3840**: Ecke 65 x 60 -> 50; keine der 177 Ansichten mehr unter V7 - 2 % (S16 b leer).
+   - **F332, drei gezielte Versuche** (Kachel runde5/versuch_F332.png): (1) Nacken-Volumen hinter dem Kopfgelenk - auch der groesste
+     Koerper laesst den Keil, verworfen; (2) Rueckprojektion der Keil-Bildpunkte: der Keil liegt rund 350 E. vom Kopfgelenk zwischen der
+     Unterkante der Rueckenflaechen und der Kopfunterseite ueber der (W)-rechten Schulter; (3) kleinste Lage, in 7 Halbpixel-Lagen und
+     gegen das Gesicht geprueft: **Einsatz Halbmesser 65 um (350, -820, -370)** (nacken_r5.py, Stufe n, nacken_v8.json; 14 Ecken, 12
+     Dreiecke, 6 Vierecke an Mesh 8, Haut = Texel der Wirtsflaeche 8 d65, Zeile 494, winkeltreu). **F332 vorher 108 px / 72 / 6,3, jetzt
+     8 / 1 / 2,0.** S16 (c): Einsatz in keiner der 177 Ansichten ueber Gesichts-Bildpunkten von V7.
+   - **F311, drei gezielte Versuche** (Kachel runde5/versuch_F311.png): (1) einzelne Kragen-Ecken 65 / 67 / 68 / 16 um +-40 / +-80 E.:
+     bestes ohne neuen Fehler 49 / 25 / 5,4; (2) +-120 / +-160 E.: 38 / 14 / 3,6; (3) kleiner Koerper Halbmesser 130 um
+     (350, -1140, -410): 28 / 8 / 2,8, oeffnet aber F332 wieder und steht neben dem Gesicht - verworfen. Bester Stand behalten:
+     **F311 63 / 37 / 6,3** (V8 r4 120 / 90 / 12,5). Offen 1.
+   - **Stand am Asset**: Luecke Summe 484 px (tief 51) in 73 von 177 Ansichten (V8 r4 und 91885ed8c 4570 / 2880 in 78; V7 3494 / 1719
+     in 63); PV 8 / 0 / 1,0 (91885ed8c 33 / 17 / 18,4); P2 6 / 1 / 2,2 (43 / 17 / 3,6); P1 0; F278 8 / 1 / 2,0 (V8 r4 Lage 0: 187 / 138 /
+     9,2); F310 8 / 1 / 2,0 (179 / 126 / 9,2); rundum hoechstens PV+1280 19 / 0 / 1,0 und P2+2048 11 / 3 / 2,2.
+   - Kopf: Mesh 9, Zeile 486 und 6501 Texel bytegleich V7 (S5 gruen).
+
+### Riegel Soll/Ist (riegel_v8.py; Gegenproben SF_belege/v8/runde5/riegel_V8r5p4_gegenprobe.txt, _V8r4_, _V7_; Exit je 1)
+| Riegel | Soll | V8 Runde 5d (c4976c62) | 91885ed8c (5fd35ff1) | V8 r4 (10d02173) | V7 |
+|---|---|---|---|---|---|
+| S1 Kontur T | <= 4 / <= 8 | **2,2 / 6,0 gruen** | gruen | gruen | rot |
+| S2 J | (a) <= 4/6 (b) <= 2 (c) <= 3 in 7 Lagen | **2,2/5; 1,7; (c) 2 px gruen** | **rot** ((c) 8 px) | **rot** ((c) 8 px) | rot |
+| S3 + (f) | wie Runde 4 | **3,0; 8,0 bei x 429; 0,9; 3,0; 45,8 % gruen** | gruen | gruen | rot |
+| S4 | wie Runde 4 | **59,2; 40,4/38,2/37,9; 31,3/30,9; 18,8..11,0; 5,6 gruen** | gruen | gruen | rot |
+| S5 Gesicht | bytegleich V7 | **gruen** (6501 Texel) | gruen | gruen | gruen |
+| S6 Boden + Szene | 0 / y <= 0 / <= 25,5 | **0 von 912; y -122; 25,2 gruen** | gruen | gruen | rot |
+| S7 | Herkunft; 35-59; <= Original | **ok (0 fremde Texel); 48,6 %; 48,2 % / Unterarm 1,0 %; 6,03 / 4,90 gruen** | gruen | gruen | rot |
+| S8 Technik | <= 16, <= 4096 | **16, 4096 gruen** | gruen | gruen | gruen |
+| S9 + Schlitz | <= 2 px, keine Ecke, 0 | **P1 2, 0, 0, 0; Schlitz 0 gruen** | gruen | gruen | (Referenz) |
+| S10 Takt F314-F345 | 0 | **0 gruen** | gruen | gruen | rot |
+| S11 Kappe/Kacheln | 0 / <= Original | **0 / 0; 95 <= 234, 105 <= 296 gruen** | gruen | gruen | gruen |
+| S12 Band | <= V7 + 20 | **0 gruen** | gruen | gruen | gruen |
+| S13 Naht | 0 | **0 gruen** | gruen | gruen | rot |
+| S14 Brust vorn (P1) | dL <= V7 + 1,5, da* <= V7, weiss 0 | **dL 2,56-2,90, da* 2,36-2,58, weiss 0 gruen** | gruen | **rot** (dL 13,3) | gruen |
+| S15 Unterseite (P4) | Herkunft 0; Fleisch unten, grau oben | **0; 72 / 0; 53,1 / 0,0 %; 4,8 / 4,3 gruen** | gruen | **rot** (72 ohne Fleisch) | rot |
+| S16 Luecke (P5) | je Ansicht und Lage <= 21 px UND <= 7 tief UND <= 3,2 px; Gesicht; Einsatz | **ROT: 1 von 177 (F311 63 / 37 / 6,3); (b) leer; (c) leer** | **rot** (69 von 177) | **rot** (69 von 177) | rot (52 von 177) |
+| S14s echte Framedumps | <= V7 + 29 | **22 (V7 22) gruen** | gruen | **rot** (4089) | gruen |
+| S10s echte Framedumps | 0 | **0 gruen** | gruen | gruen | - |
+| S9s echte Framedumps | <= 20 | **11 gruen** | gruen (9) | gruen | - |
+| Summe | | **18 von 19** | 17 von 19 | 14 von 19 | 7 von 17 |
+
+### Tests
+- configure + build: "=== LOCAL-BUILD-OK (configure)", "=== LOCAL-BUILD-OK (build)" (keine C-Aenderung am Spiel; nur
+  tests/unit/test_birkin_formen.c).
+- ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  "100% tests passed, 0 tests failed out of 8" (421 s, SF_belege/v8/runde5/ctest_gruppe.txt).
+- ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)":
+  "100% tests passed, 0 tests failed out of 1013" (351 s, SF_belege/v8/runde5/ctest_unit.txt).
+- test_birkin_formen (Commit 06a1e1be1): Mesh 8 = EM30-Elemente + Einsatz (12 Dreiecke, 6 Vierecke, 14 Ecken), Zeile 494 48 + 18
+  Flaechen, Einsatz auf Zeile/Seite und im UV-Rechteck der Wirtsflaeche (u 37-50, v 0-22). Gegenprobe (Asset getauscht, danach
+  zurueck, sha256 geprueft; runde5/gegenprobe_test_*.txt): V7 -> "0% tests passed, 2 tests failed out of 2"; V8 r4 und 91885ed8c ->
+  "50% tests passed, 1 tests failed out of 2" (unit_birkin_formen).
+
+### Spiel
+- Szene sfv8/szene_v8r5d (lauf_v4.sh, BAUM r41_sichel_v8, EMD "-"); Video **sfv8/spiderman_szene_v8_r5d.mp4** (F225-F450, 226 Bilder,
+  30 fps, 960 x 720, sha256 6682730a...); Tafeln 06/07/08/12.
+- Marker-Laeufe (szene_marker.py; sfv8/r5p6/mk/lauf_MK_A, _MK_B, _GR): Wurzel F328-F346 0 px, Schlitz-Ueberschuss gegen V7 11
+  (runde5/szene_marker.txt).
+- **gdigrab des echten Fensters** (runde5/gdi.sh: eigene exe-Kopie, Fenster per eigener PID gefunden und per SetWindowPos nach oben
+  gelegt, Client 960 x 720 bei (480,180), state.log bytegleich V7): Video sfv8/r5p6/gdi/gdi_szene_v8r5d.mp4 (50 s, 1459 Bilder), Tafel
+  11_gdigrab_echtes_fenster.jpg - seitlich t 10,25/11,75, hinten t 12,50/12,75, vorn t 13,25/14,00. Kein AUTOSHOT/SOFTWARE_RENDER.
+- Labor 50E0: nicht neu gelaufen (der Kampf laeuft in integration_r41_birkin_pistole, gruen).
+
+### Tafeln (SF_belege/v8, roh, selbst angesehen)
+Alle 15 angesehen. 01-12 wie Runde 4 (neu gerechnet am Asset; 09/10/12 mit V8 r4 als Vergleich), 13_brust_vorn.png (Foto 1 | V7 | V8 r4 | neu; P1, Takt
+F354 offline, echter Framedump F354), 14_schwanz_unterseite.png (Vorlagen mit gemessener Grenze | V8 r4 | neu), 15_ruecken_kopf.png
+(Vorlagen mit eingezeichnetem Mass | V8 r4 | neu in PV / P2 / P1; Szenen-Takte F278, F309, F310, F311, F332; unten der Einsatz gruen).
+Was ich sehe: Koerperbau, Bogen und Huegel wie Runde 4; Schwanz unten dunkelrot-fleischig, oben grau (Tafel 02, 14, gdigrab t 10,25);
+die Brust ist keine graue Platte mehr, keine weissen Keile (Tafel 13); zwischen Ruecken und Kopf ist in PV / P2 / P1 und in F278 / F309 /
+F310 kein Hintergrund-Keil mehr (Tafel 15). Was dafuer NEU zu sehen ist, steht unter Offen 2 und 3.
+
+### Offen
+1. **F311 ueber dem Soll: 63 px / 37 tiefer als 1,5 px / groesste Tiefe 6,3 px** (Soll 21 / 7 / 3,2; Lage 0: 55 / 31 / 5,8; V8 r4
+   120 / 90 / 12,5). Kacheln: SF_belege/v8/runde5/versuch_F311.png, Tafel 15 Zeile "Takt F311". Es ist ein Keil von 47 Bildpunkten bei
+   (386,192) links vom Gesichtsprofil zwischen Kinn/Wange und der (W)-rechten Schulter und ein kleines Stueck ueber dem Scheitel. Drei
+   gezielte Versuche (oben) schliessen ihn nicht ohne neuen Fehler. Riegel S16 bleibt ROT; keine Vorlage dieser Haltung.
+2. **Kragen bleibt sichtbar.** Der Suchlauf i schliesst die Kerbe durch gehobene Ruecken-/Schulterflaechen. Selbst gesehen: in PV / P2
+   liegt rechts oben am Kopf eine helle, spitz zulaufende Dreiecksflaeche (Tafel 02, 15); von vorn (P1, Framedump F354, gdigrab t
+   13,25) steht der Kopf in einer kantigen Haube aus grossen, flachen Flaechen mit gestreckter Textur (Tafel 13); von hinten (F322-F340,
+   Tafel 08, 12, versuch_F332.png) liegen oben rechts lange, faecherartig gestreift texturierte Flaechen - die gab es schon in V8 r4
+   (Tafel 12 links), sie sind nicht neu, aber auch nicht entfernt; in der (W)-rechten Flanke in PV steht eine helle Spitze zwischen
+   Rippen und Schulter, staerker als in V8 r4 (Tafel 05, 10). Spitze / Segel / Verzerrung
+   (Beobachtungen des Orchestrators) sind damit NICHT gezielt entfernt; entfernt sind der Keil F332 und die Flaeche ueber dem Gesicht
+   (P2+3840). Die Riegel S3 (Huegel/Kamm) und S9 (neue Ecken von vorn) sind gruen, fassen diese Flaechen also nicht. Am Nutzerbild zu
+   pruefen; bei Ablehnung waere der Weg ein neu modellierter Nackenuebergang statt der Eckensuche.
+3. **Der Einsatz sitzt nicht im Nacken**, sondern rund 350 E. vom Kopfgelenk unter dem Kiefer ueber der (W)-rechten Schulter (dort liegt
+   der Keil F332); sichtbar als kleiner Knoten: PV 59, P2 59, P1 67 Bildpunkte (Tafel 15 unten, gruen). Auftrag (iii) "im Nacken" ist
+   damit dem Wortlaut nach nicht erfuellt; "nicht vor dem Gesicht" ist erfuellt (S16 c: 0 in 177 Ansichten).
+4. S14 strenge Lesart ("Kanten-Sprung hoechstens wie V7"): dL 2,56-2,90 gegen V7 2,11-2,30, also 0,45-0,60 ueber V7; der Riegel laesst
+   + 1,5 zu (gruen). da* liegt unter V7.
+5. P3 Rest: Farbkante olivgrau/rosa mit dunkelrotem Saum an der Wurzel und Giebelform ueber dem Kopf nicht eigens gemessen und nicht
+   bearbeitet; die Giebelform ist durch den Kragen eher staerker geworden (Offen 2).
+6. Knappe Werte: S3 H bei x 429 (Fenster x 428-445), Huegel rot 45,8 % (Runde 4 58,3 %; Soll >= 40); S9 P1 2 px (Soll <= 2); rundum PV+1280 19 px
+   (Soll 21).
+7. Die Luecken-Messung zaehlt 177 feste Ansichten; Zwischenbilder der schnellen Drehung (F310-F314) koennen den Keil von F311 ebenfalls
+   zeigen (F310 8 / 1 / 2,0 und F312 10 / 3 / 2,2 liegen im Soll).
+
+## V8 Runde 6a - Hand (Hand-Bauer, Zweig r41/sichel_v8, 2026-11-10)
+
+Nutzer-Befund P6 (2026-11-10, bindend): "Die Vorlage hat eine breite Hand mit breiten Unterarmt. Dadurch wirkt es natürlich. Bei uns
+ist die Hand ganz klein und zierlich und wirkt dadurch verkümmert." Umfang nur linke Hand (Mesh 12) und linker Unterarm (Mesh 11).
+Commits a43dc024c (Messblatt), 2102d06e7 (Werkzeug, Varianten), 68e3f0e60 (Riegel S17), 1005b126c (Asset, Pin, Test), 854d7bea3 (Tafel).
+
+- **Asset** sha256 7a65e3f0befa0c42c1b67a3136593e5272777f3caf507c33b061348065ee2c71; Stufenfolge der Kette jetzt **s r w a u n h**
+  (h = hand_r6.py + hand_v8.json). Zweimal gebaut = bytegleich (v8_kette.sh: "V8-KETTE-OK", runde6a/kette_r6a.txt). Gegen V8 r5d
+  aendern sich nur Mesh 11 und 12; Mesh 9 bytegleich V7; TIM, Flaechen, UV, CLUT-Zeilen (490 / 491 / 492) unveraendert.
+- **Messblatt** SF_MESSBLATT_HAND.md, Bild SF_belege/v8/16a_hand_messblatt.png. **Varianten** (SF_belege/v8/16b_hand_varianten.png,
+  runde6a/hand_suche.txt), Wahl nach Zahl "ausser der Vorlage-Spanne von 34 Massen / Summe der Abweichung":
+  A 0,80 / 90 Grad: 7 / 86,5 px; B 0,80 / 105: 6 / 79,2; C 0,93 / 118 (Hoehe 0,80): 5 / 82,9; **D 0,93 / 0,72 / 118: 5 / 73,5** (gewaehlt).
+  Hand: Skala 0,93 / 0,72 / 0,93, Drehung 118 Grad um die Handachse, Krallen A x 1,33, B x 2,0, Wurzelring y -30; Unterarm Grund
+  1,229 / 0,80 / 1,229 mit Verlauf. Spanne Mesh 12 343 / 594 / 235 -> 484 / 716 / 433 E., Mesh 11 516 / 640 / 472 -> 444 / 640 / 407 E.
+  Handflaeche im Bild P1 500 -> 1654 px, P2 276 -> 762, PV 296 -> 766.
+- **Schritt ebnen** (nach der Variantenwahl): Ecke 1 des Handansatzes in die Ebene der Ecken 6, 9, 4. Ursache: das Original-Viereck 5
+  ist windschief, der Port verwirft ein Viereck am Dreieck seiner ersten drei Ecken; in neuer Groesse und Drehung stand es von vorn als
+  Schlitz offen (S9 b 49 px). Mit Ebnen 5 px (V8 r5d 0). Nicht gebaut aus dem Bauplan: "Handgelenk-Ring breiter (287 statt 248 E.)" -
+  das Handgelenk misst schon 22,0 px gegen Vorlage-Median 21,1.
+- **Riegel S17** (riegel_hand.py; runde6a/s17_neu.txt): ROT in (a) und (g).
+  (a) P1 Breitenprofil 7 von 8 Stationen in der Vorlage-Spanne: Ellbogen 33,5 (34,0..40,8 +- 1), Unterarm-Mitte 33,0 (32,5..39,1),
+  Handgelenk 22,0 (20,0..25,5), Handwurzel 33,0 (26,6..34,8), Hand breit 45,5 (37,8..50,6), Krallenwurzel 45,2, Krallen-Mitte 23,2
+  (18,2..29,1); **Spitzen 2,2 gegen 5,1..9,0 = rot**. (b) gruen: Unterarmspitze in 0 von 912 Keyframes ausserhalb des Handkoerpers.
+  (c) gruen: Breite/Laenge 0,756 (0,655..0,783), Handlaenge 60,2 px (56,9..68,5). (d) gruen: Krallen nicht kuerzer / duenner als V7 im
+  Soll. (e) gruen: keine Kreuzung in P1, P2, PV. (f) gruen: Zeilen 490: 34, 491: 6, 492: 18 Flaechen, 0 fremde Texel.
+  (g) **rot: Hand im Koerper 96 von 912 Keyframes (V7 und r5d 68), Krallenachse 44 (26)**; neu dazu vor allem Clip 15 (10 Bilder,
+  Bild 94-107), Clip 10 (9, Bild 10-26), Clip 3 (6, Bild 23-31). Zwei Kacheln: runde6a/durchdringung_kacheln.png (Clip 15 Bild 105
+  Hand in Huefte / Oberschenkel, Clip 10 Bild 18 Hand an Oberarm / Brust) - der Pruefer entscheidet.
+  Gegenproben V7 und V8 r5d: ROT in (a, b, c, d, e) - Handgelenk 12,2, Hand breit 14,5, B/L 0,336, Unterarmspitze 912 von 912 aussen,
+  Kreuzungen AB, BC / AC, BC / AC (runde6a/s17_v7.txt, s17_r5d.txt).
+- **Riegel gesamt** (statisch, runde6a/riegel_v8r6a.txt): 14 von 17 gruen; ROT S9, S16, S17. V8 r5d mit demselben Riegel: 15 von 17;
+  ROT S16, S17. Gegen r5d aendern sich in S1-S16 nur S9 und S16:
+  S9 (b) Schlitz 5 px statt 0 (F338 1, F360 1, F366 1, F372 2; vier Randpunkte der Hand am verdrehten Original-Daumenviereck 1, ein
+  Punkt Oberarm-Rueckseite, den der schlankere Unterarm freigibt) = **schlechter als r5d**.
+  S16 (rot wie r5d): (a) F311 21 / 9 / 3,6 statt 63 / 37 / 6,3 (Soll 21 / 7 / 3,2) - die groessere Hand deckt einen Teil des Keils;
+  (b) neu F311 und F312, weil die Hand 21 bzw. 32 Gesichtspunkte verdeckt (426 / 391 statt 447 / 423 sichtbar) = **schlechter als r5d**.
+- **Tests**: ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  "100% tests passed, 0 tests failed out of 8", "Total Test time (real) = 305.40 sec" (runde6a/ctest_gruppe.txt).
+  test_birkin_formen.c prueft Mesh 12 (52 Ecken, Spanne 484 / 716 / 433, Ring 1-4 y -22) und Mesh 11 (18 Ecken, 444 / 640 / 407).
+- **Spiel**: runde6a/gdi.sh (lauf_v4.sh, eigene exe-Kopie re15_sfv4_997, Hangar 50A0, gdigrab 30 fps vom echten Fenster 960 x 720);
+  debug.log "EM30: Ersatzmodell EMD/EM30_HANGAR.EMD (Raum 50A0)"; Bilder runde6a/gdi_fenster_neu_t13.0.png, _t13.5.png.
+- **Tafel** SF_belege/v8/16_hand.png (roh, selbst angesehen): Die Hand ist nicht mehr klein und zierlich - in P1 rund 3,3-fache
+  Flaeche, das Handgelenk ist nicht mehr eingeschnuert, die Krallen sitzen gefaechert am breiten Ende. **Natuerlich wie die Vorlage
+  wirkt sie noch nicht**: (1) die Original-Textur der Hand (Zeile 490) ist dunkel grauviolett mit roten Sprenkeln, die Vorlage hellgrau;
+  im echten Fenster liest sich die Hand als dunkles Paddel vor dunklem Grund und faellt kaum breiter auf als in r5d; (2) die Hand
+  knickt im Clip von P1 rund 42 Grad gegen den Unterarm (Vorlage 9-14 Grad), der Handansatz steht am Gelenk seitlich ueber;
+  (3) die Krallen sind duenne spitze Dornen, die Vorlage hat dicke stumpfe, eng liegende Finger; (4) der Unterarm ist nach Mass an der
+  Vorlage (Mitte 33,0 px, Median 33,5), aber 14 % schmaler als r5d und braun gebaendert statt grau - "breiter Unterarm" entsteht so
+  dem Auge nach nicht; (5) der Arm haengt tiefer als in der Vorlage, daher die zusaetzliche Durchdringung.
+- **Helligkeit der Hand** (Knochen 12, 0-255, mit / ohne Licht): P1 28,2 / 37,2 -> 26,8 / 30,8; P2 27,8 / 35,6 -> 21,2 / 30,0;
+  PV 27,1 / 34,7 -> 19,8 / 29,5. Die Dunkelheit kommt aus der Textur selbst; Drehung und Licht machen 1-8 Einheiten aus. Keine
+  Farbkorrektur (Regel) - Punkt fuer den Nutzer.
+- **Offen**: S17 (a) Spitzen und (g); S9 (b) 5 px; S16 (b); Hand-Textur dunkel; Knickwinkel der Hand im Clip; Krallen stumpfer und
+  dicker (Probe ausserhalb der vier Varianten: Krallen A x 1,6 / C x 1,2 hebt das Handprofil bei 90 % von 4,8 auf 17,8 px ohne
+  Kreuzung, die Station Spitzen bleibt 2,2); linke Hand in P2 / PV der Vorlage verdeckt (dort kein Vorlage-Mass).
+
+## V8 Runde 6b - Nacken ohne Kragen, Schwanz-Unterseite (Bauer 6b abgebrochen; Bau-Abschluss durch Folge-Bauer, Zweig r41/sichel_v8, 2026-11-11)
+
+Auftrag nach der Pruefung V8 r5d ("Kragen", "graue Reifen") und den Nutzer-Befunden vom 2026-11-09 ("es gibt immer noch eine Lücke
+zwischen Rücken und Kopf beim 2 beiner Birkin"; "Die Unterseite des großen Schwanzes ist fleischig ... Nur die oberseite ist durchweg
+grau."): P5-neu (Kragen weg, echter Nacken) und P4-neu (Schwanz-Unterseite fertig). Dieser Absatz ist KEINE Abgabe: Tafeln,
+Szenenvideo und Fensterbilder macht der naechste Bauer. Meshes 11 und 12 (linke Hand, Befund P7) sind hier nicht angefasst.
+Commits 6b: 5cbfdb7d8 (P5-neu Werkzeuge), 0bc534825 (P4-neu Werkzeuge), 03ecd15c5 (erstes Asset 382bbfe7), 118fad898 (Riegel 6b).
+Commits Abschluss: 3781efb4e (Riegel-Korrektur S4 / S10), 886f84a69 (v24 ohne Schub, tafeln_r6.py), bcb192258 (Asset, Pin,
+Test-Pins), 09932af5d (Riegel-Helfer laeuft wieder an V7).
+
+- **Asset** sha256 95a783a62e75ed2bd792094373ce0a27b8ad71ad508be21f4261400ef42aa7cc (274644 Bytes), Kette s r w a u n h, dreimal
+  gebaut = bytegleich (v8_kette.sh "V8-KETTE-OK"; sfv8/r6c/kette_a, kette_b, kette_c). Gegen den Stand des Hand-Bauers (7a65e3f0)
+  aendern sich nur Mesh 8 (Nacken) und die Meshes 16-22 (Schwanz); Mesh 9 bytegleich V7, Meshes 11 / 12 bytegleich 7a65e3f0,
+  16 CLUT-Zeilen unveraendert (sfv8/r6c/kopf.out).
+- **P5-neu, gebaut von 6b** (ruecken_v8.json, nacken_r6.py, nacken_v8.json):
+  (a) Kragen zurueck: die in Runde 5 angehobenen Ecken 0, 16, 17, 29, 30, 45-50, 64, 65, 67, 68 von Mesh 8 stehen wieder auf dem Stand
+  der Runde 4. **Versuch 0** (alle Ecken auf r4): Naht S2c steigt von 2 auf 8 px - deshalb bleiben 5, 6, 7, 20, 35, 38, 41, 42, 43, 58
+  auf r5d. (b) **Versuch 1 (gebaut)**: EIN geschlossenes Nackenstueck rechts statt des Einsatzes der Runde 5 (18 Flaechen): 7 Ecken ab
+  Index 69, 10 Dreiecke ab Index 77, Zeile 493, UV u 43-53 / v 88-101, vorderes Ende im Hinterkopf. Offline (PV): S3 gruen (Huegel
+  7,6 px bei x 429), Huegel-Rot 57,6 % (r4 58,3, r5d 45,8). **Versuch 2** (Sattel): Huegel-Rot 39,6 % - verworfen. **Versuche 3a / 3b**
+  (linkes Stueck, kein Anker im Kopf): PV-Profil bei x 445 von 201 auf 199, S3 (b) rot (H 6,5 bei x 425) - verworfen. Die drei
+  erlaubten Versuche sind damit verbraucht.
+  (d) Heller Keil links neben dem Gesicht: Ursache sind Texel, nicht Normalen (Licht-Faktor 1,00). d26 lag seit Runde 5 auf der Gruppe
+  blass_r5_d26 (Lab-Abstand zu den Nachbarn 13,41), neuer Ort mit Abstand 0,38; dazu d53, v4, v20 (und zunaechst v24) um hoechstens
+  1,5 (Lab) verschoben. Groessere Schuebe (d8 1,52, d49 2,07, d66 2,84, v15 3,92) brachen S14 (a) bei Takt 364 (dL 3,69-3,83, Soll
+  3,61) und blieben aus; d60 hat keinen farbtreuen Ort.
+- **P4-neu, gebaut von 6b** (unterseite_r5.py Stufe u, unterseite_v8.json): Grenze 10 Grad tiefer (Fleisch bis |theta| 110, Uebergang
+  110-120, grau ab 120); Mantel-Vierecke, Dorn- und Deckel-Dreiecke werden an 110 und 120 geteilt (je Glied +8 Ecken, Mesh 18 +12:
+  43 / 32 / 47 / 32 / 32 / 32 / 32). Ring-Deckel, beide Wege gebaut und gemessen: r5d 106 Kanten, da* 14,66, grauer Ring in 86 von 144
+  Posen (8114 Bildpunkte); "schwerpunkt" 32 Kanten, da* 18,06, 44 Posen (97 px); **"teilen" 32 Kanten, da* 7,04, 0 Posen** (gewaehlt;
+  Original-EM30 Haut / Fleisch 7,81). Reifen auf dem Mantel: Laengsbelegung jetzt Texelzeilen v 98-108 statt ab v 90 (v 90-92 sind
+  noch Haut, a* 4-13); Deckel-Kanten damit da* 9,12. Fleisch bis zur Spitze (Dorn von Mesh 22 mit geteilt).
+- **Abbruch**: 6b wurde am 2026-11-10 vom Kontingent-Ende abgebrochen. Sein letzter voller Riegel-Lauf am ersten Asset 382bbfe7:
+  "13 von 22 gruen; ROT: S4, S7, S9, S10, S15, S16, S17, S18, S19". Nicht committet waren riegel_v8.py, riegel_r6.py und
+  nacken_v8.json; nicht mehr gelaufen Kette, Pin, Test-Pins, Riegel am Endstand.
+- **Pruefung und Korrekturen des Folge-Bauers** (Skripte und Ausgaben sfv8/r6c/pruef1-3, pruef3b, v24c, pins.out):
+  1. Riegel-Korrektur S4 / S10 ist eine echte Fehlerkorrektur, kein blinder Riegel. Der alte Code zaehlte die hinter den Ringen
+     angehaengten Teilungs-Ecken als Ring (Mesh 18: Phantom-Ring 10,8 px -> S4 rot) bzw. als Wurzel (Mesh 16: 23 statt 22 Flaechen,
+     1318 px -> S10 rot). Alt gegen neu Zahl fuer Zahl gleich an V7, V8 r2, r3, r4, r5d. Rot bleibt: S4 an V7 (Wurzel 44,3; Mitte
+     34,3 / 24,1 / 28,1) und V8 r2; S10 an V7 3186 px, V8 r2 23133 px, V8 r3 20471 px. Kuenstliche Gegenproben am Endstand: ein Ring
+     von Mesh 18 auf das 0,7-fache -> S4 rot (28,8 / 28,3 / 26,8 px); Wurzel-Ecken aus V8 r3 eingesetzt -> S10 rot (14473 px).
+  2. S15 (b) "ohne Fleisch 1" war weder Riegel- noch Formfehler, sondern ein veraltetes Asset: 382bbfe7 war gebaut, bevor
+     szene_marker.wurzel_flaechen (auch Bau-Eingabe) die Teilungs-Ecken kannte; das Bandstueck v22 von Mesh 16 blieb grau (Zeile 487).
+     Der Bau am heutigen Werkzeugstand legt es auf Zeile 495: Unterseite 90 Flaechen, ohne Fleisch 0, Fleisch-Texel 5352; Mantel-Kanten
+     19 / da* 4,98 (groesster Sprung 7,8) statt 20 / 6,01 (21,6).
+  3. v24 ohne Schub (nacken_v8.json): S7 (c) Rumpf 8 lok z<0 46,3 % statt 50,9 % (Soll <= 49,3) = wieder gruen; S19 mit und ohne
+     gleich (3 Ausreisser, v24 nicht dabei). **Der helle Keil ist ohne den Schub etwas heller, nicht gleich**: offline F346 / F354 /
+     F360 / F366 13 / 14 / 23 / 21 = 71 statt 11 / 13 / 21 / 20 = 65 (r4 73, r5d 92, V7 25); in den Szenenbildern F344-F378 81-112 statt
+     76-108 helle Bildpunkte (Soll <= 87; darueber 32 statt 30 von 35 Bildern). Kein farbtreuer Schub rettet beides: 20 Kandidaten,
+     die fuenf mildesten gebaut - S7 (c) 49,7 / 49,8 / 49,9 / 50,1 / 50,4 %, alle ueber 49,3, Keil je 65. Die Ruecknahme bleibt
+     (S18 (b) war mit dem Schub ebenfalls rot).
+  4. Gegen 382bbfe7 sind am Endstand genau zwei Flaechen anders (Mesh 8 v24 UV, Mesh 16 v22 Zeile). Test-Pin nachgezogen:
+     Flaechen auf Zeile 495 je Glied 21 / 30 / 41 / 31 / 30 / 30 / 30 = 213 (vorher 20 / ... = 212); alle uebrigen Pins nachgemessen gleich.
+  5. Die Gegenprobe V7 stuerzte seit 0bc534825 in S15 ab (unterseite_r5._ring_y nahm an Mesh 16 fest drei Ringe an; V7 hat dort
+     24 Ecken). Ringzahl jetzt hoechstens (Ecken - 2) / 11; an Endstand, r4 und r5d dieselbe Ringzahl wie vorher (sfv8/r6c/ringy.out),
+     Kette danach bytegleich, Voll-Riegel am Endstand danach wiederholt = Ausgabe bytegleich (sfv8/r6c/riegel_end2.txt).
+  6. Marker-Assets (MK_A, MK_B, GR, KO) und Szenenlauf vom Endstand neu (sfv8/r6c/mk, sfv8/r6c/szene); die Laeufe von 6b zeigten 382bbfe7.
+- **Riegel am Endstand** (SF_belege/v8/runde6b/riegel_v8r6b.txt, Exit 1): **"SUMME: 17 von 22 gruen; ROT: S9, S16, S17, S18, S19"**.
+  Die Forderung "S1-S16, S18 und S19 gruen" ist NICHT erfuellt; kein Riegel wurde dafuer aufgeweicht.
+  Gruen u. a.: S2 (c) Naht 2 px; S3 Huegel 7,6 px bei x 429, Huegel-Rot 57,6 %; S4 Wurzel 59,2, Mitte 40,4 / 38,2 / 37,9; S5 Mesh 9
+  bytegleich V7; S7 (c) 46,3 %; S10 0 px; S15: Band 120-130 PV 0,0 / P2 3,1 % (Soll <= 5), grauer Ring-Deckel in 0 von 144 Posen,
+  graue Texelzeilen im Fleisch-Feld 0, Fleisch-Anteil Unterseite PV 99,4 / P2 99,2 %, Oberseite 0,0 / 0,0.
+  ROT, mit Zahl:
+  S9 (b) Schlitz Summe 5 px (F338 1, F360 1, F366 1, F372 2) - unveraendert vom Hand-Bauer (Runde 6a), nicht aus 6b.
+  S16 (a) Luecke: 62 von 177 Ansichten ueber dem Soll, Summe 4190 px, davon tief 2651 (V8 r4 69 Ansichten, 4570 / 2880; V8 r5d
+  1 Ansicht, 484 / 51 = GELB nach E3). Ohne Kragen ist die Luecke im Mass fast wieder auf dem Stand r4; das Nackenstueck holt nur
+  326 px (4516 -> 4190). S16 (b)/(c): 59 verdeckte Gesichts-Bildpunkte in 4 Ansichten (F311 21 und F312 32 durch die Hand, Knochen 12;
+  F253 4 und PV+1024 2 durch Mesh 8), in den Szenenbildern F225-F450 222 (F311 57, F312 64, sonst 1-5 je Bild; r5d 448).
+  S18 vorn ohne Kragen: (a1) Ecken von Mesh 8 im Kopf-Fenster mehr als 2 px neben r4 in 79 Vorderansichten, groesste 6,4 px
+  (r5d 136 Ansichten, 22,6 px); (a3) die 10 Flaechen des Nackenstuecks im Kopf-Fenster sichtbar in 116 Ansichten, groesste 116 px
+  (Soll 0; r5d 18 Flaechen, 136 Ansichten, 98 px); (a2, Info) Umriss ueber r4 > 2 px in 12 Ansichten, groesste 6,1 px (r5d 40 / 9,0);
+  (b) helle Bildpunkte 81-112 gegen V7 69-78, Soll <= 87, darueber 32 von 35 Bildern (r5d 95-130, 35 von 35).
+  S19 Texeldichte: 3 Dreiecke ausserhalb (r5d 62): d10 Dichte 2,00 (r4 1,97), d65 Dichte 0,49 (r4 1,15), v13 Seitenverhaeltnis 2,42
+  (r4 2,00); groesster Normalen-Winkel 27,1 Grad (r5d 39,2).
+  S17 (Hand) rot in (a) und (g) wie in Runde 6a - hier nicht angefasst.
+- **Gegenproben** (je Exit 1): V8 r5d SF_belege/v8/runde6b/riegel_V8r5d_gegenprobe.txt "14 von 20 gruen; ROT: S3, S15, S16, S17, S18,
+  S19" (S15 erweitert: Band 38,2 / 43,3 %, grauer Ring-Deckel 86 Posen / 8114 px; S18 (a1) 136 Ansichten / 22,6 px; S19 62 ausserhalb).
+  V8 r4 riegel_V8r4_gegenprobe.txt "14 von 19 gruen; ROT: S2, S14, S15, S16, S17" (S16 (a) 69 von 177 Ansichten). V7
+  riegel_V7_gegenprobe.txt "6 von 19 gruen; ROT: S1, S2, S3, S4, S6, S7, S10, S13, S15, S16, S17, S18, S19" (S4 Wurzel 44,3; S10 3186 px).
+- **Tests**: ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  "100% tests passed, 0 tests failed out of 8", "Total Test time (real) = 305.11 sec" (SF_belege/v8/runde6b/ctest_gruppe.txt).
+- **Spiel**: lauf_v4.sh (BAUM = dieser Arbeitsbaum, eigene exe-Kopie, Spiel-Asset, FD 200-1100, Ende F1110): EXIT=0, 901 Bilder,
+  debug.log "EM30: Ersatzmodell EMD/EM30_HANGAR.EMD (Raum 50A0)"; state.log bytegleich V7 (1131 Zeilen, sha256 e48e1cad143cc577...,
+  cmp gegen sfv4/r/V7_szene/state.log).
+- **Offen** (Gestaltung, fuer den naechsten Bauer / Pruefer): Luecke Ruecken / Kopf (S16 a) fast wie r4; Nackenstueck von vorn im
+  Kopf-Fenster sichtbar und Ecken bis 6,4 px neben r4 (S18 a); heller Keil 81-112 (S18 b); drei Dreiecke knapp ausserhalb der
+  Texeldichte (S19); S9 (b) 5 px und S16 (b) durch die Hand (Runde 6a / P7); S17. Tafeln 14b_tonne.png und 17_kragen_weg.png zeigen
+  den alten Stand 382bbfe7 und sind nicht committet - sie entstehen mit der Abgabe neu.
+
+## V8 Runde 6c (P7) - linke Hand richtig herum, Arm haengt (Hand-Bauer, Zweig r41/sichel_v8, 2026-11-11)
+
+**Anlass.** Nutzer 2026-11-10 abends: "Bei dem 2 beinigen Birkin in der Vorschau sieht es so aus als waere die linke Hand verkehrt
+herum gedreht, Kann das sein=?" - ja. Dazu weiter P6: "Die Vorlage hat eine breite Hand mit breiten Unterarmt. Dadurch wirkt es
+natuerlich. Bei uns ist die Hand ganz klein und zierlich und wirkt dadurch verkuemmert."
+
+**Umfang.** Nur der linke Arm: Mesh 11 (Unterarm), Mesh 12 (Hand), Knochen 11 (Ellbogen) und - mit Beleg, siehe unten - Knochen 10
+(Oberarm) in den Keyframes. Nacken, Schwanz, Kopf, Sichel-Arm, Textur unberuehrt. Kein Eingriff in Ablauf oder KI, keine Sonder-Pose.
+Alle Zahlen sind PORT-WAHL aus Messungen an der Vorlage (die Form steht auf keiner Disc, es gibt keine @0x-Adresse).
+
+### Ursache
+
+Runde 6a hatte die Hand um 118 Grad um ihre Laengsachse gedreht (`hand_v8.json` `dreh_grad 118`), begruendet mit dem Azimut der Kamera
+in der Ersatz-Pose P1. In den Ersatz-Posen P1/P2/PV liegt der Arm anders als im Spiel; dort sah die gedrehte Hand breit aus. In den
+echten Szenenposen zeigt sie der Kamera die Kante. Nachmessung ueber alle 912 Keyframes gegen Capcoms Original-EM30
+(Verhaeltnis Hand <-> Unterarm, `hand_szene.verdrehung`):
+
+| Stand | Verdrehung (Median, Grad) | Handruecken vorn (% der KF) | Daumen zur Koerpermitte (% der KF) | Handruecken zur Kamera in den Paar-Posen (Grad) | breite Stelle (px) |
+|---|---|---|---|---|---|
+| Original-EM30 | 0 | 86.7 | 91.0 | - | - |
+| V7 319bbd17 | 3.10 | 62.3 | 91.4 | -3.7 | 34.6 |
+| V8 r5d c4976c62 | 3.10 | 62.3 | 91.4 | -3.7 | 34.6 |
+| V8 r6b 95a783a6 | 118.03 | 28.0 | 28.3 | -111.4 | 22.2 |
+| NEU e9e71bca | -0.02 | 82.8 | 88.8 | -4.2 | 45.7 |
+
+Zweiter Fehler, schon in V7: der Ellbogen war um 60 Grad gebeugt (`ducken()` `ellbogen_links`), der Unterarm zeigte zur Kamera und war
+im Bild 13.4 px lang (Vorlage 42.4 .. 49.8). Dadurch stand die Hand auf Hoehe 0.58 der Figur statt 0.48 - der Arm hing nicht.
+
+### Messung umgestellt (E-c)
+
+`hand_szene.py` (neu), `hand_mass.py`: fuenf Paar-Posen mit Vorlagenbild (birkin20 <-> h125, birkin22 <-> h126, birkin23 <-> h128,
+birkin21 <-> h130, birkin24 <-> h132; Clip 1 Bild 35, 36, 38, 40, 42; Spielbild F = h + 243) und drei Kontroll-Posen (h100, h110,
+h135). Takt-Protokoll des Szenenlaufs: `SF_belege/v8/runde6c/takt.txt`. Tabellen: `SF_MESSBLATT_HAND.md` Abschnitt 8.
+
+### Reihe C1 - Verdrehung der Hand (Beuge 20, alle 912 Keyframes)
+
+| Dreh (Grad) | Handruecken vorn % | Daumen innen % |
+|---|---|---|
+| -15 | 79.7 | 80.4 |
+| -5 | 86.3 | 88.5 |
+| 0 | 86.0 | 89.3 |
+| +5 | 85.3 | 90.2 |
+| 10 | 84.6 | 91.3 |
+| +15 | 83.6 | 90.4 |
+| 20 | 82.1 | 89.5 |
+| 30 | 80.3 | 88.0 |
+| 60 | 70.1 | 78.0 |
+| 90 | 60.4 | 61.5 |
+| 110 | 35.9 | 36.2 |
+| 120 | 31.5 | 27.9 |
+| 180 | 11.1 | 9.6 |
+| 270 | 37.9 | 38.7 |
+| 350 | 85.9 | 82.9 |
+
+Zwischen -5 und +10 liegt die Reihe flach (Unterschiede unter 3 Prozentpunkten); kein Wert schlaegt Capcoms 0 in beiden Massen deutlich.
+**Wahl: 0 Grad** (E-a, Capcoms Verhaeltnis).
+
+### Reihe C2 - Ellbogen-Beuge (Verdrehung 0)
+
+Zielgroesse: mittlere Abweichung der fuenf Ketten-Masse (Unterarm-Laenge, Hand-Laenge, Hoehe Ellbogen, Handgelenk, Krallenspitze, je in
+Figurhoehen) von der Vorlage ueber die fuenf Paare, in Prozent der Figurhoehe.
+
+| Beuge (Grad) | 0 | 5 | 10 | 15 | 20 | 25 | 30 | 35 | 40 | 45 | 50 | 55 | 60 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| Ziel | 1.94 | 1.80 | 1.57 | 1.37 | 1.25 | 1.32 | 1.84 | 2.94 | 4.06 | 5.29 | 6.59 | 8.00 | 9.54 |
+
+**Wahl: 20 Grad** (Minimum; V7 60).
+
+### Reihe Oberarm (Knochen 10) - Beleg fuer den Eingriff
+
+Mit Beuge 20 allein steckt die Hand in den Szenen-Keyframes im Koerper (Durchdringung "Szene-DD" = Zahl der 104 Szenen-Keyframes mit
+Hand-Ecke oder Krallenachse in einem fremden Mesh). `ducken()` zieht den Oberarm um 20 Grad zur Koerpermitte (`arm_innen`).
+
+| Oberarm innen (Grad) | Szene-DD | Ketten-Ziel | Winkel Unterarm | Winkel Hand | seitlich |
+|---|---|---|---|---|---|
+| 20 (V7) | 31 | 1.17 | -5.7 | -11.3 | 0.058 |
+| 10 | 22 | 1.30 | -2.8 | -6.9 | 0.030 |
+| 5 | 8 | 1.36 | -1.3 | -4.7 | 0.015 |
+| 0 | 6 | 1.45 | +0.3 | -2.3 | 0.009 |
+| -5 | 4 | 1.54 | +1.9 | 0.0 | 0.016 |
+| -7 | 0 | 1.56 | +2.5 | +0.9 | |
+| -8 | 0 | 1.58 | +2.9 | +1.4 | |
+| -10 | 0 | 1.61 | +3.5 | +2.4 | 0.023 |
+| -15 | 0 | 1.80 | +5.2 | +4.8 | 0.033 |
+
+Vorlage: Unterarm-Winkel im Mittel +4.0 Grad. **Wahl: -8** (erster Wert mit 0 Durchdringungen und 1 Grad Abstand zur Kante -7; der
+Unterarm-Winkel +2.9 liegt naeher an der Vorlage als bei 20). Preis: das Ketten-Ziel steigt von 1.17 auf 1.58, und das Lage-Mass
+"seitlich" allein spraeche fuer 0 .. 5 - der Oberarm steht sichtbar weiter vom Rumpf ab als bei V7 (siehe "Offen").
+
+### Reihen Form (P6)
+
+| Krallen-Wurzelring x | Krallenwurzel (px) | Krallen-Mitte (px) |
+|---|---|---|
+| 1.0 | 32.1 | 17.8 |
+| 1.3 | 37.6 | 19.2 |
+| 1.6 | 44.4 | 21.4 |
+| 2.0 | 44.2 | 23.5 |
+| Vorlage (Median) | 43.5 | 21.8 |
+
+**Wahl: 1.6.** Unterarm-Verlauf (Radialfaktor bei y 0 / 90 / 236): 1.0/1.0/0.86 -> Ellbogen im Mittel 30.6 px; 1.1/1.1/0.86 -> 32.0 ..
+33.2; 1.15/1.12/0.9 -> 32.2 .. 34.2; **1.2/1.15/0.9 -> 33.0 .. 34.2 (gewaehlt;** Vorlage 34.0 .. 40.8). Hand quer: 0.78 -> Handwurzel
+in h130 36.0 px (ausserhalb 26.6 .. 34.8 + 1); **0.77 gewaehlt** (breite Stelle 45.0 .. 47.0); 0.76 -> breite Stelle 44.0 .. 45.0.
+
+### Bau-Angaben alt -> neu (`v8/hand_v8.json`, `hand_r6.py`, `hand_szene.stufe_b`)
+
+| Angabe | alt (V8 r6b) | neu |
+|---|---|---|
+| Hand Verdrehung `dreh_grad` | 118 | 0 |
+| Ellbogen-Beuge (Knochen 11) | 60 (V7 `ducken`) | 20 |
+| Oberarm zur Koerpermitte (Knochen 10) | 20 (V7 `ducken`) | -8 |
+| Hand-Skala quer / laengs / quer | 0.93 / 0.72 / 0.93 | 0.77 / 0.72 / 0.77 |
+| Krallen-Wurzelring A, B, C | 1.0 | 1.6 |
+| Unterarm Radialfaktor y 0 / 90 / 236 | 1.0 / 1.0 / 0.86 | 1.2 / 1.15 / 0.9 |
+| Unterarm Grund-Skala | 1.229 / 0.8 / 1.229 | unveraendert |
+| Krallen-Laengen A 1.33, B 2.0 (nach C, Anteil 0.5), C 1.0 | | unveraendert |
+| Daumenkralle CLUT 491 grau, Fingerkrallen 492 rot (V7) | | unveraendert |
+
+Stufe b rechnet Knochen 11 als `Rz(-beuge * w) @ Original11` und Knochen 10 als `Rx((20 - innen) * w) @ lokal_basis` mit dem Gewicht w
+von `ducken()`; Selbstprobe: Beuge 60 und innen 20 ergeben die Basis bytegleich.
+
+### Paar-Tabelle Vorlage gegen NEU (Videopixel)
+
+| Paar | Ellbogen | Unterarm-Mitte | Handgelenk | Handwurzel | breite Stelle | Krallenwurzel | Krallen-Mitte | Spitzen | Handlaenge | Unterarm |
+|---|---|---|---|---|---|---|---|---|---|---|
+| birkin20 | 34.0 | 32.5 | 20.5 | 26.6 | 37.8 | 37.8 | 19.6 | 9.0 | 56.9 | 43.2 |
+| h125 NEU | 34.0 | 34.0 | 22.0 | 34.0 | 45.0 | 43.0 | 20.0 | **1.0** | 64.8 | 51.3 |
+| birkin22 | 34.1 | 33.5 | 20.0 | 26.8 | 38.0 | 37.9 | 18.2 | 6.9 | 58.0 | 42.4 |
+| h126 NEU | 33.0 | 33.0 | 21.0 | 33.0 | 45.0 | 44.0 | 22.0 | **1.0** | 66.0 | 50.6 |
+| birkin23 | 34.8 | 33.1 | 21.5 | 31.4 | 44.5 | 43.5 | 21.8 | 5.1 | 59.8 | 46.5 |
+| h128 NEU | 34.0 | 35.0 | 22.0 | 33.0 | 47.0 | 45.0 | 22.0 | **1.0** | 65.5 | 49.4 |
+| birkin21 | 36.1 | 34.5 | 21.1 | 34.5 | 46.6 | 46.1 | 23.9 | 6.2 | 59.5 | 49.8 |
+| h130 NEU | 34.0 | 34.0 | 21.2 | 34.0 | 45.2 | 44.0 | 21.0 | **2.0** | 65.2 | 49.6 |
+| birkin24 | 40.8 | 39.1 | 25.5 | 34.8 | 50.6 | 50.6 | 29.1 | 8.5 | 68.5 | 44.7 |
+| h132 NEU | 34.2 | 35.2 | 21.2 | 33.2 | 46.2 | 44.2 | 21.2 | **1.0** | 65.5 | 51.1 |
+
+Fett = ausserhalb der Streuung der fuenf Vorlagebilder (+- 1 px): nur Station "Spitzen". Die Streuung gilt ueber alle fuenf Bilder,
+nicht je Paar: gegen das eigene Paarbild liegt NEU bei birkin20 und birkin22 an Handwurzel und breiter Stelle 6 bis 7 px drueber, bei
+birkin24 am Ellbogen 6.6 px und an der breiten Stelle 4.4 px drunter. Kette: Vorlage E 0.631 / W 0.484 / T 0.290, NEU 0.638 / 0.482 /
+0.280 (V7 0.623 / 0.581 / 0.482; r6b 0.624 / 0.583 / 0.411).
+
+### Alle 912 Keyframes
+
+| Mass | V7 | V8 r6b | NEU |
+|---|---|---|---|
+| Krallenspitze ueber der Sohle, kleinster Wert / Median (Einheiten) | 320 / 1750 | 125 / 1577 | -27 / 1166 |
+| Abstand Hand - Koerper, kleinster Wert | 11 | 7 | 19 (Median 491) |
+| Keyframes mit Abstand unter 30 | 8 | 13 | 3 |
+| Durchdringung: KF mit Krallenachse im Koerper | 26 | - | 24 |
+| Durchdringung: KF mit Hand-Ecke im Koerper | 68 | - | 30 |
+| Durchdringung zusammen | 68 | 96 | 30 |
+| davon Szenen-KF (104) | 1 | 1 | 0 |
+
+NEU je Clip: Clip 9: 2, Clip 14: 1, Clip 20: 27. Neu gegenueber V7: Clip 14 Bild 18. Tiefste Stelle Clip 20 Bild 18. In 1 Keyframe
+(Clip 4) liegt eine Krallenspitze 27 Einheiten unter der Sohle (kein Szenen-Clip), in 3 Keyframes unter 100 Einheiten.
+
+### Versuche, die verworfen wurden
+
+- Verdrehung 118 behalten und nur die Beuge aendern: Handruecken vorn 28 %, Kante zur Kamera (-111 Grad) - das ist der Befund P7.
+- Beuge 20 ohne Oberarm-Eingriff: 31 der 104 Szenen-Keyframes mit Durchdringung.
+- Hand quer 0.78: Handwurzel in h130 36.0 px, ausserhalb der Vorlage.
+- Daumenkralle kuerzen (Daumenlaenge 20.7 .. 23.5 gegen 16.9 .. 19.4): die Gabel-Messung springt auf eine Fingerkralle, die Zahl
+  wird instabil - nicht eingebaut.
+- "ebnen" der Ecke 1 abschalten: Schlitz-Summe S9 (b) unveraendert (70 mit und ohne, Zwischenstand c9e0862c) - wirkungslos, bleibt an.
+
+### Riegel
+
+S17 (linke Hand und Unterarm) misst jetzt in den Paar- und Kontroll-Posen, S20 (Handstellung) ist neu:
+(a) Verdrehung gegen Capcoms Original ueber 912 Keyframes (Median <= 5 Grad), Handruecken vorn >= 57.3 %, Daumen zur Koerpermitte
+>= 86.0 %; (b) Handruecken zur Kamera |Winkel| <= 30 Grad in jeder Paar-Pose; (c) Hoehe Handgelenk und Krallenspitze ueber der Sohle
+in der Streuung der Vorlage.
+
+| Riegel | NEU e9e71bca | Gegenprobe V8 r6b 95a783a6 | Gegenprobe V7 319bbd17 |
+|---|---|---|---|
+| S17 | ROT in (a) Spitzen, (d) Daumen; (b) (c) (e) (f) (g) gruen | ROT in (a, b, c, d, e, g) | ROT in (a, b, c, d, e) |
+| S20 | GRUEN: (a) -0.02 Grad, 82.8 %, 88.8 %; (b) -5.1 .. -3.5; (c) W 0.475 .. 0.487, T 0.274 .. 0.285 | ROT in (a, b, c): 118.03 Grad, 28.0 %, 28.3 %; -111.0 .. -113.6; W 0.576 .. 0.589, T 0.400 .. 0.421 | ROT in (b, c); (a) gruen 3.10 Grad; W 0.574 .. 0.587, T 0.467 .. 0.494 |
+
+Soll / Ist S17 am Endstand: (a) Handgelenk / Unterarm-Mitte 0.602 .. 0.647 (Soll >= 0.597), Spitzen 1 .. 2 px (Soll 5.1 .. 9.0) ROT;
+(b) Handgelenk 21 .. 22 px (20.0 .. 25.5), Gelenk offen in 0 von 912 KF; (c) B/L 0.682 .. 0.718 (0.655 .. 0.783), Handlaenge
+64.8 .. 66.0 (56.9 .. 68.5); (d) Krallen A 18.3 .. 19.0, B 15.9 .. 17.0, C 18.1 .. 18.6, T 14.3 .. 14.4 px gruen, Daumen-Gabel
+18.2 .. 20.0 (22.4 .. 30.5) und Daumenlaenge 20.7 .. 23.5 (16.9 .. 19.4) ROT; (e) kein Kreuzen; (f) CLUT 491: 6, 492: 18, 490: 34
+Flaechen, 0 fremde Texel; (g) 30 KF (V7 68), Szene 0 von 104. Gegenproben: `SF_belege/v8/runde6c/gegenproben.txt`.
+
+Schwaeche von S20 (a): die Schwelle "Handruecken vorn >= 57.3 %" ist durch V7 (62.3 %) gesetzt und damit weit; r6b (28.0 %) faellt
+klar durch, ein Stand zwischen 57 und 80 % ginge durch. Die Verdrehung selbst (Median <= 5 Grad) ist die scharfe Schranke.
+
+**Voller Lauf S1 - S20** (`SF_belege/v8/runde6c/riegel_v8r6c.txt`): `SUMME: 17 von 23 gruen; ROT: S3, S9, S16, S17, S18, S19`.
+Stand Rest-Bauer war: 17 von 22 gruen; ROT: S9, S16, S17, S18, S19. Neu gruen: S20. Neu rot durch diese Runde:
+
+- **S3 (e)** K 3.39 (Soll <= 3; r6b 2.97). Diagnose `runde6c/s3_diagnose.txt`: im Mess-Fenster y 212 .. 243 der Ersatz-Pose PV bilden
+  in 10 bis 11 der 32 Zeilen Oberarm-Pixel (Knochen 10) die gemessene "Kopf-Vorderkante"; die Kopf-Zeilen sind bei r6b und NEU
+  gleich; ohne Knochen 10 - 12 gerastert K 5.91 bei beiden. Der Kopf ist unveraendert (Mesh 9 bytegleich), der Riegel misst den Arm mit.
+  Riegel nicht angefasst.
+- **S9 (a)** neue Ecken ueber der V7-Oberkontur: P1 1 px, F344 0 px (Ecken 493, 494), F354 5 px, F364 2 px. Diagnose
+  `runde6c/s9_diagnose.txt`, Bild `runde6c/s9_oberkontur.png`: alle neuen Ecken liegen auf Knochen 10 (Oberarm weiter aussen); ohne
+  Knochen 10 - 12 sind es 0 px und keine neue Ecke. Der Vergleich laeuft gegen die V7-Armhaltung, die diese Runde ersetzt.
+- **S9 (b)** Schlitz 73 px (r6b 5), verteilt auf 12 Ansichten, groesste F356 12 und F370 11; Bild `runde6c/schlitz_neu.png`
+  (Innenkante Unterarm und Daumenwurzel). In den echten Framedumps F344 - F378 (S9s) 10 px, Soll <= 20, gruen (r6b 13).
+
+S16, S18, S19 rot wie beim Rest-Bauer (nicht Auftrag dieser Runde).
+
+### Nachweis, Kette, Tests, Spiellauf
+
+- Asset `re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD` sha256 e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83;
+  Kette zweimal bytegleich (`V8-KETTE-OK`), Pin `release/em30_hangar.sha256` nachgezogen.
+- `runde6c/nachweis.txt`: gegen den Stand Rest-Bauer 95a783a6 sind nur Mesh 11 und 12 anders (21 von 23 bytegleich, Mesh 9 gleich),
+  in den Keyframes nur Knochen 10 (888 KF) und 11 (889 KF); Byte-Abschnitte: Keyframes 5432 Bytes, Meshes 575 Bytes, Textur und
+  alle uebrigen Abschnitte 0. Gegen V7: Mesh 9 bytegleich.
+- Tests (`runde6c/ctest.txt`): `100% tests passed, 0 tests failed out of 8`, 307.88 s. Die Spannen-Pins von Mesh 11 und 12 in
+  `tests/unit/test_birkin_formen.c` sind am Asset nachgezogen (Mesh 12 453 / 716 / 241, Mesh 11 464 / 640 / 426).
+- Spiellauf (Szene bis Exit-Bild 1110, echtes Fenster): state.log sha256 e48e1cad143cc5776401bc6a415652d694aaba972c1c23235cd18a5cc1ece349,
+  1131 Zeilen, bytegleich zur V7-Referenz - Ablauf und KI unberuehrt. Framedumps nur F200 - F460.
+
+### Tafeln und Sicht-Urteil (selbst angesehen)
+
+- `SF_belege/v8/16_hand.png` (neu gefasst): je Paar Vorlage | V7 | V8 r5d | V8 r6b | NEU, darunter die Zahlenleiste.
+- `SF_belege/v8/18_handstellung.png` (neu): Zeile 1 echte Spielfenster F368, F369, F371, F373, F375 am Endstand je neben dem
+  Vorlagebild; Zeile 2 dieselben vom Stand Rest-Bauer; Zeilen 3 und 4 ganze Figur von vorn, links, hinten im Stand und im Gang.
+- `SF_belege/v8/runde6c/f368_nah.png`: F368 r6b | F368 NEU | birkin20 | F375 NEU | birkin24.
+
+Was zu sehen ist: Der Handruecken zeigt zur Kamera, die graue Daumenkralle sitzt auf der Koerperseite, die drei roten Krallen zeigen
+nach unten - wie in der Vorlage. Der Arm haengt seitlich, die Krallen enden auf Oberschenkelhoehe. Der Unterarm ist breit, am
+Handgelenk eingeschnuert, die Hand wieder breit; der Stummel von V7 / r5d und die schmale Kante von r6b sind weg.
+
+Was abweicht: (1) Hand und unteres Unterarm-Drittel sind dunkelrot bis violett-schwarz, in der Vorlage grau mit roten
+Fingerspitzen und einem hellen Band am Ellbogen - das ist die Original-Textur (CLUT-Zeile 490), nicht nachgemalt (E4). (2) Das
+Handende ist in der Vorlage rund wie ein Faeustling, am Modell stehen einzelne spitze Krallen. (3) Der Arm ist etwas laenger als in vier
+der fuenf Vorlagebilder. (4) In den Ansichten von vorn steht der Oberarm sichtbar weiter vom Rumpf ab als bei V7. (5) In der Vorlage
+knickt die Hand um 7 bis 14 Grad zum Koerper ein, am Modell um 1 bis 2 Grad - die Hand wirkt steifer. (6) In der Seitenansicht
+der Tafel 18 laeuft der Schwanz aus der Kachel; der Arm ist dort klein.
+
+### Offen
+
+S3 (e) und S9 (a, b) neu rot durch die Arm-Haltung; Oberarm -8 (Entscheid erbeten); S17 (a) Spitzen und (d) Daumen; Hand-Textur;
+Knick der Hand (Knochen 12); Kralle in Clip 4 unter der Sohle; 1 neuer Durchdringungs-Keyframe in Clip 14; S16, S18, S19 unveraendert rot.
+
+## V8 Runde 6 - Abgabe am Endstand (Teil 6d; Bauer, Zweig r41/sichel_v8, 2026-11-11)
+
+Dieser Abschnitt ist die Abgabe der Runde 6. Teil 6d aendert **nichts** am Modell: keine Geometrie, keine Keyframes, keine Textur.
+Das Spiel-Asset ist bytegleich zum Stand von 6c. Gemacht sind: Stand geprueft, Kette zweimal, Voll-Riegel S1-S20 mit vier
+Gegenproben, Bau und Tests, Szenenlauf mit Video, Bogen und Fensterbildern, alle Tafeln neu am Endstand, dieser Abschnitt.
+Kein RE-Befund: die Form steht auf keiner Disc; jede Zahl ist PORT-WAHL (Nutzer-Wortlaut oder Messung an der Vorlage), keine
+@0x-Adresse. Textur nur Original-EM30-Texel; keine Farbe ist am Video oder an Nutzerbildern geeicht (E4).
+
+### Wortlaut der vier Nutzer-Befunde (bindend, unveraendert)
+- (P4) 2026-11-09: "Der 2 Beiner Birkin sieht in der Vorschau schon mal super aus. Nur eine Sache passt noch nicht so ganz. Die
+  Unterseite des großen Schwanzes ist fleischig wenn man in die Vorlagen Bilder schaut. Nur die oberseite ist durchweg grau."
+- (P5) 2026-11-09: "Das einzige was mir noch auffällt, es gibt immer noch eine Lücke zwischen Rücken und Kopf beim 2 beiner Birkin.
+  Das ist in der Vorlage so wie es aussieht nicht so." Dazu aus der Pruefung V8 r5d: der Kragen / die Haube ueber dem Kopf.
+- (P6) 2026-11-10: "Die Vorlage hat eine breite Hand mit breiten Unterarmt. Dadurch wirkt es natürlich. Bei uns ist die Hand ganz
+  klein und zierlich und wirkt dadurch verkümmert."
+- (P7) 2026-11-10 abends: "Bei dem 2 beinigen Birkin in der Vorschau sieht es so aus als waere die linke Hand verkehrt herum
+  gedreht, Kann das sein=?"
+
+### Die Runde in vier Teilen (alle Versuche, auch die verworfenen)
+Einzelheiten stehen in den Abschnitten 6a, 6b und 6c oben; hier die Folge mit den Kernzahlen.
+
+| Teil | Auftrag | Asset danach | Riegel danach |
+|---|---|---|---|
+| 6a Hand-Bauer | P6 breite Hand | 7a65e3f0 | statisch 14 von 17 gruen; ROT S9, S16, S17 |
+| 6b (abgebrochen) | P5-neu Nacken ohne Kragen, P4-neu Schwanz-Unterseite | 382bbfe7 (Zwischenstand) | 13 von 22 gruen; ROT S4, S7, S9, S10, S15, S16, S17, S18, S19 |
+| Rest-Bauer | 6b abschliessen | 95a783a6 | 17 von 22 gruen; ROT S9, S16, S17, S18, S19 |
+| 6c Hand-Bauer | P7 Hand richtig herum, Arm haengend | **e9e71bca** | 17 von 23 gruen; ROT S3, S9, S16, S17, S18, S19 |
+| 6d (dieser Teil) | Abgabe | **e9e71bca** (unveraendert) | 17 von 23 gruen; ROT S3, S9, S16, S17, S18, S19 |
+
+- **6a (P6).** Vier Varianten nach Zahl "Masse ausserhalb der Vorlage-Spanne von 34 / Summe der Abweichung": A 0,80 / 90 Grad
+  7 / 86,5 px; B 0,80 / 105 6 / 79,2; C 0,93 / 118 5 / 82,9; **D 0,93 / 0,72 / 118 5 / 73,5** (gebaut). Dazu Schritt "ebnen" (Ecke 1
+  des Handansatzes in die Ebene; Schlitz S9 (b) 49 -> 5 px). Nicht gebaut: breiterer Handgelenk-Ring (das Handgelenk mass schon
+  22,0 px gegen Vorlage-Median 21,1). Rot blieb S17 (a) Spitzen 2,2 gegen 5,1..9,0 und (g) Hand im Koerper 96 von 912 Keyframes
+  (V7 68). Die Verdrehung 118 Grad dieser Variante war der spaetere Befund P7.
+- **6b (P5-neu, P4-neu), am 2026-11-10 vom Kontingent-Ende abgebrochen.** P5-neu: Versuch 0 (alle Kragen-Ecken auf V8 r4) hob die
+  Naht S2c von 2 auf 8 px - deshalb bleiben 10 Ecken auf r5d; **Versuch 1 gebaut** (ein Nackenstueck rechts, 7 Ecken, 10 Dreiecke,
+  Zeile 493; Huegel-Rot 57,6 %); Versuch 2 (Sattel, Huegel-Rot 39,6 %) verworfen; Versuche 3a / 3b (linkes Stueck; S3 (b) rot, H 6,5
+  bei x 425) verworfen. Damit waren die drei erlaubten Versuche verbraucht. Heller Keil links vom Gesicht: Ursache Texel (d26 auf
+  blasser Gruppe, Lab-Abstand 13,41 -> 0,38); groessere Schuebe (d8, d49, d66, v15) brachen S14 (a) und blieben aus. P4-neu: Grenze
+  10 Grad tiefer (Fleisch bis |theta| 110, grau ab 120), Flaechen an 110 und 120 geteilt; Ring-Deckel in drei Wegen gemessen:
+  r5d 106 Kanten / da* 14,66 / grauer Ring in 86 von 144 Posen; "schwerpunkt" 32 / 18,06 / 44 Posen (verworfen);
+  **"teilen" 32 / 7,04 / 0 Posen** (gebaut). Beim Abbruch nicht committet: riegel_v8.py, riegel_r6.py, nacken_v8.json; nicht
+  gelaufen: Kette, Pin, Test-Pins, Riegel am Endstand.
+- **Rest-Bauer.** Riegel-Korrektur S4 / S10 (Teilungs-Ecken zaehlten als Ring bzw. Wurzel; alt gegen neu Zahl fuer Zahl gleich an
+  V7, r2, r3, r4, r5d; kuenstliche Gegenproben bleiben rot). S15 (b) "ohne Fleisch 1" war ein veraltetes Asset, kein Formfehler.
+  Schub von v24 zurueckgenommen (S7 (c) 50,9 -> 46,3 %, Soll <= 49,3); 20 farbtreue Ersatz-Kandidaten gerechnet, die fuenf
+  mildesten gebaut (S7 (c) 49,7 .. 50,4 %, alle rot) und verworfen - der helle Keil ist dadurch etwas heller (81-112 statt 76-108
+  helle Bildpunkte, Soll <= 87). Absturz der Gegenprobe V7 in S15 behoben.
+- **6c (P7).** Verdrehung der Hand 118 -> 0 Grad, Ellbogen-Beuge 60 -> 20 Grad, Oberarm (Knochen 10) 20 -> -8 Grad, Hand-Skala
+  0,93 / 0,72 / 0,93 -> 0,77 / 0,72 / 0,77, Krallen-Wurzelring 1,0 -> 1,6, Unterarm-Radialfaktor 1,0 / 1,0 / 0,86 -> 1,2 / 1,15 / 0,9.
+  Verworfen: Verdrehung 118 behalten und nur beugen (Handruecken vorn 28 %); Beuge 20 ohne Oberarm (31 von 104 Szenen-Keyframes
+  mit Durchdringung); Hand quer 0,78 (Handwurzel h130 36,0 px, ausserhalb der Vorlage); Daumenkralle kuerzen (Messung instabil);
+  "ebnen" abschalten (Schlitz 70 mit und ohne). Neu gruen S20, neu rot S3 (e) und S9 (a, b) durch die neue Armhaltung.
+
+### Stand (Teil 6d)
+- **Asset** re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD, 274 644 Bytes, sha256
+  **e9e71bca28f4f8596b888436f4b02406b359ff6a6067aaf21fb344e142c90e83** - gleich im Arbeitsbaum, im Commit 7a08e71b5 (6c), in HEAD und
+  im Pin release/em30_hangar.sha256 (runde6d/stand.txt). Teil 6d hat keine Geometrie, keinen Keyframe und keinen Texel angefasst.
+- **Kette** (re15_port/tools/r41_sichel/v8_kette.sh) zweimal in getrennte Ordner: beide "V8-KETTE-OK sha256 e9e71bca...", Lauf A
+  gegen Lauf B bytegleich, Lauf A gegen das Spiel-Asset bytegleich (runde6d/kette_a.txt, kette_b.txt).
+- **Was sich gegen die Vergleichsstaende aendert** (runde6d/nachweis.txt): gegen V7 319bbd17 die Meshes 8, 11, 12, 13, 14, 16-22
+  von 23 und gespeicherte Winkel an Knochen 10 (888 Keyframes), 11 (889), 16-22 (je 912); gegen V8 r5d c4976c62 die Meshes 8, 11,
+  12, 16-22 und Knochen 10, 11; gegen den Stand Rest-Bauer 95a783a6 nur die Meshes 11 und 12 (Unterarm, Hand) und Knochen 10, 11.
+  **Mesh 9 (Kopf) ist in allen vier Vergleichen gleich** - das Gesicht ist bytegleich V7 (auch S5: Mesh 9, CLUT-Zeile 486 und die
+  6501 Gesichts-Texel gleich).
+
+### Riegel am Endstand (riegel_v8.py, S1-S20 voll: Szene, Marker-Laeufe, echte Framedumps)
+Datei runde6d/riegel_v8r6d.txt / .json, Exit 1. **SUMME: 17 von 23 gruen; ROT: S3, S9, S16, S17, S18, S19.** Die Ausgabe ist
+bytegleich zu der von 6c (cmp gegen runde6c/riegel_v8r6c.txt) - der neue Szenen- und Marker-Lauf aendert keine Zahl.
+
+| Riegel | Soll | Ist am Endstand | Urteil |
+|---|---|---|---|
+| S1 Kontur T | Mittel <= 4, Max <= 8 px | 2,2 / 6,0 | gruen |
+| S2 Uebergang J | (a) <= 4 / <= 6; (b) Sattel <= 2; (c) Naht <= 3 px | 2,2 / 5; 1,7 bei x 333; 2 px | gruen |
+| S3 Ruecken / H / K | Kuppe <= 4; H 5-10 bei x 428-445; Sattel Kopf <= 2; K <= 3; Huegel rot >= 50 % | 3,0; 7,6 bei x 429; 2,0; **K 3,4**; 57,6 % | **rot (e)** |
+| S4 Breite | Wurzel >= 55; s 90-130 >= 36; Ende <= 10; monoton | 59,2; 40,4 / 38,2 / 37,9; 5,6; ja | gruen |
+| S5 Gesicht | Mesh 9, Zeile 486, Texel bytegleich V7 | ja, ja, ja (6501 Texel) | gruen |
+| S6 Boden | 0 Keyframes unter der tiefsten Koerperecke | 0 von 912 | gruen |
+| S7 Adern | Herkunft Original; Oberarm 35-59 % und <= 57,7; Rumpf 25-80 % und <= 49,3 | ok; 48,7 %; 46,3 % | gruen |
+| S8 Technik | <= 16 CLUT-Zeilen, Hoehe <= 4096, 23 / 23 / 21 | 16; 4096; 23 / 23 / 21 | gruen |
+| S9 Vorderansicht | je <= 2 px ueber V7, keine neue Ecke; (b) Schlitz 0 | P1 1; F344 0 mit neuen Ecken 493, 494; **F354 5 px**; F364 2 mit 6 neuen Ecken; **Schlitz 73 px** in 12 Bildern | **rot** |
+| S10 Wurzel von hinten | 0 Bildpunkte | 0 | gruen |
+| S11 Kappe / Kacheln | 0 rote ueber dem Kopf | 0 / 0 | gruen |
+| S12 Unterarmband P2 | <= V7 + 20 | 0 | gruen |
+| S13 Naht | 0 Flaechen auf V7-Zeilen 480 / 481 | 0 | gruen |
+| S14 Brust von vorn | dL <= V7 + 1,5; da* <= V7; 0 fast weisse; rot >= V7 | dL 2,54-2,99 gegen V7 2,11-2,30; da* 2,32-2,62 gegen 2,93-3,15; 0; 1226-1523 gegen 1088-1356 | gruen (streng ohne Rand: nicht erfuellt, dL ueber V7) |
+| S15 Schwanz-Unterseite (P4) | Unterseite ganz Fleisch, Oberseite ohne; Band 120-130 <= 5 %; kein grauer Ring-Deckel | 90 Flaechen, 0 ohne Fleisch; 99,4 / 99,2 % unten, 0,0 / 0,0 % oben; Band 0,0 / 3,1 %; 0 von 144 Posen | gruen |
+| S16 Luecke Ruecken / Kopf (P5) | je Ansicht <= 21 px, <= 7 tief, <= 3,2 px; Gesicht frei | **62 von 177 Ansichten ueber dem Soll**; Summe 4357 px, tief 2757; PV 26 / 10 / 18,4; P2 43 / 17 / 3,6; F278 189 / 141 / 9,8; F311 226 / 165 / 11,7; Gesicht 25 Bildpunkte verdeckt in 4 Ansichten, Szene 117 | **rot** (E3: kein Einzelbild) |
+| S17 Hand (P6) | Profil in der Vorlage-Spanne; Handgelenk 20,0-25,5; B / L 0,655-0,783; Krallen; keine Kreuzung; Herkunft; Durchdringung <= V7 | 7 von 8 Stationen innen, **Spitzen 1,2 gegen 5,1-9,0**; 21,0-22,0; 0,682-0,718; **Kralle A in h130 duenner als V7, Daumen-Gabel 18,2-20,0 gegen 22,4-30,5, Daumen 20,8-25,5 gegen 16,9-19,4**; keine; ok; 30 Keyframes (V7 68), Szene 0 | **rot (a, d)**; b, c, e, f, g gruen |
+| S18 vorn ohne Kragen (P5) | Ecken <= 2 px gegen r4; keine neue Flaeche sichtbar; heller Keil <= 87 | **79 Ansichten, bis 6,4 px; Nackenstueck 10 Flaechen in 116 Ansichten, bis 116 px; hell 81-112, 32 von 35 Bildern drueber** | **rot** |
+| S19 Texeldichte / Streckung | 0 Dreiecke ausserhalb; Normalen <= 27,1 Grad | **3** (d10 Dichte 2,00; d65 0,49; v13 Seitenverhaeltnis 2,42); 27,1 | **rot** |
+| S20 Handstellung (P7) | Verdrehung Median <= 5 Grad; Handruecken vorn >= 57,3 %; Kamera-Winkel Betrag <= 30; Hoehen in der Vorlage-Spanne | -0,02 Grad; 82,8 % (V7 62,3, Original 86,7); -5,1 .. -3,5 Grad; Handgelenk 0,475-0,487 (0,462-0,503), Krallenspitze 0,274-0,285 (0,256-0,318) | gruen |
+| S14s / S10s / S9s (echte Framedumps) | <= V7 + 29; 0; <= 20 | 22 (V7 22); 0; 10 | gruen |
+
+Zur Einordnung der roten Riegel, ohne sie umzudeuten:
+- **S16** ist der Riegel zum Nutzer-Befund P5. Mit dem Rueckbau des Kragens (6b) ist die Luecke nach diesem Mass wieder fast so gross wie
+  am V8 r4 (62 gegen 69 Ansichten, 4357 gegen 4570 px) und groesser als am V7 (52 Ansichten, 3494 px; Tabelle unten). Der Entscheid E3 ("GELB - Einzelbild") greift nicht: es sind 62 Ansichten, darunter beide Foto-Posen.
+  Gegen den Stand Rest-Bauer ist die Summe durch 6c noch um 167 px gestiegen (4190 -> 4357; F311 132 / 102 / 11,7 -> 226 / 165 / 11,7,
+  F312 73 / 43 / 6,3 -> 146 / 86 / 6,4): der Arm haengt jetzt und steht in diesen zwei Bildern nicht mehr vor der Luecke.
+- **S3 (e), S9** sind Folgen der neuen Armhaltung von 6c (Oberarm -8 Grad): die Kante K misst 3,4 statt 3,0; von vorn liegen neue
+  Ecken des Arms in der Silhouette; der Schlitz misst im Modellbild 73 px, in den echten Framedumps 10 px (S9s gruen).
+- **S17 (a, d)**: Krallenspitzen und Daumen, siehe Sicht-Urteil P6. **S18, S19**: das Nackenstueck von 6b, siehe Sicht-Urteil P5.
+
+### Gegenproben (selber Riegel, selbe Laeufe, anderes Asset; runde6d/riegel_alle.sh)
+| Stand | Datei in runde6d | Summenzeile woertlich | S15 (P4) | S16 ueber Soll / Summe / tief | S17 (P6) | S18 | S20 (P7) |
+|---|---|---|---|---|---|---|---|
+| NEU e9e71bca | riegel_v8r6d.txt | 17 von 23 gruen; ROT: S3, S9, S16, S17, S18, S19 | gruen | 62 / 4357 / 2757 | rot (a, d) | rot | gruen, Verdrehung -0,02 Grad |
+| Rest-Bauer 95a783a6 | riegel_V8r6b_gegenprobe.txt | 17 von 23 gruen; ROT: S9, S16, S17, S18, S19, S20 | gruen | 62 / 4190 / 2651 | rot (Handgelenk 16,6, breite Stelle 22,2) | rot | **rot, 118,03 Grad**, Handruecken vorn 28,0 % |
+| V8 r5d c4976c62 | riegel_V8r5d_gegenprobe.txt | 14 von 21 gruen; ROT: S3, S15, S16, S17, S18, S19, S20 | **rot** (Band 38,2 / 43,3 %, grauer Ring in 86 Posen) | 1 / 484 / 51 (F311 63 / 37 / 6,3) | rot (Handgelenk 17,5, breite Stelle 34,6) | rot (136 Ansichten, bis 22,6 px) | rot (Verdrehung 3,10 Grad gruen, Teile b / c rot) |
+| V8 r4 10d02173 | riegel_V8r4_gegenprobe.txt | 14 von 20 gruen; ROT: S2, S14, S15, S16, S17, S20 | **rot** (Unterseite 66 Flaechen ohne Fleisch) | 69 / 4570 / 2880 | rot (Handgelenk 17,5, breite Stelle 34,6) | gruen (Bezug) | rot (Verdrehung 3,10 Grad gruen, Teile b / c rot) |
+| V7 319bbd17 | riegel_V7_gegenprobe.txt | 6 von 20 gruen; ROT: S1, S2, S3, S4, S6, S7, S10, S13, S15, S16, S17, S18, S19, S20 | **rot** (72 Flaechen ohne Fleisch) | 52 / 3494 / 1719 | rot (wie r4) | rot (136 Ansichten, bis 9,6 px) | rot (wie r4) |
+
+Die Gegenproben zeigen, dass der Riegel an den alten Staenden dort rot wird, wo der Nutzer den Fehler gesehen hat: P4 (S15) an
+V8 r5d, P7 (S20) am Stand Rest-Bauer, P6 (S17 b, c) an den Staenden vor 6a und am Stand Rest-Bauer. Und sie zeigen den Preis:
+S16 war nur an V8 r5d (mit Kragen) fast gruen. Der Zaehler der Summenzeile ist je Stand verschieden (23 / 21 / 20), weil die Riegel
+auf echten Framedumps (S14s, S10s, S9s) nur dort zaehlen, wo fuer den Stand ein Szenen- oder Marker-Lauf vorliegt: NEU aus
+sfv8/r6d, Rest-Bauer aus sfv8/r6c (Laeufe am Stand 95a783a6), V8 r5d aus sfv8/pr5s; V8 r4 und V7 ohne Lauf.
+
+### Tests (Bau am Endstand, HEAD 8ca7e4ab2; configure und build ueber local_build.sh mit RE15_BUILD_DIR dieses Baums)
+- configure: "=== LOCAL-BUILD-OK (configure)"; build: "ninja: no work to do.", "=== LOCAL-BUILD-OK (build)".
+- ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900
+  (runde6d/ctest_gruppe.txt): **"100% tests passed, 0 tests failed out of 8"**, "Total Test time (real) = 333.46 sec"
+  (integration_r41_birkin_pistole 266,12 s, integration_r41_sichel_form 66,53 s). Ein erster Aufruf endete mit Exit 127, weil im
+  sauberen PATH kein git lag und die Befehlskette vor ctest abbrach - kein Testlauf, wiederholt.
+- ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)"
+  (runde6d/ctest_unit.txt, gekuerzt auf Kopf und Summe): **"100% tests passed, 0 tests failed out of 1013"**,
+  "Total Test time (real) = 401.45 sec". Der Lauf lief neben den Riegel-Gegenproben (Last), kein Test fiel aus.
+- Nicht gemacht: die Test-Gegenprobe mit getauschtem Asset (wie in Runde 5). integration_r41_sichel_form liest den Asset-Pfad aus
+  dem Baum; ein Tausch haette das Spiel-Asset angefasst, und das ist in Teil 6d untersagt. Die Pins des Tests stammen aus 6c
+  (Commit 7a08e71b5).
+
+### Spiel (Teil 6d, alles neu am Endstand)
+- **Szenenlauf Hangar 50A0** (lauf_v4.sh, BAUM = dieser Arbeitsbaum, eigene exe-Kopie, EMD "-" = Spiel-Asset, FD 200-1100/1,
+  Ende F1110; Skript runde6d/laeufe.sh; Ordner sfv8/r6d/szene): EXIT=0, 901 Bilder, debug.log "EM30: Ersatzmodell
+  EMD/EM30_HANGAR.EMD (Raum 50A0)", "[hangar] ROOM50A0 Szene Ende: Cut 4, Birkin Zustand 0". **state.log bytegleich V7**
+  (1131 Zeilen, sha256 e48e1cad143cc5776401bc6a415652d694aaba972c1c23235cd18a5cc1ece349, cmp gegen sfv4/r/V7_szene/state.log) -
+  Ablauf und KI unberuehrt.
+- **Video** sfv8/spiderman_szene_v8_r6.mp4: Bilder F225-F450 des Szenenlaufs, 226 Bilder, 30 fps, 960 x 720, 2 003 466 Bytes,
+  sha256 01d29b3712b67fb098d2564ab5a354b32c1a9e91ff7b9c6aa42e66a0ee35a7eb. Die Datei dieses Namens, die vorher dort lag, zeigte
+  den Zwischenstand 382bbfe7 von 6b; sie liegt als sfv8/r6d/spiderman_szene_v8_r6_alt_382bbfe7.mp4 daneben.
+- **Bogen** SF_belege/v8/07_bogen_jedes7.jpg (jedes 7. Bild F225-F449).
+- **Marker-Laeufe** fuer den Riegel (MK_A, MK_B, GR je F300-F380; KO_NEU F225-F450; sfv8/r6d/mk): Marker-Assets neu gebaut,
+  bytegleich zu denen von 6c.
+- **gdigrab des echten Fensters** (runde6d/gdi.sh: eigene exe-Kopie re15_sfv4_20791, Fenster ueber die eigene PID gefunden und per
+  SetWindowPos nach oben gelegt, Client 960 x 720 bei (480,180); kein AUTOSHOT, kein SOFTWARE_RENDER): Video
+  sfv8/r6d/gdi/gdi_szene_v8r6d.mp4 (50 s, 2275 Bilder, Aufnahme mit 60 Bildern/s, sha256 8de900793cc3d880...); state.log dieses
+  Laufs ebenfalls bytegleich V7. Ein erster Lauf mit 30 Bildern/s (1425 Bilder) hatte das Spielbild F369 nicht aufgenommen und ist
+  verworfen (sfv8/r6d/gdi_30).
+  Zuordnung gdigrab-Bild <-> Spielbild **gemessen, nicht nach Zeit geschaetzt** (runde6d/gdi_zuordnung.py, gdi_zuordnung.txt):
+  je Framedump F das gdigrab-Bild mit der kleinsten mittleren Grauwert-Abweichung; Treffer 0,88-0,94 (320 x 240) gegen 1,32-6,39
+  beim naechsten anderen Bild. Elf Fensterbilder runde6d/gdi_fenster_F<n>.png: seitlich F262, F300; hinten F328, F334; vorn F354,
+  F366; die fuenf Hand-Bilder F368, F369, F371, F373, F375 (= Vorlage birkin20, 22, 23, 21, 24).
+- Labor 50E0 nicht neu gelaufen (der Kampf laeuft in integration_r41_birkin_pistole).
+
+### Tafeln (SF_belege/v8, roh; alle neu gerechnet am Endstand)
+- 01-08, 10-14 aus tafeln_v8.py (Vergleich V7 und V8 r4 10d02173); 11 aus den elf zugeordneten Fensterbildern (neue Option
+  --gdi-bilder, Commit f46396f2b - die festen Zeiten der Runde 5 treffen im neuen gdigrab-Lauf andere Spielbilder).
+- 09_vorn_kopf.png und 15_ruecken_kopf.png aus tafeln_r6.py mit den Spalten V7 | V8 r4 | V8 r5d | NEU.
+- 14b_tonne.png (F315-F324 je V7 | V8 r5d | NEU) und 17_kragen_weg.png (F352, F366, F372, F278, F306 je V7 | V8 r5d | NEU).
+- 16_hand.png (tafel_hand.py) und 18_handstellung.png (tafel_handstellung.py): neu gerechnet = **bytegleich** zur Fassung von 6c;
+  18 Zeile 1 aus den Framedumps des neuen Szenenlaufs. 16a_hand_messblatt.png und 16b_hand_varianten.png sind Belege der Runde 6a
+  (Stand 7a65e3f0) und nicht neu.
+- Selbst angesehen: 07, 09, 11, 14, 14b, 15, 16, 17, 18 und das Fensterbild F371. Die uebrigen (01-06, 08, 10, 12, 13) sind nur auf
+  Groesse und Inhalt (Mittelwert, Streuung) geprueft, nicht angesehen.
+
+### Sicht-Urteil je Nutzer-Befund (so, wie der Nutzer es saehe)
+- **P4 Schwanz-Unterseite fleischig: erfuellt, mit einer Abweichung.** Tafel 14: Unterseite in PV und P2 durchgehend dunkelrot bis
+  zur Spitze, Oberseite durchgehend grau, die Grenze liegt auf der gelben / roten Linie der Vorlage. Tafel 14b (F315-F324): die
+  grauen Reifen und der graue Ring-Deckel von V8 r5d sind weg. Zahl: Fleisch-Anteil unten PV 99,4 / P2 99,2 %, oben 0,0 / 0,0 %;
+  Band 120-130 Grad PV 0,0 / P2 3,1 % (Soll <= 5); grauer Ring-Deckel in 0 von 144 Posen (r5d 86). **Abweichung:** die Unterseite ist
+  ein glattes, gleichmaessig rotes Band mit harter Kante zum Grau; die Vorlage zeigt dort ein fleckiges, unruhiges Dunkelrot mit
+  weichem Uebergang. Helligkeit entlang der Flanke am Modell flach (L* 21,6 .. 28,3), in der Vorlage ansteigend (11,4 .. 36,8).
+  In F324 ragt am oberen Bildrand ein graues Stueck der Oberseite in die Sicht von unten.
+- **P5 keine Luecke Ruecken / Kopf, kein Kragen: NICHT erfuellt.** Der Kragen ist weg, die Luecke ist wieder da. Tafel 17
+  (F352, F366, F372): die gewoelbte Haube von r5d ueber dem Kopf ist verschwunden, der Kopf steht frei vor den Schultern. Aber:
+  (a) nach dem Lueckenmass liegt der Stand wieder fast beim V8 r4, also bei dem Stand, an dem der Nutzer die Luecke bemaengelt hat,
+  und ueber dem V7 -
+  Zahlen im Riegel-Absatz (S16); in F278 / F306 / F310 / F311 sieht man zwischen Hinterkopf und Schulterkamm den Hintergrund;
+  (b) von vorn steht links vom Kopf ein dunkelroter Zwickel zwischen Kopf und (W)-rechter Schulter, rechts hinter dem Kopf das
+  neue Nackenstueck als heller flacher Streifen (im Kopf-Fenster sichtbar in 116 von 136 Vorderansichten, bis 116 px), die
+  Oberkontur ist kantig gestuft; (c) in F278 / F306 steht rechts vom Kopf eine spitze Zacke fast kopfhoch; (d) die Schulterflaechen
+  tragen gestreckt-gestreifte Textur, kein glatter Uebergang wie in der Vorlage. Der helle Keil links vom Gesicht ist kleiner als in
+  r5d (81-112 gegen 95-130 helle Bildpunkte), aber ueber dem Soll 87.
+- **P6 Hand und Unterarm breit wie die Vorlage: in der Form erfuellt, in Farbe und Fingerform nicht.** Tafel 16: der Unterarm ist
+  breit, am Handgelenk eingeschnuert, die Hand wieder breit - der Umriss folgt der Vorlage; 7 von 8 Stationen liegen in allen fuenf
+  Paar-Posen in der Spanne der Vorlage (Mittel Modell | Vorlage: Ellbogen 33,8 | 34,0..40,8; Unterarm-Mitte 34,2 | 32,5..39,1;
+  Handgelenk 21,5 | 20,0..25,5; Handwurzel 33,4 | 26,6..34,8; breite Stelle 45,7 | 37,8..50,6; Krallenwurzel 44,0; Krallen-Mitte
+  21,2 | 18,2..29,1). Die Hand ist nicht mehr klein und zierlich. **Abweichungen:** Spitzen 1,0-2,0 px gegen 5,1-9,0 (die Vorlage
+  endet rund wie ein Faeustling, am Modell stehen einzelne spitze Krallen); Daumen sitzt naeher am Handgelenk (Gabel 18,2-20,0 px
+  gegen 22,4-30,5) und ist laenger (20,8-25,5 gegen 16,9-19,4); Hand und unteres Unterarm-Drittel sind dunkelrot-violett, in der
+  Vorlage grau mit roten Fingerspitzen (Original-Textur Zeile 490, wegen E4 nicht nachgefaerbt); im echten Fenster (F371) liest
+  sich die Hand deshalb als dunkle Klaue, nicht als graue Pranke.
+- **P7 Hand richtig herum, Arm haengend: erfuellt.** Tafel 18 Zeile 1 und Fensterbilder F368-F375: der Handruecken zeigt zur
+  Kamera, der Daumen sitzt auf der Koerperseite, die Krallen zeigen nach unten und enden auf Oberschenkelhoehe wie in der Vorlage;
+  die verdrehte schmale Kante vom Stand Rest-Bauer (Zeile 2) ist weg. Zahl: Verdrehung gegen Capcoms Original -0,02 Grad
+  (r6b 118,03), Handruecken zur Kamera -5,1 .. -3,5 Grad (r6b -111,0 .. -113,6), Handgelenk-Hoehe 0,475 .. 0,487 der Figur
+  (Vorlage 0,462 .. 0,503), Krallenspitze 0,274 .. 0,285 (0,256 .. 0,318). **Abweichungen:** der Oberarm steht von vorn weiter vom
+  Rumpf ab als in V7 (Folge des Eingriffs an Knochen 10; S9 (a) deshalb rot); die Hand knickt am Modell 1-2 Grad zum Koerper ein,
+  in der Vorlage 7-14 Grad - sie wirkt steifer; in der Sicht von unten (Tafel 14b, F315-F324) ragt der gestreckte Arm seitlich
+  heraus, wo er in r5d angewinkelt am Koerper lag.
+
+### Offen nach Runde 6 (nichts davon ist in 6d angefasst; es sind Fehler im Modell, nicht im Riegel)
+1. **P5 Luecke Ruecken / Kopf (S16 rot).** 62 von 177 Ansichten ueber dem Soll, Summe 4357 px (V8 r4 69 / 4570, V8 r5d 1 / 484, V7 52 / 3494).
+   Der Kragen von r5d schloss die Luecke und war dem Nutzer zu viel; ohne ihn ist die Luecke zurueck. Ein Stand, der beides
+   erfuellt (Luecke zu, kein Kragen), ist in den drei erlaubten Versuchen von 6b nicht entstanden.
+2. **Nackenstueck sichtbar (S18 a3, S19 rot).** Die 10 neuen Dreiecke rechts hinter dem Kopf sind in 116 von 136 Vorderansichten zu
+   sehen (bis 116 px), 3 Dreiecke liegen ausserhalb von Dichte / Seitenverhaeltnis; von vorn kantig gestufte Oberkontur, in
+   F278 / F306 eine Zacke rechts vom Kopf.
+3. **Heller Keil links vom Gesicht (S18 b rot).** 81-112 helle Bildpunkte gegen Soll <= 87 (V7 69-78), in 32 von 35 Bildern darueber.
+4. **Hand: Krallenspitzen und Daumen (S17 a, d rot).** Spitzen 1,2 px gegen 5,1-9,0 der Vorlage; Daumen-Gabel 18,2-20,0 gegen
+   22,4-30,5; Daumenlaenge 20,8-25,5 gegen 16,9-19,4; Kralle A in h130 duenner als V7.
+5. **Hand-Farbe.** Hand und unteres Unterarm-Drittel dunkelrot-violett (Original-Textur Zeile 490), Vorlage grau mit roten Spitzen.
+   Wegen der Texturregel E4 nicht nachgefaerbt; das braucht einen Entscheid, ob und aus welcher Original-Zeile die Hand Grau bekommt.
+6. **Armhaltung (S3 e, S9 a / b rot).** Oberarm -8 Grad (6c) steht von vorn weiter ab als V7: K 3,4 statt <= 3; F354 5 px ueber V7;
+   Schlitz im Modellbild 73 px (in echten Framedumps 10 px, S9s gruen). Der Oberarm verdeckt in F312 18 Gesichts-Bildpunkte.
+   Die Hand knickt 1-2 Grad ein, Vorlage 7-14 Grad.
+7. **Schwanz-Unterseite ohne Struktur.** Farbe und Grenze stimmen (S15 gruen), die Flaeche ist aber glatt und einfarbig; das
+   Helligkeitsprofil der Vorlage (11,4 -> 36,8) bildet das Modell nicht ab (21,6 .. 28,3).
+8. **S14 streng** (dL der Brustkante ueber V7) bleibt wie seit Runde 4 nicht erfuellt; der Riegel mit Rand ist gruen.
+9. **Keine Test-Gegenprobe mit getauschtem Asset in 6d** (Asset darf nicht angefasst werden).
+10. Tafeln 01-06, 08, 10, 12, 13 sind neu gerechnet, aber von diesem Bauer nicht angesehen; 16a / 16b zeigen den Stand 6a.
+11. Aus 6c uebernommen und unveraendert: in 1 Keyframe (Clip 4, kein Szenen-Clip) liegt eine Krallenspitze 27 Einheiten unter der
+    Sohle; 1 Durchdringungs-Keyframe gegenueber V7 dazu (Clip 14 Bild 18; insgesamt 30 statt 68 Keyframes, S17 (g) gruen).
+12. Entscheide fuer den Nutzer nach den zwei Pruefern: (a) Luecke oder Kragen bei P5 - der jetzige Stand hat die Luecke;
+    (b) Oberarm -8 Grad behalten; (c) Hand-Grau aus einer Original-Zeile.
+
+## V8 Runde 7a - Hand-Rest: Krallenspitzen, Daumen, Armhaltung (Bauer, Zweig r41/sichel_v8, 2026-11-13)
+
+Auftrag Runde 7, Teil a (K3 Krallenspitzen und Daumen, K4 Armhaltung). Meshes 8 und 9 bytegleich Stand 6d (Kopf, Nacken, Ruecken,
+Huegel = P5, nicht Teil dieser Spur). Kein RE-Befund: die Sichel-Form steht auf keiner Disc, jede Zahl ist PORT-WAHL mit Messung
+(hand_v8.json quelle.krallen_r7a, quelle.daumen_r7a). Gemessen in den fuenf echten Paar-Posen h125/h126/h128/h130/h132 (Clip 1 Bild
+35/36/38/40/42 = F368/F369/F371/F373/F375) gegen birkin20/22/23/21/24 und ueber alle 912 Keyframes; Belege SF_belege/v8/runde7a/.
+
+### Stand
+- Commits: 98d262ada (Werkzeuge: hand_r6.py rueckwaertsvertraeglich erweitert, hand_v8.json, tafel_r7a.py), 023f46e95 (Spiel-Asset,
+  Pin, Unit-Test).
+- Spiel-Asset EM30_HANGAR.EMD sha256 a474188a2a06fb181df8acdea64be48c29af9f527efbe66aacf8f41b1cc657ec (Stand 6d e9e71bca);
+  gegen 6d nur der Mesh-Abschnitt anders und darin nur Ecken und Normalen von Mesh 12; Meshes 8, 9, 11, Textur, UV, CLUT und
+  EMR-Keyframes bytegleich (abschnittsweise verglichen).
+- Kette v8_kette.sh zweimal (runde7a/kette_a.txt, kette_b.txt): V8-KETTE-OK a474188a, A/B bytegleich, Spiel-Asset = Pin.
+
+### K3 Diagnose am Stand 6d (runde7a/diag_6d.txt)
+Die "Nadel" ist EINE ueberlange Kralle: B endet 1,9-3,1 px allein vor dem Handende, A und C enden 3,5-6,1 px davor; 2 px vor dem
+Ende steht daher nur eine Spitze (Station Spitzen 1-2 px, Vorlage 5,1-9,0). Nicht "alle drei zu duenn". Daumen: die Kerbe Daumen /
+Fingerblock (Ecken 8, 9 gegen 13, 14) liegt zu nah am Handgelenk (Gabel 18,2-20,0 statt 22,4-30,5), der Daumen ist zu lang
+(20,8-25,5 statt 16,9-19,4) und endet in der duennen hellen Daumenkralle.
+
+### K3 Versuche (runde7a/versuche_k3.txt; je Punkt drei)
+Fingerkrallen:
+1. Spitzen A und C neben die B-Spitze ("ziel"): Spitzen 7/7/9/6/7 px in der Streuung, aber A 26,4-27,0 px lang (Streuung
+   15,0-23,1 +- 1) und A in h130 duenner als V7.
+2. dazu Wurzelring A nach vorn ("wurzel_schub"), Reihe w 30/40/45/50/60 mit Ring 1,6-1,8: A 25,1 -> 23,5 px; w 50/60 verschieben die
+   Station Krallenwurzel in h125/h126 auf 26-27 px; w 45 / Ring 1,7 / A-Spitze dy -45: alles in der Streuung, aber Handgelenk durch
+   Unterarm-Mitte in h132 0,5966 < 0,5973 (die A-Verschiebung dreht die Finger-Achse, Handgelenk 21,2 -> 21,0 px).
+3. dazu Wurzelring B um y -25 (gleicht die Achse aus, B wird laenger): Handgelenk-Verhaeltnis h132 0,602 wie 6d -> gewaehlt.
+Daumen:
+1. Gruppe Daumen je lokale Achse um die Daumenkralle skaliert (y 0,75 / 0,65) + Kerbe 8/9 geschoben: Gabel 22,5-26,8, aber Daumen
+   spreizt auf -34..-37 Grad (Vorlage -22..-26); bei Skalierung um die Daumenmitte faellt die Station Krallenwurzel auf 26-28 px.
+2. Daumen um seine Wurzel nach innen gedreht (+6..+10 Grad): Winkel stimmt, aber Hand zu schmal (Breite/Laenge 0,636-0,675 < 0,655,
+   S17 c rot) - verworfen.
+3. Daumen entlang SEINER Achse (Ring 13-16 -> Spitze 20) laengs 0,75 / quer 1,25 um die Spitze 20, Kerbe 8/9 um [30, 90, 0] -> gewaehlt.
+
+### K3 Alt -> Neu (runde7a/riegel_hand_a474188a.txt; Vorlage = Streuung birkin20-24)
+| Mass | Stand 6d | NEU | Vorlage |
+|---|---|---|---|
+| Spitzen (2 px vor Ende) h125/h126/h128/h130/h132 | 1,0 1,0 1,0 2,0 1,0 | 7,0 7,0 10,0 8,0 7,0 (Mittel 7,8) | 5,1-9,0 (+- 1) |
+| Krallen-Mitte (Mittel) | 21,2 | 22,4 | 18,2-29,1 |
+| Krallenwurzel (Mittel) | 44,0 | 44,8 | 37,8-50,6 |
+| breite Stelle | 45,0 45,0 47,0 45,2 46,2 | 46,0 46,0 48,0 48,2 48,2 | 37,8-50,6 |
+| Breite / Laenge | 0,682-0,718 | 0,697-0,739 | 0,655-0,783 |
+| Kralle A / B / C Laenge | 18,2-18,9 / 15,9-17,0 / 18,1-18,5 | 23,4-24,0 / 17,7-18,8 / 23,1-23,8 (keine kuerzer) | 15,0-23,1 (+- 1) |
+| Wurzeldicke A (V7 12,4-12,9) | 11,7-11,9 (h130 duenner als V7) | 12,5-12,8 | - |
+| Daumenkralle T Laenge / Dicke | 14,3 / 5,0-5,1 | 10,9-11,0 / 6,1-6,3 | 6,7-22,6 |
+| Daumen Gabel ab Handgelenk | 18,2-20,0 | 24,0-25,0 | 22,4-30,5 |
+| Daumen Laenge | 20,8-25,5 | 16,7-19,4 | 16,9-19,4 (+- 1) |
+| Daumen Wurzeldicke | 11,0-13,0 | 12,0-15,0 | 10,0-16,1 |
+| Daumen Winkel zur Handachse | -26,3..-29,3 | -26,2..-31,8 | -22,1..-26,0 |
+| Kreuzen (acht Posen) | keins | keins | - |
+
+Farbe nach E9 unveraendert (Mesh 12: 491 = 6 Flaechen Daumenkralle, 492 = 18 Fingerkrallen, Rest 490; 0 fremde Texel; S17 f).
+
+### K4 Armhaltung - Varianten (runde7a/k4_tabelle.txt, k4_mass.py; Szenenposen Kamera Cut 12 offline, Hand-Riegel ueber 912 Keyframes)
+| Variante | S20 | S17(g) KF zusammen / Krallen / Szene | S9 P1,F344,F354,F364 px (neue Ecken) | S3(e) K | Gesicht verdeckt F311-F314 px | F315-F324 Unterarm-Winkel Grad | F315-F324 Spitze-Koerper px |
+|---|---|---|---|---|---|---|---|
+| V7 (Oberarm 20, kleine Hand) | ROT | 68 / 26 / 1 | 0, 0, 0, 0 | 3,0 | 0/0/0/0 | -2,6..21,4 | 0,1..21,1 |
+| Stand 6d (Oberarm -8) | GRUEN | 30 / 24 / 0 | 1, 0(2), 5(5), 2(6) | 3,4 | 0/18/0/0 | 33,2..50,1 | 48,5..66,8 |
+| NEU K3, Oberarm -8 = gewaehlt | GRUEN | 30 / 24 / 0 | 1, 0(2), 5(5), 2(6) | 3,4 | 0/18/0/0 | 33,2..50,1 | 48,5..66,8 |
+| NEU K3, Oberarm 0 | GRUEN | 46 / 38 / 6 | 1, 5(1), 3(3), 2(3) | 3,3 | 0/6/0/0 | 30,7..47,5 | 40,7..56,9 |
+| NEU K3, Oberarm 10 | GRUEN | 153 / 129 / 23 | 1, 3, 4(1), 1 | 3,2 | 0/5/0/0 | 27,3..44,1 | 30,2..45,1 |
+| NEU K3, Oberarm 20 (Knochen 10 wie V7) | GRUEN | 293 / 237 / 34 | 1, 0, 0, 0 | 3,0 | 0/0/0/0 | 23,6..40,3 | 19,2..33,2 |
+
+Wahl: **Stand 6d bleibt (Oberarm -8, Beuge 20).** Jede Variante, die den Arm in F315-F324 weniger abstehen laesst, schiebt die nun
+breite Hand in Oberschenkel und Rumpf: Durchdringung 46 / 153 / 293 statt 30 Keyframes, in der Szene 6 / 23 / 34 statt 0. Das
+verletzt die Bedingung "Durchdringung nicht schlechter als 6d". Arm-Anteil an S3 (e): mit Knochen 10 wie V7 sinkt K von 3,4 auf 3,0
+bei bytegleichen Meshes 8 und 9 - der Ueberschuss 0,4 ist vollstaendig der Oberarm, nicht der Sattel bei x 445 (P5). Ebenso
+S9 F354 5 px und die 18 verdeckten Gesichts-Bildpunkte in F312: beide verschwinden nur mit Oberarm 20. Knick der Hand (iii) nicht
+geaendert. F528-F600 (Kamera 4, Seitengang): kein Videobild vorhanden (Video endet bei f1538 = F430); im echten Fenster baumelt die
+Hand in 6d und NEU gleich hinter der Huefte, V7 verdeckt sie.
+
+### Riegel am neuen Stand (runde7a/riegel_v8r7a.txt, Szene und Marker-Laeufe r7a; Gegenprobe Stand 6d mit denselben Werkzeugen)
+SUMME 18 von 23 gruen; ROT: S3, S9, S16, S18, S19 (Stand 6d: 17 von 23, ROT S3, S9, S16, S17, S18, S19).
+Stand 6d -> neu je Riegel: S1, S2, S4-S8, S10-S15, S14s, S10s, S9s (10 px), S20 gleich und gruen; S17 ROT (a, d) -> GRUEN;
+S3 ROT (e: K 3,4) -> ROT (3,4, Arm-Anteil siehe K4); S9 ROT (a: F354 5 px; b Schlitz offline 73) -> ROT (a gleich; b 74, +1 px durch
+die Hand-Geometrie); S16 ROT (62 von 177 Ansichten, Szene 117 verdeckt) -> gleich; S18 ROT -> gleich; S19 ROT -> gleich.
+Gegenprobe Stand 6d (riegel_V8r6d_gegenprobe.txt) = Abgabe 6d (runde6d/riegel_v8r6d.txt) bis auf die Kopfzeile (Pfad).
+Gegenprobe V7 (riegel_V7_gegenprobe.txt): SUMME 6 von 20 gruen, ab Zeile 2 identisch mit runde6d/riegel_V7_gegenprobe.txt
+(Riegel-Werkzeuge unveraendert wirksam).
+
+### Tests und Spiel
+- Bau ueber local_build.sh (RE15_BUILD_DIR dieses Baums): LOCAL-BUILD-OK. ctest -R "unit_birkin|unit_schwanz_r41|
+  integration_r41_sichel_form|integration_r41_birkin_pistole": "100% tests passed, 0 tests failed out of 8" (runde7a/ctest_gruppe.txt).
+  test_birkin_formen.c: Spanne Mesh 12 auf 462 / 716 / 261 nachgezogen (6d 453 / 716 / 241).
+- Szenenlauf am Spiel-Asset (FD 200-1100, Ende F1110): state.log bytegleich V7 (sfv4/r/V7_szene/state.log).
+
+### Tafeln (roh, selbst angesehen)
+- 16_hand.png (Vorlage | V7 | Stand 6d | NEU, fuenf Paar-Posen): Daumen kuerzer und breiter, Gabel tiefer, Fingerende stumpfer.
+- 18_handstellung.png (echte Fenster F368-F375, je V7 / 6d / NEU mit Nutzerbild; ganze Figur): Hand richtig herum und breit wie 6d;
+  der Daumen ist jetzt ein kurzer Stummel mit kleiner heller Spitze statt der langen hellen Nadel; die drei roten Krallen enden
+  dichter beieinander. Ehrlich: es bleiben drei erkennbare Spitzen, kein runder Faeustling wie in der Vorlage; die Hand bleibt
+  dunkel rot-violett gesprenkelt (E9). Nahaufnahme runde7a/hand_zoom.png (Zeilen V7 / 6d / NEU, F368 F371 F375).
+- 19_armhaltung_r7a.png (Video | V7 | 6d | NEU, F311-F324 und F528/F552/F576/F600): NEU = 6d; in F315-F324 steht der Unterarm wie
+  in 6d ab (Winkel 33-50 Grad, V7 -3..21), das Video zeigt den Arm naeher am Koerper.
+
+### Offen
+1. K4 Abstehen F315-F324 (Unterarm 33-50 Grad gegen V7 -3..21): mit der breiten Hand nicht ohne neue Durchdringung loesbar
+   (Reihe oben); eine eigene Beuge nur fuer Clip 11 waere ein Eingriff fuer einen einzelnen Moment (E-d) und ist nicht gemacht.
+2. S3 (e) K 3,4, S9 (a) F354 5 px und F312 18 verdeckte Gesichts-Bildpunkte: Ursache Oberarm -8 (gemessen), bleiben mit K4.
+3. S9 (b) offline 73 -> 74 px (+1); S9s im echten Fenster unveraendert 10 (gruen).
+4. Hand-Knick (iii) 1-2 Grad gegen Vorlage 7-14 Grad: nicht angefasst.
+5. Clip 4 Bild 42 (Keyframe 230): Hand 27,2 Einheiten unter der tiefsten Koerperecke, in 6d und NEU gleich (kein Szenen-Clip).
+6. Daumen-Winkel -26..-32 Grad etwas weiter gespreizt als die Vorlage (-22..-26); kein Riegel-Mass.
+7. Fingerende: drei Spitzen statt Faeustling (Sicht); Hand-Farbe (E9) - Entscheid des Nutzers.
+
+## V8 Runde 7b - Schwanz-Rest: Unterseite, Schwanzwurzel, Grenze (Bauer, Zweig r41/sichel_v8, 2026-11-13)
+
+Auftrag: Orchestrator Runde 7, Teil b (K1 Unterseite wie Fleisch, K2 Schwanzwurzel F315-F324 und die 7 grauen Deckel-Dreiecke,
+K5 Grenze in P2). Nur Meshes 16-22; Meshes 0-15, Keyframes, Textur und CLUT bytegleich zum Stand vor 7b (a474188a, Teil 7a).
+Belege: SF_belege/v8/runde7b/ (Werkzeug-Kopien unter werkzeug/, Bilder unter bilder/); Arbeitsnotiz sfv8/r7b/NOTIZ.md.
+Keine Zahl ist eine @0x-Konstante: die Sichel-Form gibt es auf keiner Disc; jede Zahl ist PORT-WAHL mit Messung.
+
+### Stand
+- vor 7b: a474188a (Commit 023f46e95). NEU: 87b026816352c9987e9ceace2afbcb2dc8ff9827351e87b0a1693b20c8029b10 (277572 Bytes),
+  Commit db62602be, Werkzeuge 46537dad7. v8_kette.sh zweimal bytegleich (runde7b/kette_a.txt, kette_b.txt: V8-KETTE-OK).
+- vgl_vor7b_neu.txt: Sektionen 0-6 (EDD/EMR/Keyframes) und TIM bytegleich, Meshes 0-15 gleich, anders nur 16-22.
+- Zwischenstaende, die verworfen sind: 5a358bc9 (Commit 4a5e11caf, Riegel S2 ROT), f3e1ceff (e33aaa24e, Riegel S15 g ROT).
+
+### K1 Unterseite - Ursache der Glaette (gemessen, dichte.txt)
+- Die Fleischflaechen der Runde 6 bilden je Glied das Feld u 4-36 (um 220 Grad Umfang) x v 98-108 ab (10 Texelzeilen laengs auf
+  541-710 E.). Texeldichte (Wurzel aus Texelflaeche / Flaeche) der Unterseite: Median 0,023 Texel je E., Meshes 16-19 0,018-0,021.
+- Original-Dichte desselben Fleischs: die Original-Flaechen, die das Fleischfeld benutzen (Original-EM30 Meshes 12/14/15, Zeile 482,
+  Texel v 92-125, 54 Dreiecke): 0,071 (u 0,062 / v 0,090). Runde 6 = 0,25- bis 0,30-fach, unter der Grenze 0,5 (E4); Flaechenanteil
+  im Band 0,5-2-fach: 12,1 %. Jeder Texel war rund 3,5-fach vergroessert: aus den Laengsstreifen des Original-Fleischs wurden breite
+  glatte Baender ("glatte rote Klinge").
+- Das Feld selbst (feld_zoom.png, L*-Karte in werkzeug/diag2.py): dunkelrotes Fleisch mit Lichtstreifen (u 7, 24-25, 34-35, L* 27-32)
+  und einer Furche (u 14-16, L* 9), alle entlang v. Entlang v aendert sich das Feld kaum; die Zeichnung steckt quer (in u).
+  Capcoms Original-Birkin zeigt dieselbe Zeichnung als langes rotes Laengsband am rechten Unterarm (bilder/orig.png).
+- Das Profil des Riegels S15 (d) (Modell 26,1..26,1 gegen Vorlage 11,4..36,8) misst den Verlauf QUER ueber den Schwanz (grau oben ->
+  rot unten), nicht die Zeichnung in der Flaeche. Es zeigt die Glaette nicht.
+
+### K1 neues Mass (glaette_r7b.py)
+Klassen-Marker-Lauf (jede Flaeche auf eine deckende Klassen-Zeile; Figur nur, wo Marker- und Normal-Lauf sich unterscheiden) und im
+normalen Lauf die relative oertliche Streuung von L* (sd / mittleres L*) in 5 x 5-Fenstern, die ganz in einer Klasse liegen. Geeicht
+am eigenen Fleisch des Modells in denselben Framedumps: Rumpf (Mesh 8) und Haut der Beine (Meshes 1-6, Zeile 480). Soll = im Band
+[min, max] von Rumpf/Beinhaut, festgelegt nach der Probe F260-F280 am Stand a474188a und VOR den Varianten. Ausgewertet in den Bildern,
+in denen die Unterseite beleuchtet sichtbar ist (Median-L* >= 10: F263-F398, jedes 3. Bild; im ganzen Lauf liegt sie meist im
+Dunkeln, Median L* 3,8). glaette_beleuchtet.txt:
+
+| Stand | Unterseite rel. Streuung | sd L* | Rumpf | Beinhaut |
+|---|---|---|---|---|
+| a474188a (vor 7b) | 0,079 | 1,27 | 0,197 | 0,171 |
+| U4 (3 Flaechen je Durchgang, Mittelring in allen Gliedern) | 0,116 | 1,86 | 0,197 | 0,171 |
+| U5 (Feld u 17-37 ohne Furche, 2 je Durchgang) | 0,087 | 1,47 | 0,197 | 0,171 |
+| U7 (2 je Durchgang, 3 Abschnitte in allen Gliedern) | 0,141 | 2,48 | 0,199 | 0,171 |
+| NEU 87b02681 | 0,145 | 2,47 | 0,196 | 0,171 |
+
+Soll-Band 0,171-0,196: NICHT erreicht (NEU 0,145 = +84 % gegen 0,079). Offline (ref_orig.txt, 16 Ansichten PV/P2 x Gier, RDT-Licht):
+Original-Birkin Fleischfeld 0,154, a474188a 0,169, NEU 0,203, Rumpf 0,242, Beinhaut 0,207.
+
+### K1 Aenderung (unterseite_r7b.py, Haken in unterseite_r5.anwenden, unterseite_v8.json "fleisch_r7b")
+- Feld: Seite 2, Zeile 495 (= Original-Zeile 482), u 4-37 x v 96-106. Alle Texel von Original-Flaechen der Zeile 482 benutzt, jede
+  Zeile >= 86 % Fleisch, jeder Streifen laeuft durch. Texturbild und CLUT bytegleich, 16 Zeilen.
+- Um den Umfang: Dreieckswelle ueber die Ringecken, Umkehr alle 2 Ecken ab j 9 (theta ~ -92), gespiegelt nur an Ringecken, Breite
+  je Ring = 0,066 x 2 x Ringradius x 2 pi / 11 (gleiche Dichte auf jedem Ring, gleiche Breite an jedem Gelenk). 0,066 = 0,93-fach
+  Original 0,071.
+- Laengs: v je Abschnitt 96 <-> 106, an jedem Gelenk und jeder Abschnittsgrenze dieselbe Zeile. Neue Abschnitts-Ringe nur in den
+  Meshes 19-22 (Mittelpunkt der Laengskanten, Form bleibt); Mesh 18 hat seinen Mittelring; 16/17 ungeteilt.
+- Deckel und Dorn: Achs-Ecke um 0,066 x Abstand ins Feld; reicht das Feld nicht, wird die Ringkante gestaucht (Streckung <= 2).
+- E4 am Endstand (dichte.txt): Flaeche im Dichte-Band 0,5-2 x 0,071: 12,1 % -> 82,8 %; Dreiecke ausserhalb 195 -> 54 (von 279 -> 378).
+  Streckung <= 2: 59,5 % -> 38,9 % der Flaeche. Die Streckung liegt laengs: Meshes 16/17 haben 11 Zeilen auf 516-710 E. (Median-Streckung
+  2,3 / 3,6), das Uebergangsband 110-120 (Runde 6, unveraendert) ist quer gestaucht. Entlang v ist das Feld gleich; sichtbar ist nur
+  die Dichte quer.
+
+### K1 Versuche (je Punkt hoechstens drei im Spiel gemessen)
+1. U4: Feld v 96-106, 3 Flaechen je Durchgang, Mittelring in 16, 17, 19-22 -> 0,116. Sichtbar: duenne dunkle Linien (Furche) laengs.
+2. U5: Feld u 17-37 (ohne Furche), 2 je Durchgang -> 0,087, flacher. Verworfen.
+3. U7: Feld u 4-37, 2 je Durchgang, 3 Abschnitte in allen Gliedern -> 0,141; als Asset 5a358bc9 gebaut. Voll-Riegel: S2 ROT
+   ((b) Sattel PV 1,7 -> 3,0 px, (c) 3 px in 3 von 7 Varianten). Ursache: neue Ecken auf der Silhouette werden auf ganze Bildpunkte
+   gerundet; die Rueckseiten-Pruefung der Vierecke (Ecken 0-1-2, platform/pc/main.c ~2310) faellt an den Teilstuecken anders aus;
+   Oberkontur x 342-361 1-2 px tiefer (Meshes 16/17). Endstand = U7 ohne Abschnitts-Ringe in 16/17 (Messung 0,145, S1/S2 wie a474188a).
+Offline-Vorproben ohne Spiellauf: U1 (Feld bis v 116: Texel im unbenutzten Schlitz u 18-33 / v 110-117, Bau bricht ab), U3 (v 95-109:
+die Furche endet vor jedem Abschnitts-Ring -> Strichelreihe laengs, bilder/nah_g2.png), U6 (2 je Durchgang ohne Abschnitte: 245 von 418
+Dreiecken Streckung > 2, sieht aus wie ein gestreifter Schlauch, bilder/nah_u6.png), Teilung an der gezeichneten Diagonale 0-3 (haelt
+die Flaeche, aber 84 Loch-Bildpunkte in 50 Ansichten; quer geteilt 3; loecher.txt).
+
+### K2 Schwanzwurzel F315-F324 und die 7 grauen Deckel-Dreiecke
+- Ursache je Flaeche (k2_flaechen_F312_F324.txt: Offline-ID mit szene_posen, geprueft gegen den echten Klassen-Marker-Lauf, IoU der
+  Unterseite F316-F324 0,46-0,57; die Feder-Kette im Spiel weicht ab): Der "Kasten" sind die Unterseiten-Vierecke des Wurzelglieds
+  Mesh 16 v12 / v13 / v14 (theta 6-105, je rund 250 E. breit, 230-350 Bildpunkte je Bild), die Anfangsdeckel von Mesh 17 d11-d14
+  (kappe_unten, im 20-Grad-Knick zwischen 16 und 17 sichtbar, 50-113 Bildpunkte), Mantel 17 v1-v3, dazu der Uebergang 16 v22 und das
+  graue 16 v23 (theta 120-137) als harte rot/grau-Kante oben. Aus der Kamera hinter Birkin sieht man an der aufsteigenden Wurzel die
+  Innenseite des Bogens (= Unterseite nach E1).
+- Video f1423-f1432 (F315-F324, Tafel 14b, bilder/zoom_k2b.png): Ruecken von hinten, unscharf; ueber dem Ruecken ist kein Fortsatz
+  und keine Wurzel lesbar. Vorlage an der Stelle NICHT lesbar -> die Form bleibt.
+- Eingriff: die glatte Flaeche ist dieselbe Ursache wie K1 (16 v12-v14 und 17 d11-d14 tragen jetzt das Fleisch in Original-Dichte quer);
+  die 7 grauen Deckel-Dreiecke = Wurzelkegel von Mesh 16 d11-d14, d19-d21 (Mittel |theta| < 120; k2_wurzelkegel.txt) tragen jetzt
+  Zeile 495 und die Texel ihrer Nachbarn (laengs bzw. Uebergang), ebenso die Rohr-Vierecke darunter (Laenge 0). szene_marker.py setzt
+  die Wurzelflaechen im Marker MK_A auf 487, damit S10s sie weiter zaehlt (fuer alle frueheren Assets ohne Wirkung, gemessen).
+- Kanten 495/487 mit da* >= 15 (k2_kanten.txt, Mass des Zahlen-Pruefers): a474188a 6 (alle Mesh 16, Band gegen Kegel) -> NEU 1
+  (Kegel d14 gegen d15, da* 28,3, im Rumpf). Versuch, d14 mit dem Uebergang zu belegen (Commit d73c04008): 0 Kanten, aber S15 (g) ROT
+  (Fleisch-Dreieck auf Hautzeilen 83-91) -> zurueckgenommen (c12910e26).
+
+### K5 Grenze in P2 - Messartefakt (k5_neu.txt, k5_vor7b.txt)
+- Innenrichtung je Glied in P2 gegen PV: 0,5-0,8 Grad verschoben (innen_phi wird in PV gesetzt). Bild-Anteil Zeile 495 im Band
+  120-130: PV 0,0 %, P2 a474188a 3,1 %, NEU 3,5 % (Riegel S15 e Soll <= 5, gruen). Alle 495-Bildpunkte im Band 120-130 liegen auf
+  Uebergangsflaechen, deren Ecken-Normalen genau 110 und 120 Grad haben (17 v13 / v41 / v42, 20 v42, 18 v24, 22 v42); die Grenze liegt
+  auf dem Netz bei 120. Die Ueberschreitung im Bild kommt aus der Normalen-Interpolation je Bildpunkt und der um 0,5-0,8 Grad anderen
+  Innenrichtung in P2. Die 8,8-10,8 % des Zahlen-Pruefers stammen aus seinen 7 Halbpixel-Varianten, die ich nicht nachgestellt habe.
+  Nicht behoben (kein echter Fehler).
+- Waehrend der Arbeit gefunden: Teilstuecke der grauen TEIL_FANG-Dreiecke (Ecken 118,8-122) fielen bei 3 Abschnitten mit Mittel < 120
+  auf die Fleisch-Zeile (P2 6,2 %); flaechen_klassen haelt sie seither grau (R7B_FANG_ZONE 1,5 Grad).
+
+### Riegel am neuen Stand (runde7b/riegel_v8r7b.txt; Szene und Marker-Laeufe r7b; Gegenproben mit denselben Werkzeugen)
+SUMME: 18 von 23 gruen; ROT: S3, S9, S16, S18, S19 (vor 7b a474188a: 18 von 23, dieselben; Stand 6d: 17 von 23, dazu S17).
+Vor 7b -> neu je Riegel (Stand 6d in Klammern, wo anders):
+- S1 GRUEN -> GRUEN: Mittel 2,2 -> 2,3, Max 6,0 -> 6,0 (Stationen 18/19/21: -2/5/0 -> -3/4/1).
+- S2 GRUEN -> GRUEN, unveraendert (a 2,2 / 5; b Sattel 1,7 bei x 333; c 2 px in 7 von 7). Am Zwischenstand 5a358bc9 ROT (b 3,0).
+- S15 GRUEN -> GRUEN: (a) 0 fremde Texel, 0 falsche Zeile; (b) Unterseite 90 -> 137 Flaechen, ohne Fleisch 0, Fleisch-Texel 5352 ->
+  16330, Oberseite 70 -> 77, Fehler 0; (c) PV 99,4 -> 97,9 %, P2 99,2 -> 97,9 % (Soll >= 30) / Oberseite 0,0 %; (d) groesster Sprung
+  PV 5,6 -> 6,6 (Vorlage 7,4), P2 5,4 -> 6,8 (8,4); (e) Band 120-130 PV 0,0 / P2 3,1 -> 3,5 % (Soll <= 5); Ring-Deckel mit grauem Ring
+  0 Bilder; graue Texelzeilen im Fleisch-Feld keine; Kanten Info alle 51 -> 55, groesster da* 26,8 -> 28,3 (mantel 7,8 -> 8,1).
+- S3 ROT -> ROT gleich (e: K 3,4); S9 ROT -> ROT gleich (F354 5 px, Schlitz 74); S16 ROT -> ROT gleich (62 von 177, Szene 117
+  verdeckt); S18 ROT -> ROT gleich; S19 ROT -> ROT gleich (3 Dreiecke in Mesh 8). Nicht schlechter als 6d.
+- S4-S8, S10-S14, S14s, S10s (0), S9s (10), S17, S20: GRUEN -> GRUEN, Zeilen bytegleich zur Runde 7a.
+Gegenproben (runde7b/riegel_alle.sh; mit dem neuen unterseite_v8.json):
+- vor 7b a474188a (Laeufe r7a): ab Zeile 3 identisch mit runde7a/riegel_v8r7a.txt bis auf S15 (b): "Unterseite 97 Flaechen, davon
+  ohne Fleisch 7" -> S15 ROT (die 7 grauen Kegel-Dreiecke; gewollt, der Riegel sieht K2). SUMME 17 von 23.
+- Stand 6d e9e71bca (Laeufe r6d): ab Zeile 3 identisch mit runde7a/riegel_V8r6d_gegenprobe.txt bis auf dieselbe S15 (b)-Zeile; SUMME
+  16 von 23 (ROT S3, S9, S15, S16, S17, S18, S19).
+- V7: SUMME 6 von 20 gleich; nur die S15 (b)-Zahlen anders (Wurzelflaechen anders eingeteilt).
+
+### Tests und Spiel
+- local_build.sh LOCAL-BUILD-OK; ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole":
+  "100% tests passed, 0 tests failed out of 8" (432,35 s; runde7b/ctest_gruppe.txt). test_birkin_formen.c: Flaechen auf 495 je Glied
+  35/30/41/41/40/40/40, Ecken 43/32/47/48/47/47/47.
+- Szenenlauf am Spiel-Asset (FD 200-1100, Ende F1110): state.log bytegleich V7. Marker-Laeufe KO, MK_A, MK_B, GR, KL_NEU nacheinander.
+
+### Tafeln (roh, selbst angesehen)
+- 14_schwanz_unterseite.png (Video | V7 | Stand 6d | NEU an F264, F276 und Seitwaertsgang F528/F564/F600; offline von unten, von vorn,
+  andere Seite, PV, P2): Die Unterseite zeigt jetzt die feinen Laengsstreifen des Original-Fleischs statt breiter glatter Baender.
+  Ehrlich: sie bleibt satt dunkelrot und ist von vorn weiter eine rote Klinge (Form und E1); das Video zeigt dort helleres,
+  rosa-rotes Fleisch mit hellen Flecken - Farbe wird nicht geeicht (E4). Seitwaertsgang: Grenze und Oberseite wie 6d.
+- 14b_tonne.png (F312-F324): Der Kasten traegt Fleischstreifen statt glattem Rot; die harten Kanten (11-Eck der Wurzel) bleiben.
+  F312/F313: kein grauer Deckel-Ring mehr an der Wurzel sichtbar.
+
+### Offen
+1. K1-Mass nicht im Soll: 0,145 gegen 0,171-0,196 (eigenes Fleisch). Das Feld des Original-Fleischs ist laengs gestreift; mehr Zeichnung
+   ginge nur mit Texeln anderer Zeilen (z. B. Augen-Fleisch Zeile 480) - S15 (a) schreibt Zeile 482 vor; nicht gemacht.
+2. E4 Streckung: Meshes 16/17 laengs 11 Zeilen auf 516-710 E. (Streckung bis 3,6); jede Teilung dort machte S2 rot.
+   Das Uebergangsband 110-120 (Runde 6) ist quer gestaucht (Dichte bis 14-fach), unveraendert.
+3. K2: eine Kante 495/487 mit da* 28,3 (Kegel d14/d15) im Rumpf; die harten Kanten des Wurzel-Kastens sind Geometrie (Vorlage nicht lesbar).
+4. K5: Bildmass in P2 bleibt Messartefakt; die 7-Varianten-Zahl des Zahlen-Pruefers ist nicht nachgestellt.
+5. Gegenproben mit dem neuen unterseite_v8.json: an a474188a und Stand 6d ist S15 jetzt ROT (die 7 grauen Kegel-Dreiecke gelten als
+   Deckel der Unterseite) - gewollt, siehe Riegel-Abschnitt.
+
+## V8 Runde 7c - Einbau der P5-Stufe (Kandidat R3) und Pflicht-Korrekturen K-a bis K-e (Bauer, Zweig r41/sichel_v8, 2026-11-13/14)
+
+Auftrag Runde 7 Teil c. Eingang Stand 7b (Spiel-Asset 87b02681, Commit db62602be). Geaendert ist nur Mesh 8; Mesh 9 bleibt der V7-Kopf.
+NEU = Spiel-Asset 5c902d49 (Pin). Belege: analysis/befunde_runde41/SF_belege/v8/runde7c/ (stand.txt, vgl_einbau.txt, kette_a/b.txt,
+ctest_gruppe.txt, bank/, e9_messung.txt, zacke_messung.txt, gesicht_messung.txt, orange_messung.txt, flaechen_messung.txt,
+texel_weiss_messung.txt, riegel_v8r7c.txt/.json, riegel_r7c_*_gegenprobe.txt, riegel_alle.sh, bilder/, werkzeug/).
+Arbeitsnotiz: scratchpad sfv8/r7c/NOTIZ.md.
+
+### Einbau
+- Werkzeug re15_port/tools/r41_sichel/v8/p5_stufe.py = Stufe des P5-Ablaufs (sfv8/p5/kand_r3/stufe_p5.py). Der Kopf nennt die Herkunft
+  (Ablauf P5, Kandidat R3, Pruefberichte). In v8_bau.py ist sie die letzte Stufe p, in v8_kette.sh gilt --stufen srwaunhbp.
+- p5_stufe.py --r3 auf r6 (e9e71bca) ergibt bytegleich 9860f6bd (= R3).
+- Auf Stand 7b ergibt --r3 47b51e80. Dort sind Abschnitte 0-6, Textur und CLUT bytegleich 7b, die Meshes 8/9 bytegleich R3 und alle
+  anderen Meshes bytegleich 7b (vgl_einbau.txt).
+
+### Pflicht-Korrekturen (vorher = R3 auf Stand 7b, nachher = NEU)
+| Punkt | Aenderung (p5_stufe.KORR_UV / KORR_ECKEN) | vorher -> nachher |
+|---|---|---|
+| K-a | UV t60 Ecke 17 (57,0) -> (61,6) und q15 Ecke 17 (74,11) -> (77,15), beides = R2/r6 | fremde Texel in Mesh 8: 40 -> 0. Orange Bildpunkte neu gegen den Eingangs-Lauf (Maske des Sicht-Pruefers R3): 115 Bilder / 1266 px / groesstes Stueck 17 -> 0 / 0 / 0 |
+| K-a (Riegel S7 a) | q2 Ecke 46 (42,0) -> r6 (41,0), Ecke 16 (37,2) -> (38,4) | Texel ohne Original-Flaeche 3 -> 0. Streckung q2 1,81 -> 1,61 |
+| K-b | UV t8 Ecke 17 (29,38) -> (23,41) | Dichte 0,47 -> 0,53 (Pruefer flaechen.py), Bank S19 d8 0,49 -> nicht mehr ausserhalb, Streckung 1,80. Fast weisse Bildpunkte d8: 1 -> 0 |
+| K-c | Ecke 17 (-29,-1160,240) -> (-10,-1160,198), Ecke 25 (220,-710,170) -> (216,-708,178) | Pruefer-Mass: offline 1 (P2+2048) -> 0 in 177 Ansichten, echt 1 (F313) -> 0 in F225-F450. Riegel-Mass (s16_verdeckt je Bildpunkt): 12 -> 10, Eingang 6 |
+| K-d | wie K-c (Ecke 17) | S9 F344: 3 -> 2 px |
+| K-e | - | Buckel-Rot S7: 50,0 -> 50,0 % |
+
+Versuche fuer K-c und K-d (je hoechstens drei):
+1. Ecke 17 nur tiefer (-29,-1140,240): F344 2, P2+2048 0. Aber F313 blieb, und in den echten Bildern kam rechts neben dem Kopf eine
+   helle Zacke mit V-Kerbe in Folge zurueck (F274-F282 und F306-F309, 21-25 px, Wand L 95-99). Verworfen.
+2. Ecke 17 auf (-10,-1160,198) nach Jacobi (jac.py). Ecke 25 nach dem Flaechen-Kennlauf F313: der Bildpunkt liegt unter der Kante 30-25
+   von q15; Ecke 23 zu verschieben wirkt nicht. (215,-708,170) hob die Streckung des Nachbarn t36 von 2,96 auf 3,02, (216,-708,178)
+   senkt sie auf 2,91. Behalten.
+
+Nebenversuche: t8 (25,36) ergab 112 fast weisse Bildpunkte (S14 b) und S14s 415 -> ersetzt durch (23,41). q2 nur mit Ecke 46 auf (41,0)
+ergab Streckung 2,13 (> 2) -> zusaetzlich Ecke 16 (38,4).
+
+### Was R3 erreicht hat, vorher -> nachher
+- Foto-Posen offline (Bank): PV 15/0/1,4 -> 15/0/1,4; P2 20/1/2,0 -> 20/1/2,0. Kragen 0 -> 0, Rahmen 0 -> 0, Mesh 9 = V7.
+- Zacke + V-Kerbe neben dem Kopf in Folge (echte Bilder): 0 -> 0. Nur F313 einzeln (35 px).
+- E9 offline, vorn: 36 / 2520 -> 36 / 2519 (V7 42 / 2824).
+- E9 echt, vorn, Pruefer-Klassen ohne F340: 18 / 1041 -> 18 / 1041 (V7 17 / 1306).
+- E9 echt mit Bank-Klassen: 24 / 1347 -> 24 / 1617 (V7 30 / 1881). Ursache: 17 liegt in F276-F310 1,1 px tiefer. Jede Lage, die P2+2048
+  schliesst, senkt 17 dort um mindestens 1,1 px (grid17.py).
+- K-STREIFEN (Bank): 7946 -> 7850. S2c 2 -> 2. S1 2,3 / 6,0 -> 2,3 / 6,0. S14s 55 -> 22 (= V7). state.log der Szene bytegleich V7.
+
+### Riegel (riegel_r7c.py; riegel_v8.py --r7c*; riegel_alle.sh)
+Summe NEU: 18 von 24 gruen; GELB: S3; ROT: S9, S14, S16, S18, S19.
+Zum Vergleich: Stand 6d 17 von 23 (ROT S3, S9, S16, S17, S18, S19); Stand 7b 18 von 23 (ROT S3, S9, S16, S18, S19).
+
+Stand 6d -> neu:
+- S1, S2, S4-S8, S10-S13, S15, S20, S10s, S14s: gruen -> gruen.
+  - S7 (c) 46,2 -> 39,8 % (Band 25-80).
+  - S9s 10 -> 0.
+- S17: ROT -> GRUEN (seit 7a).
+- S3: ROT -> GELB "Erbe" (E12). (e) K 3,4 = Eingang. (f) Huegel-Rot 57,6 -> 50,0 %.
+- S9: ROT -> ROT, schlechter.
+  - Neue Ecke P1 x 458, seit P5 R2/R3.
+  - F344 0 -> 2 px.
+  - Schlitz 73 -> 75.
+  - F354 5 = 5.
+- S14: GRUEN -> ROT, durch den UV-Rueckbau von R3 (d66/v24/v4 auf r4).
+  - (b) fast weisse Bildpunkte von vorn 0 -> 1804 (d66 880, v24 587, v4 337).
+  - (a) dL F354 3,88 und F364 3,93 > V7 + 1,5. F344 3,66 und P1 3,23 sind im Soll.
+- S16: ROT -> ROT.
+  - (a) alt: 62 -> 42 Ansichten.
+  - E9 offline gruen; E9 echt vorn 18 / 1041 gegen V7 17 / 1306: eins zu viel (F312 54/28/5,0).
+  - Mesh 8 verdeckt mehr Gesicht als der Eingang: PV+1024 4/2, P2+2048 2/0.
+  - Zacke 0, F340 ist Artefakt (E13), Szene Mesh 8 0.
+- S18: ROT -> ROT.
+  - (a1) ohne die Ecken 17/30/46: 79 Ansichten / 6,4 px -> 1 Ansicht / 2,5 px (Ecke 41, PV+512). Die E10-Bedingung "Gesicht" fehlt
+    (siehe S16), daher zaehlt 17 mit 13,8 px.
+  - (a3) 116 -> 0 (E11).
+  - Kragen 0. (b) E12: 0 Keile, 35 Bilder GELB, groesstes Stueck 14 px.
+- S19: ROT -> ROT. d65 0,49 -> 0,46, v13 2,42 = 2,42; d10 nicht mehr ausserhalb.
+- S21 (neu): GRUEN. Fremde Texel 0, oranger Fleck in 0 Bildern.
+
+Gegenproben (riegel_r7c.py teil, riegel_r7c_*_gegenprobe.txt):
+- V8 r4: S16 ROT. PV 33/17/18,4, P2 43/17/3,6, vorn offline 61/4136.
+- V8 r5d: S18 ROT, Kragen 49387 px.
+- R2: S16 ROT, Zacke in Folge F275-F282 und F307-F313.
+- R3 (auf 7b): S21 ROT. 40 fremde Texel, oranger Fleck in 115 Bildern. Szene Mesh 8 F313 1 px.
+- V7: Vorder-Klasse gruen, offline 42/2824 und echt 17/1306. S16 insgesamt ROT wegen der Foto-Posen.
+- Stand 7b: S16 ROT, Kragen 4684 px.
+
+### Tests und Spiel
+- Kette zweimal V8-KETTE-OK, A = B (5c902d49). Spiel-Asset = Pin. local_build.sh configure/build: LOCAL-BUILD-OK.
+- ctest-Gruppe: "100% tests passed, 0 tests failed out of 8" (305,17 s).
+- test_birkin_formen.c fuer Mesh 8: 81/27/69, Ergaenzungsdreiecke = Haelften von v8/v17, Zeilen 493/494 60/48, UV anders 31.
+- Szenenlauf FD 200-1100: state.log bytegleich V7.
+
+### Tafeln (roh, echte Framedumps, selbst angesehen; bilder/)
+- t7c_griff.png (F278, F310-F313): Silhouetten R3 = NEU, keine Zacke, Gesicht = V7.
+- t7c_vorn.png (F344-F364): R3 hat orange Punkte an der Plattenkante, NEU nicht.
+- t7c_orange_F348.png: oranges Dreieck bei R3 sichtbar, bei NEU weg.
+- t7c_gesicht_F313.png.
+- t7c_t8_weiss_F354.png: weisse Streifen mit t8 (25,36), mit der Endwahl (23,41) weg.
+
+### Offen
+- S14 (6d gruen, jetzt ROT): R3 hat d66/v24/v4 per UV auf r4 zurueckgesetzt, um den dunkelroten Fleck links neben dem Gesicht zu entfernen.
+  Folgen:
+  - (b) offline 1804 fast weisse Bildpunkte von vorn.
+  - (a) dL F354/F364 ueber V7 + 1,5.
+  - Im echten Fenster S14s nur 22 (= V7).
+  Zielkonflikt dunkelroter Fleck gegen weisse Haut. Nicht geaendert: liegt ausserhalb von K-a bis K-e und beruehrt etwas, das R3 erreicht hat.
+- K-c im Riegel-Mass: Mesh 8 verdeckt PV+1024 4 px (Eingang 2, v15 seit R3-Ecke 30) und P2+2048 2 px (d49). Im Pruefer-Mass 0.
+  Kein dritter Versuch, weil jede Lage, die P2+2048 weiter schliesst, 17 in der Griffphase weiter senkt und PV+1024 an Ecke 30 haengt
+  (S7 steht bei 50,0).
+- S16 E9 echt: vorn 18 gegen V7 17 durch F312 (linke Kerbe "Kopf ueber Schulter", 54/28/5,0). Die gibt es seit r6, sie steckt auch in
+  R2 und R3. Summe 1041 <= 1306.
+- S9: neue Ecke P1 x 458 (seit R2/R3), Schlitz 75 (6d 73).
+- S18 a1: Ecke 41 PV+512 2,5 px (r5d-Rest).
+- S19: d65 0,46 und v13 2,42 (Erbe).
+- t36 Streckung 2,91 (r6 2,96).
+- Bank-Mass E9 echt: 1347 -> 1617 (siehe oben).
+- Bank K-PRAEFIX ROT ist eine Bauart-Folge: die Bank vergleicht mit r6, die Meshes 12 und 16-22 sind seit 7a/7b anders.
+- TaskStop beendete die Schleife riegel_alle.sh nicht. Doppelte Laeufe wurden per PID beendet und alles einmal sauber neu gerechnet.
+
+## V8 Runde 7 - Abgabe am Endstand (Teil 7d; Bauer, Zweig r41/sichel_v8, 2026-11-14)
+
+Dieser Abschnitt ist die Abgabe der Runde 7. Teil 7d aendert **nichts** am Modell: keine Geometrie, keine Keyframes, keine Textur.
+Das Spiel-Asset ist bytegleich zum Stand von 7c. Gemacht sind: Stand geprueft, Kette zweimal, Voll-Riegel S1-S21 mit den
+Gegenproben, Bau und Tests, Szenenlauf mit Video, Bogen und Fensterbildern, alle Tafeln 01-19 neu am Endstand, dieser Abschnitt.
+Kein RE-Befund: die Sichel-Form steht auf keiner Disc; jede Zahl im Code ist PORT-WAHL (Nutzer-Wortlaut oder Messung), keine
+@0x-Adresse. Textur nur Original-EM30-Texel in Original-Dichte; keine Farbe ist am Video oder an Nutzerbildern geeicht (E4).
+Belege: analysis/befunde_runde41/SF_belege/v8/runde7d/ (stand.txt, kette_a/b.txt, laeufe.sh, marker_bauen.txt, riegel_alle.sh,
+riegel_v8r7d.txt/.json, riegel_r7c_*.txt/.json, riegel_V8r6d_gegenprobe.*, riegel_V7_gegenprobe.*, ctest_gruppe.txt,
+ctest_unit.txt, gdi.sh, gdi2.sh, gdi_zuordnung.py/.txt, gdi2_zuordnung.txt, gdi_fenster_F*.png, tafeln.sh).
+
+### Nutzer-Befunde dieser Runde (Wortlaut, bindend)
+- (P4) 2026-11-09: "Die Unterseite des großen Schwanzes ist fleischig wenn man in die Vorlagen Bilder schaut. Nur die oberseite ist
+  durchweg grau." Entscheid E1: Fleisch auf der ganzen Unterseite bis zur Spitze, Oberseite grau.
+- (P5) 2026-11-09: "es gibt immer noch eine Lücke zwischen Rücken und Kopf beim 2 beiner Birkin. Das ist in der Vorlage so wie es
+  aussieht nicht so." Dazu aus Darstellung.png die weisse Linie: "smooth straight to head without further hills....". Kein Kragen.
+- (P6) 2026-11-10: "Die Vorlage hat eine breite Hand mit breiten Unterarmt. ... Bei uns ist die Hand ganz klein und zierlich".
+- (P7) 2026-11-10: "sieht es so aus als waere die linke Hand verkehrt herum gedreht".
+- (K3, aus der Pruefung der Runde 6) Krallenspitzen als Keil statt einer Nadel, Daumen kuerzer und an der richtigen Stelle.
+
+### Die Runde in vier Teilen (alle Versuche, auch die verworfenen)
+Einzelheiten stehen in den Abschnitten 7a, 7b und 7c oben; hier die Folge mit den Kernzahlen.
+
+| Teil | Auftrag | Asset danach | Riegel danach (Summenzeile) |
+|---|---|---|---|
+| Eingang Stand 6d | - | e9e71bca | 17 von 23 gruen; ROT S3, S9, S16, S17, S18, S19 |
+| 7a Hand-Rest | K3 Krallen als Keil, Daumen; K4 Armhaltung | a474188a | 18 von 23; ROT S3, S9, S16, S18, S19 |
+| 7b Schwanz-Rest | K1 Unterseite wie Fleisch, K2 Schwanzwurzel, K5 Grenze | 87b02681 | 18 von 23; ROT S3, S9, S16, S18, S19 |
+| P5-Ablauf (Scratch, drei Runden) | Luecke Ruecken/Kopf ohne Kragen, nur Meshes 8/9 | R3 9860f6bd (auf r6) | eigene Bank, je Runde zwei Pruefer |
+| 7c Einbau P5 | R3 als Stufe p, Pflicht-Korrekturen K-a..K-e | **5c902d49** | 18 von 24; GELB S3; ROT S9, S14, S16, S18, S19 |
+| 7d (dieser Teil) | Abgabe | **5c902d49** (unveraendert) | siehe Riegel unten |
+
+- **7a (K3, K4).** Krallen: Versuch 1 Spitzen A/C neben die B-Spitze ("ziel": Spitzen 7/7/9/6/7 px, aber A 26,4-27,0 px lang und in
+  h130 duenner als V7, verworfen); Versuch 2 dazu Wurzelring A nach vorn (w 45 / Ring 1,7: alles in der Streuung, aber Handgelenk durch
+  Unterarm-Mitte in h132 0,5966 < 0,5973, verworfen); **Versuch 3** dazu Wurzelring B um y -25 (gewaehlt). Daumen: Versuch 1 Skalierung
+  um die Daumenkralle (Spreizung -34..-37 Grad, verworfen); Versuch 2 Daumen nach innen gedreht (Hand zu schmal, S17 c rot, verworfen);
+  **Versuch 3** entlang der Daumenachse laengs 0,75 / quer 1,25 (gewaehlt). Ergebnis Spitzen 1,0-2,0 -> 7,0-10,0 px (Vorlage 5,1-9,0),
+  Daumengabel 18,2-20,0 -> 24,0-25,0 (22,4-30,5), Daumenlaenge 20,8-25,5 -> 16,7-19,4 (16,9-19,4). S17 ROT -> GRUEN. K4 Armhaltung
+  (Entscheid E10, Oberarm-Aenderung aus 6c nicht geschuetzt): Oberarm 0 / 10 / 20 Grad gemessen = Durchdringung 46 / 153 / 293 statt
+  30 Keyframes, in der Szene 6 / 23 / 34 statt 0 -> Stand 6d (Oberarm -8) bleibt. Arm-Anteil an S3 (e) K 3,4 ist 0,4 (mit Knochen 10
+  wie V7 K 3,0). Hand-Farbe nach E9 unveraendert (Zeile 490).
+- **7b (K1, K2, K5).** Ursache der glatten roten Unterseite gemessen: Fleisch-Texel nur 0,25-0,30-fach der Original-Dichte. Neues Feld
+  u 4-37 x v 96-106 auf Zeile 495 (= Original-Zeile 482) in 0,93-facher Original-Dichte quer, Abschnitts-Ringe nur in den Meshes 19-22.
+  Versuche: U4 (0,116, Furche als duenne dunkle Linien), U5 (0,087, verworfen), U7 (0,141; als 5a358bc9 gebaut, S2 ROT 3,0 px ->
+  verworfen), Endstand = U7 ohne Ringe in 16/17 (Glaette 0,145, Soll 0,171-0,196 nicht erreicht). Dreieck d14 mit Uebergang
+  (d73c04008: 0 harte Kanten, aber S15 g ROT) zurueckgenommen. Die 7 grauen Kegel-Dreiecke der Wurzel tragen jetzt Fleisch. K5:
+  Grenze in P2 3,5 % ist Messartefakt (Normalen-Interpolation), nicht behoben.
+- **P5-Ablauf** (eigener Arbeitsablauf im Scratch sfv8/p5, nur Meshes 8 und 9, Eingang r6 e9e71bca; je Runde zwei unabhaengige Pruefer):
+  - Runde 1: Kandidat A 5873cf47 (Kopflasche + tiefer Rumpfeinsatz) und B 3c7c2642 (Rumpf-Ecken zum Kopf). Beide NICHT bestanden
+    (Zahlen-Pruefer: A S16 offline 36/177, echt 24/126, F311 242/187/12,1, Spitze ueber dem Kopf in 12 Vorderbildern; B 47/177, echt
+    30/126, Gesicht 7 px verdeckt. Sicht-Pruefer: Zacke + V-Kerbe in der Griffphase unveraendert, bei B Kante + oranger Fleck ueber dem Kopf).
+  - Runde 2: Kandidat R2 969789fd. NICHT bestanden (Zahlen-Pruefer: offline 34/177 = V7-Niveau, Foto-Posen PV 3/0/1,0, P2 10/0/1,4 im
+    Soll; aber helle Plattenspitze an Ecke 30 rechts neben dem Kopf F310-F312, F311 196/146/9,4. Sicht-Pruefer: "bester bisheriger Stand
+    an der Nutzerstelle", nicht bestanden wegen Zacke).
+  - Runde 3: Kandidat R3 9860f6bd = **Sieger**. Beide Pruefer: an der Nutzerstelle Luecke zu, Kontur auf der weissen Linie; Zacke mit
+    V-Kerbe F310-F312 in den echten Bildern weg; von vorn kein Kragen, kein Rahmen; Gesicht = V7; dunkelroter Fleck links neben dem
+    Gesicht weg. Formal NICHT bestanden wegen Nebenwirkungen (oranger Texel-Fleck in 130 Bildern, t8-Dichte 0,47, 1 verdeckter
+    Gesichts-Bildpunkt F313/P2+2048, S9 F344 3 px) -> Pflicht-Korrekturen K-a..K-e.
+  - Entscheide des Orchestrators zu P5 (2026-11-13): **E9** Vorn-Soll als Klasse gegen V7 (Ansichten mit cos >= 0,4, Griffphase
+    F262-F313; volles Luecken-Soll 21 px / 7 tief / 3,2 px nur fuer Seiten-/Rueckansichten und die Foto-Posen); verboten bleibt eine
+    helle Zacke mit V-Kerbe in zwei Bildern in Folge. **E10** S18 a1 gelockert fuer die Ecken 17, 30, 46 von Mesh 8 (mit Bedingungen
+    Kragen 0, Rahmen 0, S3 ohne Kamm, S7 >= 50 %, Gesicht unveraendert, Kopf ruhig). **E11** Ergaenzungsdreiecke d77-d80 (verdrehte
+    Vierecke qf8/qf17) zaehlen als vorhandene Flaechen. **E12** Erbe aus Meshes ausser 8/9 (S3 e K 3,4; S9 F354 5 px) ist GELB; helle
+    Bildpunkte nur als zusammenhaengender Keil >= 20 px ROT. **E13** Offline-Ansichten ohne Szenen-Gegenstueck (PV+1536, PV+3840 ...) und
+    das Klassen-Artefakt F340 sind GELB bzw. nicht gewertet.
+- **7c (Einbau).** p5_stufe.py als Stufe p der Kette (v8_kette.sh --stufen srwaunhbp); --r3 auf r6 = 9860f6bd bytegleich. Pflicht-
+  Korrekturen: K-a UV t60/q15 an Ecke 17 auf R2/r6 (fremde Texel 40 -> 0, oranger Fleck 115 Bilder -> 0) und q2 (S7 a 3 -> 0);
+  K-b t8 (23,41) (Dichte 0,47 -> 0,53); K-c Ecke 17 (-10,-1160,198), Ecke 25 (216,-708,178) (Pruefer-Mass 1 -> 0 offline und echt;
+  Riegel-Mass je Bildpunkt 12 -> 10, Eingang 6); K-d S9 F344 3 -> 2 px; K-e S7 50,0 -> 50,0 %. Verworfen: Ecke 17 nur tiefer (helle
+  Zacke mit V-Kerbe in Folge F274-F282 kam zurueck); Zwischenstand 0c307f80 mit t8 (25,36) (112 fast weisse Bildpunkte, S14s 415).
+
+### Stand (Teil 7d; runde7d/stand.txt)
+- **Asset** re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD, 277 316 Bytes, sha256
+  **5c902d493e6815f8551e0297eb1ef7e8c6cbda4b11ed3ab5191cf6a62ac11f30** - gleich im Arbeitsbaum, im Commit 639132b77 (7c), in HEAD und
+  im Pin release/em30_hangar.sha256; seit 639132b77 unveraendert (git diff leer).
+- **Kette** v8_kette.sh zweimal in getrennte Ordner (sfv8/r7d/kette_a, kette_b): beide "V8-KETTE-OK sha256 5c902d49...", Stufe 6 = V7
+  319bbd17, A und B bytegleich, A bytegleich Spiel-Asset.
+- **Kopf:** Mesh 9 ist bytegleich V7 (Riegel S5: Mesh 9, Zeile 486 und die 6501 Gesichts-Texel gleich).
+
+### Riegel am Endstand (riegel_v8.py S1-S20 voll mit den Optionen --r7c* = S21 und die Punkte nach E9-E13; runde7d/riegel_alle.sh)
+Datei runde7d/riegel_v8r7d.txt / .json, Exit 1. **SUMME: 18 von 24 gruen; GELB: S3; ROT: S9, S14, S16, S18, S19.** Die Ausgabe ist
+bytegleich zu der von 7c (cmp gegen runde7c/riegel_v8r7c.txt, 62 Zeilen) - der neue Szenen- und die neuen Marker-Laeufe aendern keine
+Zahl (die 901 Framedumps sind bildgleich zum Lauf von 7c). Ebenso sind alle sieben Teil-Riegel riegel_r7c.py (NEU und sechs
+Gegenproben) bytegleich zu runde7c.
+
+| Riegel | Soll | Ist am Endstand | Stand 6d -> neu |
+|---|---|---|---|
+| S1 Kontur T | Mittel <= 4, Max <= 8 px | 2,3 / 6,0 | gruen -> gruen (2,2 / 6,0) |
+| S2 Uebergang J | (a) <= 4 / <= 6; (b) Sattel <= 2; (c) Naht <= 3 | 2,2 / 5; 1,7 bei x 333; 2 px in 7 von 7 | gruen -> gruen |
+| S3 Ruecken / H / K | Kuppe <= 4; H 5-10; Sattel <= 2; K <= 3; Huegel-Rot >= 50 % | 3,0; 7,5 bei x 427; 1,8; **K 3,4** = Eingang; 50,0 % | ROT -> **GELB "Erbe"** (E12; 0,4 von K ist der Oberarm) |
+| S4 Breite | Wurzel >= 55; s 90-130 >= 36; Ende <= 10; monoton | 59,2; 40,4 / 38,2 / 37,9; 5,6; ja | gruen -> gruen |
+| S5 Gesicht | Mesh 9, Zeile 486, Texel = V7 | ja, ja, ja (6501) | gruen -> gruen |
+| S6 Boden | 0 Keyframes unter der Sohle | 0 von 912 | gruen -> gruen |
+| S7 Adern | Herkunft; Oberarm 35-59 % <= 57,7; Rumpf 25-80 % <= 49,3 | ok (0 Texel ohne Original-Flaeche); 48,5 %; 39,8 % | gruen -> gruen (Rumpf 46,3 -> 39,8) |
+| S8 Technik | <= 16 CLUT-Zeilen, Hoehe <= 4096, 23/23/21 | 16; 4096; 23/23/21 | gruen -> gruen |
+| S9 Vorderansicht | je <= 2 px ueber V7, keine neue Ecke; Schlitz 0 | P1 1 px mit neuer Ecke x 458; F344 2; **F354 5**; F364 2; Schlitz offline 75 | ROT -> ROT (P1-Ecke seit R2/R3 neu, F344 0 -> 2, Schlitz 73 -> 75) |
+| S10 Wurzel hinten | 0 | 0 | gruen -> gruen |
+| S11 Kappe / Kacheln | 0 rote ueber dem Kopf | 0 / 0 | gruen -> gruen |
+| S12 Unterarmband P2 | <= V7 + 20 | 0 | gruen -> gruen |
+| S13 Naht | 0 Flaechen auf 480/481 | 0 | gruen -> gruen |
+| S14 Brust von vorn | dL <= V7 + 1,5; 0 fast weisse | dL F354 3,88 / F364 3,93 (V7 2,20 / 2,11); **1804** fast weisse Bildpunkte offline | gruen -> **ROT** (UV-Rueckbau von R3 an d66 / v24 / v4) |
+| S15 Schwanz-Unterseite (P4) | Unterseite ganz Fleisch, Oberseite ohne; Band <= 5 %; kein grauer Ring | 137 Flaechen, 0 ohne Fleisch, 16 330 Fleisch-Texel; 97,9 / 0,0 % (PV und P2); Band 0,0 / 3,5 %; 0 Bilder | gruen -> gruen |
+| S16 Luecke (P5) | E9: vorn als Klasse <= V7; Seite und Foto-Posen 21 / 7 / 3,2; keine Zacke in Folge; Gesicht frei | offline vorn 36 / 2519 (V7 42 / 2824) gruen; Foto-Posen PV 15/0/1,4, P2 20/1/2,0 gruen; **echt vorn 18 / 1041 (V7 17 / 1306)**; Zacke in Folge 0; Gesicht echt durch Mesh 8 0; **offline Mesh 8 mehr als Eingang PV+1024 4/2, P2+2048 2/0** | ROT -> ROT (altes Mass a: 62 -> 42 Ansichten ueber Soll; altes Gesichts-Mass Szene 117 -> 117 verdeckte Bildpunkte, nach E12 aufgeteilt: Mesh 8 0, Arm (Mesh 10) 15 in F312 = Erbe) |
+| S17 Hand (P6) | Profil in der Vorlage-Spanne usw. | alle Stationen innen; Krallen, Daumen in der Streuung; Durchdringung 30 (V7 68), Szene 0 | **ROT -> gruen** (7a) |
+| S18 vorn ohne Kragen (P5) | Ecken <= 2 px gegen r4 (E10: 17/30/46 frei mit Bedingungen); keine neue Flaeche; kein Keil | E10-Bedingung Gesicht nicht erfuellt -> 17 zaehlt (13,8 px); uebrige Ecken 1 Ansicht 2,5 px (Ecke 41); a3 0 (E11); Kragen 0; Keil 0, 35 Bilder GELB | ROT -> ROT (79 Ansichten / 6,4 px -> 1 / 2,5 ohne E10-Ecken; a3 116 -> 0) |
+| S19 Texeldichte | 0 Dreiecke ausserhalb | **2**: d65 0,46, v13 2,42 | ROT -> ROT (3 -> 2; d10 nicht mehr ausserhalb) |
+| S20 Handstellung (P7) | Verdrehung <= 5 Grad usw. | 0,87 Grad; 83,3 %; -5,9 .. -4,4 Grad | gruen -> gruen |
+| S21 Texel Mesh 8 (K-a) | 0 fremde Texel, oranger Fleck 0 | 0; 0 Bilder | neu, gruen |
+| S14s / S10s / S9s (echt) | <= V7 + 29; 0; <= 20 | 22 (V7 22); 0; 0 | gruen -> gruen (S9s 10 -> 0) |
+
+### Gegenproben (runde7d/riegel_alle.sh; dieselben Laeufe wie 7c fuer die anderen Staende)
+Teil-Riegel riegel_r7c.py (E9-E13, S21) - alle bytegleich zu runde7c, Urteile wortgleich:
+| Stand | Datei | Urteile S3 / S9 / S16 / S18 / S21 | rot dort, wo der Fehler lag |
+|---|---|---|---|
+| NEU 5c902d49 | riegel_r7c_NEU.txt | GELB Erbe / ROT / ROT / ROT / GRUEN | - |
+| R3 auf Stand 7b (47b51e80) | riegel_r7c_R3_gegenprobe.txt | GELB / ROT / ROT / ROT / **ROT** | fremde Texel 43 (d60 37, v2 3, v15 3), oranger Fleck in 115 Bildern / 1266 px |
+| R2 969789fd | riegel_r7c_R2_gegenprobe.txt | GELB / ROT / **ROT** / ROT / ROT | Zacke + V-Kerbe in Folge F275-F282, F307-F313; S21: 3 fremde Texel (v2) |
+| V7 319bbd17 | riegel_r7c_V7_gegenprobe.txt | ROT / GRUEN / ROT / ROT / GRUEN | Vorder-Klasse gruen (42 / 2824, echt 17 / 1306); S16 rot durch die Foto-Posen (PV 63 / 39 / 15,6, P2 57 / 31 / 5,4) |
+| V8 r4 10d02173 | riegel_r7c_R4_gegenprobe.txt | GRUEN / GRUEN / **ROT** / GRUEN / GRUEN | Luecke PV 33 / 17 / 18,4, P2 43 / 17 / 3,6; Zacke in Folge F311-F313 (Befund P5) |
+| V8 r5d c4976c62 | riegel_r7c_R5D_gegenprobe.txt | ROT / GRUEN / ROT / **ROT** / GRUEN | Kragen 49 387 px |
+| Stand 7b 87b02681 | riegel_r7c_vor7c_gegenprobe.txt | GELB / GELB / ROT / ROT / GRUEN | Luecke PV 26 / 10 / 18,4, P2 43 / 17 / 3,6; Zacke in Folge F275-F282, F307-F312; Kragen-Mass 4684 px |
+
+Voll-Riegel riegel_v8.py ohne --r7c* wie in 6d / 7b (dieselben Werkzeuge, unterseite_v8.json von 7b):
+- Stand 6d e9e71bca (Laeufe r6d; riegel_V8r6d_gegenprobe.txt): "SUMME: 16 von 23 gruen; ROT: S3, S9, S15, S16, S17, S18, S19" -
+  ab Zeile 2 bytegleich zu runde7b/riegel_V8r6d_gegenprobe.txt (S15 rot durch die 7 grauen Kegel-Dreiecke, S17 rot = Befund K3).
+- V7 319bbd17 (ohne Lauf; riegel_V7_gegenprobe.txt): "SUMME: 6 von 20 gruen; ROT: S1, S2, S3, S4, S6, S7, S10, S13, S15, S16, S17,
+  S18, S19, S20" - ab Zeile 2 bytegleich zu runde7b/riegel_V7_gegenprobe.txt.
+Die Gegenproben zeigen: jeder alte Stand wird dort rot, wo der Nutzer oder ein Pruefer den Fehler gesehen hat (P5 Luecke an V8 r4,
+Kragen an V8 r5d, Zacke an R2, oranger Fleck an R3, K3 an Stand 6d, P4/P6/P7 an V7); der Endstand ist in keinem dieser Punkte rot.
+Rot bleiben am Endstand S9, S14, S16, S18, S19 (siehe Offen).
+
+### Tests (Bau am Endstand; configure und build ueber local_build.sh mit RE15_BUILD_DIR dieses Baums)
+- configure: "=== LOCAL-BUILD-OK (configure)"; build: "ninja: no work to do.", "=== LOCAL-BUILD-OK (build)"; Exe sha256 8f15f6c5... (= Exe
+  von 7c und des P5-Ablaufs).
+- ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900
+  (runde7d/ctest_gruppe.txt): **"100% tests passed, 0 tests failed out of 8"**, "Total Test time (real) = 318.11 sec".
+- ctest -j 6 --timeout 600 -R "^unit_" -E "^(unit_r38_releaseskript_|unit_r30_android_|unit_r35_android_|unit_r39_titelversion_cmake)"
+  (runde7d/ctest_unit.txt, gekuerzt): **"100% tests passed, 0 tests failed out of 1013"**, "Total Test time (real) = 453.03 sec". Der Lauf
+  lief neben den Riegeln (Last), kein Test fiel aus, keine Wiederholung noetig.
+- Beide ctest-Aufrufe aus Git-Bash mit /c/msys64/mingw64/bin vorn im PATH (sonst stiller gcc/DLL-Tod, CLAUDE.md).
+
+### Spiel (Teil 7d, alles neu am Endstand)
+- **Szenenlauf Hangar 50A0** (runde7d/laeufe.sh; lauf_v4.sh, BAUM = dieser Arbeitsbaum, eigene exe-Kopie, EMD "-" = Spiel-Asset,
+  FD 200-1100/1, Ende F1110; Ordner sfv8/r7d/szene): EXIT=0, 901 Bilder, debug.log "EM30: Ersatzmodell EMD/EM30_HANGAR.EMD (Raum
+  50A0)", "[hangar] ROOM50A0 Szene Ende: Cut 4, Birkin Zustand 0". **state.log bytegleich V7** (1131 Zeilen, sha256 e48e1cad...,
+  cmp gegen sfv4/r/V7_szene/state.log) - Ablauf und KI unberuehrt; die Spider-Man-Szene laeuft wie freigegeben.
+  Die 901 Framedumps sind bildgleich zum Szenenlauf von 7c (sfv8/r7c/laeufe/KC8, cmp je Datei: 0 anders).
+- **Marker-Laeufe** (LM_NEU und KO_NEU F225-F450, MK_A, MK_B, GR F300-F380, KL_NEU F200-F1100; sfv8/r7d/mk): Marker-Assets neu aus dem
+  Spiel-Asset gebaut, MK_A/MK_B/GR/KO_NEU/LM_NEU bytegleich zu r7c/mk (marker_bauen.txt); alle EXIT=0.
+- **Video** sfv8/spiderman_szene_v8_r7.mp4: F225-F450 des Szenenlaufs, 226 Bilder, 30 fps, 960 x 720, 2 454 141 Bytes, sha256
+  664b64dfeda044c65e9a753ec04e2062f00433b3adf1ee2551eeda24eab30c03. **Bogen** SF_belege/v8/07_bogen_jedes7.jpg (jedes 7. Bild F225-F449).
+- **gdigrab des echten Fensters** (runde7d/gdi.sh wie runde6d: eigene exe-Kopie, Fenster ueber die eigene PID, SetWindowPos nach oben,
+  Client 960 x 720 bei (480,180), 60 Bilder/s angefordert; kein AUTOSHOT, kein SOFTWARE_RENDER): sfv8/r7d/gdi/gdi_szene_v8r7d.mp4,
+  2089 Bilder; state.log dieses Laufs bytegleich V7. Zuordnung Fensterbild <-> Spielbild **gemessen** (gdi_zuordnung.py: kleinste
+  mittlere Grauwert-Abweichung, Treffer 0,88-0,93 gegen 1,32-6,42 beim naechsten anderen Bild). Spielbild F311 fehlte in dieser
+  Aufnahme (beste Abweichung 4,92); eine zweite Aufnahme (gdi2.sh, sfv8/r7d/gdi2, 2143 Bilder, state.log ebenfalls = V7) hat es
+  (0,89; gdi2_zuordnung.txt). Fensterbilder runde7d/gdi_fenster_F<n>.png: seitlich F262, F300; Griffphase F278, F310, F311 (aus
+  Aufnahme 2), F312; hinten F328, F334; vorn F354, F366; die fuenf Hand-Bilder F368, F369, F371, F373, F375.
+
+### Tafeln (SF_belege/v8, roh; alle neu am Endstand; Befehle runde7d/tafeln.sh)
+- 01-08, 10-13 aus tafeln_v8.py (Vergleich V7 und V8 r4 10d02173); 11 aus den zugeordneten Fensterbildern (--gdi-bilder runde7d).
+- 09, 15, 17 aus tafeln_r6.py (V7 | V8 r4 | V8 r5d | NEU bzw. V7 | V8 r5d | NEU).
+- 14 und 14b aus tafel_r7b.py (echte Framedumps, Video | V7 | Stand 6d | NEU).
+- 16 (bytegleich zur Fassung 7a), 18 und 19_armhaltung_r7a aus tafel_r7a.py.
+- **NEU 19_nacken_p5.png** aus tafel_r7d.py (Commit 9da7e4cda / 824f2efcb): Foto-Posen PV (neben Darstellung.png, einmal mit den
+  Nutzerlinien ueber dem Modellbild) und P2 (neben Foto 2), darunter die echten Framedumps der Griffphase F262, F278, F294, F310,
+  F311, F312 und die Vorderbilder F346, F354, F362, F372 mit dem Videobild davor; Spalten V7 | V8 r4 | V8 r6 | NEU, gleicher
+  Ausschnitt, naechster Nachbar. V8 r4 und V8 r6 aus den Laeufen des Zahlen-Pruefers P5 R2 (gleiche Exe 8f15f6c5).
+- Selbst angesehen: **alle** Tafeln 01-19 (19_nacken_p5 in vier Teilen), dazu Ausschnitte der Fensterbilder F368/F371/F375 (Hand)
+  und F278/F310/F311/F312 (Griffphase).
+
+### Sicht-Urteil je Nutzer-Befund (so, wie der Nutzer es saehe; Tafeln selbst angesehen)
+- **P4 Schwanz-Unterseite fleischig: in der Verteilung erfuellt, in der Wirkung mit Abweichungen.** Tafeln 04, 14, 08, 12: die
+  Unterseite ist bis zur Spitze rot, die Oberseite durchgehend grau, die Grenze liegt seitlich; graue Reifen oder Ring-Deckel gibt es
+  nicht mehr. Die Unterseite zeigt jetzt feine Laengsstreifen des Original-Fleischs statt der glatten Baender von 6d. Zahlen (S15):
+  Fleisch-Anteil unten PV / P2 97,9 / 97,9 %, oben 0,0 / 0,0 %; Band 120-130 Grad 0,0 / 3,5 % (Soll <= 5); grauer Ring 0 Bilder;
+  Glaette 0,145 (6d 0,079; Soll-Band des eigenen Fleischs 0,171-0,196 nicht erreicht). **Abweichungen, die der Nutzer sehen
+  wuerde:** (a) Von der Seite und von vorn (Tafeln 01, 02, 06 F380, 07 F267-F309 und F379-F393, 11 F262, 14 F264/F276) sieht man fast
+  nur die rote Seite: der Schwanz wirkt als grosse, satt dunkelrote Klinge. Das Video zeigt dort helleres, rosa-rotes Fleisch, Foto 2
+  einen eher dunkel-graeulichen Schwanz; die Farbe wird nach E4 nicht geeicht. (b) Wurf-Phase F315-F324 (Tafel 14b): ueber dem Ruecken
+  steht ein roter Kasten mit harten Kanten (Wurzelglied, K2); das Video zeigt dort keinen lesbaren Schwanz. (c) Von hinten (Tafeln 08,
+  12, F322-F340) traegt die Wurzelplatte am oberen Ruecken gestreckte rot-weisse Streifen; der Uebergang Schwanz -> Ruecken ist eine
+  sichtbare Kante, nicht "directly smooth into the back". (d) In PV (Tafel 01) liegt der Schwanzbogen nach Augenmass etwas innerhalb
+  der gruenen Nutzerlinie (nicht gemessen; Riegel S1 Kontur gegen die Vorlage Mittel 2,3 / Max 6 px gruen).
+- **P5 keine Luecke Ruecken/Kopf, kein Kragen: an der Nutzerstelle erfuellt, in der Griffphase mit Rest.** Tafel 19 Zeilen 1-3: in PV
+  und P2 laeuft die Kontur vom kleinen roten Huegel glatt zum Kopf und liegt auf der weissen Linie; kein zweiter Huegel. Zahl: PV 15 px /
+  0 tief / 1,4, P2 20 / 1 / 2,0 (Soll 21 / 7 / 3,2; V8 r4 33 / 17 / 18,4 und 43 / 17 / 3,6). Von vorn (Tafeln 17, 19 F346-F372, 09, 13):
+  kein Kragen, kein Rahmen, keine Haube (Kragen 0 px, r5d 49 387); der dunkelrote Schlitz links oben am Kopf (r6) ist weg. Griffphase
+  (Tafel 19 F262-F312, Fensterbilder F278/F310/F311/F312): die helle Zacke mit dunkler V-Kerbe rechts neben dem Kopf (r4, r6) ist weg
+  (0 Folgen; nur F313 einzeln 35 px). **Abweichungen:** (a) Rechts neben dem Kopf steht in F264-F310 die helle Rueckenplatte als flache
+  Wand fast bis Augenhoehe - kein Spalt, aber deutlich hoeher als die flache Schulter von V7. (b) Links bleibt die Kerbe "Kopf ueber
+  der Schulter" wie bei V7; in F312 ist sie bei NEU groesser als bei V7 (echt 54 / 28 / 5,0), dadurch zaehlt die Vorder-Klasse 18 Bilder
+  ueber dem Soll gegen 17 bei V7 (Summe 1041 gegen 1306) -> S16 ROT. Offline zeigt Tafel 15 fuer Takt F311 138 / 84 / 8,5 gegen V7 89 /
+  60 / 7,8. (c) Von vorn steht ueber dem Kopf eine kleine helle Gratspitze (F354, F362), und links unter dem Gesicht liegt helle, fast
+  weisse Haut (Riegel S14 b offline 1804 Bildpunkte; im echten Fenster S14s 22 = V7). (d) Gesicht: in den Szenenbildern verdeckt Mesh 8
+  nichts (0); offline in zwei gedrehten Foto-Posen PV+1024 4 px und P2+2048 2 px (Riegel-Mass je Bildpunkt; Eingang 2 / 0).
+- **P6 Hand und Unterarm breit: in der Form erfuellt, in der Farbe nicht (Entscheid E9 beim Nutzer).** Tafel 16 und Fensterbilder
+  F368-F375: breiter Unterarm, am Handgelenk eingeschnuert, breite Hand; alle acht Stationen in allen fuenf Paar-Posen in der Spanne der
+  Vorlage (Mittel 33,8 | 34,2 | 21,4 | 33,2 | 47,3 | 44,8 | 22,4 | 7,8 px; S17 gruen). **Abweichung:** Hand und unteres Unterarm-Drittel
+  sind dunkelrot-violett gesprenkelt (Original-Zeile 490), die Vorlage zeigt eine graue Hand mit roten Fingerspitzen; im Fenster liest
+  sich die Hand als dunkle rote Klaue. In der Foto-1-Pose P1 (Tafel 03, offline) sieht man die Hand von der Kante als schmale rote Spitze.
+- **P7 Hand richtig herum, Arm haengend: erfuellt.** Tafel 18 und Fensterbilder F368-F375: Handruecken zur Kamera, Daumen zur
+  Koerpermitte, Krallen nach unten, Hand endet auf Oberschenkelhoehe. Zahl (S20): Verdrehung gegen Capcoms Original 0,87 Grad,
+  Handruecken vorn 83,3 % der Keyframes (Original 86,7), Winkel zur Kamera -5,9 .. -4,4 Grad, Handgelenk 0,475-0,487 der Figurhoehe
+  (Vorlage 0,462-0,503), Krallenspitze 0,274-0,285 (0,256-0,318). **Abweichungen:** in F315-F324 steht der Unterarm 33-50 Grad ab
+  (V7 -3 .. 21; Tafel 19_armhaltung_r7a, K4); der Oberarm steht von vorn etwas weiter ab als V7 (S9 F354 5 px, S3 e K 3,4 als Erbe);
+  in F312 verdeckt der Oberarm 15-18 Gesichts-Bildpunkte; der Handknick ist 1-2 Grad statt 7-14 Grad.
+- **K3 Krallen als Keil, Daumen: in den Zahlen erfuellt, im Bild teilweise.** Spitzen 2 px vor dem Ende 7 / 7 / 10 / 8 / 7 px (Vorlage
+  5,1-9,0; 6d 1-2), Daumenlaenge 16,7-19,4 px (16,9-19,4), Gabel ab Handgelenk 24,0-25,0 (22,4-30,5), Wurzeldicke 12-15 (10,0-16,1),
+  keine Kralle kreuzt, keine duenner als V7. Im Fenster (F368, F371, F375): die eine lange Nadel ist weg; es stehen drei rote, getrennte
+  Spitzen nebeneinander und ein kurzer Daumen mit kleiner heller Spitze. **Abweichung:** die Vorlage endet als runder Faeustling, das
+  Modell mit drei sichtbaren Spitzen; der Daumen spreizt -26 .. -32 Grad (Vorlage -22 .. -26).
+- **Gesicht und Koerper:** Gesicht = V7 (Mesh 9 bytegleich), Huegel und Koerperbau wie V7/V8; Beine, Hose, Clips und KI unveraendert
+  (state.log = V7).
+
+### Offen nach Runde 7 (Fehler im Modell, nicht im Riegel; in 7d nichts davon angefasst)
+1. **S16 ROT (P5, Klasse vorn nach E9):** echt 18 Bilder ueber dem Soll gegen V7 17 (Summe 1041 gegen 1306). Das eine Bild zu viel ist
+   F312 (linke Kerbe "Kopf ueber der Schulter", 54 / 28 / 5,0; seit r6, auch in R2 und R3). Mit dem Bank-Mass ist die Summe der
+   Griffphase 1617 (R3 1347, V7 1881), weil Ecke 17 dort 1,1 px tiefer liegt (K-c).
+2. **Plattenwand rechts neben dem Kopf in der Griffphase** (F264-F310): kein Spalt, keine Zacke, aber hoeher als die Schulter von V7.
+   Kein Riegel misst die Hoehe dieser Wand.
+3. **S14 ROT:** offline 1804 fast weisse Bildpunkte von vorn (d66 880, v24 587, v4 337) und dL F354 3,88 / F364 3,93 > V7 + 1,5 - Folge
+   des UV-Rueckbaus von R3 gegen den dunkelroten Fleck links neben dem Gesicht. Im echten Fenster S14s 22 = V7. Zielkonflikt
+   dunkelroter Fleck gegen helle Haut - braucht einen Entscheid.
+4. **S9 ROT:** neue Ecke in P1 bei x 458 (seit R2/R3), Schlitz offline 75 (6d 73; im echten Fenster S9s 0); F354 5 px = Erbe des Oberarms.
+5. **S18 ROT:** die E10-Freigabe der Ecken 17/30/46 greift nicht, weil die Bedingung "Gesicht unveraendert" im Riegel-Mass fehlt
+   (Mesh 8 verdeckt PV+1024 4 px, P2+2048 2 px; im Pruefer-Mass 0). Uebrige Ecken: nur Ecke 41 in PV+512 2,5 px (Rest aus r5d).
+6. **S19 ROT:** d65 Dichte 0,46 und v13 Seitenverhaeltnis 2,42 (Erbe r6); t36 Streckung 2,91.
+7. **S3 GELB (Erbe, E12):** K 3,4 statt <= 3, Anteil 0,4 ist der Oberarm -8 Grad aus 6c.
+8. **K4 Armhaltung:** Unterarm F315-F324 33-50 Grad abstehend (V7 -3 .. 21); mit der breiten Hand nicht ohne neue Durchdringung loesbar
+   (Oberarm 0 / 10 / 20: 46 / 153 / 293 Keyframes statt 30). Handknick 1-2 Grad statt 7-14.
+9. **Hand-Farbe (E9):** Hand und unteres Unterarm-Drittel dunkelrot-violett (Original-Zeile 490), Vorlage grau mit roten Spitzen -
+   Entscheid des Nutzers.
+10. **Hand-Form:** drei sichtbare Krallenspitzen statt eines runden Faeustlings; Daumenwinkel -26 .. -32 Grad (Vorlage -22 .. -26).
+11. **Schwanz-Unterseite:** Glaette 0,145 unter dem Soll 0,171-0,196; satt dunkelrot, von der Seite und von vorn eine rote Klinge (Video:
+    heller, rosa-rot); Streckung in den Meshes 16/17 bis 3,6 (E4-Grenze 2), Flaeche mit Streckung <= 2 nur 38,9 %.
+12. **Schwanzwurzel (K2):** roter Kasten mit harten Kanten in F315-F324, eine Kante 495/487 mit da* 28,3 (Kegel d14/d15); von hinten
+    gestreckte rot-weisse Streifen an der Wurzelplatte (F322-F340). Die Vorlage ist dort nicht lesbar.
+13. **K5:** Grenze in P2 3,5 % ist ein Messartefakt der Normalen-Interpolation; die 7-Varianten-Zahl des Zahlen-Pruefers ist nicht
+    nachgestellt.
+14. Fuer F528-F600 (Seitengang) gibt es kein Videobild (Video endet bei f1538 = F430). Labor 50E0 nicht eigens gelaufen (der Kampf laeuft
+    in integration_r41_birkin_pistole, gruen).
+15. Die volle P5-Bank lief am Zwischenstand 0c307f80 (gleiche Geometrie wie der Endstand), am Endstand nur die schnelle Bank (7c).
+
+## V8 Runde 7e - Handfarbe "wie in der Vorlage" (Bauer, Zweig r41/sichel_v8, 2026-11-14)
+
+Kein RE-Befund: die Sichel-Form steht auf keiner Disc; jede Zahl ist PORT-WAHL (Nutzerentscheid, Messung, Suche), keine @0x-Adresse.
+Textur nur Original-EM30-Texel und vorhandene CLUT-Zeilen dieses Modells; keine Farbe an Video oder Nutzerbild geeicht (E4).
+Belege: analysis/befunde_runde41/SF_belege/v8/runde7e/. Commits 9a12ed9ac (Werkzeuge), b9c8c5bf6 (Asset, Pin, Unit-Test), danach Belege.
+
+### Nutzerentscheid (woertlich, bindend)
+2026-11-14, auf die Frage "dunkelrot-violett wie jetzt oder grau mit roten Spitzen wie auf Ihrer Vorlage?": **"wie in der Vorlage."**
+Vorlage birkin20-24: grauer Handruecken, nur die Finger/Krallen rot (Sicht-Pruefer r7 (4b)/(4c)).
+
+### Messung vorher (runde7e/messung_vorher.txt; Stand 7d 5c902d49, echte Framedumps F368-F375, Marker HF)
+- Handruecken 34-36 % rote Bildpunkte (a* >= 10), 15 % violett (b* < -5), L* 8,7; Vorlage 0,1-2,4 % rot, L* 12,4-14,3.
+  Ursache: Mesh 12 liegt mit 34 Flaechen auf Zeile 490 = Referenz-2-Zeile 482 OHNE die V5-Grau-Regel (V5 wie Foto b "rote Handflaeche");
+  Texel u 4-39 / v 51-86 auf Seite 2 (die dunkle Handgelenk-/Handzone der Original-Textur, Zeile 482 L* 8,5-13,6).
+- Unterarm unteres Drittel: 0 % rot, aber L* 6,8-7,2 gegen 24-25 oben (Vorlage 11,5-13,5 gegen 19,7-24,5). Die 8 Flaechen von Mesh 11,
+  die das untere Drittel beruehren (d0 d1 d16 d17 v1 v2 v3 v4), lesen dieselbe dunkle Zone (v 25-87); die 17 uebrigen die graue Zone
+  (u 5-38, v 0-56).
+- Kastenfinger (Ecken 32-39, 10 Flaechen) liegt entlang der Finger-Achse bei 0,47-0,65 der Handlaenge, die Krallen ab 0,62; der Beginn
+  der roten Zone der Vorlage bei 0,51-0,58.
+
+### Kandidaten (runde7e/kandidaten.txt) und Wahl
+| Kandidat | Was | Handfarbe (a)/(b)/(c) | L* Handruecken | Abstand der L*-Verteilung zur Vorlage (Hand / Unterarm) |
+|---|---|---|---|---|
+| Stand 7d | - | ROT / gruen / gruen | 8,7 | 0,347 / 0,325 |
+| K1 | 24 Handflaechen 490 -> 482, nur CLUT | ROT (Kastenfinger 6-7 % rot) | 8,7 | - |
+| K1b | 34 Handflaechen (mit Kastenfinger) -> 482, nur CLUT | gruen | 8,2-8,6 (fast schwarz) | 0,388 / 0,325 |
+| **K2 = Stufe f** | K1b + UV je Teilgruppe in die Grau-Zone, Mesh 11 unteres Drittel ebenso | gruen | 23,8-24,3 | **0,278 / 0,190** |
+| gemeinsame Abbildung | eine Abbildung fuer beide Teilgruppen | - | - | nicht gebaut: groesster Massstab 0,69 (gestreckte Texel) |
+Regel (vor dem Vergleich festgelegt): Handfarbe gruen; dann die Vorlage nur als Ort und Farbrichtung - L*-Perzentile 10/25/50/75/90
+von Handruecken und unterem Drittel, je Bild durch den L*-Median des oberen Unterarm-Drittels geteilt, mittlere Abweichung zur Vorlage.
+K2 ist naeher (0,234 gegen 0,357 / alt 0,336); K1b liest sich im Pruefbild als schwarze Hand.
+
+### Stufe f (re15_port/tools/r41_sichel/v8/handfarbe_r7e.py; letzte Stufe der Kette, v8_kette.sh --stufen srwaunhbpf)
+- Gruppe: 34 Flaechen von Mesh 12 ohne die 24 Krallenflaechen (Handruecken, Daumenballen, Kastenfinger mit Kappe v16; V7 "Kappe v16
+  (Kastenfinger, keine Kralle) -> 490 wie die Hand") und die 8 Flaechen von Mesh 11 mit einer Ecke im unteren Drittel
+  (y > y_min + 2/3 Spanne).
+- CLUT-Feld -> **Zeile 482** = Zeile aller 25 Flaechen des Unterarms Mesh 11 (Referenz-2-Zeile 482 mit der V5-Grau-Regel).
+- UV je Teilgruppe mit EINER ganzzahligen Abbildung u' = (M (u - U0) + 100 SU + 50) / 100 (v ebenso) in die **Grau-Zone** = die Texel
+  der 17 uebrigen Unterarm-Flaechen (Original-EM30-UV; 1462 Texel, Seite 2, u 5-38, v 0-56). Wahl nach Geometrie: groesster
+  Massstab, bei dem kein Texel ausserhalb der Grau-Zone liegt (runde7e/suche.txt, je genau ein Schub):
+  **Hand M 92 ab (4,51) nach (6,6)** (u 4-39 v 51-86 -> u 6-38 v 6-38), **Unterarm M 82 ab (0,25) nach (5,3)** (u 0-38 v 25-87 ->
+  u 5-36 v 3-54).
+- Unveraendert: Krallen (Daumenkralle 491, Fingerkrallen 492, UV = Original), Texturbild, alle 16 CLUT-Zeilen, Ecken, Normalen,
+  Flaechen, Keyframes, alle anderen Meshes, Mesh 9 (V7-Kopf). Zeile 490 bleibt im TIM, keine Flaeche zeigt mehr darauf.
+
+### Stand
+- **Asset** re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD, 277 316 Bytes, sha256
+  **07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95** = Pin release/em30_hangar.sha256 (Commit b9c8c5bf6).
+- **Kette** v8_kette.sh zweimal (runde7e/kette_a.txt, kette_b.txt): "V8-KETTE-OK sha256 07b6703f...", Stufen 1-6 = V7 319bbd17, A = B
+  bytegleich. Der erste Lauf vor dem Pin (kette_0_vor_pin.txt) baute dieselbe Datei und meldete erwartungsgemaess die Abweichung zum
+  alten Pin. Hinweis: der Hintergrund-Abzug sfv4/bg/ROOM50A12.ppm (Eingabe von Stufe 3) fehlte im Scratch (nach dem Lauf 7d geloescht);
+  neu erzeugt mit build/tests/unit/probe_bg_dump.exe (shared_assets/PSX, Stage 5), Stufe 3 danach wieder 99703bbd OK.
+- Exe unveraendert 8f15f6c5 (local_build.sh build: nur test_birkin_formen neu gelinkt).
+
+### Riegel
+- **Voll-Riegel** riegel_v8.py mit denselben Optionen wie 7d (runde7e/riegel_alle.sh, Laeufe sfv8/r7e): **"SUMME: 18 von 24 gruen; GELB: S3; ROT: S9, S14, S16, S18, S19"** = 7d;
+  die Ausgabe ist bis auf die sha256-Zeile und die Zeile S17 (f) bytegleich zu runde7d/riegel_v8r7d.txt (runde7e/riegel_v8r7e.txt). S5 Gesicht gruen (Mesh 9, Zeile 486, 6501 Texel = V7).
+  S17 (f) neu nach dem Entscheid: Mesh 12 491: 6, 492: 18, 482: 34; UV = Original oder Abbildung der Stufe f; 42 umgelegt; 0 Texel
+  ausserhalb der Grau-Zone.
+- Teil-Riegel riegel_r7c.py NEU: ab Zeile 2 bytegleich zu 7d (Urteile S3 GELB Erbe, S9/S16/S18 ROT, S21 GRUEN).
+- Gegenprobe S17 (f) allein (runde7e/riegel_s17f_gegenprobe.txt): NEU GRUEN; Stand 7d 5c902d49 und V7 ROT (34 Flaechen auf 490, 42 mit
+  anderer UV, 1168 Texel ausserhalb der Grau-Zone). Der Voll-Riegel am Stand 7d brach in S16 mit MemoryError ab (Pool mit 12 Prozessen
+  neben der Unit-Gruppe) und wurde nicht wiederholt.
+- **Riegel Handfarbe** (riegel_handfarbe.py; Marker HF: Mesh 11 blau, Hand gruen, Kastenfinger gelb, Fingerkrallen magenta, Daumenkralle
+  cyan; echte Framedumps; rot = a* >= 10; Soll aus den fuenf Vorlagebildern):
+  | Paar | Handruecken rot NEU / alt / Vorlage | Finger rot NEU / Vorlage | Unterarm unten rot NEU / Vorlage | L* Handruecken NEU / alt / Vorlage |
+  |---|---|---|---|---|
+  | F368 / birkin20 | 0,015 / 0,347 / 0,024 | 0,565 / 0,485 | 0 / 0 | 23,9 / 8,7 / 12,7 |
+  | F369 / birkin22 | 0,017 / 0,353 / 0,021 | 0,564 / 0,516 | 0 / 0 | 23,8 / 8,7 / 12,4 |
+  | F371 / birkin23 | 0,016 / 0,343 / 0,001 | 0,556 / 0,428 | 0 / 0 | 23,9 / 8,7 / 13,8 |
+  | F373 / birkin21 | 0,012 / 0,357 / 0,008 | 0,557 / 0,412 | 0 / 0 | 24,3 / 8,7 / 14,3 |
+  | F375 / birkin24 | 0,014 / 0,349 / 0,008 | 0,539 / 0,393 | 0 / 0 | 23,9 / 8,7 / 14,2 |
+  | F367 / birkin20 (Angabe) | 0,020 / 0,338 / 0,024 | 0,543 / 0,485 | 0 / 0 | 23,0 / 8,4 / 12,7 |
+  Soll (a) <= 0,024, (b) >= 0,393, (c) <= 0. **NEU GRUEN** (a, b, c); **Gegenprobe 5c902d49 ROT** in (a) (alle fuenf Paare).
+  Angaben (d): Grenze grau/rot nach der Regel der Vorlage bei 0,71-0,75 der Handlaenge (Vorlage 0,51-0,58; Stand 7d 0,74-0,77);
+  L* Handruecken / oberes Unterarm-Drittel 0,93-1,00 (Vorlage 0,52-0,72), unteres / oberes Drittel 0,74-0,82 (Vorlage 0,49-0,69).
+
+### Tests (runde7e/ctest_gruppe.txt, ctest_unit.txt, test_formen_*.txt)
+- ctest -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900:
+  **"100% tests passed, 0 tests failed out of 8"**, Total Test time (real) = 305.44 sec.
+- Unit-Gruppe wie 7d, aber -j 1 (hoechstens 2 Rechenprozesse): **"100% tests passed, 0 tests failed out of 1013"**, Total Test time
+  (real) = 1102.10 sec.
+- test_birkin_formen am Asset 07b6703f OK; Gegenprobe mit dem Asset 5c902d49: 4 FAIL (Mesh 11 nicht umtexturiert; Mesh 11 8 Flaechen
+  mit falscher UV; Mesh 12 34 Flaechen auf 490; Mesh 12 34 Flaechen mit falscher UV).
+
+### Spiel
+- **Szenenlauf** Hangar 50A0 (runde7e/laeufe.sh, lauf_v4.sh, EMD "-", FD 200-1100/1): EXIT=0, 901 Bilder, "EM30: Ersatzmodell
+  EMD/EM30_HANGAR.EMD (Raum 50A0)", "Szene Ende: Cut 4"; **state.log bytegleich V7** (sha256 e48e1cad..., 1131 Zeilen).
+  565 der 901 Framedumps anders als 7d; in F360-F380 liegen ALLE geaenderten Bildpunkte (87 957) in der Marker-Maske von Mesh 11 + 12
+  (+1 Bildpunkt Rand), 0 ausserhalb (runde7e/diff_nur_arm.txt).
+- Marker LM/KO/MK_A/MK_B/GR/KL/HF neu aus dem Asset gebaut (alle anders als 7d nur durch die UV-/CLUT-Bytes von Mesh 11/12; der
+  HF-Marker zeichnet bildgleich zum HF-Marker von 7d: 0 Bildpunkte Unterschied F360-F380), alle Laeufe EXIT=0.
+- **gdigrab des echten Fensters** (runde7e/gdi.sh, gdi2.sh: eigene exe-Kopie, Fenster ueber die eigene PID, kein AUTOSHOT, kein
+  SOFTWARE_RENDER, 960 x 720): Aufnahme 1 sha256 b38fadc5..., 3212 Bilder; Aufnahme 2 sha256 81f6ce20..., 2153 Bilder (fuer F367);
+  state.log beider Laeufe bytegleich V7. Zuordnung gemessen (gdi_zuordnung.txt, gdi2_zuordnung.txt; Treffer 0,91-0,93).
+  Fensterbilder runde7e/gdi_fenster_F354 (vorn), F366, F367, F368, F369, F371, F373, F375; Hand-Tafel runde7e/gdi_hand_r7e.png
+  (Vorlage | Stand 7d Framedump | NEU Fenster).
+
+### Tafeln (SF_belege/v8; selbst angesehen)
+- 16_hand_r7e.png (tafel_r7a.py hand --mitte "Stand 7d"): Vorlage | V7 | Stand 7d | NEU in den fuenf Paar-Posen, Breitenprofil
+  unveraendert gegen 7d (Geometrie gleich).
+- 18_handstellung_r7e.png (tafel_r7a.py stellung): echte Spielbilder F368-F375 je V7 | Stand 7d | NEU neben der Vorlage, ganze Figur
+  in Stand und Gang.
+- Was zu sehen ist: Unterarm und Handruecken grau, die drei Fingerkrallen rot, der Daumen mit heller Kralle - wie die Vorlage "grau mit
+  roten Spitzen"; die dunkelrot-violetten Sprenkel sind weg. **Abweichungen:** (1) Die Hand ist heller als in der Vorlage (L* 24 gegen
+  12-14; Verhaeltnis zum oberen Unterarm 0,93-1,00 gegen 0,52-0,72) und warmgrau (b* +1,3) statt kuehl grau-violett (b* -2,2). (2) Am
+  Handgelenk ein dunkleres Band (der untere Rand der Grau-Zone, v 45-54, liegt dort). (3) Die Grenze grau/rot liegt an den
+  Krallenwurzeln, nach der Regel der Vorlage bei 0,71-0,75 der Handlaenge statt 0,51-0,58: die rote Zone ist kuerzer, weil der
+  Kastenfinger grau ist und die Krallen erst bei 0,62 beginnen (Form unveraendert, nicht Auftrag). (4) Die Hand traegt jetzt das
+  Hautmuster des Unterarms (Hand 0,92-, unteres Drittel 0,82-fach gestreckt), nicht mehr Capcoms Handtextur.
+
+### Offen
+1. Helligkeit/Farbton der Hand gegen die Vorlage (siehe (1)/(2)); eine Abhilfe ginge nur ueber eine weitere Farbtransformation oder
+   eine andere Texelzone - beides waere eine Eichung an der Vorlage (E4) und ist nicht gemacht.
+2. Grenze grau/rot spaeter als in der Vorlage (siehe (3)); der Kastenfinger ist nach V7 Hand, nicht Finger.
+3. Unveraendert aus Runde 7: S9, S14, S16, S18, S19 ROT; S3 GELB (Erbe); Krallenform (drei Spitzen statt Faeustling), Daumenwinkel.
+
+## V8 Runde 8 - Schwanz flach, Glieder, Skorpionstachel, Fleisch nur Bauchseite (Bauer Asset, Zweig r41/sichel_v8, 2026-11-14)
+
+Kein RE-Befund: die Sichel-Form und ihr Schwanz stehen auf keiner Disc; jede Zahl ist PORT-WAHL (Auftrag, Analyse, Messung), keine @0x-Adresse.
+Textur nur Original-EM30-Texel mit den Original-Zeilen bzw. die Oberseiten-Texel des Stands 7e; keine neue CLUT-Zeile, keine Eichung am Video.
+Belege: analysis/befunde_runde41/SF_belege/v8/runde8/ (notiz.txt fortlaufend). Commits 6cf418dd8, 46d259880, b508e12db (Werkzeuge), 14bba8783
+(Asset, Pin, Unit-Test), danach Belege/Tafeln.
+
+### Auftrag (Nutzer 2026-11-14, woertlich)
+"weder mit dem rot der Schwanzfarbe noch mit dem etwas zu steifen grossen Schwanz zufrieden" + Version_80%/Areas*.png (Umriss rot,
+Gliedfugen gruen, Skorpionspitze Areas_Tip.png). Grundlage: Analyse scratchpad/schwanz_v8/analyse/ANALYSE.md, Bauplan Schritte 1, 2, 4
+(Asset); Schritte 3, 5, 6 (Rolle, Bahn, Biegsamkeit) macht der Code-Bauer.
+
+### Stufe q (re15_port/tools/r41_sichel/v8/schwanz_r8.py + schwanz_r8.json; v8_kette.sh --stufen srwaunhbpfq, SCHWANZFARBE a/b/c)
+- Nur Meshes 16-22 neu (Ecken, Normalen, Flaechen, UV-/CLUT-Felder). Skelett, Clips, Keyframes, Gliedlaengen 541, Texturbild, 16 CLUT-Zeilen,
+  Meshes 0-15 (Mesh 9 = V7-Kopf) bytegleich zu 07b6703f (Riegel R8f).
+- Querschnitt: Ellipse, Hochachse = Bauchachse e_h (innen_phi 26,4 Grad) mit dem V8-Profil, Querdicke 270 E. (Bauplan 1: 260-280).
+  Wurzelring an der Haut nur zu 0,6 abgeflacht, Ring D von Glied 16 zu 0,15 (ganz flach: Rumpf 56 px ueber der Schwanz-Oberkante an der
+  Naht J, Riegel S2c; Nutzer "Tail directly smooth into the back"; Versuche in runde8/versuche.txt).
+- Schwanzmitte: Hochachse an Gelenk 3 / 4 x 0,86 / 0,78 -> PV s .5 33,5 -> 27,0 px (-19,4 %; Messziel Bauplan 2 23,5 +- 4).
+- Fugen: Einschnuerung 0,85 an allen 6 Gelenken (voller Querschnitt 65 E. vor/hinter dem Gelenk), Manschette und Deckel wie bisher.
+- Glied 22 = Stachel: Kerbe -> Knolle Radius 135 (D 270, Auftrag 260-280) -> Verjuengung -> Nadel bis y 1139 = 550 E. ueber das heutige Ende
+  (Auftrag 450-550), auf der Gliedachse (sw_mesh_mass nimmt sie als Dornspitze).
+- Farbe: Fleisch nur im Bauchsektor |theta| <= 90 (Wurzel) .. 60 Grad (Spitze), Ruecken/Flanken Zeile 487 auf den Oberseiten-Texeln des
+  Eingangs, Nadel grau. Probe a "gedeckt" = Original-Zeile 482 (Asset 495) u 21-37 v 118-124 (L* 26,8 C* 20,3; die hellere, weniger satte
+  Partie des Original-Unterarm-Fleischs), b = a + helles Band in jeder Fuge (Original-Zeile 481 = Asset 494, Seite 1, u 36-44 v 28-41,
+  L* 74,1 C* 5,5), c = heutiger Ton (u 4-37 v 96-106, L* 18,2 C* 28,4) nur auf der Bauchseite + Baender. Standard b (Bauplan 2 verlangt das
+  helle Band an jeder Fuge). Felder aus "suche" (runde8/suche.txt), Texel bytegleich Original und von Original-Flaechen der Zeile benutzt.
+
+### Stand
+- **Asset** re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD, 280 612 Bytes, sha256
+  **4cf282427d345d47d35dd471d2fd26dc5ccca46420a5737d68e3635465b52d7d** (Farbprobe b) = Pin release/em30_hangar.sha256 (Commit 14bba8783).
+- **Kette** v8_kette.sh zweimal (runde8/kette_lauf1.txt, kette_lauf2.txt): "V8-KETTE-OK sha256 4cf28242...", Lauf 1 = Lauf 2 bytegleich.
+- **Farbproben** (Kette mit SCHWANZFARBE a / c; nicht Spiel-Asset, Scratch sfv8/r8/proben/): a e5bcda60..., c aea9bb65...
+- Bau re15_port/build_r8 (local_build.sh, RE15_BUILD_DIR, 2 Jobs); Engine-Quelltext unveraendert gegen 7e.
+
+### Messung (Messziele aus Auftrag / Analyse; runde8/rollreihe_pv.txt, r8_*.txt)
+| Ziel | vorher 07b6703f | neu 4cf28242 | Soll |
+|---|---|---|---|
+| vorn (Rollreihe, Bauch zur Kamera) s .3/.5/.7 h22 | 45 / 40 / 25 | 16 / 16,5 / 15,5 | 15-20, Vorhersage 18 / 18,5 / 17,5 +- 4 |
+| vorn h24 | 45,5 / 41 / 25,5 | 16 / 16,5 / 17 | 15-20 |
+| vorn h64 | 44 / 40,5 / 25 | 15,5 / 15,5 / 16,5 | 15-20 |
+| vorn s .1 (Wurzelglied) / s .9 (Knolle) h22-h64 | 50-51,5 / 11,5-12,5 | 22,5-26,5 / 15,5-17 | Angabe (Video 14,5-22 / 13-18) |
+| PV (f_rast, Keyframe-Rolle) s .3 | 41,5 | 39 | >= 36 |
+| PV s .5 | 33,5 | 27,0 (-19,4 %) | 15-20 % duenner; Umriss 23,5 +- 4 |
+| PV s .7 / s .9 | 19,5 / 7,5 | 18,5 / 13,5 | Umriss 18,5 / 15 +- 4 |
+| PV Bildlaenge | 159,3 px | 178,7 px | ~190 (mit 450-550 E. Nadel nicht erreichbar) |
+| PV Spitze | (285,9 / 327,6) | (286,8 / 347,0) | (286-289, 349-356): 2,0 px daneben |
+| Fugen: Einschnuerung je Gelenk (Hochachse / Huellradius) | - | 0,83-0,86 | ~0,85 |
+| Fugen von vorn schmaler an den Gelenken (Mittel h22/h24/h64) | -0,4 / -0,65 / -0,4 | 2,7 / 2,6 / 1,5 px | sichtbar (>= 1) |
+| Fleisch bei Normalen-theta >= 100 (PV) | 36,2 % | 0,0 % | 0 |
+
+### Riegel
+- **Voll-Riegel** riegel_v8.py mit denselben Optionen wie 7e, dazu --szene (debug.log des Szenenlaufs) und --farbe b (werkzeug/riegel_alle_r8.sh,
+  RE15_RIEGEL_JOBS=2): **"SUMME: 18 von 24 gruen; GELB: S3; ROT: S9, S14, S16, S18, S19"** = 7e (runde8/riegel_v8r8.txt). S5 Gesicht gruen
+  (Mesh 9, Zeile 486, 6501 Texel = V7). Gegen 7e anders nur: S1 2,5 / 6,0 (7e 2,3 / 6,0), S2 (a) 2,2 / 6, (b) 1,9 bei x 336, (c) 2 in allen
+  7 Varianten (7e 2,2 / 5, 1,7, 2; Angabe ohne Culling 13 statt 4), S4/S6/S15 nach den Regeln der Runde 8 (unten), S6 mit Szene.
+  Alle uebrigen Zeilen (S7-S14, S16-S21, S9s/S10s/S14s) bis auf die sha256 gleich wie 7e.
+- **Regeln der Runde 8** (riegel_v8.py Kopf; nur fuer ein Asset mit Nadel, Staende ohne Nadel wie bisher):
+  S4: Wurzel 55,5 (>= 55), monoton, Ende 4,2, s 170-200 >= 9 und R8b - die alte Regel "s 90-130 >= 36 / s 140-160 >= 27" (Messblatt V8,
+  Linie T) waere ROT (37,1 / 34,0 / 31,3 und 25,0 / 23,0): sie widerspricht dem Auftrag "Schwanzmitte (s .5) 15-20 % duenner" und dem
+  Nutzer-Umriss Areas.png auf demselben Bild n1439 (s .5 23,5, s .7 18,5). S6: Keyframes mit Spitze + Knollen-Ende 0 von 912; Nadel
+  offline 213 von 912 unter der Sohle (Angabe); Szene: Gelenke tiefstes y -139, Nadelspitze -11,3, Gelenkwinkel max 25,2 (7e 25,2) -> GRUEN.
+  S15 = R8e (die Regeln der Runden 5/6 - Fleisch bis theta 110/120 - widersprechen dem neuen Auftrag "Fleisch nur auf der Bauchseite").
+- **Schwanz-Riegel R8a-R8f** (riegel_schwanz_r8.py; runde8/r8_a.txt, r8_b.txt, r8_c.txt): je **6 von 6 gruen**; **Gegenprobe 07b6703f**
+  (r8_gegenprobe_07b6703f.txt): 1 von 6, **ROT R8a, R8b, R8c, R8d, R8e** (R8f bytegleich - am Eingang selbst trivial gruen).
+- Teil-Riegel riegel_r7c.py NEU: Urteile wie 7e (S3 GELB Erbe, S9/S16/S18 ROT, S21 GRUEN); einzige Zahl anders: S18 (b) helle Punkte F344
+  7 statt 4 (GELB-Liste, Urteil unveraendert).
+
+### Tests (runde8/ctest_gruppe.txt, test_formen_gegenprobe_07b6703f.txt)
+- ctest-Gruppe (unit_birkin_ai/formen/bahnsteig/szenen/opfer, unit_schwanz_r41, integration_r41_birkin_pistole, integration_r41_sichel_form)
+  am Asset 4cf28242, -j 1: **"100% tests passed, 0 tests failed out of 8"**, 304,9 s.
+- test_birkin_formen.c (Schwanzglieder nach Runde 8: Ecken, Flaechen je Zeile 495/494/487, Textur-Seiten, flach, Nadelspitze y 1139,
+  Knolle <= 136): am Asset 4cf28242 OK; Gegenprobe 07b6703f 20 FAIL.
+
+### Spiel (runde8/notiz.txt [8], szene_kette_7e_r8.txt)
+- Szenenlauf Hangar 50A0 (lauf_v4.sh, Spiel-Asset, FD 200-1100): EXIT=0, 901 Bilder, **state.log bytegleich V7 / 7e** (e48e1cad...).
+- Die Schwanzkette der Szene ist in 70 von 144 Takten anders als in 7e (bis ~630 E.; h17-h18, h31-h61, h69-h70): die Bodenregel des Codes
+  (schwanz_r41.c glaetten, Dorn = groesste Ecke von Mesh 22 = Nadelspitze 1139 statt 589) hebt die Kette frueher. Tiefste Nadelspitze y -11
+  (Boden 0). Das ist Folge des Assets im unveraenderten Code und Sache der Bahn (Bauplan 5).
+- Farbproben a / c als Overlay-Laeufe (FD 255-320), Marker LM/KO/MK_A/MK_B/GR aus 4cf28242; alle EXIT=0.
+
+### Tafeln (SF_belege/v8; selbst angesehen)
+- 20_schwanz_r8.png: Nutzerbild (Areas4 h22, Areas2 h24, Areas3 h64, Areas h90) | V8 vorher (Framedump 7e bzw. PV offline) | neu.
+  Von vorn ist die breite rote Klinge weg: ein schmaler Schwanz (15-17 px an s .3-.7) mit hellen Querbaendern und duenner Nadel; in PV
+  die graue Flanke mit roter Innenkante, Mitte schmaler, Knolle mit Nadel. Die Bahn (Lage im Bild) ist unveraendert die des Codes.
+- 21_schwanz_farbe_r8.png: vorher | a | b | c in h22, h64 (Spiel) und PV (offline).
+- Was zu sehen ist / Abweichungen: (1) In den Vorderansichten zeigt die geerbte Keyframe-Rolle die Bauchseite zur Kamera - der Schwanz
+  ist dort vor allem rot(-braun) mit Baendern; a und c sind im Spiellicht nah beieinander (farbe_spiel.txt: a L* 22-23 C* 17-21, c L* 18-21
+  C* 16-23). (2) Die Baender sind fast weiss und hart begrenzt. (3) Das Wurzelglied ist von vorn noch 22-27 px breit (S2-Kompromiss).
+  (4) Die Nadel ist 1-3 px breit und verschwindet in manchen Ansichten zwischen den Bildpunkten; in PV (Zeile Spitze, 4x) ist sie nur ein
+  kurzer Stummel, weil die Glied-22-Achse dort stark verkuerzt ist - die Nadel des Nutzers (Areas_Tip, ~20 px) ist viel deutlicher.
+
+### Fuer den Code-Bauer (Bauplan 3/5/6)
+Siehe runde8/notiz.txt "Fuer den Code-Bauer": Bauchachse e_h je Knochen (0,896, 0, 0,445), Bauch in +e_h, aus den Flaechen auf 495/494
+messbar; Querhalbachse <= 135; Gliedlaengen 541 und Knochen unveraendert; sw_mesh_mass radius[6] 136, dorn_y 1139 -> Kette hebt sich in
+der Szene frueher; Fugen 65 E. um jedes Gelenk, bei Knicken > 25 Grad Spaltenmass pruefen; Wurzelglied von vorn noch breit.
+
+### Offen
+1. Rolle (Bauplan 3): ohne gefuehrte Rolle zeigen h18-h28 laut Analyse 25-40 px; erst mit "Bauch zur Kamera" 15-17 px.
+2. Laenge PV 178,7 statt ~190 px und Spitze 2 px ueber dem Zielkasten: mit der Nadel 450-550 E. entlang der Glied-22-Achse (in PV stark
+   verkuerzt, 35 px je 1000 E.) nicht erreichbar; der Rest liegt laut Analyse an der Wurzel (Bogen beginnt im Video 15-20 px hoeher).
+3. "Gedeckt" ist im Spiellicht nur wenig gedeckter als der heutige Ton. Gedeckter ginge mit Original-Texeln einer anderen Zeile
+   (Original-Zeile 481, Seite 1 u 40-55 v 0-8 / v 48-56: L* 30-35, C* ~15, Farbton 37-39 = braeunlich) - als weitere Probe moeglich.
+4. Nadel offline in 213 von 912 Keyframes unter der Sohle (im Spiel hebt die Bodenregel); Wurzelring in PV nur 3,7 E. unter der Haut an
+   einer Ecke (S10/S10s gruen).
+
+## V8 Runde 8b - Nachbesserung nach Pruefer pr8: Stachel sichtbar, S6 streng, rosa Baender, Fleisch ein Feld je Glied (2026-11-14)
+
+Kein RE-Befund (Sichel-Form auf keiner Disc), PORT-WAHL, keine @0x-Adresse. Pruefbericht pr8 "NICHT BESTANDEN" (scratchpad sfv8/pr8/PRUEFUNG.md):
+Nadel 213 von 912 Keyframes unter der Sohle und Szenenverschiebung, keine Knolle in PV, Baender weiss (L* 74), Rot gestreckt (17 x 7).
+Belege: analysis/befunde_runde41/SF_belege/v8/runde8b/ (notiz.txt [1]-[14], Code-Bauer, Offen). Commits 73768c3f6 (Werkzeuge 8b),
+c1deca441 (8b2: Fleisch ein Feld je Glied), 045274d9d (Asset, Pin, Unit-Test), 911a3b07b (riegel_v8 Ausgabe S4 / Doku), danach Belege.
+
+### Stand
+- **Asset** EM30_HANGAR.EMD sha256 **66db224477930ce2dadff021f62369fe9cf4a2fa6d059bc5b0622e4289a770e6** (Standard b, rosa Baender) = Pin
+  release/em30_hangar.sha256. Kette dreimal (kette_lauf1-3.txt): 66db2244 jedes Mal; Lauf 1 meldet ABWEICHUNG nur gegen den alten Pin
+  0813cca3 (erster Bau 8b, Pendel-UV, verworfen), Lauf 2 und 3 V8-KETTE-OK. Probe a (ohne Baender) d6802ad4d2361e529418a17e5a52b4d6cb2e748acac8f4acc0b7b2aeece71a44.
+- Gegen 07b6703f anders: Meshes 16-22 und die Winkel der Knochen 17-22 in 289 von 912 Keyframes (heben); alles andere bytegleich (R8f).
+
+### Was geaendert ist (schwanz_r8.py)
+- Stachel: Knolle Radius bis 190 (Ringe T200-T1100), gerade Nadel auf der Gliedachse bis y 1300 (sw_mesh_mass: dorn_y). Eine abgewinkelte Nadel
+  hilft nicht: Richtungen, die in PV im Bild nach unten zeigen, zeigen in 855-897 von 912 Keyframes auch in der Welt nach unten (n1/n2).
+- S6 streng: heben() hebt in 289 Keyframes die Glieder 17-22 um eine waagerechte Achse (Bodenregel der Stufe s, Gelenke <= 25 Grad), bis keine
+  Ecke von Mesh 22 unter der Sohle liegt. Pruefer-Werkzeug c_nadel.py: 0 von 912 (Runde 8: 213).
+- Baender: Original-Zeile 480 (Asset 493, bytegleich), Seite 0, u 58-73 v 19-48 (61 % hellrot/rosa, Median L* 48,4 C* 17,4 h 22), nur die zwei
+  mittleren Bauchfelder je Fuge, kein Ring.
+- Rot: Original-Zeile 482 (Asset 495), schraeges Feld v 114-123, u 1 -> 19, Breite 20 (200 Texel statt 119), einmal quer ueber den Bauch,
+  einmal laengs je Glied (gespiegelt). Pendeln je Flaeche ergab im Spiel ein Rautenmuster und ist verworfen.
+- Proben: nur a (ohne Baender) und b (Standard).
+
+### Messung vorher / nachher
+| Punkt | Runde 8 (4cf28242) | Runde 8b (66db2244) | Soll / Video |
+|---|---|---|---|
+| Nadel unter der Sohle (912 Keyframes) | 213 | 0 | 0 |
+| PV Breite bei 30/50/70/90/110/130/150/170 px ab Wurzel | 21,5/37,9/34,5/26,7/19,7/16,0/10,2/- | 21,5/37,9/36,5/28,6/19,7/16,5/12,0/12,6 | 26/34/33,1/33,3/18,1/19,8/17,9/18,1 |
+| PV sichtbare Laenge / tiefster Punkt y | 169,3 / 332 | 185,8 / 350 | 216,9 / 351 |
+| Baender im Spiel L* / C* / h | 68-80 / ~6 / 55 | 41,1-44,9 / 13,7-15,0 / 22 | 41-53 / ~21 / ~20 |
+| Bauch im Spiel L* / C* | 23,3-24,2 / 17,2-19,7 (Pruefer) | 22,6-25,0 / 19,8-20,3 | 23-25 / 12,8-16,5 |
+| Fleischfeld | 17 x 7 gestreckt | 20 x 10 schraeg, je Glied | groesser, fleckig |
+| Szenenkette gegen 7e | 62 von 136 Takten, unbegruendet | 100 von 144, bis 1005 E., alle Bodenregel (R8g) | begruendet oder beseitigt |
+(07b6703f: PV 19,7/40/39,7/33,1/22,1/15,2/10/-, Laenge 164,7, y 325.)
+
+### Riegel
+- riegel_v8: **"SUMME: 18 von 24 gruen; GELB: S3; ROT: S9, S14, S16, S18, S19"** = 7e = Runde 8; S5 gruen; S6 streng 0 von 912, Szene
+  Nadelspitze tiefstes y -6,9, Gelenkwinkel max 25,2 (= 7e). riegel_r7c teil bis auf die sha256 gleich 7e.
+- Schwanz-Riegel R8a-R8g mit Szene: **7 von 7 gruen**. R8b misst jetzt in festen Abstaenden ab dem koerpernahen Ende (je <= 6, Mittel <= 5,
+  hier 4,1), R8c nur die sichtbare Laenge (>= 180, tiefster Punkt >= 346), R8g neu: jeder gegen 7e andere Takt muss ein Bodenregel-Takt der
+  7e-Kette mit den neuen Massen sein (oder <= 40 Takte danach), state.log bytegleich.
+- Gegenproben: 07b6703f 1 von 6 (ROT R8a-R8e); 4cf28242 2 von 6 (ROT R8b-R8e); R8g mit dem Lauf der Runde 8 und den Massen von 07b6703f ROT.
+- Tests: test_birkin_formen am Asset OK, Gegenproben 07b6703f 20 FAIL, 4cf28242 110 FAIL; ctest-Gruppe 8/8.
+- Herkunft (x9_herkunft.py und Pruefer-Werkzeug b_herkunft.py): Texel auf 495 und 493 alle gleich Disc-Original in Original-Nutzung; 487 wie
+  bisher Erbe der Referenz 2.
+
+### Spiel und Tafeln
+- Szenenlauf 50A0: EXIT=0, 901 Bilder, state.log bytegleich 7e (e48e1cad...).
+- Tafeln SF_belege/v8/20_schwanz_r8.png (Nutzerbild | vorher | neu fuer h22/h24/h64/PV + Spitze) und 21_schwanz_farbe_r8.png (vorher | a | b),
+  Kopfzeile "TAFEL", fuer Runde 8b neu erzeugt.
+
+### Offen
+1. Szenenverschiebung gegen 7e ist begruendet, nicht beseitigt (nur ohne sichtbaren Stachel moeglich: radius[7] <= 121, dorn_y <= 687) -
+   Freigabe durch Orchestrator/Nutzer. Der Satz "bewegt sich wie vorher" gilt nicht.
+2. PV Laenge 185,8 statt 216,9 px; Knolle bei 150/170 px 12-12,6 statt ~18 (in PV teils hinter Glied 21).
+3. Von vorn ist die Nadel ein langer grauer Dorn; Baender C* 14-15 statt ~21; Bauch C* +4 bis +7 ueber dem Video.
+4. Wurzelglied von vorn 22-27 px; angehobene Keyframes bis 41 Grad (Clip 11), 29 Grad (Clip 7 / 17).

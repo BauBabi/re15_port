@@ -1,0 +1,30 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build_r9g
+    Start 1372: unit_birkin_formen
+1/1 Test #1372: unit_birkin_formen ...............***Failed    0.03 sec
+EM30_HANGAR.EMD: 886 von 913 Keyframes geduckt, Fussgelenk max 342 vom EM30-Ort, 900 mit bewegtem Schwanz
+FAIL: EM30_HANGAR.EMD: Schwanzglied 16: 14 Flaechen auf 495 (Soll 14), 33 auf 493 (Soll 26), 8 auf 487, 55 gesamt (V8 Runde 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 16: auf 493 33 Flaechen im Bauchfeld C1 u 56-65 v 51-55 (Soll 12), 0 im Ring-Feld RB u 93-100 v 10-17 (Soll 14), 0 in keinem der beiden (Soll 0; V8 Runde 8e / 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 17: 0 Flaechen auf 495 (Soll 0), 77 auf 493 (Soll 56), 0 auf 487, 77 gesamt (V8 Runde 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 17: auf 493 77 Flaechen im Bauchfeld C1 u 56-65 v 51-55 (Soll 28), 0 im Ring-Feld RB u 93-100 v 10-17 (Soll 28), 0 in keinem der beiden (Soll 0; V8 Runde 8e / 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 18: 0 Flaechen auf 495 (Soll 0), 88 auf 493 (Soll 60), 0 auf 487, 88 gesamt (V8 Runde 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 18: auf 493 88 Flaechen im Bauchfeld C1 u 56-65 v 51-55 (Soll 32), 0 im Ring-Feld RB u 93-100 v 10-17 (Soll 28), 0 in keinem der beiden (Soll 0; V8 Runde 8e / 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 19: 0 Flaechen auf 495 (Soll 0), 77 auf 493 (Soll 56), 0 auf 487, 77 gesamt (V8 Runde 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 19: auf 493 77 Flaechen im Bauchfeld C1 u 56-65 v 51-55 (Soll 28), 0 im Ring-Feld RB u 93-100 v 10-17 (Soll 28), 0 in keinem der beiden (Soll 0; V8 Runde 8e / 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 20: 0 Flaechen auf 495 (Soll 0), 77 auf 493 (Soll 56), 0 auf 487, 77 gesamt (V8 Runde 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 20: auf 493 77 Flaechen im Bauchfeld C1 u 56-65 v 51-55 (Soll 28), 0 im Ring-Feld RB u 93-100 v 10-17 (Soll 28), 0 in keinem der beiden (Soll 0; V8 Runde 8e / 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 21: 0 Flaechen auf 495 (Soll 0), 77 auf 493 (Soll 56), 0 auf 487, 77 gesamt (V8 Runde 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 21: auf 493 77 Flaechen im Bauchfeld C1 u 56-65 v 51-55 (Soll 28), 0 im Ring-Feld RB u 93-100 v 10-17 (Soll 28), 0 in keinem der beiden (Soll 0; V8 Runde 8e / 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 22: 0 Flaechen auf 495 (Soll 0), 88 auf 493 (Soll 46), 33 auf 487, 121 gesamt (V8 Runde 8g)
+FAIL: EM30_HANGAR.EMD: Schwanzglied 22: auf 493 88 Flaechen im Bauchfeld C1 u 56-65 v 51-55 (Soll 32), 0 im Ring-Feld RB u 93-100 v 10-17 (Soll 14), 0 in keinem der beiden (Soll 0; V8 Runde 8e / 8g)
+EM30_HANGAR.EMD: 642 Haut-CLUT-Eintraege umgefaerbt, 30 blaue grau, 13 Zusatzzeilen, Port-Texturhoehe 4096
+EM30_HANGAR.EMD: 23 Meshes, 23 Knochen, 21 Clips, 310 Tri-Vertices umgeformt, 13 Teile umtexturiert
+test_birkin_formen: 14 Fehler
+
+
+0% tests passed, 1 tests failed out of 1
+
+Total Test time (real) =   0.10 sec
+
+The following tests FAILED:
+	1372 - unit_birkin_formen (Failed)
+Errors while running CTest

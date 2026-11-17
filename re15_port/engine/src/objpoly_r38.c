@@ -97,6 +97,25 @@ int re15_objpoly_r38_quad(const int32_t mac[4][3], int h, int ofx, int ofy, re15
     return 1;
 }
 
+/* Boden-Schatten ohne Nahgrenze (Herleitung und Adressen: re15_objpoly_r38.h). RotAverage4 / FUN_8001699c: RTPT der
+ * Ecken 0..2, RTPS der Ecke 3, AVSZ4 - keine Z-Pruefung, kein NCLIP; die GPU rastert (0,1,2) und (1,2,3) je fuer sich. */
+int re15_objpoly_r38_schatten(const int32_t mac[4][3], int h, int ofx, int ofy,
+                              int sx[4], int sy[4], int32_t *sz_summe, uint8_t tri_ok[2])
+{
+    int16_t x[4], y[4];
+    uint16_t z[4];
+    int32_t summe = 0;
+    for (int v = 0; v < 4; v++) {
+        re15_objpoly_r38_rtps(mac[v][0], mac[v][1], mac[v][2], h, ofx, ofy, &x[v], &y[v], &z[v]);
+        sx[v] = x[v]; sy[v] = y[v];
+        summe += z[v];
+    }
+    if (sz_summe) *sz_summe = summe;
+    tri_ok[0] = (uint8_t)re15_objpoly_r38_gpu_ok(x[0], y[0], x[1], y[1], x[2], y[2]);
+    tri_ok[1] = (uint8_t)re15_objpoly_r38_gpu_ok(x[1], y[1], x[2], y[2], x[3], y[3]);
+    return (tri_ok[0] || tri_ok[1]) ? 1 : 0;
+}
+
 /* Sichtraum eines MD1-Scheitels (x,y,z = v[0..2]) — dieselbe Rechnung wie die bisherige Prop-Schleife in main.c
  * (Kamera x Objekt in Q12, Translation in Welteinheiten), = GTE MAC1..3 = (TR*1000h + R*V) >> 12. */
 static void sicht(const re15_md1_vertex_t *v, const int32_t bm[9], const int32_t bt[3], int32_t out[3])

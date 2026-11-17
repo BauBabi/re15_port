@@ -1,0 +1,23 @@
+{
+ "sechs_flaechen_px": 1014,
+ "kern_px": 626,
+ "kern_lab_mittel": [
+  7.5,
+  14.5,
+  5.3
+ ],
+ "ring_px": 1467,
+ "ring_lab_mittel": [
+  6.7,
+  4.1,
+  -1.2
+ ],
+ "kern_warmrot_anteil": 0.8769968051118211,
+ "ring_warmrot_anteil": 0.05589638718473074,
+ "bbox_fenster": [
+  385,
+  89,
+  444,
+  148
+ ]
+}

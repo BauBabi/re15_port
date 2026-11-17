@@ -1,0 +1,15 @@
+dE 0.44 n 192 Zeile 480 Seite 0 u 12-27 v 10-21 L*-Streuung 15.1 Vorhersage [98, 58, 58] S 0.41 V 0.38
+dE 0.54 n 224 Zeile 480 Seite 0 u 52-67 v 52-65 L*-Streuung 15.4 Vorhersage [97, 58, 59] S 0.40 V 0.38
+dE 1.31 n 448 Zeile 481 Seite 1 u 50-65 v 18-45 L*-Streuung 12.7 Vorhersage [99, 59, 58] S 0.42 V 0.39
+dE 1.79 n 192 Zeile 480 Seite 0 u 24-39 v 36-47 L*-Streuung 15.7 Vorhersage [100, 62, 61] S 0.39 V 0.39
+dE 2.10 n 240 Zeile 480 Seite 0 u 4-23 v 22-33 L*-Streuung 17.6 Vorhersage [104, 63, 64] S 0.39 V 0.41
+dE 2.28 n 192 Zeile 481 Seite 1 u 20-35 v 42-53 L*-Streuung 17.6 Vorhersage [93, 57, 56] S 0.40 V 0.37
+dE 2.69 n 224 Zeile 481 Seite 1 u 68-83 v 38-51 L*-Streuung 17.9 Vorhersage [100, 59, 56] S 0.44 V 0.39
+dE 3.09 n 224 Zeile 480 Seite 0 u 34-49 v 50-63 L*-Streuung 18.0 Vorhersage [90, 54, 54] S 0.40 V 0.35
+dE 3.30 n 192 Zeile 481 Seite 1 u 100-115 v 42-53 L*-Streuung 14.1 Vorhersage [99, 63, 60] S 0.40 V 0.39
+dE 3.44 n 336 Zeile 481 Seite 1 u 36-63 v 46-57 L*-Streuung 15.2 Vorhersage [103, 64, 61] S 0.41 V 0.40
+dE 7.54 n 240 Zeile 482 Seite 2 u 10-29 v 10-21 L*-Streuung 6.6 Vorhersage [102, 73, 75] S 0.29 V 0.40
+dE 11.03 n 192 Zeile 482 Seite 2 u 22-37 v 22-33 L*-Streuung 7.6 Vorhersage [95, 75, 75] S 0.21 V 0.37
+dE 11.35 n 336 Zeile 482 Seite 2 u 6-33 v 36-47 L*-Streuung 11.0 Vorhersage [83, 65, 69] S 0.21 V 0.33
+dE 12.14 n 192 Zeile 482 Seite 2 u 22-37 v 90-101 L*-Streuung 4.9 Vorhersage [76, 31, 31] S 0.60 V 0.30
+dE 13.46 n 256 Zeile 482 Seite 2 u 0-15 v 90-105 L*-Streuung 6.6 Vorhersage [71, 28, 28] S 0.61 V 0.28

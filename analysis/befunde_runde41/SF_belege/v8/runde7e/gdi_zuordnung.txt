@@ -1,0 +1,10 @@
+gdigrab-Bilder 3212 fps (Datei) 37.363319115936406
+F354 -> gdigrab-Bild 551 (t 14.747 s; gleiche Bilder 551-551), mittlere Abweichung 320x240 0.92 (naechstes anderes Bild 2.45), 960x720 1.42 -> gdi_fenster_F354.png
+F366 -> gdigrab-Bild 565 (t 15.122 s; gleiche Bilder 565-565), mittlere Abweichung 320x240 0.93 (naechstes anderes Bild 1.63), 960x720 1.43 -> gdi_fenster_F366.png
+F367 -> gdigrab-Bild 565 (t 15.122 s; gleiche Bilder 565-567), mittlere Abweichung 320x240 1.73 (naechstes anderes Bild 2.19), 960x720 2.40 -> gdi_fenster_F367.png
+F368 -> gdigrab-Bild 566 (t 15.149 s; gleiche Bilder 566-567), mittlere Abweichung 320x240 0.92 (naechstes anderes Bild 2.16), 960x720 1.38 -> gdi_fenster_F368.png
+F369 -> gdigrab-Bild 568 (t 15.202 s; gleiche Bilder 568-568), mittlere Abweichung 320x240 0.92 (naechstes anderes Bild 2.17), 960x720 1.43 -> gdi_fenster_F369.png
+F371 -> gdigrab-Bild 570 (t 15.256 s; gleiche Bilder 570-571), mittlere Abweichung 320x240 0.92 (naechstes anderes Bild 2.06), 960x720 1.40 -> gdi_fenster_F371.png
+F373 -> gdigrab-Bild 574 (t 15.363 s; gleiche Bilder 573-574), mittlere Abweichung 320x240 0.91 (naechstes anderes Bild 1.74), 960x720 1.40 -> gdi_fenster_F373.png
+F375 -> gdigrab-Bild 576 (t 15.416 s; gleiche Bilder 576-576), mittlere Abweichung 320x240 0.92 (naechstes anderes Bild 1.44), 960x720 1.42 -> gdi_fenster_F375.png
+F367: gdi_fenster_F367.png aus der zweiten Aufnahme (gdi2.sh, gdi2_zuordnung.txt: Abweichung 0.92); die erste Aufnahme hatte F367 nicht (1.73, dasselbe Bild wie F366)

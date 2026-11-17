@@ -20,6 +20,8 @@
 /* Hand the engine the already-loaded ITPS.ITP bytes (the PC backend resolves the asset root). Call
  * once at boot; supersedes the lazy load. `data` must remain valid for the program's lifetime. */
 void re15_itps_set_data(const uint8_t *data, int size);
+/* Runde 41 Optionen: der ULTIMATE-1.5-Puffer (re15_ultimate15_itps_bauen), gelesen nur bei re15_ultimate15() AN. */
+void re15_itps_set_data_u15(const uint8_t *data, int size);
 
 /* Load ITEM/ITPS.ITP once via re15_asset_read_file (lazy, fail-once — a missing asset must not fopen-
  * storm the per-pixel draw). Returns 0 on success, -1 on failure. */

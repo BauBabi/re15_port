@@ -1,0 +1,6 @@
+Tabelle neu erzeugt: byte-gleich (sha256 LF e33d192f0695497a5b5678de4a569c6053fcd949abcd797ceae10972ecaff7b0)
+MULDE.EMD neu erzeugt: byte-gleich (sha256 Datei 7726e46f17c78501f7a40db1280b98be8bede5517e0df0d869ce3163e9687409)
+Netze ausserhalb [10, 16, 21, 22] gleich K5e_f1: True
+Teil 10: 934 Ecken, groesste Tiefe im Kopf -16.0 (Clip 12 Bild 15, Ecke 761) -> ausserhalb mit Rand
+Teil 21: 731 Ecken, groesste Tiefe im Kopf -16.0 (Clip 12 Bild 16, Ecke 208) -> ausserhalb mit Rand
+EXIT 0

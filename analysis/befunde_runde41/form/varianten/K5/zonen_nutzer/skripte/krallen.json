@@ -1,0 +1,263 @@
+{
+ "sichtbar": {
+  "asset_bild1": {
+   "14": 0,
+   "15": 0,
+   "28": 0,
+   "30": 0,
+   "19": 0,
+   "20": 0,
+   "29": 0,
+   "31": 0
+  },
+  "asset_bild2": {
+   "14": 357,
+   "15": 699,
+   "28": 0,
+   "30": 2,
+   "19": 0,
+   "20": 0,
+   "29": 0,
+   "31": 419
+  },
+  "k5c_bild1": {
+   "14": 0,
+   "15": 0,
+   "28": 0,
+   "30": 0,
+   "19": 0,
+   "20": 4,
+   "29": 10,
+   "31": 0
+  },
+  "k5c_bild2": {
+   "14": 357,
+   "15": 461,
+   "28": 292,
+   "30": 2,
+   "19": 1521,
+   "20": 1734,
+   "29": 1479,
+   "31": 419
+  }
+ },
+ "vorn_links_nutzer": {
+  "text": "Exakt 4 Krallen",
+  "dreiecke": [
+   {
+    "bbox_beschriftet": [
+     417,
+     479,
+     428,
+     492
+    ],
+    "px_vorlage": 37,
+    "spitze_vorlage": [
+     402,
+     390
+    ],
+    "meshes_asset": {
+     "30": 2
+    },
+    "meshes_k5c": {
+     "30": 2
+    }
+   },
+   {
+    "bbox_beschriftet": [
+     466,
+     502,
+     493,
+     535
+    ],
+    "px_vorlage": 131,
+    "spitze_vorlage": [
+     440,
+     419
+    ],
+    "meshes_asset": {
+     "13": 79,
+     "14": 5
+    },
+    "meshes_k5c": {
+     "13": 79,
+     "14": 5
+    }
+   },
+   {
+    "bbox_beschriftet": [
+     496,
+     493,
+     552,
+     530
+    ],
+    "px_vorlage": 267,
+    "spitze_vorlage": [
+     470,
+     416
+    ],
+    "meshes_asset": {
+     "13": 7,
+     "15": 221
+    },
+    "meshes_k5c": {
+     "13": 7,
+     "15": 221
+    }
+   },
+   {
+    "bbox_beschriftet": [
+     535,
+     475,
+     557,
+     491
+    ],
+    "px_vorlage": 65,
+    "spitze_vorlage": [
+     473,
+     396
+    ],
+    "meshes_asset": {},
+    "meshes_k5c": {
+     "28": 8
+    }
+   }
+  ],
+  "anzahl": 4
+ },
+ "vorn_rechts_nutzer": {
+  "text": "Krallen (Zahl nicht genannt)",
+  "freie_linienenden": [
+   {
+    "beschriftet": [
+     301,
+     613
+    ],
+    "vorlage": [
+     203.0,
+     457.3
+    ],
+    "meshes_7x7_asset": {
+     "18": 4
+    },
+    "meshes_7x7_k5c": {
+     "18": 4,
+     "19": 9
+    }
+   },
+   {
+    "beschriftet": [
+     442,
+     511
+    ],
+    "vorlage": [
+     273.5,
+     406.3
+    ],
+    "meshes_7x7_asset": {
+     "18": 10,
+     "31": 39
+    },
+    "meshes_7x7_k5c": {
+     "18": 10,
+     "31": 39
+    }
+   },
+   {
+    "beschriftet": [
+     448,
+     583
+    ],
+    "vorlage": [
+     276.5,
+     442.3
+    ],
+    "meshes_7x7_asset": {},
+    "meshes_7x7_k5c": {}
+   }
+  ],
+  "geschlossene_dreiecke": [
+   {
+    "bbox_beschriftet": [
+     420,
+     518,
+     454,
+     580
+    ],
+    "px_vorlage": 310,
+    "meshes_asset": {
+     "18": 8,
+     "31": 208
+    },
+    "meshes_k5c": {
+     "18": 8,
+     "31": 208
+    }
+   },
+   {
+    "bbox_beschriftet": [
+     303,
+     573,
+     322,
+     609
+    ],
+    "px_vorlage": 98,
+    "meshes_asset": {
+     "18": 87
+    },
+    "meshes_k5c": {
+     "18": 31,
+     "19": 62
+    }
+   }
+  ],
+  "anzahl_spitzen": 3,
+  "krallenzone_meshes": {
+   "asset": {
+    "18": 478,
+    "31": 197
+   },
+   "k5c": {
+    "18": 220,
+    "19": 417,
+    "31": 197
+   }
+  }
+ },
+ "hinten_links_nutzer": {
+  "text": "Kaum sichtbar, aber wahrscheinlich 3 Krallen. Rechts waere es sicher genauso",
+  "marken": [
+   {
+    "bbox_beschriftet": [
+     516,
+     382,
+     535,
+     395
+    ],
+    "px_vorlage": 55,
+    "meshes_asset": {
+     "5": 4
+    },
+    "meshes_k5c": {
+     "5": 4
+    }
+   },
+   {
+    "bbox_beschriftet": [
+     515,
+     421,
+     540,
+     456
+    ],
+    "px_vorlage": 96,
+    "meshes_asset": {
+     "5": 23
+    },
+    "meshes_k5c": {
+     "5": 23
+    }
+   }
+  ],
+  "anzahl_marken": 2
+ }
+}

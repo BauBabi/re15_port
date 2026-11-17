@@ -1,0 +1,374 @@
+{
+ "regel": "Runde 3 (Pruefer r2 Nr. 12): Kralle 19 und Ihre \"Form links im Bild\" (vorne_rechte_Hand_und_Kralle.png).\nA  Auftrag (K5c-Lage, genau EIN Laengenfaktor entlang der eigenen Achse): gemessen, wie viel davon in Ihrer Form, in Ihrem Hand-Umriss und\n   ueber sichtbarer Hand liegt; Durchdringung der Hand 18 mit einem Wurzelradius, der zur gekuerzten Laenge passt (200 x Faktor).\nB  Gegenprobe \"Lage an Ihre Form gebunden\": K5c-Kralle 19 um ihre Wurzel (Knochen-Ursprung an der Hand) gedreht (2 Winkel, -90..90 Grad in\n   3-Grad-Schritten, senkrecht zur K5c-Achse) und mit einem Laengenfaktor so, dass die Spitze <= 2 px neben Ihrem Strichende liegt; je\n   Loesung dieselben Messgroessen. Nur gemessen; was in den Kandidaten kommt, steht in g_krallen.py.\nAufruf: python g_kralle19.py <ausgabe.json>",
+ "A_k5c_lage_ein_faktor": {
+  "laengenfaktor": 0.4898,
+  "sichtbar_px": 838,
+  "in_ihrer_form_px": 8,
+  "ihre_form_px": 59,
+  "in_ihrem_handumriss_px": 478,
+  "verdeckt_sichtbare_hand18_px": 710,
+  "ueber_hintergrund_px": 28,
+  "im_schriftzug_px": 142,
+  "ecken_in_hand18": 8,
+  "ecken_geprueft": 25,
+  "wurzelradius": 98.0,
+  "spitze_vorlage": [
+   218.1,
+   462.5
+  ],
+  "spitze_abstand_px": 16.01
+ },
+ "k5c_unveraendert": {
+  "sichtbar_px": 1521,
+  "in_ihrer_form_px": 53,
+  "ihre_form_px": 59,
+  "in_ihrem_handumriss_px": 561,
+  "verdeckt_sichtbare_hand18_px": 836,
+  "ueber_hintergrund_px": 161,
+  "im_schriftzug_px": 449,
+  "ecken_in_hand18": 1,
+  "ecken_geprueft": 19,
+  "wurzelradius": 200.0,
+  "spitze_vorlage": [
+   203.3,
+   499.1
+  ],
+  "spitze_abstand_px": 41.76
+ },
+ "B_loesungen": 90,
+ "B_ohne_hand_und_hintergrund": 0,
+ "B_beste": [
+  {
+   "winkel": [
+    87,
+    -24
+   ],
+   "laengenfaktor": 0.918,
+   "sichtbar_px": 812,
+   "in_ihrer_form_px": 1,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 353,
+   "verdeckt_sichtbare_hand18_px": 581,
+   "ueber_hintergrund_px": 64,
+   "im_schriftzug_px": 195,
+   "ecken_in_hand18": 3,
+   "ecken_geprueft": 19,
+   "wurzelradius": 183.6,
+   "spitze_vorlage": [
+    206.0,
+    457.7
+   ],
+   "spitze_abstand_px": 3.03
+  },
+  {
+   "winkel": [
+    81,
+    -27
+   ],
+   "laengenfaktor": 0.832,
+   "sichtbar_px": 819,
+   "in_ihrer_form_px": 6,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 377,
+   "verdeckt_sichtbare_hand18_px": 588,
+   "ueber_hintergrund_px": 68,
+   "im_schriftzug_px": 189,
+   "ecken_in_hand18": 3,
+   "ecken_geprueft": 19,
+   "wurzelradius": 166.4,
+   "spitze_vorlage": [
+    202.0,
+    457.5
+   ],
+   "spitze_abstand_px": 1.01
+  },
+  {
+   "winkel": [
+    90,
+    -24
+   ],
+   "laengenfaktor": 1.051,
+   "sichtbar_px": 848,
+   "in_ihrer_form_px": 1,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 374,
+   "verdeckt_sichtbare_hand18_px": 592,
+   "ueber_hintergrund_px": 92,
+   "im_schriftzug_px": 189,
+   "ecken_in_hand18": 3,
+   "ecken_geprueft": 19,
+   "wurzelradius": 210.2,
+   "spitze_vorlage": [
+    202.0,
+    459.6
+   ],
+   "spitze_abstand_px": 2.47
+  },
+  {
+   "winkel": [
+    81,
+    -30
+   ],
+   "laengenfaktor": 0.825,
+   "sichtbar_px": 793,
+   "in_ihrer_form_px": 4,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 400,
+   "verdeckt_sichtbare_hand18_px": 601,
+   "ueber_hintergrund_px": 47,
+   "im_schriftzug_px": 172,
+   "ecken_in_hand18": 4,
+   "ecken_geprueft": 19,
+   "wurzelradius": 165.0,
+   "spitze_vorlage": [
+    201.9,
+    455.4
+   ],
+   "spitze_abstand_px": 2.16
+  },
+  {
+   "winkel": [
+    84,
+    -27
+   ],
+   "laengenfaktor": 0.869,
+   "sichtbar_px": 879,
+   "in_ihrer_form_px": 8,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 408,
+   "verdeckt_sichtbare_hand18_px": 646,
+   "ueber_hintergrund_px": 68,
+   "im_schriftzug_px": 191,
+   "ecken_in_hand18": 3,
+   "ecken_geprueft": 19,
+   "wurzelradius": 173.8,
+   "spitze_vorlage": [
+    202.0,
+    457.5
+   ],
+   "spitze_abstand_px": 1.01
+  },
+  {
+   "winkel": [
+    78,
+    -30
+   ],
+   "laengenfaktor": 0.768,
+   "sichtbar_px": 812,
+   "in_ihrer_form_px": 10,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 400,
+   "verdeckt_sichtbare_hand18_px": 608,
+   "ueber_hintergrund_px": 57,
+   "im_schriftzug_px": 174,
+   "ecken_in_hand18": 4,
+   "ecken_geprueft": 20,
+   "wurzelradius": 153.6,
+   "spitze_vorlage": [
+    202.0,
+    457.5
+   ],
+   "spitze_abstand_px": 1.01
+  },
+  {
+   "winkel": [
+    78,
+    -27
+   ],
+   "laengenfaktor": 0.74,
+   "sichtbar_px": 815,
+   "in_ihrer_form_px": 10,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 388,
+   "verdeckt_sichtbare_hand18_px": 604,
+   "ueber_hintergrund_px": 53,
+   "im_schriftzug_px": 186,
+   "ecken_in_hand18": 5,
+   "ecken_geprueft": 22,
+   "wurzelradius": 148.0,
+   "spitze_vorlage": [
+    204.0,
+    457.6
+   ],
+   "spitze_abstand_px": 1.05
+  },
+  {
+   "winkel": [
+    87,
+    -27
+   ],
+   "laengenfaktor": 0.929,
+   "sichtbar_px": 925,
+   "in_ihrer_form_px": 9,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 453,
+   "verdeckt_sichtbare_hand18_px": 692,
+   "ueber_hintergrund_px": 68,
+   "im_schriftzug_px": 191,
+   "ecken_in_hand18": 3,
+   "ecken_geprueft": 19,
+   "wurzelradius": 185.8,
+   "spitze_vorlage": [
+    202.0,
+    457.5
+   ],
+   "spitze_abstand_px": 1.01
+  },
+  {
+   "winkel": [
+    -42,
+    0
+   ],
+   "laengenfaktor": 1.241,
+   "sichtbar_px": 1019,
+   "in_ihrer_form_px": 59,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 633,
+   "verdeckt_sichtbare_hand18_px": 940,
+   "ueber_hintergrund_px": 38,
+   "im_schriftzug_px": 90,
+   "ecken_in_hand18": 0,
+   "ecken_geprueft": 19,
+   "wurzelradius": 248.2,
+   "spitze_vorlage": [
+    204.0,
+    457.6
+   ],
+   "spitze_abstand_px": 1.05
+  },
+  {
+   "winkel": [
+    72,
+    -27
+   ],
+   "laengenfaktor": 0.689,
+   "sichtbar_px": 797,
+   "in_ihrer_form_px": 10,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 369,
+   "verdeckt_sichtbare_hand18_px": 585,
+   "ueber_hintergrund_px": 53,
+   "im_schriftzug_px": 188,
+   "ecken_in_hand18": 7,
+   "ecken_geprueft": 24,
+   "wurzelradius": 137.8,
+   "spitze_vorlage": [
+    204.0,
+    457.6
+   ],
+   "spitze_abstand_px": 1.05
+  }
+ ],
+ "B_meiste_in_form": [
+  {
+   "winkel": [
+    -42,
+    0
+   ],
+   "laengenfaktor": 1.241,
+   "sichtbar_px": 1019,
+   "in_ihrer_form_px": 59,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 633,
+   "verdeckt_sichtbare_hand18_px": 940,
+   "ueber_hintergrund_px": 38,
+   "im_schriftzug_px": 90,
+   "ecken_in_hand18": 0,
+   "ecken_geprueft": 19,
+   "wurzelradius": 248.2,
+   "spitze_vorlage": [
+    204.0,
+    457.6
+   ],
+   "spitze_abstand_px": 1.05
+  },
+  {
+   "winkel": [
+    -33,
+    -6
+   ],
+   "laengenfaktor": 0.914,
+   "sichtbar_px": 1007,
+   "in_ihrer_form_px": 59,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 646,
+   "verdeckt_sichtbare_hand18_px": 927,
+   "ueber_hintergrund_px": 42,
+   "im_schriftzug_px": 85,
+   "ecken_in_hand18": 1,
+   "ecken_geprueft": 19,
+   "wurzelradius": 182.8,
+   "spitze_vorlage": [
+    204.0,
+    459.7
+   ],
+   "spitze_abstand_px": 2.62
+  },
+  {
+   "winkel": [
+    -30,
+    -9
+   ],
+   "laengenfaktor": 0.81,
+   "sichtbar_px": 996,
+   "in_ihrer_form_px": 59,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 648,
+   "verdeckt_sichtbare_hand18_px": 936,
+   "ueber_hintergrund_px": 36,
+   "im_schriftzug_px": 81,
+   "ecken_in_hand18": 1,
+   "ecken_geprueft": 19,
+   "wurzelradius": 162.0,
+   "spitze_vorlage": [
+    204.0,
+    457.6
+   ],
+   "spitze_abstand_px": 1.05
+  },
+  {
+   "winkel": [
+    -36,
+    -3
+   ],
+   "laengenfaktor": 0.991,
+   "sichtbar_px": 1013,
+   "in_ihrer_form_px": 59,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 655,
+   "verdeckt_sichtbare_hand18_px": 934,
+   "ueber_hintergrund_px": 43,
+   "im_schriftzug_px": 86,
+   "ecken_in_hand18": 1,
+   "ecken_geprueft": 19,
+   "wurzelradius": 198.2,
+   "spitze_vorlage": [
+    206.0,
+    457.7
+   ],
+   "spitze_abstand_px": 3.03
+  },
+  {
+   "winkel": [
+    -39,
+    -3
+   ],
+   "laengenfaktor": 1.098,
+   "sichtbar_px": 1038,
+   "in_ihrer_form_px": 59,
+   "ihre_form_px": 59,
+   "in_ihrem_handumriss_px": 655,
+   "verdeckt_sichtbare_hand18_px": 968,
+   "ueber_hintergrund_px": 41,
+   "im_schriftzug_px": 110,
+   "ecken_in_hand18": 1,
+   "ecken_geprueft": 19,
+   "wurzelradius": 219.6,
+   "spitze_vorlage": [
+    202.0,
+    457.5
+   ],
+   "spitze_abstand_px": 1.01
+  }
+ ]
+}

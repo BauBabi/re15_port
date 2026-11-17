@@ -1,0 +1,18 @@
+fa31156c3b17
+1/2 Test #1372: unit_birkin_formen ...............***Failed    0.01 sec
+FAIL: EM30_HANGAR.EMD: Mesh 8 UVs ausser dem CLUT-Feld weichen von EM30 ab (26 Flaechen)
+FAIL: EM30_HANGAR.EMD: Mesh 8 Ader-Zeilen 23/3 Flaechen statt 35/6 (V8 Runde 2)
+FAIL: EM30_HANGAR.EMD: Mesh 14 nicht umtexturiert
+FAIL: EM30_HANGAR.EMD: Unterarm (Mesh 14) 0 Flaechen auf X3 (Soll 37), 37 auf 482 (Soll 0)
+FAIL: EM30_HANGAR.EMD: CLUT 3840 Eintraege (Soll 16 x 256) ab y 480
+2/2 Test #1378: unit_schwanz_r41 .................***Failed    0.04 sec
+FAIL: Spiel-Asset: Schwanzkette 16-22 nicht die V8-Kette (9 Werte anders, V8-Kette 1, V4-Kette 0)
+319bbd17f10b
+1/2 Test #1372: unit_birkin_formen ...............***Failed    0.01 sec
+FAIL: EM30_HANGAR.EMD: Mesh 8 Ader-Zeilen 0/0 Flaechen statt 35/6 (V8 Runde 2)
+FAIL: EM30_HANGAR.EMD: Oberarm (Mesh 13) 0 Flaechen auf X1 (Soll 13), 13 auf 480 (Soll 0)
+FAIL: EM30_HANGAR.EMD: Mesh 14 nicht umtexturiert
+FAIL: EM30_HANGAR.EMD: Unterarm (Mesh 14) 0 Flaechen auf X3 (Soll 37), 37 auf 482 (Soll 0)
+FAIL: EM30_HANGAR.EMD: CLUT 3328 Eintraege (Soll 16 x 256) ab y 480
+2/2 Test #1378: unit_schwanz_r41 .................***Failed    0.03 sec
+FAIL: Spiel-Asset: Schwanzkette 16-22 nicht die V8-Kette (9 Werte anders, V8-Kette 0, V4-Kette 1)

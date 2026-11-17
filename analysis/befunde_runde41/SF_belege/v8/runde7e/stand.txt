@@ -1,0 +1,12 @@
+Runde 7e (Handfarbe, Nutzerentscheid 2026-11-14 "wie in der Vorlage"), Zweig r41/sichel_v8
+Werkzeuge: Commit 9a12ed9ac; Asset/Pin/Unit-Test: Commit b9c8c5bf6
+Spiel-Asset re15_port/shared_assets/PSX/EMD/EM30_HANGAR.EMD: 07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95 (277316 Byte)
+Pin release/em30_hangar.sha256: 07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95
+Eingang der Stufe f = Stand 7d: 5c902d493e6815f8551e0297eb1ef7e8c6cbda4b11ed3ab5191cf6a62ac11f30
+Kette v8_kette.sh zweimal: V8-KETTE-OK sha256 07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95 / V8-KETTE-OK sha256 07b6703f15879bbeedd96eff7c647afc3ad989cad41b1423d1d24927265cbb95; A=B bytegleich
+Exe re15_port/build/platform/pc/re15_pc.exe: 8f15f6c52c7db434f3bcb05c31c499f1486aadff81625f8dd254e64708542f42 (unveraendert gegen 7d)
+Hintergrund-Abzug sfv4/bg/ROOM50A12.ppm (Eingabe Kettenstufe 3) fehlte im Scratch, neu: build/tests/unit/probe_bg_dump.exe shared_assets/PSX <sfv4/bg> 5 -> sha256 694d8afe719a80712bdf407e2ca46f82b255bf69bda4d0489e56de76f3d9e241; Stufe 3 danach 99703bbd OK
+Szenenlauf sfv8/r7e/szene (lauf_v4.sh, EMD -, FD 200-1100/1, Ende 1110): EXIT=0, 901 Framedumps; state.log sha256 e48e1cad143cc5776401bc6a415652d694aaba972c1c23235cd18a5cc1ece349 = sfv4/r/V7_szene/state.log (cmp)
+Framedumps r7e gegen r7d: 901 verglichen, 565 anders; F360-F380 alle geaenderten Bildpunkte in der Arm-Maske (diff_nur_arm.txt)
+gdigrab 1: sfv8/r7e/gdi/gdi_szene_v8r7e.mp4 sha256 b38fadc5150b4a1f4ed03199b39ffc9fb09ffccd37e8f1ee3d707aefb9554f13, 3212 Bilder; state.log = V7
+gdigrab 2: sfv8/r7e/gdi2/gdi_szene_v8r7e.mp4 sha256 81f6ce206528165bdfdcd3d253740e0da5353e887d04da5b13bc513d899ff8c4, 2153 Bilder; state.log = V7 (fuer F367)

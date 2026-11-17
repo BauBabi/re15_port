@@ -1,0 +1,15 @@
+MK_A/MK_B/GR in C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7d/mk Wurzelflaechen 22
+KO C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7d/mk/KO_NEU.EMD Gesichtsflaechen 61 Hinterkopf 30
+LM C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7d/mk/LM_NEU.EMD a32427688b8c7c98871a45ade00555f0941b4d4ebb5c1fc57acca25225f642e8
+Marker C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7d/mk/KL_NEU.EMD {'sonst': 313, 'beinhaut': 141, 'rumpf': 108, 'arm_rechts': 143, 'unterseite': 267, 'oberseite': 134}
+MK_A bytegleich r7c
+MK_B bytegleich r7c
+GR bytegleich r7c
+KO_NEU bytegleich r7c
+LM_NEU bytegleich r7c
+fd50e9848335481f22f99b684f5954b6982a1edfc0c011f9ae2c3f258112a9b9 *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7d/mk/GR.EMD
+50ce7017571faba8082f21abbea87e9fd0302da150297b711cbb804df66acf15 *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7d/mk/KL_NEU.EMD
+69fe9d7acd7da7fdaab0b1ab079566b80028c1bd7ab16e4fcf19872caa273ea4 *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7d/mk/KO_NEU.EMD
+a32427688b8c7c98871a45ade00555f0941b4d4ebb5c1fc57acca25225f642e8 *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7d/mk/LM_NEU.EMD
+691dd051a97654fb0f205c654232aea2ef98d1bcb77c005067d85718e8d5be63 *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7d/mk/MK_A.EMD
+bff95be4d5470ff99c79bca8b91eb4dea0e8c7991db8978ddda4f47a0df7285e *C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/r7d/mk/MK_B.EMD

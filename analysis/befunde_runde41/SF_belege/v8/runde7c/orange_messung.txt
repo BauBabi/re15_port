@@ -1,0 +1,5 @@
+V7 orange px F225-F450: 2 in 1 Bildern; groesstes Stueck max 2 | neu gegen N7B (nicht in 2 px Umkreis): Bilder mit >= 3 neuen px 0, Summe 0
+N7B orange px F225-F450: 334 in 113 Bildern; groesstes Stueck max 4 | neu gegen N7B (nicht in 2 px Umkreis): Bilder mit >= 3 neuen px 0, Summe 0
+R3B orange px F225-F450: 1600 in 117 Bildern; groesstes Stueck max 17 | neu gegen N7B (nicht in 2 px Umkreis): Bilder mit >= 3 neuen px 115, Summe 1266
+KC6 orange px F225-F450: 338 in 113 Bildern; groesstes Stueck max 4 | neu gegen N7B (nicht in 2 px Umkreis): Bilder mit >= 3 neuen px 0, Summe 0
+KC8 orange px F225-F450: 338 in 113 Bildern; groesstes Stueck max 4 | neu gegen N7B (nicht in 2 px Umkreis): Bilder mit >= 3 neuen px 0, Summe 0

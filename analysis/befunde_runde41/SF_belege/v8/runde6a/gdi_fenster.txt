@@ -1,0 +1,3 @@
+Fenster (Prozess re15_sfv4_997): 101936 480 180 960 720
+fertig
+Bilder: ffmpeg -ss 13.0 und -ss 13.5 aus gdi_szene_v8r6a.mp4 (Asset 7a65e3f0); Vergleichsbild V8 r5d -ss 13.5 aus gdi_szene_v8r5d.mp4 (Runde 5); Ausschnitt der Tafel x 380..780, y 200..680 des 960x720-Fensters

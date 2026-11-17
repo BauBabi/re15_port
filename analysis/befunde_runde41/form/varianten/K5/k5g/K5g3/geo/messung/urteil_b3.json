@@ -1,0 +1,1578 @@
+{
+ "lauf": "lauf_voll.json",
+ "emd": "KAND.EMD",
+ "tabelle": "TABELLE.json",
+ "sha256": "3cec21137b5a9670717437e1732a5cd0db28804ba93263eac9f4f81e4641b5f2",
+ "voll": true,
+ "hart": [
+  {
+   "nr": "H1a",
+   "punkt": "ab4-Summe <= 1 % der K5e_f1-Summe ueber alle Ansichten (1043153 -> 10431)",
+   "gut": true,
+   "ist": "Summe 4298 (K5e_f1 auf denselben Ansichten 1043153, MULDE 547)"
+  },
+  {
+   "nr": "H1b",
+   "punkt": "ab4 groesstes zusammenhaengendes Streifenstueck je Ansicht <= 25 px",
+   "gut": true,
+   "ist": "groesstes 21 (spiel5080 Clip 12 Bild 14); Ansichten > 25: 0 []"
+  },
+  {
+   "nr": "H1c",
+   "punkt": "ab4-Summe je Ansicht ausserhalb der Clips 10/12 <= 20 px",
+   "gut": true,
+   "ist": "Ansichten > 20: 0 []; groesste 20 (spiel5080_vorn Clip 26 Bild 26)"
+  },
+  {
+   "nr": "H2",
+   "punkt": "ab5: Summe <= MULDE*1,05+50 und Ansichten > 20 <= MULDE*1,05+2",
+   "gut": true,
+   "ist": "Summe 12833 (MULDE 41765, Grenze 43903), > 20: 163 (MULDE 302, Grenze 319.1), groesste 159 (MULDE 618)"
+  },
+  {
+   "nr": "H3a",
+   "punkt": "uebrige Paare mit 10/21/22/23 ungerichtet, X<->{10,21} gruppiert: je <= K5e_f1*1,05+50",
+   "gut": false,
+   "ist": "ROT: 7<->22 158 > 156 (K5e_f1 101)"
+  },
+  {
+   "nr": "H3b",
+   "punkt": "Schulter 16>10 + 10>16 je Ansicht <= K5e_f1*1,05+25",
+   "gut": true,
+   "ist": "Ansichten rot: 0, schlimmste (Zuwachs, Ansicht, Clip, Bild, ist, K5e_f1): []; Summe 384256 (K5e_f1 1730744)"
+  },
+  {
+   "nr": "H4",
+   "punkt": "gezeichnete Dreiecke + 773 + 86 <= 8192",
+   "gut": true,
+   "ist": "meiste 6937 (spiel5080_vorn Clip 11 Bild 56) -> 7796"
+  },
+  {
+   "nr": "H5",
+   "punkt": "der Lauf gehoert zur EMD-Datei",
+   "gut": true,
+   "ist": "sha256 Datei 3cec21137b5a9670, Lauf 3cec21137b5a9670"
+  },
+  {
+   "nr": "H7",
+   "punkt": "Umriss >= K5e_f1 - 0,0005",
+   "gut": true,
+   "ist": "bild2 0.65316 (K5e_f1 0.65294, Grenze 0.65244), bild1 0.72330 (K5e_f1 0.72312, Grenze 0.72262)"
+  },
+  {
+   "nr": "H8",
+   "punkt": "Tabelle taugt fuer die Textur-Stufe (bank.tabelle_pruefen fuer 10/21/22 + gleiche Regeln fuer 16, H6b)",
+   "gut": true,
+   "ist": "(1) 10/21/22 per bank.tabelle_pruefen: GUT - 8777 Flaechen, jede mit Mutter; UV ausserhalb des Mutter-Rechtecks: 0; Dehnung gegen die Mutter {\"10\": {\"port_dreiecke\": 1441, \"groesste\": 6.79, \"ueber2\": 40, \"ueber4\": 1, \"ueber8\": 0, \"uv_entartet\": 36}, \"21\": {\"port_dreiecke\": 2909, \"groesste\": 3.67, \"ueber2\": 58, \"ueber4\": 0, \"ueber8\": 0, \"uv_entartet\": 47}, \"22\": {\"port_dreiecke\": 4275, \"groesste\": 6.02, \"ueber2\": 93, \"ueber4\": 2, \"ueber8\": 0, \"uv_entartet\": 1240}} | (2) Netz 16: 720 Flaechen, Fehler 0 [], UV ausserhalb des Mutter-Rechtecks 0 | (3) G.mulde_auf_form auf der echten Tabelle ohne Abbruch"
+  },
+  {
+   "nr": "H6b",
+   "punkt": "S12: Netz 16 formgleich geteilt: Ecken auf K5e_f1-Flaeche <= 2 UND an Teil 16 weg = neu = tief128 = hoch128 = 0",
+   "gut": true,
+   "ist": "1945 Ansichten, Summen {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 274, 'hoch48': 205, 'abw': 479}; schlimmste [['bild1', 0, 0, {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 0, 'hoch48': 0, 'abw': 0}], ['bild1', 0, 3, {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 0, 'hoch48': 0, 'abw': 0}], ['bild1', 0, 6, {'weg': 0, 'neu': 0, 'tief128': 0, 'hoch128': 0, 'tief48': 0, 'hoch48': 0, 'abw': 0}]]; Sektionen 0-6 gleich; fremde Netze geaendert: keine; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler"
+  },
+  {
+   "nr": "H9",
+   "punkt": "S9 gerade Kanten (hals 21/22, schulter 16/kugel_r, dach schaedel/22.ell; Puffer und Licht/Maler; <= K5e_f1 + 2)",
+   "gut": false,
+   "ist": "rote Zeilen 29 {'hals/Licht/Maler': 8, 'schulter/Puffer': 3, 'schulter/Licht/Maler': 9, 'dach/Puffer': 2, 'dach/Licht/Maler': 3, 'hals/Puffer': 4}"
+  }
+ ],
+ "hart_gut": false,
+ "zielmarken": [
+  {
+   "punkt": "weg: keine Ansicht > 200",
+   "gut": true,
+   "ist": "Ansichten > 200: 0, groesste 17"
+  },
+  {
+   "punkt": "weg: Summe <= 10 % MULDE (36702)",
+   "gut": true,
+   "ist": "Summe 17 (MULDE 367027)"
+  },
+  {
+   "punkt": "tief128: Summe <= 10 % MULDE (527533)",
+   "gut": true,
+   "ist": "Summe 347 (MULDE 5275332), groesste 47"
+  },
+  {
+   "punkt": "neu: keine Ansicht > 200",
+   "gut": true,
+   "ist": "groesste 97 (['bild1', 27, 4])"
+  },
+  {
+   "punkt": "hoch48: keine Ansicht > 200",
+   "gut": true,
+   "ist": "groesste 155 (['bild2', 11, 23])"
+  },
+  {
+   "punkt": "tief48 so klein wie moeglich (Bericht)",
+   "gut": true,
+   "ist": "Summe 33971 (MULDE 13380589 = 0.25 %), > 200: 0, groesste 157 (['bild2', 9, 49])"
+  }
+ ],
+ "zielmarken_gut": true,
+ "bild2_haltung": {
+  "bild1": 0,
+  "bild2": 5,
+  "spiel5080": 0,
+  "spiel5080_vorn": 8,
+  "spiel5090": 2
+ },
+ "s9": {
+  "gut": false,
+  "rot": 29,
+  "je_stelle": {
+   "hals/Licht/Maler": 8,
+   "schulter/Puffer": 3,
+   "schulter/Licht/Maler": 9,
+   "dach/Puffer": 2,
+   "dach/Licht/Maler": 3,
+   "hals/Puffer": 4
+  },
+  "zeilen": [
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 4.09,
+     "abw": 2.44,
+     "laenge": 342,
+     "w_roh": 14
+    },
+    "ist": {
+     "wechsel": 5.15,
+     "abw": 2.83,
+     "laenge": 330,
+     "w_roh": 17
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "hals",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 3.05,
+     "abw": 2.65,
+     "laenge": 884,
+     "w_roh": 27
+    },
+    "ist": {
+     "wechsel": 11.23,
+     "abw": 2.83,
+     "laenge": 365,
+     "w_roh": 41
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 4.01,
+     "abw": 2.23,
+     "laenge": 424,
+     "w_roh": 17
+    },
+    "ist": {
+     "wechsel": 6.41,
+     "abw": 2.33,
+     "laenge": 468,
+     "w_roh": 30
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "schulter",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 2.95,
+     "abw": 2.68,
+     "laenge": 848,
+     "w_roh": 25
+    },
+    "ist": {
+     "wechsel": 9.31,
+     "abw": 2.59,
+     "laenge": 806,
+     "w_roh": 75
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.69,
+     "laenge": 128,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 2.86,
+     "abw": 2.33,
+     "laenge": 140,
+     "w_roh": 4
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:27:72",
+    "stelle": "dach",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.96,
+     "abw": 2.83,
+     "laenge": 209,
+     "w_roh": 2
+    },
+    "ist": {
+     "wechsel": 8.16,
+     "abw": 2.15,
+     "laenge": 147,
+     "w_roh": 12
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 3.83,
+     "abw": 2.39,
+     "laenge": 261,
+     "w_roh": 10
+    },
+    "ist": {
+     "wechsel": 8.96,
+     "abw": 2.33,
+     "laenge": 268,
+     "w_roh": 24
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "hals",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 3.04,
+     "abw": 2.47,
+     "laenge": 789,
+     "w_roh": 24
+    },
+    "ist": {
+     "wechsel": 13.89,
+     "abw": 2.33,
+     "laenge": 288,
+     "w_roh": 40
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 93,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 95,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "schulter",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 93,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 95,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 99,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.56,
+     "laenge": 105,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild2:27:40",
+    "stelle": "dach",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 1.1,
+     "abw": 2.83,
+     "laenge": 181,
+     "w_roh": 2
+    },
+    "ist": {
+     "wechsel": 6.14,
+     "abw": 2.24,
+     "laenge": 114,
+     "w_roh": 7
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 2.61,
+     "abw": 2.33,
+     "laenge": 230,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 5.66,
+     "abw": 2.24,
+     "laenge": 212,
+     "w_roh": 12
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "hals",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 2.0,
+     "abw": 2.53,
+     "laenge": 699,
+     "w_roh": 14
+    },
+    "ist": {
+     "wechsel": 11.76,
+     "abw": 2.44,
+     "laenge": 238,
+     "w_roh": 28
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 3.21,
+     "abw": 2.74,
+     "laenge": 499,
+     "w_roh": 16
+    },
+    "ist": {
+     "wechsel": 6.21,
+     "abw": 2.83,
+     "laenge": 499,
+     "w_roh": 31
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "schulter",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 2.06,
+     "abw": 2.74,
+     "laenge": 775,
+     "w_roh": 16
+    },
+    "ist": {
+     "wechsel": 8.56,
+     "abw": 2.83,
+     "laenge": 748,
+     "w_roh": 64
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.56,
+     "laenge": 132,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 3.95,
+     "abw": 2.83,
+     "laenge": 152,
+     "w_roh": 6
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:11:5",
+    "stelle": "dach",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 1.29,
+     "abw": 2.83,
+     "laenge": 310,
+     "w_roh": 4
+    },
+    "ist": {
+     "wechsel": 7.43,
+     "abw": 2.83,
+     "laenge": 148,
+     "w_roh": 11
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 1.0,
+     "abw": 2.39,
+     "laenge": 57,
+     "w_roh": 1
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.44,
+     "laenge": 60,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "hals",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.33,
+     "laenge": 59,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 3.0,
+     "abw": 2.44,
+     "laenge": 61,
+     "w_roh": 3
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 4.41,
+     "abw": 2.44,
+     "laenge": 136,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 5.76,
+     "abw": 2.15,
+     "laenge": 139,
+     "w_roh": 8
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "schulter",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 1.44,
+     "abw": 2.83,
+     "laenge": 278,
+     "w_roh": 4
+    },
+    "ist": {
+     "wechsel": 7.64,
+     "abw": 2.76,
+     "laenge": 288,
+     "w_roh": 22
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080:12:16",
+    "stelle": "dach",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 2.08,
+     "abw": 2.83,
+     "laenge": 240,
+     "w_roh": 5
+    },
+    "ist": {
+     "wechsel": 3.25,
+     "abw": 2.09,
+     "laenge": 308,
+     "w_roh": 10
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "hals",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 3.21,
+     "abw": 2.56,
+     "laenge": 343,
+     "w_roh": 11
+    },
+    "ist": {
+     "wechsel": 14.02,
+     "abw": 2.09,
+     "laenge": 328,
+     "w_roh": 46
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 2.54,
+     "abw": 2.44,
+     "laenge": 236,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 2.8,
+     "abw": 2.69,
+     "laenge": 250,
+     "w_roh": 7
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "schulter",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 3.55,
+     "abw": 2.85,
+     "laenge": 282,
+     "w_roh": 10
+    },
+    "ist": {
+     "wechsel": 8.18,
+     "abw": 2.44,
+     "laenge": 391,
+     "w_roh": 32
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.09,
+     "laenge": 10,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.33,
+     "laenge": 14,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "nah2048:10:46",
+    "stelle": "dach",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.15,
+     "laenge": 41,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.15,
+     "laenge": 12,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 1.97,
+     "abw": 2.69,
+     "laenge": 203,
+     "w_roh": 4
+    },
+    "ist": {
+     "wechsel": 7.43,
+     "abw": 2.04,
+     "laenge": 296,
+     "w_roh": 22
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "hals",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 2.58,
+     "abw": 2.44,
+     "laenge": 310,
+     "w_roh": 8
+    },
+    "ist": {
+     "wechsel": 13.11,
+     "abw": 2.27,
+     "laenge": 366,
+     "w_roh": 48
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 2.69,
+     "abw": 2.15,
+     "laenge": 223,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 2.56,
+     "abw": 2.56,
+     "laenge": 234,
+     "w_roh": 6
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "schulter",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 2.9,
+     "abw": 2.59,
+     "laenge": 241,
+     "w_roh": 7
+    },
+    "ist": {
+     "wechsel": 7.69,
+     "abw": 2.36,
+     "laenge": 390,
+     "w_roh": 30
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.33,
+     "laenge": 10,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild2:10:45",
+    "stelle": "dach",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.15,
+     "laenge": 33,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 2.37,
+     "abw": 2.83,
+     "laenge": 253,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 4.06,
+     "abw": 2.2,
+     "laenge": 320,
+     "w_roh": 13
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "hals",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 3.38,
+     "abw": 2.69,
+     "laenge": 355,
+     "w_roh": 12
+    },
+    "ist": {
+     "wechsel": 12.96,
+     "abw": 2.39,
+     "laenge": 378,
+     "w_roh": 49
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 2.7,
+     "abw": 2.44,
+     "laenge": 222,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 3.45,
+     "abw": 2.33,
+     "laenge": 232,
+     "w_roh": 8
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "schulter",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 4.44,
+     "abw": 2.69,
+     "laenge": 293,
+     "w_roh": 13
+    },
+    "ist": {
+     "wechsel": 10.97,
+     "abw": 2.51,
+     "laenge": 392,
+     "w_roh": 43
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.33,
+     "laenge": 12,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.15,
+     "laenge": 12,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:46",
+    "stelle": "dach",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.44,
+     "laenge": 48,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.69,
+     "laenge": 15,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "hals",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 3.08,
+     "abw": 2.27,
+     "laenge": 195,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 8.33,
+     "abw": 2.15,
+     "laenge": 204,
+     "w_roh": 17
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "schulter",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 2.0,
+     "abw": 2.71,
+     "laenge": 400,
+     "w_roh": 8
+    },
+    "ist": {
+     "wechsel": 8.49,
+     "abw": 2.75,
+     "laenge": 483,
+     "w_roh": 41
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:10:82",
+    "stelle": "dach",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.69,
+     "laenge": 38,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 4.0,
+     "abw": 2.44,
+     "laenge": 88,
+     "w_roh": 4
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "hals",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.83,
+     "laenge": 22,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 10.0,
+     "abw": 2.44,
+     "laenge": 96,
+     "w_roh": 10
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "schulter",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080_vorn:12:40",
+    "stelle": "dach",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.56,
+     "laenge": 51,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.24,
+     "laenge": 48,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "hals",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 3.0,
+     "abw": 2.33,
+     "laenge": 69,
+     "w_roh": 3
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 2.15,
+     "laenge": 50,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 3.1,
+     "abw": 2.83,
+     "laenge": 129,
+     "w_roh": 4
+    },
+    "ist": {
+     "wechsel": 2.65,
+     "abw": 2.83,
+     "laenge": 151,
+     "w_roh": 4
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "schulter",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 2.69,
+     "laenge": 316,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 5.26,
+     "abw": 2.56,
+     "laenge": 247,
+     "w_roh": 13
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "spiel5080:12:18",
+    "stelle": "dach",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "hals",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "hals",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "schulter",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 3.52,
+     "abw": 2.56,
+     "laenge": 227,
+     "w_roh": 8
+    },
+    "ist": {
+     "wechsel": 2.58,
+     "abw": 2.24,
+     "laenge": 233,
+     "w_roh": 6
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "schulter",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 1.91,
+     "abw": 3.14,
+     "laenge": 314,
+     "w_roh": 6
+    },
+    "ist": {
+     "wechsel": 10.16,
+     "abw": 2.35,
+     "laenge": 364,
+     "w_roh": 37
+    },
+    "gut": false
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "dach",
+    "karte": "Puffer",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   },
+   {
+    "ansicht": "bild1:12:22",
+    "stelle": "dach",
+    "karte": "Licht/Maler",
+    "k5e": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "ist": {
+     "wechsel": 0.0,
+     "abw": 0.0,
+     "laenge": 0,
+     "w_roh": 0
+    },
+    "gut": true
+   }
+  ]
+ },
+ "s13": {
+  "modell": 14337,
+  "k5e_f1": 6386,
+  "je_netz": {
+   "10": 1441,
+   "16": 800,
+   "21": 2909,
+   "22": 4275
+  }
+ },
+ "urteil2": [
+  {
+   "nr": "H1a",
+   "punkt": "ab4-Summe <= 1 % der K5e_f1-Summe ueber alle Ansichten (1043153 -> 10431)",
+   "gut": true,
+   "ist": "Summe 4298 (K5e_f1 auf denselben Ansichten 1043153, MULDE 547)",
+   "daten": {
+    "summe": 4298,
+    "grenze": 10431
+   }
+  },
+  {
+   "nr": "H1b",
+   "punkt": "ab4 groesstes zusammenhaengendes Streifenstueck je Ansicht <= 25 px",
+   "gut": true,
+   "ist": "groesstes 21 (spiel5080 Clip 12 Bild 14); Ansichten > 25: 0 []",
+   "daten": {
+    "groesstes": 21,
+    "wo": [
+     "spiel5080",
+     12,
+     14
+    ],
+    "ueber25": []
+   }
+  },
+  {
+   "nr": "H1c",
+   "punkt": "ab4-Summe je Ansicht ausserhalb der Clips 10/12 <= 20 px",
+   "gut": true,
+   "ist": "Ansichten > 20: 0 []; groesste 20 (spiel5080_vorn Clip 26 Bild 26)",
+   "daten": {
+    "rot": [],
+    "groesste": [
+     20,
+     "spiel5080_vorn",
+     26,
+     26
+    ]
+   }
+  },
+  {
+   "nr": "H2",
+   "punkt": "ab5: Summe <= MULDE*1,05+50 und Ansichten > 20 <= MULDE*1,05+2",
+   "gut": true,
+   "ist": "Summe 12833 (MULDE 41765, Grenze 43903), > 20: 163 (MULDE 302, Grenze 319.1), groesste 159 (MULDE 618)",
+   "daten": {
+    "ist": {
+     "summe": 12833,
+     "ueber20": 163,
+     "groesste": 159
+    },
+    "mulde": {
+     "summe": 41765,
+     "ueber20": 302,
+     "groesste": 618
+    }
+   }
+  },
+  {
+   "nr": "H3a",
+   "punkt": "uebrige Paare mit 10/21/22/23 ungerichtet, X<->{10,21} gruppiert: je <= K5e_f1*1,05+50",
+   "gut": false,
+   "ist": "ROT: 7<->22 158 > 156 (K5e_f1 101)",
+   "daten": {
+    "zeilen": [
+     [
+      "T16<->{10,21}",
+      384386,
+      1732275,
+      1818938.75
+     ],
+     [
+      "T7<->{10,21}",
+      270644,
+      314168,
+      329926.4
+     ],
+     [
+      "22<->23",
+      61290,
+      74092,
+      77846.6
+     ],
+     [
+      "T11<->{10,21}",
+      7089,
+      7033,
+      7434.650000000001
+     ],
+     [
+      "16<->23",
+      6338,
+      6482,
+      6856.1
+     ],
+     [
+      "17<->22",
+      6308,
+      29268,
+      30781.4
+     ],
+     [
+      "10<->21",
+      4932,
+      753008,
+      790708.4
+     ],
+     [
+      "18<->22",
+      4559,
+      7954,
+      8401.7
+     ],
+     [
+      "16<->22",
+      2943,
+      36889,
+      38783.450000000004
+     ],
+     [
+      "17<->23",
+      1230,
+      1230,
+      1341.5
+     ],
+     [
+      "18<->23",
+      540,
+      539,
+      615.95
+     ],
+     [
+      "7<->22",
+      158,
+      101,
+      156.05
+     ],
+     [
+      "T17<->{10,21}",
+      133,
+      309,
+      374.45
+     ],
+     [
+      "22<->31",
+      71,
+      259,
+      321.95
+     ],
+     [
+      "23<->31",
+      56,
+      56,
+      108.80000000000001
+     ],
+     [
+      "13<->22",
+      4,
+      4,
+      54.2
+     ],
+     [
+      "T18<->{10,21}",
+      1,
+      7,
+      57.35
+     ]
+    ],
+    "rot": [
+     [
+      "7<->22",
+      158,
+      101,
+      156.05
+     ]
+    ]
+   }
+  },
+  {
+   "nr": "H3b",
+   "punkt": "Schulter 16>10 + 10>16 je Ansicht <= K5e_f1*1,05+25",
+   "gut": true,
+   "ist": "Ansichten rot: 0, schlimmste (Zuwachs, Ansicht, Clip, Bild, ist, K5e_f1): []; Summe 384256 (K5e_f1 1730744)",
+   "daten": {
+    "rot": [],
+    "summe": 384256,
+    "summe_k5e": 1730744
+   }
+  },
+  {
+   "nr": "H4",
+   "punkt": "gezeichnete Dreiecke + 773 + 86 <= 8192",
+   "gut": true,
+   "ist": "meiste 6937 (spiel5080_vorn Clip 11 Bild 56) -> 7796",
+   "daten": {
+    "meiste": [
+     6937,
+     "spiel5080_vorn",
+     11,
+     56
+    ]
+   }
+  },
+  {
+   "nr": "H5",
+   "punkt": "der Lauf gehoert zur EMD-Datei",
+   "gut": true,
+   "ist": "sha256 Datei 3cec21137b5a9670, Lauf 3cec21137b5a9670",
+   "daten": {
+    "sha": "3cec21137b5a9670717437e1732a5cd0db28804ba93263eac9f4f81e4641b5f2"
+   }
+  },
+  {
+   "nr": "H6b",
+   "punkt": "Netz 16 nur formgleich fein geteilt (statt H6)",
+   "gut": true,
+   "ist": "Sektionen 0-6 gleich; fremde Netze geaendert: keine; groesster Abstand einer Ecke von 16 zur K5e_f1-Flaeche 0.65; Formpruefung ohne Fehler",
+   "daten": {}
+  },
+  {
+   "nr": "H7",
+   "punkt": "Umriss >= K5e_f1 - 0,0005",
+   "gut": true,
+   "ist": "bild2 0.65316 (K5e_f1 0.65294, Grenze 0.65244), bild1 0.72330 (K5e_f1 0.72312, Grenze 0.72262)",
+   "daten": {
+    "umriss": {
+     "bild2": 0.6531623551303574,
+     "bild1": 0.7233048213175552
+    },
+    "k5e": {
+     "bild2": 0.65294153335895,
+     "bild1": 0.7231187980882574
+    }
+   }
+  },
+  {
+   "nr": "H8",
+   "punkt": "Tabelle taugt fuer die Textur-Stufe (bank.tabelle_pruefen fuer 10/21/22 + gleiche Regeln fuer 16, H6b)",
+   "gut": true,
+   "ist": "(1) 10/21/22 per bank.tabelle_pruefen: GUT - 8777 Flaechen, jede mit Mutter; UV ausserhalb des Mutter-Rechtecks: 0; Dehnung gegen die Mutter {\"10\": {\"port_dreiecke\": 1441, \"groesste\": 6.79, \"ueber2\": 40, \"ueber4\": 1, \"ueber8\": 0, \"uv_entartet\": 36}, \"21\": {\"port_dreiecke\": 2909, \"groesste\": 3.67, \"ueber2\": 58, \"ueber4\": 0, \"ueber8\": 0, \"uv_entartet\": 47}, \"22\": {\"port_dreiecke\": 4275, \"groesste\": 6.02, \"ueber2\": 93, \"ueber4\": 2, \"ueber8\": 0, \"uv_entartet\": 1240}} | (2) Netz 16: 720 Flaechen, Fehler 0 [], UV ausserhalb des Mutter-Rechtecks 0 | (3) G.mulde_auf_form auf der echten Tabelle ohne Abbruch",
+   "daten": {}
+  }
+ ]
+}

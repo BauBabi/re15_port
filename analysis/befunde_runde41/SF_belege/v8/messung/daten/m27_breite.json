@@ -1,0 +1,645 @@
+{
+"median_T_kante": 11.0,
+"stationen": [
+{
+"s": 0,
+"p": [
+370.2,
+180.2
+],
+"n": [
+0.173,
+0.985
+],
+"vorlage_aussen": 10,
+"vorlage_innen": 70,
+"vorlage_breite": 61,
+"modell_aussen": 14,
+"schwanz_aussen": null,
+"schwanz_breite": 0,
+"schwanz_knochen": [],
+"erster_knochen": 8,
+"ziel_aussen": 10,
+"ziel_quelle": "Kante",
+"d_kante": 4,
+"d_T": 14,
+"vorlage_breite_s": null
+},
+{
+"s": 10,
+"p": [
+362.7,
+181.7
+],
+"n": [
+0.209,
+0.978
+],
+"vorlage_aussen": 10,
+"vorlage_innen": 70,
+"vorlage_breite": 61,
+"modell_aussen": 12,
+"schwanz_aussen": 19,
+"schwanz_breite": 3,
+"schwanz_knochen": [
+16
+],
+"erster_knochen": 8,
+"ziel_aussen": 10,
+"ziel_quelle": "Kante",
+"d_kante": 2,
+"d_T": 12,
+"vorlage_breite_s": null
+},
+{
+"s": 20,
+"p": [
+353.5,
+183.6
+],
+"n": [
+0.209,
+0.978
+],
+"vorlage_aussen": 9,
+"vorlage_innen": 70,
+"vorlage_breite": 62,
+"modell_aussen": 17,
+"schwanz_aussen": 18,
+"schwanz_breite": 15,
+"schwanz_knochen": [
+16
+],
+"erster_knochen": 8,
+"ziel_aussen": 9,
+"ziel_quelle": "Kante",
+"d_kante": 8,
+"d_T": 17,
+"vorlage_breite_s": null
+},
+{
+"s": 30,
+"p": [
+344.3,
+185.6
+],
+"n": [
+0.209,
+0.978
+],
+"vorlage_aussen": 7,
+"vorlage_innen": 29,
+"vorlage_breite": 23,
+"modell_aussen": 18,
+"schwanz_aussen": 18,
+"schwanz_breite": 36,
+"schwanz_knochen": [
+16
+],
+"erster_knochen": 16,
+"ziel_aussen": 7,
+"ziel_quelle": "Kante",
+"d_kante": 11,
+"d_T": 18,
+"vorlage_breite_s": null
+},
+{
+"s": 40,
+"p": [
+335.1,
+187.6
+],
+"n": [
+0.256,
+0.967
+],
+"vorlage_aussen": 6,
+"vorlage_innen": 56,
+"vorlage_breite": 51,
+"modell_aussen": 19,
+"schwanz_aussen": 19,
+"schwanz_breite": 35,
+"schwanz_knochen": [
+16,
+17
+],
+"erster_knochen": 17,
+"ziel_aussen": 6,
+"ziel_quelle": "Kante",
+"d_kante": 13,
+"d_T": 19,
+"vorlage_breite_s": null
+},
+{
+"s": 50,
+"p": [
+326.7,
+191.3
+],
+"n": [
+0.557,
+0.831
+],
+"vorlage_aussen": 14,
+"vorlage_innen": 70,
+"vorlage_breite": 57,
+"modell_aussen": 18,
+"schwanz_aussen": 18,
+"schwanz_breite": 36,
+"schwanz_knochen": [
+16,
+17
+],
+"erster_knochen": 17,
+"ziel_aussen": 14,
+"ziel_quelle": "Kante",
+"d_kante": 4,
+"d_T": 18,
+"vorlage_breite_s": null
+},
+{
+"s": 60,
+"p": [
+319.3,
+197.6
+],
+"n": [
+0.665,
+0.747
+],
+"vorlage_aussen": 11,
+"vorlage_innen": 21,
+"vorlage_breite": 11,
+"modell_aussen": 11,
+"schwanz_aussen": 11,
+"schwanz_breite": 43,
+"schwanz_knochen": [
+16,
+17,
+18
+],
+"erster_knochen": 18,
+"ziel_aussen": 11,
+"ziel_quelle": "Kante",
+"d_kante": 0,
+"d_T": 11,
+"vorlage_breite_s": null
+},
+{
+"s": 70,
+"p": [
+312.0,
+204.2
+],
+"n": [
+0.656,
+0.755
+],
+"vorlage_aussen": 14,
+"vorlage_innen": 50,
+"vorlage_breite": 37,
+"modell_aussen": 8,
+"schwanz_aussen": 8,
+"schwanz_breite": 41,
+"schwanz_knochen": [
+17,
+18
+],
+"erster_knochen": 17,
+"ziel_aussen": 14,
+"ziel_quelle": "Kante",
+"d_kante": -6,
+"d_T": 8,
+"vorlage_breite_s": null
+},
+{
+"s": 80,
+"p": [
+304.7,
+210.6
+],
+"n": [
+0.672,
+0.74
+],
+"vorlage_aussen": 11,
+"vorlage_innen": 48,
+"vorlage_breite": 38,
+"modell_aussen": 6,
+"schwanz_aussen": 6,
+"schwanz_breite": 36,
+"schwanz_knochen": [
+17,
+18
+],
+"erster_knochen": 18,
+"ziel_aussen": 11,
+"ziel_quelle": "Kante",
+"d_kante": -5,
+"d_T": 6,
+"vorlage_breite_s": null
+},
+{
+"s": 90,
+"p": [
+297.4,
+217.2
+],
+"n": [
+0.672,
+0.74
+],
+"vorlage_aussen": 8,
+"vorlage_innen": 46,
+"vorlage_breite": 39,
+"modell_aussen": 6,
+"schwanz_aussen": 6,
+"schwanz_breite": 33,
+"schwanz_knochen": [
+18
+],
+"erster_knochen": 18,
+"ziel_aussen": 8,
+"ziel_quelle": "Kante",
+"d_kante": -2,
+"d_T": 6,
+"vorlage_breite_s": 39
+},
+{
+"s": 100,
+"p": [
+290.1,
+223.7
+],
+"n": [
+0.662,
+0.75
+],
+"vorlage_aussen": 9,
+"vorlage_innen": 20,
+"vorlage_breite": 12,
+"modell_aussen": 3,
+"schwanz_aussen": 3,
+"schwanz_breite": 62,
+"schwanz_knochen": [
+18,
+19
+],
+"erster_knochen": 19,
+"ziel_aussen": 9,
+"ziel_quelle": "Kante",
+"d_kante": -6,
+"d_T": 3,
+"vorlage_breite_s": 12
+},
+{
+"s": 110,
+"p": [
+283.4,
+230.5
+],
+"n": [
+0.83,
+0.558
+],
+"vorlage_aussen": 11,
+"vorlage_innen": 53,
+"vorlage_breite": 43,
+"modell_aussen": 2,
+"schwanz_aussen": 2,
+"schwanz_breite": 50,
+"schwanz_knochen": [
+18,
+19
+],
+"erster_knochen": 19,
+"ziel_aussen": 11,
+"ziel_quelle": "Kante",
+"d_kante": -9,
+"d_T": 2,
+"vorlage_breite_s": 43
+},
+{
+"s": 120,
+"p": [
+280.1,
+239.1
+],
+"n": [
+0.983,
+0.185
+],
+"vorlage_aussen": 12,
+"vorlage_innen": 56,
+"vorlage_breite": 45,
+"modell_aussen": 4,
+"schwanz_aussen": 4,
+"schwanz_breite": 38,
+"schwanz_knochen": [
+18,
+19
+],
+"erster_knochen": 19,
+"ziel_aussen": 12,
+"ziel_quelle": "Kante",
+"d_kante": -8,
+"d_T": 4,
+"vorlage_breite_s": 45
+},
+{
+"s": 130,
+"p": [
+278.5,
+248.4
+],
+"n": [
+0.986,
+0.167
+],
+"vorlage_aussen": 13,
+"vorlage_innen": 45,
+"vorlage_breite": 33,
+"modell_aussen": 15,
+"schwanz_aussen": 15,
+"schwanz_breite": 32,
+"schwanz_knochen": [
+19
+],
+"erster_knochen": 19,
+"ziel_aussen": 13,
+"ziel_quelle": "Kante",
+"d_kante": 2,
+"d_T": 15,
+"vorlage_breite_s": 33
+},
+{
+"s": 140,
+"p": [
+277.0,
+257.8
+],
+"n": [
+0.987,
+0.162
+],
+"vorlage_aussen": 9,
+"vorlage_innen": 41,
+"vorlage_breite": 33,
+"modell_aussen": 24,
+"schwanz_aussen": 24,
+"schwanz_breite": 31,
+"schwanz_knochen": [
+19
+],
+"erster_knochen": 19,
+"ziel_aussen": 9,
+"ziel_quelle": "Kante",
+"d_kante": 15,
+"d_T": 24,
+"vorlage_breite_s": 33
+},
+{
+"s": 150,
+"p": [
+275.3,
+267.1
+],
+"n": [
+0.984,
+0.178
+],
+"vorlage_aussen": 14,
+"vorlage_innen": 26,
+"vorlage_breite": 13,
+"modell_aussen": 34,
+"schwanz_aussen": 34,
+"schwanz_breite": 28,
+"schwanz_knochen": [
+19
+],
+"erster_knochen": 19,
+"ziel_aussen": 14,
+"ziel_quelle": "Kante",
+"d_kante": 20,
+"d_T": 34,
+"vorlage_breite_s": 13
+},
+{
+"s": 160,
+"p": [
+273.7,
+276.4
+],
+"n": [
+0.986,
+0.167
+],
+"vorlage_aussen": 14,
+"vorlage_innen": 24,
+"vorlage_breite": 11,
+"modell_aussen": 44,
+"schwanz_aussen": 44,
+"schwanz_breite": 26,
+"schwanz_knochen": [
+19,
+20
+],
+"erster_knochen": 19,
+"ziel_aussen": 14,
+"ziel_quelle": "Kante",
+"d_kante": 30,
+"d_T": 44,
+"vorlage_breite_s": 11
+},
+{
+"s": 170,
+"p": [
+271.9,
+285.8
+],
+"n": [
+0.968,
+0.251
+],
+"vorlage_aussen": null,
+"vorlage_innen": null,
+"vorlage_breite": null,
+"modell_aussen": 54,
+"schwanz_aussen": 54,
+"schwanz_breite": 12,
+"schwanz_knochen": [
+20
+],
+"erster_knochen": 20,
+"ziel_aussen": 11.0,
+"ziel_quelle": "T+Median",
+"d_kante": 43.0,
+"d_T": 54,
+"vorlage_breite_s": null
+},
+{
+"s": 180,
+"p": [
+269.1,
+295.1
+],
+"n": [
+0.969,
+0.247
+],
+"vorlage_aussen": 6,
+"vorlage_innen": 12,
+"vorlage_breite": 7,
+"modell_aussen": 56,
+"schwanz_aussen": 56,
+"schwanz_breite": 9,
+"schwanz_knochen": [
+20,
+21
+],
+"erster_knochen": 21,
+"ziel_aussen": 6,
+"ziel_quelle": "Kante",
+"d_kante": 50,
+"d_T": 56,
+"vorlage_breite_s": 7
+},
+{
+"s": 190,
+"p": [
+268.4,
+304.6
+],
+"n": [
+0.998,
+-0.061
+],
+"vorlage_aussen": null,
+"vorlage_innen": null,
+"vorlage_breite": null,
+"modell_aussen": 56,
+"schwanz_aussen": 56,
+"schwanz_breite": 12,
+"schwanz_knochen": [
+20
+],
+"erster_knochen": 20,
+"ziel_aussen": 11.0,
+"ziel_quelle": "T+Median",
+"d_kante": 45.0,
+"d_T": 56,
+"vorlage_breite_s": null
+},
+{
+"s": 200,
+"p": [
+269.0,
+314.4
+],
+"n": [
+1.0,
+-0.027
+],
+"vorlage_aussen": 11,
+"vorlage_innen": 19,
+"vorlage_breite": 9,
+"modell_aussen": 54,
+"schwanz_aussen": 54,
+"schwanz_breite": 9,
+"schwanz_knochen": [
+21
+],
+"erster_knochen": 21,
+"ziel_aussen": 11,
+"ziel_quelle": "Kante",
+"d_kante": 43,
+"d_T": 54,
+"vorlage_breite_s": 9
+},
+{
+"s": 210,
+"p": [
+269.4,
+324.2
+],
+"n": [
+0.998,
+-0.069
+],
+"vorlage_aussen": null,
+"vorlage_innen": null,
+"vorlage_breite": null,
+"modell_aussen": 54,
+"schwanz_aussen": 54,
+"schwanz_breite": 9,
+"schwanz_knochen": [
+21,
+22
+],
+"erster_knochen": 22,
+"ziel_aussen": 11.0,
+"ziel_quelle": "T+Median",
+"d_kante": 43.0,
+"d_T": 54,
+"vorlage_breite_s": null
+}
+],
+"s1_v7": {
+"mittel": 16.8,
+"max": 50,
+"mittel_T": 24.0,
+"max_T": 56
+},
+"mitte": [
+[
+315.9,
+237.5,
+90
+],
+[
+300.0,
+234.9,
+100
+],
+[
+310.4,
+248.6,
+110
+],
+[
+314.0,
+245.5,
+120
+],
+[
+307.6,
+253.3,
+130
+],
+[
+302.2,
+261.9,
+140
+],
+[
+295.5,
+270.7,
+150
+],
+[
+292.9,
+279.7,
+160
+],
+[
+278.3,
+297.4,
+180
+],
+[
+284.5,
+314.0,
+200
+]
+]
+}

@@ -81,6 +81,7 @@
 #include "re15_kanister2080_r41.h"   /* Runde 41 Spur G: Bits 114-117 */
 #include "re15_story80_r41.h"        /* Runde 41 Spur ST80 Nachbesserung 1: Bit 128 */
 #include "re15_story_r42.h"          /* Runde 42 Story v0.8.31: Bits 118-124, 129-132, 23-33, 17 (VERTRAG Runde 42) */
+#include "re15_birkin_formen.h"      /* Runde 41 Hangar-Rueckbau: Bit 38 (Hangar-Szene gesehen) */
 
 #ifndef RE15_ASSET_PSX_DIR
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
@@ -574,6 +575,8 @@ static const port_bit_t k_port[] = {
     { RE15_R42_BANK, RE15_R42_BIT_DOK_P4, "RE15_R42_BIT_DOK_P4", "Dokument P-4 Lab Incident Report 5021 (Runde 42 Story, reserviert v0.8.32)" },
     { RE15_R42_BANK, RE15_R42_BIT_DOK_VAKZIN, "RE15_R42_BIT_DOK_VAKZIN", "Dokument Vaccine Synthesis 5011 (Runde 42 Story, reserviert v0.8.32)" },
     { RE15_R42_BANK, RE15_R42_BIT_ENZYM, "RE15_R42_BIT_ENZYM", "Enzym = Disc-Bit ROOM40A1 @0x00ED0 pc[18] (Runde 42 Story, reserviert v0.8.32)" },
+    { RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, "RE15_BF_HANGAR_BIT", "Hangar-Szene 50A0/50A1 gesehen, birkin_formen.c bf_hangar_beenden (Runde 41 Hangar-Rueckbau)" },
+    { RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT, "RE15_BF_BESIEGT_BIT", "Hangar-Birkin besiegt, birkin_formen.c bf_hangar_tod_merken (Runde 1 hangar_liegen)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 
@@ -589,7 +592,7 @@ static int kollisionen(const unsigned *bits, int n, unsigned *treffer, int max_t
 static void teil_p(void)
 {
     printf("=== P: Bank-9-Bits des Ports gegen den Original-Satz ===\n");
-    unsigned alle[128]; int n = 0;   /* Runde 42: 57 + 23 Port-Bits + Lageplaene > 64 (frueher 64 = Ueberlauf) */
+    unsigned alle[128]; int n = 0;   /* Runde 42 + Runde 1 hangar_liegen: 59 + 23 Port-Bits + Lageplaene > 64 (frueher 64 = Ueberlauf) */
     for (int i = 0; i < N_PORT; i++) {
         PRUEFE(k_port[i].bank == 9, "%s steht in Bank 9 (%u)", k_port[i].makro, k_port[i].bank);
         int im_original = k_port[i].bit < 256 && s_z.belegt[k_port[i].bit];

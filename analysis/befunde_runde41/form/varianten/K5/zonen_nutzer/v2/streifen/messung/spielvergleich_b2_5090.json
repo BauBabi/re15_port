@@ -1,0 +1,35 @@
+{
+ "name": "b2_5090",
+ "raum": "5090",
+ "pose": "941,-23776,3874,12,0,11",
+ "aufnahme": "C:\\Users\\MJOEDI~1\\AppData\\Local\\Temp\\claude\\1ad3836299811990\\c41eae99-e724-4cb3-afb9-119709f20a9d\\scratchpad\\streifen\\spiel\\b2_5090\\hwnd_08.png",
+ "figur_px": 39911,
+ "uebereinstimmend": {
+  "px": 15290,
+  "abweichung_spiel_zu_maler": 7.596533682145193,
+  "abweichung_spiel_zu_tiefenpuffer": 7.596533682145193,
+  "unterscheidbare_px": 0,
+  "anteil_spiel_naeher_an_maler": 0.0
+ },
+ "keil_kopf_ueber_brust_hals": {
+  "px": 147,
+  "abweichung_spiel_zu_maler": 1.038548752834467,
+  "abweichung_spiel_zu_tiefenpuffer": 5.297052154195011,
+  "unterscheidbare_px": 80,
+  "anteil_spiel_naeher_an_maler": 0.9375
+ },
+ "brust_hals_ueber_kopf": {
+  "px": 75,
+  "abweichung_spiel_zu_maler": 0.8977777777777778,
+  "abweichung_spiel_zu_tiefenpuffer": 3.848888888888889,
+  "unterscheidbare_px": 26,
+  "anteil_spiel_naeher_an_maler": 0.9615384615384616
+ },
+ "alle_ordnungsfehler": {
+  "px": 803,
+  "abweichung_spiel_zu_maler": 1.3266915732669158,
+  "abweichung_spiel_zu_tiefenpuffer": 5.08302200083022,
+  "unterscheidbare_px": 459,
+  "anteil_spiel_naeher_an_maler": 0.9586056644880174
+ }
+}

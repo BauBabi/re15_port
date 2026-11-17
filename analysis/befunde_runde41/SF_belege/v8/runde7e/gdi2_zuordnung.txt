@@ -1,0 +1,4 @@
+gdigrab-Bilder 2153 fps (Datei) 43.06
+F366 -> gdigrab-Bild 579 (t 13.446 s; gleiche Bilder 579-580), mittlere Abweichung 320x240 0.91 (naechstes anderes Bild 1.62), 960x720 1.39 -> gdi_fenster_F366.png
+F367 -> gdigrab-Bild 581 (t 13.493 s; gleiche Bilder 581-581), mittlere Abweichung 320x240 0.92 (naechstes anderes Bild 1.73), 960x720 1.43 -> gdi_fenster_F367.png
+F368 -> gdigrab-Bild 583 (t 13.539 s; gleiche Bilder 582-583), mittlere Abweichung 320x240 0.91 (naechstes anderes Bild 1.96), 960x720 1.39 -> gdi_fenster_F368.png

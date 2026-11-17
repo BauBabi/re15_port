@@ -1,0 +1,25 @@
+ctest Gruppe, V8 Runde 6d, HEAD 8ca7e4ab2, Beginn 2026-11-11 03:53:29
+Aufruf: ctest --test-dir C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build -R "unit_birkin|unit_schwanz_r41|integration_r41_sichel_form|integration_r41_birkin_pistole" --timeout 900
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r41_sichel_v8/re15_port/build
+    Start   44: unit_birkin_ai
+1/8 Test   #44: unit_birkin_ai ...................   Passed    0.05 sec
+    Start 1372: unit_birkin_formen
+2/8 Test #1372: unit_birkin_formen ...............   Passed    0.04 sec
+    Start 1373: unit_birkin_bahnsteig
+3/8 Test #1373: unit_birkin_bahnsteig ............   Passed    0.30 sec
+    Start 1377: unit_birkin_szenen
+4/8 Test #1377: unit_birkin_szenen ...............   Passed    0.21 sec
+    Start 1378: unit_schwanz_r41
+5/8 Test #1378: unit_schwanz_r41 .................   Passed    0.08 sec
+    Start 1379: integration_r41_birkin_pistole
+6/8 Test #1379: integration_r41_birkin_pistole ...   Passed  266.12 sec
+    Start 1380: integration_r41_sichel_form
+7/8 Test #1380: integration_r41_sichel_form ......   Passed   66.53 sec
+    Start 1384: unit_birkin_opfer
+8/8 Test #1384: unit_birkin_opfer ................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 8
+
+Total Test time (real) = 333.46 sec
+ctest_rc=0
+Ende 2026-11-11 03:59:03

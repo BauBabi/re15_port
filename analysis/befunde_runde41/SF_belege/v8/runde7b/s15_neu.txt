@@ -1,0 +1,6 @@
+a/b {'zeile': 495, 'unten': 137, 'oben': 77, 'unten_ohne_fleisch': 0, 'oben_fehler': 0, 'deckel_unten': 130, 'deckel_grau_unten': 0, 'fleisch_texel': 16330, 'fremde_texel': 0, 'falsche_zeile': 0, 'ok': True}
+c {'ansichten': {'PV': {'unten_px': 2144, 'unten_fleisch': 97.9, 'oben_px': 786, 'oben_fleisch': 0.0}, 'P2': {'unten_px': 2210, 'unten_fleisch': 97.9, 'oben_px': 956, 'oben_fleisch': 0.0}}, 'ok': True}
+d {'PV': (6.6, 7.4, [23.9, 20.5, 27.0, 28.1, 26.4, 26.1]), 'P2': (6.8, 8.4, [24.9, 20.6, 27.3, 28.5, 26.7, 26.3])}
+e {'ansichten': {'PV': {'band_px': 275, 'band': 0.0, 'uebergang_px': 415, 'uebergang': 97.8, 'fleisch_px': 306, 'fleisch': 100.0}, 'P2': {'band_px': 424, 'band': 3.5, 'uebergang_px': 360, 'uebergang': 98.6, 'fleisch_px': 428, 'fleisch': 100.0}}, 'ok': True}
+g {'zeilen': 11, 'grau': [], 'kleinst': 85.3, 'ok': True}
+kanten {'alle': {'kanten': 55, 'laenge': 16157, 'da': 5.66, 'dL': -8.32, 'da_max': 28.3}, 'mantel': {'kanten': 27, 'laenge': 8488, 'da': 4.61, 'dL': -8.23, 'da_max': 8.1}, 'deckel': {'kanten': 28, 'laenge': 7670, 'da': 6.82, 'dL': -8.41, 'da_max': 28.3}}

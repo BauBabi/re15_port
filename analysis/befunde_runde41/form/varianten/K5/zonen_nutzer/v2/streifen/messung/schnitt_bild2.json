@@ -1,0 +1,886 @@
+{
+ "kandidat": "K5e_f1",
+ "dreiecke": 3199,
+ "orientierung": {
+  "sichtbare_dreiecke": 3199,
+  "zur_kamera": 293,
+  "von_kamera_weg": 2906
+ },
+ "keil_px": 3278,
+ "gegen_px": 1455,
+ "keil_flaechen": [
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 4 Haelfte 0",
+   "px": 882,
+   "mitteltiefe": 4974.0,
+   "ecken_vz": [
+    5193,
+    4766,
+    4963
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "21 Hals, Viereck 10 Haelfte 0",
+     "px": 634,
+     "mitteltiefe": 5038.7,
+     "ecken_vz": [
+      4893,
+      5122,
+      5101
+     ]
+    },
+    {
+     "flaeche": "21 Hals, Viereck 18 Haelfte 1",
+     "px": 194,
+     "mitteltiefe": 4977.0,
+     "ecken_vz": [
+      4916,
+      5122,
+      4893
+     ]
+    },
+    {
+     "flaeche": "21 Hals, Viereck 50 Haelfte 1",
+     "px": 38,
+     "mitteltiefe": 4992.7,
+     "ecken_vz": [
+      5049,
+      5089,
+      4840
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 46.323067999365776,
+   "tiefe_max": 93.66565966216149,
+   "bbox_grundlage": [
+    176,
+    104,
+    247,
+    153
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 15 Haelfte 0",
+   "px": 622,
+   "mitteltiefe": 4751.0,
+   "ecken_vz": [
+    4963,
+    4545,
+    4745
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 122 Haelfte 1",
+     "px": 305,
+     "mitteltiefe": 4758.3,
+     "ecken_vz": [
+      4718,
+      4792,
+      4765
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 130 Haelfte 0",
+     "px": 289,
+     "mitteltiefe": 4861.0,
+     "ecken_vz": [
+      4765,
+      4792,
+      5026
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Dreieck 42",
+     "px": 28,
+     "mitteltiefe": 4775.7,
+     "ecken_vz": [
+      4875,
+      4734,
+      4718
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 55.062672384379766,
+   "tiefe_max": 127.71642518361114,
+   "bbox_grundlage": [
+    77,
+    160,
+    157,
+    229
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 205 Haelfte 0",
+   "px": 509,
+   "mitteltiefe": 5046.7,
+   "ecken_vz": [
+    4908,
+    4966,
+    5266
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "21 Hals, Viereck 18 Haelfte 0",
+     "px": 396,
+     "mitteltiefe": 5057.7,
+     "ecken_vz": [
+      4916,
+      5135,
+      5122
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 92 Haelfte 1",
+     "px": 48,
+     "mitteltiefe": 5128.7,
+     "ecken_vz": [
+      5125,
+      5104,
+      5157
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 80 Haelfte 0",
+     "px": 47,
+     "mitteltiefe": 5145.0,
+     "ecken_vz": [
+      5157,
+      5104,
+      5174
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 66.42284675252267,
+   "tiefe_max": 88.07711481651677,
+   "bbox_grundlage": [
+    172,
+    91,
+    193,
+    145
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 12 Haelfte 1",
+   "px": 431,
+   "mitteltiefe": 4793.7,
+   "ecken_vz": [
+    5007,
+    4473,
+    4901
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "10 Brust/Buckel, Dreieck 61",
+     "px": 245,
+     "mitteltiefe": 4876.0,
+     "ecken_vz": [
+      4921,
+      4904,
+      4803
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Dreieck 60",
+     "px": 167,
+     "mitteltiefe": 4848.7,
+     "ecken_vz": [
+      4921,
+      4803,
+      4822
+     ]
+    },
+    {
+     "flaeche": "21 Hals, Viereck 57 Haelfte 1",
+     "px": 19,
+     "mitteltiefe": 4882.7,
+     "ecken_vz": [
+      4908,
+      4836,
+      4904
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 55.25448499317736,
+   "tiefe_max": 118.71436150957743,
+   "bbox_grundlage": [
+    284,
+    210,
+    309,
+    249
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 13 Haelfte 1",
+   "px": 255,
+   "mitteltiefe": 4670.3,
+   "ecken_vz": [
+    4901,
+    4344,
+    4766
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 148 Haelfte 0",
+     "px": 156,
+     "mitteltiefe": 4843.7,
+     "ecken_vz": [
+      4822,
+      4803,
+      4906
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Dreieck 60",
+     "px": 51,
+     "mitteltiefe": 4848.7,
+     "ecken_vz": [
+      4921,
+      4803,
+      4822
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 149 Haelfte 1",
+     "px": 23,
+     "mitteltiefe": 4926.0,
+     "ecken_vz": [
+      4803,
+      5069,
+      4906
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 31.68315450396858,
+   "tiefe_max": 82.40599237855713,
+   "bbox_grundlage": [
+    263,
+    188,
+    287,
+    214
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 205 Haelfte 1",
+   "px": 191,
+   "mitteltiefe": 5127.0,
+   "ecken_vz": [
+    4908,
+    5266,
+    5207
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 91 Haelfte 0",
+     "px": 150,
+     "mitteltiefe": 5149.3,
+     "ecken_vz": [
+      5166,
+      5125,
+      5157
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 91 Haelfte 1",
+     "px": 26,
+     "mitteltiefe": 5182.7,
+     "ecken_vz": [
+      5166,
+      5157,
+      5225
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 92 Haelfte 1",
+     "px": 8,
+     "mitteltiefe": 5128.7,
+     "ecken_vz": [
+      5125,
+      5104,
+      5157
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 76.70829593389772,
+   "tiefe_max": 95.87508673103093,
+   "bbox_grundlage": [
+    183,
+    90,
+    238,
+    103
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 14 Haelfte 1",
+   "px": 138,
+   "mitteltiefe": 4758.0,
+   "ecken_vz": [
+    4766,
+    4545,
+    4963
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 130 Haelfte 0",
+     "px": 130,
+     "mitteltiefe": 4861.0,
+     "ecken_vz": [
+      4765,
+      4792,
+      5026
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 122 Haelfte 1",
+     "px": 7,
+     "mitteltiefe": 4758.3,
+     "ecken_vz": [
+      4718,
+      4792,
+      4765
+     ]
+    },
+    {
+     "flaeche": "21 Hals, Viereck 17 Haelfte 0",
+     "px": 1,
+     "mitteltiefe": 4929.3,
+     "ecken_vz": [
+      4979,
+      4916,
+      4893
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 11.950677687038024,
+   "tiefe_max": 29.00086420016578,
+   "bbox_grundlage": [
+    139,
+    158,
+    170,
+    197
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 197 Haelfte 1",
+   "px": 76,
+   "mitteltiefe": 4888.0,
+   "ecken_vz": [
+    4790,
+    4966,
+    4908
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "21 Hals, Viereck 17 Haelfte 0",
+     "px": 75,
+     "mitteltiefe": 4929.3,
+     "ecken_vz": [
+      4979,
+      4916,
+      4893
+     ]
+    },
+    {
+     "flaeche": "21 Hals, Dreieck 3",
+     "px": 1,
+     "mitteltiefe": 5093.3,
+     "ecken_vz": [
+      4916,
+      4979,
+      5385
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 28.229673013720912,
+   "tiefe_max": 36.0229958552527,
+   "bbox_grundlage": [
+    170,
+    150,
+    185,
+    157
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 13 Haelfte 0",
+   "px": 76,
+   "mitteltiefe": 4572.7,
+   "ecken_vz": [
+    4901,
+    4473,
+    4344
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "10 Brust/Buckel, Dreieck 61",
+     "px": 44,
+     "mitteltiefe": 4876.0,
+     "ecken_vz": [
+      4921,
+      4904,
+      4803
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Dreieck 60",
+     "px": 32,
+     "mitteltiefe": 4848.7,
+     "ecken_vz": [
+      4921,
+      4803,
+      4822
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 27.461236160238514,
+   "tiefe_max": 77.91556935160042,
+   "bbox_grundlage": [
+    275,
+    210,
+    287,
+    222
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 12 Haelfte 0",
+   "px": 54,
+   "mitteltiefe": 4685.7,
+   "ecken_vz": [
+    5007,
+    4577,
+    4473
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "21 Hals, Viereck 57 Haelfte 1",
+     "px": 43,
+     "mitteltiefe": 4882.7,
+     "ecken_vz": [
+      4908,
+      4836,
+      4904
+     ]
+    },
+    {
+     "flaeche": "10 Brust/Buckel, Dreieck 61",
+     "px": 6,
+     "mitteltiefe": 4876.0,
+     "ecken_vz": [
+      4921,
+      4904,
+      4803
+     ]
+    },
+    {
+     "flaeche": "21 Hals, Viereck 56 Haelfte 0",
+     "px": 2,
+     "mitteltiefe": 5021.3,
+     "ecken_vz": [
+      5252,
+      4908,
+      4904
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 36.457075957211146,
+   "tiefe_max": 111.41681361022893,
+   "bbox_grundlage": [
+    300,
+    239,
+    309,
+    256
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 197 Haelfte 0",
+   "px": 26,
+   "mitteltiefe": 4861.0,
+   "ecken_vz": [
+    4790,
+    4827,
+    4966
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "10 Brust/Buckel, Viereck 130 Haelfte 0",
+     "px": 26,
+     "mitteltiefe": 4861.0,
+     "ecken_vz": [
+      4765,
+      4792,
+      5026
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 5.31206305542355,
+   "tiefe_max": 14.931400945958558,
+   "bbox_grundlage": [
+    156,
+    149,
+    159,
+    159
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 137 Haelfte 0",
+   "px": 17,
+   "mitteltiefe": 4736.0,
+   "ecken_vz": [
+    4751,
+    4767,
+    4690
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "10 Brust/Buckel, Dreieck 42",
+     "px": 17,
+     "mitteltiefe": 4775.7,
+     "ecken_vz": [
+      4875,
+      4734,
+      4718
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 11.209987232792628,
+   "tiefe_max": 30.346931323349963,
+   "bbox_grundlage": [
+    76,
+    222,
+    83,
+    228
+   ]
+  },
+  {
+   "flaeche": "22 Kopf (Oberkiefer), Viereck 3 Haelfte 1",
+   "px": 1,
+   "mitteltiefe": 5084.7,
+   "ecken_vz": [
+    5295,
+    4766,
+    5193
+   ],
+   "vorn_liegt": [
+    {
+     "flaeche": "21 Hals, Viereck 50 Haelfte 0",
+     "px": 1,
+     "mitteltiefe": 5114.0,
+     "ecken_vz": [
+      5049,
+      5204,
+      5089
+     ]
+    }
+   ],
+   "tiefe_hinter_vorderflaeche_median": 102.65022691461672,
+   "tiefe_max": 102.65022691461672,
+   "bbox_grundlage": [
+    248,
+    104,
+    248,
+    104
+   ]
+  }
+ ],
+ "ordnungsfehler_px_gesamt": 17970,
+ "figur_px": 187996,
+ "ordnungsfehler_paare": [
+  {
+   "gemalt": "Brust/Buckel",
+   "vorn": "Hals",
+   "px": 4613
+  },
+  {
+   "gemalt": "Kopf (Oberkiefer)",
+   "vorn": "Brust/Buckel",
+   "px": 1852
+  },
+  {
+   "gemalt": "Hals",
+   "vorn": "Hals",
+   "px": 1473
+  },
+  {
+   "gemalt": "Kopf (Oberkiefer)",
+   "vorn": "Hals",
+   "px": 1426
+  },
+  {
+   "gemalt": "Oberarm vorn links",
+   "vorn": "Oberarm vorn links",
+   "px": 1383
+  },
+  {
+   "gemalt": "Hals",
+   "vorn": "Brust/Buckel",
+   "px": 1304
+  },
+  {
+   "gemalt": "Hals",
+   "vorn": "Kopf (Oberkiefer)",
+   "px": 817
+  },
+  {
+   "gemalt": "Brust/Buckel",
+   "vorn": "Oberarm vorn rechts",
+   "px": 692
+  },
+  {
+   "gemalt": "Brust/Buckel",
+   "vorn": "Kopf (Oberkiefer)",
+   "px": 638
+  },
+  {
+   "gemalt": "Oberarm vorn rechts",
+   "vorn": "Brust/Buckel",
+   "px": 633
+  },
+  {
+   "gemalt": "Hand vorn rechts",
+   "vorn": "Hand vorn rechts",
+   "px": 516
+  },
+  {
+   "gemalt": "Unterarm vorn links",
+   "vorn": "Oberarm vorn links",
+   "px": 359
+  },
+  {
+   "gemalt": "Kopf (Oberkiefer)",
+   "vorn": "Kopf (Oberkiefer)",
+   "px": 351
+  },
+  {
+   "gemalt": "Kopf (Oberkiefer)",
+   "vorn": "Oberarm vorn rechts",
+   "px": 259
+  },
+  {
+   "gemalt": "Kralle vorn links 14",
+   "vorn": "Hand vorn links",
+   "px": 164
+  }
+ ],
+ "schnitt_im_raum": {
+  "Kopf (Oberkiefer) x Brust/Buckel": {
+   "paare": 306,
+   "flaechen_a": 112,
+   "flaechen_b": 109,
+   "beispiel_a": [
+    "22 Kopf (Oberkiefer), Dreieck 0",
+    "22 Kopf (Oberkiefer), Dreieck 1",
+    "22 Kopf (Oberkiefer), Dreieck 166",
+    "22 Kopf (Oberkiefer), Dreieck 167",
+    "22 Kopf (Oberkiefer), Dreieck 168",
+    "22 Kopf (Oberkiefer), Dreieck 169",
+    "22 Kopf (Oberkiefer), Dreieck 173",
+    "22 Kopf (Oberkiefer), Dreieck 2",
+    "22 Kopf (Oberkiefer), Dreieck 3",
+    "22 Kopf (Oberkiefer), Dreieck 4",
+    "22 Kopf (Oberkiefer), Dreieck 5",
+    "22 Kopf (Oberkiefer), Dreieck 56"
+   ],
+   "beispiel_b": [
+    "10 Brust/Buckel, Dreieck 1",
+    "10 Brust/Buckel, Dreieck 15",
+    "10 Brust/Buckel, Dreieck 17",
+    "10 Brust/Buckel, Dreieck 19",
+    "10 Brust/Buckel, Dreieck 21",
+    "10 Brust/Buckel, Dreieck 23",
+    "10 Brust/Buckel, Dreieck 42",
+    "10 Brust/Buckel, Dreieck 43",
+    "10 Brust/Buckel, Dreieck 44",
+    "10 Brust/Buckel, Dreieck 45",
+    "10 Brust/Buckel, Dreieck 46",
+    "10 Brust/Buckel, Dreieck 48"
+   ]
+  },
+  "Kopf (Oberkiefer) x Hals": {
+   "paare": 324,
+   "flaechen_a": 64,
+   "flaechen_b": 112,
+   "beispiel_a": [
+    "22 Kopf (Oberkiefer), Dreieck 0",
+    "22 Kopf (Oberkiefer), Dreieck 1",
+    "22 Kopf (Oberkiefer), Dreieck 2",
+    "22 Kopf (Oberkiefer), Dreieck 3",
+    "22 Kopf (Oberkiefer), Dreieck 4",
+    "22 Kopf (Oberkiefer), Dreieck 5",
+    "22 Kopf (Oberkiefer), Dreieck 6",
+    "22 Kopf (Oberkiefer), Dreieck 7",
+    "22 Kopf (Oberkiefer), Dreieck 8",
+    "22 Kopf (Oberkiefer), Dreieck 9",
+    "22 Kopf (Oberkiefer), Viereck 0 Haelfte 0",
+    "22 Kopf (Oberkiefer), Viereck 0 Haelfte 1"
+   ],
+   "beispiel_b": [
+    "21 Hals, Dreieck 11",
+    "21 Hals, Dreieck 13",
+    "21 Hals, Dreieck 15",
+    "21 Hals, Dreieck 16",
+    "21 Hals, Dreieck 17",
+    "21 Hals, Dreieck 18",
+    "21 Hals, Dreieck 19",
+    "21 Hals, Dreieck 20",
+    "21 Hals, Dreieck 22",
+    "21 Hals, Dreieck 23",
+    "21 Hals, Dreieck 24",
+    "21 Hals, Dreieck 26"
+   ]
+  },
+  "Unterkiefer x Hals": {
+   "paare": 24,
+   "flaechen_a": 5,
+   "flaechen_b": 12,
+   "beispiel_a": [
+    "23 Unterkiefer, Dreieck 1",
+    "23 Unterkiefer, Dreieck 2",
+    "23 Unterkiefer, Dreieck 3",
+    "23 Unterkiefer, Dreieck 4",
+    "23 Unterkiefer, Viereck 1 Haelfte 1"
+   ],
+   "beispiel_b": [
+    "21 Hals, Viereck 0 Haelfte 0",
+    "21 Hals, Viereck 0 Haelfte 1",
+    "21 Hals, Viereck 15 Haelfte 0",
+    "21 Hals, Viereck 15 Haelfte 1",
+    "21 Hals, Viereck 48 Haelfte 1",
+    "21 Hals, Viereck 55 Haelfte 0",
+    "21 Hals, Viereck 55 Haelfte 1",
+    "21 Hals, Viereck 56 Haelfte 0",
+    "21 Hals, Viereck 56 Haelfte 1",
+    "21 Hals, Viereck 63 Haelfte 0",
+    "21 Hals, Viereck 7 Haelfte 0",
+    "21 Hals, Viereck 8 Haelfte 1"
+   ]
+  },
+  "Unterkiefer x Brust/Buckel": {
+   "paare": 28,
+   "flaechen_a": 18,
+   "flaechen_b": 8,
+   "beispiel_a": [
+    "23 Unterkiefer, Dreieck 0",
+    "23 Unterkiefer, Dreieck 1",
+    "23 Unterkiefer, Dreieck 2",
+    "23 Unterkiefer, Dreieck 3",
+    "23 Unterkiefer, Dreieck 4",
+    "23 Unterkiefer, Dreieck 7",
+    "23 Unterkiefer, Dreieck 8",
+    "23 Unterkiefer, Dreieck 9",
+    "23 Unterkiefer, Viereck 1 Haelfte 1",
+    "23 Unterkiefer, Viereck 2 Haelfte 0",
+    "23 Unterkiefer, Viereck 2 Haelfte 1",
+    "23 Unterkiefer, Viereck 4 Haelfte 1"
+   ],
+   "beispiel_b": [
+    "10 Brust/Buckel, Viereck 120 Haelfte 1",
+    "10 Brust/Buckel, Viereck 127 Haelfte 0",
+    "10 Brust/Buckel, Viereck 127 Haelfte 1",
+    "10 Brust/Buckel, Viereck 128 Haelfte 0",
+    "10 Brust/Buckel, Viereck 128 Haelfte 1",
+    "10 Brust/Buckel, Viereck 135 Haelfte 0",
+    "10 Brust/Buckel, Viereck 150 Haelfte 0",
+    "10 Brust/Buckel, Viereck 151 Haelfte 1"
+   ]
+  },
+  "Hals x Brust/Buckel": {
+   "paare": 539,
+   "flaechen_a": 149,
+   "flaechen_b": 142,
+   "beispiel_a": [
+    "21 Hals, Dreieck 0",
+    "21 Hals, Dreieck 1",
+    "21 Hals, Dreieck 10",
+    "21 Hals, Dreieck 11",
+    "21 Hals, Dreieck 12",
+    "21 Hals, Dreieck 13",
+    "21 Hals, Dreieck 14",
+    "21 Hals, Dreieck 15",
+    "21 Hals, Dreieck 16",
+    "21 Hals, Dreieck 17",
+    "21 Hals, Dreieck 18",
+    "21 Hals, Dreieck 19"
+   ],
+   "beispiel_b": [
+    "10 Brust/Buckel, Dreieck 11",
+    "10 Brust/Buckel, Dreieck 13",
+    "10 Brust/Buckel, Dreieck 15",
+    "10 Brust/Buckel, Dreieck 17",
+    "10 Brust/Buckel, Dreieck 19",
+    "10 Brust/Buckel, Dreieck 21",
+    "10 Brust/Buckel, Dreieck 38",
+    "10 Brust/Buckel, Dreieck 39",
+    "10 Brust/Buckel, Dreieck 5",
+    "10 Brust/Buckel, Dreieck 51",
+    "10 Brust/Buckel, Dreieck 52",
+    "10 Brust/Buckel, Dreieck 53"
+   ]
+  },
+  "Kopf (Oberkiefer) x Unterkiefer": {
+   "paare": 123,
+   "flaechen_a": 52,
+   "flaechen_b": 51,
+   "beispiel_a": [
+    "22 Kopf (Oberkiefer), Dreieck 100",
+    "22 Kopf (Oberkiefer), Dreieck 153",
+    "22 Kopf (Oberkiefer), Dreieck 154",
+    "22 Kopf (Oberkiefer), Dreieck 155",
+    "22 Kopf (Oberkiefer), Viereck 10 Haelfte 0",
+    "22 Kopf (Oberkiefer), Viereck 10 Haelfte 1",
+    "22 Kopf (Oberkiefer), Viereck 11 Haelfte 0",
+    "22 Kopf (Oberkiefer), Viereck 170 Haelfte 0",
+    "22 Kopf (Oberkiefer), Viereck 170 Haelfte 1",
+    "22 Kopf (Oberkiefer), Viereck 171 Haelfte 0",
+    "22 Kopf (Oberkiefer), Viereck 171 Haelfte 1",
+    "22 Kopf (Oberkiefer), Viereck 172 Haelfte 0"
+   ],
+   "beispiel_b": [
+    "23 Unterkiefer, Dreieck 0",
+    "23 Unterkiefer, Dreieck 1",
+    "23 Unterkiefer, Dreieck 2",
+    "23 Unterkiefer, Dreieck 20",
+    "23 Unterkiefer, Dreieck 21",
+    "23 Unterkiefer, Dreieck 22",
+    "23 Unterkiefer, Dreieck 23",
+    "23 Unterkiefer, Dreieck 24",
+    "23 Unterkiefer, Dreieck 25",
+    "23 Unterkiefer, Dreieck 3",
+    "23 Unterkiefer, Dreieck 38",
+    "23 Unterkiefer, Dreieck 39"
+   ]
+  }
+ },
+ "aussen_vorzeichen_modellraum": -1.0,
+ "ecken_innen": {
+  "Kopf (Oberkiefer) in Brust/Buckel": {
+   "ecken": 378,
+   "innen": 37,
+   "tiefe_max": 296.43762349988725,
+   "tiefe_median": 76.1009280712086,
+   "ueber_20": 32,
+   "ueber_50": 24
+  },
+  "Kopf (Oberkiefer) in Hals": {
+   "ecken": 378,
+   "innen": 12,
+   "tiefe_max": 155.48759410753377,
+   "tiefe_median": 22.73486615030935,
+   "ueber_20": 7,
+   "ueber_50": 4
+  },
+  "Unterkiefer in Brust/Buckel": {
+   "ecken": 130,
+   "innen": 5,
+   "tiefe_max": 163.3067633151125,
+   "tiefe_median": 30.408727520635523,
+   "ueber_20": 5,
+   "ueber_50": 2
+  },
+  "Unterkiefer in Hals": {
+   "ecken": 130,
+   "innen": 0,
+   "tiefe_max": 0.0,
+   "tiefe_median": 0.0,
+   "ueber_20": 0,
+   "ueber_50": 0
+  }
+ }
+}

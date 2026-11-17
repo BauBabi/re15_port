@@ -1,0 +1,4 @@
+    build OK
+
+=== LOCAL-BUILD-OK (build)
+rc=0

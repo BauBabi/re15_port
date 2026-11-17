@@ -17,6 +17,9 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+#ifndef _WIN32
+#include <sys/time.h>   /* gettimeofday: Mess-Anzeige RE15_BILD_HUD */
+#endif
 #ifdef _WIN32
 #include <windows.h>      /* AttachConsole — GUI-Subsystem-Begleiter, siehe main() */
 #endif
@@ -35,6 +38,7 @@ extern void re15_android_bootstrap_assets(void);
 #include "re15_scd.h"
 #include "re15_fade.h"      /* fade channels + the letterbox counter (FUN_80021a0c) */
 #include "re15_md1.h"
+#include "re15_clutanim.h"  /* Paletten-Animation Typ 3 (Monitore 5030/5031, Wasser) */
 #include "re15_title_pulse.h"   /* Titelmenue: Puls (FUN_801028ec) + Titel-Tick (2 VBlanks) */
 
 re15_engine_state_t g_engine;
@@ -96,6 +100,8 @@ static inline int RNDI(float f) {
 #include "re15_panel_zeiger.h"  /* der rote Leistungs-Zeiger, ROOM11F0 Cut 10 */
 #include "re15_msg_select.h"  /* re15_msg_select_layout — die EINE Ja/Nein-Auswahl (LAB_80028564) */
 #include "re15_itps.h"        /* re15_itps_set_data — the per-item modal picture sheet (ITPS.ITP, U11) */
+#include "re15_ultimate15.h"     /* Runde 41 Optionen: ULTIMATE 1.5 (Disc-Bilder + -Weltmodelle), AI ohne MIXED */
+#include "re15_lautstaerke_r41.h" /* Runde 41 Optionen: re15_lautstaerke_r41_speichern schreibt auch ultimate=on */
 #include "re15_item_use.h"    /* heal classifier gate + applier table (wave 3: prompt-less direct heal) */
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
 #include "asset_root_pc.h"    /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ, 2026-08-24) */
@@ -554,7 +560,7 @@ static void pc_draw_effects(const re15_camera_view_t *cam, int cx, int cy,
          * Routine 3 flags:=0x13, TPAGE bleibt hdr-Seed 0x001F) = ABR0 50/50.
          * Legacy-Fx (ohne Row-VM, flags==0) behalten den alten Pfad (Global 2/3 = 50/50). */
         int abe, abr;
-        if (f->abr_port) {                            /* Runde 41 SF Neuaufbau ab NB2 (NB5): Mischart-Vorgabe des gruenen Blutes */
+        if (f->abr_port) {                            /* Runde 41 SF NB5: Mischart-Vorgabe des Ports (derzeit setzt sie niemand, re15_esp.h) */
             abe = 1;
             abr = (f->abr_port - 1) & 3;
         } else if (f->rows_base) {
@@ -954,9 +960,21 @@ static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
     {
         const char *datei = re15_bf_emd_datei(type);
         int sz = 0; uint8_t *buf;
+        /* Runde 41 Kralle r2: Logik-Gerippe der Kralle ACT[3] = Capcom-EM30, solange ein Ersatzmodell gezeichnet wird
+         * (enemy_ai_common.c re15_bk_kralle_logik_setzen; das residente CDEMD0.EMS haelt den Block). */
+        extern void re15_bk_kralle_logik_setzen(const uint8_t *em30, size_t len);
+        if (type == 0x30u) re15_bk_kralle_logik_setzen(NULL, 0);
         if (datei && (buf = pc_read_shared(datei, &sz)) != NULL) {
             if (out_len) *out_len = (size_t)sz;
             fprintf(stderr, "[enemy] EM%02X: Ersatzmodell %s (Raum %04X)\n", type, datei, g_current_room_id);
+            if (type == 0x30u) {
+                size_t es = 0, eo = 0, el = 0; const uint8_t *ems = pc_cdemd(&es);
+                const int ix = re15_ems_index_for_type(type);
+                if (ems && ix >= 0 && re15_ems_get_entry(ems, es, ix, &eo, &el) == 0) {
+                    re15_bk_kralle_logik_setzen(ems + eo, el);
+                    fprintf(stderr, "[enemy] EM30: Kralle rechnet mit dem Capcom-EM30 (CDEMD0.EMS Block %d)\n", ix);
+                }
+            }
             return buf;
         }
         if (datei) fprintf(stderr, "[enemy] EM%02X: %s fehlt -> Auslieferungsmodell\n", type, datei);
@@ -1607,6 +1625,52 @@ static int pc_sync_player_model(re15_md1_t *pl_md1)
     return 1;
 }
 
+/* PALETTEN-ANIMATION (include/re15_clutanim.h) — die Textur-Seite im PC-Port.
+ * Im Original kopiert ein DR_MOVE je Bild 16 Farben (sx = Unterpalette*16) aus der CLUT-Zeile der Quell-TIM
+ * an eine eigene VRAM-Zeile, auf die alle Primitive des Objekts zeigen (FUN_8002b968/FUN_8002bc04). SDL kennt
+ * kein VRAM: die Prop-Textur bekommt darum unter ihren eigenen CLUT-Streifen (render_pc.c, je Zeile eine
+ * Kopie) je erreichbare Unterpalette einen weiteren Streifen. Zeile R+u hat die Farben 0..15 = Quell-TIM
+ * Zeile qz, Eintraege 16u..16u+15 (die 16 Werte des DR_MOVE, w=0x10 @0x8002bb9c); Index >= 16 liest im
+ * Original VRAM rechts neben der Zeile — er kommt in keiner Typ-3-Textur vor (Zensus, Riegel
+ * unit_clutanim_monitore P6), steht hier deshalb auf 0.
+ * Nur 8-bpp-TIMs (CLUT-Zeile = 256 Eintraege): alle Typ-3-Texturen beider Discs sind 8 bpp. */
+static const re15_rdt_t *s_ca_rdt = NULL;               /* RDT, aus der die Prop-TIMs zuletzt geladen wurden */
+static int32_t           s_ca_key[RE15_RDT_MAX_PROPS];  /* gebauter Stand je obj_id, -1 = Original-Textur */
+
+static int pc_clutanim_clut(int oid, int qo, int qz, int unter)
+{
+    if (!s_ca_rdt || oid < 0 || oid >= RE15_RDT_MAX_PROPS || qo < 0 || qo >= RE15_RDT_MAX_PROPS) return -1;
+    if (!s_ca_rdt->prop_tim[oid] || !s_ca_rdt->prop_tim[qo]) return -1;
+    re15_tim_t eig, quelle;
+    if (re15_tim_parse(s_ca_rdt->prop_tim[oid], s_ca_rdt->prop_tim_size[oid], &eig) != 0 ||
+        re15_tim_parse(s_ca_rdt->prop_tim[qo],  s_ca_rdt->prop_tim_size[qo],  &quelle) != 0) return -1;
+    if (eig.bpp != 8 || !eig.has_clut || quelle.bpp != 8 || !quelle.has_clut) return -1;
+    const int R = eig.clut_entries / 256;
+    const int K = re15_clutanim_max_unter(oid) + 1;
+    if (R < 1 || K < 1 || qz < 0 || (qz + 1) * 256 > quelle.clut_entries) return -1;
+    if (unter < 0) unter = 0;
+    if (unter >= K) unter = K - 1;
+    const int32_t key = (qo << 16) | (qz << 8) | K;
+    if (s_ca_key[oid] != key) {
+        uint16_t *c = (uint16_t *)calloc((size_t)(R + K) * 256u, sizeof(uint16_t));
+        if (!c) return -1;
+        memcpy(c, eig.clut, (size_t)R * 256u * sizeof(uint16_t));
+        for (int k = 0; k < K; k++)
+            for (int i = 0; i < 16; i++)
+                c[(R + k) * 256 + i] = quelle.clut[qz * 256 + 16 * k + i];
+        re15_tim_t t2 = eig;
+        t2.clut = c;
+        t2.clut_entries = (R + K) * 256;
+        re15_render_pc_upload_tim_slot(&t2, RE15_TIM_SLOT_PROP(oid));
+        re15_objabe_r38_pc_textur(&t2, RE15_TIM_SLOT_PROP(oid));   /* STP-Teile mit denselben Streifen */
+        free(c);
+        s_ca_key[oid] = key;
+        fprintf(stderr, "[clutanim] ROOM%04X obj %d: Quelle obj %d Zeile %d, %d Unterpaletten\n",
+                (unsigned)g_current_room_id, oid, qo, qz, K);
+    }
+    return ((eig.clut_y + R + unter) & 0x1FF) << 6;
+}
+
 static void pc_load_room_prop_set(const re15_rdt_t *rdt,
                                   re15_md1_t md1[RE15_RDT_MAX_PROPS],
                                   int ok[RE15_RDT_MAX_PROPS])
@@ -1628,7 +1692,8 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
      * mit. Es war die POLIZEIWESTE in ROOM1190, die dadurch wegfiel — der Nutzer sah
      * an ihrer Stelle ein gelbes Viereck. Herleitung + Zensus stehen bei
      * RE15_RDT_MAX_PROPS in re15_rdt.h. */
-    for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) ok[op] = 0;
+    for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) { ok[op] = 0; s_ca_key[op] = -1; }   /* Paletten-Streifen neu */
+    s_ca_rdt = rdt;
     re15_objabe_r38_pc_raum_neu();   /* Runde 38 Spur W: STP-Teil-Texturen des alten Raums verwerfen */
     if (!rdt) return;
     int nprops = rdt->prop_count < RE15_RDT_MAX_PROPS ? rdt->prop_count
@@ -1777,6 +1842,11 @@ static void pc_load_room_prop_set(const re15_rdt_t *rdt,
         const uint8_t *tb = re15_gatorszene_r41_tim_bytes((uint16_t)g_current_room_id, &tsz); re15_tim_t tt;
         if (w_oid >= 0 && nprops <= w_oid && mb && re15_md1_parse(mb, (size_t)msz, &md1[w_oid]) == 0) ok[w_oid] = 1;
         if (w_oid >= 0 && nprops <= w_oid && tb && re15_tim_parse(tb, tsz, &tt) == 0) re15_render_pc_upload_tim_slot(&tt, RE15_TIM_SLOT_PROP(w_oid)); }
+    {   /* Runde 41 Optionen: ULTIMATE 1.5 — Disc-Weltmodelle (nur bei AN; platform/pc/src/ultimate15_pc.c). */
+        extern void re15_ultimate15_pc_props(re15_md1_t *md1, int *ok, int nprops, const int *slot);
+        int u15_slot[RE15_RDT_MAX_PROPS];
+        for (int op = 0; op < RE15_RDT_MAX_PROPS; op++) u15_slot[op] = RE15_TIM_SLOT_PROP(op);
+        re15_ultimate15_pc_props(md1, ok, nprops, u15_slot); }
 }
 
 /* ── FE-4 memory-card save/load ────────────────────────────────────────────── */
@@ -2736,47 +2806,51 @@ enum { CFG_TOP = 0, CFG_PICKER, CFG_SOUND, CFG_EDIT, CFG_AI };
 static const int k_cfg_top_x[3]  = { 147, 198, 248 };            /* DAT_80073d6c.x (y=24) */
 #define CFG_AI_X 14
 #define CFG_AI_Y 225
-/* 2026-08-23 (dritte Stufe "AI  MIXED"): die breiteste Beschriftung ist jetzt "AI  MIXED".
+/* 2026-08-23 (dritte Stufe "AI  MIXED"): die breiteste Beschriftung war "AI  MIXED".
  * Breiten GEMESSEN aus der Glyphen-Vorschubtabelle, die der Renderer selbst benutzt
  * (BIN/DEBUG.BIN Datei-Offset 0x4416 == RAM 0x800c4416, render_pc.c:2300 — s_msgfont_w[code],
  * Code-Abbildung pc_font_code; Summe der Advance-Bytes je Glyph):
- *   "AI  RE1.5" = 56 px | "AI  RE2" = 46 px | "AI  MIXED" = 62 px
- * Text beginnt bei CFG_AI_X+5 = 19, also Kasten-Ende >= 19+62+5 = 86 -> Breite >= 72.
- * 96 REICHT und bleibt unveraendert (der byte-true OPTIONS-Kasten endet bei y=220, dieser
+ *   "AI  RE1.5" = 56 px | "AI  RE2" = 46 px  (| "AI  MIXED" = 62 px, seit Runde 41 Optionen weg)
+ * Text beginnt bei CFG_AI_X+5 = 19, also Kasten-Ende >= 19+56+5 = 80 -> Breite >= 66.
+ * 96 bleibt unveraendert (der byte-true OPTIONS-Kasten endet bei y=220, dieser
  * Streifen liegt darunter; x=14..110 bleibt weit innerhalb der 320er-Breite). */
 #define CFG_AI_W 96
+/* Runde 41 Optionen: die Zeile "ULTIMATE 1.5" (re15_ultimate15.h) im selben freien Streifen rechts neben der
+ * AI-Zeile, gleiche Hoehe, gleicher Rand. Breiten aus derselben Vorschubtabelle BIN/DEBUG.BIN@0x4416 (nachgemessen):
+ *   "ULTIMATE 1.5  ON" = 114 px | "ULTIMATE 1.5  OFF" = 121 px
+ * Text ab CFG_ULT_X+5 = 125, Ende 125+121 = 246, + 5 Rand = 251 -> Kasten 120..256 (136 breit), Abstand zur
+ * AI-Zeile (Ende 110) 10 px, rechts bleiben 64 px bis 320. */
+#define CFG_ULT_X 120
+#define CFG_ULT_W 136
 static const int k_cfg_pick_x[5] = { 147, 164, 181, 198, 248 }; /* DAT_80073d78.x (y=24) */
 
-/* Der AI-Schalter hat DREI Zustaende (Menue-Index == re15_ai_flavor_t, 1:1):
- *   0 = RE1.5-Gehirn      + RE1.5-Modelle   ("AI  RE1.5")
- *   1 = RE2-Gehirn/-Anim  + RE1.5-Modelle   ("AI  RE2")     <- Hybrid-Rig, DEFAULT
- *   2 = RE1.5 ueberall AUSSER dem HUND 0x20 ("AI  MIXED")   <- 2026-08-23, Nutzer-Auftrag
+/* Der AI-Schalter hat ZWEI Zustaende (Menue-Index == re15_ai_flavor_t, 1:1):
+ *   0 = RE1.5-Gehirn      + RE1.5-Modelle   ("AI  RE1.5") — die Original-KI
+ *   1 = RE2-Gehirn/-Anim  + RE1.5-Modelle   ("AI  RE2")   <- Hybrid-Rig, DEFAULT
  *
- * ⚠️ MIXED ist ein VOLLWERTIGES drittes Flavor-Enum-Glied, KEIN zweites orthogonales Flag.
- * Welle G hatte fuer die (spaeter entfernte) "RE2 MODELS"-Stufe bewusst ein Zweitflag gewaehlt,
- * weil damals 17 Stellen `== RE15_AI_FLAVOR_RE2` verglichen und einzeln haetten geprueft werden
- * muessen. Genau dieses Problem ist jetzt an der Wurzel geloest: es gibt keinen globalen
- * Flavor-Vergleich mehr, alle Stellen fragen re15_ai_re2_for_type(typ) (s. re15_ai_flavor.h).
+ * ⛔ ENTFERNT Runde 41 Optionen (Nutzer 16.11.2026: "im Konfigurationsmenu das AI Mixed herausnehmen ... RE 2 AI
+ * ... bleibt unser Standard ... RE 1.5 AI koennen wir auch behalten"): die dritte Stufe "AI  MIXED". Jeder Weg,
+ * auf dem ein MIXED-Wert noch ankommen kann, landet bei RE2: der Menue-Index 2 (pc_ai_mode_set klemmt auf [0,1],
+ * also RE15_CONFIG_AI=2 -> RE2), das Env RE15_AI_FLAVOR=m/mixed (enemy_ai_re2_zombie.c re15_ai_flavor) und ein
+ * Flavor, der beim Betreten des Schirms MIXED ist (pc_ai_mode -> 1, s. dort). Die KI selbst (Enum-Glied
+ * RE15_AI_FLAVOR_MIXED + typ-bezogene Aufloesung re15_ai_re2_for_type) bleibt als TEST-Haken stehen —
+ * sechs Riegel (test_ai_flavor_mixed, test_r37_beretta, test_r38_griff_alle, test_r41_granate,
+ * test_r41_zombiefresser, probe_hund_trefferluecke) pinnen damit die Typ-Aufloesung; das Spiel erreicht sie nicht.
+ * (Gespeichert wird die KI-Wahl nicht: weder re15_options.cfg noch der Spielstand tragen sie — jeder Start ist RE2.)
  *
  * ⛔ ENTFERNT 2026-08-21: die alte dritte Stufe "AI  RE2 MODELS". Der Port faehrt unter dem
  * RE2-Flavor IMMER das Hybrid-Rig; das orthogonale re15_ai_models() liest main.c nicht mehr.
- * ROBUSTHEIT: pc_ai_mode() liefert nur 0/1/2 (unbekannter Flavor -> 0 = byte-true RE1.5),
- * pc_ai_mode_set() KLEMMT jeden Fremdwert auf [0,2]. */
+ * ROBUSTHEIT: pc_ai_mode() liefert nur 0/1 (RE1.5 -> 0, alles andere -> 1 = RE2),
+ * pc_ai_mode_set() KLEMMT jeden Fremdwert auf [0,1]. */
 static int pc_ai_mode(void)
 {
-    switch (re15_ai_flavor()) {
-        case RE15_AI_FLAVOR_RE2:   return 1;
-        case RE15_AI_FLAVOR_MIXED: return 2;
-        default:                   return 0;
-    }
+    return (re15_ai_flavor() == RE15_AI_FLAVOR_RE15) ? 0 : 1;   /* MIXED (nur noch Test-Haken) zeigt RE2 */
 }
 static void pc_ai_mode_set(int m)
 {
     if (m < 0) m = 0;
-    if (m > 2) m = 2;                     /* Fremdwert -> hoechster gueltiger Index */
-    re15_ai_flavor_set(m == 0 ? RE15_AI_FLAVOR_RE15
-                     : m == 1 ? RE15_AI_FLAVOR_RE2
-                              : RE15_AI_FLAVOR_MIXED);
+    if (m > 1) m = 1;                     /* Fremdwert, auch der alte MIXED-Index 2 -> RE2 */
+    re15_ai_flavor_set(m == 0 ? RE15_AI_FLAVOR_RE15 : RE15_AI_FLAVOR_RE2);
 }
 
 /* EDIT custom-remap screen (FUN_8002ebbc). s_edit_phase: 0=slot-select, 1=panel A (basic action), 2=panel B
@@ -2857,11 +2931,24 @@ static void pc_config_draw_ai_row(int lit)
     extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
     if (lit) re15_render_pc_config_rect(CFG_AI_X, CFG_AI_Y, CFG_AI_W, 14, 0, 0, 0x80, 128);
     unsigned char b[20]; int n = 0;
-    static const char *k_ai_top[3] = { "AI  RE1.5", "AI  RE2", "AI  MIXED" };
-    int mode = pc_ai_mode(); if (mode < 0 || mode > 2) mode = 0;
+    static const char *k_ai_top[2] = { "AI  RE1.5", "AI  RE2" };   /* Runde 41 Optionen: ohne "AI  MIXED" */
+    int mode = pc_ai_mode(); if (mode < 0 || mode > 1) mode = 1;
     const char *s = k_ai_top[mode];
     for (const char *p = s; *p && n < 20; p++) b[n++] = (unsigned char)pc_font_code(*p);
     re15_render_pc_config_text(CFG_AI_X + 5, CFG_AI_Y + 2, b, n, 0);
+}
+
+/* Runde 41 Optionen — die Zeile "ULTIMATE 1.5  ON|OFF" (re15_ultimate15.h) rechts neben der AI-Zeile, gleiche Art:
+ * Spielschrift attr 0, blauer 50-%-Kasten wie die Original-Reiter, wenn der Cursor darauf steht (TOP cur 4). */
+static void pc_config_draw_ultimate_row(int lit)
+{
+    extern void re15_render_pc_config_rect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
+    if (lit) re15_render_pc_config_rect(CFG_ULT_X, CFG_AI_Y, CFG_ULT_W, 14, 0, 0, 0x80, 128);
+    unsigned char b[24]; int n = 0;
+    const char *s = re15_ultimate15() ? "ULTIMATE 1.5  ON" : "ULTIMATE 1.5  OFF";
+    for (const char *p = s; *p && n < 24; p++) b[n++] = (unsigned char)pc_font_code(*p);
+    re15_render_pc_config_text(CFG_ULT_X + 5, CFG_AI_Y + 2, b, n, 0);
 }
 
 /* Draw the current sub-screen's CONFIG.TIM tiles + selected-item highlight + text over the backdrop
@@ -2875,25 +2962,24 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
     extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
     if (screen == CFG_TOP) {
         pc_config_draw_ai_row(cur == 3);          /* PORT EXTENSION, below the byte-true panel */
+        pc_config_draw_ultimate_row(cur == 4);    /* Runde 41 Optionen: ULTIMATE 1.5 */
         if (cur < 3)
             re15_render_pc_config_rect(k_cfg_top_x[cur], 24, 48, 16, 0, 0, 0x80, 128); /* blue tab cursor @50% */
     } else if (screen == CFG_AI) {
         /* PORT EXTENSION — AI picker, laid out like the SOUND screen (same CONFIG.TIM label
          * boxes at uv 0,232 88x18), with the row-below marker kept lit so it is obvious where
-         * this screen was entered from. 2026-08-23: DRITTE Zeile "MIXED" bei y=89 — exakt das
-         * 19-px-Raster (51/70/89) und exakt die Koordinaten, die die (entfernte) WELLE-G-Zeile
-         * schon benutzt hat (23c20b0f), also kein neu geratenes Layout. Beschriftungen GEMESSEN
-         * gegen die Vorschubtabelle BIN/DEBUG.BIN@0x4416 (render_pc.c:2300):
-         * "RE1.5" 34 px | "RE2" 24 px | "MIXED" 40 px. Kasten x=116..204, Text ab x=124 ->
-         * die laengste Zeile endet bei 164, bleibt in der 88-px-Kachel. */
-        static const struct { const char *s; int tile_y, text_y; } k_ai_rows[3] = {
+         * this screen was entered from. Runde 41 Optionen: die dritte Zeile "MIXED" (y=89, 2026-08-23) ist
+         * entfernt — es bleiben die zwei Zeilen im 19-px-Raster 51/70 wie vor der MIXED-Erweiterung.
+         * Beschriftungen GEMESSEN gegen die Vorschubtabelle BIN/DEBUG.BIN@0x4416 (render_pc.c:2300):
+         * "RE1.5" 34 px | "RE2" 24 px. Kasten x=116..204, Text ab x=124 -> endet bei 158, in der 88-px-Kachel. */
+        static const struct { const char *s; int tile_y, text_y; } k_ai_rows[2] = {
             { "RE1.5", 51, 53 }, { "RE2", 70, 71 },
-            { "MIXED", 89, 90 },                      /* Raster 19 px, wie 23c20b0f */
         };
-        for (int r = 0; r < 3; r++)
+        for (int r = 0; r < 2; r++)
             re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, k_ai_rows[r].tile_y);
         pc_config_draw_ai_row(1);
-        for (int r = 0; r < 3; r++) {
+        pc_config_draw_ultimate_row(0);           /* Runde 41 Optionen: Streifen bleibt vollstaendig */
+        for (int r = 0; r < 2; r++) {
             unsigned char b[16]; int n = 0;
             for (const char *p = k_ai_rows[r].s; *p && n < 16; p++) b[n++] = (unsigned char)pc_font_code(*p);
             re15_render_pc_config_text(124, k_ai_rows[r].text_y, b, n, (pc_ai_mode() == r) ? 0 : 3);
@@ -2994,6 +3080,10 @@ static void pc_run_config(void)
     /* keep the live label array in sync with the active preset A/B/C on entry (EDIT keeps its custom map). */
     if (s_config_type >= 0 && s_config_type <= 2) memcpy(s_config_d08, s_config_preset[s_config_type], 16);
 
+    /* Runde 41 Optionen: ein MIXED-Flavor (nur noch ueber Test-Haken setzbar) wird beim Betreten zu RE2 —
+     * der Schirm kennt nur RE1.5 / RE2 (pc_ai_mode). */
+    if (re15_ai_flavor() == RE15_AI_FLAVOR_MIXED) re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
+
     int screen = CFG_TOP, cur = 0;
     /* debug: start the INTERACTIVE options screen on a given tab, so a gdigrab capture of the REAL
      * window can inspect a screen without depending on synthetic key injection (SDL does not see
@@ -3005,6 +3095,7 @@ static void pc_run_config(void)
           else if (t == 3) { screen = CFG_PICKER; cur = 0; }
           else if (t == 4) { screen = CFG_SOUND; s_config_sound = re15_lautstaerke_r41_pc_eintritt(); }   /* Runde 41 Spur D: wie der TOP->SOUND-Eintritt */
           else if (t == 8) { screen = CFG_AI;     cur = 3; }
+          else if (t == 9) { screen = CFG_TOP;    cur = 4; }   /* Runde 41 Optionen: Cursor auf ULTIMATE 1.5 */
       } }
     int fade_level = 0x7fff;   /* brightness = fade_level>>7; fade IN from black */
     int fading_out = 0;
@@ -3045,10 +3136,16 @@ static void pc_run_config(void)
                 else if (cancel)                                  re15_audio_core_se(5);
             }
             if (screen == CFG_TOP) {
-                if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 3; }
-                if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 3) cur = 0; }
+                /* Runde 41 Optionen: fuenfter Eintrag cur 4 = ULTIMATE 1.5 (Port-Erweiterung, rechts neben AI). */
+                if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 4; }
+                if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 4) cur = 0; }
                 if (confirm) {
-                    if (cur == 0)      { screen = CFG_PICKER; cur = 0; }   /* CONFIG -> preset picker (cursor 0) */
+                    if (cur == 4) {                                        /* ULTIMATE 1.5: umschalten + sofort speichern */
+                        re15_ultimate15_set(!re15_ultimate15());
+                        (void)re15_lautstaerke_r41_speichern();            /* re15_options.cfg: ultimate=on (nur bei AN) */
+                        fprintf(stderr, "[optionen] ULTIMATE 1.5 %s\n", re15_ultimate15() ? "AN" : "AUS");
+                    }
+                    else if (cur == 0) { screen = CFG_PICKER; cur = 0; }   /* CONFIG -> preset picker (cursor 0) */
                     else if (cur == 1) { screen = CFG_SOUND; s_config_sound = re15_lautstaerke_r41_pc_eintritt(); }   /* SOUND -> sound screen; Runde 41 Spur D: Arbeitskopie aus dem Gespeicherten (@0x8002f244-4c) */
                     else if (cur == 2) { fading_out = 1; }                 /* EXIT   -> leave config */
                     else               { screen = CFG_AI; }                /* AI (port extension) */
@@ -3063,12 +3160,9 @@ static void pc_run_config(void)
                     else               { screen = CFG_TOP; cur = 0; }      /* EXIT -> back to top */
                 }
             } else if (screen == CFG_AI) {
-                /* PORT EXTENSION: pick the AI mode. 2026-08-23: wieder DREI Zustaende (RE1.5 /
-                 * RE2 / MIXED), also wieder ein ZYKLUS statt des Toggles — DOWN = +1, UP = -1
-                 * (== +2) modulo 3, genau wie in WELLE G (23c20b0f). Der `^1`-Toggle haette die
-                 * dritte Zeile unerreichbar gemacht. */
-                if (pp & RE15_PAD_BIT_DOWN)    pc_ai_mode_set((pc_ai_mode() + 1) % 3);
-                else if (pp & RE15_PAD_BIT_UP) pc_ai_mode_set((pc_ai_mode() + 2) % 3);
+                /* PORT EXTENSION: pick the AI mode. Runde 41 Optionen: nur noch ZWEI Zustaende (RE1.5 / RE2,
+                 * "AI MIXED" entfernt) — UP und DOWN schalten um, wie der SOUND-Schirm (raw 0x5000 toggle). */
+                if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) pc_ai_mode_set(pc_ai_mode() ^ 1);
                 if (confirm || cancel) { screen = CFG_TOP; cur = 3; }
             } else if (screen == CFG_SOUND) {
                 if (pp & (RE15_PAD_BIT_UP | RE15_PAD_BIT_DOWN)) s_config_sound ^= 1;   /* raw 0x5000 toggle */
@@ -3128,6 +3222,7 @@ static void re15_testhaken_ende(void)
      * weg und bekam "resource busy or locked", das Spiel startete gar nicht erst
      * (gemessen: Abbruch nach 0.86 s, kein debug.log im Arbeitsverzeichnis).
      * fclose gibt den Griff sofort zurueck. */
+    { extern void re15_render_pc_textri_bilanz(void); re15_render_pc_textri_bilanz(); }   /* G3 (Runde 41 Form K5g3): Schlusszeile [tri-liste] */
     fflush(NULL);
     fclose(stderr);
 #if defined(_WIN32)
@@ -3694,18 +3789,23 @@ re_title:;
                        * RE15_CONFIG_AI=0|1|2 waehlt den Zustand fuer den Shot vor, damit die
                        * Beschriftungs-BREITE aller Zustaende am gerenderten Bild und nicht nach
                        * Gefuehl geprueft werden kann. Das ist der MENUE-INDEX (== re15_ai_flavor_t):
-                       * 0 RE1.5 / 1 RE2 / 2 MIXED. ⚠️ Die 2 hiess bis WELLE G "RE2 MODELS" — diese
-                       * Stufe ist seit 2026-08-21 weg und hatte ausserhalb dieses Screenshot-
-                       * Harness keinen Konsumenten, die Zahl ist damit frei neu belegt.
-                       * pc_ai_mode_set KLEMMT alles ausserhalb [0,2]. */
+                       * 0 RE1.5 / 1 RE2. Runde 41 Optionen: die 2 (bis dahin "MIXED", davor "RE2 MODELS")
+                       * gibt es nicht mehr — pc_ai_mode_set KLEMMT alles ausserhalb [0,1], die 2 wird RE2.
+                       * 9 = TOP mit dem Cursor auf ULTIMATE 1.5 (Runde 41 Optionen); RE15_CONFIG_ULTIMATE=0|1
+                       * schaltet die Option fuer den Shot vor (ohne die Options-Datei zu schreiben). */
                       if (t == 8) { const char *ai = getenv("RE15_CONFIG_AI");
                                     pc_ai_mode_set(ai ? atoi(ai) : 0); }
+                      { const char *u = getenv("RE15_CONFIG_ULTIMATE"); if (u && *u) re15_ultimate15_set(atoi(u) != 0); }
                       int screen = (t == 8) ? CFG_AI
-                                 : (t <= 2) ? CFG_TOP
+                                 : (t <= 2 || t == 9) ? CFG_TOP
                                  : (t == 3) ? CFG_PICKER : (t == 4 ? CFG_SOUND : CFG_EDIT);
                       if (t == 4) s_config_sound = re15_lautstaerke_r41_pc_eintritt();   /* Runde 41 Spur D: Shot zeigt den gespeicherten Sound-Modus (@0x8002f244-4c) */
-                      int cur = (t == 8) ? 3
+                      int cur = (t == 8) ? 3 : (t == 9) ? 4
                               : (t <= 2) ? t : atoi(getenv("RE15_CONFIG_CUR")?getenv("RE15_CONFIG_CUR"):"0");
+                      /* PRUEFZEILE (Runde 41 Optionen, eingefroren von integration_optionen_r41_menue): was der Schirm
+                       * zeigt — KI-Stufen des AI-Schirms, der gewaehlte KI-Index und die ULTIMATE-Zeile. */
+                      fprintf(stderr, "[optionen] KI-Stufen 2 (RE1.5 RE2) gewaehlt %d, ULTIMATE 1.5 %s, Schirm %d Cursor %d\n",
+                              pc_ai_mode(), re15_ultimate15() ? "ON" : "OFF", t, cur);
                       if (t >= 5 && t <= 7) { s_config_type = 3; s_edit_phase = t - 5; s_edit_slot = cur;
                                     s_edit_code = atoi(getenv("RE15_CONFIG_CODE")?getenv("RE15_CONFIG_CODE"):"0"); }
                       for (int f=0; f<4; f++) {   /* render a few frames so the shot reads a presented buffer, not stale black */
@@ -4195,6 +4295,7 @@ re_title:;
     { extern void re15_pc_elza_se_init(void); re15_pc_elza_se_init(); }   /* Runde 36 Spur L: ELZASE.VBS-Haken */
     { extern void re15_pc_lift2030_se_init(void); re15_pc_lift2030_se_init(); }   /* Runde 37 Spur C N1: LIFT6030.VBS-Haken */
     { extern void re15_pc_annette_se(int); re15_annette_r41_se_hook(re15_pc_annette_se); }   /* Runde 41 Spur AN: ANNETTE_SE.VBS */
+    re15_bf_ruf_hook(re15_audio_birkin_ruf);   /* NUTZERWUNSCH 2026-11-16: Sherry-Ruf in der Hangar-Szene (ROOM3070 snd1 Satz 10) */
     { extern void re15_audio_stimme(uint16_t, int); re15_annette_r41_stimme_hook(re15_audio_stimme); }   /* Runde 41 Spur AN N1: Schrei 5090 nur als Ton */
     { extern int re15_pc_annette_tuerbank(void); re15_annette_r41_tuerbank_hook(re15_pc_annette_tuerbank); }   /* Runde 41 Spur AN NB4: Tuerton 6030 (DOOR2A) */
     { extern void re15_pc_w11b0_init(void); re15_pc_w11b0_init(); }   /* Runde 38 Spur C: Schiebe-Ton ROOM11B0 (Satz 7 aus ROOM1171) */
@@ -4726,6 +4827,10 @@ re_title:;
         if (ipix) re15_keyitems_r41_icon_einsetzen(ipix, isz);     /* Runde 41 Spur O: Tile 0x33 (Crank) */
         if (ipix) re15_gatorszene_r41_icon_einsetzen(ipix, isz);   /* Runde 41 Spur F: Tile 0x34 (Water Key) */
         if (ipix) re15_itemall_set_pix(ipix, isz);   /* buffer intentionally kept for the program's life */
+        /* Runde 41 Optionen (ULTIMATE 1.5, re15_ultimate15.h): zweiter Puffer = obiger Stand + Disc-Icons. */
+        { extern uint8_t *re15_ultimate15_pc_itemall(const uint8_t *basis, int n);
+          uint8_t *u15 = ipix ? re15_ultimate15_pc_itemall(ipix, isz) : NULL;
+          if (u15) re15_itemall_set_pix_u15(u15, isz); }
     }
     /* Item-get modal per-item PICTURE sheet (ITEM/ITPS.ITP, U11) — same cwd-independent root as the
      * icons. The modal draws the 112×72 TIM at id×0x3000 (re15_itps_pixel). */
@@ -4739,6 +4844,10 @@ re_title:;
         if (ipic) re15_keyitems_r41_bild_einsetzen(ipic, psz);     /* Runde 41 Spur O: Block 0x33 (Crank), Rechtecke Block 0x35 */
         if (ipic) re15_gatorszene_r41_bild_einsetzen(ipic, psz);   /* Runde 41 Spur F: Block 0x34 (Water Key) */
         if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
+        /* Runde 41 Optionen (ULTIMATE 1.5): zweiter Puffer = obiger Stand + Disc-Bilder (Item-Modal). */
+        { extern uint8_t *re15_ultimate15_pc_itps(const uint8_t *basis, int n);
+          uint8_t *u15 = ipic ? re15_ultimate15_pc_itps(ipic, psz) : NULL;
+          if (u15) re15_itps_set_data_u15(u15, psz); }
     }
     /* PRUEFZEILE der beiden Ladestellen oben (Runde 30, Nachbesserung): gelesen wird ueber
      * DIESELBEN Leser, aus denen gezeichnet wird — das Modal ueber re15_itps_pixel, das Icon
@@ -5109,6 +5218,11 @@ re_title:;
          * FUN_80044210 (Latch + Laden) — also pro Raum aus der Tabelle, nie hartkodiert.
          * Der Port macht das jetzt in room_common.c beim Raumwechsel. */
     }
+    /* PALETTEN-ANIMATION der Typ-3-Objekte am Boot-/LADE-Weg anmelden — dieselbe Stelle wie im Tuerweg
+     * (scd_room_reenter): FUN_8003ef6c ruft FUN_8002b968 @0x8003f020 direkt nach dem Init-Lauf; der Boot-Weg hier
+     * hat main00 oben und sub00 eben laufen lassen. Ohne diese Zeile griesselte ein im Monitor Room geladener
+     * Spielstand nicht. include/re15_clutanim.h */
+    if (rdt_ok) re15_clutanim_raum_anmelden(&rdt);
 
     /* ⛔ DIE SICHERUNG AUCH AM BOOT-/LADE-WEG IN DEN HEBETISCH LEGEN (Runde 30, Thema H).
      *
@@ -9380,21 +9494,19 @@ re_title:;
                 int32_t sbm[9], sbt[3];   /* Q12 (byte-true integer RTPS) */
                 for (int i = 0; i < 9; i++) sbm[i] = sh_rot[i];
                 for (int i = 0; i < 3; i++) sbt[i] = sh_trans[i];
-                int sx[4], sy[4], sok = 1;
+                int sx[4], sy[4], sok;
                 int32_t sh_vz_summe = 0;   /* Runde 36 Spur O: AVSZ4-Summe der vier Ecken (re15_pri_schatten_r36.h) */
-                for (int v = 0; v < 4; v++) {
-                    int32_t _x = sh_corner[v][0], _y = sh_corner[v][1], _z = sh_corner[v][2];
-                    int32_t _vx = (int32_t)(((int64_t)_x*sbm[0] + (int64_t)_y*sbm[1] + (int64_t)_z*sbm[2]) >> 12) + sbt[0];
-                    int32_t _vy = (int32_t)(((int64_t)_x*sbm[3] + (int64_t)_y*sbm[4] + (int64_t)_z*sbm[5]) >> 12) + sbt[1];
-                    int32_t _vz = (int32_t)(((int64_t)_x*sbm[6] + (int64_t)_y*sbm[7] + (int64_t)_z*sbm[8]) >> 12) + sbt[2];
-                    if (_vz < 64) { sok = 0; break; }   /* H28 near-clip */
-                    sh_vz_summe += (_vz > 0xFFFF) ? 0xFFFF : _vz;   /* SZ-Klemme 0..65535 wie die GTE */
-                    int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
-                    int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
-                    uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
-                    uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                    sx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
-                    sy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                uint8_t sh_tri[2];
+                {   /* Release v0.8.30: RotAverage4 ohne Nahgrenze (FUN_8001b064 @0x8001b2c8, RE2 FUN_8001699c @0x80016b30-6c);
+                     * GTE-Saettigung + GPU-Grenze je Dreieck (re15_objpoly_r38_schatten) statt des Port-Ausschnitts "H28" `_vz < 64`. */
+                    int32_t smac[4][3];
+                    for (int v = 0; v < 4; v++) {
+                        int32_t _x = sh_corner[v][0], _y = sh_corner[v][1], _z = sh_corner[v][2];
+                        smac[v][0] = (int32_t)(((int64_t)_x*sbm[0] + (int64_t)_y*sbm[1] + (int64_t)_z*sbm[2]) >> 12) + sbt[0];
+                        smac[v][1] = (int32_t)(((int64_t)_x*sbm[3] + (int64_t)_y*sbm[4] + (int64_t)_z*sbm[5]) >> 12) + sbt[1];
+                        smac[v][2] = (int32_t)(((int64_t)_x*sbm[6] + (int64_t)_y*sbm[7] + (int64_t)_z*sbm[8]) >> 12) + sbt[2];
+                    }
+                    sok = re15_objpoly_r38_schatten(smac, (int)cam_view.fov_screen_dist, cx, cy, sx, sy, &sh_vz_summe, sh_tri);
                 }
                 if (sok) {
                     if (getenv("RE15_SHADOW_DBG")) {
@@ -9410,6 +9522,7 @@ re_title:;
                     }
                     /* Runde 36 Spur O: Spieler-Schatten in die OT-Ordnung (FUN_8001b064 @0x8001b2d8). */
                     re15_render_pc_shadow_tiefe(sh_vz_summe, 1);
+                    re15_render_pc_shadow_dreiecke((uint8_t)(sh_tri[0] | (sh_tri[1] << 1)));   /* Release v0.8.30 */
                     if (re15_player_is_dead() && g_death_pool > 0)
                         /* BLOOD POOL (byte-true LAB_8003694c): the shadow quad turns dark-red
                          * (subtractive color 0x38/0xff/0xff @0x8003699c-b8) — the SIZE growth
@@ -10071,20 +10184,16 @@ re_title:;
                 re15_camera_yaw_matrix_angle(fyaw, fym);
                 re15_camera_compose_view_bone(&cam_view, fym, fpos, frot, ftr);
                 const int32_t fc[4][3] = { { -fhx, 0, fhz }, { -fhx, 0, -fhz }, { fhx, 0, fhz }, { fhx, 0, -fhz } };
-                int fsx[4], fsy[4], fok = 1; int32_t fvz_summe = 0;
-                for (int v = 0; v < 4; v++) {
-                    int32_t _x = fc[v][0], _y = fc[v][1], _z = fc[v][2];
-                    int32_t _vx = (int32_t)(((int64_t)_x*frot[0] + (int64_t)_y*frot[1] + (int64_t)_z*frot[2]) >> 12) + ftr[0];
-                    int32_t _vy = (int32_t)(((int64_t)_x*frot[3] + (int64_t)_y*frot[4] + (int64_t)_z*frot[5]) >> 12) + ftr[1];
-                    int32_t _vz = (int32_t)(((int64_t)_x*frot[6] + (int64_t)_y*frot[7] + (int64_t)_z*frot[8]) >> 12) + ftr[2];
-                    if (_vz < 64) { fok = 0; break; }
-                    fvz_summe += (_vz > 0xFFFF) ? 0xFFFF : _vz;
-                    int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
-                    int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
-                    uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
-                    uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                    fsx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
-                    fsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                int fsx[4], fsy[4], fok; int32_t fvz_summe = 0; uint8_t ftri[2];
+                {   /* Release v0.8.30: FUN_8001699c ohne Nahgrenze (RTPT/RTPS/AVSZ4 @0x80016b30-6c), re15_objpoly_r38_schatten */
+                    int32_t fmac[4][3];
+                    for (int v = 0; v < 4; v++) {
+                        int32_t _x = fc[v][0], _y = fc[v][1], _z = fc[v][2];
+                        fmac[v][0] = (int32_t)(((int64_t)_x*frot[0] + (int64_t)_y*frot[1] + (int64_t)_z*frot[2]) >> 12) + ftr[0];
+                        fmac[v][1] = (int32_t)(((int64_t)_x*frot[3] + (int64_t)_y*frot[4] + (int64_t)_z*frot[5]) >> 12) + ftr[1];
+                        fmac[v][2] = (int32_t)(((int64_t)_x*frot[6] + (int64_t)_y*frot[7] + (int64_t)_z*frot[8]) >> 12) + ftr[2];
+                    }
+                    fok = re15_objpoly_r38_schatten(fmac, (int)cam_view.fov_screen_dist, cx, cy, fsx, fsy, &fvz_summe, ftri);
                 }
                 /* Nachbesserung 3 (Abnahme 3 Mangel 2): die Messzeile steht HINTER dem Einreihen und meldet als
                  * `gezeichnet=`, ob der Renderer das Viereck angenommen hat (Zaehler der Schatten-Warteschlange vorher/
@@ -10094,6 +10203,7 @@ re_title:;
                     extern int re15_render_pc_shadow_quads_eingereiht(void);
                     const int vor = re15_render_pc_shadow_quads_eingereiht();
                     re15_render_pc_shadow_tiefe(fvz_summe, 0);
+                    re15_render_pc_shadow_dreiecke((uint8_t)(ftri[0] | (ftri[1] << 1)));   /* Release v0.8.30 */
                     re15_render_shadow_quad_c(fsx[0], fsy[0], fsx[1], fsy[1], fsx[2], fsy[2], fsx[3], fsy[3],
                                               frgb[0], frgb[1], frgb[2]);
                     fgez = re15_render_pc_shadow_quads_eingereiht() - vor;
@@ -10374,11 +10484,14 @@ re_title:;
                     re15_wasserzombie_schatten_y(npc, &nsh_y);   /* Runde 38 Spur U: Hochziehen -> +0x1ba (`lh a1,442` @0x801004fc) */
                     re15_r39_schatten_y(npc, &nsh_y);            /* Runde 39 Spur E: Gorilla 0x27 / Affe 0x29 -> +0x1ba (`lh a1,442` @0x80116f30 / @0x80110c78) */
                     re15_spinnenanim_r41_schatten_y(npc, &nsh_y); /* Runde 41 Spur L: Spinne -> +0x1ba (`lh a1,442` @0x80110b4c) */
+                    re15_bf_schatten_y(npc, &nsh_y);             /* Hangar-Szene: Spider-Man -> Boden (+0x1ba @0x80111bc0, STAGE5) */
                     if (npc->type == 0x21)
                         nsh_y = re15_ai_re2_for_type(npc->type)
                                   ? (int32_t)npc->dog_floor_y      /* +0x1C2 @0x80100414 */
                                   : (int32_t)npc->crow_floor;      /* +0x1BA @0x8011221c-234 */
-                    int32_t nsh_world[3] = { npc->x, nsh_y, npc->z };
+                    int32_t nsh_x = npc->x, nsh_z = npc->z;
+                    re15_bf_schatten_xz(npc, &nsh_x, &nsh_z);    /* Hangar-Szene Runde 4: Schattenpunkt bei gekipptem Spider-Man */
+                    int32_t nsh_world[3] = { nsh_x, nsh_y, nsh_z };
                     int32_t nsh_rot[9], nsh_trans[3];
                     /* byte-true: RotMatrixY(ACTOR rot_y) via the trig LUT (FUN_8001b064 @0x8001b0e4
                      * uses entity+0x6a, NOT the camera yaw — RE'd wf_13911cba). nyaw above IS that
@@ -10388,38 +10501,40 @@ re_title:;
                     int32_t nm[9], nt[3];   /* Q12 (byte-true integer RTPS) */
                     for (int i = 0; i < 9; i++) nm[i] = nsh_rot[i];
                     for (int i = 0; i < 3; i++) nt[i] = nsh_trans[i];
-                    int nsx[4], nsy[4], nok = 1;
+                    int nsx[4], nsy[4], nok;
                     int32_t nsh_vz_summe = 0;   /* Runde 36 Spur O: AVSZ4-Summe (Gleichstand: unten) */
-                    for (int v = 0; v < 4; v++) {
-                        int32_t _x = nsh_c[v][0], _y = nsh_c[v][1], _z = nsh_c[v][2];
-                        int32_t _vx = (int32_t)(((int64_t)_x*nm[0] + (int64_t)_y*nm[1] + (int64_t)_z*nm[2]) >> 12) + nt[0];
-                        int32_t _vy = (int32_t)(((int64_t)_x*nm[3] + (int64_t)_y*nm[4] + (int64_t)_z*nm[5]) >> 12) + nt[1];
-                        int32_t _vz = (int32_t)(((int64_t)_x*nm[6] + (int64_t)_y*nm[7] + (int64_t)_z*nm[8]) >> 12) + nt[2];
-                        if (_vz < 64) { nok = 0; break; }
-                        nsh_vz_summe += (_vz > 0xFFFF) ? 0xFFFF : _vz;
-                        int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
-                        int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
-                        uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
-                        uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                        nsx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
-                        nsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                    uint8_t nsh_tri[2];
+                    {   /* Release v0.8.30: ohne Nahgrenze wie RotAverage4 (FUN_8001b064 @0x8001b2c8) / FUN_8001699c
+                         * (@0x80016b30-6c) - GTE-Saettigung + GPU-Grenze je Dreieck (re15_objpoly_r38_schatten) statt `_vz < 64`. */
+                        int32_t nmac[4][3];
+                        for (int v = 0; v < 4; v++) {
+                            int32_t _x = nsh_c[v][0], _y = nsh_c[v][1], _z = nsh_c[v][2];
+                            nmac[v][0] = (int32_t)(((int64_t)_x*nm[0] + (int64_t)_y*nm[1] + (int64_t)_z*nm[2]) >> 12) + nt[0];
+                            nmac[v][1] = (int32_t)(((int64_t)_x*nm[3] + (int64_t)_y*nm[4] + (int64_t)_z*nm[5]) >> 12) + nt[1];
+                            nmac[v][2] = (int32_t)(((int64_t)_x*nm[6] + (int64_t)_y*nm[7] + (int64_t)_z*nm[8]) >> 12) + nt[2];
+                        }
+                        nok = re15_objpoly_r38_schatten(nmac, (int)cam_view.fov_screen_dist, cx, cy,
+                                                        nsx, nsy, &nsh_vz_summe, nsh_tri);
                     }
                     /* RE15_LACHE_LOG (Runde 41 Spur S, Nachbesserung 2): MESSSCHIENE, kein Verhalten. Je
                      * Schatten einer Spinne 0x25 oder einer RE2-Babyspinne 0x26: Bild, Platz, Zustand, Halbmasse, Lache an,
-                     * Tinte (R,G,B wie re15_render_shadow_quad sie bekommt), Boden-Y, sichtbar = das Viereck geht an den Zeichner (alle vz >= 64). */
+                     * Tinte (R,G,B wie re15_render_shadow_quad sie bekommt), Boden-Y, sichtbar = das Viereck geht an den Zeichner
+                     * (mindestens ein GPU-Dreieck innerhalb der Groessengrenze, re15_objpoly_r38_schatten), dreiecke = Maske (0,1,2)/(1,2,3). */
                     if (npc->type == 0x25u || re15_re2spider_baby_owns(npc)) {
                         static FILE *s_ll = NULL; static int s_ll_init = 0;
                         if (!s_ll_init) { s_ll_init = 1; const char *p = getenv("RE15_LACHE_LOG"); if (p && *p) s_ll = fopen(p, "w"); }
                         if (s_ll) {
-                            fprintf(s_ll, "F=%u slot=%d typ=%02x st=%d/%d/%d/%d hx=%d hz=%d pool=%d rgb=%02x%02x%02x y=%d w(%d,%d) sichtbar=%d\n",
+                            fprintf(s_ll, "F=%u slot=%d typ=%02x st=%d/%d/%d/%d hx=%d hz=%d pool=%d rgb=%02x%02x%02x y=%d w(%d,%d) sichtbar=%d dreiecke=%u\n",
                                     (unsigned)g_engine.frame_count, (int)(npc - g_actors), (unsigned)npc->type, (int)npc->state,
                                     (int)npc->sub_state_1, (int)npc->sub_state_2, (int)npc->sub_state_3, (int)nhx, (int)nhz,
-                                    corpse_pool, sh_r, sh_g, sh_b, (int)nsh_y, (int)npc->x, (int)npc->z, (nok && !crow_no_record) ? 1 : 0);
+                                    corpse_pool, sh_r, sh_g, sh_b, (int)nsh_y, (int)npc->x, (int)npc->z, (nok && !crow_no_record) ? 1 : 0,
+                                    (unsigned)(nsh_tri[0] | (nsh_tri[1] << 1)));
                             fflush(s_ll);
                         }
                     }
                     if (nok && !crow_no_record) {
                         re15_render_pc_shadow_tiefe(nsh_vz_summe, 0);   /* Runde 36 Spur O */
+                        re15_render_pc_shadow_dreiecke((uint8_t)(nsh_tri[0] | (nsh_tri[1] << 1)));   /* Release v0.8.30 */
                         if (corpse_pool || crow_tinted)
                             re15_render_shadow_quad_c(nsx[0], nsy[0], nsx[1], nsy[1],
                                                       nsx[2], nsy[2], nsx[3], nsy[3],
@@ -10656,6 +10771,53 @@ re_title:;
                     re15_g5_tentakel_kette_strecken(npc_skel, npc_poses, npc_skel->bone_count, re15_g5_tentakel_scale_x(npc_i));
                 (void)re15_bissarm_r37_handkontakt(npc, npc_skel, npc_kf, npc_poses, npc_skel->bone_count);   /* Runde 37 Spur J: RE2-Handkontakt im Griff (re15_bissarm_r37.h) */
                 (void)re15_schwanz_r41_pose(npc, npc_skel, npc_poses);   /* Runde 41 SF N1.9: Schwanzkette 16-22 der Sichel-Form schwingt nach (PORT-WAHL, re15_schwanz_r41.h) */
+                {   /* Runde 41 Schwanz r9 Messhaken (Nutzer 2026-11-15: "taucht der schwanz jetzt garnicht mehr auf, oder ist nicht mehr
+                     * sauber connected"). Nur Messung, im Normalpfad stumm, kein Verhalten:
+                     *   RE15_SCHWANZ_MASKE=schwanz | birkin | figuren: Knochen 16-22 bzw. alle Knochen der V8-Sichel-Form bzw. Sichel-Form und
+                     *     Spider-Man (Typ 0x2B) mit Drehung 0 (alle Ecken auf dem Knochenpunkt, keine Flaeche) - die Differenz zweier Framedumps
+                     *     sind die Schwanz- bzw. Koerperpunkte des Bilds (Riegel integration_r41_schwanz_zusammen).
+                     *   RE15_SCHWANZ_LOG=<datei>: je gezeichnetem Bild die Gelenke 0-7 im 320x240-Bild (sx sy Blicktiefe, Kamera des Zeichners)
+                     *     und die Glieder ohne Querschnitt ab der Wurzel (re15_schwanz_r41_verdeckt: x- und z-Spalte 0). */
+                    static int s_sm_an = -1; static FILE *s_sl_fp = NULL;
+                    if (s_sm_an < 0) {
+                        const char *e = getenv("RE15_SCHWANZ_MASKE"), *lp = getenv("RE15_SCHWANZ_LOG");
+                        s_sm_an = !e ? 0 : !strcmp(e, "schwanz") ? 1 : !strcmp(e, "birkin") ? 2 : !strcmp(e, "figuren") ? 3 : 0;
+                        if (lp && *lp) s_sl_fp = fopen(lp, "w");
+                    }
+                    const int sw_v8 = npc->type == 0x30u && npc_skel->bone_count == 23 && re15_schwanz_r41_v8_kette(npc_skel);
+                    if (s_sl_fp && sw_v8) {
+                        int verd = 0;
+                        while (verd < 7 && !npc_poses[16 + verd].rot[0] && !npc_poses[16 + verd].rot[3] && !npc_poses[16 + verd].rot[6]) verd++;
+                        fprintf(s_sl_fp, "[schwanz-bild] F%u verdeckt %d", (unsigned)g_engine.frame_count, verd);
+                        for (int j = 0; j < 8; j++) {
+                            const int b = 16 + (j < 7 ? j : 6);
+                            int32_t l[3] = { npc_poses[b].trans[0], npc_poses[b].trans[1], npc_poses[b].trans[2] }, gw[3];
+                            if (j == 7) {   /* Gelenk 7 = Ende von Knochen 22 entlang seiner y-Spalte (Gliedlaenge relpos 22) */
+                                const int16_t *rl = npc_skel->bone_relative_pos[22];
+                                const double ll = sqrt((double)rl[0] * rl[0] + (double)rl[1] * rl[1] + (double)rl[2] * rl[2]);
+                                const double sy = sqrt((double)npc_poses[b].rot[1] * npc_poses[b].rot[1] + (double)npc_poses[b].rot[4] * npc_poses[b].rot[4]
+                                                       + (double)npc_poses[b].rot[7] * npc_poses[b].rot[7]);
+                                if (sy > 0.0) for (int k = 0; k < 3; k++) l[k] += (int32_t)lrint(npc_poses[b].rot[k * 3 + 1] / sy * ll);
+                            }
+                            if (npc->render_scale_q12) for (int k = 0; k < 3; k++) l[k] = (int32_t)(((int64_t)l[k] * npc->render_scale_q12) >> 12);
+                            if (npc->rot_x || npc->rot_z) {
+                                int32_t M[9]; re15_skel_euler_matrix((int)npc->rot_x, (int)npc->rot_y, (int)npc->rot_z, M);
+                                const int32_t ap[3] = { npc->x, npc->y, npc->z };
+                                for (int k = 0; k < 3; k++)
+                                    gw[k] = ap[k] + (int32_t)(((int64_t)M[k * 3] * l[0] + (int64_t)M[k * 3 + 1] * l[1] + (int64_t)M[k * 3 + 2] * l[2]) >> 12);
+                            } else re15_skel_bone_to_world(l, npc->rot_y, npc->x, npc->y, npc->z, gw);
+                            const long vx = ((long)gw[0] * cam_view.rot[0] + (long)gw[1] * cam_view.rot[1] + (long)gw[2] * cam_view.rot[2]) / 4096 + cam_view.trans[0];
+                            const long vy = ((long)gw[0] * cam_view.rot[3] + (long)gw[1] * cam_view.rot[4] + (long)gw[2] * cam_view.rot[5]) / 4096 + cam_view.trans[1];
+                            const long vz = ((long)gw[0] * cam_view.rot[6] + (long)gw[1] * cam_view.rot[7] + (long)gw[2] * cam_view.rot[8]) / 4096 + cam_view.trans[2];
+                            if (vz > 64) fprintf(s_sl_fp, " %d(%.2f,%.2f,%ld)", j, 160.0 + (double)vx * cam_view.fov_screen_dist / vz,
+                                                 120.0 + (double)vy * cam_view.fov_screen_dist / vz, vz);
+                            else fprintf(s_sl_fp, " %d(-,-,%ld)", j, vz);
+                        }
+                        fputc('\n', s_sl_fp); fflush(s_sl_fp);
+                    }
+                    if ((s_sm_an && sw_v8) || (s_sm_an == 3 && npc->type == 0x2Bu))
+                        for (int q = s_sm_an == 1 ? 16 : 0; q < npc_skel->bone_count; q++) memset(npc_poses[q].rot, 0, sizeof npc_poses[q].rot);
+                }
                 {   /* Runde 41 SF NB6 Messhaken RE15_GRIFF_LOG=<datei>: Griffpunkte der Hangar-Szene je gezeichnetem Bild nach allen
                      * Posen-Haken - Typ 0x30 Knochen 15/13/8 (Sichelhand, Schulter, Brust), Typ 0x2B Knochen 0 und 20 (Griffknochen),
                      * Weltkoordinaten mit Figurmatrix und Massstab wie der Zeichner. Nur Messung, im Normalpfad stumm, kein Verhalten. */
@@ -10678,6 +10840,25 @@ re_title:;
                             fprintf(s_griff_fp, " %d(%d,%d,%d)", kn[q], (int)gw[0], (int)gw[1], (int)gw[2]);
                         }
                         fputc('\n', s_griff_fp); fflush(s_griff_fp);
+                    }
+                }
+                {   /* Runde 41 SF Runde 7 (Wurf eindrehend) Messhaken RE15_POSE_LOG=<datei>: gezeichnete Pose der Hangar-Figuren je Bild
+                     * nach allen Posen-Haken - Typ 0x30 und 0x2B, Aktorlage, Gier/Kippung, Massstab und je Knochen Drehung (Q12, 9 Werte)
+                     * und Lage im Modellraum (wie re15_skel_compute_pose). Damit rechnet die Messung Mesh, Kopf, Brust und Mitte genau
+                     * so, wie der Zeichner sie zeigt. Nur Messung, im Normalpfad stumm, kein Verhalten. */
+                    static FILE *s_pose_fp = NULL; static int s_pose_tried = 0;
+                    if (!s_pose_tried) { s_pose_tried = 1; const char *pp = getenv("RE15_POSE_LOG"); if (pp && *pp) s_pose_fp = fopen(pp, "w"); }
+                    if (s_pose_fp && (npc->type == 0x30u || npc->type == 0x2Bu)) {
+                        fprintf(s_pose_fp, "[pose] F%u typ%02X mo=%d af=%d frac=%d lage %d %d %d rot %d %d %d s %d n %d",
+                                (unsigned)g_engine.frame_count, (unsigned)npc->type, (int)npc->motion, (int)npc->anim_frame,
+                                (int)npc->anim_frac, (int)npc->x, (int)npc->y, (int)npc->z, (int)npc->rot_x, (int)npc->rot_y,
+                                (int)npc->rot_z, (int)npc->render_scale_q12, (int)npc_skel->bone_count);
+                        for (int q = 0; q < npc_skel->bone_count; q++) {
+                            const re15_skel_pose_t *pq = &npc_poses[q];
+                            fprintf(s_pose_fp, " |%d %d %d %d %d %d %d %d %d %d %d %d", pq->rot[0], pq->rot[1], pq->rot[2], pq->rot[3],
+                                    pq->rot[4], pq->rot[5], pq->rot[6], pq->rot[7], pq->rot[8], pq->trans[0], pq->trans[1], pq->trans[2]);
+                        }
+                        fputc('\n', s_pose_fp); fflush(s_pose_fp);
                     }
                 }
                 {   /* Runde 41 SF NB6 Messhaken RE15_BEIN_LOG=<datei>: Beingelenke (Knochen 0-6: Becken, Huefte/Knie/Knoechel
@@ -10738,7 +10919,8 @@ re_title:;
                  * (@0x8010143c-5c), Speer/Wedeln/Zug aus den Tabellen @0x80105740/@0x80105770.
                  * Yaw-only (nyaw) == RotMatrix(0, yaw, 0), also fuer alle anderen Typen unveraendert. */
                 if (npc->type == 0x37u || re15_spinnenanim_r41_volle_drehung(npc)   /* Runde 41 Spur L: Spinne RotMatrix(+0x68) @0x8001e8f4 */
-                    || re15_annette_r41_volle_drehung(npc))                      /* Runde 41 Spur AN: Leiche gekippt (re15_annette_r41.h) */
+                    || re15_annette_r41_volle_drehung(npc)                       /* Runde 41 Spur AN: Leiche gekippt (re15_annette_r41.h) */
+                    || re15_bf_volle_drehung(npc))                               /* Hangar-Szene Runde 4: Spider-Man gekippt (re15_birkin_formen.h) */
                     re15_skel_euler_matrix((int)npc->rot_x, npc_yaw_eff, (int)npc->rot_z, nyaw);
                 /* ENTITY-RENDER-SCALE +0x166 (Gate Flag 0x800): das Original skaliert die
                  * Root-Matrix VOR der Bone-Schleife uniform per ScaleMatrix (FUN_8001e8c8
@@ -11124,6 +11306,10 @@ re_title:;
                     if (npc_lit)
                         re15_light_ctx_rotate_for_bone(&lctx_npc_world, nyawed_rot,
                                                        &lctx_npc);
+                    if (npc->type == 0x30u && nbi == 15) {   /* Runde 41 Kralle "synchron": Messhaken gezeichnete Klaue (RE15_BIRKIN_DBG) */
+                        extern void re15_bkk_zeichner_melden(const re15_actor_t *e, const int32_t R[9], const int32_t T[3]);
+                        re15_bkk_zeichner_melden(npc, nyawed_rot, nbone_world_trans);
+                    }
                     int32_t ncomb_rot[9];
                     int32_t ncomb_trans[3];
                     re15_camera_compose_view_bone(&cam_view, nyawed_rot, nbone_world_trans,
@@ -11520,6 +11706,15 @@ re_title:;
                         pi, oid, (int)g_scd.props[pi].obj_type, g_scd.props[pi].x, g_scd.props[pi].y, g_scd.props[pi].z,
                         g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z); }
 #endif
+                /* PALETTEN-ANIMATION (re15_clutanim.h): 2 = die Zielzeile schreibt kein getickter Eintrag ->
+                 * 0x0000 -> die GPU zeichnet keinen Texel (ROOM5030 Objekt 8/9, im Original gemessen);
+                 * 1 = Streifen der Unterpalette statt der eigenen CLUT. Gilt fuer das ERSTE Mesh: nur dessen
+                 * Primitive stellt FUN_8002b968 um (pool+0x10/+0x18, @0x8002ba60-bb00). */
+                int ca_clut = -1;
+                { int qo = -1, qz = 0, un = 0;
+                  const int ca = re15_clutanim_objekt(oid, &qo, &qz, &un);
+                  if (ca == 2) continue;
+                  if (ca == 1) ca_clut = pc_clutanim_clut(oid, qo, qz, un); }
                 const re15_md1_t *prop_md1 = NULL;
                 int prop_md1_ok = 0;
                 /* Kein 6er-Cap (ROOM11F0: 12 Props, Schalter obj 0x06..0x0B waren
@@ -11663,6 +11858,8 @@ re_title:;
                             if (irons_sort_max >= 0 && wz_for_sort > irons_sort_max)
                                 wz_for_sort = irons_sort_max;   /* Tiefen-Klemme, s.u. */
                             const re15_md1_tri_uv_t *uv = &hm->triangle_uvs[ti];
+                            re15_md1_tri_uv_t uv_ca;
+                            if (ca_clut >= 0 && hbi == 0) { uv_ca = *uv; uv_ca.clut = (uint16_t)ca_clut; uv = &uv_ca; }
                             int page_off = (int)((uv->page & 0x000F) * 128);
                             /* BF-round: per-vertex shading for prop tri. */
                             uint8_t pr0, pg0, pb0, pr1, pg1, pb1, pr2, pg2, pb2;
@@ -11717,6 +11914,8 @@ re_title:;
                             if (irons_sort_max >= 0 && wz_avg > irons_sort_max)
                                 wz_avg = irons_sort_max;        /* Tiefen-Klemme, s.u. */
                             const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];
+                            re15_md1_quad_uv_t uv_ca;
+                            if (ca_clut >= 0 && hbi == 0) { uv_ca = *uv; uv_ca.clut = (uint16_t)ca_clut; uv = &uv_ca; }
                             int page_off = (int)((uv->page & 0x000F) * 128);
                             /* BF-round: per-vertex shading for prop quad. */
                             uint8_t pqr0, pqg0, pqb0, pqr1, pqg1, pqb1;
@@ -11964,6 +12163,42 @@ re_title:;
          * Solange die fehlt, waere jede Aenderung an einer Maskentiefe geraten. Mit dieser
          * Zeile im Bild enthaelt EIN Screenshot alles: Raum, Cut, Weltlage, Blickrichtung
          * und wie viele Masken der Cut gerade zeichnet. */
+        {   /* MESS-ANZEIGE RE15_BILD_HUD=1 (Runde 41 Kralle "synchron", im Normalpfad stumm, kein Verhalten): Spielbild und Birkins
+             * Clip/Bild im Fenster, damit Videos (gdigrab) Bild fuer Bild mit state.log / birkin_dbg.log zusammenpassen. */
+            static int s_bh = -1;
+            if (s_bh < 0) s_bh = getenv("RE15_BILD_HUD") != NULL;
+            if (s_bh) {
+                extern int re15_render_pc_debug_text(int x, int y, const char *str);
+                char bh[64]; int n = snprintf(bh, sizeof bh, "F%u", (unsigned)g_engine.frame_count);
+                for (int bi = 0; bi < RE15_ACTOR_MAX && n < 40; bi++)
+                    if (g_actors[bi].active && g_actors[bi].type == 0x30u)
+                        n += snprintf(bh + n, sizeof bh - (size_t)n, "  CLIP %d BILD %d", (int)g_actors[bi].motion, (int)g_actors[bi].anim_frame);
+                re15_render_pc_debug_text(4, 228, bh);
+                {   /* Bildnummern-Streifen (Runde 2): 17 Felder zu 5x5 Bildpunkten ab (4,218): Marke weiss-schwarz-weiss, dann
+                     * 14 Bit der Spielbildnummer (hoechstes zuerst, weiss = 1). Die Videoauswertung liest ihn aus JEDEM
+                     * aufgenommenen Bild und beschriftet nach dem Spielbild, das das Bild wirklich zeigt. */
+                    extern void re15_render_pc_debug_fill(int x, int y, int w, int h, uint32_t rgb);
+                    const unsigned fn = (unsigned)g_engine.frame_count & 0x3FFFu;
+                    for (int bi = 0; bi < 17; bi++) {
+                        const int weiss = bi < 3 ? (bi != 1) : (int)((fn >> (13 - (bi - 3))) & 1u);
+                        re15_render_pc_debug_fill(4 + 5 * bi, 218, 5, 5, weiss ? 0xFFFFFFu : 0x000000u);
+                    }
+                }
+                {   /* bild_zeit.log: Spielbild + Wanduhr (UTC, ms) - gdigrab mit -copyts stempelt die Videobilder mit derselben
+                     * Wanduhr, so ordnet die Auswertung jedes Videobild dem gezeigten Spielbild zu. */
+                    static FILE *s_bz = NULL;
+                    if (!s_bz) s_bz = fopen("bild_zeit.log", "w");
+                    long long ms = 0;
+#ifdef _WIN32
+                    { FILETIME ft; GetSystemTimeAsFileTime(&ft);   /* 100 ns seit 1601 -> ms seit 1970 */
+                      ms = (long long)((((unsigned long long)ft.dwHighDateTime << 32) | ft.dwLowDateTime) / 10000ULL) - 11644473600000LL; }
+#else
+                    { struct timeval tv; gettimeofday(&tv, NULL); ms = (long long)tv.tv_sec * 1000 + tv.tv_usec / 1000; }
+#endif
+                    if (s_bz) { fprintf(s_bz, "F%u %lld.%03lld\n", (unsigned)g_engine.frame_count, ms / 1000, ms % 1000); fflush(s_bz); }
+                }
+            }
+        }
         if (getenv("RE15_POS_HUD")) {
             extern int re15_render_pc_debug_text(int x, int y, const char *str);
             extern int re15_pri_log_cut(void);
@@ -11976,6 +12211,14 @@ re_title:;
                      (unsigned)g_current_room_id, re15_pri_log_cut(),
                      (int)pl->x, (int)pl->y, (int)pl->z, (int)pl->rot_y, nmask);
             re15_render_pc_debug_text(4, 4, hud);
+        }
+        /* MESSHAKEN RE15_BILD_HUD=1 (Runde 41 birkin_aufrichten, KEIN Verhalten): Spielbildnummer oben links, damit eine
+         * gdigrab-Aufnahme in Zeitlupe jedes Bild der Pose-Messschiene (RE15_POSE_LOG, Spalte F) zuordnen kann. */
+        if (getenv("RE15_BILD_HUD")) {
+            extern int re15_render_pc_debug_text(int x, int y, const char *str);
+            char bh[24];
+            snprintf(bh, sizeof bh, "F%u", (unsigned)g_engine.frame_count);
+            re15_render_pc_debug_text(4, 14, bh);
         }
         if (re15_debug_menu_open()) {
             extern int  re15_render_pc_debug_text(int x, int y, const char *str);

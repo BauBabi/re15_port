@@ -950,23 +950,31 @@ static void abschnitt_spielschritt(void)
     }
 
     /* 6e — NACHBESSERUNG H-1: AUTO-NACHFUEHRUNG beim Heben = FUN_8001a8f8 (gun sub0 `ori a1,zero,
-     * 0xc8` @0x80032fe0, `jal 0x8001a8f8` @0x80032fec). a1 = (t - rot + s) & 0xfff (@0x8001a960-68);
+     * 0xc8` @0x80032fe0, `jal 0x8001a8f8` @0x80032fec; Schritt seit Runde 41 s. unten). a1 = (t - rot + s) & 0xfff (@0x8001a960-68);
      * a1 < 2s -> rot := t (@0x8001a984); sonst rot := rot - s (`subu v0,a2,s1` @0x8001a97c, `sh`
      * @0x8001a988, OHNE Maske) und bei a1 <= 0x800 (`sltiu v0,a1,0x801` @0x8001a98c) rot += 2s
      * (@0x8001a9ac-b0). Ziel = Zombie 700 in +x; seine Peilung t ist die des Port-atan2
      * ((re15_atan2_q12(0, 700) - 0x400) & 0xfff = 4095, gemessen, Vorbedingung 128 — Aufbau, keine
-     * Verhaltenskonstante). Erwartung von Hand aus FUN_8001a8f8 mit t = 4095, s = 200:
-     *   A  rot0 = -300: a1 = (4095 + 300 + 200) & 0xfff = 499 -> rot + s = -100 (alter Port: & 0xfff
-     *      = 3996); dann a1 = 299 < 400 -> rot := t = 4095
-     *   B  rot0 = 2196: a1 = (4095 - 2196 + 200) & 0xfff = 2099 > 0x800 -> rot - s = 1996 (alter Port
-     *      mit zentrierter Differenz +1899 -> +s = 2396); dann a1 = 2299 -> 1796
-     *   B' rot0 = 2296: a1 = 1999 <= 0x800 -> rot + s = 2496, dann 1799 -> 2696 (Negativ-Kontrolle:
-     *      ausserhalb des Bands [0x801 - s, 0x7ff] drehen alter Port und Original gleich) */
+     * Verhaltenskonstante).
+     * SCHRITT s: seit Runde 41 "zielhilfe" (d12b972fb, Nutzer 2026-11-16 "Gegner 180 Grad hinter Leon, Waffe
+     * heben -> Leon dreht nur teilweise") dreht das HEBEN mit dem RE2-Retail-Schritt `li a3,0xd8` @0x800434a0
+     * (Heben-Sub @0x8004326c, `jal 0x80015558` @0x800434b0 = derselbe Algorithmus wie 0x8001a8f8; Beta -> Retail),
+     * 0x120 @0x800434ac nur bei 8-Bild-Hebung (player_common.c heben_schritt). Waffe 9 hebt mit mehr als 8 Bildern
+     * -> s = 0xd8 = 216 (RE1.5 waere 0xc8 @0x80032fe0). Der Algorithmus FUN_8001a8f8 bleibt, nur s ist neu.
+     * Erwartung von Hand aus FUN_8001a8f8 mit t = 4095, s = 216:
+     *   A  rot0 = -300: a1 = (4095 + 300 + 216) & 0xfff = 515 -> rot + s = -84 (alter Port: & 0xfff
+     *      = 4012); dann a1 = 299 < 432 -> rot := t = 4095
+     *   B  rot0 = 2196: t - rot = 1899 im Band [0x801 - s, 0x7ff] = [1833, 2047]; a1 = (4095 - 2196 + 216) & 0xfff
+     *      = 2115 > 0x800 -> rot - s = 1980 (alter Port mit zentrierter Differenz +1899 -> +s = 2412); dann
+     *      a1 = 2331 -> 1764
+     *   B' rot0 = 2296: t - rot = 1799 < 1833 ausserhalb des Bands; a1 = 2015 <= 0x800 -> rot + s = 2512, dann
+     *      1799 -> 2728 (Negativ-Kontrolle: ausserhalb des Bands drehen alter Port und Original gleich)
+     * (Vor Runde 41 mit s = 200: A -100/4095, B 1996/1796, B' 2496/2696.) */
     {
         struct { const char *name; int16_t rot0, soll1, soll2; int nr; } F[] = {
-            { "A Schritt ueber 0",        -300,  -100, 4095, 129 },
-            { "B Band unter 180 Grad",    2196,  1996, 1796, 130 },
-            { "B' Grenze (Negativ-Kon.)", 2296,  2496, 2696, 153 },
+            { "A Schritt ueber 0",        -300,   -84, 4095, 129 },
+            { "B Band unter 180 Grad",    2196,  1980, 1764, 130 },
+            { "B' Grenze (Negativ-Kon.)", 2296,  2512, 2728, 153 },
         };
         for (unsigned i = 0; i < sizeof F / sizeof F[0]; i++) {
             if (sp_bringup(9, 5) != 0) { PRUEF(F[i].nr, 0, "Bringup 6e"); return; }

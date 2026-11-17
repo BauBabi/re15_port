@@ -1,0 +1,11 @@
+b8c/alt_66db.EMD Achse +-(0.8956,0.4449)
+   CLUT 31168 (Zeile 487): 252 Flaechen, Mitte entlang Achse -121
+   CLUT 31680 (Zeile 495): 104 Flaechen, Mitte entlang Achse 155
+   CLUT 31552 (Zeile 493): 40 Flaechen, Mitte entlang Achse 179
+   Eckenschwerpunkt entlang Achse -19.5 (Ecken 682)
+   Keyframe-Beugung: Summe entlang Achse 794.38 (Winkel 40.3 Grad), Gelenke + 4967 / - 500, Keyframes 912
+b8c/neu_d31f.EMD Achse +-(0.8956,0.4449)
+   CLUT 31552 (Zeile 493): 284 Flaechen, Mitte entlang Achse 31
+   CLUT 31168 (Zeile 487): 112 Flaechen, Mitte entlang Achse -143
+   Eckenschwerpunkt entlang Achse -19.5 (Ecken 682)
+   Keyframe-Beugung: Summe entlang Achse 794.38 (Winkel 40.3 Grad), Gelenke + 4967 / - 500, Keyframes 912

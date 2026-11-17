@@ -26,6 +26,8 @@
 #include <stdarg.h>   /* re2se_log (RE15_RE2SE_LOG-Dateilog, Phase 2) */
 #include <SDL.h>
 #include "re15_audio.h"
+#include "re15_pipe_r41.h"   /* Runde 41 Spur pipe: ARMS-Bank des Rohrs = Messer (PORT-WAHL); Spur pipe_ton: Rohr-Toene */
+#include "re15_engine.h"     /* g_engine.frame_count (Rohr-Zeile im RE15_WAFFEN_LOG) */
 #include "re15_scd.h"
 #include "re15_vab.h"
 #include "re15_room.h"
@@ -874,6 +876,9 @@ void re15_audio_room_se_snd0(int se_id)
  * (the EDT prefix @0) for the se_id lookup. Idempotent per weapon; frees the previous bank on change. */
 static int load_weapon_se_vab_pc(int weapon_id)
 {
+    /* Runde 41 Spur pipe: PORT-WAHL Vorlage Messer — ARMS02 ist auf der Disc die Pistolen-Bank (byte-gleich
+     * ARMS03..06/0A/0B, sha256 ff146f31...); das Rohr (2) spielt Ziehen/Schwung/Treffer aus ARMS01 (Messer). */
+    weapon_id = re15_pipe_r41_arms_bank(weapon_id);
     if (weapon_id < 0 || weapon_id > 0xff) return -1;
     if (s_weap_loaded && s_weap_id == weapon_id) return 0;
     for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) {
@@ -1054,6 +1059,59 @@ void re15_audio_re2_panel_se(int se_id)
     se_play_layers(s_panel_edt, &s_panel_vab, s_panel_decoded, s_panel_decoded_len, se_id);
 }
 
+/* ===== NUTZERWUNSCH 2026-11-16: Birkins Sherry-Ruf in der Hangar-Szene (re15_bf_ruf_hook) ==================
+ * Der Ruf ist Raum-Ton 10 der Raeume, in denen die Disc den 0x30 setzt: 40-%-Disc ROOM3070 snd1 EDT @0x5E28 `00 00 b2 16`
+ * (Prog 0 = byte1 & 0x7f @0x80045490-98, Ton 11 = byte2 >> 4 @0x80045474, Stimme 6 = (byte3 & 0x1f) - 16 @0x80045478-7c,
+ * Prio 2 = byte2 & 0xf @0x800454b0) -> Ton @0x67E0 -> VAG 12 @0x16640, 9200 B, sha1 d19adfc8010d; gespielt vom 0x30 ueber
+ * FUN_800453d0(10) (STAGE3 @0x8011a744/48). Die Hangar-Raumbank (ROOM50A0/50A1 snd1) traegt auf Satz 10 einen anderen Ton
+ * (Asset: VAG 12 @0x166D0, 3056 B, sha1 940a7ffcc5a1; Disc: @0x1E914, 10288 B, sha1 d33761692d08), also kommt der Satz aus der
+ * snd1-Bank von STAGE3/ROOM3070.RDT des Asset-Baums (EDT-Satz, Ton und Welle bytegleich mit der Disc: EDT @0x131A0 `00 00 b2 16`,
+ * VAG 12 @0x239B8, sha1 d19adfc8010d). Abgespielt ueber denselben FUN_800453d0-Pfad wie jeder Raum-Ton (se_play_layers). */
+#define RE15_BIRKIN_RUF_RDT "STAGE3/ROOM3070.RDT"
+#define RE15_BIRKIN_RUF_SATZ 10                 /* a0 = 0xa @0x8011a748 (STAGE3) */
+static re15_vab_t s_bruf_vab;
+static int16_t  *s_bruf_decoded[RE15_VAB_MAX_SAMPLES];
+static int       s_bruf_decoded_len[RE15_VAB_MAX_SAMPLES];
+static const uint8_t *s_bruf_edt = NULL;
+static int       s_bruf_state = 0;          /* 0 = ungeprueft, 1 = geladen, -1 = fehlt */
+
+static int load_birkin_ruf_pc(void)
+{
+    if (s_bruf_state) return (s_bruf_state == 1) ? 0 : -1;
+    s_bruf_state = -1;
+    int sz = 0;
+    uint8_t *d = re15_pc_read_cd(RE15_BIRKIN_RUF_RDT, &sz);
+    static re15_rdt_t rdt;                   /* Zeiger zeigen in d - d bleibt geladen */
+    if (!d || re15_rdt_parse(d, (size_t)sz, &rdt) != 0 || !rdt.snd_edt[1] || !rdt.snd_vh[1] || !rdt.snd_vb[1] ||
+        rdt.snd_edt_size[1] < (RE15_BIRKIN_RUF_SATZ + 1) * 4 ||
+        re15_vab_parse(rdt.snd_vh[1], (size_t)rdt.snd_vh_size[1], &s_bruf_vab) != 0) {
+        fprintf(stderr, "[birkinruf] %s snd1 fehlt -> Sherry-Ruf stumm\n", RE15_BIRKIN_RUF_RDT);
+        free(d); return -1;
+    }
+    for (int i = 0; i < s_bruf_vab.vag_count; i++) {
+        uint32_t off = s_bruf_vab.samples[i].offset, n = s_bruf_vab.samples[i].size;
+        if (off + n > (uint32_t)rdt.snd_vb_size[1]) continue;
+        size_t cap = (n / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        s_bruf_decoded[i]     = pcm;
+        s_bruf_decoded_len[i] = re15_vag_adpcm_decode(rdt.snd_vb[1] + off, n, pcm, cap);
+    }
+    s_bruf_edt   = rdt.snd_edt[1];
+    s_bruf_state = 1;
+    {   const uint8_t *r = s_bruf_edt + RE15_BIRKIN_RUF_SATZ * 4;
+        fprintf(stderr, "[birkinruf] %s snd1 geladen: Satz %d = %02x %02x %02x %02x\n", RE15_BIRKIN_RUF_RDT, RE15_BIRKIN_RUF_SATZ,
+                r[0], r[1], r[2], r[3]); }
+    return 0;
+}
+
+void re15_audio_birkin_ruf(void)
+{
+    if (!g_audio.initialized) return;
+    if (load_birkin_ruf_pc() != 0) return;
+    se_play_layers(s_bruf_edt, &s_bruf_vab, s_bruf_decoded, s_bruf_decoded_len, RE15_BIRKIN_RUF_SATZ);
+}
+
 /* ===== Runde 35 Spur M: die GLASBRUCH-Bank (RE2 ROOM1090 snd0) ========================
  * RE2 room1090 sub15 @0x0208/@0x0218 `36 02 21 01 ...` -> Se_on 0x02210001 = Raumbank (Bank 2,
  * `srl t1,a0,24` @0x8005ba30) Satz 0x21 (EDT @0x84 `00 00 7c 60` = Prog 0 Ton 7 + 3 Zusatzlagen).
@@ -1173,6 +1231,64 @@ static void re2_schloss_se(int satz)
  *    (DAT_800b2824 = DAT_800b2826 = tone[+2], LAB_800451dc `lbu 0x2(s1)`) — genau das tut der
  *    Port; sonst FUN_80045a64(param_2) (@0x800451c0-cc), das die Emitter-Position braucht
  *    (siehe den OFFEN-Block an se_play_layers). */
+/* ===== Runde 41 Spur pipe_ton: ROHR-TOENE aus Birkins Raum-Bank (NUTZERWUNSCH, Belege include/re15_pipe_r41.h) =====
+ * Einmal geladen aus STAGE3/ROOM3070.RDT snd1 (Kopf @0x14 EDT / @0x18 VH / @0x1c VB, wie parse_audio in rdt_common.c).
+ * Gespielt werden zusammengesetzte Saetze (re15_pipe_r41_rohr_rec): Welle/Ton = Birkin-Satz 7 bzw. 4, Stimme/Prio = der
+ * Messer-Satz 8 bzw. 5 aus ARMS01 — darum je ARMS-Satz-Nummer ein eigener 4-Byte-Satz in s_rohr_edt. */
+#define ROHR_EDT_N 9                                       /* ARMS-Saetze 0..8; belegt nur 5 und 8 */
+static int         s_rohr_state = 0;                       /* 0 ungeprueft, 1 geladen, -1 fehlt */
+static re15_vab_t  s_rohr_vab;
+static int16_t    *s_rohr_decoded    [RE15_VAB_MAX_SAMPLES];
+static int         s_rohr_decoded_len[RE15_VAB_MAX_SAMPLES];
+static uint8_t     s_rohr_edt[ROHR_EDT_N * 4];
+
+static int rohr_bank_laden(void)
+{
+    if (s_rohr_state) return s_rohr_state;
+    s_rohr_state = -1;
+    int sz = 0;
+    uint8_t *rdt = re15_pc_read_cd(RE15_PIPE_R41_ROHR_RDT, &sz);
+    if (!rdt || sz < 0x20) { free(rdt); fprintf(stderr, "[rohr] %s fehlt -> Pipe stumm\n", RE15_PIPE_R41_ROHR_RDT); return -1; }
+    uint32_t e = (uint32_t)rdt[0x14] | ((uint32_t)rdt[0x15] << 8) | ((uint32_t)rdt[0x16] << 16) | ((uint32_t)rdt[0x17] << 24);
+    uint32_t h = (uint32_t)rdt[0x18] | ((uint32_t)rdt[0x19] << 8) | ((uint32_t)rdt[0x1a] << 16) | ((uint32_t)rdt[0x1b] << 24);
+    uint32_t v = (uint32_t)rdt[0x1c] | ((uint32_t)rdt[0x1d] << 8) | ((uint32_t)rdt[0x1e] << 16) | ((uint32_t)rdt[0x1f] << 24);
+    const int satz_max = (RE15_PIPE_R41_ROHR_SATZ_TREFFER > RE15_PIPE_R41_ROHR_SATZ_SCHWUNG)
+                       ? RE15_PIPE_R41_ROHR_SATZ_TREFFER : RE15_PIPE_R41_ROHR_SATZ_SCHWUNG;
+    if (e == 0 || h <= e || v <= h || v >= (uint32_t)sz || e + (uint32_t)(satz_max + 1) * 4u > h ||
+        re15_vab_parse(rdt + h, (size_t)(v - h), &s_rohr_vab) != 0) {
+        free(rdt); fprintf(stderr, "[rohr] %s: snd1 nicht lesbar -> Pipe stumm\n", RE15_PIPE_R41_ROHR_RDT); return -1;
+    }
+    const uint8_t *vb = rdt + v; const uint32_t vb_sz = (uint32_t)sz - v;
+    for (int i = 0; i < s_rohr_vab.vag_count; i++) {
+        uint32_t off = s_rohr_vab.samples[i].offset, n = s_rohr_vab.samples[i].size;
+        if (off + n > vb_sz) continue;
+        size_t cap = (n / 16) * 28;
+        int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+        if (!pcm) continue;
+        s_rohr_decoded[i]     = pcm;
+        s_rohr_decoded_len[i] = re15_vag_adpcm_decode(vb + off, n, pcm, cap);
+    }
+    /* ARMS01-Messersaetze 8/5 (`00 00 43 11` / `00 00 13 11`, ARMS01.EDH @0x20/@0x14) liefern Stimme/Prio; der Port haelt
+     * die ARMS-Bank der Pipe ohnehin auf ARMS01 (re15_pipe_r41_arms_bank). Fehlt sie, gilt dieselbe Byte-Folge. */
+    static const uint8_t messer_treffer[4] = { 0x00, 0x00, 0x43, 0x11 };
+    static const uint8_t messer_schwung[4] = { 0x00, 0x00, 0x13, 0x11 };
+    const uint8_t *mt = messer_treffer, *ms = messer_schwung;
+    if (s_weap_loaded && s_weap_id == RE15_PIPE_R41_MESSER && s_weap_edt_count > RE15_PIPE_R41_ARMS_TREFFER) {
+        mt = s_weap_edt + RE15_PIPE_R41_ARMS_TREFFER * 4;
+        ms = s_weap_edt + RE15_PIPE_R41_ARMS_SCHWUNG * 4;
+    }
+    memset(s_rohr_edt, 0, sizeof s_rohr_edt);
+    re15_pipe_r41_rohr_rec(rdt + e + RE15_PIPE_R41_ROHR_SATZ_TREFFER * 4, mt, s_rohr_edt + RE15_PIPE_R41_ARMS_TREFFER * 4);
+    re15_pipe_r41_rohr_rec(rdt + e + RE15_PIPE_R41_ROHR_SATZ_SCHWUNG * 4, ms, s_rohr_edt + RE15_PIPE_R41_ARMS_SCHWUNG * 4);
+    free(rdt);                                             /* VAGs dekodiert, die zwei Saetze kopiert */
+    s_rohr_state = 1;
+    fprintf(stderr, "[rohr] %s snd1 geladen: %d VAGs, Treffer %02x%02x%02x%02x, Schwung %02x%02x%02x%02x\n",
+            RE15_PIPE_R41_ROHR_RDT, s_rohr_vab.vag_count,
+            s_rohr_edt[32], s_rohr_edt[33], s_rohr_edt[34], s_rohr_edt[35],
+            s_rohr_edt[20], s_rohr_edt[21], s_rohr_edt[22], s_rohr_edt[23]);
+    return 1;
+}
+
 void re15_audio_weapon_se(int se_id)
 {
     {   /* Mess-Log (Debug-Harness, RE15_WAFFEN_LOG) */
@@ -1180,6 +1296,20 @@ void re15_audio_weapon_se(int se_id)
         FILE *wl = re15_waffen_log();
         if (wl) fprintf(wl, "    SE  arms_rec=%d bank=%d(geladen=%d) count=%d\n",
                         se_id, s_weap_id, s_weap_loaded, s_weap_edt_count);
+    }
+    {   /* Runde 41 Spur pipe_ton: Pipe (Waffe 2) -> Birkins Rohr-Toene; jede andere Waffe faellt durch (Messer unveraendert). */
+        extern int re15_player_equipped_weapon(void);
+        const int rohr = re15_pipe_r41_rohr_satz(re15_player_equipped_weapon(), se_id);
+        if (rohr >= 0) {
+            const int st = rohr_bank_laden();
+            {   extern FILE *re15_waffen_log(void);
+                FILE *wl = re15_waffen_log();
+                if (wl) fprintf(wl, "    SE  rohr F%u arms_rec=%d -> %s snd1 satz=%d (geladen=%d)\n",
+                                (unsigned)g_engine.frame_count, se_id, RE15_PIPE_R41_ROHR_RDT, rohr, st); }
+            if (g_audio.initialized && st == 1)
+                se_play_layers(s_rohr_edt, &s_rohr_vab, s_rohr_decoded, s_rohr_decoded_len, se_id);
+            return;
+        }
     }
     if (!g_audio.initialized || !s_weap_loaded || se_id < 0 || se_id >= s_weap_edt_count) return;
     /* LAYERED (byte-true): ARMS record 0 (the gunshot) = 00 00 13 30 -> byte3 0x30 = 1 extra tone,

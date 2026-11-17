@@ -1,0 +1,17 @@
+Rollreihe der Analyse (r2_rolle.py) am Asset 4cf28242 (Farbprobe b; Geometrie a/b/c gleich):
+h22 phi 0: neu [22.5, 16.0, 16.5, 15.5, 15.5] | Analyse (flach phi 0) [17.5, 18.0, 18.5, 17.5, 12.0] | Abweichung [5.0, -2.0, -2.0, -2.0, 3.5] (max 5.0) | Video [15.5, 20.5, 16.0, 15.0, 18.0]
+h24 phi 0: neu [26.5, 16.0, 16.5, 17.0, 16.5] | Analyse (flach phi 0) [17.5, 18.5, 17.5, 18.0, 12.5] | Abweichung [9.0, -2.5, -1.0, -1.0, 4.0] (max 9.0) | Video [14.5, 15.5, 12.0, 20.5, 18.0]
+h64 phi 0: neu [26.5, 15.5, 15.5, 16.5, 17.0] | Analyse (flach phi 0) [16.5, 17.5, 17.5, 17.0, 12.5] | Abweichung [10.0, -2.0, -2.0, -0.5, 4.5] (max 10.0) | Video [22.0, 14.5, 15.0, 18.0, 13.0]
+h90 phi 90: neu [50.5, 39.0, 28.0, 19.5, 11.5] | Analyse (flach phi 90) [50.5, 40.5, 33.5, 19.5, 8.5] | Abweichung [0.0, -1.5, -5.5, 0.0, 3.0] (max 5.5) | Video [23.5, 43.5, 27.0, 19.5, 14.5]
+
+Rollreihe am Stand 07b6703f (zum Vergleich):
+h22 phi 0: neu [50.5, 45.0, 40.0, 25.0, 11.5] | Analyse (flach phi 0) [17.5, 18.0, 18.5, 17.5, 12.0] | Abweichung [33.0, 27.0, 21.5, 7.5, -0.5] (max 33.0) | Video [15.5, 20.5, 16.0, 15.0, 18.0]
+h24 phi 0: neu [51.5, 45.5, 41.0, 25.5, 12.5] | Analyse (flach phi 0) [17.5, 18.5, 17.5, 18.0, 12.5] | Abweichung [34.0, 27.0, 23.5, 7.5, 0.0] (max 34.0) | Video [14.5, 15.5, 12.0, 20.5, 18.0]
+h64 phi 0: neu [50.0, 44.0, 40.5, 25.0, 12.5] | Analyse (flach phi 0) [16.5, 17.5, 17.5, 17.0, 12.5] | Abweichung [33.5, 26.5, 23.0, 8.0, 0.0] (max 33.5) | Video [22.0, 14.5, 15.0, 18.0, 13.0]
+h90 phi 90: neu [52.5, 40.5, 34.0, 20.0, 8.5] | Analyse (flach phi 90) [50.5, 40.5, 33.5, 19.5, 8.5] | Abweichung [2.0, 0.0, 0.5, 0.5, 0.0] (max 2.0) | Video [23.5, 43.5, 27.0, 19.5, 14.5]
+
+PV f_rast (m1_pv.py): s .1/.3/.5/.7/.9, Laenge, Nadelspitze
+ALT_07b6703f.EMD {"breite": [49.0, 41.5, 33.5, 19.5, 7.5], "laenge": 159.3, "spitze_nadel": [285.9, 327.6], "tiefster_px": [281, 325], "px": 4538}
+EM30_R8_a.EMD {"breite": [0.0, 39.0, 27.0, 18.5, 13.5], "laenge": 178.7, "spitze_nadel": [286.8, 347.0], "tiefster_px": [284, 332], "px": 4093}
+EM30_R8_b.EMD {"breite": [0.0, 39.0, 27.0, 18.5, 13.5], "laenge": 178.7, "spitze_nadel": [286.8, 347.0], "tiefster_px": [284, 332], "px": 4093}
+EM30_R8_c.EMD {"breite": [0.0, 39.0, 27.0, 18.5, 13.5], "laenge": 178.7, "spitze_nadel": [286.8, 347.0], "tiefster_px": [284, 332], "px": 4093}

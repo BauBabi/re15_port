@@ -116,6 +116,24 @@ int re15_objpoly_r38_quad_mesh_p(const re15_md1_vertex_t *const v[4], const int3
 void re15_objpoly_r38_halbviereck_pc(uint16_t attr, const int ax[4], const int ay[4], const re15_md1_quad_uv_t *uv,
                                      int page_off, int wz, const uint8_t gpu_ok[2], const uint8_t rgb[12]);
 
+/* Release v0.8.30 (Pruefung R1, Spinnen-Lache L7): BODEN-SCHATTEN-Viereck (Figurenschatten, Blutlache, Spinnen-Lache,
+ * Babyfleck) OHNE Nahgrenze. Die beiden Original-Zeichner haengen das Viereck ohne jede Z-Pruefung ein:
+ *   RE1.5 FUN_8001b064: `jal 0x80065d10` (RotAverage4 = RTPT 0x4a280030 @0x80065d2c, RTPS 0x4a180001 @0x80065d58,
+ *         AVSZ4 0x4b68002e @0x80065d7c) @0x8001b2c8, danach `srl v0,v0,4` @0x8001b2d8 und addPrim @0x8001b30c-35c,
+ *         einziger Sprung davor ist die Bereichspruefung `jal 0x80014368` / `beq v0,zero` @0x8001b224/2c
+ *         (XZ-Kreuzprodukte @0x80014368-3b0, wie FUN_8002c820 im RE2).
+ *   RE2   FUN_8001699c (Record-Pool 0x800ce698, 50 x 0x68; Lache = rec+4/+6, FUN_80016480 `sw a2,4(t0)` @0x80016530):
+ *         RTPT 0x4a280030 @0x80016b30, RTPS 0x4a180001 @0x80016b58, AVSZ4 0x4b68002e @0x80016b6c, OTZ-Klemme
+ *         `sltiu v0,v0,0x2000` / `addiu v0,zero,8191` @0x80016b80/8c, addPrim @0x80016b98-bcc; einziger Sprung davor
+ *         ist `jal 0x8002c820` / `beq v0,zero` @0x80016af8/b00 (Mittelpunkt im Kamera-Bodenviereck, reine XZ-Kreuzprodukte).
+ * Was die Ecken nahe/hinter der Kamera tun, entscheiden also nur die GTE-Saettigung (re15_objpoly_r38_rtps: SZ3 >= 0,
+ * SXY -400h..3FFh) und die GPU-Groessengrenze je Dreieck (0,1,2)/(1,2,3). Kein NCLIP, keine OTZ-Grenze.
+ * mac[v] = Sichtraum der Ecken 0..3 (Reihenfolge des Schatten-Templates FUN_8001af5c). sx/sy = gesaettigte Bildpunkte,
+ * *sz_summe = SZ0+SZ1+SZ2+SZ3 (fuer re15_render_pc_shadow_tiefe), tri_ok[0]/[1] = GPU-Dreieck (0,1,2)/(1,2,3) gerastert.
+ * Rueckgabe 1 = mindestens ein Dreieck wird gerastert. Ersetzt den Port-Ausschnitt `_vz < 64` ("H28", ohne Beleg). */
+int re15_objpoly_r38_schatten(const int32_t mac[4][3], int h, int ofx, int ofy,
+                              int sx[4], int sy[4], int32_t *sz_summe, uint8_t tri_ok[2]);
+
 /* Messschiene RE15_OBJPOLY_LOG=<datei> (Diagnose, kein Verhalten): der Zeichenweg meldet den Beginn jedes Objekts;
  * je Bild und Objekt schreibt die Datei eine Zeile "F<bild> room=<raum> cut=<cut> obj=<id> gezeichnet=<n>
  * nclip=<n> otz=<n> gpu=<n>" (Polygone nach Grund; ein Viereck zaehlt einmal). */

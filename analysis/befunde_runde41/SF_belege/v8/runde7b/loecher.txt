@@ -1,0 +1,3 @@
+emd/NEU.EMD Ansichten 50 Umriss-Pixel anders 1124 Loch-Pixel (innen weg) 3 [('F349', 1), ('F352', 2)]
+emd/T1.EMD Ansichten 50 Umriss-Pixel anders 1192 Loch-Pixel (innen weg) 84 [('F244', 10), ('F259', 5), ('F265', 9), ('F268', 4), ('F274', 1), ('F277', 8), ('F280', 8), ('F289', 10), ('F292', 9), ('F298', 10), ('F301', 4), ('F307', 1)]
+emd/U7c.EMD Ansichten 50 Umriss-Pixel anders 1932 Loch-Pixel (innen weg) 10 [('F310', 1), ('F325', 6), ('F352', 3)]

@@ -19,9 +19,16 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: ohne diese Zeile gelten im Li
 #
 # Pruefungen je Lauf (state.log / debug.log):
 #   1  (3,61) 0 -> 1: das Ereignis lief (echter Weg, nicht der Parkplatz)
-#   2  erster Spieler-Treffer (Haken)
+#   2  erster Spieler-Treffer (Haken); danach mindestens ein weiterer Treffer (der Befund)
 #   3  die ERSTE Biss-Episode danach (ss1 = 4, Clip 4) trifft den Spieler bei +0x95 = 0x23 (af = 35) mit hp -10 -
 #      genau das Verhalten des Originals (s. o.). Alter Stand: die Episode laeuft ohne Treffer durch (ROT).
+#      Seit der Klauen-Sonde (Kralle ACT[3], `jal 0x8001c2dc` @0x80117834 / STAGE5 @0x80118048) zieht Birkin auf dieser
+#      Route die Klaue aus der Gangwand, bevor sie trifft; ist der erste Treffer der Biss selbst, zaehlt er als Haken und Biss.
+#      Gemessen (r41/birkin_kralle): Leon erster Treffer F1000 ss1 4 af 35 -10, Elza F941 ss1 4 af 35 -10.
+#      Pflicht nur noch im Leon-Lauf (50E0): NUTZERENTSCHEID 17.11.2026 "Nein" - ein Kontakt der Klinge beim Ausholen (Clip 3
+#      af < 0x20, RE15_BKK_SCHLAG_AB) loest keinen Rueckzug mehr aus. Im Elza-Lauf (50F1) zog Birkin bis 32b4575e6 bei F1276
+#      (af 23, Ausholen) zurueck und biss danach (Treffer F1346 af 35); jetzt laeuft der Hieb durch und trifft (F1293), eine
+#      Biss-Episode kommt bis zum Tod nicht mehr. Kommt eine, gilt auch dort af 35 / -10.
 #   4  Birkin stirbt (st = 3, hp <= 0)
 #   5  (3,73) und (3,84) 0 -> 1 (sub01 ueber 5:28 aus der Todesmaschine)
 # Gemessen mit dem Fix (Integrationsbaum, labor_check/angriff f_e5): Elza Haken F873, Biss F1014 af 35 hp 90 -> 80,
@@ -58,7 +65,7 @@ if(NOT DEFINED _laeufe)
 endif()
 
 set(_f "")
-function(ein_lauf _name _raum _pos _route _extra)
+function(ein_lauf _name _raum _pos _route _extra _biss_pflicht)
     set(WORKDIR "${_wurzel}/${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     # Route durchs Ausloesefeld (GEGENPRUEFUNG labor_check 3.1), dann stehen, zielen, feuern, R1 kurz los (neu zielen).
@@ -93,6 +100,8 @@ function(ein_lauf _name _raum _pos _route _extra)
     set(_biss_ende "")
     set(_biss_treffer "")
     set(_tot "")
+    set(_nach 0)
+    set(_nach_liste "")
     foreach(_z IN LISTS _zeilen)
         if(NOT _z MATCHES "^F([0-9]+) .*PL\\([-0-9]+,[-0-9]+,rot=[-0-9]+,hp=([-0-9]+)\\)")
             continue()
@@ -109,9 +118,21 @@ function(ein_lauf _name _raum _pos _route _extra)
             set(_af ${CMAKE_MATCH_4})
             set(_bhp ${CMAKE_MATCH_5})
         endif()
+        if(NOT _prev_hp STREQUAL "" AND _hp LESS _prev_hp AND NOT _haken STREQUAL "")
+            math(EXPR _nach "${_nach} + 1")   # Spieler-Treffer NACH dem Haken (Befund: vorher keiner mehr)
+            string(APPEND _nach_liste " F${_bild}/ss${_ss1}/af${_af}")
+        endif()
         if(NOT _prev_hp STREQUAL "" AND _hp LESS _prev_hp)
             if(_haken STREQUAL "")
                 set(_haken "${_bild}")
+                # Kralle ACT[3] mit Klauen-Sonde (@0x80117834): auf dieser Route steckt die Klaue im Fenster in Wandzelle #17 / #3
+                # (50E0) bzw. #12 / #2 (50F1) und Birkin zieht sie heraus (Clip 0xa), bevor sie Leon/Elza erreicht. Der erste
+                # Treffer ist dann schon der Biss selbst (ss1 4): er zaehlt als Haken UND als die gesuchte Biss-Episode.
+                if(_st STREQUAL "1" AND _ss1 STREQUAL "4")
+                    math(EXPR _d "${_prev_hp} - ${_hp}")
+                    set(_biss_start "${_bild}")
+                    set(_biss_treffer "F${_bild} af=${_af} -${_d}")
+                endif()
             elseif(NOT _biss_start STREQUAL "" AND _biss_ende STREQUAL "" AND _biss_treffer STREQUAL "")
                 math(EXPR _d "${_prev_hp} - ${_hp}")
                 set(_biss_treffer "F${_bild} af=${_af} -${_d}")
@@ -131,8 +152,15 @@ function(ein_lauf _name _raum _pos _route _extra)
     endforeach()
     if(_haken STREQUAL "")
         string(APPEND _g "\n ${_name}: kein Spieler-Treffer (Haken)")
-    elseif(_biss_start STREQUAL "")
+    elseif(_nach EQUAL 0)
+        string(APPEND _g "\n ${_name}: nach dem Haken F${_haken} trifft Birkin den stehenden Spieler nie wieder (Befund 555556172)")
+    elseif(_biss_start STREQUAL "" AND _biss_pflicht)
         string(APPEND _g "\n ${_name}: nach dem Haken F${_haken} keine Biss-Episode (ss1 4)")
+    elseif(_biss_start STREQUAL "")
+        # Elza (50F1), NUTZERENTSCHEID 17.11.2026 "Nein" (Kontakt beim Ausholen loest keinen Rueckzug aus, RE15_BKK_SCHLAG_AB): bis
+        # 32b4575e6 zog Birkin bei F1276 (Clip 3 af 23, Klinge beim Ausholen in der Wand) zurueck und biss danach (F1331, Treffer
+        # F1346 af 35). Jetzt laeuft dieser Hieb durch und trifft (F1293); es folgen Hiebe und Wuerfe, keine Biss-Episode bis zum
+        # Tod. Gefordert bleibt der Befund (Treffer nach dem Haken); die Biss-Box (KF N-2, af 35) prueft der Leon-Lauf.
     elseif(_biss_treffer STREQUAL "")
         string(APPEND _g "\n ${_name}: Biss F${_biss_start}..F${_biss_ende} nach dem Haken F${_haken} verfehlt den stehenden Spieler (Original: Treffer bei +0x95 0x23, Box = KF N-2)")
     elseif(NOT _biss_treffer MATCHES "af=35 -10$")
@@ -146,15 +174,15 @@ function(ein_lauf _name _raum _pos _route _extra)
             string(APPEND _g "\n ${_name}: (3,${_bit}) nach dem Tod nicht gesetzt")
         endif()
     endforeach()
-    message(STATUS "r41_labor_birkin_angriff ${_name} (${_raum}): exit=${_rv} Haken F${_haken}, Biss ab F${_biss_start}: ${_biss_treffer}, Tod ${_tot}${_g}")
+    message(STATUS "r41_labor_birkin_angriff ${_name} (${_raum}): exit=${_rv} Haken F${_haken}, Biss ab F${_biss_start}: ${_biss_treffer}, Treffer nach dem Haken ${_nach}:${_nach_liste}, Tod ${_tot}${_g}")
     set(_f "${_f}${_g}" PARENT_SCOPE)
 endfunction()
 
 if("leon" IN_LIST _laeufe)
-    ein_lauf(leon 50E0 "-25450,-14700,0,0" "L0.34,XU1.4,R0.34,XU1.8,R0.34,XU3" "")
+    ein_lauf(leon 50E0 "-25450,-14700,0,0" "L0.34,XU1.4,R0.34,XU1.8,R0.34,XU3" "" ON)
 endif()
 if("elza" IN_LIST _laeufe)
-    ein_lauf(elza 50F1 "-24550,-23650,0,0" "R0.34,XU1.0,L0.34,XU2.0,L0.34,XU4" "RE15_TITLE_SHOT_CHAR=1")
+    ein_lauf(elza 50F1 "-24550,-23650,0,0" "R0.34,XU1.0,L0.34,XU2.0,L0.34,XU4" "RE15_TITLE_SHOT_CHAR=1" OFF)
 endif()
 
 file(REMOVE "${_exe_kopie}")

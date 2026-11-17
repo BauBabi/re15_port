@@ -1,0 +1,150 @@
+{
+ "Rücken.png": {
+  "versatz": [
+   0,
+   0
+  ],
+  "grundlage_px": 311558,
+  "abweichend": 9287,
+  "davon_ausserhalb_annotation": 3322,
+  "rest_max_diff": 127,
+  "rest_in_figur": 3322,
+  "vorfaktoriert_abweichend_ausserhalb_annotation": 0,
+  "rest_bbox": null
+ },
+ "Schwanz_hinten.png": {
+  "versatz": [
+   425,
+   0
+  ],
+  "grundlage_px": 311558,
+  "abweichend": 15337,
+  "davon_ausserhalb_annotation": 2910,
+  "rest_max_diff": 127,
+  "rest_in_figur": 2910,
+  "vorfaktoriert_abweichend_ausserhalb_annotation": 0,
+  "rest_bbox": null
+ },
+ "Kopf_von_hinten.png": {
+  "versatz": [
+   0,
+   0
+  ],
+  "grundlage_px": 311558,
+  "abweichend": 4387,
+  "davon_ausserhalb_annotation": 3495,
+  "rest_max_diff": 127,
+  "rest_in_figur": 3495,
+  "vorfaktoriert_abweichend_ausserhalb_annotation": 0,
+  "rest_bbox": null
+ },
+ "linkes_bein_hinten.png": {
+  "versatz": [
+   223,
+   0
+  ],
+  "grundlage_px": 311558,
+  "abweichend": 7906,
+  "davon_ausserhalb_annotation": 3214,
+  "rest_max_diff": 255,
+  "rest_in_figur": 3214,
+  "vorfaktoriert_abweichend_ausserhalb_annotation": 627,
+  "rest_bbox": [
+   2,
+   2,
+   519,
+   593
+  ]
+ },
+ "rechtes_bein_hinten.png": {
+  "versatz": [
+   0,
+   0
+  ],
+  "grundlage_px": 311558,
+  "abweichend": 10030,
+  "davon_ausserhalb_annotation": 3195,
+  "rest_max_diff": 127,
+  "rest_in_figur": 3195,
+  "vorfaktoriert_abweichend_ausserhalb_annotation": 0,
+  "rest_bbox": null
+ },
+ "linker_rechter_Fuß_hinten.png": {
+  "versatz": [
+   375,
+   0
+  ],
+  "grundlage_px": 311558,
+  "abweichend": 4123,
+  "davon_ausserhalb_annotation": 3488,
+  "rest_max_diff": 127,
+  "rest_in_figur": 3488,
+  "vorfaktoriert_abweichend_ausserhalb_annotation": 0,
+  "rest_bbox": null
+ },
+ "Bein_Vorne_rechts.png": {
+  "versatz": [
+   0,
+   0
+  ],
+  "grundlage_px": 311558,
+  "abweichend": 6937,
+  "davon_ausserhalb_annotation": 3202,
+  "rest_max_diff": 127,
+  "rest_in_figur": 3202,
+  "vorfaktoriert_abweichend_ausserhalb_annotation": 0,
+  "rest_bbox": null
+ },
+ "Gesicht vorne.png": {
+  "versatz": [
+   401,
+   0
+  ],
+  "grundlage_px": 374312,
+  "abweichend": 9460,
+  "davon_ausserhalb_annotation": 2517,
+  "rest_max_diff": 127,
+  "rest_in_figur": 2517,
+  "vorfaktoriert_abweichend_ausserhalb_annotation": 0,
+  "rest_bbox": null
+ },
+ "Vorne_Oberkörper.png": {
+  "versatz": [
+   0,
+   0
+  ],
+  "grundlage_px": 374312,
+  "abweichend": 9388,
+  "davon_ausserhalb_annotation": 2525,
+  "rest_max_diff": 127,
+  "rest_in_figur": 2525,
+  "vorfaktoriert_abweichend_ausserhalb_annotation": 0,
+  "rest_bbox": null
+ },
+ "vorne_rechte_Hand_und_Kralle.png": {
+  "versatz": [
+   282,
+   0
+  ],
+  "grundlage_px": 374312,
+  "abweichend": 6722,
+  "davon_ausserhalb_annotation": 2439,
+  "rest_max_diff": 127,
+  "rest_in_figur": 2439,
+  "vorfaktoriert_abweichend_ausserhalb_annotation": 0,
+  "rest_bbox": null
+ },
+ "Vorderes_Linkes_Bein_mit_fuß.png": {
+  "versatz": [
+   0,
+   0
+  ],
+  "grundlage_px": 374312,
+  "abweichend": 8042,
+  "davon_ausserhalb_annotation": 1775,
+  "rest_max_diff": 127,
+  "rest_in_figur": 1775,
+  "vorfaktoriert_abweichend_ausserhalb_annotation": 0,
+  "rest_bbox": null
+ }
+}

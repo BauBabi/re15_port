@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "re15_scd.h"
+#include "re15_clutanim.h"   /* FUN_8002b968 nach dem Init-Lauf */
 #include "re15_aot.h"
 #include "re15_rdt.h"
 #include "re15_actor.h"
@@ -457,6 +458,10 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     scd_vm_set_room_init(1);
     scd_vm_tick();                      /* run init+main once (main00 regs; sub00→scenario sub) */
     scd_vm_set_room_init(0);
+    /* PALETTEN-ANIMATION der Typ-3-Objekte anmelden (Monitore 5030/5031, Wasser): FUN_8003ef6c ruft
+     * FUN_8002b968 @0x8003f020 DIREKT nach dem Init-Lauf (`jal 0x8003f0a0` @0x8003f018) — also nach main00/
+     * sub00 und VOR allen Port-Zusatzobjekten unten. Beleg-Block: include/re15_clutanim.h. */
+    re15_clutanim_raum_anmelden(rdt);
     /* Die SICHERUNG in den Hebetisch legen — NACH dem Init-Lauf, weil sich das Prop an
      * die Elternmatrix der Plattform haengt und die erst durch main00 im Pool steht.
      * Tut in jedem anderen Raum nichts. Herleitung: include/re15_sicherung.h. */

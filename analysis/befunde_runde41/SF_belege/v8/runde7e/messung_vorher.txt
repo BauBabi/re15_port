@@ -1,0 +1,339 @@
+Runde 7e - Messung VOR dem Bau (Stand 7d, Asset 5c902d49), Scratch sfv8/r7e (Werkzeuge in runde7e/werkzeug/)
+
+== 1. Flaechen von Mesh 11 / 12 / 14 je CLUT-Zeile, UV, Texel-Lab (Palette, ohne Licht) - a1_flaechen.py
+asset sha 5c902d493e6815f8551e0297eb1ef7e8c6cbda4b11ed3ab5191cf6a62ac11f30
+== ASSET 5c902d49 CLUT ab y 480 Zeilen 16 pix (256, 384)
+  M11 d0  zeile 482 seite 2 u   0-  8 v  76- 87 texel   44 Lab   8.5   3.5   1.2  ecken [4, 17, 6] y 627..674
+  M11 d1  zeile 482 seite 2 u   8- 19 v  80- 87 texel   48 Lab   8.5   4.2   1.2  ecken [7, 17, 5] y 626..674
+  M11 d2  zeile 482 seite 2 u  14- 27 v   0- 11 texel   91 Lab  28.7   3.6   1.3  ecken [12, 11, 10] y 34..93
+  M11 d3  zeile 482 seite 2 u  27- 38 v   0- 14 texel   79 Lab  25.0   3.7   1.4  ecken [8, 12, 10] y 34..93
+  M11 d4  zeile 482 seite 2 u  25- 38 v   0- 14 texel   58 Lab  28.7   3.7   1.4  ecken [12, 8, 9] y 34..90
+  M11 d5  zeile 482 seite 2 u  14- 27 v   0-  5 texel   45 Lab  25.0   3.6   1.3  ecken [11, 12, 9] y 34..91
+  M11 d6  zeile 482 seite 2 u  22- 33 v  11- 35 texel  142 Lab  25.0   3.7   1.4  ecken [16, 10, 3] y 93..240
+  M11 d7  zeile 482 seite 2 u   8- 25 v   3- 20 texel  123 Lab  28.7   3.7   1.4  ecken [9, 15, 11] y 89..236
+  M11 d8  zeile 482 seite 2 u   5- 21 v  20- 51 texel  245 Lab  28.7   3.6   1.3  ecken [14, 15, 0] y 233..442
+  M11 d9  zeile 482 seite 2 u  17- 33 v  30- 56 texel  186 Lab  21.3   3.6   1.3  ecken [13, 16, 3] y 237..442
+  M11 d10 zeile 482 seite 2 u   5-  8 v  20- 51 texel   78 Lab  25.1   3.9   1.3  ecken [15, 14, 2] y 236..442
+  M11 d11 zeile 482 seite 2 u  17- 38 v  35- 56 texel   77 Lab  17.4   3.9   1.5  ecken [16, 13, 1] y 234..442
+  M11 d12 zeile 482 seite 2 u   5- 14 v   3- 21 texel   47 Lab  25.0   3.7   1.4  ecken [11, 15, 2] y 91..238
+  M11 d13 zeile 482 seite 2 u  27- 38 v  11- 35 texel  155 Lab  25.0   3.6   1.4  ecken [16, 8, 10] y 90..237
+  M11 d14 zeile 482 seite 2 u   8- 25 v   5- 25 texel  166 Lab  28.7   3.7   1.4  ecken [15, 9, 0] y 89..236
+  M11 d15 zeile 482 seite 2 u  33- 38 v  14- 35 texel   77 Lab  25.0   3.7   1.5  ecken [8, 16, 1] y 90..237
+  M11 d16 zeile 482 seite 2 u   8- 19 v  80- 87 texel   54 Lab   9.5   4.2   1.2  ecken [17, 4, 5] y 626..674
+  M11 d17 zeile 482 seite 2 u   0- 12 v  76- 87 texel   66 Lab   9.0   4.0   1.2  ecken [17, 7, 6] y 628..674
+  M11 v0  zeile 482 seite 2 u  21- 38 v   5- 35 texel  363 Lab  25.0   3.7   1.4  ecken [0, 9, 1, 8] y 89..234
+  M11 v1  zeile 482 seite 2 u   0- 17 v  51- 80 texel  354 Lab   9.5   3.8   1.4  ecken [7, 13, 6, 14] y 442..628
+  M11 v2  zeile 482 seite 2 u   0- 21 v  25- 80 texel  437 Lab  12.7   3.8   1.3  ecken [6, 14, 4, 0] y 233..628
+  M11 v3  zeile 482 seite 2 u   8- 38 v  25- 85 texel  922 Lab  13.6   3.7   1.3  ecken [5, 4, 1, 0] y 233..627
+  M11 v4  zeile 482 seite 2 u  12- 38 v  35- 85 texel  474 Lab   9.5   3.8   1.4  ecken [5, 1, 7, 13] y 234..628
+  M11 v5  zeile 482 seite 2 u   5- 27 v   3- 30 texel  376 Lab  27.0   3.7   1.4  ecken [3, 10, 2, 11] y 91..240
+  M11 v6  zeile 482 seite 2 u   5- 22 v  21- 56 texel  466 Lab  25.0   3.6   1.3  ecken [2, 14, 3, 13] y 238..442
+  M11 Zeilen: {482: 25}
+  M12 d0  zeile 491 seite 2 u   0- 16 v  86-109 texel  212 Lab  43.4   6.2   2.3  ecken [20, 19, 21] y 349..457
+  M12 d1  zeile 491 seite 2 u   0-  8 v  82- 86 texel   26 Lab  35.7   3.3   1.2  ecken [22, 18, 21] y 329..353
+  M12 d2  zeile 490 seite 2 u  18- 24 v  71- 83 texel   46 Lab  12.7   3.8   0.0  ecken [17, 51, 11] y 237..325
+  M12 d3  zeile 491 seite 2 u   0-  8 v  86-109 texel  120 Lab  43.4   6.4   2.4  ecken [20, 21, 18] y 329..457
+  M12 d4  zeile 491 seite 2 u   7- 16 v  86-109 texel  120 Lab  39.9   3.6   1.3  ecken [19, 20, 18] y 329..457
+  M12 d5  zeile 492 seite 2 u   0- 21 v  84-110 texel  292 Lab  14.9  17.6   7.6  ecken [46, 48, 47] y 476..661
+  M12 d6  zeile 491 seite 2 u   0- 16 v  82- 87 texel   52 Lab  35.7   3.3   1.2  ecken [21, 19, 22] y 330..353
+  M12 d7  zeile 491 seite 2 u   7- 16 v  82- 87 texel   27 Lab  35.7   3.3   1.2  ecken [18, 22, 19] y 329..349
+  M12 d8  zeile 490 seite 2 u  26- 38 v  61- 68 texel   42 Lab   9.1   4.2   0.0  ecken [3, 7, 8] y -22..271
+  M12 d9  zeile 490 seite 2 u  26- 39 v  59- 69 texel   57 Lab   9.5   4.2   0.0  ecken [1, 9, 5] y -22..284
+  M12 d10 zeile 490 seite 2 u  16- 26 v  70- 84 texel   76 Lab  12.7   3.9   0.0  ecken [50, 6, 10] y 222..346
+  M12 d11 zeile 492 seite 2 u   6- 22 v  93-110 texel  119 Lab  18.1  26.3  13.5  ecken [29, 27, 28] y 522..694
+  M12 d12 zeile 492 seite 2 u   9- 22 v  92-110 texel  106 Lab  14.9  22.3  10.3  ecken [29, 30, 27] y 522..694
+  M12 d13 zeile 492 seite 2 u   6- 13 v  92-110 texel   68 Lab  21.5  25.8  12.9  ecken [29, 28, 30] y 522..694
+  M12 d14 zeile 492 seite 2 u   0- 10 v  83-110 texel  130 Lab  21.5  22.6  11.7  ecken [45, 47, 48] y 477..661
+  M12 d15 zeile 492 seite 2 u   7- 21 v  83-110 texel  222 Lab   9.9  16.7   5.5  ecken [47, 45, 46] y 476..661
+  M12 d16 zeile 492 seite 2 u   2- 22 v  78- 93 texel   83 Lab   8.1  12.3   3.9  ecken [31, 27, 30] y 431..560
+  M12 d17 zeile 492 seite 2 u   2- 22 v  78- 99 texel  213 Lab   9.7  16.2   5.0  ecken [27, 31, 28] y 431..560
+  M12 d18 zeile 492 seite 2 u   7- 21 v  66- 84 texel  144 Lab  12.0  12.5   4.8  ecken [45, 49, 46] y 383..493
+  M12 d19 zeile 492 seite 2 u   2- 24 v  69- 89 texel  243 Lab   9.9  12.5   3.9  ecken [43, 41, 44] y 371..464
+  M12 d20 zeile 492 seite 2 u   0- 21 v  66- 87 texel  241 Lab   9.7  12.5   3.9  ecken [48, 46, 49] y 383..477
+  M12 d21 zeile 492 seite 2 u   2- 13 v  78- 99 texel  109 Lab   9.9  16.7   7.6  ecken [30, 28, 31] y 431..522
+  M12 d22 zeile 492 seite 2 u   2- 10 v  69- 89 texel   92 Lab   9.7  13.8   3.9  ecken [44, 40, 43] y 371..480
+  M12 d23 zeile 492 seite 2 u   2- 24 v  87-120 texel  393 Lab  18.1  25.3  11.7  ecken [42, 41, 43] y 464..675
+  M12 d24 zeile 492 seite 2 u   2- 10 v  86-120 texel  173 Lab  21.5  25.5  12.9  ecken [42, 43, 40] y 464..675
+  M12 d25 zeile 492 seite 2 u  10- 24 v  86-120 texel  280 Lab  13.3  17.6   7.6  ecken [42, 40, 41] y 464..675
+  M12 d26 zeile 492 seite 2 u  10- 24 v  69- 87 texel  144 Lab   9.9  12.4   4.3  ecken [40, 44, 41] y 371..480
+  M12 d27 zeile 492 seite 2 u   0-  7 v  66- 87 texel   83 Lab   8.7  12.7   3.9  ecken [49, 45, 48] y 383..493
+  M12 d28 zeile 490 seite 2 u  16- 26 v  62- 70 texel   52 Lab   9.9   4.1   0.0  ecken [9, 50, 12] y 284..346
+  M12 d29 zeile 490 seite 2 u  16- 26 v  64- 83 texel  117 Lab   9.5   4.2   0.0  ecken [6, 50, 9] y 222..346
+  M12 d30 zeile 490 seite 2 u  18- 26 v  63- 71 texel   47 Lab   9.9   3.9   0.0  ecken [51, 8, 0] y 271..325
+  M12 d31 zeile 490 seite 2 u  18- 26 v  65- 82 texel   80 Lab   9.5   3.7   0.0  ecken [51, 17, 8] y 237..325
+  M12 v0  zeile 490 seite 2 u  19- 26 v  62- 73 texel   55 Lab   9.5   4.2   0.0  ecken [15, 23, 16, 24] y 281..356
+  M12 v1  zeile 490 seite 2 u  16- 23 v  53- 61 texel   44 Lab  11.5  15.5  -7.3  ecken [16, 24, 13, 25] y 281..382
+  M12 v2  zeile 490 seite 2 u  15- 22 v  68- 79 texel   58 Lab   9.5   0.0   0.0  ecken [10, 6, 11, 17] y 222..329
+  M12 v3  zeile 490 seite 2 u  17- 22 v  64- 74 texel   41 Lab   8.5   7.9   0.0  ecken [13, 25, 14, 26] y 326..382
+  M12 v4  zeile 490 seite 2 u  17- 24 v  51- 59 texel   39 Lab  12.7  11.0  -3.6  ecken [14, 26, 15, 23] y 281..372
+  M12 v5  zeile 490 seite 2 u  26- 39 v  64- 83 texel  217 Lab   8.7   4.2   0.0  ecken [6, 9, 4, 1] y -22..284
+  M12 v6  zeile 490 seite 2 u  29- 38 v  70- 86 texel   93 Lab   8.5   4.2   0.0  ecken [1, 5, 3, 7] y -22..148
+  M12 v7  zeile 490 seite 2 u  24- 32 v  66- 79 texel   72 Lab   8.5   4.2   0.0  ecken [7, 5, 16, 15] y 136..281
+  M12 v8  zeile 490 seite 2 u  14- 25 v  72- 81 texel   73 Lab   9.5   0.0   0.0  ecken [9, 12, 8, 0] y 271..342
+  M12 v9  zeile 490 seite 2 u  24- 38 v  65- 82 texel  219 Lab   9.5   4.2   0.0  ecken [17, 2, 8, 3] y -22..271
+  M12 v10 zeile 490 seite 2 u  21- 30 v  55- 65 texel   57 Lab   9.5  10.2   0.0  ecken [7, 16, 8, 13] y 136..326
+  M12 v11 zeile 490 seite 2 u  21- 25 v  67- 81 texel   41 Lab   9.5   4.2   0.0  ecken [8, 13, 9, 14] y 271..328
+  M12 v12 zeile 490 seite 2 u  16- 17 v  51- 57 texel    8 Lab  15.7  10.5 -11.1  ecken [25, 24, 26, 23] y 347..382
+  M12 v13 zeile 490 seite 2 u  22- 30 v  54- 64 texel   52 Lab   9.7  15.9   0.0  ecken [5, 9, 15, 14] y 148..328
+  M12 v14 zeile 490 seite 2 u  21- 37 v  71- 83 texel  143 Lab   9.5   4.2   0.0  ecken [2, 17, 4, 6] y -22..237
+  M12 v15 zeile 490 seite 2 u   8- 10 v  69- 81 texel   26 Lab   9.7   4.2   1.6  ecken [37, 36, 39, 38] y 438..467
+  M12 v16 zeile 490 seite 2 u   5-  7 v  60- 65 texel   12 Lab  12.7   3.8   1.4  ecken [33, 35, 32, 34] y 483..515
+  M12 v17 zeile 490 seite 2 u   5- 17 v  60- 70 texel   93 Lab   9.5   4.2   0.0  ecken [50, 33, 12, 32] y 342..515
+  M12 v18 zeile 490 seite 2 u   5- 18 v  65- 71 texel   19 Lab   9.9   0.0   0.0  ecken [51, 35, 50, 33] y 325..515
+  M12 v19 zeile 490 seite 2 u   8- 18 v  69- 71 texel   14 Lab   9.5   4.0   1.5  ecken [51, 50, 39, 37] y 325..467
+  M12 v20 zeile 490 seite 2 u   8- 18 v  69- 84 texel  131 Lab   9.7   4.2   1.6  ecken [10, 36, 50, 37] y 329..467
+  M12 v21 zeile 490 seite 2 u   8- 18 v  67- 75 texel   57 Lab   9.9   3.8   1.4  ecken [11, 38, 10, 36] y 310..448
+  M12 v22 zeile 490 seite 2 u   9- 19 v  69- 83 texel  128 Lab   9.9   3.9   1.5  ecken [51, 39, 11, 38] y 310..458
+  M12 v23 zeile 490 seite 2 u   6- 18 v  60- 71 texel   93 Lab   9.5   4.2   0.0  ecken [0, 34, 51, 35] y 318..498
+  M12 v24 zeile 490 seite 2 u   4- 17 v  66- 77 texel   75 Lab   9.9   3.9   1.5  ecken [12, 32, 0, 34] y 318..500
+  M12 v25 zeile 490 seite 2 u  24- 34 v  68- 80 texel  112 Lab   8.5   4.2   0.0  ecken [3, 2, 1, 4] y -22..-22
+  M12 Zeilen: {490: 34, 491: 6, 492: 18}
+  M14 d0  zeile 495 seite 2 u   1- 15 v  65- 83 texel  138 Lab  13.9   3.9   1.4  ecken [17, 4, 6] y 830..1035
+  M14 d1  zeile 495 seite 2 u   1-  9 v  59- 83 texel  121 Lab  12.2   5.8   1.3  ecken [17, 7, 5] y 828..1035
+  M14 d2  zeile 495 seite 2 u  25- 36 v   4- 11 texel   43 Lab  40.8  13.5   2.5  ecken [11, 12, 10] y -8..75
+  M14 d3  zeile 495 seite 2 u  25- 36 v   4- 16 texel   65 Lab  43.4  10.2   2.5  ecken [12, 8, 10] y -8..75
+  M14 d4  zeile 495 seite 2 u  36- 40 v   8- 23 texel   22 Lab  47.0   9.5   3.8  ecken [26, 12, 9] y -8..69
+  M14 d5  zeile 495 seite 2 u  30- 40 v   8- 23 texel   68 Lab  47.4   8.4   3.5  ecken [12, 11, 9] y -8..73
+  M14 d6  zeile 495 seite 2 u  13- 25 v   4- 21 texel   98 Lab  43.4   9.9   3.7  ecken [10, 16, 3] y 75..283
+  M14 d7  zeile 495 seite 2 u  30- 40 v  11- 34 texel  132 Lab  39.1   6.6   2.5  ecken [15, 9, 11] y 69..277
+  M14 d8  zeile 495 seite 2 u  15- 35 v  34- 47 texel   96 Lab  34.4   5.1   1.3  ecken [15, 14, 0] y 272..568
+  M14 d9  zeile 495 seite 2 u   9- 20 v  13- 39 texel  133 Lab  39.1   6.8   2.4  ecken [16, 13, 3] y 279..569
+  M14 d10 zeile 495 seite 2 u  15- 31 v  22- 47 texel  188 Lab  39.1   3.4   1.2  ecken [14, 15, 2] y 277..568
+  M14 d11 zeile 495 seite 2 u   9- 28 v  21- 39 texel  152 Lab  43.4   3.4   1.2  ecken [13, 16, 1] y 274..569
+  M14 d12 zeile 495 seite 2 u  21- 31 v  11- 34 texel  134 Lab  36.6   8.6   3.6  ecken [15, 11, 2] y 73..281
+  M14 d13 zeile 495 seite 2 u  20- 34 v   4- 21 texel  128 Lab  35.5  10.6   2.5  ecken [8, 16, 10] y 71..279
+  M14 d14 zeile 495 seite 2 u  31- 40 v  23- 40 texel   67 Lab  36.6   6.4   3.6  ecken [9, 15, 0] y 69..277
+  M14 d15 zeile 495 seite 2 u  20- 34 v  16- 31 texel  110 Lab  39.1   9.6   3.8  ecken [16, 8, 1] y 71..279
+  M14 d16 zeile 495 seite 2 u   1- 12 v  70- 83 texel   50 Lab  13.6   6.8   1.4  ecken [20, 17, 5] y 828..1035
+  M14 d17 zeile 495 seite 2 u   1-  6 v  59- 83 texel   84 Lab  12.0   9.9   0.0  ecken [7, 17, 6] y 831..1035
+  M14 d18 zeile 495 seite 2 u  34- 37 v   8- 19 texel   28 Lab  50.0   8.2   2.4  ecken [12, 25, 8] y -8..71
+  M14 d19 zeile 495 seite 2 u  19- 30 v  25- 29 texel   28 Lab  36.4   6.5   2.6  ecken [24, 12, 26] y -8..69
+  M14 d20 zeile 495 seite 2 u  13- 31 v  88- 97 texel   82 Lab  16.1  11.8   4.8  ecken [25, 12, 24] y -8..71
+  M14 d21 zeile 495 seite 2 u   1- 15 v  76- 83 texel   27 Lab  15.9   8.3   1.4  ecken [17, 19, 4] y 830..1035
+  M14 d22 zeile 495 seite 2 u  17- 32 v  21- 35 texel   98 Lab  43.4   6.4   2.4  ecken [19, 17, 18] y 829..1035
+  M14 d23 zeile 495 seite 2 u  10- 35 v  81-108 texel  302 Lab  15.9  11.9   1.5  ecken [17, 20, 18] y 829..1035
+  M14 v0  zeile 495 seite 2 u  34- 40 v  22- 40 texel   41 Lab  35.2   6.5   4.4  ecken [0, 22, 9, 26] y 69..273
+  M14 v1  zeile 495 seite 2 u   1- 15 v  39- 65 texel  186 Lab  21.6   5.4  -2.1  ecken [6, 14, 7, 13] y 568..831
+  M14 v2  zeile 495 seite 2 u   6- 35 v  40- 78 texel  499 Lab  17.8   5.4   0.0  ecken [6, 4, 14, 0] y 272..831
+  M14 v3  zeile 495 seite 2 u   9- 32 v  31- 74 texel  267 Lab  20.5   5.4   0.0  ecken [5, 1, 20, 23] y 274..829
+  M14 v4  zeile 495 seite 2 u   1- 28 v  31- 70 texel  464 Lab  27.8   5.2   0.0  ecken [7, 13, 5, 1] y 274..831
+  M14 v5  zeile 495 seite 2 u  13- 30 v   4- 22 texel  168 Lab  40.8  10.6   3.1  ecken [3, 2, 10, 11] y 73..283
+  M14 v6  zeile 495 seite 2 u   9- 21 v  13- 47 texel  257 Lab  39.4   6.6   1.2  ecken [2, 3, 14, 13] y 281..569
+  M14 v7  zeile 495 seite 2 u  28- 37 v  16- 36 texel   99 Lab  36.6   6.6   2.5  ecken [1, 8, 23, 25] y 71..274
+  M14 v8  zeile 495 seite 2 u  15- 35 v  39- 78 texel   88 Lab  20.2   4.5   0.0  ecken [0, 4, 22, 19] y 272..830
+  M14 v9  zeile 495 seite 2 u  11- 35 v  23- 38 texel  348 Lab  39.1   5.1   1.3  ecken [22, 19, 21, 18] y 273..830
+  M14 v10 zeile 495 seite 2 u  21- 32 v  21- 34 texel  130 Lab  36.6   5.3   2.5  ecken [22, 21, 26, 24] y 69..273
+  M14 v11 zeile 495 seite 2 u  16- 35 v  79-106 texel  414 Lab  17.8  13.8   5.0  ecken [21, 23, 24, 25] y 69..274
+  M14 v12 zeile 495 seite 2 u   0- 40 v  83-112 texel 1086 Lab  18.1  22.6  10.7  ecken [18, 20, 21, 23] y 273..829
+  M14 Zeilen: {495: 37}
+orig sha 569e31387d78c89f2193553a4ba8670d8923ff3d2e98f99c1a2a6bef8f72f4ce
+== ORIGINAL EM30 CLUT ab y 480 Zeilen 3 pix (256, 384)
+  M11 d0  zeile 482 seite 2 u   0-  8 v  76- 87 texel   44 Lab  13.1   3.9   0.6  ecken [4, 17, 6] y 784..842
+  M11 d1  zeile 482 seite 2 u   8- 19 v  80- 87 texel   48 Lab  13.6   4.1   0.0  ecken [7, 17, 5] y 782..842
+  M11 d2  zeile 482 seite 2 u  14- 27 v   0- 11 texel   91 Lab  40.8  13.5   3.9  ecken [12, 11, 10] y 43..116
+  M11 d3  zeile 482 seite 2 u  27- 38 v   0- 14 texel   79 Lab  36.5  13.5   0.6  ecken [8, 12, 10] y 43..116
+  M11 d4  zeile 482 seite 2 u  25- 38 v   0- 14 texel   58 Lab  36.5  14.6   0.6  ecken [12, 8, 9] y 43..112
+  M11 d5  zeile 482 seite 2 u  14- 27 v   0-  5 texel   45 Lab  35.2  15.4   0.6  ecken [11, 12, 9] y 43..114
+  M11 d6  zeile 482 seite 2 u  22- 33 v  11- 35 texel  142 Lab  36.6   6.6   2.6  ecken [16, 10, 3] y 116..300
+  M11 d7  zeile 482 seite 2 u   8- 25 v   3- 20 texel  123 Lab  38.4  13.5   5.3  ecken [9, 15, 11] y 111..295
+  M11 d8  zeile 482 seite 2 u   5- 21 v  20- 51 texel  245 Lab  43.4   6.4   1.2  ecken [14, 15, 0] y 291..552
+  M11 d9  zeile 482 seite 2 u  17- 33 v  30- 56 texel  186 Lab  35.7   3.7   1.2  ecken [13, 16, 3] y 296..553
+  M11 d10 zeile 482 seite 2 u   5-  8 v  20- 51 texel   78 Lab  39.4   6.6   2.5  ecken [15, 14, 2] y 295..552
+  M11 d11 zeile 482 seite 2 u  17- 38 v  35- 56 texel   77 Lab  26.9   5.9   1.3  ecken [16, 13, 1] y 292..553
+  M11 d12 zeile 482 seite 2 u   5- 14 v   3- 21 texel   47 Lab  35.2  15.4   0.6  ecken [11, 15, 2] y 114..298
+  M11 d13 zeile 482 seite 2 u  27- 38 v  11- 35 texel  155 Lab  40.8   6.6   2.4  ecken [16, 8, 10] y 112..296
+  M11 d14 zeile 482 seite 2 u   8- 25 v   5- 25 texel  166 Lab  40.8  10.6   3.1  ecken [15, 9, 0] y 111..295
+  M11 d15 zeile 482 seite 2 u  33- 38 v  14- 35 texel   77 Lab  36.6   6.8   2.6  ecken [8, 16, 1] y 112..296
+  M11 d16 zeile 482 seite 2 u   8- 19 v  80- 87 texel   54 Lab  12.7   5.5   0.0  ecken [17, 4, 5] y 782..842
+  M11 d17 zeile 482 seite 2 u   0- 12 v  76- 87 texel   66 Lab  12.8   7.1   1.3  ecken [17, 7, 6] y 785..842
+  M11 v0  zeile 482 seite 2 u  21- 38 v   5- 35 texel  363 Lab  38.4   8.6   2.5  ecken [0, 9, 1, 8] y 111..292
+  M11 v1  zeile 482 seite 2 u   0- 17 v  51- 80 texel  354 Lab  16.5   3.9   0.0  ecken [7, 13, 6, 14] y 552..785
+  M11 v2  zeile 482 seite 2 u   0- 21 v  25- 80 texel  437 Lab  20.2   5.4   0.0  ecken [6, 14, 4, 0] y 291..785
+  M11 v3  zeile 482 seite 2 u   8- 38 v  25- 85 texel  922 Lab  20.5   4.1   1.1  ecken [5, 4, 1, 0] y 291..784
+  M11 v4  zeile 482 seite 2 u  12- 38 v  35- 85 texel  474 Lab  17.4   5.1   0.0  ecken [5, 1, 7, 13] y 292..785
+  M11 v5  zeile 482 seite 2 u   5- 27 v   3- 30 texel  376 Lab  39.1  10.6   2.5  ecken [3, 10, 2, 11] y 114..300
+  M11 v6  zeile 482 seite 2 u   5- 22 v  21- 56 texel  466 Lab  39.1   5.4   1.2  ecken [2, 14, 3, 13] y 298..553
+  M11 Zeilen: {482: 25}
+  M12 d0  zeile 482 seite 2 u   0- 16 v  86-109 texel  212 Lab  18.3  18.5   8.2  ecken [20, 19, 21] y 441..635
+  M12 d1  zeile 482 seite 2 u   0-  8 v  82- 86 texel   26 Lab  12.1  10.8   1.4  ecken [22, 18, 21] y 406..447
+  M12 d2  zeile 482 seite 2 u  18- 24 v  71- 83 texel   46 Lab  20.5   3.6   0.0  ecken [17, 51, 11] y 329..451
+  M12 d3  zeile 482 seite 2 u   0-  8 v  86-109 texel  120 Lab  21.5  21.3  10.1  ecken [20, 21, 18] y 419..635
+  M12 d4  zeile 482 seite 2 u   7- 16 v  86-109 texel  120 Lab  16.3  16.6   6.5  ecken [19, 20, 18] y 419..635
+  M12 d5  zeile 482 seite 2 u   0- 21 v  84-110 texel  292 Lab  16.4  16.7   6.0  ecken [46, 48, 47] y 619..788
+  M12 d6  zeile 482 seite 2 u   0- 16 v  82- 87 texel   52 Lab  12.2   9.9   0.0  ecken [21, 19, 22] y 406..447
+  M12 d7  zeile 482 seite 2 u   7- 16 v  82- 87 texel   27 Lab  12.7   5.3   0.0  ecken [18, 22, 19] y 406..441
+  M12 d8  zeile 482 seite 2 u  26- 38 v  61- 68 texel   42 Lab  13.6   3.9   0.0  ecken [3, 7, 8] y 29..286
+  M12 d9  zeile 482 seite 2 u  26- 39 v  59- 69 texel   57 Lab  13.6   3.9   0.0  ecken [1, 9, 5] y 34..304
+  M12 d10 zeile 482 seite 2 u  16- 26 v  70- 84 texel   76 Lab  19.0   3.8   1.3  ecken [50, 6, 10] y 308..481
+  M12 d11 zeile 482 seite 2 u   6- 22 v  93-110 texel  119 Lab  16.6  23.5  12.2  ecken [29, 27, 28] y 756..836
+  M12 d12 zeile 482 seite 2 u   9- 22 v  92-110 texel  106 Lab  16.4  18.7   6.5  ecken [29, 30, 27] y 756..836
+  M12 d13 zeile 482 seite 2 u   6- 13 v  92-110 texel   68 Lab  21.5  23.0  11.3  ecken [29, 28, 30] y 756..836
+  M12 d14 zeile 482 seite 2 u   0- 10 v  83-110 texel  130 Lab  21.5  21.3   9.9  ecken [45, 47, 48] y 620..788
+  M12 d15 zeile 482 seite 2 u   7- 21 v  83-110 texel  222 Lab  13.6  13.8   2.6  ecken [47, 45, 46] y 619..788
+  M12 d16 zeile 482 seite 2 u   2- 22 v  78- 93 texel   83 Lab  10.9   5.8   0.0  ecken [31, 27, 30] y 624..789
+  M12 d17 zeile 482 seite 2 u   2- 22 v  78- 99 texel  213 Lab  12.2  11.8   2.6  ecken [27, 31, 28] y 624..789
+  M12 d18 zeile 482 seite 2 u   7- 21 v  66- 84 texel  144 Lab  15.9   5.4   1.4  ecken [45, 49, 46] y 487..633
+  M12 d19 zeile 482 seite 2 u   2- 24 v  69- 89 texel  243 Lab  13.6   5.4   1.4  ecken [43, 41, 44] y 515..647
+  M12 d20 zeile 482 seite 2 u   0- 21 v  66- 87 texel  241 Lab  13.6   5.8   1.4  ecken [48, 46, 49] y 487..620
+  M12 d21 zeile 482 seite 2 u   2- 13 v  78- 99 texel  109 Lab  13.6  12.5   5.5  ecken [30, 28, 31] y 624..756
+  M12 d22 zeile 482 seite 2 u   2- 10 v  69- 89 texel   92 Lab  12.7   9.9   1.3  ecken [44, 40, 43] y 515..661
+  M12 d23 zeile 482 seite 2 u   2- 24 v  87-120 texel  393 Lab  16.8  22.2  10.1  ecken [42, 41, 43] y 647..875
+  M12 d24 zeile 482 seite 2 u   2- 10 v  86-120 texel  173 Lab  21.5  23.0  11.3  ecken [42, 43, 40] y 647..875
+  M12 d25 zeile 482 seite 2 u  10- 24 v  86-120 texel  280 Lab  16.4  17.6   5.5  ecken [42, 40, 41] y 647..875
+  M12 d26 zeile 482 seite 2 u  10- 24 v  69- 87 texel  144 Lab  15.9   3.9   1.4  ecken [40, 44, 41] y 515..661
+  M12 d27 zeile 482 seite 2 u   0-  7 v  66- 87 texel   83 Lab  13.6   8.3   1.4  ecken [49, 45, 48] y 487..633
+  M12 d28 zeile 482 seite 2 u  16- 26 v  62- 70 texel   52 Lab  17.4   3.9   0.0  ecken [9, 50, 12] y 304..481
+  M12 d29 zeile 482 seite 2 u  16- 26 v  64- 83 texel  117 Lab  16.5   3.9   0.0  ecken [6, 50, 9] y 304..481
+  M12 d30 zeile 482 seite 2 u  18- 26 v  63- 71 texel   47 Lab  17.4   3.9   0.0  ecken [51, 8, 0] y 286..451
+  M12 d31 zeile 482 seite 2 u  18- 26 v  65- 82 texel   80 Lab  16.5   3.9   0.0  ecken [51, 17, 8] y 286..451
+  M12 v0  zeile 482 seite 2 u  19- 26 v  62- 73 texel   55 Lab  17.4   3.9   0.0  ecken [15, 23, 16, 24] y 321..463
+  M12 v1  zeile 482 seite 2 u  16- 23 v  53- 61 texel   44 Lab  13.8  15.4 -11.2  ecken [16, 24, 13, 25] y 330..485
+  M12 v2  zeile 482 seite 2 u  15- 22 v  68- 79 texel   58 Lab  16.5   3.8   0.6  ecken [10, 6, 11, 17] y 308..457
+  M12 v3  zeile 482 seite 2 u  17- 22 v  64- 74 texel   41 Lab  12.2   7.9   0.0  ecken [13, 25, 14, 26] y 375..485
+  M12 v4  zeile 482 seite 2 u  17- 24 v  51- 59 texel   39 Lab  16.8  11.0  -4.0  ecken [14, 26, 15, 23] y 321..470
+  M12 v5  zeile 482 seite 2 u  26- 39 v  64- 83 texel  217 Lab  14.3   3.9   0.0  ecken [6, 9, 4, 1] y 32..308
+  M12 v6  zeile 482 seite 2 u  29- 38 v  70- 86 texel   93 Lab  15.9   3.9   0.0  ecken [1, 5, 3, 7] y 29..206
+  M12 v7  zeile 482 seite 2 u  24- 32 v  66- 79 texel   72 Lab  13.6   3.9   0.0  ecken [7, 5, 16, 15] y 189..330
+  M12 v8  zeile 482 seite 2 u  14- 25 v  72- 81 texel   73 Lab  17.4   3.8   1.2  ecken [9, 12, 8, 0] y 286..475
+  M12 v9  zeile 482 seite 2 u  24- 38 v  65- 82 texel  219 Lab  15.9   3.9   0.0  ecken [17, 2, 8, 3] y 29..329
+  M12 v10 zeile 482 seite 2 u  21- 30 v  55- 65 texel   57 Lab  13.6   9.9  -0.4  ecken [7, 16, 8, 13] y 189..379
+  M12 v11 zeile 482 seite 2 u  21- 25 v  67- 81 texel   41 Lab  16.5   3.9   1.3  ecken [8, 13, 9, 14] y 286..379
+  M12 v12 zeile 482 seite 2 u  16- 17 v  51- 57 texel    8 Lab  19.4  10.2 -10.9  ecken [25, 24, 26, 23] y 448..485
+  M12 v13 zeile 482 seite 2 u  22- 30 v  54- 64 texel   52 Lab  13.6  11.8  -0.4  ecken [5, 9, 15, 14] y 206..375
+  M12 v14 zeile 482 seite 2 u  21- 37 v  71- 83 texel  143 Lab  16.5   3.9   0.0  ecken [2, 17, 4, 6] y 32..329
+  M12 v15 zeile 482 seite 2 u   8- 10 v  69- 81 texel   26 Lab  15.9   4.8   1.4  ecken [37, 36, 39, 38] y 608..649
+  M12 v16 zeile 482 seite 2 u   5-  7 v  60- 65 texel   12 Lab  21.0   3.7   1.3  ecken [33, 35, 32, 34] y 671..715
+  M12 v17 zeile 482 seite 2 u   5- 17 v  60- 70 texel   93 Lab  17.4   3.9   0.0  ecken [50, 33, 12, 32] y 475..715
+  M12 v18 zeile 482 seite 2 u   5- 18 v  65- 71 texel   19 Lab  17.4   3.9   1.4  ecken [51, 35, 50, 33] y 451..715
+  M12 v19 zeile 482 seite 2 u   8- 18 v  69- 71 texel   14 Lab  17.0   3.9   1.4  ecken [51, 50, 39, 37] y 451..649
+  M12 v20 zeile 482 seite 2 u   8- 18 v  69- 84 texel  131 Lab  16.5   3.9   1.4  ecken [10, 36, 50, 37] y 457..649
+  M12 v21 zeile 482 seite 2 u   8- 18 v  67- 75 texel   57 Lab  17.4   3.8   1.3  ecken [11, 38, 10, 36] y 431..622
+  M12 v22 zeile 482 seite 2 u   9- 19 v  69- 83 texel  128 Lab  16.5   3.9   1.4  ecken [51, 39, 11, 38] y 431..636
+  M12 v23 zeile 482 seite 2 u   6- 18 v  60- 71 texel   93 Lab  16.5   3.9   0.0  ecken [0, 34, 51, 35] y 441..691
+  M12 v24 zeile 482 seite 2 u   4- 17 v  66- 77 texel   75 Lab  17.4   3.9   1.4  ecken [12, 32, 0, 34] y 441..694
+  M12 v25 zeile 482 seite 2 u  24- 34 v  68- 80 texel  112 Lab  13.6   3.9   0.0  ecken [3, 2, 1, 4] y 29..35
+  M12 Zeilen: {482: 58}
+  M14 d0  zeile 482 seite 2 u   1- 15 v  65- 83 texel  138 Lab  13.9   3.9   1.4  ecken [17, 4, 6] y 741..924
+  M14 d1  zeile 482 seite 2 u   1-  9 v  59- 83 texel  121 Lab  12.2   5.8   1.3  ecken [17, 7, 5] y 739..924
+  M14 d2  zeile 482 seite 2 u  25- 36 v   4- 11 texel   43 Lab  40.8  13.5   2.5  ecken [11, 12, 10] y -7..67
+  M14 d3  zeile 482 seite 2 u  25- 36 v   4- 16 texel   65 Lab  43.4  10.2   2.5  ecken [12, 8, 10] y -7..67
+  M14 d4  zeile 482 seite 2 u  36- 40 v   8- 23 texel   22 Lab  47.0   9.5   3.8  ecken [26, 12, 9] y -7..62
+  M14 d5  zeile 482 seite 2 u  30- 40 v   8- 23 texel   68 Lab  47.4   8.4   3.5  ecken [12, 11, 9] y -7..65
+  M14 d6  zeile 482 seite 2 u  13- 25 v   4- 21 texel   98 Lab  43.4   9.9   3.7  ecken [10, 16, 3] y 67..253
+  M14 d7  zeile 482 seite 2 u  30- 40 v  11- 34 texel  132 Lab  39.1   6.6   2.5  ecken [15, 9, 11] y 62..247
+  M14 d8  zeile 482 seite 2 u  15- 35 v  34- 47 texel   96 Lab  34.4   5.1   1.3  ecken [15, 14, 0] y 243..507
+  M14 d9  zeile 482 seite 2 u   9- 20 v  13- 39 texel  133 Lab  39.1   6.8   2.4  ecken [16, 13, 3] y 249..508
+  M14 d10 zeile 482 seite 2 u  15- 31 v  22- 47 texel  188 Lab  39.1   3.4   1.2  ecken [14, 15, 2] y 247..507
+  M14 d11 zeile 482 seite 2 u   9- 28 v  21- 39 texel  152 Lab  43.4   3.4   1.2  ecken [13, 16, 1] y 245..508
+  M14 d12 zeile 482 seite 2 u  21- 31 v  11- 34 texel  134 Lab  36.6   8.6   3.6  ecken [15, 11, 2] y 65..251
+  M14 d13 zeile 482 seite 2 u  20- 34 v   4- 21 texel  128 Lab  35.5  10.6   2.5  ecken [8, 16, 10] y 63..249
+  M14 d14 zeile 482 seite 2 u  31- 40 v  23- 40 texel   67 Lab  36.6   6.4   3.6  ecken [9, 15, 0] y 62..247
+  M14 d15 zeile 482 seite 2 u  20- 34 v  16- 31 texel  110 Lab  39.1   9.6   3.8  ecken [16, 8, 1] y 63..249
+  M14 d16 zeile 482 seite 2 u   1- 12 v  70- 83 texel   50 Lab  13.6   6.8   1.4  ecken [20, 17, 5] y 739..924
+  M14 d17 zeile 482 seite 2 u   1-  6 v  59- 83 texel   84 Lab  12.0   9.9   0.0  ecken [7, 17, 6] y 742..924
+  M14 d18 zeile 482 seite 2 u  34- 37 v   8- 19 texel   28 Lab  50.0   8.2   2.4  ecken [12, 25, 8] y -7..63
+  M14 d19 zeile 482 seite 2 u  13- 31 v  90- 97 texel   68 Lab  17.0  12.9   5.0  ecken [24, 12, 26] y -7..62
+  M14 d20 zeile 482 seite 2 u  13- 31 v  88- 97 texel   82 Lab  16.1  11.8   4.8  ecken [25, 12, 24] y -7..63
+  M14 d21 zeile 482 seite 2 u   1- 15 v  76- 83 texel   27 Lab  15.9   8.3   1.4  ecken [17, 19, 4] y 741..924
+  M14 d22 zeile 482 seite 2 u  10- 35 v  84-108 texel  266 Lab  15.9  12.5   1.6  ecken [19, 17, 18] y 740..924
+  M14 d23 zeile 482 seite 2 u  10- 35 v  81-108 texel  302 Lab  15.9  11.9   1.5  ecken [17, 20, 18] y 740..924
+  M14 v0  zeile 482 seite 2 u  34- 40 v  22- 40 texel   41 Lab  35.2   6.5   4.4  ecken [0, 22, 9, 26] y 62..244
+  M14 v1  zeile 482 seite 2 u   1- 15 v  39- 65 texel  186 Lab  21.6   5.4  -2.1  ecken [6, 14, 7, 13] y 507..742
+  M14 v2  zeile 482 seite 2 u   6- 35 v  40- 78 texel  499 Lab  17.8   5.4   0.0  ecken [6, 4, 14, 0] y 243..742
+  M14 v3  zeile 482 seite 2 u   9- 32 v  31- 74 texel  267 Lab  20.5   5.4   0.0  ecken [5, 1, 20, 23] y 245..740
+  M14 v4  zeile 482 seite 2 u   1- 28 v  31- 70 texel  464 Lab  27.8   5.2   0.0  ecken [7, 13, 5, 1] y 245..742
+  M14 v5  zeile 482 seite 2 u  13- 30 v   4- 22 texel  168 Lab  40.8  10.6   3.1  ecken [3, 2, 10, 11] y 65..253
+  M14 v6  zeile 482 seite 2 u   9- 21 v  13- 47 texel  257 Lab  39.4   6.6   1.2  ecken [2, 3, 14, 13] y 251..508
+  M14 v7  zeile 482 seite 2 u  28- 37 v  16- 36 texel   99 Lab  36.6   6.6   2.5  ecken [1, 8, 23, 25] y 63..245
+  M14 v8  zeile 482 seite 2 u  15- 35 v  39- 78 texel   88 Lab  20.2   4.5   0.0  ecken [0, 4, 22, 19] y 243..741
+  M14 v9  zeile 482 seite 2 u   0- 40 v  87-112 texel  942 Lab  18.1  23.5  11.3  ecken [22, 19, 21, 18] y 244..741
+  M14 v10 zeile 482 seite 2 u  17- 35 v  84-106 texel  329 Lab  18.1  22.2   9.0  ecken [22, 21, 26, 24] y 62..244
+  M14 v11 zeile 482 seite 2 u  16- 35 v  79-106 texel  414 Lab  17.8  13.8   5.0  ecken [21, 23, 24, 25] y 62..245
+  M14 v12 zeile 482 seite 2 u   0- 40 v  83-112 texel 1086 Lab  18.1  22.6  10.7  ecken [18, 20, 21, 23] y 244..740
+  M14 Zeilen: {482: 37}
+
+== 2. L*-Profil der Texelzeilen unter Mesh 11, Grau-Zone, Fussabdruecke - a2_zonen.py
+L*-Profil (Zeile 482) der von Mesh 11 benutzten Texel je v (Median, Anteil a*>=10 auf Zeile 495):
+  v  0- 2 n  24 L482  21.3  L495  29.8 a495  18.8  L490  23.9 a490  22.1
+  v  3- 5 n  53 L482  25.0  L495  37.2 a495  15.4  L490  28.0 a490  17.6
+  v  6- 8 n  65 L482  28.7  L495  41.7 a495  13.5  L490  28.7 a490  10.6
+  v  9-11 n  77 L482  28.7  L495  41.7 a495  12.3  L490  29.3 a490  10.6
+  v 12-14 n  88 L482  28.7  L495  42.1 a495   9.9  L490  28.7 a490   7.1
+  v 15-17 n  95 L482  28.7  L495  38.4 a495  10.6  L490  28.7 a490   7.1
+  v 18-20 n 100 L482  25.0  L495  40.8 a495  10.6  L490  28.0 a490  11.1
+  v 21-23 n 102 L482  28.7  L495  40.8 a495   9.6  L490  28.7 a490   7.1
+  v 24-26 n 102 L482  28.7  L495  42.4 a495   6.5  L490  28.7 a490   3.6
+  v 27-29 n 102 L482  28.7  L495  43.4 a495   6.4  L490  28.7 a490   3.6
+  v 30-32 n 102 L482  25.0  L495  39.1 a495   4.3  L490  25.0 a490   3.6
+  v 33-35 n 102 L482  25.0  L495  39.1 a495   3.4  L490  25.0 a490   3.6
+  v 36-38 n  96 L482  25.0  L495  39.1 a495   3.4  L490  25.0 a490   3.7
+  v 39-41 n  87 L482  22.3  L495  35.7 a495   5.2  L490  22.3 a490   3.6
+  v 42-44 n  78 L482  22.3  L495  36.6 a495   6.6  L490  22.3 a490   3.8
+  v 45-47 n  69 L482  17.8  L495  28.7 a495   6.6  L490  19.0 a490   3.9
+  v 48-50 n  60 L482  17.4  L495  26.1 a495   5.4  L490  17.4 a490   3.8
+  v 51-53 n  45 L482  17.4  L495  26.1 a495   5.4  L490  17.4 a490   3.9
+  v 54-56 n  15 L482   9.5  L495  16.5 a495  15.2  L490  12.2 a490  15.2
+Mesh 11 oben (v <= 56): ['d0', 'd1', 'd2', 'd3', 'd4', 'd5', 'd6', 'd7', 'd8', 'd9', 'd10', 'd11', 'd12', 'd13', 'd14', 'd15', 'd16', 'd17', 'v0', 'v1', 'v2', 'v3', 'v4', 'v5', 'v6']
+Mesh 11 unten (v > 56): []
+Grau-Zone N: 1462 Texel, x 261-294 (u 5-38) v 0-56
+  N auf Zeile 482: L 25.0 a 3.7 b 1.3 (Median), Anteil L<15 0.070
+  N v  0: u 25-27 (3)
+  N v  4: u 13-30 (18)
+  N v  8: u 11-33 (23)
+  N v 12: u 9-36 (28)
+  N v 16: u 7-38 (32)
+  N v 20: u 5-38 (34)
+  N v 24: u 5-38 (34)
+  N v 28: u 5-38 (34)
+  N v 32: u 5-38 (34)
+  N v 36: u 5-37 (33)
+  N v 40: u 5-33 (29)
+  N v 44: u 5-29 (25)
+  N v 48: u 5-25 (21)
+  N v 52: u 7-21 (15)
+  N v 56: u 16-17 (2)
+Traceback (most recent call last):
+  File "C:\workspace\git\reAi_v2\.claude\worktrees\r41_sichel_v8\analysis\befunde_runde41\SF_belege\v8\runde7e\werkzeug\a2_zonen.py", line 74, in <module>
+    print('%s: %d Texel u %d-%d v %d-%d; Zeile 490 L %.1f a %.1f; Zeile 482 L %.1f a %.1f; a490>=10: %.3f; in N: %d' % (nm, M.sum(), xs.min()-256, xs.max()-256, ys.min(), ys.max(),
+  File "C:\Python310\lib\site-packages\numpy\core\_methods.py", line 45, in _amin
+    return umr_minimum(a, axis, None, out, keepdims, initial, where)
+ValueError: zero-size array to reduction operation minimum which has no identity
+
+== 3. Farbe in echten Framedumps (Stand 7d, Lauf r7d/szene; Marker HF_ALT) gegen birkin20/22/23 - a5_perz.py --vorlage
+F368
+   handruecken      n  2992 L p10/50/90  6.0  8.7 13.0 | a p50/90  4.0 17.3 | b p10/50  -8.3   0.0 | C>8 0.420  b<-5 0.154  a>=10 0.347  L<10 0.698
+   finger           n  1041 L p10/50/90  3.0  7.3 17.9 | a p50/90 11.9 18.2 | b p10/50   0.3   3.5 | C>8 0.736  b<-5 0.012  a>=10 0.585  L<10 0.640
+   unterarm_unten   n   919 L p10/50/90  2.9  6.8 11.1 | a p50/90  2.4  4.0 | b p10/50   0.0   0.7 | C>8 0.007  b<-5 0.010  a>=10 0.000  L<10 0.851
+   unterarm_oben    n  1174 L p10/50/90 17.2 24.6 31.3 | a p50/90  3.4  6.6 | b p10/50   1.0   1.3 | C>8 0.028  b<-5 0.000  a>=10 0.000  L<10 0.000
+birkin20
+   handruecken      n  3677 L p10/50/90  5.9 12.7 27.9 | a p50/90  3.5  6.5 | b p10/50  -3.5  -2.2 | C>8 0.049  b<-5 0.027  a>=10 0.024  L<10 0.326
+   finger           n  1954 L p10/50/90  6.7 11.2 23.9 | a p50/90  9.9 16.3 | b p10/50  -0.6   2.2 | C>8 0.606  b<-5 0.000  a>=10 0.485  L<10 0.350
+   unterarm_unten   n  1371 L p10/50/90  8.3 12.1 19.7 | a p50/90  2.5  4.1 | b p10/50  -5.1  -3.2 | C>8 0.000  b<-5 0.143  a>=10 0.000  L<10 0.210
+   unterarm_oben    n  2037 L p10/50/90 10.4 24.5 36.5 | a p50/90  1.2  2.9 | b p10/50  -3.4  -1.7 | C>8 0.006  b<-5 0.020  a>=10 0.000  L<10 0.095
+F369
+   handruecken      n  2981 L p10/50/90  6.0  8.7 13.0 | a p50/90  4.0 17.3 | b p10/50  -8.4   0.0 | C>8 0.429  b<-5 0.153  a>=10 0.353  L<10 0.709
+   finger           n  1040 L p10/50/90  3.0  7.4 18.3 | a p50/90 11.8 18.2 | b p10/50   0.3   3.5 | C>8 0.734  b<-5 0.011  a>=10 0.581  L<10 0.642
+   unterarm_unten   n   939 L p10/50/90  2.9  7.2 11.3 | a p50/90  2.7  4.0 | b p10/50   0.0   0.9 | C>8 0.009  b<-5 0.011  a>=10 0.000  L<10 0.842
+   unterarm_oben    n  1041 L p10/50/90 16.8 24.7 31.4 | a p50/90  3.4  6.4 | b p10/50   0.9   1.3 | C>8 0.027  b<-5 0.000  a>=10 0.000  L<10 0.000
+birkin22
+   handruecken      n  3782 L p10/50/90  6.8 12.4 26.8 | a p50/90  2.8  6.2 | b p10/50  -3.5  -2.2 | C>8 0.045  b<-5 0.038  a>=10 0.021  L<10 0.330
+   finger           n  1810 L p10/50/90  5.0  9.1 17.7 | a p50/90 10.3 17.9 | b p10/50   0.9   2.3 | C>8 0.618  b<-5 0.000  a>=10 0.516  L<10 0.540
+   unterarm_unten   n  1355 L p10/50/90  7.3 11.8 17.7 | a p50/90  2.9  4.4 | b p10/50  -5.3  -3.4 | C>8 0.000  b<-5 0.168  a>=10 0.000  L<10 0.294
+   unterarm_oben    n  1947 L p10/50/90  9.8 21.5 30.8 | a p50/90  2.5  4.1 | b p10/50  -5.2  -3.0 | C>8 0.011  b<-5 0.128  a>=10 0.000  L<10 0.101
+F371
+   handruecken      n  2950 L p10/50/90  6.0  8.7 13.0 | a p50/90  4.0 17.3 | b p10/50  -6.3   0.0 | C>8 0.417  b<-5 0.146  a>=10 0.343  L<10 0.707
+   finger           n  1084 L p10/50/90  2.8  7.4 18.5 | a p50/90 11.6 18.8 | b p10/50   0.6   3.5 | C>8 0.717  b<-5 0.007  a>=10 0.568  L<10 0.625
+   unterarm_unten   n   991 L p10/50/90  2.7  6.8 11.3 | a p50/90  2.4  4.0 | b p10/50   0.0   0.7 | C>8 0.016  b<-5 0.009  a>=10 0.000  L<10 0.861
+   unterarm_oben    n  1149 L p10/50/90 16.3 24.1 31.4 | a p50/90  3.4  6.4 | b p10/50   0.9   1.2 | C>8 0.022  b<-5 0.000  a>=10 0.000  L<10 0.004
+birkin23
+   handruecken      n  4185 L p10/50/90  6.8 13.8 28.0 | a p50/90  2.8  5.1 | b p10/50  -3.6  -2.2 | C>8 0.023  b<-5 0.025  a>=10 0.001  L<10 0.272
+   finger           n  2440 L p10/50/90  5.8 10.6 18.2 | a p50/90  8.9 15.2 | b p10/50   0.8   2.6 | C>8 0.553  b<-5 0.004  a>=10 0.428  L<10 0.442
+   unterarm_unten   n  1467 L p10/50/90  8.3 11.7 16.0 | a p50/90  3.0  4.2 | b p10/50  -5.4  -3.5 | C>8 0.002  b<-5 0.195  a>=10 0.000  L<10 0.237
+   unterarm_oben    n  2191 L p10/50/90 12.1 21.3 29.5 | a p50/90  2.8  4.0 | b p10/50  -5.1  -3.3 | C>8 0.039  b<-5 0.143  a>=10 0.000  L<10 0.058
+
+== 4. Lage Kastenfinger / Hand / Krallen entlang der Finger-Achse (Anteil Handlaenge) - a6_kasten.py
+F368 S6 Modell 0.609 Vorlage birkin20 0.559 | hand 2388 px t p10/50/90 0.08 0.29 0.45 rot 0.36 L 9.1 | kastenfinger 611 px t p10/50/90 0.48 0.54 0.62 rot 0.26 L 8.0 | daumenkralle 47 px t p10/50/90 0.55 0.59 0.64 rot 0.00 L 26.4 | finger 1012 px t p10/50/90 0.62 0.74 0.88 rot 0.63 L 7.4
+F369 S6 Modell 0.612 Vorlage birkin22 0.578 | hand 2443 px t p10/50/90 0.07 0.30 0.46 rot 0.36 L 8.7 | kastenfinger 554 px t p10/50/90 0.49 0.55 0.64 rot 0.28 L 8.2 | daumenkralle 45 px t p10/50/90 0.56 0.59 0.64 rot 0.00 L 26.9 | finger 1015 px t p10/50/90 0.62 0.74 0.88 rot 0.63 L 7.5
+F371 S6 Modell 0.615 Vorlage birkin23 0.532 | hand 2327 px t p10/50/90 0.07 0.29 0.45 rot 0.35 L 8.7 | kastenfinger 641 px t p10/50/90 0.47 0.54 0.62 rot 0.27 L 8.2 | daumenkralle 47 px t p10/50/90 0.57 0.60 0.66 rot 0.00 L 26.4 | finger 1066 px t p10/50/90 0.63 0.75 0.89 rot 0.61 L 7.5
+F373 S6 Modell 0.600 Vorlage birkin21 0.513 | hand 2436 px t p10/50/90 0.07 0.29 0.45 rot 0.37 L 8.8 | kastenfinger 632 px t p10/50/90 0.47 0.53 0.61 rot 0.28 L 8.4 | daumenkralle 56 px t p10/50/90 0.56 0.59 0.64 rot 0.00 L 21.0 | finger 1093 px t p10/50/90 0.62 0.74 0.88 rot 0.61 L 7.2
+F375 S6 Modell 0.622 Vorlage birkin24 0.553 | hand 2329 px t p10/50/90 0.07 0.30 0.46 rot 0.36 L 9.1 | kastenfinger 657 px t p10/50/90 0.49 0.55 0.65 rot 0.25 L 8.1 | daumenkralle 47 px t p10/50/90 0.55 0.59 0.64 rot 0.00 L 27.7 | finger 975 px t p10/50/90 0.64 0.75 0.89 rot 0.60 L 7.1

@@ -1,0 +1,5646 @@
+{
+"stand": "asset_6200b3d35",
+"ordner": "C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/streifen/versionen/6200b3d35",
+"schritt": 2,
+"clips": 28,
+"textur_streifen_flaechen": {},
+"zusammenfassung": {
+"Spiel 5090": {
+"bilder": 380,
+"bilder_mit_rot_aus_streifen": 0,
+"median_rot_streifen": 0.0,
+"max_rot_streifen": 0,
+"bilder_mit_rot_hals_kopf_kiefer": 287,
+"median_rot_alle": 107.5,
+"je_clip_bilder_mit_rot_von_n_min_median_max": {
+"0": [
+0,
+9,
+0,
+0,
+0
+],
+"1": [
+0,
+1,
+0,
+0,
+0
+],
+"2": [
+0,
+30,
+0,
+0,
+0
+],
+"3": [
+0,
+30,
+0,
+0,
+0
+],
+"4": [
+0,
+25,
+0,
+0,
+0
+],
+"5": [
+0,
+44,
+0,
+0,
+0
+],
+"6": [
+0,
+1,
+0,
+0,
+0
+],
+"8": [
+0,
+15,
+0,
+0,
+0
+],
+"9": [
+0,
+32,
+0,
+0,
+0
+],
+"10": [
+0,
+63,
+0,
+0,
+0
+],
+"11": [
+0,
+28,
+0,
+0,
+0
+],
+"12": [
+0,
+28,
+0,
+0,
+0
+],
+"13": [
+0,
+1,
+0,
+0,
+0
+],
+"15": [
+0,
+1,
+0,
+0,
+0
+],
+"17": [
+0,
+1,
+0,
+0,
+0
+],
+"19": [
+0,
+1,
+0,
+0,
+0
+],
+"21": [
+0,
+1,
+0,
+0,
+0
+],
+"23": [
+0,
+1,
+0,
+0,
+0
+],
+"25": [
+0,
+1,
+0,
+0,
+0
+],
+"26": [
+0,
+17,
+0,
+0,
+0
+],
+"27": [
+0,
+50,
+0,
+0,
+0
+]
+}
+},
+"von unten": {
+"bilder": 380,
+"bilder_mit_rot_aus_streifen": 0,
+"median_rot_streifen": 0.0,
+"max_rot_streifen": 0,
+"bilder_mit_rot_hals_kopf_kiefer": 276,
+"median_rot_alle": 4.0,
+"je_clip_bilder_mit_rot_von_n_min_median_max": {
+"0": [
+0,
+9,
+0,
+0,
+0
+],
+"1": [
+0,
+1,
+0,
+0,
+0
+],
+"2": [
+0,
+30,
+0,
+0,
+0
+],
+"3": [
+0,
+30,
+0,
+0,
+0
+],
+"4": [
+0,
+25,
+0,
+0,
+0
+],
+"5": [
+0,
+44,
+0,
+0,
+0
+],
+"6": [
+0,
+1,
+0,
+0,
+0
+],
+"8": [
+0,
+15,
+0,
+0,
+0
+],
+"9": [
+0,
+32,
+0,
+0,
+0
+],
+"10": [
+0,
+63,
+0,
+0,
+0
+],
+"11": [
+0,
+28,
+0,
+0,
+0
+],
+"12": [
+0,
+28,
+0,
+0,
+0
+],
+"13": [
+0,
+1,
+0,
+0,
+0
+],
+"15": [
+0,
+1,
+0,
+0,
+0
+],
+"17": [
+0,
+1,
+0,
+0,
+0
+],
+"19": [
+0,
+1,
+0,
+0,
+0
+],
+"21": [
+0,
+1,
+0,
+0,
+0
+],
+"23": [
+0,
+1,
+0,
+0,
+0
+],
+"25": [
+0,
+1,
+0,
+0,
+0
+],
+"26": [
+0,
+17,
+0,
+0,
+0
+],
+"27": [
+0,
+50,
+0,
+0,
+0
+]
+}
+}
+},
+"je_bild": [
+{
+"clip": 0,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 909,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 0,
+"bild": 2,
+"Spiel 5090": {
+"rot_px": 901,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 0,
+"bild": 4,
+"Spiel 5090": {
+"rot_px": 906,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 0,
+"bild": 6,
+"Spiel 5090": {
+"rot_px": 905,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 0,
+"bild": 8,
+"Spiel 5090": {
+"rot_px": 805,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 0,
+"bild": 10,
+"Spiel 5090": {
+"rot_px": 893,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 0,
+"bild": 12,
+"Spiel 5090": {
+"rot_px": 910,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 0,
+"bild": 14,
+"Spiel 5090": {
+"rot_px": 819,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 0,
+"bild": 16,
+"Spiel 5090": {
+"rot_px": 843,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 1,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 1,
+"Spiel 5090": {
+"rot_px": 138,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 3,
+"Spiel 5090": {
+"rot_px": 135,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 5,
+"Spiel 5090": {
+"rot_px": 133,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 7,
+"Spiel 5090": {
+"rot_px": 118,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 9,
+"Spiel 5090": {
+"rot_px": 121,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 11,
+"Spiel 5090": {
+"rot_px": 141,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 13,
+"Spiel 5090": {
+"rot_px": 136,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 15,
+"Spiel 5090": {
+"rot_px": 109,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 17,
+"Spiel 5090": {
+"rot_px": 134,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 19,
+"Spiel 5090": {
+"rot_px": 127,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 21,
+"Spiel 5090": {
+"rot_px": 123,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 23,
+"Spiel 5090": {
+"rot_px": 112,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 25,
+"Spiel 5090": {
+"rot_px": 130,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 27,
+"Spiel 5090": {
+"rot_px": 142,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 29,
+"Spiel 5090": {
+"rot_px": 157,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 31,
+"Spiel 5090": {
+"rot_px": 161,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 33,
+"Spiel 5090": {
+"rot_px": 183,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 35,
+"Spiel 5090": {
+"rot_px": 192,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 37,
+"Spiel 5090": {
+"rot_px": 188,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 39,
+"Spiel 5090": {
+"rot_px": 194,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 41,
+"Spiel 5090": {
+"rot_px": 196,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 43,
+"Spiel 5090": {
+"rot_px": 185,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 45,
+"Spiel 5090": {
+"rot_px": 209,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 47,
+"Spiel 5090": {
+"rot_px": 209,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 49,
+"Spiel 5090": {
+"rot_px": 214,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 51,
+"Spiel 5090": {
+"rot_px": 188,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 53,
+"Spiel 5090": {
+"rot_px": 193,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 55,
+"Spiel 5090": {
+"rot_px": 184,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 57,
+"Spiel 5090": {
+"rot_px": 176,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 2,
+"bild": 59,
+"Spiel 5090": {
+"rot_px": 164,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 1,
+"Spiel 5090": {
+"rot_px": 138,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 3,
+"Spiel 5090": {
+"rot_px": 114,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 5,
+"Spiel 5090": {
+"rot_px": 58,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 7,
+"Spiel 5090": {
+"rot_px": 19,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 9,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 11,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 13,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 15,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 17,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 19,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 21,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 23,
+"Spiel 5090": {
+"rot_px": 12,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 25,
+"Spiel 5090": {
+"rot_px": 21,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 27,
+"Spiel 5090": {
+"rot_px": 150,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 29,
+"Spiel 5090": {
+"rot_px": 267,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 31,
+"Spiel 5090": {
+"rot_px": 250,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 33,
+"Spiel 5090": {
+"rot_px": 233,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 35,
+"Spiel 5090": {
+"rot_px": 250,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 37,
+"Spiel 5090": {
+"rot_px": 260,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 39,
+"Spiel 5090": {
+"rot_px": 267,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 41,
+"Spiel 5090": {
+"rot_px": 236,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 43,
+"Spiel 5090": {
+"rot_px": 158,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 45,
+"Spiel 5090": {
+"rot_px": 111,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 47,
+"Spiel 5090": {
+"rot_px": 98,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 49,
+"Spiel 5090": {
+"rot_px": 122,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 51,
+"Spiel 5090": {
+"rot_px": 97,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 53,
+"Spiel 5090": {
+"rot_px": 136,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 55,
+"Spiel 5090": {
+"rot_px": 125,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 57,
+"Spiel 5090": {
+"rot_px": 151,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 3,
+"bild": 59,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 1,
+"Spiel 5090": {
+"rot_px": 136,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 3,
+"Spiel 5090": {
+"rot_px": 105,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 5,
+"Spiel 5090": {
+"rot_px": 38,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 7,
+"Spiel 5090": {
+"rot_px": 19,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 9,
+"Spiel 5090": {
+"rot_px": 21,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 11,
+"Spiel 5090": {
+"rot_px": 39,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 13,
+"Spiel 5090": {
+"rot_px": 86,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 15,
+"Spiel 5090": {
+"rot_px": 715,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 17,
+"Spiel 5090": {
+"rot_px": 1032,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 19,
+"Spiel 5090": {
+"rot_px": 1070,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 21,
+"Spiel 5090": {
+"rot_px": 1089,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 23,
+"Spiel 5090": {
+"rot_px": 992,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 25,
+"Spiel 5090": {
+"rot_px": 791,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 27,
+"Spiel 5090": {
+"rot_px": 602,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 29,
+"Spiel 5090": {
+"rot_px": 329,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 31,
+"Spiel 5090": {
+"rot_px": 165,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 33,
+"Spiel 5090": {
+"rot_px": 127,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 35,
+"Spiel 5090": {
+"rot_px": 115,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 37,
+"Spiel 5090": {
+"rot_px": 126,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 39,
+"Spiel 5090": {
+"rot_px": 118,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 41,
+"Spiel 5090": {
+"rot_px": 144,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 43,
+"Spiel 5090": {
+"rot_px": 137,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 45,
+"Spiel 5090": {
+"rot_px": 136,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 47,
+"Spiel 5090": {
+"rot_px": 165,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 4,
+"bild": 49,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 1,
+"Spiel 5090": {
+"rot_px": 144,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 3,
+"Spiel 5090": {
+"rot_px": 151,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 5,
+"Spiel 5090": {
+"rot_px": 159,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 7,
+"Spiel 5090": {
+"rot_px": 168,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 9,
+"Spiel 5090": {
+"rot_px": 163,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 11,
+"Spiel 5090": {
+"rot_px": 187,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 13,
+"Spiel 5090": {
+"rot_px": 188,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 15,
+"Spiel 5090": {
+"rot_px": 155,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 17,
+"Spiel 5090": {
+"rot_px": 147,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 19,
+"Spiel 5090": {
+"rot_px": 148,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 21,
+"Spiel 5090": {
+"rot_px": 126,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 7,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 23,
+"Spiel 5090": {
+"rot_px": 139,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 25,
+"Spiel 5090": {
+"rot_px": 140,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 27,
+"Spiel 5090": {
+"rot_px": 153,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 29,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 31,
+"Spiel 5090": {
+"rot_px": 175,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 33,
+"Spiel 5090": {
+"rot_px": 164,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 35,
+"Spiel 5090": {
+"rot_px": 192,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 37,
+"Spiel 5090": {
+"rot_px": 166,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 39,
+"Spiel 5090": {
+"rot_px": 174,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 41,
+"Spiel 5090": {
+"rot_px": 157,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 43,
+"Spiel 5090": {
+"rot_px": 146,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 45,
+"Spiel 5090": {
+"rot_px": 145,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 47,
+"Spiel 5090": {
+"rot_px": 146,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 49,
+"Spiel 5090": {
+"rot_px": 156,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 51,
+"Spiel 5090": {
+"rot_px": 163,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 53,
+"Spiel 5090": {
+"rot_px": 161,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 55,
+"Spiel 5090": {
+"rot_px": 186,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 57,
+"Spiel 5090": {
+"rot_px": 184,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 59,
+"Spiel 5090": {
+"rot_px": 167,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 61,
+"Spiel 5090": {
+"rot_px": 165,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 63,
+"Spiel 5090": {
+"rot_px": 155,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 65,
+"Spiel 5090": {
+"rot_px": 151,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 7,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 67,
+"Spiel 5090": {
+"rot_px": 140,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 7,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 69,
+"Spiel 5090": {
+"rot_px": 138,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 71,
+"Spiel 5090": {
+"rot_px": 132,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 73,
+"Spiel 5090": {
+"rot_px": 162,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 75,
+"Spiel 5090": {
+"rot_px": 160,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 77,
+"Spiel 5090": {
+"rot_px": 163,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 79,
+"Spiel 5090": {
+"rot_px": 181,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 81,
+"Spiel 5090": {
+"rot_px": 159,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 83,
+"Spiel 5090": {
+"rot_px": 171,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 85,
+"Spiel 5090": {
+"rot_px": 155,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 5,
+"bild": 87,
+"Spiel 5090": {
+"rot_px": 165,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 6,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 2,
+"Spiel 5090": {
+"rot_px": 130,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 4,
+"Spiel 5090": {
+"rot_px": 124,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 6,
+"Spiel 5090": {
+"rot_px": 56,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 8,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 10,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 12,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 14,
+"Spiel 5090": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 16,
+"Spiel 5090": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 18,
+"Spiel 5090": {
+"rot_px": 21,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 20,
+"Spiel 5090": {
+"rot_px": 64,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 22,
+"Spiel 5090": {
+"rot_px": 39,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 24,
+"Spiel 5090": {
+"rot_px": 94,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 26,
+"Spiel 5090": {
+"rot_px": 138,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 8,
+"bild": 28,
+"Spiel 5090": {
+"rot_px": 142,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 2,
+"Spiel 5090": {
+"rot_px": 118,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 4,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 6,
+"Spiel 5090": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 8,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 10,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 12,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 14,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 16,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 18,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 20,
+"Spiel 5090": {
+"rot_px": 16,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 22,
+"Spiel 5090": {
+"rot_px": 213,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 24,
+"Spiel 5090": {
+"rot_px": 569,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 26,
+"Spiel 5090": {
+"rot_px": 569,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 28,
+"Spiel 5090": {
+"rot_px": 536,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 30,
+"Spiel 5090": {
+"rot_px": 292,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 32,
+"Spiel 5090": {
+"rot_px": 29,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 34,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 36,
+"Spiel 5090": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 38,
+"Spiel 5090": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 40,
+"Spiel 5090": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 42,
+"Spiel 5090": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 44,
+"Spiel 5090": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 46,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 48,
+"Spiel 5090": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 50,
+"Spiel 5090": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 52,
+"Spiel 5090": {
+"rot_px": 9,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 54,
+"Spiel 5090": {
+"rot_px": 27,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 56,
+"Spiel 5090": {
+"rot_px": 52,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 58,
+"Spiel 5090": {
+"rot_px": 124,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 60,
+"Spiel 5090": {
+"rot_px": 156,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 9,
+"bild": 62,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 1,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 3,
+"Spiel 5090": {
+"rot_px": 156,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 5,
+"Spiel 5090": {
+"rot_px": 138,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 7,
+"Spiel 5090": {
+"rot_px": 122,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 9,
+"Spiel 5090": {
+"rot_px": 79,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 11,
+"Spiel 5090": {
+"rot_px": 76,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 13,
+"Spiel 5090": {
+"rot_px": 85,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 15,
+"Spiel 5090": {
+"rot_px": 55,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 17,
+"Spiel 5090": {
+"rot_px": 40,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 19,
+"Spiel 5090": {
+"rot_px": 33,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 21,
+"Spiel 5090": {
+"rot_px": 28,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 23,
+"Spiel 5090": {
+"rot_px": 18,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 25,
+"Spiel 5090": {
+"rot_px": 21,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 27,
+"Spiel 5090": {
+"rot_px": 9,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 29,
+"Spiel 5090": {
+"rot_px": 14,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 31,
+"Spiel 5090": {
+"rot_px": 11,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 33,
+"Spiel 5090": {
+"rot_px": 9,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 35,
+"Spiel 5090": {
+"rot_px": 20,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 37,
+"Spiel 5090": {
+"rot_px": 12,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 39,
+"Spiel 5090": {
+"rot_px": 34,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 41,
+"Spiel 5090": {
+"rot_px": 94,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 43,
+"Spiel 5090": {
+"rot_px": 116,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 45,
+"Spiel 5090": {
+"rot_px": 140,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 47,
+"Spiel 5090": {
+"rot_px": 140,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 49,
+"Spiel 5090": {
+"rot_px": 140,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 51,
+"Spiel 5090": {
+"rot_px": 140,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 53,
+"Spiel 5090": {
+"rot_px": 144,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 55,
+"Spiel 5090": {
+"rot_px": 91,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 57,
+"Spiel 5090": {
+"rot_px": 65,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 59,
+"Spiel 5090": {
+"rot_px": 34,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 61,
+"Spiel 5090": {
+"rot_px": 19,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 63,
+"Spiel 5090": {
+"rot_px": 15,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 65,
+"Spiel 5090": {
+"rot_px": 31,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 67,
+"Spiel 5090": {
+"rot_px": 9,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 69,
+"Spiel 5090": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 71,
+"Spiel 5090": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 73,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 75,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 77,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 79,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 81,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 83,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 85,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 87,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 89,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 91,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 93,
+"Spiel 5090": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 95,
+"Spiel 5090": {
+"rot_px": 12,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 97,
+"Spiel 5090": {
+"rot_px": 21,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 99,
+"Spiel 5090": {
+"rot_px": 17,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 101,
+"Spiel 5090": {
+"rot_px": 36,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 103,
+"Spiel 5090": {
+"rot_px": 30,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 105,
+"Spiel 5090": {
+"rot_px": 35,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 107,
+"Spiel 5090": {
+"rot_px": 72,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 109,
+"Spiel 5090": {
+"rot_px": 82,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 111,
+"Spiel 5090": {
+"rot_px": 91,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 113,
+"Spiel 5090": {
+"rot_px": 67,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 115,
+"Spiel 5090": {
+"rot_px": 84,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 117,
+"Spiel 5090": {
+"rot_px": 106,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 119,
+"Spiel 5090": {
+"rot_px": 103,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 121,
+"Spiel 5090": {
+"rot_px": 139,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 7,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 123,
+"Spiel 5090": {
+"rot_px": 157,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 10,
+"bild": 125,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 1,
+"Spiel 5090": {
+"rot_px": 138,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 3,
+"Spiel 5090": {
+"rot_px": 18,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 5,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 7,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 9,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 11,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 13,
+"Spiel 5090": {
+"rot_px": 425,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 15,
+"Spiel 5090": {
+"rot_px": 909,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 17,
+"Spiel 5090": {
+"rot_px": 901,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 19,
+"Spiel 5090": {
+"rot_px": 906,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 21,
+"Spiel 5090": {
+"rot_px": 905,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 23,
+"Spiel 5090": {
+"rot_px": 805,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 25,
+"Spiel 5090": {
+"rot_px": 893,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 27,
+"Spiel 5090": {
+"rot_px": 910,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 29,
+"Spiel 5090": {
+"rot_px": 819,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 31,
+"Spiel 5090": {
+"rot_px": 861,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 33,
+"Spiel 5090": {
+"rot_px": 883,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 35,
+"Spiel 5090": {
+"rot_px": 901,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 37,
+"Spiel 5090": {
+"rot_px": 77,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 39,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 41,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 43,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 45,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 47,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 49,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 51,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 53,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 11,
+"bild": 55,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 140,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 2,
+"Spiel 5090": {
+"rot_px": 40,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 4,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 6,
+"Spiel 5090": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 8,
+"Spiel 5090": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 10,
+"Spiel 5090": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 12,
+"Spiel 5090": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 14,
+"Spiel 5090": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 16,
+"Spiel 5090": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 18,
+"Spiel 5090": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 20,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 22,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 24,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 26,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 28,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 30,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 32,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 34,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 36,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 38,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 40,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 42,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 44,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 46,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 48,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 50,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 52,
+"Spiel 5090": {
+"rot_px": 8,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 12,
+"bild": 54,
+"Spiel 5090": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 33,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 13,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 15,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 17,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 19,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 21,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 23,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 25,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 1,
+"Spiel 5090": {
+"rot_px": 135,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 3,
+"Spiel 5090": {
+"rot_px": 97,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 5,
+"Spiel 5090": {
+"rot_px": 23,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 7,
+"Spiel 5090": {
+"rot_px": 11,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 9,
+"Spiel 5090": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 11,
+"Spiel 5090": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 13,
+"Spiel 5090": {
+"rot_px": 250,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 15,
+"Spiel 5090": {
+"rot_px": 365,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 17,
+"Spiel 5090": {
+"rot_px": 435,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 19,
+"Spiel 5090": {
+"rot_px": 647,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 21,
+"Spiel 5090": {
+"rot_px": 261,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 23,
+"Spiel 5090": {
+"rot_px": 274,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 25,
+"Spiel 5090": {
+"rot_px": 594,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 27,
+"Spiel 5090": {
+"rot_px": 295,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 29,
+"Spiel 5090": {
+"rot_px": 276,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 31,
+"Spiel 5090": {
+"rot_px": 365,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 26,
+"bild": 33,
+"Spiel 5090": {
+"rot_px": 193,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 0,
+"Spiel 5090": {
+"rot_px": 152,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 2,
+"Spiel 5090": {
+"rot_px": 244,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 4,
+"Spiel 5090": {
+"rot_px": 232,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 6,
+"Spiel 5090": {
+"rot_px": 429,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 8,
+"Spiel 5090": {
+"rot_px": 544,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 10,
+"Spiel 5090": {
+"rot_px": 247,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 12,
+"Spiel 5090": {
+"rot_px": 29,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 6,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 14,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 16,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 18,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 20,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 22,
+"Spiel 5090": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 24,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 26,
+"Spiel 5090": {
+"rot_px": 22,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 28,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 30,
+"Spiel 5090": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 32,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 34,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 1,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 36,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 38,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 40,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 42,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 44,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 46,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 48,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 50,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 52,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 54,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 56,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 58,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 60,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 62,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 64,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 66,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 68,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 70,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 72,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 74,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 76,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 78,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 80,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 82,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 84,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 86,
+"Spiel 5090": {
+"rot_px": 0,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 3,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 88,
+"Spiel 5090": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 90,
+"Spiel 5090": {
+"rot_px": 12,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 92,
+"Spiel 5090": {
+"rot_px": 25,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 5,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 94,
+"Spiel 5090": {
+"rot_px": 70,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 2,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 96,
+"Spiel 5090": {
+"rot_px": 113,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+},
+{
+"clip": 27,
+"bild": 98,
+"Spiel 5090": {
+"rot_px": 170,
+"rot_px_streifen": 0,
+"streifen_px": 0
+},
+"von unten": {
+"rot_px": 4,
+"rot_px_streifen": 0,
+"streifen_px": 0
+}
+}
+],
+"sekunden": 64
+}

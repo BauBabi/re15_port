@@ -1,0 +1,15 @@
+Riegel V8 (Messblatt V8 Abschnitt 7) fuer C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/sfv8/emd/EM30_V8r2.EMD
+sha256 d0ef852c9070c7a970b53301c961c059f02f166befb525792ecbd19705e2911a
+Referenz V7 319bbd17f10ba0cdd703861c6d844a00fb414d82b513e77057bf0ff80fda65f6
+S1 Kontur T: Mittel 1.8 Max 5.0 px (Soll <= 4 / <= 8) -> GRUEN
+   d je Station (px, + = Modell weiter innen): [-3.0, -3.0, -1.0, 1.0, 5.0, -2.0, 0.0, -5.0, -1.0, 2.0, 1.0, 0.0, 1.0, 0.0, 2.0, -2.0, -3.0, -1.0, 5.0, 0.0, -1.0, -1.0]
+S2 Uebergang J: (a) Mittel 1.7 Max 5 (<= 4 / <= 6); (b) Sattel 1.7 bei x 382 (<= 2); (c) Huckel an J 3.0 bei x 397 (<= 3) -> GRUEN
+S3 Ruecken/H/K: (a) Kuppe 4.0 (<= 4); (b) H 6.8 bei x 437 (5-10, x 428-445); (c) weitere []; (d) Sattel Kopf 1.5 bei x 430 (<= 2); (e) K 3.0 (<= 3); (f) Huegel rot 0.0 % (>= 40) -> ROT
+S4 Breite: Wurzel 56.9 (>= 55), s 90-130 [38.8, 37.9] (>= 36), Ende 5.9 (<= 10), monoton True; (b) unten s 140-160 [20.4, 20.3] (>= 27), s 170-200 [8.6, 8.5, 6.3, 6.2] (>= 9); Folge [56.9, 51.1, 50.0, 42.5, 42.2, 41.2, 38.8, 37.9, 20.4, 20.3, 8.6, 8.5, 6.3, 6.2, 5.9] -> ROT
+S5 Gesicht: Mesh 9 True, Zeile 486 True, Texel True (6501) -> GRUEN
+S6 Boden: 0 von 912 Keyframes unter der tiefsten Koerperecke []; Szene {'takte': 144, 'tiefstes_y': -66, 'unter_boden': 0, 'gelenk_max_grad': 39.3} -> ROT
+S7 Adern: (a) Herkunft FALSCH {'alte_zeilen_gleich': True, 'neue_zeilen_original': False, 'neue_zeilen': 3, 'texel_bytegleich_v7': True, 'flaechen_neue_zeilen': 91, 'texel_unter_neuen': 20249, 'texel_original': True, 'uv_geaenderte_flaechen': 0, 'feld_c_fehler': 13, 'ok': False}; (b) Oberarm 13 42.7 % (>= V7 22,8, <= Original 57.7; Vorlage-Band 35-59 nur Info); (c) Rumpf 8 (W)-rechts lok z<0 5.0 % (25-80; Original gleiche Pose 49.3 nur Info) [lok x<0 5.3]; Unterarm 14 17.3 % (<= Original 22.5); (d) Flecken auf den Flaechen der neuen Zeilen 11 je 5671 px = 1.94 je 1000 px (<= Original dieselben Flaechen 26 je 5693 px = 4.57) -> ROT
+S8 Technik: 16 Zeilen, Hoehe 4096, Felder gueltig True, 23 Meshes, 23 Knochen, 21 Clips -> GRUEN
+S9 Vorderansicht: P1 17 px, neue Ecken [429, 430, 431, 432, 438, 439, 440, 441, 499, 500]; F344 17 px, neue Ecken []; F354 13 px, neue Ecken []; F364 10 px, neue Ecken [] (je <= 2 px ueber V7, keine neue Ecke) -> ROT
+S10 Wurzel von hinten: sichtbare Wurzelflaechen-Bildpunkte ['F320:946', 'F322:1167', 'F324:1373', 'F326:1488', 'F328:1540', 'F330:1639', 'F332:1518'], Summe 9671 (Soll 0) -> ROT
+SUMME: 4 von 10 gruen; ROT: S3, S4, S6, S7, S9, S10

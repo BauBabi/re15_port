@@ -1,0 +1,29 @@
+{
+ "emd_sha256": "4164d55a259abfbfdc3051659a66ad552498c9c1834b1288b3797f341a74e598",
+ "grenze": 8192,
+ "quelle": "RE15_TRILOG (render_pc.c, protokolliert jedes in die Liste aufgenommene texturierte Dreieck), Lauf mit re15_port/tools/form_spiel.sh, Form in fester Pose = dichtestes Bild der Messung ueber alle Bilder (geo/lauf_geo.json). Auswertung: geo/werkzeug/tri_zaehlen.py, tri_periode.py, tri_wer.py. Die Protokolle (je rund 160 MB) sind nicht aufbewahrt.",
+ "laeufe": [
+  {
+   "raum": "5090",
+   "clip": 12,
+   "bild": 40,
+   "pose": "941,-23776,3874,12,40,11",
+   "bilder": 308,
+   "max_gesamt": 5190,
+   "max_form": 4454,
+   "max_rest": 736,
+   "hinweis": "Slot 12 Form 4454, Slot 11 Spielerin 712, Slot 50 Effektseite 24; alle 308 Bilder gleich. Vorhersage der Messung: 4473 Form-Dreiecke."
+  },
+  {
+   "raum": "5080",
+   "clip": 12,
+   "bild": 37,
+   "pose": "-20711,-15984,2095,12,37,1",
+   "bilder": 356,
+   "max_gesamt": 4417,
+   "max_form": 4417,
+   "max_rest": 0,
+   "hinweis": "Alle Dreiecke in Slot 11; Bildlaenge aus der wortgleichen Wiederkehr (4417). Die Spielerin steht in diesem Lauf ausserhalb des Bilds und wird nicht eingereiht (0 von 4417 Zeilen tragen eine Kennung der Spielerin). Mit Spielerin im Bild: 4417 + 712 = 5129. Vorhersage der Messung: 4445 Form-Dreiecke."
+  }
+ ]
+}
