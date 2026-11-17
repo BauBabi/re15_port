@@ -102,6 +102,7 @@ static inline int RNDI(float f) {
 #include "re15_itps.h"        /* re15_itps_set_data — the per-item modal picture sheet (ITPS.ITP, U11) */
 #include "re15_ultimate15.h"     /* Runde 41 Optionen: ULTIMATE 1.5 (Disc-Bilder + -Weltmodelle), AI ohne MIXED */
 #include "re15_lautstaerke_r41.h" /* Runde 41 Optionen: re15_lautstaerke_r41_speichern schreibt auch ultimate=on */
+#include "re15_stimme_option.h"   /* Runde 41 Stimmen: Option VOICE ON/OFF (Zeile im OPTIONS-Schirm, voice=off) */
 #include "re15_item_use.h"    /* heal classifier gate + applier table (wave 3: prompt-less direct heal) */
 #include "re15_damage.h"      /* re15_player_equipped_weapon (ARMS CONTROL panel, 8.23) */
 #include "asset_root_pc.h"    /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ, 2026-08-24) */
@@ -2812,16 +2813,22 @@ static const int k_cfg_top_x[3]  = { 147, 198, 248 };            /* DAT_80073d6c
  * Code-Abbildung pc_font_code; Summe der Advance-Bytes je Glyph):
  *   "AI  RE1.5" = 56 px | "AI  RE2" = 46 px  (| "AI  MIXED" = 62 px, seit Runde 41 Optionen weg)
  * Text beginnt bei CFG_AI_X+5 = 19, also Kasten-Ende >= 19+56+5 = 80 -> Breite >= 66.
- * 96 bleibt unveraendert (der byte-true OPTIONS-Kasten endet bei y=220, dieser
- * Streifen liegt darunter; x=14..110 bleibt weit innerhalb der 320er-Breite). */
-#define CFG_AI_W 96
+ * (Der byte-true OPTIONS-Kasten endet bei y=220, dieser Streifen liegt darunter.)
+ * Runde 41 Stimmen: von 96 auf das gemessene Mindestmass 66 (x 14..80) verkleinert, damit die dritte Zeile "VOICE"
+ * in den Streifen passt (Aufteilung bei CFG_VOICE_X). */
+#define CFG_AI_W 66
 /* Runde 41 Optionen: die Zeile "ULTIMATE 1.5" (re15_ultimate15.h) im selben freien Streifen rechts neben der
  * AI-Zeile, gleiche Hoehe, gleicher Rand. Breiten aus derselben Vorschubtabelle BIN/DEBUG.BIN@0x4416 (nachgemessen):
  *   "ULTIMATE 1.5  ON" = 114 px | "ULTIMATE 1.5  OFF" = 121 px
- * Text ab CFG_ULT_X+5 = 125, Ende 125+121 = 246, + 5 Rand = 251 -> Kasten 120..256 (136 breit), Abstand zur
- * AI-Zeile (Ende 110) 10 px, rechts bleiben 64 px bis 320. */
-#define CFG_ULT_X 120
-#define CFG_ULT_W 136
+ * Runde 41 Stimmen: Kasten = 5 + 121 + 5 = 131 breit, ab x 87 (87..218, Text ab 92), vorher 120..256. */
+#define CFG_ULT_X 87
+#define CFG_ULT_W 131
+/* Runde 41 Stimmen: die Zeile "VOICE  ON|OFF" (re15_stimme_option.h) als dritte im Streifen. Breiten aus derselben
+ * Vorschubtabelle BIN/DEBUG.BIN@0x4416 (nachgemessen): "VOICE  ON" = 63 px | "VOICE  OFF" = 70 px -> Kasten 5 + 70 + 5 =
+ * 80 breit. Aufteilung des Streifens 14..306 (links und rechts je 14 px Rand): AI 14..80 | 7 px | ULTIMATE 87..218 |
+ * 8 px | VOICE 226..306. In der alten Aufteilung (AI 96, ULTIMATE ab 120) blieben rechts nur 64 px. */
+#define CFG_VOICE_X 226
+#define CFG_VOICE_W 80
 static const int k_cfg_pick_x[5] = { 147, 164, 181, 198, 248 }; /* DAT_80073d78.x (y=24) */
 
 /* Der AI-Schalter hat ZWEI Zustaende (Menue-Index == re15_ai_flavor_t, 1:1):
@@ -2951,6 +2958,19 @@ static void pc_config_draw_ultimate_row(int lit)
     re15_render_pc_config_text(CFG_ULT_X + 5, CFG_AI_Y + 2, b, n, 0);
 }
 
+/* Runde 41 Stimmen — die Zeile "VOICE  ON|OFF" (re15_stimme_option.h) rechts neben ULTIMATE 1.5, gleiche Art:
+ * Spielschrift attr 0, blauer 50-%-Kasten, wenn der Cursor darauf steht (TOP cur 5). */
+static void pc_config_draw_voice_row(int lit)
+{
+    extern void re15_render_pc_config_rect(int x, int y, int w, int h, uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+    extern int  re15_render_pc_config_text(int x, int y, const unsigned char *codes, int len, int attr);
+    if (lit) re15_render_pc_config_rect(CFG_VOICE_X, CFG_AI_Y, CFG_VOICE_W, 14, 0, 0, 0x80, 128);
+    unsigned char b[16]; int n = 0;
+    const char *s = re15_stimme_option() ? "VOICE  ON" : "VOICE  OFF";
+    for (const char *p = s; *p && n < 16; p++) b[n++] = (unsigned char)pc_font_code(*p);
+    re15_render_pc_config_text(CFG_VOICE_X + 5, CFG_AI_Y + 2, b, n, 0);
+}
+
 /* Draw the current sub-screen's CONFIG.TIM tiles + selected-item highlight + text over the backdrop
  * (called after re15_render_pc_config_clear + the backdrop + the 16 action labels). */
 static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
@@ -2963,6 +2983,7 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
     if (screen == CFG_TOP) {
         pc_config_draw_ai_row(cur == 3);          /* PORT EXTENSION, below the byte-true panel */
         pc_config_draw_ultimate_row(cur == 4);    /* Runde 41 Optionen: ULTIMATE 1.5 */
+        pc_config_draw_voice_row(cur == 5);       /* Runde 41 Stimmen: VOICE */
         if (cur < 3)
             re15_render_pc_config_rect(k_cfg_top_x[cur], 24, 48, 16, 0, 0, 0x80, 128); /* blue tab cursor @50% */
     } else if (screen == CFG_AI) {
@@ -2979,6 +3000,7 @@ static void pc_config_draw_overlay(const re15_tim_t *tim, int screen, int cur)
             re15_render_pc_config_tile(tim, 0, 232, 88, 18, 116, k_ai_rows[r].tile_y);
         pc_config_draw_ai_row(1);
         pc_config_draw_ultimate_row(0);           /* Runde 41 Optionen: Streifen bleibt vollstaendig */
+        pc_config_draw_voice_row(0);              /* Runde 41 Stimmen: dito */
         for (int r = 0; r < 2; r++) {
             unsigned char b[16]; int n = 0;
             for (const char *p = k_ai_rows[r].s; *p && n < 16; p++) b[n++] = (unsigned char)pc_font_code(*p);
@@ -3096,6 +3118,7 @@ static void pc_run_config(void)
           else if (t == 4) { screen = CFG_SOUND; s_config_sound = re15_lautstaerke_r41_pc_eintritt(); }   /* Runde 41 Spur D: wie der TOP->SOUND-Eintritt */
           else if (t == 8) { screen = CFG_AI;     cur = 3; }
           else if (t == 9) { screen = CFG_TOP;    cur = 4; }   /* Runde 41 Optionen: Cursor auf ULTIMATE 1.5 */
+          else if (t == 10) { screen = CFG_TOP;   cur = 5; }   /* Runde 41 Stimmen: Cursor auf VOICE */
       } }
     int fade_level = 0x7fff;   /* brightness = fade_level>>7; fade IN from black */
     int fading_out = 0;
@@ -3136,11 +3159,17 @@ static void pc_run_config(void)
                 else if (cancel)                                  re15_audio_core_se(5);
             }
             if (screen == CFG_TOP) {
-                /* Runde 41 Optionen: fuenfter Eintrag cur 4 = ULTIMATE 1.5 (Port-Erweiterung, rechts neben AI). */
-                if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 4; }
-                if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 4) cur = 0; }
+                /* Runde 41 Optionen: fuenfter Eintrag cur 4 = ULTIMATE 1.5 (Port-Erweiterung, rechts neben AI).
+                 * Runde 41 Stimmen: sechster Eintrag cur 5 = VOICE (rechts neben ULTIMATE 1.5). */
+                if (pp & RE15_PAD_BIT_LEFT)  { if (--cur < 0) cur = 5; }
+                if (pp & RE15_PAD_BIT_RIGHT) { if (++cur > 5) cur = 0; }
                 if (confirm) {
-                    if (cur == 4) {                                        /* ULTIMATE 1.5: umschalten + sofort speichern */
+                    if (cur == 5) {                                        /* VOICE: umschalten + sofort speichern */
+                        re15_stimme_option_set(!re15_stimme_option());
+                        (void)re15_lautstaerke_r41_speichern();            /* re15_options.cfg: voice=off (nur bei OFF) */
+                        fprintf(stderr, "[optionen] VOICE %s\n", re15_stimme_option() ? "AN" : "AUS");
+                    }
+                    else if (cur == 4) {                                        /* ULTIMATE 1.5: umschalten + sofort speichern */
                         re15_ultimate15_set(!re15_ultimate15());
                         (void)re15_lautstaerke_r41_speichern();            /* re15_options.cfg: ultimate=on (nur bei AN) */
                         fprintf(stderr, "[optionen] ULTIMATE 1.5 %s\n", re15_ultimate15() ? "AN" : "AUS");
@@ -3792,20 +3821,22 @@ re_title:;
                        * 0 RE1.5 / 1 RE2. Runde 41 Optionen: die 2 (bis dahin "MIXED", davor "RE2 MODELS")
                        * gibt es nicht mehr — pc_ai_mode_set KLEMMT alles ausserhalb [0,1], die 2 wird RE2.
                        * 9 = TOP mit dem Cursor auf ULTIMATE 1.5 (Runde 41 Optionen); RE15_CONFIG_ULTIMATE=0|1
-                       * schaltet die Option fuer den Shot vor (ohne die Options-Datei zu schreiben). */
+                       * schaltet die Option fuer den Shot vor (ohne die Options-Datei zu schreiben).
+                       * 10 = TOP mit dem Cursor auf VOICE (Runde 41 Stimmen); RE15_CONFIG_VOICE=0|1 dito. */
                       if (t == 8) { const char *ai = getenv("RE15_CONFIG_AI");
                                     pc_ai_mode_set(ai ? atoi(ai) : 0); }
                       { const char *u = getenv("RE15_CONFIG_ULTIMATE"); if (u && *u) re15_ultimate15_set(atoi(u) != 0); }
+                      { const char *v = getenv("RE15_CONFIG_VOICE"); if (v && *v) re15_stimme_option_set(atoi(v) != 0); }
                       int screen = (t == 8) ? CFG_AI
-                                 : (t <= 2 || t == 9) ? CFG_TOP
+                                 : (t <= 2 || t == 9 || t == 10) ? CFG_TOP
                                  : (t == 3) ? CFG_PICKER : (t == 4 ? CFG_SOUND : CFG_EDIT);
                       if (t == 4) s_config_sound = re15_lautstaerke_r41_pc_eintritt();   /* Runde 41 Spur D: Shot zeigt den gespeicherten Sound-Modus (@0x8002f244-4c) */
-                      int cur = (t == 8) ? 3 : (t == 9) ? 4
+                      int cur = (t == 8) ? 3 : (t == 9) ? 4 : (t == 10) ? 5
                               : (t <= 2) ? t : atoi(getenv("RE15_CONFIG_CUR")?getenv("RE15_CONFIG_CUR"):"0");
                       /* PRUEFZEILE (Runde 41 Optionen, eingefroren von integration_optionen_r41_menue): was der Schirm
                        * zeigt — KI-Stufen des AI-Schirms, der gewaehlte KI-Index und die ULTIMATE-Zeile. */
-                      fprintf(stderr, "[optionen] KI-Stufen 2 (RE1.5 RE2) gewaehlt %d, ULTIMATE 1.5 %s, Schirm %d Cursor %d\n",
-                              pc_ai_mode(), re15_ultimate15() ? "ON" : "OFF", t, cur);
+                      fprintf(stderr, "[optionen] KI-Stufen 2 (RE1.5 RE2) gewaehlt %d, ULTIMATE 1.5 %s, Schirm %d Cursor %d, VOICE %s\n",
+                              pc_ai_mode(), re15_ultimate15() ? "ON" : "OFF", t, cur, re15_stimme_option() ? "ON" : "OFF");
                       if (t >= 5 && t <= 7) { s_config_type = 3; s_edit_phase = t - 5; s_edit_slot = cur;
                                     s_edit_code = atoi(getenv("RE15_CONFIG_CODE")?getenv("RE15_CONFIG_CODE"):"0"); }
                       for (int f=0; f<4; f++) {   /* render a few frames so the shot reads a presented buffer, not stale black */

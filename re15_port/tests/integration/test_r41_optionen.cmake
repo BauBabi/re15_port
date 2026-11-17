@@ -7,7 +7,7 @@
 #       - das Rechteck der frueheren dritten Zeile (x 116..203, y 89..106) ist pixelgleich mit dem TOP-Schirm
 #         (Tab 0) -> dort ist keine Kachel mehr. Auf master steht dort die MIXED-Kachel (rot).
 #   (2) ULTIMATE-Zeile aus re15_options.cfg: Tab 9 (TOP, Cursor auf ULTIMATE 1.5) mit "ultimate=on" ->
-#       "[optionen] ... ULTIMATE 1.5 ON", ohne die Zeile -> "OFF"; die Zeile (x 120..255, y 225..238) unterscheidet
+#       "[optionen] ... ULTIMATE 1.5 ON", ohne die Zeile -> "OFF"; die Zeile (x 87..217, y 225..238; vor Runde 41 Stimmen 120..255) unterscheidet
 #       sich zwischen Tab 9 (Kasten blau) und Tab 0.
 #   (3) Echte Tastenkette im Options-Schirm (pc_run_config): Start TOP Cursor 4 (RE15_CONFIG_TAB=9), Kreis/Quadrat
 #       schaltet AN und schreibt re15_options.cfg sofort ("ultimate=on"), LEFT LEFT auf EXIT, Kreis/Quadrat beendet.
@@ -101,9 +101,9 @@ if(TEIL STREQUAL "menue")
         set(_fehler "${_fehler}\n[2] ULTIMATE aus re15_options.cfg nicht gelesen (ON-Zeile ${_p_an}, OFF-Zeile ${_p_aus})")
     endif()
     if(EXISTS "${WORKDIR}/ult_an.bmp" AND EXISTS "${WORKDIR}/top.bmp")
-        bmp_pruefen(anders "${WORKDIR}/top.bmp" "${WORKDIR}/ult_an.bmp" 120 225 255 238 _a)
+        bmp_pruefen(anders "${WORKDIR}/top.bmp" "${WORKDIR}/ult_an.bmp" 87 225 217 238 _a)
         if(NOT _a EQUAL 0)
-            set(_fehler "${_fehler}\n[2] ULTIMATE-Zeile (120..255, 225..238) zwischen OFF/Tab 0 und ON/Tab 9 gleich")
+            set(_fehler "${_fehler}\n[2] ULTIMATE-Zeile (87..217, 225..238) zwischen OFF/Tab 0 und ON/Tab 9 gleich")
         endif()
     else()
         set(_fehler "${_fehler}\n[2] Abzug ult_an.bmp fehlt")
