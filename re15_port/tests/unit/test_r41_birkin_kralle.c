@@ -85,6 +85,18 @@
  *                       Zucken - Clip 0xa im Trefferbild, kein Zuckbild, Verzug 1, +0x1dc wie beim Zucken (3..6, @0x8011a31c).
  *                       Gegenprobe 3a51d7aae: 39 Zuckbilder, kein Clip 0xa (folge 1), Rueckzug verloren.
  *
+ * Ausholen (NUTZERENTSCHEID 17.11.2026 auf "Soll der Rueckzug auch zaehlen, wenn die Klaue schon beim Ausholen die Wand
+ * beruehrt?": "Nein"). Ausholen = Clip 3 vor dem ersten Schlagbild af 0x20 (RE15_BKK_SCHLAG_AB, Herleitung im Header: EM30_HANGAR.EMD
+ * @Datei 0x1538, Clip 3 Bild 32 = Keyframe 149, erstes Bild nach vorn/unten). durch/folge zaehlen nur noch Schlagbilder (af >= 0x20);
+ *   aus_kontakt = Clip-3-Bilder af < 0x20 mit Klinge in Wand, aus_rueck = Rueckzuege, die in einem solchen Bild ausgeloest wurden (Soll 0).
+ *   schwanz_ausholen        50A0, Birkin (-10310,-11990), Spieler (-9462,-12838) (Lagesuche ausholen/tools/suche.c): die Klinge
+ *                           beruehrt die Wand nur beim Ausholen (af 21/22), der Schlag ist frei -> KEIN Rueckzug, Clip 3 bis zum
+ *                           Ende, HUB mit +0x1df 0x1e. Gegenprobe 32b4575e6: Rueckzug bei af 21.
+ *   schwanz_ausholen_schlag 50A0, Birkin (-13050,-10600), Spieler (-13898,-9752): Kontakt beim Ausholen (af 21) UND im Schlag (af 36)
+ *                           -> der Ausholkontakt zaehlt nicht, der Schlagkontakt loest den Rueckzug im naechsten Bild aus.
+ *                           Gegenprobe 32b4575e6: Rueckzug schon bei af 21.
+ *   schwanz_abbruch         (umgekehrt) Kontakt im Abbruch-/Ausstiegsbild bei af 21 -> kein Rueckzug, danach Gang.
+ *
  * Runde 3, Auftrag B - Kampf-Clipenden (Capcom-EM30, ROOM3070; Bericht birkin_aufrichten offen 1/2): anim_set FUN_8001f314 posiert
  * +0x95 VOR dem Vorschub (`lbu v0,149(t0)` @0x8001f35c, `sw a2,360(t0)` @0x8001f36c, `addiu v0,v0,1` @0x8001f618, Umlauf
  * `sb zero,149(v1)` @0x8001f63c) -> im Wechselbild steht das LETZTE Bild; Gewicht +0x8f (vor dem Abzug, @0x8001f408) * a3
@@ -221,6 +233,9 @@ typedef struct {
     int soak_ph2;                          /* Runde 3 schwanz_treffer: +0x6 nach dem HURT-Soak-Takt, VOR dem Taktende-Haken */
     int folge;                             /* Runde 3: Bilder mit Clip 3 + Klinge in Wand (Welt), nach denen KEIN Clip 0xa folgt (Soll 0) */
     int zuck, zuck_stun;                   /* Runde 3 r2 schwanz_zucken: Zuckbilder (Clip 7) nach dem Kontakt (Soll 0), +0x1dc danach */
+    int aus3_nach;                         /* Clip nach dem ERSTEN Verlassen von Clip 3 (-1 = nie) */
+    int aus_kontakt, aus_af, aus_rueck;    /* Ausholen (17.11.): Clip-3-Bilder af < RE15_BKK_SCHLAG_AB mit Klinge in Wand, erstes davon,
+                                            * Rueckzuege, die in einem solchen Bild ausgeloest wurden (Soll 0) */
     int ruecksprung, stillstand, wechsel, wechsel_falsch, wechsel_ab[8];   /* Runde 3 Auftrag B (Kampf-Clipenden) */
     char spur[512];
 } ergebnis_t;
@@ -258,6 +273,7 @@ static void kampf_bild(ergebnis_t *r, bild_t *alt, const re15_actor_t *e)
     if (wp >= 4096) r->stillstand++;
     if (alt->ok && alt->mo == e->motion && e->motion != 1 && e->motion != 0 && e->anim_frame == 0 && alt->af > 0) r->ruecksprung++;
     if (alt->ok && alt->mo != e->motion) {
+        if (alt->mo == 3 && r->aus3_nach < 0) r->aus3_nach = e->motion;
         if (r->wechsel < 8) r->wechsel_ab[r->wechsel] = alt->mo;
         r->wechsel++;
         /* Wechselbild eines nicht kreisenden Clips: Bild 0 kann dort nur der Umlauf sein (der Port zeichnet einen Clip ab Bild 1) */
@@ -277,7 +293,7 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
 {
     g_scd.cam_id = (uint8_t)s_cut;
     ergebnis_t r; memset(&r, 0, sizeof r); r.sonde_af = -1; r.kontakt_af = -1; r.frac_a = -1; r.kontakt_zelle = -1;
-    r.kontakt_t = -1; r.a_t = -1; r.rate_a = -1; r.soak_ph2 = -1;
+    r.kontakt_t = -1; r.a_t = -1; r.rate_a = -1; r.soak_ph2 = -1; r.aus_af = -1; r.aus3_nach = -1;
     bild_t alt; memset(&alt, 0, sizeof alt);
     int vor_kontakt = 0;
     memset(g_actors, 0, sizeof g_actors);
@@ -293,7 +309,7 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
     int16_t gier1 = 0; int gier1_ok = 0;
     for (int f = 0; f < s_takte; f++) {
         pl->hit_react = 1;                                     /* Spieler+0x93 gesetzt: kein Treffer-Block (@0x8011772c), nur Box + Sonde */
-        const uint8_t ph_vor = e->sub_state_2;
+        const uint8_t ph_vor = e->sub_state_2, ss1_vor = e->sub_state_1;
         re15_enemy_ai_run_all(0);
         if (s_treffer == 1 && r.kontakt_t >= 0 && f == r.kontakt_t + 1) r.soak_ph2 = e->sub_state_2;   /* vor dem Taktende-Haken */
         if (s_treffer == 2 && r.kontakt_t >= 0 && f == r.kontakt_t + 1) { r.soak_ph2 = e->sub_state_2; r.zuck_stun = e->hit_stun; }
@@ -305,12 +321,20 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
             if (!r.clip_a) { r.frac_a = e->anim_frac; r.rate_a = e->anim_blend_rate; r.a_t = f; }
             r.clip_a = 1; if (e->anim_frame > r.clip_a_max) r.clip_a_max = e->anim_frame;
         }
-        /* Runde 3: JEDES Bild mit Clip 3 und Klinge in einer Wand braucht im Folgebild Clip 0xa (auch Abbruch-/Ausstiegsbild) */
+        /* Runde 3: JEDES Bild mit Clip 3 und Klinge in einer Wand braucht im Folgebild Clip 0xa (auch Ausstiegsbild am Clipende).
+         * Ausholen (NUTZERENTSCHEID 17.11.2026 "Nein"): nur Bilder ab dem ersten Schlagbild af 0x20 (RE15_BKK_SCHLAG_AB, Herleitung
+         * re15_birkin_klaue_r41.h) - ein Kontakt beim Ausholen loest keinen Rueckzug aus. */
+        const int schlag = e->anim_frame >= RE15_BKK_SCHLAG_AB;
+        const int wk_bild = (e->motion == 3) ? welt_kontakt(e, NULL) : 0;
         if (vor_kontakt && e->motion != 0x0a) r.folge++;
-        vor_kontakt = (e->motion == 3 && welt_kontakt(e, NULL));
-        /* Runde 3: Weltkontakt (ohne Kamera) im gezeichneten Bild der Phase 1 */
+        vor_kontakt = wk_bild && schlag;
+        if (wk_bild && !schlag) { r.aus_kontakt++; if (r.aus_af < 0) r.aus_af = e->anim_frame; }
+        /* Rueckzug ausgeloest (+0x4/+0x6 -> 3/3 in diesem Takt, aus Phase 1, Abbruch- oder Ausstiegsbild) in einem Ausholbild? */
+        if (e->motion == 3 && e->sub_state_1 == 3 && e->sub_state_2 == 3 && !(ss1_vor == 3 && ph_vor == 3) && !schlag) r.aus_rueck++;
+        /* Runde 3: Weltkontakt (ohne Kamera) im gezeichneten Bild der Phase 1 - zaehlt ab dem ersten Schlagbild */
         re15_bkk_befund_t wb;
-        const int wk = (e->motion == 3 && (e->sub_state_2 == 1 || e->sub_state_2 == 3)) ? welt_kontakt(e, &wb) : 0;
+        const int wk_roh = (e->motion == 3 && (e->sub_state_2 == 1 || e->sub_state_2 == 3)) ? welt_kontakt(e, &wb) : 0;
+        const int wk = wk_roh && schlag;
         if (wk) {
             if (r.kontakt_af < 0) { r.kontakt_af = e->anim_frame; r.kontakt_t = f; r.kontakt_zelle = wb.zelle; r.kontakt_y = wb.punkt[1]; }
             if (e->sub_state_2 == 1) r.durch++;          /* Klinge steckt (Pose dieses Takts), Rueckzug nicht ausgeloest */
@@ -327,7 +351,7 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
         if (s_treffer == 2 && r.kontakt_t >= 0 && f > r.kontakt_t) {
             if (e->state == 2 && e->motion == 7) r.zuck++;                                  /* Zuckbild statt Rueckzug */
         }
-        if (ph_vor == 1 && e->sub_state_2 == 3 && re15_bk_kralle_logik_aktiv() && !wk) r.ohne++;   /* Rueckzug ohne Weltkontakt */
+        if (ph_vor == 1 && e->sub_state_2 == 3 && re15_bk_kralle_logik_aktiv() && !wk_roh) r.ohne++;   /* Rueckzug ohne Weltkontakt */
         if (e->motion == 3 && e->anim_frame > r.clip3_max) r.clip3_max = e->anim_frame;
         if (ph_vor == 1 && e->sub_state_2 == 3 && r.sonde_af < 0) r.sonde_af = e->anim_frame;
         if (e->sub_state_2 == 1) {
@@ -442,6 +466,8 @@ int main(int argc, char **argv)
                   r.kontakt_t, r.a_t, r.durch, r.folge);
         } else if (wand) {
             CHECK(r.kontakt_af >= 0, "schwanz_wand: die gezeichnete Klinge muss die Ostwand #4 erreichen (Lage pruefen)");
+            CHECK(r.aus_rueck == 0 && r.kontakt_af >= RE15_BKK_SCHLAG_AB, "schwanz_wand: Rueckzug nur aus einem Schlagbild (aus_rueck %d, "
+                  "kontakt_af %d)", r.aus_rueck, r.kontakt_af);
             CHECK(r.durch == 0 && r.folge == 0, "schwanz_wand: %d Takt(e) steckt die gezeichnete Klinge in der Wand, ohne dass +0x6 = 3 gesetzt wird "
                   "(ohne Clip 0xa im Folgebild: %d)", r.durch, r.folge);
             CHECK(r.clip_a && r.sonde_af == r.kontakt_af, "schwanz_wand: Rueckzug im Kontaktbild (af %d), ausgeloest bei af %d", r.kontakt_af, r.sonde_af);
@@ -533,7 +559,10 @@ int main(int argc, char **argv)
         /* Runde 3: Ansprung nach dem Aufrichten, vom Tor @0x80117668 bei af 21 abgebrochen; im Ausstiegsbild (Phase 2 @0x80117888,
          * kein anim_set) gleitet die Klinge mit der weiterlaufenden Ueberblendung ins Gelaender #17. Lage aus dem Messlauf
          * N_50E0steh F806-F810: Birkin (-15000,-16300) Gier 1024 (Auftritt Sub 9), Leon (-13301,-22184); gemessen F810 148 tief.
-         * Soll: auch dort Rueckzug im Folgebild (folge == 0). Gegenprobe ohne die Abbruch-/Ausstiegs-Pruefung: Gang ohne Rueckzug. */
+         * NUTZERENTSCHEID 17.11.2026 "Nein" (Kontakt beim Ausholen zaehlt nicht): das Tor bricht nur bei +0x95 < 0x1e ab
+         * (`sltiu v0,v0,0x1e` @0x801176ac), Abbruch- und Ausstiegsbild liegen also immer im Ausholen (af < RE15_BKK_SCHLAG_AB 0x20).
+         * Soll jetzt: die Klinge beruehrt das Gelaender beim Ausholen (aus_kontakt > 0), KEIN Rueckzug daraus (aus_rueck == 0, kein
+         * Clip 0xa im Folgebild), danach Gang. Gegenprobe 32b4575e6: Rueckzug im Folgebild (aus_rueck 1). */
         if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
         re15_bk_kralle_logik_setzen(s_blob, s_blob_len);
         if (!raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50E0.RDT", 0x50E0u)) { fprintf(stderr, "FAIL: ROOM50E0 nicht ladbar\n"); return 1; }
@@ -542,8 +571,44 @@ int main(int argc, char **argv)
         s_sub = 3; s_weiter = 0; s_takte = 400; s_gier = -1;
         printf("%s: ticks=%d clip0xa=%d kontakt_af=%d folge=%d ohne=%d Wechsel=%d%s\n", fall, r.ticks, r.clip_a, r.kontakt_af, r.folge, r.ohne,
                r.wechsel, r.spur);
-        CHECK(r.folge == 0, "schwanz_abbruch: %d Bild(er) mit Clip 3 und Klinge in der Wand ohne Clip 0xa im Folgebild", r.folge);
-        CHECK(r.clip_a, "schwanz_abbruch: die Klinge muss im Abbruch-/Ausstiegsbild das Gelaender #17 treffen (Lage pruefen) -> Clip 0xa");
+        printf("%s: aus_kontakt=%d aus_af=%d aus_rueck=%d\n", fall, r.aus_kontakt, r.aus_af, r.aus_rueck);
+        CHECK(r.aus_kontakt > 0 && r.aus_af < RE15_BKK_SCHLAG_AB, "schwanz_abbruch: die Klinge muss beim Ausholen (Abbruch-/Ausstiegsbild) das "
+              "Gelaender #17 beruehren (Lage pruefen), aus_kontakt %d aus_af %d", r.aus_kontakt, r.aus_af);
+        CHECK(r.aus_rueck == 0 && r.aus3_nach == 1, "schwanz_abbruch: Kontakt nur beim Ausholen -> kein Rueckzug, nach dem Ausstiegsbild "
+              "Gang Clip 1 (aus_rueck %d, Clip nach dem Ansprung %#x)", r.aus_rueck, r.aus3_nach);
+        CHECK(r.folge == 0 && r.ohne == 0, "schwanz_abbruch: %d Schlagbild(er) mit Klinge in der Wand ohne Clip 0xa im Folgebild, ohne %d",
+              r.folge, r.ohne);
+        re15_bk_kralle_logik_setzen(NULL, 0);
+    }
+    if (!strcmp(fall, "schwanz_ausholen") || !strcmp(fall, "schwanz_ausholen_schlag")) {
+        /* NUTZERENTSCHEID 17.11.2026 "Nein": Kontakt beim Ausholen (af < RE15_BKK_SCHLAG_AB) loest keinen Rueckzug aus; der Schlag
+         * (ab af 0x20 bis zum Ende des Absenkens) zaehlt weiter mit Rueckzug im naechsten Bild. Lagen aus ausholen/tools/suche.c. */
+        if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
+        re15_bk_kralle_logik_setzen(s_blob, s_blob_len);
+        if (!raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50A0.RDT", 0x50A0u)) { fprintf(stderr, "FAIL: ROOM50A0 nicht ladbar\n"); return 1; }
+        s_cut = 5;
+        const int nur = !strcmp(fall, "schwanz_ausholen");
+        ergebnis_t r = nur ? hieb(0x10, -10310, -11990, -9462, -12838, 0) : hieb(0x10, -13050, -10600, -13898, -9752, 0);
+        printf("%s: ticks=%d clip0xa=%d aus_kontakt=%d aus_af=%d aus_rueck=%d kontakt_af=%d sonde_af=%d verzug=%d durch=%d folge=%d ohne=%d "
+               "clip3_max=%d aus_sub=%d cd=0x%02x\n", fall, r.ticks, r.clip_a, r.aus_kontakt, r.aus_af, r.aus_rueck, r.kontakt_af, r.sonde_af,
+               r.a_t - r.kontakt_t, r.durch, r.folge, r.ohne, r.clip3_max, r.aus_sub, r.cd);
+        CHECK(r.aus_kontakt > 0 && r.aus_af >= 0 && r.aus_af < RE15_BKK_SCHLAG_AB, "%s: die Klinge muss beim Ausholen die Wand beruehren "
+              "(Lage pruefen), aus_kontakt %d aus_af %d", fall, r.aus_kontakt, r.aus_af);
+        CHECK(r.aus_rueck == 0, "%s: Kontakt beim Ausholen darf keinen Rueckzug ausloesen (aus_rueck %d, Rueckzug bei af %d)", fall,
+              r.aus_rueck, r.sonde_af);
+        if (nur) {
+            CHECK(r.kontakt_af < 0 && !r.clip_a && r.clip3_max == fc3 - 1, "schwanz_ausholen: Schlag frei -> kein Clip 0xa, Clip 3 bis zum "
+                  "letzten Bild %d (kontakt_af %d, clip0xa %d, clip3_max %d)", fc3 - 1, r.kontakt_af, r.clip_a, r.clip3_max);
+            CHECK(r.aus_sub == 1 && r.cd == 0x1e, "schwanz_ausholen: Clip-Ende -> HUB mit +0x1df 0x1e (@0x801178bc), aus_sub=%d cd=0x%02x",
+                  r.aus_sub, r.cd);
+        } else {
+            CHECK(r.kontakt_af >= RE15_BKK_SCHLAG_AB && r.clip_a && r.sonde_af == r.kontakt_af && r.a_t == r.kontakt_t + 1,
+                  "schwanz_ausholen_schlag: Kontakt im Schlag -> Rueckzug im naechsten Bild (kontakt_af %d, sonde_af %d, Verzug %d)",
+                  r.kontakt_af, r.sonde_af, r.a_t - r.kontakt_t);
+            CHECK(r.durch == 0 && r.folge == 0 && r.ohne == 0, "schwanz_ausholen_schlag: durch %d folge %d ohne %d", r.durch, r.folge, r.ohne);
+            CHECK(r.aus_sub == 1 && r.cd == 0x3c, "schwanz_ausholen_schlag: Phase 5 -> HUB mit +0x1df 0x3c (@0x801179a4-a8), aus_sub=%d "
+                  "cd=0x%02x", r.aus_sub, r.cd);
+        }
         re15_bk_kralle_logik_setzen(NULL, 0);
     }
     if (!strcmp(fall, "schwanz_abdeckung")) {
