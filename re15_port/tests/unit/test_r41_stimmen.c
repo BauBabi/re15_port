@@ -7,9 +7,10 @@
  *      ("volume=50\nsound=stereo\n"), bei OFF kommt genau "voice=off\n" dazu (auch hinter ultimate=on), Rundreise
  *      Speichern -> Laden ergibt denselben Zustand; eine Datei ohne voice-Zeile (alle bisherigen) laedt ON.
  *   C  Stopp-Hook: der Wechsel ON -> OFF ruft ihn genau einmal (laufende Aufnahme endet), OFF -> OFF und OFF -> ON nicht.
- *   D  Was stumm wird: bei OFF spielt kein synchro-Dialog (Beispiele 1170/0, 1240/0, Johns Ruf 1141/42, Annettes Schrei
- *      5090/41, Hilferuf 1141/53, Rekorder 1100/40), wohl aber der Tuerton door_sound.wav (1141/59, ein Geraeusch);
- *      bei ON spielt alles.
+ *   D  Was stumm wird: bei OFF spielt kein synchro-Dialog mit Untertitel (Beispiele 1170/0, 1240/0, Rekorder 1100/40,
+ *      1011/16, 1141/40, 5090/40, 1041/40), wohl aber der Tuerton door_sound.wav (1141/59) und - NUTZERWUNSCH-Auslegung
+ *      17.11.2026 - die Laute ohne Untertitel: help01..05 (1141/1041/1131 Id 53..57), Johns Ruf 1141/42, Annettes
+ *      Schrei 5090/41, Stoehnen main16.5 (1011/24); bei ON spielt alles.
  */
 #define _DEFAULT_SOURCE
 #include <stdio.h>
@@ -150,19 +151,39 @@ static void teil_d(void)
     static const struct { unsigned raum; int id; const char *was; } dialog[] = {
         { 0x1170, 0,  "Helipad-Intro main00" },
         { 0x1240, 0,  "Vorspann 1240 main00" },
-        { 0x1141, 42, "Johns Hilferuf main42 (re15_audio_stimme)" },
-        { 0x1141, 53, "Hilferuf help01" },
-        { 0x5090, 41, "Annettes Schrei main41 (re15_audio_stimme)" },
         { 0x1100, 40, "Irons' Rekorder (Irons_Rekorder_Sound.wav)" },
-        { 0x1011, 16, "Elza main16.5" },
+        { 0x1011, 16, "1011 main16 (Dialogzeile neben dem Stoehnen)" },
+        { 0x1141, 40, "1141 main40 (Dialogzeile neben Johns Ruf)" },
+        { 0x1141, 52, "1141 Id 52 (vor help01)" },
+        { 0x1141, 58, "1141 Id 58 (nach help05)" },
+        { 0x5090, 40, "Annette main40 'W-William! You're alive!'" },
+        { 0x5090, 42, "5090 main42 'Leon: Annette!'" },
+        { 0x1041, 40, "Elza 1041 main40 'Oh, no, this is John!'" },
+        { 0x1041, 42, "1041 Id 42 (Johns Ruf nur in 1141)" },
+        { 0x5091, 41, "5091 Id 41 (Schrei nur in 5090)" },
+        { 0x1010, 24, "1010 Id 24 (Stoehnen nur in 1011)" },
+    };
+    /* NUTZERWUNSCH-Auslegung 17.11.2026: Laute ohne Untertitel = Hinweise/Geraeusche, bleiben bei OFF hoerbar. */
+    static const struct { unsigned raum; int id; const char *was; } laut[] = {
+        { 0x1141, 53, "Hilferuf help01 1141" }, { 0x1141, 57, "Hilferuf help05 1141" },
+        { 0x1041, 53, "Hilferuf help01 1041" }, { 0x1041, 57, "Hilferuf help05 1041" },
+        { 0x1131, 54, "Hilferuf help02 1131" }, { 0x1131, 57, "Hilferuf help05 1131" },
+        { 0x1141, 42, "Johns Ruf main42 (re15_audio_stimme)" },
+        { 0x5090, 41, "Annettes Schrei main41 (re15_audio_stimme)" },
+        { 0x1011, 24, "Stoehnen main16.5 (1011 Id 24)" },
     };
     re15_stimme_option_set(1);
     for (size_t i = 0; i < sizeof dialog / sizeof dialog[0]; i++)
         CHECK(re15_stimme_option_spielt(dialog[i].raum, dialog[i].id) == 1, "ON: %s spielt", dialog[i].was);
+    for (size_t i = 0; i < sizeof laut / sizeof laut[0]; i++)
+        CHECK(re15_stimme_option_spielt(laut[i].raum, laut[i].id) == 1, "ON: %s spielt", laut[i].was);
     CHECK(re15_stimme_option_spielt(0x1141, RE15_R39J_TUERTON_ID) == 1, "ON: Tuerton door_sound.wav spielt");
     re15_stimme_option_set(0);
     for (size_t i = 0; i < sizeof dialog / sizeof dialog[0]; i++)
         CHECK(re15_stimme_option_spielt(dialog[i].raum, dialog[i].id) == 0, "OFF: %s stumm", dialog[i].was);
+    for (size_t i = 0; i < sizeof laut / sizeof laut[0]; i++)
+        CHECK(re15_stimme_option_spielt(laut[i].raum, laut[i].id) == 1, "OFF: %s bleibt hoerbar (Laut ohne Untertitel)",
+              laut[i].was);
     CHECK(re15_stimme_option_spielt(0x1141, RE15_R39J_TUERTON_ID) == 1,
           "OFF: Tuerton door_sound.wav (1141/%d) spielt weiter - Geraeusch", RE15_R39J_TUERTON_ID);
     CHECK(re15_stimme_option_spielt(0x1041, RE15_R39J_TUERTON_ID) == 0, "OFF: Id 59 in einem anderen Raum ist kein Tuerton");

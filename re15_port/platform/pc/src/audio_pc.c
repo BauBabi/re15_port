@@ -2417,7 +2417,7 @@ static void re15_voice_play(uint16_t room, int voice_id)
     if (!g_audio.initialized) return;
     /* Runde 41 Stimmen (re15_stimme_option.h): VOICE OFF = derselbe Weg wie "keine Datei fuer (Raum, Id)" — der Kanal
      * startet nicht, g_re15_voice_laeuft bleibt 0, die Szene laeuft mit der Textdauer. Geraeusche auf dem Sprachkanal
-     * (Tuerton 1141) spielen weiter. */
+     * und Laute ohne Untertitel (re15_stimme_option_ist_geraeusch) spielen weiter. */
     if (!re15_stimme_option_spielt((unsigned)room, voice_id)) {
         fprintf(stderr, "[voice] VOICE OFF: ROOM%04X msg %d bleibt stumm (Textdauer)\n", (unsigned)room, voice_id);
         return;
@@ -2439,7 +2439,8 @@ void re15_audio_stimme(uint16_t room, int voice_id) { re15_voice_play(room, voic
  * ueber die vorhandene Ausblende des Mischers (MIXER_TAIL_FADE_SAMPLES), also ohne Knacken: das Ende wird auf "jetzt +
  * Ausblende" gekuerzt, der Puffer bleibt im Clip-Cache. Danach meldet re15_audio_tick g_re15_voice_laeuft = 0 und jeder
  * Wartende laeuft mit der Textdauer weiter; die Nachricht (Untertitel) haengt nicht am Kanal und bleibt stehen.
- * Nicht gestoppt werden die RE2-XA-Laute (s_re2xa_pcm) und Geraeusche auf dem Sprachkanal (Tuerton 1141). */
+ * Nicht gestoppt werden die RE2-XA-Laute (s_re2xa_pcm) und Geraeusche/Laute ohne Untertitel auf dem Sprachkanal
+ * (re15_stimme_option_ist_geraeusch). */
 void re15_audio_stimme_stoppen(void)
 {
     if (!g_audio.initialized) return;

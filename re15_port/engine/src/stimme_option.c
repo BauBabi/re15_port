@@ -4,6 +4,9 @@
 #include "re15_stimme_option.h"
 #include "re15_dining_r38.h"   /* RE15_R38F_RAUM_1141 */
 #include "re15_dining_r39.h"   /* RE15_R39J_TUERTON_ID (door_sound.wav) */
+#include "re15_johnruf_r39.h"  /* RE15_R39P_RAUM_1041/1131, RE15_R39P_HILFE_ID0/_N (help01..05 in 1041/1131) */
+#include "re15_annette_r41.h"  /* RE15_AN_RAUM, RE15_AN_MSG_SCHREI (main41) */
+#include "re15_elza_r36.h"     /* RE15_ELZA_RAUM_1011, RE15_ELZA_STOEHNEN_MSG_ID (main16.5) */
 
 #include <stdlib.h>
 #include <string.h>
@@ -13,9 +16,19 @@ static void (*s_stopp)(void) = 0;
 
 int  re15_stimme_option(void) { return s_an; }
 
+/* NUTZERWUNSCH-Auslegung (17.11.2026): "Voiceover" = gesprochene Dialogzeilen MIT Untertitel. Laute ohne Untertitel
+ * sind Hinweise bzw. Geraeusche und bleiben bei OFF hoerbar. Alle anderen (Raum, Id) bleiben bei OFF stumm. */
 int re15_stimme_option_ist_geraeusch(unsigned room_id, int voice_id)
 {
-    return (room_id & 0xFFFFu) == RE15_R38F_RAUM_1141 && voice_id == RE15_R39J_TUERTON_ID;
+    const unsigned raum = room_id & 0xFFFFu;
+    const int hilfe = voice_id >= RE15_R39J_HILFE_ID0 && voice_id < RE15_R39J_HILFE_ID0 + RE15_R39J_HILFE_N;
+    if (raum == RE15_R38F_RAUM_1141)                         /* Tuerton 59, Johns Ruf main42, Hilferufe help01..05 */
+        return voice_id == RE15_R39J_TUERTON_ID || voice_id == RE15_R38F_HILFE_STIMME || hilfe;
+    if (raum == RE15_R39P_RAUM_1041 || raum == RE15_R39P_RAUM_1131)   /* dieselben help01..05 (Ids wie 1141) */
+        return voice_id >= RE15_R39P_HILFE_ID0 && voice_id < RE15_R39P_HILFE_ID0 + RE15_R39P_HILFE_N;
+    if (raum == RE15_AN_RAUM)       return voice_id == RE15_AN_MSG_SCHREI;          /* Annettes Schrei main41 */
+    if (raum == RE15_ELZA_RAUM_1011) return voice_id == RE15_ELZA_STOEHNEN_MSG_ID;  /* Stoehnen main16.5 (Id 24) */
+    return 0;
 }
 
 int re15_stimme_option_spielt(unsigned room_id, int voice_id)

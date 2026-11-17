@@ -9,12 +9,13 @@
  *
  * WAS "Stimme" HEISST (Zensus aller Tonquellen, Bericht stimmen_option/BERICHT_r1.md):
  *   AUS bei OFF — alle Aufnahmen aus synchro/, die ueber den Sprachkanal laufen (audio_pc.c re15_voice_play, EIN Weg):
- *     a) Message_on-Zeilen jeder Szene (SCD_AUDIO_VOICE_ON, synchro/STAGEn/roomXXXX/mainNN.wav), samt der Umleitungen
- *        Elza main16.5 (r36), Irons' Rekorder (r38), Elza-Montage 1241 <- 1240 (r38), Port-Szenen-Reihenfolge (r39),
- *        Hilferufe help01..05 1141/1041/1131 (r39);
- *     b) Sprachzeilen ohne Text ueber re15_audio_stimme: Johns Hilferuf 1141 main42 (r38), Annettes Schrei 5090
- *        main41 (r41).
+ *     Message_on-Zeilen jeder Szene (SCD_AUDIO_VOICE_ON, synchro/STAGEn/roomXXXX/mainNN.wav), samt der Umleitungen
+ *     Irons' Rekorder (r38), Elza-Montage 1241 <- 1240 (r38), Port-Szenen-Reihenfolge (r39).
  *   BLEIBEN bei OFF (Musik und Geraeusche):
+ *     - NUTZERWUNSCH-Auslegung (Entscheid 17.11.2026, "Voiceover" = gesprochene Dialogzeilen MIT Untertitel): Laute ohne
+ *       Untertitel sind Hinweise bzw. Geraeusche -> re15_stimme_option_ist_geraeusch: Johns Hilferufe help01..05
+ *       (1141/1041/1131 Id 53..57, r39), Johns Ruf 1141 main42 (r38), Annettes Schrei 5090 main41 (r41), das
+ *       Stoehnen main16.5 (1011 Id 24, r36);
  *     - der Tuerton door_sound.wav in ROOM1141 (Sprach-Id 59, re15_dining_r39.h RE15_R39J_TUERTON_ID, Nutzer-Nachtrag 17
  *       Punkt 5): er laeuft nur technisch ueber den Sprachkanal, ist aber ein Geraeusch -> re15_stimme_option_spielt;
  *     - RE2-XA der G5-Szene (R704_XA0B/0C.XAS, re15_audio_re2_xa) = Birkin-Laute (G5_auftritt.md M5), kein Dialog;
@@ -46,7 +47,8 @@ void re15_stimme_option_set(int an);
 /* Plattform: beendet eine laufende synchro-Aufnahme (PC: audio_pc.c re15_audio_stimme_stoppen). */
 void re15_stimme_option_stopp_hook(void (*fn)(void));
 
-/* Die Datei zu (Raum, Sprach-Id) ist ein GERAEUSCH, das nur technisch ueber den Sprachkanal laeuft (Tuerton 1141/59). */
+/* Die Datei zu (Raum, Sprach-Id) ist ein GERAEUSCH/Laut ohne Untertitel, das nur technisch ueber den Sprachkanal laeuft
+ * (Tuerton 1141/59, Hilferufe, Johns Ruf, Annettes Schrei, Stoehnen main16.5). */
 int  re15_stimme_option_ist_geraeusch(unsigned room_id, int voice_id);
 /* Darf der Sprachkanal (Raum, Id) jetzt spielen? ON -> immer; OFF -> nur Geraeusche. */
 int  re15_stimme_option_spielt(unsigned room_id, int voice_id);
