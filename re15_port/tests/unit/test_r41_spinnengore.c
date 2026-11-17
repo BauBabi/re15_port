@@ -25,6 +25,9 @@
  *   M  Lache (Nachbesserung 2, Abnahme 2 Mangel 1): RE1.5 CORPSE 0x801153d4 (0x00DF809F, +8 je Takt, 91 bzw. 121
  *      Takte, Eintritt je Todesweg), RE2 FUN_80104DE8 (0x00BF10BF, +8 je Takt, 90 Takte, Wasser sperrt), Babyspinne
  *      (Tinte beim SPLAT, der Record bleibt nach dem DESPAWN liegen). Byte-Pins aus STAGE2/EMS25/EMS26/RE2-PSX.EXE.
+ *   M9 Schatten ohne Nahgrenze (Release v0.8.30, Pruefung R1): RE1.5 FUN_8001b064 (RotAverage4 @0x8001b2c8) und RE2
+ *      FUN_8001699c (RTPT/RTPS/AVSZ4 @0x80016b30-6c) haengen das Viereck ohne Z-Pruefung ein; re15_objpoly_r38_schatten
+ *      verwirft nur nach GPU-Groesse je Dreieck (0,1,2)/(1,2,3), Bildpunkte vor der Kamera wie bisher.
  *   M7b/M7c Raumwechsel (Nachbesserung 3, Abnahme 3 Mangel 2): der Fleck faellt ueber die RAUM-LADEKETTE
  *      (re15_re2z_rng_reset bzw. re15_actor_init), nicht ueber den Modul-Aufruf direkt (FUN_8001633c `sb zero,-50(s1)`
  *      @0x8001639c, einziger Aufrufer @0x80026e0c).
@@ -60,6 +63,8 @@
 #include "fx_plattform_pc.h"   /* re15_pc_esp_clut / re15_pc_fx_seite_clut_ok: der Zeichner (platform/pc/src) */
 #include "re2_fx.h"            /* Nachbesserung 3: RE2-FX-Maschine (Kraehenfeder Raumbank 0x0C) */
 #include "re15_schuss_r36.h"   /* re15_schuss_r36_kraehe_parts_seed */
+#include "re15_objpoly_r38.h"   /* M9: re15_objpoly_r38_schatten (Release v0.8.30) */
+#include "re15_math.h"          /* M9: re15_gte_divide */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -539,8 +544,61 @@ static void test_lache(void)
         pin(x2, n, B, 0x80016968u, 0xa203000eu, "sb v1,14(s0)");
         pin(x2, n, B, 0x80026e0cu, 0x0c0058cfu, "jal 0x8001633c (Pool-Init im Raumwechsel)");
         pin(x2, n, B, 0x8001639cu, 0xa220ffceu, "sb zero,-50(s1)");
+        /* M9 (Release v0.8.30, Pruefung R1): Zeichner FUN_8001699c ohne Nahgrenze - Bereichspruefung, dann RTPT/RTPS/AVSZ4,
+         * OTZ-Klemme 0x1fff und addPrim, kein Sprung auf ein Z dazwischen */
+        pin(x2, n, B, 0x80016af8u, 0x0c00b208u, "jal 0x8002c820 (XZ-Bereich)");
+        pin(x2, n, B, 0x80016b00u, 0x10400033u, "beq v0,zero,0x80016bd0");
+        pin(x2, n, B, 0x80016b30u, 0x4a280030u, "RTPT");
+        pin(x2, n, B, 0x80016b58u, 0x4a180001u, "RTPS");
+        pin(x2, n, B, 0x80016b6cu, 0x4b68002eu, "AVSZ4");
+        pin(x2, n, B, 0x80016b80u, 0x2c422000u, "sltiu v0,v0,0x2000");
+        pin(x2, n, B, 0x80016b8cu, 0x24021fffu, "addiu v0,zero,8191");
+        pin(x2, n, B, 0x80016b9cu, 0x000420c2u, "srl a0,a0,3");
     }
     free(x2);
+    {   /* M9 RE1.5 FUN_8001b064: Bereichspruefung, RotAverage4 (RTPT/RTPS/AVSZ4), OT-Index otz >> 4, kein Z-Sprung */
+        uint8_t *x1 = datei(RE15_REPO_INFO "/Re1.5/PSX.EXE", &n);
+        CHECK(x1 != NULL && n > 0x800, "M9: info/Re1.5/PSX.EXE");
+        if (x1 && n > 0x800) {
+            const uint32_t B = w32(x1, 0x18) - 0x800u;
+            pin(x1, n, B, 0x8001b224u, 0x0c0050dau, "jal 0x80014368 (XZ-Bereich)");
+            pin(x1, n, B, 0x8001b22cu, 0x1040004du, "beq v0,zero,0x8001b364");
+            pin(x1, n, B, 0x8001b2c8u, 0x0c019744u, "jal 0x80065d10 (RotAverage4)");
+            pin(x1, n, B, 0x8001b2d8u, 0x00021102u, "srl v0,v0,4");
+            pin(x1, n, B, 0x80065d2cu, 0x4a280030u, "RTPT");
+            pin(x1, n, B, 0x80065d58u, 0x4a180001u, "RTPS");
+            pin(x1, n, B, 0x80065d7cu, 0x4b68002eu, "AVSZ4");
+        }
+        free(x1);
+    }
+    {   /* M9 Port: re15_objpoly_r38_schatten verwirft nicht nach Z, nur nach GPU-Groesse je Dreieck (0,1,2)/(1,2,3) */
+        const int h = 0x200, ox = 160, oy = 120;
+        int sx[4], sy[4]; int32_t summe = -1; uint8_t tri[2];
+        /* a) ganz vor der Kamera: dieselben Bildpunkte wie die bisherige Rechnung (cx + (IR1*n >> 16)), beide Dreiecke */
+        const int32_t vor[4][3] = { { -400, 300, 3000 }, { -400, 300, 2000 }, { 400, 300, 3000 }, { 400, 300, 2000 } };
+        CHECK(re15_objpoly_r38_schatten(vor, h, ox, oy, sx, sy, &summe, tri) == 1 && tri[0] && tri[1],
+              "M9a: Viereck vor der Kamera nicht gezeichnet (%d/%d)", tri[0], tri[1]);
+        for (int v = 0; v < 4; v++) {
+            uint32_t nn = re15_gte_divide((uint32_t)h, (uint32_t)vor[v][2]);
+            int ex = ox + (int)(((int64_t)vor[v][0] * nn) >> 16), ey = oy + (int)(((int64_t)vor[v][1] * nn) >> 16);
+            CHECK(sx[v] == ex && sy[v] == ey, "M9a: Ecke %d (%d,%d) statt (%d,%d)", v, sx[v], sy[v], ex, ey);
+        }
+        CHECK(summe == 10000, "M9a: SZ-Summe %ld (Soll 10000)", (long)summe);
+        /* b) zwei Ecken mit 0 < z < 64 (der alte Port-Ausschnitt warf das GANZE Viereck weg): GTE-Ueberlauf n = 0x1FFFF,
+         *    Bildpunkte bleiben klein -> beide Dreiecke gerastert */
+        const int32_t nah[4][3] = { { -10, 20, 40 }, { -100, 200, 3000 }, { 10, 20, 40 }, { 100, 200, 3000 } };
+        CHECK(re15_objpoly_r38_schatten(nah, h, ox, oy, sx, sy, &summe, tri) == 1 && tri[0] && tri[1],
+              "M9b: Viereck mit z 40 verworfen (%d/%d)", tri[0], tri[1]);
+        CHECK(sx[0] == ox + (int)((-10 * 0x1FFFFLL) >> 16) && summe == 40 + 3000 + 40 + 3000,
+              "M9b: Ecke 0 x %d, Summe %ld", sx[0], (long)summe);
+        /* c) Ecke hinter der Kamera: SZ3 = 0 -> n = 0x1FFFF, SX = 160 - 1800 gesaettigt auf -400h, SY = 120 + 599 = 719;
+         *    Dreieck (0,1,2) ueber 1023 breit -> weg, (1,2,3) bleibt */
+        const int32_t hinten[4][3] = { { -900, 300, -500 }, { -400, 300, 2000 }, { 400, 300, 3000 }, { 400, 300, 2000 } };
+        re15_objpoly_r38_schatten(hinten, h, ox, oy, sx, sy, &summe, tri);
+        CHECK(sx[0] == -0x400 && sy[0] == oy + (int)((300 * 0x1FFFFLL) >> 16) && tri[0] == 0 && tri[1] == 1
+              && summe == 0 + 2000 + 3000 + 2000,
+              "M9c: Ecke 0 (%d,%d), Dreiecke %d/%d, Summe %ld (Soll (-1024,719), 0/1, 7000)", sx[0], sy[0], tri[0], tri[1], (long)summe);
+    }
 
     int32_t hx, hz; int pool; uint8_t rgb[3];
     /* M2 RE1.5, Platzweg: Leiche Phase 0 -> 91 Schritte zu 8, Tinte 0x00DF809F, dann Phase 2 */

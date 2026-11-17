@@ -94,6 +94,25 @@ static int           s_light_quad_count = 0;
 static int           s_shadow_next_spieler = 0;
 /* Runde 41 Spur S NB3 (Messschiene RE15_LACHE_LOG der Babyflecken): Laenge der Schatten-Warteschlange dieses Bildes. */
 int re15_render_pc_shadow_quads_eingereiht(void);
+/* Release v0.8.30 (Pruefung R1): welche GPU-Dreiecke des NAECHSTEN Schatten-Vierecks die GPU rastert (Bit 0 = (0,1,2),
+ * Bit 1 = (1,2,3); re15_objpoly_r38_schatten, Groessengrenze je Dreieck). 3 = beide = bisheriger Weg (Port-Diagonale 0-3,
+ * unveraendert). Genau ein Bit: nur dieses GPU-Dreieck, das andere wird ein leeres Dreieck. Verbraucht sich beim Einreihen. */
+static uint8_t       s_shadow_next_dreiecke = 3;
+void re15_render_pc_shadow_dreiecke(uint8_t maske)
+{
+    s_shadow_next_dreiecke = (uint8_t)(maske & 3u);
+}
+/* Ecken-Indizes der Port-Zerlegung bzw. des einen GPU-Dreiecks (+ leeres Dreieck aus Ecke 0). */
+static const int *shadow_idx_naechstes(void)
+{
+    static const int beide[6] = { 0, 2, 3, 0, 3, 1 };
+    static const int gpu_a[6] = { 0, 1, 2, 0, 0, 0 };   /* GPU (0,1,2) */
+    static const int gpu_b[6] = { 1, 2, 3, 1, 1, 1 };   /* GPU (1,2,3) */
+    const uint8_t m = s_shadow_next_dreiecke;
+    s_shadow_next_dreiecke = 3;
+    return m == 1 ? gpu_a : (m == 2 ? gpu_b : beide);
+}
+
 void re15_render_pc_shadow_tiefe(int32_t vz_summe4, int ist_spieler)
 {
     s_shadow_next_vz = vz_summe4;
@@ -987,13 +1006,13 @@ void re15_render_shadow_quad_c(int x0, int y0, int x1, int y1,
                                int x2, int y2, int x3, int y3,
                                uint8_t r, uint8_t g, uint8_t b)
 {
-    if (!s_shadow_tex) return;
-    if (s_shadow_quad_count >= SHADOW_QUAD_MAX) { s_shadow_verworfen++; return; }
+    if (!s_shadow_tex) { s_shadow_next_dreiecke = 3; return; }
+    if (s_shadow_quad_count >= SHADOW_QUAD_MAX) { s_shadow_verworfen++; s_shadow_next_dreiecke = 3; return; }
     const SDL_Color col = { r, g, b, 255 };
     SDL_FPoint p[4] = { {(float)x0,(float)y0}, {(float)x1,(float)y1},
                         {(float)x2,(float)y2}, {(float)x3,(float)y3} };
     SDL_FPoint t[4] = { {0.f,0.f}, {1.f,0.f}, {0.f,1.f}, {1.f,1.f} };
-    const int idx[6] = { 0, 2, 3, 0, 3, 1 };
+    const int *idx = shadow_idx_naechstes();   /* Release v0.8.30: GPU-Dreiecke (re15_render_pc_shadow_dreiecke) */
     s_shadow_vz[s_shadow_quad_count] = s_shadow_next_vz;             /* Runde 36 Spur O: Tag */
     s_shadow_spieler[s_shadow_quad_count] = (uint8_t)s_shadow_next_spieler;
     s_shadow_next_vz = -1; s_shadow_next_spieler = 0;
@@ -1067,14 +1086,14 @@ void re15_render_light_quad(int x0, int y0, int x1, int y1,
 void re15_render_shadow_quad(int x0, int y0, int x1, int y1,
                              int x2, int y2, int x3, int y3)
 {
-    if (!s_shadow_tex) return;
-    if (s_shadow_quad_count >= SHADOW_QUAD_MAX) { s_shadow_verworfen++; return; }
+    if (!s_shadow_tex) { s_shadow_next_dreiecke = 3; return; }
+    if (s_shadow_quad_count >= SHADOW_QUAD_MAX) { s_shadow_verworfen++; s_shadow_next_dreiecke = 3; return; }
     const SDL_Color white = { 255, 255, 255, 255 };  /* no extra modulation (0x808080 prim = neutral) */
     SDL_FPoint p[4] = { {(float)x0,(float)y0}, {(float)x1,(float)y1},
                         {(float)x2,(float)y2}, {(float)x3,(float)y3} };
     SDL_FPoint t[4] = { {0.f,0.f}, {1.f,0.f}, {0.f,1.f}, {1.f,1.f} };
     /* quad corners in space: 0(-X,+Z) 2(+X,+Z) 3(+X,-Z) 1(-X,-Z) → tris (0,2,3),(0,3,1) */
-    const int idx[6] = { 0, 2, 3, 0, 3, 1 };
+    const int *idx = shadow_idx_naechstes();   /* Release v0.8.30: GPU-Dreiecke (re15_render_pc_shadow_dreiecke) */
     s_shadow_vz[s_shadow_quad_count] = s_shadow_next_vz;             /* Runde 36 Spur O: Tag */
     s_shadow_spieler[s_shadow_quad_count] = (uint8_t)s_shadow_next_spieler;
     s_shadow_next_vz = -1; s_shadow_next_spieler = 0;

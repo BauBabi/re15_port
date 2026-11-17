@@ -55,13 +55,10 @@ file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
 
 set(_fehler "")
 set(_skript "M0.3,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M0.8,MA0.1,M1,W10")
-# L7 (Lache RE2 "sichtbar"): Vorlauf, bevor Leon hebt. Seit r41/zielhilfe (d12b972fb, Nutzer 2026-11-16: Heben dreht vollstaendig
-# zum Ziel, RE2-Schritt 0xd8 @0x800434a0) trifft der erste Schuss die Spinne Platz 2 schon in F14 an ihrem Austritt (-500,-6400);
-# dort liegen bei voller Lache (2020 x 2120) Ecken vor der Kamera-Nahgrenze (vz < 64), das Viereck geht nie an den Zeichner.
-# Vorher (Heben drehte nur 0xc8 je Bild, erste Schuesse daneben) lief die Spinne bis (3977,-5683) und starb dort in F79 - die
-# Lage, an der die Pruefung entstand. Mit dem Vorlauf W1.5 laeuft sie aus dem Austritt heraus (gemessen Release v0.8.30: Tod bei
-# (3577,-6273), volle Lache sichtbar); gepruefte Mechanik (Tinte bf10bf, 90 x 8 bis 2020 x 2120, sichtbar) unveraendert.
-set(_vorlauf_L7 "W1.5,")
+# L7 (Lache RE2 "sichtbar") laeuft OHNE Vorlauf (Pruefung R1 v0.8.30: der Vorlauf W1.5 aus 8c54123dd wich nur dem Port-Ausschnitt
+# `_vz < 64` aus). Seit r41/zielhilfe stirbt die Spinne Platz 2 in F14 am Austritt (-500,-6400); dort liegen Ecken der vollen Lache
+# vor/hinter der Kamera. Die Original-Zeichner haben keine Nahgrenze (RE1.5 FUN_8001b064 RotAverage4 @0x8001b2c8, RE2 FUN_8001699c
+# RTPT/RTPS/AVSZ4 @0x80016b30-6c); der Port rechnet seit v0.8.30 GTE-Saettigung + GPU-Grenze je Dreieck (re15_objpoly_r38_schatten).
 
 function(r41s_lauf _name _raum _waffe _art _lache)
     set(WORKDIR "${_basis}_${_name}")
@@ -71,7 +68,7 @@ function(r41s_lauf _name _raum _waffe _art _lache)
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${ARGN}
         RE15_DEBUG_JUMP=${_raum}@250
         RE15_GIVE=${_waffe}:60 RE15_EQUIP=${_waffe}
-        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=5 "RE15_INPUT_SCRIPT=${_vorlauf_${_name}}${_skript}"
+        RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=5 "RE15_INPUT_SCRIPT=${_skript}"
         RE15_SPINNEN_LOG=sp.log RE15_LACHE_LOG=lache.log
         "RE15_EXIT_AT=400#${_raum}"
         "${_exe}")

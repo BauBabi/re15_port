@@ -9464,21 +9464,19 @@ re_title:;
                 int32_t sbm[9], sbt[3];   /* Q12 (byte-true integer RTPS) */
                 for (int i = 0; i < 9; i++) sbm[i] = sh_rot[i];
                 for (int i = 0; i < 3; i++) sbt[i] = sh_trans[i];
-                int sx[4], sy[4], sok = 1;
+                int sx[4], sy[4], sok;
                 int32_t sh_vz_summe = 0;   /* Runde 36 Spur O: AVSZ4-Summe der vier Ecken (re15_pri_schatten_r36.h) */
-                for (int v = 0; v < 4; v++) {
-                    int32_t _x = sh_corner[v][0], _y = sh_corner[v][1], _z = sh_corner[v][2];
-                    int32_t _vx = (int32_t)(((int64_t)_x*sbm[0] + (int64_t)_y*sbm[1] + (int64_t)_z*sbm[2]) >> 12) + sbt[0];
-                    int32_t _vy = (int32_t)(((int64_t)_x*sbm[3] + (int64_t)_y*sbm[4] + (int64_t)_z*sbm[5]) >> 12) + sbt[1];
-                    int32_t _vz = (int32_t)(((int64_t)_x*sbm[6] + (int64_t)_y*sbm[7] + (int64_t)_z*sbm[8]) >> 12) + sbt[2];
-                    if (_vz < 64) { sok = 0; break; }   /* H28 near-clip */
-                    sh_vz_summe += (_vz > 0xFFFF) ? 0xFFFF : _vz;   /* SZ-Klemme 0..65535 wie die GTE */
-                    int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
-                    int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
-                    uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
-                    uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                    sx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
-                    sy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                uint8_t sh_tri[2];
+                {   /* Release v0.8.30: RotAverage4 ohne Nahgrenze (FUN_8001b064 @0x8001b2c8, RE2 FUN_8001699c @0x80016b30-6c);
+                     * GTE-Saettigung + GPU-Grenze je Dreieck (re15_objpoly_r38_schatten) statt des Port-Ausschnitts "H28" `_vz < 64`. */
+                    int32_t smac[4][3];
+                    for (int v = 0; v < 4; v++) {
+                        int32_t _x = sh_corner[v][0], _y = sh_corner[v][1], _z = sh_corner[v][2];
+                        smac[v][0] = (int32_t)(((int64_t)_x*sbm[0] + (int64_t)_y*sbm[1] + (int64_t)_z*sbm[2]) >> 12) + sbt[0];
+                        smac[v][1] = (int32_t)(((int64_t)_x*sbm[3] + (int64_t)_y*sbm[4] + (int64_t)_z*sbm[5]) >> 12) + sbt[1];
+                        smac[v][2] = (int32_t)(((int64_t)_x*sbm[6] + (int64_t)_y*sbm[7] + (int64_t)_z*sbm[8]) >> 12) + sbt[2];
+                    }
+                    sok = re15_objpoly_r38_schatten(smac, (int)cam_view.fov_screen_dist, cx, cy, sx, sy, &sh_vz_summe, sh_tri);
                 }
                 if (sok) {
                     if (getenv("RE15_SHADOW_DBG")) {
@@ -9494,6 +9492,7 @@ re_title:;
                     }
                     /* Runde 36 Spur O: Spieler-Schatten in die OT-Ordnung (FUN_8001b064 @0x8001b2d8). */
                     re15_render_pc_shadow_tiefe(sh_vz_summe, 1);
+                    re15_render_pc_shadow_dreiecke((uint8_t)(sh_tri[0] | (sh_tri[1] << 1)));   /* Release v0.8.30 */
                     if (re15_player_is_dead() && g_death_pool > 0)
                         /* BLOOD POOL (byte-true LAB_8003694c): the shadow quad turns dark-red
                          * (subtractive color 0x38/0xff/0xff @0x8003699c-b8) — the SIZE growth
@@ -10155,20 +10154,16 @@ re_title:;
                 re15_camera_yaw_matrix_angle(fyaw, fym);
                 re15_camera_compose_view_bone(&cam_view, fym, fpos, frot, ftr);
                 const int32_t fc[4][3] = { { -fhx, 0, fhz }, { -fhx, 0, -fhz }, { fhx, 0, fhz }, { fhx, 0, -fhz } };
-                int fsx[4], fsy[4], fok = 1; int32_t fvz_summe = 0;
-                for (int v = 0; v < 4; v++) {
-                    int32_t _x = fc[v][0], _y = fc[v][1], _z = fc[v][2];
-                    int32_t _vx = (int32_t)(((int64_t)_x*frot[0] + (int64_t)_y*frot[1] + (int64_t)_z*frot[2]) >> 12) + ftr[0];
-                    int32_t _vy = (int32_t)(((int64_t)_x*frot[3] + (int64_t)_y*frot[4] + (int64_t)_z*frot[5]) >> 12) + ftr[1];
-                    int32_t _vz = (int32_t)(((int64_t)_x*frot[6] + (int64_t)_y*frot[7] + (int64_t)_z*frot[8]) >> 12) + ftr[2];
-                    if (_vz < 64) { fok = 0; break; }
-                    fvz_summe += (_vz > 0xFFFF) ? 0xFFFF : _vz;
-                    int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
-                    int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
-                    uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
-                    uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                    fsx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
-                    fsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                int fsx[4], fsy[4], fok; int32_t fvz_summe = 0; uint8_t ftri[2];
+                {   /* Release v0.8.30: FUN_8001699c ohne Nahgrenze (RTPT/RTPS/AVSZ4 @0x80016b30-6c), re15_objpoly_r38_schatten */
+                    int32_t fmac[4][3];
+                    for (int v = 0; v < 4; v++) {
+                        int32_t _x = fc[v][0], _y = fc[v][1], _z = fc[v][2];
+                        fmac[v][0] = (int32_t)(((int64_t)_x*frot[0] + (int64_t)_y*frot[1] + (int64_t)_z*frot[2]) >> 12) + ftr[0];
+                        fmac[v][1] = (int32_t)(((int64_t)_x*frot[3] + (int64_t)_y*frot[4] + (int64_t)_z*frot[5]) >> 12) + ftr[1];
+                        fmac[v][2] = (int32_t)(((int64_t)_x*frot[6] + (int64_t)_y*frot[7] + (int64_t)_z*frot[8]) >> 12) + ftr[2];
+                    }
+                    fok = re15_objpoly_r38_schatten(fmac, (int)cam_view.fov_screen_dist, cx, cy, fsx, fsy, &fvz_summe, ftri);
                 }
                 /* Nachbesserung 3 (Abnahme 3 Mangel 2): die Messzeile steht HINTER dem Einreihen und meldet als
                  * `gezeichnet=`, ob der Renderer das Viereck angenommen hat (Zaehler der Schatten-Warteschlange vorher/
@@ -10178,6 +10173,7 @@ re_title:;
                     extern int re15_render_pc_shadow_quads_eingereiht(void);
                     const int vor = re15_render_pc_shadow_quads_eingereiht();
                     re15_render_pc_shadow_tiefe(fvz_summe, 0);
+                    re15_render_pc_shadow_dreiecke((uint8_t)(ftri[0] | (ftri[1] << 1)));   /* Release v0.8.30 */
                     re15_render_shadow_quad_c(fsx[0], fsy[0], fsx[1], fsy[1], fsx[2], fsy[2], fsx[3], fsy[3],
                                               frgb[0], frgb[1], frgb[2]);
                     fgez = re15_render_pc_shadow_quads_eingereiht() - vor;
@@ -10475,38 +10471,40 @@ re_title:;
                     int32_t nm[9], nt[3];   /* Q12 (byte-true integer RTPS) */
                     for (int i = 0; i < 9; i++) nm[i] = nsh_rot[i];
                     for (int i = 0; i < 3; i++) nt[i] = nsh_trans[i];
-                    int nsx[4], nsy[4], nok = 1;
+                    int nsx[4], nsy[4], nok;
                     int32_t nsh_vz_summe = 0;   /* Runde 36 Spur O: AVSZ4-Summe (Gleichstand: unten) */
-                    for (int v = 0; v < 4; v++) {
-                        int32_t _x = nsh_c[v][0], _y = nsh_c[v][1], _z = nsh_c[v][2];
-                        int32_t _vx = (int32_t)(((int64_t)_x*nm[0] + (int64_t)_y*nm[1] + (int64_t)_z*nm[2]) >> 12) + nt[0];
-                        int32_t _vy = (int32_t)(((int64_t)_x*nm[3] + (int64_t)_y*nm[4] + (int64_t)_z*nm[5]) >> 12) + nt[1];
-                        int32_t _vz = (int32_t)(((int64_t)_x*nm[6] + (int64_t)_y*nm[7] + (int64_t)_z*nm[8]) >> 12) + nt[2];
-                        if (_vz < 64) { nok = 0; break; }
-                        nsh_vz_summe += (_vz > 0xFFFF) ? 0xFFFF : _vz;
-                        int32_t _ir1 = _vx > 0x7FFF ? 0x7FFF : (_vx < -0x8000 ? -0x8000 : _vx);
-                        int32_t _ir2 = _vy > 0x7FFF ? 0x7FFF : (_vy < -0x8000 ? -0x8000 : _vy);
-                        uint32_t _sz3 = _vz > 0xFFFF ? 0xFFFFu : (uint32_t)_vz;
-                        uint32_t _n = re15_gte_divide((uint32_t)cam_view.fov_screen_dist, _sz3);
-                        nsx[v] = cx + (int)(((int64_t)_ir1 * (int64_t)_n) >> 16);
-                        nsy[v] = cy + (int)(((int64_t)_ir2 * (int64_t)_n) >> 16);
+                    uint8_t nsh_tri[2];
+                    {   /* Release v0.8.30: ohne Nahgrenze wie RotAverage4 (FUN_8001b064 @0x8001b2c8) / FUN_8001699c
+                         * (@0x80016b30-6c) - GTE-Saettigung + GPU-Grenze je Dreieck (re15_objpoly_r38_schatten) statt `_vz < 64`. */
+                        int32_t nmac[4][3];
+                        for (int v = 0; v < 4; v++) {
+                            int32_t _x = nsh_c[v][0], _y = nsh_c[v][1], _z = nsh_c[v][2];
+                            nmac[v][0] = (int32_t)(((int64_t)_x*nm[0] + (int64_t)_y*nm[1] + (int64_t)_z*nm[2]) >> 12) + nt[0];
+                            nmac[v][1] = (int32_t)(((int64_t)_x*nm[3] + (int64_t)_y*nm[4] + (int64_t)_z*nm[5]) >> 12) + nt[1];
+                            nmac[v][2] = (int32_t)(((int64_t)_x*nm[6] + (int64_t)_y*nm[7] + (int64_t)_z*nm[8]) >> 12) + nt[2];
+                        }
+                        nok = re15_objpoly_r38_schatten(nmac, (int)cam_view.fov_screen_dist, cx, cy,
+                                                        nsx, nsy, &nsh_vz_summe, nsh_tri);
                     }
                     /* RE15_LACHE_LOG (Runde 41 Spur S, Nachbesserung 2): MESSSCHIENE, kein Verhalten. Je
                      * Schatten einer Spinne 0x25 oder einer RE2-Babyspinne 0x26: Bild, Platz, Zustand, Halbmasse, Lache an,
-                     * Tinte (R,G,B wie re15_render_shadow_quad sie bekommt), Boden-Y, sichtbar = das Viereck geht an den Zeichner (alle vz >= 64). */
+                     * Tinte (R,G,B wie re15_render_shadow_quad sie bekommt), Boden-Y, sichtbar = das Viereck geht an den Zeichner
+                     * (mindestens ein GPU-Dreieck innerhalb der Groessengrenze, re15_objpoly_r38_schatten), dreiecke = Maske (0,1,2)/(1,2,3). */
                     if (npc->type == 0x25u || re15_re2spider_baby_owns(npc)) {
                         static FILE *s_ll = NULL; static int s_ll_init = 0;
                         if (!s_ll_init) { s_ll_init = 1; const char *p = getenv("RE15_LACHE_LOG"); if (p && *p) s_ll = fopen(p, "w"); }
                         if (s_ll) {
-                            fprintf(s_ll, "F=%u slot=%d typ=%02x st=%d/%d/%d/%d hx=%d hz=%d pool=%d rgb=%02x%02x%02x y=%d w(%d,%d) sichtbar=%d\n",
+                            fprintf(s_ll, "F=%u slot=%d typ=%02x st=%d/%d/%d/%d hx=%d hz=%d pool=%d rgb=%02x%02x%02x y=%d w(%d,%d) sichtbar=%d dreiecke=%u\n",
                                     (unsigned)g_engine.frame_count, (int)(npc - g_actors), (unsigned)npc->type, (int)npc->state,
                                     (int)npc->sub_state_1, (int)npc->sub_state_2, (int)npc->sub_state_3, (int)nhx, (int)nhz,
-                                    corpse_pool, sh_r, sh_g, sh_b, (int)nsh_y, (int)npc->x, (int)npc->z, (nok && !crow_no_record) ? 1 : 0);
+                                    corpse_pool, sh_r, sh_g, sh_b, (int)nsh_y, (int)npc->x, (int)npc->z, (nok && !crow_no_record) ? 1 : 0,
+                                    (unsigned)(nsh_tri[0] | (nsh_tri[1] << 1)));
                             fflush(s_ll);
                         }
                     }
                     if (nok && !crow_no_record) {
                         re15_render_pc_shadow_tiefe(nsh_vz_summe, 0);   /* Runde 36 Spur O */
+                        re15_render_pc_shadow_dreiecke((uint8_t)(nsh_tri[0] | (nsh_tri[1] << 1)));   /* Release v0.8.30 */
                         if (corpse_pool || crow_tinted)
                             re15_render_shadow_quad_c(nsx[0], nsy[0], nsx[1], nsy[1],
                                                       nsx[2], nsy[2], nsx[3], nsy[3],
