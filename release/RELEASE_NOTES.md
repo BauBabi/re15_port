@@ -1,3 +1,2340 @@
+# v0.8.30 - 2026-11-17
+
+Ihr Auftrag vom 30.10. (Nachtrag 34, nach v0.8.29): "Ok, ziehe die neuen branches mit rein, und schliesse den Rest ab."
+(AUFTRAG.md Z. 1091) - dazu Ihre Nachtraege 35 bis 38 vom 30./31.10. (Alligator-Befunde, Sirene, Panel-Freigabe,
+Bahnsteig-Birkin) und Ihre Befunde und Auftraege vom 1.11. bis 17.11. zu den Gore-Effekten, dem Kanalwasser in 2000, den
+Zombie-Armen, dem Sicherungskasten und dem Panel in STAGE2, der Handgranate und dem Waffenschaden, den Story-Texten nach
+dem 80%-Stand, dem G5-Auftritt im Zug, dem Alligator, der Annette-Szene, den beiden Birkin-Formen und ihren Kaempfen,
+den Gorilla-Filmen, den Monitoren, der Zielhilfe, der Pipe und den Optionen; der Wortlaut steht je Abschnitt. Diese
+Fassung enthaelt vier Gruppen: erstens die fuenf Spuren, die v0.8.29 unter "Ab Samstag (neue Tokens)" angekuendigt hat
+und die seit dem 31.10. (Nachtrag 30, Key Items, Alligator-Reste) bzw. 1.11. (Restpunkte, Bahnsteig-Birkin) auf master
+liegen; zweitens die erste Welle der Spuren vom 1.11. bis 7.11. (Gore, Kanalwasser, Zombie-Arme, Kasten und Panel,
+Handgranate, Story, G5-Auftritt, Waffenschaden) - seit dem 7.11. auf master; drittens die zweite Welle (Alligator,
+Annette-Szene, Riesenform mit Bewegung, Kamera und Texturen) - seit dem 8.11. auf master, am 9.11. ergaenzt um zwei
+Korrekturen (gestreckte Sherry und Annette, Labor-Birkin); viertens alles vom 9.11. bis 17.11.: Ihre Alligator-Befunde
+vom 9.11., die Sichel-Form V8 mit der ueberarbeiteten Spider-Man-Szene und dem Hangar danach, die Riesenform mit neuem
+Hals, rechter Hand, Vorderzaehnen und Haut K5g3, Birkins Klauenhieb und Aufrichten, die Gorilla-Filme in 1141 und 11C0,
+die flimmernden Monitore, die Zielhilfe, die Pipe und die Optionen - jede Arbeit auf einem eigenen Zweig gebaut und
+geprueft und am 17.11. im Zweig r41/release_0830 zusammengefuehrt -, dazu eine Korrektur an den Boden-Schatten aus der
+Abnahme. Die Sichel-Form V7 und die Riesenform-Haut K5e, die am 9.11. dazukamen, sind damit wieder ersetzt.
+
+**Warum v0.8.30 erst jetzt kommt:** Der Release-Bau vom 9.11. brach zweimal im Linux-Schritt ab - einmal an der
+Linux-Portabilitaet neuer Tests und Messhaken, einmal an Ihren umbenannten PRI-Freistellungen, die der Linux-Lauf aus
+dem Arbeitsbaum las. Beides ist behoben (b8e3ad700, 0b86e36c6; die Umbenennung ist nach Ihrem Entscheid "Umbenennung
+committen" im Repo, 0fb3d8247); ein Tag wurde nicht gesetzt (Memory reai-v2-runde41-laufend.md, 9.11.). Am selben Tag
+kamen Ihre Alligator-Befunde und Ihr Urteil zur Riesenform K5e im Spiel (siehe "Riesenform - Hals, rechte Hand,
+Vorderzaehne, Haut K5g3"). Den Vorschlag, v0.8.30 am 11.11. ohne die beiden Birkin-Nachbesserungen zu veroeffentlichen,
+haben Sie mit "Nein" beantwortet (Protokoll vom 11.11., Protokollfassung). Am 14.11. kam Ihr Auftrag, parallel mit der
+Story fuer v0.8.31 zu beginnen: "parallel schon mal mit den Story Implementierungen anfangen, damit ich danach die
+letzten Voiceovers aufnehmen kann." (Protokoll vom 14.11.).
+
+Wie gewohnt hat ein zweiter Agent jeden Punkt unabhaengig am gebauten Spiel gegen Ihren Wortlaut nachgemessen; wo eine
+Abnahme nicht bestand, wurde nachgebessert und erneut abgenommen. Eine Ausnahme steht unten offen: Fuer den
+Bahnsteig-Birkin (Spur R) gibt es nach der dritten Abnahme (Liste N1 bis N6 mit einem Blocker; die Datei traegt kein
+Urteil) keine vierte Abnahme-Datei; die Behebung der sechs Punkte ist nur im Dossier der Spur belegt, das Protokoll
+fuehrt "Runde 3 bestanden".
+
+**Umfang dieser Fassung - Ihr Entscheid vom 7.11.:** Auf den Vorschlag, v0.8.30 sofort ohne die Birkin-Arbeiten zu
+bauen, antworteten Sie "Nein" und auf die Rueckfrage "Mit allem in Arbeit"; dazu: "Aligator anette und die Formen
+gehoeren da auch rein, aber nach der 500. Iteration muss es ja mal gut und abgenommen sein...." (Protokoll vom 7.11.,
+17:30). Deshalb endet jede laufende Schleife der zweiten Welle mit ihrer letzten Runde; danach wird abgenommen oder
+Ihnen zum Ja/Nein gezeigt, nicht weiter poliert. Ihr Wort vom 6.11. zu den Birkin-Modellen gilt weiter: "wir machen noch
+2 weitere Versuche danach die Birkin Modelle vernuenftig hin zu bekommen. Wenn ich das Gefuehl habe wir machen
+ueberhaupt kein Fortschritt in die richtige Richtung, drehen wir das alles zurueck und nutzen wieder den Birkin aus der
+Mod Version und entfernen die Szene mit dem Spiderman wieder." (Memory reai-v2-birkin-zwei-versuche-sonst-rueckbau.md Z.
+8). Einen Rueckbau gibt es nicht: Die Sichel-Form V8 haben Sie am 15.11. angenommen ("Naja, so ist es in Ordnung, so
+kann ich damit leben.", Protokoll vom 15.11.), bei der Riesenform den neuen Hals (14.11.), die rechte Hand (15.11.) und
+die Vorderzaehne (16.11.) - siehe "Sichel-Form" und "Riesenform - Hals, rechte Hand, Vorderzaehne, Haut K5g3". Offen ist
+bei der Riesenform die Farbe; zu den Vergleichsbildern vom 17.11. sagten Sie: "Naja, die Form sieht doch gut aus. Bei
+der Farbe weiss ich es nicht." (Memory reai-v2-birkin-zwei-versuche-sonst-rueckbau.md) - siehe "Zu entscheiden".
+
+**Vormerkung fuer v0.8.31 - Ihr Wort vom 7.11.:** "Fuer Die Version 31 moechte ich dann, das du die Form Birkin G5 aus
+dem Finale wieder entfernst. Die passt nicht... Stattdessen, machen wir ein finale wie beim Golem am Ende von Resident
+Evil 2. Das jemand Leon den Raketenwerfer zuwirft, und man dann damit episch von mehreren Wiederholungen sieht, wie die
+Rakete angeflogen kommen und den Gegner zersprengt." (Memory reai-v2-story-ende-annette-g5.md, Nachtrag 7.11.). In
+v0.8.30 bleibt der G5 im Finale; der Umbau ist fuer v0.8.31 vorgesehen.
+
+**Vorschau auf v0.8.31 (nicht in dieser Fassung):** Grundlage der Story ist das Konzept vom 9.11.
+(C:/workspace/git/reAi_v2_entscheidung_2026-11-06/11_story_v0831/KONZEPT.md) mit Ihren Korrekturen; es schliesst die
+Luecken der Mod in STAGE3 bis STAGE6 mit einer gemeinsamen Linie fuer Leon und Elza. Schon gebaut und von Pruefern
+abgenommen, aber bewusst nicht in v0.8.30:
+* Story Teil 1 bis 3 auf dem Zweig r42/story: STAGE2 (Schluesselloch und Nachgespraech in 2080/2081, die Uhr neben dem
+  Schluessel in 2090), STAGE1 (Szene vor der Leiter in 11A0/11A1 mit der Rueckgabe der Uhr), STAGE3 (Marvin, 30E0 in
+  einem Besuch, eine neue Zeile in 3070) und STAGE6 (neue Gespraeche im Zug 6030/6031, Elzas Zugstart). Die
+  Aufnahmeliste dazu haben Sie am 14.11. bekommen (11_story_v0831/AUFNAHMELISTE.md).
+* Die Spider-Man-Szene "von aussen" (Zweig r42/hangar_aussen, Ordner 39): Sie laeuft, wenn man aus dem Monitorraum
+  5030/5031 durch die Nordtuer in den Hangar-Gang zurueckgeht; im Gang gibt es keinen Kampf mehr. Ihr Wort vom 16.11.:
+  "Bei Szene aussen muss das aber vom Monitor Raum aus erfolgen, wenn man zurueck laeuft, sonst fragt man sich - wenn er
+  Richtung Kamera zum anderen Ausgang hin geht wo er denn hin ist..." (Memory reai-v2-hangar-szene-monitorbild.md).
+* Die Option VOICE ON/OFF (Zweig r41/stimmen, Ordner 47): Stimmen stumm, Untertitel bleiben; Laute ohne Untertitel
+  bleiben hoerbar.
+Diese drei werden gerade mit v0.8.30 zur Basis fuer v0.8.31 zusammengefuehrt. Entschieden, aber noch nicht gebaut:
+* Gore und Schaden nach Ihrer Rangfolge vom 16.11. (woertlich): "Gore und Schaden - ganz klar - wenn ich frueher was
+  anderes behauptet habe, falsch - 80% build ist ausschlaggebend, dann 40% build und wenn aequivalente Gore Effekte bei
+  40% build und wenn dort Dinge noch fehlen dann kommt Resident Evil 2 zum Einsatz." Fuer die Zombies gilt Ihre Ausnahme
+  "In dem Fall dann doch eher Resident Evil 2, einfach weil es spielerisch unspassig ist auf diese Weise." (beides
+  Memory reai-v2-re2-ki-nur-angriffsmuster-gore-max.md). Fruehere Einzelentscheide zu Gore und Schaden, die dem
+  widersprechen, sind damit aufgehoben - laut Memory u. a. die doppelten Lebenspunkte fuer Gorilla und Birkin und die
+  anschiessbaren Gitterhaende. Dazu Ihre Entscheide zum Bauplan: Der Granatwerfer trennt den Oberkoerper ab, die
+  Handgranate zerteilt; es gibt hoechstens zwei Handgranaten (eine in Irons' Buero, hoechstens eine weitere aus dem
+  Bausatz), und ihr Schaden ist nur so hoch, wie der zaeheste Zombie braucht ("Nur genau so viel wie benoetigt.", Datei
+  gore_matrix/NUTZERENTSCHEIDE_1116.md im Protokollordner). Bis dahin gelten in v0.8.30 die Werte unter "Handgranate"
+  und "Waffenschaden".
+* Gegenstaende ohne Verwendung (Konzept K-10, 11_story_v0831/GEGENSTAENDE.md): nach Ihren Antworten vom 16.11. die
+  Mutter am Ventil in 2030, der Granaten-Bausatz der 40%-Disc und der Colt Python als Belohnung in 2040; nach dem Plan
+  dazu ein Fundort fuer die Pipe im Kesselraum 11F0/11F1 und fuer den Raketenwerfer in der Asservatenkammer 1110.
+* Unbenutzte Hintergruende (Ihre Entscheide vom 17.11.): Das Loch im Boden von Wagen B (ROOM509 Bild 10) ist nach dem
+  Anfahren "einfach da", die Rechner zeigen beim Benutzen ihre Vollbilder (305, 2080, 505), ROOM1250/1251 bleiben liegen
+  (Memory reai-v2-unbenutzte-hintergruende.md).
+* Das Finale nach dem RE2-Ende mit dem Raketenwerfer statt des G5 (Vormerkung oben) und der gerenderte Film "Zug faehrt
+  an" (Raum 600). Ihr Urteil zur ersten Fassung vom 17.11.: "Insgesamt von Kamerafuehrung und Inszenierung und Sound her
+  und so genial, aber die Umgebung ist viel zu leer. Da fehlt die Ganze Raum Deko." (Memory reai-v2-zugfilm-600.md); die
+  zweite Fassung mit Raumdeko ist in Arbeit.
+* Ihre 13 naechsten Punkte vom 15.11. (C:/workspace/git/reAi_v2_entscheidung_2026-11-06/29_naechste_punkte/LISTE.md)
+  kommen nach Birkin und Story.
+
+Regel der Runde (Abschlussplan zu Nachtrag 34, AUFTRAG.md Z. 1110-1112): "Abnahmen fallen nur bei blockierenden Fehlern
+oder einem nicht erfuellten Nutzer-Punkt durch; Feinheiten kommen als "offen" in die Release Notes; hoechstens EINE
+Nachbesserung je Spur." Den letzten Teil hat diese Runde mehrfach ueberschritten: Gore drei Nachbesserungen, Handgranate
+drei, G5-Auftritt sechs, Bahnsteig-Birkin drei, Kanalwasser zwei; je eine Nachbesserung hatten Nachtrag 30, Key Items,
+Alligator-Reste, Restpunkte, Kasten/Panel und Story; die Zombie-Arme bekamen nach der Abnahme nur Berichtigungen an
+Kommentar, Dossier und ein Vorher/Nachher-Bild. Die zweite Welle liegt weit darueber (Alligator neun Abnahmen, Annette
+fuenf, Riesenform-Kamera vier, Riesenform-Texturen drei Versuche - der letzte in fuenf Runden -, Sichel mehrere
+Modellfassungen und Kopf-Runden) - siehe "Noch offen". Nach dem 9.11. kamen dazu: Ihre Alligator-Befunde vier Abnahmen
+(zwei nicht bestanden), die Sichel-Form V8 sieben Modell-Runden mit eigener Nacken-Spur und weiteren Runden fuer
+Handfarbe und Schwanz, die Spider-Man-Szene sechs Runden, der Schwanz in der Szene fuenf, die Riesenform vier Runden am
+Hals, neun an der rechten Hand und drei an der Haut K5g3, der Klauenhieb mehrere Runden mit zwei verworfenen Ansaetzen
+fuer die Schwanz-Gestalt.
+
+Pruefstand: Die fuenf Spuren vom 31.10./1.11. sind auf master integriert (Merge O+P: 1033 Unit-, Eigenschafts- und
+Sonden-Riegel und 192 Integrationstests gruen; Integration Q+R laut Protokoll vom 1.11.: 1044 Unit-, Eigenschafts- und
+Sonden-Riegel, Zielgruppen gruen, Gegenpruefung ohne Befund). Die erste Welle ist seit dem 7.11. auf master (Unit-,
+Eigenschafts- und Sonden-Riegel 1067/1067 gruen, 42 Waffenschaden-Integrationsriegel und 16 Zug-/Querbezugs-Riegel
+gruen, Gegenpruefung in Ordnung; Protokoll vom 7.11., 17:00). Die zweite Welle ohne die Sichel-Form ist seit dem 8.11.
+auf master; dafuer liefen im Integrationsbaum drei Laeufe (A, A2, B) mit allen Querbezuegen zur ersten Welle. Der letzte
+Lauf B endete gruen: 1098/1098 Unit-, Eigenschafts- und Sonden-Riegel; Alligator 48 Unit- und 20 Spiel-Riegel;
+Riesenform 20; Annette und Story 30; Waffen mit Alligator-Querbezug 110 (zwei davon scheiterten am Bildmitschnitt des
+Grafiktreibers und liefen danach einzeln je zweimal gruen); Klettern mit Kette A+C 31. Die Gegenpruefung der Merges fand
+keine unerklaerte Zeile, nur eine fehlende Alligator-Datei in der Paket-Pruefung - nachgetragen. Am 9.11. folgten im
+Integrationsbaum Lauf C (Sichel V7), der Labor-Fix und Lauf D (Riesenform K5e): jeweils 1100/1100 Unit-, Eigenschafts-
+und Sonden-Riegel, gezielte Gruppen 108/108, 40/40 und 115/115, alle Gegenpruefungen ohne Befund. Die exe im Hauptbaum
+stammt vom 9.11., 10:30 (nicht 07:03 wie in der Fassung vom 9.11.) und enthaelt nichts von dem, was danach kam.
+
+Nach dem 9.11. lief jede neue Arbeit zuerst auf einem eigenen Zweig, mit eigenen Riegelgruppen und unabhaengiger
+Pruefung (Zahlen je Abschnitt und unter "Technisch"). Am 17.11. wurden alle Zweige im Zweig r41/release_0830
+zusammengefuehrt: r41/integration (Alligator-Befunde), r41/zwischensequenz_114, r41/monitore, r41/zielhilfe, r41/pipe,
+r41/optionen, r41/sichel_szene, r41/birkin_aufrichten, r41/form und r41/birkin_kralle. Die erste Abnahme-Suite darauf
+(Stand ea630d75f) endete mit "99% tests passed, 12 tests failed out of 1567" (16366,56 s). Neun der roten Riegel waren
+gewollte Folgen der neuen Zweige (Pipe-Reichweite, Zielhilfe, Riesenform-Modell K5g3, Form-Lebenspunkte 1000, eine neue
+Protokollzeile) und sind mit Begruendung angepasst (16d9dffdd, 8c54123dd, 5ae09b47b); zwei hingen an der Umgebung; einer
+zeigte einen echten Port-Fehler. Die erste unabhaengige Pruefung der Anpassungen liess das nicht durch, weil eine
+Anpassung diesen Fehler nur umging ("NICHT BESTANDEN - 1 roter Punkt"); jetzt ist er behoben (29312b011, siehe
+"Boden-Schatten nahe der Kamera"), die zweite Pruefung: "BESTANDEN - kein roter Punkt" (Gruppe "100% tests passed, 0
+tests failed out of 291"). Zuletzt kam der Klauenhieb ohne Ausholen dazu (44cc5b7d5). Finale Abnahme auf 44cc5b7d5:
+"99% tests passed, 1 tests failed out of 1569" (18411,03 s), rot nur unit_r39_titelversion_cmake. Danach kam am 17.11. abends Ihr Wunsch dazu, dass der Alligator nur durch den Kanister stirbt (ec0d39bb9, siehe "STAGE2: Alligator stirbt nur durch den Kanister"): eigener Riegel, Alligator-Gruppe "100% tests passed, 0 tests failed out of 167", unabhaengige Abnahme "BESTANDEN". Bekannt umgebungsbedingt rot: unit_r39_titelversion_cmake (git fehlt im PATH von local_build.sh);
+unit_r38_releaseskript_ablauf ist nur bei langem Build-Pfad rot ("Filename too long"), die Abnahme baut deshalb mit
+kurzem Pfad. Beim Release wird master auf ec0d39bb9 vorgezogen und die Hauptbaum-exe neu gebaut; die volle Suite laeuft
+beim Release-Bau zusaetzlich im Linux-Container, ein roter Test haelt das Release an.
+
+## Was Sie merken
+
+### STAGE1: Zombies mit Original-Armen (ROOM1140, ROOM1250)
+
+Ihr Befund vom 2.11.: "wtf, warum haben denn die dicken Zombies jetzt ploetzlich so einen duennen Stummel Arm?" und "Den
+sollen sie nicht haben. Die sollen schon den original Arm haben...." - dazu Ihre Regel "Ja, das Aussehen der Modelle bei
+Resident Evil 1.5 ist entscheidend! Haben wir im Port jetzt Stummel Aermchen oder irgendeinen anderen Quatsch gemacht ist
+das falsch." und "Ist ok, auch fuer die dicken Zombies. Wenn du zu 100% sicher nachweisen kannst, dass das auftaucht mit
+den duennen Aermchen, dann lag ich wohl falsch." (Dossier ZA_zombiearm.md Z. 6-11). Abnahme 1 bestanden.
+
+**Die duennen Glieder gibt es nicht mehr.** Ursache war eine Spawn-Variante aus einem Zwischenstand nach v0.8.29 (nicht in
+v0.8.29 selbst), die bei einem Viertel aller Zombies ein Glied auf 37 % Dicke skalierte und verfaerbte. Der Nachweis fiel
+gegen die Variante aus: Das Original wuerfelt sie zwar, setzt aber am Ende jeder Zombie-Initialisierung jedes Teil wieder
+auf volle Groesse - sichtbar wird sie nie. 27 Spielstaende (26 aus dem Mod-Baum, einer von der 40%-Disc) mit 131 Zombies,
+davon 99 mit dem Rest des Wurfs: alle Teile voll. Deshalb ist die Variante fuer alle Zombie-Typen abgeschaltet, unter
+beiden Gehirnen und in beiden Modellmodi (Riegel je Typ: 400 Saaten, kein veraendertes Teil). Im Besprechungsraum 1140
+(Leon) haben beide dicken Zombies (weisses Kurzarmhemd, nackte dicke Unterarme) wieder volle Arme, die Uniform-Zombies den
+Aermel mit dem RPD-Abzeichen durchgehend; ebenso die Gruppe in 1250. Sonst aendert sich nichts: Die beiden Zufallswuerfe
+bleiben, der Zufallsstrom ist mit dem vorherigen Stand identisch, Trefferzonen, Lebenspunkte und alles Treffer-/Tod-Gore
+laufen wie bisher. Elza: Die Abschaltung haengt an keiner Figur; 1141 hat keine Gegner, in 1251 zeigt das Dossier-Bild
+die Zombies klein am linken Rand. Nicht belegt: Die Abnahme hat Elza nicht eigens im Fenster gemessen; ihr Sichtbeleg ist Leon in 1140 und 1250.
+
+### STAGE1: Gorilla-Film im Dialog - Elza in ROOM1141, Leon in ROOM11C0 (Zwischensequenzen 114 und 11C)
+
+Die beiden Filme sind Ihr eigenes Projekt: Sie haben die Szenen in Blender mit Ihren Modellen aus Cutscenes/ nachgebaut,
+Helfer haben Bild und Ton nach Ihren Vorgaben gerendert (Memory reai-v2-cutscene-blender-raum114.md). Ihr Wortlaut zum
+Einbau vom 13.11.: "Ich wuerde im Dialog bei John und Elza vor 'What was that?' diesen Schrei-Sound von dem Gorilla
+einbauen, aus 11C Sekunde 6. Und dann kurz warten, bevor ich das Video abspiele. Nach dem Video geht es normal weiter
+mit 'Shit! that is what I was talking about!'" (Commit f0d4cfac4), zur Blende: "Wie ist es in Resident Evil 2 gemacht,
+wenn die Filmsequenzen starten? So machen wir das auch." (bddc94eec) und zu 11C: "Diese Version des Videos sieht super
+aus! Auch da brauchen wir vor dem "What!" Von Leon wieder ein Bruellen vom dem Gorilla. Dann kurze Pause, dann das
+Video, dann geht es weiter mit "Ada, you hide in that patrol car"" (b5ee75c27). Zum Einbau von 114 im Spiel: "einfach
+super" (Protokoll vom 13.11.).
+
+**Elza, ROOM1141 (John und Elza).** Wenn John ausgesprochen hat, bruellt der Gorilla (Satz 4 der Raumbank von 11C0, gut
+1,2 s), kurze Pause, dann "Elza: What was that?!"; Elza dreht sich zum Fenster, kurzes Warten, harter Schnitt in den
+Film (367 Bilder, gut 12 s), danach 0,5 s Einblenden aus Schwarz wie in RE2 und "John: Shit! that is what I was talking
+about!". Der Glasbruch der Runde 39 vor "What was that?!" entfaellt, weil der Film das Zerspringen selbst zeigt; die
+Musik startet wie im Original nach Johns Zeile.
+
+**Leon, ROOM11C0 (Leon und Ada).** Nach "Ada: You didn't run into him?" bruellt der Gorilla, kurze Pause, "Leon:
+What!?", beide drehen sich zum Anhaenger, dann der Film (362 Bilder, 12,07 s). Den Original-Auftritt der Gorillas in
+Kamera 12 (Anhaenger wackelt, Gorillas werden gesetzt) spult das Spiel im schwarzen Bild unsichtbar vor; eingeblendet
+wird mit der Original-Kamera 5 und "Leon: Ada, you hide inside that patrol car."; die Kampfmusik startet erst nach dem
+Film.
+
+START ueberspringt den Film; fehlt die Datei, laeuft die Szene ohne ihn weiter. Leon hat in 1140 und Elza in 11C1 diese
+Dialoge nicht und sieht keinen Film (ROOM11C1 hat keinen Nachrichtenblock). Die Filme liegen als MOVIE/R114GORI.STR und
+R11CGORI.STR im Format von CAPCOM.STR vor (320 x 240); auf der PSX laufen die Zeilen ohne Schrei und Film.
+
+**Wie geprueft:** Riegel fuer beide Raeume (unit_r41_zws114_*, unit_r41_zws11c_*, darunter "600 Bilder ohne Schrei/Film"
+fuer Elza in 11C1) und der Durchlauf Elza 1131 -> 1141 -> 1171 ("Film zu Ende: 367 von 367 Bildern gezeigt"); in 11C0 im
+echten Fenster gemessen: harter Schnitt in den Film, keine Kamera 12 im ganzen Lauf, der Stand nach dem Film mit und
+ohne Vorspulen "0 von 118 Bildern abweichend". Drei aeltere Riegel sind auf die laengeren Szenen nachgezogen (Zielen und
+Nachladen in 1141: 33 Bilder, Granate in 11C0: 38 Bilder, ein Sicht-Riegel in 1141). Einen unabhaengigen Pruefer gab es
+fuer den Einbau nicht (siehe "Noch offen").
+
+### Im ganzen Spiel: Key Items ueber das Inventar, Kurbel ohne Fliegen (Spur O)
+
+Ihr Nachtrag 34: "Auch das mit der Kurbel scheint noch nicht gefixed - leon "fliegt" quasi immer noch an die richtige
+Position bis das drehen dann los geht. Bei Resident Evil 2 ist die Kurbel Animation offenbar deshalb nicht
+kaputt/fliegend, weil man EXPLIZIT die Items im Player Inventory auswaehlen muss und dann genau richtig steht bei der
+Nutzung. Das moechte ich bei Key Items, die nicht Schluessel sind bei unseren Port auch haben!" und zu den Karten:
+"Schaue wie es in Resident Evil 2 gemacht wird, und mache es genauso." (AUFTRAG.md Z. 1094-1101). Abnahme 1 bestanden,
+keine Maengel.
+
+**Bedienung.** START, ITEM, Gegenstand waehlen, USE. Steht die Figur an der richtigen Stelle (dieselbe Pruefung wie die
+Aktionstaste: Ebene und Blickpunkt), schliesst das Inventar und die Handlung startet sofort, ohne Text und ohne Frage;
+sonst "You can't use it here.", und das Inventar bleibt offen. Die Aktionstaste zeigt an diesen Stellen nur noch die
+Beschreibung, keine Frage mehr. Das gilt fuer Feuerloescher (1090), Zange (11E0), Minidisc-Spieler (1100), Kurbel (2020),
+Zeitbombe (2040), die Sicherung (1050, 2010, 2060), die Zuendkerze (4030) und die Karten unten - 14 Stellen, alle an der
+echten exe mit Leon und, wo es den Raum gibt, mit Elza durchgespielt.
+
+**Kurbel in 2020/2021.** Das Spielbild kommt erst zurueck, wenn Leon an der Kurbel steht und schon dreht: Lage und Blick
+werden im schwarzen Bild gesetzt, das kurze Stehen und die Ueberblendung in die Kurbel-Pose (das "Fliegen") entfallen,
+wie in RE2, wo die Kurbel ohne Ueberblendung startet. Aus dem Stand, im Gehen, im Rennen und aus drei Blickrichtungen ist
+das erste Kurbelbild dasselbe (die Lage, die das Original aus dem Stand erreicht), Elza ebenso. Am Ende der Szene kippt
+er nicht mehr zurueck, der Wechsel faellt in den Schnitt. Waehrend der Kurbel-Szene hat Leon wie in RE2 die Waffe nicht
+in der Hand, danach ist sie wieder da (RE2 legt sie erst beim naechsten Oeffnen des Inventars wieder an; nicht
+uebernommen, weil in dem Raum vier Zombies warten - Port-Wahl).
+
+**Neu im Inventar.** Kurbel und Zeitbombe gab es im Original nur als Flag. Die Kurbel hat Name, Bild, Symbol und Text
+aus RE2 ("The end is square-shaped"), die Bombe das ausgelieferte Bild ("Timer Bomb" im Inventar, "Time Bomb" in
+Skripten und CHECK - beides ausgeliefert). Beide verschwinden bei der Benutzung. Das gilt auch fuer laufende
+Spielstaende. Volles Inventar beim Aufnehmen: "You can't carry any more items", der Gegenstand bleibt liegen; ein alter
+Spielstand mit gesetztem Flag und vollem Inventar behaelt an Kurbel, Bombe und Sicherung die alte Frage samt
+Original-Ueberblendung, bis ein Platz frei ist.
+
+**Karten wie in RE2.** Karte am LESER = USE aus dem Inventar (Blue/Yellow/Red Keycard in 10D0, 11E0, 1230, Red Master
+Keycard 3050, Blue Master Keycard 4000; RE2-Vorbild Red Card Key). Karte als TUERSCHLOSS = Aktionstaste wie bisher (Green
+Keycard 3010; RE2-Vorbild Lab Card Key). Schluessel, Latch Key 3091 und "You don't need this key any more" bleiben
+unveraendert. Am Kartenleser endet die Beschreibung jetzt vor der Frage-Seite; der Satz "You have not the ... Keycard to
+operate it." ist nicht mehr erreichbar (RE2-Form).
+
+**Nebenwirkung, gemessen:** Die RE2-Regel "keine Ueberblendung" wirkt jetzt auch auf die Ventil-Drehung in 2030; gemessen
+entsteht beim Loslassen des Ventils kein Pose-Sprung.
+
+### STAGE1/2: Gore unter der Standard-KI (Spinne, Kraehe, Hund, MC51)
+
+Ihre Regel vom 1.11.: "Die spinne und die anderen uebernommenen resident evil 2 kis sollten im wesentlichen nur
+angriffsmuster, Treffer usw uebernehmen, weil die resident evil 1.5 ki das teilweise noch etwas doof ist. Der gore darf
+gerne der maximale aus beiden sein. Das muss nicht stringent aus resident evil 2 uebernommenen werden." und "Genau
+genommen sollte der gore sogar das maximale aus allen 3en sein, inkl den 80% Videos." (Memory
+reai-v2-re2-ki-nur-angriffsmuster-gore-max.md Z. 11 und 13). Ihr Befund, dass die Spinne beim Magnum-Schuss nicht
+platzt, ist in den Dossiers nur sinngemaess ueberliefert. Nicht belegt: Der Wortlaut Ihres Spinnen-Befunds steht in keiner Quelle. Gemessen: Unter der Standard-KI (RE2-Gehirn) kam der toedliche Treffer an, aber das Platzen blieb aus - die
+Spinne platzte nur unter "AI RE1.5". Ausserdem loeschte ein Port-Fehler die Farbe des Spinnenbluts (rot statt gruen).
+Vier Abnahmen, die vierte bestanden.
+
+**Spinnen (ROOM2070 Leon, 2071 Elza; Spinnen gibt es nur in STAGE2).** Jeder Treffer, auch mit der Pistole, spritzt
+jetzt gruen am Fusspunkt der Spinne (vorher rot), unter beiden KI-Einstellungen. Schrot trennt wie in RE2 ein Beinpaar
+ab: gelbgruene Beinstuecke fliegen weg, die Spinne laeuft mit einem Beinpaar weniger weiter. Ein toedlicher Treffer mit
+Magnum (Super Redhawk, Colt Python), Schrot, SPAS, Granaten, Rakete oder ein kritischer Treffer laesst Rumpf und
+Hinterleib in gelbgruene Scherben zerplatzen, alle noch haengenden Beine fliegen ab und fallen zu Boden, dazu eine
+gruene Blutwolke (im Fenster gemessen mit Redhawk und Python, die uebrigen Waffen ueber Riegel). Pistole und Browning:
+kein Platzen, nur gruenes Todesblut. Einzelne Scherben fliegen bis vor die Kamera - Mechanik des Originals, nicht falsch
+gezeichnet. Unter der toten Spinne waechst eine gruene Lache (RE2-Tinte; unter "AI RE1.5" dunkel und gruenstichig wie in
+RE1.5); steht Leon darin, faerbt sich sein Schuh gruen - Zeichenreihenfolge des Originals, durch die groessere
+Port-Lache deutlicher als in RE2 (siehe "Zu entscheiden"). Unter "AI RE1.5" folgt der Spinnentod jetzt der Waffentabelle
+des Originals: Magnum, Schrot, SPAS, Granaten usw. platzen immer, nicht nur bei kritischem Treffer, und die Beine
+fliegen. Babyspinnen: Der Schatten lebender Babys ist kleiner als in RE2; stirbt eines, spritzt es gruen und laesst
+einen kleinen gruenen Fleck bis zum Raumwechsel - im Fenster kaum zu erkennen, und Babys sterben im Port praktisch nie
+(siehe "Noch offen"). Erreichbarkeit: Die Magnum liegt in ROOM3050/3051 (STAGE3), die Remington in 10F0/10F1, die SPAS
+in 2030/2031. Nicht belegt: Welche Waffe im normalen Durchlauf das Platzen zuerst ausloest; ob man mit der Magnum nach STAGE2 zurueckkommt, wurde nicht geprueft.
+
+**Kraehen (ROOM10C0 Leon, 10C1 Elza).** Beim Tod platzt die Kraehe wie bisher in dunkelrote Teile; neu entstehen 8 bis 11
+Federn am Koerper, die quer durch den Gang pendeln, zu Boden sinken und dort verschwinden (RE2 laesst keine Feder liegen).
+Ein Pistolentreffer im Flug loest 2 bis 3 Federn, der Sturz danach 2 weitere. Die Federn sind blaugrau bis dunkelviolett
+(Farbtabelle des RE2-Effektbilds). Beim reinen Fliegen (Abheben, Kreisen, Trudeln, Vorbeiflug) verliert die Kraehe im Port
+keine Federn - RE2 tut das; Port-Wahl wegen Ihres frueheren Befunds "Bluteffekte ohne Treffer bei den Kraehen" (Dossier
+S_spinnengore.md Z. 999-1000). Unter "AI RE1.5" und bei der Ereigniskraehe gibt es keine Federn. Beleg: Leon Bild 356,
+Elza Bild 294 platzt, beide bitgleich bei gleicher Saat. Nebenwirkung der Federn: Jeder Federwurf zieht Zahlen aus dem
+gemeinsamen RE2-Zufallsstrom (in RE2 genauso) - nach einem Kraehentreffer verschiebt sich die Zufallsfolge der uebrigen
+RE2-Gegner im Raum.
+
+**Hunde (ROOM1190 Leon, Standard-KI).** Beim Tod fliegen viele dunkelrote Fetzen weg, danach liegen rote Fleischbrocken am
+Kadaver: der RE2-Teilewurf (sieben Teile), der bisher nur nicht gezeichnet wurde. Zwei der sieben RE2-Teile haben kein
+RE1.5-Netz und zeichnen nichts. Nicht belegt: Hunde mit Elza nicht gemessen.
+
+**Zombies, MC51 beim Tief-Zielen (Standard-KI).** Ein toedlicher MC51-Treffer in die Beine toetet meist nicht mehr: Die
+Beine platzen, der Zombie kriecht mit 10 Lebenspunkten weiter (RE2-Weg; RE1.5 laesst ihn mit 30 kriechen); liegen bleibt
+er nur in einem von vier Faellen. Beleg: Messhaken und Riegel in ROOM1140 (stirbt Bild 74, steht Bild 127 mit 10 HP
+wieder auf); ein freier Fensterbeleg fehlt.
+
+**Schalter.** Mit dem Schalter gegen das 80%-Gore (siehe "Technisch") bleiben das Platzen der Spinne und die
+MC51-Beinzelle aus (die Spinne baeumt sich auf, dreht sich auf den Ruecken und bleibt ganz). Das gruene Blut und die
+Lache bleiben, weil beide Originale sie haben; Kraehenfedern und Hund-Teilewurf bleiben, weil sie RE2-eigenes Gore sind,
+das bisher nur nicht gezeichnet wurde (Dossier S_spinnengore.md Z. 297, 781, 1001).
+
+### STAGE1 bis 5: Handgranate - Zerfetzen und doppelte Birkin-Lebenspunkte (Spur GR)
+
+Ihr Auftrag vom 2.11.: "Und die Granate sollte laut den Videos der 80% Version die Zombies zerfetzen, also die normale,
+richtige Handgranate. Ausserdem ist sie noch zu schwach, die sollte auch die dicken Zombies zerfetzen" (Dossier
+GR_granate.md Z. 656-657). Ihre Berichtigung zur ersten Fassung: "Das stimmt nicht, bei complete disc video 2 bei 15
+Sekunden wirft Leon eine Granate. Und auch die Hunde und andere Gegner die zerfetzen koennen sollen natuerlich
+entsprechend zerfetzen von einer Granate." (Z. 407-408), "Nein, nicht die Spinne ist das was zersprengt wird durch die
+Granate, sondern die Zombies im Sewer" (Z. 409) und "Bei der Granate das es garkeine Koerperteile mehr hinterher gibt
+die uebrig bleiben ist unwahrscheinlich. Wahrscheinlich wuerden die einzelnen Koerperteile nach der Explosion dann da
+liegen. Man sieht es nur in dem Video Ausschnitt nicht so richtig." (Z. 410-412). Zur Staerke: "Naja, die Granate hat
+halt einen Schaden, sind die Gegner damit tot, sind sie tot. Der Gorilla ist ein Endgegner, wenn der mit einer Granate
+stirbt ist das etwas schwach." (Z. 234-235), "Ja, ist gut. Gorilla, Handgranate und ein paar Schuss, und ja auch Birkin
+und Aligator, wobei die an sich schon staerker sein muessen als der Gorilla." (Z. 236-238) und "1. ja, 2. ja, 3. huh,
+wie jetzt das ist doch ein Boss fight. Warum soll die Granate nicht wirken ?... zu 4. Ja, nicht einfach mit einer
+Granate beenden." (Z. 8-9). Zwei Abnahmen, beide bestanden, beide mit je drei nicht blockierenden Maengeln. Gilt fuer
+Leon und Elza gleich.
+
+**Was davon bleibt und was der Waffenschaden (naechster Abschnitt) am 7.11. ersetzt hat:** Das Zerfetzen, der Teilewurf
+und die neuen Lebenspunkte der Birkin-Formen bleiben. Die Schadenswerte dieser Spur (Handgranate 1000; Bosse mit Rest und
+"danach genau N Pistolenschuesse") sind nach Ihrem Entscheid vom 7.11. durch die RE2-Regel ersetzt - die Zahlen stehen
+unter "Waffenschaden".
+
+**Zombies, auch die dicken (ROOM1140 gemessen; Elza ROOM1041 per Log).** Eine Handgranate (nicht Saeure- oder
+Brandgranate) toetet jeden Zombie im Wirkradius, auch die dicken (die vorher weiter angriffen). Der Zombie zerfliegt in
+sieben Stuecke (Rumpf, Becken, Kopf, beide Arme, beide Beine), die bis an den oberen Bildrand fliegen, an Waenden
+abprallen, zu Boden fallen und dort verstreut in Blut liegen bleiben bis zum Raumwechsel; kein heiler Koerper bleibt
+stehen; der schwarze Rauch steht etwa 1,5 s (vorher 0,3 s). Gilt unter beiden KI-Einstellungen, bei Handgranate und
+Granatwerfer-Explosivrunde. Im Kanal 2000 (der Zombie-Typ des Videos) werden Feuerball und Rauch gezeichnet. Vorlage: der
+einzige Handgranatenwurf in allen 80%-Videos, Complete Disc Video 2, Wurf bei 16,95 s, Detonation bei 19,25 s am
+Kanal-Zombie - Teile bis zur Decke, Rauch, am Ort nichts mehr.
+
+**Hund (ROOM1230).** Eine Handgranate toetet; der Hund wirft seine sieben RE2-Teile, die liegen bleiben; der Rumpf bleibt
+wie in RE2.
+
+**Spinne (ROOM2030, Standard-KI).** Eine Granate toetet: Die Spinne platzt, sechs Babyspinnen erscheinen. Unter "AI RE1.5"
+platzt sie jetzt auch an der Werfer-Explosivrunde.
+
+**Birkin hat doppelt so viele Lebenspunkte (Ihre Freigabe "1. ja"):** Start 600 statt 300, Mutations-Tor unter 200,
+Mutation 300, Revive 100; die Riesenform (5080 und 5090) hat 1000 statt 150 (RE2-G4-Wert, Ihre Freigabe "2. ja"), der G5
+600. Nur mit der Pistole hatte die Abnahme im alten Ablauf gezaehlt: Form 1 27 Schuesse bis zur Mutation (vorher 14),
+der ganze Endkampf 166 Schuss und etwa 144 s Dauerfeuer; ein stehender Schuetze ohne Ausweichen und Heilen stirbt an der
+Riesenform - Ihr Wort dazu: "ist ja der Endkampf" (Protokoll vom 2.11.). Seit der Riesenform-Stufe 3 (Welle 2) kaempft
+in 5090 ab dem Betreten die Riesenform mit 1000 Lebenspunkten, ohne Mensch-Birkin und ohne Mutation im Zug. Der
+Pistolen-Riegel dieses Ablaufs (Leon und Elza gleich, mit Rueckzug an die Ostwand) endet mit dem Tod des G5 bei vollen
+Lebenspunkten des Spielers und 157 verbrauchten Patronen (255 auf 98). ROOM3080 (G-Form im Aufzug) bleibt eine Szene
+ohne Kampf (Ihr Entscheid laut Protokoll vom 2.11., Protokoll-Paraphrase). Elzas 3071-Kampf ist nur per Riegel gemessen,
+kein Fensterkampf (nach einem Debug-Sprung nach 3070 nimmt Leon keine Eingabe an; ein alter Messweg-Fehler).
+
+**Unveraendert:** Saeure- und Brandgranate, die Werfer-Arten, der Pistolenschaden (Birkin 15, Gorilla 12, Alligator 7).
+Mit dem Schalter gegen das 80%-Gore (siehe "Technisch") entfallen Zerfetzen, Teile-Wurf, Liegenbleiben, Rauch-Nachlauf
+und der Werfer-Platzer der RE1.5-Spinne; der Schaden bleibt auch dann.
+
+### Im ganzen Spiel: Waffenschaden wie in RE2 - Handgranate und Raketenwerfer (Spur WS)
+
+Ihr Entscheid vom 7.11.: "mach wie resident evil 2. Auch bei der Granate. mach sie so stark, dass sie gerade so die
+Standard Gegner mit einer Granate toeten kann." (Dossier WS_waffenschaden.md Z. 10-11). Abnahme 1 bestanden, zwei
+geringe Maengel an Kommentaren und Dossier-Belegen (veraltete Zahlen; ein ungenau beschriebener Beleg-Scan), seit dem
+7.11. auf master. Jede Zahl unten ist von der Abnahme im echten Spiel mit Leon und Elza (Zombies, Hunde, Spinnen,
+Gorilla, Alligator, Birkin in 3070 mit Leon, Endkampf) bzw. per Riegel (Kraehe, Affe, Tyrant, Ivy, Gitterhaende)
+nachgemessen oder aus dem RE2-Code gelesen.
+
+**Handgranate: ein Wert fuer alle Gegner.** Die Granate macht an jedem Gegner 251 Schaden - genau einen Punkt mehr als
+der staerkste Standard-Gegner (der dicke Zombie, 250 Lebenspunkte) aushaelt. Damit stirbt jeder Standard-Gegner an einer
+Granate: Zombies, auch die dicken ("gerade so", gemessen Rest -1 beim echten Wurf in 1140), Hunde, Kraehen, Spinnen, der
+kleine Affe, der Tyrant. Die Boss-Regel der Handgranaten-Spur ("Rest, danach genau N Pistolenschuesse") ist weg; Bosse
+nehmen denselben Wert: Gorilla 2 Granaten (vorher 1 Granate + 4 Schuss), Birkin in 3070 3 Granaten (vorher 1 + 8), die
+Riesenform 4 Granaten, der G5 3 Granaten (vorher einen Sonderwert von 80). Im Endkampf 5090 sind das seit der
+Riesenform-Stufe 3 (Riesenform ab dem Betreten, keine Mensch-Birkin und keine Mutation mehr im Zug) 4 + 3 = 7 Granaten;
+die Abnahme hatte im alten Ablauf mit der Mensch-Birkin davor 2 + 4 + 3 = 9 gezaehlt.
+
+**Raketenwerfer: Schaden je Gegnertyp aus RE2.** Bisher machte die Rakete ueberall 1000. Jetzt gilt je Gegner die
+RE2-Tabelle: Zombies 900, Hund, Kraehe, kleiner Affe und Ivy 300, Spinnen 200, Gorilla 200 (RE2 hat keinen Affen;
+Vorlage ist der Licker), Tyrant 500, Birkin als Mensch, Form 1 und nach der Mutation 200, Riesenform 301 (RE2-G4), G5
+200, Alligator 110, die Gitterhaende in 1210 nur 40. Im Spiel gemessen: Riesenform 4 Raketen (699, 398, 97, tot - im
+Integrationslauf vom 8.11. mit der Annette-Szene davor dieselbe Folge), G5 4 Raketen (nach 3 Raketen steht er mit 0
+Lebenspunkten noch - in RE2 lebt ein Gegner mit 0). Der Endkampf 5090 braucht damit 8 Treffer (4 + 4). Die Abnahme hatte
+im alten Ablauf (Mensch-Birkin davor, 3 Raketen bis zur Mutation) 11 Treffer gezaehlt und bei Dauerfeuer 19 verbrauchte
+Raketen, davon 5 waehrend der Mutation und 3 in der Rueckstoss-Szene ins Leere (WS_abnahme_1.md Z. 209-211); den
+Verbrauch bei Dauerfeuer im neuen Ablauf hat niemand gemessen. **Der Raketenwerfer liegt in keinem Raum des Spiels**
+(Protokoll vom 7.11.: in keinem der 206 Raeume); diese Zahlen sind nur mit den Debug-Waffen erreichbar - siehe "Zu
+entscheiden".
+
+**Alligator-Boss in 2090/2091 (Orchestrator-Zusatz "Original oder nicht").** Seine Lebenspunkte sind jetzt der RE2-Wert
+25240 statt 25300 (aus dem RE2-Alligator-Modul gelesen; der Port laeuft wie RE2 mit gesetztem Spielstart-Bit). Folge mit
+der neuen Granate: EINE Handgranate schwaecht ihn, und die Kanister-Szene startet sofort (gemessen Leon und Elza, Bild 300
+Treffer, Bild 302 Szene) - vorher 1 Granate + 8 Pistolenschuesse. Mit der Pistole allein braucht es 35 statt 43 Schuss bis
+zur Schwaeche, mit der Rakete 3 Treffer. Toeten kann ihn weiter nur der Kanister. Die Abnahme vermerkt, dass das Ihrem
+frueheren Wunsch "nicht einfach mit einer Granate beenden" widerspricht, aber aus "mach wie resident evil 2" folgt - siehe
+"Zu entscheiden".
+
+**Unveraendert:** Saeure- und Brandgranate, die Werfer-Arten, die Spielerseite (eine Granate am Spieler), die Lebenspunkte
+aller Gegner ausser dem Alligator-Boss.
+
+### Im ganzen Spiel: Zielhilfe - beim Waffe-Heben dreht die Figur ganz zum Gegner (RE2)
+
+Ihr Wortlaut vom 16.11. (Sitzungsprotokoll): "Ein weiteres Element, was unendlich nervt, aber ich weiss das es schon ein
+Fehler im Original ist - wenn ich die Waffe hebe, und der Auto Anvisieren Mechanismus kommt, klappt er nur wenn der
+Gegner in einen nicht zu hohen Winkel ist. Ist der Gegner zum Beispiel 180 Grad hinter mir, dreht sich Leon nicht
+komplett bis zum Gegner sondern nur teilweise." Eine Pruefrunde: "Ergebnis: bestanden. Kein roter Punkt." (Ordner 40).
+
+**Was jetzt anders ist.** Beim Heben der Waffe dreht die Figur bei jeder Waffe und in jedem Winkel genau auf den Gegner,
+auch 180 Grad hinter sich; bei 90 Grad seitlich steht sie nach 4 statt 6 Bildern auf dem Ziel. Vorher fehlten bei 180
+Grad mit der Pistole 21,7 Grad, mit dem Messer beim Wiederheben 28,0 Grad und mit der Super Redhawk 56,9 Grad (die
+Redhawk nur bei Leon; Messer ziehen, Schrotflinte und MG drehten schon ganz). Ursache: Das Original dreht nur, solange
+das Anheben dauert - bei der Pistole fehlen dort 4,2 Grad -, und der Port drehte zusaetzlich im ersten Bild des Anhebens
+nicht. Einen Winkel, ab dem kein Gegner erfasst wird, gibt es nicht. Jetzt gilt die Schrittweite von RE2 Retail (Ihre
+Regel "Beta -> Retail", Memory reai-v2-beta-zu-retail.md), und das erste Bild dreht mit. Unveraendert: welcher Gegner
+gewaehlt wird, keine Zielerfassung durch Waende, Zielwechsel mit L1, Drehen von Hand; eine Leiche wird nicht anvisiert.
+Leon und Elza teilen diesen Teil des Spiels; die Messung lief fuer beide ueber alle Waffen (am Ende 0 Grad daneben).
+
+**Wie geprueft:** Im echten Fenster in ROOM1140 mit einem Zombie direkt hinter Leon: Der alte Stand bleibt 21,7 Grad
+daneben stehen, der neue steht auf dem Zombie. Riegelgruppe (Zielen, Waffen, Spieler) "100% tests passed, 0 tests failed
+out of 199". Mit der Zielhilfe trifft Leon in mehreren Laeufen frueher - drei Riegel waren deshalb anzupassen, und einer
+davon zeigte einen alten Port-Fehler (siehe "Pruefstand" und "Boden-Schatten nahe der Kamera").
+
+### Im ganzen Spiel: Boden-Schatten nahe der Kamera wie im Original (Abnahme v0.8.30)
+
+Gefunden in der Abnahme von v0.8.30, kein Befund von Ihnen: Der Port warf jeden Boden-Schatten (Schatten von Spieler und
+Gegnern, die Lache unter einer toten Spinne, den Fleck einer toten Babyspinne) ganz weg, sobald eine Ecke sehr nahe an
+der Kamera lag. Diese Grenze stammt aus dem Juli (09cab1418), hatte keinen Beleg im Original und steckte auch in
+v0.8.29. Sichtbar wurde sie mit der neuen Zielhilfe: Im Spinnen-Riegel (Leon, ROOM2070) stirbt die Spinne jetzt schon an
+ihrem Austritt nahe der Kamera, und ihre Lache wurde nie gezeichnet. Das Original prueft dort keine Naehe (RE1.5
+FUN_8001b064, RE2 FUN_8001699c); was nahe oder hinter der Kamera bleibt, entscheiden die Rechengrenzen der PSX
+(GTE-Saettigung und die Groessengrenze 1023 x 511 Bildpunkte je Dreieck). So rechnet jetzt auch der Port; ist nur eine
+Haelfte des Vierecks erlaubt, wird nur sie gezeichnet. Vor der Kamera bleiben es dieselben Bildpunkte.
+
+Gemessen: Die Lache der Spinne am Austritt ist sichtbar (vorher nie), die Flecken toter Babyspinnen im Riegel 2600 von
+2600 statt 1600 von 2600; eine lebende Spinne direkt vor der Kamera ist in 319 Bildern ganz weg, wie es die
+Groessengrenze verlangt. Zwei unabhaengige Pruefungen: Die erste fand den Fehler hinter einer Testanpassung ("NICHT
+BESTANDEN - 1 roter Punkt"), die zweite hat die Disassembly selbst gelesen ("BESTANDEN - kein roter Punkt").
+
+### Im ganzen Spiel: Pipe als Nahkampfwaffe - Rohr in der Hand, mehr Reichweite, keine Anzahl, Birkins Rohr-Ton
+
+Ihr Wortlaut vom 16.11. (Sitzungsprotokoll): "Mir ist ausserdem noch aufgefallen das wir die Pipe als Waffe im Inventar
+spawnen koennen, aber sie ist noch nicht nutzbar. Eigentlich sollte die Pipe so aehnlich funktionieren wie ein Messer,
+aber mit mehr Reichweite. Ich weiss nicht ob schon irgendwas fuer die Pipe vorhanden ist. Modell oder Animation oder so.
+Ausserdem sollte pipe auch wie Messer keine Anzahl haben, sondern halt einfach unendlich da sein." und zum Ton: "Ok, die
+sounds muessten natuerlich noch angepasst werden. Natuerlich soll die Pipe nicht klingen wie ein Messer. Sondern eher
+ein dumpfes metallenes Aufschlag Geraeusch haben. So wie bei Birkin zum Beispiel. Der hat ja auch eine Pipe." Je eine
+Pruefrunde, beide bestanden ("Ergebnis: bestanden. Kein roter Punkt." bzw. "Ergebnis: bestanden, vorlegbar. Es gibt
+keinen roten Punkt."), Ordner 42.
+
+**Was die Disc hat (Berichtigung der ersten Auskunft).** Im Code ist die Pipe eine Nahkampfwaffe wie das Messer, mit
+eigenem Schaden (gegen Zombies 24, Messer 6). Ein Rohr-Modell gibt es nicht - die Waffendatei der Pipe auf der Disc ist
+die Kopie einer Schusswaffen-Datei -, und die Pipe reicht im Original sogar etwas weniger weit als das Messer (1000
+gegen 1100). Im Port war sie bisher eine Kopie des Messers (Messer in der Hand, "255" im Inventar, Toene aus der
+Pistolen-Bank).
+
+**Was jetzt anders ist (Leon und Elza).** Die Figur haelt ein sechskantiges, metallgraues Rohr, doppelt so lang wie das
+Messer, selbst gebaut aus der Messer-Datei; die Bewegungen sind die des Messers. Reichweite 1355 statt 1100 beim Messer
+(aus der Rohrlaenge, Ihr Wunsch): Gemessen trifft Leon mit dem Messer bis 2700 Abstand, mit der Pipe bis 3000, Elza bis
+2500 bzw. 2800. Keine Zahl in Inventar, Ausruestfeld und Kiste, kein Verbrauch; die Zahl entfaellt auch beim Messer
+(sichtbar war sie dort hoechstens in der Kiste). Ton: Treffer = Birkins Rohr-Aufschlag aus STAGE3, Schwung = Birkins
+tiefes "Wusch", auch das Ziehen klingt nach Rohr; die Pipe ist lauter als das Messer (Birkins Original-Lautstaerke 127
+gegen 70), das Messer klingt unveraendert. Schaden gegen Zombies vorerst wie das Messer (siehe "Noch offen").
+
+**Wie geprueft:** Der Pruefer hat ueber das Menue ausgeruestet und getroffen (Leon in 1140, Elza in 1181, je zwei
+Treffer; auf 2800 Abstand trifft die Pipe 2 von 2, das Messer 0 von 2); Riegelgruppe "100% tests passed, 0 tests failed
+out of 318", Ton-Gruppe "100% tests passed, 0 tests failed out of 13", der Ton bei Leon und Elza nachgemessen.
+**Fundort:** Die Pipe liegt in keinem Raum - weder auf der Disc noch im Mod; in v0.8.30 bekommt man sie nur ueber das
+Item-Debug. Ein Fundort im Kesselraum 11F0/11F1 ist fuer v0.8.31 geplant (siehe "Vorschau").
+
+### Optionen: AI MIXED entfernt, neue Option ULTIMATE 1.5
+
+Ihr Wortlaut vom 16.11.: "Ausserdem wuerde ich im Konfigurationsmenu das AI Mixed herausnehmen wollen. RE 2 AI wuerde
+ich behalten wollen und bleibt unser Standard mit dem wir arbeiten und RE 1.5 AI koennen wir auch behalten, beinhaltet
+die Strunzdumme KI vom Original. Zusaetzlich wuerde ich gerne eine weitere Option hinzufuegen wollen: Ultimate 1.5 zum
+ein oder ausschalten. Wenn das eingeschaltet ist, bekomme alle Items im Player Inventory Menu und auch die Sachen die
+man in der Welt aufnehmen kann, ihre haesslichen Icons/Models von der unmodifizierten Resident Evil 1.5 Version."
+(Memory reai-v2-mixed-ist-das-ziel.md und reai-v2-ultimate15-option.md). Zwei Pruefrunden: Die erste fand einen roten
+Punkt (bei AN zeigte die Rote Master-Keycard einen Schluessel), die zweite: "Ich habe keinen roten Punkt gefunden."
+(Ordner 44).
+
+**KI-Wahl.** Im KI-Schirm stehen nur noch AI RE1.5 und AI RE2 (Standard). AI MIXED (RE1.5 fuer alle Gegner, RE2 nur fuer
+den Hund) ist weg; jeder alte Weg dorthin landet bei RE2. Die KI-Wahl wird wie bisher nicht gespeichert, jeder Start
+beginnt mit RE2.
+
+**ULTIMATE 1.5.** Neue Zeile "ULTIMATE 1.5 OFF/ON" neben der KI-Zeile, ab Werk AUS; die Wahl wird sofort gespeichert
+(re15_options.cfg). Erreichbar ueber die Optionen im Titel; die Weltmodelle wechseln beim naechsten Raumladen. Bei AN
+zeigt das Spiel, was die unveraenderte 40%-Disc an echten Bildern hat: 61 Inventar-Symbole, die Aufheben- und
+Untersuchen-Bilder von sechs Gegenstaenden, die Breitbilder und alle Misch-Symbole, dazu vier Fundstuecke mit eigenem
+Disc-Modell (Pistolen- und Schrotmunition, Erste-Hilfe-Spray und die Zange - sie ist auf der Disc eine stehende Ampulle
+mit der Aufschrift VIRUS und wurde so uebernommen). Zugeordnet ist nach Bildinhalt: Die Rote Master-Keycard behaelt ihre
+Karte, der Schluessel der Disc unter ihrer Nummer geht an den Water Key. Wo die Disc nur Platzhalter hat (65
+Untersuchen-Bilder mit einer "BOSS"-Karte, 6 Symbole als Kopie der Browning), bleibt das heutige Bild - Ihre Wahl vom
+16.11. auf die Rueckfrage: "Nein, nur echte Disc-Bilder". Ebenso bleiben Gegenstaende, die nur ins Hintergrundbild
+gemalt sind, und das Statusbild. Bei AUS ist alles pixelgleich wie vorher. Die Disc-Dateien liegen unveraendert in einem
+eigenen Ordner (shared_assets/PSX/DISC40); die Mod-Dateien sind nicht ueberschrieben.
+
+**Wie geprueft:** Riegelgruppe (Optionen, Inventar, KI) in beiden Runden "100% tests passed, 0 tests failed out of 182";
+bei AUS 0 von 76800 Bildpunkten anders, die Optionsdatei bitgleich.
+
+### STAGE2: ROOM2000/2001 - Kanalwasser ohne Blinken, Deckentropfen aus (Spur W)
+
+Ihr Befund vom 1.11.: "Das blinken im Wasser ist auf jeden Fall fehlerhaft und quatsch, siehe Marker." (Dossier
+W_wasserblink.md Z. 5; Ihre Marke: ROOM2000 Kamera 2, Bild F444, Hauptbaum-exe vom Morgen des 1.11.). Drei Abnahmen: die
+zweite bestanden (Blinken), die dritte bestanden (Deckentropfen, nach dem Merge nachgeholt).
+
+**Das Blinken ist weg.** Es war ein ausgedachter Port-Effekt aus einem Zwischenstand nach v0.8.29 (sechs feste
+Glanzpunkte auf dem Kanalwasser, ohne Vorlage). Kein Skript des Originals - weder im Repo-Baum noch auf der 40%-Disc -
+legt Licht auf das Kanalwasser, und im 80%-Video sind die weissen Flecken im Kanal die Spritzer an den Fuessen watender
+Zombies; ortsfest blinkt dort nichts. An Ihrer Marke in 19 s: 0 Blitze und 0 unruhige Flecken (Ihre exe vom 1.11.: 64
+Blitze und 6 Flecken); in allen 64 Kamera-Laeufen (2000/2001/20B0/20B1, Leon und Elza) ist der Kanal ruhig. Wer v0.8.29
+spielt, hat das Blinken nie gesehen. Seit dem 15.11. schimmert das Wasser dagegen leicht wie im Original
+(Paletten-Animation, siehe "Monitore flimmern, Wasser schimmert"); das ausgedachte Blinken bleibt weg.
+
+**Was bleibt:** die gelben Flecken im Kanal (der Kanalboden mit den Lampenflecken, der durch die halbdurchsichtige
+Wasserflaeche scheint, wie im 80%-Video und unveraendert seit v0.8.29), der Wasserlauf an der Leiter bis zur Flut samt den
+drei Gitterstrahlen aus dem Original-Skript, und die Flutszene in 20B0/20B1 unveraendert.
+
+**Deckentropfen (Abnahme 3 bestanden).** Ein einzelner Bildpunkt an der Decke pulsierte (nach etwa 18 s im Raum in drei
+Kameras, bei Leon und Elza, auch in Ihrer exe): ein Deckentropfen des Mod-Skripts, den der Port an der Decke haengen
+liess, weil ihm die Fallroutine fehlt. Nach Ihrer Regel "Mod-Inhalt nur mit 80%-Beleg" ("Wenn das Birkin-Modell Mod
+Arbeit ist, ist das ok, so lange nachweisbar ist, das es auch im 80% Build wirklich so vor kommt, und nicht ausgedacht
+ist.", 1.11.) hat der Orchestrator entschieden, die Tropfen-Schleife in 2000/2001 wie auf der 40%-Disc nicht zu starten
+(Variante B). Die Abnahme hat den Beleg an den Skript-Bytes beider Discs selbst nachgelesen: Die 40%-Disc startet die
+Tropfen nie. Im Spiel (Leon 2000, Elza 2001, mit Raumwechsel hin und zurueck und nach dem Laden eines Spielstands) faellt
+kein Tropfen, und am Bildrand ist kein Fleck mehr; Kanalwasser, Wasserlauf und Gitterstrahlen unveraendert. Ob die Tropfen
+weg bleiben sollen, fragt die Abnahme Sie - siehe "Zu entscheiden".
+
+### STAGE5 und STAGE2: Monitore flimmern, Wasser schimmert wie im Original (Paletten-Animation)
+
+Ihr Wortlaut vom 15.11.: "Die Monitore im Original laufen uebrigens, also grieseln, bei uns sind die Bilder statisch."
+(Memory reai-v2-hangar-szene-monitorbild.md). Ihr Urteil zu Ordner 33 am selben Abend: "super" (Protokoll vom 15.11.).
+Zwei Runden: Die erste Pruefung bestaetigte Mechanismus, Ablauf und "sonst nichts veraendert", fiel aber durch, weil das
+Elza-Video in Wahrheit Leon in 5030 zeigte; in Runde 2 ist der Elza-Lauf in 5031 echt aufgenommen (Code unveraendert).
+
+**Was das Spiel auf der Disc macht (im Emulator gemessen).** Die Monitorbilder bewegen sich nicht selbst; das Spiel
+schaltet alle 4 Spielbilder die Farben der Monitorflaechen weiter und beginnt nach 7 Schritten (28 Bilder, knapp eine
+Sekunde) von vorn. Bei den Streifen-Monitoren laeuft ein heller Balken durch, die Rausch-Monitore springen und flackern
+dunkel. Eigenheit des Originals, genau so uebernommen: Die Tabelle hat 8 Plaetze, der Raum 11 Monitore - deshalb zeigt
+der Monitor unten in der Mitte Rauschfarben statt Streifenfarben, und zwei Monitore (unten links und rechts) bleiben
+unsichtbar. Leon (5030) und Elza (5031) gleich. Die Monitor-Objekte gibt es nur im Mod-Baum (auf der 40%-Disc hat 5030
+keine); die Technik dahinter ist auf beiden Discs dieselbe.
+
+**Dieselbe Technik bewegt das Wasser.** In STAGE2 (u. a. Kanal 2000, 2020, 2040, 2080, Alligator-Becken 2090, 20A0,
+20B0) und in 11A0 und 1260 schimmert das Wasser jetzt leicht (Farbsprung hoechstens 16, alle 4 Bilder). Das ist das
+Original-Schimmern (im Original-Speicher gemessen), nicht das ausgedachte Glanzpunkt-Blinken, das Sie am 1.11. abgelehnt
+haben (Spur W oben); in v0.8.29 war das Wasser still. Der Kanal-Riegel der Spur W erlaubt jetzt genau diesen
+Paletten-Schritt.
+
+**Wie geprueft:** Takt und Folge gegen das Original (alle 4 Bilder, 7 Schritte); 32 Bildpaare im Abstand eines Umlaufs
+ohne einen Bildpunkt Unterschied; Riegelgruppen "100% tests passed, 0 tests failed out of 186" (Runde 1) und "100% tests
+passed, 0 tests failed out of 7" (Runde 2); Gegenproben mit eingebauten Fehlern rot.
+
+### STAGE2: Nachtrag 30 - Schrank 2010, Panel-Raetsel 2030, Notiz und Plakat, Plattform-Ton, Sirene, Lautstaerke, Wasser an der Leiter (Spur N)
+
+Ihr Nachtrag 30 vom 25.10. (in v0.8.29 angehalten, jetzt gebaut): "In ROOM 2010, beim Anklicken des Schranks, mache das
+er aufklappt und dann so aussieht wie in 2060 der Fuse Kasten - siehe fuse_box.bmp. Ab da soll auch der Mechanismus
+gleich - das Einsetzen der Sicherung etc. Dann - in ROOM 2030 am Kasten, damit die Platform runter faehrt, erstelle ein
+Raetsel, das so aussieht wie das Panel in Nahansicht, anstatt das komische - dreh an Valve 13. Dann - beim Text soll nur
+drin stehen das gruen und rot verwechselt wurde, nicht black, das soll raus. Bei der verwechselten Nummer soll drin
+stehen das sie ausserdem die Nummern verwechselt haben von "Schwarz" und "Gruen". Hier dienen die Anfuehrungszeichen als
+Ironie fuer die falschen Farben auf den Poster. Natuerlich auf englisch. Und wenn die Plattform runter faehrt, fehlt mir
+noch der Original Sound von Resident Evil 2. Und waehrend des Alerts und der Alert message fehlt mir noch zusaetzlich
+durchweg der Alert sound aus Resident Evil 2." und "Und bei der reduzierten Volume sollen ALLE Volumes reduziert werden,
+nicht nur ein paar." (AUFTRAG.md Z. 947-964). Dazu Ihre Wahl des Plakats in Nachtrag 30d ("Plakat NEU: 1. GREEN 01 - 2.
+RED 02 - 3. BLACK 09 - 4. RED 08 -> Loesung 09 -> 02 -> 01 -> 08", Z. 1008), Nachtrag 30e: "und eine Sache fehlt mir
+noch - in room 2010 soll - bis zum ablassen der Wassers, auch ein Wasser Effekt die Leiter runter kommen und ueber den
+Weg bis zum Wasser Pool in der Mitte laufen." mit Ihrer Wahl "Bis zur Flut in 2030 (Empfohlen)" (Z. 1013-1015), Nachtrag
+36: "bei der Minute bis zum Wasser voll laufen in STAGE2 solltest du ebenfalls die Alarm Sirene mit einbauen nach der
+Ansage. Die findest du zum Beispiel auch bei room6000." (Z. 1143-1144), Ihre Freigabe des Panel-Entwurfs in Nachtrag 37
+("A Druckspeicher (Empfohlen)", Z. 1153) und zur Lautstaerke in Nachtrag 34: "Betreff der Lautstaerke, die Option
+scheint doch zu funktionieren, aber selbst mit Lautstaerke bei 10 ist es immer noch zu laut. Da muss wahrscheinlich
+doppelt so viel gedreht werden und Standard sollte dann 50 sein." (Z. 1091-1093). Abnahme 1 fand im Spurbaum alle sieben
+Punkte erfuellt, bestand aber nicht, weil das Zusammenspiel mit den Key Items der Spur O (USE der Sicherung am
+geschlossenen Schrank verpuffte) im Merge nicht gefangen war; beides ist in der Integration behoben und mit Riegeln
+belegt (siehe "Technisch"). Leon und Elza (2011, 2031, 2001) gleich gemessen.
+
+**Schrank in ROOM2010/2011.** Die Aktionstaste am Schaltschrank schaltet die Kamera auf die Schrank-Kamera, die Tuer
+klappt in 16 Bildern um 90 Grad auf (Takt des Original-Hebels in 11F0), und innen steht der Sicherungskasten aus
+ROOM2060: Ihr fuse_box.bmp ist der Blick von Kamera 6 in 2060, Innenflaeche und Tuer-Innenseite sind aus diesem Bild auf
+die Rueckwand bzw. die Tuerebene gerechnet, die Aussenseite aus dem Hintergrund von 2010, darum deckt sich die
+geschlossene Tuer mit dem Hintergrund (geschlossen ist der Kasten bitgleich der Original-Hintergrund). Die Aktionstaste
+allein zeigt danach nur "A fuse box for the valve controls." / "One of the fuses is missing..." - eingesetzt wird ueber
+das Inventar (Spur O): vor dem Schrank START, ITEM, Sicherung, USE; das Inventar schliesst, der Schrank klappt auf (ist
+er offen, entfaellt das), dann wie in 2060: Nahansicht der Sicherungen, Cursor mit dem Steuerkreuz auf die Luecke in der
+dritten Reihe (ein Schritt nach rechts reicht), Aktionstaste. Nicht belegt: Ob es in dieser Nahansicht wie im Original keinen Abbruch gibt, ist in keiner Quelle belegt; belegt ist nur der Abbruch mit Kreuz am Pult 2050 und im Panel 2030.,
+Nahansicht mit eingesetzter Sicherung und gruener Lampe, "You've used the Fuse.", dann das Standbild der Ventile mit dem
+Aufschliess-Ton aus v0.8.29, zuletzt zurueck zur alten Kamera. Der Cursor-Schritt ist Bild fuer Bild der von 2060.
+Steckt die Sicherung schon oder sitzt sie im Generator, gilt USE dort nicht: "You can't use it here.", das Inventar
+bleibt offen. Die offene Tuer ist nur unter Kamera 3 zu sehen (unter Kamera 4 stuende der Fluegel direkt vor der Kamera,
+dafuer gibt es kein Bild - Port-Wahl); beim naechsten Betreten ist sie wieder zu. Herausnehmen und der Rest des
+Mechanismus sind unveraendert aus v0.8.29.
+
+**Panel-Raetsel in ROOM2030/2031 statt Ventil 13 (Ihr Entwurf A "Druckspeicher").** Am Pult: "Will you operate the
+panel?" (seit Spur PF auf zwei Seiten, siehe dort), Ja, und das Panel fuellt das Bild: drei Tanks A (fasst 100), B (50),
+C (30), die Anzeige liest Tank A und steht bei 100, rote Marke bei 80. Steuerkreuz bewegt den Cursor, die Aktionstaste
+waehlt die Quelle (gruene Lampe), die Aktionstaste auf einem zweiten Tank fuellt um - es fliesst, bis die Quelle leer
+oder das Ziel voll ist ("The tank is empty." / "The tank is full."), jede Fahrt dauert 16 Spielbilder wie der
+Original-Hebel in 11F0, mit den Toenen des RE2-Panels aus ROOM2130. Loesung: A nach B (50/50/0), B nach C (50/20/30), C
+nach A (80/20/0) - die Nadel muss von 100 auf 80 herunter, und beim Probieren bleiben in B genau 20 zurueck. Bei 80
+wartet das Panel kurz, dann folgt "The pressure gauge reads 80. / Lower the bridge?", mit Ja faehrt die Bruecke in der
+Draufsicht herunter, "The bridge is down." EXIT oder die Abbruchtaste verlassen das Panel, beim naechsten Oeffnen steht
+es wieder auf 100/0/0; es gibt keine Sackgasse (alle 16 Staende durchgesucht, von jedem hoechstens 4 Zuege bis 80).
+START oeffnet im Panel kein Inventar. Ventil 13 am Tank ist weg. Rahmen und EXIT-Feld sind pixelgleich aus den
+Original-Nahansichten 2050 Kamera 15 und 11F0 Kamera 10, der Rest ist nach dem entzerrten Echtbild des Pults neu
+gezeichnet (Port-Wahl). Nach der Loesung laeuft die Kette wie in v0.8.29 weiter (Sued-Landeplatz, Ventile, Flut).
+
+**Notiz und Plakat.** Die "Technician's Note" sagt jetzt auf Seite 1 und 2: "They mixed up / green and red, and on top
+of" / "that they swapped the / numbers of "black" and / "green"! What are they? / Colorblind? How is anyone / supposed
+to work with / something like this...." (77 Woerter wortgleich am Artefakt gelesen; die Anfuehrungszeichen sind in der
+RE2-Dokumentschrift so gesetzt, wie RE2 sie selbst setzt). Das Plakat an der Suedwand zeigt "1. GREEN 01 - 2. RED 02 -
+3. BLACK 09 - 4. RED 08". Rechenweg: Zeile 1 GREEN heisst rot, Nummer aus der BLACK-Zeile 09 = 09 rot; Zeile 2 RED
+heisst gruen, 02 gruen; Zeile 3 BLACK bleibt, Nummer aus der GREEN-Zeile 01 = 01 schwarz; Zeile 4 RED heisst gruen, 08
+gruen. Richtig ist also 09 -> 02 -> 01 -> 08, und jede Zeile trifft ein echtes Rad; die alte Folge 01/02/09/08 setzt
+zurueck.
+
+**Plattform-Ton.** Wenn die Bruecke faehrt, laeuft der Motor der RE2-Mittelbruecke aus ROOM4080 bis zum Halt, und der
+Halt-Ton schneidet ihn wie in RE2 (Toene bytegleich aus der RE2-Raumdatei).
+
+**Sirene in der Flut-Minute.** Nach der Ansage ("WARNING ...", Warntext samt Ihrer Aufnahme) heult zusaetzlich zum
+RE2-Alarm die Sirene aus ROOM6000: RE1.5 spielt dort ein Stueck, das bytegleich RE2s MAIN11 ist; die Sirene darin (0,80 s
+an, 0,14 s aus) liegt in RE2 auch ohne Musik vor (SUB_34, Schleife 14,3 s), und die spielt der Port. Sie laeuft
+durchgehend bis zur Flut, bis zum Tod oder bis zum Verlassen des Raums, bei Leon und Elza, und endet im Bild des
+Flut-Beginns.
+
+**Lautstaerke (Nachtrag 34, Entscheid N-E2).** Der Regler wirkt jetzt quadratisch: 100 = voll, 50 = ein Viertel, 30
+entspricht dem alten 10, 10 = ein Hundertstel; ohne Options-Datei gilt 50. Eine vorhandene Options-Datei behaelt ihren
+Wert (20 heisst jetzt 0,04). Gemessen am ganzen Mischweg: jeder einzelne Abtastwert folgt der Einstellung, Tuersequenz
+und Sprung ins Wasser eingeschlossen (2 499 000 Werte, 0 falsch) - es gibt nur einen Ausgabeweg, Ihr Eindruck aus
+Nachtrag 30b ("Die Tuersequenzen und Sounds der Reinsprung SOunds ins wasser etc, scheint davon nicht betroffen.",
+AUFTRAG.md Z. 987-988) liess sich an der exe nicht bestaetigen.
+
+**Wasser an der Leiter (Nachtrag 30e) - gebaut in ROOM2000/2001, nicht in 2010.** ROOM2010/2011 ist das Buero mit
+Schreibmaschine und Computer; es hat keine Leiter, keinen Weg und kein Becken. Ihr Wortlaut ("die Leiter runter kommen und
+ueber den Weg bis zum Wasser Pool in der Mitte laufen") trifft Wort fuer Wort den Kanalraum 2000/2001 (Leiter nach 2050,
+West-Steg, Kanal in der Mitte) - und Ihr eigener Entwurf vom 23.10. nennt genau diese Leiter. Entscheid des Orchestrators:
+dort gebaut. Bis zur Flut in 2030 stroemt Wasser ueber die ganze Leiter (sechs Dauerstrahlen vom Gitter-Effekt des
+Raumskripts), spritzt von der Leiter bis zur Kante, laeuft sichtbar fliessend ueber den Steg (derselbe Effekt wie die
+Flutwelle in 20B0) und schlaegt im Kanal ein; die Leiter bleibt gesperrt wie bisher. Nach der Flut ist es aus. Elza in
+2001 gleich.
+
+### STAGE2: ROOM2010/2030 - Sicherungskasten entzerrt, Panel in der Spielschrift, Frage ohne Ueberlappung (Spur PF)
+
+Ihr Befund vom 2.11. (00:26): "Der Kasten mit der Sicherung in ROOM 2010 sieht schon klasse aus, aber das Bild ist / der
+Kasten ist bei der Kamerasicht irgendwie komisch gestaucht.... das ist noch falsch. Auch das Raetsel in 2030 das du
+gebaut hast ist Klasse! Aber Zahlen und Texte auf den Panel in Nahansicht sind kaum lesbar/verschwommen. Und der Text am
+Anfang vor dem Start des Raetsels ueberlappt mit dem yes / no Auswahl." (Dossier PF_panelfix.md Z. 5-7). Nach dem ersten
+Bau (09:24): "Das Panel ist immer noch schwer lesbar/verpixelt. Vor allem das A 100, und das 80 links, das Dreh panel,
+der BRIDGE und PRESSURE 80 Text, der B 50 und der C30 Text und auch der Caution High Pressure Text." (PF_abnahme_1.md Z.
+14-15; Abnahme 1 nicht bestanden). Zur Schrift am Vergleichsbild vom 3.11.: "ja, ist super." (Dossier Z. 180). Danach
+Nachbesserung 1 (Kasten-Scherung, Drehscheiben) und Abnahme 2 bestanden. Leon und Elza ueberall bildgleich.
+
+**Sicherungskasten ROOM2010/2011.** Geschlossen ist der Kasten unveraendert der Original-Hintergrund. Nach der
+Aktionstaste klappt die Tuer auf, und der Inhalt (Rueckwand mit den Sicherungen, offener Fluegel mit zwei Schildern) hat
+jetzt dieselben Proportionen wie der Fuse-Kasten in 2060 - vorher war er waagrecht um 21 % (Rueckwand) bzw. 29 %
+(Fluegel) gestaucht, und ein Knick lief quer durch den Kasten. Jedes Bildteilchen wird jetzt ueber die Kamera gerechnet,
+mit der das Original den 2060-Kasten zeigt, und unter Kamera 3 in 2010 gezeigt: Sicherungsroehren senkrecht, Rahmen und
+Schilder waagrecht, die Schilder Rechtecke statt Parallelogramme. Dafuer fehlt links und rechts ein schmaler Rand des
+Kastens - die Tuer in 2010 ist schmaler als der Kasten in 2060 - und die Tuer zeigt etwas mehr von ihrem unteren Teil.
+Keine Naht, kein Versatz, keine andere Helligkeit; gleich in jeder Fenstergroesse, am Kasten auch im Vollbild gemessen.
+Die Nahansichten beim Einsetzen der Sicherung bleiben die Original-Hintergruende aus 2060.
+
+**Pult und Panel ROOM2030/2031.** Die Frage am Pult kommt jetzt auf zwei Seiten: "A control panel for the bridge." mit
+Seitenpfeil, dann "Will you operate the panel?" allein auf der ersten Zeile, darunter frei "Yes   No" mit dem Cursor -
+ein Tastendruck mehr, wie bei den Original-Fragen mit Erklaerung (z. B. am Kasten in 2060). Vorher lief die zweite Zeile
+in die Auswahl ("Will you operate the Yesel?   No"). Das Panel in Nahansicht zeigt die Beschriftung jetzt in der kleinen
+Pixelschrift des Spiels: A 100, B 50, C 30, die rote 80 am Tank A, BRIDGE / SET 80, CAUTION / HIGH PRESSURE - alle acht
+von Ihnen genannten Texte werden Zeichen fuer Zeichen erkannt (42 von 42), vor und nach der Loesung. Das Schild oben
+rechts heisst "BRIDGE / SET 80" statt "PRESSURE 80" (das Feld ist fuer "PRESSURE 80" in dieser Schrift zu schmal), das
+rote Schild ist breiter, die winzigen Zahlen im runden Zeiger-Instrument sind weg - das rote Feld 80 bis 100 und die
+rote 80 am Tank zeigen das Ziel. Drehscheiben, Zeiger-Instrument und Zeiger sind ganze, scharfe Pixel ohne graue
+Verlaeufe; der Zeiger flimmert beim Umfuellen nicht mehr. Der Querbalken der Drehscheiben steht etwas flacher als vorher
+(siehe "Zu entscheiden"). Die Nachrichten im Panel stehen auf einem dunkleren Band, damit die breitere Schrift des roten
+Schilds nicht mehr sichtbar ueber dem Text liegt (ein schwaches Durchschimmern bleibt, der Text ist lesbar). Der Ablauf
+des Raetsels ist unveraendert (Spur N, oben). Im Standardfenster ist jeder Bildpunkt des Panels ein 3x3-Block ohne
+Filter - die Pixelschrift des Spiels, kein Weichzeichner. Nicht belegt: Das Panel wurde im Vollbild nicht gemessen.
+
+### STAGE2: Alligator - Kampfbeginn, Schluessel, Putz, Finisher, Leiche und Kanister im Maul (Spur P)
+
+Ihr Nachtrag 35 vom 30.10.: "Bei den Aligator fight gab es noch einige findings: - Zum einen kam der Putz immer noch
+nicht so runter wie beim Aligator fight in Resident Evil 2, das heisst der Teil funktioniert da noch nicht 1 zu 1 - Nach
+dem Aligator Tot fand man den Schluessel nicht, ich weiss nicht, ob der In der Wand haengen geblieben ist oder so, aber
+ich kam auf jeden Fall nicht ran - Ich konnte beim Aligator nach seinen Tot drauf klettern - Der Spieler ist beim Tod
+durch den Aligator in seinen Finisher noch halb haengend in der Luft sichtbar, nicht wie in Resident Evil 2. Er muss ja
+irgendwann mal verschwinden, das es so aussieht als ob er wirklich gefressen wird. - Bei der Zombie Leiche die der
+Aligator am Anfang Frisst ist es noch schlimmer. Der Haengt nicht mal sauber im Maul und bewegt sich dynamisch mit,
+sondern haengt darunter.... - Der Kanister haengt auch nicht gerade im Maul wie bei Resident Evil 2 und der Aligator
+kann sich mit Kanister danach offenbar auch nicht mehr richtig bewegen....." (AUFTRAG.md Z. 1116-1122). Dazu aus v0.8.29
+"Ab Samstag" Ihre Antwort in Nachtrag 31 Punkt 2, "Aendern: nicht vor der Kamera" (Z. 1040), und die Lagespruenge mit
+dem Kanister im Maul. Abnahme 1 bestanden, keine Maengel, sechs Hinweise; Leon und Elza gemessen (ROOM2091 ist
+bytegleich ROOM2090).
+
+**Kampfbeginn nicht mehr vor der Kamera.** Die Zombie-Leiche treibt weiter vorn im Becken; nach dem Fressen und dem Schrei
+schwimmt der Alligator von rechts durch die Beckenmitte auf Leon bzw. Elza zu, statt rund 100 Bilder lang gross die rechte
+Bildhaelfte zu fuellen (rechte Bildhaelfte im Mittel 26 % statt 45 %, kein Bild ueber 50 %). Abstand beim Kampfbeginn
+und erster Biss liegen im RE2-Band aus v0.8.29. Im ersten Bild ragen Kopf und Hals von rechts ins Becken, der Rumpf folgt
+nach gut 100 Bildern: mehr lassen das RE2-Band, die Kamerazone und Kamera 0 nicht zu. Der blinkende Schluessel auf der
+Leiche ist in der Ankunft rund 8 x 7 Bildpunkte gross; mindestens so hell wie die abgenommene Fassung (Ihre Antwort in
+Nachtrag 31 Punkt 3: "Ja, gut genug").
+
+**Der Water Key ist nach jedem Tod erreichbar (Nachtrag 35 Punkt 1, Pflicht fuer das Release).** Vorher lag er bei 202
+von 1688 gerechneten Todeslagen im Maschinenblock - das war Ihr "in der Wand haengen geblieben". Jetzt liegt er immer
+auf einem Punkt, den die Figur wirklich erreicht, und die Kamera der Einstellung nach dem Tod meidet Stellen, an denen
+Leon ihn verdeckt. Die Mindestgroesse von 10 Bildpunkten, die in der Spur P dazu galt, gilt seit Ihren Befunden vom
+9.11. nicht mehr: Der Schluessel liegt jetzt naeher an der Leiche und ist dafuer kleiner (siehe den Abschnitt zu den
+Nutzerbefunden 9.11.). Ihr "drauf klettern": Der Schluessel lag auf der Kletter-Ebene und war damit fuer die
+Aktionstaste eine Stufe; jetzt liegt er wie die schwimmenden Objekte des Raums auf der Wasser-Ebene, die Aktionstaste
+hebt ihn auf. Gemessen in der Spur P (vor Ihren Befunden vom 9.11.; die Erreichbarkeit ist danach nicht neu ausgezaehlt,
+der Riegel dazu lief auf dem neuen Stand in der Alligator-Gruppe gruen): 1688 Todeslagen und 4,7 Millionen Stellungen,
+nicht erreicht 0, Klettern 0; dazu natuerliche Kaempfe bis zum Aufheben, Leon und Elza, auch mit der Leiche zwischen
+Figur und Schluessel.
+
+**Die Leiche des Alligators hat wie in RE2 keine Kollision mehr.** Man laeuft durch sie hindurch, sie sperrt den Westkanal
+nicht mehr (vorher stand Elza bei der Leiche fest), und Leon zielt nicht mehr auf sie.
+
+**Putz wie in RE2.** Er faellt jetzt bei jedem starken Stoss des Alligators, an die Stelle gebunden, an der RE2 ihn
+ausloest (das Schuetteln): fuenf Brocken mit Staubspur, zufaellig in der Beckenseite der laufenden Kamera, mit dem
+RE2-Geraeusch (bytegleich aus der RE2-Raumdatei). Der alte Staub ueber Leon beim Dash war der falsche Effekt: In RE2
+gehoert er zum Rueckzug des Alligators nach Beschuss, den es hier nicht gibt. Der Ort je Beckenseite ist Port-Wahl (RE2
+hat drei Beine, 2090 einen Ring aus vier Seiten); ein Bildvergleich mit dem laufenden RE2 war nicht moeglich (kein Abbild
+auf der Maschine), der Vergleich steht auf den Skript- und Code-Bytes.
+
+**Finisher: Die Figur verschwindet.** Stirbt Leon oder Elza durch den Alligator, ist die Figur mit dem Ende des
+Schuettelns weg (RE2 setzt dort ein Zeichen-Bit), danach kaut der Alligator allein; auch Elzas Zopf ist weg.
+
+**Fress-Szene am Anfang.** Die Zombie-Leiche liegt quer im Maul, Rumpfmitte zwischen den Kiefern, die Enden ragen seitlich
+heraus; sie folgt dem Kopf Bild fuer Bild durch das ganze Schuetteln und ist mit dem Ende des Schuettelns weg.
+
+**Kanister im Maul.** Er liegt quer im Maul wie in RE2 und ragt nach einer Seite heraus, aus welcher Richtung der
+Alligator auch kommt. Mit dem Kanister im Maul springt der Alligator nicht mehr: Der Bildschritt ist auf den groessten
+echten Schritt seiner Bewegungen begrenzt, an der Wand weicht er sichtbar zurueck, dabei kann der Kopf kurz in die Wand
+ragen. In 306 Trage-Laeufen (275 400 Bilder) kein Sprung. Weil der Kanister in RE2-Groesse am kleineren Alligator sitzt,
+ragt er 1,5-mal so weit zur Seite wie in RE2 (siehe "Noch offen").
+
+**Ausserdem:** Die Uebergabe von der Ankunftsszene (2090) zum Knall mit den acht Zombies in 2080 ist jetzt ueber den
+echten Weg als Riegel belegt (Leon und Elza), nicht mehr nur von Hand.
+
+### Restpunkte aus v0.8.29: toter Alligator bleibt tot, ausgelieferter Raum, Treppenwange 6010/6011, Effekt-Quader 20B0 (Spur Q)
+
+Fuenf Punkte des Orchestrators aus den offenen Listen von v0.8.29, ohne eigenen Nutzer-Wortlaut. Abnahme 1 bestanden,
+keine Maengel.
+
+**Der tote Alligator bleibt tot.** Vorher war er beim naechsten Betreten von 2090 mit voller Energie wieder da und ohne
+zweiten Kanister nicht mehr zu toeten. Jetzt bleibt er tot - nach dem Verlassen des Raums, ueber Spielstand laden und
+nach dem Aufheben des Water Key, Leon und Elza. RE2 sperrt seinen Alligator schon beim Kampfbeginn; der Port setzt die
+Sperre erst beim Tod (Port-Wahl), weil der Alligator hier den Water Key traegt: Wer vor seinem Tod ueber die Leiter
+flieht, trifft ihn beim Zurueckkommen wieder, sonst waere der Schluessel weg.
+
+**Ausgelieferter Raum.** Mit dem Schalter fuer den ausgelieferten Raum (RE1.5-Alligator, keine Port-Szenen; siehe
+"Technisch") zeigt 2090 jetzt auch die zwei Spinnen des ausgelieferten Raums, die der Port dort bisher verwarf.
+
+**Treppenwange ROOM6010/6011 Kamera 5.** Das Restloch aus v0.8.29 (Kopf und Schulter ragten unter der Treppe ueber die
+Wange) ist zu: Die Tiefe des Teils kam aus einer Kollisionszelle unter den Stufen, die Wange selbst liegt deutlich naeher
+an der Kamera. An allen gemessenen Stellen, Leon und Elza, ist kein Figurpunkt auf dem Teil sichtbar, auch auf dem echten
+Weg ueber die Treppe. Im Spiel steht an diesen Plaetzen nie Kamera 5, die Aenderung sieht man nur mit erzwungener Kamera.
+
+**Ihre Freistellungs-Liste STAGE3-6** (Dossier M, "Fuer den Nutzer") ist vollstaendig: Die acht kleinen Stellen aus
+v0.8.29 sind eingetragen, je mit Restbild; der Teile-Bericht stammt jetzt aus dem ausgelieferten Lauf; ROOM4040/4041
+Kamera 12 hat keine Stelle hinter dem Torrahmen (jenseits des Tors gibt es keinen Stehplatz).
+
+**Effekt-Quader in 20B0/20B1 und die stillen Testenden.** Die stillen Enden des Ketten-Riegels aus v0.8.29 waren
+Abstuerze: Der Zeichner rechnet bei riesigen Dreiecken ueber (die Effekt-Quader des Wassers kurz vor der Kamera nach der
+Flutszene). Der Port klemmt die Ecken jetzt wie die PSX-Hardware (Polygone ueber 1023 x 511 Bildpunkte zeichnet die
+Hardware nicht) - auch im Spiel fuer die Effekt-Quader: Die schirmfuellenden grau-gruenen Bloecke im Westgang nach der
+Flut (bis 90 % des Bildes) sind weg, Quader unter der Grenze bleiben im Bild. Fuer die Elza-Kette 2031 -> 20B1 -> 2051
+gibt es jetzt einen eigenen Riegel. Kein Ende der exe ist mehr still: Ein Absturz schreibt Adresse und Stapel ins
+debug.log.
+
+### STAGE2: Alligator Nachbesserungen - oben nicht sicher, kein Haengen, Trefferreaktion und Biss wie RE2 (Spur G2)
+
+Nach v0.8.29 und der Spur P meldeten Sie weitere Alligator-Befunde; die Spur G2 hat sie auf dem gelobten Stand vom 6.11.
+nachgebessert. Neun Abnahmen; die neunte (8.11.) ist bestanden, seit dem 8.11. auf master. Unterwegs fielen unter
+anderem durch: die Abnahme 5 (Absturz und ein Wurf der Figur aus dem Raum), die Abnahme 7 (ein Biss traf im selben
+Schnappen ein zweites Mal) und die Abnahme 8 (die Sperre dagegen stand auf einem RE2-Beleg, der in RE2 den Spurt sperrt,
+nicht den Biss).
+
+**Ihre Entscheide vom 6.11. (woertlich, als Vorgaben der Nachbesserung 3):** Zur Frage F1 (Kameragrenze fuer den Kopf,
+wenn der Alligator den Kanister holt): "noe, wozu wenn es gut funktioniert?" - keine Kameragrenze. Zu F3: "Er soll nur den
+Spieler oben auf der Rampe auch rammen koennen, das der Spieler oben nicht ausweichen kann. Alternativ kann er auch hoch
+beissen oder sowas, aber er darf halt oben nicht sicher sein." (zum Takt: "Das kann er gerne machen."). Zu F4: "Wenn er
+haengt muessen wir nachbessern denke ich. Er darf nicht zu lange haengen. Wenn es kurz ist, kann man mit dem tauchen
+abhilfe schaffen, aber das hilft natuerlich nicht bei der Platform." (G2_abnahme_6.md Z. 13-17).
+
+**Nachbesserung 3 - bestanden (Abnahme 6, 7.11.), Leon und Elza, mit und ohne Kanister.** Oben auf der Rampe ist die
+Figur nicht mehr sicher: In jeder gemessenen Lage (zehn eigene Lagen der Abnahme in allen Blickrichtungen, stehend und
+gehend, dazu die Lagen der frueheren Abnahmen) wird sie gerammt, hochgebissen oder von der Querung gebissen, jeder
+Treffer 50 Schaden, 18 bis 25 Treffer in den ersten zwei Minuten nach Kampfbeginn; der erste Treffer kommt spaetestens
+etwa 13 s nach dem Kampfbeginn bzw. nach dem Hinaufsteigen; in den Fensterlaeufen keine Pause ueber 15 s (hoechstens 447
+Bilder), im Harness bis 492 Bilder, Schranke der Vorgabe 600 Bilder. Einzige Ausnahme war das Kanister-Holen zu
+Kampfbeginn (knapp 28 s ohne Treffer, solange er den Kanister aus dem Becken holt) - mit Nachbesserung 4 weg, siehe
+unten. An der Plattform- und Rampen-Suedkante haengt er nicht mehr: Haenge-Fenster 0, laengste Zeit ohne Fortschritt 326
+Bilder (Grenze 450 = 15 s, Port-Wahl nach Ihrem "nicht zu lange"), kein Rueckfall; an denselben Lagen beisst er jetzt 20
+bis 32 Mal statt 13 bis 23 Mal mit bis zu 1123 Bildern Pause im gelobten Stand. Der Absturz und der Wurf der Figur durch
+die Suedwand aus der Abnahme 5 sind behoben (46 eigene Laeufe: kein Bild mit der Figur ausserhalb von Deck oder Raum;
+ein "Raumhalt" greift nur in einer Trefferreaktion, nie beim Gehen, Klettern oder Absteigen). Ein Biss waehrend des
+Hochkletterns schob die Figur danach aber noch hinter die Ostwand (Ihr Befund 1 vom 9.11.; an diesem Stand nachgestellt
+in drei Laeufen mit je 1149 Bildern in fester Wand; die bisherigen Riegel sahen den Fehler nicht) - behoben, siehe den
+Abschnitt zu den Nutzerbefunden 9.11. Ausserhalb der beiden Orte (oben auf der Rampe, Wasser nahe einer Blockkante) ist
+der Kampf bitgleich zum gelobten Stand. Riegel: 28/28 Unit, 20/20 exe-Riegel gruen.
+
+**Nachbesserung 4 in drei Runden - bestanden (Abnahme 9, 8.11.).** Ihre Antworten vom 7.11. (woertlich,
+G2_MESSBLATT_NB4.md Z. 11-15): "er kann den Spieler ruhig In das Wasser stossen." - ein Treffer oben an der Rampenkante
+darf die Figur ins Wasser stossen (vorher taumelte sie nur an der Kante, Frage F3 der Abnahme 6). Und zum Kanister-Holen:
+"Die Frage stellt sich garnicht, da leon mit den alligator ganz normal seine runden drehen soll. Das heisst der alligator
+sollte Ganz natuerlich irgendwann zum Kanister kommen, waehrend er leo. Auf dem rundweg verfolgt....". Dazu der Entscheid
+des Orchestrators ("Original oder nicht"): Fuer jeden Alligator-Angriff, der die Figur trifft (Biss im Wasser, Biss von
+der Querung, Rammen, Hochbiss, Biss mit Kanister), gilt die Trefferreaktion der Figur aus RE2 statt des RE1.5-Niederwurfs,
+der die Figur bis zu gut 13 000 Einheiten weit warf (Frage F2 der Abnahme 6).
+
+**Was Sie jetzt sehen (Leon und Elza).** Jeder Treffer laeuft als RE2-Trefferreaktion; in ueber 70 000 gemessenen
+Bildern kam kein RE1.5-Niederwurf mehr vor. Rammt der Alligator die Figur oben an der Rampenkante, faellt sie ins
+Wasser; beisst er von unten hinauf, taumelt sie und bleibt oben (siehe "Zu entscheiden"). Einen eigenen
+Kanister-Holmodus gibt es nicht mehr: Er nimmt den Kanister nur auf, wenn sein Kopf auf dem Verfolgungsweg in Reichweite
+kommt - seit den Nutzerbefunden vom 9.11. auch mitten im Biss und im Spurt (Abschnitt weiter unten); bleibt die Figur an
+der Rampe, lag der Kanister 3300 bis 4400 Bilder (Stand vor den Nutzerbefunden 9.11. mit der alten Kanisterlage, nicht
+neu gemessen), und die 28-s-Pause beim Kanister-Holen ist weg (erster Treffer oben nach 300 Bildern). Jeder Biss-Anlauf
+trifft hoechstens einmal, wie in RE2: Ein einzelnes Schnappen toetet die Figur nicht mehr in 20 Bildern aus voller
+Gesundheit (Abnahme 7 hatte 400 von 895 Treffern als Zweitbiss gemessen; jetzt 0 Zweitbisse in 523 Treffern des
+Testprogramms und in allen Spiellaeufen). Nach dem Intro beisst er im ersten Anlauf, sobald sein Maul an der Figur ist,
+wie in RE2 (gemessen Bild 290; vorher zwei leere Anlaeufe bis Bild 416). Mit echten Trefferpunkten: Biss bei Bild 942
+(100 auf 40), der naechste Biss 107 Bilder spaeter - Leon und Elza gleich. Riegel: 48/48 Unit, die exe-Riegel der
+Abnahme 5/5, in der Integration 20/20.
+
+### STAGE2: Alligator - Klettern, Kanister in der Kanalmitte, Schluessel bei der Leiche (Nutzerbefunde 9.11.)
+
+Nach Ihrem Spieltest vom 9.11. meldeten Sie (woertlich): "Den Aligator fight habe ich jetzt auch einmal getestet. Ist
+cool! Es gibt nur 3 winzige kleinigkeiten die mir aufgefallen sind: 1. Wenn ich direkt an der Kante hochklettere auf die
+Platform und dann vom Aligator erwischt werden, ist es moeglich das er mich in die Wand schiebt. 2. Ich musste diverse
+runden mit dem Aligator drehen, bis er letzendlich den Behaelter aufnahm. Eigentlich sollte er den Behaelter aufnehmen,
+sobald die Position erreicht ist, wo der Behaelter liegt. Wenn das so nicht so einfach ist, lege den Behaelter zentraler
+in die Mitte, damit er ihn auf jeden Fall aufnehmen muss, sobald der Spieler den Aligator dort hingelockt hat. 3. Ich
+bin ausversehen nach dem Tot des Aligators die Leiter hoch und wieder runter. Ich konnte den Schluessel sehen, aber
+aufnehmen konnte ich ihn nicht mehr." (INT_gator_nutzerbefunde.md Z. 6-14). Zur Lage des Schluessels schrieben Sie
+danach, ebenfalls am 9.11.: "na er soll naeher bei der Leiche liegen, immerhin hat der Aligator ja den Schluessel samt
+Zombie gefressen." (ebd. Z. 298).
+
+Vier unabhaengige Abnahmen am 9. und 10.11. Die Abnahme 0 (9.11.) fiel durch: Im echten Kampf zeigte die Einstellung
+nach dem Tod den Schluessel weiter in einer Kamera, die an seinem Platz nicht laeuft (4 von 4 Laeufen des Pruefers), und
+die Kanister-Aufnahme brach einen laufenden Biss ab, was RE2 nicht tut. Die Abnahme 1 (9.11.) ist bestanden. Danach
+kamen drei Nachtraege: Kanister in die Kanalmitte, Schluessel naeher an die Leiche und ein weicher statt harter
+Haltungswechsel, wenn der Kanister einen Spurt abbricht. Die Abnahme 2 (10.11.) fiel durch: In einer Todeslage (der
+Todesrolle) lag der Schluessel nach dem Nachtrag hinter der Leiche, zu sehen war genau ein Bildpunkt; der zustaendige
+Riegel war rot und nach dem Nachtrag nicht gefahren worden, und bei den Spiel-Riegeln, die das Bild der Einstellung
+pruefen (zwei Pruefdateien mit mehreren Laeufen), stand die Bildschranke seit dem Nachtrag auf 0 x 0 statt 10 x 9,
+sodass sie den einen Bildpunkt durchliessen. Die Abnahme 3 (10.11.) ist bestanden.
+
+Der Stand ist in v0.8.30 (Zweig r41/integration 799594460, gemergt mit 762ebfda4). "Alter Stand" heisst im Folgenden:
+der Stand vor diesen Befunden (master vom 9.11., 0b86e36c6).
+
+Der gelobte Kampf ist ausserhalb dieser Punkte unveraendert: Stellt man mit zwei Messhaken die alte Wurfrichtung und den
+harten Haltungswechsel wieder her, sind 9 von 9 Laeufen der Abnahme 3 ueber die volle Laenge in den Zustandsprotokollen
+bitgleich mit dem Stand der Abnahme 1 (Vergleich der Protokolle, kein Bildvergleich).
+
+**Ein Biss beim Hochklettern schiebt die Figur nicht mehr in die Wand.** Bisher lief das Klettern nach dem Treffer
+weiter und trug die Figur laengs der Trefferrichtung hinter die Ostwand - so endete auch Ihre Sitzung. Jetzt beendet der
+Treffer das Klettern: Nach einem Biss am Kletteransatz bleibt die Figur im Wasser und wird dort von der Trefferreaktion
+geschoben; hinaufgetragen wird sie nicht mehr. Ins Wasser stossen kann der Alligator sie also weiterhin, auch oben von
+der Kante des Decks. Beleg: Im Original ersetzt der Treffer die laufende Spieler-Routine - so in RE2 beim Treffer des
+Alligators (@0x801015b4) und ebenso in RE1.5 (Stelle unter "Technisch"). Keine neue Zahl. Gemessen: In der Abnahme 1
+steht die Figur in fuenf von fuenf Laeufen mit Biss waehrend des Kletterns 60 Bilder (2 s) nach dem Biss im Wasser. Im
+Riegel liegen 0 von 612 eingespeisten Kletter-Lagen in oder hinter der Wand (alter Stand, im Riegel ueber einen
+Pruefhaken nachgestellt: 248 von 612); in der Abnahme 3 acht von acht Laeufen ohne ein Bild in fester Wand (der alte
+Stand in drei Laeufen der Abnahme 1: je 1149 Bilder in fester Wand, das sind etwa 38 s, Ende an der Stelle Ihrer
+Sitzung). Klettern ohne Biss ist in den Protokollen bitgleich mit dem alten Stand.
+
+**Der Alligator nimmt den Kanister in der ersten Passage auf, in der er im Aufnahmefenster liegt - auch mitten im Biss
+und im Spurt.** Bisher galt das Aufnahmefenster nur, solange der Alligator die Figur schwimmend verfolgte oder
+aufgetaucht lauerte; im Biss und im Spurt galt es nicht. In 15 Laeufen des alten Stands blieben 13 von 27 Passagen am
+Kanister ohne Aufnahme: 4 im Spurt, 1 im Biss, 7 seitlich vorbei, 1 der Laenge nach ausserhalb. Jetzt gilt das Fenster
+auch im Biss, wie in RE2: Dessen Fenster-Abfrage (@0x80100ab8-b1c) fragt den laufenden Biss nicht ab. Der Biss laeuft
+dabei wie in RE2 zu Ende und trifft; gesperrt ist nur ein neuer Biss. Im Spurt ist das Fenster eine Port-Wahl nach Ihrem
+Wort "sobald die Position erreicht ist, wo der Behaelter liegt": RE2 kennt im Spurt weder Fenster noch Abbruch. Das
+Fenster selbst ist unveraendert. Sein fernes Ende (voraus, vom Alligator aus gesehen) stammt aus RE2. Dass es im Spiel
+der Laenge nach schon am Alligator selbst beginnt (0 bis etwa 6000 voraus statt nur das letzte Stueck davor), ist seit
+der Spur G2 Port-Wahl nach Ihrem Punkt 8 vom 1.11. (Liste Ihrer Punkte in G2_gatorfix.md Z. 13: "erst wenn er beim
+Kanister ankommt, aufnehmen"); zur Breite siehe "Zu entscheiden". Die uebrigen RE2-Stellen stehen unter "Technisch".
+Gemessen (Abnahme 1, noch mit der alten Kanisterlage): In jeder der neun Lagen faellt die Aufnahme in die erste Passage,
+in der der Kanister im Fenster liegt; die Passagen bis zur Aufnahme sinken in vier Vergleichslaeufen von 3/3/2/3 auf
+1/2/1/1. In einem Elza-Lauf nahm er den Kanister im alten Stand in 3600 Bildern (2 Minuten) nicht auf, in der Abnahme 1
+bei Bild 627 (etwa 21 s), im Endstand mit der neuen Kanisterlage bei Bild 608 (etwa 20 s; Abnahmen 2 und 3). Aus dem
+Riegel zum Biss (Zahlen aus dem Bericht des Fixers, keine Messung einer Abnahme): 9 von 9 Fenstertreffern im Biss, der
+Biss laeuft in 44 von 44 Bildern gleich wie ohne Kanister.
+
+**Bricht der Kanister einen Spurt ab, wechselt der Alligator weich ins Schwimmen (Port-Wahl).** Trifft das Fenster im
+Spurt, bricht der Alligator den Spurt ab und schwimmt weiter. Die Form dieses Abbruchs ist Port-Wahl, weil RE2 den
+Abbruch nicht kennt: ohne die Vierteldrehung, die in RE2 nur zum normalen Spurt-Ende gehoert, und mit der Ueberblendung
+32, mit der RE2 ins Schwimmen eintritt (@0x80100c38). Der Kopf senkt sich dabei ueber mehrere Bilder, das Maul schliesst
+allmaehlich. Einen harten Wechsel in einem Bild (vom Anlauf mit Kopf hoch und Maul offen ins flache Schwimmen) gab es
+nur in den Zwischenstaenden dieser Runde vor dem Nachtrag, also in den Staenden der Abnahmen 0 und 1; im alten Stand gab
+es ihn nicht, weil es dort keinen Abbruch gab. Gemessen (Abnahme 3): Bildunterschied im ersten Bild nach dem Abbruch
+2,09, danach 1,92 bis 2,16 (kein Sprung); mit dem Messhaken, der den Zwischenstand herstellt, 3,28 (Sprung). Der
+Bewegungsablauf ist in den Protokollen derselbe; eine Zeile weicht ab (die Lage des Kanisters im Maul beim Anhaengen).
+Das normale Spurt-Ende ist unveraendert.
+
+**Der Kanister landet auf der Mittellinie des Westkanals.** Port-Wahl nach Ihrem Wort "lege den Behaelter zentraler in
+die Mitte". Die Kanalmitte ist an der Kollision des Raums gemessen (der Kanal ist zwischen Westwand und Plattform 7200
+breit; Stellen unter "Technisch"). Der Wurf ist dieselbe RE2-Bahn (RE2 ROOM7020, @0x088E-08A2), nur anders gedreht:
+Wurfrichtung 3342 statt 3072 (Nordwurf) und 888 statt 1024 (Suedwurf). Der Kanister liegt, wo er aufschlaegt. Beim
+Nordwurf sind das bei Leon 216, bei Elza 244 oestlich der Kanalmitte; im Stand der Abnahme 1 lag er 1570 westlich davon.
+Beim Suedwurf - nur mit Messhaken gemessen - sind es 45 bzw. 73 oestlich der Mitte. Gemessen (Abnahme 3): 20 von 20
+Standardlaeufen (10 Wege je Leon und Elza) mit Aufnahme, in keinem schwimmt der Alligator vorher ausserhalb des Fensters
+am Kanister vorbei. Wurf-Szene, Text und Fall sind dieselben Ablaeufe (Marvin "Hey, Leon, try with this!" bzw. John
+"Hey, Elza, try with this!"). Eine Nebenwirkung im Bild: Marvin bzw. John wirft den Kanister oben vom Gelaender. Steht
+Ihre Figur (Leon bzw. Elza) dabei vorn im Bild der tiefen Wurf-Einstellung - so in den Wurf-Aufnahmen der Abnahme 2 -,
+zieht der fallende Kanister kurz hinter ihrem Kopf und ihrer Schulter durch; mit der alten Richtung fiel er laut Abnahme
+2 rechts neben der Figur (siehe "Noch offen"). Den Rest an der Westwand finden Sie unter "Zu entscheiden".
+
+**Der Schluessel liegt bei der Leiche und laesst sich nach "Leiter hoch und wieder runter" aufnehmen.** Zu Ihrem Punkt 3
+ergab die Messung: Die Aufnahme selbst ging nicht verloren (200 von 200 Tastendrucken am Schluessel wirkten); dass er
+sich nicht aufnehmen liess, liess sich so nicht nachstellen. Nachgestellt ist mit der Leiche Ihrer Sitzung: Der
+Schluessel lag im Bild einer Kamera, die nur im Westkanal laeuft; an seinem Platz lief eine andere Kamera. Jetzt liegt
+er immer im Gebiet der Kamera, die ihn zeigt (Kamera-Umschaltung des Originals, RE1.5 @0x80014230; Einzelstellen unter
+"Technisch"), und nach Ihrem Wort am der Leiche naechsten Punkt, den die Figur erreichen kann (Port-Wahl; keine neue
+Zahl). Gemessen (Abnahme 3, echter Kampf bis zum Tod, Leon und Elza): Schluessel 762 von der Leiche (Stand der Abnahme
+1: 3528 bis 4910; davor 1214), als Schluesselring erkennbar (Ring etwa 9 x 11 Bildpunkte); nach Leiter hoch und runter
+genau einmal aufgenommen (Leon Bild 151, Elza Bild 156, Abfrage "Will you take the Water Key?"), nach einem zweiten
+Leitergang liegt kein Schluessel mehr da. Ueber 208 gerechnete Todeslagen: mittlerer Abstand zur Leiche 834, groesster
+2560 (Stand der Abnahme 1: 3808 und 6036); 207 Lagen naeher, 1 gleich, keine weiter. Der Preis ist die Bildgroesse: Die
+Angabe "mindestens 10 Bildpunkte gross" aus dem Abschnitt zur Spur P gilt nicht mehr. Die Bildgroesse entscheidet die
+Lage nicht mehr, sie wird nur noch gemessen - siehe "Zu entscheiden".
+
+**Der Schluessel liegt nicht mehr hinter der Leiche (Durchfall der Abnahme 2).** In der Todesrolle war nach dem Nachtrag
+nur ein Bildpunkt zu sehen. Ursache: Die Verdeckung wurde am Suchpunkt geprueft, der Schluessel wird beim Ablegen aber
+noch angehoben und gekippt und lag danach hinter der Leiche. Jetzt wird die Endlage geprueft, mit derselben Kugel wie
+bisher (halbe Breite 800 des RE1.5-Alligator-Kastens @0x80118b98; keine neue Zahl). Gemessen (Abnahme 3): Todesrolle
+jetzt 789 von der Leiche, 8 Bildpunkte (Kasten 8 x 5) in jedem Bild der Einstellung, zu Fuss erreichbar und aufnehmbar,
+Leon und Elza - dieser Lauf begann mit dem Testhaken der Todesrolle, nicht mit einem natuerlichen Kampf, und ohne
+Leitergang. Die Bildschranke der Riegel verlangt wieder mindestens 2 x 2 Bildpunkte an der Stelle des Schluessels und in
+der Kamera der Einstellung; ein einzelner Bildpunkt faellt damit durch.
+
+Riegel: Alligator-Gruppe "100% tests passed, 0 tests failed out of 154" (Abnahme 3, 10.11., 5019,56 s unter Fremdlast,
+kein Riegel nachgefahren). Die volle Suite lief erst mit der Abnahme von v0.8.30 (siehe Pruefstand); dort war ein
+Alligator-Riegel (Tragen) an die neue Zielhilfe anzupassen (8c54123dd).
+
+### STAGE2: Alligator stirbt nur durch den Kanister (ROOM2090/2091)
+
+Ihr Wunsch vom 17.11.: "ueberpruefe noch mal das der alligator wirklich nur mit den gascontainer getoetet werden kann.
+Auf keinen Fall ander."
+
+**Bis jetzt stimmte das nicht ganz**, obwohl es die Notizen zu v0.8.29 schon versprachen. Der Alligator hat 25 240
+Lebenspunkte. Fielen sie unter null, starb er auch ohne Kanister, mit seiner alten Todesrolle aus dem ersten Bosskampf.
+Mit normaler Munition ist das kaum zu schaffen, mit Messer oder Rohr (beide ohne Mengengrenze) aber moeglich. Dabei kam
+ein zweiter Fehler heraus: Hatte er nur noch wenige Lebenspunkte, loeste ein Treffer auf den Kanister im Maul die alte
+Todesrolle aus statt der Explosion.
+
+**Jetzt:** Seine Lebenspunkte fallen nie unter null. Jeder Treffer bleibt ein gewoehnlicher Treffer mit Blut, Bruellen
+und Grossreaktion. Sterben kann er nur, wenn er den Kanister im Maul hat und Sie ihn treffen; dann explodiert er wie
+bisher. RE2 selbst kennt den Tod durch Beschuss; den hatte der Port nie eingebaut. Der Punkt "300 Lebenspunkte, stirbt
+an jeder Waffe" aus dem Gore-Plan vom 16.11. ist damit gestrichen.
+
+Neuer Riegel unit_r41_gator_nur_kanister: 1353 Treffer mit zusammen 42 374 Schadenspunkten (Raketen, Granaten,
+Einzeltreffer) ohne Tod, danach der Kanister bei 1 Lebenspunkt: Explosion und Leiche. Auf dem Stand davor faellt er in
+beiden Teilen durch. Alle 167 Alligator- und Kanister-Riegel gruen; unabhaengige Abnahme bestanden. Nur Testhaken
+(Umgebungsvariablen, nicht im Spiel erreichbar) koennen ihn noch anders sterben lassen.
+
+### Story nach dem 80%-Stand: Texte und Stimmen (ROOM1151, 30E1, 30C1, 6030)
+
+Ihre Regel vom 2.11.: "Ja, aber die Raeume, auch wenn sie vom Port erfunden wurden bleiben so! Lediglich Story soll der
+80% Version entsprechend angepasst werden. Bei der 40% Version vorsicht! Es gibt auch Platzhalter Charaktere, da nicht
+alles fertig war! Sage mir auch, wenn gaenzlich Raeume fehlen und sowas!" und "wenn ein Story snipped nachweislich und
+gravierend von der urspruenglich geplanten Story abweicht, dann muss ich den halt noch mal aufnehmen. Aber ich musste in
+STAGE1 und STAGE2 sowieso mir viele zusaetzliche Dialoge und Cutscenes ausdenken um Sinn in der Story zu geben. Das
+werde ich auch noch fuer STAGE3-6 machen muessen." (Memory reai-v2-story-nach-80-raeume-bleiben.md Z. 11 und 20). Die
+Spur hat das 80%-Material katalogisiert (101 Story-Eintraege, 34 Texte, 64 Orte), den Port gegen die 40%-Disc gezaehlt
+und den Abgleich mit zwei Entscheidungspunkten vorgelegt; umgesetzt ist, was Sie entschieden haben. Keine Raumdatei
+wurde veraendert: Die Szenen sind Umleitungen beim Start des Original-Unterprogramms, die Texte Port-Texte. Zwei
+unabhaengige Abnahmen am 7.11.: Abnahme 1 nicht bestanden (ein Blocker: im Zug 6030 war die Reihenfolge "Fuehrerstand
+zuerst" erreichbar, dann nannte Leon Sherry, bevor er sie getroffen hatte - ein Rueckschritt gegen Runde 36);
+Nachbesserung 1, Abnahme 2 bestanden (ST80_abnahme_2.md: "In ROOM6030 laufen beide Reihenfolgen widerspruchsfrei.").
+
+**Elza, ROOM1151 (Chefbuero, Irons tot auf der Couch).** Drueckt man am Hebetisch daneben ("Nothing happened.") und klickt
+danach Irons an, zeigt er wieder "He has already passed..." - vorher stand im selben Raumbesuch "Nothing happened.", weil
+zwei Port-Texte dieselbe Nummer trugen. Leon in 1150 unveraendert.
+
+**Elza, ROOM30E1 (John hinter dem Gitterzaun) - Ihr Entscheid A1.** Johns Zeilen 2 und 3 lauten jetzt "John: This is
+bad... those monsters / have us surrounded!" und "John: ...Damn it, there's no place / around here to hide..." - statt
+"one of those monsters bit me as I tried to get away!" und "...And there doesn't seem to be a place with any medical
+supplies here...". Der Biss war eine Fehllesung des Mods: Die 40%-Disc sagt in derselben, dort gerufenen Zeile
+"umstellt", und im 80%-Material entkommt John knapp. John gilt damit nicht mehr als gebissen. Die uebrigen Zeilen
+bleiben.
+
+**Elza, ROOM30C1 (Marvin am Tresen) - Ihre kurze Fassung.** Genau fuenf Zeilen: "Elza: Who are you?" / "Officer: Marvin
+Branagh, RPD." / "Elza: Are there any others still alive?" / "Marvin: A few. There are other / survivors out there." /
+"Elza: Then I hope they make it out." Dann Marvins Abgang wie bisher (Winken, Weglaufen, Kamera 3). Die alten Zeilen mit
+"Leon Kennedy", Ada und "me and John and Sherry" laufen nicht mehr; Ada wird in Elzas ganzem Lauf nicht mehr genannt, was
+50B1 "It's a woman. She's dead." stuetzt - Ihr Grundsatz aus Runde 36: "Die duerfen sich niemals begegnet sein".
+
+**Leon, ROOM6030, hinterer Wagen - Ihr freigegebener Vorschlag.** 13 Zeilen in dieser Folge: Leon "Hang on, Marvin. /
+We're getting out of here." - Leon "Who are you two?" - John "Name's John. This is Sherry. / We made it down here with /
+a girl named Elza." - Sherry "She's out there fighting / the monsters!" (ein Original-Satz des Raums) - John "She's
+trying to keep the outside / clear so we can escape." - John "She said she'd catch up with us." (Ihre Variante (a) zu
+Elzas Verbleib) - Leon "Why aren't you out there?" - John "She told me to stay with the kid... / and look after your
+friend here." - Leon "Where's Annette?" - John "The woman in the lab coat? / Up front, trying to start the train." -
+Sherry "A lab coat...? Is it Mom?!" (Sherry dreht sich dabei zu Leon) - John "Easy, kid. Stay with me." - Leon "I'll
+find out. Stay here." Nicht mehr zu hoeren: "Where's Elza?", "Is anyone else with you?", "I see. Thanks.".
+
+**Leon, ROOM6030, Fuehrerstand - und die Reihenfolge (Nachbesserung 1).** Gehen Sie zuerst in den Wagen und dann nach
+vorn: "Annette: Is everyone aboard?" - "Leon: Everyone we could find. There's a / little girl in the back... Sherry." -
+"Annette: Sherry...? My daughter is / on this train? ...Thank God." - "Leon: Can you start this thing?" - danach wie
+bisher "Certainly." und die uebrigen Zeilen. Gehen Sie zuerst nach vorn, sagt Leon dort nur "Everyone we could find. Can
+you start this thing?"; erst nach dem Gespraech im Wagen folgt beim naechsten Besuch vorne der Nachtrag "There's a
+little girl in the back... Sherry." mit Annettes Antwort. Jede Zeile laeuft hoechstens einmal, beide Wege setzen
+dieselben Flags. Kein "Where's that biker girl?" und kein "I've never met her." mehr (laut Protokoll vom 2.11. ergibt
+"biker girl" in 6030 fuer Sie keinen Sinn - Protokollfassung, kein Wortlaut). Annette erfaehrt hier von Sherry - nach
+Ihrem Entscheid das Motiv fuer ihren Gang nach hinten beim Krachen; die Szene dazu steht unter "Annette". Zwei neue
+Leon-Zeilen des Nachtrags haben noch keine Aufnahme - siehe "Fuer Sie zum Aufnehmen".
+
+**Zug 6030 nach dem Tor (Integration mit der Annette-Szene, 8.11.).** Gemessen wurden durchgehende Laeufe mit Leon:
+erster Besuch im Zug, Torschalter in 6000, zweiter Besuch. Ein Weg war widerspruechlich: zuerst der Fuehrerstand, dann
+der Wagen, dann ohne Rueckkehr nach vorn zum Tor - beim naechsten Betreten rief Annette beim Zugstart "...Sherry is back
+there!", obwohl ihr niemand von Sherry erzaehlt hatte, und Leons Nachtrag kam nie. Behoben: Auf diesem Weg kommt beim
+ersten Betreten des Fuehrerstands nach dem Tor zuerst Leons Nachtrag ("There's a little girl in the back... Sherry." mit
+Annettes Antwort), der Zugstart folgt beim naechsten Betreten. Die Wege "Wagen zuerst" und "vorne, Wagen, zurueck nach
+vorn, dann Tor" waren schon widerspruchsfrei und bleiben, wie sie sind. Jede Zeile laeuft hoechstens einmal (28 Zeilen).
+Zwei weitere Wege kann kein Beleg entscheiden, weil das Original-Skript nach dem Tor beide Zug-Szenen ueberspringt - siehe
+"Zu entscheiden". Elza: In 6031 gibt es keine Frau im Kittel; ihr Zug ist davon nicht beruehrt.
+
+**Bewusst unveraendert (Ihr Entscheid A2):** In 50B0 loest bei Leon Ada den Reaktor aus; Elzas 5011 "beast broke the power
+core" bleibt als Elzas Vermutung (Capcom-Text). Die Kenntnisnahme-Punkte B1 bis B16 des Abgleichs sind nicht angefasst
+(siehe "Zu entscheiden"). Capcoms sechs englische Saetze des 80%-Stands (Dach 1170, Hinterhof 3061) stehen im Port und in
+Ihren Aufnahmen schon im selben Wortlaut; nur "Look," fehlt in 3061 Zeile 5.
+
+**Stimmen.** Jede Zeile sucht ihre Datei unter synchro/STAGEn/roomXXXX/mainNN.wav, ohne Umleitung; welche Dateien neu
+gesprochen sind, steht mit Dateinamen unter "Fuer Sie zum Aufnehmen". Laut Protokoll vom 3.11. haben Sie die
+Aufnahmeliste eingesprochen ("alle voiceovers ergaenzt bis auf Anette 5090"); Annettes drei Zeilen fuer 5090 sind aus
+der RE2-Claire-Disc geschnitten. Die Abnahmen haben mit Ihren neuen Aufnahmen aus dem Hauptbaum gemessen: Stimmen
+synchron. Die Dateien sind seit dem 9.11. im Repo (siehe "Fuer Sie zum Aufnehmen").
+
+**Lieferung ausserhalb des Spiels.** Die drei Dossiers (Katalog, Zensus, Abgleich) sind die Grundlage fuer Ihre eigenen
+STAGE3-6-Dialoge, mit der Liste der Luecken je Raum. Fehlende Orte nach Ihren Antworten: Raum mit rotem Rad = 2060, Tunnel
+mit oranger Tuer und Rippen-Tunnel = 2000/2001, Bahnsteig-Halle etwa 5080. Der Moosgang der 40%-Disc ist im Mod derselbe
+Gang wie ROOM20A0, mit Ziegeln uebermalt; nach Ihrem Entscheid vom 3.11. wird kein neuer Moosgang eingebaut. Das Finale
+(Disc-Raeume 605-607) fehlt in jedem Material: Der Port hat nach dem G5-Kampf kein Ende, die Disc auch nicht - Ihr Wort:
+"Sobald er Tot ist, muss ich mir eben ein Ende ausdenken." (Memory reai-v2-story-ende-annette-g5.md Z. 11); Ihre
+Vormerkung fuer v0.8.31 steht in der Einleitung.
+
+### STAGE3 und 5: Birkin-Kette bis zum Game Over - Angriffsmuster aus dem RE2-G4, Spieler-Klemme nach RE2, G5-Biss und Fressen (Spur R)
+
+Ihr Nachtrag 38 vom 31.10.: "Die von dir gebaute neue Birkin Version auf dem Bahnhof sieht nicht ansatzweise so aus, wie
+auf den Bildern, nach dem du diese bauen solltest. Also wie bei: vlcsnap-2026-10-31-00h28m45s774.png und
+vlcsnap-2026-10-31-00h29m02s830.png. Es ist eine eigene Form und braucht dann auch eigene Bewegungsanimationen."
+(AUFTRAG.md Z. 1161-1163). Die Spur hat daraufhin die Riesenform auf dem RE2-G4 aufgebaut (dickere, knotige Glieder,
+engerer Stand, breiterer Rumpf; Bewegungen, Reichweiten und Trefferbilder aus dem G4). Diesen G4-Ansatz haben Sie noch
+am 31.10. als Form verworfen: "nein, ist es nicht. Es gibt nur diese 2 Screenshots des modells" (Memory
+reai-v2-bahnsteig-nur-zwei-screenshots.md Z. 11). Die eigene Form (Abschnitte "Riesenform" unten) hat die G4-Fassung der
+Spur R im Spiel ersetzt: In 5080/5081 und 5090/5091 steht die eigene Riesenform (seit Ihrem Entscheid vom 7.11. abends;
+in v0.8.30 in der Fassung K5g3). Was von Spur R unabhaengig vom Modell im Spiel bleibt, steht hier. Drei Abnahmen: die
+erste (drei Blocker, u. a. Form mit der Pistole gar nicht erreichbar oder unverwundbar) und die dritte (Liste N1 bis N6
+mit einem Blocker; die Datei traegt kein Urteil) sind als Dateien belegt, die Behebung der sechs Punkte nur im Dossier
+der Spur; das Protokoll fuehrt "Runde 3 bestanden". Nicht belegt: Eine vierte Abnahme-Datei gibt es nicht.
+
+**Die Birkin-Kette laeuft mit der Startwaffe bis zum Ende, Leon und Elza bildgleich.** 5090/5091 im Dauerfeuer:
+Mutation, Riesenform, Griff, Rueckstoss-Szene, G5, G5-Tod; 3070 (Leon getippt), 3071 (Elza), 5080/5081: Birkin stirbt
+(Stand der Spur R; seit der Riesenform-Stufe 3 beginnt 5090 gleich mit der Riesenform, und in 5080 flieht sie am Ende -
+siehe "Riesenform"). Vorher hing die Kette an einem Treffer im ersten Bild nach dem Modelltausch (Form dauerhaft
+unverwundbar), die Form kam mit dem Mutationsrest statt eigener Lebenspunkte an, und in 3071 blieb Birkin nach dem
+Auftritt hinter dem Tor ohne Sichtlinie - alles behoben. Die Lebenspunkte je Form stehen unter "Handgranate" (Riesenform
+1000).
+
+**Riesenform (Angriffsmuster aus dem G4, mit der neuen Form unveraendert):** Gehen in der Bodenphase, Hieb und
+Doppelschlag (beide Hiebe treffen, wie im Original), Biss, Rennen mit Ueberrennen (toetet nie), Griff (Spieler mit dem
+Gesicht zur Form), Zucken, Auftritt, Weichen bei Naehe - Bildzahlen, Reichweiten und Trefferzonen wie im G4; Schaden wie
+die bisherigen Birkin-Rollen (Hieb und Biss 10, Rennen 5), der Griff 35 nach der auf 100 Port-HP halbierten RE2-Regel.
+Nach einem Treffer im Rennen dreht die Form ab statt Leon durch den Wagen zu tragen; sie schiebt sich selbst aus dem
+Spieler (RE2-Reihenfolge), Posen springen nicht mehr.
+
+**Spieler-Klemme nach RE2 Retail im Birkin-Kampf.** Die RE1.5-Beta-Klemme versagte bei grossen Versaetzen - Leon landete
+in der Suedwest-Nische von 5090 fest in der Wand, ohne Eingabe, ohne Treffer: Softlock. Im Birkin-Kampf gilt jetzt die
+Klemme von RE2 Retail, mit drei als Port-Wahl markierten Regeln fuer die engere Bahn von 5090 gegen RE2s Zugwagen.
+Gemessen: 0 Bildenden in fester Zelle in allen Laeufen, die vorher 388 bis 3085 hatten; tausende Griffe und Lagen je
+Raum: 0 fest, 0 eingekeilt. Ausserhalb des Birkin-Kampfs bleibt die Klemme Byte fuer Byte die alte.
+
+**G5: Biss, Fressen, Game Over.** Der Biss toetet nie (wie der Original-Aufruf), gefressen wird nur ein Spieler mit 0 HP
+(die Logik war verkehrt: der Port frass den gesunden Spieler), die Biss-Sperre laeuft ab (vorher nach dem ersten Biss kein
+zweiter), das Kauen laeuft mit Gewicht und Ton: "YOU DIED" ueber dem laufenden Fressen, dann der Titel. Arme: einer toetet
+mit Gnade wie das Original, die anderen nie. G5-Schaden auf Port-HP: Biss 20, Arme 7, 7, 5, 7. Der G5 blutet bei Treffern
+und spielt die Biss-Blutserie; Blut faellt wie im Original nur, wenn der Spieler nach Westen blickt.
+
+**Kamera.** Die Rueckseiten der Birkin-Formen werden wie in RE2 verworfen: Steht Kamera 13 im Koerper des G5, sieht man
+den Spieler, Arme und Bisse statt der Innenseite des Koerpers. Nach der Rueckstoss-Szene schaltet das Bild aus der Lage
+des Spielers auf den passenden Schnitt (vorher stand Leon oestlich ohne Zone und ohne Bild), und die Sperre nach dem
+Morph dauert 271 statt 1126 Bilder.
+
+### STAGE5: Birkin Sichel-Form im Hangar und Labor (Spur SF)
+
+Ihr Auftrag (ueber den Orchestrator, Dossier SF_sichel.md Z. 11-13): "Der Hangar Birkin der ist als Grundlage da, den
+musst du nur noch mal gegen die 80% Version im Video genaustens analysieren und im Zweifel korrigieren." Die zweibeinige
+Form aus dem Hangar (50A0) und dem Labor (50E0) ist kein Original-Modell: Sie existiert auf der ausgelieferten Disc
+nicht und ist eine Nachbildung nach dem 80%-Video (Complete Disc Video 4). Nach mehreren Modellfassungen
+(Nachbesserungen 1 und 2, Neuaufbau, Referenz 2 - von Ihnen am 3.11. gelobt -, V3 und V4) und Ihrem Entscheid vom 6.11.
+(zwei weitere Versuche) wurde der Koerper auf die gelobte Referenz 2 zurueckgesetzt; Schwanz und Kopf werden nach Ihren
+beschrifteten Beschreibungen neu gebaut ("Ich will EXAKT diese Umsetzung und auch EXAKT seine Farben.", SF_sichel.md Z.
+1205-1207). Den Kopf gestalten Sie seit dem 7.11. selbst mit; Ihre Hinweise zu Farbe, Auge, Haaren, Maul, der Form ueber
+dem Maul, dem Schwanz und dem Ruecken flossen Runde fuer Runde ein. Neue Grundlage seit dem 8.11. ist der Kopf des
+Original-RE1.5-Birkin - Ihr Wort (Protokoll vom 8.11.): "Orientiere dich an den Original Birkin in Resident Evil 1.5.
+... Also nutze das Original Resident Evil 1.5 Birkin Modell als Ausgangsgrundlage, damit solltest du nicht viel falsch
+machen." und "Immerhin ist dieses Modell ja eine Mutation/Weiterentwicklung des anderen Models! Dementsprechend muss ein
+Teil des Vormodells erkenntbar drin sein."
+
+Die Runden am 8.11. folgten Ihren Saetzen einzeln: grauer Kopf nach dem Original-Birkin mit geschlossenem Mund und
+grauem Haar, Schwanz dick und grau ohne Huckel, Rot nur auf der Brust und am Oberarm, kein roter Fleck auf der rechten
+Schulter, und zuletzt die linke Hand, Ihr Wort (woertlich): "Beim 2 Beiner Birkin - fast perfekt, aber die linke Hand von
+ihn stimmt immer noch nicht. Erstens sieht man auf den Original Bildern ganz klar, das alle Krallen bis auf die Daumen
+Kralle rot sind, die Daumen Kralle ist grau. und 2. Sieht man auf den Original Bildern das Offenbar JEDE der Krallen im
+Original laenger ist...." Daraus wurde V7: Daumenkralle grau, drei Fingerkrallen rot, alle auf die Laenge der Fotos.
+
+**Zwischenstand vom 8.11. - V7, Ihr Wort (woertlich):** "Naja, gehen wir so erst mal ins rennnen." V7 war das Modell der
+Fassung vom 9.11. (die Szene im Spiel Bild fuer Bild wie das Video, das Sie gesehen haben; unabhaengige Abnahme der Spur
+bestanden). In v0.8.30 ist V7 durch V8 ersetzt.
+
+**V8 nach Ihrer Skizze vom 8.11.** Ihr Wort (woertlich): "Das Gesicht vom 2 beinigen Birkin ist jetzt schon gut, aber
+mit Schwanz und sowas bin ich immer noch 0 zufrieden.... Ich verstehe das auch nicht. Es ist doch eigentlich KLAR
+erkennbar. Siehe Darstellung.png und Darstellung_Vorlage.png. Man sieht ganz klar den Koerper Aufbau...." und "und wenn
+du schon dabei bist, am ueberarbeiten, man sieht ebenfalls beim vorlage Bild, das die Rechte Seite auch mehr rottoene
+hat, also quasi mehr adern an verschiedenen Stellen, am Arm und Koerper, nicht nur grau. Uebernehme die die Textur
+Sachen die du dafuer brauchst vom originalen Birkin von Resident Evil 1.5". Gemessene Ursache: Die Schwanzwurzel sass zu
+tief und seitlich, und die L-Biegung steckte fest in allen Bewegungsbildern. Danach Ihre Punkte vom 9. und 10.11.
+(woertlich): "Die Unterseite des grossen Schwanzes ist fleischig wenn man in die Vorlagen Bilder schaut. Nur die
+oberseite ist durchweg grau." - "es gibt immer noch eine Luecke zwischen Ruecken und Kopf beim 2 beiner Birkin. Das ist
+in der Vorlage so wie es aussieht nicht so." - "Die Vorlage hat eine breite Hand mit breiten Unterarmt. Dadurch wirkt es
+natuerlich. Bei uns ist die Hand ganz klein und zierlich und wirkt dadurch verkuemmert." - "Bei dem 2 beinigen Birkin in
+der Vorschau sieht es so aus als waere die linke Hand verkehrt herum gedreht, Kann das sein=?" (Dossier SF_sichel.md und
+Memory reai-v2-runde41-laufend.md). Am 14.11. zur Handfarbe "wie in der Vorlage." und zum Vorschauvideo mit der neuen
+Szene: "Nee, nicht die Hautfarbe aendern. Fast Perfekt." Zum Schwanz: "weder mit dem rot der Schwanzfarbe noch mit dem
+etwas zu steifen grossen Schwanz zufrieden" (Commit c94847a31), zur Farbprobe "Ich wuerde auch sagen b, wobei das
+Original Video der Schwanz noch etwas heller ist und nicht ganz so rot" (804c62601), zum Endstand der Szene "Im prinzip
+fast perfekt, aber - ich weiss nicht wo du die Streifen bei den Schwanz Abschnitten von Birkin her nimmst, die gehoeren
+da nicht hin. Schau doch auf das Original Video, der Schwanz wirkt auch ueber die Abschnitte hinweg einheitlich."
+(6af3e3324) und am 15.11., als die Oberseite dabei ihre Farbe verlor: "NUR DIE UNTERSEITE WAR KOMISCH MIT DEN
+ABSCHNITTEN!!!!" (83350f359).
+
+**Endstand - V8 mit Schwanz 8g, angenommen am 15.11.** Ihr Wort zu Ordner 32 (woertlich): "Naja, so ist es in Ordnung,
+so kann ich damit leben." (Protokoll vom 15.11.). Im Hangar (50A0/50A1) und im Labor (50E0/50F1) steht jetzt V8:
+* Nacken: Die Luecke zwischen Ruecken und Kopf ist zu, eine glatte Linie fuehrt vom roten Huegel zum Kopf, kein Kragen;
+  das Gesicht ist das von V7.
+* Hand und Unterarm breit und richtig herum (Handruecken zur Kamera, Daumen innen, Krallen nach unten); die Hand grau
+  aus dem Originalmodell wie der Unterarm, die Krallen rot; der linke Unterarm haengt tiefer, wie in der Vorlage.
+* Schwanz: breit aus dem oberen Ruecken, flach (von vorn schmal), mit Gliedern und Stachelspitze; er biegt sich und
+  folgt der Bahn aus dem Video. Oberseite, Ruecken und Flanken dunkel wie im Stand 8c (mit den weichen Ringen), nur die
+  Unterseite einheitlich fleischfarben ohne Abschnitte; der Schwanz haengt in jedem Bild am Koerper.
+* Die rechte Seite traegt Adern aus der Original-Textur. Alle Farben stammen aus Original-EM30-Texeln, keine Eichung am
+  Video.
+
+**Wie geprueft:** Runde 7 des Modells haben zwei unabhaengige Pruefer bestanden ("BESTANDEN (kein ROT), mit
+GELB-Punkten" und "Bestanden (keine Bewertung der dritten Klasse)"). Die Nacken-Stelle lief als eigene Spur; deren
+dritter Kandidat war der beste Stand und wurde vom Orchestrator genommen, obwohl ihn beide Pruefer formal nicht bestehen
+liessen. Die Handfarbe 7e liess der Pruefer knapp nicht bestehen (Hand zu hell, Rot nur an den Krallen); ein roterer
+Fingerteil (7e2) wurde verworfen, weil die Hand dann deutlich roeter als die Vorlage waere. Schwanz 8g: die Oberseite in
+0 von 384 Flaechen anders als 8c, die Unterseite ganz im Bauchfeld, keine Naht. Die Szene mit dem Schwanz brauchte fuenf
+Runden, die letzte bestanden ("Videos ehrlich: JA. Vorlegbar: JA", Gruppe "100% tests passed, 0 tests failed out of
+30"). Die Sichtpruefungen der Szene liefen mit Leon in 50A0; Elza ist ueber bitgleiche Protokolle belegt.
+
+### STAGE5: Hangar 50A0/50A1 - Spider-Man-Szene ueberarbeitet, Kampf, Birkin bleibt liegen, Sherry-Ruf
+
+Ihre Befunde zur Szene vom 13. und 14.11. (woertlich): "was da raus kommt beim Spiderman waehrend Birkin ihn hoch haelt
+oder auf den Boden wirft sieht aus wie gruenes Gas oder sowas. Aber EIGENTLICH ist es gruenes Blut. So wie jedes andere
+Blut im Spiel auch." - "Im Original Video gleitet der Spiderman mit gehobenen Armen zum Angriff Linear auf Birkin zu,
+und wird dann von Birkin abgefangen und hochgehoben. Bei uns springt er in den Vorschau Videos mehr oder weniger direkt
+hoch auf Birkins Arm." - "Ausserdem struggled der Spiderman im Original Video viel mehr oben auf den Arm bis er
+letztendlich tot ist. Bei uns bleibt er aktuell mehr oder weniger statisch." - "Im Original dreht sich Birkin da mehr
+ein, und schmeisst ihn so eindrehend hin. Bei uns schmeisst er ihn einfach lustlos gerade auf den Boden." - "Was viel
+eher auffaellt ist, das birkin dann zum schluss im video kurzzeitig einmal nach vorne gleitet statt zu gehen." (Commits
+f6deac461, 64702bdfd, 16924ee0d, 2cdcf1c8f, b84fcc83c).
+
+**Die Szene (Leon 50A0, Elza 50A1).** Das Blut ist jetzt das Original-Spinnenblut (deckende dunkelgruene Spritzer wie
+bei den Spinnen in 2070), kein Gas. Der Spider-Man gleitet schraeg durch die Luft auf Birkin zu, wird an der Brust
+abgefangen, zurueckgedrueckt und weich hochgehoben; er zappelt oben deutlich, wird schwaecher und haengt dann tot; sein
+Schatten liegt am Boden. Birkin holt aus, dreht sich in den Wurf ein und steht danach seitlich, der Spider-Man schwingt
+seitlich heraus; am Ende geht Birkin mit sichtbaren Schritten (Original-Gang) statt zu gleiten. Der Schwanz bewegt sich
+mit (Rolle, Bahn je Videobild, Biegsamkeit). Die Szene gibt es nur im 80%-Video: Die Bewegungen sind Original-Clips von
+Birkin und Spider-Man, Reihenfolge, Drehung und Takt sind am Video gemessen (Port-Szene). Sechs Pruefrunden, die sechste
+bestanden ("springt nach meiner Messung und Sichtung nichts mehr sofort als Fehler ins Auge"); der Wurf bestand eine
+eigene Pruefung.
+
+**Nach der Szene: Kampf (Ihre Wahl vom 15.11.).** Am 15.11. sagten Sie (woertlich): "diese Szene wo der Birkin den
+Spiderman schmeisst, ist 100%ig kein Boss Kampf. Sie wirkt nicht so. Ich wuerde eher sagen, das Leon oder Elza Birkin
+auf dem Monitor sehen mit der Szene, wo auch immer er danach hin laeuft." Die Szene als Monitorbild im Monitor Room
+5030/5031 wurde gebaut, bestand beide Pruefungen und wurde von Ihnen abgelehnt: "wenn die Birkin Szene ueber den Monitor
+anders aussieht, und ja offenbar anders aussehen muss - das sieht man ja bei Sherrys Szene - dann ist das im Original
+doch nicht ueber Monitor gezeigt. Denn man sieht ja EINDEUTIG, das das normale Spiel grafik ist" (Memory
+reai-v2-hangar-szene-monitorbild.md). Auch die Variante, in der Birkin nach der Szene verschwindet, haben Sie verworfen
+("man steht mitten im Raum ... unlogisch", ebd.); Ihre Wahl: "Im Hangar, dann Kampf". Das Monitorbild ist vollstaendig
+zurueckgebaut (Monitor Room und Elzas Sherry-Szene wie vorher). Neu: Das Spiel merkt sich im Spielstand, dass die Szene
+gesehen ist - nach dem Laden oder beim Wiederbetreten kommt sie nicht noch einmal, Birkin greift sofort an. Der
+Hangar-Birkin hat dieselbe verdoppelte Lebenspunkte-Skala wie die anderen Birkin-Formen (600 statt 300).
+
+**Nach dem Kampf: Birkin bleibt liegen (Ihr Wort vom 16.11.).** "Das er aufsteht und wegrennt ist daemlich. Besser er
+bleibt einfach liegen..." (Commit 98391e747). Besiegt bricht Birkin zusammen und bleibt liegen (Original-Todesablauf;
+gemessen 40 Sekunden ohne jede Bewegung). Das Spiel merkt sich den Sieg im Spielstand: Wer hinausgeht oder spaeter einen
+Spielstand laedt, findet den Hangar leer. Hat man Birkin zuerst im Kraftraum besiegt, zeigt der Hangar weder Szene noch
+Birkin; der Kraftraum-Birkin bleibt in jedem Fall. Der Pruefer hat einen echten Kampf ohne Messhaken gefuehrt (12
+Raketen): "Bestanden." Einen Gegenstand oder eine geoeffnete Tuer bringt der Kampf in v0.8.30 nicht; fuer v0.8.31 haben
+Sie entschieden, dass die Szene "von aussen" laeuft und es im Gang keinen Kampf mehr gibt (siehe "Vorschau").
+
+**Sherry-Ruf (Ihr Wunsch vom 16.11.).** "Ah, und ich moechte das der 4 Beiner nicht mehr "Sherry" ruft, denn das ist
+wirklich weird! Allerdings kann 2 Beiner Birkin mit Schwanz waehrend er Richtung Kamera laeuft nachdem er den Spiderman
+weg gehauen hat noch mal Sherry rufen." (Commit 84b36f0d2). In der Hangar-Szene ruft Birkin jetzt einmal "Sherry", wenn
+er nach dem Wurf auf die Kamera zugeht - Birkins eigener Ton von der Disc (derselbe wie in ROOM3070); sonst ist die
+Szene Bild fuer Bild unveraendert. Die Riesenform in 5080/5090 ruft nicht mehr; das Gebruell bleibt. Der Ruf der
+Riesenform war eine fruehere Port-Wahl (Birkins Ruf an stummen Stellen des RE2-G4) und ist zurueckgenommen. Pruefer:
+"Bestanden." (Gruppe "100% tests passed, 0 tests failed out of 54"). Auf der PSX gibt es den Ruf nicht.
+
+### STAGE5/6: Annette im hinteren Zugwagen - Szene wie in RE2 (Spur AN)
+
+Ihr Auftrag vom 2.11. (woertlich): "Sobald man den Boss aussen besiegt hat, den Generator eingeschaltet und das Tor
+geoeffnet, ist Anette nicht mehr im Fahrer Raum. Sie ist hinten im Zugabteil. In Resident Evil 2 gibt es eine Szene wo
+Anette zu ihren Mutierten William spricht, und er sie dann umbringt. Sowas wuerde ich dann im hinteren Zugabteil auch
+machen inklusive dem Dialog. Betreff der G5 Birkin Form am Ende - das ist eine Entscheidung die ich gerne so drin lassen
+moechte - also erst die Tierform von Birkin noch mal die wir erstellt haben und dann die G5 Form." (Dossier AN_annette.md
+Z. 6-10).
+Fuenf Abnahmen; die fuenfte (7.11.) ist bestanden, seit dem 8.11. auf master. Die Abnahme 4 fiel wegen eines Blockers
+durch: Die lebende Annette im Fuehrerstand und in 6000 bekam den RE2-Leichenkasten, Leon kam ihr bis 802 statt 900 nahe -
+ein Rueckschritt gegen das Original in RE1.5-Raeumen. Nachbesserung 6 gibt ihr in 6000/6030 und in 5090 vor der Szene
+wieder ihren RE1.5-Kasten (Leon haelt bei 901 bis 903); das kleinere RE2-Mass gilt nur ab dem Szenenstart und fuer die
+Leiche (sie haelt Leon bei etwa 800 auf). Abnahme 5 hat das im Fenster nachgemessen.
+
+**Ablauf (von den Abnahmen 1 bis 5 bestaetigt):** Nach Bahnsteig-Boss, Generator und Tor ist Annette nicht mehr im
+Fuehrerstand, sondern im hinteren Wagen 5090. Beim Zugstart in 6030 eine kurze Szene mit vier Zeilen ("There! The
+train's moving." / "What was that? ...Sherry is back there!" / "I'll check it out." / "No. She's my daughter. Stay here
+and keep an eye on the controls."). In 5090 die Szene nach dem RE2-Vorbild von der Claire-Disc (dort gefunden und im
+Emulator aufgenommen; auf der Leon-Disc gibt es sie nicht): Annette spricht die Riesenform an ("W-William! You're
+alive!" und "William." aus der Claire-Disc geschnitten, Schrei ohne Untertitel), die Form setzt an, trifft sie, sie
+sackt im Trefferbild zusammen, Blut in RE2-Bildgroesse, dann liegt die Leiche flach mit dem RE2-Liegeclip; Leon ruft
+"Annette!" (Ihre Aufnahme). Danach beginnt der Kampf. Beim Wiedereintritt liegt die Leiche weiter da; Schuesse gehen
+durch sie und durch lebende Begleiter hindurch auf den Gegner (RE2-Regel, Ihr Entscheid). Bei Elza gibt es wie
+vorgesehen keine Szene.
+
+**Zusammen mit dem Rest des Endkampfs (Integration, 8.11.):** Ein Lauf mit Leon in 5090, mit den Speicher-Bits von Tor
+und Zugstart wie im echten Weg, zeigt die ganze Folge - Szene, Annettes Tod, Kampfstart, Riesenform mit vier Raketen,
+Rueckstoss, Sturz aus dem Zug, G5-Auftritt - ohne Absturz; er ist als Riegel festgehalten.
+
+### STAGE6: Sherry (6031) und Annette (6030) beim Sprechen nicht mehr auseinandergezogen (Integration)
+
+Ihre Marke vom 8.11. (befund.log, ROOM6031 Bild 164, Bild befund_6031_F164_marke1.bmp): Sherry war beim Sprechen
+auseinandergezogen - der Kopf oben versetzt, die Oberarme seitlich abgeloest. In Ihrer Story-Liste stand dasselbe fuer
+Annette in 6030.
+Ursache: Der Port hielt das Skelett einer Szenenfigur je Platz in der Figurenliste. Setzt eine Szene im selben Raum eine
+andere Figur auf denselben Platz, behielt die neue Figur die Knochenlagen der alten. In 6031 steht dort erst ein
+Erwachsener aus der Wagen-Szene, dann Sherry; in 6030 erst John, dann Annette. Das Original bindet bei jedem Erscheinen
+die Knochenlagen des neuen Modells (@0x800224a8 "sw v0,0x84(s2)"). Die Szenen-Bewegungen bringen keine eigenen
+Knochenlagen mit (ROOM6031.RDT @0x13C8 und ROOM6030.RDT @0x17BC, Kopf o_arm 0).
+Behoben: Wechselt die Figur auf einem Platz, bindet der Port ihre eigenen Knochenlagen neu (Commit 2c1c0eb1a). Zwei neue
+Riegel halten beide Szenen fest; der alte Stand macht beide rot. Die unabhaengige Pruefung hat die Ursache mit eigenem
+Leser nachgerechnet und beide Szenen im Fenster gesehen: Sherry und Annette bleiben zusammen (Bericht ebfc5f0cf).
+
+### STAGE5: Labor-Birkin (50E0/50F1) trifft wieder (Integration)
+
+Gefunden bei der Abnahme der Sichel-Form und dann am echten Weg nachgemessen (Leon in 50E0, Elza in 50F1, Start an der
+Tuer aus 50D0): Nach seinem ersten Hieb blieb der Birkin knapp vor dem Spieler in einer Hiebschleife stehen. Einen
+stehenden Spieler traf er nie wieder. Das kam mit der Aenderung "Angriffsbox" nach v0.8.29.
+Ursache: Der Port pruefte die Reichweite am aktuellen Bewegungsbild. Das Original prueft an der zuletzt gezeichneten Lage
+der Klaue, die zwei Bilder zurueckliegt: FUN_8001a5e0 liest die gezeichnete Weltmatrix (@0x8001a5ec bis @0x8001a638),
+und das Bild wird vor dem Hochzaehlen gesetzt (@0x8001f35c, @0x8001f61c). Die Klaue erreicht den Spieler genau zwei
+Bilder vor dem Trefferfenster; der Port pruefte erst, als sie schon zurueckschwang.
+Behoben (Commit 145316fc9): Die Box prueft jetzt die gezeichnete Klaue. Am echten Weg trifft der Biss wieder, ein
+stehender Spieler stirbt, und der Birkin ist mit genug Treffern zu besiegen; danach geht es durch die Tuer weiter. Der
+Code ist in STAGE3 und STAGE5 gleich, die Aenderung gilt fuer alle Birkin dieses Typs (3070/3071, 5080, 50E0/50F1 und
+den Hangar 50A0). Ein neuer Riegel prueft den echten Weg fuer Leon und Elza; der alte Stand macht ihn rot. Die
+unabhaengige Pruefung ist bestanden.
+Folge fuer Sie: Der Laborkampf ist wieder deutlich schwerer. Mit der Pistole hat Elza den Birkin in 50F1 in einem
+Testlauf von 9000 Bildern nicht besiegt.
+
+### STAGE3 und STAGE5: Birkins Klauenhieb und Rueckzug, Aufrichten ohne zweites Buecken
+
+Ihre Befunde (woertlich): am 15.11. "Beim regulaeren Birkin fight, in Stage3 faellt mir auf, macht er manchmal
+wiederholt so eine rueckzieh/nach Schlag Animation, die er im Originalen nicht macht. Das macht auch unsere veraenderte
+Version mit Schwanz." und am 16.11.: "Aktuell ist es ja eher so - er schlaegt, zieht die Hand danach zurueck, steht
+wieder normal da, und dann kommt dieses Rueckstoss Animation im Anschluss. Das ist auf jeden Fall falsch." (Auftraege
+der Spur). Ihr Entscheid zur Schwanz-Gestalt vom 16.11.: "Das mit dem zurueckziehen wuerde nur sinn machen, wenn er
+gegen eine Wand schlaegt und deshalb die Hand dann zurueck faehrt. Das muesste dann auch synchron dazu passieren. Bei
+allen anderen Faellen macht das eigentlich keinen Sinn." (Commit 8ce27af6b). Am 17.11. auf die Frage, ob der Rueckzug
+auch zaehlen soll, wenn die Klaue schon beim Ausholen die Wand beruehrt: "Nein" (Commit 83eab1010), und zum Ergebnis:
+"Sieht fuer mich in Ordnung aus. Das merkt kein Mensch." (Protokoll vom 17.11.). Zum Aufrichten am 16.11.: "Auch jetzt
+in der Vorschau wieder, wenn Birkin im Power Room runter springt und sich aufrichtet wiederholt sich noch mal die
+runterbeugen Animation wie bei anderen Birkin in Stage3 auch... Warum? Das soll so NATUERLICH nicht sein...." (Auftrag
+der Spur).
+
+**Normaler Kampf mit dem Capcom-Modell (Leon 3070, Elza 3071).** Nach einem fertigen Hieb kommt kein Rueckstoss mehr,
+Birkin greift direkt wieder an. Ursache war ein Port-Fehler: Der Port startete nach jedem Hieb die Erholung, das
+Original nur, wenn die Klauenspitze im Schlagfenster in einer Wandzelle steckt (@0x80117834). Gemessen vorher 8 von 12
+Hieben mit Rueckstoss, nachher 0 von 17; steht der Spieler direkt an einem Block, kommt der Rueckzug wie im Original (18
+von 19). Ohne Rueckzug ist die Pause bis zum naechsten Angriff kuerzer (0x1e statt 0x3c Bilder) - im Vergleichsvideo von
+3070 stirbt Leon im neuen Stand etwa 4 s frueher. Waehrend des Hiebs dreht Birkin nicht mehr zum Spieler nach.
+
+**Schwanz-Gestalt (Kraftraum Leon 50E0 / Elza 50F1, Hangar 50A0/50A1).** Birkin zieht die Klaue nur zurueck, wenn die
+gezeichnete Klaue wirklich gegen eine Wand oder unter die Oberkante eines Gelaenders schlaegt, und zwar im naechsten
+Bild - auch wenn die Stelle ausserhalb des Bildes oder hinter Leon bzw. Elza liegt; ohne Wandkontakt nie. Das Ausholen
+zaehlt nicht (Ihr "Nein"): Der Schlag beginnt bei Bild 32; steht Birkin dicht an einer Wand, faehrt die Klaue beim
+Ausholen bis zu 11 Bilder in die Wand, der Rueckzug kommt erst mit dem Schlag. Trifft ein Schuss genau im Bild nach dem
+Wandschlag, kommt der Rueckzug trotzdem (der Treffer zaehlt); ein toedlicher Schuss geht vor - Birkin faellt, die Klaue
+gleitet aus der Wand. Die Treffer der Kralle gegen den Spieler rechnet der Port am Capcom-Gerippe des EM30, nicht am bis
+590 Einheiten laengeren Arm des Ersatzmodells; die Regel aus "Labor-Birkin trifft wieder" (die Box prueft die
+gezeichnete Lage, zwei Bilder zurueck) gilt weiter. Zwei fruehere Ansaetze sind verworfen: die Wandsonde des
+Capcom-Modells allein (im Kraftraum und im Hangar zog Birkin damit auch zurueck, wenn man die Klaue an keiner Wand sah)
+und eine Rechnung nach Sichtbarkeit im Bild (in 51 Bildern steckte die Klaue sichtbar in der Wand, ohne dass er
+zurueckzog).
+
+**Clip-Enden und Aufrichten (Leon 50E0, Elza 50F1, 3070, 3071, Aufzug 3080).** Am Ende einer Bewegung sprang der Port
+auf das erste Bild der beendeten Bewegung zurueck und hielt es 7 bis 9 Bilder - beim Landen und Aufrichten ist das die
+Hocke, im Kraftraum zweimal hintereinander. Das Original laesst das letzte Bild stehen und blendet weich in die naechste
+Bewegung (@0x8001f35c, @0x8001f618). So ist es jetzt beim Auftritt und Aufrichten und - mit dem Klauenhieb - auch am
+Ende von Hieb, Biss und Wurf; vor dem ersten Ansprung steht Birkin nicht mehr gut eine Viertelsekunde still
+(@0x80117644). Original und deshalb geblieben: In Elzas 3071 senkt Birkin den Kopf zweimal (der erste Durchgang stark
+gedaempft), im Aufzug 3080 stoesst die Hand zweimal zu. Die Hangar-Szene, 5080 und 5090 sind bitgleich zum vorherigen
+Stand.
+
+**Wie geprueft:** Den normalen Kampf bestaetigte schon die erste Pruefung ("Regulaerer Kampf 3070/3071: behoben und
+belegt."). Fuer die Schwanz-Gestalt fielen zwei Ansaetze durch; der dritte (Weltkontakt der gezeichneten Klaue) mass in
+16 Laeufen 92 Wandkontakte und 91 Rueckzuege (der fehlende: Tod im selben Bild), 0 Rueckzuege ohne Kontakt; dazu 744
+Clip-Wechsel in der Schwanz-Gestalt und 26 im normalen Kampf, je ohne Ruecksprung und ohne Stillstand (der Pruefer
+bemaengelte nur ein fehlerhaftes Vergleichsvideo). Ausholen: "Ihr Entscheid ist richtig umgesetzt." - 160 Ausholbilder
+mit der Klaue in der Wand, keines mit Rueckzug (Gruppe "100% tests passed, 0 tests failed out of 53"). Aufrichten: zwei
+Runden, die zweite "bestanden, kein roter Punkt" (Gruppe "100% tests passed, 0 tests failed out of 44"). In Ordner 45
+fehlt das Vergleichsvideo zum Clip-Ende im normalen Kampf (es war fehlerhaft); die Videos 2 bis 4 zeigen noch den Stand
+mit Rueckzug beim Ausholen, Video 5 den Endstand.
+
+### STAGE5: Riesenform - Bewegung, Angriffe und Rueckstoss-Kamera (Spur Form, Stufe 3)
+
+Die eigene Riesenform (Form J; Kopf nach Ihrem Entscheid E22 krokodil- statt nilpferdartig, woertlich "Es wirkt eher
+krokodilmaessig. Hier sieht es eher hippomaessig aus....") ist seit dem 8.11. auf master. Der Ablauf folgt Ihren
+Entscheiden E5/E6 (Port-Wahl): In 5080/5081 kaempft sie auf dem Bahnsteig, und wenn ihre Lebenspunkte verbraucht sind,
+flieht sie mit Abdrehen, Galopp und Sprung - Treffer halten die Flucht nicht auf. In 5090/5091 steht sie ab dem
+Betreten im Wagen (eine Mensch-Birkin und eine Mutation gibt es im Zug nicht mehr), wird zurueckgedraengt und aus dem Zug
+geschossen; danach folgt der G5-Auftritt. Sie hat in beiden Raeumen 1000 Lebenspunkte (Waffenwerte siehe
+"Waffenschaden"). START waehrend ihres Griffs oeffnet den Statusschirm nicht mehr, nichts friert ein (Leon und Elza
+gemessen).
+
+Vier Abnahmen; die vierte (7.11.) ist bestanden. Abnahme 2 fand die Rueckstoss-Szene nach dem Treffer mit der falschen
+Kamera (Leons Ruecken fuellt das Bild, die Form dahinter, bis 100 % fast schwarz). Abnahme 3 fand die Szene behoben, aber
+eine zusaetzliche Kamerawache machte den Kampf davor schlechter (38 statt 7 fast schwarze Bilder, Flattern zwischen zwei
+Kameras); Runde 2 hat diese Wache auf den vorherigen Stand zurueckgesetzt. Abnahme 4: In 13 Szenenlaeufen mit Leon und
+Elza ist die Form in jedem Taumelbild zu sehen und taumelt erkennbar; kein Szenenbild ist ueber 60 % fast schwarz
+(hoechstens 54,6 %), der Spieler bedeckt hoechstens 7,6 % des Bildes, 2 bis 3 Schnitte je Lauf ohne Flattern; die
+Kampfkamera vor der Szene ist Bild fuer Bild die vorherige. Zwei Kamerastellen zeigt Ihnen die Abnahme zur Wahl - siehe
+"Zu entscheiden".
+
+**Nach dem Zusammenfuehren (8.11.).** Mit 1000 Lebenspunkten und der neuen Textur wurde alles noch einmal gemessen; die
+Riegel pruefen den Kampf jetzt mit dem Raketenwerfer und echten Spieler-Lebenspunkten. Drei Dinge koennen Sie merken:
+Erstens gehen in der Suedwestecke von 5090 Schuesse auf die Form ins Leere, wenn eine Wandzelle des Raums zwischen Ihnen
+und der Form liegt - das ist die Sichtlinien-Pruefung des Originals (in der EXE und in der Raumdatei nachgelesen), kein
+Port-Fehler; wer von den Angriffen der Form dorthin geschoben wird, muss sich neu stellen. Zweitens sind einige
+Kampfbilder dunkler als mit dem alten Kopf K4 - allein wegen der dunkleren Textur, bei gleichem Schnitt und gleicher
+Lage (beim Auftritt 602 bis 628 statt 559 bis 596 Promille fast schwarze Bildpunkte). Drittens stuerzte mit der neuen
+Textur der Software-Renderer ab, den nur die Testlaeufe benutzen; Ursache war ein Zahlenueberlauf im Zeichner der
+Grafikbibliothek bei der 4096 Zeilen hohen Textur. Behoben: Nur im Software-Pfad werden die betroffenen Dreiecke
+geteilt; Ihr beschleunigter Renderer zeichnet Bild fuer Bild wie vorher (0 Pixel Abweichung).
+
+### STAGE5: Riesenform - Texturen nach Ihrer Vorlage (Spur Form, Farbe)
+
+Die Kopfform K5c haben Sie am 6.11. gewaehlt ("eher c"); die Farben und die Struktur lehnten Sie ab ("wie ein Pokemon",
+FARBE.md Z. 33). Drei Versuche am 7.11.: Versuch 1 und 2 (Malen aus den Screenshots) bestanden die Pruefer nicht; zu
+Versuch 3 (Uebertragung der Original-RE2-G4-Haut) sagten Sie: "Das koennte schon passen mit der riesen Form ... schwarz
+rot ... verbrannt ... Gesicht ... in flammenfarben" und nach Runde 3: "Naja, passt von den farben her nicht ganz der
+vierbeiner, zu viel rot im Vergleich zur Vorlage, aber immerhin bedrohlich...." (Protokoll vom 7.11., 16:50). Ihr Auftrag
+dazu (17:10, woertlich): "bist du noch an der Verbesserung von k5c ran, und entfernst die uebertriebenen roten
+feuerrillen wieder, und stellst es wieder nach vorlage um?" und (17:30): "die Kopfform und alles von den neuen Feuerding
+ist gut, aber die Texturen sind eben uebertrieben und falsch und entsprechen nicht der Vorlage. Ich will schon die
+Vorlage darstellen!"
+
+**Zwischenstand vom 7.11. abends (E30, woertlich):** "Nein, wie lassen es so wie es jetzt ist. Sieht doch gut aus.
+Auch die Leuchtstelle sieht gut aus." Damit kam Versuch 3 Runde 5 (K5c) ins Spiel: die uebertragene Original-RE2-G4-Haut
+ohne Feuerrillen, der Rotanteil je Koerperregion nach Ihren beiden Vorlagebildern, die Leuchtstelle am Becken. Der Kopf
+K4 ist als Variante gesichert.
+
+**Feinschliff vom 8.11. (K5d, nicht eingebaut).** Ihr Auftrag (woertlich): "Bei der 4er Form fehlen jetzt wieder ein paar
+Details, die vorher da waren, da wuerde ich noch mal ran. Im Vergleichsfoto ist die Schwanzspitze auch so fleisch
+roetlich, bei uns ist es einheitlich grau/blau. An den Verbindungsstuecken der Beine und Arme ist es im Vergleichsfoto so
+weisslich, bei uns einfach grau/blau. Die Lippe hat teilweise komische roetliche Stellen statt durchweg grau/blau zu sein.
+Auf der Vorderseite sieht man eine rote fleischige Stelle auf dem huckel, die fehlt. Und ich wuerde es insgesamt einw
+wenig heller machen, das es zumindest die Helligkeit der Vergleichsbilder hat." und "Und die krallen bei der
+Vorderseite stimmen nicht. Weder optisch - da sind es jetzt irgendwie zu viele - noch farblich - wo kommt denn da jetzt
+ploetzlich dieses rot her im Vergleich zum Original Bild?" Die Variante K5d setzte die Details als Flecken an die hellen
+Stellen der Videobilder. Ihr Urteil (woertlich): "Das einzige was wahrlich furchtbar ist.... Die Flecken an der Textur
+sehen aus wie drauf gemalt.... nicht so sauber wie bei den rest des spieles" / "Alles wirkt unruhig und so frei
+verteilt." / "Wie als haette das Modell Hautprobleme. Alles bunt." und "Nein, unterkiefer soll aussen natuerlich auch nicht
+leuchten sondern dunkel/grau sein." Die Ursache lag bei mir: K5c gab neun Koerpergruppen je einen eigenen, am Video
+ausgerichteten Farbton, und K5d legte am Video geeichte Flecken darueber. Beides widerspricht der Regel, Texturen nicht
+an Videobildern zu eichen.
+
+**Stand 9.11. - K5e "ruhige Haut" (E32).** Ihr Wort zur Vorlage (woertlich): "Warum hast du es jetzt beim 4 beiner um
+den Fleck herum hinten am hintern schwarz gemacht? also um den roten Fleck herum? ansonsten passt, baue das ruhig
+einfach mal alles so ein." In der Fassung vom 9.11. stand K5e im Spiel (in v0.8.30 ersetzt durch K5g3, siehe den
+naechsten Abschnitt):
+* Eine Hautfarbe fuer den ganzen Koerper statt der Gruppenfarben. Die Schattierung ist die Original-Haut des RE2-G4, kein
+  Bildpunkt ist neu gemalt. Farbfremde Flecken je 10.000 Bildpunkte: 0 (K5c 16, K5d 17, Original-G4 3,5).
+* Ihre Wuensche als ganze Flaechen: hellere Gelenke, fleischroetliche Schwanzspitze, fleischrote Stelle vorn auf dem
+  Buckel, Lippe und Unterkiefer grau ohne Leuchten, Krallen vorn eingezogen (in Ihrem Bild 2 rechts eine, links zwei) und
+  in Handfarbe, insgesamt heller (Ihr Bild 2 so hell wie die Vorlage).
+* Der schwarze Ring um die rote Stelle am Becken ist weg: Der Rand bekam die neue Hautfarbe, der rote Kern blieb.
+  Nachgemessen war der Ring vorher 7,9 L* dunkler als die Haut ringsum, jetzt ist er 4,5 L* heller.
+* Die Textur hat 10 statt 16 Farbzeilen (im Port 512 x 2560).
+Einbau-Pruefung (Zahlen und Bild) bestanden; Form-Riegel 11/11, Birkin-Riegel 4/4, Unit 1014/1014; die Form laedt in 24
+Spiellaeufen ohne Fehlzeile, auch mit dem Software-Renderer.
+
+### STAGE5: Riesenform - Hals, rechte Hand, Vorderzaehne, Haut K5g3 (Spur Form, 9. bis 16.11.)
+
+Ausgangspunkt war Ihr Urteil zu K5e im Spiel am 9.11. (woertlich): "Und der 4 Beiner sieht von der Textur her jetzt
+absolut furchtbar aus. Komplett augeblasst ... Null wie die restlichen Gegner im Spiel. Es wird doch irgendwie moeglich
+sein den passendere Texturen zu geben wo er nicht ganz so plastisch blass aussieht...." und "Und auf der Unterseite am
+Hals hat er komische rote streifen, die sollten da auch nicht sein." (Memory reai-v2-runde41-laufend.md, 9.11.). Danach
+haben Sie das Modell selbst Stueck fuer Stueck beschrieben ("So, jetzt habe ich alle Abschnitt die Sichtbar sind
+vollstaendig beschrieben") und zur rechten Vorderhand gesagt: "vorne rechts hat er wahrscheinlich auch 4 krallen. Man
+sieht es nur nicht wegen der Schrift." (ebd.).
+
+Der Weg in Kuerze: Eine Variante "nicht blass" (K5f) bestand die Pruefung nicht und kam nicht ins Spiel. Eine
+Farbeichung ueber Leon, Annette und den Raumhintergrund zeigte, dass die Videofarben des Wesens zu 75 bis 80 %
+Streulicht sind und als Zielfarben nicht taugen; belastbar blieb nur "Haut wenig bunt, Ton waermer". Ihre Zerlegung
+wurde auf das Modell uebertragen (Grundlage v2, unabhaengig geprueft). Daraus wurden vier Teile:
+* **Hals und Nacken - Ihr Ja vom 14.11.: "ja, lass so".** Die grossen roten Platten und Streifen an der Hals-Unterseite
+  und die graugruenen Keile von der Schulter in den Kopf sind weg (neue Halsgeometrie B4). Dafuer bleiben kleine Reste
+  (siehe "Noch offen"). Vier Bauer-Runden; die letzte liess der Pruefer nicht bestehen, empfahl aber, Sie am fairen
+  Vergleichsblatt (Ordner 25) entscheiden zu lassen.
+* **Rechte Vorderhand - Ihre Wahl vom 15.11.: "Variante1".** Nach neun Runden standen zwei Varianten zur Wahl (Ordner
+  31); Ihr Hinweis vom 14.11. dazu: "ok. Orientiere dich einfach mehr an die linke Hand....". Variante 1: Pfote mit vier
+  Spitzen wie links (eine Kralle an der Spitze, drei auf der langen Seite), Schulter und Kopf wie vorher; die Pfote
+  kommt schraeg unter dem Kiefer hervor, oben in Ihrer roten Armzone ist kein Arm, rechts neben dem Kiefer steht etwas
+  ueber. Beim Einbau behoben: In einer Bewegung steckte die Hand im Boden, in einer anderen der Kiefer tief in der Hand.
+  Die rechten Krallen haben wieder die lange Form von K5c statt der Stummel.
+* **Vorderzaehne - Ihre Frage vom 16.11.: "Warum hat denn der vierbeiner Birkin ganz vorne im Maul keine Zaehne?", Wahl
+  "Oben und unten".** 16 neue Zaehne: oben je 5 links und rechts und einer in der Mitte, unten je 2 und einer in der
+  Mitte; die Zahnreihen laufen ohne Luecke um die Schnauzenspitze wie beim RE2-G4, mit Form, Farbe und Licht der
+  Seitenzaehne. Die unteren sind bewusst kurz (ohne Sie entschieden): Laengere stachen von schraeg unten in mehr als der
+  Haelfte der geschlossenen Posen durch die Oberlippe. Ihr Wort: "Sieht doch in Ordnung aus mit den Zaehnen" (Memory
+  reai-v2-birkin-zwei-versuche-sonst-rueckbau.md).
+* **Haut K5g3.** Auf der neuen Geometrie neu texturiert aus der Original-Haut des RE2-G4, ohne Eichung am Video: dunkel
+  rotbraun mit sichtbarer Hautstruktur statt grau-violett und flach, die braune Musterung mit Maserung, kein rotes
+  Fleisch mehr an der Hals-Unterseite, keine fast weissen Punkte, zwei kleine helle Augenpunkte statt grosser gemalter
+  Augen. Drei Runden; die dritte haben beide Pruefer bestanden ("kein roter Punkt" bzw. "bestanden"). Diese Haut kam
+  zusammen mit Ihrer Hand-Wahl ins Spiel - ein eigenes Ja von Ihnen zur Farbe gibt es nicht. Zu den Vergleichsbildern
+  mit den beiden 80%-Screenshots (Ordner 46) sagten Sie am 17.11.: "Naja, die Form sieht doch gut aus. Bei der Farbe
+  weiss ich es nicht." - siehe "Zu entscheiden".
+
+**Wie geprueft:** Den Einbau der Hand haben zwei Pruefer bestanden ("BESTANDEN (kein roter Punkt)" und "BESTANDEN - kein
+roter Punkt"; Geometrie-Riegel 14 von 15 und Textur-Riegel 48 von 48 gruen, die Gegenproben rot; ctest 1408 von 1411,
+die drei Roten haengen nicht am Einbau). Die Vorderzaehne bestanden in Runde 2 beide Pruefer ("Bestanden, kein roter
+Punkt."); in keiner der 771 Posen sticht ein neuer Zahn durch Kinn oder Schnauze. Das Modell hat jetzt 15249 statt 6386
+Dreiecke; damit keines verworfen wird, hat der PC-Port seine Dreiecksliste von 8192 auf 16384 Plaetze vergroessert
+(Puffer des Ports, kein Spielwert) - im Kampf in 5090 hoechstens 7770 Dreiecke je Bild, keines verworfen. Die Textur hat
+jetzt 15 Farbzeilen (im Port 512 x 3840). Im Vergleich mit den beiden 80%-Screenshots deckt sich der Umriss in Bild 1 zu
+77 % bei fast gleicher Groesse, in Bild 2 nur zu 56 % (dort Feuer und ein dunkler Schattenriss im Video); fuer einen
+Farbvergleich taugen die Tafeln nicht.
+
+### ROOM5090/5091: G5-Auftritt im Zug nach RE2
+
+Ihr Auftrag vom 2.11.: "Die finale Mutationsstelle beim Endboss trifft es noch nicht ganz. nach dem raus schiessen von
+Birkin aus dem Zug, sollst du die letzte Stufe GENAUSO machen wie bei Resident Evil 2. Bei Resident Evil 2 ist es so -
+man hat eine Grossaufnahme an seitlich der offenen Stelle des Zuges, und dann kommen da zunaechst die Tentakel vom
+finalen Birkin G5, und der zieht ihn dann rein. Schau es dir an!" (Dossier G5_auftritt.md Z. 3-6). Vorlage ist die
+RE2-Szene im Zug (Leon-Disc), gegen eine echte RE2-Aufnahme und 26 RE2-Spielstaende nachgemessen; fuenf Abnahmen, die
+vierte (Szene) und die fuenfte (Nachbesserungen 5 und 6: Tunnellampen, Beben, Truemmer, Vibration - nach dem Merge
+nachgeholt) bestanden. Leon und Elza verhalten sich gleich; einziger Unterschied: In 5090 steht die Frau im Kittel, in
+5091 nicht.
+
+**Ablauf.** Sobald die Riesenform aus dem Zug geschossen ist, bebt das Bild kurz (mit Beben-Ton aus RE2, von der Decke
+fallen Brocken und Staub wie in RE2, mit Gamepad vibriert es nach dem RE2-Muster), und das Bild schneidet hart in die
+RE2-Grossaufnahme: schraeg von unten auf die offene Wagentuer am Westende, mit RE2-Hintergrund und RE2-Masken. Durch das
+Tuerloch ziehen RE2-Tunnellampen mit Lichtband, bis die Masse das Loch zudeckt. Ihre Figur laeuft wie in RE2 von hinten
+zur offenen Tuer; kurz darauf beginnt die Armierung, und bis zum Ende der Szene koennen Sie nichts eingeben. Die Figur
+steht kurz und laeuft nach rechts aus dem Bild; der erste Tentakel greift von links ueber ihren Kopf; drei eingerollte
+Arme liegen an Rahmen, Decke und Boden deckungsgleich mit RE2; Birkin-Laute wie RE2. Die Masse schiebt sich unten links
+hinter dem Tuerpfosten herein und waechst nach rechts, mit schraeger Stachelreihe, baeumt sich auf und wirft oranges
+Bodenlicht wie RE2. Die Arme ziehen ein und stossen als lange Speere vor. Zweite RE2-Einstellung, niedrig nach Westen
+auf das Wagenende; die Figur geht rueckwaerts aus dem Bild, der G5 kommt aus der Tiefe heran, bis nur Masse und Maul das
+Bild fuellen. Dritte Einstellung: RE1.5-Kamera 12 statt der RE2-Schnitte 5 und 6 (Port-Wahl, es werden keine
+Hintergruende erfunden); die Figur geht rueckwaerts auf die Kamera zu, die Arme wachsen in derselben Zeitfolge wie in
+RE2 nach. Dann Sperre aus, kein Bildsprung in den Kampf. Gesamt gut 20 Sekunden. Die bisherige Pause vor dem Typwechsel
+entfaellt - RE2 hat zwischen dem Verschwinden der Masse und der Armierung keine.
+
+**Kampf.** Fair und gewinnbar: Wer wie in RE2 direkt vor dem G5 stehen bleibt, wird gebissen - in RE2 wie im Port.
+Pistolentest (12 s zurueckgehen, dann Pistole): G5 tot, Spieler-HP 45, bei Leon und Elza. Stehend mit gehaltenem Feuer:
+Nach etwa 7,5 s schiebt ein Arm die Figur ein Stueck nach Osten ohne Schaden, erster Treffer nach 25,7 s, G5 tot nach
+29,6 s bei HP 18. Die Musik bleibt RE1.5 (RE2 senkt dort seine Musik; Port-Wahl). Die Lebenspunkte des G5 (600) und die
+Raketen- und Granatenzahlen stehen unter "Waffenschaden".
+
+**Zwei Reste aus der Abnahme 5 (nicht blockierend):** Wer mit dem Raketenwerfer aus der Rueckstoss-Szene heraus feuert,
+sieht eine noch fliegende Rakete samt Rauchspur in die Grossaufnahme kreuzen und im Tuerloch explodieren (etwa 0,4 s nach
+dem Schnitt); RE2 zeigt dort nichts - siehe "Zu entscheiden". Die schwarzen Szenenbalken blenden erst mit dem Schnitt ein
+(RE2 hat sie schon davor); im Beben ist dadurch zwei Bilder lang oben ein schmaler schwarzer Rand sichtbar.
+
+## Zu entscheiden
+
+So ist es jetzt gebaut; ein Wort von Ihnen genuegt, um etwas zu aendern.
+
+Fragen an Sie (je mit dem, was Ihre Wahl fuer das Spiel aendert):
+* **Drehscheiben im Panel 2030 (Spur PF, Hinweis H2 der Abnahme 2).** Der Querbalken der Drehscheiben steht jetzt bei
+  26,6 Grad statt etwa 30 Grad - eine Folge der scharfen, filterlosen Pixel (Wortlaut der Abnahme: "Flach mit hartem
+  dunklem Rand, Teilstriche als ganze Texel, Querbalken 1:2 (26,6 Grad) statt rund 30 Grad ... ob sie dem Nutzer gefaellt,
+  kann nur er beurteilen."). Lassen Sie es so, bleibt das Panel wie abgenommen; wollen Sie den alten Winkel, wird die
+  Scheibe neu gezeichnet und das Panel noch einmal gemessen.
+* **Zug 6030, Weg "vorne, ohne Wagen, dann Tor" (Integration, Weg F0).** Gehen Sie zuerst nach vorn zu Annette, nicht in
+  den Wagen, und schalten dann das Tor in 6000: Beim naechsten Betreten des Fuehrerstands sagt Leon "There's a little
+  girl in the back... Sherry.", obwohl er John und Sherry nie getroffen hat - die Wagen-Szene laeuft nach dem Tor nie
+  mehr, so schaltet es das Original-Skript am Torschalter. Danach folgt der Zugstart. So lassen heisst: ein schiefer
+  Satz auf diesem Weg; aendern heisst: Auf diesem Weg entfaellt der Nachtrag oder bekommt eine eigene Zeile, die Sie
+  aufnehmen muessten.
+* **Zug 6030, Zug erst nach dem Tor betreten (Integration, Weg N).** Betreten Sie den Zug zum ersten Mal erst nach dem
+  Tor, laufen weder die Wagen- noch die Fuehrerstand-Szene (Original-Skript), und der Zugstart kommt sofort: Annette
+  ruft "...Sherry is back there!", ohne zu wissen, dass Sherry im Zug ist. So lassen oder fuer diesen Weg eine eigene
+  Fassung?
+* **Zug 6030, Zugstart erst beim naechsten Betreten (Integration, Weg F, behoben).** Auf dem Weg "vorne, Wagen, ohne
+  Rueckkehr zum Tor" kommt nach dem Tor zuerst Leons Nachtrag, der Zugstart erst beim naechsten Betreten des
+  Fuehrerstands. So lassen heisst: ein Betreten mehr bis zum Zugstart; sonst kaeme der Zugstart direkt nach dem Nachtrag.
+* **Annette-Radius (Spur AN, Abnahmen 4 und 5).** Die lebende Annette hat in 6000, im Fuehrerstand und in 5090 vor der
+  Szene ihren RE1.5-Abstand (Leon kommt ihr bis etwa 900 nahe); erst ab der Szene und als Leiche gilt das kleinere
+  RE2-Mass (Leon kommt der Leiche bis etwa 800 nahe; sie haelt ihn erst dort auf, die lebende Annette schon bei 900).
+  Bestaetigen Sie diese Zweiteilung, bleibt es so; wollen Sie ueberall das RE2-Mass, kommt Leon der lebenden Annette
+  naeher als im Original.
+* **Deckentropfen 2000/2001 = Variante B (Spur W, Abnahme 3).** Die Tropfen-Schleife laeuft wie auf der 40%-Disc nicht;
+  damit ist auch der pulsierende Bildpunkt am Bildrand weg. Zur Wahl standen (Dossier W_wasserblink.md Z. 492-497):
+  "(A) Tropfen bauen wie im Repo-Baum ..." - "(B) Wie die 40%-Disc: Die Schleife ... laeuft nicht. Damit verschwindet auch
+  der Fleck am Bildrand." - "(C) Bleibt wie jetzt: Die Tropfen haengen, und der Fleck am Bildrand bleibt." Bestaetigen Sie
+  B, bleibt der Kanal ohne Tropfen; waehlen Sie A, fallen in 2000/2001 Tropfen von der Decke wie im Mod-Skript, und
+  dieselbe Fallroutine wuerde fuer 28 weitere Raeume gebaut.
+* **Rakete fliegt in die G5-Szene (Abnahme 5 des G5-Auftritts, R1).** Feuern Sie mit dem Raketenwerfer, waehrend die
+  Riesenform aus dem Zug geschossen wird, kreuzt die Rakete noch etwa 0,4 s lang die Grossaufnahme und explodiert im
+  Tuerloch; RE2 zeigt dort nichts. So lassen heisst: nur mit Raketenwerfer sichtbar und nur bei Dauerfeuer; aendern
+  heisst: die Szene raeumt fliegende Geschosse beim Schnitt weg.
+* **Vibration mit Gamepad (Abnahme 5 des G5-Auftritts).** Die Vibrationsfolge beim Beben ist aus der RE2-Disassembly
+  nachgerechnet und an der exe gemessen (23 von 23 Werte), aber kein Pruefer hatte ein Gamepad in der Hand. Bitte beim
+  Spielen mit Pad pruefen, ob das Beben spuerbar ankommt; ohne Pad passiert nichts.
+* **Riesenform, zwei Kamerastellen in 5090 (Abnahme 4 der Stufe 3, "dem Nutzer zeigen").** (a) Steht Leon nach dem Wurf
+  der Form nah vor Kamera 12 im Wagen B, zeigt der Raum 53 bis 62 Bilder lang (rund 2 s) seine Zonenkamera 13 mit der
+  Form gross im Bild; die andere Kamera des Raums (12) zeigt dort Leons Ruecken ueber ein Drittel des Bildes. So lassen
+  heisst: die Original-Zonenkamera (Port-Wahl); aendern heisst: Kamera 12 mit dem grossen Spielerruecken. (b) Weicht der
+  Spieler im Kampf mehr als etwa 2,5 s zurueck, schaltet der Raum auf seine Aussenkamera 14 (Blick von ausserhalb des
+  Wagens, Figuren klein, Bild dunkel) - die Original-Regel des Raums. So lassen oder eine eigene Kamera-Wache dafuer
+  (eigene Runde)?
+* **Alligator an der Rampenkante (Spur G2, Fragen F1/F2 der Abnahmen 7 und 8).** Rammt der Alligator die Figur oben auf
+  der Rampe, stoesst er sie jetzt ins Wasser (wie gewuenscht) - in den Laeufen der Abnahme jedes Mal; beisst er von
+  unten hinauf, taumelt sie nur und bleibt oben. RE2 hat im Alligator-Raum keine Rampe, die Stossrichtung ist eine
+  Port-Wahl ohne Ihren Wortlaut. Ist sie fuer Sie in Ordnung? Und: Waehrend des Sturzes taumelt die Figur in der
+  RE2-Haltung weiter (kein eigener Fall-Clip, weil RE2 dort keinen Sturz kennt) - ist dieser Anblick fuer Sie in
+  Ordnung?
+* **Alligator-Boss mit einer Granate geschwaecht (Spur WS, Abnahme 1).** Mit dem RE2-Wert und der neuen Granate startet
+  eine Handgranate sofort die Kanister-Szene; mit der Pistole sind es 35 statt 43 Schuss. Das folgt aus "mach wie
+  resident evil 2", widerspricht aber Ihrem frueheren "Ja, nicht einfach mit einer Granate beenden." (Handgranate, Punkt
+  4). So lassen heisst: die Granate ist im Alligator-Kampf die Abkuerzung; aendern heisst: ein eigener Granatenwert nur
+  fuer den Alligator-Boss, dann waeren es wieder zwei Treffer. Ab v0.8.31 gilt Ihre Rangfolge vom 16.11. auch fuer den
+  Schaden (siehe "Vorschau"); dann wird dieser Wert neu gesetzt und seine Folge fuer den Alligator ausgewiesen.
+* **Alligator dicht an der Westwand schwimmt einmal am Kanister vorbei (Nutzerbefunde 9.11., Punkt K-1).** Steht die
+  Figur dicht an der Westwand, schwimmt der Alligator ihr nach und kommt seitlich 2292 bis 2354 am Kanister vorbei;
+  aufgenommen wird nur bis 1733 seitlich. Er nimmt ihn dann beim naechsten Anlauf, je nach Lauf bei Bild 526 bis 1651 -
+  das sind etwa 18 bis 55 s nach Beginn des Messlaufs. Gemessen (Abnahme 3): 9 von 18 gezielten Laeufen, alle an der
+  Westwand, 0 von 7 an der Plattformseite, 0 von 20 Standardlaeufen; "diverse Runden" liessen sich nicht mehr erzeugen.
+  In einem weiteren Lauf an der Westwand verpasst er keine Passage, nimmt den Kanister aber erst bei Bild 2348 (etwa 78
+  s): Die Bisse ziehen die Figur nach Sueden, der Alligator folgt ihr und kommt erst spaet zum Kanister. Das Fenster ist
+  3466 breit, der Kanal 7200. Herkunft des Fensters: Aus RE2 belegt ist nur sein fernes Ende voraus (@0x80100ae4-e8).
+  Sein Anfang am Alligator selbst - im Spiel gilt es der Laenge nach von 0 bis etwa 6000 voraus - ist seit der Spur G2
+  Port-Wahl nach Ihrem Punkt 8 vom 1.11. (G2_gatorfix.md Z. 13: "erst wenn er beim Kanister ankommt, aufnehmen"). Die
+  Breite zur Seite rechnet der Port aus Koerperradius des Alligators plus Kanisterradius (1466 + 267) und fuehrt sie im
+  Code als Port-Wahl vom 23.10., weil RE2 den Alligator auf einer festen Spur fuehrt; die Abnahme 3 nennt das ganze
+  Fenster "RE2-Wert". So lassen heisst: an der Westwand kann eine zweite Runde noetig sein; aendern heisst: ein
+  breiteres Fenster zur Seite - dann nimmt er den Kanister auch auf, wenn er neben ihm vorbeischwimmt.
+* **Schluessel bei der Leiche ist klein - bitte im Spieltest ansehen (Nutzerbefunde 9.11., Punkt K-2).** Am Todesort des
+  echten Kampfs ist er als Schluesselring erkennbar (etwa 9 x 11 Bildpunkte). An den anderen ausgezaehlten Todeslagen
+  ist er sichtbar und blinkt, aber fuer einen Spieler nicht als Schluessel zu erkennen: Todesrolle 8 Bildpunkte (Kasten
+  8 x 5), Tod an der Plattform 4 bis 5. Zwei weitere Lagen hat nur die Abnahme 2 ausgezaehlt (dieselben Lagen, in der
+  Abnahme 3 nicht neu ausgezaehlt): Tod im Kanal (Lauf tod_kanal_n) etwa 7 helle Bildpunkte, Tod an der Westwand 2 bis 3
+  pulsierende Bildpunkte. Die kleinste Lage der Riegel zeigt 3 x 2 Bildpunkte; der Bericht fasst zusammen: "Schluessel 2
+  bis 8 Bildpunkte breit". Gerechnet ueber 208 Todeslagen liegen 205 unter der frueheren Bildschwelle von 10,4
+  Bildpunkten; das mittlere Bild ist von 9,8 auf 4,8 Bildpunkte geschrumpft, das kleinste von 6,3 auf 2,9. Das ist die
+  Kehrseite Ihres "naeher bei der Leiche". So lassen heisst: nahe bei der Leiche, dafuer klein; aendern heisst: Sie
+  nennen eine Mindestgroesse, dann liegt der Schluessel in manchen Lagen wieder weiter von der Leiche weg.
+* **Endkampf mit dem Raketenwerfer (Spur WS, H11).** Der Endkampf in 5090 braucht 8 Raketentreffer (Riesenform 4, G5 4;
+  die Abnahme zaehlte im alten Ablauf mit der Mensch-Birkin davor 11), der Raketenwerfer liegt aber in keinem Raum des
+  Spiels - diese Zahlen erreicht nur, wer die Debug-Waffen nutzt. Lassen Sie es so, aendert sich fuer den normalen
+  Durchlauf nichts; wollen Sie den Werfer im Spiel (Ihre Vormerkung fuer v0.8.31 sieht ihn im Finale vor), braucht er
+  einen Fundort und Munition. Der Plan fuer v0.8.31 legt ihn fuers Finale in die Asservatenkammer 1110
+  (11_story_v0831/GEGENSTAENDE.md).
+* **"Where's Annette?" bei "vorne zuerst" (ST80, Abnahme 2, Frage 2).** Gehen Sie im Zug zuerst nach vorn zu Annette und
+  dann in den Wagen, fragt Leon dort weiterhin "Where's Annette?", obwohl er gerade bei ihr war (Runde 36 und Abnahme 1
+  hatten das vermerkt). So lassen: ein schiefer Satz in dieser einen Reihenfolge; aendern: eine eigene Wagen-Zeile fuer
+  diese Reihenfolge - die Sie dann aufnehmen muessten.
+* **Nachrichten-Id 40 auf PSX nicht anzeigbar (ST80, Abnahme 2, N2).** Leons Nachtrag-Zeile "There's a little girl in the
+  back... Sherry." traegt die Nummer 40; die PSX-Fassung kennt in diesem Raum nur Nummern bis 31, und alle kleineren sind
+  belegt. Auf dem PC ist alles zu sehen; auf der PSX wuerde in dieser Reihenfolge nur Annettes Antwort erscheinen. Die PSX
+  baut derzeit ohnehin nicht; wenn sie es wieder tut, muss die Nummerntabelle dort wachsen.
+* **Riesenform - die Farbe (K5g3, Ordner 46).** Im Spiel steht die Haut K5g3 (dunkel rotbraun, aus der Original-Haut des
+  RE2-G4). Sie kam mit Ihrer Hand-Wahl ins Spiel; zur Farbe sagten Sie am 17.11.: "Naja, die Form sieht doch gut aus.
+  Bei der Farbe weiss ich es nicht." Im Video ist das Wesen lila-blau mit rosa Stellen - laut Farbeichung zu 75 bis 80 %
+  Streulicht der Umgebung, als Farbvorlage also nicht brauchbar. So lassen heisst: K5g3 bleibt; aendern heisst: Sie
+  sagen, was an der Farbe stoert (z. B. heller, dunkler, roeter), und es wird aus der Original-Haut umgesetzt, ohne
+  Eichung am Video.
+
+Entscheide waehrend der Runde (Orchestrator bzw. Koordinator; Sie koennen widersprechen):
+* **Umfang v0.8.30 = "Mit allem in Arbeit"** (Ihr Entscheid vom 7.11.): Alligator, Annette und die Riesenform sind
+  abgenommen bzw. von Ihnen angenommen; am 11.11. Ihr "Nein" zu einer Veroeffentlichung ohne die beiden
+  Birkin-Nachbesserungen. Drin sind die Sichel-Form V8 (Ihr Ja vom 15.11.) und die Riesenform-Teile vom 14. bis 16.11.;
+  nicht drin sind die Story fuer v0.8.31, die Szene "von aussen" (Ihr Entscheid fuer v0.8.31) und die Option VOICE.
+* **Alligator (Spur G2):** keine Kameragrenze fuer den Kopf (Ihr "noe, wozu wenn es gut funktioniert?"); oben auf der
+  Rampe rammt und beisst er (Ihr F3); Haengen hoechstens 15 s ohne Fortschritt (Port-Wahl nach Ihrem "nicht zu lange");
+  Trefferreaktion der Figur aus RE2 statt des RE1.5-Niederwurfs ("Original oder nicht"); kein eigener Kanister-Holmodus
+  (Ihr "ganz normal seine runden drehen"); ein Treffer an der Rampenkante darf ins Wasser stossen (Ihr "er kann den
+  Spieler ruhig In das Wasser stossen."); ein Treffer je Biss-Anlauf wie in RE2; das Rammen trifft einmal je
+  Ueberquerung (Port-Wahl, RE2 trifft die Figur nur ueber den Biss).
+* **Alligator (Nutzerbefunde 9.11.):** Kanister-Aufnahme auch im Spurt (Port-Wahl nach Ihrem "sobald die Position
+  erreicht ist, wo der Behaelter liegt"; RE2 hat im Spurt weder Fenster noch Abbruch); der Spurt, den der Kanister
+  abbricht, endet ohne Vierteldrehung (Port-Wahl; in RE2 gehoert sie nur zum normalen Spurt-Ende) und mit Ueberblendung
+  32 (RE2 @0x80100c38, dort beim Eintritt ins Schwimmen); Kanister auf die Kanalmitte ueber die Wurfrichtungen 3342 und
+  888 (Port-Wahl nach Ihrem "zentraler in die Mitte"; gewaehlt ist je Richtung die Landestelle mit dem kleinsten Abstand
+  zur gemessenen Kanalmitte); Schluessel immer im Gebiet der Kamera, die ihn zeigt (Port-Wahl nach Ihrem Punkt 3), und
+  am der Leiche naechsten erreichbaren Punkt (Ihr "naeher bei der Leiche"); die Bildschwelle 10,4 Bildpunkte entscheidet
+  die Lage nicht mehr, sie wird nur noch gemessen; die Bildschranke der Riegel steht auf 2 x 2 statt frueher 10 x 9
+  Bildpunkten (nur die Untergrenze "nicht ein einzelner Bildpunkt").
+* **Waffenschaden (Spur WS):** Handgranate 251 fuer jeden Gegner, Rakete je Gegnertyp nach RE2 (Ihr "mach wie resident
+  evil 2"); Alligator-Boss 25240 statt 25300 ("Original oder nicht"); Gorilla zaehlt als Boss, sonst waere die Granate
+  361; Zuordnungen ohne RE2-Gegenstueck: Gorilla wie der Licker (200), kleiner Affe wie die kleinen Tiere (300),
+  Gitterhaende wie die RE2-Arme (40).
+* **Wasser an der Leiter (Nachtrag 30e) in ROOM2000/2001 statt 2010/2011** - 2010 ist das Buero ohne Leiter, Weg und
+  Becken; Ihr Wortlaut und Ihr Entwurf vom 23.10. treffen 2000.
+* **Spawn-Variante der Zombies fuer ALLE Zombie-Typen abgeschaltet** (Regel des Koordinators; Ihr Wort galt den dicken).
+* **Gore-Port-Wahlen:** gelbgruenes RE1.5-Platzen statt der dunklen RE2-Drift im RE2-Gehirn; der RE1.5-Blutcode steht
+  fuer die RE2-Blut-Effekte (RE2: olivgelb bis gruen, nie rot); Lache groesser als in RE2 (deshalb faerbt sie Leons Schuh
+  gruen) - Abnahme 3: "Das gehoert in die Release Notes oder in die Entscheidung ueber die PORT-WAHL"; Federn nur an
+  Treffer-, Tod- und Griff-Stellen; der Schalter gegen das 80%-Gore gilt nur fuer das Platzen und die
+  MC51-Beinzelle.
+* **Birkin-Lebenspunkte (Spur GR, Ihre Freigaben "1. ja" und "2. ja"):** Birkin-Skala verdoppelt, Riesenform 1000
+  (RE2-G4-Wert). Die Boss-Regel der Granate ist durch WS ersetzt.
+* **Key Items:** Die Welt laeuft an den 14 Stellen schon in der Einblende (noetig fuer die Kurbel); die Waffe kommt bei
+  der Kurbel nach der Szene zurueck, nicht erst beim naechsten Oeffnen des Inventars wie in RE2 (vier Zombies im Raum);
+  die Kurbel hat Name, Bild und Text aus RE2.
+* **Panel 2030:** "SET 80" statt "PRESSURE 80", die Ziffern im Zeigerblatt entfallen, das Nachrichtenband ist dunkler
+  (Port-Wahlen der Nachbesserung); Rahmen und EXIT aus den Original-Nahansichten, der Rest nach dem Echtbild gezeichnet.
+* **Alligator (Spur P):** Lage der Leiche und Anlaufrichtung am Kampfbeginn (Messung im RE2-Band), Putz je Beckenseite der
+  laufenden Kamera, Leiche im Maul mit der Rumpfmitte auf der Maullage, begrenzter Bildschritt mit Kanister, Kanister in
+  RE2-Groesse (keine Umskalierung).
+* **Toter Alligator:** Sperre erst beim Tod statt wie RE2 beim Kampfbeginn (der Water Key haengt an ihm).
+* **Effekt-Quader 20B0:** Die PSX-Hardware-Grenze gilt auch im Spiel fuer die Effekt-Quader.
+* **Bahnsteig-Birkin:** drei Regeln der Spieler-Klemme fuer die engere Bahn von 5090; Riesenform-Schaden und G5-Schaden
+  auf 100 Port-HP halbiert; der Port haelt beim Kampfstart aus der Lage den passenden Schnitt (RE2 hat dort keine
+  Kamera-Regel).
+* **Riesenform Stufe 3:** Riesenform in 5080 (mit Flucht) und 5090 (ab dem Betreten, keine Mutation im Zug) nach Ihren
+  Entscheiden E5/E6; die Rueckstoss-Szene waehlt ihren Schnitt nach der Lage von Form und Spieler aus den vorhandenen
+  Kameras des Raums, keine erfundene Kamera; die Kampfkamera vor der Szene bleibt die bisherige (Runde 2 nach Abnahme 3);
+  wo kein Schnitt passt, bleibt die Original-Zonenkamera (siehe Frage oben).
+* **Riesenform Texturen:** Nach Ihrem E32 die ruhige Haut K5e: Original-RE2-G4-Haut mit einer Farbe je Material, die
+  Adern als dunkle Struktur unter der Haut (Ihr "Feuerrillen raus"), keine Eichung je Region oder Fleck am Video; die
+  Leuchtstelle am Becken bleibt (E30), ihr Rand folgt der Haut. In v0.8.30 ersetzt durch K5g3: Original-RE2-G4-Haut auf
+  der neuen Geometrie, Braun mit Struktur, Hals-Unterseite ohne Fleisch, keine Hautstelle heller als L* 85; die
+  Aufhellung je Seite bleibt groesser als die Original-Seitenhelligkeit, damit kein schwarzer Sattel entsteht. Die Haut
+  kam mit Ihrer Hand-Wahl ins Spiel, ohne eigenes Ja zur Farbe. Die unteren Vorderzaehne sind kurz (Variante A, ohne Sie
+  entschieden). Die Dreiecksliste des PC-Ports hat 16384 statt 8192 Plaetze (Puffer des Ports, kein Spielwert).
+* **Software-Renderer:** Gegen den Ueberlauf werden Dreiecke nur im Software-Pfad geteilt; der beschleunigte Renderer
+  bekommt die Dreiecke unveraendert.
+* **Zug 6030 (Integration):** Ist auf dem Weg "vorne, Wagen, Tor" Leons Nachtrag noch offen, laeuft er nach dem Tor vor
+  dem Zugstart - kleinster belegter Fix, keine neue Zeile, kein neues Speicher-Bit.
+* **Sichel-Form:** Koerper der gelobten Referenz 2 als Grundlage; Schwanz und Kopf nach Ihren Beschreibungen, der Kopf
+  seit dem 8.11. auf Basis des Original-RE1.5-Birkin-Kopfs; eingebaut in der Fassung V8 mit Schwanz 8g nach Ihrem Ja vom
+  15.11.; der Kopf von V7 bleibt Grundlage, am Hinterkopf darf angefuegt werden; der Nacken-Kandidat R3 wurde genommen,
+  obwohl ihn beide Pruefer formal nicht bestehen liessen (bester Stand); Handfarbe 7e statt eines roteren Fingerteils;
+  Farben nur aus Original-EM30-Texeln, keine Eichung am Video.
+* **Annette:** Szene nach dem Claire-Disc-Vorbild; Schuesse gehen durch lebende Begleiter und die Leiche hindurch
+  (RE2-Regel); Leiche liegt flach mit dem RE2-Liegeclip; bei Elza keine Szene.
+* **G5-Auftritt:** dritte Einstellung in RE1.5-Kamera 12 statt der RE2-Schnitte 5 und 6; die Musik bleibt RE1.5 -
+  Abnahme 3: "vertretbar (PORT-WAHL, Uebertragung auf ein anderes Stueck unbelegt)"; Lampen laufen 4 Bilder vor, damit sie
+  szenenbildgleich mit RE2 sind.
+* **Gorilla-Filme:** In 11C0 spult das Spiel den Original-Auftritt der Kamera 12 unsichtbar vor und blendet erst mit der
+  Kamera 5 ein (Orchestrator); der Film kommt vor dem Musikstart (Abweichung von der woertlichen Folge des Skripts); in
+  1141 ersetzt der Schrei den Glasbruch der Runde 39.
+* **Monitore und Wasser:** Die Eigenheiten des Originals (8 Plaetze fuer 11 Monitore) sind uebernommen; im Port bekommt
+  jede Unterpalette einen eigenen Farbstreifen der Textur (SDL hat keinen Bildspeicher wie die PSX); der Kanal-Riegel
+  der Spur W erlaubt Farbspruenge bis 16 (mit Ordner 33 von Ihnen abgenommen).
+* **Zielhilfe:** Schrittweite von RE2 Retail (Beta -> Retail); die grosse Schrittweite fuer die Super Redhawk erkennt
+  der Port an deren Clip-Laenge.
+* **Boden-Schatten:** im Code behoben statt als bekannter Fehler vermerkt; die Diagonale der Schattenvierecke (PC 0-3,
+  PSX 1-2) bleibt, weil eine Aenderung jeden Schatten aendern wuerde.
+* **Pipe:** Rohr-Modell selbst gebaut aus der Messer-Datei, doppelt so lang wie das Messer (Port-Wahl, die Disc hat kein
+  Rohr); Reichweite 1355 (Ihr Wunsch); Toene mit Birkins Welle und mit Stimme und Vorrang des Messers, Lautstaerke wie
+  bei Birkin (127), auch das Ziehen klingt nach Rohr (Orchestrator).
+* **Optionen:** ULTIMATE 1.5 ab Werk AUS, die Disc-Dateien in einem eigenen Ordner (Orchestrator); Zuordnung der
+  Disc-Bilder nach Bildinhalt statt nach Nummer (nach dem roten Punkt der ersten Pruefung); die Zange als VIRUS-Ampulle,
+  weil das der Disc-Stand ist.
+* **Spider-Man-Szene und Hangar:** Blut = Original-Spinnenblut; die abgespreizten toten Glieder sind der Original-
+  Sterbeclip und bleiben; Wurf mit Seitenlage und Gang am Ende nach Messung am Video (Port-Szene); "Szene gesehen" und
+  "Hangar-Birkin besiegt" als neue Speicher-Bits 38 und 39 (Port-Wahl, im Original frei); der Original-Todesablauf haelt
+  Birkin liegen, das Raumsignal, das den Kraftraum-Birkin streichen wuerde, bleibt im Hangar aus; der Monitor Room als
+  Ort fuer das Monitorbild war ein Entscheid des Orchestrators (von Ihnen abgelehnt, zurueckgebaut).
+* **Klauenhieb:** massgeblich ist der Weltkontakt der gezeichneten Klaue, keine Rechnung nach Sichtbarkeit im Bild
+  (Orchestrator); die Treffer der Kralle rechnen am EM30-Gerippe (Port-Wahl); der Rueckzug hat Vorrang vor dem Zucken
+  (Port-Wahl); die Gelaender-Oberkante 1900 und der Schlagbeginn bei Bild 32 sind gemessen, keine Werte des Originals.
+* **Aufrichten:** die Clip-Ende-Regel aus dem Story-Zweig woertlich uebernommen und fuer den Kraftraum freigeschaltet.
+
+Weitere Fragen aus der Runde, die noch niemand entschieden hat (so ist es jetzt):
+* **Gore allgemein:** Ihre Rangfolge vom 16.11. (80% > 40% > RE2 fuer Gore und Schaden, Zombies spielerisch wie RE2)
+  gibt die Richtung fuer die folgenden Gore- und Granaten-Fragen vor; umgesetzt wird sie mit dem Gore-Umbau in v0.8.31.
+* **Gore, Tabelle 5b:** Was die RE2-Gehirne ueber Angriff und Treffer hinaus ersetzen sollen - vor allem das Klettern der
+  Spinne, das unter der Standard-KI nie laeuft, und Fressen/Schlafen der Zombie-Familie.
+* **Gore, Wuergearm:** Ob die abfliegende RE1.5-Hand in den RE2-Zellenarm gehoben werden soll.
+* **Gore, Federn im Flug:** Ob die Kraehe wie in RE2 auch beim reinen Fliegen Federn verlieren soll (jetzt nur bei
+  Treffer, Tod und Griff).
+* **Gore, Federn unter "AI RE1.5" und bei der Ereigniskraehe:** nach Ihrer Regel "Gore = Maximum" eine Frage an Sie.
+* **Gore, kopflos mit Nicht-Magnum-Waffe (Video):** erst die Waffe im Video sichern, dann Port-Wahl.
+* **Granate, Kraehe:** Ihre Teile verschwinden nach dem Original-Ablauf, nicht "liegen bleiben" wie beim Zombie.
+* **Granate, Werfer-Explosivrunde:** Der dicke Zombie und der Kanal-Zombie ueberleben sie, der RE2-Hund auch -
+  unveraendert gelassen; Ihre Antworten galten der Handgranate.
+* **Kanalwasser, ROOM50B0:** roter Bodenschein in Kamera 2 aus demselben Zwischenstand wie das Blinken (das Video zeigt
+  dort ein rotes Band) - bleibt, bis Sie entscheiden.
+* **Zombie-Modelle (Berichtigung):** Die Fassung vom 9.11. nannte hier eine Voreinstellung "RE2 AI + Model". Die gibt es
+  seit dem 21.08. nicht mehr (Commit 215ed3198, Ihr damaliges Wort: "Mittlerweile ist RE 2 AI schon so gut, dass wir
+  diese Option im Optionsmenue sowie seine eigenen Models entfernen koennen."); seither zeichnet auch die RE2-KI die
+  RE1.5-Modelle. Nichts zu entscheiden.
+* **Zufallsgenerator der Disc** als eigene Runde (aendert jeden Wurf).
+* **Bahnsteig-Birkin, Gestaltung:** Soll der Griff der Form nach dem Wurf abgekuerzt oder die RE2-Opfer-Sequenz (Leon
+  wird gehalten) gebaut werden? Soll die Rueckstoss-Szene kuerzer werden, wenn Leon weit oestlich steht und sich rund 14
+  s nicht sieht? Soll fuer Leon unter dem G5 im Westen eine naehere Kamera gelten?
+* **Story, Kenntnisnahme-Punkte B1 bis B8, B15:** "Widerspruch ja oder moeglich, aber nicht gravierend oder nicht
+  belastbar belegt. Dateien nur, falls Sie angleichen wollen."
+* **Story, Trailer-Orte:** Ihre Antwort laut Protokoll vom 2.11.: Bild 1 und 4 nicht noetig, Bild 2 vielleicht ein Gang in
+  B1 oder B2 hinter dem Tor, Bild 3 einer der Flure 1F bis 3F - nicht gebaut.
+* **Klauenhieb, toedlicher Schuss direkt nach dem Wandschlag:** Der Tod geht vor - Birkin faellt, die Klaue gleitet in
+  10 Bildern aus der Wand (wie im Original); der Pruefer empfahl, das zu entscheiden.
+* **ULTIMATE 1.5, Zange:** Bei AN ist die Zange eine stehende Ampulle mit der Aufschrift VIRUS - so steht es auf der
+  Disc; aendern liesse es sich mit einer Zeile.
+
+## Fuer Sie zum Aufnehmen
+
+Ohne Datei laufen die Zeilen stumm mit Untertitel; der Port bindet jede Datei nach Raum und Nachricht
+(synchro/STAGEn/roomXXXX/mainNN.wav, keine Umleitung). Laut Protokoll vom 3.11. haben Sie die Aufnahmeliste der
+Story-Spur eingesprochen ("alle voiceovers ergaenzt bis auf Anette 5090"); die Abnahmen der Story-Spur haben mit diesen
+Dateien gemessen. Sie sind seit dem 9.11. im Repo (Commit 010f833b9: die neuen Aufnahmen fuer STAGE2 bis 6 und
+synchro/unused, Ihre geaenderte synchro/STAGE3/room3061/main05.wav, dazu die RE2-Claire-Stimmbank als Quelle der
+Annette-Zeilen in 5090) und kommen ins Paket (es nimmt synchro/STAGE*, ohne unused/). Nicht im Repo ist weiter der
+Ordner voice/Merged mit 18 neuen Dateien (der Commit nahm ihn ausdruecklich nicht mit) - bitte sagen Sie, ob er mit ins
+Release soll. Was seit dem 9.11. dazukam, braucht keine Aufnahmen: Die Gorilla-Filme bringen ihren Ton mit, der
+Sherry-Ruf und der Pipe-Ton sind Birkins Toene von der Disc. Die Aufnahmeliste fuer v0.8.31 (Story) haben Sie am 14.11.
+bekommen (11_story_v0831/AUFNAHMELISTE.md); sie gehoert nicht zu dieser Fassung.
+
+**Neu - fehlen noch (stumm mit Untertitel):**
+* **Zug 6030, Nachbesserung der Story-Spur (Abnahme 2, Frage 1):** synchro/STAGE6/room6030/main31.wav - Leon: "Everyone
+  we could find. Can you start this thing?" (wenn Sie zuerst nach vorn gehen) und main40.wav - Leon: "There's a little
+  girl in the back... Sherry." (der Nachtrag beim naechsten Besuch vorne). Beide Saetze stammen aus Ihrer Zeile main12
+  bzw. Ihrem ersten Wortlaut.
+* **Annette-Szene, hinterer Wagen 5090 (Wahl, nicht fehlend):** synchro/STAGE5/room5090/main40.wav - Annette:
+  "W-William! You're alive!"; main41.wav - Annette: Schrei ohne Untertitel; main43.wav - Annette: "William." - alle drei
+  liegen seit dem 3.11. als Schnitte aus der Claire-Disc vor; wenn Sie sie selbst sprechen wollen, ersetzt Ihre Aufnahme
+  den Schnitt. main42.wav - Leon: "Annette!" ist Ihre Aufnahme.
+
+**Zur Kontrolle - die Liste vom 3.11. (schon eingesprochen; "bleibt" = die vorhandene Aufnahme spricht schon diesen
+Wortlaut):**
+* **Annette-Szene (Spur AN), Zugstart 6030 - eingesprochen am 3.11., seit dem 9.11. im Repo:**
+  synchro/STAGE6/room6030/main27.wav - Annette: "There! The train's moving."; main28.wav - Annette: "What was that?
+  ...Sherry is back there!"; main29.wav - Leon: "I'll check it out."; main30.wav - Annette: "No. She's my daughter. Stay
+  here and keep an eye on the controls."
+* **Alte Aufnahmen mit geaendertem Text:** synchro/STAGE3/room30E1/main02.wav - John: "This is bad... those monsters
+  have us surrounded!"; main03.wav - John: "...Damn it, there's no place around here to hide...";
+  synchro/STAGE6/room6031/ main00.wav - Elza: "Sherry! Is anyone else here?"; main01.wav - Sherry: "A policeman! He's
+  fighting off monsters. He wants us to start the train."; synchro/STAGE5/room50B0/main01.wav - Ada: "Some other
+  survivors are down there with her too."; synchro/STAGE6/room6000/main00.wav - Annette: "You must be that cop. Your
+  friend is already here."; main03.wav - Annette: "Come on. Let's join the others and get out of here."
+* **Elza trifft Marvin, ROOM30C1:** synchro/STAGE3/room30C1/main01.wav - Elza: "Who are you?" (bleibt); main02.wav -
+  Marvin: "Marvin Branagh, RPD."; main03.wav - Elza: "Are there any others still alive?"; main04.wav - Marvin: "A few.
+  There are other survivors out there."; main05.wav - Elza: "Then I hope they make it out." (main06 bis main08 werden
+  nicht mehr gespielt).
+* **Leons Zug, Wagen, ROOM6030 (Spielreihenfolge):** synchro/STAGE6/room6030/main00.wav - Leon: "Hang on, Marvin. We're
+  getting out of here." (bleibt); main01.wav - Leon: "Who are you two?"; main21.wav - John: "Name's John. This is
+  Sherry. We made it down here with a girl named Elza."; main02.wav - Sherry: "She's out there fighting the monsters!"
+  (bleibt); main03.wav - John: "She's trying to keep the outside clear so we can escape."; main22.wav - John: "She said
+  she'd catch up with us."; main04.wav - Leon: "Why aren't you out there?" (bleibt); main05.wav - John: "She told me to
+  stay with the kid... and look after your friend here."; main06.wav - Leon: "Where's Annette?" (bleibt); main07.wav -
+  John: "The woman in the lab coat? Up front, trying to start the train."; main23.wav - Sherry: "A lab coat...? Is it
+  Mom?!"; main24.wav - John: "Easy, kid. Stay with me."; main08.wav - Leon: "I'll find out. Stay here."
+* **Leons Zug, Fuehrerstand, ROOM6030:** main11.wav - Annette: "Is everyone aboard?"; main12.wav - Leon: "Everyone we
+  could find. There's a little girl in the back... Sherry."; main25.wav - Annette: "Sherry...? My daughter is on this
+  train? ...Thank God."; main26.wav - Leon: "Can you start this thing?" (main13 bis main19 bleiben).
+* **Optional:** synchro/STAGE3/room3061/main05.wav - Sherry: "It's here! Look, I can get inside through this hole!"
+  (genauer Capcom-Wortlaut aus dem 80%-Ton). Die geaenderte Datei ist seit dem 9.11. im Repo (010f833b9); ist das die
+  neue Aufnahme, ist der Punkt erledigt. Die Panel-Texte von 2030 sind wie alle Port-Texte stumm; v0.8.29 hat die
+  Port-Texte des Ventilkastens 2010 unter derselben Form (main40.wav bis main44.wav) als optional gelistet.
+* Die uebrigen Punkte dieser Fassung brauchen keine Aufnahmen.
+
+## Noch offen
+
+Alligator (Spur G2)
+* Takt zwischen zwei Biss-Anlaeufen (Punkt O1 der Abnahme 9, nicht blockierend): RE2 kann bei andauerndem Kontakt nach dem
+  Ende der Trefferreaktion gleich wieder einen Biss-Anlauf beginnen; der Port wartet laenger (gemessen 107 Bilder zwischen
+  zwei Bissen). In einer eigenen Runde gegen RE2 zu belegen.
+* Ein Riegel des Alligator-Testprogramms setzt den Platz des Alligators in der Gegnerliste fest als 35 voraus (gering,
+  Gegenpruefung vom 8.11.; im Spiel ohne Wirkung).
+* 2 von 523 Treffern im Testprogramm (Biss von der Querung, danach Rammen) brechen eine liegende Trefferreaktion ab - nach
+  RE2 zulaessig. Der Sturz von der Rampe hat keinen eigenen Fall-Clip (siehe "Zu entscheiden").
+
+Alligator (Nutzerbefunde 9.11.)
+* Auf dem Endstand lief nur die Alligator-Riegelgruppe (154 Riegel, gruen). Die Unit-, Eigenschafts- und Sonden-Riegel
+  (ohne die Riegel fuer Releaseskript, Android und Titelversion, ohne Integrations-Riegel) liefen laut Bericht zuletzt
+  auf dem Zwischenstand f8c71298a vom 9.11.: "99% tests passed, 5 tests failed out of 1104", alle fuenf
+  Zeitueberschreitungen unter Last, einzeln 5 von 5 gruen. Die volle Suite lief erst mit der Abnahme von v0.8.30 (siehe
+  Pruefstand).
+* Grenzen der Abnahme 3: Die Aufnahme des Schluessels an der Todesrolle begann mit dem Testhaken der Todesrolle, nicht
+  mit einem natuerlichen Kampf, und ohne Leitergang. Zwei weitere Todeslagen der Riegel (dort 3 x 2 und 7 x 5
+  Bildpunkte) hat der Pruefer nur ueber den gruenen Riegel geprueft und nicht eigens am echten Weg nachgefahren; fuer
+  beide nennt der Bericht des Fixers exe-Laeufe am echten Weg (aus den Protokollen seiner Riegel, keine Messung einer
+  Abnahme).
+* Schluessel aus der Ferne: Geprueft sind die Kamera der Einstellung nach dem Tod und die Kamera am Platz des
+  Schluessels. Ob er aus den anderen Kameras von weitem zu sehen ist, ist nicht gemessen. Die Abnahme 1 hat das fuer
+  zwei Kameras (Cut 6 und 7) als Hinweis offen gelassen - in ihren Aufnahmen waren dort Wasserspritzer an den Fuessen
+  nicht sicher vom Schluessel zu trennen -, damals noch mit der frueheren Lage des Schluessels; die Abnahme 3 hat an der
+  neuen Lage wieder nur die Kamera der Einstellung und die Kamera am Schluessel geprueft.
+* Der Suedwurf (Richtung 888) ist nur mit Messhaken belegt: Im echten Ablauf fiel die Wahl in den Abnahmen immer auf den
+  Nordwurf; ein Riegel waehlt ihn in zwei von fuenf Laeufen von selbst, setzt die Lage der Figur aber per Messhaken. Ein
+  Lauf mit Suedwurf ganz ohne Messhaken fehlt.
+* Eine von 208 gerechneten Todeslagen: Steht die Figur zwischen Kamera und Leiche, liegt der Schluessel 2560 statt 938
+  von der Leiche, weil er naeher im Bild hinter der Figur laege.
+* Der Riegel zeigt, dass der Schluessel in jedem Bild der Einstellung zu sehen ist, nicht, dass er als Schluessel
+  erkennbar ist (siehe "Zu entscheiden").
+* Mit der neuen Wurfrichtung zieht der fallende Kanister in der tiefen Wurf-Einstellung kurz hinter Kopf und Schulter
+  Ihrer Figur durch, wenn sie dort vorn im Bild steht. Geworfen hat Marvin bzw. John oben vom Gelaender; verdeckt wird
+  der Kanister von Leon bzw. Elza unten im Bild vor dem Tor. Die Aussage stammt aus der Abnahme 2. In ihren Aufnahmen
+  ist der Kanister bei Leon in den Bildern 1319 bis 1321 teilweise verdeckt (wurf_leon_fall_gross.png; drei Bilder, das
+  ist eine Zehntelsekunde; in Bild 1317 noch frei, Bild 1318 fehlt auf der Tafel, in Bild 1322 nicht mehr zu sehen), bei
+  Elza in Bild 2018 (wurf_elza_szene.png; in Bild 2016 frei, in Bild 2020 nicht mehr zu sehen). Mit der alten Richtung
+  fiel er laut Abnahme 2 rechts neben der Figur. Die Abnahme 3 hat den Hinweis uebernommen und nicht neu vermessen; ihr
+  Bericht schreibt "des Werfers", nach den Bildern ist die Spielfigur gemeint. In ihrer Aufnahme des natuerlichen Kampfs
+  (s_l2_leon_wurf.png, Bilder 1014 bis 1034) steht in dieser Einstellung keine Figur im Bild, der Kanister faellt dort
+  frei. Nicht geaendert, weil eine andere Richtung die Landung in der Kanalmitte aendert.
+* Bleibt die Figur an der Rampe, lag der Kanister nach dem Abschnitt zur Spur G2 "3300 bis 4400 Bilder" (etwa 110 bis
+  147 s), bis der Alligator ihn nahm. Das ist der Stand vor den Nutzerbefunden vom 9.11. (alte Kanisterlage, kein
+  Fenster im Biss und im Spurt) und mit dem neuen Stand nicht neu gemessen.
+* Das normale Spurt-Ende wechselt im Port weiter ohne Ueberblendung ins Schwimmen (RE2 blendet, @0x80100c38). Nicht
+  geaendert (gelobter Kampf).
+* Seitliche Passagen am Kanister ausserhalb des Fensters bleiben ohne Aufnahme (siehe "Zu entscheiden").
+* Ausserhalb des Alligators: Der RE1.5-Schadenspfad des Ports beendet ein Klettern nicht; das Original taete es
+  (@0x80012ed4). Nicht angefasst.
+* Zwei geplante Spiel-Riegel sind nicht gebaut (einer zum Kletterbiss, einer zu Tod, Leiter und Rueckkehr). Beide Wege
+  pruefen Riegel im Testprogramm, und die Abnahmen haben beide am gebauten Spiel gefahren; Namen unter "Technisch".
+* Ein Testteil (Teil K von unit_r41_gatorfix_nb4) legt den Kanister weiter an die alte Liegestelle; im Spiel ohne
+  Wirkung.
+* Formal: In zwei Pruefdateien nennen Kopfkommentare noch die alte Regel "nie unter 10,4 Bildpunkten" (Namen unter
+  "Technisch"); die Pruefung selbst folgt der neuen Regel. Im Spiel ohne Wirkung.
+
+Annette (Spur AN)
+* Die Wege F0 und N im Zug 6030 (siehe "Zu entscheiden").
+* Annettes drei Zeilen in 5090 sind Schnitte aus der Claire-Disc (siehe "Fuer Sie zum Aufnehmen").
+* Ein Zweig im Annette-Code ("erster Besuch erst nach dem Tor") ist im echten Spiel nicht erreichbar (nur mit
+  Debug-Flags), weil der Torschalter die Fuehrerstand-Szene als gelaufen markiert; unveraendert gelassen.
+
+Riesenform (Stufe 3 und Modell K5g3)
+* Wagen B nach dem Wurf (Zonenkamera 13) und die Aussenkamera 14 bei weitem Zurueckweichen: siehe "Zu entscheiden".
+* Weicht der Spieler 3 bis 4 s zurueck, steht beim Schnitt in die Rueckstoss-Szene ein Bild lang (33 ms) noch das
+  gehaltene, dunkle Kampfbild.
+* Kurz vor dem Wechsel auf Kamera 12 liegt das Szenenbild knapp unter der Dunkel-Grenze der Pruefung (bis 595 von 600
+  Promille).
+* Mit 1000 Lebenspunkten zeigt die Szenenkamera in der Standardlage die Form kurz (rund 15 Bilder) klein am Wagenende
+  hinter Leon bzw. Elza, bevor Kamera 11 kommt; die Riegel halten diesen Stand fest, damit ein Rueckschritt auffaellt.
+* Die Haltezeit der Kampfkamera (30 Bilder) prueft nicht nach, ob der Spieler noch vor ihrem Auge steht (gemeldet, nicht
+  geaendert).
+* Der Bisspunkt der Form wurde am alten Kiefer K4 gemessen; am neuen Kiefer liegt er 21 Einheiten vor der Kieferspitze
+  statt in der Zahnreihe, die Reichweite des Bisses ist unveraendert. Nicht angepasst.
+* Im Stehen hat die Form das Maul offen (Ruhe-Clip mit dem neuen Kiefer); so haben Sie es in der Vorlage gesehen und
+  angenommen.
+* Die vier K5e-Punkte der Fassung vom 9.11. betrafen die Haut K5e, die in v0.8.30 nicht mehr im Spiel ist.
+* Hals B4 (von Ihnen angenommen): kleine rote Zacken an den Unterkanten der roten Halsfelder (beim Bewegen leicht
+  flimmernd), ein dunkler Sprenkelfleck im linken roten Halsfeld, feine Fransen im Licht an Schulter und Kopf; an der
+  Schulter oben war der vorige Stand sauberer.
+* Rechte Hand Variante 1 (so gewaehlt): Oben in Ihrer roten Armzone ist kein Arm, rechts neben dem Kiefer steht etwas
+  ueber. In einer Bewegung dreht der Unterarm schneller weg als auf dem Blatt (bis 16,7 statt 12,4 Grad je Bild), damit
+  nichts ineinandersteckt; in einer Pose steckt eine Kralle 81 Einheiten im Kopf (im Bild nicht zu sehen).
+* Vorderzaehne: Die unteren sind kurz (sichtbar 25 bis 86 Einheiten, die alten Seitenzaehne 144). Im Fallen stecken die
+  unteren Vorderzaehne bis etwa 100 Einheiten in der Hand; nah von vorn kreuzen sich obere und untere in X-Form; drei
+  neue Zaehne beruehren den anderen Kiefer bis 1,5 Einheiten tief (weniger als ein Bildpunkt). Die alten Seitenzaehne
+  treten bei geschlossenem Maul in 378 Posen seitlich aus der Schnauze (vorher schon so, nicht angefasst).
+* Haut K5g3 unter weissem Licht (im Spiellicht nicht zu sehen): Haut kupfern, Braun oliv-ocker, die Flecken heben sich
+  wenig ab, ein kleiner oranger Fleck im Maulwinkel und ein rosaroter unter der Zahnreihe; die Augen sind zwei kleine
+  graue Punkte statt hell-rosa wie im Video; die Leuchtstelle am Becken wirkt lila-grau mit grauen Bloecken (nicht
+  bearbeitet).
+* Die Aufhellung je Seite der Haut geht ueber die Original-Seitenhelligkeit hinaus (Entscheid gegen einen schwarzen
+  Sattel); Ihr Urteil am Bild steht aus (siehe "Zu entscheiden", Farbe).
+* Gegen die 80%-Screenshots (Ordner 46): In Bild 1 reicht das vordere Bein rund 40 Bildpunkte tiefer, zwischen den
+  Beinen ist eine Luecke; in Bild 2 ist das Maul offen und rot, wo das Video nur dunklen Schattenriss zeigt, und der
+  rechte Arm ragt in eine helle Stelle.
+* Technik: 225 Dreiecke ohne Texturflaeche (K5e: 28); die Bildzeit mit dem groesseren Modell ist nicht gemessen.
+* Software-Renderer: An einer Teilungskante kann ein Randpixel anders fallen (nur Software-Pfad, nicht Ihr Renderer);
+  nicht gemessen ist, ob die Grafikbibliothek bei sehr grossen Fensterskalen an anderer Stelle ueberlaeuft.
+
+Sichel-Form und Hangar
+* Restpunkte, die Ihnen mit Ordner 28 genannt wurden: Stachelspitze als duenne graue Nadel, Wurzelglied im Bogen etwas
+  breit, der Bogen rollt bei h100-h102 schnell ein, Birkin steht nach dem Wurf etwas frueh seitlich und stark gebueckt.
+* In zwei Einzelbildern (h35, h72) ist der Schwanz hinter dem Koerper verborgen (im Original ist dort unter dem Schritt
+  ebenfalls nichts zu sehen); frei haengt er in h81 (am fliegenden Spider-Man), h146/h148 (Kameraschnitt) und h159
+  (Bildrand).
+* Nur im direkten Vergleich: Austrittsknick in h30/h31 etwa 63 Grad, ein Sprung von h29 auf h30, die rosa Unterseite
+  grenzt scharf an die dunkle Oberseite, und die Ringe der Oberseite enden an der Bauchkante.
+* Hand: heller als in der Vorlage, Rot nur an den Krallen, Daumen grau-weiss, harte Kante am Handgelenk.
+* Aus Runde 7: In der Griffphase steht rechts neben dem Kopf die helle Rueckenplatte recht hoch; kurz nach dem Wurf
+  steht der Unterarm etwa eine Drittelsekunde seitlich ab; einige eigene Riegel des Modells sind rot (riegel_v8 18 von
+  24) - die Pruefer stuften das als nicht stoerend ein.
+* Spider-Man: im ganzen Raum dunkler und etwas kleiner als im Video, Arme im Anflug eher seitlich, Flugpose starr,
+  Zappeln anfangs etwas schwaecher, im Griff weniger Blut; Birkin dreht nach dem Wurf spaeter zurueck als im Video.
+* Die Sichtpruefungen der Szene liefen mit Leon (50A0); Elza ist ueber bitgleiche Protokolle belegt.
+* Die Zahl der Fingerkrallen loest das Video nicht auf; das Modell behaelt drei Fingerkrallen und die Daumenkralle.
+* Hangar: Was der Kampf bringt, bleibt in v0.8.30 offen (kein Gegenstand, keine Tuer); in v0.8.31 entfaellt der Kampf im
+  Gang. Den Ausloeser ueber die Westtuer (aus 4070) zeigt kein Video. Welcher Ton beim Hangar- und Laborkampf an den
+  Original-Rufstellen des Birkin klingt (die Hangar-Raumbank hat dort einen anderen Ton als 3070), ist nicht gemessen.
+* Sherry-Ruf: Im Video kann das Bild um etwa 3 Bilder gegen den Ton verschoben sein; 5080 ist nur per Riegel geprueft.
+
+Labor-Birkin
+* Der Vortrieb am Standfuss waehrend der Angriffe (FUN_8011bdd8) fehlt im Port. Er aendert Anlauf und Kampfabstand in
+  allen Raeumen dieses Birkin-Typs und braucht eine eigene Abnahme (vorgesehen fuer v0.8.31).
+* Beim Rammen ist nicht geprueft, ob die Box ebenfalls die gezeichnete Lage nimmt. Die Riesenform (Grundlage RE2) ist auf
+  dieselbe Bildfrage noch nicht gegen RE2 geprueft.
+* Die Raeume 50E0/50F1 gibt es nur im Mod-Baum, nicht auf der 40%-Disc.
+
+Klauenhieb und Aufrichten
+* Waehrend des Rueckzugs steckt die Klaue kurz tiefer in der Wand (Capcoms Bewegung zeigt "haengen bleiben, ruetteln,
+  herausziehen"); auch beim Zucken mitten im Rueckzug (7-mal gemessen) bleibt sie tief in der Wand.
+* Ausserhalb des Hiebs (Gang, Biss, Wurf, Aufrichte-Szene in 50E0) steckt die Klinge oft in Waenden - nicht Teil der
+  Regel.
+* Treffer und Bild koennen auseinanderfallen: Die Treffer der Kralle rechnen am EM30-Gerippe, der Rueckzug an der
+  gezeichneten Klinge - die Klaue kann sichtbar in Leon ragen, ohne zu treffen.
+* Die Gelaender-Oberkante 1900 ist nur an drei Gelaendern gemessen (Streuung 1500 bis 2100); einige Zellen in 50E0/50F1
+  sind unsicher eingeordnet.
+* Fuer diese Kaempfe gibt es keinen Original-Beleg: Der Laborkampf stammt aus dem Mod, den Hangar-Kampf hat der Port
+  eingefuehrt, 3070 ist nie im Original gemessen.
+* Bekannt, nicht angefasst: Der Port zeichnet einen Clip ab Bild 1 statt 0; der Biss prueft sein Tor nach statt vor dem
+  Bildwechsel; die Todesphasen ziehen weiter vor dem Zeichnen ab; im Kraftraum-Auftritt fehlt ein Aufruf des
+  Fussschritts (@0x80119cd4), und der Vortrieb am Standfuss (FUN_8011bdd8) fehlt weiter (siehe "Labor-Birkin").
+* Ihre Rueckmeldung zu Ordner 43 (Aufrichten) steht aus.
+
+Gorilla-Filme 114 und 11C
+* Einen unabhaengigen Pruefer fuer den Einbau gab es nicht; belegt sind die Riegel und die Messlaeufe. Ihr "einfach
+  super" galt dem Einbau von 114, Ihr "sieht super aus" dem Film 11C.
+* Schrei: Satz 4 der Raumbank von 11C0, laut Protokoll von Ihnen vorerst so angenommen (Protokollfassung); er laesst
+  sich an einer Stelle tauschen (Ihr "aus 11C Sekunde 6" kann auch die Landung meinen, Satz 2, 0,51 s).
+* Im 11C-Film: rechter Fuss des Gorillas 5 bis 7 cm ueber dem Boden (Original-Clip), Knick im Handgelenk in den Bildern
+  204-212; die Brustschlaege sind mit Satz 8 vertont (kein Beleg im Spiel); der Schutt ist heller als im Original.
+* Die Filme haben 320 x 240 Bildpunkte (der MDEC-Dekoder kann hoechstens 256 Zeilen), die Quelle 640 x 480.
+* Vor dem Android-Bau ist der .cxx-Cache zu leeren (Modul umbenannt).
+
+Monitore und Wasser
+* Monitor unten in der Mitte: Farben und Takt stimmen, das Muster nicht - im Original grobe Bloecke, im Port feinere
+  Streifen (schon vorher so).
+* Der ueberzaehlige Eintrag der 8-Platz-Tabelle schreibt im Original in weitere Speicherstellen (u. a.
+  Ton-Lautstaerken); die Folgen sind nicht untersucht.
+* Vom Wasser gibt es kein Original-Video, nur den Speicherbeleg; welche Objekte in 1260, 2050, 2070 und 2080 beim
+  normalen Eintritt angemeldet werden, ist im Original nicht gemessen.
+* 5050, 50B0, 50D0 und 6000 haben einen anderen Mechanismus - nicht untersucht.
+* Die PSX-Fassung zeichnet die Streifen nicht.
+* Fuer Runde 2 gibt es keinen eigenen Pruefbericht; die Protokolle des Elza-Laufs hat der Orchestrator selbst geprueft.
+
+Zielhilfe
+* Der Port folgt hier RE2 Retail, nicht RE1.5 (Beta -> Retail).
+* Bei kleinen Winkeln rastet die Figur ein Bild frueher ein (Endwinkel gleich).
+* Die grosse Schrittweite fuer die Super Redhawk erkennt der Port an deren Clip-Laenge (Mod-Bank mit 8 Bildern; auf der
+  40%-Disc 10).
+* Automatisches Drehen und Drehen von Hand laufen beim Heben in umgekehrter Reihenfolge als in RE1.5 (schon vorher so).
+* Ihre Rueckmeldung zu Ordner 40 steht aus.
+
+Boden-Schatten
+* Den Spielerschatten hat niemand eigens im Spiel gemessen.
+* Die Diagonale der Schattenvierecke: PC 0-3, PSX 1-2; das Eckenmass weicht ab (Original -X-2, Port -X) - beides alt,
+  eigener Auftrag.
+* Weitere Nahgrenzen ohne Beleg (vz < 64) in main.c und gator_re2_pc.c - jede braucht ein eigenes RE.
+
+Pipe
+* Gegen Zombies so stark wie das Messer. Ordner 42 kuendigte fuer den Schadens-Umbau den Disc-Wert 24 an; nach Ihrer
+  Ausnahme vom 16.11. (Zombies wie RE2) behaelt der Bauplan fuer Zombies den RE2-Schaden aller Waffen - welcher Wert
+  dann fuer die Pipe gilt, ist offen.
+* Das Rohr ist ein Nachbau; der Pruefer: "Der Nutzer sollte es am Video abnehmen."
+* Drehen beim Zielen bleibt beim Port-Wert 24 (Original 0).
+* Elzas Netz ergaebe die Reichweite 1326; der Port nimmt fuer beide 1355.
+* Kein Fundort in v0.8.30 (nur Item-Debug). Ihre Rueckmeldung zu Ordner 42 steht aus.
+
+Optionen
+* Die unterste Menuezeile (AI und ULTIMATE) ist am Bildrand ein paar Bildpunkte abgeschnitten (schon vorher so).
+* Rote und Blaue Master-Keycard: Fuer die Disc-Kacheln gibt es zwei Lesarten; gewaehlt ist die nach Bildinhalt.
+* Ob die Disc-Dateien (DISC40) im Paket ankommen, ist am Paket nicht geprueft.
+
+Zweite Welle allgemein
+* Die Linux-Laeufe der neuen Riegel stehen bis zum Release-Bau aus (die Paketierung faehrt die Linux-Suite) - das gilt
+  auch fuer alles seit dem 9.11. Ein Kamera-Riegel der Riesenform (Warten mit Leon) misst genau an seiner Schranke ohne
+  Abstand und kann auf einem anderen Rasterer kippen, ohne dass sich das Spiel aendert.
+* Nur am PC gebaut; PSX- und Android-Bau nicht geprueft (die Android-Texturgrenze von 4096 Zeilen haelt die Riesenform
+  mit 15 Farbzeilen (3840; Stand 9.11.: 10 Farbzeilen, 2560) ein, auf einem Geraet ist das nicht gemessen).
+
+Zombie-Arme
+* Der Zufallsgenerator des Ports bleibt der Port-eigene; die 40%-Disc rechnet mit einem Zustands-Generator (Startwert je
+  Raum). Das aendert jeden Wurf und ist eine eigene Runde - nicht in v0.8.30.
+* Die Reihenfolge der Spawn-Wuerfe weicht vom Original ab - ohne Einfluss auf das Aussehen.
+
+Key Items
+* Auf der Dreh-Lage der Kurbel selbst (Blick Nord) meldet USE "You can't use it here."; es gilt das Original-Rechteck
+  westlich der Kurbel, wo auch "It's a square hole." kommt. RE2 hat an seiner Kurbel dieselbe Form.
+* Zwei Wege bei Karten: 3010 (Green Keycard, Tuerschloss) per Aktionstaste, 4000 (Blue Master Keycard, Panel) per USE -
+  beide mit RE2-Vorbild.
+* "You've used ..." beginnt an allen 14 Stellen auf fast schwarzem Bild, weil die Welt schon in der Einblende laeuft
+  (Port-Wahl).
+* Wer die Sicherung vom Hebetisch in 1150 noch traegt, hat mit der aus 2030 zwei Eintraege - reicht fuer Rolltor und
+  Generator, keine Sackgasse. Bei vollem Inventar kennt die Frage zum Herausnehmen am Kasten 2010 das volle Inventar
+  nicht: "You've taken the Fuse." ohne Eintrag, bis ein Platz frei ist (keine Sackgasse).
+
+Gore
+* Spinne: Wandflecken und die verstreuten Bodenflecken nach dem Platzen (80%-Video) fehlen; die Lache ist ein wachsendes
+  Viereck (RE1.5 und RE2 kennen keine Wandflecken).
+* Treffer-Spritzer und alle RE2-Partikel sitzen am Fusspunkt der Spinne, nicht am getroffenen Teil.
+* Babyspinnen sterben im Port praktisch nie (das Zertreten verlangt einen Spieler-Zustand, den die Zielhilfe nicht
+  liefert); ohne Tod kein Fleck.
+* Nach der Landung verschwinden einige Oberschenkel der Spinne, die Unterschenkel bleiben liegen (Eigenheit der Beta).
+* Die Leiche nach dem Python-Schuss bleibt beschiessbar; ein zweiter Schuss gibt eine zweite gruene Wolke ohne Scherben.
+* In Elzas Kamera von 2071 war die RE1.5-Lache nie sichtbar, weil ein Schattenviereck nahe der Kamera ganz wegfiel;
+  diese Ursache ist behoben (siehe "Boden-Schatten nahe der Kamera"), die Kamera von 2071 ist danach nicht eigens
+  gemessen.
+* Unter der Standard-KI fehlen weiter RE1.5-Inhalte jenseits von Angriff und Treffer: das Klettern der Spinne, Fressen
+  und Schlafen der Zombie-Familie, Schritt-Toene (siehe "Zu entscheiden", Tabelle 5b).
+* Kraehe: Liegende Federn und Fetzen wie im 80%-Video gibt es in RE2 nicht - nicht gebaut. Sitzt die Kraehe am Boden,
+  faellt die Haelfte der Federn sofort unter den Boden (wie im Original).
+* Hund: Zwei der sieben RE2-Teile haben kein RE1.5-Netz. Mit Elza nicht gemessen.
+* MC51-Beinzelle: freier Fensterbeleg fehlt (nur Messhaken und Riegel).
+* Weitere Video-Punkte nicht gebaut: Kopf weg mit Nicht-Magnum-Waffe, Wandspritzer, grosse Lache unter dem lebenden
+  liegenden Zombie; ob eine brennende Leiche weiterbrennt, ist am Port nicht geprueft.
+
+Handgranate und Waffenschaden
+* 3070/3071: kein Fensterbeleg fuer Elzas 3071-Kampf (nur Riegel); die 600-Form ist im Fenster nur fuer Leon in 3070
+  belegt.
+* Behoben in der Riesenform-Spur: START waehrend des Riesenform-Griffs in 5090 fror Form und Leon dauerhaft ein; jetzt
+  oeffnet START im Griff den Statusschirm nicht (Abnahme 4 der Stufe 3, Leon und Elza).
+* Nebenbefund 11C0: Der Gorilla trifft Leon in der Aufstellung der Abnahme alle 57 bis 58 Bilder aus rund 2100 Einheiten
+  Abstand (nicht untersucht).
+* Aeltere Nebenbefunde (eigene Spur): Dauerflamme an toten RE2-Hunden; ein echter Wurf zuendet in 2000, 1230 und 2030 an
+  manchen Standorten sofort an der Wand; Zombies bleiben nach der Werfer-Explosion mit 0 HP aktiv.
+* Nicht gebaut: dunkle Flecken an Wand und Decke (Video); der Blitz bleibt weiss-orange (Video weiss-gruenlich); die
+  Werfer-Explosivrunde ist unveraendert; Saeure- und Brandgranate im RE1.5-Gehirn behalten "Oberkoerper ab, kriecht
+  weiter"; der Rumpf bleibt als Torso in der Lache liegen; das Kanal-Zombie-Modell des Mods ist weiss-grau, im Video
+  khaki.
+* Munition: Handgranaten liegen in keinem Raum aus; Pistolenpatronen nur in STAGE1 - der Pistolen-Riegel des neuen
+  Endkampf-Ablaufs verbraucht 157 Patronen; ob ein Spieler so viele in 5090 hat, haengt am Verbrauch vorher. Der
+  Raketenwerfer liegt in keinem Raum.
+* Gitterhaende in 1210: Die Rakete macht dort nur noch 40 statt 1000 (RE2-Arme) - 7 Raketen statt 1 bis zum Abfall des
+  Arms (nur per Riegel; im Fenster waren sie kein Ziel). Waehrend einer Mutation von Birkin wirken Raketen nicht (Revive),
+  wie vorher; im Zug 5090 gibt es seit der Riesenform-Stufe 3 keine Mutation mehr.
+
+
+Kanalwasser
+* Die Fallroutine der Tropfen fehlt dem Port weiter; in 28 anderen Repo-Raeumen stehen Tropfen-Zeilen - ob deren Skripte
+  den Effekt starten, ist nicht geprueft; wo sie es tun, haengt der Tropfen ebenso.
+* ROOM50B0 Kamera 2: roter Bodenschein aus demselben Zwischenstand, blinkt nicht, unveraendert (siehe "Zu entscheiden").
+* Ob die Port-Zombies im Kanal von 2000/2001 beim Waten spritzen wie im 80%-Video, ist nicht gemessen.
+* Kein DuckStation-Lauf; die Aussage zum Original stuetzt sich auf die Skript-Bytes beider Discs, die EXE und das
+  80%-Video (von zwei Abnahmen als ausreichend bewertet).
+
+Nachtrag 30 (Spur N)
+* Die offene Schranktuer in 2010/2011 hat keine Kollision: Die Figur kann durch den Fluegel gehen.
+* Die Schrank-Innenseite zeigt nach dem Einsetzen weiter die Rueckwand mit fehlender Sicherung und roter Lampe; nur die
+  Nahansicht zeigt den Wechsel auf die gruene Lampe.
+* Die Tuer ist nur unter Kamera 3 zu sehen (unter Kamera 4 zeigt der Hintergrund den Schrank geschlossen).
+* Stirbt die Figur bei offenem Panel, liegt "YOU DIED" ueber dem Panel; danach geht es normal zum Titel.
+
+Sicherungskasten und Panel (Spur PF)
+* Die Lesbarkeit misst kein Test; sie ist allein durch Ihr "ja, ist super." abgenommen. Das Panel ist im Vollbild nicht
+  gemessen.
+* Waehrend der Panel-Nachrichten schimmert das rote Schild schwach durch das Band (Port-Wahl, Text lesbar). Nicht belegt: Ob Sie das Durchschimmern stoert.
+* Der Kasten ist nur unter Kamera 3 eine Port-Flaeche; unter Kamera 4 bleibt der Original-Hintergrund.
+
+Alligator (Spur P und G2)
+* Beim Kampfbeginn ragen Kopf und Hals von rechts ins Bild, der Rumpf folgt nach gut 100 Bildern - mehr lassen das
+  RE2-Band, die Kamerazone und Kamera 0 nicht zu.
+* Mit dem Kanister im Maul ragt der Kopf bzw. das Kanister-Ende kurz ueber die Wand, dann gleitet der Alligator zurueck -
+  sichtbar als Abdruecken von der Wand, kein Sprung.
+* Der Kanister bleibt in RE2-Groesse am kleineren Alligator: Die Ueberlaenge zur Seite ist 1,5-mal so lang wie in RE2.
+  Eine Umskalierung beim Biss waere erfunden.
+* In RE2 wird die Alligator-Leiche 10 bis 15 % kleiner gezeichnet; der Port nicht.
+* Putz, Finisher und Kanister-Sitz stehen auf den RE2-Bytes, nicht auf einem Bild aus dem laufenden Original (kein
+  Abbild).
+
+* Ein einmaliger Absturz in einem Elza-Riegel der Spur P (21-mal nicht reproduziert) ist ohne Ursache; seit Spur Q
+  schreibt ein Haken beim naechsten Mal Adresse und Stapel ins debug.log.
+
+Restpunkte (Spur Q)
+* Effekt-Quader in 20B0 unter der Hardware-Grenze bleiben im Bild; ob das Original sie an dieser Stelle zeigt, ist ohne
+  DuckStation-Vergleich nicht belegt.
+* Treppenende ROOM6010/6011 (vorbestehend): Je nach Spur schiebt das Treppenende die Figur seitlich aus der Treppe; bei
+  Elza ist nur ein schmaler Streifen in der Treppenmitte sicher. Mit dem Original nicht verglichen.
+* Teil 8 der Treppenwange deckt nicht die ganze Wange - nur mit erzwungener Kamera 5 zu sehen.
+
+Story
+* Die unveraenderten Dateien 6030 main00/02/04/06/13 bis 19: per Spracherkennung nur main02 geprueft.
+* Dateinamen, die nicht der Nachrichtennummer folgen (1050, 1150, 11B0, 1171, 1011, 1141, 1100, 1241): Wer neu spricht,
+  ersetzt die Datei rechts; room1141/main42.wav und main50.wav spielen nie.
+* Die dritte Zeile von 6030 Zeile 21 liegt auf dem unteren Kinobalken (lesbar).
+* PSX: nur Syntaxpruefung, nicht gelaufen; Nachrichten-Id 40 ist auf der PSX nicht anzeigbar (siehe "Zu entscheiden").
+* Zur Kenntnis, nicht geaendert (B1 bis B16): 30E1 Zeilen 14 bis 17 Rollen vertauscht (Disc: John draengt, Elza zoegert);
+  30E0 verschweigt Marvins Beinwunde; 5011 Feuer statt Virus und erschlossene Sprecher; 3070 Sprecher erschlossen,
+  "Underground" Fehllesung; 3071 Sherrys Insiderwissen; 4001 Sprecher Elza statt John; 3061 Zeile 5 ohne "Look,"; Adas
+  Tod ohne Beleg dagegen; John in der Zelle 1211; Mod-Namen (Irons, Branagh, Kennedy ausser dem Ausweis, Annette, Elliot,
+  Dr. Birkin, Virus Inhibitor) ohne Capcom-Beleg.
+* Luecken des Materials: Sprecher von "......Leon" in 115, unlesbare Untertitel, der Name der Frau im Kittel ist nirgends
+  belegt, das Finale 605 bis 607 fehlt ueberall.
+
+Bahnsteig-Birkin (Spur R)
+* Das Modell: Die G4-Fassung ist ersetzt; im Spiel steht die eigene Riesenform (seit Ihrem Entscheid vom 7.11. abends;
+  in v0.8.30 K5g3). Eine vierte Abnahme-Datei der Spur R gibt es nicht.
+* Die Szene vom Bahnsteig (Ihr Bild 1, ROOM5080 aus einem Blick, den keine Kamera des Raums hat) existiert im Spiel nicht;
+  in 5080 kaempft seit der Stufe 3 die Riesenform und flieht am Ende.
+* Griff der Form: Leon fliegt weg statt von der Form gehalten zu werden (RE2-Opfer-Sequenz nicht gebaut). Steht Leon vor
+  der Form, verschwindet sein Oberkoerper in ihr (RE2-Verhalten, bleibt so).
+* Auf dem orangen Boden von 5090 wirkt der grosse Schatten dunkelrot. (Der harte Modellwechsel bei der Mutation im Zug
+  entfaellt, weil es dort seit der Stufe 3 keine Mutation mehr gibt.)
+* Leon unter dem G5 im Westen (nur wenn er dort stehen bleibt und nicht schiesst): Der G5 rollt ueber ihn, er bleibt frei;
+  in der Ecke unter dem Koerper kurz ohne Wirkung der Eingabe. Im freien Spiel in 16 Laeufen nie.
+* Im Rueckstoss und G5-Auftritt ist Leon, wenn er weit oestlich steht, rund 14 s nicht im Bild (Gestaltungsfrage).
+
+G5-Auftritt
+* Die Lampe ist im 3x-Fenster 3 bis 12 % dunkler als in RE2 (Rasterkante beim Hochskalieren); Vorlauf 55 statt 59 Bilder
+  (erste Lampe 0,13 s frueher). Beides gering, von der Abnahme 5 so eingestuft.
+* Kampf: Ein Arm schiebt die Figur ein Stueck nach hinten; ob RE2 im Kampf genauso schiebt, belegt kein RE2-Kampf-RAM.
+* Port-Wahlen: dritte Einstellung in RE1.5-Kamera 12 statt der RE2-Schnitte 5 und 6; Musik RE1.5 statt der
+  RE2-Absenkung; die RE2-CD-Standbilder sind nicht nachgebildet; die RE2-Spieler-Gesten (Umdrehen, Hochschauen) nicht
+  uebertragen; der Rueckzug des G5 im Kampf ist vereinfacht; die RE2-Zugfahrt-Vibration vor der Szene ist nicht gebaut.
+* PSX: Szenen-Schnitte, RE2-Licht, Lampen, Beben und Brocken nur auf dem PC.
+* Vormerkung v0.8.31: Der G5 soll aus dem Finale wieder heraus (Ihr Wort vom 7.11., siehe Einleitung); dann entfaellt
+  dieser Auftritt, und das Finale wird nach dem RE2-Ende neu gebaut (siehe "Vorschau auf v0.8.31").
+
+Umgebung und Pruefstand
+* Die Skript-Riegel des Release-Skripts laufen in der Abnahme von v0.8.30 wieder mit; unit_r38_releaseskript_ablauf
+  ist nur bei langem Build-Pfad rot ("Filename too long"), mit kurzem Pfad "71/71 Pruefungen gruen";
+  unit_r39_titelversion_cmake ist rot, wenn git nicht im PATH liegt (so unter local_build.sh).
+* Alle Spuren dieser Fassung sind nur am PC gebaut; PSX- und Android-Bau sind fuer keine Spur geprueft.
+* Am 7.11. um 18:40 brach ein Wochenlimit des Kontos fuenf laufende Pruefungen ab, am 8.11. gegen 00:15 ein weiteres
+  Kontingent die Alligator-Abnahme 8; alle wurden auf dem neuen Modell fortgesetzt (Protokoll vom 7./8.11.). Die Berichte
+  der abgebrochenen Pruefer wurden von den Nachfolgern nur als Rohmaterial gelesen und jede Messung neu gemacht.
+* Am 10.11. abends und am 11.11. frueh brachen Kontingentgrenzen erneut alle laufenden Arbeiten ab; sie wurden am 11.11.
+  bzw. ab dem 13.11. mit den Notizen der abgebrochenen Agenten fortgesetzt.
+
+## Technisch
+
+* **Stand v0.8.30:** Zweig r41/release_0830, HEAD 44cc5b7d5 (17.11.), Basis master 0b86e36c6 (9.11.). Merges vom 17.11.
+  in dieser Reihenfolge: 762ebfda4 r41/integration (799594460, Alligator-Nutzerbefunde), b1b7e8cfb
+  r41/zwischensequenz_114 (00011e063), a465189c7 r41/monitore (dce5427d2), bbb00c08e r41/zielhilfe (d12b972fb),
+  dae306b17 r41/pipe (b417700a4), 0968140a2 r41/optionen (ecd2a5c70), f0f9b0749 r41/sichel_szene (84b36f0d2), 198284284
+  r41/birkin_aufrichten (f7057a708), b5e557c2e r41/form (649bbbf39; Konflikte in .gitattributes und
+  tests/unit/CMakeLists.txt, beide Bloecke behalten), ea630d75f r41/birkin_kralle (32b4575e6); danach die
+  Testanpassungen 16d9dffdd, 8c54123dd, 5ae09b47b, der Fix 29312b011 und der Nachzug 44cc5b7d5 (r41/birkin_kralle
+  83eab1010, Ausholen) und die Alligator-Sperre ec0d39bb9. Beim Release wird master auf ec0d39bb9 vorgezogen. Nach 53667af13 lagen auf master: 010f833b9
+  (Aufnahmen synchro/ und RE2-Dateien), b8e3ad700 (Linux-Portabilitaet fuer den Release-Bau), 0fb3d8247 (Ihre neuen
+  PRI-Freistellungen, Entscheid "Umbenennung committen") und 0b86e36c6 (Linux-Warnungen in drei Tests).
+* **Stand master vom 9.11. (Vorgeschichte):** 53667af13 (9.11., Fast-Forward aus r41/integration). Seit b27d96891 neu:
+  2c1c0eb1a (Sherry und Annette, Bericht f6204ab0a, Pruefung ebfc5f0cf); Lauf C Merge 91636662f (r41/sichel_nb2, Sichel
+  V7, Abnahme 0 5ea6d94f0), Bericht 154e59a89, Gegenpruefung a3051c902; Labor-Fix 145316fc9 (Bericht d3dcddf1a, Pruefung
+  e181dfac7); Lauf D Merge db52dd8bf (r41/form, Riesenform K5e, Einbau E32 bestanden), Riegel-Fixes 48263fc5f und
+  c3a6b2057, Bericht 37f7a8ecb, Gegenpruefung 53667af13. Hauptbaum-exe neu gebaut 9.11. (Dateizeit 10:30). Der Stand
+  b27d96891 (8.11.) enthielt: 8f464d57c (7.11., Merge WS) = 68f3f5f13 (6.11., v0.8.29 d682200f + Birkin-Zweig + Merges
+  47b5b3280, b539a5337 + Spuren vom 31.10./1.11.: R d0d3e10d7, O 2a0e2ff44, P 361017e92, Integration O+P 91cd9ec82, N
+  c5d7ba18a, Q 852b43581, R 6c34c132a, Integration Q+R 746958956, 0dd07032d, 2bcf4d0f1) + Welle 1 (Merges 6.11. 19:56
+  bis 20:11 in der Reihenfolge S 83eab5b59, W 35773161a, ZA fb3d4c4f2, PF 66f436807, GR 54e0b06e7, ST80 7d8634051, G5A
+  c9297033c; danach 8cf96bad1 Pistolentest, 0df13de33) + nachgeholte Abnahmen und Nachbesserungen vom 7.11. (W Abnahme
+  3, G5A Abnahme 5, ST80 Abnahme 1 nicht bestanden -> Nachbesserung 1 45174ae1f/ceb920b22/8ffad09ab -> Abnahme 2
+  bestanden 7587d3e57; VERTRAG 1.1 0b25c2703: Bank-9-Bit 128 an ST80, Nachrichten-Ids 6030 31 und 40) + Spur WS (Zweig
+  r41/waffenschaden, sieben Commits 57d416401..ac72cd3cb, Abnahme 97349ae5e, Merge 8f464d57c ohne Konflikt). Dazu Welle
+  2: Lauf A Merges 10bb4bc79 (r41/form_nb4, Stufe 3, Abnahme 4 f9d9a96f0, 9 Konfliktdateien) und 2a0fe07bc (r41/annette,
+  Abnahme 5 e0137de38, 3 Konfliktdateien, VERTRAG 1.2), Fixes aa534a122, a9f77838a, a28502957, d99419679, d5f4f5914
+  (Riegel auf die Stufe-3-Zeitachse), Kette A+C 3163f6045; Lauf A2 275a57906 (r41/form, Asset K5c, E30), bf5001400
+  (veraltete Kommentare, u. a. 43 -> 35 Pistolenschuesse am Alligator), 2312b9e0a/dabac8d22 (Wagenweg-Riegel 1000 HP),
+  8f09f8fe0 (Messhaken), 3b2eec448 (Zug 6030), c752d9a73 (Riegel Zug-Weg und 5090-Kombilauf), 72c80256f (Dossier),
+  4dde57452/b0623e4d6/89586a617 (Absturz Software-Renderer, Riegel unit_r41_uv_textur); Lauf B c19f8aaf3 (r41/gator_re2,
+  Abnahme 9 00c6b3bad, 4 Konfliktdateien), 198980793, 548b8f3e7, eef7bc87b, 05015ad01, 8d3d840a9, b27d96891 (Paket-Gate
+  um GATOR40A0.RBJ). Nicht belegt: Fuer die drei Merges vor den Spuren (47b5b3280, b539a5337, Birkin-Zweig) gibt es kein
+  Leseblatt und keinen Abschnitt in diesen Notes.
+* **Alligator-Nutzerbefunde 9.11. (Abnahmen 9./10.11.; in v0.8.30 ueber den Merge 762ebfda4):**
+  Zweigstand r41/integration 799594460, Basis master 0b86e36c6. Befund 1 (Klettern): 8d165ee58. Befund 2 (Kanister im
+  Biss und im Spurt): 80c7394ab, Biss laeuft zu Ende 16f7b402b. Befund 3 (Schluessel im Gebiet seiner Kamera):
+  6d7a9e121, f8c71298a (Rueckfall auf die Bildschwelle), ersetzt durch bf345ea49 (kein Rueckfall). Nachtrag K1
+  (Kanalmitte) e5cd784dc, K2 (naechster Punkt zur Leiche) ae9e17c9e, H3 (Spurt-Abbruch) 3061fe397, Riegel-Nachzug
+  05c8851e6. Nachbesserung zur Abnahme 2: 61aeffeb8 (Endlage mit vier Ecken, verworfen: zu streng, 172 von 208 Lagen
+  weiter weg) und cceb11646 (auf die Mitte zurueckgenommen), Riegel 190c4b1da, 04aa0e7db, 3a532ee7e. Berichte 4d68d2549,
+  077481839, 3f12a9b4e, 696a42f42, 5116d63ed; Abnahmen 0 bis 3: 6b221f0d6 (nicht bestanden), b29263046 (bestanden),
+  dd5010b5d (nicht bestanden), 799594460 (bestanden).
+  - Abnahme 0 (Stand 077481839): Der Lauf der ganzen Gruppe (150 Riegel) wurde nach 3 fertigen Riegeln abgebrochen (zu
+    langsam neben den eigenen Laeufen des Pruefers). Gefahren ist ein eigens gewaehlter Ziel-Satz: "100% tests passed, 0
+    tests failed out of 96" (510,53 s). Durchgefallen nicht an den Riegeln: der Schluessel an den Laeufen im echten
+    Kampf, der Biss-Abbruch an der selbst gelesenen RE2-Disassembly (gemessen dazu ein Riegel-Lauf des Fixers).
+  - Abnahme 1 (Stand 3f12a9b4e): "100% tests passed, 0 tests failed out of 152" (5410,25 s).
+  - Abnahme 2 (Stand 696a42f42): "99% tests passed, 1 tests failed out of 154" (5436,62 s), rot unit_r41_gatorszene_tod
+    ("tod: 6 Fehler", einzeln 6 von 6 rot, rot seit ae9e17c9e).
+  - Nachbesserung (Stand 3a532ee7e): "100% tests passed, 0 tests failed out of 154" (4451,95 s).
+  - Abnahme 3 (Stand 5116d63ed): "100% tests passed, 0 tests failed out of 154" (5019,56 s); unit_r41_gatorszene_tod
+    einzeln 3 von 3 "tod: 0 Fehler". Aufruf der Gruppe: ctest -R "gator|kanister|alligator|2090|2080|re2gator".
+  - Unit-, Eigenschafts- und Sonden-Riegel (Bericht, Stand f8c71298a): ctest -R "^(unit_|prop_|probe_)", ausgenommen
+    unit_r38_releaseskript_*, unit_r30_android_*, unit_r35_android_*, unit_r39_titelversion_cmake und
+    unit_r39_titelversion_ablauf; Zeitueberschreitungen: unit_gator_sweep, unit_r37_masken36_ausschluss,
+    unit_r41_alligator2_erreichbar, unit_r41_birkin_wand_g5, unit_r41_birkin_wand_griff.
+  - Neue Riegel: unit_r41_gatorfix_kletterbiss(_elza), unit_r41_gatorfix_kanbiss(_elza),
+    integration_r41_gatorfix_kanister_vorbei(_elza), integration_r41_gatorfix_kanister_mitte(_elza),
+    unit_r41_gatorszene_tod_gebiet(_elza).
+  - Angepasste Riegel: unit_r41_kanister2080_landung; unit_r41_gatorszene_tod (drei Staende);
+    unit_r41_alligator2_schluessel (Becken-Scan); unit_r41_alligator2_weg (jede Lage beginnt mit frischem Boss-Zustand,
+    f8c71298a - behebt ein Leck des Testprogramms, Gegenprobe gegen 0b86e36c6 im Bericht);
+    integration_r41_kanister2080_kampf (Wurfrichtungen 3342/888, 05c8851e6); die exe-Riegel
+    integration_r41_gatorszene_tod* (test_r41_gatorszene.cmake) und integration_r41_alligator2_k3(_elza)
+    (test_r41_alligator2.cmake): Bildschranke 2 x 2 an der Endlage und in der Kamera der Einstellung, dazu lesen sie die
+    neue Protokollzeile "Schluessel-Bild".
+  - Nicht gebaut (Plan des Untersuchers): die exe-Riegel test_r41_gatorfix_kletterbiss.cmake (Befund 1) und
+    integration_r41_restpunkte_gator_wiederkehr (Befund 3). Im Testprogramm faehrt unit_r41_gatorfix_kletterbiss den
+    Engine-Weg mit den Kletter-Baenken und unit_r41_gatorszene_tod_gebiet Tod, Leiter, Rueckkehr und Kamerawechsel. Am
+    gebauten Spiel gefahren: Kletterbiss in der Abnahme 1 (8 Laeufe in der Einzeltabelle des Berichts, davon 5 mit Biss
+    waehrend des Kletterns; die Uebersicht desselben Berichts nennt 9) und in der Abnahme 3 (8 Laeufe); Tod, Leiter hoch
+    und runter und Aufnahme in den Abnahmen 1 und 3 (Leon und Elza).
+  - Veraltete Kopfkommentare, Code der Pruefung richtig: tests/unit/probes/r41_alligator2.cmake Z. 5 ("Becken-Scan: nie
+    unter 10,4 Bildpunkten") und Z. 9 ("Schluessel >= 10,4 Bildpunkte und sichtbar"),
+    tests/integration/test_r41_alligator2.cmake Z. 17 (">= 10,4 Bildpunkte ... Kasten >= 10 x 9"). Dieselbe Datei sagt
+    in Z. 284-285, dass die Bildschwelle 10,4 hinter Ihr Wort zuruecktritt und die Bildgroesse nur noch gemessen wird.
+  - Belegstellen im Wortlaut. Klettern: RE2 EM23_OVL_0000.BIN @0x801015b4 `addiu v0,zero,0x205` / @0x801015c4 `sw
+    v0,-0x404(at)`; RE1.5 PSX.EXE @0x80012ebc `sb v0,4(s1)` / @0x80012ed4 `sb v0,5(s1)` / @0x80012ee0 `sb zero,6(s1)`;
+    Endlage Ihrer Sitzung und der drei Laeufe des alten Stands: (11948,-1800,-18568), hinter der Ostwand.
+    Kanister-Fenster: RE2-Abfrage @0x80100ab8-b1c mit @0x80100ae4 `addiu -8601` / @0x80100ae8 `sltiu 0x18f` (RE2: 8601
+    bis 8999 voraus, mal Modellmass - das ferne Ende; im Spiel gilt es fuer den Kanister der Wurf-Szene seit der Spur
+    G2, e139e9b6e vom 1.11., schon ab 0 - gator_re2_r41.c Z. 627-632, unveraendert gegenueber 0b86e36c6; Abnahme 2:
+    "wirksam laengs 0 bis etwa 6000, |quer| < 1733") und @0x80100af4 `lbu +0x226`; den Kiefer-Lauf +0x224 fragt sie
+    nicht ab. Biss laeuft zu Ende: @0x80100328 `jal 0x80101388` (Kiefer-Ablauf in jedem Takt; im Bereich
+    0x80101388-0x80101578 kein Zugriff auf +0x226); +0x226 sperrt nur den neuen Biss (@0x8010133c `lb v0,0x224(a0)`,
+    @0x80101360 `lbu v1,0x226(a0)`, @0x8010137c `sb v0,0x224(a0)`). Spurt: RE2 Sub 3 0x80100d30-0x80100ee8 ohne Fenster
+    und ohne Abbruch; normales Spurt-Ende @0x80100ea8 `beqz s0,0x80100ee8` (Endflag des Spurt-Clips), @0x80100ebc `addiu
+    v0,v0,0x400` (Vierteldrehung). Eintritt ins Schwimmen: @0x80100c38 `addiu a2,zero,0x20` / @0x80100c3c `jal
+    0x8001a330`. Kanalmitte: ROOM2090.RDT, Kollision @0x6DC; Westwand-Kasten [0] @0x6F4 x -10900 bis -8900 (Innenkante
+    -8900), Plattform-Kasten [4] @0x724 x -1700 bis 1850 (Kante -1700); Kanal 7200 breit, Mitte x -5300. Wurfbahn: RE2
+    ROOM7020 @0x088E-08A2, v (25,20,10) / a (5,20,0). Kamera-Umschaltung: RE1.5 PSX.EXE FUN_80014230, @0x80014254 `lbu
+    v1,22(a0)` / @0x8001425c `bne v1,v0`, @0x80014298 `jal 0x80014368`, @0x800142a8 `lbu a0,1(s0)` -> @0x800142ac `jal
+    0x800142f4`. Verdeckung durch die Leiche: Kugel mit 800, der halben Breite des RE1.5-Alligator-Kastens
+    (@0x80118b98).
+  - Geaendert unter re15_port: 22 Dateien, +1360 / -86 Zeilen samt Tests; Spielcode in climb_common.c,
+    gator_treffer_r41.c, enemy_ai_boss_gator.c, gator_re2_r41.c, gatorszene_r41.c, kanister2080_r41.c.
+* **Messhaken der Alligator-Nutzerbefunde (nur Diagnose, kein Spielweg):** Neu sind RE15_G2_KAN_PHASEN_ALT=1
+  (Kanister-Fenster wie im alten Stand 0b86e36c6: nur in der Verfolgung und beim aufgetauchten Lauern, nicht im Biss und
+  nicht im Spurt) und RE15_G2_DASH_BLEND_ALT=1 (Spurt-Abbruch ohne Ueberblendung, wie von 80c7394ab bis vor 3061fe397;
+  der Code nennt dafuer den Stand b29263046). Nicht neu ist RE15_K2080_WURF_GIER=<Zahl> aus der Kanister-Spur: Der Haken
+  erzwingt eine feste Wurfrichtung, gleich welche - 3072 stellt den alten Nordwurf her, 888 erzwingt den neuen Suedwurf.
+  Neue Protokollzeile im debug.log: "[gatorszene] Schluessel-Bild: Kamera ..., Ecken-Kasten ...".
+* **Nicht in v0.8.30:** r42/story (Story Teil 1 bis 3; wird gerade mit v0.8.30, r42/hangar_aussen und r41/stimmen zur
+  Basis fuer v0.8.31 zusammengefuehrt), r42/hangar_aussen (fe5436f55, Szene "von aussen"), r41/stimmen (73aee131a,
+  Option VOICE); Abbruchreste auf r41/sichel_v4r6_abbruch, r41/form_rot_r4_abbruch und r41/form_k5f_r2_abbruch
+  (9dfd05b25, "nicht verwendet").
+* **Geprueft (Summenzeilen der jeweils letzten Abnahme, Windows):**
+  - Abnahme v0.8.30 (Zweig r41/release_0830): erster Lauf auf ea630d75f "99% tests passed, 12 tests failed out of 1567"
+    (16366,56 s; Einordnung unter "Pruefstand"); Pruefung der Anpassungen R1 "NICHT BESTANDEN - 1 roter Punkt" (Gruppe
+    "100% tests passed, 0 tests failed out of 270"), R2 "BESTANDEN - kein roter Punkt" (Gruppe "100% tests passed, 0
+    tests failed out of 291", abgenommene Assets unveraendert); finale Abnahme auf 44cc5b7d5 siehe "Pruefstand".
+  - Gorilla-Filme: Unit 114 "100% tests passed, 0 tests failed out of 86"; Durchlauf Elza 1131 -> 1141 -> 1171 "100%
+    tests passed, 0 tests failed out of 1" (383,14 s); 11C nach dem Vorspulen "100% tests passed, 0 tests failed out of
+    1147" (Teilmenge).
+  - Monitore und Wasser: Pruefer R1 Teilsuite "100% tests passed, 0 tests failed out of 186", R2 "100% tests passed, 0
+    tests failed out of 7"; Gegenproben mit eingebauten Fehlern rot.
+  - Zielhilfe: "100% tests passed, 0 tests failed out of 199" (Pruefer).
+  - Pipe: "100% tests passed, 0 tests failed out of 318" (Pruefer); Pipe-Ton "100% tests passed, 0 tests failed out of
+    13".
+  - Optionen: Bauer und Pruefer in beiden Runden "100% tests passed, 0 tests failed out of 182".
+  - Sichel V8: Runde 7 Gruppe "100% tests passed, 0 tests failed out of 8", Unit 1013 von 1013; Schwanz 8g "100% tests
+    passed, 0 tests failed out of 18"; Szene mit Schwanz Runde 5 "100% tests passed, 0 tests failed out of 30" (1719,30
+    s).
+  - Hangar: Rueckbau mit Bit 38 "100% tests passed, 0 tests failed out of 32"; Liegenbleiben "100% tests passed, 0 tests
+    failed out of 33" (Pruefer, 1851,68 s); Sherry-Ruf "100% tests passed, 0 tests failed out of 54".
+  - Klauenhieb: Runde 3 "100% tests passed, 0 tests failed out of 67"; Ausholen "100% tests passed, 0 tests failed out
+    of 53"; Aufrichten "100% tests passed, 0 tests failed out of 44".
+  - Riesenform: K5g3 Form-Gruppe je Runde "100% tests passed, 0 tests failed out of 12", Textur-Riegel 47 von 47 (41
+    Gegenproben rot); Hand-Einbau Geometrie-Riegel 14 von 15, Textur-Riegel 48 von 48, ctest 1408 von 1411 (die drei
+    Roten ohne Bezug zum Einbau); Vorderzaehne Form-Gruppe 27 von 27, Riegel 5 von 5.
+  - Integration Welle 1 + WS auf master: Unit-/Eigenschafts-/Sonden-Riegel 1067/1067; 42 Waffenschaden-Integrationsriegel
+    (1 Lastausreisser, einzeln 3 x gruen) und 16 Zug-/Querbezugs-Riegel gruen; Gegenpruefung 62 Hunks, 0 gemeinsame
+    Dateien (Protokoll 7.11.). WS-Abnahme: "100% tests passed, 0 tests failed out of 1066" (Unit), Integration 42/42;
+    Gegenprobe mit selbst uebersetzter alter Engine rot an genau den erwarteten Stellen.
+  - Spuren vom 31.10.: Merge O+P "1033 unit/prop/probe, 192 Integrationstests gruen"; Integration Q+R "100% tests passed,
+    0 tests failed out of 1051" bzw. 1044 am 1.11., Zielgruppen gruen.
+  - Nachtrag 30 (Abnahme 1): "ctest -R r41_nachtrag30 -j3: 11/11 gruen"; "1024/1024 gruen, 3 uebersprungen"; Integration
+    mit Spur O: Unit "14", Schrank-Riegel Leon/Elza "2/2", Ventilkette-Wege gruen.
+  - Key Items (Abnahme 1): "100% tests passed ... out of 21"; breit "100% tests passed ... out of 1139"; Querbezug 45 von
+    46 (rot nur eine Altlast der Basis).
+  - Alligator-Reste (Abnahme 1): "22 von 24 gruen", die zwei unter Last roten einzeln 3 x gruen; Nachbargruppe 189 von 190
+    (Altlast); Spur selbst "100% ... out of 81"; Trage-Laeufe 306, Sprung ueber 340: 0.
+  - Restpunkte (Abnahme 1): "16/16", "97/97", "15/15", "92/92", "1056/1056".
+  - Bahnsteig-Birkin: Abnahme 1 nicht bestanden (drei Blocker), Abnahme 3 mit Liste N1 bis N6 (ein Blocker, kein
+    Urteilswort); danach Nachbesserung 3 der Spur selbst: "Zielauswahl 75 von 75 gruen". Nicht belegt: Keine Abnahme-4-Datei.
+  - Zombie-Arme (Abnahme 1): je Typ "400 Seeds ... Teil veraendert 0"; Gruppe "113/113 Passed".
+  - Gore (Abnahme 4): "Unit-Zielauswahl: 326/326 gruen"; "Integration einzeln nacheinander: 14/14 gruen".
+  - Handgranate (Abnahme 2): "2/2 gruen"; Integration "4/4 gruen"; volle Suite "1069/1070 gruen" (rot nur ein Zeitlimit
+    unter Last, direkt ohne Zeitlimit in Ordnung).
+  - Kanalwasser: Abnahme 2 Unit "23/23 gruen", Integration "11/11 gruen"; Abnahme 3 (Deckentropfen) "alle 12 Riegel
+    gruen", Gegenprobe mit gestarteter Schleife zeigt Tropfen und Fleck.
+  - Kasten/Panel (Abnahme 2): "1066/1066 gruen", PF-beruehrt "44/44", Integration 10/10, 8/8, 13/13, 1/1, 10/10, "Gruppe B
+    gesamt (42 Integrationstests) 42/42 gruen".
+  - Story: Abnahme 1 (nicht bestanden, M1) und Abnahme 2 (bestanden): Riegel P4a bis P4k gruen, Gegenprobe gegen den alten
+    Stand rot; Spur selbst "1078 Tests, 1070 gruen" (rot nur die sieben Skript-Riegel und ein inzwischen gruener Riegel).
+  - G5-Auftritt: Abnahme 4 "1068/1068 gruen, 334,8 s", Integration "11/11 gruen"; Abnahme 5 (NB5/NB6): "72 verschiedene
+    Riegel ... kein roter Riegel", Lampen gegen RE2-RAM 20/20, Vibration 23/23.
+  - Welle 2, letzte Abnahmen: Alligator Abnahme 9 "100% tests passed, 0 tests failed out of 48" (Unit) und 5/5 exe-Riegel
+    (1284,8 s); Annette Abnahme 5: Annette-Riegel 4/4, Suite 1040/1040, Integration 8/8, 28/28 und 8/8; Riesenform Stufe 3
+    Abnahme 4: Satz D 13/13, Satz A 19/19; Riesenform-Einbau: Form-Gruppe 11/11, Asset-Gruppe 4/4, Einbau-Pruefung Zahlen
+    und Sicht bestanden; Sichel V7: Einbau 8/8, Abnahme 0 bestanden (Spur 11/11, Dossier 20/20, Unit 1013/1013,
+    Szene 901 von 901 Bildern gleich).
+  - Integration Lauf A2 (8.11.): Wagenweg auf 1000 HP 6/6 (zweimal); Zug-Riegel torweg 3/3, annette_g5 1/1,
+    Annette/Story-Gruppe 25/25, unit/prop/probe 1083/1083; nach dem Absturz-Fix Pistolen-Riegel gruen (477,88 s), Form
+    19/19, unit 1068/1068.
+  - Integration Lauf B (8.11., INT_belege/w2b_test/testlauf_summen.txt): unit/prop/probe "100% tests passed, 0 tests
+    failed out of 1098" (Kopf eef7bc87b; der erste Lauf hatte 1097/1098 - zwei Teile eines Alligator-Riegels schrieben
+    unter -j 6 dieselbe Logdatei, Fix 548b8f3e7); G2 48/48 + 20/20; Form-Satz A 20/20; AN/ST80 30/30; WS/Gator 108/110
+    (2 x DEVICELOST im Bildmitschnitt, einzeln je 2 x gruen); Klettern + Kette A+C 31/31; Raum-Querbezug 2090/2091/2080
+    8/8; main.c-Fensterriegel 5/5; Form-Asset-Gruppe 4/4; F-Riegel nach Neuvermessung 4/4. Gegenpruefung G2-Merge (908
+    Dateien, 1008 Hunks) und Form-Merge (281 Dateien, 3825 Hunks): 0 unerklaerte Zeilen.
+  - Kette A+C, Messung 3 (8.11., Kopf 198980793): Leon 2030 -> 20B0 -> 2050 und Elza 2031 -> 20B1 -> 2051, je alle 31
+    Pruefungen, Bild fuer Bild wie Messung 2.
+  - Integration Lauf C, Sichel V7 (Merge 91636662f, 9.11.): unit/prop/probe 1100/1100; gezielt (Birkin, Form, Bahnsteig,
+    G5, Alligator, Waffen, Annette) 108/108; Sichel-Gruppen 12/12 und 21/21; Hangar-Szene mit Software-Renderer ohne
+    Absturz; Gegenpruefung: kein Hunk verloren.
+  - Labor-Birkin (Fix 145316fc9, Pruefung e181dfac7): Birkin/Labor/Sichel/Form/G5 40/40, unit/prop/probe 1100/1100.
+  - Integration Lauf D, Riesenform K5e (Merge db52dd8bf, 9.11.): unit/prop/probe 1100/1100; gezielt 115/115 (zwei Riegel
+    mit belegter Ursache auf K5e nachgezogen); Software-Renderer in 5090 ohne Absturz; Gegenpruefung ohne Befund.
+  - Fix Sherry 6031 / Annette 6030 (Pruefung ebfc5f0cf): Riegel 2/2 gruen, Gegenprobe rot (Abweichung 311 bzw. 129);
+    unit/prop/probe 1100/1100; Annette-, Story-, Torweg-, Kartenbit-, G5-Auftritt- und Zug-Riegel 31/31.
+  - Release-Skript-Riegel: laufen in der Abnahme von v0.8.30 wieder mit (siehe "Noch offen", Umgebung).
+* **Neue Assets (Paket-Gate):** Gore: GLAS1090_0C.TIM (RE2-Effektbild der Kraehenfedern). G5-Auftritt: R704_CUT09/10
+  (Hintergruende, Masken), R704_XA0B/0C (Ton), R704_LAMPE (Modell), R704_BEBEN (Ton), R704.ESP. Nachtrag 30: SUB_34.BGM
+  (Sirene), BRUECKE4080 (Bruecken-Motor und Halt); geaendert FILE31_p01/p02 (Notiz). Alligator-Reste: GATOR40A0.VBS
+  geaendert (Putz). Restpunkte: MASKS/ROOM6010.MSK, ROOM6011.MSK und zwei Maskenbilder geaendert. Welle 2:
+  RE2/GATOR40A0.RBJ (RE2-Raumbank mit den Trefferreaktions-Clips 17-20; seit b27d96891 im Paket-Gate),
+  RE2/ANNETTE_4D.EMD, RE2/ANNETTE_4D_BLUT.EMD und RE2/ANNETTE_SE.VBS (Annette), RE2/BAHNSTEIG_FORM.EMD/.TIM (Riesenform
+  K5e mit F1-Rand, EMD sha256 f277916d..., TIM 31a35e66..., 512 x 256 mit 10 Farbzeilen, 28 Clips; ersetzt das entfernte
+  BAHNSTEIG_G4 der Spur R; K5c gesichert unter varianten/K5/einbau_k5c). EMD/EM30_HANGAR.EMD (Sichel V7, sha256
+  319bbd17..., 13 Farbzeilen, Pin release/em30_hangar.sha256, nachbaubar mit re15_port/tools/r41_sichel/v7_kette.sh).
+  Keine neuen Paketdateien bei Key Items, Kanalwasser, Zombie-Armen, Kasten/Panel, Handgranate, Waffenschaden und Story.
+  Dazu Ihre Aufnahmen unter synchro/ (seit 010f833b9 im Repo, siehe "Fuer Sie zum Aufnehmen"). Seit dem 9.11.:
+  MOVIE/R114GORI.STR (7 669 088 Byte) und MOVIE/R11CGORI.STR (8 152 640 Byte) mit den Herkunftstexten
+  R114GORI.TXT/R11CGORI.TXT (Gorilla-Filme, Format wie CAPCOM.STR); EMD/EM30_HANGAR.EMD jetzt Sichel V8 mit Schwanz 8g
+  (sha256 a02a6df3..., 286 420 Byte, Pin release/em30_hangar.sha256 nachgezogen, nachbaubar mit
+  re15_port/tools/r41_sichel/v8_kette.sh); RE2/BAHNSTEIG_FORM.EMD jetzt Riesenform K5g3 mit Hals B4, rechter Hand und
+  Vorderzaehnen (sha256 115f8721..., 588 764 Byte) und RE2/BAHNSTEIG_FORM.TIM (sha256 c00823b3..., 138 784 Byte, 15
+  Farbzeilen; K5e_f1 gesichert unter varianten/K5/einbau_k5e_f1); PLD/PL00W02.PLW und PLD/PL04W02.PLW (Rohr fuer Leon
+  und Elza, sha256 d544eb73... bzw. 3c48af24..., erzeugt mit re15_port/tools/pipe_r41/gen_pipe_plw.py); DISC40/ mit
+  sechs unveraenderten Dateien der 40%-Disc fuer ULTIMATE 1.5 (DATA/ITEMALL.PIX, DATA/MIXITEM.PIX, ITEM/ITPS.ITP,
+  STAGE1/ROOM1020.RDT, STAGE1/ROOM11B0.RDT, STAGE4/ROOM4010.RDT; in .gitattributes "DISC40/** -text"). Keine neue
+  Tondatei: Pipe-Ton und Sherry-Ruf kommen zur Laufzeit aus der Raumbank von ROOM3070. Ein eigenes Paket-Gate haben
+  davon nur EM30_HANGAR.EMD (Pin) und BAHNSTEIG_FORM (Liste).
+* **Speicher-Bits und Text-Ids:** Bank 9 Bit 101 heisst jetzt "Druck 80 erreicht" (Nachtrag 30), Bit 125 (Sicherung im
+  Kasten) unveraendert; Restpunkte nutzen das vorhandene Bit 111 (Alligator tot); neu Bit 128 (Story, Zug 6030:
+  Fuehrerstand vor dem Wagen besucht, Nachtrag steht aus; VERTRAG 1.1) und Bit 133 (Annette: Zugstart gesehen).
+  Port-Texte: 2030/2031 Ids 40 (zwei Seiten), 41, 42, 47 neu belegt (vorher Ventil 13); 1150/1151 Hebetisch Id 21 statt
+  20; 6030 Ids 21 bis 26, 31 und 40 (Story), 27 bis 30 (Annette); 5090 Ids 40 bis 43 (Annette). Neu seit dem 9.11.: Bank
+  9 Bit 38 (Hangar-Szene gesehen) und Bit 39 (Hangar-Birkin besiegt), im Original frei; die Optionsdatei
+  re15_options.cfg bekommt bei ULTIMATE 1.5 AN die Zeile "ultimate=on".
+* **Titelbild:** Es zeigt die Versionsnummer statt "Sample Ver.2025.01.25" (seit v0.8.27); die Nummer kommt beim
+  Release-Bau aus release_alles.sh (CMake RE15_VERSION), ein lokaler Bau zeigt den letzten Tag mit "dev". Nach dem Bau im
+  Titelabzug pruefen, dass "Ver.0.8.30" dasteht - Windows, Linux und Android.
+* **Nicht geprueft:** PSX-Bau fuer alle Spuren dieser Fassung (Story und Annette nur Syntaxpruefung), Android-Bau,
+  Linux-Suite im Container (laeuft beim Release-Bau), Bildvergleich mit dem laufenden RE2 fuer Putz, Finisher und
+  Kanister-Sitz (kein Abbild), DuckStation-Lauf fuer das Kanalwasser und die Effekt-Quader 20B0, Gamepad-Vibration im
+  G5-Auftritt mit echtem Pad. Seit dem 9.11. ausserdem nicht geprueft: der Einbau der Gorilla-Filme durch einen
+  unabhaengigen Pruefer und ob DISC40 und die Filme im Android-Paket ankommen; auf der PSX gibt es die Gorilla-Filme,
+  die Monitor-Streifen und den Sherry-Ruf nicht.
+* **Schalter (Umgebung bzw. Datei):** RE15_KEIN_80PROZENT_GORE=1 = Schalter gegen das 80%-Gore (Platzen der Spinne und
+  MC51-Beinzelle aus; bei der Handgranate Zerfetzen, Teile-Wurf, Liegenbleiben, Rauch-Nachlauf und Werfer-Platzer aus,
+  der Schaden bleibt); RE15_GATOR_ORIGINAL = ausgelieferter Raum 2090 mit RE1.5-Alligator ohne Port-Szenen; die
+  Options-Datei der Lautstaerke ist re15_options.cfg. RE15_ULTIMATE15=0/1 ueberschreibt beim Laden die gespeicherte
+  Einstellung ULTIMATE 1.5; RE15_CONFIG_AI=2 und RE15_AI_FLAVOR=m/mixed landen seit v0.8.30 bei RE2.
+* **Messschienen (nur Diagnose):** RE15_KEYITEMS_LOG, RE15_USE_TEST (Key Items); RE15_SE_DEBUG (Sirene); RE15_ZGORE_TEST
+  (MC51-Beinzelle); RE15_G5A_SPUR (nur vom Testprogramm des G5-Auftritts gelesen); RE15_BB_POSE, RE15_BIRKIN_HP_AT,
+  RE15_BIRKIN_CUT (Bahnsteig-Birkin); RE15_GATOR_ORIGINAL (ausgelieferter Raum); RE15_SLOTDECKUNG (Riesenform Kamera);
+  RE15_SWTRI_LOG (Software-Renderer, Ueberlauf je Dreieck); fuer durchgehende Laeufe ueber mehrere Raeume
+  RE15_FLAG_WATCH, RE15_FIRE_AOT als Liste, RE15_EXIT_AT mit "!k" und Eingabeskripte mit einem Abschnitt je Raum; Zeilen
+  [keyitems], [schrank2010], [panel2030], [wasserlauf41], [tropfen41], [gpu-grenze], [sw-teilung], [tim] (Upload-Fehler
+  einer Textur ueber der Grenze des Renderers), [flow] AUSNAHME im debug.log. Seit dem 9.11.:
+  RE15_ZWS_VORSPULEN_SICHTBAR=1 (Vorspulen in 11C0 sichtbar, nur Test), RE15_PIPE_LOG, RE15_BILD_HUD (Bildnummern im
+  Fenster), RE15_BIRKIN_DBG, RE15_POSE_LOG, RE15_SCHWANZ_MASKE, RE15_SCHWANZ_LOG, RE15_HANGAR_BIRKIN_HP,
+  RE15_TRILISTE_GRENZE, RE15_LACHE_LOG (jetzt mit dreiecke=); Zeilen [clutanim], [zws114]/[zws11c] und [tri-liste]
+  UEBERLAUF/ENDE im debug.log; die Messhaken der Alligator-Befunde stehen oben.
+
 # v0.8.29 - 2026-10-26
 
 Ihr Auftrag vom 23.10. (Runde 41): "Gehe die von vorhin besprochenen noch offenen Punkte an, aslo: Runde 41 startet mit
