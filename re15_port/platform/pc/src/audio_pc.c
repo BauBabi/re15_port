@@ -47,6 +47,7 @@
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
 #include "re15_wassersprung_r41.h" /* Runde 41 Spur A: Lage des NPC-Schritts (FUN_80045a64, Entscheid A-E4) */
 #include "re15_xa.h"               /* Runde 41 G5A (M5): re15_xa_decode_sector_mono fuer RE2-VOICE07-Strecken */
+#include "re15_stimme_option.h"    /* Runde 41 Stimmen: Option VOICE ON/OFF (Tor in re15_voice_play, Stopp-Hook) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
@@ -1941,6 +1942,8 @@ static void pc_bang(void)        { re15_audio_weapon_se(0); }   /* R9: FUN_80045
 
 void re15_audio_init(void)
 {
+    { extern void re15_audio_stimme_stoppen(void);
+      re15_stimme_option_stopp_hook(re15_audio_stimme_stoppen); }   /* Runde 41 Stimmen: OFF beendet die laufende Aufnahme */
     re15_esp_shell_clink_hook = pc_shell_clink;   /* the row-VM shell bounce SE */
     re15_esp_bang_hook        = pc_bang;          /* the row-VM muzzle bang (tick 2) */
     /* Diagnostic: RE15_BGM_DUMP=<wav> renders the room's MAIN BGM offline (exact
@@ -2412,6 +2415,13 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
 static void re15_voice_play(uint16_t room, int voice_id)
 {
     if (!g_audio.initialized) return;
+    /* Runde 41 Stimmen (re15_stimme_option.h): VOICE OFF = derselbe Weg wie "keine Datei fuer (Raum, Id)" — der Kanal
+     * startet nicht, g_re15_voice_laeuft bleibt 0, die Szene laeuft mit der Textdauer. Geraeusche auf dem Sprachkanal
+     * (Tuerton 1141) spielen weiter. */
+    if (!re15_stimme_option_spielt((unsigned)room, voice_id)) {
+        fprintf(stderr, "[voice] VOICE OFF: ROOM%04X msg %d bleibt stumm (Textdauer)\n", (unsigned)room, voice_id);
+        return;
+    }
     if (!re15_voice_load_clip(room, voice_id)) return;   /* no clip for this (room, id) → silent */
     /* RE2 addresses a voice by (file, channel); model file = room low byte,
      * channel = voice id (the r<room>_m<id> key). */
@@ -2424,6 +2434,27 @@ static void re15_voice_play(uint16_t room, int voice_id)
 }
 /* Runde 38 Spur F: Johns Hilferuf ROOM1141 als Sprachzeile ohne Text (synchro main42.wav, dining_r38_pc.c). */
 void re15_audio_stimme(uint16_t room, int voice_id) { re15_voice_play(room, voice_id); }
+
+/* Runde 41 Stimmen: Stopp-Hook der Option VOICE (re15_stimme_option_set ON -> OFF). Eine laufende synchro-Aufnahme endet
+ * ueber die vorhandene Ausblende des Mischers (MIXER_TAIL_FADE_SAMPLES), also ohne Knacken: das Ende wird auf "jetzt +
+ * Ausblende" gekuerzt, der Puffer bleibt im Clip-Cache. Danach meldet re15_audio_tick g_re15_voice_laeuft = 0 und jeder
+ * Wartende laeuft mit der Textdauer weiter; die Nachricht (Untertitel) haengt nicht am Kanal und bleibt stehen.
+ * Nicht gestoppt werden die RE2-XA-Laute (s_re2xa_pcm) und Geraeusche auf dem Sprachkanal (Tuerton 1141). */
+void re15_audio_stimme_stoppen(void)
+{
+    if (!g_audio.initialized) return;
+    SDL_LockAudioDevice(s_audio_dev);
+    for (int i = 0; i < VOICE_MAX_MSG; i++) {
+        if (!s_voice_clip[i].pcm || s_xa.pcm != s_voice_clip[i].pcm || !s_xa.active) continue;
+        if (re15_stimme_option_ist_geraeusch((unsigned)s_voice_room, i)) continue;
+        int ende = s_xa.pos + MIXER_TAIL_FADE_SAMPLES;
+        if (ende < s_xa.pcm_len) s_xa.pcm_len = ende;
+        fprintf(stderr, "[voice] VOICE OFF: laufende Aufnahme ROOM%04X msg %d endet (Position %d, Ende %d)\n",
+                (unsigned)s_voice_room, i, s_xa.pos, s_xa.pcm_len);
+        break;
+    }
+    SDL_UnlockAudioDevice(s_audio_dev);
+}
 
 /* Runde 41 G5-Auftritt (Abnahme 1 M5): RE2 Xa_on (0x59, Handler @0x80058028 -> FUN_800129b4) der Szene room7040 sub06.
  * RE2 streamt die Strecke von CD: CdlSetfilter(Datei 1, Kanal), CdlReadS ab Start; das Laufwerk liefert jeden 16. Sektor
@@ -3784,7 +3815,25 @@ void re15_audio_tick(void)
       g_re15_voice_restbilder = g_re15_voice_laeuft
           ? (int)(((int64_t)(s_xa.pcm_len - s_xa.pos) * 30)
                   / (s_dev_freq > 0 ? s_dev_freq : RE15_AUDIO_RATE))
-          : 0; }
+          : 0;
+      /* Runde 41 Stimmen, MESSHAKEN (nur Tests): RE15_VOICE_AUS_NACH=<n> schaltet die Option VOICE auf OFF, sobald eine
+       * Aufnahme <n> Bilder lang laeuft — dieselbe Funktion wie der Kreis im OPTIONS-Schirm (re15_stimme_option_set),
+       * nur mitten in einer Szene. Kein Spielweg setzt die Variable. */
+      { static int s_aus_nach = -2, s_lief_bilder = 0, s_nach = -1;
+        if (s_aus_nach == -2) { const char *e = getenv("RE15_VOICE_AUS_NACH"); s_aus_nach = (e && *e) ? atoi(e) : -1; }
+        if (s_nach >= 0 && ++s_nach <= 2)   /* die zwei Bilder nach dem Umschalten: Kanal und Untertitel */
+            fprintf(stderr, "[voice] Messhaken: Bild %d nach dem Umschalten - Stimme laeuft %d, Nachricht %d offen %d\n",
+                    s_nach, g_re15_voice_laeuft, (int)g_scd.message_id, (int)g_scd.message_active);
+        if (s_aus_nach >= 0 && re15_stimme_option()) {
+            s_lief_bilder = g_re15_voice_laeuft ? s_lief_bilder + 1 : 0;
+            if (s_lief_bilder > s_aus_nach) {
+                fprintf(stderr, "[voice] Messhaken RE15_VOICE_AUS_NACH: VOICE OFF nach %d Bildern laufender Aufnahme "
+                                "(Rest %d Bilder, Nachricht %d offen %d, capTick %ld)\n", s_lief_bilder - 1,
+                        g_re15_voice_restbilder, (int)g_scd.message_id, (int)g_scd.message_active, s_cap_ticks);
+                re15_stimme_option_set(0);
+                s_nach = 0;
+            }
+        } } }
     if (!g_audio.initialized) return;
 
     /* RE15_AUDIO_CAP_SYNC: ein Spielframe = RE15_AUDIO_RATE/30 Stereo-Frames, gerendert durch

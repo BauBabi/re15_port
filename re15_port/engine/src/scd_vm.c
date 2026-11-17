@@ -1908,9 +1908,11 @@ static int op_message_on(scd_thread_t *t)
          * da, ob der Kanal lief und wieviel Rest er meldete. */
         {   FILE *lg = getenv("RE15_STIMME_LOG") ? fopen("stimme.log", "a") : NULL;
             if (lg) {
-                fprintf(lg, "raum=%04x nachricht=%d  laeuft=%d rest=%d  %u gewartet%s\n",
+                /* Runde 41 Stimmen: + Bild (frame_count des Raums), damit ein Riegel die Lage jeder Zeile mit und
+                 * ohne Sprachausgabe vergleichen kann (integration_stimmen_r41_szene). */
+                fprintf(lg, "raum=%04x nachricht=%d  laeuft=%d rest=%d  %u gewartet  bild=%u%s\n",
                         g_current_room_id, t->pc[1], g_re15_voice_laeuft,
-                        g_re15_voice_restbilder, (unsigned)t->voice_wait,
+                        g_re15_voice_restbilder, (unsigned)t->voice_wait, (unsigned)g_engine.frame_count,
                         t->voice_wait >= (unsigned)RE15_VOICE_NOTBREMSE
                             ? "  (NOTBREMSE - Kanal haengt?)" : "");
                 fclose(lg);
