@@ -431,9 +431,11 @@ static void wave5_tests(void)
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
     frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
-    CHECK(g_inv.slots[0].id == 0x04 && g_inv.slots[0].qty == 6,
-          "(27) GLOCK full reload -> id 0x04 SIG P228 qty 6 (@0x80074c99 via "
-          "@0x8004e370), got %02x q%d", g_inv.slots[0].id, g_inv.slots[0].qty);
+    /* Runde 42 Gegenstaende (K-10 "Glock wird beim Nachladen zur SIG"): PORT-KORREKTUR -> die Glock bleibt 0x06
+     * (re15_gegenstaende_r42_paar, Ergebnis-Byte @0x80074c99 wie die Pistolen @0x80074c8c/90/94 = eigene Id). */
+    CHECK(g_inv.slots[0].id == 0x06 && g_inv.slots[0].qty == 6,
+          "(27) GLOCK full reload -> bleibt 0x06 GLOCK 18 qty 6 (PORT-KORREKTUR des Ergebnis-Bytes @0x80074c99, "
+          "Ausfuehrung @0x8004e370), got %02x q%d", g_inv.slots[0].id, g_inv.slots[0].qty);
     CHECK(re15_inv_screen_cache_tile(0) == 0x06,
           "(27) the icon cell keeps the GLOCK art (no repaint in 0x8004e34c-e3e0), "
           "tile %d", re15_inv_screen_cache_tile(0));
@@ -453,12 +455,15 @@ static void wave5_tests(void)
     w5_enter_exchange();
     w5_second_move(RE15_PAD_BIT_RIGHT);
     frame(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
-    CHECK(g_inv_screen.item_state == 6 && g_inv.slots[0].id == 0x15 &&
-          g_inv.slots[0].qty == 5 && g_inv.slots[1].id == 0x06,
-          "(27) bullets-first on the GLOCK: NO pair -> 25c2=6, nothing mutated "
-          "(@0x8004ea38-5c scan miss -> @0x8004b3f0)");
-    idle(8);
-    re15_menu_toggle();
+    /* Runde 42 Gegenstaende: PORT-KORREKTUR der Partnerliste @0x80074ccc (Eintrag 5 @0x80074cdc `04 04 03 00` doppelt ->
+     * `06 06 03 00`): Munition zuerst laedt die Glock wie die Browning (Aktion 3 @0x8004e42c). */
+    {
+        int gs = re15_inv_find_item(0x06);
+        CHECK(gs >= 0 && g_inv.slots[gs].qty == 6 && re15_inv_find_item(0x15) < 0,
+              "(27) bullets-first on the GLOCK: Aktion 3 (PORT-KORREKTUR) -> Glock 0x06 qty 6, Munition verbraucht "
+              "(Platz %d)", gs);
+    }
+    w5_finish_and_close();
 
     /* (28) SELF-STACK (action 5 @0x8004e664): pair {15,15,05,00} @0x80074ccc;
      * delegates to the action-2 body when norm A < norm B (@0x8004e670) else the

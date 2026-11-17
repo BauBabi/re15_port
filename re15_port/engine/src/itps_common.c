@@ -65,6 +65,8 @@ int re15_itps_load(void)
     re15_dining_r38_bild_einsetzen(data, sz);       /* Runde 38 Spur F: Block 0x43 */
     re15_keyitems_r41_bild_einsetzen(data, sz);     /* Runde 41 Spur O: Block 0x33 (Crank), Rechtecke Block 0x35 */
     re15_gatorszene_r41_bild_einsetzen(data, sz);   /* Runde 41 Spur F: Block 0x34 (Water Key) */
+    { extern void re15_gegenstaende_r42_bild_einsetzen(uint8_t *, int);
+      re15_gegenstaende_r42_bild_einsetzen(data, sz); }   /* Runde 42 Gegenstaende: Bloecke 0x1E..0x20 (Kapseln) */
     s_itps  = data;
     s_loaded = 1;
     return 0;

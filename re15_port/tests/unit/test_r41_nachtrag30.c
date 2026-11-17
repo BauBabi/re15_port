@@ -75,7 +75,9 @@ static int s_nvf = 0;
 static void vorflag(uint8_t zone, uint8_t idx) { if (s_nvf < 16) { s_vf[s_nvf].zone = zone; s_vf[s_nvf].idx = idx; s_nvf++; } }
 static void band_aus_y(int32_t y) { re15_collision_set_band(re15_collision_band_from_y(y)); }
 static int bit(int b) { return re15_game_flag_get(RE15_R41C_BANK, (uint8_t)b) ? 1 : 0; }
-static void bits_leeren(void) { re15_game_state_init(); re15_ventilkette_r41_reset(); s_nvf = 0; }
+/* Runde 42 Gegenstaende (K-10): die Mutter sitzt am Pult (Bit (9,43)) = Vorbedingung des Panels; der Schritt davor hat eigene
+ * Riegel (unit_r42_gegenstaende_mutter, re15_gegenstaende_r42.h). */
+static void bits_leeren(void) { re15_game_state_init(); re15_ventilkette_r41_reset(); s_nvf = 0; vorflag(9, 43); }
 
 static int raum_hoch(uint16_t raum, int32_t x, int32_t y, int32_t z)
 {

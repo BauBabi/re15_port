@@ -13,6 +13,7 @@
  * c3=6 "You can't use it here." plain message with DAT_800b8522=0 = NO Yes/No.)
  */
 #include "re15_item_use.h"
+#include "re15_gegenstaende_r42.h"
 #include "re15_actor.h"         /* g_actors[PLAYER].hp / status_flags */
 #include "re15_scd.h"           /* re15_vest_hp_bonus — Weste-Nachruestung */
 
@@ -44,7 +45,11 @@ static const re15_heal_t s_heal[13] = {
  * @0x8004aa64: `sltiu (id-0x22),0xe` (@0x8004ab48; 0xe=14 -> id in [0x22,0x2f] INCLUSIVE)
  * AND `beq a0,0x25` (Red excluded @0x8004ab54) -> c3=3. 0x2f ("NUT") IS admitted and has
  * its own absolute HP=77 handler (idx>=0xd @0x8004ae98/@0x8004b028). */
-int re15_item_use_is_heal(uint8_t id) { return id >= 0x22 && id <= 0x2f && id != 0x25; }
+int re15_item_use_is_heal(uint8_t id)
+{
+    /* Runde 42 Gegenstaende (K-10): PORT-KORREKTUR 0x2F Mutter = kein Heilmittel (re15_gegenstaende_r42.h). */
+    return id >= 0x22 && id <= 0x2f && id != 0x25 && !re15_gegenstaende_r42_kein_heilmittel(id);
+}
 
 void re15_item_use_apply(uint8_t id)
 {

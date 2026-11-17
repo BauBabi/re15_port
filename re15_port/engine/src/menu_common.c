@@ -47,6 +47,7 @@
  * -> re15_audio_core_se(id). The tab-select FSM itself is SILENT (EXE-wide jal scan:
  * zero SE sites in 0x8004974c-0x80049a58 / FUN_80046540 — spec fact).
  */
+#include "re15_gegenstaende_r42.h"   /* Runde 42: Mutter kein Heilmittel, Glock-Nachladen */
 #include <stdio.h>
 #include <string.h>
 #include "re15_menu.h"
@@ -587,8 +588,9 @@ static void state5_classifier(void)
         }
         return;
     }
-    if ((uint8_t)(id - 0x22) < 0xe && id != 0x25) {  /* sltiu 0xe @0x8004ab48; beq 0x25
+    if ((uint8_t)(id - 0x22) < 0xe && id != 0x25 &&  /* sltiu 0xe @0x8004ab48; beq 0x25
                                                       * @0x8004ab54 (Red excluded) */
+        !re15_gegenstaende_r42_kein_heilmittel(id)) { /* Runde 42 PORT-KORREKTUR 0x2F Mutter (HP:=77 @0x8004ae98) -> Schluessel-Weg */
         s_c3 = 3;                                 /* HEAL @0x8004ab60 — c4 NOT reset here
                                                    * (relies on the terminal invariant) */
         return;
@@ -970,6 +972,10 @@ static int exchange_match(void)
         extern int re15_inventar_r39_paar(int a, int b, uint8_t *result, uint8_t *pic);
         int r39 = re15_inventar_r39_paar(a, b, &s_x_result, &s_x_pic);
         if (r39) return r39;
+    }
+    {   /* Runde 42 Gegenstaende: PORT-KORREKTUR Glock + H. Gun Bullets (@0x80074C98 `15 04` -> 0x06, @0x80074CDC `04 04` -> `06 06`) */
+        int r42 = re15_gegenstaende_r42_paar(idA, idB, &s_x_result, &s_x_pic);
+        if (r42) return r42;
     }
     cnt   = xu8(X_PROP_TBL + (uint32_t)idA * 12u + 9u);
     plist = xu32(X_PROP_TBL + (uint32_t)idA * 12u + 4u);   /* PSX address in the blob */

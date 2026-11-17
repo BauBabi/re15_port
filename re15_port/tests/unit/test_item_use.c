@@ -41,7 +41,9 @@ int main(void)
     CHECK("0x24 Green IS heal-usable",              re15_item_use_is_heal(0x24));
     CHECK("0x25 Red is EXCLUDED (beq a0,0x25 @0x8004ab54)", !re15_item_use_is_heal(0x25));
     CHECK("0x26 Blue IS heal-usable",               re15_item_use_is_heal(0x26));
-    CHECK("0x2f NUT IS admitted (idx 13 special)",  re15_item_use_is_heal(0x2f));
+    /* Runde 42 Gegenstaende (K-10): PORT-KORREKTUR - das Original nimmt 0x2F auf (sltiu 0xe @0x8004ab48, HP := 77 @0x8004ae98);
+     * im Port wirkt die Mutter am Bruecken-Panel 2030 (re15_gegenstaende_r42.h). */
+    CHECK("0x2f NUT is NOT heal-usable (PORT-KORREKTUR, Original idx 13 special)", !re15_item_use_is_heal(0x2f));
     CHECK("0x30 (first key/doc) is NOT",            !re15_item_use_is_heal(0x30));
 
     /* ---- applier table @0x80010fbc (s0=100 @0x8004ae14) ---- */

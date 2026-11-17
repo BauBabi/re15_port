@@ -72,6 +72,7 @@
 #include "re15_johnruf_r39.h"  /* Runde 39 Spur P: Bank-9-Bit 97 (VERTRAG Runde 39 1.1) */
 #include "re15_ventilkette_r41.h" /* Runde 41 Spur C: Bank-9-Bits 100-103, 106, 107 (VERTRAG Runde 41 1.1; 107 = Dokument, Nachbesserung 4) */
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Bank-9-Bits 110-113 (VERTRAG Runde 41 1.1) */
+#include "re15_gegenstaende_r42.h" /* Runde 42 Gegenstaende (K-10): Bank-9-Bits 40, 41, 43..51, 170 */
 #include "re15_annette_r41.h"   /* Runde 41 Spur AN: Bank-9-Bit 133 (VERTRAG Runde 41 1.1, Orchestrator 2026-11-02) */
 
 #include <stdint.h>
@@ -185,8 +186,15 @@ static raum_t s_orig_raum[N_ORIG];
 static int satz_scharf(const orig_item_t *o)
 {
     const int slot = (o->item == 0x3F) ? R42_UHR_PLATZ : o->slot;
-    return g_aot.slots[slot].active && g_aot.slots[slot].type == RE15_AOT_TYPE_ITEM &&
-           g_aot.item_params[slot].item_type == o->item;
+    /* Runde 42 Gegenstaende (K-10, re15_gegenstaende_r42.h): Head of Akuma 0x32 (2040/2041 @0x01364, Bit 91) ist die Colt Python
+     * 0x14; Original-Saetze an einer Vorrang-Stelle ziehen unveraendert in einen freien Slot -> ueber Item UND Taken-Bit suchen. */
+    const uint8_t item = (o->item == RE15_G42_AKUMA && o->bit == RE15_G42_BIT_PYTHON) ? RE15_G42_PYTHON : o->item;
+    if (g_aot.slots[slot].active && g_aot.slots[slot].type == RE15_AOT_TYPE_ITEM && g_aot.item_params[slot].item_type == item)
+        return 1;
+    for (int s = 0; s < RE15_AOT_MAX; s++)
+        if (g_aot.slots[s].active && g_aot.slots[s].type == RE15_AOT_TYPE_ITEM && g_aot.item_params[s].item_type == item &&
+            g_aot.item_params[s].taken_bit == o->bit) return 1;
+    return 0;
 }
 
 /* Den Original-Raum mit dem aktuellen Bank-9-Stand starten; 1 = Item-Satz scharf. */
@@ -577,6 +585,18 @@ static const port_bit_t k_port[] = {
     { RE15_R42_BANK, RE15_R42_BIT_ENZYM, "RE15_R42_BIT_ENZYM", "Enzym = Disc-Bit ROOM40A1 @0x00ED0 pc[18] (Runde 42 Story, reserviert v0.8.32)" },
     { RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, "RE15_BF_HANGAR_BIT", "Hangar-Szene 50A0/50A1 gesehen, birkin_formen.c bf_hangar_beenden (Runde 41 Hangar-Rueckbau)" },
     { RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT, "RE15_BF_BESIEGT_BIT", "Hangar-Birkin besiegt, seit Runde 42 hangar_aussen nur noch gelesen (alte Spielstaende), birkin_formen.c bf_hangar_besiegt" },
+    { RE15_G42_BANK, RE15_G42_BIT_GLOCK,        "RE15_G42_BIT_GLOCK",        "Glock 18 genommen, Leiche 1050 (Runde 42 Gegenstaende, V-01)" },
+    { RE15_G42_BANK, RE15_G42_BIT_MUTTER,       "RE15_G42_BIT_MUTTER",       "Mutter genommen 2010/2011 (Runde 42 Gegenstaende, V-03)" },
+    { RE15_G42_BANK, RE15_G42_BIT_MUTTER_DRIN,  "RE15_G42_BIT_MUTTER_DRIN",  "Mutter am Bruecken-Panel 2030/2031 eingesetzt (Runde 42 Gegenstaende, V-03)" },
+    { RE15_G42_BANK, RE15_G42_BIT_ROHR,         "RE15_G42_BIT_ROHR",         "Rohr genommen 11F0/11F1 (Runde 42 Gegenstaende, V-04)" },
+    { RE15_G42_BANK, RE15_G42_BIT_WERFER,       "RE15_G42_BIT_WERFER",       "Granatwerfer genommen 1071 (Runde 42 Gegenstaende, V-05)" },
+    { RE15_G42_BANK, RE15_G42_BIT_HUELSEN_1191, "RE15_G42_BIT_HUELSEN_1191", "Granathuelsen 1191 (Runde 42 Gegenstaende, V-06)" },
+    { RE15_G42_BANK, RE15_G42_BIT_HUELSEN_30E1, "RE15_G42_BIT_HUELSEN_30E1", "Granathuelsen 30E1 (Runde 42 Gegenstaende, V-06)" },
+    { RE15_G42_BANK, RE15_G42_BIT_ZUENDER,      "RE15_G42_BIT_ZUENDER",      "Zuender 3000/3001 (Runde 42 Gegenstaende, V-06)" },
+    { RE15_G42_BANK, RE15_G42_BIT_NITRO,        "RE15_G42_BIT_NITRO",        "Nitro-Kapsel 30E0/30E1 (Runde 42 Gegenstaende, V-06)" },
+    { RE15_G42_BANK, RE15_G42_BIT_SAEURE_40B1,  "RE15_G42_BIT_SAEURE_40B1",  "Saeure-Kapsel 40B1 (Runde 42 Gegenstaende, V-06)" },
+    { RE15_G42_BANK, RE15_G42_BIT_SPIND_4050,   "RE15_G42_BIT_SPIND_4050",   "Spind 4050 Brennstoff / 4051 Saeure-Kapsel (Runde 42 Gegenstaende, V-07)" },
+    { RE15_G42_BANK, RE15_G42_BIT_BRAND_5021,   "RE15_G42_BIT_BRAND_5021",   "Brand-Kapsel 5021 (Runde 42 Gegenstaende, V-06)" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 

@@ -4874,6 +4874,8 @@ re_title:;
         if (ipic) re15_dining_r38_bild_einsetzen(ipic, psz);       /* Runde 38 Spur F: Block 0x43 */
         if (ipic) re15_keyitems_r41_bild_einsetzen(ipic, psz);     /* Runde 41 Spur O: Block 0x33 (Crank), Rechtecke Block 0x35 */
         if (ipic) re15_gatorszene_r41_bild_einsetzen(ipic, psz);   /* Runde 41 Spur F: Block 0x34 (Water Key) */
+        { extern void re15_gegenstaende_r42_bild_einsetzen(uint8_t *, int);
+          if (ipic) re15_gegenstaende_r42_bild_einsetzen(ipic, (int)psz); }   /* Runde 42 Gegenstaende: Bloecke 0x1E..0x20 (Kapseln) */
         if (ipic) re15_itps_set_data(ipic, psz);     /* kept for the program's life */
         /* Runde 41 Optionen (ULTIMATE 1.5): zweiter Puffer = obiger Stand + Disc-Bilder (Item-Modal). */
         { extern uint8_t *re15_ultimate15_pc_itps(const uint8_t *basis, int n);

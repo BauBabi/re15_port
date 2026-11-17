@@ -233,11 +233,12 @@ static void teil_stellen(void)
 {
     printf("== stellen ==\n");
     const int n = re15_keyitems_r41_stellen_anzahl();
-    PRUEF(n == 14, "14 Stellen (%d)", n);
+    PRUEF(n == 15, "15 Stellen (%d; Runde 42 Gegenstaende: + Mutter am Pult 2030)", n);
     for (int i = 0; i < n; i++) {
         uint16_t raum; uint8_t item, frage, art; int slot, ev;
         re15_keyitems_r41_stelle(i, &raum, &item, &slot, &ev, &frage, &art);
-        if ((raum == 0x1050 && item == 0x40) || raum == 0x2010) { PRUEF(1, "ROOM%04X Port-Programm (eigene Riegel)", raum); continue; }
+        if ((raum == 0x1050 && item == 0x40) || raum == 0x2010 || (raum == 0x2030 && item == 0x2F)) {
+            PRUEF(1, "ROOM%04X Port-Programm (eigene Riegel; Mutter: unit_r42_gegenstaende_mutter)", raum); continue; }
         for (int v = 0; v < 2; v++) {
             const uint16_t r = (uint16_t)(raum | v);
             if (v && (raum == 0x1090 || raum == 0x4000)) continue;   /* nur_der */
@@ -278,6 +279,7 @@ static void teil_use(void)
     for (int i = 0; i < n; i++) {
         uint16_t raum; uint8_t item, frage, art; int slot, ev;
         re15_keyitems_r41_stelle(i, &raum, &item, &slot, &ev, &frage, &art);
+        if (raum == 0x2030 && item == 0x2F) { PRUEF(1, "ROOM2030 Mutter: eigener Riegel unit_r42_gegenstaende_mutter"); continue; }
         const lauf_t *l = lauf_zu(raum, item);
         if (!l) { PRUEF(0, "ROOM%04X Item 0x%02x ohne Lauf-Zeile", raum, item); continue; }
         for (int v = 0; v < 2; v++) {
