@@ -3605,6 +3605,22 @@ target_compile_definitions(probe_gator_fress PRIVATE
 add_test(NAME unit_gator_fress COMMAND probe_gator_fress)
 set_tests_properties(unit_gator_fress PROPERTIES TIMEOUT 120)
 
+# --- K-12 (Nutzerwunsch 2026-11-17, woertlich: "überprüfe noch mal das der alligator wirklich nur mit den gascontainer getötet
+#     werden kann. Auf keinen Fall ander."): echter Boss-Takt mit RE2-EM23-Bank wie unit_gator_fress. Teil A: ueber 30000
+#     Schadenspunkte ueber die echten Eingaenge (Rakete RE2-Applier 0x30011 / Art 9, Handgranate Explosion / Art 2, kleine
+#     Treffer Art 0) -> keine Todesrolle (Clip 7, GBP_DIE/GBP_DEAD), kein Zustand 3/7, HP nie < 0. Teil B: mit HP 1 Kanister
+#     im Maul (Stufe 7) + Treffer -> R1 -> Leiche (re15_gr2_tot). Argument "b" = Teil B allein (Gegenprobe). ---
+add_executable(probe_r41_gator_nur_kanister probe_r41_gator_nur_kanister.c)
+target_link_libraries(probe_r41_gator_nur_kanister PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r41_gator_nur_kanister PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r41_gator_nur_kanister PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(probe_r41_gator_nur_kanister PRIVATE m)
+endif()
+add_test(NAME unit_r41_gator_nur_kanister COMMAND probe_r41_gator_nur_kanister)
+set_tests_properties(unit_r41_gator_nur_kanister PROPERTIES TIMEOUT 120)
+
 # MESS-SONDE (Auftrag 2026-09-14): wo steht Leon waehrend des Fress-Finishers?
 add_executable(probe_gator_maul probe_gator_maul.c)
 target_link_libraries(probe_gator_maul PRIVATE re15_engine re15_test_support)
