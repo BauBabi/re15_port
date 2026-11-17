@@ -60,9 +60,20 @@
 #   unter SF_belege/v8/schwanz_r9_r5/). Auswerter probe_r41_schwanz_farbe:
 #   (6b) Oberseite/Flanke/Nadel im Bogen F317-F343 (darin F336 = Nutzerbild 3) bildpunktgleich zu 8c: hoechstens 10 Promille anders.
 #   (6c) Unterseite ohne Abschnitte F255-F350: dE76 Mittel Bauch gegen Bauch-Fuge hoechstens 8,0.
-#   (6d) 0 Schwanzpunkte mit Naht-Texel u 54-55.
+#   (6d) hoechstens 100 Schwanzpunkte mit Naht-Texel u 54-55 in F255-F350 (bis zur v0.8.31-Basis 0, s. "(6d) und der Adapter").
 #   Gemessen (320x240, scratchpad schwanz_r9/r5): 8g 0,00 % / 3,54 / 0; Gegenproben 8f 92a58f26 (b) 98,07 % ROT, 8c (c) 18,33 ROT, 8d 547acc80
 #   (d) 5172 ROT (und (b) 61,62 %).
+#   (6d) UND DER ADAPTER (v0.8.31-Basis Runde 2, scratchpad v0831_basis/r2, BERICHT_r2.md). Ab 17.11. 18:50 war (6d) mit 35 Punkten rot, auf allen
+#   Staenden (r42/story, r42/hangar_aussen fe5436f55, release_0830 ec0d39bb9 mit dem alten Ausloeser F255-F350, und die exe f7057a708, die am
+#   16.11. 18:38 hier 0 gemessen hatte - dieselbe Datei, dieselben Assets). Die Szene selbst ist bitgleich: N-, T- und NAHT-Laeufe h12-h107 der
+#   exe mit altem Ausloeser (release) und der exe mit neuem (r42/story) sind Bild fuer Bild gleich. Geaendert hat sich die Sitzung: bis 17.11.
+#   17:51 lokale Konsole, seit 18:12 Fernsitzung bzw. getrennt (LocalSessionManager Ereignis 24/25); SDL nimmt fuer Direct3D 11 den DXGI-Adapter 0,
+#   in dieser Sitzung "NVIDIA GeForce RTX 4060 Laptop GPU" ohne Ausgang (gemessen mit EnumAdapters1). Mechanismus (RE15_TRILOG an den Naht-
+#   Punkten): die 8g-Flaechen beruehren die Naht-Spalte nur mit Ecken und Kanten (z. B. uv (49,57) (54,100) (55,55), (43,55) (49,80) (55,80));
+#   ob ein Bildpunkt-Mittelpunkt dort Texel 54/55 trifft, entscheidet die Rasterung der GPU. Auf dem NVIDIA-Weg sind es 1-6 Punkte je Bild
+#   (F74-F85, F91-F104, F115/F116 = h60-h71, h77-h90, h101/h102), einzelne dunkle Punkte bzw. kurze 1-Punkt-Linien. Gegenproben auf demselben
+#   Adapter: 8c 4490, 8d 5174 (je Bild bis 150 / 172), auf der Konsole 4489 / 5172. Grenze 100 = knapp das Dreifache des hoechsten 8g-Werts
+#   (35), Faktor 45 unter der kleinsten Gegenprobe; sie trennt "Naht-Texel nur an Flaechenraendern" von "Flaechen liegen auf der Naht".
 # (8) MINDESTLAENGE F272-F278 (h29-h35) und F315 (h72): je Bild 0 Schwanzpunkte (verdeckt) oder ein Stueck mindestens so lang wie die Linie des
 #   Original-Videos und mindestens zwei Schwanzbreiten (18 Punkte 320x240). Gemessen: Runde 4 (47eab4cdb) ROT h30-h34 (9,8-22,1 gegen
 #   20,0-25,0) und (4) h30-h32 (107 / 84 / 74 Grad); Runde 5 h30-h34 29,8-31,3, h35 / h72 verdeckt.
@@ -188,7 +199,7 @@ set(_mit "${CMAKE_MATCH_1}")
 if(NOT _rv EQUAL 0)
     message(FATAL_ERROR "schwanz_zusammen: Schwanzteil haengt frei in der Luft, liegt vor dem Koerper, knickt sichtbar, kommt ueber der Austrittszeile aus der Taille oder ist ein Klumpen (exit=${_rv}) - Dumps ${_basis}_*")
 endif()
-execute_process(COMMAND "${RE15_FARB_TOOL}" "${_dn}" "${_dt}" "${_dc8}" "${_dmk}" "${_dnaht}" ${_f0} ${_f1} 317 343 10 80 0
+execute_process(COMMAND "${RE15_FARB_TOOL}" "${_dn}" "${_dt}" "${_dc8}" "${_dmk}" "${_dnaht}" ${_f0} ${_f1} 317 343 10 80 100
                 TIMEOUT 120
                 RESULT_VARIABLE _rvf
                 OUTPUT_VARIABLE _outf)

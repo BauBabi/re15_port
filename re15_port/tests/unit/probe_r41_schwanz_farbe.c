@@ -13,13 +13,19 @@
  *         (Bauch rot, Bauch-Fuge magenta, Flanke/Ruecken gruen, Flanken-Fuge cyan, Nadel blau, Wurzel gelb; Kanal an = Wert > 24)
  *   NAHT  normal mit dem Naht-Markerasset (marker.py naht: Texel Seite 0 u 54-55 v 46-60 gruen)
  *
- *   probe_r41_schwanz_farbe <N> <T> <C8> <MK> <NAHT> <F0> <F1> <b_f0> <b_f1> <b_promille_max> <c_max_x10> <naht_max>
+ *   probe_r41_schwanz_farbe <N> <T> <C8> <MK> <NAHT> <F0> <F1> <b_f0> <b_f1> <b_promille_max> <c_max_x10> <naht_max> [<h0>]
+ *   h0 (optional, Standard 243) = Bild des Szenentakts h0, nur fuer die Beschriftung "h.." der Zeilen (Takt h = F - h0) und die Marke
+ *   "Nutzerbild 3" (h93 = F336 alt). Runde 42 "hangar_aussen": die Szene startet im Raumwechsel aus dem Monitorraum, h0 = Raumbild F14
+ *   (birkin_formen.c Kopf "Runde 42"); bis 98391e747 fest F243. Die Pruefbereiche kommen weiter als Bildnummern.
  *
  * (b) OBERSEITE WIE 8c: in b_f0..b_f1 (Bogen h74-h100, darin F336 = Nutzerbild 3) die Bildpunkte, die im Markerlauf Flanke/Ruecken/Nadel sind
  *     (samt 8er-Nachbarschaft, also ohne die Klassengrenze) und in N und C8 Schwanz: hoechstens b_promille_max / 1000 davon verschieden.
  * (c) UNTERSEITE OHNE ABSCHNITTE: in F0..F1 alle Bauch- und Bauch-Fugen-Punkte (Markerlauf, ohne Klassengrenze) des Laufs N; Abstand dE76 (CIELab
  *     D65) der Mittel Bauch / Bauch-Fuge hoechstens c_max_x10 / 10 (mindestens 50 Fugenpunkte).
  * (d) NAHT: in F0..F1 Schwanzpunkte, in denen NAHT von N abweicht (= sie zeigen ein Texel u 54-55): hoechstens naht_max.
+ *     Der Wert haengt vom Grafikadapter ab (v0.8.31-Basis, Kopf test_r41_schwanz_zusammen.cmake "(6d) und der Adapter"): Flaechen des 8g
+ *     beruehren die Naht-Spalte nur mit Ecken/Kanten (u 54/55), ob ein Bildpunkt-Mittelpunkt dort Texel 54/55 trifft, entscheidet die
+ *     Rasterung der GPU.
  * Messung und Grenzen (320x240, F255-F350, exe Runde 5): scratchpad schwanz_r9/r5 (BERICHT_r5.md).
  */
 #include <stdio.h>
@@ -81,7 +87,8 @@ int main(int argc, char **argv)
     const int f0 = atoi(argv[6]), f1 = atoi(argv[7]), b_f0 = atoi(argv[8]), b_f1 = atoi(argv[9]);
     const double b_max = atof(argv[10]) / 1000.0, c_max = atof(argv[11]) / 10.0;
     const long naht_max = atol(argv[12]);
-    long b_n = 0, b_d = 0, naht = 0, n0 = 0, n1 = 0;
+    const int h0 = argc > 13 ? atoi(argv[13]) : 243;   /* v0.8.31-Basis: nur Beschriftung h = F - h0 (Kopf) */
+    long b_n = 0, b_d = 0, naht = 0, n0 = 0, n1 = 0, naht_bild_max = 0;
     double s0[3] = { 0 }, s1[3] = { 0 };
     for (int f = f0; f <= f1; f++) {
         bild_t n = { 0 }, t = { 0 }, mk = { 0 }, na = { 0 }, c8 = { 0 };
@@ -122,8 +129,9 @@ int main(int argc, char **argv)
                 }
             }
         naht += fn;
+        if (fn > naht_bild_max) naht_bild_max = fn;
         b_n += fb_n; b_d += fb_d;
-        if (mit_b || fn) printf("F%d h%d%s: Flanke/Ruecken/Nadel %ld Punkte, anders als 8c %ld; Naht-Punkte %ld\n", f, f - 243, f == 336 ? " (Nutzerbild 3)" : "",
+        if (mit_b || fn) printf("F%d h%d%s: Flanke/Ruecken/Nadel %ld Punkte, anders als 8c %ld; Naht-Punkte %ld\n", f, f - h0, f - h0 == 93 ? " (Nutzerbild 3)" : "",
                                 fb_n, fb_d, fn);
         free(kl); free(n.p); free(t.p); free(mk.p); free(na.p); free(c8.p);
     }
@@ -144,7 +152,8 @@ int main(int argc, char **argv)
            n0 ? s0[0] / n0 : 0.0, n1, n1 ? s1[0] / n1 : 0.0, de, c_max, fc ? "UNTERSEITE-ABSCHNITTE" : "UNTERSEITE-OK");
     fehler += fc;
     const int fd = naht > naht_max;
-    printf("(d) Naht u 54-55 F%d-F%d: %ld Schwanzpunkte (Grenze %ld) -> %s\n", f0, f1, naht, naht_max, fd ? "NAHT" : "NAHT-OK");
+    printf("(d) Naht u 54-55 F%d-F%d: %ld Schwanzpunkte (Grenze %ld, groesster Wert je Bild %ld) -> %s\n", f0, f1, naht, naht_max, naht_bild_max,
+           fd ? "NAHT" : "NAHT-OK");
     fehler += fd;
     return fehler ? 1 : 0;
 }
