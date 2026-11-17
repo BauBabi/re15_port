@@ -9,13 +9,15 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die aelteren Int
 # (EDT-Satz 10 `00 00 b2 16`, VAG 12 sha1 d19adfc8010d = 40-%-Disc ROOM3070 VAG 12 @0x16640; der 0x30 spielt ihn ueber
 # FUN_800453d0(10), STAGE3 @0x8011a744/48). Belege: birkin_bahnsteig.c bb_bild_ton, audio_pc.c re15_audio_birkin_ruf.
 #
-# Je Figur (Leon 50A0, Elza 50A1) ein Lauf mit Ton (RE15_AUDIO_CAP_SYNC: Audioschicht aktiv, kein Geraet):
+# Je Figur (Leon 50A0, Elza 50A1) ein Lauf mit Ton (RE15_AUDIO_CAP_SYNC: Audioschicht aktiv, kein Geraet). Seit dem Merge in
+# r42/hangar_aussen startet die Szene nur beim Betreten durch die Nordtuer aus dem Monitorraum (Lauf wie integration_r42_hangar_aussen
+# Lauf 2 ohne 3:73: Debug-Sprung 5030 an die Tuer, Aktionstaste):
 #   verlangt  "Szene Start" < genau EIN "[hangar] ROOM50A? Sherry-Ruf h119" < "Szene Ende";
 #             "[birkinruf] STAGE3/ROOM3070.RDT snd1 geladen: Satz 10 = 00 00 b2 16" (die Bank ist da, der Satz ist der Disc-Satz);
 #             Messzeile "[hangar-takt] h119 ... B clip 1 bild 16" (Birkin geht in diesem Takt los).
 # Bild fuer Bild unveraendert (gemessen, scratchpad sherry_ruf/BERICHT_r1.md): state.log und alle [hangar-takt]-Zeilen bitgleich zu
-# 98391e747; im Mitschnitt liegt die Welle genau einmal (r 0,79), im alten Stand nie (r <= 0,09).
-# GEGENPROBE (gemessen): exe von 98391e747 -> ROT (keine Sherry-Ruf-Zeile, keine Bank-Zeile).
+# d413862a4 (r42/hangar_aussen vor dem Merge); im Mitschnitt liegt die Welle genau einmal, im alten Stand nie.
+# GEGENPROBE (gemessen): exe von d413862a4 -> ROT (keine Sherry-Ruf-Zeile, keine Bank-Zeile).
 #
 # Testhaken (kein Spielverhalten): RE15_SET_FLAG, RE15_DEBUG_JUMP, RE15_PLAYER_POS, RE15_INPUT_SCRIPT, RE15_HANGAR_LOG,
 # RE15_AUDIO_CAP_SYNC, RE15_STATE_LOG, RE15_EXIT_AT.
@@ -75,7 +77,7 @@ function(_zahl _datei _text _out)
 endfunction()
 
 set(_f "")
-set(_weg "W0.5,UX3.6,W0.3,L0.27,W0.3,UX2.5,W20")   # wie integration_r41_hangar_laden: angeforderter Schnitt 4 -> Szene
+set(_weg "W1,A0.2,W25")   # an der Nordtuer des Monitorraums: Aktionstaste -> Gang -> Szene (integration_r42_hangar_aussen Lauf 2)
 
 function(figur _name _raum _extra)
     string(TOLOWER "${_raum}" _rl)
@@ -87,11 +89,11 @@ function(figur _name _raum _extra)
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_extra}
         "RE15_AUDIO_CAP_SYNC=${WORKDIR}/ton.raw"
         RE15_SET_FLAG=8:42,8:43
-        RE15_DEBUG_JUMP=50A0@20
-        RE15_PLAYER_POS=-12406,4381,1024
+        RE15_DEBUG_JUMP=5030@20
+        RE15_PLAYER_POS=-15300,-26300,1024
         "RE15_INPUT_SCRIPT=${_weg}"
         RE15_STATE_LOG=state.log
-        "RE15_EXIT_AT=800#${_rl}"
+        "RE15_EXIT_AT=500#${_rl}"
         "${_exe_kopie}")
     set(_d "${WORKDIR}/debug.log")
     _pos("${_d}" "[hangar] ROOM${_raum} Szene Start" _p1)

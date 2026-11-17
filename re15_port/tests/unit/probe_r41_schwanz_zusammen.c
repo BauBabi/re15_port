@@ -28,7 +28,7 @@
  * h59-h70, der Schwanz kommt seitlich aus der Taille statt in Hueft-Hoehe hinter der Huefte hervor; (3) sah es nicht, weil der Streifen
  * NEBEN der Silhouette lag; dazu Entscheid des Orchestrators zu "braune Streifen an den Raendern": der Schwanz einheitlich ueber die Breite).
  * Weitere optionale Argumente:  <taille_f0> <taille_f1> <ueber_max> [<ton_f0> <ton_f1> <ton_max_x10>]
- *   (5) UEBER DER AUSTRITTSZEILE: in taille_f0..taille_f1 (Takt h = F - 243, nur h58-h72) je Bild die Schwanzpunkte ueber der Zeile
+ *   (5) UEBER DER AUSTRITTSZEILE: in taille_f0..taille_f1 (Takt h = F - h0, h0 = argv[27], Standard 243; nur h58-h72) je Bild die Schwanzpunkte ueber der Zeile
  *       y_aus(h) - 4,5 (320x240, auf die Bildgroesse umgerechnet), auch neben der Silhouette. y_aus = Austritt des Original-Videos
  *       (k_aus_video: Videozeile 640x480 je geradem h, analysis/befunde_runde41/SF_belege/v8/bewegung/tabelle_v8.json "austritt", ungerade h
  *       linear), Port-Zeile (vy - 1,3) / 2,079 (Registrierung bf_video_welt); 4,5 = halbe Schwanzbreite (Median 9 Punkte der sichtbaren
@@ -189,6 +189,9 @@ int main(int argc, char **argv)
     const int l_extra = (r4 && argc > 26) ? atoi(argv[26]) : -1;
     const int u_f0 = r4 ? atoi(argv[21]) : 0, u_f1 = r4 ? atoi(argv[22]) : -1;
     const int s_f0 = r4 ? atoi(argv[23]) : 0, s_f1 = r4 ? atoi(argv[24]) : -1, sicht_min = r4 ? atoi(argv[25]) : 0;
+    /* Runde 42 "hangar_aussen": Bild des Szenentakts h0 (Takt h = F - h0). Bis 98391e747 fest 243 (Ausloeser im Raum, Debug-Sprung 50A0);
+     * seit die Szene im Raumwechsel aus dem Monitorraum startet, ist h0 = Raumbild 14 (birkin_formen.c Kopf "Runde 42"). */
+    const int h0 = (r4 && argc > 27) ? atoi(argv[27]) : 243;
     int fehler_sicht = 0, sicht_kleinst = 1 << 30, fehler_5b = 0, groesst_5b = 0;
     int fehler_ueber = 0, ueber_groesst = 0, fehler_laenge = 0, laenge_bilder = 0;
     double laenge_kleinst = 1e30;
@@ -320,21 +323,21 @@ int main(int argc, char **argv)
                     if (ub320 > groesst_5b) groesst_5b = ub320;
                     if (ub320 > ueber_max) {
                         printf("F%d (5b) TAILLE LINKS h%d: %d Schwanzpunkte (320x240) neben der Silhouette ueber dem Guertel (Zeile %.1f) rechts der Mitte FEHLER\n",
-                               f, f - 243, ub320, gz / sy);
+                               f, f - h0, ub320, gz / sy);
                         fehler_5b++;
                     }
                 }
             }
-            if (r3 && f >= t_f0 && f <= t_f1 && f - 243 >= 58 && f - 243 <= 72) {
-                const int ymax = (int)ceil((aus_zeile(f - 243) - 4.5) * sy);      /* Zeilen y < ymax liegen ueber der Grenze */
+            if (r3 && f >= t_f0 && f <= t_f1 && f - h0 >= 58 && f - h0 <= 72) {
+                const int ymax = (int)ceil((aus_zeile(f - h0) - 4.5) * sy);      /* Zeilen y < ymax liegen ueber der Grenze */
                 int ub = 0;
                 for (int yy = 0; yy < ymax && yy < h; yy++)
                     for (int xx = 0; xx < w; xx++) ub += sw[(size_t)yy * w + xx];
                 const int ub320 = (int)lround(ub / (sx * sy));
                 if (ub320 > ueber_groesst) ueber_groesst = ub320;
                 if (ub320 > ueber_max) {
-                    printf("F%d (5) UEBER DER AUSTRITTSZEILE h%d: %d Schwanzpunkte (320x240) ueber Zeile %.1f FEHLER\n", f, f - 243, ub320,
-                           aus_zeile(f - 243) - 4.5);
+                    printf("F%d (5) UEBER DER AUSTRITTSZEILE h%d: %d Schwanzpunkte (320x240) ueber Zeile %.1f FEHLER\n", f, f - h0, ub320,
+                           aus_zeile(f - h0) - 4.5);
                     fehler_ueber++;
                 }
             }
@@ -342,19 +345,19 @@ int main(int argc, char **argv)
                 const int s320 = (int)lround(sw_n / (sx * sy));
                 if (s320 < sicht_kleinst) sicht_kleinst = s320;
                 if (s320 < sicht_min) {
-                    printf("F%d (7) SCHWANZ KAUM SICHTBAR h%d: %d Schwanzpunkte (320x240) < %d FEHLER\n", f, f - 243, s320, sicht_min);
+                    printf("F%d (7) SCHWANZ KAUM SICHTBAR h%d: %d Schwanzpunkte (320x240) < %d FEHLER\n", f, f - h0, s320, sicht_min);
                     fehler_sicht++;
                 }
             }
             if (r5l && ((f >= l_f0 && f <= l_f1) || f == l_extra)) {       /* (8) Mindestlaenge (Runde 5) */
-                const double lv = video_linie320(f - 243);
+                const double lv = video_linie320(f - h0);
                 const int s320 = (int)lround(sw_n / (sx * sy));
                 if (lv > 0.0) {
                     laenge_bilder++;
                     const double lg = sw_n ? laenge320(sw, w, h) : 0.0;
                     const int ok = sw_n == 0 || (lg >= l_prozent / 100.0 * lv && lg >= 2.0 * K_SCHWANZBREITE);
                     if (sw_n && lg < laenge_kleinst) laenge_kleinst = lg;
-                    printf("F%d (8) h%d: %d Schwanzpunkte (320x240), sichtbar %.1f Punkte lang, Videolinie %.1f%s\n", f, f - 243, s320, lg, lv,
+                    printf("F%d (8) h%d: %d Schwanzpunkte (320x240), sichtbar %.1f Punkte lang, Videolinie %.1f%s\n", f, f - h0, s320, lg, lv,
                            ok ? (sw_n ? "" : " (verdeckt)") : " FEHLER");
                     if (!ok) fehler_laenge++;
                 }

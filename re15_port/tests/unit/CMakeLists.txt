@@ -4163,24 +4163,27 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_sichel_form.cmake)
     set_tests_properties(integration_r41_sichel_form PROPERTIES TIMEOUT 400)
     # Rueckbau Monitorbild (Runde 41, Stand 23f9da5c9 + Bank-9-Bit 38): Hangar-Szene, Speichern, neuer Prozess laedt, Hangar erneut
-    # betreten -> keine zweite Szene, Birkin wie beim Wiedereintritt. Leon und Elza, je 2 Laeufe. Gegenprobe exe 23f9da5c9 = ROT.
+    # betreten -> keine zweite Szene. Seit Runde 42 "hangar_aussen": Szene aus dem Monitorraum, Wiedereintritt und Laden -> Gang leer.
+    # Leon und Elza, je 2 Laeufe. Gegenprobe exe 98391e747 = ROT.
     add_test(NAME integration_r41_hangar_laden
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_hangar_laden_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_hangar_laden.cmake)
     set_tests_properties(integration_r41_hangar_laden PROPERTIES TIMEOUT 900)
-    # Hangar: Birkin bleibt liegen (Runde 1 "hangar_liegen", Nutzer 2026-11-16): Tod -> liegt in Phase 3 (@0x8011aed4) bis zum
-    # Speichern, Bank-9-Bit 39; Laden + Wiederbetreten leer, Kraftraum 50E0/50F1 unveraendert, Reihenfolge-Luecke (Bank 3 Bit 0x49).
-    # Leon und Elza, je 4 Laeufe. Gegenprobe exe 53fa8a984 = ROT.
-    add_test(NAME integration_r41_hangar_liegen
+    # Runde 42 "hangar_aussen" (PORT-SZENE, Nutzer 16.11.2026; ersetzt integration_r41_hangar_liegen - im Hangar gibt es keinen Kampf
+    # mehr): von Westen (4070/4071) keine Szene, Gang leer; durch die Nordtuer aus dem Monitorraum Szene, danach kein Birkin, Spider-Man
+    # liegt tot, Kontrolle an der Nordtuer, Weg nach Sueden; Bank 3 Bit 0x49 -> keine Szene. Leon und Elza, je 2 Laeufe.
+    # Gegenprobe exe 98391e747 = ROT.
+    add_test(NAME integration_r42_hangar_aussen
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_hangar_liegen_wd
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_hangar_liegen.cmake)
-    set_tests_properties(integration_r41_hangar_liegen PROPERTIES TIMEOUT 1500)
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r42_hangar_aussen_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_hangar_aussen.cmake)
+    set_tests_properties(integration_r42_hangar_aussen PROPERTIES TIMEOUT 1200)
     # Sherry-Ruf (Runde 1 "sherry_ruf", Nutzerwunsch 2026-11-16): die Hangar-Szene ruft genau einmal "Sherry" im ersten Gangtakt h119
-    # (ROOM3070 snd1 Satz 10 = Disc-Ruf des 0x30, STAGE3 @0x8011a744). Leon und Elza, je 1 Lauf mit Ton. Gegenprobe exe 98391e747 = ROT.
+    # (ROOM3070 snd1 Satz 10 = Disc-Ruf des 0x30, STAGE3 @0x8011a744). Leon und Elza, je 1 Lauf mit Ton; seit dem Merge in
+    # r42/hangar_aussen Szene durch die Nordtuer aus dem Monitorraum. Gegenprobe exe 98391e747 / d413862a4 = ROT.
     add_test(NAME integration_r41_hangar_sherry
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

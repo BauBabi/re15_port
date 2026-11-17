@@ -15,12 +15,14 @@
  *
  *   HANGAR (50A0/50A1, Cut 12, V1 4:36-4:40): Birkin packt einen anspringenden Spider-Man (Typ 0x2B), stemmt
  *     ihn ueber den Kopf und schmettert ihn vor sich auf den Boden (Birkin-Clip 0x0B = GRAB-THROW, Wurf bei
- *     Bild 0x2C wie im Original @0x80117d30), dann greift er den Spieler an (Uebergabe an die 0x30-KI).
+ *     Bild 0x2C wie im Original @0x80117d30) und geht auf die Kamera zu.
  *     Runde 41 Spur H: Cut 12 ist im Raum unerreichbar (keine RVD-Zone, kein Cut_chg) - die Szene ist deshalb eine
- *     Zwischensequenz mit Riegel und Letterbox, ausgeloest vom ersten angeforderten Schnitt, der eine der Figuren zeigt;
- *     vorher gibt es die Figuren nicht (birkin_formen.c Kopf "Spur H", Dossier analysis/befunde_runde41/H_hangar.md).
- *     Ablauf Bild fuer Bild nach dem 80%-Video (Complete Disc 4, 45.0 s): Ansprung, Halten, Wurf, Spider-Man flieht
- *     rechts an der Kamera vorbei, Birkin geht auf die Kamera zu; danach 0x30-KI.
+ *     Zwischensequenz mit Riegel und Letterbox; vorher gibt es die Figuren nicht (birkin_formen.c Kopf "Spur H", Dossier
+ *     analysis/befunde_runde41/H_hangar.md). Ablauf Bild fuer Bild nach dem 80%-Video (Complete Disc 4, 45.0 s): Ansprung,
+ *     Halten, Wurf, Spider-Man fliegt rechts an der Kamera vorbei, Birkin geht auf die Kamera zu.
+ *     Runde 42 (PORT-SZENE, Nutzer 16.11.2026): ausgeloest NUR beim Betreten durch die Nordtuer aus dem Monitorraum 5030/5031
+ *     (re15_bf_raum_eintritt), danach kein Kampf: Birkin ist fort (zum anderen Ausgang), der Spider-Man liegt tot, Gang danach
+ *     leer (birkin_formen.c Kopf "Runde 42").
  *     Modell-Voraussetzungen (jedes EM30-Ersatzmodell): Knochen 15 = haltende Hand (Sichelhand,
  *     Runde 41 SF N1.2), Clip 0 (Stand, INIT), Clip 0x0B (Griff/Wurf,
  *     mindestens 0x2D Bilder), Clip 1 (Gang der KI); Spider-Man EM2B: Clips 0, 7, 0x0A, 0x0C.
@@ -108,8 +110,12 @@ uint16_t re15_bf_pad(uint16_t pad, uint16_t *pressed);
 /* Kameraschnitt zur Spielerlage in ROOM5090/5091 (Baender der RVD-Zonen, s. birkin_formen.c). */
 int      re15_bf_schnitt_aus_lage(int32_t x);
 
-/* Je KI-Tick vor der Gegner-Schleife: setzt im Hangar Birkin + Spider-Man und spielt die Wurfszene. */
+/* Je KI-Tick vor der Gegner-Schleife: spielt im Hangar die Wurfszene (merkt sich ausserdem den Raum des Takts). */
 void re15_bf_raumtick(void);
+/* Runde 42 (PORT-SZENE): Raumwechsel, direkt nach dem SCD-Init des neuen Raums (room_common.c re15_room_apply_pending). Startet die
+ * Hangar-Szene, wenn der Spieler aus dem Monitorraum 5030/5031 (= Nordtuer) in 50A0/50A1 kommt und die Szene noch nicht lief;
+ * `tuer_cut` = Eintritts-Schnitt der Tuer, auf den die Kamera am Szenenende zurueckgeht. */
+void re15_bf_raum_eintritt(int tuer_cut);
 /* 1 = dieser Slot wird gerade von der Szene gefuehrt (KI-Tick ueberspringen). */
 int  re15_bf_szene_besitzt(int slot);
 void re15_bf_reset(void);                /* Raumwechsel */
@@ -140,15 +146,16 @@ int  re15_bb_cd_lauf_test(int setzen);
 int  re15_bb_pose_aktiv(void);
 void re15_bb_pose_tick(void);
 
-/* Diagnose fuer Tests: Szenenphase (0 = wartet auf den Ausloeser, keine Figuren; 1 = Vorlauf in Cut 12; 2 = Sprung;
- * 3 = Griff/Halten; 4 = Wurf; 5 = am Boden und Flucht; 6 = Abgang (Gang auf die Kamera zu, Zeitplan); 7 = frei). */
+/* Diagnose fuer Tests: Szenenphase (0 = keine Szene, keine Figuren; 1 = Vorlauf in Cut 12; 2 = Sprung;
+ * 3 = Griff/Halten; 4 = Wurf; 5 = am Boden und Flucht; 6 = Abgang (Gang auf die Kamera zu, Zeitplan); 7 = vorbei/leer). */
 int  re15_bf_hangar_phase(void);
-int  re15_bf_hangar_slot(int birkin);    /* 1 = Birkin-Slot, 0 = Spider-Man-Slot, -1 = keiner */
+int  re15_bf_hangar_slot(int birkin);    /* 1 = Birkin-Slot, 0 = Spider-Man-Slot (nach der Szene: die Leiche), -1 = keiner */
 int  re15_bf_hangar_riegel(void);        /* 1 = die Szene haelt Set(2,7)/Set(1,27) */
 /* PORT-WAHL (Zensus Bank 9, bank9_zensus.py 2026-11-15: Original frei 23..51; Port, r42/story (23..37), r41/monitore,
  * r41/birkin_kralle, r41/form ohne Bit 38): "Hangar-Szene 50A0/50A1 gesehen" steht im Spielstand, damit die Szene nach dem
  * Laden nicht noch einmal laeuft (Dossier H_hangar.md OFFEN 6.1). Gesetzt am Szenenende (bf_hangar_beenden), gelesen beim
- * Betreten (re15_bf_raumtick): gesetzt -> keine Szene, Birkin sofort Angreifer wie beim Wiedereintritt. */
+ * Betreten (re15_bf_raum_eintritt / re15_bf_raumtick): gesetzt -> keine Szene; seit Runde 42 Gang leer (bis 98391e747: Birkin
+ * sofort Angreifer). */
 #define RE15_BF_HANGAR_BANK  9
 #define RE15_BF_HANGAR_BIT   38
 void re15_bf_hangar_vergessen(void);     /* Testhaken: "Szene gesehen" loeschen (Bank-9-Bit RE15_BF_HANGAR_BIT) */
@@ -158,6 +165,8 @@ void re15_bf_hangar_vergessen(void);     /* Testhaken: "Szene gesehen" loeschen 
  * der Disc (Raum-Ton 10 der 0x30-Raeume, Belege birkin_bahnsteig.c bb_bild_ton); PC: re15_audio_birkin_ruf. NULL = stumm. */
 void re15_bf_ruf_hook(void (*fn)(void));
 /* ---- Hangar: liegen bleiben (Runde 1 "hangar_liegen", Nutzer 2026-11-16: "Besser er bleibt einfach liegen") --------------------
+ * ⛔ GESCHICHTE seit Runde 42 "hangar_aussen": im Hangar gibt es keinen Kampf mehr (Kopf "Runde 42" in birkin_formen.c), Birkin
+ * stirbt dort nicht. Der Abschnitt bleibt als Beleg fuer Bit 39 und das Raummerker-Tor (beides wird weiter gelesen).
  * ORIGINAL (40-%-Disc STAGE5.BIN, selbst disassembliert): Todesmaschine FUN_8011adec, Phase 0 @0x8011ae2c (+0x7 = 1 @0x8011ae38,
  * Clip 9), Phase 2 setzt den Birkin-Fortschritt z5 0x1C (`jal 0x8004ef90` a1 = 0x1c @0x8011aeac/@0x8011aecc), Phase 3 @0x8011aed4
  * wartet auf grid & 0xF == 2 ohne anim_set. Im Hangar (grid 0x10) kommt das Signal nie: Birkin bleibt im letzten Bild von Clip 9
@@ -169,8 +178,8 @@ void re15_bf_ruf_hook(void (*fn)(void));
  * ueber ein Raummerker-Tor (Sce_em_set mit pc[7] = 0xFF; 50E0 sub00 `21 03 49 00` @0x00AEA, Disc ROOM3071 sub00 @0x030FC).
  * PORT-WAHL (Zensus Bank 9, scratchpad hangar_liegen/zensus/frei.py 2026-11-16: Original, 40-%-Disc, Port r41/sichel_szene,
  * r42/story einschliesslich re15_story_r42.h, r41/birkin_kralle, r41/form, r41/monitore, master - Bit 39 von niemandem belegt):
- * "Hangar-Birkin besiegt" - gesetzt beim Eintritt in den Tod (Phase 0 ausgefuehrt, birkin_formen.c bf_hangar_tod_merken), gelesen
- * beim Betreten (re15_bf_raumtick): gesetzt -> keine Szene, kein Birkin, auch nach dem Laden. */
+ * "Hangar-Birkin besiegt" - bis 98391e747 gesetzt beim Eintritt in den Tod (Phase 0 ausgefuehrt). Seit Runde 42 gibt es im Hangar
+ * keinen Kampf mehr; das Bit wird nur noch GELESEN (alte Spielstaende): gesetzt -> keine Szene, Gang leer, auch nach dem Laden. */
 #define RE15_BF_BESIEGT_BIT  39
 /* "Kraftraum-Birkin besiegt" = Bank 3 Bit 0x49: gesetzt nur von ROOM50E0 sub01 `22 03 49 01` @0x00B1A bzw. ROOM50F1 sub01 @0x00A04
  * nach Ck(5,0x1C) (Todesphase 2 des Kraftraum-Birkin @0x8011aecc); danach setzt der Kraftraum ihn nicht mehr (Tor `21 03 49 00`
@@ -179,8 +188,6 @@ void re15_bf_ruf_hook(void (*fn)(void));
  * Sce_em_set 0x30 @0x033CE, Ck/Set(5,0x1C) @0x0348E; ROOM3071 @0x03434 / @0x0350E). */
 #define RE15_BF_KRAFTRAUM_BANK  3
 #define RE15_BF_KRAFTRAUM_BIT   0x49
-/* 1 = der Schnitt `cut` des aktuellen Raums zeigt eine Szenenfigur (Anker-Viereck + Bild), = Ausloeser-Bedingung. */
-int  re15_bf_szene_im_schnitt(int cut);
 /* Region-Cull-Ausnahme (Zeichner): 1 = `a` ist eine Figur der Hangar-Szene und die Szene haelt Cut 12. */
 int  re15_bf_szene_zeigt(const re15_actor_t *a);
 /* Runde 41 SF Neuaufbau ab NB2 (aus NB3): 1 = die Hangar-Szene haelt Cut 12 -> Effekte (gruenes Blut) nicht gegen den

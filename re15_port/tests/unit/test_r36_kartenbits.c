@@ -576,7 +576,7 @@ static const port_bit_t k_port[] = {
     { RE15_R42_BANK, RE15_R42_BIT_DOK_VAKZIN, "RE15_R42_BIT_DOK_VAKZIN", "Dokument Vaccine Synthesis 5011 (Runde 42 Story, reserviert v0.8.32)" },
     { RE15_R42_BANK, RE15_R42_BIT_ENZYM, "RE15_R42_BIT_ENZYM", "Enzym = Disc-Bit ROOM40A1 @0x00ED0 pc[18] (Runde 42 Story, reserviert v0.8.32)" },
     { RE15_BF_HANGAR_BANK, RE15_BF_HANGAR_BIT, "RE15_BF_HANGAR_BIT", "Hangar-Szene 50A0/50A1 gesehen, birkin_formen.c bf_hangar_beenden (Runde 41 Hangar-Rueckbau)" },
-    { RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT, "RE15_BF_BESIEGT_BIT", "Hangar-Birkin besiegt, birkin_formen.c bf_hangar_tod_merken (Runde 1 hangar_liegen)" },
+    { RE15_BF_HANGAR_BANK, RE15_BF_BESIEGT_BIT, "RE15_BF_BESIEGT_BIT", "Hangar-Birkin besiegt, seit Runde 42 hangar_aussen nur noch gelesen (alte Spielstaende), birkin_formen.c bf_hangar_besiegt" },
 };
 #define N_PORT ((int)(sizeof k_port / sizeof k_port[0]))
 

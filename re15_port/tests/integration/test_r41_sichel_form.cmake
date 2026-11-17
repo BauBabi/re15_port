@@ -7,6 +7,9 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: ohne diese Zeile gelten im Li
 # tools/birkin_formen.py) traegt eine Schwanzkette (Knochen 16-22); V8 hat weiter 23 Meshes / 23 Knochen / 21 Clips (riegel_v8 S8). Je ein kurzer Lauf mit
 # Debug-Sprung, kein Messhaken ausser der Kamera in 50A0 (RE15_FORCE_CUT=4: Cut 12 der Szene hat ein Ankerviereck
 # x -25000..-21000, in dem der Birkin nicht steht; Cut 4 zeigt ihn). Geprueft aus debug.log / enemy_dbg.log:
+# ⛔ Runde 42 "hangar_aussen": im Gang 50A0 gibt es den Birkin nur noch in der Szene, und die laeuft nur beim Betreten durch die Nordtuer
+# aus dem Monitorraum (birkin_formen.c Kopf "Runde 42"). Der 50A0-Lauf springt deshalb nach 5030 an die Tuer und geht per Aktionstaste
+# hinein; gezeichnet wird der Birkin dann in Cut 12 (Region-Cull-Ausnahme re15_bf_szene_zeigt), RE15_FORCE_CUT entfaellt.
 #   1  50A0 und 50E0: "EM30: Ersatzmodell EMD/EM30_HANGAR.EMD" und "EM30 loaded: 23 meshes, 23 bones, 21 clips"
 #   2  50A0: der Zeichner zeichnet 23 Teile (Bones 23, Meshes 23) - kein Rohr-Tausch, Schwanzglieder mit eigenem Knochen
 #
@@ -34,13 +37,13 @@ set(_exe_kopie "${_exe_dir}/re15_pc_r41sichel_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 set(_f "")
-function(ein_lauf _raum _pos _extra)
+function(ein_lauf _raum _sprung _pos _extra)
     set(WORKDIR "${_wurzel}/${_raum}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     re15_start_spiel(_rv 180
         RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
-        RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=${_pos}" RE15_ENEMY_DBG=1 ${_extra}
+        RE15_DEBUG_JUMP=${_sprung} "RE15_PLAYER_POS=${_pos}" RE15_ENEMY_DBG=1 ${_extra}
         "RE15_EXIT_AT=700#${_raum}"
         "${_exe_kopie}")
     set(_g "")
@@ -68,8 +71,8 @@ function(ein_lauf _raum _pos _extra)
     set(_f "${_f}${_g}" PARENT_SCOPE)
 endfunction()
 
-ein_lauf(50A0 "-3000,-15000,2048,0" "RE15_FORCE_CUT=4")
-ein_lauf(50E0 "-25450,-14700,0,0" "")
+ein_lauf(50A0 5030@20 "-15300,-26300,1024" "RE15_INPUT_SCRIPT=W1,A0.2")   # Runde 42: durch die Nordtuer -> Szene
+ein_lauf(50E0 50E0@250 "-25450,-14700,0,0" "")
 
 file(REMOVE "${_exe_kopie}")
 if(_f)
