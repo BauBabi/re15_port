@@ -17,7 +17,8 @@
  *   zeile3070  3070 als Leon: (4,194) im Besuch gesetzt -> msg 6 einmal; schon gesetzt beim Betreten -> keine Zeile; Elza 3071 keine
  *   t03        3070-Auftritt (Emergence 0x80119378): im Wechselbild steht das letzte Bild von Clip 0x10, Clip 0xd blendet mit a3 0x100
  *   t04        3080-Hand (Szenen-Modus 0x80118d00): zwei Stoesse, der zweite aus dem gehaltenen letzten Bild ab Bild 0, a3 0x400
- *   t03labor   NB1 B2: derselbe Auftritt in 50E0 laeuft den alten Weg (STAGE5 = Endkampf, unveraendert)
+ *   t03labor   derselbe Auftritt in 50E0 (Kraftraum, STAGE5) laeuft seit r41/release_0830 7d19c6061 DENSELBEN Weg wie 3070 (Nutzerbefund
+ *              16.11.2026; NB1 B2 "Endkampf unveraendert" damit aufgehoben, Merge v0.8.31-Basis)
  * NB1 B1 (t03): nach dem Auftritt Rate 0 (Kampf wie vor T-03), Tod mit a3 0x200 @0x8011a764. NB1 B3 (programm): Poltern vor msg 6.
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
@@ -484,9 +485,13 @@ static void teil_t03(void)
     PRUEF(rate_tod == 0x200 && frac_tod >= 6,
           "Tod Clip 9: a3 0x200 (@0x8011a764), +0x8f 7 (@0x8011a654) -> Startgewicht 7 x 0x200 = 3584 (Rate %#x frac %d)", rate_tod, frac_tod);
     PRUEF(halt10 == fc10 - 1, "Wechselbild Clip 0x10: Bild %d = letztes (%d) statt Umlauf 0 (@0x8001f35c/@0x8001f63c)", halt10, fc10 - 1);
-    PRUEF(wechsel == 0x0d && rate0d == 0x100 && frac0d == 0x0e,
-          "Clip 0xd (@0x80119464) blendet mit a3 0x100 (@0x801194a4), frac 0xf -> 0xe nach dem ersten Schritt (Rate %#x frac %d)",
-          rate0d, frac0d);
+    /* Merge v0.8.31-Basis (r41/release_0830 f7057a708, Pruefer R1): gezeichnet wird +0x8f VOR dem Abzug (`lbu s0,143(v1)` @0x8001f408,
+     * `mult v0,a3` @0x8001f474, Abzug erst @0x8001f5b0/@0x8001f5b4) - der Port holt den Abzug am Anfang des naechsten KI-Bilds nach
+     * (s_bk_frac_offen). Nach dem ersten Bild steht also noch 0xf: wp = 0xf * 0x100 = 3840 (gleiche Aenderung wie
+     * test_r41_birkin_aufrichten emergence). */
+    PRUEF(wechsel == 0x0d && rate0d == 0x100 && frac0d == 0x0f,
+          "Clip 0xd (@0x80119464) blendet mit a3 0x100 (@0x801194a4), erstes Bild gezeichnet mit frac 0xf vor dem Abzug (@0x8001f408)"
+          " = wp %d (soll 3840) (Rate %#x frac %d)", frac0d * rate0d, rate0d, frac0d);
     PRUEF(halt0d == fc0d - 1, "Ende Clip 0xd: letztes Bild %d (soll %d) bleibt bis zum Ansprung (Phase 4 ohne anim_set @0x801194d0)",
           halt0d, fc0d - 1);
 }
@@ -520,12 +525,16 @@ static void teil_t04(void)
     PRUEF(stoesse == 2, "zwei Stoesse (Phase 8 -> 9 und Phase 10 -> 11, Original @0x801191e4/@0x8011922c): %d", stoesse);
     PRUEF(rate9 == 0x400, "Stoss 1: a3 0x400 (@0x80119274): %#x", rate9);
     PRUEF(halt9 == fc4 - 1, "Wechselbild nach Stoss 1: letztes Bild %d (soll %d) gehalten, kein Ruecksprung auf Bild 0", halt9, fc4 - 1);
-    PRUEF(bild10 == 1 && rate10 == 0x400 && frac10 == 2,
-          "Stoss 2: Clip 4 ab Bild 0 (Umlaufwert @0x8001f63c, gezeichnet 1), frac 3 * a3 0x400 (Bild %d Rate %#x frac %d)",
-          bild10, rate10, frac10);
+    /* Merge v0.8.31-Basis (r41/release_0830 f7057a708): Szenen-Modus zeichnet +0x8f vor dem Abzug (@0x8001f408, Abzug @0x8001f5b4),
+     * wie test_r41_birkin_aufrichten szene3080: frac 3 * a3 0x400 = 3072. */
+    PRUEF(bild10 == 1 && rate10 == 0x400 && frac10 == 3,
+          "Stoss 2: Clip 4 ab Bild 0 (Umlaufwert @0x8001f63c, gezeichnet 1), gezeichnet frac 3 * a3 0x400 = 3072 vor dem Abzug (@0x8001f408)"
+          " (Bild %d Rate %#x frac %d)", bild10, rate10, frac10);
 }
 
-/* ---- t03labor (NB1 B2): derselbe Auftritt in 50E0 (grid 0x33 @0xACE) laeuft den ALTEN Weg (Endkampf-Raeume unveraendert) ------- */
+/* ---- t03labor: derselbe Auftritt in 50E0 (grid 0x33 @0xACE). Bis zum Merge der v0.8.31-Basis lief er den ALTEN Weg (NB1 B2); seit
+ * r41/release_0830 7d19c6061 (Nutzerbefund 16.11.2026 Kraftraum) gilt dort dieselbe Clipende-Regel: STAGE5-Emergence 0x80119b8c ist
+ * instruktionsgleich mit STAGE3 0x80119378 (Phasentabelle @0x80100464), a3 `ori a3,zero,0x100` @0x80119c44 / @0x80119cb8. ------- */
 static void teil_t03labor(void)
 {
     printf("== t03labor ==\n");
@@ -550,8 +559,9 @@ static void teil_t03labor(void)
         if (ph == 5) break;
     }
     PRUEF(sub9 && phase_alt == 5, "50E0: Auftritt Sub 9 bis zum Ansprung");
-    PRUEF(wechsel10 == 0 && fc10 > 1, "50E0: Wechselbild Clip 0x10 = Umlauf 0 wie vor T-03 (Bild %d, Clip %d Bilder)", wechsel10, fc10);
-    PRUEF(rate_max == 0, "50E0: keine Szenen-Staerke (Rate %#x), Zeichenpfad-Standard wie vor T-03", rate_max);
+    PRUEF(fc10 > 1 && wechsel10 == fc10 - 1,
+          "50E0: Wechselbild Clip 0x10 = letztes Bild wie 3070 (@0x8001f35c/@0x8001f63c, 7d19c6061) (Bild %d, Clip %d Bilder)", wechsel10, fc10);
+    PRUEF(rate_max == 0x100, "50E0: Szenen-Staerke a3 0x100 (@0x80119c44/@0x80119cb8, 7d19c6061) (Rate %#x)", rate_max);
 }
 
 int main(int argc, char **argv)

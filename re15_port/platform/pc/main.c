@@ -10873,12 +10873,15 @@ re_title:;
                         fputc('\n', s_griff_fp); fflush(s_griff_fp);
                     }
                 }
-                {   /* Runde 41 SF Runde 7 (Wurf eindrehend) Messhaken RE15_POSE_LOG=<datei>: gezeichnete Pose der Hangar-Figuren je Bild
+                {   /* Runde 41 SF Runde 7 (Wurf eindrehend) Messhaken RE15_HANGAR_POSE_LOG=<datei>: gezeichnete Pose der Hangar-Figuren je Bild
+                     * (Merge v0.8.31-Basis: frueher RE15_POSE_LOG - derselbe Name wie die Messschiene skeleton_common.c re15_pose_messzeile
+                     * aus r42/story; beide oeffneten dieselbe Datei mit "w" und schrieben durcheinander, integration_r42_story3b_leon fand
+                     * seine "F.. R.. t30 m.."-Zeilen nicht mehr. Umbenannt, Format unveraendert; Leser tools/r41_sichel/v8/bewegung).
                      * nach allen Posen-Haken - Typ 0x30 und 0x2B, Aktorlage, Gier/Kippung, Massstab und je Knochen Drehung (Q12, 9 Werte)
                      * und Lage im Modellraum (wie re15_skel_compute_pose). Damit rechnet die Messung Mesh, Kopf, Brust und Mitte genau
                      * so, wie der Zeichner sie zeigt. Nur Messung, im Normalpfad stumm, kein Verhalten. */
                     static FILE *s_pose_fp = NULL; static int s_pose_tried = 0;
-                    if (!s_pose_tried) { s_pose_tried = 1; const char *pp = getenv("RE15_POSE_LOG"); if (pp && *pp) s_pose_fp = fopen(pp, "w"); }
+                    if (!s_pose_tried) { s_pose_tried = 1; const char *pp = getenv("RE15_HANGAR_POSE_LOG"); if (pp && *pp) s_pose_fp = fopen(pp, "w"); }
                     if (s_pose_fp && (npc->type == 0x30u || npc->type == 0x2Bu)) {
                         fprintf(s_pose_fp, "[pose] F%u typ%02X mo=%d af=%d frac=%d lage %d %d %d rot %d %d %d s %d n %d",
                                 (unsigned)g_engine.frame_count, (unsigned)npc->type, (int)npc->motion, (int)npc->anim_frame,

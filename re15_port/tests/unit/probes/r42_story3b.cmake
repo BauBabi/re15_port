@@ -10,7 +10,7 @@
 #   unit_r42_story3b_zeile3070  3070 msg 6 einmal nach (4,194), Elza 3071 ohne
 #   unit_r42_story3b_t03        3070-Auftritt: letztes Bild im Wechselbild, Clip 0xd mit a3 0x100
 #   unit_r42_story3b_t04        3080-Hand: zweiter Stoss aus dem gehaltenen Bild, a3 0x400
-#   unit_r42_story3b_t03labor   NB1 B2: Auftritt 50E0 (STAGE5, Endkampf) alter Weg, unveraendert
+#   unit_r42_story3b_t03labor   Auftritt 50E0 (Kraftraum) mit derselben Clipende-Regel wie 3070 (seit 7d19c6061, NB1 B2 aufgehoben)
 #   integration_r42_story3b_leon  Durchlauf Leon 3060 -> 3010 -> 30E0 -> 3070 -> 30E0 -> 3070 -> 3080 -> 4000 (tests/integration/test_r42_story3b.cmake)
 #   integration_r42_story3b_elza  Durchlauf Elza 30E1 -> 3071 -> 30E1 -> 3071 -> 3081 -> 4001 (keine Port-Szene, T-04)
 add_executable(test_r42_story3b ${CMAKE_CURRENT_LIST_DIR}/../test_r42_story3b.c)

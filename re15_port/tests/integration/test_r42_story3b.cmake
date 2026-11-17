@@ -17,7 +17,11 @@
 # TEIL elza   30E1 -> 3071 (Birkin-Auftritt Sub 10, Kampf, Flucht sub17) -> 30E1 (John und Sherry, Original) -> 3071 (Aufzug) -> 3081
 #             (Hand) -> 4001. Ausser T-04 im Aufzug darf sich nichts aendern: keine Port-Szene in 30E1/3071.
 # Vorgesetzt (der Wegplan-Bot kann es nicht spielen, gemessen Lauf d2: Magazin leer ohne Nachladen, Spieler gefressen): Birkins Tod
-# ueber den Messhaken RE15_S3B_BIRKIN_TOT (Leon 600, Elza 60 Kampfbilder - Elza wurde in Lauf elza_vor nach ~600 gefressen; danach Tod wie nach einem Treffer; Zusammenbruch, (5,0x1c) @0x8011a6b8,
+# ueber den Messhaken RE15_S3B_BIRKIN_TOT (Leon 175, Elza 60 Kampfbilder - Elza wurde in Lauf elza_vor nach ~600 gefressen; Leon
+# seit dem Merge der v0.8.31-Basis (r41/release_0830, Kralle Runde 3: Kampfwege mit eigener a3-Staerke und gehaltenem letzten Bild)
+# im Lauf 9f1c7cd5 nach ~360 Kampfbildern vom WURF-TOD (STAGE3 cmd 6 -> Stub 0x8011b168 -> 0x8011b1a8, birkin_opfer.c haken_wurf3;
+# HP-Haken hilft dort nicht, die Maschine setzt cmd 7) getoetet, vorher 600 (Lauf 756cacdf mit 300: Wurf-Griff schon bei
+# Kampfbild ~297 = F1521; 175 = F1399 liegt im Gang Sub 1 ohne aktiven Haken); danach Tod wie nach einem Treffer; Zusammenbruch, (5,0x1c) @0x8011a6b8,
 # sub01 @0x03496 und alles danach laufen echt) und RE15_R39_MESS_SPIELER_HP=100 (Treffer bis dahin ohne Tod, Muster
 # integration_r41_birkin_pistole). 3010-Zombies wie Stufe STAGE3a (Kill-Bits 7:64..7:70).
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<leon|elza> -P test_r42_story3b.cmake
@@ -114,7 +118,7 @@ function(_umlauf _datei _typ _clip_a _clip_b _erg)
 endfunction()
 
 set(_basis RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 RE15_EQUIP=3
-           RE15_S3B_BIRKIN_TOT=600 RE15_R39_MESS_SPIELER_HP=100 RE15_WEGPLAN_LOG=wegplan.txt RE15_STATE_LOG=state.log
+           RE15_S3B_BIRKIN_TOT=175 RE15_R39_MESS_SPIELER_HP=100 RE15_WEGPLAN_LOG=wegplan.txt RE15_STATE_LOG=state.log
            RE15_POSE_LOG=pose.txt RE15_STIMME_LOG=1 RE15_SE_DEBUG=1)
 
 # 3070: Birkin-Szene (Aot Platz 2 @0x033E2), Kampf bis (bank,bit), Rueckweg nach 30E0 nordlich am Block SCA 3 vorbei (dort liegt
@@ -294,15 +298,27 @@ ENDE
         else()
             fail("T-03: Umlaufbild Clip 16 af0 vor Clip 13 (${_u}x)")
         endif()
-        # NB1 B1: nach dem Auftritt (Clips 0x10/0xd) kaempft Birkin in 3070 ohne Szenen-Staerke (Rate 0 wie vor T-03); Tod Clip 9
-        # beginnt mit +0x8f 7 (@0x8011a654) x a3 0x200 (@0x8011a764) = wp 3584
-        file(STRINGS "${WORKDIR}/pose.txt" _k3070 REGEX " R3070 s[0-9]+ t30 m([0-9]|1[0-24578-9]|[2-9][0-9]) .* ra256 ")
-        list(LENGTH _k3070 _nk)
-        if(_nk EQUAL 0)
-            ok("B1: 3070-Kampf ohne stehengebliebene Rate 0x100")
+        # NB1 B1: nach dem Auftritt (Clips 0x10/0xd) bleibt die Szenen-Staerke nicht stehen: der Eintritt in den Kampf (Phase 4
+        # @0x801194d0 -> Sub 3) setzt die Rate auf 0. Tod Clip 9 beginnt mit +0x8f 7 (@0x8011a654) x a3 0x200 (@0x8011a764) = wp 3584.
+        # Merge v0.8.31-Basis: seit r41/release_0830 (Kralle Runde 3, enemy_ai_common.c re15_birkin_anim_kampf) tragen die KAMPFWEGE
+        # die a3 ihres eigenen anim_set-Aufrufs (STAGE3.BIN): Gang Clip 1 0x100 @0x80117288 / 0x200 @0x80117358, Kralle Clip 3 0x100
+        # @0x80117644, Erholung Clip 0xa 0x400 @0x8011791c, Biss Clip 4 0x100 @0x80117b98, Wurf Clip 0xb 0x100 @0x80117e54. Die alte
+        # Pruefung "keine Kampfpose mit Rate 0x100" ist damit ueberholt (gemessen Lauf 9f1c7cd5: m1/m3/m11 ra256, m10 ra1024, m9 ra512).
+        # Jetzt: (a) das Bild nach dem Auftritt (Clip 0xd) traegt Rate 0; (b) jede Kampfpose dieser Clips traegt genau ihre a3.
+        file(STRINGS "${WORKDIR}/pose.txt" _ein REGEX " R3070 s[0-9]+ t30 m13 af[0-9]+ .* ra0 ")
+        list(LENGTH _ein _ne)
+        if(_ne GREATER 0)
+            ok("B1: Eintritt in den Kampf nach dem Auftritt mit Rate 0 (Phase 4 @0x801194d0 -> Sub 3)")
         else()
-            list(GET _k3070 0 _k0)
-            fail("B1: ${_nk} Kampfposen mit Rate 0x100 (erste: ${_k0})")
+            fail("B1: kein Bild Clip 0xd mit Rate 0 nach dem Auftritt (Szenen-Staerke bleibt stehen)")
+        endif()
+        file(STRINGS "${WORKDIR}/pose.txt" _kf REGEX " R3070 s[0-9]+ t30 (m1 .* ra(0|768|1024)|m3 .* ra(0|512|768|1024)|m10 .* ra(0|256|512|768)|m4 .* ra(0|512|768|1024)|m11 .* ra(0|512|768|1024)) ")
+        list(LENGTH _kf _nk)
+        if(_nk EQUAL 0)
+            ok("B1: 3070-Kampfposen mit der a3 ihres anim_set (Gang 0x100/0x200, Kralle 0x100, Erholung 0x400, Biss 0x100, Wurf 0x100)")
+        else()
+            list(GET _kf 0 _k0)
+            fail("B1: ${_nk} Kampfposen mit fremder Rate (erste: ${_k0})")
         endif()
         file(STRINGS "${WORKDIR}/pose.txt" _tod REGEX " R3070 s[0-9]+ t30 m9 af0 kf[0-9]+ fr7 ra512 wp3584 ")
         list(LENGTH _tod _nt)
