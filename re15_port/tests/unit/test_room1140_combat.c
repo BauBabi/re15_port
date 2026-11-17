@@ -42,6 +42,7 @@
 #include "re15_damage.h"   /* re15_damage_seed_rng */
 #include "re15_player.h"   /* re15_player_tick + RE15_PAD_BIT_R1 (the aim pose, Phase 8.14) */
 #include "re15_vab.h"      /* re15_vab_parse + re15_footstep_vag — the death-SE bank lookup (Phase 8.17) */
+#include "re15_pipe_r41.h" /* re15_pipe_r41_reichweite - Rohr-Reichweite (Test 12) */
 #include "re15_inventory.h" /* g_inv + re15_ammo_* — the byte-true magazine/reload model (part 27) */
 #include "re15_room.h"
 #include "re15_skeleton.h" /* re15_sin/cos_q12 - the test-21 anchor seed */     /* g_room_change + g_current_room_id — the death->continue reload (part 20) */
@@ -607,10 +608,14 @@ int main(void)
             printf("  (11c) hit while down -> immediate GET-UP (no lie timer)\n");
     }
 
-    /* (12): the BYTE-TRUE reach bound (cone tester FUN_800127fc/800128a0): R = reach + enemy hitbox
-     * radius (hbdata+6 = hit_radius_min = 400 for zombies), hit iff strict dist < R. The pistol's table
-     * reach is 1000, so the true effective range vs a zombie is 1000+400 = 1400 (strict). Pre-fix the
-     * port tested dist <= reach (radius omitted) and would have MISSED a zombie at 1000..1399. */
+    /* (12): the BYTE-TRUE reach bound (cone tester FUN_800127fc, dispatch @0x8006E548 [2] = 0x800127FC):
+     * R = reach + enemy hitbox radius (hbdata+6 = hit_radius_min = 400 for zombies), hit iff strict dist < R.
+     * Weapon 2 = PIPE (Tester @0x8006E550, Schaden @0x8006E658 = 24). Its table reach @0x8006E5A8 = 1000
+     * (Grundwert) is replaced since Runde 41 "pipe" (92b2ed813, NUTZERWUNSCH 2026-11-16 "wie ein Messer, aber
+     * mit mehr Reichweite") by RE15_PIPE_R41_REICHWEITE = 1355 (engine/src/gen/pipe_r41.inc, re15_pipe_r41_reichweite);
+     * the bound MECHANISM (reach + radius, strict <) is unchanged and is what this check pins:
+     * R = 1355 + 400 = 1755. Pre-fix the port tested dist <= reach (radius omitted) and would have MISSED
+     * a zombie at 1355..1754. (Vor Runde 41 stand hier R = 1000 + 400 = 1400 mit z 1399/1403.) */
     {
         pl->x = 0; pl->z = 0; pl->hp = 100; pl->hit_react = 0; pl->state = 0; pl->rot_y = 0; pl->floor = 0;
         re15_player_death_reset();
@@ -622,18 +627,20 @@ int main(void)
         re15_actor_t *z = &g_actors[zslots[0]];
         if (z->hit_radius_min != 400) {   /* the spawn dim this whole bound depends on */
             fprintf(stderr, "FAIL: (12) zombie hit_radius_min must be 400, ist %u\n", z->hit_radius_min); fail = 1; }
-        /* Byte-true SquareRoot0 distance (NOT exact): z=1399 -> SquareRoot0(1399²)=1396, still
-         * < R=1400 -> MUST hit. (The BIOS sqrt is coarse near 1400: 1402²->1396, 1403²->1402,
-         * so R=1400 falls in the gap between placements.) */
-        z->x = 0; z->z = 1399; z->hp = 60; z->hit_react = 0; z->state = RE15_AI_STATE_ACTIVE;
+        if (re15_pipe_r41_reichweite(2, 1000) != 1355) {   /* NUTZERWUNSCH-Reichweite, an der R haengt */
+            fprintf(stderr, "FAIL: (12) Rohr-Reichweite must be 1355 (pipe_r41.inc), ist %u\n",
+                    (unsigned)re15_pipe_r41_reichweite(2, 1000)); fail = 1; }
+        /* Byte-true SquareRoot0 distance (NOT exact, re15_squareroot0 = BIOS table @0x8007d984):
+         * z=1755 -> SquareRoot0(1755²)=1750 < R=1755 -> MUST hit. */
+        z->x = 0; z->z = 1755; z->hp = 60; z->hit_react = 0; z->state = RE15_AI_STATE_ACTIVE;
         if (re15_player_weapon_fire(2) != (zslots[0] + 1) || z->hp != (int16_t)(60 - 24)) {
-            fprintf(stderr, "FAIL: (12) zombie at SquareRoot0(1399²)=1396 (< R 1400) must be HIT, HP=%d\n", z->hp); fail = 1; }
-        /* z=1403 -> SquareRoot0(1403²)=1402 >= R=1400: strict dist < R fails -> MUST miss. */
-        z->x = 0; z->z = 1403; z->hp = 60; z->hit_react = 0; z->state = RE15_AI_STATE_ACTIVE;
+            fprintf(stderr, "FAIL: (12) zombie at SquareRoot0(1755²)=1750 (< R 1755) must be HIT, HP=%d\n", z->hp); fail = 1; }
+        /* z=1756 -> SquareRoot0(1756²)=1755 == R: strict dist < R fails -> MUST miss (dist == R is the edge). */
+        z->x = 0; z->z = 1756; z->hp = 60; z->hit_react = 0; z->state = RE15_AI_STATE_ACTIVE;
         if (re15_player_weapon_fire(2) != 0 || z->hp != 60) {
-            fprintf(stderr, "FAIL: (12) zombie at SquareRoot0(1403²)=1402 (>= R 1400, strict <) must MISS, hp=%d\n", z->hp); fail = 1; }
+            fprintf(stderr, "FAIL: (12) zombie at SquareRoot0(1756²)=1755 (>= R 1755, strict <) must MISS, hp=%d\n", z->hp); fail = 1; }
         if (!fail)
-            printf("  (12) byte-true reach: hit at SquareRoot0(1399²)=1396 (< R 1400), miss at 1402 (>= R, strict <)\n");
+            printf("  (12) byte-true reach: hit at SquareRoot0(1755²)=1750 (< R 1355+400), miss at 1755 (>= R, strict <)\n");
     }
 
     /* (13): the byte-true DEATH ANIMATION play-out (FUN_80107cb0). With the enemy model bank loaded,
