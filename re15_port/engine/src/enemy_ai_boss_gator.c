@@ -1048,9 +1048,33 @@ static void gb_ring_target(const re15_actor_t *e, const re15_actor_t *pl,
 /* Treffer-Intercept: re15_enemy_take_damage hat state=2 (+ ggf. 3) gesetzt und
  * sub_state_1 mit dem Reaktions-Code ueberschrieben. Der Boss uebersetzt das in
  * sein eigenes Phasenmodell: Blut IMMER, Flinch nur an 10%-Schwellen (Punkt 5). */
+static int s_gb_testtod;        /* Pruefhaken RE15_GB_TEST=3 (Todesrolle, nur Tests): der einzige Weg in GBP_DIE */
+static int s_gb_nur_kanister;   /* Zaehler der abgefangenen Beschuss-Tode (Messhaken re15_gator_boss_nur_kanister_zaehler) */
+int re15_gator_boss_nur_kanister_zaehler(void) { return s_gb_nur_kanister; }
 static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
 {
-    if (e->state == 3) { g->phase = GBP_DIE; g->timer = 0; e->state = 1; return; }
+    /* ⛔ NUTZERWUNSCH 2026-11-17 (Konzept K-12, Memory reai-v2-alligator-nur-kanister), woertlich: "überprüfe noch mal das der
+     * alligator wirklich nur mit den gascontainer getötet werden kann. Auf keinen Fall ander."
+     * Bis hier: HP < 0 -> state 3 (RE1.5-Todesregel `bgez` @0x80013014 / state 3 @0x80013020, Port re15_damage.c; RE2-Applier
+     * `sw 2 / sw 3` @0x80047288/90) -> Todesrolle GBP_DIE (Clip 7), also nach 25240 Schadenspunkten auch OHNE Kanister (mit
+     * Messer/Rohr ohne Mengengrenze rechnerisch erreichbar). RE2 kennt den Tod durch Beschuss (R2 @0x801028ac / R3 @0x80102b1c),
+     * im Port nicht gebaut (Entscheid B2). PORT-WAHL nach dem Nutzerwunsch: Zustand 3 wird 2, und nur NEGATIVE HP werden auf 1
+     * gehoben (HP < 0 = tot, Gate 3 @0x80047148-50 - mit 1 bleibt er Ziel fuer Zielhilfe und Schuss; HP 0 lebt nach derselben Regel
+     * `bgez` @0x80013014, positive HP bleiben unberuehrt). Der Treffer laeuft als gewoehnlicher Treffer weiter:
+     * Blut, R4/R0 und mit dem Kanister im Maul (+0x226 == 7, HURT-Selektor @0x80101ef4-fc) der Explosionstod R1 wie bisher.
+     * Ausgenommen nur der Pruefhaken RE15_GB_TEST=3 (Todesrolle der Szenen-Tests) und die Leiche selbst (GBP_DIE/GBP_DEAD).
+     * Zaehler/Log nur, wenn hier wirklich ein Tod abgefangen wird (Zustand 3 oder HP < 0). */
+    if ((e->state == 3 || e->hp < 0) && !s_gb_testtod && g->phase != GBP_DIE && g->phase != GBP_DEAD) {
+        const int hp_vorher = (int)e->hp, zustand_vorher = (int)e->state;
+        if (e->state == 3) e->state = 2;
+        if (e->hp < 0) e->hp = 1;
+        s_gb_nur_kanister++;
+        if (s_gb_stumm == 0) { FILE *fl = fopen("gator_boss.log", "a");
+            if (fl) { fprintf(fl, "NUR-KANISTER Beschuss-Tod abgefangen hp %d -> %d, Zustand %d -> %d (Phase %d, Nr %d) F%u\n", hp_vorher,
+                              (int)e->hp, zustand_vorher, (int)e->state, (int)g->phase, s_gb_nur_kanister, (unsigned)g_engine.frame_count);
+                      fclose(fl); } }
+    }
+    if (e->state == 3) { s_gb_testtod = 0; g->phase = GBP_DIE; g->timer = 0; e->state = 1; return; }
     if (e->state != 2) return;
     e->state = 1;                       /* Boss-Panzerung: HURT-Route selbst verwalten */
     /* Runde 41 Spur B: Unverwundbarkeit +0x1D3 |= 0x80 waehrend der Grossreaktion (@0x80102c20-28)
@@ -1869,7 +1893,7 @@ static void gb_takt(int slot)
         const char *tv = getenv("RE15_GB_TEST");
         if (tv && *tv == '3' && g->phase != GBP_DIE && g->phase != GBP_DEAD) {
             s_kill_ctr++;
-            if (s_kill_ctr == 300) { e->hp = -1; e->state = 3; }
+            if (s_kill_ctr == 300) { e->hp = -1; e->state = 3; s_gb_testtod = 1; }   /* K-12: nur dieser Pruefhaken darf in GBP_DIE */
         }
     }
     if (g->maul_kontakt > 0) g->maul_kontakt--;

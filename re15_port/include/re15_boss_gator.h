@@ -16,6 +16,9 @@ int  re15_gator_boss_active(const re15_actor_t *e);
  * im Auslieferungsstand ohne Eintrag in der Modell-Ladetabelle @0x80072f38, Typ 0x23 = 0/0) und die RE1.5-KI der
  * Wurzel 0x8010c448 (STAGE2, registriert @0x80116f64; Port re15_alligator_ai_tick). */
 int  re15_gator_original(void);
+/* Konzept K-12 (Nutzerwunsch 2026-11-17 "nur mit den gascontainer"): Zahl der Treffer, deren HP < 0 der Boss abgefangen hat
+ * (HP bleibt 1, kein Tod durch Beschuss). Messhaken fuer unit_r41_gator_nur_kanister. */
+int  re15_gator_boss_nur_kanister_zaehler(void);
 
 /* Der Boss-Tick — ersetzt re15_alligator_ai_tick fuer den Boss-Aktor. */
 void re15_gator_boss_tick(int slot);

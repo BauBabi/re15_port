@@ -14,3 +14,11 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_schwanz_zusammen.cmake)
     set_tests_properties(integration_r41_schwanz_zusammen PROPERTIES TIMEOUT 1500)
 endif()
+
+# Release-Bau v0.8.30 (release/logs/v0.8.30_20261117-204645/03_linux.log Z. 1903-1923): beide Auswerter rufen libm
+# (lround/acos/ceil/atan2/sincos/sqrt) und binden weder re15_engine noch m - unter mingw liefert msvcrt die Funktionen mit,
+# im Linux-Container brach der Link mit "undefined reference to `lround'" ab.
+if(NOT WIN32)
+    target_link_libraries(probe_r41_schwanz_zusammen PRIVATE m)
+    target_link_libraries(probe_r41_schwanz_farbe PRIVATE m)
+endif()
