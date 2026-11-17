@@ -31,7 +31,8 @@
 #   fall3050    (Nachbesserung 1, Punkt 4) ROOM3050 obj 1: der VORGESEHENE Fall laeuft — Schub West/Sued bis in die
 #               Absprungzelle r*[46], AUSLOESER, LANDUNG Band 0 (Super Redhawk haengt am FALL, nicht an der oberen Lage).
 #   weg2040 / treppe2040 (Nachbesserung 1, Punkt 4) ROOM2040 ohne die Kiste in 2050: Nordgang 2070 -> slot 5 ->
-#               Galerie Band 5 -> Treppe sce 13 -> Halle Band 3.
+#               Galerie Band 5 -> Treppe sce 13 -> Halle Band 3. Seit Runde 42 K-03 ist slot 5 eine Abkuerzung, die erst
+#               nach dem Aufschliessen aus 2040 (Bit 122) offen ist; der Lauf setzt dieses Bit vor (s. u.).
 #
 #   tritt2060 / echt2050 / elza2051 (Nachbesserung 3, Abnahme 2 P1/P2): Ruhe-Zweig LAB_8002c0b8 + Y-Test FUN_8002cabc, s. u.
 #               echt2050 faehrt nach dem Fall zurueck (2050 slot 0 -> 2000 -> slot 4 -> 2050): Kiste wieder auf dem Record.
@@ -212,9 +213,20 @@ message(STATUS "r36_dachkiste fall3050: ${_n_ok3050} angenommene Schuebe, Ausloe
 # (-18650,0,-19300)): nach Osten -> DOOR FIRE slot=5 -> ROOM2040 Band 5 (Galerie); (b) die Treppe sce 13 slot 5/6
 # @0x0133C/@0x01350 verbindet die Galerie (Band 5) mit der Halle (Band 3), in der die Tuer der Kisten-Oberkante
 # (2050 slot 2 @0x01C8A -> (21700,-5400,-5400) Band 3) ankommt. Messungen: R_belege/nb1_2070n, nb1_2040treppe.
+# Runde 42 K-03 (Nutzerkorrektur, STAGE2 afc9b3797, story2_r42.c install_2070): slot 5 ist vom Korridor aus "locked from
+# the other side", bis 2040 slot 4 @0x0131C (Galerie) aufschliesst und Bank-9-Bit 122 setzt (RE15_R42_BIT_TUER_2040).
+# Im Spielweg ist 2070 -> 2040 damit nur noch die Abkuerzung NACH dem ersten Besuch (Zeitbomben-Weg: Halle -> Treppe ->
+# Galerie -> aufschliessen -> 2070). Dieser Lauf prueft die Verbindung (Rechteck, Ziel-Cut, Ankunft Galerie Band 5), also
+# den Zustand nach dem Aufschliessen: RE15_SET_FLAG=9:122. Unveraendert streng: DOOR FIRE mit demselben Rechteck/Spawn,
+# ROOM2040 geladen. Der Erstzugang zu 2040 ohne die 2050-Kiste haengt NICHT an dieser Tuer, sondern an weg2020 +
+# tritt2060 (unten); die Sperre selbst (Bit 122 = 0 -> zu) misst integration_r42_story2 gegenseite, das Aufschliessen
+# integration_r42_story2_tueren bombe.
 _lauf(weg2040 200 ${_grund} RE15_STAIR_DBG=1 RE15_DEBUG_JUMP=2070@250 "RE15_PLAYER_POS=-18650,-19300,0,0"
+      "RE15_SET_FLAG=9:122"
       "RE15_INPUT_SCRIPT=W2,U10,UA0.2,U0.5,UA0.2,U0.5,UA0.2,U0.5,UA0.2,W2" "RE15_EXIT_AT=700#2040")
+_muss("[setflag] flag(9,122/0x7a) = 1" _dbg "weg2040: Bit 122 (K-03, Tuer aus 2040 aufgeschlossen) nicht vorgesetzt")
 _muss("loaded room2070.rdt" _dbg "weg2040: ROOM2070 nicht geladen")
+_darf_nicht_text("Tuer nach 2040 (Platz 5 @0x0B1C) -> " _dbg "weg2040: K-03-Sperre trotz Bit 122 = 1 aktiv")
 _muss("[aot] DOOR FIRE slot=5 rect=(5500,-19200,hw=500,hh=1000) target_cut=12 spawn=(-19750,-9000,-19850)" _dbg "weg2040: Tuer 2070 slot 5 @0x00B1C nach ROOM2040 nicht ausgeloest (Nordgang)")
 _muss("loaded room2040.rdt" _dbg "weg2040: ROOM2040 nicht geladen")
 _lauf(treppe2040 200 ${_grund} RE15_STAIR_DBG=1 RE15_DEBUG_JUMP=2040@250 "RE15_PLAYER_POS=-1350,-19200,3072,5"
@@ -230,7 +242,7 @@ string(REGEX MATCH "room=2040 [^
 if("${_b3}" STREQUAL "")
     _fehler("treppe2040: Spieler nach der Treppe nicht auf Band 3 / y -5400 (climb.txt)")
 endif()
-message(STATUS "r36_dachkiste weg2040/treppe2040: Nordgang -> 2040 Galerie (Band 5) -> Treppe -> Halle (Band 3)")
+message(STATUS "r36_dachkiste weg2040/treppe2040: Nordgang (Bit 122 = aus 2040 aufgeschlossen) -> 2040 Galerie (Band 5) -> Treppe -> Halle (Band 3)")
 
 # ---- Punkt 4 (Nachbesserung 2, N3): ROOM2050 obj 6 (Band 3, Record (-1600,-5400,-9348) @0x01D0E) erreicht die
 # Absprungzelle r*[49] @0x00B5C (x 6350..8750 z -13950..-12150, Wort 0x3202) und faellt — geschlossen geregelt ueber den
