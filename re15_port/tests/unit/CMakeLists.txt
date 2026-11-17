@@ -216,7 +216,7 @@ target_compile_definitions(test_r41_birkin_kralle PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 foreach(_fall frei drehen wand wand1 hangar hangar_ohne hangar_wand schwanz_wand schwanz_gelaender
               schwanz_gelaender16 schwanz_ausserhalb schwanz_verdeckt schwanz_spieler schwanz_abdeckung
-              schwanz_treffer schwanz_zucken schwanz_abbruch kampf_kralle kampf_erholung kampf_biss kampf_wurf kampf_rempler kampf_ansprung)
+              schwanz_treffer schwanz_zucken schwanz_abbruch schwanz_ausholen schwanz_ausholen_schlag kampf_kralle kampf_erholung kampf_biss kampf_wurf kampf_rempler kampf_ansprung)
     add_test(NAME unit_r41_birkin_kralle_${_fall} COMMAND test_r41_birkin_kralle ${_fall})
     set_tests_properties(unit_r41_birkin_kralle_${_fall} PROPERTIES TIMEOUT 60)
 endforeach()

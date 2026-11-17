@@ -12190,7 +12190,7 @@ int re15_bk_kralle_logik_aktiv(void) { return s_bk_logik_ok; }
  * s_bk_logik_ok; PORT-WAHL, kein Capcom-Code, Herleitung re15_birkin_klaue_r41.h/.c): steckt die Klinge in der Pose, die der
  * Zeichner in DIESEM Bild zeigt (Bild +0x95 nach dem Vorschub, Ueberblendung +0x8f), in einer Wand oder unter der Oberkante
  * eines Gelaenders, dann +0x6 = 3 wie die Capcom-Sonde (@0x80117848-858) -> naechster Takt Phase 3 (Clip 0xa @0x801178dc, Se(6)
- * @0x801178fc). Gilt in jedem Bild der Phase 1.
+ * @0x801178fc). Gilt in jedem Bild der Phase 1 ab dem ersten Schlagbild (17.11.2026: nicht beim Ausholen, RE15_BKK_SCHLAG_AB).
  * Runde 2: am ENDE des Spieltakts statt im Gegner-Takt, auf dem Stand des gezeichneten Bilds (nach Spieler-Klemme/Schub,
  * re15_player_nachklemme in game_step_common.c).
  * Runde 3 (Orchestrator-Auslegung): massgeblich ist der PHYSISCHE Wandschlag in Weltgeometrie - keine Bild-, Verdeckungs- oder
@@ -12204,11 +12204,17 @@ void re15_bk_kontakt_takt_ende(void)
         /* Runde 3, PORT-WAHL nach dem Entscheid: die Klinge kann auch im Abbruchbild der Kralle (Tor @0x80117668 -> +0x6 = 2) und
          * im Ausstiegsbild danach (Phase 2 @0x80117888 schreibt 0x101, kein anim_set: Clip 3 bleibt stehen, die Ueberblendung
          * laeuft weiter) in eine Wand gleiten - gemessen 50E0 F810: Ansprung nach dem Aufrichten bei af 21 abgebrochen, im
-         * Ausstiegsbild 148 tief im Gelaender #17, danach Gang. Auch dort gilt: Wandkontakt -> Rueckzug im naechsten Bild. */
+         * Ausstiegsbild 148 tief im Gelaender #17, danach Gang. Auch dort gilt: Wandkontakt -> Rueckzug im naechsten Bild.
+         * NUTZERENTSCHEID 17.11.2026 ("Soll der Rueckzug auch zaehlen, wenn die Klaue schon beim Ausholen die Wand beruehrt?" -
+         * "Nein"): nur ein Kontakt ab dem ersten Schlagbild +0x95 >= RE15_BKK_SCHLAG_AB (0x20, EM30_HANGAR.EMD @Datei 0x1538 Clip 3
+         * Bild 32 = Keyframe 149, erstes Bild nach vorn/unten; Herleitung re15_birkin_klaue_r41.h) loest den Rueckzug aus. Das
+         * Abbruchbild und das Ausstiegsbild nach einem Abbruch liegen immer davor (das Tor bricht nur bei +0x95 < 0x1e ab,
+         * `sltiu v0,v0,0x1e` @0x801176ac); das Ausstiegsbild am Clipende haelt das letzte Bild (Absenken) und zaehlt weiter. */
         const int abbruch = (e->sub_state_1 == 3 && e->sub_state_2 == 2);
         const int ausstieg = (e->sub_state_1 == 1 && e->sub_state_2 == 0);
         if (e->sub_state_1 != 3 && !ausstieg) continue;
-        if (e->motion == 3 && (e->sub_state_2 == 1 || abbruch || ausstieg) && re15_bkk_kontakt(e)) {
+        if (e->motion == 3 && (e->sub_state_2 == 1 || abbruch || ausstieg) && e->anim_frame >= RE15_BKK_SCHLAG_AB &&
+            re15_bkk_kontakt(e)) {
             e->sub_state_1 = 3; e->sub_state_2 = 3;
             /* Runde 3: der +0x4-Schnappschuss +0x1d8 (`sw` @0x80116698-a0, ROOT nach dem ACT) liegt im Original HINTER dem
              * +0x6 = 3 der Sonde (@0x80117858). Der Taktende-Haken kommt nach dem Schnappschuss des Ports - ohne Nachtrag

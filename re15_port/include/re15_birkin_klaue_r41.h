@@ -67,7 +67,25 @@ int re15_bkk_kontakt(const re15_actor_t *e);
  * gemessen (Runde 1 "synchron", Merge-Commit e7858c897) steckt die gezeichnete Klinge nicht nur im Capcom-Fenster 0x24..0x2b
  * (@0x801176ec-f0) in Waenden/Gelaendern, sondern schon beim Ausholen (af 21..35, Ueberblendung +0x8f = 0xf @0x80117600-08)
  * und beim Absenken nach dem Schlag (af 51..68). Jede dieser Lagen ist ein Durchdringen; deshalb prueft die Kralle
- * in jedem gezeichneten Bild der Phase 1. */
+ * in jedem gezeichneten Bild der Phase 1.
+ *
+ * NUTZERENTSCHEID 17.11.2026 auf "Soll der Rueckzug auch zaehlen, wenn die Klaue schon beim Ausholen die Wand beruehrt?": "Nein".
+ * Ausholen = die Bilder von Clip 3 VOR dem ersten Bild, in dem die Klinge nach vorn/unten schlaegt. Gemessen an der gezeichneten
+ * Bank (EM30_HANGAR.EMD, EDD dir[1] @Datei 0x1274, Clip 3 = Kopf @0x1280 `51 00 44 02`: 81 Bilder ab Eintrag 124; reine Pose der
+ * Klingenspitze, Mesh 15, ausholen/tools/rein.py) und an den zeichner-Zeilen der Messlaeufe (ausholen/tools/bahn.py):
+ *   af 0..30  Klaue hebt sich und zieht nach hinten: Hoehe 1078 -> 5070 (Scheitel af 30), vorn -1600 .. -813 (af 30), -863 (af 31);
+ *   af 31     Scheitel/ruhend (Eintrag @Datei 0x1534 `94 00 00 00` = Keyframe 148): d = (-50, +47, -17);
+ *   af 32     ERSTES Bild nach vorn UND unten (Eintrag @Datei 0x1538 `95 00 00 00` = Keyframe 149): d vorn +458, Hoehe -175;
+ *   af 33..35 weiter nach vorn/unten (+833/-461, +295/-350, +653/-1179), af 36 der Querschwung (+2376 quer).
+ * Dasselbe Bild im Capcom-EM30 (CDEMD0.EMS, Clip 3 ebenfalls ab Eintrag 124, Keyframe 148 -> 149): af 31 -> 32 vorn +356,
+ * Hoehe -136, Scheitel af 30. Das Tor der Kralle laesst ab +0x95 >= 0x1e nicht mehr abbrechen (`lbu v0,149(v1)` @0x801176a4,
+ * `sltiu v0,v0,0x1e` @0x801176ac `1e 00 42 2c`; STAGE5 @0x80117ec0) - der Hieb ist ab dem Scheitel festgelegt. Das Schaden-
+ * fenster 0x24..0x2b (`addiu v0,v0,-36` / `sltiu v0,v0,0x8` @0x801176ec-f0 `dc ff 42 24` / `08 00 42 2c`) ist die Trefferzeit
+ * der Angriffsbox (Keyframe N-2), nicht der Beginn der Schlagbewegung: af 32..35 bringen die Klinge schon 2165 nach unten (5053 -> 2888).
+ * Deshalb zaehlt ein Wandkontakt ab af 0x20 (Schlag + Absenken, einschliesslich des Ausstiegsbilds am Clipende, das das letzte
+ * Bild haelt); davor (Ausholen, auch Abbruch-/Ausstiegsbild nach dem Tor, das nur bei +0x95 < 0x1e abbricht) loest er keinen
+ * Rueckzug aus. PORT-WAHL nach dem Entscheid, nur Schwanz-Gestalt. */
+#define RE15_BKK_SCHLAG_AB 0x20   /* erstes Schlagbild: EM30_HANGAR.EMD @Datei 0x1538 (Clip 3 Bild 32 = Keyframe 149) */
 
 /* Ueberblendung in die Erholung (Clip 0xa): Runde 3 - die PORT-WAHL +0x8f = 8 (Runde 1, hergeleitet aus der Port-Rate 0x200) ist
  * entfernt. Die Schwanz-Gestalt blendet wie das Original: +0x8f = 3 (`sb v0,143(v1)` @0x80117900, `8f 00 62 a0`), a3 = 0x400
