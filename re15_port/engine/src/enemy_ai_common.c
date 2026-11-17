@@ -12934,6 +12934,23 @@ static void re15_birkin_ai_tick(int slot)
                                          bp[0], bp[1], bp[2], s1);
                 }
             }
+            if (e->hit_stun == 0 && s_bk_logik_ok && e->birkin_saved_state == 1 && e->birkin_saved_sub == 3 &&
+                e->birkin_saved_ph2 == 3) {
+                /* Kralle Runde 3, Pruefung r1 rot (50A1 Elza F1496/F1793), PORT-WAHL nach dem NUTZERENTSCHEID ("synchron dazu"), nur
+                 * Schwanz-Gestalt (s_bk_logik_ok): im Bild vor dem Treffer hat die Klinge eine Wand getroffen, der Rueckzug steht an
+                 * (Schnappschuss +0x1d8 = Kralle +0x6 = 3, `sw` @0x80116698-a0; +0x5/+0x6 hat der Resolver schon ueberschrieben:
+                 * +0x6 = 1 @0x80012fd8, +0x5 = Waffe `sb v0,5(s1)` @0x80012ff0). Das Zucken (+0x1dc == 0 @0x8011a1f4, Clip 7 +0x8f 0xf @0x8011a2e0,
+                 * Ende 0x101 @0x8011a3a8) hielt die Klinge 6 Bilder bis 496 tief in der Wand und verwarf den Rueckzug. Statt Clip 7
+                 * beginnt hier die Erholung (Clip 0xa) - im Bild nach dem Kontakt wie ohne Treffer. Uebernommen vom Zucken: die
+                 * Neuladung +0x1dc = (rng&3)+3 (@0x8011a31c) und Se(rng&1 ? 1 : 3) (@0x8011a330), damit Panzerung, Ton und Zufallsfolge
+                 * wie beim Zucken weiterlaufen; nicht uebernommen: die Drehung 0x50 (@0x8011a348, sie dreht die Klinge in der Wand)
+                 * und die Zuckphase (+0x7 = 1 @0x8011a2d0). */
+                e->hit_stun = (int16_t)((re15_engine_rand8() & 3) + 3);  /* wie @0x8011a31c */
+                re15_audio_room_se((re15_engine_rand8() & 1) ? 1 : 3);   /* wie @0x8011a330 */
+                e->state = 1; e->sub_state_1 = 3; e->sub_state_2 = 3; e->sub_state_3 = e->birkin_saved_ph3;
+                re15_birkin_erholung(e);
+                break;
+            }
             if (e->hit_stun == 0) {                    /* +0x1dc==0 @0x8011a1f4: FLINCH */
                 re15_birkin_clip(e, 7); e->anim_frac = 0xf;          /* clip 7 @0x8011a2e0 */
                 e->hit_stun = (int16_t)((re15_engine_rand8() & 3) + 3);  /* re-arm +0x1dc = (rng&3)+3 @0x8011a31c */

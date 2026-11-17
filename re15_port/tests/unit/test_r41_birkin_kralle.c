@@ -79,6 +79,11 @@
  *                       schon im Soak-Bild (Original `j 0x8011a268` @0x8011a20c ohne ACT), Verzug 1.
  *                       Gegenprobe Stand vor dem Nachtrag: der Soak stellt +0x6 = 1 her, die Klinge bleibt in der Wand (gemessen
  *                       50F1 Elza F1276/F1277).
+ *   schwanz_zucken      Runde 3 r2 (Pruefung r1 rot, 50A1 Elza F1496 -> F1497): wie schwanz_treffer, aber ohne Soak (+0x1dc = 0
+ *                       -> Zucken @0x8011a1f4, Clip 7 @0x8011a2e0); der Resolver schreibt +0x6 = 1 / +0x5 = Waffe (@0x80012fd8 /
+ *                       @0x80012ff0). PORT-WAHL: ein anstehender Rueckzug (Schnappschuss +0x1d8 = Kralle +0x6 = 3) geht vor dem
+ *                       Zucken - Clip 0xa im Trefferbild, kein Zuckbild, Verzug 1, +0x1dc wie beim Zucken (3..6, @0x8011a31c).
+ *                       Gegenprobe 3a51d7aae: 39 Zuckbilder, kein Clip 0xa (folge 1), Rueckzug verloren.
  *
  * Runde 3, Auftrag B - Kampf-Clipenden (Capcom-EM30, ROOM3070; Bericht birkin_aufrichten offen 1/2): anim_set FUN_8001f314 posiert
  * +0x95 VOR dem Vorschub (`lbu v0,149(t0)` @0x8001f35c, `sw a2,360(t0)` @0x8001f36c, `addiu v0,v0,1` @0x8001f618, Umlauf
@@ -215,6 +220,7 @@ typedef struct {
     int kontakt_t, a_t, ohne, rate_a;      /* Runde 3: Takt des ersten Weltkontakts, erster 0xa-Takt, Rueckzuege ohne Weltkontakt, a3 */
     int soak_ph2;                          /* Runde 3 schwanz_treffer: +0x6 nach dem HURT-Soak-Takt, VOR dem Taktende-Haken */
     int folge;                             /* Runde 3: Bilder mit Clip 3 + Klinge in Wand (Welt), nach denen KEIN Clip 0xa folgt (Soll 0) */
+    int zuck, zuck_stun;                   /* Runde 3 r2 schwanz_zucken: Zuckbilder (Clip 7) nach dem Kontakt (Soll 0), +0x1dc danach */
     int ruecksprung, stillstand, wechsel, wechsel_falsch, wechsel_ab[8];   /* Runde 3 Auftrag B (Kampf-Clipenden) */
     char spur[512];
 } ergebnis_t;
@@ -289,7 +295,8 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
         pl->hit_react = 1;                                     /* Spieler+0x93 gesetzt: kein Treffer-Block (@0x8011772c), nur Box + Sonde */
         const uint8_t ph_vor = e->sub_state_2;
         re15_enemy_ai_run_all(0);
-        if (s_treffer && r.kontakt_t >= 0 && f == r.kontakt_t + 1) r.soak_ph2 = e->sub_state_2;   /* vor dem Taktende-Haken */
+        if (s_treffer == 1 && r.kontakt_t >= 0 && f == r.kontakt_t + 1) r.soak_ph2 = e->sub_state_2;   /* vor dem Taktende-Haken */
+        if (s_treffer == 2 && r.kontakt_t >= 0 && f == r.kontakt_t + 1) { r.soak_ph2 = e->sub_state_2; r.zuck_stun = e->hit_stun; }
         re15_bk_kontakt_takt_ende();                           /* Taktende wie re15_game_step (Runde 2) */
         r.ticks++;
         kampf_bild(&r, &alt, e);
@@ -308,8 +315,17 @@ static ergebnis_t hieb(uint8_t grid, int32_t bx, int32_t bz, int32_t px, int32_t
             if (r.kontakt_af < 0) { r.kontakt_af = e->anim_frame; r.kontakt_t = f; r.kontakt_zelle = wb.zelle; r.kontakt_y = wb.punkt[1]; }
             if (e->sub_state_2 == 1) r.durch++;          /* Klinge steckt (Pose dieses Takts), Rueckzug nicht ausgeloest */
         }
-        if (s_treffer && r.kontakt_t == f && e->sub_state_2 == 3) {   /* Schuss nach dem Takt: Schadensweg setzt +0x4 = 2 (HURT) */
+        if (s_treffer == 1 && r.kontakt_t == f && e->sub_state_2 == 3) {   /* Schuss nach dem Takt: Schadensweg setzt +0x4 = 2 (HURT) */
             e->state = 2; e->sub_state_3 = 0; if (e->hit_stun <= 0) e->hit_stun = 9;
+        }
+        /* Runde 3 r2 (Pruefung r1 rot, 50A1 Elza F1496 -> F1497): Schuss im Folgebild OHNE Soak (+0x1dc = 0 -> Zucken @0x8011a1f4).
+         * Der Resolver schreibt wie re15_damage.c: +0x7 = 0 (@0x80012fd4), +0x6 = 1 (@0x80012fd8), +0x5 = Waffe (@0x80012ff0; 3 wie
+         * gemessen F1497 ss1=3), +0x4 = 2 (@0x80013018). */
+        if (s_treffer == 2 && r.kontakt_t == f && e->sub_state_2 == 3) {
+            e->state = 2; e->sub_state_3 = 0; e->sub_state_2 = 1; e->sub_state_1 = 3; e->hit_stun = 0; e->hp = (int16_t)(e->hp - 15);
+        }
+        if (s_treffer == 2 && r.kontakt_t >= 0 && f > r.kontakt_t) {
+            if (e->state == 2 && e->motion == 7) r.zuck++;                                  /* Zuckbild statt Rueckzug */
         }
         if (ph_vor == 1 && e->sub_state_2 == 3 && re15_bk_kralle_logik_aktiv() && !wk) r.ohne++;   /* Rueckzug ohne Weltkontakt */
         if (e->motion == 3 && e->anim_frame > r.clip3_max) r.clip3_max = e->anim_frame;
@@ -381,12 +397,14 @@ int main(int argc, char **argv)
         }
         re15_bk_kralle_logik_setzen(NULL, 0);
     }
-    if (!strcmp(fall, "schwanz_wand") || !strcmp(fall, "schwanz_gelaender") || !strcmp(fall, "schwanz_treffer")) {
+    if (!strcmp(fall, "schwanz_wand") || !strcmp(fall, "schwanz_gelaender") || !strcmp(fall, "schwanz_treffer") ||
+        !strcmp(fall, "schwanz_zucken")) {
         if (!hangar_bank()) { fprintf(stderr, "FAIL: EM30_HANGAR.EMD nicht ladbar\n"); return 1; }
         re15_bk_kralle_logik_setzen(s_blob, s_blob_len);
-        const int treffer = !strcmp(fall, "schwanz_treffer");
+        const int zucken = !strcmp(fall, "schwanz_zucken");
+        const int treffer = !strcmp(fall, "schwanz_treffer") || zucken;
         const int wand = !strcmp(fall, "schwanz_wand") || treffer;
-        s_treffer = treffer;
+        s_treffer = zucken ? 2 : treffer;
         if (wand ? !raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50A0.RDT", 0x50A0u)
                  : !raum_laden(RE15_ASSET_PSX_DIR "/STAGE5/ROOM50F1.RDT", 0x50F1u)) {
             fprintf(stderr, "FAIL: Raum nicht ladbar\n"); return 1;
@@ -402,7 +420,19 @@ int main(int argc, char **argv)
                fall, r.ticks, r.clip_a, r.clip_a_max, r.kontakt_af, r.durch, r.ohne, r.frac_a, r.rate_a, r.a_t - r.kontakt_t, r.sonde_af,
                r.aus_sub, r.cd);
         s_treffer = 0;
-        if (treffer) {
+        if (zucken) {
+            /* Runde 3 r2: Schuss im Folgebild ohne Soak. Soll: Erholung (Clip 0xa, +0x6 = 4) im Trefferbild statt Clip 7, kein
+             * Zuckbild, Verzug 1, +0x1dc wie beim Zucken neu geladen ((rng&3)+3 = 3..6, @0x8011a31c). Gegenprobe 3a51d7aae: Clip 7
+             * (@0x8011a2e0), die Klinge bleibt in der Wand, kein 0xa (folge 1). */
+            printf("schwanz_zucken: zuck=%d ph2_nach_treffer=%d stun=%d folge=%d\n", r.zuck, r.soak_ph2, r.zuck_stun, r.folge);
+            CHECK(r.zuck == 0 && r.soak_ph2 == 4, "schwanz_zucken: anstehender Rueckzug muss vor dem Zucken gehen (Zuckbilder %d, +0x6 im "
+                  "Trefferbild %d statt 4)", r.zuck, r.soak_ph2);
+            CHECK(r.kontakt_af >= 0 && r.clip_a && r.a_t == r.kontakt_t + 1 && r.durch == 0 && r.ohne == 0 && r.folge == 0,
+                  "schwanz_zucken: Schuss im Folgebild (+0x1dc = 0) - Rueckzug trotzdem im Folgebild (Kontakt Takt %d, 0xa ab Takt %d, "
+                  "durch %d, folge %d)", r.kontakt_t, r.a_t, r.durch, r.folge);
+            CHECK(r.zuck_stun >= 3 && r.zuck_stun <= 6, "schwanz_zucken: +0x1dc wie beim Zucken neu geladen (3..6, @0x8011a31c), war %d", r.zuck_stun);
+            CHECK(r.aus_sub == 1 && r.cd == 0x3c, "schwanz_zucken: Phase 5 -> HUB mit +0x1df 0x3c (@0x801179a4-a8), aus_sub=%d cd=0x%02x", r.aus_sub, r.cd);
+        } else if (treffer) {
             /* Runde 3: der Schnappschuss +0x1d8 (@0x80116698-a0) liegt im Original hinter dem +0x6 = 3 (@0x80117858); der HURT-Soak
              * (`+0x4 = *(+0x1d8)` @0x8011a208) setzt die Erholung fort. Der Soak-Takt selbst ruft kein anim_set (Verzug 2). */
             CHECK(r.soak_ph2 == 4, "schwanz_treffer: im Soak-Takt muss die Erholung beginnen (+0x6 = 4; Schnappschuss +0x1d8 traegt das "
