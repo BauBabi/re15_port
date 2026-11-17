@@ -13,7 +13,7 @@
  *       SDL 2.28.5 src/render/SDL_render.c:1266-1268).
  * CLUT-Indizes ausserhalb der TIM nimmt der Zeichner als Zeile 0 (render_pc.c `clut_idx = 0`); sie stehen nur im Protokoll.
  *
- * Paare: RE2/BAHNSTEIG_FORM.EMD + .TIM (Riesenform, seit E32 K5e_f1; vorher K5c), PSX/EMD/EM30_HANGAR.EMD, PSX/EMD/EM29_ROT.EMD, RE2/ANNETTE_4D.EMD,
+ * Paare: RE2/BAHNSTEIG_FORM.EMD + .TIM (Riesenform, seit R9-Einbau K5g3; davor E32 K5e_f1, K5c), PSX/EMD/EM30_HANGAR.EMD, PSX/EMD/EM29_ROT.EMD, RE2/ANNETTE_4D.EMD,
  * RE2/ANNETTE_4D_BLUT.EMD (RE1.5-Container mit TIM), jede RE2-Bank aus RE2/CDEMD0.EMS mit EMD- und TIM-Record (re2_ems_load_bank).
  *
  * Gegenprobe (eingebaut): dieselbe Pruefung auf einer Kopie der BAHNSTEIG_FORM mit einer verschobenen UV (Dreieck 0 in Mesh 0,
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
 {
     const int gegenprobe = argc > 1 && !strcmp(argv[1], "gegenprobe");
 
-    /* ---- Riesenform (Spiel-Asset K5e_f1 seit E32; Riegel entstand an K5c) ------------------------------------------- */
+    /* ---- Riesenform (Spiel-Asset K5g3 seit R9-Einbau; davor K5e_f1 seit E32; Riegel entstand an K5c) ---------------- */
     {
         size_t en = 0, tn = 0;
         uint8_t *emd = slurp(RE2_DIR "/BAHNSTEIG_FORM.EMD", &en);
@@ -164,13 +164,15 @@ int main(int argc, char **argv)
             }
             pruef_t p = pruefe(&s_eb.md1, &tim);
             melden("RE2/BAHNSTEIG_FORM", &s_eb.md1, &p);
-            /* Spiel-Asset seit E32 = K5e_f1 (analysis/befunde_runde41/form/NUTZER_ENTSCHEIDE.md E32, Pins form_j_posen.h
-             * FORM_J_TIM_LEN 136224): TIM-Kopf @0x04 = 0x09 (8 bpp + CLUT), CLUT-Block @0x08 = 0x140c (12 + 256 x 10 x 2),
-             * CLUT-Breite @0x10 = 0x0100 (256 Eintraege je Zeile), CLUT-Hoehe @0x12 = 0x000a -> 10 Zeilen; Port 512 x (256 x 10).
-             * Vorher K5c: 512x4096, 16 Zeilen. Die Geometrie (32 Meshes) ist K5d = K5c. */
-            CHECK(s_eb.md1.mesh_count == 32, "BAHNSTEIG_FORM: %d Meshes statt 32 (K5e_f1)", s_eb.md1.mesh_count);
-            CHECK(p.tex_w == 512 && p.tex_h == 2560 && p.n_cluts == 10,
-                  "BAHNSTEIG_FORM: Textur %dx%d %d Zeilen statt K5e_f1 512x2560 10 Zeilen", p.tex_w, p.tex_h, p.n_cluts);
+            /* Spiel-Asset seit dem R9-Einbau = K5g3 + rechte Hand Variante 1 (Zweig r41/form, 1ee2cdca4, Nutzerentscheid
+             * 15.11.2026 "Variante1", analysis/befunde_runde41/form/varianten/K5/k5g/K5g3/EINBAU_R9.md; Vorderzaehne
+             * 0cf283e83 haengen nur an das MD1 an, TIM unveraendert c00823b3; Pins form_j_posen.h FORM_J_TIM_LEN 138784):
+             * TIM-Kopf @0x04 = 0x09 (8 bpp + CLUT), CLUT-Block @0x08 = 0x1e0c (12 + 256 x 15 x 2), CLUT-Breite @0x10 =
+             * 0x0100 (256 Eintraege je Zeile), CLUT-Hoehe @0x12 = 0x000f -> 15 Zeilen; Port 512 x (256 x 15) = 3840 <= 4096.
+             * Davor K5e_f1 (E32): 512x2560, 10 Zeilen; K5c: 512x4096, 16 Zeilen. Geometrie 32 Meshes (32/32/28). */
+            CHECK(s_eb.md1.mesh_count == 32, "BAHNSTEIG_FORM: %d Meshes statt 32 (K5g3)", s_eb.md1.mesh_count);
+            CHECK(p.tex_w == 512 && p.tex_h == 3840 && p.n_cluts == 15,
+                  "BAHNSTEIG_FORM: Textur %dx%d %d Zeilen statt K5g3 512x3840 15 Zeilen", p.tex_w, p.tex_h, p.n_cluts);
             /* eingebaute Gegenprobe: eine Kopie mit verschobener UV muss anschlagen (nur im Normallauf) */
             if (!gegenprobe) {
                 uint8_t *kopie = (uint8_t *)malloc(en);

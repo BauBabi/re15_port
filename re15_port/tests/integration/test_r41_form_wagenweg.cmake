@@ -172,14 +172,19 @@ endif()
 #   (je bildgleich in drei Einzellaeufen). Ursache ist das EMD: K5e-EMD + K5c-TIM ergibt 742, K5c-Paar 751 (RE15_RE2_ASSET_ROOT,
 #   Bericht analysis/befunde_runde41/INT_laufd_riesenform.md); die Geometrie ist K5d (Krallen ganz eingezogen), die Zaehlung
 #   render_pc.c re15_slotdeckung zaehlt nur deckende Dreiecke. Schranke 6a leon = gemessener Wert K5e 742; 6c leon 631 <= 639 bleibt.
+# Release v0.8.30 (Merge r41/form, Spiel-Asset K5g3 + rechte Hand Variante 1 + Vorderzaehne, EMD 115f8721, Nutzerentscheid
+#   15.11.2026 "Variante1", K5g3/EINBAU_R9.md): an derselben Stelle Cut 12 6c leon 641 (F1635) statt 631, elza 525 (F1634) statt 517;
+#   6a leon 751 >= 742. Bildgleich in der Suite und in je zwei Einzellaeufen. Ursache ist das Asset: dieselbe exe mit
+#   RE15_RE2_ASSET_ROOT = Kopie von shared_assets/RE2 mit K5e_f1 (git show 62bd0001b, sha256 f277916d.../31a35e66...) ergibt
+#   elza 517 und leon gruen (Gegenprobe im Commit des Release-Zweigs r41/release_0830). Schranken 6c = gemessene Werte K5g3.
 set(_p6_form_min 768)
 set(_p6_deck 500)
 set(_p6_dunkel 600)
 if(TEIL STREQUAL "leon")
-    set(_p6_form_min 742)   # K5e_f1 (E32), Lauf D; vorher 751 mit K5c
-    set(_p6_deck 639)
+    set(_p6_form_min 742)   # K5e_f1 (E32), Lauf D; vorher 751 mit K5c; K5g3 misst 751
+    set(_p6_deck 641)       # K5g3 (R9-Einbau), Release v0.8.30; vorher 639 (K5c), K5e_f1 631
 elseif(TEIL STREQUAL "elza")
-    set(_p6_deck 523)
+    set(_p6_deck 525)       # K5g3 (R9-Einbau), Release v0.8.30; vorher 523 (K5c), K5e_f1 517
 elseif(TEIL STREQUAL "zurueck_leon")
     set(_p6_dunkel 629)
 elseif(TEIL STREQUAL "zurueck_elza")

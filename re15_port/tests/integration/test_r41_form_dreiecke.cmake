@@ -9,7 +9,14 @@
 # Laeufe (eigene exe-Kopie, Modell aus RE15_FORM_ASSET_ROOT ueber RE15_RE2_ASSET_ROOT; fehlt die TIM dort, nimmt das Spiel die aus
 # shared_assets/RE2):
 #   kampf   ROOM5090 wie integration_r41_birkin_pistole (Debug-Sprung, laufen, Zielen + Feuer gehalten): die Form kommt, wird
-#           getroffen (HP < 150), die Kamera steht dabei auch auf Schnitt 11.
+#           getroffen, die Kamera steht dabei auch auf Schnitt 11.
+#           Release v0.8.30 (Querbezug r41/form x master): der Zweig r41/form lag vor 2fb07b019 (Nutzerentscheid F2 2026-11-02,
+#           Riesenform-HP 150 -> 1000 = RE2-G4-Ctor `addiu v0,zero,1000` @0x80100678 / `sh v0,342(s1)` @0x8010067c,
+#           include/re15_birkin_formen.h RE15_BB_FORM_HP). "Getroffen" hiess dort HP < 150 = mindestens ein Treffer; jetzt
+#           HP < RE15_BB_FORM_HP (aus dem Header gelesen), gezaehlt ab dem ersten Bild mit dieser HP (vorher steht die Form-1-HP 600 im
+#           Log). Mit 1000 HP und der Pistole (15 je Treffer) stirbt Leon ohne Haken in F930 (gemessen), die exe startet neu und
+#           erreicht RE15_EXIT_AT nie; der Lauf nimmt deshalb wie integration_r41_birkin_pistole (seit GR NB3) den Messhaken
+#           RE15_R39_MESS_SPIELER_HP=100 (engine/src/gegner_r39.c, kein Spielverhalten, nur mit Env).
 #   s11     ROOM5090, Form per Messhaken RE15_BB_POSE in Clip 12 (abgespielt) an der Bild-2-Lage, Kamera RE15_FORCE_CUT=11,
 #           Spielerin im Bild, schiesst (Magazin faellt).
 #   v5080   ROOM5080, Form Clip 12 (abgespielt) von vorn (Gier 2095), Kamera Schnitt 1, Spielerin im Bild, schiesst.
@@ -31,6 +38,11 @@ if(NOT DEFINED RE15_FORM_ASSET_ROOT)
     get_filename_component(RE15_FORM_ASSET_ROOT
         "${CMAKE_CURRENT_LIST_DIR}/../../shared_assets/RE2" ABSOLUTE)
 endif()
+file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/../../include/re15_birkin_formen.h" _hp_zeile REGEX "^#define RE15_BB_FORM_HP [0-9]+")
+if(NOT _hp_zeile MATCHES "RE15_BB_FORM_HP ([0-9]+)")
+    message(FATAL_ERROR "r41_form_dreiecke: RE15_BB_FORM_HP nicht in include/re15_birkin_formen.h")
+endif()
+set(_form_hp_soll "${CMAKE_MATCH_1}")
 set(_variante 0)
 if(NOT RE15_FORM_ASSET_ROOT STREQUAL "-" AND EXISTS "${RE15_FORM_ASSET_ROOT}/BAHNSTEIG_FORM.EMD")
     set(_variante 1)
@@ -103,6 +115,7 @@ function(ein_lauf _name _raum _exit _skript)
     set(_mg_min 99999)
     set(_cam11 0)
     set(_form_min 9999)
+    set(_form_voll 0)   # erst ab dem ersten Bild mit der Riesenform-HP RE15_BB_FORM_HP zaehlen (davor Form-1-HP 600)
     foreach(_z IN LISTS _mg)
         if(_z MATCHES " mg=([0-9]+) ")
             if(CMAKE_MATCH_1 GREATER _mg_max)
@@ -116,7 +129,10 @@ function(ein_lauf _name _raum _exit _skript)
             set(_cam11 1)
         endif()
         if(_z MATCHES "t=30 st=[0-9]+ [^]]*\\] hp=(-?[0-9]+)")
-            if(CMAKE_MATCH_1 LESS _form_min)
+            if(CMAKE_MATCH_1 EQUAL _form_hp_soll)
+                set(_form_voll 1)
+            endif()
+            if(_form_voll AND CMAKE_MATCH_1 LESS _form_min)
                 set(_form_min "${CMAKE_MATCH_1}")
             endif()
         endif()
@@ -126,8 +142,8 @@ function(ein_lauf _name _raum _exit _skript)
         string(APPEND _g "\n ${_name}: kaum Schuesse (Magazin ${_mg_max} -> ${_mg_min})")
     endif()
     if(_name STREQUAL "kampf")
-        if(_form_min GREATER_EQUAL 150)
-            string(APPEND _g "\n kampf: die Form wurde nicht getroffen (HP-Minimum ${_form_min})")
+        if(_form_min GREATER_EQUAL _form_hp_soll)
+            string(APPEND _g "\n kampf: die Form wurde nicht getroffen (HP-Minimum ${_form_min} ab HP ${_form_hp_soll})")
         endif()
         if(NOT _cam11)
             string(APPEND _g "\n kampf: Kamera nie auf Schnitt 11")
@@ -139,7 +155,7 @@ function(ein_lauf _name _raum _exit _skript)
 endfunction()
 
 set(_f "")
-ein_lauf(kampf 5090 2600 "A0.1,W1,U8.5${_feuer}" "RE15_PLAYER_POS=500,-9175,2048,0")
+ein_lauf(kampf 5090 2600 "A0.1,W1,U8.5${_feuer}" "RE15_PLAYER_POS=500,-9175,2048,0" RE15_R39_MESS_SPIELER_HP=100)
 ein_lauf(s11 5090 1300 "A0.1,W1${_feuer}" "RE15_PLAYER_POS=4000,-24300,1024,0"
     "RE15_BB_POSE=941,-23776,3874,12,-1,-1" RE15_FORCE_CUT=11)
 ein_lauf(v5080 5080 1300 "A0.1,W1${_feuer}" "RE15_PLAYER_POS=-23000,-14000,1024,0"

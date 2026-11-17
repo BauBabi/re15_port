@@ -247,7 +247,9 @@ if(TEIL MATCHES "^original")
     if(NOT _log MATCHES "\\[pl\\] Spieler-Familie ${_fam} ")
         r41q_fehler("Spielfigur nicht ${_fam}")
     endif()
-    if(_log MATCHES "verworfen")
+    # Die Zeile des Spinnen-Filters (engine/src/gatorszene_r41.c "[gatorszene] ROOM....: Spinne 0x25 bei (x,z) verworfen").
+    # Nicht das blosse Wort: seit r41/form (d36d6b932, G3) steht "[tri-liste] ... verworfen=0" in jedem debug.log.
+    if(_log MATCHES "Spinne 0x25 bei \\([-0-9]+,[-0-9]+\\) verworfen")
         r41q_fehler("Spinnen-Filter laeuft unter dem Schalter")
     endif()
     if(_log MATCHES "\\[gatorszene\\]")
