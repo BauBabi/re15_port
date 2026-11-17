@@ -22,6 +22,9 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: ohne diese Zeile gelten im Li
 #   2  erster Spieler-Treffer (Haken)
 #   3  die ERSTE Biss-Episode danach (ss1 = 4, Clip 4) trifft den Spieler bei +0x95 = 0x23 (af = 35) mit hp -10 -
 #      genau das Verhalten des Originals (s. o.). Alter Stand: die Episode laeuft ohne Treffer durch (ROT).
+#      Seit der Klauen-Sonde (Kralle ACT[3], `jal 0x8001c2dc` @0x80117834 / STAGE5 @0x80118048) zieht Birkin auf dieser
+#      Route die Klaue aus der Gangwand, bevor sie trifft; ist der erste Treffer der Biss selbst, zaehlt er als Haken und Biss.
+#      Gemessen (r41/birkin_kralle): Leon erster Treffer F1000 ss1 4 af 35 -10, Elza F941 ss1 4 af 35 -10.
 #   4  Birkin stirbt (st = 3, hp <= 0)
 #   5  (3,73) und (3,84) 0 -> 1 (sub01 ueber 5:28 aus der Todesmaschine)
 # Gemessen mit dem Fix (Integrationsbaum, labor_check/angriff f_e5): Elza Haken F873, Biss F1014 af 35 hp 90 -> 80,
@@ -112,6 +115,14 @@ function(ein_lauf _name _raum _pos _route _extra)
         if(NOT _prev_hp STREQUAL "" AND _hp LESS _prev_hp)
             if(_haken STREQUAL "")
                 set(_haken "${_bild}")
+                # Kralle ACT[3] mit Klauen-Sonde (@0x80117834): auf dieser Route steckt die Klaue im Fenster in Wandzelle #17 / #3
+                # (50E0) bzw. #12 / #2 (50F1) und Birkin zieht sie heraus (Clip 0xa), bevor sie Leon/Elza erreicht. Der erste
+                # Treffer ist dann schon der Biss selbst (ss1 4): er zaehlt als Haken UND als die gesuchte Biss-Episode.
+                if(_st STREQUAL "1" AND _ss1 STREQUAL "4")
+                    math(EXPR _d "${_prev_hp} - ${_hp}")
+                    set(_biss_start "${_bild}")
+                    set(_biss_treffer "F${_bild} af=${_af} -${_d}")
+                endif()
             elseif(NOT _biss_start STREQUAL "" AND _biss_ende STREQUAL "" AND _biss_treffer STREQUAL "")
                 math(EXPR _d "${_prev_hp} - ${_hp}")
                 set(_biss_treffer "F${_bild} af=${_af} -${_d}")

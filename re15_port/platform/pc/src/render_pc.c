@@ -3677,6 +3677,19 @@ int re15_render_pc_game_text(int x, int y, const char *str, int attr)
  * bei TIM-Texel x = (768-704)*4 = 256 — exakt der Bereich, den s_msgfont_idx laedt. Die 8x8-Glyphen
  * sind dessen Zeilen 0..31 (der 16x16-Spielfont beginnt erst bei v=32), Palette = CLUT-Zeile 0
  * = s_msgfont_pal[0] (re15_msgfont_attr_row(0)==0). */
+/* MESS-ANZEIGE (RE15_BILD_HUD, Runde 41 Kralle "synchron" Runde 2, kein Spielverhalten): deckendes Rechteck in der
+ * Text-Ebene - fuer den maschinenlesbaren Bildnummern-Streifen, mit dem die Videoauswertung jedes aufgenommene Bild dem
+ * Spielbild zuordnet, das es WIRKLICH zeigt (gdigrab zeigt das zuletzt dargestellte Bild, nicht das gerade gerechnete). */
+void re15_render_pc_debug_fill(int x, int y, int w, int h, uint32_t rgb)
+{
+    for (int yy = y; yy < y + h; yy++)
+        for (int xx = x; xx < x + w; xx++)
+            if ((unsigned)xx < (unsigned)SCREEN_XRES && (unsigned)yy < (unsigned)SCREEN_YRES) {
+                s_text_overlay[yy * SCREEN_XRES + xx] = (rgb << 8) | 0xFFu;
+                s_text_overlay_used = 1;
+            }
+}
+
 int re15_render_pc_debug_text(int x, int y, const char *str)
 {
     re15_msgfont_ensure();

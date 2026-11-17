@@ -17,6 +17,9 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+#ifndef _WIN32
+#include <sys/time.h>   /* gettimeofday: Mess-Anzeige RE15_BILD_HUD */
+#endif
 #ifdef _WIN32
 #include <windows.h>      /* AttachConsole — GUI-Subsystem-Begleiter, siehe main() */
 #endif
@@ -956,9 +959,21 @@ static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
     {
         const char *datei = re15_bf_emd_datei(type);
         int sz = 0; uint8_t *buf;
+        /* Runde 41 Kralle r2: Logik-Gerippe der Kralle ACT[3] = Capcom-EM30, solange ein Ersatzmodell gezeichnet wird
+         * (enemy_ai_common.c re15_bk_kralle_logik_setzen; das residente CDEMD0.EMS haelt den Block). */
+        extern void re15_bk_kralle_logik_setzen(const uint8_t *em30, size_t len);
+        if (type == 0x30u) re15_bk_kralle_logik_setzen(NULL, 0);
         if (datei && (buf = pc_read_shared(datei, &sz)) != NULL) {
             if (out_len) *out_len = (size_t)sz;
             fprintf(stderr, "[enemy] EM%02X: Ersatzmodell %s (Raum %04X)\n", type, datei, g_current_room_id);
+            if (type == 0x30u) {
+                size_t es = 0, eo = 0, el = 0; const uint8_t *ems = pc_cdemd(&es);
+                const int ix = re15_ems_index_for_type(type);
+                if (ems && ix >= 0 && re15_ems_get_entry(ems, es, ix, &eo, &el) == 0) {
+                    re15_bk_kralle_logik_setzen(ems + eo, el);
+                    fprintf(stderr, "[enemy] EM30: Kralle rechnet mit dem Capcom-EM30 (CDEMD0.EMS Block %d)\n", ix);
+                }
+            }
             return buf;
         }
         if (datei) fprintf(stderr, "[enemy] EM%02X: %s fehlt -> Auslieferungsmodell\n", type, datei);
@@ -11263,6 +11278,10 @@ re_title:;
                     if (npc_lit)
                         re15_light_ctx_rotate_for_bone(&lctx_npc_world, nyawed_rot,
                                                        &lctx_npc);
+                    if (npc->type == 0x30u && nbi == 15) {   /* Runde 41 Kralle "synchron": Messhaken gezeichnete Klaue (RE15_BIRKIN_DBG) */
+                        extern void re15_bkk_zeichner_melden(const re15_actor_t *e, const int32_t R[9], const int32_t T[3]);
+                        re15_bkk_zeichner_melden(npc, nyawed_rot, nbone_world_trans);
+                    }
                     int32_t ncomb_rot[9];
                     int32_t ncomb_trans[3];
                     re15_camera_compose_view_bone(&cam_view, nyawed_rot, nbone_world_trans,
@@ -12112,6 +12131,42 @@ re_title:;
          * Solange die fehlt, waere jede Aenderung an einer Maskentiefe geraten. Mit dieser
          * Zeile im Bild enthaelt EIN Screenshot alles: Raum, Cut, Weltlage, Blickrichtung
          * und wie viele Masken der Cut gerade zeichnet. */
+        {   /* MESS-ANZEIGE RE15_BILD_HUD=1 (Runde 41 Kralle "synchron", im Normalpfad stumm, kein Verhalten): Spielbild und Birkins
+             * Clip/Bild im Fenster, damit Videos (gdigrab) Bild fuer Bild mit state.log / birkin_dbg.log zusammenpassen. */
+            static int s_bh = -1;
+            if (s_bh < 0) s_bh = getenv("RE15_BILD_HUD") != NULL;
+            if (s_bh) {
+                extern int re15_render_pc_debug_text(int x, int y, const char *str);
+                char bh[64]; int n = snprintf(bh, sizeof bh, "F%u", (unsigned)g_engine.frame_count);
+                for (int bi = 0; bi < RE15_ACTOR_MAX && n < 40; bi++)
+                    if (g_actors[bi].active && g_actors[bi].type == 0x30u)
+                        n += snprintf(bh + n, sizeof bh - (size_t)n, "  CLIP %d BILD %d", (int)g_actors[bi].motion, (int)g_actors[bi].anim_frame);
+                re15_render_pc_debug_text(4, 228, bh);
+                {   /* Bildnummern-Streifen (Runde 2): 17 Felder zu 5x5 Bildpunkten ab (4,218): Marke weiss-schwarz-weiss, dann
+                     * 14 Bit der Spielbildnummer (hoechstes zuerst, weiss = 1). Die Videoauswertung liest ihn aus JEDEM
+                     * aufgenommenen Bild und beschriftet nach dem Spielbild, das das Bild wirklich zeigt. */
+                    extern void re15_render_pc_debug_fill(int x, int y, int w, int h, uint32_t rgb);
+                    const unsigned fn = (unsigned)g_engine.frame_count & 0x3FFFu;
+                    for (int bi = 0; bi < 17; bi++) {
+                        const int weiss = bi < 3 ? (bi != 1) : (int)((fn >> (13 - (bi - 3))) & 1u);
+                        re15_render_pc_debug_fill(4 + 5 * bi, 218, 5, 5, weiss ? 0xFFFFFFu : 0x000000u);
+                    }
+                }
+                {   /* bild_zeit.log: Spielbild + Wanduhr (UTC, ms) - gdigrab mit -copyts stempelt die Videobilder mit derselben
+                     * Wanduhr, so ordnet die Auswertung jedes Videobild dem gezeigten Spielbild zu. */
+                    static FILE *s_bz = NULL;
+                    if (!s_bz) s_bz = fopen("bild_zeit.log", "w");
+                    long long ms = 0;
+#ifdef _WIN32
+                    { FILETIME ft; GetSystemTimeAsFileTime(&ft);   /* 100 ns seit 1601 -> ms seit 1970 */
+                      ms = (long long)((((unsigned long long)ft.dwHighDateTime << 32) | ft.dwLowDateTime) / 10000ULL) - 11644473600000LL; }
+#else
+                    { struct timeval tv; gettimeofday(&tv, NULL); ms = (long long)tv.tv_sec * 1000 + tv.tv_usec / 1000; }
+#endif
+                    if (s_bz) { fprintf(s_bz, "F%u %lld.%03lld\n", (unsigned)g_engine.frame_count, ms / 1000, ms % 1000); fflush(s_bz); }
+                }
+            }
+        }
         if (getenv("RE15_POS_HUD")) {
             extern int re15_render_pc_debug_text(int x, int y, const char *str);
             extern int re15_pri_log_cut(void);
