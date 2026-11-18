@@ -11174,6 +11174,10 @@ re_title:;
                  * Dieselbe flache Part-Maske wie beim Gore (kein Kaskaden-Effekt noetig: die
                  * Kinder des inaktiven Arms stehen alle selbst in der Maske). */
                 const uint16_t arm_hide = re15_re2arm_part_hide_mask(npc);
+                /* Runde 42 Stufe 2 Runde 2: das RE1.5-EM1A steht so, dass das Handgelenk des gezeichneten Arms auf der
+                 * RE2-Hand liegt (enemy_ai_re2_zellenarm.c, Block MODELL / ZEICHNEN); 0 fuer alle anderen Typen. */
+                int32_t arm_versatz[3];
+                (void)re15_re2arm_zeichen_versatz(npc, npc_poses, npc_skel->bone_count, arm_versatz);
                 for (int nbi = 0; nbi < npc_zeichen_n; nbi++) {
                     if (arm_hide & (1u << nbi)) continue;
                     /* Bit 0 klar -> dieser Part wird nicht gezeichnet. Das `continue` ist
@@ -11289,9 +11293,9 @@ re_title:;
                         nyawed_trans[r] = (int32_t)(s >> 12);
                     }
                     int32_t nbone_world_trans[3] = {
-                        nyawed_trans[0] + npc->x,
-                        nyawed_trans[1] + npc->y,
-                        nyawed_trans[2] + npc->z,
+                        nyawed_trans[0] + npc->x + arm_versatz[0],
+                        nyawed_trans[1] + npc->y + arm_versatz[1],
+                        nyawed_trans[2] + npc->z + arm_versatz[2],
                     };
                     if (nbi >= npc_bones && !npc_remap)   /* Runde 35 Spur J: Mesh ohne Knochen weltfest, FUN_8001e5b0 (re15_affen.h (2c)) */
                         (void)re15_affen_teil_weltfest(npc->type, npc_skel, nbi, nyawed_rot, nbone_world_trans);
