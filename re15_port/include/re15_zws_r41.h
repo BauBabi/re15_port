@@ -2,6 +2,9 @@
  * RE1.5 Rebuilt — Runde 41, Zwischensequenzen mit den Gorilla-Filmen des Nutzers (ein Modul, eine Tabelle, zwei Filme):
  *   114  Besprechungsraum, Elzas Szenario ROOM1141, John und Elza  -> MOVIE/R114GORI.STR
  *   11C  Parkplatz/Garage,  Leons Szenario ROOM11C0, Leon und Ada   -> MOVIE/R11CGORI.STR
+ *   birk6000  Bahnsteig ROOM6000, Leons erstes Treffen mit Annette    -> MOVIE/R409BIRK.STR (RE2-Film "Birkins Mutation",
+ *             Runde 42 Strang birkinfilm, include/re15_birkinfilm_r42.h; Blendenart RE15_ZWS_BLENDART_4090, Bild 40 Zeilen tiefer)
+ *   birk5011  Monitorraum ROOM5011, Elza zwischen msg 3 und msg 4    -> derselbe Film (Runde 42 birkinfilm Stufe 2)
  * Je Film: Gorilla-Schrei vor der "Was war das?"-Zeile, Tonende + kurze Pause, die Zeile, kurz warten, harter Schnitt in
  * den Film, danach 15 Bilder Einblenden aus Schwarz wie RE2 und der Dialog laeuft weiter. Code: engine/src/zws_r41.c
  * (Tabelle k_filme), platform/pc/src/zws_r41_pc.c (Ton + Filmspieler).
@@ -183,6 +186,35 @@
 /* Startpegel bei Wert < 0: Wert + 0x8000 (@0x80057f94-@0x80057fa0) = 0x7800 -> Helligkeit 240 (@0x8002c3b8 >> 7). */
 #define RE15_ZWS_BLENDE_PEGEL ((uint16_t)(RE15_ZWS_BLENDE_WERT + 0x8000))
 
+/* ================================ ZWEITE BLENDENART: RE2 ROOM4090 (Runde 42 Strang birkinfilm) ================================
+ * Tabellenspalte `blende` (re15_zws_film_t): RE15_ZWS_BLENDART_1080 (0, Standard) = harter Schnitt in den Film, danach 15 Bilder
+ * Einblenden (oben, ROOM1080 sub14); RE15_ZWS_BLENDART_4090 = genau der Uebergang des Films R409 "Birkins Mutation" in RE2 Leon
+ * ROOM4090 sub02 (selbst disassembliert; Opcode-Tabelle @0x800a74c8):
+ *   @0x027F4 `53 02 02 07 00 02` Sce_fade_set Kanal 2, ABR 2, RGB 7, Wert +0x0200: FUN_8002c1a0 @0x80057f50 (Schritt +0x200),
+ *            FUN_8002c2b0(Kanal, 0) @0x80057f64 (`sh a1,0(a0)` @0x8002c2d4), Wert > 0 -> Pegel 0 (`sh zero` @0x80057fa4).
+ *   @0x027FA Sce_bgm_control (SUB anhalten), @0x02800 Sleep 1, @0x02804 Sce_bgm_control (MAIN anhalten), @0x0280A Sleep 62,
+ *   @0x0280E Cut_chg 10, @0x02810 Evt_next. Sleep (0x09 -> 0x800539dc) setzt den Zaehler, Sleeping (0x0a -> 0x80053a24) zaehlt
+ *   je Bild herunter und gibt bei 0 mit `addiu pc,3` + return 2 ab (@0x80053a6c/@0x80053a88), Evt_next (0x02 -> 0x80053860)
+ *   gibt ab: Abblende in Bild F0, Film in Bild F64 -> F0..F63 = 64 Bilder Helligkeit 0, 4, ..., 252 (Takt FUN_8002c378:
+ *   Helligkeit = Pegel >> 7 @0x8002c3b8, danach Pegel += Schritt @0x8002c404-@0x8002c414, Halt bei Bit 15 @0x8002c3b4).
+ *   @0x02812 `53 02 02 07 00 fe` Wert -0x0200 -> Pegel = Wert + 0x8000 = 0x7E00 (@0x80057f98) -> Helligkeit 252 im Bild F64,
+ *   @0x02818 `6f 0b` Movie_on -> der Film laeuft im Bildwechsel von F64 (harter Schnitt aus fast Schwarz),
+ *   @0x0281C `74 02 ff 7f` Sce_fade_adjust (0x74 -> 0x80057fd8: FUN_8002c2b0(Kanal 2, 0x7FFF) = Pegel 0x7FFF) im Bild nach dem
+ *   Film -> Helligkeit 255, 251, ..., 3 (64 Bilder), dann Bit 15 -> Halt; @0x02820 Sleep 63 (Skript wartet die Einblende ab).
+ * Im Port: die Film-Zeile setzt beim ersten Takt die Abblende, parkt bis Takt 64, setzt dann Pegel 0x7E00/Schritt -0x200 und fordert
+ * den Film an; die Plattform meldet re15_zws_r41_film_gespielt -> Pegel 0x7FFF (= @0x0281C). Unterschied zu RE2: das Bild von
+ * Takt 64 (Helligkeit 252) zeigt der Port VOR dem Film (die Plattform spielt den Film zu Beginn des naechsten Bilds), RE2 danach.
+ * Waehrend des Films tickt der Port-Blendkanal mit (re15_render_end_frame je Filmbild), RE2 nicht (der Film laeuft innerhalb von
+ * FUN_8002b968); deshalb setzt film_gespielt den Pegel wie @0x0281C neu. */
+#define RE15_ZWS_BLENDART_1080   0
+#define RE15_ZWS_BLENDART_4090   1
+#define RE15_ZWS4090_AB_WERT     0x0200   /* @0x027F8 `00 02` = Schritt je Bild                                      */
+#define RE15_ZWS4090_AB_PEGEL    0x0000   /* Wert > 0 -> `sh zero` @0x80057fa4                                       */
+#define RE15_ZWS4090_AB_BILDER   64       /* F0..F63: Sleep 1 @0x02800 + Sleep 62 @0x0280A + Evt_next @0x02810         */
+#define RE15_ZWS4090_AUF_WERT    (-0x0200) /* @0x02816 `00 fe`                                                        */
+#define RE15_ZWS4090_AUF_PEGEL   ((uint16_t)(RE15_ZWS4090_AUF_WERT + 0x8000))   /* 0x7E00, @0x80057f98                 */
+#define RE15_ZWS4090_NACH_PEGEL  0x7FFF   /* @0x0281E `ff 7f` -> FUN_8002c2b0 `sh a1` @0x8002c2d4                       */
+
 /* Haken-Stelle: Port-Zeile (msg >= 0) oder RDT-Anker (msg < 0: Datei-Offset + erwartete Bytes). */
 typedef struct {
     int16_t  msg;          /* Port-Zeile `2b <msg> 00 00`, sonst -1 */
@@ -201,6 +233,8 @@ typedef struct {
     int                schrei_satz;  /* ROOM11C0 snd1 Satz */
     const char        *film_datei;   /* relativ zur Asset-Wurzel */
     int                film_bilder;
+    int                blende;       /* RE15_ZWS_BLENDART_1080 (0) / _4090 (Runde 42 birkinfilm) */
+    int                bild_y;       /* Bildlage: Zeilen Rand oben, wenn der Film niedriger als 240 ist (R409: 40) */
 } re15_zws_film_t;
 
 /* Tabelle (Riegel/Plattform). */
@@ -210,7 +244,8 @@ const re15_zws_film_t *re15_zws_r41_film_fuer_raum(unsigned raum);
 const re15_zws_film_t *re15_zws_r41_aktiv(void);   /* Film des laufenden Schreis/Films, sonst NULL */
 
 /* Zustand des Films (Riegel/Plattform). */
-enum { RE15_ZWS_FILM_AUS = 0, RE15_ZWS_FILM_OFFEN = 1, RE15_ZWS_FILM_GESPIELT = 2 };
+enum { RE15_ZWS_FILM_AUS = 0, RE15_ZWS_FILM_OFFEN = 1, RE15_ZWS_FILM_GESPIELT = 2,
+       RE15_ZWS_FILM_ABBLENDEN = 3 };   /* 3: Blendenart 4090, die Film-Zeile parkt RE15_ZWS4090_AB_BILDER Takte vor dem Film */
 
 /* HAKEN op_message_on (scd_vm.c, nach dem Stimmen-Riegel): 0 = nicht diese Zeile, 1 = verbraucht (pc += 4), 2 = parken. */
 int re15_zws_r41_message_on(const uint8_t *pc);

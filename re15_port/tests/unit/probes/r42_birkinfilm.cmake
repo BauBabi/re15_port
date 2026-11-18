@@ -1,0 +1,38 @@
+# Runde 42 Strang "birkinfilm" (2026-11-18), Stufe 1: RE2-Film "Birkins Mutation" in Leons erstem Treffen mit Annette (ROOM6000).
+# Herleitung include/re15_birkinfilm_r42.h + include/re15_zws_r41.h ("ZWEITE BLENDENART"), Code engine/src/birkinfilm_r42.c,
+# engine/src/zws_r41.c, platform/pc/src/zws_r41_pc.c, platform/pc/src/audio_pc.c; Werkzeuge tools/r42_birkinfilm/.
+#
+#   unit_r42_birkinfilm_datei     R409BIRK.STR = R409.STR ohne Sektoren [11630,13460), Rest bytegleich, 3927 Bilder 320x160, Ton
+#   unit_r42_birkinfilm_xa        R409_XA09/11/14.XAS = Lesefenster aus VOICE04.XAS (STAGE4.BIN @0x384), Zuordnung Sprachkanal
+#   unit_r42_birkinfilm_programm  Programm = sub06 + Einschub vor @0x01156, Texte 40..42, Filmtabelle (Blendenart 4090, y 40)
+#   unit_r42_birkinfilm_ablauf    ROOM6000 am VM: Zeilen 0,1,2,40,41,42,3; Film einmal; Blenden 64 ab / 64 auf wie RE2 ROOM4090
+#   unit_r42_birkinfilm_einmal    zweites Betreten ((3,100)=1): kein Film
+# Stufe 2 (Elza ROOM5011, Film zwischen msg 3 @0x00640 und msg 4 @0x00690, keine neuen Saetze):
+#   unit_r42_birkinfilm_programm5011  Programm = sub02 + Einschub vor @0x00690, Filmtabelle birk5011
+#   unit_r42_birkinfilm_ablauf5011    ROOM5011 am VM: Zeilen 0..16, Film einmal zwischen 3 und 4, Blenden wie 6000
+#   unit_r42_birkinfilm_einmal5011    zweites Betreten ((4,237)=0): kein Film
+#   integration_r42_birkinfilm_leon / _elza  echte exe durch die Szene (tests/integration/test_r42_birkinfilm.cmake)
+add_executable(test_r42_birkinfilm ${CMAKE_CURRENT_LIST_DIR}/../test_r42_birkinfilm.c)
+target_link_libraries(test_r42_birkinfilm PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_birkinfilm PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_birkinfilm PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_ASSET_RE2_DIR="${CMAKE_SOURCE_DIR}/shared_assets/RE2"
+    RE15_INFO_RE2_DIR="${CMAKE_SOURCE_DIR}/../info/re2leon"
+    RE15_SYNCHRO_DIR="${CMAKE_SOURCE_DIR}/../synchro")
+if(NOT WIN32)
+    target_link_libraries(test_r42_birkinfilm PRIVATE m)
+endif()
+foreach(_teil datei xa programm ablauf einmal programm5011 ablauf5011 einmal5011)
+    add_test(NAME unit_r42_birkinfilm_${_teil} COMMAND test_r42_birkinfilm ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(unit_r42_birkinfilm_${_teil} PROPERTIES TIMEOUT 300)
+endforeach()
+if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_birkinfilm.cmake)
+    foreach(_teil leon elza)
+        add_test(NAME integration_r42_birkinfilm_${_teil}
+                 COMMAND ${CMAKE_COMMAND} -DRE15_PC_EXE=$<TARGET_FILE:re15_pc> -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/r42_birkinfilm_${_teil}
+                         -DTEIL=${_teil} -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_birkinfilm.cmake)
+        set_tests_properties(integration_r42_birkinfilm_${_teil} PROPERTIES TIMEOUT 1800)
+    endforeach()
+endif()

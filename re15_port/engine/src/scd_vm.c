@@ -1324,6 +1324,9 @@ static int op_evt_exec(scd_thread_t *t)
     /* Runde 42 rest Stufe 3: ROOM3091 sub07 (Hoftuer + D309 #21/#24, U-01) und sub04 ("There's a power supply.", U-02) (re15_ungenutzt_r42.h). */
     { extern const uint8_t *re15_ungenutzt_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
       target_pc = re15_ungenutzt_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
+    /* Runde 42 birkinfilm: ROOM6000 sub00 @0x00F58 Evt_exec sub06 -> Annettes Szene mit Rahmenzeilen und RE2-Film (re15_birkinfilm_r42.h). */
+    { extern const uint8_t *re15_birkinfilm_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
+      target_pc = re15_birkinfilm_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
     if (!target_pc) return 1;   /* no such sub → drop */
 
     int slot;
@@ -1982,6 +1985,9 @@ static int op_message_on(scd_thread_t *t)
       if (re15_dining_r39_message_on(t->pc)) { t->pc += 4; return 1; } }
     { const int jr = re15_johnruf_r39_message_on(t->pc);   /* Runde 39 Spur P: Rufe 1041/1131 (nur Stimme), Karte 1041 (parkt) */
       if (jr == 2) return 2; if (jr == 1) { t->pc += 4; return 1; } }
+    { extern int re15_birkinfilm_r42_message_on(const uint8_t *pc);   /* Runde 42 birkinfilm: 6000 msg 43 = RE2 Wsleep @0x027E2 */
+      const int bf = re15_birkinfilm_r42_message_on(t->pc);
+      if (bf == 2) return 2; if (bf == 1) { t->pc += 4; return 1; } }
     { const int zw = re15_zws_r41_message_on(t->pc);   /* Runde 41 ZWS114: 1141 msg 61 Gorilla-Schrei / msg 60 Film (parkt) */
       if (zw == 2) return 2; if (zw == 1) { t->pc += 4; return 1; } }
 

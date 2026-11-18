@@ -2311,6 +2311,7 @@ static const uint8_t *wav_find_data(const uint8_t *b, int sz,
  * hardcode served room1170 clips — or silence — everywhere). Returns 1 if a clip
  * exists for this (room, id). */
 static uint16_t s_voice_room = 0;      /* the room the clip cache belongs to */
+static int16_t *re2xa_dekodieren(const char *datei, int lesesektoren, int64_t *out_n_ret, int *sek_ret, int *src_n_ret);
 
 static int re15_voice_load_clip(uint16_t room, int voice_id)
 {
@@ -2378,6 +2379,25 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
     }
     if (s_voice_clip[voice_id].tried) return s_voice_clip[voice_id].pcm != NULL;
     s_voice_clip[voice_id].tried = 1;
+    /* Runde 42 birkinfilm (re15_birkinfilm_r42.h): Annettes RE2-Saetze in ROOM6000 (msg 40..42) sind RE2-XA-Strecken aus
+     * VOICE04.XAS (shared_assets/RE2/R409_XAnn.XAS, Lesefenster Laenge*16 - 0x1E, FUN_800129b4) statt synchro-Aufnahmen. Gleicher
+     * Kanal wie jede Sprachzeile (Riegel, Option VOICE, Nachhall), ohne Pegel-Anhebung - das sind RE2-Bytes (wie re15_audio_re2_xa). */
+    {   extern const char *re15_birkinfilm_r42_stimme(unsigned, int, int *);
+        int lese = 0;
+        const char *re2 = re15_birkinfilm_r42_stimme((unsigned)room, voice_id, &lese);
+        if (re2) {
+            int64_t n = 0; int sek = 0, src_n = 0;
+            int16_t *p = re2xa_dekodieren(re2, lese, &n, &sek, &src_n);
+            if (!p) return 0;
+            s_voice_clip[voice_id].pcm = p;
+            s_voice_clip[voice_id].len = (int)n;
+            { extern unsigned g_re15_entladen_gen; extern unsigned re15_audio_stimme_gen_setzen(unsigned);
+              re15_audio_stimme_gen_setzen(g_re15_entladen_gen); }
+            fprintf(stderr, "[voice] ROOM%04X msg %d <- RE2 %s (%d Sektoren, Lesefenster %d -> %d Proben @37800 -> %ld @%d Hz)\n",
+                    (unsigned)room, voice_id, re2, sek, lese, src_n, (long)n, s_dev_freq);
+            return 1;
+        }
+    }
     /* room id packs (stage+1)<<12 | room<<4 | variant: 0x1170 -> STAGE1/room1170. */
     char reldir[64];
     snprintf(reldir, sizeof reldir, "synchro/STAGE%u/room%04X/",
@@ -2602,15 +2622,17 @@ void re15_audio_re2_xa_stop(void)
     free(s_re2xa_pcm); s_re2xa_pcm = NULL;
     SDL_UnlockAudioDevice(s_audio_dev);
 }
-int re15_audio_re2_xa(const char *datei, int lesesektoren)
+/* Dekodiert eine RE2-XA-Strecke (rohe 2336-Byte-Sektoren EINES Kanals unter shared_assets/RE2/) mono, kappt auf das Lesefenster
+ * und rechnet linear auf die Geraeterate um. NULL = Datei fehlt/defekt. Runde 42 birkinfilm: aus re15_audio_re2_xa herausgezogen,
+ * damit der Sprachkanal (re15_voice_load_clip) Annettes RE2-Saetze in ROOM6000 aus denselben Bytes laedt. */
+static int16_t *re2xa_dekodieren(const char *datei, int lesesektoren, int64_t *out_n_ret, int *sek_ret, int *src_n_ret)
 {
-    if (!g_audio.initialized) return 0;
     int sz = 0;
     uint8_t *roh = re15_pc_read_re2(datei, &sz);
     if (!roh || sz < 2336 || (sz % 2336) != 0) {
         free(roh);
         fprintf(stderr, "[re2xa] shared_assets/RE2/%s fehlt oder ist keine 2336-Byte-Sektorfolge -> stumm\n", datei);
-        return 0;
+        return NULL;
     }
     const int sek = sz / 2336;
     int src_n = sek * 4032;                                   /* 18 Gruppen x 8 Einheiten x 28 Proben */
@@ -2619,10 +2641,11 @@ int re15_audio_re2_xa(const char *datei, int lesesektoren)
     int hist[2] = { 0, 0 };
     for (int i = 0; i < sek; i++) {
         const uint8_t *s = roh + (size_t)i * 2336;
-        if (s[0] != 1 || s[2] != 0x64 || s[3] != 0x00) {      /* Datei 1 (CdlSetfilter, FUN_800129b4), Audio|Form2|RT, mono/37800/4 Bit */
+        if (s[0] != 1 || (s[2] & 0x7F) != 0x64 || s[3] != 0x00) {   /* Datei 1 (CdlSetfilter, FUN_800129b4), Audio|Form2|RT
+                                                                      * (+ EOF-Bit 0x80 im letzten Sektor), mono/37800/4 Bit */
             fprintf(stderr, "[re2xa] %s Sektor %d: Subheader %02X %02X %02X %02X statt 01 kk 64 00 -> stumm\n",
                     datei, i, s[0], s[1], s[2], s[3]);
-            free(src); free(roh); return 0;
+            free(src); free(roh); return NULL;
         }
         re15_xa_decode_sector_mono(s + 8, src + (size_t)i * 4032, hist);
     }
@@ -2630,9 +2653,9 @@ int re15_audio_re2_xa(const char *datei, int lesesektoren)
     if (lesesektoren > 0 && (int64_t)lesesektoren * 252 < (int64_t)src_n) src_n = lesesektoren * 252;   /* Stopp @0x80012e3c */
     const int rate = 37800;                                   /* coding_info 0x00: Bits 2-3 = 0 -> 37800 Hz */
     int64_t out_n = (int64_t)src_n * s_dev_freq / rate;
-    if (out_n < 1) { free(src); return 0; }
+    if (out_n < 1) { free(src); return NULL; }
     int16_t *pcm = (int16_t *)malloc((size_t)out_n * sizeof(int16_t));
-    if (!pcm) { free(src); return 0; }
+    if (!pcm) { free(src); return NULL; }
     for (int64_t i = 0; i < out_n; i++) {                     /* linear, wie re15_voice_load_clip */
         int64_t sp = i * (int64_t)rate * 65536 / s_dev_freq;
         int64_t si = sp >> 16; int frac = (int)(sp & 0xffff);
@@ -2640,6 +2663,19 @@ int re15_audio_re2_xa(const char *datei, int lesesektoren)
         pcm[i] = (int16_t)(a + (((b2 - a) * frac) >> 16));
     }
     free(src);
+    if (out_n_ret) *out_n_ret = out_n;
+    if (sek_ret) *sek_ret = sek;
+    if (src_n_ret) *src_n_ret = src_n;
+    return pcm;
+}
+
+int re15_audio_re2_xa(const char *datei, int lesesektoren)
+{
+    if (!g_audio.initialized) return 0;
+    int64_t out_n = 0;
+    int sek = 0, src_n = 0;
+    int16_t *pcm = re2xa_dekodieren(datei, lesesektoren, &out_n, &sek, &src_n);
+    if (!pcm) return 0;
     re15_audio_re2_xa_stop();                                 /* alte Strecke loesen (RE2: ein neues Xa_on setzt den Strom neu) */
     SDL_LockAudioDevice(s_audio_dev);
     s_re2xa_pcm = pcm;

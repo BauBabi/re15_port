@@ -97,7 +97,12 @@ static int schrei(int satz)
 }
 
 /* ---- Film ------------------------------------------------------------------------------------------------------- */
-static int film_spielen(const char *rel)
+/* Runde 42 birkinfilm: Filme niedriger als 240 Zeilen (RE2 R409: 320x160) stehen wie in RE2 mit `bild_y` Zeilen Rand oben auf
+ * schwarzem Grund (RE2-Filmtabelle @0x800a22cc +0x12 = 0x0028, `lhu v0,0x12(a3)` @0x80032254 -> +0x50, addiert @0x80033200).
+ * Die Vollbild-Ebene (re15_render_pc_show_fmv) zieht ihr Bild auf 320x240 - deshalb wird hier auf 320x240 zusammengesetzt. */
+#define ZWS_SCHIRM_W 320
+#define ZWS_SCHIRM_H 240
+static int film_spielen(const char *rel, int bild_y)
 {
     int msz = 0;
     uint8_t *mbuf = re15_pc_read_cd(rel, &msz);
@@ -109,6 +114,10 @@ static int film_spielen(const char *rel)
         return -1;
     }
     uint32_t *rgba = (uint32_t *)malloc((size_t)movie.width * (size_t)movie.height * 4);
+    const int setzen = movie.height < ZWS_SCHIRM_H && movie.width == ZWS_SCHIRM_W && bild_y >= 0 &&
+                       bild_y + movie.height <= ZWS_SCHIRM_H;
+    uint32_t *schirm = setzen ? (uint32_t *)malloc((size_t)ZWS_SCHIRM_W * ZWS_SCHIRM_H * 4) : NULL;
+    if (schirm) for (int i = 0; i < ZWS_SCHIRM_W * ZWS_SCHIRM_H; i++) schirm[i] = 0x000000FFu;   /* schwarz, Alpha 0xFF */
     int16_t *apcm = NULL;
     int aframes = 0, arate = 0, achans = 0, have_audio = 0;
     if (re15_xa_decode_movie(mbuf, (size_t)msz, &apcm, &aframes, &arate, &achans) == 0) {
@@ -136,7 +145,12 @@ static int film_spielen(const char *rel)
         }
         re15_render_begin_frame();
         re15_input_tick();
-        re15_render_pc_show_fmv(rgba, movie.width, movie.height);
+        if (schirm) {
+            memcpy(schirm + (size_t)bild_y * ZWS_SCHIRM_W, rgba, (size_t)movie.width * (size_t)movie.height * 4);
+            re15_render_pc_show_fmv(schirm, ZWS_SCHIRM_W, ZWS_SCHIRM_H);
+        } else {
+            re15_render_pc_show_fmv(rgba, movie.width, movie.height);
+        }
         re15_render_end_frame();
         re15_audio_tick();
         gezeigt++;
@@ -151,6 +165,7 @@ static int film_spielen(const char *rel)
     }
     re15_fmv_audio_stop();
     free(apcm);
+    free(schirm);
     free(rgba);
     free(mbuf);
     re15_render_pc_hide_fmv();
@@ -186,7 +201,7 @@ void re15_zws_r41_pc_bild(void)
 {
     if (!re15_zws_r41_film_offen()) return;
     const re15_zws_film_t *f = re15_zws_r41_aktiv();
-    const int gezeigt = (f && f->raum == (g_current_room_id & 0xFFFFu)) ? film_spielen(f->film_datei) : -1;
+    const int gezeigt = (f && f->raum == (g_current_room_id & 0xFFFFu)) ? film_spielen(f->film_datei, f->bild_y) : -1;
     if (gezeigt > 0) re15_zws_r41_film_gespielt();   /* RE2-Einblenden (re15_zws_r41.h "UEBERBLENDUNG WIE RE2") */
     else re15_zws_r41_film_fehlt();
 }
