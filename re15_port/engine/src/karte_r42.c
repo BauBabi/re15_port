@@ -27,22 +27,28 @@ int re15_karte_r42_kunst_gemalt(unsigned page, unsigned rect, int x, int y)
     return 0;
 }
 
+/* Der Punkt wird um (mx,my) als 8x8-Quad gezeichnet, sein sichtbarer Ring hat die Mitte bei (mx-1,my-1):
+ * TEX.TIM @0x14910 (dieselbe Konstante wie KF_GLYPH_MITTE, karte_fahrstuhl_1080.c; in allen 611 Abzuegen der
+ * Stufe 3 Runde 2 liegt die Ring-Mitte genau dort). Geklemmt wird diese sichtbare Mitte, nicht (mx,my). */
+#define R42_GLYPH_MITTE 1
+
 int re15_karte_r42_kunst_klemmen(unsigned page, unsigned rect, int16_t *mx, int16_t *my)
 {
     const re15_map_kunst_idx_t *k;
     int i, best = -1, bx = 0, by = 0;
+    int cx = *mx - R42_GLYPH_MITTE, cy = *my - R42_GLYPH_MITTE;
     if (page < 6 || page > 12) return 0;          /* nur STAGE2-6 (re15_karte_r42.h) */
     k = kachel(page, rect);
     if (!k || k->anzahl == 0) return 0;
     for (i = 0; i < (int)k->anzahl; i++) {
         const re15_map_kunst_spanne_t *s = &s_map_kunst_spannen[k->erst + i];
         int sy = k->ry + s->y, x0 = k->rx + s->x0, x1 = x0 + s->len - 1;
-        int px = *mx < x0 ? x0 : (*mx > x1 ? x1 : *mx);
-        int dx = px - *mx, dy = sy - *my, d = dx * dx + dy * dy;
+        int px = cx < x0 ? x0 : (cx > x1 ? x1 : cx);
+        int dx = px - cx, dy = sy - cy, d = dx * dx + dy * dy;
         if (d == 0) return 0;                       /* liegt schon auf der Kunst */
         if (best < 0 || d < best) { best = d; bx = px; by = sy; }
     }
-    *mx = (int16_t)bx;
-    *my = (int16_t)by;
+    *mx = (int16_t)(bx + R42_GLYPH_MITTE);
+    *my = (int16_t)(by + R42_GLYPH_MITTE);
     return best;
 }

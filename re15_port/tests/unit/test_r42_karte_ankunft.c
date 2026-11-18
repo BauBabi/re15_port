@@ -14,6 +14,7 @@
  *  [A] Blatt 6..12 (STAGE2-6), Zone mit HERGELEITETER Zeile (Port-Ergaenzung): der Punkt liegt auf einem
  *      Texel des RAUMKOERPERS der eigenen Kachel (Index != 0 und != 4 = nicht auf der Wandlinie). Auf aaea5f8c2 / 6e0f3db61 ROT: 6000 aus 50B0 (8 px ueber r5, der
  *      Gang ist nicht gemalt), 4040 aus 4050, 4050 (2 Lagen), 4080 aus 4090, 11A0 aus 3000 (Blatt 6).
+ *      Geprueft wird die SICHTBARE Ring-Mitte (mx-1,my-1) - TEX.TIM @0x14910, KF_GLYPH_MITTE.
  *  [B] Blatt 6..12, Zone mit AUSGELIEFERTER Zeile (@0x800768b0): nur gezaehlt und gemeldet (byte-true,
  *      der Marker wird dort nicht geklemmt; 2000/3090/4030 liegen an der Tuer 1 px auf der Nachbarkachel).
  *  [C] Blatt 6..12: Zonen DESSELBEN Raums mit DERSELBEN Zeile auf demselben Blatt (4040 r4+r12, 4080 r8+r13,
@@ -202,7 +203,7 @@ int main(void)
         if (echte_zeile(zb) == 1) {
             char e[80];
             b_n++;
-            if (gemalt(seite, rc, mx, my)) b_auf++;
+            if (gemalt(seite, rc, mx - 1, my - 1)) b_auf++;
             else {
                 snprintf(e, sizeof e, " %04X<-%04X(B%d r%d %d,%d)", rid, s_ank[i].von, seite, rc, mx, my);
                 strncat(lb, e, sizeof lb - strlen(lb) - 1);
@@ -210,7 +211,7 @@ int main(void)
             continue;
         }
         a_n++;
-        if (gemalt(seite, rc, mx, my)) a_ok++;
+        if (gemalt(seite, rc, mx - 1, my - 1)) a_ok++;
         else {
             char e[80];
             snprintf(e, sizeof e, " %04X<-%04X(B%d r%d %d,%d)", rid, s_ank[i].von, seite, rc, mx, my);
