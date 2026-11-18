@@ -38,7 +38,8 @@
  *      (@0x801032f8-30c); die Feder pendelt, faellt und verschwindet unter dem Boden (Op 5 @0x8001e070 -> Op 35).
  *      PORT-WAHL: an den reinen Flug-Stellen (Abheben @0x80100CA8-C4 u.a.) wird keine Feder gezeichnet.
  * Modus 2 `pruef_log <log> <art>` = Auswerter des Integrationslaufs (RE15_SPINNEN_LOG mit {G..}-Klammern):
- *   art "platzt": eine RE2-Spinne (o=1) stirbt (st=3) und traegt danach sh mit Teil 0 und 19 und fl == 0x7fff8.
+ *   art "platzt": eine RE2-Spinne (o=1) stirbt (st=3) und traegt danach sh mit Teil 0 und 19; seit Runde 42 U7 fliegt kein
+ *                 Bein (fl & 0x7fff8 == 0; bis dahin fl == 0x7fff8).
  *   art "bein":   eine RE2-Spinne im Treffer (st=2) traegt ein geplatztes Beinpaar (sh-Bits in 3..18).
  *   art "aus":    eine RE2-Spinne stirbt, die Teilschicht bleibt aus (ta=0 in jedem Bild).
  * Modus 3 `pruef_lache <log> <art>` = Auswerter von RE15_LACHE_LOG (main.c, je Schatten einer Spinne):
@@ -116,9 +117,15 @@ static int platzt_ganz(void)
     if (!re15_teile_an(S)) return 0;
     if ((t[0].w & 0x4a) != 0x4a || (t[19].w & 0x4a) != 0x4a) return 0;
     if (t[0].col != 0x207f60u || t[19].col != 0x207f60u) return 0;
-    for (int k = 3; k <= 18; k++)
-        if ((t[k].w & 0x1062) != 0x1062 || t[k].grav != 20 || t[k].v[1] != -100 || t[k].spin != -128 || t[k].spin_inc != 8)
+    /* ⛔ Runde 42 Strang gore U7 (Nutzerregel 16.11.2026; 80 %-Video F08 F2 0:15,1-0:15,5 Kadaver mit gespreizten Beinen): mit
+     * 80 %-Gestaltung bleiben die Beine beim Platzen dran ((w & 0x41) == 1, kein Flugbit 0x20); der Disc-Beinflug 0x1062
+     * (@0x8011419c-52c) gilt nur noch ohne sie (re15_spinnengore_an() == 0). */
+    for (int k = 3; k <= 18; k++) {
+        if (re15_spinnengore_an()) {
+            if ((t[k].w & 0x20u) || (t[k].w & 0x41u) != 1u) return 0;
+        } else if ((t[k].w & 0x1062) != 0x1062 || t[k].grav != 20 || t[k].v[1] != -100 || t[k].spin != -128 || t[k].spin_inc != 8)
             return 0;
+    }
     return 1;
 }
 static int paare_geplatzt(void)
@@ -891,10 +898,11 @@ static void test_federn(void)
                "groesster Schwung %d, Quads %d\n", nf, (int)y_start, bild, re2fx_op_zaehler(34), re2fx_op_zaehler(16),
                re2fx_op_zaehler(5), re2fx_op_zaehler(35), re2fx_op_zaehler(36), kipp, max_dx, quads);
     }
-    /* N4 Flug-Treffer: Browning w3 -> Zeile 3 -> 0x80102934 P0, 2..3 Federn (@0x80102a08-1c) */
+    /* N4 Flug-Treffer: Beretta w5 -> Zeile 4 -> 0x80102934 P0, 2..3 Federn (@0x80102a08-1c). Bis Runde 42 die Browning w3; die
+     * zerlegt die Kraehe seit U5 (80 %-Video F07 F1 0:54,55). */
     e = kraehe_neu(-1500);
     re15_re2crow_feder_zaehler(&f0, &g0, &s0);
-    e->state = 2; e->sub_state_1 = 3; e->sub_state_2 = 0; e->hp = 5;
+    e->state = 2; e->sub_state_1 = 5; e->sub_state_2 = 0; e->hp = 5;
     kl[0] = e->x; kl[1] = e->y; kl[2] = e->z;
     re15_re2crow_hurt_test(e, PL);
     nf = federn_pruefen(kl, "N4 Treffer");
@@ -903,11 +911,15 @@ static void test_federn(void)
     for (int t = 0; t < 6; t++) re15_re2crow_hurt_test(e, PL);
     CHECK(federn_zaehlen() == nf + 2, "N4b: Sturz %d Federn (Soll %d + 2)", federn_zaehlen(), nf);
     printf("N-Messung: Flug-Treffer %d Federn, mit Sturz %d\n", nf, federn_zaehlen());
-    /* N5 Launch: Remington w8 -> Zeile 7 -> 0x8010327C, 5..8 Federn (@0x801032f8-30c) */
+    /* N5 Launch: Remington w8 -> Zeile 7 -> 0x8010327C, 5..8 Federn (@0x801032f8-30c). Runde 42 U5: im Spiel zerlegt die
+     * Schrotflinte (Disc-Klasse @0x801211cc[8] = 0x801149c4); der LAUNCH-Zweig bleibt Referenz-Pin mit abgeschaltetem U5-Weg. */
+    extern void re15_re2crow_r42_fetzen_test(int an);
+    re15_re2crow_r42_fetzen_test(0);
     e = kraehe_neu(-1500);
     e->state = 2; e->sub_state_1 = 8; e->sub_state_2 = 0;
     kl[0] = e->x; kl[1] = e->y; kl[2] = e->z;
     re15_re2crow_hurt_test(e, PL);
+    re15_re2crow_r42_fetzen_test(-1);
     nf = federn_pruefen(kl, "N5 Launch");
     CHECK(nf >= 5 && nf <= 8, "N5: Launch %d Federn (Soll 5..8 @0x801032f8-30c)", nf);
     printf("N-Messung: Launch %d Federn\n", nf);
@@ -1043,7 +1055,9 @@ static int pruef_log(const char *pfad, const char *art)
             if (ta) ta_an = 1;
             if (st == 3) {
                 tod_re2 = 1;
-                if ((sh & 0x80001u) == 0x80001u && fl == 0x7fff8u) platzt = 1;
+                /* Runde 42 Strang gore U7 (80 %-Video F08 F2 0:15,1-0:15,5): Teile 0/19 platzen, die Beine 3..18 fliegen NICHT
+                 * mehr (vorher fl == 0x7fff8, Disc-Beinflug @0x8011419c-52c). */
+                if ((sh & 0x80001u) == 0x80001u && (fl & 0x7fff8u) == 0u) platzt = 1;
             }
             if (st == 2 && (sh & 0x7fff8u)) bein = 1;
         }

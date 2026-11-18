@@ -24,6 +24,8 @@
  *   affe29      Gegenprobe kleiner Affe 0x29 (ROOM3040, Sce_em_set @0x01310/@0x01324): Regel 0, HP und die Antwort auf
  *               einen Pistolentreffer (14 = Zeile 0x29 Waffe 3) Bild fuer Bild gleich mit Haken aus/an
  */
+/* Runde 42 Strang gore U3 (Nutzerregel 16.11.2026 "80% build ist ausschlaggebend"): die Verdopplung ist aufgehoben,
+ * RE15_R39_AFFEN_HP_FAKTOR = 1 -> Gorilla-HP = Disc 180 (@0x8011f514). Die Riegel lesen die HP aus dem Kopf. */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -245,10 +247,10 @@ static void teil_hp1141(void)
         PRUEF(a->grid_id == 0x10 && b->grid_id == 0x10, "[%s] grid 0x%02x/0x%02x (Kampf-Variante `44 01 27 10` / `44 02 27 10`)",
               tag, a->grid_id, b->grid_id);
         PRUEF(g_gameflow.character == 4, "[%s] Figur 4 = Elza (Elza-RDT)", tag);
-        const int soll = an ? 2 * 180 : 180;
+        const int soll = an ? (RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR) : 180;
         PRUEF(a->hp == soll && b->hp == soll,
               "[%s] ROOM1141 HP beider Gorillas = %d (gemessen %d / %d; Tabelle @0x8011f514 = 180, Saat @0x80117104%s)",
-              tag, soll, (int)a->hp, (int)b->hp, an ? ", NUTZER-VORGABE x2" : "");
+              tag, soll, (int)a->hp, (int)b->hp, an ? ", x Faktor (Runde 42 U3: 1)" : "");
         PRUEF(re15_r39_affen_akku(a) == 0 && re15_r39_affen_akku(b) == 0, "[%s] Energie-Akku startet bei 0", tag);
     }
     /* Die Regel haengt am Typ, nicht am Raum (Nachbesserung 2): derselbe INIT-Haken in drei Raumnummern. */
@@ -259,8 +261,8 @@ static void teil_hp1141(void)
     for (unsigned i = 0; i < sizeof raeume / sizeof raeume[0]; i++) {
         memset(d, 0, sizeof *d); d->type = 0x27;
         g_current_room_id = raeume[i];
-        PRUEF(re15_r39_affen_regel(d) == 1 && re15_r39_affen_hp_init(d, 180) == 360,
-              "Raum %04X: Gorilla 0x27 -> Regel an, HP 2 x 180 = 360 (kein Raum-Tor mehr)", (unsigned)raeume[i]);
+        PRUEF(re15_r39_affen_regel(d) == 1 && re15_r39_affen_hp_init(d, 180) == (RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR),
+              "Raum %04X: Gorilla 0x27 -> Regel an, HP 180 x Faktor (Runde 42 U3: 1; kein Raum-Tor)", (unsigned)raeume[i]);
         d->type = 0x29;
         PRUEF(re15_r39_affen_regel(d) == 0 && re15_r39_affen_hp_init(d, 105) == 105,
               "Raum %04X: kleiner Affe 0x29 -> Regel aus, Tabellenwert bleibt", (unsigned)raeume[i]);
@@ -330,7 +332,7 @@ static void teil_zucken1141(void)
         if (!an) PRUEF(fl[1] && fl[2] && fl[3], "[vorher] jeder Schuss flincht (Clip 7 @0x8011b08c-90): %d %d %d", fl[1], fl[2], fl[3]);
         else {
             PRUEF(!fl[1] && !fl[2] && fl[3], "[nachher] Flinch erst beim dritten Schuss (36 Energie): %d %d %d", fl[1], fl[2], fl[3]);
-            PRUEF(hpv[1] == 360 && hpn[3] == 324, "[nachher] HP 360 -> 324 ueber drei Schuesse: %d -> %d", hpv[1], hpn[3]);
+            PRUEF(hpv[1] == (RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR) && hpn[3] == (RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR) - 36, "[nachher] HP Start -> Start - 36 ueber drei Schuesse: %d -> %d", hpv[1], hpn[3]);
             PRUEF(akku[1] == 12 && akku[2] == 24, "[nachher] Akku 12 / 24 vor dem Flinch: %d / %d", akku[1], akku[2]);
         }
     }
@@ -396,7 +398,7 @@ static void teil_ablauf1141(void)
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER], *john = &g_actors[1];
         re15_actor_t *g[2] = { aktor_vom_typ(0x27, 0), aktor_vom_typ(0x27, 1) };
         kampf_t k[2] = { { 0, 0, g[0]->hp, -1 }, { 0, 0, g[1]->hp, -1 } };
-        const int soll_hp = an ? 360 : 180;
+        const int soll_hp = an ? (RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR) : 180;
         PRUEF(k[0].hp_start == soll_hp && k[1].hp_start == soll_hp,
               "[%s] Gorillas aus BEFREIUNG (Saetze wie sub00 @0x00B1A/@0x00B2E) mit HP %d / %d (soll %d)", tag,
               k[0].hp_start, k[1].hp_start, soll_hp);
@@ -431,8 +433,8 @@ static void teil_ablauf1141(void)
             printf("    [%s] Gorilla %d: HP %d, %d Treffer bis zum Tod (Bild %d), %d Flinches (Clip 7)\n", tag, i + 1,
                    k[i].hp_start, k[i].treffer, k[i].tot_bild, k[i].flinch);
         PRUEF(kampf_ende >= 0, "[%s] beide Gorillas tot (Bild %ld)", tag, kampf_ende);
-        const int soll_tr = an ? 31 : 16;                  /* hp >= 0 bleibt HURT (`bgez` @0x80012528): 360/12 + 1, 180/12 + 1 */
-        const int soll_fl = an ? 10 : 15;                  /* nachher jeder 3. von 30 nicht-toedlichen, vorher jeder */
+        const int soll_tr = an ? ((RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR) / 12 + 1) : 16;   /* hp >= 0 bleibt HURT (`bgez` @0x80012528): HP/12 + 1 (Runde 42 U3: 180 -> 16) */
+        const int soll_fl = an ? ((RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR) / 12) / 3 : 15;   /* nachher jeder 3. der HP/12 nicht-toedlichen (Runde 42 U3: 15/3 = 5), vorher jeder */
         PRUEF(k[0].treffer == soll_tr && k[1].treffer == soll_tr, "[%s] Treffer bis zum Tod: %d / %d (soll %d)", tag,
               k[0].treffer, k[1].treffer, soll_tr);
         PRUEF(k[0].flinch == soll_fl && k[1].flinch == soll_fl, "[%s] Flinches (Clip 7): %d / %d (soll %d)", tag,

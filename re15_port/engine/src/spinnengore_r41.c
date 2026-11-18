@@ -97,7 +97,13 @@ void re15_spinnengore_platzen(re15_actor_t *e)
     re15_spinnengore_teil_platzt(slot, 19);
     re15_enemy_fx19700(e, 0x00082000u, 0, null3);
     re15_enemy_fx19700(e, 0x00082000u, 19, null3);
-    (void)re15_spinnengore_beine_fliegen(slot);
+    /* ⛔ RUNDE 42 STRANG GORE U7 (BAUPLAN gore_matrix U7, Nutzerregel 16.11.2026 "80% build ist ausschlaggebend"): im
+     * 80 %-Video platzt die Spinne, und der flache Kadaver sackt MIT gespreizten Beinen zusammen - F08 F2 0:14,72-0:15,52
+     * (Platzen), Kadaver mit Beinen 0:15,1-0:15,5; E21 B 5:18,23-5:18,90. Der Disc-Beinflug (@0x8011419c-52c, Zwilling
+     * @0x80114778-b0c) ist das andere Bild und laeuft nur noch ohne 80 %-Gestaltung (RE15_KEIN_80PROZENT_GORE=1), in beiden
+     * Gehirnen (diese Funktion ist der einzige Platzer). Schon vorher abgeschossene Beine bleiben ab (re15_spinnengore_bein_ab). */
+    if (!re15_spinnengore_an())
+        (void)re15_spinnengore_beine_fliegen(slot);
 }
 
 /* Beinpaar leg/leg+1 platzt, Blut zweimal an Teil leg+2 (a2 = pool + 172*leg + 408 @0x80113dc8 / @0x80113e20). */

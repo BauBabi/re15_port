@@ -2214,29 +2214,28 @@ static void re2d_teile_wurf(re15_actor_t *e)
     }
 }
 
-/* Runde 41 Spur GR (Nachbesserung 1) — der Hund ZERFETZT bei Tod durch eine EXPLOSIVGRANATE (Handgranate w9 /
- * Werfer-Explosivrunde w15 = RE2-Zeile 9). GESTALTUNG / PORT-WAHL (Nutzer 2026-11-02: "auch die Hunde ... sollen
- * entsprechend zerfetzen"; Gore = Maximum aus RE1.5, RE2, 80%-Videos; kein 80%-Video zeigt einen Hund an einer
- * Explosion — Inventur GR_granate.md §4N). Quelle der TEILE: RE2 0x80104440, dieselben 7 Parts der Tabelle @0x80105680
- * (`02 03 04 07 08 09 0a`) mit dem Farbwort 0x00101040 (@0x801044c8). Anders als das Original (Drift + Scherben 0x4A,
- * `ori v0,v0,0x4a` @0x801044a4, nach 29 Bildern weg) fliegen sie wie die Zombie-Teile mit dem Wurf FUN_80028AD8
- * (re15_re2z_granate_werfen) und BLEIBEN LIEGEN (Nutzer-Entscheid 2026-11-02). Der Rumpf bleibt wie im RE2-Original
- * (der Teile-Wurf nimmt Part 0/1 nie). Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1. */
-void re15_re2z_granate_werfen(re15_actor_t *e, const uint8_t *teile, int n);   /* enemy_ai_re2_zombie.c */
+/* ⛔ RUNDE 42 STRANG GORE U16 (BAUPLAN gore_matrix U16, Nutzerregel 16.11.2026; ersetzt die Port-Wahl Runde 41 GR N1
+ * "immer zerfetzen, Teile bleiben liegen"): der Hund an einer Explosivgranate = RE2 GENAU. Weder ein Video noch die Disc
+ * zeigen ihn (Disc-Luft-Tod FUN_80110eb0: nur Blut an Bone 0) -> Luecke -> RE2 0x80104440 (re2d_teile_wurf): 7 Teile,
+ * Flagwort 0x4A, Drift FUN_80028DAC, nach 29 Bildern weg (`sltiu v0,v0,0x1d` @0x80028DCC / `sw zero,0` @0x80028DDC), und nur
+ * bei +0x1D2 < 3 (@0x801046A8-C4). Fuer das RE1.5-Gehirn (KI-Wahl im Menue, ohne +0x1D2) dieselbe Teilung nach der
+ * RE2-Klammer K = Hitcode >> 28 (`srl s6,s5,0x1c` @0x80047114, Spalte = Zone + 3K @0x80047310-30): Handgranate K 0 ->
+ * Spalte < 3 -> Teile; Werfer-Explosivrunde K 1 (Hitcode 0x10020009, RE2 Op 47 @0x80020d54-58) -> Spalte >= 3 -> keine.
+ * Einmal je Tod: Bit 15 von re2z_part_gr (Part 15 ist die Reserve @0x801010DC, wird nie gezeichnet) macht zugleich die
+ * Part-Bruecke fuer das RE1.5-Gehirn aktiv (re15_re2z_gore_active Typ 0x20). Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1
+ * nur im RE1.5-Gehirn (dort ist der Wurf eine Ergaenzung); im RE2-Gehirn ist er Original. */
 int  re15_zgore_80prozent(void);                                               /* zombiegore_r15.c */
-static unsigned s_re2d_gr_zahl = 0;   /* Port-Diagnose (Tests) */
+static unsigned s_re2d_gr_zahl = 0;   /* Port-Diagnose (Tests): Teile-Wuerfe an Zeile 9 / Handgranate */
 unsigned re15_re2d_granate_zahl(void) { return s_re2d_gr_zahl; }
 void re15_re2d_granate_teile(re15_actor_t *e)
 {
-    static const uint8_t parts[7] = { 2, 3, 4, 7, 8, 9, 10 };   /* @0x80105680 */
     if (!e || e->re2z_part_gr) return;                            /* einmal je Tod */
-    re15_gore_r41_hund_bruecke(e);
-    re15_re2z_granate_werfen(e, parts, 7);
-    for (int i = 0; i < 7; i++) e->re2z_part_tint[parts[i]] = 0x00101040u;   /* `sw a2,112` @0x801044c8 */
+    re2d_teile_wurf(e);                                           /* 0x80104440 */
+    e->re2z_part_gr = 0x8000u;
     s_re2d_gr_zahl++;
     if (getenv("RE15_ZGORE_TEST") || getenv("RE15_GR_LOG"))
-        fprintf(stderr, "[gr] Hund Slot %d Waffe %u: ZERFETZT (Teile-Maske 0x%04x, HP %d)\n", (int)(e - g_actors),
-                (unsigned)e->sub_state_1, (unsigned)e->re2z_part_gr, (int)e->hp);
+        fprintf(stderr, "[gr] Hund Slot %d Waffe %u: Teile-Wurf RE2 0x80104440 (HP %d)\n", (int)(e - g_actors),
+                (unsigned)e->sub_state_1, (int)e->hp);
 }
 
 /* Die drei Effekte je Bild des Routers 0x80104610 (@0x80104644-7C):
@@ -2307,15 +2306,18 @@ static void re2d_death(re15_actor_t *e, re15_actor_t *pl)
          * Vorher lief der Port-Kern NACH dem Gore-Block: sein Treffer-P0 (re2d_hurt_p0 setzt
          * Budget 1 und verbraucht es mit FX(0,0)) machte das Budget 18 zunichte. */
         int router9 = (row == 5 || row == 6 || row == 9 || row == 17 || row == 19);   /* @0x801055CC */
-        /* Runde 41 Spur GR N1: Zeile 9 (Explosivgranate) zerfetzt mit eingeschaltetem 80%-Gore IMMER, auch die
-         * Werfer-Explosion mit +0x1D2 >= 3 (Original dort nur der Kern @0x801046A8-D4) — Block re15_re2d_granate_teile. */
-        const int gr9 = (row == 9) && re15_zgore_80prozent();
-        if (router9 && (gr9 || !(row == 9 && e->re2z_hits1d2 >= 3))) {
+        /* ⛔ RUNDE 42 STRANG GORE U16 (BAUPLAN gore_matrix U16, Nutzerregel 16.11.2026: "80% build ist ausschlaggebend, dann
+         * 40% build ... wenn dort Dinge noch fehlen dann kommt Resident Evil 2 zum Einsatz"): kein Video und nicht die Disc
+         * zeigen einen Hund an einer Explosion (die Disc zerlegt ihn nicht) -> Luecke, RE2 GENAU: Zeile 9 wirft die Teile nur
+         * bei +0x1D2 < 3 (Zeile `lbu v1,5(s0)` / `addiu v0,zero,9` @0x801046A8-AC, `lbu v0,0x1d2(s0)` / `sltiu v0,v0,3`
+         * @0x801046B8-C0), sonst nur der Kern (`jal 0x80104178` @0x801046CC); der Wurf ist 0x80104440 (re2d_teile_wurf:
+         * Flagwort 0x4A, Drift FUN_80028DAC, nach 29 Bildern weg `sltiu v0,v0,0x1d` @0x80028DCC / `sw zero,0` @0x80028DDC).
+         * Die Port-Wahl Runde 41 GR N1 (immer zerfetzen, Teile bleiben liegen, re15_re2d_granate_teile) ist aufgehoben. */
+        if (router9 && !(row == 9 && e->re2z_hits1d2 >= 3)) {
             e->re2d_se231 = 1;                             /* sb s1,561 @0x801046E8 (kein SE 7) */
             re2d_kern(e, pl);                              /* jal 0x80104178 @0x801046E4 */
-            if (gr9) re15_re2d_granate_teile(e);           /* Runde 41 Spur GR N1 statt 0x80104440 */
-            else
             re2d_teile_wurf(e);                            /* jal 0x80104440 @0x801046EC */
+            if (row == 9) s_re2d_gr_zahl++;                /* Port-Diagnose (Runde 42 U16) */
             if (row == 9) {                                /* @0x801046F4-754 (nur Zeile 9) */
                 e->re2d_budget21f = 1;                     /* sb s1,543 @0x80104708 (Delay-Slot) */
                 int part = (int)(re15_re2_rand() & 0xfu);  /* jal rand @0x80104704 / andi 0xf */

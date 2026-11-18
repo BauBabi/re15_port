@@ -70,7 +70,12 @@ void re15_bf_modell_hook(void (*fn)(uint8_t type));
  *   Mutation    `slti v0,v0,100` / `ori v0,zero,0x601` @0x8011667c-684      hp < 100 -> 0x601
  *   Mut.-HP     `ori v0,zero,0x96` / `sh v0,154(v1)`   @0x80118094-098      150
  *   Revive      `ori v0,zero,0x32` / `sh v0,154(v1)`   @0x8011a530-534      50 */
-#define RE15_BIRKIN_HP_FAKTOR     2
+/* ⛔ RUNDE 42 STRANG GORE U4 (BAUPLAN gore_matrix U4, Nutzerregel 16.11.2026 woertlich: "80% build ist ausschlaggebend, dann
+ * 40% build ... wenn ich frueher was anderes behauptet habe, falsch"): die Verdopplung oben (Nutzerentscheid F1 2026-11-02) ist
+ * aufgehoben, der Faktor ist 1 = die Disc-Skala selbst: INIT 300 `ori v0,zero,0x12c` @0x8011690c, Verwundet `slti v0,v0,200`
+ * @0x801164fc, Mutation `slti v0,v0,100` @0x8011667c, Mutations-HP `ori v0,zero,0x96` @0x80118094, Revive `ori v0,zero,0x32`
+ * @0x8011a530 (STAGE3.BIN, Version_40%, selbst nachgelesen 18.11.). Die Riesenform (RE15_BB_FORM_HP 1000) bleibt. */
+#define RE15_BIRKIN_HP_FAKTOR     1
 #define RE15_BIRKIN_HP_INIT       (300 * RE15_BIRKIN_HP_FAKTOR)   /* 0x12c @0x8011690c */
 #define RE15_BIRKIN_HP_VERWUNDET  (200 * RE15_BIRKIN_HP_FAKTOR)   /* slti 200 @0x801164fc */
 #define RE15_BIRKIN_HP_MUT_TOR    (100 * RE15_BIRKIN_HP_FAKTOR)   /* slti 100 @0x8011667c */

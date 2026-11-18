@@ -1519,10 +1519,28 @@ static const uint8_t s_re2c_row_from_weapon[22] = {    /* Werte == re2z_row_from
     /*12*/ 15, /*13*/  8, /*14*/ 16, /*15*/  9, /*16*/ 11, /*17*/ 10,
     /*18*/ 17, /*19*/ 18, /*20*/ 13, /*21*/  1
 };
+/* ⛔ RUNDE 42 STRANG GORE U5 (BAUPLAN gore_matrix U5, Nutzerregel 16.11.2026 "80% build ist ausschlaggebend, dann 40% build
+ * ... wenn dort Dinge noch fehlen dann kommt Resident Evil 2 zum Einsatz"): die Kraehe ZERFAELLT in Fetzen
+ *   - Pistole (Browning w3, SIG P228 w4): 80 %-Video F07 F1 0:54,55-0:55,40 / 0:58,1-0:59,0, E07 B 1:15,0-1:16,0 (Fetzen statt
+ *     Sturz; PRUEFUNG P1: 0:54,7 2942 dunkle Pixel, 0:55,3 418, ab 0:55,6 0). Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1.
+ *   - Schrot (w8) und SPAS (w13): Disc-Klasse STAGE1 @0x801211cc[8] = [13] = 0x801149c4 (schwer: Teile platzen), Version_40%
+ *     selbst gelesen 18.11. (Leicht-Klasse 0x80114738 fuer [0..6], [12], [19], [20]). RE2 schleuderte sie als Ganzes weg
+ *     (Zeilen 7/8 -> 0x8010327C); die Disc zeigt ein anderes Bild -> Disc. Gilt auch ohne 80 %-Gestaltung.
+ * Der Fetzen-Weg ist der RE2-GIB 0x80102CA0 (13 Teile, Wurf/Wirbel), den der Port fuer die Zeilen 5/6/9/10/11/17 schon faehrt. */
+int re15_zgore_80prozent(void);                            /* zombiegore_r15.c */
+static int s_re2c_fetzen_test = -1;                        /* NUR Tests: 0 = U5 aus (Referenz-Pins der RE2-Zeilen 3/7/8) */
+void re15_re2crow_r42_fetzen_test(int an) { s_re2c_fetzen_test = an; }
+static int re2c_gore_r42_fetzen(unsigned w)
+{
+    if (s_re2c_fetzen_test == 0) return 0;
+    if (w == 8u || w == 13u) return 1;                     /* @0x801211cc[8]/[13] = 0x801149c4 */
+    return (w == 3u || w == 4u) && re15_zgore_80prozent(); /* 80 %: F07 F1 0:54,55-0:55,40 */
+}
 static void re2c_hurt(re15_actor_t *e, re15_actor_t *pl)
 {
     unsigned w = e->sub_state_1;                           /* +0x5 = RE1.5-weapon_id @0x800124bc */
     uint8_t row = (w < 22u) ? s_re2c_row_from_weapon[w] : 1u;
+    if (re2c_gore_r42_fetzen(w)) { re2c_hurt_gib(e, pl); return; }   /* Runde 42 U5 (wie die GIB-Zeilen ohne Phasen-Tor) */
     switch (row) {
     case 5: case 6: case 9: case 10: case 11: case 17:
         re2c_hurt_gib(e, pl); break;                       /* @0x80104A2C-30/3C-44/5C */

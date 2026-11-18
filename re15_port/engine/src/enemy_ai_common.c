@@ -6800,6 +6800,13 @@ static void re15_crow_death(re15_actor_t *e)
     {
         int wl = e->sub_state_1;
         int gib = (wl >= 7 && wl <= 11) || wl == 13 || (wl >= 15 && wl <= 18);
+        /* Runde 42 Strang gore U5 (Nutzerregel 16.11.2026 "80% build ist ausschlaggebend"): die Pistole (Browning w3,
+         * SIG P228 w4) laesst die Kraehe in Fetzen zerfallen, 80 %-Video F07 F1 0:54,55-0:55,40 (Disc-Klasse waere
+         * @0x801211cc[3]/[4] = 0x80114738 "faellt ganz"). Unter dem 80 %-Schalter (RE15_KEIN_80PROZENT_GORE). */
+        {
+            extern int re15_zgore_80prozent(void);
+            if ((wl == 3 || wl == 4) && re15_zgore_80prozent()) gib = 1;
+        }
         if (gib && e->sub_state_1 != 7) e->sub_state_1 = 7;   /* auf die Port-GIB-Spur mappen */
     }
     if (e->sub_state_1 == 7) {   /* GIB lane 0x801149c4: 13 feather children (@0x80114a50) -> corpse */
@@ -8492,13 +8499,13 @@ static void re15_dog_ai_tick(int slot)
 
     case 3: { /* DEATH dispatcher FUN_80110dc0 -> rows @0x80121070 (audit #5 + verified detour claim) */
         re15_dog_fall_physics(e);
-        {   /* Runde 41 Spur GR N1 (GESTALTUNG / PORT-WAHL, Block re15_re2d_granate_teile in enemy_ai_re2_dog.c): auch der
-             * RE1.5-Hund zerfetzt bei Tod durch eine Explosivgranate (+0x5 = 9 Handgranate, 15 Werfer-Explosivrunde) —
-             * das RE1.5-Gehirn hat keine Teile-Mechanik (Luft-Tod FUN_80110eb0: nur Blut an Bone 0), die Teile kommen aus
-             * RE2 0x80104440 und fahren ueber die Part-Bruecke der Spur S. Einmal je Tod (re2z_part_gr). */
+        {   /* Runde 42 Strang gore U16 (ersetzt Runde 41 GR N1, Block re15_re2d_granate_teile in enemy_ai_re2_dog.c): der
+             * RE1.5-Hund an der HANDGRANATE (+0x5 = 9) bekommt den RE2-Teile-Wurf 0x80104440 (Drift, nach 29 Bildern weg) wie
+             * der RE2-Hund (Klammer K 0 -> Spalte < 3 @0x801046A8-C4); die Werfer-Explosivrunde (+0x5 = 15, K 1) wirft keine
+             * Teile. Das RE1.5-Gehirn selbst hat keine Teile-Mechanik (Luft-Tod FUN_80110eb0: nur Blut an Bone 0). */
             extern void re15_re2d_granate_teile(re15_actor_t *e);
             extern int  re15_zgore_80prozent(void);
-            if ((e->sub_state_1 == 9 || e->sub_state_1 == 15) && !e->re2z_part_gr && re15_zgore_80prozent())
+            if (e->sub_state_1 == 9 && !e->re2z_part_gr && re15_zgore_80prozent())
                 re15_re2d_granate_teile(e);
         }
         if (!re15_dog_row_airborne(e->sub_state_1)) {

@@ -8,7 +8,7 @@
  *     0x80115830 faerbt den Boden-Schatten um (0x00ffff38 @0x80115880-c8) und waechst
  *     +0xbc/+0xbe um +10/Tick fuer 51 Ticks @0x8011589c-ac/@0x8011585c-60).
  * Messung: ROOM1170 Re-Entry-Roster, naechste Kraehe erschiessen —
- *   Lauf A: weapon 3 (Normal-Lane 0x80114738) -> state 7 sub 0, frame==11 eingefroren,
+ *   Lauf A: weapon 5 (Normal-Lane 0x80114738; bis Runde 42 weapon 3) -> state 7 sub 0, frame==11 eingefroren,
  *           Lache waechst Basis+510 (51 Ticks x +10), danach konstant, crow_pool=1;
  *   Lauf B: weapon 7 (GIB-Lane 0x801149c4)   -> state 7 sub 1 (Pool-WIPE): Schatten 1x1,
  *           kein Pool, Koerper verborgen (crow_hide), flags|=0x42 (@0x80114acc/ae8). */
@@ -134,22 +134,22 @@ static void run_death(const re15_rdt_t *rdt, int weapon)
     /* Erwartungen aus dem Original (crow_death_pool.md §3-Verifikation) */
     CHECK(changes == 0, "(w%d) Corpse friert ein — KEIN f314 in state 7, got %d frame-CHANGES",
           weapon, changes);
-    if (weapon == 3) {
-        CHECK(e->sub_state_1 == 0, "(w3) Normal-Lane endet sub 0 (a0=0 @0x80114964), got %d",
+    if (weapon == 5) {
+        CHECK(e->sub_state_1 == 0, "(w5) Normal-Lane endet sub 0 (a0=0 @0x80114964), got %d",
               e->sub_state_1);
         CHECK(e->motion == 0x0a && e->anim_frame == 11,
-              "(w3) Freeze auf Land-Clip 0x0a Frame 11 (12 FINISH-f314 @0x8011493c posieren 0..11, Runde 39 K NB1), "
+              "(w5) Freeze auf Land-Clip 0x0a Frame 11 (12 FINISH-f314 @0x8011493c posieren 0..11, Runde 39 K NB1), "
               "got motion=%d frame=%d",
               e->motion, e->anim_frame);
-        CHECK(e->rot_z == 0, "(w3) rot_z=0 beim Land (@0x801148f8), got %d", e->rot_z);
-        CHECK(e->crow_pool == 1, "(w3) Lache aktiv (0x00ffff38 @0x80115880-c8)");
+        CHECK(e->rot_z == 0, "(w5) rot_z=0 beim Land (@0x801148f8), got %d", e->rot_z);
+        CHECK(e->crow_pool == 1, "(w5) Lache aktiv (0x00ffff38 @0x80115880-c8)");
         CHECK(e->crow_shadow_w == (uint16_t)(base_w + 510) &&
               e->crow_shadow_h == (uint16_t)(base_w + 510),
-              "(w3) Lache = Basis(%u)+510 (51 Ticks x +10 @0x8011589c-ac), got %u/%u",
+              "(w5) Lache = Basis(%u)+510 (51 Ticks x +10 @0x8011589c-ac), got %u/%u",
               base_w, e->crow_shadow_w, e->crow_shadow_h);
         CHECK((e->flags & 0x42) == 0x42,
-              "(w3) word0-Bits 0x2|0x40 (@0x80114990/@0x801149ac), got flags=%02x", e->flags);
-        CHECK(e->crow_hide == 0, "(w3) Normal-Leiche bleibt sichtbar");
+              "(w5) word0-Bits 0x2|0x40 (@0x80114990/@0x801149ac), got flags=%02x", e->flags);
+        CHECK(e->crow_hide == 0, "(w5) Normal-Leiche bleibt sichtbar");
     } else {
         CHECK(e->sub_state_1 == 1, "(w%d) GIB endet sub 1 = Pool-WIPE (a0=1 @0x80114b7c), got %d",
               weapon, e->sub_state_1);
@@ -178,7 +178,9 @@ int main(void)
     if (re15_rdt_parse(data, size, &rdt) != 0) { fprintf(stderr, "FAIL: parse\n"); return 1; }
 
     re15_actor_init();
-    run_death(&rdt, 3);   /* Normal-Lane (Original: state 7 sub 0 -> Blutlache) */
+    run_death(&rdt, 5);   /* Normal-Lane (Original: state 7 sub 0 -> Blutlache). Runde 42 gore U5: Beretta w5 statt Pistole
+                           * w3 - die Pistole zerlegt die Kraehe jetzt (80 %-Video F07 F1 0:54,55); w5 liegt auf der Disc in
+                           * derselben Leicht-Klasse @0x801211cc[5] = 0x80114738 */
     re15_actor_init();
     run_death(&rdt, 7);   /* GIB-Lane (Original: state 7 sub 1 -> Pool-WIPE, keine Lache) */
     free(data);

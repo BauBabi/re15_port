@@ -791,6 +791,29 @@ int re15_enemy_waffen_schaden(const re15_actor_t *e, int weapon_id)   /* Runde 3
     const uint16_t *r = e ? re15_enemy_dmg_row(e) : NULL;
     return (r && weapon_id >= 0 && weapon_id < 22) ? (int)r[weapon_id] : 0;
 }
+static int re15_riesenform_g4(const re15_actor_t *e);         /* Runde 42 U9, Definition vor re15_enemy_take_damage_at */
+static int re15_riesenform_g4_zeile(unsigned zeile);
+/* ⛔ RUNDE 42 STRANG GORE U6 (BAUPLAN gore_matrix U6, Nutzerregel 16.11.2026 "80% build ist ausschlaggebend, dann 40% build";
+ * hebt die NUTZER-VORGABE Runde 37 "jeder Schuss des Feuerstosses trifft" fuer diese Gegner auf): gegen einen Gegner mit
+ * DISC-ZEILE (@0x8006e0d0 + Typ*0x58, keine RE2-Zeile des Ports) zaehlt ein Feuerstoss der Beretta M93R / Glock 18 als EIN
+ * Treffer wie auf der Disc: Entlade-Handler 0x800338A8 mit EINEM Resolver-Aufruf `jal 0x80011f50` @0x8003396c und drei
+ * Patronen `jal 0x8004eae4` @0x80033974/7c/84 (Abschusstabelle @0x80074114/18), Schaden = Spalte 5/6 der Zeile (der ganze Stoss,
+ * z. B. Gorilla 28 @0x8006ee4c / @0x8006ee50, Version_40% PSX.EXE selbst gelesen 18.11.). Gegen RE2-Zeilen (Zombie-Familie,
+ * Hund, Kraehe, Spinne unter dem RE2-Modell) bleibt jede Kugel ein Treffer = RE2s Custom Handgun (Kugeln in Bild 0/3/6
+ * @0x80048910-20, `jal 0x80041098` je Kugel @0x80048990). Ausgenommen (PORT-WAHL, Strang-Grenzen): der Alligator 0x23
+ * (Nutzer 17.11. "auf keinen Fall ander", K-12: nicht anfassen), der G5 0x36 und alles in ROOM5090/5091 (Strang r42/finale),
+ * die Riesenform (RE2-G4-Zeile, U9: dort gilt RE2s Feuerstoss je Kugel). */
+int re15_feuerstoss_ein_treffer(const re15_actor_t *e)
+{
+    if (!e) return 0;
+    if (e->type == 0x23u || e->type == 0x36u) return 0;
+    if (g_current_room_id == 0x5090u || g_current_room_id == 0x5091u) return 0;
+    if (re15_riesenform_g4(e)) return 0;
+    const uint16_t *r = re15_enemy_dmg_row(e);
+    if (!r) return 0;
+    return !(r == s_re2_wpn_dmg_zombie || r == s_re2_wpn_dmg_zombie16 || r == s_re2_wpn_dmg_dog ||
+             r == s_re2_wpn_dmg_crow || r == s_re2_wpn_dmg_spiderbaby);
+}
 /* ============================================================================================
  * ⛔ RE2-FLAVOR — (2) DIE START-HP (+0x156) AUS DEN RE2-EM-MODULEN
  * ============================================================================================
@@ -2562,8 +2585,15 @@ retry_after_latch:
                      * treffen (Bit-Konstanten = die Original-Baender 0x40000000/0x20000000);
                      * UP geht vorbei. VORHER fiel er in den generischen LEVEL-Zweig — wer auf
                      * die niedrigen Arme nach UNTEN zielte, traf NIE (Nutzer-Report 2026-08-29
-                     * "keinerlei Treffer-Feedback"; dieselbe Klasse wie der Hund-Befund). */
-                    eband = 0x40000000u | 0x20000000u;
+                     * "keinerlei Treffer-Feedback"; dieselbe Klasse wie der Hund-Befund).
+                     * ⛔ RUNDE 42 STRANG GORE U8 (BAUPLAN gore_matrix U8, Nutzerregel 16.11.2026 "80% build ist
+                     * ausschlaggebend, dann 40% build"; der Nutzer nennt "anschiessbare Gitterhaende" ausdruecklich als
+                     * aufgehobenen Entscheid): wie auf der Disc KEIN Band -> kein Ziel, Schuesse und Messer gehen durch.
+                     * Disc: kein `jal 0x80012aa4` / `jal 0x80012974` (Band-Stempel) im Arm-Code 0x8010c1ec-0x8010d7a0, die
+                     * Arme kommen ohne HP (ROOM1210 Sce_em_set @0x1d86..0x1e4e); 80 % V34 zeigt sie ohne Beschuss.
+                     * Vorpruefung (test_r42_tiere [u8]): der Flur ROOM1210 ist ohne Schuss passierbar (RE2-Griff kostet keine
+                     * HP, jeder Arm greift hoechstens einmal). Explosionen (re15_re2_gl_apply) wirken unveraendert. */
+                    eband = 0u;
                 } else if (e->type == 0x27 || e->type == 0x29) {   /* Runde 38 Spur S: kleiner Affe 0x29 = derselbe Schwanz @0x80111148-1b0 */
                     /* GORILLA-BOSS: Band aus dem Brain-Tail-Stempel (enemy_ai_common.c,
                      * @0x80117380-e8): Boden = LEVEL + DOWN(dist<0xfa0=4000, FUN_80012974
@@ -2825,7 +2855,12 @@ retry_after_latch:
      * 5 -> 15 = 3 x 5, @0x8006e0d0 + Typ*0x58 + 3*4 / + 5*4); je Kugel gilt die Einzelschuss-Pistole (Spalte 3) —
      * wie RE2, dessen Custom-Handgun-Zeile 4 im Schaden gleich der Handgun-Zeile 3 ist (@0x800A4168 / @0x800A4154
      * w0 0x00E03C10). In den RE2-Zeilen des Ports ist Spalte 5 == Spalte 3 (No-op). */
-    if (weapon_id == 5 || weapon_id == 6) dmg = dmg_row[3];
+    if ((weapon_id == 5 || weapon_id == 6) && !re15_feuerstoss_ein_treffer(e)) dmg = dmg_row[3];
+    /* Runde 42 U6: Gegner mit Disc-Zeile nehmen den Stoss als EINEN Treffer mit Spalte 5/6 (Block re15_feuerstoss_ein_treffer). */
+    if (re15_riesenform_g4(e)) {                    /* Runde 42 U9: RE2-G4-Zeile, Klammer 0 (Block re15_riesenform_g4) */
+        extern unsigned re15_re2z_weapon_id(unsigned w);
+        dmg = re15_riesenform_g4_zeile(re15_re2z_weapon_id((unsigned)weapon_id));
+    }
     if (s_re2_probe[best].valid &&
         (dmg_row == s_re2_wpn_dmg_zombie || dmg_row == s_re2_wpn_dmg_zombie16)) {
         /* RE2-Applier: Schaden nach KLAMMER aus dem Zombie-Record-Wort 0 —
@@ -3229,6 +3264,35 @@ int re15_rakete_schaden(const re15_actor_t *e)
     }
     return (int)((w0 >> 0) & 0x3FFu);                 /* Klammer 0: `srlv` @0x80047254 / `andi v1,v1,0x3ff` @0x8004725c */
 }
+/* ⛔ RUNDE 42 STRANG GORE U9 (BAUPLAN gore_matrix U9; Planer-Festlegung "Gegner, die es auf der Disc nicht gibt, nehmen ihre
+ * ganze RE2-Zeile"): BIRKINS RIESENFORM nimmt den Schaden des RE2-G4 (Typ 0x34). Die Riesenform gibt es nur im 80 %-Material
+ * ohne sichtbare Wirkung, auf der Disc fehlt sie -> Luecke -> RE2. Zeiger *(0x800A6A88 + 0x34*4) = @0x800A6B58 -> 0x800A5BE4,
+ * je Zeile 0x800A5BE4 + (Zeile-1)*20, Klammer 0 = w0 & 0x3FF (`srlv` @0x80047254 / `andi v1,v1,0x3ff` @0x8004725c), aus
+ * info/re2leon/PSX.EXE selbst gelesen 18.11.2026:
+ *   Z1 0x00000014 @0x800A5BE4 = 20   Z2..Z4 0x01B0701D @0x800A5BF8/0C/20 = 29   Z5 0x05F18865 @0x800A5C34 = 101
+ *   Z6 0x0781E078 @0x800A5C48 = 120  Z7 0x03C10446 @0x800A5C5C = 70   Z8 0x05A17C64 @0x800A5C70 = 100
+ *   Z9 0x05A1685A @0x800A5C84 = 90   Z10 0x00511846 @0x800A5C98 = 70  Z11 0x00A0F03C @0x800A5CAC = 60
+ *   Z12 0x01304C13 @0x800A5CC0 = 19  Z13 0x01B0701D @0x800A5CD4 = 29  Z14 0x03C0F03C @0x800A5CE8 = 60
+ *   Z15 0x00902409 @0x800A5CFC = 9   Z16 0x00501405 @0x800A5D10 = 5   Z17 0x12D4B52D @0x800A5D24 = 301
+ *   Z18 0x01405014 @0x800A5D38 = 20  Z19 0x01B0701D @0x800A5D4C = 29
+ * RE1.5-Waffe -> RE2-Zeile ueber re15_re2z_weapon_id (dieselbe Zuordnung wie der Zombie). Der Feuerstoss (w5/w6) trifft je Kugel
+ * mit Zeile 4 = 29 wie RE2s Custom Handgun (Abschnitt 0 des Bauplans). Die HANDGRANATE (Art 2) behaelt D_G
+ * (re15_granate_schaden): NUTZERWUNSCH 16.11. "wenn weniger reicht um die zombies zu toeten, gib der handgranate weniger. Nur genau
+ * so viel wie benoetigt." ersetzt den Bauplan-Schritt U9.2 (Zeile 9 = 90); die Wirkung auf Bosse ergibt sich daraus.
+ * NICHT in ROOM5090/5091: dort baut der Strang r42/finale die RE2-Tyrant-Regeln (Strang-Grenze). */
+static const uint16_t s_g4_k0[20] = { 0, 20, 29, 29, 29, 101, 120, 70, 100, 90, 70, 60, 19, 29, 60, 9, 5, 301, 20, 29 };
+static int re15_riesenform_g4(const re15_actor_t *e)
+{
+    if (!e || e->type != 0x30u) return 0;
+    if (g_current_room_id == 0x5090u || g_current_room_id == 0x5091u) return 0;   /* Strang-Grenze r42/finale */
+    int hp0 = 0, ende = 0;
+    re15_bf_granate_form(e, &hp0, &ende);
+    return hp0 == RE15_BB_FORM_HP;                    /* dasselbe Praedikat wie re15_rakete_schaden */
+}
+static int re15_riesenform_g4_zeile(unsigned zeile)
+{
+    return (zeile >= 1u && zeile < 20u) ? (int)s_g4_k0[zeile] : 0;
+}
 static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const int32_t *p,
                                      const re2gl_treffer_t *gl)
 {
@@ -3313,6 +3377,14 @@ static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const
     if (e->type == 0x36u && (g_current_room_id == 0x5090u || g_current_room_id == 0x5091u) &&
         type >= 3u && type <= 4u)
         dmg = 70;                                                  /* Z11 @0x800A5FA4 / Z10 @0x800A5F90, K0 */
+    /* Runde 42 U9: Riesenform ausserhalb 5090/5091 = RE2-G4, Klammer 0 (Block re15_riesenform_g4). Werfer-/Applier-Treffer
+     * tragen ihre RE2-Zeile (gl->zeile), sonst Art -> RE1.5-Waffe DAT_8006f430[Art] -> RE2-Zeile. Art 2 (Handgranate) bleibt D_G. */
+    if (type >= 3u && type <= 9u && re15_riesenform_g4(e)) {
+        extern unsigned re15_re2z_weapon_id(unsigned w);
+        unsigned zeile = gl ? gl->zeile : re15_re2z_weapon_id((unsigned)re15_react_table[type]);
+        int g4 = re15_riesenform_g4_zeile(zeile);
+        if (g4 > 0) dmg = (int16_t)g4;
+    }
     e->sub_state_3 = 0;                                            /* +0x7 = 0 (@80012fd4) */
     e->sub_state_2 = 1;                                            /* +0x6 = 1 (@80012fd8) */
     e->sub_state_1 = (type < 11) ? re15_react_table[type] : 0;     /* +0x5 = RE1.5-WAFFEN-Id

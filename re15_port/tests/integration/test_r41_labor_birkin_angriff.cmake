@@ -69,7 +69,11 @@ function(ein_lauf _name _raum _pos _route _extra _biss_pflicht)
     set(WORKDIR "${_wurzel}/${_name}")
     file(MAKE_DIRECTORY "${WORKDIR}")
     # Route durchs Ausloesefeld (GEGENPRUEFUNG labor_check 3.1), dann stehen, zielen, feuern, R1 kurz los (neu zielen).
-    set(_skript "${_route},W2")
+    # Runde 42 Strang gore U4 (Nutzerregel 16.11.2026: Birkin-Menschform mit Disc-HP 300 = `ori v0,zero,0x12c` @0x8011690c statt
+    # 600): mit dem Feuer direkt nach der Route starb der Birkin nach 7 Redhawk-Treffern (je -45, einer alle 57 Bilder - der
+    # Takt haengt am Rueckstoss, nicht am Skript), bevor er den Spieler erreichte (gemessen: Leon Tod F949, Elza F834, beide ohne
+    # Spieler-Treffer). Der Spieler wartet darum 12 s laenger, bevor er schiesst; gemessen wird weiter das Angriffsmuster.
+    set(_skript "${_route},W2,W12")
     foreach(_i RANGE 1 120)
         string(APPEND _skript ",M0.4,MA0.12,W0.1")
     endforeach()

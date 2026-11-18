@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.16)
 # Nutzer (2026-11-01): "die spinnen platzen bei magnum Schuss z.b. immer noch nicht..." Dossier
 # analysis/befunde_runde41/S_spinnengore.md. Gemessen vorher: RE2-Gehirn besitzt jede 0x25, +0x93 = 0x41 beim
 # Redhawk-Tod, Teilschicht aus (ta=0). Nachher: Teile 0/19 platzen, alle Beine fliegen (sh 0x80001, fl 0x7fff8).
+# Runde 42 Strang gore U7 (Nutzerregel 16.11.2026, 80 %-Video F08 F2 0:15,1-0:15,5): die Beine bleiben am Kadaver (fl ohne 0x7fff8).
 #
 #   ECHTER WEG: Debug-Sprung nach ROOM2070 (Leon) bzw. ROOM2071 (Elza, RE15_TITLE_SHOT_CHAR=1), Waffe per
 #   RE15_GIVE/RE15_EQUIP (die Super Redhawk liegt im Spiel in ROOM3050/3051 @RDT 0x1ec6), Zielen + Feuern im Wechsel

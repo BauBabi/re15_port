@@ -270,9 +270,11 @@ static void test_hurt_recovery_and_corpse(void)
     CROW->state = 1; CROW->sub_state_1 = 4; CROW->sub_state_2 = 1; CROW->y = -2000;
     tick();
     CROW->hp = 8; CROW->state = 2;                         /* take_damage-Analog */
-    CROW->sub_state_1 = 3;                                 /* Waffen-Stempel wie der Resolver
-                                                            * (`sb s8,0x5` @0x800124bc): Pistole
-                                                            * w3 -> Zeile 3 = Flug-Treffer
+    CROW->sub_state_1 = 5;                                 /* Waffen-Stempel wie der Resolver
+                                                            * (`sb s8,0x5` @0x800124bc): Beretta
+                                                            * w5 -> Zeile 4 = Flug-Treffer (Runde 42
+                                                            * gore U5: die Pistole w3 zerlegt jetzt,
+                                                            * 80 %-Video F07 F1 0:54,55)
                                                             * (@0x80104A18; Fix 2026-08-23:
                                                             * Zeile = Waffe, nicht prev_sub) */
     CROW->sub_state_2 = 0; CROW->sub_state_3 = 0;
@@ -295,8 +297,8 @@ static void test_hurt_recovery_and_corpse(void)
     tick();
     se_n = 0;
     CROW->hp = -1; CROW->state = 3;                        /* toedlicher Treffer */
-    CROW->sub_state_1 = 3;                                 /* Waffen-Stempel (Pistole w3 ->
-                                                            * Flug-Treffer-Zeile, s.o.) */
+    CROW->sub_state_1 = 5;                                 /* Waffen-Stempel (Beretta w5 ->
+                                                            * Flug-Treffer-Zeile 4, s.o.) */
     CROW->sub_state_2 = 0; CROW->sub_state_3 = 0;
     int corpse = 0;
     for (int i = 0; i < 120 && !corpse; i++) { tick(); if (CROW->state == 7) corpse = 1; }
@@ -353,7 +355,11 @@ static void test_gib_and_launch_rows(void)
     CHECK(CROW->crow_shadow_w == 0, "GIB-Leiche: Schatten-Disable (@0x80103C34), w=%d",
           CROW->crow_shadow_w);
 
-    /* HURT-Zeile 7 (Landen) -> LAUNCH (@0x80104A34): Sofort-Kill, Speed 600 in SPIELER-Yaw. */
+    /* HURT-Zeile 7 (Landen) -> LAUNCH (@0x80104A34): Sofort-Kill, Speed 600 in SPIELER-Yaw.
+     * Runde 42 gore U5: im Spiel zerlegt die Schrotflinte die Kraehe jetzt (Disc-Klasse @0x801211cc[8] = 0x801149c4); der
+     * RE2-LAUNCH-Zweig bleibt hier als Referenz-Pin der RE2-Zeile 7 - mit abgeschaltetem U5-Weg. */
+    extern void re15_re2crow_r42_fetzen_test(int an);
+    re15_re2crow_r42_fetzen_test(0);
     fresh_crow(3000, 0);
     tick();
     CROW->state = 1; CROW->sub_state_1 = 7; CROW->sub_state_2 = 1; CROW->y = -300;
@@ -372,6 +378,7 @@ static void test_gib_and_launch_rows(void)
     for (int i = 0; i < 80 && !corpse3; i++) { tick(); if (CROW->state == 7) corpse3 = 1; }
     CHECK(corpse3 && CROW->sub_state_1 == 3, "Launch endet in CORPSE Sub 3 (@0x80103434-40), sub=%d",
           CROW->sub_state_1);
+    re15_re2crow_r42_fetzen_test(-1);
 }
 
 static void test_no_freeze(void)

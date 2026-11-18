@@ -67,7 +67,7 @@ int16_t re15_r39_affen_hp_init(const re15_actor_t *e, int16_t tabelle)
 {
     int s = r39_slot(e);
     int16_t hp = tabelle;
-    if (re15_r39_affen_regel(e)) hp = (int16_t)(tabelle * RE15_R39_AFFEN_HP_FAKTOR);   /* 360 */
+    if (re15_r39_affen_regel(e)) hp = (int16_t)(tabelle * RE15_R39_AFFEN_HP_FAKTOR);   /* 180 (Runde 42 U3, Faktor 1) */
     if (s >= 0) { s_hp_ref[s] = hp; s_ref_ok[s] = 1; memset(&s_merk[s], 0, sizeof s_merk[s]); }
     re15_r39_log("affen init slot=%d raum=%04x typ=%02x hp=%d (tabelle %d @0x8011f514, regel %d)", s, g_current_room_id,
                  e ? e->type : 0, (int)hp, (int)tabelle, re15_r39_affen_regel(e));

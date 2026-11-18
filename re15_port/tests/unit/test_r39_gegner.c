@@ -37,6 +37,8 @@
  *   kriecher_1010_re15 / kriecher_1220_re15  dieselbe Kriecher-Messung im RE1.5-Flavor: Block B ist dort nativ
  *                 (DECIDE[5] Sub 5 -> Wort 1, Kriech-Clip 0x1A), vorher wie nachher
  */
+/* Runde 42 Strang gore U3 (Nutzerregel 16.11.2026 "80% build ist ausschlaggebend"): die Verdopplung ist aufgehoben,
+ * RE15_R39_AFFEN_HP_FAKTOR = 1 -> Gorilla-HP = Disc 180 (@0x8011f514). Die Riegel lesen die HP aus dem Kopf. */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -230,7 +232,7 @@ static void teil_affen_hp(void)
         re15_actor_t *a = aktor_vom_typ(0x27, 0), *b = aktor_vom_typ(0x27, 1);
         PRUEF(a && b, "[%s] ROOM11C0: zwei Gorillas 0x27 aktiv", an ? "nachher" : "vorher");
         if (!a || !b) continue;
-        int soll = an ? 360 : 180;
+        int soll = an ? (RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR) : 180;
         PRUEF(a->hp == soll && b->hp == soll,
               "[%s] ROOM11C0 HP beider Gorillas = %d (gemessen %d / %d; Tabelle @0x8011f514 = 180, Saat @0x80117104)",
               an ? "nachher" : "vorher", soll, (int)a->hp, (int)b->hp);
@@ -241,9 +243,9 @@ static void teil_affen_hp(void)
     re15_r39_gegner_enable(1);
     g_current_room_id = 0x1141;
     re15_actor_t dummy; memset(&dummy, 0, sizeof dummy); dummy.type = 0x27;
-    PRUEF(re15_r39_affen_hp_init(&dummy, 180) == 360, "ROOM1141: 2 x 180 = 360 (NUTZER-VORGABE, alle Gorillas)");
+    PRUEF(re15_r39_affen_hp_init(&dummy, 180) == (RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR), "ROOM1141: 180 x Faktor (Runde 42 U3: 1)");
     g_current_room_id = 0x11C0;
-    PRUEF(re15_r39_affen_hp_init(&dummy, 180) == 360, "ROOM11C0: 2 x 180 = 360 (NUTZER-VORGABE)");
+    PRUEF(re15_r39_affen_hp_init(&dummy, 180) == (RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR), "ROOM11C0: 180 x Faktor (Runde 42 U3: 1)");
     dummy.type = 0x29;
     PRUEF(re15_r39_affen_hp_init(&dummy, 105) == 105 && !re15_r39_affen_regel(&dummy), "kleiner Affe 0x29: Regel aus, Tabellenwert bleibt");
 }
@@ -316,7 +318,7 @@ static void teil_affen_zucken(void)
                   "[nachher] Treffer 3 (36 Energie = 3 x 12 @0x8006ee44) flincht (Clip 7)");
             PRUEF(exit_sub[3] == 7,
                   "[nachher] Flinch-Exit nach dem 3. Treffer -> Sub 7 Vergeltungs-Sprung (Runde 35: jeder Treffer zaehlt, @0x8011b194-98), Sub %d", exit_sub[3]);
-            PRUEF(g->hp == 360 - 36, "[nachher] HP 360 -> 324 (jeder Treffer zieht 12 ab, auch ohne Flinch): %d", (int)g->hp);
+            PRUEF(g->hp == (RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR) - 36, "[nachher] HP Start -> Start - 36 (jeder Treffer zieht 12 ab, auch ohne Flinch): %d", (int)g->hp);
         }
         /* +0x93-Riegel nach einem Treffer ohne Zucken: frei (sonst waere der Gorilla unverwundbar) */
         if (an) {
@@ -391,7 +393,7 @@ static void teil_affen_schuss(void)
         if (!an) PRUEF(fl[1] && fl[2] && fl[3], "[vorher] jeder Schuss flincht: %d %d %d", fl[1], fl[2], fl[3]);
         else {
             PRUEF(!fl[1] && !fl[2] && fl[3], "[nachher] Flinch erst beim dritten Schuss (36 Energie): %d %d %d", fl[1], fl[2], fl[3]);
-            PRUEF(hpv[1] == 360 && hpn[3] == 324, "[nachher] HP 360 -> 324 ueber drei Schuesse: %d -> %d", hpv[1], hpn[3]);
+            PRUEF(hpv[1] == (RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR) && hpn[3] == (RE15_R39_AFFEN_HP_TABELLE * RE15_R39_AFFEN_HP_FAKTOR) - 36, "[nachher] HP Start -> Start - 36 ueber drei Schuesse: %d -> %d", hpv[1], hpn[3]);
         }
     }
 }

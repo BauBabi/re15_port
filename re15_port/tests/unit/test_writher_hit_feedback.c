@@ -69,19 +69,34 @@ static int fire(int elev)
     return re15_player_weapon_fire(3);            /* Pistole (Budget-Kosten -1) */
 }
 
+/* ⛔ RUNDE 42 STRANG GORE U8 (BAUPLAN gore_matrix U8, Nutzerregel 16.11.2026; "anschiessbare Gitterhaende" ist ein aufgehobener
+ * Entscheid): die Arme haben wie auf der Disc KEIN Zielband mehr (kein `jal 0x80012aa4` / `jal 0x80012974` im Arm-Code
+ * 0x8010c1ec-0x8010d7a0) - Schuesse gehen durch. Der Flinch-Baum 0x8010d188 bleibt als Referenz-Pin der RE1.5-Maschine; er wird
+ * hier mit den Feldern betreten, die der Resolver bei einem Treffer schreibt (+0x7 = 0 @0x80012428, +0x4 = 2 @0x80012520,
+ * +0x5 = Waffe @0x800124bc, +0x93 |= 1 @0x800124F0, Budget += Kosten re15_writher_hit_cost). */
+extern const signed char re15_writher_hit_cost[22];
+static void treffer_analog(re15_actor_t *e)
+{
+    e->sub_state_3 = 0; e->sub_state_1 = 3; e->hit_react |= 1u;
+    e->writher_hits = (uint8_t)((int)e->writher_hits + re15_writher_hit_cost[3]);
+    e->state = (e->hp >= 0) ? 2 : 3;
+}
+
 int main(void)
 {
     re15_ai_writher_re15_pin(1);   /* Runde 35 Spur H: Referenz-Pin der RE1.5-Maschine, die das Spiel nicht mehr erreicht (0x1A ist RE2) */
     printf("=== Gitterhand-Treffer-Feedback (Band + Original-Flinch 0x8010d188) ===\n");
 
-    /* --- A: DOWN-Schuss registriert + Flinch mit Blut --- */
+    /* --- A: DOWN-Schuss geht durch (U8); der Flinch mit Blut bleibt als Maschinen-Pin --- */
     {
         re15_actor_t *e = setup();
         CHECK("Arm hat HP/Budget nach INIT (Nachruestung v0.3.34)",
               e->hp > 0 && e->writher_hits >= 1);
+        int16_t hp0 = e->hp;
+        CHECK("A: DOWN-Schuss geht durch (Runde 42 U8, kein Zielband wie auf der Disc)", fire(-1) == 0 && e->hp == hp0);
+        CHECK("A: kein Treffer -> kein HURT", e->state == 1);
         int fx0 = re15_esp_fx_count();
-        CHECK("A: DOWN-Schuss trifft den bodennahen Arm", fire(-1) == WS + 1);
-        CHECK("A: Treffer -> HURT (state 2)", e->state == 2);
+        treffer_analog(e);
         re15_enemy_ai_run_all(1);                 /* Flinch-Eintritt */
         CHECK("A: Flinch-Clip 2 neu gestartet (+0x94=2/+0x95 klein, @0x8010d200/210)",
               e->motion == 2 && e->anim_frame <= 1);
@@ -90,21 +105,21 @@ int main(void)
               re15_esp_fx_count() == fx0 + 1);
     }
 
-    /* --- B: LEVEL-Schuss registriert ebenfalls --- */
+    /* --- B: LEVEL-Schuss geht ebenfalls durch --- */
     {
         re15_actor_t *e = setup();
-        CHECK("B: LEVEL-Schuss trifft", fire(0) == WS + 1);
-        CHECK("B: -> HURT", e->state == 2);
+        CHECK("B: LEVEL-Schuss geht durch (U8)", fire(0) == 0);
+        CHECK("B: kein HURT", e->state == 1);
     }
 
-    /* --- C: Budget verbraucht -> Abtauchen (Sub 6) am Flinch-Ende --- */
+    /* --- C: Budget verbraucht -> Abtauchen (Sub 6) am Flinch-Ende (Maschinen-Pin, Treffer-Analog) --- */
     {
         re15_actor_t *e = setup();
         e->writher_hits = 1;                      /* Pistole kostet -1 -> nach 2 Treffern < 0 */
-        CHECK("C: Treffer 1", fire(-1) == WS + 1);
+        treffer_analog(e);
         for (int t = 0; t < 80 && e->state != 1; t++) re15_enemy_ai_run_all(1);
         CHECK("C: Flinch 1 endet in Ruhe (Budget 0 >= 0)", e->state == 1 && e->sub_state_1 == 0);
-        CHECK("C: Treffer 2", fire(-1) == WS + 1);
+        treffer_analog(e);
         for (int t = 0; t < 80 && e->state != 1; t++) re15_enemy_ai_run_all(1);
         CHECK("C: Budget < 0 -> ABTAUCHEN (Weiche @0x8010d14c, Port-Sub 6)",
               e->state == 1 && e->sub_state_1 == 6);
