@@ -96,3 +96,22 @@ fuer 6000 daher KEIN freier Beleg.
 - 5090/5091: Zone weiter auf Blatt 9 r7 (jetzt 5070s Kachel) - U-12 (r42/rest).
 - Seitenwahl ausserhalb des Original-Inits: 5080 (Blatt 12 statt 9), 6020 (Blatt 9 statt 12) - PORT-WAHL, weil nur
   dort ihre Kunst liegt (FUN_8004bdd4 / FUN_8004bf70 setzen Blatt 9 bzw. 0xC, @0x8004bf50 / @0x8004c038).
+
+## 5. Kartenschirm im echten Spiel (FB_SHOT)
+
+Abzug bei Inventarbild 96 (helle Pulsphase), nur der eigene Raum besucht, kein Plan; je Leon-Raum eine Kamera-Lage
+(Sonde probe_r42_karte_bestand, CAM-Zeile). 35 geplant: **31 mit Marker genau an der Tabellenlage** fuer die
+tatsaechliche Spielerlage (29 sofort <= 1 px; 4030 und 6020 je 2/3 px daneben, weil das Spiel die Figur verschob -
+debug.log "pl pos" (-22514,-21334) bzw. (-6197,8418) gibt mit derselben Zeile genau (162,108) / (240,151));
+4 ohne Abzug (4000, 4010, 6000, 6030: Raum-Ereignis beim Betreten, die Karte oeffnet nicht - wie in Stufe 1).
+Schleier: in keinem Abzug ist ein fremder Raum gezeichnet. 6020 zeigt Blatt 9, 5080 Blatt 12 (PORT-WAHL).
+Messbilder: `messbild_blatt8_s2.png`, `messbild_blatt9_s2.png`, `messbild_blatt10_12_s2.png` (echtes Spiel),
+`messbild_zeilen_blatt8_s2.png` / `_blatt9_s2.png` / `_blatt12_s2.png` (Tueren mit ausgelieferter Zeile A und
+Zonenzeile Z auf der Kunst).
+
+## 6. Angepasste Pins
+
+- unit_r30_karte_nutzerstand: Klasse C leer ((9,190,91) war 5020s Marke auf dem fremden r7).
+- integration_map_raum_live: Warps im SELBEN Raum (4050-Labyrinth, Zug 5090/6030) zaehlen nicht mehr als Tuer -
+  bis Stufe 1 "trafen" die 4050-Warps nur, weil 4050 auf der Fahrstuhlkachel stand (Marker 5/38 Lagen). Jetzt
+  197 Tueren, 159 mit sichtbarem Symbol (81 %), 28 Warps ausgelassen.
