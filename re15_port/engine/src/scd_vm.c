@@ -695,6 +695,10 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) pc = re15_hund1121_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur R: 1121/30 Hund */
     if (!pc) pc = re15_elzazombies_r39_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 39 Spur Q: 1041/1061/1031 Ereignis 30 */
     if (!pc) pc = re15_nahaufnahmen_r40_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 40: 11D0/1110/1100 Ereignis 31, 1110/3, 11F0/16 */
+    if (!pc) { extern const uint8_t *re15_rb42_ereignis(uint16_t, uint8_t);
+               pc = re15_rb42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 Gegenstaende Stufe 2: 5050/5051 Ereignis 2 = sub02 mit Cut 5 (Rechner-Bildschirm) */
+    if (!pc) { extern const uint8_t *re15_gegenstaende_r42_ereignis(uint16_t, uint8_t);
+               pc = re15_gegenstaende_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 Gegenstaende (K-10): 1050 Ereignis 5 (Leiche/Glock), 2030/2031 Ereignis 24 ohne Mutter, Fundstellen 1071/3010/3011/5021 Ereignis 26; VOR der Ventilkette */
     if (!pc) pc = re15_ventilkette_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur C: 2030/17-27, 2050/2+4+9, 2010/20 (re15_ventilkette_r41.h; 2080 seit Nachtrag 7 Original) */
     if (!pc) pc = re15_gatorszene_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur F: 2090/2091 + 2080/2081 Ereignis 18 */
     if (!pc) { extern const uint8_t *re15_story2_r42_ereignis(uint16_t, uint8_t);
@@ -786,6 +790,7 @@ void scd_vm_tick(void)
     if (!s_vm_room_init) { extern void re15_story1_r42_tick(void); re15_story1_r42_tick(); }   /* Runde 42 Story STAGE1: Ausloesung, Signale, Abblende der Szene an der Leiter 11A0/11A1 */
     if (!s_vm_room_init) { extern void re15_story3a_r42_tick(void); re15_story3a_r42_tick(); }   /* Runde 42 Story STAGE3a: Signale/Abblende/Schuesse 3060, Wiedersehen, "Gunshots" 3020 */
     if (!s_vm_room_init) { extern void re15_story3b_r42_tick(void); re15_story3b_r42_tick(); }   /* Runde 42 Story STAGE3b: Signal FREI 30E0, Zeile 3070 */
+    if (!s_vm_room_init) { extern void re15_gegenstaende_r42_tick(void); re15_gegenstaende_r42_tick(); }   /* Runde 42 Gegenstaende: 1050 Leiche wie 1051 sub01 @0x00CB2; Fundstellen mit Text 1071/3010/3011/5021 nach der Aufnahme */
     if (!s_vm_room_init) { extern void re15_story6_r42_tick(void); re15_story6_r42_tick(); }   /* Runde 42 Story STAGE6: Toene Zugstart 6031 */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
@@ -1307,6 +1312,10 @@ static int op_evt_exec(scd_thread_t *t)
      * -> Zugstart E9 bzw. Wagen vor dem Zugstart (re15_story6_r42.h). */
     { extern const uint8_t *re15_story6_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
       target_pc = re15_story6_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
+    /* Runde 42 Gegenstaende Stufe 2: ROOM3050/3051 sub01 @0x0221C -> sub15 mit Cut 10, ROOM5050/5051 sub01 @0x00850 -> sub03 mit
+     * Cut 5 (Rechner-Bildschirm, re15_rechnerbilder_r42.h). */
+    { extern const uint8_t *re15_rb42_evt_exec(uint16_t, uint8_t, const uint8_t *);
+      target_pc = re15_rb42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
     if (!target_pc) return 1;   /* no such sub → drop */
 
     int slot;
@@ -1582,6 +1591,10 @@ static int op_cut_chg(scd_thread_t *t)
      * KEINER Zone liegt (= Kamera bleibt stehen; ein verpasster Uebergang ist
      * endgueltig). Gleiche Fehlerklasse wie der frueher gemeldete Fix, gleicher
      * Restposten. */
+    /* Runde 42 Gegenstaende Stufe 2 (re15_rechnerbilder_r42.h): Cut_chg auf ein Bild OHNE Kamera (2080/2081 Bild 9 >= nCut 9)
+     * = Standbild; die Kamera bleibt, nur die Zonen-Automatik geht aus wie @0x800402d4. Jeder andere Cut_chg beendet es. */
+    { extern int re15_rb42_cut_chg(uint8_t);
+      if (re15_rb42_cut_chg(t->pc[1])) { g_scd.cut_auto_enabled = 0; t->pc += 2; return 1; } }
     g_scd.cam_id_prev       = (uint8_t)g_scd.work_vars[0x0A];   /* @0x800402c0 / @0x800402e4 */
     g_scd.cam_id            = t->pc[1];
     g_scd.cam_arg2          = 0;

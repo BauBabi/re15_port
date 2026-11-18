@@ -106,7 +106,7 @@ if("${TEIL}" STREQUAL "panel")
     # Cursor von (160,119), 2,515 Bildpunkte je Bild (ROOM2050 @0x023C2): L1.2 -> x 69 (Tank A), R1.0 -> x 144 (Tank B), R0.6 -> x 190 (Tank C), L1.6 -> x 69.
     set(_skript "A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W1.5,A0.1,W1.5,A0.1,W2,A0.1,W2,A0.1,W2,L1.2,W0.3,A0.1,W0.3,R1.0,W0.3,A0.1,W1.5,A0.1,W0.3,R0.6,W0.3,A0.1,W1.5,A0.1,W0.3,L1.6,W0.3,A0.1,W3,A0.1,W1,A0.1,W2,A0.1,W2,A0.1,W2,A0.1,W6")
     _lauf(p 300 RE15_NOAUDIO=1 RE15_SE_DEBUG=1 RE15_SOFTWARE_RENDER=1
-          RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=350,-9500,1024,3" "RE15_SET_FLAG=7:155,7:156,7:157"
+          RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=350,-9500,1024,3" "RE15_SET_FLAG=7:155,7:156,7:157,9:43"
           RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=${_skript}"
           "RE15_FRAMEDUMP=780-900/120:f_" "RE15_EXIT_AT=1420#203${S}")
     _muss("${_dbg}" "[ventilkette41] ROOM203${S} Ereignis 24 -> Port-Programm 2030_panel_ein" "Pult ohne Druck oeffnet das Panel")
@@ -154,7 +154,7 @@ if("${TEIL}" STREQUAL "panel")
         _fehler(": Tank B fuellt sich im Bild nicht (leer ${_b_leer}, voll ${_b_voll})")
     endif()
     # Abnahme 0, Mangel 3: START bei offenem Panel oeffnet nichts (die Vollbild-Ebene liegt ueber dem Inventar), die Tasten bleiben im Panel, CROSS verlaesst es
-    _lauf(st 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=350,-9500,1024,3" "RE15_SET_FLAG=7:155,7:156,7:157"
+    _lauf(st 300 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_DEBUG_JUMP=2030@250 "RE15_PLAYER_POS=350,-9500,1024,3" "RE15_SET_FLAG=7:155,7:156,7:157,9:43"
           RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=330 "RE15_INPUT_SCRIPT=A0.1,W1.5,A0.1,W1,A0.1,W2,A0.1,W1.5,A0.1,W1.5,A0.1,W2,A0.1,W2,A0.1,W2,S0.1,W2,L1.2,W0.3,S0.1,W2,X0.1,W2,S0.1,W2" "RE15_EXIT_AT=1000#203${S}")
     _danach("${_dbg}" "[panel2030] offen: A 100 B 0 C 0" "[panel2030] Steuerkreuz 0x8" "Tasten bleiben im Panel")
     _danach("${_dbg}" "[panel2030] Steuerkreuz 0x8" "[panel2030] Abbruch" "CROSS verlaesst das Panel")
@@ -458,7 +458,8 @@ if("${TEIL}" STREQUAL "laden")
             _muss("${_dbg}" "Spieler-Familie PL04" "Elza geladen")
         endif()
     endmacro()
-    set(_spinnen "7:155;7:156;7:157")
+    # Runde 42 Gegenstaende (K-10): 9:43 = Mutter sitzt am Pult (Vorbedingung des Panels, re15_gegenstaende_r42.h)
+    set(_spinnen "7:155;7:156;7:157;9:43")
     # Wasserlauf: Modell und Strahlen auch am Lade-Weg, Gegenlauf mit Bit 100
     _karte_lauf(wan 300 "200${S};-26300;-1800;6500;1024" RE15_FORCE_CUT=10 RE15_FRAMEDUMP=200:f.ppm "RE15_EXIT_AT=210#200${S}")
     _muss("${_dbg}" "[wasserlauf41] ROOM200${S}: 6 Strahlen, Lauf ueber den Weg Effekt 0x0F" "Wasserlauf nach CONTINUE")

@@ -64,6 +64,7 @@ int re15_cam_present_tick(void)
     g_scd.work_vars[0x0C] = g_scd.work_vars[0x0A];
     g_scd.work_vars[0x0A] = (int16_t)g_scd.cam_id;
     g_scd.cam_change_pending = 0;
+    { extern void re15_rb42_tick(void); re15_rb42_tick(); }   /* Runde 42 Gegenstaende Nacharbeit G9: 505 Zielkreis folgt dem angezeigten Bild */
     return 1;
 }
 

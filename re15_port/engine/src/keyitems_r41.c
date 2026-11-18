@@ -81,6 +81,9 @@ static const stelle_t k_stellen[] = {
     { 0x4000, 0x47, 2, MARKER, 1, 0, 1, 3, 32, 0 },
     /* Zuendkerze: sce-5-Platz 5 @0x00516, sub01 Case 5 @0x005DE -> sub02 @0x00612 msg 0, Ck(5,3,1) @0x00636, @0x0063A msg 1 */
     { 0x4030, 0x41, 5, MARKER, 1, 0, 0, 5, 3, 1 },
+    /* Runde 42 Gegenstaende (K-10): Mutter am Bruecken-Panel 2030/2031 = Pult Slot 12 Ereignis 24 (ventilkette_r41.c install_2030), solange
+     * (9,43) = 0; Port-Programm gegenstaende_r42.c k_prg_mutter (Form ROOM2060 sub18 @0x01678), Frage = Port-Text 57. */
+    { 0x2030, 0x2F, 12, 24, 57, 0, 0, 9, 43, 0 },
 };
 #define N_STELLEN ((int)(sizeof k_stellen / sizeof k_stellen[0]))
 

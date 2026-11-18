@@ -236,24 +236,34 @@ static const uint8_t k_rechner[20] = { 0x2c, 0x04, 0x03, 0x31, 0x08, 0x00, 0xee,
                                        0xff, 0x00, 0x18, 0x02, 0x00, 0x00 };   /* sub00 @0x0C1A */
 /* sub02 mit dem Hinweis: Original-Bytes @0x0C86..@0x0CEE, dann Message_on 52 `2b 34 ff ff` + Evt_next + Nop (Form des ersten
  * Satzes @0x0C86 `2b 00 ff ff 02 00`: Text-Platz-Maske 0xffff) VOR dem Endif @0x0CEE, Blocklaenge @0x0C8E 0x60 -> 0x66. Der
- * Hinweis kommt nur im Ja-Zweig, nach Plc_ret @0x0CEC (Wasser gesunken, Spieler frei). */
-static uint8_t s_ablass[(RE15_S2_ABLASS_ENDE - RE15_S2_ABLASS_OFF) + 6];
+ * Hinweis kommt nur im Ja-Zweig, nach Plc_ret @0x0CEC (Wasser gesunken, Spieler frei).
+ * Runde 42 Gegenstaende Stufe 2 (re15_rechnerbilder_r42.h, NUTZERWUNSCH 17.11. "Ja, einbauen"): vor dem Sleep 20 @0x0CBE steht
+ * zusaetzlich `29 09` = Rechner-Bildschirm ROOM208.BSS Bild 9 als Standbild (nCut 9, keine Kamera); Blocklaenge 0x66 -> 0x68. */
+#define S2_SLEEP_VOR_CUT7 0x0CBE   /* `09 0a 14 00` Sleep 20 vor Cut_chg 7 @0x0CC2 */
+static uint8_t s_ablass[(RE15_S2_ABLASS_ENDE - RE15_S2_ABLASS_OFF) + 6 + 2];
 static int     s_ablass_n;
 static int ablass_bauen(void)
 {
+    extern const uint8_t re15_rb42_satz_208[2];
     const int n0 = RE15_S2_ABLASS_ENDIF - RE15_S2_ABLASS_OFF;   /* bis vor das Endif */
+    const int ns = S2_SLEEP_VOR_CUT7 - RE15_S2_ABLASS_OFF;      /* bis vor den Sleep */
     static const uint8_t kopf[] = { 0x2b, 0x00, 0xff, 0xff, 0x02, 0x00, 0x06, 0x00, 0x60, 0x00, 0x21, 0x0c, 0x1f, 0x00,
                                     0x22, 0x03, 0xf5, 0x01 };   /* @0x0C86..@0x0C97 */
     static const uint8_t fuss[] = { 0x2e, 0x01, 0x00, 0x00, 0x42, 0x00, 0x08, 0x00, 0x01, 0x00 };   /* @0x0CE8..@0x0CF1 */
+    static const uint8_t schlaf[] = { 0x09, 0x0a, 0x14, 0x00, 0x29, 0x07 };                         /* @0x0CBE..@0x0CC3 */
     const uint8_t *a = rdt_bytes(RE15_S2_ABLASS_OFF, kopf, (int)sizeof kopf);
     const uint8_t *e = rdt_bytes(RE15_S2_ABLASS_ENDIF - 6, fuss, (int)sizeof fuss);
-    if (!a || !e) return 0;
-    memcpy(s_ablass, a, (size_t)n0);
-    s_ablass[RE15_S2_ABLASS_IFEL - RE15_S2_ABLASS_OFF + 2] = 0x66;
+    const uint8_t *z = rdt_bytes(S2_SLEEP_VOR_CUT7, schlaf, (int)sizeof schlaf);
+    if (!a || !e || !z) return 0;
+    int k = 0;
+    memcpy(s_ablass + k, a, (size_t)ns); k += ns;
+    memcpy(s_ablass + k, re15_rb42_satz_208, 2); k += 2;                       /* Standbild Bild 9 (Stufe 2) */
+    memcpy(s_ablass + k, a + ns, (size_t)(n0 - ns)); k += n0 - ns;
+    s_ablass[RE15_S2_ABLASS_IFEL - RE15_S2_ABLASS_OFF + 2] = 0x66 + 2;
     const uint8_t hinweis[6] = { 0x2b, RE15_R42_MSG_2080_LOCH, 0xff, 0xff, 0x02, 0x00 };
-    memcpy(s_ablass + n0, hinweis, 6);
-    memcpy(s_ablass + n0 + 6, a + n0, (size_t)(RE15_S2_ABLASS_ENDE - RE15_S2_ABLASS_ENDIF));
-    s_ablass_n = n0 + 6 + (RE15_S2_ABLASS_ENDE - RE15_S2_ABLASS_ENDIF);
+    memcpy(s_ablass + k, hinweis, 6); k += 6;
+    memcpy(s_ablass + k, a + n0, (size_t)(RE15_S2_ABLASS_ENDE - RE15_S2_ABLASS_ENDIF)); k += RE15_S2_ABLASS_ENDE - RE15_S2_ABLASS_ENDIF;
+    s_ablass_n = k;
     return 1;
 }
 

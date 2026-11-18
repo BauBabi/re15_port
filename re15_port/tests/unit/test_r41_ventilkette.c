@@ -272,7 +272,9 @@ static int ventil_platz_weg(void)
 
 static int bit(int b) { return re15_game_flag_get(RE15_R41C_BANK, (uint8_t)b) ? 1 : 0; }
 static int sicherung_bit(void) { return re15_game_flag_get(RE15_R41C_SICHERUNG_BANK, RE15_R41C_SICHERUNG_BIT) ? 1 : 0; }
-static void bits_leeren(void) { re15_game_state_init(); re15_ventilkette_r41_reset(); s_nvf = 0; }
+/* Runde 42 Gegenstaende (K-10): die Mutter sitzt am Pult (Bit (9,43)) = Vorbedingung des Panels; der Schritt davor hat eigene
+ * Riegel (unit_r42_gegenstaende_mutter, re15_gegenstaende_r42.h). */
+static void bits_leeren(void) { re15_game_state_init(); re15_ventilkette_r41_reset(); s_nvf = 0; vorflag(9, 43); }
 
 static int prop_von_obj(int obj)
 {

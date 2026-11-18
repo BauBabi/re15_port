@@ -300,7 +300,10 @@ static void leser_abschliessen(void)
 static void teil_d(const soll_t *s, raum_t *r)
 {
     printf("\n[D] Dokument %d: Aufheben mit der Aktionstaste (ROOM%04X)\n", s->nr, r->id);
-    druck(r, s->stand_x, s->stand_z, s->stand_rot, NULL);
+    /* Runde 42 Gegenstaende (K-10 V-01): ROOM1050 traegt jetzt wie 1051 den Leichen-Satz Slot 11 (Glock); er faengt den Druck, bis
+     * die Glock genommen ist (Bit (9,40), Form 1051 sub01 @0x00CB2) - Leon wie Elza in teil_dok1_elza. */
+    static const int glock[] = { 40, 0 };
+    druck(r, s->stand_x, s->stand_z, s->stand_rot, r->id == 0x1050 ? glock : NULL);
     CHECK(!re15_item_modal_active() && re15_menu_doc_active() && re15_menu_stage() != 0,
           "D Stand (%d,%d) rot %d -> KEIN Item-Modal, Aufnahme-Leser angefordert",
           s->stand_x, s->stand_z, s->stand_rot);

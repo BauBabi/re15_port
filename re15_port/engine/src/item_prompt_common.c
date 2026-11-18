@@ -45,6 +45,7 @@
 #include "re15_dining_r38.h"     /* Runde 38 Spur F: "Dining Room Key" (Id 0x43) */
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: "Water Key" (Id 0x34) */
 #include "re15_keyitems_r41.h"    /* Runde 41 Spur O: "Crank" (Id 0x33) */
+#include "re15_gegenstaende_r42.h" /* Runde 42 Gegenstaende: "Detonator" (Id 0x1C) */
 #include "gen/item_prompt_data.inc"
 
 /* Port-Prompt-Schluessel -> BSS-Skriptindex. Die Zuordnung der vier bisher genutzten
@@ -98,7 +99,7 @@ static int re15_prompt_name_ist_schluessel(uint8_t item_id)
  * "You've received the <Name>." (story3a_r42.c) denselben Namen liest wie "Will you take the <Name>?".
  *   1. Dokument-Tabelle ab Id 0x48 (Runde 30, re15_files_doc; RE2 `sb a1,-30913(at)` @0x800518a0)
  *   2. Port-Namen: Schluessel 0x42/0x45 (Runde 36 Q), leerer Loescher (37 I), Dining Room Key 0x43 (38 F), Crank 0x33 (41 O),
- *      Water Key 0x34 (41 F)
+ *      Water Key 0x34 (41 F), Detonator 0x1C (Runde 42 Gegenstaende)
  *   3. ausgelieferte Namensbank (Offsettabelle 102 u16 @0x800c495c, Blob @0x800c4a28; Reader FUN_80028840 @0x80028840). */
 static const unsigned char *name_glyphen(uint8_t item_id)
 {
@@ -109,6 +110,7 @@ static const unsigned char *name_glyphen(uint8_t item_id)
     if (!nm) nm = re15_dining_r38_name(item_id);
     if (!nm) nm = re15_keyitems_r41_name(item_id);
     if (!nm) nm = re15_gatorszene_r41_name(item_id);
+    if (!nm) nm = re15_gegenstaende_r42_name(item_id);   /* Runde 42 Gegenstaende: 0x1C "Detonator" (GEGENSTAENDE.md V-06) */
     if (nm) return nm;
     /* Grenze = die physische Ausdehnung der Original-Offsettabelle (102); das Original maskiert nur `andi a0,a0,0xff`. */
     if ((int)item_id < RE15_ITEM_PROMPT_NIDS) return re15_item_prompt_name_blob + re15_item_prompt_name_off[item_id];

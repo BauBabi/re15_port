@@ -369,6 +369,8 @@ static int inv_assets_init(void)
     if (s_itps) re15_dining_r38_bild_einsetzen(s_itps, s_itps_size);       /* Runde 38 Spur F */
     if (s_itps) re15_keyitems_r41_bild_einsetzen(s_itps, s_itps_size);     /* Runde 41 Spur O */
     if (s_itps) re15_gatorszene_r41_bild_einsetzen(s_itps, s_itps_size);   /* Runde 41 Spur F */
+    { extern void re15_gegenstaende_r42_bild_einsetzen(uint8_t *, int);
+      if (s_itps) re15_gegenstaende_r42_bild_einsetzen(s_itps, (int)s_itps_size); }   /* Runde 42 Gegenstaende: Kapseln 0x1E..0x20 */
     /* PRUEFZEILE der beiden Ladestellen dieses Schirms (Runde 30, Nachbesserung): 0 = das
      * Rohr ist in DEN Puffern, aus denen Raster (inv_compose_cells) und CHECK-Foto
      * (photo_upload_check) lesen. Ohne Einsetzen stuende hier der ausgelieferte Stand
