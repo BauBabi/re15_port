@@ -23,3 +23,12 @@ target_compile_definitions(test_r42_karte_st456 PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r42_karte_st456 COMMAND test_r42_karte_st456)
 set_tests_properties(unit_r42_karte_st456 PROPERTIES TIMEOUT 120)
+
+# RIEGEL Stufe 2 Runde 2: der aktuelle Raum ist auf dem Blatt GEZEICHNET (Op-Liste), jede Zone aller Blaetter.
+add_executable(test_r42_karte_sichtbar test_r42_karte_sichtbar.c)
+target_link_libraries(test_r42_karte_sichtbar PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_karte_sichtbar PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_karte_sichtbar PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r42_karte_sichtbar COMMAND test_r42_karte_sichtbar)
+set_tests_properties(unit_r42_karte_sichtbar PROPERTIES TIMEOUT 120)

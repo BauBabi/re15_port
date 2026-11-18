@@ -621,7 +621,38 @@ int re15_map_player_band(void);
 static int s_ohne_aktuell = 0;
 void re15_map_ohne_aktuell(int an) { s_ohne_aktuell = an ? 1 : 0; }
 
+/* ⛔ r42/karte Stufe 2 Runde 2: FREMDE ZONEN AUF EINEM RECHTECK MIT TEILBEREICHEN.
+ * Pruefbericht pruef_s2_r1 ROT 1: im T-Gang 5070/5130 (Blatt 9 r7) zeigte die Karte KEINEN Raum,
+ * nur Punkt und Tuerstriche. Das Rechteck traegt Teilbereiche des Zugs 5090 (zid 84, s_map_teile);
+ * der Zeichner malte ein solches Rechteck NUR ueber die Teile, und deren Zustand haengt am zid 84.
+ * Jede ANDERE Zone auf demselben Rechteck (5070 zid 115, 5130 zid 116; auf aaea5f8c2 5020) blieb
+ * unsichtbar, auch als aktueller Raum. Die Teilbereiche sind eine PORT-ERGAENZUNG (Nutzer 2026-09-07,
+ * fehler/howto4.png) - das Original zeichnet je Rechteck zwei SPRTs ohne Zustand (FUN_80046fd8,
+ * Schleife @0x800472fc-0x800473e0). Regel jetzt: die Teile gelten nur fuer IHREN zid; fremde Zonen
+ * desselben Rechtecks faerben das GANZE Rechteck (re15_map_rect_state_fremd), und ein Teil zeigt
+ * den staerkeren der beiden Zustaende. Blatt 3 r5 (ROOM1110) traegt nur zid 17 -> unveraendert. */
+static int teil_zid(unsigned page, unsigned rect_idx, unsigned char zid)
+{
+    int k;
+    for (k = 0; k < (int)(sizeof s_map_teile / sizeof s_map_teile[0]); k++)
+        if (s_map_teile[k].page == page && s_map_teile[k].rect == rect_idx && s_map_teile[k].zid == zid)
+            return 1;
+    return 0;
+}
+
+static int rect_state_impl(unsigned page, unsigned rect_idx, int nur_fremd);
+
 int re15_map_rect_state(unsigned page, unsigned rect_idx)
+{
+    return rect_state_impl(page, rect_idx, 0);
+}
+
+int re15_map_rect_state_fremd(unsigned page, unsigned rect_idx)
+{
+    return rect_state_impl(page, rect_idx, 1);
+}
+
+static int rect_state_impl(unsigned page, unsigned rect_idx, int nur_fremd)
 {
     extern unsigned g_current_room_id;
     int state = RE15_MAP_RECT_UNMAPPED;
@@ -647,6 +678,7 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
          * KEINER eigenen Zone; ohne diesen Zweig blieb es "unbekannt" und wurde
          * dauerhaft grau gemalt, statt den Zustand seiner Zone zu erben. */
         int eigen, etage_hier = 0, etage_besucht = 0, j;
+        if (nur_fremd && teil_zid(page, rect_idx, zn->zid)) continue;   /* r42: s.o. teil_zid */
         hat_etage = re15_map_floor_lookup(zn->room, zn->idx,
                                           re15_map_player_band(), &fp, &fr);
         eigen = (zn->page == page && zn->rect == rect_idx);
@@ -800,7 +832,12 @@ static int teil_zustand(const re15_map_teil_t *t)
                 return RE15_MAP_RECT_CURRENT;
         }
     }
-    return besucht ? RE15_MAP_RECT_VISITED : RE15_MAP_RECT_UNVISITED;
+    {   /* r42/karte Stufe 2 Runde 2: eine fremde Zone desselben Rechtecks (T-Gang 5070/5130 auf den
+         * 5090-Teilen von Blatt 9 r7) faerbt auch jeden Teil - der staerkere Zustand gilt (s. teil_zid). */
+        int fs = re15_map_rect_state_fremd(t->page, t->rect);
+        int eigen_zu = besucht ? RE15_MAP_RECT_VISITED : RE15_MAP_RECT_UNVISITED;
+        return fs > eigen_zu ? fs : eigen_zu;
+    }
 }
 
 int re15_map_teil_count(unsigned page, unsigned rect_idx)

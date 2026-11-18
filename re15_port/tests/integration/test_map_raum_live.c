@@ -702,8 +702,12 @@ int main(void)
      * teilen sich EIN gemaltes Rechteck (dann kann nur eines rot sein), und die
      * heuristisch zugeordneten Zonen treffen ihr Rechteck ungenauer als die
      * zeilen-basierten. Restarbeit, kein Freibrief - die Schranke haelt 6 von 7. */
-    CHECK("mindestens 6 von 7 betretenen Raeumen sind sichtbar rot",
-          geprueft > 0 && (geprueft - rot_fehlt) * 7 >= geprueft * 6);
+    /* ⛔ r42/karte Stufe 2 Runde 2: JEDER betretene Raum ist sichtbar rot. Die Quote 6 von 7 liess
+     * "ROT FEHLT: ROOM5070/5130" (T-Gang auf den 5090-Teilen von Blatt 9 r7) gruen durchgehen - der
+     * Pruefbericht pruef_s2_r1 ROT 1 fand es im Abzug, nicht im Test. Gemessen nach der Abhilfe
+     * (re15_map_rect_state_fremd): 98 von 98. Gegenprobe: cf95284eb 2 fehlen, aaea5f8c2 ROOM5020. */
+    CHECK("jeder betretene Raum ist sichtbar rot",
+          geprueft > 0 && rot_fehlt == 0);
     CHECK("der Spieler-Marker liegt im Rechteck seines Raums",
           marker_ges > 0 && marker_drin + 1 >= marker_ges);
     CHECK("der Spieler-Marker landet NIE im Rechteck eines anderen Raums",

@@ -2789,6 +2789,12 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                              rx, ry, rw, rh, ru, rv, cr, cg, cb, 1);
                     } else {
                         int k2;
+                        /* r42/karte Stufe 2 Runde 2 (Pruefbericht pruef_s2_r1 ROT 1): eine FREMDE Zone auf
+                         * diesem Rechteck (T-Gang 5070/5130 auf den 5090-Teilen von Blatt 9 r7) faerbt das
+                         * GANZE Rechteck - sonst blieb der aktuelle Raum leer, nur Punkt und Tuerstriche.
+                         * Die Teile malen dann nur noch, wo ihr eigener Zustand STAERKER ist, und liegen
+                         * oben: sie werden zuerst eingetragen (Op-Liste von hinten gerastert). */
+                        int fs = re15_map_rect_state_fremd((unsigned)st->map_page, (unsigned)i);
                         for (k2 = 0; k2 < nteil; k2++) {
                             int tx, ty, tw, th, ts;
                             int tr = 128, tg = 128, tb = 128;   /* neutral, s.u. */
@@ -2821,6 +2827,7 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                             } else if (durchgang_r != 1) {
                                 continue;
                             }
+                            if (fs >= RE15_MAP_RECT_UNVISITED && ts <= fs) continue;   /* r42: Grund malt es */
                             /* Besitz-Gatter wie beim ganzen Rechteck (RE2
                              * @0x8006E744 / @0x8006E66C). */
                             if (ts == RE15_MAP_RECT_UNVISITED &&
@@ -2847,6 +2854,19 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                                  tx, ty, tw, th,
                                  ru + (tx - rx), rv + (ty - ry),
                                  tr, tg, tb, 1);
+                        }
+                        /* r42: der GRUND der fremden Zone - ganzes Rechteck, gleiche Gatter wie ohne Teile
+                         * (Durchgang 0 nur fuer aktuell, unbesucht nur mit Kartenbesitz RE2 @0x8006E744). */
+                        if (fs >= RE15_MAP_RECT_UNVISITED &&
+                            (fs == RE15_MAP_RECT_CURRENT) == (durchgang_r == 0) &&
+                            (fs != RE15_MAP_RECT_UNVISITED || re15_map_owned_page((unsigned)st->map_page))) {
+                            int clut_grund = (fs == RE15_MAP_RECT_CURRENT) ? RE15_INV_CLUT_MAP_AKTUELL
+                                           : (fs == RE15_MAP_RECT_VISITED) ? RE15_INV_CLUT_MAP_BESUCHT
+                                           : RE15_INV_CLUT_MAP_UNBESUCHT;
+                            if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i, clut_grund,
+                                    rx, ry, rw, rh, ru, rv, 128, 128, 128))
+                            sprt(&e, RE15_INV_PAGE_MAP4, clut_grund,
+                                 rx, ry, rw, rh, ru, rv, 128, 128, 128, 1);
                         }
                     }
                 }

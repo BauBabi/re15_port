@@ -56,6 +56,9 @@ enum {
     RE15_MAP_RECT_CURRENT   = 3    /* enthaelt den aktuellen Raum -> rot */
 };
 int re15_map_rect_state(unsigned page, unsigned rect_idx);
+/* r42/karte: Zustand nur aus den Zonen, deren zid KEINE Teilbereiche auf diesem Rechteck hat
+ * (T-Gang 5070/5130 auf den 5090-Teilen von Blatt 9 r7). UNMAPPED = es gibt keine solche Zone. */
+int re15_map_rect_state_fremd(unsigned page, unsigned rect_idx);
 
 /* TEILBEREICHE eines Rechtecks. Wo Innenwaende einen Ort zerschneiden, traegt jeder
  * Teil seinen eigenen Zustand - der Spieler steht ja nur in EINEM davon.
