@@ -1,0 +1,48 @@
+Abzuege 619 {'ok': 572, 'KEIN PUNKT': 14, 'NEBEN DEM ROTEN RAUM': 18, 'KEIN ABZUG': 12, 'RAUM NICHT ROT': 3}
+   L10B0_t0 KEIN PUNKT lage (-21159, 3289) punkt None um None blatt 2
+   L10B0_w0 KEIN PUNKT lage (-21159, -8486) punkt None um None blatt 2
+   L11B0_t0 NEBEN DEM ROTEN RAUM lage (-26483, -18094) punkt (158, 72) um 0.25 blatt 0
+   L11B0_w1 NEBEN DEM ROTEN RAUM lage (-25609, -15768) punkt (159, 71) um 0.25 blatt 0
+   L1240_t0 KEIN ABZUG lage (-26214, -3861) punkt None um None blatt None
+   L1240_w0 KEIN ABZUG lage (-26214, -3861) punkt None um None blatt None
+   L1260_t0 KEIN PUNKT lage (-20250, -6700) punkt None um None blatt 0
+   L1260_t1 KEIN PUNKT lage (20900, -8100) punkt None um None blatt 0
+   L1260_t2 KEIN PUNKT lage (-8750, -6900) punkt None um None blatt 0
+   L1260_t3 KEIN PUNKT lage (19700, -5000) punkt None um None blatt 0
+   L1260_w0 KEIN PUNKT lage (-20250, -17632) punkt None um None blatt 0
+   L1260_w1 KEIN PUNKT lage (19168, -8100) punkt None um None blatt 0
+   L2000_t0 NEBEN DEM ROTEN RAUM lage (4350, -20500) punkt (161, 171) um 0.2 blatt 6
+   L3090_w1 NEBEN DEM ROTEN RAUM lage (-26444, -17598) punkt (219, 174) um 0.29 blatt 7
+   L4070_t0 NEBEN DEM ROTEN RAUM lage (-12100, -18950) punkt (146, 163) um 0.2 blatt 8
+   L4070_w0 NEBEN DEM ROTEN RAUM lage (-10918, -18950) punkt (147, 163) um 0.25 blatt 8
+   L4080_t0 NEBEN DEM ROTEN RAUM lage (-3900, 2100) punkt (168, 117) um 0.29 blatt 8
+   L4080_t3 NEBEN DEM ROTEN RAUM lage (2600, -25300) punkt (179, 161) um 0.29 blatt 8
+   L5090_t2 RAUM NICHT ROT lage (300, 5000) punkt (182, 98) um 0.0 blatt 9
+   L5090_w1 RAUM NICHT ROT lage (13025, -23550) punkt (201, 153) um 0.0 blatt 9
+   L50B0_w0 KEIN ABZUG lage (-19414, -13519) punkt None um None blatt None
+   L50B0_w1 KEIN ABZUG lage (-19463, -13458) punkt None um None blatt None
+   L6000_t0 NEBEN DEM ROTEN RAUM lage (5204, 1600) punkt (212, 86) um 0.29 blatt 12
+   L6000_w0 NEBEN DEM ROTEN RAUM lage (5200, -1166) punkt (212, 86) um 0.29 blatt 12
+   L6030_t1 NEBEN DEM ROTEN RAUM lage (-17970, -20380) punkt (262, 113) um 0.29 blatt 12
+   L6030_w0 KEIN ABZUG lage (-25000, -24133) punkt None um None blatt None
+   L6030_w1 KEIN ABZUG lage (-25034, -24133) punkt None um None blatt None
+   L6040_t0 KEIN ABZUG lage (-26214, -3861) punkt None um None blatt None
+   L6040_w0 KEIN ABZUG lage (-26214, -3861) punkt None um None blatt None
+   E10B1_t0 KEIN PUNKT lage (16490, -8110) punkt None um None blatt 2
+   E10B1_t1 KEIN PUNKT lage (-21159, 3289) punkt None um None blatt 2
+   E11B1_t0 NEBEN DEM ROTEN RAUM lage (-26483, -18094) punkt (158, 72) um 0.25 blatt 0
+   E1241_t0 KEIN ABZUG lage (-26214, -3861) punkt None um None blatt None
+   E1261_t0 KEIN PUNKT lage (-20250, -6700) punkt None um None blatt 0
+   E1261_t1 KEIN PUNKT lage (20900, -8100) punkt None um None blatt 0
+   E1261_t2 KEIN PUNKT lage (-8750, -6900) punkt None um None blatt 0
+   E1261_t3 KEIN PUNKT lage (19700, -5000) punkt None um None blatt 0
+   E2001_t0 NEBEN DEM ROTEN RAUM lage (4350, -20500) punkt (161, 171) um 0.2 blatt 6
+   E4071_t0 NEBEN DEM ROTEN RAUM lage (-12100, -18950) punkt (146, 163) um 0.2 blatt 8
+   E4081_t0 NEBEN DEM ROTEN RAUM lage (-3900, 2100) punkt (168, 117) um 0.29 blatt 8
+   E4081_t3 NEBEN DEM ROTEN RAUM lage (2600, -25300) punkt (179, 161) um 0.29 blatt 8
+   E5091_t2 RAUM NICHT ROT lage (300, 5000) punkt (182, 98) um 0.0 blatt 9
+   E6001_t0 NEBEN DEM ROTEN RAUM lage (5200, 1600) punkt (212, 86) um 0.29 blatt 12
+   E6031_t1 NEBEN DEM ROTEN RAUM lage (-17970, -20380) punkt (262, 113) um 0.29 blatt 12
+   E6041_t0 KEIN ABZUG lage (-26214, -3861) punkt None um None blatt None
+   L50B0_w1k KEIN ABZUG lage (-19463, -13458) punkt None um None blatt None
+   L6030_w1k KEIN ABZUG lage (-25034, -24133) punkt None um None blatt None
