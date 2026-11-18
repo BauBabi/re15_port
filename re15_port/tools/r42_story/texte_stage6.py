@@ -22,8 +22,13 @@ gemeldet (PSX schneidet ab). Hoechstens 3 Zeilen je Seite (28 Original-Dialoge h
 texte_bauen.py), Zeilenbreite <= 271 px.
 Zwei Seiten ('|' im Text, nur 6030 msg 4: der Nutzersatz braucht vier Zeilen): Form des einzigen zweiseitigen Original-Untertitels
 ROOM3060 msg 7 @0x120C, Seitenwechsel @0x1244 `04 01 02 3c 04 00` = Seite zu Ende, Seitenwartezeit N Bilder OHNE Taste
-(msg_common.c Typewriter: `02 N`, N > 0 -> message_fsm 2 mit Timer), neue Seite ohne Sprecherkopf. N = der Nachlauf der
-Zeilen desselben Raums (ROOM6030 `01 63` @0x13F5, 0x63 = 99 Bilder) statt 0x3C aus 3060.
+(msg_common.c Typewriter: `02 N`, N > 0 -> message_fsm 2 mit Timer). N = der Nachlauf der Zeilen desselben Raums (ROOM6030 `01 63`
+@0x13F5, 0x63 = 99 Bilder) statt 0x3C aus 3060.
+Runde 42 Strang namen, Stufe 1: JEDE Seite traegt den Sprecherkopf `05 <Farbe> <Sprecher>: 05 00 00` (Form der ersten Seite,
+ROOM6030 msg 0 @0x13BE `05 01`), direkt hinter dem `04 00` des Seitenwechsels. ROOM3060 msg 7 (Sherry, ohne Stimme) hat auf Seite 2
+keinen Kopf; hier spricht Leon beide Saetze. NUTZER 18.11.2026: "Du hast bei den uebernommenen Saetzen aus Resident Evil 2 nicht den
+Namen in den Dialog mit davor geschrieben wie bei den rest auch...." (Memory reai-v2-sprechername-vor-satz: jeder gesprochene Satz
+traegt den Namen, Systemtexte nicht). Seitenwechsel und Stimme bleiben wie bisher (eine Nachricht, `02 63`).
 """
 import os
 import struct
@@ -79,19 +84,16 @@ def rdt_msg(raum, mid):
 
 
 def untertitel_seiten(farbe, name, text, raum):
-    """Untertitel mit 1..n Seiten ('|'); Seite 1 mit Sprecherkopf (texte_stage3a.untertitel), weitere ohne Kopf."""
+    """Untertitel mit 1..n Seiten ('|'); JEDE Seite mit Sprecherkopf (texte_stage3a.untertitel, Strang namen)."""
     seiten = text.split('|')
     b, z1, bw = T.untertitel(farbe, name, seiten[0], raum)
     b = b[:-4]                                   # Schwanz erst am Ende (SCHWANZ, Beleg oben)
     zeilen = [z1]
     for s in seiten[1:]:
-        z = T.umbruch(s, 0, T.MAX_PX)
-        b += SEITE
-        for i, zz in enumerate(z):
-            if i:
-                b.append(0x08)
-            b += T.kod(zz)
-        bw += [T.px(zz) for zz in z]
+        bs, z, bws = T.untertitel(farbe, name, s, raum)
+        assert bs[:2] == [0x04, 0x00] and SEITE[-2:] == [0x04, 0x00]
+        b += SEITE + bs[2:-4]                    # `04 00` des Seitenwechsels, dann `05 <Farbe> <Sprecher>: 05 00 00 <Text>`
+        bw += bws
         zeilen.append(z)
     return b + list(SCHWANZ), zeilen, bw
 

@@ -231,7 +231,7 @@ ENDE
     pruefe("L21: msg 2 (Leon)" "[msgtext] room=6030 id=2 \"Leon: Where is she now?\"")
     pruefe("L21: msg 3" "[msgtext] room=6030 id=3 \"John: We got split up in the fire. One second she was right behind us...\"")
     pruefe("L21: msg 22 (Sherry)" "[msgtext] room=6030 id=22 \"Sherry: Elza's still out there...!\"")
-    pruefe("L21: msg 4 (zwei Seiten)" "[msgtext] room=6030 id=4 \"Leon: If she's as tough as you say, she'll find another way out.But we can't wait. When that reactor goes, nobody gets out.\"")
+    pruefe("L21: msg 4 (zwei Seiten)" "[msgtext] room=6030 id=4 \"Leon: If she's as tough as you say, she'll find another way out.Leon: But we can't wait. When that reactor goes, nobody gets out.\"")
     pruefe("L21: msg 5" "[msgtext] room=6030 id=5 \"John: Then I'm staying with the kid. And I'll keep an eye on your friend here.\"")
     pruefe_nicht("L21: kein 'fighting the monsters'" "fighting the monsters")
     pruefe_nicht("L21: kein 'catch up'" "catch up")

@@ -1948,6 +1948,10 @@ static int op_message_on(scd_thread_t *t)
      * englische Sprachausgabe, synchro/ ist eigene Produktion. Die Sleep-Werte des Skripts
      * bleiben unangetastet; gewartet wird nur, wo eine Aufnahme laenger ist als das
      * Original ihr Zeit gibt. Wo sie hineinpasst, aendert sich am Timing NICHTS. */
+    /* Runde 42 Strang namen: Satz 2 einer RE2-Rahmenzeile (6000 msg 48/49/50) gehoert zur laufenden Stimme - VOR dem Riegel
+     * oeffnen (RE2 ROOM4090 @0x02722 Sleep 41 zwischen msg 0x0A und 0x0B unter einem Xa_on; re15_birkinfilm_r42.h). */
+    { extern int re15_birkinfilm_r42_folgeseite(const uint8_t *pc, uint32_t pause_mask);
+      if (re15_birkinfilm_r42_folgeseite(t->pc, pause_mask)) { t->pc += 4; return 1; } }
     {   extern int g_re15_voice_laeuft, g_re15_voice_restbilder;
         enum { RE15_VOICE_NOTBREMSE = 300 };   /* 10 s > laengste Aufnahme (242,5 Bilder) */
         if (g_re15_voice_laeuft && g_re15_voice_restbilder > 0

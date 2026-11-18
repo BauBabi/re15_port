@@ -2,7 +2,7 @@
 #
 #   unit_r42_rest_msglaenge        (a) jede Nachricht jeder ausgelieferten RDT (+ Port-Texte) traegt ihr eigenes Ende; das Original
 #                                      liest in-place (@0x800c004c: RDT+0x3C), der Port kopiert - keine Kopie darf abschneiden
-#   unit_r42_rest_schreibmaschine  (a) ROOM2040 msg 0 (411 Byte) und ROOM6030 msg 4 (139 Byte) laufen bis an ihr 0x01
+#   unit_r42_rest_schreibmaschine  (a) ROOM2040 msg 0 (411 Byte) und ROOM6030 msg 4 (149 Byte) laufen bis an ihr 0x01
 add_executable(test_r42_rest ${CMAKE_CURRENT_LIST_DIR}/../test_r42_rest.c)
 target_link_libraries(test_r42_rest PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r42_rest PRIVATE ${CMAKE_SOURCE_DIR}/include)

@@ -57,7 +57,7 @@ void re15_birkinfilm_r42_texte(uint16_t room_id)
         const int d = re15_msg_compute_duration(k_bf_texte[i].b, k_bf_texte[i].n, 0);   /* wie re15_msg_load_room_block */
         if (d > 0 && d < 65535) re15_msg_install_durations(k_bf_texte[i].id, d);
     }
-    BF_LOG("ROOM6000: %d Rahmenzeilen eingesetzt (msg 40..42)", BF_TEXTE_N);
+    BF_LOG("ROOM6000: %d Rahmenzeilen eingesetzt (msg 40..42 Satz 1, 48..50 Satz 2)", BF_TEXTE_N);
 }
 
 /* ==== Programm ============================================================================================================ */
@@ -115,6 +115,24 @@ int re15_birkinfilm_r42_message_on(const uint8_t *pc)
     BF_LOG("ROOM%04X Warte-Zeile %d: Stimme und Untertitel zu Ende (%u Takte auf den Untertitel)%s", (unsigned)raum, pc[1],
            s_warte, s_warte >= RE15_BF_WARTEN_NOTBREMSE ? " NOTBREMSE" : "");
     s_warte = 0;
+    return 1;
+}
+
+/* ==== Satz 2 der Rahmenzeilen (Runde 42 Strang namen) ===================================================================== */
+/* RE2 ROOM4090 sub02 zeigt jede Rahmenzeile als ZWEI Nachrichten unter EINER Stimme: msg 0x0A @0x02718, Xa_on 0x09 @0x0271E,
+ * Sleep 41 @0x02722, msg 0x0B @0x02726 (ebenso 0x14/0x15 um Sleep 81 @0x027D8, 0x17/0x18 um Sleep 81 @0x02850). Das Programm
+ * (gen/birkinfilm_r42.inc) bildet das ab: msg 40/41/42 = Satz 1 mit der RE2-Stimme, Sleep, msg 48/49/50 = Satz 2.
+ * PORT-WAHL: Satz 2 laeuft am Stimmen-Riegel (scd_vm.c op_message_on, "DEN VORIGEN SATZ AUSREDEN LASSEN") vorbei und reiht keine
+ * eigene Stimme ein - er IST der zweite Teil der laufenden Aufnahme; der Riegel wuerde ihn bis zu deren Ende zurueckhalten.
+ * Geoeffnet wird er wie jede Untertitelzeile (re15_dialog_open_mask, nicht blockierend, Maske aus dem Opcode). */
+int re15_birkinfilm_r42_folgeseite(const uint8_t *pc, uint32_t pause_mask)
+{
+    if (!pc || (uint16_t)g_current_room_id != RE15_BF_RAUM) return 0;
+    if (pc[1] != RE15_BF_MSG_XA09_S2 && pc[1] != RE15_BF_MSG_XA11_S2 && pc[1] != RE15_BF_MSG_XA14_S2) return 0;
+    re15_dialog_open_mask((int)pc[1], 0, pause_mask);
+    g_scd.message_arg2 = pc[2];
+    g_scd.message_arg3 = pc[3];
+    BF_LOG("ROOM6000 msg %d: Satz 2 unter der laufenden RE2-Stimme (kein Riegel, keine eigene Stimme)", pc[1]);
     return 1;
 }
 

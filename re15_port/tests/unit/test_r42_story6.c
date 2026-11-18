@@ -239,8 +239,9 @@ static const zeile_t k_liste[] = {
     { 0x6030,  2, "Leon: Where is she now?" },
     { 0x6030,  3, "John: We got split up in the fire. One second she was right behind us..." },
     { 0x6030, 22, "Sherry: Elza's still out there...!" },
-    /* zwei Seiten: re15_msg_decode_text haengt die Seiten ohne Leerzeichen an (wie ROOM3060 msg 7 "side!Just") */
-    { 0x6030,  4, "Leon: If she's as tough as you say, she'll find another way out.But we can't wait. When that reactor goes, nobody gets out." },
+    /* zwei Seiten: re15_msg_decode_text haengt die Seiten ohne Leerzeichen an (wie ROOM3060 msg 7 "side!Just"); Strang namen:
+     * Seite 2 traegt den Namenskopf "Leon:" wie Seite 1 (Nutzer 18.11., Memory reai-v2-sprechername-vor-satz) */
+    { 0x6030,  4, "Leon: If she's as tough as you say, she'll find another way out.Leon: But we can't wait. When that reactor goes, nobody gets out." },
     { 0x6030,  5, "John: Then I'm staying with the kid. And I'll keep an eye on your friend here." },
     /* E6 (6031, Elza): msg 0 bleibt (story_r36), 1, 2 Neutext, 12, 13 neu */
     { 0x6031,  0, "Elza: Sherry! Is anyone else here?" },

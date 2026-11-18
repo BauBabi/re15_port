@@ -299,7 +299,7 @@ static const zeile_t k_liste[] = {
     { 0x6030,  2, "Leon: Where is she now?" },
     { 0x6030,  3, "John: We got split up in the fire. One second she was right behind us..." },
     { 0x6030, 22, "Sherry: Elza's still out there...!" },
-    { 0x6030,  4, "Leon: If she's as tough as you say, she'll find another way out.But we can't wait. When that reactor goes, nobody gets out." },
+    { 0x6030,  4, "Leon: If she's as tough as you say, she'll find another way out.Leon: But we can't wait. When that reactor goes, nobody gets out." },   /* Strang namen: Seite 2 mit "Leon:" */
     { 0x6030,  5, "John: Then I'm staying with the kid. And I'll keep an eye on your friend here." },
     { 0x6030,  6, "Leon: Where's Annette?" },
     { 0x6030,  7, "John: The woman in the lab coat? Up front, trying to start the train." },
@@ -360,7 +360,7 @@ static void teil_texte(void)
             int len = 0, z = 0;
             const unsigned char *raw = re15_msg_get_raw(k_liste[i].id, &len);
             const int px = raw ? max_zeilenbreite(raw, len, &z) : -1;
-            /* Runde 42 STAGE6: 6030 msg 4 (Nutzersatz, zwei Seiten) hat 139 B - PC MSG_RAW_LEN 192, PSX 128 schneidet ab (gemeldet) */
+            /* Runde 42 STAGE6: 6030 msg 4 (Nutzersatz, zwei Seiten) hat 149 B (Strang namen: Seite 2 mit "Leon:") - PSX 128 schneidet ab (gemeldet) */
             const int maxlen = (k_liste[i].raum == 0x6030 && k_liste[i].id == 4) ? 192 : 128;
             PRUEF(t && strcmp(t, k_liste[i].text) == 0 && raw && len <= maxlen && px > 0 && px <= 271 && z <= 3,
                   "ROOM%04X msg %2d (%d B, %d Zeilen, max %d px <= 271): \"%s\"", k_liste[i].raum, k_liste[i].id, len, z,
