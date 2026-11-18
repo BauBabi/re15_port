@@ -7,6 +7,7 @@
  *   flag:<bank>:<bit>  setzt ein Spielflag (bit dezimal oder 0x..), z.B. flag:4:0xF3 (Strom an)
  *   give:<id>:<n>      legt einen Gegenstand ins Inventar (re15_inv_grant), z.B. give:0x45:1
  *   cut:<n>            gespeicherter Kamera-Cut
+ *   y:<n>              Spieler-y (Boden des Standorts; die Wiederherstellung leitet das Band daraus ab, re15_savedata.c)
  *   elza               Spielfigur Elza (g_gameflow.character = 4, probe_r30_elza-intro.c:241)
  *   leer               Inventar leeren (vor give:, damit ein Gegenstand auf Platz 0 liegt)
  * Inventar sonst = Einsatzausruestung (re15_inv_load_briefing).
@@ -53,6 +54,8 @@ int main(int argc, char **argv)
             long id = strtol(argv[a] + 5, &e, 0);
             long n = (e && *e == ':') ? strtol(e + 1, NULL, 0) : 1;
             if (re15_inv_grant((uint8_t)id, (uint8_t)n) != 0) { printf("FAIL: give 0x%02lX\n", id); return 2; }
+        } else if (strncmp(argv[a], "y:", 2) == 0) {   /* Runde 42 lageplaene: Gehweg 2000 y -1800, Absatz 6000 y -3600 */
+            pl->y = atoi(argv[a] + 2);
         } else if (strncmp(argv[a], "cut:", 4) == 0) {
             g_scd.cam_id = (uint8_t)atoi(argv[a] + 4);
         } else if (strcmp(argv[a], "leer") == 0) {

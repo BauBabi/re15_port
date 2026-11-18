@@ -207,7 +207,8 @@ static int plan_nehmen(int k, int *out_bit)
     const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(k);
     raum_t r;
     *out_bit = -1;
-    if (!z || raum_laden(&r, z->raum) != 0) return -1;
+    /* Runde 42 Stufe 2: ein Plan nur fuer Elza (Fabrik 30C1) wird in ihrer Fassung raum|1 genommen */
+    if (!z || raum_laden(&r, (uint16_t)(z->raum | (z->variante == RE15_R36K_VARIANTE_ELZA))) != 0) return -1;
     raum_start(&r, z->rect_x + RE15_R36K_RECT / 2, z->rect_z + RE15_R36K_RECT / 2);
     int zone = g_aot.slots[z->aot_slot].active && g_aot.slots[z->aot_slot].type == RE15_AOT_TYPE_GENERIC &&
                g_aot.slots[z->aot_slot].event_id == RE15_R36K_EREIGNIS;
@@ -297,7 +298,7 @@ static void teil_v(void)
     for (int k = 0; k < n_plaene; k++) {
         const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(k);
         raum_t r;
-        if (raum_laden(&r, z->raum) != 0) continue;
+        if (raum_laden(&r, (uint16_t)(z->raum | (z->variante == RE15_R36K_VARIANTE_ELZA))) != 0) continue;   /* Runde 42 Stufe 2 */
         bank9_schreiben(stand);
         raum_start(&r, z->rect_x + RE15_R36K_RECT / 2, z->rect_z + RE15_R36K_RECT / 2);
         int haengt = prop_slot(RE15_R36K_OBJ) >= 0 && g_aot.slots[z->aot_slot].active &&
@@ -615,7 +616,10 @@ static void teil_p(void)
                    bit, blatt, (unsigned)z->raum,
                    im_original ? "KOLLISION mit " : "im Original frei", im_original ? s_z.erste[bit] : "");
             int doppelt = 0;
-            for (int i = 0; i < N_PORT; i++) if (k_port[i].bit == bit) doppelt = 1;
+            /* Runde 42 lageplaene Stufe 2: ein Vertrags-Planbit (re15_story_r42.h RE15_R42_BIT_PLAN_*) ist DERSELBE Plan, kein
+             * zweites Bit - Bit 35 setzen Leons Uebergabe 3060 (story3a_r42.c) und Elzas Wandplan 30C1 (k_r36k_lage). */
+            for (int i = 0; i < N_PORT; i++)
+                if (k_port[i].bit == bit && strncmp(k_port[i].makro, "RE15_R42_BIT_PLAN_", 18) != 0) doppelt = 1;
             for (int j = 0; j < n_plaene; j++) {
                 const re15_kartenitem_r36_t *y = re15_kartenitems_r36_zeile(j);
                 for (int bj = 0; bj < y->n_blaetter; bj++)

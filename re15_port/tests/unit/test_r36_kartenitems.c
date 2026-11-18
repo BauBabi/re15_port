@@ -136,7 +136,8 @@ static void teil_t(void)
     static const uint8_t  alle_bl[2][3] = { { 2, 3, 4 }, { 1, 0, 0 } }, alle_bits[2][3] = { { 89, 88, 87 }, { 77, 78, 0 } };
     static const char    *name[2]   = { "police station map", "police basement map" };
     static const char    *art[2]    = { "You've taken a", "You've taken the" };   /* RE2 room20B0 @0x3DB8 / room2130 @0x1D57 */
-    CHECK("2 Zeilen (Runde 42)", re15_kartenitems_r36_anzahl() == 2);
+    CHECK("5 Zeilen (Runde 42: Revier + Keller, Stufe 2 Kanalisation/Fabrik/U-Bahn - die drei prueft unit_r42_lageplaene2)",
+          re15_kartenitems_r36_anzahl() == 5);
     for (int i = 0; i < 2 && i < re15_kartenitems_r36_anzahl(); i++) {
         const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(i);
         char nm[160];
@@ -413,6 +414,7 @@ static void teil_k(void)
     printf("=== K: Kartenblatt je Etage (RE2 FUN_8006E120) ===\n");
     for (int i = 0; i < re15_kartenitems_r36_anzahl(); i++) {
         const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(i);
+        if (z->blatt > 4) continue;   /* Runde 42 Stufe 2: Blaetter STAGE2..6 prueft unit_r42_lageplaene2 (Polizei-Schema hier) */
         int g0 = 0, u0 = 0, g1 = 0, u1 = 0, w0, w1;
         char nm[200];
         int wand0, koerper0;

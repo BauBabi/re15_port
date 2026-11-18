@@ -89,6 +89,38 @@ PLAENE = [  # (raum, name, artikel, rahmen, [(blatt, bit, etage)], aot_slot, ver
     (0x1200, "police basement map", "the", "room2130", [(1, 77, "B2"), (0, 78, "B1")], 40, 0xFF),
 ]
 
+# ---- Runde 42 Stufe 2: EIN Plan je Gebiet STAGE2..6 (ohne Forschungszentrum 4020 = r42/rest, ohne Labor 5030 = Original) --
+# Lage NICHT aus Nutzer-Marken, sondern direkt: Wandebene aus der SCA-Zelle (Byte-Offset), Mitte auf der Wand, Groesse
+# s = 1 (RE2-karte01 unskaliert = "wie ein Plakat", PORT-WAHL), Mitte 2000 ueber dem Boden des Standorts (PORT-WAHL).
+# Kamera = die Ankunfts-/Pflichtkamera (Kopf include/re15_kartenitems_r36.h, RUNDE 42 STUFE 2); die VIEW-Zeilen stammen von
+# `probe_r34n_e_dokumente kamera RAUM` und dienen nur der Kontrollausgabe (Plakat im Bild).
+# Variante: 0 = beide Fassungen, 2 = nur Elza (re15_kartenitems_r36.h RE15_R36K_VARIANTE_ELZA).
+VIEWS2 = {
+    0x2000: (11, (3258, 0, -2484, 531, 4007, 696, 2430, -876, 3187), (-13607, 6361, 18908), 208),
+    0x30C0: (1, (3923, 0, 1210, 49, 4085, -160, -1207, 167, 3912), (9505, 2234, 7886), 208),
+    0x6000: (0, (1581, 0, 3796, 872, 3988, -364, -3696, 941, 1539), (-2778, 3515, 11446), 208),
+}
+PLAENE2 = [
+    # Kanalisation: Rahmen RE2 room4040 @0x1B9B "There's a sewer map. / Will you take it?", @0x1BCB "You've taken / the
+    # sewer map."; Nordwand des Nordgangs z = -19800 (ROOM2000 SCA-Zelle 7 @0x012A4 x[-19850..7450] z[-19800..-17800],
+    # floor 19 = Band 1, n = -z) links neben der Ostleiter (Tuer Slot 0 x 3900..4900), Mitte x 1500: frei von Elzas
+    # John-Satz 2001 sub00 @0x017EA (Slot 7, x 2200..6100). Boden -1800 (1260 Slot 1/4 @0x0114A/@0x011AA next_y `f8 f8`);
+    # Rohr an der Wand bei y -3250 (Cut 11 Bild (100,112)/(200,131) auf z -19800) -> Mitte -3800 liegt darueber.
+    dict(raum=0x2000, name="sewer map", rahmen="room4040", gruppe=[(6, 34, "Kanalisation")], slot=20, verdr=0xFF,
+         variante=0, n=(0.0, 0.0, -1.0), boden=-1800, mitte=(1500.0, -1800.0 - 2000.0, -19800.0)),
+    # Fabrik (nur Elza, 30C1): Name RE2 room5040 @0x2341/@0x2376 "factory map"; Wand z = 1100 (ROOM30C1 SCA-Zelle 1
+    # @0x007F8 x[-27200..-5300] z[1100..1600], n = -z), Mitte x -7600 zwischen Treppenfuss (Zelle 10..13 bis x -9400) und
+    # Ostwand x -5800 (Zelle 0 @0x007EC), Boden 0 (3091 Slot 0 @0x01332 next_y 0).
+    dict(raum=0x30C0, name="factory map", rahmen="room4040", gruppe=[(7, 35, "Fabrik")], slot=20, verdr=0xFF,
+         variante=2, n=(0.0, 0.0, -1.0), boden=0, mitte=(-7600.0, 0.0 - 2000.0, 1100.0)),
+    # U-Bahn: Name "subway map" = PORT-WAHL im Rahmen room4040; Wand x = 2025 (ROOM6000 SCA-Zelle 17 @0x00828
+    # x[25..2025] z[-2400..3725], n = +x), Mitte z -400 auf der linken Tafel der Rueckwand (Bild-x 80..115 = z -1000..272;
+    # Hangar-Tuer Slot 0 erst ab z 2200), Boden -3600 (50B0 Slot 1 @0x004AE next_y `f0 f1`).
+    dict(raum=0x6000, name="subway map", rahmen="room4040", gruppe=[(12, 37, "U-Bahn")], slot=20, verdr=0xFF,
+         variante=0, n=(1.0, 0.0, 0.0), boden=-3600, mitte=(2025.0, -3600.0 - 2000.0, -400.0)),
+]
+S2 = 1.0   # RE2-Originalgroesse
+
 
 def projiziere(raum, p):
     _, R, T, H = CAMS[raum]
@@ -178,6 +210,19 @@ def frage(name):
             + [0x57, 0x08] + text("Will you take it") + [0x1B, 0x03, 0x02, 0x01, 0x00])
 
 
+def frage_4040(name):
+    # RE2 room4040 @0x1B9B: FA 02 "There's a " F9 01 "sewer map" F9 00 01(.) FC "Will you take it" 1B FB 40 FE 00
+    # RE1.5-Rahmen wie frage(): F9 -> 05, "." -> 57, FC -> 08, Schluss 1B 03 02 01 00 (ROOM2030 msg 2).
+    return ([0x04, 0x02] + text("There's a ") + [0x05, 0x01] + text(name) + [0x05, 0x00]
+            + [0x57, 0x08] + text("Will you take it") + [0x1B, 0x03, 0x02, 0x01, 0x00])
+
+
+def genommen_4040(name):
+    # RE2 room4040 @0x1BCB: FA 02 "You've taken" FC "the " F9 01 "sewer map" F9 00 01 FE 00 (room5040 @0x2376 ebenso)
+    return ([0x04, 0x02] + text("You've taken") + [0x08] + text("the ") + [0x05, 0x01] + text(name)
+            + [0x05, 0x00, 0x57, 0x01, 0x00])
+
+
 def genommen(name, artikel):
     # RE2 room20B0 msg 17 @0x3DB8: FA 02 "You've taken a" FC F9 01 NAME F9 00 "." FC FE 00
     # RE2 room2130 @0x1D57:        FA 02 "You've taken the " FC F9 01 NAME F9 00 "." FE 00
@@ -233,6 +278,46 @@ def main():
               % (raum, name, gruppe, P["c"][0], P["c"][1], P["c"][2], breite, hoehe, s, 1080 * s, 720 * s,
                  zeilen[-1]["x"], zeilen[-1]["y"], zeilen[-1]["z"], zeilen[-1]["rx"], zeilen[-1]["ry"],
                  zeilen[-1]["rz"], zeilen[-1]["rx0"], zeilen[-1]["rz0"], slot))
+        zeilen[-1]["variante"] = 0
+        zeilen[-1]["band"] = 0   # Aot_set pc[4] = 0 wie ROOM5030 sub00 @0x0108A
+    # ---- Runde 42 Stufe 2: Plaene STAGE2..6 mit direkter Lage (Wand aus der SCA-Zelle, s = 1) -----------------------
+    for p in PLAENE2:
+        raum = p["raum"]
+        blatt, bit, etage = p["gruppe"][0]
+        n = np.array(p["n"])
+        mitte = np.array(p["mitte"])
+        s = S2
+        unten = np.array([0.0, 1.0, 0.0])
+        vor = -n
+        rechts = np.cross(unten, vor)
+        M = np.column_stack([unten, vor, rechts])
+        rx, ry, rz = euler(M)
+        assert np.abs(wieder(rx, ry, rz) - M).max() < 1e-9
+        urs = mitte - 85.0 * s * n
+        rmitte = mitte + 300.0 * n
+        md1s.append(bytes(md1))   # s = 1: das RE2-MD1 unveraendert
+        texte.append((frage_4040(p["name"]), genommen_4040(p["name"])))
+        cut, R, T, H = VIEWS2[raum]
+        R = np.array(R, float).reshape(3, 3) / 4096.0
+        ecken_bild = []
+        for a in (-540.0, 540.0):
+            for b in (-360.0, 360.0):
+                v = R @ (mitte + a * s * rechts + b * s * unten) + np.array(T, float)
+                ecken_bild.append((160.0 + H * v[0] / v[2], 120.0 + H * v[1] / v[2]))
+        zeilen.append(dict(raum=raum, blatt=blatt, bit=bit, etage=etage, slot=p["slot"], verdr=p["verdr"],
+                           name=p["name"], artikel="the", rahmen=p["rahmen"], gruppe=p["gruppe"],
+                           x=int(round(urs[0])), y=int(round(urs[1])), z=int(round(urs[2])),
+                           rx=q12(rx), ry=q12(ry), rz=q12(rz),
+                           rx0=int(round(rmitte[0])) - 500, rz0=int(round(rmitte[2])) - 500,
+                           s=s, breite=1080.0 * s, hoehe=720.0 * s, mitte=mitte, variante=p["variante"],
+                           band=int(-(int(p["boden"]) / 0x708))))   # re15_collision.c:186 -(y/0x708), C-Division
+        print("ROOM%04X %s Blatt %d Bit %d Variante %d | Mitte (%d,%d,%d) s %.2f | Ursprung (%d,%d,%d) rot (%d,%d,%d) | "
+              "Rechteck (%d,%d) Slot %d | Cut %d Bild x %.0f..%.0f y %.0f..%.0f"
+              % (raum, p["name"], blatt, bit, p["variante"], mitte[0], mitte[1], mitte[2], s,
+                 zeilen[-1]["x"], zeilen[-1]["y"], zeilen[-1]["z"], zeilen[-1]["rx"], zeilen[-1]["ry"], zeilen[-1]["rz"],
+                 zeilen[-1]["rx0"], zeilen[-1]["rz0"], p["slot"], cut,
+                 min(e[0] for e in ecken_bild), max(e[0] for e in ecken_bild),
+                 min(e[1] for e in ecken_bild), max(e[1] for e in ecken_bild)))
     if not schreiben:
         return
 
@@ -245,7 +330,8 @@ def main():
 
     L = ["/* AUTOMATISCH ERZEUGT von re15_port/tools/r36_kartenitems/karten_export.py --schreiben - nicht von Hand.",
          " * Runde 36 Spur N (Dossier analysis/befunde_runde36/N_kartenitems.md Abschnitt 3); Runde 42 Strang lageplaene:",
-         " * EIN Revierplan (ROOM1030) + EIN Kellerplan (ROOM1200) wie RE2 room20B0 Set(33,2..4) @0x037DA-E2.",
+         " * EIN Revierplan (ROOM1030) + EIN Kellerplan (ROOM1200) wie RE2 room20B0 Set(33,2..4) @0x037DA-E2; Stufe 2: je Gebiet",
+         " * ein Plan wie RE2 room4040/5040 - Kanalisation ROOM2000, Fabrik ROOM30C1 (nur Elza), U-Bahn ROOM6000 (s = 1).",
          " * RE2-Lageplan karte01: info/re2leon/PL0/RDT/ROOM3060.RDT MD1 @0x%06X (%d B, md5 %s)," % (MD1_OFF, MD1_LEN, MD1_MD5),
          " *                       TIM @0x%06X (%d B, md5 %s) - TIM UNVERAENDERT." % (TIM_OFF, TIM_LEN, TIM_MD5),
          " * Je Raum EIN MD1: dieselben Bytes, nur die 5 Ecken @0x44 gleichmaessig um s skaliert (PORT-WAHL:",
@@ -260,11 +346,15 @@ def main():
              % (len(md1s), ", ".join("k_r36k_md1_%d" % i for i in range(len(md1s)))))
     L.append("")
     for i, (f, g) in enumerate(texte):
-        L.append("/* ROOM%04X: \"A %s. / Will you take it?\" (RE2 %s-Rahmen) */"
-                 % (zeilen[i]["raum"], zeilen[i]["name"], zeilen[i]["rahmen"]))
+        L.append("/* ROOM%04X: \"%s %s. / Will you take it?\" (RE2 %s-Rahmen) */"
+                 % (zeilen[i]["raum"], "There's a" if zeilen[i]["rahmen"] == "room4040" else "A", zeilen[i]["name"],
+                    zeilen[i]["rahmen"]))
         L.append(blob("k_r36k_frage_%d" % i, bytes(f)))
-        L.append("/* ROOM%04X: \"You've taken %s / %s.\" (RE2 %s-Rahmen) */"
-                 % (zeilen[i]["raum"], zeilen[i]["artikel"], zeilen[i]["name"], zeilen[i]["rahmen"]))
+        if zeilen[i]["rahmen"] == "room4040":
+            L.append("/* ROOM%04X: \"You've taken / the %s.\" (RE2 room4040-Rahmen) */" % (zeilen[i]["raum"], zeilen[i]["name"]))
+        else:
+            L.append("/* ROOM%04X: \"You've taken %s / %s.\" (RE2 %s-Rahmen) */"
+                     % (zeilen[i]["raum"], zeilen[i]["artikel"], zeilen[i]["name"], zeilen[i]["rahmen"]))
         L.append(blob("k_r36k_genommen_%d" % i, bytes(g)))
     L.append("static const unsigned char *const k_r36k_frage[%d] = { %s };"
              % (len(texte), ", ".join("k_r36k_frage_%d" % i for i in range(len(texte)))))
@@ -276,17 +366,18 @@ def main():
              % (len(texte), ", ".join(str(len(g)) for _, g in texte)))
     L.append("")
     L.append("/* raum, blatt, bit, aot_slot, verdraengt_nach, x, y, z, rot_x, rot_y, rot_z, rect_x, rect_z (1000x1000),")
-    L.append(" * n_blaetter, blaetter[], bits[] (Runde 42: alle Blaetter des Plans; [0] = blatt/bit der Fundstelle).")
+    L.append(" * n_blaetter, blaetter[], bits[] (Runde 42: alle Blaetter des Plans; [0] = blatt/bit der Fundstelle),")
+    L.append(" * variante (Runde 42 Stufe 2: 0 = beide Fassungen, 2 = nur Elza / raum|1), band (Aot_set pc[4] der Zone).")
     L.append(" * Licht: Flach-Attribut RE15_R36K_PROP_ATTR im Installer, keine Spalte (Nachbesserung 1). */")
     L.append("static const re15_kartenitem_r36_t k_r36k_lage[%d] = {" % len(zeilen))
     for z in zeilen:
         gb = [g[0] for g in z["gruppe"]] + [0] * (RE15_R36K_MAX_BLAETTER - len(z["gruppe"]))
         gt = [g[1] for g in z["gruppe"]] + [0] * (RE15_R36K_MAX_BLAETTER - len(z["gruppe"]))
-        L.append("    { 0x%04X, %d, %d, %d, 0x%02X, %d, %d, %d, %d, %d, %d, %d, %d, %d, { %s }, { %s } },"
+        L.append("    { 0x%04X, %d, %d, %d, 0x%02X, %d, %d, %d, %d, %d, %d, %d, %d, %d, { %s }, { %s }, %d, %d },"
                  "   /* %s %s Mitte (%d,%d,%d) */"
                  % (z["raum"], z["blatt"], z["bit"], z["slot"], z["verdr"], z["x"], z["y"], z["z"],
                     z["rx"], z["ry"], z["rz"], z["rx0"], z["rz0"], len(z["gruppe"]),
-                    ", ".join(str(v) for v in gb), ", ".join(str(v) for v in gt),
+                    ", ".join(str(v) for v in gb), ", ".join(str(v) for v in gt), z["variante"], z["band"],
                     z["name"], "/".join(g[2] for g in z["gruppe"]),
                     round(z["mitte"][0]), round(z["mitte"][1]), round(z["mitte"][2])))
     L.append("};")

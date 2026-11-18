@@ -28,6 +28,38 @@
  *   ALTE SPIELSTAENDE: Besitz je Blatt = sein Bit (unveraendert). Ein Plan haengt, solange EINES seiner Bits
  *   fehlt (wer frueher nur den 3F-Plan nahm, findet den Revierplan in der Lobby und bekommt 1F/2F dazu).
  *
+ * RUNDE 42 STUFE 2 — EIN PLAN JE GEBIET FUER STAGE2..6 (wie RE2: "sewer map" room4040, "factory map" room5040):
+ *   NUTZERWUNSCH 18.11.2026 (Auftrag): je Gebiet ein Plan, gut sichtbar wie ein Plakat, frueh auf dem Pflichtweg beider
+ *   Figuren; Kanalisation "der Wandplan im ersten Kanalraum 2000/2001" (Konzept F-25/K-04). NICHT hier: Forschungszentrum
+ *   (Capcoms Wandplan 4020, baut r42/rest als Blatt 8) und Labor (Original ROOM5030 sub02, Flag (3,115)).
+ *   Kanalisation ROOM2000/2001, Blatt 6, Bit 34 (re15_story_r42.h RE15_R42_BIT_PLAN_KANAL), Nordwand des Nordgangs z = -19800
+ *     (SCA-Zelle 7 @0x012A4 z[-19800..-17800] floor 19 = Band 1) links neben der Ostleiter, Mitte x 1500. GEMESSEN: der
+ *     Raum hat ZWEI getrennte Gehwege (Band 1: Kanal-Zellen 12/13 @0x012E0/@0x012EC sind fuer den Spieler fest, u0 = 01) -
+ *     Nord/Ost mit Tuer 2070 und Ostleiter, Sued/West mit 2010/2050 und Westleiter. Leon bekommt die Steuerung im Nordgang:
+ *     2000 sub02 Pos_set @0x0180C (4600,-1800,-21150), Szene in Cut 11 @0x017FE. Elza steht nach ihrer ersten Szene am
+ *     Westgang (2001 sub02 Pos_set @0x0188E, Cut 4), muss aber fuer John (sub00 Slot 7 @0x017EA x 2200..6100 -> sub04
+ *     Cut_chg 11 @0x01966) und Sherry (sub05 Cut_chg 11 @0x01A9E, Pos_set @0x01AA4 (597,-1800,-20962)) an diese Wand.
+ *     Nur das Ostende ist fuer BEIDE sicher frueh; Cut 11 ist dort die Szenenkamera beider.
+ *   Fabrik NUR ROOM30C1 (Elza), Blatt 7, Bit 35 (dasselbe Bit wie Leons Uebergabe in 3060, RE15_R42_BIT_PLAN_FABRIK),
+ *     Kamera 1 = Ankunft aus 3091 (Slot 0 @0x01332 -> Cut 1; Pflicht: Marvin-Szene E31 30C1 sub00 @0x00BEE): Nordwand
+ *     z = 1100 (SCA-Zelle 1 @0x007F8 x[-27200..-5300] z[1100..1600]) zwischen Treppenfuss (Zelle 10..13 x <= -9400)
+ *     und Ostwand (Zelle 0 x = -5800). Konzept 6b woertlich: "Elza: an der Wand im Tresenbereich 30C1".
+ *   U-Bahn ROOM6000/6001, Blatt 12, Bit 37 (RE15_R42_BIT_PLAN_UBAHN), Kamera 0 = Ankunft aus dem Hangar (50B0/50B1 Slot 1
+ *     @0x004AE/@0x004B6 -> Cut 0, y -3600; Konzept L-24/E-18: beide gehen 50B0 -> 6000 -> 6030 Slot 3), Rueckwand des
+ *     Treppenabsatzes x = 2025 (SCA-Zelle 17 @0x00828 x[25..2025] z[-2400..3725]). Capcoms gruene Tafel (Kamera 8) haengt
+ *     bei z -22000 am Tor und kommt erst nach dem Generator (L-25/E-19) ins Bild — deshalb die Ankunftswand.
+ *   GROESSE = RE2-Original: das karte01-MD1 UNSKALIERT (s = 1: 1080 x 720, MD1 @0x44), PORT-WAHL "wie ein Plakat".
+ *   HOEHE: Mitte 2000 ueber dem Boden des Standorts (2000 Gehweg y -1800 aus 1260 Slot 1/4 @0x0114A/@0x011AA `f8 f8`; 30C1 y 0 aus
+ *     3091 @0x01332; 6000 y -3600 aus 50B0 @0x004AE `f0 f1`) = PORT-WAHL (Augenhoehe-Plakat).
+ *   TEXT im Rahmen RE2 room4040 @0x1B9B "There's a / sewer map. / Will you take it?" und @0x1BCB "You've taken / the sewer
+ *     map."; "factory map" = RE2 room5040 @0x2341/@0x2376; "subway map" = PORT-WAHL (RE2 hat keinen U-Bahn-Plan).
+ *   PROP-BAND = Band des Standorts + 1 wie die Wandobjekte der Disc (ROOM2000 obj 0..2 @0x016E6.. Band 2, ROOM6000 obj 0/1
+ *     @0x00E16/@0x00E38 Band 3). GEMESSEN 18.11.: mit Band 1 im Gehweg-Band 1 von 2000 nahm die Klettersonde FUN_8002d474
+ *     (Objekt-Test FUN_8002d2c0 @0x8002d370) das Plakat als Kiste - Leon kletterte auf y -3600 statt die Frage zu sehen.
+ *   SLOT 20 und Ereignis 28 in allen drei Raeumen frei (RDT-Saetze nur Slots 0..7, Kamerazonen ab 26/42/44; Subs < 28).
+ *   NACHRICHTEN 30/31: RDT-Block 2000 12, 2001 15, 30C1 11, 6000 8, 6001 3 Eintraege; Port belegt dort 40 (2000/2001),
+ *     21..26 (30C1), 0/3 als Neutext (6000) — 30/31 frei (analysis/befunde_runde42/belege/zensus_r42.txt).
+ *
  * NUTZER-VORGABE (AUFTRAG.md Z. 73-77, woertlich): "Extrahiere mir Karte01 oder Karte02 ... Haenge sie
  *   mir beispielhaft an die Stelle von map3F.bmp, und schalte damit die Map fuer Etage 3F frei, wie das
  *   Kartensystem in Resident Evil 2 auch funktioniert. Auch mit den Text." + 2F ROOM10D0 (map2F.bmp),
@@ -99,9 +131,19 @@ typedef struct {
     uint8_t  n_blaetter;       /* Runde 42: Blaetter dieses Plans (Revier 3, Keller 2)                 */
     uint8_t  blaetter[RE15_R36K_MAX_BLAETTER];  /* 4 = 3F, 3 = 2F, 2 = 1F, 1 = B2, 0 = B1               */
     uint8_t  bits[RE15_R36K_MAX_BLAETTER];      /* je Blatt sein Bank-9-Bit: 89/88/87 bzw. 77/78        */
+    uint8_t  variante;         /* Runde 42 Stufe 2: RE15_R36K_VARIANTE_* (0 = beide Fassungen des Raums)  */
+    uint8_t  band;             /* Runde 42 Stufe 2: Aot_set pc[4] der Zone = Boden-Band des Standorts -(y/0x708)
+                                * (re15_collision.c:186; Scan-Gatter @0x80042cac); Stufe 1: 0 wie ROOM5030       */
 } re15_kartenitem_r36_t;
 
-#define RE15_R36K_ANZAHL       2   /* Runde 42: Revierplan ROOM1030 + Kellerplan ROOM1200 (vorher 5) */
+/* Runde 42 Stufe 2: Fassung des Raums, in der der Plan haengt. Der Fabrikplan haengt NUR in Elzas 30C1: Leon spielt 30C0
+ * als Marvin (Konzept L-06) und bekommt den Plan erst danach in 3060 von Marvin (L-09, story3a_r42.c, Bit 35). */
+#define RE15_R36K_VARIANTE_BEIDE 0   /* raum und raum|1                                                            */
+#define RE15_R36K_VARIANTE_LEON  1   /* nur raum (gerade Id)                                                       */
+#define RE15_R36K_VARIANTE_ELZA  2   /* nur raum|1 (ungerade Id)                                                   */
+
+#define RE15_R36K_ANZAHL       5   /* Runde 42: Revierplan 1030, Kellerplan 1200 (Stufe 1); Kanalisation 2000, Fabrik 30C1 (Elza),
+                                    * U-Bahn 6000 (Stufe 2). Forschungszentrum 4020 baut r42/rest, Labor 5030 ist Original. */
 #define RE15_R36K_BANK         9         /* Bank-9-Bits (gespeichert mit g_game.flags)                   */
 #define RE15_R36K_EREIGNIS     28        /* VERTRAG.md 1.3 Spur N                                       */
 #define RE15_R36K_OBJ          15        /* Prop-Pool-Id; TIM-Slot RE15_TIM_SLOT_PROP(15) = 35; kein Raum
@@ -117,7 +159,8 @@ typedef struct {
                                           * RE2 room20B0 obj 8 @0x03158 / room2130 obj 0 @0x00FDC = 0x0010;
                                           * RE1.5 ROOM1200 obj 0/1 @0x007DA/@0x00804 = 0x0010; Zeichner
                                           * FUN_8002c18c @0x8002c2f4 -> FUN_80022f0c flach, 0x808080      */
-#define RE15_R36K_PROP_BAND    1         /* wie r35 RE15_R35I_PROP_BAND (100 von 121 Item-Props)          */
+#define RE15_R36K_PROP_BAND    1         /* wie r35 RE15_R35I_PROP_BAND (100 von 121 Item-Props); Runde 42: Abstand
+                                          * ueber dem Band des Standorts (Prop-Band = band + 1, kartenitems_r36.c) */
 
 /* Prop + Aufhebe-Zone beim Raumstart anlegen (nur solange EINES der Bank-9-Bits des Plans fehlt). Gerufen an BEIDEN
  * Raumstart-Wegen (scd_room_setup.c, platform/pc/main.c Boot/CONTINUE) nach dem Init-Lauf von main00.

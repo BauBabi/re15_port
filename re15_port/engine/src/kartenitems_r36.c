@@ -23,10 +23,18 @@
 
 #define N_ZEILEN ((int)(sizeof k_r36k_lage / sizeof k_r36k_lage[0]))
 
+/* Runde 42 Stufe 2: eine Zeile gilt nur in ihrer Fassung des Raums (variante; Fabrikplan nur Elzas 30C1). */
+static int fassung_passt(const re15_kartenitem_r36_t *z, uint16_t room_id)
+{
+    if (z->variante == RE15_R36K_VARIANTE_LEON) return (room_id & 1u) == 0;
+    if (z->variante == RE15_R36K_VARIANTE_ELZA) return (room_id & 1u) != 0;
+    return 1;
+}
+
 static int index_des_raums(uint16_t room_id)
 {
     for (int k = 0; k < N_ZEILEN; k++)
-        if ((uint16_t)(room_id & 0xFFFEu) == k_r36k_lage[k].raum) return k;
+        if ((uint16_t)(room_id & 0xFFFEu) == k_r36k_lage[k].raum && fassung_passt(&k_r36k_lage[k], room_id)) return k;
     return -1;
 }
 
@@ -105,7 +113,12 @@ void re15_kartenitems_r36_install(uint16_t room_id)
         g_scd.props[i].active     = 1;
         g_scd.props[i].obj_id     = RE15_R36K_OBJ;
         g_scd.props[i].obj_type   = 0;                     /* pc[2] -> pool+8 @0x8004095c   */
-        g_scd.props[i].band       = RE15_R36K_PROP_BAND;   /* pc[4] -> pool+130 @0x80040974 */
+        /* pc[4] -> pool+130 @0x80040974. Runde 42 Stufe 2: eine Etage UEBER dem Standort wie die Wandobjekte der Disc -
+         * ROOM1200 obj 0/1 @0x007DA/@0x00804 Band 1 (Boden Band 0), ROOM2000 obj 0..2 @0x016E6/@0x01708/@0x0172A Band 2
+         * (Gehweg Band 1), ROOM6000 obj 0/1 @0x00E16/@0x00E38 Band 3 (Absatz Band 2). Im Band des Spielers waere das Plakat
+         * fuer die Klettersonde ein Objekt (FUN_8002d2c0 @0x8002d370 Band-Gate, Kasten 0 mit Rand -112 trifft fast ueberall):
+         * gemessen 2000, Aktion vor der Wand -> Klettern auf y -3600 statt Ereignis 28. Stufe 1 (Band 0): 1 wie bisher. */
+        g_scd.props[i].band       = (uint8_t)(g->band + RE15_R36K_PROP_BAND);
         g_scd.props[i].parent_obj = -1;                    /* pc[5] = 0x00 = Weltraum        */
         g_scd.props[i].x = g->x;
         g_scd.props[i].y = g->y;
@@ -139,7 +152,8 @@ void re15_kartenitems_r36_install(uint16_t room_id)
                  g->rect_x + RE15_R36K_RECT / 2, g->rect_z + RE15_R36K_RECT / 2,
                  RE15_R36K_RECT / 2, RE15_R36K_RECT / 2);
     g_aot.slots[g->aot_slot].sce_flags = 0;
-    g_aot.slots[g->aot_slot].band      = 0;                 /* Aot_set pc[4] = 0 wie ROOM5030       */
+    g_aot.slots[g->aot_slot].band      = g->band;           /* Aot_set pc[4]: 0 wie ROOM5030 (Stufe 1); Stufe 2 das Band
+                                                            * des Standorts (Gehweg 2000 = 1, Absatz 6000 = 2)      */
     re15_aot_retype(g->aot_slot, RE15_R36K_AOT_SCE, RE15_R36K_AOT_SAT, RE15_R36K_AOT_P0,
                     (uint16_t)((RE15_R36K_EREIGNIS << 8) | 0x18), 0);
 #ifdef RE15_PLATFORM_PC

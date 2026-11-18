@@ -164,7 +164,10 @@ static void teil_tabelle(void)
 {
     printf("=== tabelle: EIN Revierplan + EIN Kellerplan (RE2 room20B0 / room2130) ===\n");
     int n = re15_kartenitems_r36_anzahl();
-    PRUEFE(n == 2, "Anzahl Plaene %d (soll 2; Runde 36 hatte 5 Etagenplaene)", n);
+    /* Stufe 2: dazu Kanalisation/Fabrik/U-Bahn (Riegel unit_r42_lageplaene2_*); STAGE1 bleibt bei genau zwei Plaenen */
+    int n_s1 = 0;
+    for (int k = 0; k < n; k++) if ((re15_kartenitems_r36_zeile(k)->raum >> 12) == 1) n_s1++;
+    PRUEFE(n_s1 == 2, "Anzahl Plaene in STAGE1 %d (soll 2; Runde 36 hatte 5 Etagenplaene), alle Gebiete %d", n_s1, n);
     const re15_kartenitem_r36_t *a = re15_kartenitems_r36_zeile(0), *b = re15_kartenitems_r36_zeile(1);
     PRUEFE(a && a->raum == 0x1030 && a->blatt == 2 && a->bit == 89,
            "Zeile 0 = Revierplan ROOM1030 (Fundstelle 1F, Blatt 2, Bit 89): ROOM%04X Blatt %d Bit %d",
