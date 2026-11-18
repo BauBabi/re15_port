@@ -1,6 +1,7 @@
 /*
- * RE1.5 Rebuilt — Runde 42 Strang "rest", Stufe 3: ungenutzte Capcom-/80-%-Inhalte STAGE2-6 (U-05 501 Rechner, U-01 3091 Hoftuer
- * + D309 #21/#24, U-02 3091 "There's a power supply.", U-11 402 Wandplan -> Blatt 8; Stufe 5: U-08 Elzas Tuer 4001 -> 401).
+ * RE1.5 Rebuilt — Runde 42 Strang "rest", Stufe 3: ungenutzte Capcom-/80-%-Inhalte STAGE2-6 (U-05 501 Rechner, U-01 3091 Pochen
+ * + D309 #21/#24/#25, U-02 3091 "There's a power supply.", U-11 402 Wandplan -> Blatt 8; Stufe 5: U-08 Elzas Tuer 4001 -> 401;
+ * Stufe 7: Pochen, Blicke und Zielhaltungen in 3091 auf die Lobby-Tuer, durch die Elza am Ende geht).
  * Herleitung, Belege und Formen: include/re15_ungenutzt_r42.h. Kein Asset-Patch: die Programme sind Original-Befehle; 3091 sub07
  * wird zur Laufzeit aus den RDT-Bytes kopiert, nachdem die Pruefbytes stimmen (sonst laeuft das Original).
  */
@@ -92,7 +93,7 @@ static const uint8_t k_schalter[] = {
 static const uint8_t k_sub04_3091[28] = { 0x06, 0x00, 0x0e, 0x00, 0x21, 0x04, 0x08, 0x01, 0x2b, 0x02, 0xff, 0xff, 0x02, 0x00,
                                           0x07, 0x00, 0x0c, 0x00, 0x2b, 0x03, 0xff, 0xff, 0x02, 0x00, 0x00, 0x00, 0x01, 0x00 };
 
-/* ==== U-01: 3091 sub07 mit Blick zur Hoftuer und D309 #21/#24 ============================================================= */
+/* ==== U-01: 3091 sub07 mit D309 #21/#24/#25, Pochen + Blicke an der Lobby-Tuer (Stufe 7) ================================= */
 /* Pruefbytes der Stellen, die geaendert oder eingefuegt werden (Mod ROOM3091). */
 static const uint8_t k_neck_lobby[10] = { 0x41, 0x01, LE16(RE15_U42_LOBBY_X), 0x00, 0x00, LE16(RE15_U42_LOBBY_Z), 0x64, 0x00 };
 static const uint8_t k_dest_e[8]  = { 0x40, 0x00, 0x09, 0x20, LE16(RE15_U42_LOBBY_X), LE16(RE15_U42_LOBBY_Z) };   /* @0x1AB0 */
@@ -102,6 +103,9 @@ static const uint8_t k_vor_25[8]  = { 0x09, 0x0a, 0x1e, 0x00, 0x2b, 0x19, 0x00, 
 static const uint8_t k_vor_29[8]  = { 0x09, 0x0a, 0x46, 0x00, 0x2e, 0x02, 0x01, 0x00 };   /* @0x1C60 Sleep 70, @0x1C64 Work 2,1 */
 static const uint8_t k_kopf07[8]  = { 0x2b, 0x20, 0xff, 0xff, 0x02, 0x00, 0x22, 0x04 };   /* @0x16CA msg 32, Evt_next, Set(4,..) */
 static const uint8_t k_ende07[4]  = { 0x47, 0x00, 0x01, 0x00 };                           /* @0x1DAE Aot_on 0, Evt_end */
+static const uint8_t k_tuer0_rect[8] = { LE16(RE15_U42_TUER0_RX), LE16(RE15_U42_TUER0_RZ), LE16(RE15_U42_TUER0_RW),
+                                         LE16(RE15_U42_TUER0_RD) };                       /* @0x1338 / @0x135C Slot 0 Rechteck */
+static const int     k_schlag_off[4] = { 0x1A62, 0x1A72, 0x1A82, 0x1A92 };              /* Mod Se_on 0x0D (Disc @0x1778..@0x17A8) */
 static const uint8_t k_geste_j0[4] = { 0x3f, 0x00, 0x04, 0x00 };                          /* @0x1B2A Plc_motion 4 (John nach msg 23) */
 static const uint8_t k_geste_e0[4] = { 0x3f, 0x00, 0x05, 0x00 };                          /* @0x1BCA Plc_motion 5 (Elza nach msg 25) */
 static const uint8_t k_geste_j1[4] = { 0x3f, 0x00, 0x03, 0x00 };                          /* @0x1BF6 Plc_motion 3 (John nach msg 26) */
@@ -123,7 +127,9 @@ static void put(int *k, const void *b, int n) { if (*k + n <= (int)sizeof s_szen
 static int pruefen07(void)
 {
     return rdt_bytes(RE15_U42_SUB07_OFF, k_kopf07, 8) && rdt_bytes(RE15_U42_SUB07_ENDE - 4, k_ende07, 4) &&
-           rdt_bytes(0x1A62, k_schlag, 12) && rdt_bytes(0x1A92, k_schlag, 12) &&
+           rdt_bytes(k_schlag_off[0], k_schlag, 12) && rdt_bytes(k_schlag_off[1], k_schlag, 12) &&
+           rdt_bytes(k_schlag_off[2], k_schlag, 12) && rdt_bytes(k_schlag_off[3], k_schlag, 12) &&
+           rdt_bytes(0x1332 + 6, k_tuer0_rect, 8) && rdt_bytes(0x1356 + 6, k_tuer0_rect, 8) &&
            rdt_bytes(0x1AA6, k_neck_lobby, 10) && rdt_bytes(0x1AB0, k_dest_e, 8) &&
            rdt_bytes(0x1AC0, k_neck_lobby, 10) && rdt_bytes(0x1ACA, k_dest_j, 8) &&
            rdt_bytes(U42_EIN_JOHN - 4, k_vor_25, 8) && rdt_bytes(U42_EIN_ELZA - 4, k_vor_29, 8) &&
@@ -151,16 +157,13 @@ static int szene_bauen(void)
     if (!pruefen07()) return 0;
     const uint8_t *r = g_room_rdt.raw;
     int k = 0;
-    /* [@0x16CA, @0x1BC2) mit den vier Blickzielen auf der Hoftuer */
+    /* [@0x16CA, @0x1BC2) Byte fuer Byte; die Blick-/Drehziele @0x1AA6/@0x1AB0/@0x1AC0/@0x1ACA bleiben das Mod-Ziel der Lobby-Tuer
+     * (-28481,-155) (Stufe 7, NUTZERWUNSCH 18.11. "warum zielen sie denn jetzt auf die falsche Tür?"). Nur der Ort der vier
+     * Schlaege pc[6..11] wandert in die Mitte des Rechtecks der Lobby-Tuer Slot 0 (PORT-WAHL, re15_ungenutzt_r42.h (a2)). */
     const int a = RE15_U42_SUB07_OFF;
     put(&k, r + a, U42_EIN_JOHN - a);
-    static const int k_neck[2] = { 0x1AA6, 0x1AC0 }, k_dest[2] = { 0x1AB0, 0x1ACA };
-    for (int i = 0; i < 2; i++) {
-        uint8_t *n = s_szene + (k_neck[i] - a), *d = s_szene + (k_dest[i] - a);
-        n[2] = (uint8_t)((uint16_t)RE15_U42_HOF_X & 0xff); n[3] = (uint8_t)((uint16_t)RE15_U42_HOF_X >> 8);
-        n[6] = (uint8_t)((uint16_t)RE15_U42_HOF_Z & 0xff); n[7] = (uint8_t)((uint16_t)RE15_U42_HOF_Z >> 8);
-        d[4] = n[2]; d[5] = n[3]; d[6] = n[6]; d[7] = n[7];
-    }
+    const uint8_t ort[6] = { LE16(RE15_U42_POCH_X), LE16(RE15_U42_POCH_Y), LE16(RE15_U42_POCH_Z) };
+    for (int i = 0; i < 4; i++) memcpy(s_szene + (k_schlag_off[i] - a) + 6, ort, sizeof ort);
     /* John msg 33 (D309 #21) vor Elzas msg 25 */
     zeile(&k, 0x00, RE15_U42_MSG_JOHN, U42_GESTE_J_OFF, U42_GESTE_J_ENDE);
     /* [@0x1BC2, @0x1C64) */
@@ -264,8 +267,9 @@ const uint8_t *re15_ungenutzt_r42_evt_exec(uint16_t room_id, uint8_t sub, const 
         if (getenv("RE15_U42_ORIGINAL")) { U42_LOG("ROOM3091 sub07: Messhaken RE15_U42_ORIGINAL -> Mod-Szene"); return pc; }
         if (!szene_bauen()) { g_re15_u42_zaehler[4]++; U42_LOG("ROOM3091 sub07: Pruefbytes anders - Original"); return pc; }
         g_re15_u42_zaehler[1]++;
-        U42_LOG("ROOM3091 sub07: Blick zur Hoftuer (%d,%d), Zeilen %d (John), %d (Elza), %d (John), Programm %d B - U-01",
-                RE15_U42_HOF_X, RE15_U42_HOF_Z, RE15_U42_MSG_JOHN, RE15_U42_MSG_ELZA, RE15_U42_MSG_JOHN2, s_szene_n);
+        U42_LOG("ROOM3091 sub07: Pochen an der Lobby-Tuer (%d,%d,%d), Blick zur Lobby-Tuer (%d,%d), Zeilen %d (John), %d (Elza), "
+                "%d (John), Programm %d B - U-01/Stufe 7", RE15_U42_POCH_X, RE15_U42_POCH_Y, RE15_U42_POCH_Z, RE15_U42_LOBBY_X,
+                RE15_U42_LOBBY_Z, RE15_U42_MSG_JOHN, RE15_U42_MSG_ELZA, RE15_U42_MSG_JOHN2, s_szene_n);
         return s_szene;
     }
     if (sub == RE15_U42_3091_SUB_SCHALTER) {

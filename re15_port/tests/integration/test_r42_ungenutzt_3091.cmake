@@ -6,8 +6,9 @@
 # Weg wie integration_r41_stage3szenen_b_3091 (Elza-Neuspiel, work_vars[0x10] = 0x0F = ROOM3061 @0x011F6, Sprung nach 3091,
 # Sicherung (4,8) und Riegelschluessel (9,21) gesetzt, Sherry vor der Riegeltuer Slot 1, VIERECK -> sub02 -> Evt_exec 7).
 # Geprueft im debug.log:
-#   - ungenutzt_r42.c hat sub07 ersetzt (Zeile "[ungenutzt42] ... ROOM3091 sub07: Blick zur Hoftuer (-24506,1500)")
-#   - Elza (Aktor 2) und John (Aktor 1) drehen nach den Schlaegen zum Tonort (-24506,1500) = Disc ROOM3091 Se_on @0x1778
+#   - ungenutzt_r42.c hat sub07 ersetzt (Zeile "[ungenutzt42] ... ROOM3091 sub07: Pochen an der Lobby-Tuer (-26795,0,-1020)")
+#   - Stufe 7 (NUTZERWUNSCH 18.11. "warum zielen sie denn jetzt auf die falsche Tür?"): Elza (Aktor 2) und John (Aktor 1) drehen
+#     nach den Schlaegen, VOR "What was that?" (msg 22), zur Lobby-Tuer (-28481,-155) = Mod @0x1AB0/@0x1ACA, nie zur Hoftuer
 #   - Zeilenfolge 22, 23, 24, 33 (D309 #21), 25..28, 34 (D309 #24), 36 (D309 #25), 29, 30
 #   - danach geht es wie in der Mod in die Lobby 30C1 (Tuer S198, Aot_on Slot 0 @0x1DAE)
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P <diese Datei>
@@ -88,9 +89,19 @@ macro(pruefe_re _was _re)
     endif()
 endmacro()
 
-pruefe("neue Szene (kein Messhaken)" "ROOM3091 sub07: Blick zur Hoftuer (-24506,1500), Zeilen 33 (John), 34 (Elza), 36 (John)")
-pruefe("Elza dreht zum Tonort (Disc @0x1778)" "Plc_dest(slot=2 mode=0x09 dest=(-24506,1500))")
-pruefe("John dreht zum Tonort (Disc @0x1778)" "Plc_dest(slot=1 mode=0x09 dest=(-24506,1500))")
+pruefe("neue Szene (kein Messhaken)"
+    "ROOM3091 sub07: Pochen an der Lobby-Tuer (-26795,0,-1020), Blick zur Lobby-Tuer (-28481,-155), Zeilen 33 (John), 34 (Elza), 36 (John)")
+pruefe_re("Elza dreht nach den Schlaegen zur Lobby-Tuer (Mod @0x1AB0), vor msg 22"
+    "Plc_dest[(]slot=2 mode=0x09 dest=[(]-28481,-155[)][)].*msgtext] room=3091 id=22 ")
+pruefe_re("John dreht nach den Schlaegen zur Lobby-Tuer (Mod @0x1ACA), vor msg 22"
+    "Plc_dest[(]slot=1 mode=0x09 dest=[(]-28481,-155[)][)].*msgtext] room=3091 id=22 ")
+string(FIND "${_dbg}" "dest=(-24506,1500)" _hof)
+if(NOT _hof LESS 0)
+    message(STATUS "FAIL ${_tag}: eine Figur dreht zur Hoftuer (-24506,1500)")
+    math(EXPR _fehler "${_fehler} + 1")
+else()
+    message(STATUS "ok   ${_tag}: keine Drehung zur Hoftuer (-24506,1500)")
+endif()
 pruefe_re("Zeilen 22, 23, 24, 33, 25..28, 34, 36, 29, 30 in dieser Folge"
     "msgtext] room=3091 id=22 .*msgtext] room=3091 id=23 .*msgtext] room=3091 id=24 .*msgtext] room=3091 id=33 .*msgtext] room=3091 id=25 .*msgtext] room=3091 id=28 .*msgtext] room=3091 id=34 .*msgtext] room=3091 id=36 .*msgtext] room=3091 id=29 .*msgtext] room=3091 id=30 ")
 pruefe("msg 33" "[msgtext] room=3091 id=33 \"John: Hey, let's get going. If we stay here, they'll come swarming back.\"")

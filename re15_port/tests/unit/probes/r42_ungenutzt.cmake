@@ -5,8 +5,10 @@
 #   unit_r42_ungenutzt_rechner   5010/5011 (U-05): Disc #40 vor dem Speicher-Text, jedes Mal
 #   unit_r42_ungenutzt_plan      4020/4021 (U-11): Wandplan gibt Blatt 8 (Bit 36) einmal, mit "You've taken the laboratory map."
 #   unit_r42_ungenutzt_schalter  3091 (U-02): ohne Strom "There's a power supply." vor "I can't reach the breaker switch..."
-#   unit_r42_ungenutzt_szene     3091 (U-01): Blick zur Hoftuer, D309 #21 (msg 33), #24 (msg 34), #25 (msg 36) in der Szene
-#   unit_r42_ungenutzt_bytes     Programme gegen die Original-Saetze
+#   unit_r42_ungenutzt_szene     3091 (U-01): D309 #21 (msg 33), #24 (msg 34), #25 (msg 36) in der Szene; Stufe 7: Blicke und
+#                                Zielhaltungen nach den Schlaegen zur Lobby-Tuer (Nutzer 18.11.)
+#   unit_r42_ungenutzt_bytes     Programme gegen die Original-Saetze; Stufe 7: Schlaege an der Lobby-Tuer, Blickziele = Mod
+#   unit_r42_ungenutzt_namen     Stufe 7 (Nutzer 18.11.): gesprochen -> Sprechername davor, System-/Untersuchungstext ohne
 #   unit_r42_ungenutzt_tuer401   Stufe 5 U-08: Elza 4001 Slot 1 -> 4011 (Disc @0x1012), Kiste/Rechner/Funde/Rueckweg,
 #                                Leon 4000 Slot 1 unveraendert
 add_executable(test_r42_ungenutzt ${CMAKE_CURRENT_LIST_DIR}/../test_r42_ungenutzt.c)
@@ -16,7 +18,7 @@ target_compile_definitions(test_r42_ungenutzt PRIVATE RE15_ASSET_PSX_DIR="${CMAK
 if(NOT WIN32)
     target_link_libraries(test_r42_ungenutzt PRIVATE m)
 endif()
-foreach(_teil rechner plan schalter szene bytes tuer401)
+foreach(_teil rechner plan schalter szene bytes namen tuer401)
     add_test(NAME unit_r42_ungenutzt_${_teil} COMMAND test_r42_ungenutzt ${_teil} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r42_ungenutzt_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()

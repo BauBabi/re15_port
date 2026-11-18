@@ -20,14 +20,30 @@
  *   Maske ffff wie der Disc-Satz @0x372 pc[16..17]). PORT-WAHL: Nahbild statt Raumkamera (Disc sce 1 schaltet keine Kamera) -
  *   der Satz spricht vom Rechner, den Cut 2 zeigt; der Speicher-Ablauf danach ist unveraendert.
  *
- * ---- U-01 (3091 Geraeusch an der Hoftuer, D309 #21/#24) -------------------------------------------------------------------------
+ * ---- U-01 (3091 Pochen an der Tuer, D309 #21/#24/#25) -----------------------------------------------------------------------
  * Disc ROOM3091 sub07: viermal `36 02 0d 01 00 00 46 a0 00 00 dc 05` @0x1778/@0x1788/@0x1798/@0x17A8 = Ton 0x0D am Weltort
  *   (-24506, 0, 1500) (Se_on-Handler LAB_80041624, Modus 0 -> Ursprung (0,0,0) @0x80041678..@0x80041684, Pruefung U-01); der Ort
- *   liegt in der Tuer Slot 1 @0x133C nach 306 (Hof). Danach #21 John (@0x1B4E) und #24 Elza (@0x1BD6), im Port nie gezeigt.
- * Mod ROOM3091 sub07 [@0x16CA, @0x1DB2) spielt dieselben Schlaege @0x1A62..@0x1A92, dreht aber danach beide Figuren zur Lobby-Tuer
- *   Slot 0 (-28481,-155): Plc_neck @0x1AA6 / Plc_dest @0x1AB0 (Elza, Work 2,1), Plc_neck @0x1AC0 / Plc_dest @0x1ACA (John, Work 2,0).
- * BAU (Pruefung U-01 "Mod-Blickrichtung @0x1AA6-@0x1ACA mit aendern"): Kopie von sub07 mit
- *   (a) Blick-/Drehziel dieser vier Saetze = Ort der Schlaege (-24506,1500) (Disc @0x1778 `46 a0 .. dc 05`);
+ *   liegt im Rechteck der Tuer Slot 1 @0x133C nach 306 (Hof; Rechteck (-25610,1300,1890,750) = x -25610..-23720, z 1300..2050).
+ *   Danach #21 John (@0x1B4E), #24 Elza (@0x1BD6), #25 John (@0x1BEF), im Port nie gezeigt.
+ * Mod ROOM3091 sub07 [@0x16CA, @0x1DB2) spielt dieselben Schlaege @0x1A62/@0x1A72/@0x1A82/@0x1A92 (Ort der Disc), dreht aber danach
+ *   beide Figuren zur Lobby-Tuer Slot 0 (-28481,-155): Plc_neck @0x1AA6 / Plc_dest @0x1AB0 (Elza, Work 2,1), Plc_neck @0x1AC0 /
+ *   Plc_dest @0x1ACA (John, Work 2,0); danach heben beide die Waffe (Plc_motion(2,6) eigene Bank, Elza @0x1ADA, John @0x1AE6 und
+ *   @0x1B1A, Elza @0x1B86 - Sub 2 = Play-once+Hold auf der Entity-Bank 0x80050f00, Richtung = Gier aus dem Plc_dest davor).
+ *   Am Ende dreht @0x1D5E `40 00 09 20 bf 90 65 ff` Elza wieder dorthin, und @0x1DAE `47 00` (Aot_on Slot 0) feuert genau diese
+ *   Tuer (Slot 0 @0x1332/@0x1356, S198 -> 30C1, Marvin in der Lobby, ROOM30C1 sub03): Elza geht durch die Lobby-Tuer.
+ * NUTZERWUNSCH 18.11.2026 (nach Video U02_U01_3091_Weg_zum_Schalter_mit_Ton.mp4, Frage "soll Elza nach 'Let me deal with it.' in
+ *   die Lobby gehen?"): "Zu deiner Frage - passt, aber warum zielen sie denn jetzt auf die falsche Tür?" -> Pochen, Blicke,
+ *   Drehungen und Zielhaltungen gehen auf DIE Tuer, durch die Elza am Ende geht (Lobby-Tuer Slot 0), nicht auf Capcoms Hoftuer.
+ * BAU: Kopie von sub07 mit
+ *   (a) Blick-/Drehziele @0x1AA6/@0x1AB0/@0x1AC0/@0x1ACA UNVERAENDERT = Mod-Ziel der Lobby-Tuer (-28481,-155) (Stufe 3 hatte sie auf
+ *       den Disc-Tonort gelegt; seit Stufe 7 wieder Mod). Die vier Zielhaltungen Plc_motion(2,6) folgen damit von selbst;
+ *   (a2) Ort der vier Schlaege @0x1A62/@0x1A72/@0x1A82/@0x1A92 pc[6..11] = Mitte des Rechtecks der Lobby-Tuer Slot 0
+ *       (Mod @0x1338 `2e 96 34 f9 4e 02 a0 05` = (-27090,-1740,590,1440) -> (-26795, 0, -1020)), y = 0 wie Disc @0x1778 pc[8..9].
+ *       PORT-WAHL "Lage aus der Tuer": Capcoms Tonort liegt im Rechteck SEINER Tuer (Hof, siehe oben), aber nicht in dessen Mitte
+ *       (-24665,1675); eine Regel, nach der Capcom den Punkt im Rechteck waehlte, ist nicht belegt - die Mitte ist die Port-Wahl.
+ *       HINWEIS: Der PC-Port spielt Se_on heute ohne Ortsklang (audio_pc.c SCD_AUDIO_SE_ON nutzt evt.pos_* nicht; der Ortspfad
+ *       FUN_80045a64 fuer pc[3] != 0 ist offen, scd_vm.c op_se_on) - der Ort steht richtig im Programm, hoerbar wird er erst mit
+ *       einem Ortsklang;
  *   (b) John msg 33 (= D309 #21) VOR Elzas msg 25 @0x1BC2 "Let me deal with it..." (Johns Drang zum Aufbruch, Elza antwortet mit
  *       der Aufteilung - wie auf der Disc #21 -> #22 Elza "teilen wir uns auf"), Gestenblock = Johns Block nach msg 23
  *       [@0x1B2A, @0x1B5A) (Bewegung 4/4/0/0/8);
@@ -35,9 +51,8 @@
  *       Mod #27 John "You stay with me now" / #28 Sherry), Gestenblock = Elzas Block nach msg 25 [@0x1BCA, @0x1BEE) (5/5/2/9).
  *   (d) Runde 2 (Pruefung s3_r1 G2): John msg 36 (= D309 #25 @0x1BEF 「任せとけ！」, auf der Disc die Antwort auf #24) direkt nach
  *       msg 34, Gestenblock = Johns Block nach msg 26 "Will do!" [@0x1BF6, @0x1C0A) (3/3). Englisch PORT-WAHL "Leave it to me!".
- *   NICHT geaendert (Pruefung s3_r1 G1, offen): der Schluss @0x1D5E `40 00 09 20 bf 90 65 ff` dreht Elza zur Lobby-Tuer, und
- *   @0x1DAE `47 00` (Aot_on Slot 0) feuert genau diese Tuer (S198 -> 30C1, Marvin in der Lobby, ROOM30C1 sub03). Elzas weiterer
- *   Weg fuehrt in der Mod zwingend durch die Lobby; sie zur Hoftuer zu drehen und dann in die Lobby zu schicken waere schlechter.
+ *   NICHT geaendert: der Schluss ab @0x1C64 (Elza dreht @0x1D5E zur Lobby-Tuer und geht @0x1DAE hindurch), Sherrys Weg und
+ *   Sherrys Blicke (die Mod gibt ihr nach den Schlaegen kein Plc_dest; ihre Plc_neck @0x1C3C/@0x1C4E/@0x1C7E gehen auf John/Elza).
  *   Jede neue Zeile wartet danach, bis Zeile UND Stimme zu Ende sind (Form story3b_r42.c OP_ZEILE: Signal Bank 5 0x14, RE2 Wsleep
  *   ROOM7020 sub12 @0x079A); 3091 nutzt in Bank 5 nur 0x20..0x22 (sub09..sub11 @0x1DCA/@0x1DD8/@0x1DE6).
  *   Work_set (2,0) = John (sub00 @0x014E0 Sce_em_set Slot 0 Typ 0x49), (2,1) = Elza (@0x014F4 Slot 1).
@@ -111,10 +126,18 @@
 #define RE15_U42_SUB07_ENDE       0x1DB2
 #define RE15_U42_SUB04_OFF        0x15CA
 #define RE15_U42_SUB04_ENDE       0x15E6
-#define RE15_U42_HOF_X            (-24506) /* Disc ROOM3091 Se_on @0x1778 `46 a0`                                             */
+#define RE15_U42_HOF_X            (-24506) /* Disc ROOM3091 Se_on @0x1778 `46 a0` (= Mod @0x1A62; nur noch Pruefbyte)          */
 #define RE15_U42_HOF_Z            1500     /* Disc ROOM3091 Se_on @0x1778 `dc 05`                                             */
 #define RE15_U42_LOBBY_X          (-28481) /* Mod @0x1AA6 `bf 90` (Lobby-Tuer Slot 0)                                         */
 #define RE15_U42_LOBBY_Z          (-155)   /* Mod @0x1AA6 `65 ff`                                                              */
+/* Stufe 7 (NUTZERWUNSCH 18.11.): Tonort der Schlaege = Mitte des Rechtecks der Lobby-Tuer Slot 0, PORT-WAHL (siehe oben, a2) */
+#define RE15_U42_TUER0_RX         (-27090) /* Mod ROOM3091 Door_aot_set Slot 0 @0x1338 `2e 96`                                 */
+#define RE15_U42_TUER0_RZ         (-1740)  /* @0x133A `34 f9`                                                                  */
+#define RE15_U42_TUER0_RW         590      /* @0x133C `4e 02`                                                                  */
+#define RE15_U42_TUER0_RD         1440     /* @0x133E `a0 05`                                                                  */
+#define RE15_U42_POCH_X           (RE15_U42_TUER0_RX + RE15_U42_TUER0_RW / 2)   /* -26795 */
+#define RE15_U42_POCH_Y           0        /* Disc ROOM3091 @0x1778 pc[8..9] `00 00`                                           */
+#define RE15_U42_POCH_Z           (RE15_U42_TUER0_RZ + RE15_U42_TUER0_RD / 2)   /* -1020  */
 #define RE15_U42_MSG_JOHN         33       /* D309 #21 */
 #define RE15_U42_MSG_ELZA         34       /* D309 #24 */
 #define RE15_U42_MSG_JOHN2        36       /* D309 #25 @0x1BEF 「任せとけ！」 (Runde 2, G2)                                   */

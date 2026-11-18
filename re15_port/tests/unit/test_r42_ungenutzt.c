@@ -10,14 +10,19 @@
  *   plan     4020/4021 (U-11): Wandplan -> msg 0, dann msg 2 "You've taken the laboratory map.", Bit (9,36), Blatt 8 im Besitz;
  *            zweites Untersuchen nur msg 0
  *   schalter 3091 (U-02): Schalter-Platz Slot 5 ohne Strom -> msg 35 "There's a power supply.", dann msg 3; mit Strom nur msg 2
- *   szene    3091 (U-01): Szene sub07 -> Folge 32, 9..24, 33, 25..28, 34, 29, 30; nach den Schlaegen blicken John und Elza zur
- *            Hoftuer (-24506,1500), nicht zur Lobby-Tuer (-28481,-155)
- *   bytes    Programme gegen die Original-Saetze (nur mit Modul; die Gegenprobe auf aaea5f8c2 laeuft ohne)
+ *   szene    3091 (U-01): Szene sub07 -> Folge 32, 9..24, 33, 25..28, 34, 36, 29, 30; nach den Schlaegen blicken John und Elza
+ *            (Stufe 7, NUTZERWUNSCH 18.11. "warum zielen sie denn jetzt auf die falsche Tür?") zur Lobby-Tuer (-28481,-155), durch
+ *            die Elza am Ende geht, nicht zur Hoftuer (-24506,1500) - auch noch, waehrend John die Waffe hebt (msg 23)
+ *   bytes    Programme gegen die Original-Saetze (nur mit Modul; die Gegenprobe auf aaea5f8c2 laeuft ohne); 3091: Blickziele = Mod,
+ *            Ort der vier Schlaege = Mitte der Lobby-Tuer Slot 0 (-26795,0,-1020)
+ *   namen    Stufe 7 (Nutzer 18.11.): jeder gesprochene neue Satz des Moduls traegt den Sprechernamen in der Form der uebrigen
+ *            Untertitel (`04 00 05 <Farbe> <Name:> 05 00 00`, Farbe wie die Original-Zeilen des Sprechers in 3091), reine
+ *            Untersuchungs-/Systemtexte (3091 msg 35, 4020/4021 msg 2) bleiben ohne Namen (`04 02`)
  *   tuer401  Stufe 5, U-08 (NUTZERWUNSCH 18.11. "ja, warum nicht?"): Elza ROOM4001 Slot 1 ist eine Tuer wie Disc @0x1012 (sce 2)
  *            und fuehrt nach ROOM4011 (-21044,-24000) Cut 0, nicht zu msg 14 "It's locked."; in 4011 Kiste (msg 6 -> Kistenbild),
  *            Rechner (msg 7 -> Speicher-Ablauf), zwei Funde (Bit 11/12) und die Tuer zurueck nach ROOM4001 (-15608,-3524);
  *            Leon ROOM4000 Slot 1 unveraendert (-> ROOM4010), der Haken fasst 4000 nicht an
- * Aufruf: test_r42_ungenutzt [rechner|plan|schalter|szene|bytes|tuer401|alle]
+ * Aufruf: test_r42_ungenutzt [rechner|plan|schalter|szene|bytes|namen|tuer401|alle]
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -335,7 +340,7 @@ static void teil_szene(void)
     int slot = -1;
     for (int k = SCD_EVENT_SLOT_FIRST; k <= SCD_EVENT_SLOT_LAST && slot < 0; k++)
         if (!g_scd.threads[k].active && scd_thread_start(k, s_rdt.sub_scd[2]) == 0) slot = k;   /* sub02 -> Evt_exec 7 @0x015A4 */
-    int bild22 = -1, j_hof = 9999, e_hof = 9999, j_lob = 9999, e_lob = 9999;
+    int bild22 = -1, j_hof = 9999, e_hof = 9999, j_lob = 9999, e_lob = 9999, bild23 = -1, j23_lob = 9999, j23_hof = 9999;
     for (int f = 0; f < 20000; f++) {
         frame(1);
         if (bild22 < 0 && s_prot_n > 0 && s_prot_id[s_prot_n - 1] == 22) {
@@ -345,6 +350,12 @@ static void teil_szene(void)
                 j_hof = gier_abstand(j, -24506, 1500); e_hof = gier_abstand(e, -24506, 1500);
                 j_lob = gier_abstand(j, -28481, -155); e_lob = gier_abstand(e, -28481, -155);
             }
+        }
+        /* msg 23 = John "Sounds like somebody's in there." direkt nach seinem Plc_motion(2,6) @0x1B1A (Waffe gehoben) */
+        if (bild23 < 0 && s_prot_n > 0 && s_prot_id[s_prot_n - 1] == 23) {
+            bild23 = s_bild;
+            const re15_actor_t *j = aktor_typ(0x49);
+            if (j) { j23_lob = gier_abstand(j, -28481, -155); j23_hof = gier_abstand(j, -24506, 1500); }
         }
         if (f > 100 && !laeuft() && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27)) break;
     }
@@ -372,8 +383,11 @@ static void teil_szene(void)
           "msg 33 steht, bis sie zu Ende ist (%d Bilder bis msg 25)", i33 >= 0 && i33 + 1 < s_prot_n ? s_prot_bild[i33 + 1] - s_prot_bild[i33] : -1);
     printf("   bei msg 22 (Bild %d): John Hof %d / Lobby %d, Elza Hof %d / Lobby %d (Gier-Abstand, 4096 = 360 Grad)\n", bild22,
            j_hof, j_lob, e_hof, e_lob);
-    PRUEF(bild22 >= 0 && j_hof <= 128 && e_hof <= 128 && j_lob > 256 && e_lob > 256,
-          "nach den Schlaegen: John und Elza blicken zur Hoftuer (-24506,1500), nicht zur Lobby-Tuer (-28481,-155)");
+    /* Stufe 7: Mod-Ziel @0x1AA6/@0x1AB0 (Elza) und @0x1AC0/@0x1ACA (John) = Lobby-Tuer (-28481,-155) */
+    PRUEF(bild22 >= 0 && j_lob <= 128 && e_lob <= 128 && j_hof > 256 && e_hof > 256,
+          "nach den Schlaegen: John und Elza blicken zur Lobby-Tuer (-28481,-155), nicht zur Hoftuer (-24506,1500)");
+    printf("   bei msg 23 (Bild %d): John Lobby %d / Hof %d\n", bild23, j23_lob, j23_hof);
+    PRUEF(bild23 >= 0 && j23_lob <= 128 && j23_hof > 256, "John hebt die Waffe (Plc_motion(2,6) @0x1B1A) zur Lobby-Tuer");
     PRUEF(re15_game_flag_get(4, 16) == 1, "Szene zu Ende: (4,16) = 1 (sub07 @0x016D0)");
 }
 
@@ -404,11 +418,18 @@ static void teil_bytes(void)
         g_room_rdt = s_rdt;
         p = re15_ungenutzt_r42_programm(0x3091, 0, &n);
         const int alt = 0x1DB2 - 0x16CA;
-        PRUEF(p && n > alt && !memcmp(p, s_raw + 0x16CA, 0x1AA6 - 0x16CA), "3091 sub07: Kopf bis @0x1AA6 unveraendert");
-        static const uint8_t k_hof[4] = { 0x46, 0xa0, 0xdc, 0x05 };
-        PRUEF(p && p[0x1AA6 - 0x16CA + 2] == k_hof[0] && p[0x1AA6 - 0x16CA + 3] == k_hof[1] && p[0x1AA6 - 0x16CA + 6] == k_hof[2] &&
-              p[0x1ACA - 0x16CA + 4] == k_hof[0] && p[0x1ACA - 0x16CA + 7] == k_hof[3],
-              "3091 sub07: Blickziele @0x1AA6/@0x1ACA = Disc-Tonort `46 a0 .. dc 05` (@0x1778)");
+        PRUEF(p && n > alt && !memcmp(p, s_raw + 0x16CA, 0x1A62 - 0x16CA), "3091 sub07: Kopf bis @0x1A62 unveraendert");
+        /* Stufe 7: vier Schlaege `36 02 0d 01 00 00` + Ort (-26795,0,-1020) = Mitte Rechteck Slot 0 @0x1338 (-27090,-1740,590,1440) */
+        static const uint8_t k_schlag_lobby[12] = { 0x36, 0x02, 0x0d, 0x01, 0x00, 0x00, 0x55, 0x97, 0x00, 0x00, 0x04, 0xfc };
+        int schlaege = 0;
+        for (int i = 0; i < 4 && p; i++) {
+            const int o = 0x1A62 + 0x10 * i - 0x16CA;
+            schlaege += !memcmp(p + o, k_schlag_lobby, 12) && !memcmp(p + o + 12, s_raw + 0x1A62 + 0x10 * i + 12, 4);
+        }
+        PRUEF(schlaege == 4, "3091 sub07: vier Schlaege @0x1A62/@0x1A72/@0x1A82/@0x1A92 an der Lobby-Tuer `55 97 00 00 04 fc` (%d/4)",
+              schlaege);
+        PRUEF(p && !memcmp(p + 0x1A9E - 0x16CA, s_raw + 0x1A9E, 0x1BC2 - 0x1A9E),
+              "3091 sub07: [@0x1A9E, @0x1BC2) Byte fuer Byte = Mod (Blickziele @0x1AA6/@0x1AB0/@0x1AC0/@0x1ACA `bf 90 .. 65 ff` Lobby-Tuer)");
         PRUEF(p && !memcmp(p + n - (0x1DB2 - 0x1C64), s_raw + 0x1C64, 0x1DB2 - 0x1C64), "3091 sub07: Schluss ab @0x1C64 unveraendert");
         /* Runde 2: Johns msg 36 (D309 #25) mit dem Gestenblock nach "Will do!" [@0x1BF6, @0x1C0A) vor dem Schluss; danach
          * Sleep 2 + Warten (16 Byte, ungenutzt_r42.c zeile()) */
@@ -420,6 +441,59 @@ static void teil_bytes(void)
     }
 #else
     /* Runde 2 (Pruefung s3_r1 G4): ohne Modul ROT statt uebersprungen - sonst hat der Riegel auf aaea5f8c2 keine Gegenprobe */
+    PRUEF(0, "Modul re15_ungenutzt_r42.h fehlt (Stand vor U-05/U-11/U-02/U-01)");
+#endif
+}
+
+/* ---- namen (Stufe 7, Nutzer 18.11.) ------------------------------------------------------------------------------------- */
+/* Nutzer 18.11.2026: "Du hast bei den übernommenen Sätzen aus Resident Evil 2 nicht den Namen in den Dialog mit davor geschrieben wie
+ * bei den rest auch...." und Berichtigung "Nein - das theres a power supply ist ohne Name ein Systemtext". Regel: gesprochen -> Name
+ * davor in der Form der Original-Zeilen DESSELBEN Sprechers in 3091 (Elza msg 21 @0x234B, John msg 23 @0x238A, je 12 Byte
+ * `04 00 05 <Farbe> <Name:> 05 00 00`); Untersuchungs-/Systemtext -> `04 02` ohne Namen. */
+static int rdt_text(uint16_t room, int id, const uint8_t **out)
+{
+    if (rdt_laden(room) != 0) return 0;
+    const uint32_t ms = (uint32_t)s_raw[0x3C] | (uint32_t)s_raw[0x3D] << 8 | (uint32_t)s_raw[0x3E] << 16 | (uint32_t)s_raw[0x3F] << 24;
+    if (ms + 2u * (unsigned)id + 2u > s_rawsz) return 0;
+    const unsigned o = (unsigned)s_raw[ms + 2 * id] | (unsigned)s_raw[ms + 2 * id + 1] << 8;
+    if (ms + o + 4u > s_rawsz) return 0;
+    *out = s_raw + ms + o;
+    return 1;
+}
+static void teil_namen(void)
+{
+    printf("== namen ==\n");
+#ifdef U42_MODUL
+    uint8_t elza[12], john[12];
+    if (rdt_laden(0x3091) != 0) { PRUEF(0, "ROOM3091.RDT fehlt"); return; }
+    memcpy(elza, s_raw + 0x234B, 12); memcpy(john, s_raw + 0x238A, 12);
+    PRUEF(elza[0] == 0x04 && elza[1] == 0x00 && elza[2] == 0x05 && elza[3] == 0x01 && elza[10] == 0x00 && elza[11] == 0x00 &&
+          john[3] == 0x07 && john[9] == 0x05, "Form der Original-Zeilen: Elza msg 21 @0x234B Farbe 01, John msg 23 @0x238A Farbe 07");
+    static const struct { int id; int wer; const char *was; } k_gesprochen[] = {
+        { 33, 1, "D309 #21" }, { 34, 0, "D309 #24" }, { 36, 1, "D309 #25" } };
+    for (int i = 0; i < 3; i++) {
+        int n = 0;
+        const uint8_t *b = re15_ungenutzt_r42_text(0x3091, (uint8_t)k_gesprochen[i].id, &n);
+        const uint8_t *soll = k_gesprochen[i].wer ? john : elza;
+        PRUEF(b && n > 12 && !memcmp(b, soll, 12), "3091 msg %d (%s, gesprochen): Name %s davor wie die Original-Zeile",
+              k_gesprochen[i].id, k_gesprochen[i].was, k_gesprochen[i].wer ? "John:" : "Elza:");
+    }
+    static const struct { uint16_t raum; int id; const char *was; } k_system[] = {
+        { 0x3091, 35, "There's a power supply. (80 % T25, Systemtext)" },
+        { 0x4020, 2, "You've taken the laboratory map." }, { 0x4021, 2, "You've taken the laboratory map." } };
+    for (int i = 0; i < 3; i++) {
+        int n = 0;
+        const uint8_t *b = re15_ungenutzt_r42_text(k_system[i].raum, (uint8_t)k_system[i].id, &n);
+        PRUEF(b && n > 3 && b[0] == 0x04 && b[1] == 0x02 && b[2] != 0x05, "ROOM%04X msg %d (%s): ohne Namen `04 02`",
+              k_system[i].raum, k_system[i].id, k_system[i].was);
+    }
+    /* U-05: der Rechner-Satz ist der Mod-Text selbst (Disc #40, Untersuchen), nicht neu geschrieben - ohne Namen wie im Original */
+    const uint8_t *t = NULL;
+    PRUEF(rdt_text(0x5010, RE15_U42_5010_SATZ, &t) && t[0] == 0x04 && t[1] == 0x02,
+          "ROOM5010 msg %d (U-05, Untersuchen): RDT-Text `04 02` ohne Namen", RE15_U42_5010_SATZ);
+    PRUEF(rdt_text(0x5011, RE15_U42_5011_SATZ, &t) && t[0] == 0x04 && t[1] == 0x02,
+          "ROOM5011 msg %d (U-05, Untersuchen): RDT-Text `04 02` ohne Namen", RE15_U42_5011_SATZ);
+#else
     PRUEF(0, "Modul re15_ungenutzt_r42.h fehlt (Stand vor U-05/U-11/U-02/U-01)");
 #endif
 }
@@ -546,6 +620,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "schalter") || !strcmp(teil, "alle")) teil_schalter();
     if (!strcmp(teil, "szene")    || !strcmp(teil, "alle")) teil_szene();
     if (!strcmp(teil, "bytes")    || !strcmp(teil, "alle")) teil_bytes();
+    if (!strcmp(teil, "namen")    || !strcmp(teil, "alle")) teil_namen();
     if (!strcmp(teil, "tuer401")  || !strcmp(teil, "alle")) teil_tuer401();
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;
