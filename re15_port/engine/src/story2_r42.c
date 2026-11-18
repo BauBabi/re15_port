@@ -151,6 +151,11 @@ static const uint8_t k_prog_elza[] = {
     OP_WORK(2, RE15_S2_NPC_SLOT), OP_DEST(M_DREH, RE15_S2_AN_NPC, RE15_S2_TREPPE_X, RE15_S2_TREPPE_Z),
     OP_SLEEP(RE15_S2_SHERRY_LAUF_BILDER),                              /* Weg Tuer 2030 -> Nische (re15_story2_r42.h) */
     OP_EM(RE15_S2_SHERRY_SLOT, RE15_S2_TYP_SHERRY, RE15_S2_SHERRY_START_X, RE15_S2_SHERRY_START_Z, RE15_S2_GIER_SHERRY_START),
+    /* Runde 42 rest Stufe 3, U-07 (scratchpad ungenutzt/VORSCHLAEGE.md + PRUEFUNG.md): Sherry wartete seit Mod-2001 im Pausenraum 2011 -
+     * Mod ROOM2001 sub05 @0x1A92 `22 03 4a 01` Set(3,74); Mod ROOM2011 sub00 @0x08BC `21 03 4a 01` Ck(3,74)=1 -> @0x08C0 Sce_em_set
+     * Typ 0x4B; kein Ruecksetzer in irgendeiner Mod-RDT (Zensus der Pruefung, flagscan.py). Ab hier steht sie bei John: der Merker
+     * geht auf 0 (Set mit Wert 0, Form ROOM11D0 sub02 @0x01888 `22 02 07 00`), damit sie nicht zugleich in 2011 steht. */
+    OP_SET(RE15_S2_SHERRY_2011_BANK, RE15_S2_SHERRY_2011_BIT, 0),
     OP_SLEEP(1),
     OP_WORK(2, RE15_S2_SHERRY_SLOT), OP_DEST(M_LAUF, RE15_S2_AN_SHERRY, RE15_S2_SHERRY_ZW_X, RE15_S2_SHERRY_ZW_Z),
     OP_WARTE(RE15_S2_AN_SHERRY),
