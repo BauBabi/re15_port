@@ -1,0 +1,14 @@
+{
+ "L6040_t0": "Szenenraum ohne Tuer und Spielerlage (nDoor=0, sub00 Evt_exec ohne Bedingung @ROOM6040.RDT 0x00522); Karte nie aufrufbar",
+ "L6040_w0": "Szenenraum ohne Tuer und Spielerlage (nDoor=0, sub00 Evt_exec ohne Bedingung @ROOM6040.RDT 0x00522); Karte nie aufrufbar",
+ "E6041_t0": "Szenenraum ohne Tuer und Spielerlage (nDoor=0, sub00 Evt_exec ohne Bedingung @ROOM6041.RDT 0x00522); Karte nie aufrufbar",
+ "E6041_w0": "Szenenraum ohne Tuer und Spielerlage (nDoor=0, sub00 Evt_exec ohne Bedingung @ROOM6041.RDT 0x00522); Karte nie aufrufbar",
+ "L1240_t0": "Szenenraum ohne Tuer und Spielerlage (nDoor=0, sub00 Evt_exec ohne Bedingung @ROOM1240.RDT 0x00544); Karte nie aufrufbar - gemessen 18.11.: Lauf 2600 Bilder ab Raumstart (szene/L1240_szene), die Karte ging nie auf; am Ende der Szene Aot_on 0 @0x00618 -> Wechsel nach ROOM1170",
+ "L1240_w0": "Szenenraum ohne Tuer und Spielerlage (nDoor=0, sub00 Evt_exec ohne Bedingung @ROOM1240.RDT 0x00544); Karte nie aufrufbar - gemessen 18.11.: Lauf 2600 Bilder ab Raumstart (szene/L1240_szene), die Karte ging nie auf; am Ende der Szene Aot_on 0 @0x00618 -> Wechsel nach ROOM1170",
+ "E1241_t0": "Szenenraum ohne Tuer und Spielerlage (nDoor=0, sub00 Evt_exec ohne Bedingung @ROOM1241.RDT 0x00544); Karte nie aufrufbar - gemessen 18.11.: Lauf 2600 Bilder ab Raumstart (szene/L1240_szene), die Karte ging nie auf; am Ende der Szene Aot_on 0 @0x00618 -> Wechsel nach ROOM1170",
+ "E1241_w0": "Szenenraum ohne Tuer und Spielerlage (nDoor=0, sub00 Evt_exec ohne Bedingung @ROOM1241.RDT 0x00544); Karte nie aufrufbar - gemessen 18.11.: Lauf 2600 Bilder ab Raumstart (szene/L1240_szene), die Karte ging nie auf; am Ende der Szene Aot_on 0 @0x00618 -> Wechsel nach ROOM1170",
+ "L50B0_w0": "Lauf betritt den Szenenbereich: SCD Plc_dest/Plc_motion (Szene haelt den Spieler, Karte gesperrt); auch mit 1 s",
+ "L50B0_w1": "Lauf betritt den Szenenbereich: SCD Plc_dest/Plc_motion (Szene haelt den Spieler, Karte gesperrt); auch mit 1 s",
+ "L6030_w0": "Lauf loest die Wagen-Szene aus (ROOM6030 Evt_exec sub02, Karte gesperrt); auch mit 1 s",
+ "L6030_w1": "Lauf loest die Wagen-Szene aus (ROOM6030 Evt_exec sub02, Karte gesperrt); auch mit 1 s"
+}

@@ -1,0 +1,70 @@
+Gleiche 144 Leon-Ankunftslagen STAGE2-6 (wie Runde 3)
+  v0.8.30 aaea5f8c2    {'NEBEN DEM ROTEN RAUM': 47, 'ok': 85, 'KEIN PUNKT': 6, 'RAUM NICHT ROT': 5, 'KEIN ABZUG': 1}
+  Runde 3 b94479047    {'NEBEN DEM ROTEN RAUM': 6, 'ok': 136, 'RAUM NICHT ROT': 1, 'KEIN ABZUG': 1}
+  jetzt                {'NEBEN DEM ROTEN RAUM': 3, 'ok': 139, 'RAUM NICHT ROT': 1, 'KEIN ABZUG': 1}
+besser als v0.8.30 (55): L2020_t0 L2030_t1 L2030_t2 L2040_t0 L2040_t1 L2040_t2 L2050_t0 L2050_t1 L2060_t1 L2070_t1 L2080_t0 L20A0_t0 L3060_t0 L3070_t0 L3090_t1 L30A0_t0 L30B0_t0 L30E0_t0 L30E0_t1 L30E0_t2 L30E0_t4 L4040_t0 L4040_t1 L4040_t2 L4040_t3 L4050_t0 L4050_t1 L4050_t10 L4050_t11 L4050_t12 L4050_t13 L4050_t2 L4050_t3 L4050_t5 L4050_t6 L4050_t7 L4050_t8 L4050_t9 L5000_t0 L5020_t0 L5070_t0 L50A0_t1 L50D0_t2 L50D0_t3 L5130_t0 L5130_t1 L5130_t2 L5140_t0 L5140_t1 L6000_t0 L6000_t2 L6010_t0 L6010_t1 L6020_t0 L6020_t1
+schlechter als v0.8.30 (1): L4080_t0(NEBEN DEM ROTEN RAUM um 0.29, vorher 0.32)
+Zahlwert um kleiner als v0.8.30 (nur Info):
+   L2070_t0 0.68 -> 0.43
+   L3020_t0 0.64 -> 0.57
+   L3030_t0 0.84 -> 0.41
+   L3030_t1 0.66 -> 0.30
+   L30C0_t1 0.93 -> 0.41
+   L30C0_t2 0.43 -> 0.41
+   L4000_t3 0.43 -> 0.41
+   L4050_t4 0.48 -> 0.36
+   L4080_t1 0.68 -> 0.50
+   L40A0_t0 0.48 -> 0.45
+   L5000_t3 0.84 -> 0.61
+   L50E0_t0 0.68 -> 0.62
+   L50F0_t0 1.00 -> 0.95
+   L5100_t0 1.00 -> 0.54
+   L5100_t1 0.84 -> 0.43
+
+Runde 3 -> Runde 4, alle Lagen mit Aenderung (Punkt oder Urteil):
+   E10B1_t0   None um None KEIN PUNKT  ->  [285, 187] um 0.46 ok
+   E10B1_t1   None um None KEIN PUNKT  ->  [217, 166] um 0.29 NEBEN DEM ROTEN RAUM
+   E1261_t0   None um None KEIN PUNKT  ->  [203, 193] um 0.61 ok
+   E1261_t1   None um None KEIN PUNKT  ->  [233, 194] um 1.0 ok
+   E1261_t2   None um None KEIN PUNKT  ->  [212, 193] um 1.0 ok
+   E1261_t3   None um None KEIN PUNKT  ->  [232, 192] um 1.0 ok
+   E4041_t2   [110, 121] um 0.54 ok  ->  [109, 121] um 0.61 ok
+   E4051_t2   [118, 120] um 0.54 ok  ->  [65, 195] um 0.45 ok
+   E4051_t3   [126, 114] um 0.54 ok  ->  [51, 184] um 0.61 ok
+   E4051_t4   [90, 120] um 0.43 ok  ->  [42, 142] um 0.36 ok
+   E4051_t5   [102, 104] um 0.36 ok  ->  [80, 195] um 0.45 ok
+   E4051_t6   [90, 120] um 0.43 ok  ->  [51, 163] um 0.61 ok
+   E4051_t7   [90, 116] um 0.68 ok  ->  [67, 161] um 0.32 ok
+   E4071_t0   [146, 163] um 0.2 NEBEN DEM ROTEN RAUM  ->  [149, 164] um 0.57 ok
+   E4081_t0   [168, 117] um 0.29 NEBEN DEM ROTEN RAUM  ->  [170, 117] um 0.29 NEBEN DEM ROTEN RAUM
+   E4081_t1   [212, 128] um 0.36 ok  ->  [213, 129] um 0.5 ok
+   E4081_t2   [198, 148] um 0.82 ok  ->  [202, 151] um 0.68 ok
+   E4081_t3   [179, 161] um 0.29 NEBEN DEM ROTEN RAUM  ->  [182, 164] um 0.57 ok
+   E6001_t0   [212, 86] um 0.29 NEBEN DEM ROTEN RAUM  ->  [215, 76] um 0.68 ok
+   L10B0_t0   None um None KEIN PUNKT  ->  [217, 166] um 0.29 NEBEN DEM ROTEN RAUM
+   L10B0_w0   None um None KEIN PUNKT  ->  [217, 187] um 0.3 ok
+   L1260_t0   None um None KEIN PUNKT  ->  [203, 193] um 0.61 ok
+   L1260_t1   None um None KEIN PUNKT  ->  [233, 194] um 1.0 ok
+   L1260_t2   None um None KEIN PUNKT  ->  [212, 193] um 1.0 ok
+   L1260_t3   None um None KEIN PUNKT  ->  [232, 192] um 1.0 ok
+   L1260_w0   None um None KEIN PUNKT  ->  [203, 201] um 0.61 ok
+   L1260_w1   None um None KEIN PUNKT  ->  [231, 194] um 1.0 ok
+   L4040_t2   [110, 121] um 0.54 ok  ->  [109, 121] um 0.61 ok
+   L4040_w1   [110, 105] um 0.45 ok  ->  [109, 105] um 0.5 ok
+   L4050_t2   [118, 120] um 0.54 ok  ->  [65, 195] um 0.45 ok
+   L4050_t3   [126, 114] um 0.54 ok  ->  [51, 184] um 0.61 ok
+   L4050_t4   [90, 120] um 0.43 ok  ->  [42, 142] um 0.36 ok
+   L4050_t5   [102, 104] um 0.36 ok  ->  [80, 195] um 0.45 ok
+   L4050_t6   [90, 120] um 0.43 ok  ->  [51, 163] um 0.61 ok
+   L4050_t7   [90, 116] um 0.68 ok  ->  [67, 161] um 0.32 ok
+   L4070_t0   [146, 163] um 0.2 NEBEN DEM ROTEN RAUM  ->  [149, 164] um 0.57 ok
+   L4080_t0   [168, 117] um 0.29 NEBEN DEM ROTEN RAUM  ->  [170, 117] um 0.29 NEBEN DEM ROTEN RAUM
+   L4080_t1   [212, 128] um 0.36 ok  ->  [213, 129] um 0.5 ok
+   L4080_t2   [198, 148] um 0.82 ok  ->  [202, 151] um 0.68 ok
+   L4080_t3   [179, 161] um 0.29 NEBEN DEM ROTEN RAUM  ->  [182, 164] um 0.57 ok
+   L4080_w0   [174, 123] um 0.46 ok  ->  [179, 127] um 0.59 ok
+   L4080_w1   [212, 128] um 0.36 ok  ->  [216, 128] um 0.43 ok
+   L6000_t0   [212, 86] um 0.29 NEBEN DEM ROTEN RAUM  ->  [215, 76] um 0.68 ok
+   L6000_w0   [212, 86] um 0.29 NEBEN DEM ROTEN RAUM  ->  [215, 82] um 0.71 ok
+
+Summe jetzt: {('S1', 'ok'): 232, ('S1', 'NEBEN DEM ROTEN RAUM'): 5, ('S1', 'KEIN ABZUG'): 3, ('S2-6', 'NEBEN DEM ROTEN RAUM'): 8, ('S2-6', 'ok'): 383, ('S2-6', 'RAUM NICHT ROT'): 3, ('S2-6', 'KEIN ABZUG'): 9}

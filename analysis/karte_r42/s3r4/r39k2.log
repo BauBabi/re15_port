@@ -1,0 +1,19 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r42_karte/re15_port/build
+    Start 1088: unit_r39_karten_1090
+1/7 Test #1088: unit_r39_karten_1090 .............   Passed    0.11 sec
+    Start 1089: unit_r39_karten_b1
+2/7 Test #1089: unit_r39_karten_b1 ...............   Passed    0.69 sec
+    Start 1090: unit_r39_karten_teil
+3/7 Test #1090: unit_r39_karten_teil .............   Passed    0.21 sec
+    Start 1091: unit_r39_karten_treppen
+4/7 Test #1091: unit_r39_karten_treppen ..........   Passed    0.07 sec
+    Start 1092: unit_r39_karten_marker
+5/7 Test #1092: unit_r39_karten_marker ...........   Passed    0.31 sec
+    Start 1093: unit_r39_karten_tueren
+6/7 Test #1093: unit_r39_karten_tueren ...........   Passed    5.46 sec
+    Start 1094: integration_r39_karten
+7/7 Test #1094: integration_r39_karten ...........   Passed  209.55 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Total Test time (real) = 216.48 sec
