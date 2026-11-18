@@ -11,6 +11,8 @@
 #   unit_r42_story6_tuer6031    nach dem Tor, vor dem Zugstart: Ausgang Tuer, Tuer nach 5091 msg 4; danach Original msg 11
 #   unit_r42_story6_zug6031     Zugstart E9: 14..17, (9,130), Zug-an vor Krachen, Sherry/John, einmalig
 #   unit_r42_story6_ruck6031    Runde 42 rest (b): Ruckeln der Fahrt nach RE2 ROOM7030 sub14 ab der Licht-Schleife, vorher keins
+#   unit_r42_story6_ruck6030    Runde 42 rest Stufe 4 (NUTZERWUNSCH 18.11.): dasselbe Ruckeln in Leons 6030 ab ROOM6030 sub05 @0x01004 nach
+#                               seinem Zugstart; vorher (Wagen vor dem Zugstart) keins; Wiedereintritt ruckelt wieder
 #   unit_r42_story6_t05         Cut-9-Tiefen ueber der Liege, Marvins Kern frei
 #   integration_r42_story6_leon / _elza  Durchlaeufe (tests/integration/test_r42_story6.cmake)
 add_executable(test_r42_story6 ${CMAKE_CURRENT_LIST_DIR}/../test_r42_story6.c)
@@ -20,7 +22,7 @@ target_compile_definitions(test_r42_story6 PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_S
 if(NOT WIN32)
     target_link_libraries(test_r42_story6 PRIVATE m)
 endif()
-foreach(_teil texte wagen6030 wagen6031 vorher6031 tuer6031 zug6031 ruck6031 t05)
+foreach(_teil texte wagen6030 wagen6031 vorher6031 tuer6031 zug6031 ruck6031 ruck6030 t05)
     add_test(NAME unit_r42_story6_${_teil} COMMAND test_r42_story6 ${_teil} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r42_story6_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()

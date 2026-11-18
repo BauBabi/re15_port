@@ -100,17 +100,34 @@ static const uint8_t *umleiten(int p, const uint8_t *pc)
     return k_prog[p].prog;
 }
 
-/* Runde 42 rest (b): Anfang der Licht-Schleife sub05 in ROOM6031 (24 Byte @0x00E2A..@0x00E42), wie op_evt_exec sie startet. */
+/* Runde 42 rest (b): Anfang der Licht-Schleife sub05 in ROOM6031 (24 Byte @0x00E2A..@0x00E42), wie op_evt_exec sie startet.
+ * Runde 42 rest Stufe 4: ebenso in ROOM6030 (24 Byte @0x01004..@0x0101C); s_licht_raum = Raum, in dem sie gestartet wurde. */
 static const uint8_t *s_licht_pc;
+static uint16_t       s_licht_raum;
+#define S6_LICHT_LEN 24    /* ROOM6031 sub05 @0x00E2A..@0x00E42 = ROOM6030 sub05 @0x01004..@0x0101C (Set/Sleep 8/Set/Sleep 20/Goto/Evt_end) */
+/* Die Licht-Schleife, bytegleich in beiden RDTs (ROOM6030 @0x01004, ROOM6031 @0x00E2A). */
+static const uint8_t k_licht_sig[S6_LICHT_LEN] = {
+    0x22, 0x01, 0x1c, 0x01, 0x09, 0x0a, 0x08, 0x00, 0x22, 0x01, 0x1c, 0x00,
+    0x09, 0x0a, 0x14, 0x00, 0x17, 0xff, 0xff, 0x00, 0xf0, 0xff, 0x01, 0x00 };
 
 const uint8_t *re15_story6_r42_evt_exec(uint16_t room_id, uint8_t sub, const uint8_t *pc)
 {
+    /* Runde 42 rest Stufe 4 (NUTZERWUNSCH 18.11.2026: "Ja, na klar, wenn du die ruckeln lassen kannst waehrend der Zug faehrt lass
+     * sie auch ruckeln."): Leons 6030 bekommt dasselbe Ruckeln wie Elzas 6031. Der Haken merkt sich hier NUR den Anfang der
+     * Licht-Schleife und gibt das Ziel unveraendert zurueck - Leons Ablauf (annette_r41.c k_zug_seg, abgenommen) bleibt bitgleich.
+     * Nach dem Zugstart ((9,133) = 1, gesetzt von z_bit am Programmanfang) liefern sub07 @0x01132, sub06 @0x010C4 und z_fahrt im
+     * Zugstart-Programm (Kopie von sub07 @0x01132) das Original-sub05; vorher ist das Ziel das Zugstart-Programm bzw. k_tuer. */
+    if (room_id == RE15_S6_RAUM_LEON) {
+        if (pc && sub == RE15_AN_ZUG_SUB && re15_game_flag_get(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT) &&
+            !memcmp(pc, k_licht_sig, S6_LICHT_LEN)) { s_licht_pc = pc; s_licht_raum = RE15_S6_RAUM_LEON; }
+        return pc;
+    }
     if (room_id != RE15_S6_RAUM_ELZA || !pc) return pc;
     if (sub == RE15_S6_SUB_WAGEN) return umleiten(RE15_S6_P_WAGEN, pc);
     if (sub != RE15_S6_SUB_LICHT) return pc;
     /* Zugstart: erst nach dem Tor, einmalig. Danach laeuft sub05 (Licht-Schleife) wie im Original. */
     if (!re15_game_flag_get(RE15_S6_TOR_BANK, RE15_S6_TOR_BIT) || re15_game_flag_get(RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA)) {
-        if (re15_game_flag_get(RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA)) s_licht_pc = pc;   /* Fahrt (E9 @0x00F54 oder spaeter) */
+        if (re15_game_flag_get(RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA)) { s_licht_pc = pc; s_licht_raum = RE15_S6_RAUM_ELZA; }   /* Fahrt (E9 @0x00F54 oder spaeter) */
         return pc;
     }
     /* sub00 @0x00D2A Switch(Cut) Case 0 -> sub07 (Fuehrerstand), Case 6/8/12 (@0x00D3A..@0x00D4E) -> sub06 (Wagen). */
@@ -145,13 +162,12 @@ static const s6_ruck_t k_ruck[] = {
 };
 #define S6_RUCK_N    ((int)(sizeof k_ruck / sizeof k_ruck[0]))
 #define S6_RUCK_LANG 64    /* Bild des Ifel_ck @0x0BCE */
-#define S6_LICHT_LEN 24    /* ROOM6031 sub05 @0x00E2A..@0x00E42 (Set/Sleep 8/Set/Sleep 20/Goto/Evt_end) */
 static int s_ruck_t = -1, s_ruck_var9, s_ruck_next, s_ruck_dx, s_ruck_dy;
 unsigned g_re15_s6_ruck_bilder;   /* Messhaken: Bilder mit Verschiebung (Tests) */
 
 static int licht_laeuft(void)
 {
-    if (!s_licht_pc) return 0;
+    if (!s_licht_pc || s_licht_raum != (uint16_t)g_current_room_id) return 0;
     for (int i = 0; i < SCD_THREAD_COUNT; i++) {
         const scd_thread_t *t = &g_scd.threads[i];
         if (t->active && t->pc >= s_licht_pc && t->pc < s_licht_pc + S6_LICHT_LEN) return 1;
@@ -159,11 +175,15 @@ static int licht_laeuft(void)
     return 0;
 }
 
-static void ruck_takt(void)
+/* Zugstart-Bit je Raum: Elza (9,130) RE15_R42_BIT_ZUG_ELZA, Leon (9,133) RE15_AN_ZUG_BIT (Runde 42 rest Stufe 4). */
+static void ruck_takt(unsigned bank, unsigned bit)
 {
     s_ruck_dx = s_ruck_dy = 0;
-    if (!re15_game_flag_get(RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA) || !licht_laeuft()) { s_ruck_t = -1; return; }
-    if (s_ruck_t < 0) { s_ruck_t = 0; s_ruck_var9 = 0; s_ruck_next = 0; S6_LOG("ROOM6031 Fahrt: Ruckeln an (RE2 ROOM7030 sub14)"); }
+    if (!re15_game_flag_get(bank, bit) || !licht_laeuft()) { s_ruck_t = -1; return; }
+    if (s_ruck_t < 0) {
+        s_ruck_t = 0; s_ruck_var9 = 0; s_ruck_next = 0;
+        S6_LOG("ROOM%04X Fahrt: Ruckeln an (RE2 ROOM7030 sub14)", (unsigned)s_licht_raum);
+    }
     if (s_ruck_t == S6_RUCK_LANG) {
         /* @0x0BCE Ifel_ck / Cmp(var 9 >= 2) `23 00 09 02 02 00` (RE2 Cmp @0x80054474, Op 2 = >= @0x800544e0) -> Save(9,0) @0x0BD8 +
          * Evt_next @0x0BDC (ein Takt, @0x80053860 gibt 2); danach Copy/Calc/Copy @0x0BE0..@0x0BEA = var9 + 1, Goto @0x0BEE (gibt 1). */
@@ -182,7 +202,8 @@ static void ruck_takt(void)
 
 int re15_story6_r42_ruck(int *dx, int *dy)
 {
-    const int an = ((uint16_t)g_current_room_id == RE15_S6_RAUM_ELZA) && (s_ruck_dx || s_ruck_dy);
+    const uint16_t raum = (uint16_t)g_current_room_id;
+    const int an = (raum == RE15_S6_RAUM_ELZA || raum == RE15_S6_RAUM_LEON) && (s_ruck_dx || s_ruck_dy);
     if (dx) *dx = an ? s_ruck_dx : 0;
     if (dy) *dy = an ? s_ruck_dy : 0;
     return an;
@@ -191,8 +212,11 @@ int re15_story6_r42_ruck(int *dx, int *dy)
 /* ==== Takt: Toene der Signale (Form annette_r41.c zug_tick) ================================================================ */
 void re15_story6_r42_tick(void)
 {
-    if ((uint16_t)g_current_room_id != RE15_S6_RAUM_ELZA) { s_licht_pc = NULL; s_ruck_t = -1; s_ruck_dx = s_ruck_dy = 0; return; }
-    ruck_takt();
+    const uint16_t raum = (uint16_t)g_current_room_id;
+    /* Runde 42 rest Stufe 4: in Leons 6030 nur das Ruckeln - seine Toene laufen weiter in annette_r41.c zug_tick. */
+    if (raum == RE15_S6_RAUM_LEON) { ruck_takt(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT); return; }
+    if (raum != RE15_S6_RAUM_ELZA) { s_licht_pc = NULL; s_ruck_t = -1; s_ruck_dx = s_ruck_dy = 0; return; }
+    ruck_takt(RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA);
     if (re15_game_flag_get(5, RE15_S6_SIG_ZUG_AN)) {
         re15_game_flag_set(5, RE15_S6_SIG_ZUG_AN, 0);
         g_re15_s6_zaehler[RE15_S6_P_N]++;

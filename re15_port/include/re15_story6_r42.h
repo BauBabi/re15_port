@@ -39,7 +39,13 @@
  * Port (PORT-WAHL): ROOM6031 nach dem Zugstart ((9,130) = 1) - solange die Licht-Schleife sub05 laeuft (= RE2 sub15, die Fahrt),
  * laeuft k_ruck mit; Beginn im ersten Takt, in dem der sub05-Faden aktiv ist (RE2 startet beide Faeden im selben Takt @0x0AE0/
  * @0x0AE4; die Fadenreihenfolge des Ports kann das um 1 Bild verschieben). Gezeichnet in render_pc.c ueber ein Zwischenziel des
- * Szenenteils (negativer Viewport-Ursprung zeichnet im direct3d-Renderer nichts), Balken und Text unverschoben. Leons Fassung 6030 (annette_r41.c, abgenommen) bleibt ohne Ruckeln - Nutzerfrage.
+ * Szenenteils (negativer Viewport-Ursprung zeichnet im direct3d-Renderer nichts), Balken und Text unverschoben.
+ * Leon 6030 (Runde 42 rest Stufe 4, NUTZERWUNSCH 18.11.2026 woertlich: "Ja, na klar, wenn du die ruckeln lassen kannst waehrend der
+ * Zug faehrt lass sie auch ruckeln."): dieselbe Regel mit Leons Zugstart-Bit (9,133) RE15_AN_ZUG_BIT und seiner Licht-Schleife
+ * ROOM6030 sub05 @0x01004..@0x0101C (24 Byte, bytegleich mit ROOM6031 @0x00E2A). Der Haken in re15_story6_r42_evt_exec merkt sich
+ * in 6030 nur den Anfang dieses sub05 und gibt das Ziel unveraendert zurueck; Leons Zugstart-Programm (annette_r41.c k_zug_seg,
+ * abgenommen), seine Texte, Kamera und Toene (annette_r41.c zug_tick) bleiben unberuehrt. Das Ruckeln beginnt also am Zugstart mit
+ * z_fahrt (Kopie von sub07 @0x01132) und laeuft bei jedem spaeteren Betreten des fahrenden Zugs (sub07 @0x01132, sub06 @0x010C4).
  * Opcode 0x5C selbst bleibt fuer RDT-Bytecode RE1.5 (scd_vm.c op_sce_shake_on).
  * Wagen vor dem Zugstart ((3,89)=1, (9,130)=0, Cut 6/8/12: sub06 @0x00EEA `04 ff 18 05`) -> k_s6_6031_tuer: Ausgang Slot 2 wieder die
  * Tuer (main00 @0x00C72), Tuer nach 5091 zeigt msg 4 (sub06 @0x00E90) - Form Leons k_tuer.

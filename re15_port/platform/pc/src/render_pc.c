@@ -1411,7 +1411,7 @@ void re15_render_end_frame(void)
         SDL_Rect vp = beben_vp_alt; vp.y -= s_beben_dy;
         SDL_RenderSetViewport(s_renderer, &vp); beben_vp = 1;
     }
-    /* Runde 42 rest (b): Ruckeln der Fahrt ROOM6031 (RE2 ROOM7030 sub14 Sce_shake_on @0x80058164 -> FUN_8002ac94; Belege
+    /* Runde 42 rest (b): Ruckeln der Fahrt ROOM6031, seit Stufe 4 auch ROOM6030 (RE2 ROOM7030 sub14 Sce_shake_on @0x80058164 -> FUN_8002ac94; Belege
      * include/re15_story6_r42.h "E9 Ruckeln"). RE2 kopiert je Zeile x pc[1]..319 nach x 0 (Breite 320 - pc[1] @0x8002acc4), Quelle
      * Zeile + pc[2] (@0x8002ad10, am Rand geklemmt @0x8002ad14-38): der Szenenteil rueckt pc[1] nach links und pc[2] nach oben,
      * Spalte 319 und die letzte Zeile behalten ihren Inhalt. Ein Viewport mit NEGATIVEM Ursprung zeichnet im direct3d-Renderer

@@ -14,6 +14,11 @@
  *              Zugstart Original (Slot 2 = msg 11)
  *   zug6031    Elza Fuehrerstand nach dem Tor: Zugstart E9 einmal, Folge 14..17, (9,130)=1, Zug-an-Ton vor dem Krachen, Sherry am
  *              Pult, John im Fuehrerstand, danach Sperren frei; erneut betreten: kein zweiter Zugstart
+ *   ruck6031   Elza: Ruckeln der Fahrt (RE2 ROOM7030 sub14) ab der Licht-Schleife sub05 nach E9
+ *   ruck6030   Leon (Runde 42 rest Stufe 4, NUTZERWUNSCH 18.11.2026): dasselbe Ruckeln ab der Licht-Schleife ROOM6030 sub05
+ *              @0x01004 nach seinem Zugstart (annette_r41.c), vorher (Wagen vor dem Zugstart, Zugstart vor z_fahrt) keins
+ *   spur6030 <datei>  (kein ctest, Messwerkzeug) Leons Zugstart 6030 Bild fuer Bild ohne Ruckel-Werte in <datei>: Cut, Text,
+ *              Merker-Pruefsumme, Akteure, Ton-Ereignisse, ANNETTE_SE-Saetze - Vergleich vorher/nachher (bitgleich)
  *   t05        MASKS/ROOM6030.MSK == ROOM6031.MSK; Cut 9: Soll-Tiefen (51 Rechtecke ueber der Liegeflaeche), alle anderen
  *              unveraendert; keiner der 147 Kernpunkte Marvins wird verdeckt (Konzept [B36]: vorher 7 Rechtecke)
  */
@@ -43,6 +48,7 @@
 #include "re15_story80_r41.h"
 #include "re15_story_r42.h"
 #include "re15_story6_r42.h"
+#include "re15_annette_r41.h"   /* Runde 42 rest Stufe 4: Leons Zugstart 6030 (RE15_AN_ZUG_*) */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -144,6 +150,7 @@ static void protokoll(void)
 }
 
 /* Ein Spielbild in der Reihenfolge von platform/pc/main.c (wie test_r38_kleinkram.c frame_pad). */
+static FILE *s_spur = NULL;   /* spur6030: Ereignisse je Bild */
 static void frame_pad(uint16_t pressed, uint16_t held)
 {
     const unsigned char *raw; int len, id;
@@ -170,8 +177,11 @@ static void frame_pad(uint16_t pressed, uint16_t held)
         re15_item_modal_tick(re15_pad_virtual_word(pressed), re15_pad_virtual_word(held));
     protokoll();
     scd_audio_event_t e;
-    while (scd_audio_queue_pop(&e))
+    while (scd_audio_queue_pop(&e)) {
+        if (s_spur) fprintf(s_spur, "  ton k%u b%u s%u v%u p%u (%d,%d,%d) w%u/%u\n", e.kind, e.bank, e.sample_id, e.volume, e.pan,
+                            e.pos_x, e.pos_y, e.pos_z, e.raw_w0, e.raw_w1);
         if (e.kind == SCD_AUDIO_VOICE_ON && s_stimme_n < PROT_N) s_stimme[s_stimme_n++] = (int)e.sample_id;
+    }
     s_bild++;
 }
 static void frame(void) { frame_pad(0, 0); }
@@ -593,6 +603,126 @@ static void teil_ruck6031(void)
           fehler);
 }
 
+/* ================================================ Ruckeln Leon 6030 (Runde 42 rest Stufe 4) ======================= */
+/* NUTZERWUNSCH 18.11.2026: "Ja, na klar, wenn du die ruckeln lassen kannst waehrend der Zug faehrt lass sie auch ruckeln." Leons
+ * Fuehrerstand nach dem Tor ((3,89) = 1, (4,23) = 1: sub07 @0x010CC..@0x01132 setzt keine Annette und ruft Evt_exec sub05 @0x01132,
+ * Spur AN macht daraus den Zugstart). Soll wie ruck6031: ab dem ersten Takt mit dem Faden in der Licht-Schleife ROOM6030 sub05
+ * (@0x01004, 24 Byte) der RE2-Takt ROOM7030 sub14, davor keins. */
+static int fuehrerstand6030(void)
+{
+    static const uint8_t k_banken[] = { 0x4D };   /* Annette: z_emset = sub07 @0x010F8 Sce_em_set Typ 0x4D */
+    re15_annette_r41_reset();
+    return room_boot(0x6030, -3873, -23487, 2048, 0, k_banken, 1);   /* Tuer Slot 1 main00 @0x00C52 Ziel, Cut 0 */
+}
+
+static void teil_ruck6030(void)
+{
+    printf("== ruck6030: Ruckeln der Fahrt nach Leons Zugstart ==\n");
+    re15_game_state_init();
+    re15_inv_init();
+    zaehler_null();
+    re15_game_flag_set(3, 22, 1); re15_game_flag_set(4, 23, 1); re15_game_flag_set(3, 89, 1);
+    /* (1) Wagen vor dem Zugstart: sub06 @0x010C4 Evt_exec sub05 -> k_tuer (Spur AN), keine Licht-Schleife, kein Ruckeln */
+    {
+        static const uint8_t k_banken[] = { 0x49, 0x40, 0x4B };   /* ROOM6030 sub06 @0x0101C/@0x01030/@0x01044 */
+        re15_annette_r41_reset();
+        if (room_boot(0x6030, -17970, -20380, 1100, 6, k_banken, 3) != 0) return;
+        int an = 0, licht = 0;
+        for (int f = 0; f < 300; f++) {
+            frame();
+            if (re15_story6_r42_ruck(NULL, NULL)) an++;
+            if (s_rdt.sub_scd[RE15_AN_ZUG_SUB] && faden_im_programm(s_rdt.sub_scd[RE15_AN_ZUG_SUB], 24) >= 0) licht++;
+        }
+        PRUEF(an == 0 && licht == 0 && !re15_game_flag_get(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT),
+              "Wagen vor dem Zugstart: 300 Bilder, %d mit Licht-Schleife, %d mit Ruckeln, (9,133)=%d", licht, an,
+              re15_game_flag_get(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT));
+    }
+    /* (2) Fuehrerstand: Zugstart, ab z_fahrt (Kopie sub07 @0x01132) die Fahrt */
+    if (fuehrerstand6030() != 0) return;
+    const uint8_t *licht = s_rdt.sub_scd[RE15_AN_ZUG_SUB];
+    PRUEF(licht && s_rawsz > 0x101C && licht == s_raw + 0x01004, "ROOM6030 sub05 liegt @0x01004 (Licht-Schleife, 24 Byte)");
+    static const struct { int bild, dx, dy; } k_soll[] = {   /* sichtbare Bilder eines Durchlaufs (RE2 ROOM7030 sub14), = ruck6031 */
+        { 0, 1, 1 }, { 2, 1, 0 }, { 7, 1, 0 }, { 9, 1, 1 }, { 21, 1, 1 }, { 32, 1, 1 }, { 34, 1, 0 }, { 39, 1, 0 }, { 41, 1, 1 }, { 52, 1, 1 },
+    };
+    enum { N = 387 };   /* k = 1..386 = Bild 0..385 = Durchlaeufe 0..5 (Start 322, Ende 385) */
+    static int s_dx[N], s_dy[N];
+    int licht_bild = -1, vorher = 0, n = 0, zug_vorher = -1;
+    for (int f = 0; f < 9000 && n < N; f++) {
+        frame();
+        int dx = 0, dy = 0;
+        const int an = re15_story6_r42_ruck(&dx, &dy);
+        if (licht_bild < 0) {
+            if (an) vorher++;
+            if (licht && faden_im_programm(licht, 24) >= 0) { licht_bild = s_bild; zug_vorher = re15_annette_r41_zug_szene(); }
+            else continue;
+        }
+        s_dx[n] = dx; s_dy[n] = dy; n++;
+    }
+    PRUEF(zug_vorher == 1 && re15_game_flag_get(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT),
+          "Leons Zugstart-Programm lief (%d mal), (9,133)=%d", zug_vorher, re15_game_flag_get(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT));
+    PRUEF(licht_bild > 0 && vorher == 0, "Licht-Schleife sub05 @0x01004 ab Bild %d, davor %d Bilder mit Ruckeln", licht_bild, vorher);
+    int fehler = 0, sichtbar = 0;
+    for (int k = 1; k < n; k++) {
+        const int b = k - 1;
+        int t, it;
+        static const int k_start[] = { 0, 64, 128, 193, 257, 322, 386 };
+        for (it = 0; it < 6 && b >= k_start[it + 1]; it++) {}
+        t = b - k_start[it];
+        int sdx = 0, sdy = 0;
+        for (unsigned i = 0; i < sizeof k_soll / sizeof k_soll[0]; i++)
+            if (k_soll[i].bild == t) { sdx = k_soll[i].dx; sdy = k_soll[i].dy; }
+        if (s_dx[k] || s_dy[k]) sichtbar++;
+        if (s_dx[k] != sdx || s_dy[k] != sdy) {
+            if (fehler < 6) printf("        Bild %d (Durchlauf %d, Takt %d): (%d,%d), Soll (%d,%d)\n", b, it, t, s_dx[k], s_dy[k], sdx, sdy);
+            fehler++;
+        }
+    }
+    PRUEF(n == N && fehler == 0 && sichtbar == 60,
+          "%d Bilder der Fahrt gemessen: %d sichtbare Ruckler (Soll 6 Durchlaeufe x 10 = 60), %d Abweichungen vom RE2-Takt", n, sichtbar,
+          fehler);
+    /* (3) Wiedereintritt in den fahrenden Zug: sub07 @0x01132 startet sub05 als Original -> wieder Ruckeln */
+    if (fuehrerstand6030() != 0) return;
+    int wieder = 0;
+    for (int f = 0; f < 200; f++) { frame(); if (re15_story6_r42_ruck(NULL, NULL)) wieder++; }
+    PRUEF(re15_annette_r41_zug_szene() == 0 && wieder > 0, "Wiedereintritt Fuehrerstand: kein zweiter Zugstart (%d), %d Ruckel-Bilder in 200",
+          re15_annette_r41_zug_szene(), wieder);
+}
+
+/* Messwerkzeug (kein ctest): Leons Zugstart Bild fuer Bild, ohne die Ruckel-Werte selbst. Gleiche Datei vorher/nachher = Ablauf,
+ * Texte, Kamera, Toene bitgleich. */
+static void teil_spur6030(const char *datei)
+{
+    printf("== spur6030 -> %s ==\n", datei ? datei : "(keine Datei)");
+    if (!datei || !(s_spur = fopen(datei, "w"))) { PRUEF(0, "Spurdatei"); return; }
+    re15_game_state_init();
+    re15_inv_init();
+    zaehler_null();
+    re15_game_flag_set(3, 22, 1); re15_game_flag_set(4, 23, 1); re15_game_flag_set(3, 89, 1);
+    if (fuehrerstand6030() != 0) { fclose(s_spur); s_spur = NULL; return; }
+    int ende = -1;
+    for (int f = 0; f < 4000; f++) {
+        fprintf(s_spur, "B%d\n", s_bild);
+        frame();
+        uint32_t h = 2166136261u;
+        const uint8_t *g = (const uint8_t *)&g_game;
+        for (size_t i = 0; i < sizeof g_game; i++) { h ^= g[i]; h *= 16777619u; }
+        fprintf(s_spur, "  cut %d cam %d wv0a %d msg %d/%d merker %08x lb %d pm %d toene %d %d %d %d zug %d\n", s_shown,
+                (int)g_scd.cam_id, (int)g_scd.work_vars[0x0A], g_scd.message_active ? 1 : 0, (int)g_scd.message_id, (unsigned)h,
+                (int)g_letterbox_level, (int)g_scd.player_mode, re15_annette_r41_ton(0), re15_annette_r41_ton(1),
+                re15_annette_r41_ton(2), re15_annette_r41_ton(3), re15_annette_r41_zug_szene());
+        for (int i = 0; i < RE15_ACTOR_MAX; i++) {
+            const re15_actor_t *a = &g_actors[i];
+            if (!a->active) continue;
+            fprintf(s_spur, "  akt %d typ %d (%d,%d,%d) r%d st%d mo%d\n", i, a->type, (int)a->x, (int)a->y, (int)a->z,
+                    (int)a->rot_y, (int)a->state, (int)a->motion);
+        }
+        if (ende < 0 && f > 30 && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27)) ende = s_bild;
+        if (ende >= 0 && s_bild > ende + 120) break;
+    }
+    fclose(s_spur); s_spur = NULL;
+    PRUEF(ende > 0, "Zugstart-Szene endet in Bild %d (Sperren frei)", ende);
+}
+
 /* ================================================ T-05 ========================================================= */
 #include "gen_r42_liege_tiefe.inc"
 static uint8_t *msk_laden(uint16_t raum, size_t *n)
@@ -652,6 +782,8 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "tuer6031")   || !strcmp(teil, "alle")) teil_tuer6031();
     if (!strcmp(teil, "zug6031")    || !strcmp(teil, "alle")) teil_zug6031();
     if (!strcmp(teil, "ruck6031")   || !strcmp(teil, "alle")) teil_ruck6031();
+    if (!strcmp(teil, "ruck6030")   || !strcmp(teil, "alle")) teil_ruck6030();
+    if (!strcmp(teil, "spur6030")) teil_spur6030(argc > 2 ? argv[2] : NULL);
     if (!strcmp(teil, "t05")        || !strcmp(teil, "alle")) teil_t05();
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;
