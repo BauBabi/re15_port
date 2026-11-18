@@ -14,7 +14,7 @@
  *           ROOM6030 msg 0 @0x013BE), traegt denselben Kopf auf JEDER weiteren Seite (direkt hinter dem `04 00` nach `02 N`).
  *           Dazu: die Annette-Saetze 40..42/48..50 in 6000 sind da, Leons 6030 msg 4 hat zwei Seiten.
  *   seite   Schreibmaschine (msg_common.c, ohne Taste) auf 6030 msg 4: Seite 2 kommt nach dem Seitenwechsel `02 63` (0x63 Bilder,
- *           Form ROOM3060 @0x1244, N = ROOM6030 Nachlauf @0x13F5 - unveraendert) und das gezeigte Fenster [page, parse) beginnt
+ *           Form ROOM3060 @0x1244, N = ROOM6030 Nachlauf `01 63` @0x13F7 - unveraendert) und das gezeigte Fenster [page, parse) beginnt
  *           mit `04 00 05 01 "Leon:" 05 00`.
  * Gegenprobe (rot auf r42/story 8db089f5d): texte meldet 4 Seiten ohne Namen (6000 msg 40/41/42 Seite 2, 6030 msg 4 Seite 2),
  * seite meldet das Fenster ohne Kopf (Bericht BERICHT_s1_r1.md).

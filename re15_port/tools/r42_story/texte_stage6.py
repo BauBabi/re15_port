@@ -17,13 +17,13 @@ msg 3 @0x1498, msg 4 @0x14C1; ROOM6031 msg 0 @0x1161, msg 1 @0x11AF, msg 2 @0x11
 Farben aus den ausgelieferten Zeilen: Leon 01 (ROOM6030 msg 0 @0x13BE `05 01`), Elza 01 (ROOM6031 msg 0 @0x1148 `05 01`),
 Sherry 06 (ROOM6030 msg 2 @0x1416 / ROOM6031 msg 1 @0x1165 `05 06`), John 07 (ROOM6030 msg 3 @0x144E `05 07`; ROOM6031 hat
 keine John-Zeile).
-Laenge: hoechstens 192 Byte (PC MSG_RAW_LEN, msg_common.c:37); ueber 128 Byte (PSX MSG_RAW_LEN, msg_common.c:33) wird
-gemeldet (PSX schneidet ab). Hoechstens 3 Zeilen je Seite (28 Original-Dialoge haben drei Zeilen, z. B. ROOM10D0 msg 17;
+Laenge: hoechstens 512 Byte (PC MSG_RAW_LEN, msg_common.c:47, Runde 42 rest a); ueber 128 Byte (PSX MSG_RAW_LEN,
+msg_common.c:43) wird gemeldet (PSX schneidet ab). Hoechstens 3 Zeilen je Seite (28 Original-Dialoge haben drei Zeilen, z. B. ROOM10D0 msg 17;
 texte_bauen.py), Zeilenbreite <= 271 px.
 Zwei Seiten ('|' im Text, nur 6030 msg 4: der Nutzersatz braucht vier Zeilen): Form des einzigen zweiseitigen Original-Untertitels
 ROOM3060 msg 7 @0x120C, Seitenwechsel @0x1244 `04 01 02 3c 04 00` = Seite zu Ende, Seitenwartezeit N Bilder OHNE Taste
-(msg_common.c Typewriter: `02 N`, N > 0 -> message_fsm 2 mit Timer). N = der Nachlauf der Zeilen desselben Raums (ROOM6030 `01 63`
-@0x13F5, 0x63 = 99 Bilder) statt 0x3C aus 3060.
+(msg_common.c Typewriter: `02 N`, N > 0 -> message_fsm 2 mit Timer). N = der Nachlauf der Zeilen desselben Raums (ROOM6030 msg 0:
+Schwanz `04 01 01 63` beginnt @0x13F5, `01 63` @0x13F7, 0x63 = 99 Bilder @0x13F8) statt 0x3C aus 3060.
 Runde 42 Strang namen, Stufe 1: JEDE Seite traegt den Sprecherkopf `05 <Farbe> <Sprecher>: 05 00 00` (Form der ersten Seite,
 ROOM6030 msg 0 @0x13BE `05 01`), direkt hinter dem `04 00` des Seitenwechsels. ROOM3060 msg 7 (Sherry, ohne Stimme) hat auf Seite 2
 keinen Kopf; hier spricht Leon beide Saetze. NUTZER 18.11.2026: "Du hast bei den uebernommenen Saetzen aus Resident Evil 2 nicht den
@@ -39,10 +39,10 @@ sys.path.insert(0, HIER)
 import texte_stage3a as T  # noqa: E402
 
 ZIEL = os.path.join(T.PORT, 'engine', 'src', 'gen', 'story6_r42_texte.inc')
-MAX_LEN = 192
+MAX_LEN = 512   # PC MSG_RAW_LEN (msg_common.c:47)
 PSX_LEN = 128
 MAX_ZEILEN = 3
-SEITE = [0x04, 0x01, 0x02, 0x63, 0x04, 0x00]   # Form ROOM3060 @0x1244 `04 01 02 3c 04 00`, N = 0x63 (ROOM6030 @0x13F5 `01 63`)
+SEITE = [0x04, 0x01, 0x02, 0x63, 0x04, 0x00]   # Form ROOM3060 @0x1244 `04 01 02 3c 04 00`, N = 0x63 (ROOM6030 `01 63` @0x13F7, Schwanz ab @0x13F5)
 SCHWANZ = bytes([0x04, 0x01, 0x01, 0x63])
 # (Raum, Id) der Original-Zeilen, deren Schwanz belegt wird (Datei-Offset des Schwanzes oben im Kopf)
 SCHWANZ_BELEG = ((0x6030, 0, 0x13F5), (0x6030, 3, 0x1498), (0x6030, 4, 0x14C1),
@@ -111,12 +111,12 @@ def main():
     for raum, mid, (farbe, name), text in UNTERTITEL:
         b, zeilen, bw = untertitel_seiten(farbe, name, text, raum)
         if len(b) > PSX_LEN:
-            print('Hinweis: ROOM%04X msg %d hat %d Byte > %d (PSX MSG_RAW_LEN schneidet ab; PC 192)' % (raum, mid, len(b), PSX_LEN))
+            print('Hinweis: ROOM%04X msg %d hat %d Byte > %d (PSX MSG_RAW_LEN schneidet ab; PC 512)' % (raum, mid, len(b), PSX_LEN))
         for i, w in enumerate(bw):
             if w > T.MAX_PX:
                 fehler.append('ROOM%04X msg %d Zeile %d = %d px > %d' % (raum, mid, i + 1, w, T.MAX_PX))
         if len(b) > MAX_LEN:
-            fehler.append('ROOM%04X msg %d: %d Byte > %d (PSX MSG_RAW_LEN)' % (raum, mid, len(b), MAX_LEN))
+            fehler.append('ROOM%04X msg %d: %d Byte > %d (PC MSG_RAW_LEN)' % (raum, mid, len(b), MAX_LEN))
         if max(len(z) for z in zeilen) > MAX_ZEILEN:
             fehler.append('ROOM%04X msg %d: %d Zeilen > %d' % (raum, mid, len(zeilen), MAX_ZEILEN))
         if bytes(b[-4:]) != SCHWANZ:
