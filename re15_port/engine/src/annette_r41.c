@@ -322,7 +322,8 @@ static const uint8_t z_geste16[]  = { 0x3f, 0x00, 0x09, 0x00, 0x09, 0x0a, 0x19, 
                                       0x3f, 0x00, 0x10, 0x00, 0x09, 0x0a, 0x14, 0x00 };   /* @0x0129A Annette nach msg 16 */
 static const uint8_t z_sig_krach[]= { 0x22, 0x05, RE15_AN_SIG_KRACH, 0x01 };               /* Port: Krach (RE2 @0x01040) */
 /* WARNING beim Krachen (Strang finale Stufe 2, Vorschlag A7 "Fuehrerstand 603: WARNING beim Krachen", Nutzer 2026-11-17 zum
- * Loch "Loch ist einfach da": beim Anfahren kracht es, im Fuehrerstand blinkt WARNING). Original-Bytes des gescheiterten Starts
+ * Loch "Loch ist einfach da": beim Anfahren kracht es, im Fuehrerstand blinkt WARNING; das Loch selbst ist seit Stufe 4 wieder
+ * entfernt, Nutzerentscheid 18.11. "Finden wir keinen Weg, muss es halt raus", re15_zug_r42 geloescht). Original-Bytes des gescheiterten Starts
  * ROOM6030 sub08 @0x01224..@0x0123F unveraendert: Set(1,29,1) @0x01224, For 3 @0x01228 { Cut 4 @0x0122E (Pult dunkel),
  * Sleep 15 @0x01230, Cut 5 @0x01234 (rotes WARNING, BSS ROOM603 Bild 5; Kamera 5 @0x0100 = Kamera 4 @0x00E0), Sleep 15
  * @0x01236 } Next @0x0123A, Set(1,29,0) @0x0123C = drei Wechsel 4/5 in 90 Bildern. Danach zurueck auf Cut 1 = sub08 @0x01254

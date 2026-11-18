@@ -300,12 +300,13 @@ check_tree() {           # $1 = fertiger Paketordner
               GATOR40A0_1A.TIM GATOR40A0_26.TIM KANISTER2080.VBS BAHNSTEIG_FORM.EMD BAHNSTEIG_FORM.TIM \
               ANNETTE_4D.EMD ANNETTE_4D_BLUT.EMD ANNETTE_SE.VBS \
               SOUND/SUB_34.BGM BRUECKE4080.EDT BRUECKE4080.VH BRUECKE4080.VB \
-              R702.ESP R702_16.TIM R702_27.TIM R702_15.TIM R702_1A.TIM R702_XA03_LEON.XAS R702.EDT R702.VH R702.VB; do
+              R702.ESP R702_16.TIM R702_27.TIM R702_15.TIM R702_1A.TIM R702_XA03_LEON.XAS R702_XA03_CLAIRE.XAS R702.EDT R702.VH R702.VB; do
         [[ -s "$out/shared_assets/RE2/$rs" ]] || die "RE2-Asset fehlt/leer im Paket: shared_assets/RE2/$rs (Runde-41-Szene waere stumm/unsichtbar)"
         cmp -s "$RE2/$rs" "$out/shared_assets/RE2/$rs" || die "RE2-Asset im Paket weicht vom Quellbaum ab: shared_assets/RE2/$rs"
     done
     # Runde 42 Strang finale (Plan S10): die Dateien des entfernten G5-Auftritts (R704_*) duerfen nicht mehr im Paket liegen; das Finale
-    # nimmt R702.ESP + R702_xx.TIM (Wiederholung 3, Bank 0x27) und R702_XA03_LEON.XAS (Todesschrei), Liste oben.
+    # nimmt R702.ESP + R702_xx.TIM (Wiederholung 3, Bank 0x27) und R702_XA03_LEON.XAS / R702_XA03_CLAIRE.XAS (Todesschrei Leon 5090 /
+    # Elza 5091, Stufe 4), Liste oben.
     for rs in "$out"/shared_assets/RE2/R704*; do
         [[ -e "$rs" ]] && die "G5-Rest im Paket: ${rs#$out/} (Runde 42: G5 entfernt)"
     done

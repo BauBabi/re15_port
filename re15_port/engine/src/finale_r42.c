@@ -805,7 +805,8 @@ static void sequenz(uint16_t *pad)
         zerplatzen_start();                                               /* FUN_80100108 @0x80103c04, FUN_8010158c @0x80103c0c-50 (U5) */
         s_fi.getoetet = 1;                                                /* +0x10E |= 0x4000 @0x80103c58-68 */
         s_fi.phase = RE15_FI_P8; s_fi.t = 0;
-        protokoll("Einschlag: VSync 5, Explosion Platz %d, Xa 0x03 (%d Sektoren)", k, RE15_FI_XA03_LESE, 0);
+        protokoll("Einschlag: VSync 5, Explosion Platz %d, Xa 0x03 (%d Sektoren)", k,
+                  ist_elza() ? RE15_FI_XA03_LESE_ELZA : RE15_FI_XA03_LESE, 0);   /* Stufe 4: Elza 1234 (Claire-STAGE7.BIN @0x156) */
     }   /* fallthrough: Phase 8 im selben Bild (@0x80103c6c-70) */
         /* fallthrough */
     case RE15_FI_P8: {                                                    /* @0x80103c70 */

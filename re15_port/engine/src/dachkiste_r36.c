@@ -35,6 +35,10 @@
  *   AKTION                       Aktionstaste (Quadrat) 3 Bilder
  *   AOTS                         aktive AOT-Slots (Typ, Ereignis, Flags, Band, Rechteck) ins Log
  *   FLAG z b                     Spielflag (Bank z, Bit b) ins Log (Nachbesserung 3)
+ *   TASTE maske halten [los]     Runde 42 finale Stufe 4: Pad-Bits (Port-Belegung re15_player.h, z. B. START 0x8, Quadrat 0x8000,
+ *                                Kreuz 0x4000, oben 0x10 rechts 0x20 unten 0x40 links 0x80) fuer halten Aufrufe, danach los Aufrufe
+ *                                (Standard 6) nichts - gezaehlt je Eingabetakt, also auch im Status-Menue und in Szenen (das Menue
+ *                                bedient der Wegplan sonst nicht; Durchlauf: Raketenwerfer ausruesten wie ein Spieler)
  *   ENDE
  * Log: RE15_WEGPLAN_LOG=<datei> (Default wegplan.txt im Arbeitsordner).
  */
@@ -160,7 +164,7 @@ void re15_dachkiste_schub_log(int prop_idx, int32_t ziel_x, int32_t ziel_z, int 
 #define WP_R1     0x0800u   /* Zielen (platform/pc/src/input_pc.c RE15_PAD_R1) */
 
 enum { WP_OBJ = 1, WP_RAUM, WP_WARTE, WP_GEGNERWEG, WP_ZELLE, WP_GEHE, WP_BLICK, WP_SCHIEB, WP_AKTION, WP_AOTS, WP_FLAG, WP_ENDE,
-       WP_SCHIESS, WP_GEHE_OBJ, WP_BLICK_OBJ, WP_TIPPE, WP_LAUF, WP_JAGE, WP_RAEUME, WP_BENUTZE, WP_EREIGNIS };
+       WP_SCHIESS, WP_GEHE_OBJ, WP_BLICK_OBJ, WP_TIPPE, WP_LAUF, WP_JAGE, WP_RAEUME, WP_BENUTZE, WP_EREIGNIS, WP_TASTE };
 
 typedef struct {
     int kind;
@@ -289,6 +293,8 @@ static void wp_parse(const char *pfad)
         else if (!strcmp(w, "EREIGNIS"))  { cmd.kind = WP_EREIGNIS; d = 300; sscanf(zeile, "%*s %d %d %d %d", &a, &b, &c, &d);
                                             cmd.a = a; cmd.b = b; cmd.c = c; cmd.d = d; }
         else if (!strcmp(w, "BLICK_OBJ")) { cmd.kind = WP_BLICK_OBJ; }
+        else if (!strcmp(w, "TASTE"))     { cmd.kind = WP_TASTE; b = 3; c = 6; sscanf(zeile, "%*s %i %d %d", &a, &b, &c);
+                                            cmd.a = a; cmd.b = b; cmd.c = c; }
         else continue;
         s_wp[s_wp_n++] = cmd;
     }
@@ -330,6 +336,7 @@ static void wp_start(const wp_cmd_t *c)
     case WP_BLICK_OBJ: wp_log("BLICK_OBJ Slot %d", s_wp_obj); break;
     case WP_BENUTZE: wp_log("BENUTZE Item 0x%02x", c->a); break;
     case WP_EREIGNIS: wp_log("EREIGNIS sub %d nach (%d,%d) = 1, max %d Bilder", c->a, c->b, c->c, c->d); break;
+    case WP_TASTE: wp_log("TASTE 0x%04x %d Takte, dann %d frei", c->a, c->b, c->c); break;
     default: break;
     }
 }
@@ -383,6 +390,13 @@ int re15_dachkiste_wegplan_pad(uint16_t *bits)
     if (s_wp_n <= 0 || s_wp_i >= s_wp_n) return 0;
     const wp_cmd_t *c = &s_wp[s_wp_i];
     if (c->kind == WP_ENDE) return 0;
+    if (c->kind == WP_TASTE) {   /* je Eingabetakt (nicht je Spielbild): das Status-Menue zaehlt frame_count nicht weiter */
+        if (s_wp_zaehler == 0) wp_start(c);
+        *bits = (s_wp_zaehler < c->b) ? (uint16_t)c->a : 0;
+        s_wp_bits = *bits;
+        if (++s_wp_zaehler >= c->b + c->c) wp_naechster("gedrueckt");
+        return 1;
+    }
 
     /* Nur je NEUEM Spielbild weiterschalten; innerhalb eines Bildes dieselben Bits liefern. */
     const int neu = (g_engine.frame_count != s_wp_bild_zuletzt);

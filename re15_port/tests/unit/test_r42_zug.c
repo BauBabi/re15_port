@@ -1,7 +1,7 @@
 /*
- * test_r42_zug.c — Runde 42 Strang "finale", Stufe 2 "Abfahrt": Zugfilm im Zugstart, WARNING beim Krachen, Loch in Wagen B.
- * Herleitung: include/re15_zws_r41.h ("Zugfilm Raum 600"), engine/src/annette_r41.c (z_film, z_warnung), tools/r42_story/
- * szenen_stage6.py (Elza), include/re15_zug_r42.h (Loch).
+ * test_r42_zug.c — Runde 42 Strang "finale", Stufe 2 "Abfahrt": Zugfilm im Zugstart, WARNING beim Krachen; Stufe 4: Wagen B ohne
+ * Loch. Herleitung: include/re15_zws_r41.h ("Zugfilm Raum 600"), engine/src/annette_r41.c (z_film, z_warnung), tools/r42_story/
+ * szenen_stage6.py (Elza).
  *
  * Teile (Aufruf: test_r42_zug <teil>):
  *   datei    MOVIE/R600ZUG.STR: 405 Bilder 320x240 mit den Port-Dekodern, CD-XA 37800 Hz Stereo = Filmlaenge, und der Ton steigt
@@ -18,8 +18,11 @@
  *            ROOM1080 sub14 @0x02524/@0x02536. Kein Befehl an Slot 1 (SUB laeuft bei (3,89)=1 nicht: 6030 @0x01060/@0x01118,
  *            6031 @0x00E86/@0x00F3A; ein Op 3 wuerde ihn einschalten). In der VM: der Halte-Befehl geht in die Ton-Warteschlange,
  *            BEVOR die Film-Zeile parkt; waehrend des Films nichts; nach dem Film der Weiter-Befehl
- *   loch     Hook + VM: 5090/5091 Evt_exec sub03 nach dem Zugstart -> Cut_replace(8,10) + sub03 (bytegleich 5090 @0x012DA /
- *            5091 @0x012BE); Zonen 7->10 und 9->10 statt 7->8 / 9->8; ohne Zugstart-Bit Original (7->8, 9->8)
+ *   wagenb   Stufe 4: das Loch (Stufe 2, Cut_replace(8,10) beim Raumaufbau) ist wieder entfernt. NUTZER 18.11.2026: "Aber natuerlich
+ *            soll man nicht einfach ueber das Loch laufen koennen." / "Finden wir keinen Weg, muss es halt raus..." - gemessen gibt es
+ *            mit dem Loch ab dem Anfahren keinen Weg nach Wagen C (Bericht s4 r1). Geprueft: 5090/5091 bauen Wagen B nach dem
+ *            Zugstart wie das Original (sub00 @0x0127C / @0x01260 `04 ff 18 03` startet sub03 unveraendert): Zonen 7->8 @0x3F0 und
+ *            9->8 @0x454, nie ->10; dazu re15_rdt_zonen_auffrischen (FUN_800396fc @0x800397e8) stellt getauschte Zonen zurueck
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -33,7 +36,6 @@
 #include "re15_annette_r41.h"
 #include "re15_story_r42.h"
 #include "re15_story6_r42.h"
-#include "re15_zug_r42.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -299,7 +301,7 @@ static void teil_musik(void)
     musik_pruefen("Elza ROOM6031", p, len, "STAGE6/ROOM6031.RDT", RE15_ZUG600_RAUM_ELZA, 0x00EB8u);
 }
 
-/* ---- loch ----------------------------------------------------------------------------------------------------- */
+/* ---- wagenb --------------------------------------------------------------------------------------------------- */
 static re15_rdt_t s_rdt;
 static uint8_t *raum_laden(const char *rel, unsigned id, int zug_leon, int zug_elza)
 {
@@ -332,46 +334,26 @@ static int zone_hat(int von, int nach)
     return 0;
 }
 
-static void teil_loch(void)
+static void teil_wagenb(void)
 {
-    printf("== loch ==\n");
+    printf("== wagenb ==\n");
     size_t n0 = 0, n1 = 0;
     uint8_t *r0 = asset("STAGE5/ROOM5090.RDT", &n0), *r1 = asset("STAGE5/ROOM5091.RDT", &n1);
-    int len = 0;
-    const uint8_t *k = re15_zug_r42_programm(&len);
-    PRUEF(r0 && r1 && k && len == 27 && k[0] == 0x4b && k[1] == 8 && k[2] == 10 &&
-          !memcmp(k + 3, r0 + RE15_ZUG_R42_SUB03_5090, 24) && !memcmp(k + 3, r1 + RE15_ZUG_R42_SUB03_5091, 24) &&
-          !memcmp(r0 + 0x0127C, "\x04\xff\x18\x03", 4) && !memcmp(r1 + 0x01260, "\x04\xff\x18\x03", 4),
-          "Programm = Cut_replace(8,10) + sub03 bytegleich (5090 @0x012DA, 5091 @0x012BE); Aufruf sub00 @0x0127C / @0x01260");
-    /* Hook allein */
-    const uint8_t *t0 = r0 ? r0 + RE15_ZUG_R42_SUB03_5090 : NULL;
-    re15_game_flag_set(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT, 0); re15_game_flag_set(RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA, 0);
-    PRUEF(re15_zug_r42_evt_exec(0x5090u, 3, t0) == t0 && re15_zug_r42_evt_exec(0x5091u, 3, t0) == t0,
-          "vor dem Zugstart: 5090/5091 sub03 unveraendert");
-    re15_game_flag_set(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT, 1);
-    PRUEF(re15_zug_r42_evt_exec(0x5090u, 3, t0) == k && re15_zug_r42_evt_exec(0x5091u, 3, t0) == t0 &&
-          re15_zug_r42_evt_exec(0x5090u, 2, t0) == t0 && re15_zug_r42_evt_exec(0x6030u, 3, t0) == t0,
-          "Leon (9,133)=1: nur 5090 sub03 -> Loch-Programm (nicht 5091, nicht sub02, nicht 6030)");
-    re15_game_flag_set(RE15_AN_ZUG_BANK, RE15_AN_ZUG_BIT, 0); re15_game_flag_set(RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA, 1);
-    PRUEF(re15_zug_r42_evt_exec(0x5091u, 3, t0) == k && re15_zug_r42_evt_exec(0x5090u, 3, t0) == t0,
-          "Elza (9,130)=1: nur 5091 sub03 -> Loch-Programm");
-    re15_game_flag_set(RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA, 0);
+    PRUEF(r0 && r1 && !memcmp(r0 + 0x0127C, "\x04\xff\x18\x03", 4) && !memcmp(r1 + 0x01260, "\x04\xff\x18\x03", 4),
+          "sub00 @0x0127C / @0x01260 Evt_exec sub03 (Licht-Schleife, Original)");
     free(r0); free(r1);
-    /* VM: Raumaufbau */
-    static const struct { const char *rdt; unsigned id; int zl, ze, loch; } faelle[] = {
-        { "STAGE5/ROOM5090.RDT", 0x5090u, 0, 0, 0 }, { "STAGE5/ROOM5090.RDT", 0x5090u, 1, 0, 1 },
-        { "STAGE5/ROOM5091.RDT", 0x5091u, 0, 0, 0 }, { "STAGE5/ROOM5091.RDT", 0x5091u, 0, 1, 1 },
-        { "STAGE5/ROOM5091.RDT", 0x5091u, 1, 0, 0 },
+    /* VM: Raumaufbau mit und ohne Zugstart-Bit - immer Bild 8 (Original), nie Bild 10 */
+    static const struct { const char *rdt; unsigned id; int zl, ze; } faelle[] = {
+        { "STAGE5/ROOM5090.RDT", 0x5090u, 0, 0 }, { "STAGE5/ROOM5090.RDT", 0x5090u, 1, 0 },
+        { "STAGE5/ROOM5091.RDT", 0x5091u, 0, 0 }, { "STAGE5/ROOM5091.RDT", 0x5091u, 0, 1 },
     };
     for (unsigned i = 0; i < sizeof faelle / sizeof faelle[0]; i++) {
-        const unsigned vor = g_re15_zug_r42_loch;
         uint8_t *b = raum_laden(faelle[i].rdt, faelle[i].id, faelle[i].zl, faelle[i].ze);
         const int z78 = zone_hat(7, 8), z98 = zone_hat(9, 8), z710 = zone_hat(7, 10), z910 = zone_hat(9, 10);
-        const int ok = b && (faelle[i].loch ? (z710 && z910 && !z78 && !z98) : (z78 && z98 && !z710 && !z910)) &&
-                       (g_re15_zug_r42_loch - vor) == (unsigned)faelle[i].loch;
-        PRUEF(ok, "ROOM%04X Zugstart Leon %d / Elza %d: Zonen 7->8 %d, 9->8 %d, 7->10 %d, 9->10 %d (Soll %s)", faelle[i].id,
-              faelle[i].zl, faelle[i].ze, z78, z98, z710, z910, faelle[i].loch ? "Loch = Bild 10" : "Original = Bild 8");
-        if (b && faelle[i].loch) {   /* Tuer in denselben Raum: Zonen frisch aus der Datei (FUN_800396fc @0x800397e8) */
+        PRUEF(b && z78 && z98 && !z710 && !z910, "ROOM%04X Zugstart Leon %d / Elza %d: Zonen 7->8 %d, 9->8 %d, 7->10 %d, 9->10 %d "
+              "(Soll Bild 8 wie das Original, kein Loch)", faelle[i].id, faelle[i].zl, faelle[i].ze, z78, z98, z710, z910);
+        if (b && faelle[i].zl + faelle[i].ze) {   /* Raumlader: getauschte Zonen kommen frisch aus der Datei (FUN_800396fc @0x800397e8) */
+            for (int k = 0; k < s_rdt.zone_count; k++) if (s_rdt.zones[k].cam_to == 8) s_rdt.zones[k].cam_to = 10;
             const int ok2 = re15_rdt_zonen_auffrischen(&s_rdt) == 0 && zone_hat(7, 8) && zone_hat(9, 8) && !zone_hat(7, 10);
             PRUEF(ok2, "ROOM%04X re15_rdt_zonen_auffrischen: Zonen wieder wie in der Datei (7->8, 9->8)", faelle[i].id);
         }
@@ -389,7 +371,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(t, "leon"))    teil_leon();
     if (alle || !strcmp(t, "elza"))    teil_elza();
     if (alle || !strcmp(t, "musik"))   teil_musik();
-    if (alle || !strcmp(t, "loch"))    teil_loch();
+    if (alle || !strcmp(t, "wagenb"))  teil_wagenb();
     printf("%s: %d Fehler\n", g_fail ? "ROT" : "GRUEN", g_fail);
     return g_fail ? 1 : 0;
 }

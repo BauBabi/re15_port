@@ -24,6 +24,9 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die uebrigen Int
 #   Runde 4: die Form ruht waehrend der ganzen Szene SICHTBAR (keine Zeile "Form gezeichnet 0"; RE2 @0x80026590-9c blendet nicht aus).
 #   debug.log: Schnitte 13 (W) / 13 (Reaktion) / zurueck auf die gemerkte Kamera (Ende), John aus JOHN_49_WURF.EMD mit 26 Clips, der
 #   Werfer in der Hand im Schnitt 13, im Flug im Schnitt 13 und in der Kamera des Spielers, am Boden in der Kamera des Spielers.
+#   Stufe 4 (Durchlauf): nach dem Aufheben oeffnet START das Inventar ("[r38q] F<n> Inventar-Ton Satz 6 (Oeffnen)" nach dem Bild
+#   "aufgehoben") - vorher stellte das Schliessen des Zurufs die Pad-Sperre der Szene wieder her (FUN_80028134 @0x800285a4 /
+#   @0x800286cc / @0x8002871c), RE15_PAUSE_PAD blieb stehen, der Werfer war nicht ausruestbar; finale.log "Pad-Sperre aus".
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=leon|elza -P test_r42_finale_wurf.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -55,7 +58,7 @@ re15_start_spiel(_rv 500
     RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_figur_env}
     RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=500,-9175,2048,0"
-    RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U8.5,W7.3,A0.1,W3.5,A0.1,W4"
+    RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U8.5,W7.3,A0.1,W3.5,A0.1,W4,S0.1,W2"
     RE15_FINALE_LOG=1 RE15_FINALE_UHR=60 "RE15_EXIT_AT=1000"
     "${_exe_kopie}")
 file(REMOVE "${_exe_kopie}")
@@ -202,6 +205,24 @@ endif()
 if(_log MATCHES "Wurf: Form gezeichnet 0")
     string(APPEND _f "
  Form waehrend der Szene nicht gezeichnet (verschwindet sichtbar, Rot s3 r3)")
+endif()
+# Stufe 4: nach dem Aufheben laesst sich das Inventar oeffnen (Werfer ausruesten wie ein Spieler).
+if(_log MATCHES "\\[finale\\] T[0-9]+ F([0-9]+) Wurf: aufgehoben: Zellen")
+    set(_fa "${CMAKE_MATCH_1}")
+    string(REGEX MATCHALL "\\[r38q\\] F[0-9]+ Inventar-Ton Satz 6 [(]Oeffnen[)]" _auf "${_dbg}")
+    set(_nach 0)
+    foreach(_z IN LISTS _auf)
+        string(REGEX MATCH "F([0-9]+)" _x "${_z}")
+        if(CMAKE_MATCH_1 GREATER _fa)
+            set(_nach 1)
+        endif()
+    endforeach()
+    if(NOT _nach)
+        string(APPEND _f "\n nach dem Aufheben (F${_fa}) oeffnet START das Inventar nicht (Pad-Sperre der Szene stehen geblieben?)")
+    endif()
+endif()
+if(NOT _log MATCHES "Wurf: Pad-Sperre aus [(]Set[(]2,7,0[)][)]")
+    string(APPEND _f "\n Messzeile 'Pad-Sperre aus (Set(2,7,0))' fehlt")
 endif()
 if(_log MATCHES "Ausloeser: Abschuss")
     string(APPEND _f "\n Abschuss ausgeloest (ohne Werfer in der Hand darf das nicht sein)")

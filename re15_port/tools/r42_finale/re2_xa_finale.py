@@ -14,20 +14,95 @@ Ausgabe: die rohen 2336-Byte-Sektoren DES Kanals im Lesefenster [Start, Ende), S
 Submode 0x64, Codierung 0x00 = mono 37800 Hz 4 Bit):
   R702_XA03_LEON.XAS = Kanal 5, Sektoren 5, 21, .., (Lesefenster 1026 Sektoren)
 Das Lesefenster selbst (1026) traegt der Port als Konstante (finale_r42.c, RE15_FI_XA03_LESE), nicht die Datei.
-Aufruf: re2_xa_finale.py [<Ausgabeverzeichnis>]   (Standard re15_port/shared_assets/RE2)"""
+Aufruf: re2_xa_finale.py [<Ausgabeverzeichnis>]   (Standard re15_port/shared_assets/RE2)
+
+Stufe 4 (Plan S9, Elza 5091): R702_XA03_CLAIRE.XAS aus der Claire-PAL-Disc des Nutzers (SLES-10972; im Repo gibt es keine brauchbare
+Claire-XA: info/re2clair/PL1/VOICE/VOICE11.XAS ist nur Nullbytes, VOICE17.XAS fehlt, Dossier B 1.3). Gelesen wird NUR ueber ISO9660:
+PL1/VOICE/VOICE17.XAS;1 = LBA 96572, 4685824 Byte = 2288 Sektoren (je Sektor die rohen 2336 Byte ab Byte 16 des 2352-Byte-Rohsektors),
+COMMON/BIN/STAGE7.BIN (420 Byte) Tabelle @0x144, Eintrag 3 @0x156 `05 00 00 00 4f 00` = Kanal 5, Block 0, Laenge 79; Lesefenster
+79*16 - 0x1E = 1234 Sektoren (Claire-Overlay mit denselben Formeln, Dossier B 6). Gleiche Schnittregel wie Leon.
+Aufruf: re2_xa_finale.py --claire "<.../Resident Evil 2 Claire.bin>" [<Ausgabeverzeichnis>]"""
 import hashlib, os, struct, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 XAS = os.path.join(REPO, "info", "re2leon", "PL0", "VOICE", "VOICE07.XAS")
 STAGE7 = os.path.join(REPO, "info", "re2leon", "COMMON", "BIN", "STAGE7.BIN")
-OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(REPO, "re15_port", "shared_assets", "RE2")
+_ARGS = [a for a in sys.argv[1:] if a != "--claire"]
+if "--claire" in sys.argv[1:]:
+    _ARGS = _ARGS[1:]
+OUT = _ARGS[0] if _ARGS else os.path.join(REPO, "re15_port", "shared_assets", "RE2")
 SEK = 2336
 XA_TAB = 0x144
 XAS_MD5 = "2f592fe0ea42e0d34cabddf9fbb4cec4"   # = Disc VOICE07.XAS;1 (re2_xa_schnitt.py)
 
 
+def schneiden(x, st7, nr, soll, name, kanal_erwartet=None):
+    kanal, block, laenge = struct.unpack_from("<HHH", st7, XA_TAB + nr * 6)
+    assert (kanal, block, laenge) == soll, "STAGE7.BIN @0x%X: %r" % (XA_TAB + nr * 6, (kanal, block, laenge))
+    start = block * 16 + kanal
+    ende = -0x1E + (block + laenge) * 16 + kanal
+    teile = []
+    for i in range(start, ende, 16):
+        s = x[i * SEK:(i + 1) * SEK]
+        assert s[0] == 1 and s[1] == kanal and s[2] == 0x64 and s[3] == 0x00 and s[4:8] == s[0:4], (nr, i, s[:8].hex())
+        teile.append(s)
+    daten = b"".join(teile)
+    open(os.path.join(OUT, name), "wb").write(daten)
+    print("%s: Kanal %d, Sektoren %d..%d (%d), Lesefenster %d Sektoren = %.3f s, PCM %.3f s, %d Byte, md5 %s" % (
+        name, kanal, start, start + 16 * (len(teile) - 1), len(teile), ende - start, (ende - start) / 150.0,
+        len(teile) * 4032 / 37800.0, len(daten), hashlib.md5(daten).hexdigest()))
+
+
+CLAIRE_XAS = ("PL1/VOICE/VOICE17.XAS", 96572, 4685824)   # ISO-Verzeichnis der Claire-PAL-Disc (Dossier B 1.2)
+CLAIRE_ST7 = "COMMON/BIN/STAGE7.BIN"
+
+
+def claire(disc_pfad):
+    import importlib.util
+    roh = open(disc_pfad, "rb")
+
+    def sektor(lba):
+        roh.seek(lba * 2352)
+        return roh.read(2352)
+
+    def iso_finde(pfad):
+        pvd = sektor(16)[24:24 + 2048]
+        assert pvd[1:6] == b"CD001", "kein ISO9660"
+        lba, groesse = struct.unpack_from("<I", pvd, 156 + 2)[0], struct.unpack_from("<I", pvd, 156 + 10)[0]
+        for teil in pfad.split("/"):
+            daten = b"".join(sektor(lba + i)[24:24 + 2048] for i in range((groesse + 2047) // 2048))
+            p, treffer = 0, None
+            while p < len(daten):
+                ln = daten[p]
+                if ln == 0:
+                    p = ((p // 2048) + 1) * 2048
+                    continue
+                n = daten[p + 33:p + 33 + daten[p + 32]].decode("ascii", "replace").split(";")[0]
+                if n.upper() == teil.upper():
+                    treffer = (struct.unpack_from("<I", daten, p + 2)[0], struct.unpack_from("<I", daten, p + 10)[0])
+                    break
+                p += ln
+            assert treffer, "%s nicht auf der Disc" % pfad
+            lba, groesse = treffer
+        return lba, groesse
+
+    lba, groesse = iso_finde(CLAIRE_XAS[0])
+    assert (lba, groesse) == CLAIRE_XAS[1:], "VOICE17.XAS: LBA %d Groesse %d" % (lba, groesse)
+    n = (groesse + 2047) // 2048
+    x = b"".join(sektor(lba + i)[16:16 + SEK] for i in range(n))
+    l7, g7 = iso_finde(CLAIRE_ST7)
+    st7 = sektor(l7)[24:24 + 2048][:g7]
+    assert g7 == 420, "Claire-STAGE7.BIN %d Byte" % g7
+    print("Claire-Disc: VOICE17.XAS LBA %d, %d Sektoren, md5 %s; STAGE7.BIN LBA %d md5 %s" % (
+        lba, n, hashlib.md5(x).hexdigest(), l7, hashlib.md5(st7).hexdigest()))
+    os.makedirs(OUT, exist_ok=True)
+    schneiden(x, st7, 0x03, (5, 0, 79), "R702_XA03_CLAIRE.XAS")
+
+
 def main():
+    if len(sys.argv) > 2 and sys.argv[1] == "--claire":
+        return claire(sys.argv[2])
     x = open(XAS, "rb").read()
     assert hashlib.md5(x).hexdigest() == XAS_MD5, "VOICE07.XAS ist nicht die Disc-Datei"
     assert len(x) == 1904 * SEK

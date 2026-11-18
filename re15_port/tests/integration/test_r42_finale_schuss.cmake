@@ -23,7 +23,14 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die uebrigen Int
 #   R702 Satz 0x0F (Se_on 0x020F0001 @0x80103b54-5c) im Einschlagbild, Bank geladen. Zerplatzen (U5): Bild 16 loescht die Brocken und setzt
 #   sechs 0x040E2000 (Marken der Tabelle @0x8010476c). VSync 5 gilt genau vom Einschlag bis Phase 9 (84 Bilder im debug.log).
 #   Danach: Abspann-Raum 6040 und Titel (zweiter Spiel-Boot, RE15_BOOT_EXIT_AT=2), kein [g5a]/G5-Auftritt im ganzen Lauf.
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r42_finale_schuss.cmake
+# STUFE 4 (Plan S9, TEIL=elza): dieselbe Maschine in ROOM5091 (Dossier B 6: Claire-Overlay mit denselben Konstanten). Unterschiede:
+#   Zeile "You lose, big guy!" (NUTZERWUNSCH 17.11., K-11 Claire) mit Lesefenster 354 Sektoren = 71 Bilder (Claire-STAGE7.BIN @0x150
+#   `06 00 4e 00 18 00`) -> U = T + 15 + 71 + 1; Todesschrei R702_XA03_CLAIRE.XAS mit Lesefenster 1234 Sektoren (@0x156 `05 00 00 00 4f 00`)
+#   = 493,6 Austastungen -> bei VSync 5 das 99. Bild nach dem Einschlag (Kill U+218, Phase 9 U+219, Xa-Fenster 495, Zeitlupe 100 Bilder);
+#   Abspann-Raum 6041 (5091 Tuer Slot 5 -> Stage-Byte 05 / Raum 04 + Variante). Beide Teile pruefen zusaetzlich mit Ton-Treiber "dummy"
+#   (statt RE15_NOAUDIO): Message_on der Schlusszeile im Bild T+16 mit der Aufnahme synchro/STAGE5/room509x/main02.wav und den Start der
+#   RE2-XA mit Datei und Lesefenster im Einschlagbild.
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> [-DTEIL=leon|elza] -P test_r42_finale_schuss.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
     message(FATAL_ERROR "r42_finale_schuss: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
@@ -32,25 +39,45 @@ if(NOT WORKDIR)
     message(FATAL_ERROR "r42_finale_schuss: WORKDIR fehlt")
 endif()
 
+if(NOT TEIL)
+    set(TEIL leon)
+endif()
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+if(TEIL STREQUAL "elza")
+    set(_raum 5091)
+    set(_figur_env RE15_TITLE_SHOT_CHAR=1)
+    set(_soll_ut 87)            # Sleep 15 + Lesefenster 71 + Programmstart T+1
+    set(_soll_kill 218)         # Einschlag U+119 + 99 (1234 Sektoren * 60 / 150 = 493,6 Austastungen, VSync 5)
+    set(_soll_xavbl 495)
+    set(_abspann 6041)
+    set(_zeile "Elza: You lose, big guy!")
+    set(_xa_datei "R702_XA03_CLAIRE.XAS: 78 Sektoren, Lesefenster 1234")
+else()
+    set(_raum 5090)
+    set(_figur_env "")
+    set(_soll_ut 49)
+    set(_soll_kill 202)
+    set(_soll_xavbl 415)
+    set(_abspann 6040)
+    set(_zeile "Leon: Game over.")
+    set(_xa_datei "R702_XA03_LEON.XAS: 65 Sektoren, Lesefenster 1026")
+endif()
+math(EXPR _soll_p9 "${_soll_kill} + 1")
+math(EXPR _soll_zeitlupe "${_soll_kill} - 119 + 1")
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(WORKDIR "${WORKDIR}/lauf_${_lauf_id}")
 file(MAKE_DIRECTORY "${WORKDIR}")
 get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
-file(GLOB _alte_kopien "${_exe_dir}/re15_pc_r42finale_*.exe")
-foreach(_k IN LISTS _alte_kopien)
-    file(REMOVE "${_k}")
-endforeach()
-set(_exe_kopie "${_exe_dir}/re15_pc_r42finale_${_lauf_id}.exe")
+set(_exe_kopie "${_exe_dir}/re15_pc_r42finale_${TEIL}_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 re15_start_spiel(_rv 800
-    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
-    RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
-    RE15_DEBUG_JUMP=5090@250 "RE15_PLAYER_POS=500,-9175,2048,0"
+    RE15_NO_INTRO=1 SDL_AUDIODRIVER=dummy RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
+    RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_figur_env}
+    RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=500,-9175,2048,0"
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA6,W60"
-    RE15_FINALE_WERFER=1 RE15_FINALE_LOG=1 RE15_KAMERAHALT_LOG=1 RE15_BOOT_EXIT_AT=2 "RE15_EXIT_AT=7000"
+    RE15_FINALE_WERFER=1 RE15_FINALE_LOG=1 RE15_KAMERAHALT_LOG=1 RE15_MSG_LOG=1 RE15_STIMME_LOG=1 RE15_BOOT_EXIT_AT=2 "RE15_EXIT_AT=7000"
     "${_exe_kopie}")
 file(REMOVE "${_exe_kopie}")
 
@@ -72,12 +99,12 @@ if(NOT _T OR NOT _U)
     message(FATAL_ERROR "r42_finale_schuss: kein Ausloeser/keine Freigabe im finale.log (exit=${_rv})\n${_log}")
 endif()
 math(EXPR _d "${_U} - ${_T}")
-if(NOT _d EQUAL 49)
-    string(APPEND _f "\n U - T = ${_d} statt 49 (Sleep 15 + Lesefenster 33 + Programmstart T+1)")
+if(NOT _d EQUAL _soll_ut)
+    string(APPEND _f "\n U - T = ${_d} statt ${_soll_ut} (Sleep 15 + Lesefenster + Programmstart T+1)")
 endif()
 foreach(_paar "echte Rakete geloescht:7" "W1:.*vor der Form:37" "Wiederholung 020d1000 Besitzer 0x80:38" "W1 eingefroren:52"
               "W2:.*vor der Form:77" "Wiederholung 020d1000 Besitzer 0x81:78" "W2 eingefroren:84" "W3:.*vor der Form:109"
-              "Ruetteln:118" "Einschlag:119" "Se_on 0x020F0001. Raumbank R702 Satz 0x0F .PC-Haken 1.:119" "Wackeln aus:134" "Bild 16: Brocken weg, 6 x 0x040E2000:134" "Kill:202" "Phase 9:203")
+              "Ruetteln:118" "Einschlag:119" "Se_on 0x020F0001. Raumbank R702 Satz 0x0F .PC-Haken 1.:119" "Wackeln aus:134" "Bild 16: Brocken weg, 6 x 0x040E2000:134" "Kill:${_soll_kill}" "Phase 9:${_soll_p9}")
     string(REGEX MATCH "^(.*):([0-9]+)$" _x "${_paar}")
     set(_m "${CMAKE_MATCH_1}")
     set(_soll "${CMAKE_MATCH_2}")
@@ -96,7 +123,7 @@ if(NOT _log MATCHES "echte Rakete geloescht \\([1-9][0-9]* Plaetze\\)")
 endif()
 # [^\n] statt .: der CMake-Punkt passt auch auf den Zeilenumbruch (Runde 3: "Ausloeser: .*Schnitt 12" fand "W1 ... Schnitt 12" der Runde 2)
 foreach(_paar "Ausloeser: [^\n]*Schnitt 15" "Fixpunkte: Form [(]9250,-25750[)]" "Wiederholung Form [(]22000,-23250[)] Schnitt 13" "W1: Spieler 10000 vor der Form, Schnitt 13" "W2: Spieler 5000 vor der Form, Schnitt 14"
-              "W3: Spieler 3000 vor der Form, Schnitt 13" "Kill: [^\n]*Xa-Fenster 415 Austastungen")
+              "W3: Spieler 3000 vor der Form, Schnitt 13" "Kill: [^\n]*Xa-Fenster ${_soll_xavbl} Austastungen")
     if(NOT _log MATCHES "${_paar}")
         string(APPEND _f "\n '${_paar}' fehlt (U3-Schnitte / R1-Echtzeit)")
     endif()
@@ -177,7 +204,7 @@ if(_log MATCHES "\\[finale\\] T[0-9]+ F([0-9]+) Ausloeser: ")
     else()
         string(APPEND _f "\n Messzeile Ausloese-Schnitt fehlt")
     endif()
-    if(NOT _dbg MATCHES "\\[kamerahalt\\] F${_fa} raum=5090 [^\n]* -> HALTEN")
+    if(NOT _dbg MATCHES "\\[kamerahalt\\] F${_fa} raum=${_raum} [^\n]* -> HALTEN")
         string(APPEND _f "\n Bild F${_fa} (Ausloeser, Versetzen auf die Fixpunkte) wird gezeigt statt gehalten")
     endif()
 endif()
@@ -192,8 +219,8 @@ if(_dbg MATCHES "\\[gator-re2\\] VSync 5 [^\n]* ab F([0-9]+)(.*)$")
     set(_nach "${CMAKE_MATCH_2}")
     if(_nach MATCHES "\\[gator-re2\\] VSync 2 [^\n]* ab F([0-9]+)")
         math(EXPR _dv "${CMAKE_MATCH_1} - ${_v5}")
-        if(NOT _dv EQUAL 84)
-            string(APPEND _f "\n Zeitlupe ${_dv} Bilder statt 84 (83 bis zum Kill + Phase 9)")
+        if(NOT _dv EQUAL _soll_zeitlupe)
+            string(APPEND _f "\n Zeitlupe ${_dv} Bilder statt ${_soll_zeitlupe} (bis zum Kill + Phase 9)")
         endif()
     else()
         string(APPEND _f "\n VSync 2 nach der Zeitlupe fehlt")
@@ -204,21 +231,44 @@ endif()
 if(_dbg MATCHES "\\[g5a\\]")
     string(APPEND _f "\n [g5a]-Zeile im Lauf: der G5-Auftritt lief")
 endif()
-if(NOT _dbg MATCHES "PC loaded room6040")
-    string(APPEND _f "\n Abspann-Raum 6040 nicht geladen")
+if(NOT _dbg MATCHES "PC loaded room${_abspann}")
+    string(APPEND _f "\n Abspann-Raum ${_abspann} nicht geladen")
+endif()
+# Stufe 4: Schlusszeile als Message_on mit Aufnahme (K-11) im Bild T+16 (sub15 Sleep 15 @0x01A30, Programmstart T+1) und Todesschrei-XA.
+string(FIND "${_dbg}" "[msgtext] room=${_raum} id=2 \"${_zeile}\"" _pz)
+if(_pz LESS 0)
+    string(APPEND _f "\n Schlusszeile '${_zeile}' (ROOM${_raum} Meldung 2) nicht gezeigt")
+else()
+    string(SUBSTRING "${_dbg}" ${_pz} 400 _nach_zeile)
+    if(NOT _nach_zeile MATCHES "\\[voice\\] clip loaded: main02[.]wav")
+        string(APPEND _f "\n zur Schlusszeile keine Aufnahme synchro/STAGE5/room${_raum}/main02.wav geladen")
+    endif()
+endif()
+if(EXISTS "${WORKDIR}/stimme.log")
+    file(READ "${WORKDIR}/stimme.log" _st)
+    math(EXPR _soll_zb "${_T} + 16")
+    if(NOT _st MATCHES "raum=${_raum} nachricht=2 [^\n]* bild=${_soll_zb}\n")
+        string(APPEND _f "\n Schlusszeile nicht im Bild T+16 = F${_soll_zb} (stimme.log)")
+    endif()
+else()
+    string(APPEND _f "\n stimme.log fehlt (RE15_STIMME_LOG)")
+endif()
+string(FIND "${_dbg}" "[re2xa] ${_xa_datei} " _px)
+if(_px LESS 0)
+    string(APPEND _f "\n Todesschrei nicht gestartet ('[re2xa] ${_xa_datei}' fehlt)")
 endif()
 if(NOT _dbg MATCHES "Set\\(0,1,0\\): INGAME aus -> Titel")
     string(APPEND _f "\n Diashow-Ende Set(0,1,0) nicht gesehen")
 endif()
 # S8 (Plan): die Diashow ROOM6040 dauert die Summe ihrer Sleeps, 3952 Bilder (@0x00534-0x00586, Dossier C 1.2); der Bildzaehler
 # beginnt mit dem Raum neu, Set(0,1,0) @0x00590 faellt deshalb im Bild 3952 + Vorlauf des Raumstarts (gemessen 5: F3957).
-if(_dbg MATCHES "\\[finale\\] F([0-9]+) ROOM6040 Set\\(0,1,0\\)")
+if(_dbg MATCHES "\\[finale\\] F([0-9]+) ROOM${_abspann} Set\\(0,1,0\\)")
     math(EXPR _dia "${CMAKE_MATCH_1} - 3952")
     if(_dia LESS 0 OR _dia GREATER 8)
         string(APPEND _f "\n Diashow-Ende im Bild ${CMAKE_MATCH_1}, erwartet 3952 + 0..8 (Summe der Sleeps @0x00534-0x00586)")
     endif()
 else()   # Runde 3 (Pruefbericht s1 r2, gelb): ohne die Zeile ist die Dauer nicht geprueft -> rot
-    string(APPEND _f "\n Messzeile '[finale] F<n> ROOM6040 Set(0,1,0)' fehlt - Diashow-Dauer 3952 nicht pruefbar")
+    string(APPEND _f "\n Messzeile '[finale] F<n> ROOM${_abspann} Set(0,1,0)' fehlt - Diashow-Dauer 3952 nicht pruefbar")
 endif()
 # S8: das neue Spiel nach dem Titel traegt weder das Finale-Bit 129 noch den Raketenwerfer (main.c memset g_inv/g_game).
 if(NOT _dbg MATCHES "\\[flow\\] boot #2: Raum [0-9A-F]+, Bit 129 0, Raketenwerfer im Inventar 0")
@@ -227,7 +277,7 @@ endif()
 if(NOT _dbg MATCHES "BOOT_EXIT_AT: boot #2")
     string(APPEND _f "\n Titel nicht erreicht (kein zweiter Spiel-Boot, exit=${_rv})")
 endif()
-message(STATUS "r42_finale_schuss: T=${_T} U=${_U} exit=${_rv}")
+message(STATUS "r42_finale_schuss_${TEIL}: T=${_T} U=${_U} exit=${_rv}")
 if(_f)
-    message(FATAL_ERROR "r42_finale_schuss:${_f}\n--- finale.log ---\n${_log}")
+    message(FATAL_ERROR "r42_finale_schuss_${TEIL}:${_f}\n--- finale.log ---\n${_log}")
 endif()

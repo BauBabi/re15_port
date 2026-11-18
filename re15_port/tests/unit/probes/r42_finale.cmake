@@ -18,8 +18,17 @@ if(TARGET re15_pc)
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r42_finale_schuss_wd
+                     -DTEIL=leon
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_finale_schuss.cmake)
     set_tests_properties(integration_r42_finale_schuss PROPERTIES TIMEOUT 900)
+    # Stufe 4 (Plan S9): Elza 5091 - Zeile "You lose, big guy!" 71 Bilder, Todesschrei Claire 1234 Sektoren, Abspann 6041.
+    add_test(NAME integration_r42_finale_schuss_elza
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r42_finale_schuss_elza_wd
+                     -DTEIL=elza
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_finale_schuss.cmake)
+    set_tests_properties(integration_r42_finale_schuss_elza PROPERTIES TIMEOUT 900)
 endif()
 # Plan S7 (Pruefbericht s1 r1): ohne Bank-9-Bit 129 bleiben sub02 (Abspann-Vorspann) und Tuer 5 (ROOM6040/6041) gesperrt, mit Bit offen.
 add_executable(test_r42_finale_abspann ${CMAKE_CURRENT_LIST_DIR}/../test_r42_finale_abspann.c)

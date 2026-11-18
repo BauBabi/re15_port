@@ -284,6 +284,14 @@ static int   s_audio_cap_sync = 0; /* RE15_AUDIO_CAP_SYNC: frame-locked render, 
 static long  s_cap_ticks      = 0; /* gerenderte Spielframes in diesem Modus (== PCM/1470)     */
 static long  s_cap_limit      = 0; /* RE15_AUDIO_CAP_FRAMES: danach Datei schliessen + exit(0)  */
 long re15_audio_cap_tick(void) { return s_cap_ticks; }   /* Runde 38 Spur F: Mitschnitt-Takt im Ton-Messschrieb (dining_r38_pc.c) */
+/* Runde 42 Strang finale Stufe 4 (MESSHAKEN, kein Spielpfad): RE15_AUDIO_CAP_VSYNC=1 rendert im CAP_SYNC-Modus je Spielbild so viele
+ * Proben, wie das Bild im Original dauert: VSync(n) wartet n Austastungen (RE2 Hauptschleife @0x8002b990-98, Port re2b_vsync()),
+ * also RATE * n / 60 statt fest RATE / 30. Ohne die Variable bleibt es bitgleich bei 1470 je Bild. Grund: in der Zeitlupe des
+ * Finales (VSync 5 @0x80103b00-08) laeuft der Ton im Spiel in Echtzeit weiter (Bildbudget 82 ms), ein fester 1470er-Takt staucht
+ * den Todesschrei auf 2/5. s_cap_proben = Stereo-Proben bisher (Zeitachse fuer RE15_FRAMEDUMP_TAKT in render_pc.c). */
+static int   s_cap_vsync      = 0;
+static long  s_cap_proben     = 0;
+long re15_audio_cap_proben(void) { return s_cap_proben; }
 static int   s_audio_mono = 0;     /* OPTIONS SOUND: 1 = mono (collapse final mix), 0 = stereo */
 void re15_audio_set_mono(int mono) { s_audio_mono = mono ? 1 : 0; }
 
@@ -2110,6 +2118,7 @@ void re15_audio_init(void)
           s_audio_cap_sync = 1;
           { const char *lim = getenv("RE15_AUDIO_CAP_FRAMES");
             if (lim && *lim) s_cap_limit = atol(lim); }
+          { const char *vs = getenv("RE15_AUDIO_CAP_VSYNC"); s_cap_vsync = (vs && *vs && *vs != '0') ? 1 : 0; }
           s_dev_freq = RE15_AUDIO_RATE;
           s_audio_dev = 0;                 /* SDL_LockAudioDevice(0) ist ein No-op */
           load_bundled_vab_pc();
@@ -3971,8 +3980,17 @@ void re15_audio_tick(void)
      * dieselbe Kette wie der SDL-Callback (der in diesem Modus gar nicht laeuft). audio_callback
      * schreibt selbst nach s_audio_cap. */
     if (s_audio_cap_sync) {
-        static int16_t capbuf[(RE15_AUDIO_RATE / 30) * 2];
-        audio_callback(NULL, (Uint8 *)capbuf, (int)sizeof capbuf);
+        static int16_t capbuf[(RE15_AUDIO_RATE / 30) * 2 * 4];   /* bis VSync 8 */
+        int n = RE15_AUDIO_RATE / 30;
+        if (s_cap_vsync) {                                        /* Messhaken s.o.: Bilddauer = VSync-Wert Austastungen */
+            extern int re2b_vsync(void);
+            int v = re2b_vsync();
+            if (v < 2) v = 2;
+            if (v > 8) v = 8;
+            n = RE15_AUDIO_RATE * v / 60;
+        }
+        audio_callback(NULL, (Uint8 *)capbuf, n * 2 * (int)sizeof(int16_t));
+        s_cap_proben += n;
         s_cap_ticks++;
         if (s_cap_limit > 0 && s_cap_ticks >= s_cap_limit) {
             if (s_audio_cap) { fflush(s_audio_cap); fclose(s_audio_cap); s_audio_cap = NULL; }

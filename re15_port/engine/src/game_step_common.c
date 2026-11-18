@@ -2413,8 +2413,8 @@ void re15_game_step(const re15_game_ctx_t *c)
          * vor Dispatcher @0x8001ce0c) — gemessen mit unit_elliot_1170_run / probe_1090_cutscene. */
         re15_player_room_entry_pose();
         /* Runde 42 Strang finale Stufe 2: der Raumlader des Originals liest die RDT auch hier neu (FUN_800396fc @0x800397e8,
-         * include/re15_rdt.h re15_rdt_zonen_auffrischen) - ein Cut_replace des vorigen Besuchs (ROOM5090/5091 Wagen B, Loch)
-         * gilt danach nicht mehr und wird von sub00 neu gesetzt, statt sich beim zweiten Mal zurueckzutauschen. */
+         * include/re15_rdt.h re15_rdt_zonen_auffrischen) - ein Cut_replace des vorigen Besuchs (gefunden an ROOM5090/5091
+         * Wagen B, Stufe 2; ROOM30E1 main00 @0x9F2 / ROOM1130 sub00 tauschen ebenfalls) gilt danach nicht mehr und wird von sub00 neu gesetzt, statt sich beim zweiten Mal zurueckzutauschen. */
         re15_rdt_zonen_auffrischen((re15_rdt_t *)c->rdt);
         scd_room_reenter(c->rdt, pl->x, pl->z, sc);
         /* Latch the byte-true intro handoff (ROOM1170 sub11 Aot_on(3) → door 3 → this reenter).

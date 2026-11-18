@@ -1313,10 +1313,6 @@ static int op_evt_exec(scd_thread_t *t)
      * -> Zugstart E9 bzw. Wagen vor dem Zugstart (re15_story6_r42.h). */
     { extern const uint8_t *re15_story6_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
       target_pc = re15_story6_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
-    /* Runde 42 Strang finale Stufe 2: ROOM5090/5091 sub00 @0x0127C / @0x01260 Evt_exec sub03 nach dem Zugstart -> Cut_replace(8,10)
-     * + sub03 (Loch im Boden von Wagen B, re15_zug_r42.h). */
-    { extern const uint8_t *re15_zug_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
-      target_pc = re15_zug_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
     if (!target_pc) return 1;   /* no such sub → drop */
 
     int slot;

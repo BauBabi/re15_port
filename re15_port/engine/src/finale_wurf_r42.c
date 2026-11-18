@@ -81,6 +81,7 @@ static struct {
     unsigned takt, t0;
     int      z_an, z_aus;             /* Messzeile: Zuruf stand von/bis (Takt) */
     int      log_genommen;
+    int      pad_frei_offen;   /* Stufe 4: nach dem Ende auf Set(2,7,0) warten und die gemerkte Pause-Kopie mitfreigeben */
     uint8_t  prog[192];
 } s_w = { .form = -1, .john = -1 };
 
@@ -564,6 +565,7 @@ static void ende(void)
         e->x = (int16_t)s_w.fx; e->z = (int16_t)s_w.fz; e->rot_y = s_w.fg;   /* Member_set2 aus Var 8/9/10 @0x01992-0x019A6 */
     }
     s_w.aktiv = 0;                                                     /* +0x10E &= 0x7FFF @0x01968-0x01976: Form-KI an */
+    s_w.pad_frei_offen = 1;                                            /* Stufe 4: Set(2,7,0) @0x01B58 folgt im Programm */
     LOG("Ende: Form-KI an, Spieler bleibt (%d,%d) Gier %d", pl->x, pl->z, pl->rot_y);
     {   /* Messzeile: der Aufnahme-AOT (Item_aot_set des Programms, op_item_aot_set) */
         const re15_aot_item_params_t *ip = &g_aot.item_params[RE15_FW_AOT_SLOT];
@@ -576,6 +578,21 @@ void re15_finale_wurf_takt(void)
 {
     if (!raum()) return;
     s_w.takt++;
+    /* Stufe 4 (Durchlauf: nach dem Wurf liess sich das Inventar nicht mehr oeffnen, der Werfer war nicht ausruestbar). GEMESSEN
+     * (Lauf s4r1 v_leon8, Pause-Wort je Aenderung): F2541 Set(2,7,1) @0x0181A -> 0x01000007; F2656 Set(2,7,0) @0x01B58 -> 0x00000007;
+     * F2667 Zuruf-Meldung zu -> 0x01000007 mit (2,7) = 0. Der Zuruf ist im Port ein Message_on (PORT-WAHL beim Loslassen), und das
+     * Schliessen einer RE1.5-Nachricht stellt das beim Oeffnen gemerkte Pause-Wort wieder her (FUN_80028134: `lw a0,DAT_800b853c` /
+     * `sw a0,0x800aca40` @0x800285a4 / @0x800286cc / @0x8002871c) - gemerkt mitten in der Szene mit gesetzter Pad-Sperre. Danach
+     * blieb RE15_PAUSE_PAD stehen, und der START-Poll (game_step_common.c, Gate @0x8001cd14-20) oeffnete das Menue nie mehr. RE2
+     * hat diesen Weg nicht: sub12 wartet nach dem Ruf mit Wsleep @0x018C2 auf das Ende des Xa_on @0x01888, bevor es weitergeht.
+     * Wie bei der Freigabe des Schusses (finale_r42.c, RE15_PAUSE_PLAYER in g_re15_pauseflags_saved) gilt das Aufheben der Sperre
+     * darum auch fuer die gemerkte Kopie - sobald das Programm (2,7) wirklich geloescht hat. */
+    if (s_w.pad_frei_offen && !re15_game_flag_get(2, 7)) {
+        s_w.pad_frei_offen = 0;
+        const int war = (g_re15_pauseflags_saved & RE15_PAUSE_PAD) ? 1 : 0;
+        g_re15_pauseflags_saved &= ~RE15_PAUSE_PAD;
+        LOG("Pad-Sperre aus (Set(2,7,0)), gemerkte Kopie hatte sie %d", war, 0, 0);
+    }
     if (s_w.w == RE15_FW_W_LIEGT && !s_w.log_genommen && re15_game_flag_get(9, RE15_R42_BIT_WERFER_FINALE)) {
         s_w.log_genommen = 1; s_w.w = RE15_FW_W_GENOMMEN;
         int z0 = -1, z1 = -1;

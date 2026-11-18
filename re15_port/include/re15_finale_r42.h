@@ -79,8 +79,9 @@ extern "C" {
 #define RE15_FI_VBL_S          60  /* NTSC-Austastung; VSync(n) wartet n davon (Hauptschleife @0x8002b990-98) */
 /* Elza (5091) = Claire-Fassung (Dossier B 6: Claire-Overlay CDEMD1.EMS mit denselben Konstanten, Adressen -0x104): Zeile Xa 0x02 =
  * Claire-STAGE7.BIN @0x150 `06 00 4e 00 18 00` -> 24*16 - 0x1E = 354 Sektoren = 2,36 s = 70,8 -> 71 Bilder; Xa 0x03 = @0x156 Kanal 5
- * Block 0 Laenge 79 -> 79*16 - 0x1E = 1234 Sektoren (Echtzeit 8,23 s, bei VSync 5 das 99. Bild). Die Datei kann nur aus der Claire-Disc
- * des Nutzers geschnitten werden (Dossier B 1.3: info/re2clair VOICE11.XAS ist Nullbytes) - bis dahin stumm, die Wartezeit gilt. */
+ * Block 0 Laenge 79 -> 79*16 - 0x1E = 1234 Sektoren (Echtzeit 8,23 s, bei VSync 5 das 99. Bild). Die Datei ist aus der Claire-PAL-Disc
+ * des Nutzers geschnitten (Dossier B 1.3: info/re2clair VOICE11.XAS ist Nullbytes): Stufe 4, tools/r42_finale/re2_xa_finale.py --claire,
+ * VOICE17.XAS LBA 96572 Kanal 5 Sektoren 5..1237 (78), md5 df88fe577d84dce0671668c4f96808bc (unit_r42_finale_assets). */
 #define RE15_FI_ZEILE_BILDER_ELZA 71
 #define RE15_FI_XA03_DATEI_ELZA   "R702_XA03_CLAIRE.XAS"
 #define RE15_FI_XA03_LESE_ELZA    1234

@@ -2149,7 +2149,44 @@ void re15_render_end_frame(void)
      * SDL_RenderGeometry gezeichneten 3D-Props. Dieser Haken liefert beides zusammen.
      * Rein env-/aufruf-gegatet; der Normalpfad ist unberuehrt. */
     { extern void re15_bildhalt_r41_merken(int auftrag); re15_bildhalt_r41_merken(s_readback_pending); }   /* Runde 41 Spur E: Abzug fuer gehaltene Bilder (nur mit Rueckleser) */
+    /* Runde 42 Strang finale Stufe 4 (MESSHAKEN, kein Spielpfad): RE15_FRAMEDUMP_TAKT=<praefix> liest JEDES gezeigte Bild zurueck
+     * (auch Film, Tuer, Menue, Diashow) und benennt es nach der Ton-Zeitachse des Mitschnitts: <praefix><Stereo-Proben 10 Stellen>.ppm
+     * (re15_audio_cap_proben, RE15_AUDIO_CAP_SYNC). Ein Bild gehoert damit genau an die Stelle des Tons, die beim Zeigen lief; mehrere
+     * Bilder ohne Tontakt dazwischen ueberschreiben einander. Ersatz fuer gdigrab, solange die Windows-Sitzung getrennt ist.
+     * RE15_FRAMEDUMP_TAKT_AB=<hexraum>:<n> beginnt erst mit der n-ten Ladung des Raums (Durchlauf: Video ab dem Fahrpult). */
+    {   static int s_takt = -1;
+        static char s_takt_pfx[400];
+        static unsigned s_ab_raum = 0, s_ab_n = 0, s_ab_gesehen = 0, s_ab_raum_alt = 0xFFFFFFFFu;
+        if (s_takt < 0) {
+            const char *e = getenv("RE15_FRAMEDUMP_TAKT");
+            s_takt = (e && *e) ? 1 : 0;
+            if (s_takt) snprintf(s_takt_pfx, sizeof s_takt_pfx, "%s", e);
+            const char *ab = getenv("RE15_FRAMEDUMP_TAKT_AB");
+            if (ab && *ab) { s_ab_raum = (unsigned)strtoul(ab, NULL, 16); const char *k = strchr(ab, ':'); s_ab_n = k ? (unsigned)atoi(k + 1) : 1u; }
+        }
+        if (s_takt && s_ab_raum) {
+            extern unsigned g_current_room_id;
+            if (g_current_room_id != s_ab_raum_alt && g_current_room_id == s_ab_raum) s_ab_gesehen++;
+            s_ab_raum_alt = g_current_room_id;
+            if (s_ab_gesehen >= s_ab_n) { s_ab_raum = 0; fprintf(stderr, "[framedump-takt] Abzug beginnt (ROOM%04X Ladung %u)\n", g_current_room_id, s_ab_n); }
+        }
+        if (s_takt && !s_ab_raum && !s_readback_pending) {
+            extern long re15_audio_cap_proben(void);
+            const long pr = re15_audio_cap_proben();
+            snprintf(s_readback_path, sizeof s_readback_path, "%s%010ld.ppm", s_takt_pfx, pr);
+            s_readback_pending = 2;   /* 2 = Takt-Abzug: ohne Logzeile */
+            {   /* Zuordnung Spielbild <-> Ton-Zeitachse fuer den Schnitt: bei Raumwechsel und alle 30 Bilder eine Zeile */
+                extern unsigned g_current_room_id;
+                static unsigned s_raum_alt = 0xFFFFFFFFu;
+                if (g_current_room_id != s_raum_alt || (g_engine.frame_count % 30u) == 0u)
+                    fprintf(stderr, "[framedump-takt] %010ld ROOM%04X F%u\n", pr, (unsigned)g_current_room_id,
+                            (unsigned)g_engine.frame_count);
+                s_raum_alt = g_current_room_id;
+            }
+        }
+    }
     if (s_readback_pending) {
+        const int still = (s_readback_pending == 2);
         s_readback_pending = 0;
         int rw = 0, rh = 0;
         SDL_GetRendererOutputSize(s_renderer, &rw, &rh);
@@ -2160,17 +2197,20 @@ void re15_render_end_frame(void)
                 FILE *pf = fopen(s_readback_path, "wb");
                 if (pf) {
                     fprintf(pf, "P6\n%d %d\n255\n", rw, rh);
+                    unsigned char *zeile = (unsigned char *)malloc((size_t)rw * 3);   /* eine Zeile je fwrite */
                     for (int y = 0; y < rh; y++) {
                         const uint32_t *row = (const uint32_t *)((const uint8_t *)rs->pixels + (size_t)y * rs->pitch);
                         for (int x = 0; x < rw; x++) {
                             unsigned char rgb[3] = { (unsigned char)(row[x] >> 16),
                                                      (unsigned char)(row[x] >>  8),
                                                      (unsigned char)(row[x]      ) };
-                            fwrite(rgb, 1, 3, pf);
+                            if (zeile) memcpy(zeile + 3 * x, rgb, 3); else fwrite(rgb, 1, 3, pf);
                         }
+                        if (zeile) fwrite(zeile, 1, (size_t)rw * 3, pf);
                     }
+                    free(zeile);
                     fclose(pf);
-                    fprintf(stderr, "[framedump] %dx%d -> %s\n", rw, rh, s_readback_path);
+                    if (!still) fprintf(stderr, "[framedump] %dx%d -> %s\n", rw, rh, s_readback_path);
                 }
             } else {
                 fprintf(stderr, "[framedump] SDL_RenderReadPixels failed: %s\n", SDL_GetError());
