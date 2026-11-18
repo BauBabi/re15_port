@@ -139,6 +139,10 @@ static const r39_kante_t s_kanten[] = {
     { 2, 207, 123, 15, 16, 2, 0 }, { 2, 207, 123, 15, 16, 1, R39_SCHEMA(3) },
     { 2, 207, 139, 15, 15, 2, 0 },
     { 1, 186, 112, 15, 18, 3, 3 },
+    /* r42/karte Stufe 3 Runde 4: ROOM6000 Gang nach 50B0 (Blatt 12, synth 13) - seine Unterkante y83 (Nordkante Zelle 12
+     * @ROOM6000.RDT 0x007EC, z -1634) ist dieselbe Wand wie die gemalte Nordlinie y84 von r5 (MAP0D.PIX Index 4); sie entfaellt,
+     * wenn r5 gezeichnet wird - sonst stuende die Wand doppelt. */
+    { 12, 208, 76, 30, 8, 1, 5 },
 };
 
 /* ---- Wird der Traeger gezeichnet? (Nachbesserung 1, M3) -------------------------------------------------------

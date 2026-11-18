@@ -42,4 +42,18 @@ int re15_karte_r42_kunst_klemmen(unsigned page, unsigned rect, int16_t *mx, int1
 /* 1, wenn (x,y) auf einem Texel des Raumkoerpers von Kachel <rect> auf Blatt <page> liegt (Messhilfe fuer Riegel). */
 int re15_karte_r42_kunst_gemalt(unsigned page, unsigned rect, int x, int y);
 
+/* r42/karte Stufe 3 Runde 4 - DER RING NICHT AUF DER NACHBARKACHEL (PORT-WAHL, Pruefbericht pruef_s3_r3 ROT: 4080_t3 "halb auf
+ * der Wandlinie" - die Linie x177 ist die Wand von r11/40B0; Orchestrator-Vorgabe 2(c) "kein Punkt auf einer Wandlinie oder am
+ * Uebergang"). Nach re15_karte_r42_kunst_klemmen steht die Ring-MITTE auf dem Raumkoerper der eigenen Kachel; der 5x5-Ring
+ * (TEX.TIM @0x14910, uv 225..229) kann aber noch auf der Kunst einer ANDEREN Kachel liegen (Wandlinie oder Koerper des
+ * Nachbarraums). Dann wird die Mitte um hoechstens halbe Ringbreite + 1 (3 px) verschoben: zuerst so wenig fremde Texel
+ * wie moeglich, dann ein Rand mit mindestens der Haelfte Raumkoerper des eigenen ORTS (eigene Kachel + Kacheln desselben Raums
+ * mit derselben Zeile), dann der kuerzeste Weg, dann mehr Rand. Die Mitte bleibt auf dem Raumkoerper des Orts;
+ * die eigene Wandlinie und Treppenstriche im Inneren loesen dabei nichts aus.
+ * Nachbesserung (Pruefbericht pruef_s3_r3 ROT 4070_t0/4080_t0): ausgeloest wird ausserdem, wenn im 2-px-RAND um den Ring
+ * (9x9 ohne 5x5) weniger als 30 % Raumkoerper des Orts liegen (Mass der Pruefung); Ziel ist dann die naechste Lage mit
+ * mindestens der Haelfte, Suchweite halbe Ringbreite + 1 (Belege und Messwerte in karte_r42.c). PORT-WAHL.
+ * Daten: re15_map_kunst.h s_map_kunst_alles (tools/gen_map_kunst.py, Index != 0). */
+int re15_karte_r42_ring_klemmen(const void *zone, unsigned page, unsigned rect, int16_t *mx, int16_t *my);
+
 #endif

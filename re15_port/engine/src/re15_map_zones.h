@@ -159,9 +159,23 @@ static const re15_map_zone_t s_map_zones[] = {
      * Blatt 2 haelt fuer ihn eine ZWOELFTE, tabellenlose Kachel bereit (uv(32,88), Schirm
      * (94,125)); nutzbar wird sie erst, wenn Blatt 2 - wie Blatt 3 heute - eine eigene
      * Ersatz-Seitentabelle in s_map_rectfix bekommt. Bis dahin bleiben Marker und
-     * Besucht-Bit von 10B0 unveraendert, nur die (falsche) Faerbung entfaellt. */
-    { 0x10B0, -25040, -21700,  19888,   9088,  2, 255, 0,  11,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x10B1, -25040, -21700,  19888,   9088,  2, 255, 0,  11,     0,     0,     0,     0, 0, 0,   0, 0 },
+     * Besucht-Bit von 10B0 unveraendert, nur die (falsche) Faerbung entfaellt.
+     * (Ueberholt durch r42/karte Stufe 3 Runde 4, s. unten: Schema-Zeichnung mit eigener Zeile.) */
+    /* r42/karte Stufe 3 Runde 4 - NUTZERWUNSCH 18.11.2026 woertlich:
+     *   "selbstverständlich sollen alle Räume auch eIn stück karte mit navigationspunkt haben."
+     * ROOM10B0 hat im Auslieferungsstand KEINE Zeile (@0x80076908 = Stub {0,0,1,1}, 00 00 00 00 01 00 01 00) und keine
+     * gemalte Kachel; die SEITE ist byte-true Blatt 2 (FUN_8004b568: Raumindex 11 -> Kette 0..11, Schwanz @0x8004b680-684
+     * `ori v0,zero,0x2`). PORT-ERGAENZUNG "Grundriss aus der Kollision" (synth 14): vier Zellen aus der begehbaren Flaeche
+     * je Band (Flut ueber die SCA-Zellen des RDT, Raster 200, Messhilfe scratchpad karte/s3r4b/neu_schema.py): Band 0 = L
+     * (Westarm x -22000..-19800, z -6400..6800 zur Tuer nach 1260 @ROOM10B0.RDT 0x016F2; Suedarm z -9200..-6400 bis
+     * x -2800), Band 1 = Rampe x -2800..3000 z -13400..-4600, Band 5 = Gang x 1000..19800 z -7600..-4800 zur Tuer nach
+     * 1170 (0x016D2, floor 5). Zeile fuer FUN_800473f8 (@0x8004741c-0x80047528) mit EINEM Massstab sx = sy = 1900 (nicht
+     * spiegelnd, Norden oben); gewaehlt, damit der Grundriss in die freie Flaeche passt
+     * (rechts unter der gemalten 1F-Etage: Kunst MAP03 endet dort bei x209 fuer y>=90, rechter Pfeil y120..136; Kartenfeld
+     * des Originals x39..293 / y44..206, Riegel unit_map_synth) - PORT-WAHL, keine Spielkonstante. Westkante x -22800 -> 214,
+     * Nordkante z 6800 -> 160 (7 px Abstand zur gemalten 1F-Kachel darueber, x206..221 bis y153). Kein Nachbar liegt auf Blatt 2 (1170 Blatt 4/5, 1260 ohne Seite) -> keine Tuermarke. */
+    { 0x10B0, -25040, -21700,  19888,   9088,  2, 255, 0,  11,   197,   230,  1900,  1900, 0, 0,  14, 0 },
+    { 0x10B1, -25040, -21700,  19888,   9088,  2, 255, 0,  11,   197,   230,  1900,  1900, 0, 0,  14, 0 },
     /* ROOM1090, untere Ebene (Hinterhof mit dem verunglueckten Polizeitransporter).
      * Heimatblatt ist KEINE Wahl: der Stage-1-Karteninit FUN_8004b568 schickt Raumindex
      * (0x1090>>4)&0xFF = 9 ueber die Kette 0..11, deren Schwanz @0x8004b680 `j 0x8004b888`
@@ -426,6 +440,18 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1220, -17075, -26750, -11311, -21375,  1,   8, 4, 105,   177,   140,  2496,  2250, 0, 0,   0, 0 },
     { 0x1221, -17075, -26750, -11311, -21375,  1,   8, 4, 105,   177,   140,  2496,  2250, 0, 0,   0, 0 },
     { 0x1250, -21850, -25300,  15700,   9750,  1,   0, 0,  36,     0,     0,     0,     0, 0, 0,   0, 0 },
+    /* r42/karte Stufe 3 Runde 4 - NUTZERWUNSCH 18.11.2026 (Wortlaut bei ROOM10B0). ROOM1260 bekommt im Auslieferungsstand
+     * GAR KEINE Seite: FUN_8004b568 prueft `sltiu v0,v1,0x26` @0x8004b574, Raumindex 0x26 faellt durch (jr @0x8004b898,
+     * kein Schreiben von 260e). PORT-ERGAENZUNG "Grundriss aus der Kollision" (synth 15) auf Blatt 0 (B1): dort liegen
+     * die Nachbarn 11B0 und 11D0, deren Leitern in 1260 enden (Tueren 1260->11B0 Trigger (27650,9450) und ->11D0
+     * (21850,-8050); Leitern = Etagenwechsel, keine Wand an Wand). Kasten x200..239 y174..205 unter dem 11C0-Ring, rechts
+     * neben 11D0 (das B1-Schema endet dort bei y171 bzw. x148; Kartenfeld des Originals x39..293 / y44..206). Die Kollision
+     * von 1260 ist eine offene Halle mit einzelnen Wandzuegen (die Flut ueber die Zellen fuellt die ganze Huelle), darum
+     * EIN Kasten = Huelle der SCA-Zellen x -25150..30400, z -23250..20350. Zeile fuer FUN_800473f8 mit sx = sy = 745
+     * (Norden oben, nicht spiegelnd), damit die Halle in die freie Flaeche passt (PORT-WAHL, keine Spielkonstante).
+     * Die Zeile des Index 0x26 @0x800769E0 ist die von ROOM2000 (STAGE2-Basis 38 + 0) und gehoert nicht zu 1260. */
+    { 0x1260, -25150, -23250,  30400,  20350,  0, 255, 0, 122,   195,   211,   745,   745, 0, 0,  15, 0, 0 },
+    { 0x1261, -25150, -23250,  30400,  20350,  0, 255, 0, 122,   195,   211,   745,   745, 0, 0,  15, 0, 0 },
     { 0x1251, -21850, -25300,  15700,   9750,  1,   0, 0,  36,     0,     0,     0,     0, 0, 0,   0, 0 },
     /* ==== r42/karte (v0.8.31), Blatt 6 = STAGE2 (Kanalisation), MAP07.PIX =========================
      * Nutzer 2026-11-18: "das die [Map] fuer STAGE2-6 genauso sauber funktioniert wie bei STAGE1 ...
@@ -474,6 +500,14 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x2081, -24900, -18950, -21450, -14400,  6,   8, 1,  47,   190,   178,  2340,  1613, 0, 0,   0, 0, 0 },
     { 0x2090, -10900, -29000,   9200,  -3400,  6,   9, 0,  48,   202,   184,  1930,  2007, 0, 0,   0, 0, 0 },
     { 0x2091, -10900, -29000,   9200,  -3400,  6,   9, 0,  48,   202,   184,  1930,  2007, 0, 0,   0, 0, 0 },
+    /* r42/karte Stufe 3 Runde 4 - NUTZERWUNSCH 18.11.2026 (Wortlaut bei ROOM10B0). ROOM20B0 ist derselbe Ort wie ROOM2000
+     * (Variante, Regel "Varianten-Raeume" wie 5030/5110): vier der fuenf Tueren liegen auf DERSELBEN Weltkoordinate
+     * (->1260 (4400,-19700) und (-27100,-24200), ->2010 (-27100,-2650), ->2050 (-27100,10300); ROOM20B0 slot 0/1/2/4 =
+     * ROOM2000 slot 0/1/2/4), die Kollisionshuelle ist bis auf x1 7950/7450 gleich. Der Auslieferungsstand gibt dem Raum
+     * Seite 0xd (FUN_8004b8a0, Raum 10-11 -> 0xd @0x8004b9b4, CD-Datei 0) und den Stub @0x80076A38 (Index 38+11).
+     * PORT-ERGAENZUNG: dieselbe Kachel und die AUSGELIEFERTE Zeile von ROOM2000 @0x800769E0 (50 00 c4 00 24 09 04 09). */
+    { 0x20B0, -29000, -29000,   7950,  12800,  6,   0, 0,  37,    80,   196,  2340,  2308, 0, 0,   0, 0, 0 },
+    { 0x20B1, -29000, -29000,   7950,  12800,  6,   0, 0,  37,    80,   196,  2340,  2308, 0, 0,   0, 0, 0 },
     { 0x20A0,  -5600, -28900,  29000,   7000,  6,  10, 0, 114,   288,   156,   292,   273, 1, 0,   0, 0, 1 },
     { 0x20A1,  -5600, -28900,  29000,   7000,  6,  10, 0, 114,   288,   156,   292,   273, 1, 0,   0, 0, 1 },
     /* ==== r42/karte (v0.8.31), Blatt 7 = STAGE3, MAP08.PIX ========================================
@@ -551,12 +585,56 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x4051,  -3000, -13600,  12650,  -5450,  8,   5, 0,  70,   127,   163,  1540,  1474, 1, 0,   0, 0, 1 },
     { 0x4050, -19500, -29000,  -3850, -20500,  8,   6, 1, 118,   107,    82,  1540,  1474, 0, 1,   0, 0, 1 },   /* Labyrinth Verteiler B (r6); hergeleitet R90cw */
     { 0x4051, -19500, -29000,  -3850, -20500,  8,   6, 1, 118,   107,    82,  1540,  1474, 0, 1,   0, 0, 1 },
+    /* r42/karte Stufe 3 Runde 4 - NUTZERWUNSCH 18.11.2026 (Wortlaut bei ROOM10B0). Das LABYRINTH ROOM4050 hat acht Kammern
+     * (begehbar = RVD-Kamerazone und keine feste SCA-Zelle, Zusammenhangskomponenten, Messhilfe s3r4b/kammern.py); nur die
+     * beiden Verteiler (Zone 0 = r5, Zone 1 = r6) sind gemalt. Die sechs uebrigen Kammern erreicht man ueber die Selbst-Tueren
+     * des Raums (z.B. slot 3 @ROOM4050 Trigger (-1000,-9450) -> Spawn (-15850,11650)); dort klemmte der Punkt bisher am Rand
+     * von r5/r6 und lief nicht mit. PORT-ERGAENZUNG "Grundriss aus der Kollision" (synth 16): EIN Ort "Kammern" mit sechs
+     * Zellen = Huellen der Kammern (x/z): K1 -17600..-6200/10600..20000, K2 200..10800/-2000..7200, K3 -17400..-5800/
+     * -3600..5600, K4 -16600..-6600/-17800..-8400, K5 -1200..4000/-26800..-17000, K6 9000..14200/-26800..-17000.
+     * Zeile fuer FUN_800473f8 (@0x8004741c-0x80047528) Norden oben, nicht spiegelnd, Massstab sx = sy = 1540 wie die
+     * Verteiler-Zeilen; Lage links unter r5/r6 im Kartenfeld des Originals (x39..86, y130..198) - PORT-WAHL. Der Kasten
+     * deckt die Verteiler mit ab; dort gewinnen deren kleinere Kaesten (Zonenwahl kleinste Box +-ZONE_SLACK). */
+    { 0x4050, -17600, -26800,  14200,  20000,  8, 255, 2, 124,    18,   206,  1540,  1540, 0, 0,  16, 0, 0 },
+    { 0x4051, -17600, -26800,  14200,  20000,  8, 255, 2, 124,    18,   206,  1540,  1540, 0, 0,  16, 0, 0 },
     { 0x4070, -14950, -28550,  -2100, -15750,  8,   7, 0,  71,   121,   179,  1306,  1311, 0, 0,   0, 0, 0 },   /* Treppenhaus (Band 12); hergeleitet R0 */
     { 0x4071, -14950, -28550,  -2100, -15750,  8,   7, 0,  71,   121,   179,  1306,  1311, 0, 0,   0, 0, 0 },
-    { 0x4080,  -7625, -30610,  29380,   5975,  8,   8, 0,  72,   127,   169,  1540,  1605, 0, 0,   0, 0, 0 },   /* Ring rechts (r8); hergeleitet R0 */
-    { 0x4081,  -7625, -30610,  29380,   5975,  8,   8, 0,  72,   127,   169,  1540,  1605, 0, 0,   0, 0, 0 },
-    { 0x4080,  -9338,  -6600,   5232,   7039,  8,  13, 1, 120,   127,   169,  1540,  1605, 0, 0,   0, 0, 0 },   /* Ring rechts, Diagonale an 4030 (r13); selber Rahmen wie ROOM4080 Zone 0 */
-    { 0x4081,  -9338,  -6600,   5232,   7039,  8,  13, 1, 120,   127,   169,  1540,  1605, 0, 0,   0, 0, 0 },
+    /* r42/karte Stufe 3 Runde 4 (Pruefbericht pruef_s3_r3 ROT: 4080_w1 "Punkt laeuft im Ostarm nicht mit", 4080_t3 "halb auf
+     * der Wandlinie"). ROOM4080 hat keine ausgelieferte Zeile (@0x800768b0 + 8*(65+8) = @0x80076AF8 ist der Stub {0,0,1,1});
+     * PORT-ERGAENZUNG wie ROOM1060/10A0 (Runde 39): Zeile fuer die Formel FUN_800473f8 (@0x8004741c-0x80047528) aus den
+     * WANDFLAECHEN des Raums auf die GEMALTEN Linien von Blatt 8 (DATA/MAP09.PIX, Kachel r8 + Nachbarlinien r9/r11):
+     *   x  2000 = Ostkante Zelle 3 @ROOM4080.RDT 0x00580 (Fuss, Westwand)   -> Linie x177 (r11 Index 4, y159..167)
+     *   x 25457 = Westkante Zelle 1 @0x00568 (Ostarm, Ostwand)              -> Linie x218 (r8 Index 4, y124..135)
+     *   z -3430 = Suedkante Zelle 0 @0x0055C (Ostarm, Nordwand)             -> Linie y124 (r9/r8 Index 4, x210..218)
+     *   z -27103 = Nordkante Zelle 2 @0x00574 (-29318+2215, Fuss, Suedwand) -> Linie y167 (r11 Index 4, x177..189)
+     * -> sx = round(41*2^20/23457) = 1833, sy = round(43*2^20/23673) = 1905, ox 118, oy 176 (Rest 0 an allen vier Waenden;
+     * tools/karte_r42_zeilen.py Quelle "wand"). Die alte Zeile (127,169,1540,1605) kam aus der Bbox der Kollisionszellen;
+     * die grossen Wandzellen (Zelle 10 @0x005D4 reicht bis x 29380) machten den Massstab 16 % zu klein - der ganze Ostarm
+     * lag links neben dem gemalten Arm, die Klemme hielt den Punkt fest (Abzug L4080_w1: 2989 Einheiten, 0 px).
+     * GEGENPROBEN (nicht im Fit): die vier Tueren des Raums landen auf der Kunst - ->4090 (21300,-5400) -> (211,128), gemaltes
+     * Symbol (207,128) an der Arm-Westlinie x210; ->40B0 (1950,-25200) -> (177,164), gemaltes Symbol (175,163); ->40A0
+     * (16650,-18600) -> (203,152) an der Ostlinie der unteren Diagonale vor 40A0 (r10 ab x206); ->4030 (-4250,2550) ->
+     * (167,113) an der Spitze von r13 - die AUSGELIEFERTE 4030-Zeile @0x80076AD0 setzt die Gegenseite (Abzug L4030_t2) auf
+     * (164,113). Begehbare Rasterpunkte (200er) auf dem Raumkoerper r8|r13: 59 % -> 87 %, <= 1 px daneben 76 % -> 99,6 %.
+     * Der Ostarm traegt damit KEINE eigene Zone: seine eigenen Waende (x 21396 Ostkante Zelle 5 @0x00598 -> 211, gemalt 210;
+     * x 25457 -> 218; z -3430 -> 124; z -8460 Unterkante Zelle 5 -> 133, gemalt 134) ergeben dieselbe Zeile auf 1 px.
+     * Zone 1 (r13, schmaler Gang an 4030): Kasten = begehbare Flaeche des schmalen Gangs (x -4700..1100, z -2800..3000,
+     * bis zu den kleinen Rauten Zelle 18/19 @0x00634/0x00640) statt des Kamerabereichs (-9338..5232); sonst nahm die
+     * kleinste Box (+ ZONE_SLACK 1500) auch den Anfang der breiten Diagonale (Lage 3100,-4907 nach 2 s aus 4030). */
+    { 0x4080,  -7625, -30610,  29380,   5975,  8,   8, 0,  72,   118,   176,  1833,  1905, 0, 0,   0, 0, 0 },   /* Ring rechts (r8); Zeile aus den Waenden */
+    { 0x4081,  -7625, -30610,  29380,   5975,  8,   8, 0,  72,   118,   176,  1833,  1905, 0, 0,   0, 0, 0 },
+    { 0x4080,  -4700,  -2800,   1100,   3000,  8,  13, 1, 120,   118,   176,  1833,  1905, 0, 0,   0, 0, 0 },   /* Ring rechts, Diagonale an 4030 (r13); selber Rahmen wie ROOM4080 Zone 0 */
+    { 0x4081,  -4700,  -2800,   1100,   3000,  8,  13, 1, 120,   118,   176,  1833,  1905, 0, 0,   0, 0, 0 },
+    /* r42/karte Stufe 3 Runde 4 - OSTARM von ROOM4080 als EIGENE Zone mit EIGENER Zeile (Orchestrator-Vorgabe 2(a),
+     * Pruefbericht pruef_s3_r3 ROT 4080_w1). PORT-ERGAENZUNG wie Zone 0 (Stub @0x80076AF8): Zeile fuer FUN_800473f8
+     * (@0x8004741c-0x80047528) aus den Waenden DES ARMS auf die gemalten Armlinien von r8 (DATA/MAP09.PIX):
+     *   x 21396 = Ostkante Zelle 5 @ROOM4080.RDT 0x00598 -> Linie x210;  x 25457 = Westkante Zelle 1 @0x00568 -> x218;
+     *   z -3430 = Suedkante Zelle 0 @0x0055C -> y124;               z -8460 = Unterkante Zelle 5 @0x00598 -> y134.
+     * sx = round(8*2^20/4061) = 2066, sy = round(10*2^20/5030) = 2085, ox 105, oy 181 (alle vier Waende auf 0 px).
+     * Gleicher zid wie Zone 0 (72: dieselbe Kachel r8, dieselben Tuermarken ->4090). Kasten = Armwaende je um ZONE_SLACK
+     * (1500, re15_map_zones.c) nach innen, damit die Zonenwahl (kleinste Box +-1500) genau an den Armwaenden umschaltet. */
+    { 0x4080,  22896,  -6960,  23957,  -4930,  8,   8, 2,  72,   105,   181,  2066,  2085, 0, 0,   0, 0, 0 },
+    { 0x4081,  22896,  -6960,  23957,  -4930,  8,   8, 2,  72,   105,   181,  2066,  2085, 0, 0,   0, 0, 0 },
     { 0x4090, -28908, -29132, -12708, -12252,  8,   9, 0,  73,   191,   143,  1540,  1844, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076B00 */
     { 0x4091, -28908, -29132, -12708, -12252,  8,   9, 0,  73,   191,   143,  1540,  1844, 0, 0,   0, 0, 0 },
     { 0x40A0, -30100, -30701,  -8562, -11690,  8,  10, 0,  74,   197,   180,  1793,  1712, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076B08 */
@@ -609,6 +687,20 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x5141,   -500, -17700,  19702,  -9100,  9,  12, 1, 117,   124,   204,  1696,  1681, 0, 0,   0, 0, 0 },
     { 0x6000,  -7867, -25284,  22283,   6701, 12,   5, 0,  95,   138,   150,  2161,  2304, 0, 0,   0, 0, 0 },   /* Bahnsteig Ost (r5); hergeleitet R0 */
     { 0x6001,  -7867, -25284,  22283,   6701, 12,   5, 0,  95,   138,   150,  2161,  2304, 0, 0,   0, 0, 0 },
+    /* r42/karte Stufe 3 Runde 4 - PORT-ERGAENZUNG "Grundriss aus der Kollision" (wie ROOM1210-Kammer, Runde 39 Spur G NB2):
+     * der GANG NACH 50B0 ist auf Blatt 12 nicht gemalt (Pruefbericht pruef_s3_r3 ROT: 6000_t0/w0 "Punkt auf der Wandlinie
+     * (212,86), laeuft nach 2766 Einheiten nicht mit"). Er liegt noerdlich des Blocks Zelle 12 @ROOM6000.RDT 0x007EC
+     * (x -7862..12578, z -5674..-1634; auf r5 die ungefuellten Kaesten x212..230 y84..97). Mit DERSELBEN Zeile wie der
+     * Bahnsteig (Zone 0, Formel FUN_800473f8 @0x8004741c-0x80047528) fallen seine Waende auf: West x 2025 (Ostkante Zelle 17
+     * @0x00828) -> 208, Ost x 15903 (Westkante Zelle 13 @0x007F8) -> 237, Nische x 8113 (Westkante Zelle 9 @0x007C8) -> 221,
+     * Nord z 3336 (Suedkante Zelle 16 @0x0081C) -> 72, z 1736 (Suedkante Zelle 9) -> 76, Sued z -1634 (Nordkante Zelle 12)
+     * -> 83 (die gemalte Nordlinie von r5 y84 ist dieselbe Wand - die Unterkante der Zelle entfaellt dort, karte_r39.c
+     * s_kanten). Zwei Zellen (s_map_synth_cells 22/23). Begehbar gemessen (Flut, Raster 100): x 2100..15900, z -1600..3300.
+     * Kasten: Sued z -134 = Blocknordwand -1634 + ZONE_SLACK 1500 (re15_map_zones.c), damit die Zonenwahl (kleinste Box
+     * +-1500) genau an der Wand umschaltet und der Bahnsteig darunter Zone 0 bleibt. Zelle 22 @0x00864 (Tuerrahmen
+     * x 1893..3433, z 2396..3450, 2x2 px) ist nicht ausgespart. */
+    { 0x6000,   2025,   -134,  15903,   3336, 12, 255, 1, 121,   138,   150,  2161,  2304, 0, 0,  13, 0, 0 },   /* Gang nach 50B0 (Schema); Zeile wie Zone 0 */
+    { 0x6001,   2025,   -134,  15903,   3336, 12, 255, 1, 121,   138,   150,  2161,  2304, 0, 0,  13, 0, 0 },
     { 0x6010, -32012, -32020,   1518,   4435, 12,   0, 0,  96,   140,   150,  2074,  1927, 0, 0,   0, 0, 0 },   /* Bahnsteig West mit Treppen (r0); hergeleitet R0 */
     { 0x6011, -32012, -32020,   1518,   4435, 12,   0, 0,  96,   140,   150,  2074,  1927, 0, 0,   0, 0, 0 },
     { 0x6020, -13050,   -750,   4500,  15450,  9,   8, 0,  97,   178,   114,  1618,  1494, 0, 1,   0, 0, 1 },   /* Achteck Sued (r8) - PORT-WAHL Blatt 9; hergeleitet R90cw */
@@ -966,10 +1058,10 @@ static const re15_map_mark_t s_map_marks[] = {
     {  8, 12,  154,  114, 1, 119,  68, 1 },   /* 4040.1<->4030.0, Luecke 10 px, Mitte der Projektionen (kein gemaltes Symbol) */
     {  8,  5,  102,  104, 1,  70,  69, 1 },   /* 4050.0<->4040.0, Luecke 12 px, gemaltes Symbol (100,104) E r5 */
     {  8,  6,  110,  119, 3, 118,  69, 1 },   /* 4050.1<->4040.0, Luecke 4 px, gemaltes Symbol (113,119) W r6 */
-    {  8, 13,  166,  114, 3, 120,  68, 1 },   /* 4080.1<->4030.0, Luecke 4 px, Mitte der Projektionen (kein gemaltes Symbol) */
-    {  8, 11,  177,  163, 1,  75,  72, 1 },   /* 40B0.0<->4080.0, Luecke 7 px, gemaltes Symbol (175,163) E r11 */
-    {  8,  8,  204,  149, 1,  72,  74, 1 },   /* 4080.0<->40A0.0, Luecke 10 px, Mitte der Projektionen (kein gemaltes Symbol) */
-    {  8,  9,  209,  128, 1,  73,  72, 1 },   /* 4090.0<->4080.0, Luecke 4 px, gemaltes Symbol (207,128) E r9 */
+    {  8, 13,  165,  113, 3, 120,  68, 1 },   /* 4080.1<->4030.0, Luecke 3 px, Mitte der Projektionen (kein gemaltes Symbol); Stufe 3 Runde 4: 4080-Zeile aus den Waenden */
+    {  8, 11,  177,  163, 1,  75,  72, 1 },   /* 40B0.0<->4080.0, Luecke 3 px, gemaltes Symbol (175,163) E r11 */
+    {  8,  8,  205,  151, 1,  72,  74, 1 },   /* 4080.0<->40A0.0, Luecke 5 px, Mitte der Projektionen (kein gemaltes Symbol); Stufe 3 Runde 4 */
+    {  8,  9,  209,  128, 1,  73,  72, 1 },   /* 4090.0<->4080.0, Luecke 2 px, gemaltes Symbol (207,128) E r9 */
     {  8,  0,  179,   65, 0,  65, 255, 0 },   /* 4000.0->3070 (anderes Blatt), Luecke 0 px, eigene Projektion */
     {  9, 10,  138,  177, 1,  85,  71, 1 },   /* 50A0.0<->4070.0, Luecke 2 px, gemaltes Symbol (135,177) E r10 */
     {  9,  0,  153,  104, 2,  76,  79, 1 },   /* 5000.0<->5030.0, Luecke 3 px, Mitte der Projektionen (kein gemaltes Symbol) */
@@ -999,7 +1091,9 @@ static const re15_map_mark_t s_map_marks[] = {
     { 12,  0,  194,  103, 1,  96,  95, 1 },   /* 6010.0<->6000.0, Luecke 8 px, gemaltes Symbol (191,103) E r0 */
     { 12,  0,  194,  133, 1,  96,  95, 1 },   /* 6010.0<->6000.0, Luecke 4 px, gemaltes Symbol (191,133) E r0 */
     { 12,  5,  265,  111, 1,  95,  99, 1 },   /* 6000.0<->6030.0, Luecke 64 px, AUSGELIEFERTE 6030-Zeile @0x80076BD8 am gemalten Sprossenband (271,107) */
-    { 12,  5,  210,   84, 3,  95, 255, 0 },   /* 6000.0->50B0 (anderes Blatt), Luecke 0 px, eigene Projektion */
+    /* r42/karte Stufe 3 Runde 4: die Tuer nach 50B0 liegt im Gang (Schema-Zeichnung, zid 121) - Trigger (2000..3600,
+     * 2200..3300) @ROOM6000 Door_aot_set slot 0, Mitte x 2800 -> 210, an der Nordwand z 3336 -> y72 (kind 0 = Nord). */
+    { 12, 255, 210,   72, 0, 121, 255, 0 },   /* 6000.1->50B0 (anderes Blatt), eigene Projektion */
     { 12,  7,  253,  118, 3,  99, 255, 0 },   /* 6030.0->5090 (anderes Blatt), Luecke 0 px, eigene Projektion */
     {  8,  7,  150,  170, 5,  71, 255, 0 },   /* ROOM4070 Treppe (-8800,-24950) Aot_set sce 12 Paar gemittelt */
     {  9, 14,  147,  178, 5,  71, 255, 0 },   /* ROOM4070 Treppe (-8200,-19300) Aot_set sce 12 Paar gemittelt */
@@ -1211,6 +1305,12 @@ static const re15_map_synth_t s_map_synth[] = {
      * gezeichnetem r3 (karte_r39.c s_kanten), der Durchgang y117..119 (@0x01BC8 endet z -20746 -> py116, @0x01C40 beginnt
      * z -22520 -> py120) oeffnet r3 (karte_r39.c s_korr). Keine Doppelwand: jede Linie liegt auf der gemalten. */
     { 186, 112,  15,  18, 21, 1,   0, 0,   0, 0,    0,   0 },  /* synth 12: ROOM1210 Suedwest-Kammer (Zone 1) */
+    /* r42/karte Stufe 3 Runde 4: ROOM6000 Gang nach 50B0 (Zone 1, Blatt 12) - keine Affine, Zeile der Zone (s. s_map_zones). */
+    { 208,  72,  30,  12, 22, 2,   0, 0,   0, 0,    0,   0 },  /* synth 13: ROOM6000 Gang nach 50B0 */
+    /* r42/karte Stufe 3 Runde 4 - NUTZERWUNSCH (s. ROOM10B0/ROOM1260 in s_map_zones): keine Affine, Zeile der Zone. */
+    { 214, 160,  78,  37, 24, 4,   0, 0,   0, 0,    0,   0 },  /* synth 14: ROOM10B0 (Blatt 2) */
+    { 200, 174,  40,  32, 28, 1,   0, 0,   0, 0,    0,   0 },  /* synth 15: ROOM1260 (Blatt 0) */
+    {  39, 130,  48,  69, 29, 6,   0, 0,   0, 0,    0,   0 },  /* synth 16: ROOM4050 Labyrinth-Kammern (Blatt 8) */
 };
 typedef struct { short x, y, w, h; } re15_map_synth_cell_t;
 static const re15_map_synth_cell_t s_map_synth_cells[] = {
@@ -1227,6 +1327,12 @@ static const re15_map_synth_cell_t s_map_synth_cells[] = {
     { 141, 153,  18,  16 },                                                     /* 10A0 B1 (10) */
     { 138, 180,  12,   9 },                                                     /* 11D0 Kammer (11) */
     { 186, 112,  15,  18 },                                                     /* ROOM1210 Kammer (12), Index 21 */
+    { 208,  76,  30,   8 }, { 208,  72,  14,   4 },                             /* ROOM6000 Gang (13): Hauptgang, Nische */
+    { 214, 160,   6,  24 }, { 214, 184,  38,   6 }, { 252, 180,  40,   7 }, { 252, 187,   9,  10 },   /* ROOM10B0 (14): Westarm,
+                                       * Suedarm, Gang Band 5, Rampe Band 1 - Zeile (197,230,1900,1900) auf die Flut je Band */
+    { 200, 174,  40,  32 },                                                     /* ROOM1260 (15): Huelle der SCA-Zellen */
+    {  39, 130,  18,  14 }, {  65, 148,  17,  15 }, {  39, 151,  18,  14 }, {  41, 171,  15,  15 },   /* ROOM4050 Kammern (16): K1-K4, */
+    {  63, 184,   9,  15 }, {  78, 184,   9,  15 },                                                    /* K5, K6 - Zeile (18,206,1540,1540) */
 };
 /* ACHTUNG - ERSATZ-SEITENTABELLE. Das Original fuehrt fuer Blatt 3 (2F)
  * die Tabelle von Blatt 2 (1F): verschiedene Adressen (@0x8007636C /

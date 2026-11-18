@@ -913,8 +913,11 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                  * Ankunft an der Tuer). Zonen mit eigenen Teilbereichen (Zug 5090) und Zonen mit der
                  * AUSGELIEFERTEN Zeile (byte-true, zone_echte_zeile) bleiben unberuehrt. */
                 if (zrc != 255 && !zone_echte_zeile(zn) &&
-                    !re15_map_teil_hat_zid((unsigned)zpg, (unsigned)zrc, zn->zid))
+                    !re15_map_teil_hat_zid((unsigned)zpg, (unsigned)zrc, zn->zid)) {
                     (void)re15_karte_r42_kunst_klemmen((unsigned)zpg, (unsigned)zrc, mx, my);
+                    /* r42/karte Stufe 3 Runde 4 (PORT-WAHL, include/re15_karte_r42.h): der 5x5-Ring ganz auf den Ort */
+                    (void)re15_karte_r42_ring_klemmen(zn, (unsigned)zpg, (unsigned)zrc, mx, my);
+                }
                 tuer_anziehen(zn, world_x, world_z, (int)g_inv_screen.map_page, mx, my);
                 /* ⛔ NACH DEM ZUG NICHT NOCHMAL KLEMMEN - gemessen und verworfen
                  * (2026-09-03). Naheliegend, weil das Tuersymbol auf der WAND zwischen
@@ -3014,6 +3017,16 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                     if (cur2 && cur2->room == zg->room && cur2->idx == zg->idx &&
                         (!zg->etage || re15_map_zone_etage_besucht(zg)) &&
                         re15_karte_r39_etage_hier(zg, st->map_page))   /* Runde 39 Spur G */
+                        rs2 = RE15_MAP_RECT_CURRENT;
+                    /* r42/karte Stufe 3 Runde 4 (PORT-WAHL wie rect_state_impl, re15_map_zones.c): auf Blatt 6..12 ist
+                     * eine Schema-Zeichnung DESSELBEN Raums mit DERSELBEN Zeile derselbe Ort wie die gemalte Kachel
+                     * (ROOM6000: Gang nach 50B0 als Grundriss neben r5) - steht die Figur auf dem Bahnsteig, ist auch
+                     * der Gang rot. Nicht fuer Etagen-/Gast-Zeilen; STAGE1 (Blatt 0-5) unveraendert. */
+                    if (cur2 && st->map_page >= 6 && st->map_page <= 12 && cur2->room == zg->room &&
+                        cur2->idx != zg->idx && !zg->etage && !cur2->etage && cur2->page == zg->page &&
+                        cur2->ox == zg->ox && cur2->oy == zg->oy && cur2->sx == zg->sx && cur2->sy == zg->sy &&
+                        cur2->flip_x == zg->flip_x && cur2->flip_z == zg->flip_z && cur2->tausch == zg->tausch &&
+                        (zg->sx | zg->sy) != 0)
                         rs2 = RE15_MAP_RECT_CURRENT;
                 }
                 /* ⛔ ROT GEHOERT DEM RAUM, NICHT DER EINZELNEN ZEICHNUNG.

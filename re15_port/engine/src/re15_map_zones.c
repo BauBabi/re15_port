@@ -240,6 +240,10 @@ static const struct { unsigned short room; unsigned char idx; } s_zone_zusatzbit
     { 0x1220, 2 }, { 0x1220, 3 }, { 0x1220, 4 },
     { 0x1180, 2 }, { 0x1180, 3 }, { 0x1180, 4 },
     { 0x1230, 2 }, { 0x1230, 3 }, { 0x1230, 4 },
+    /* r42/karte Stufe 3 Runde 4: ROOM4080 Ostarm (Zone 2, eigene Zeile, re15_map_zones.h) (Bit 251) */
+    { 0x4080, 2 },
+    /* r42/karte Stufe 3 Runde 4: ROOM4050 Labyrinth-Kammern (Zone 2, Schema synth 16) (Bit 252) */
+    { 0x4050, 2 },
 };
 #define ZONE_ZUSATZ_BASIS 240
 #define ZONE_ZUSATZ_N ((int)(sizeof s_zone_zusatzbit / sizeof s_zone_zusatzbit[0]))

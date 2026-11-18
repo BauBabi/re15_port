@@ -101,6 +101,24 @@ def zeile_rot(bbox, ziel, rot, skala, anker=''):
     return (ox, oy, sx, sy, fx, fz, ts)
 
 
+def zeile_wand(waende, rot):
+    """Stufe 3 Runde 4 (PORT-ERGAENZUNG wie ROOM1060/10A0, Runde 39): je Achse ZWEI Wandflaechen des Raums (SCA-Zellkante,
+    Datei-Offset im Plan) auf die GEMALTE Linie derselben Wand. waende = {'x': [(welt, px), (welt, px)], 'z': [...]}.
+    Nur R0 (die Wandseiten liegen dann wie die Linien); Massstab = Linienabstand / Wandabstand, Versatz aus der ersten Wand."""
+    assert rot == 'R0', 'zeile_wand nur fuer R0'
+    (x1, p1), (x2, p2) = waende['x']
+    (z1, q1), (z2, q2) = waende['z']
+    sx = round((p2 - p1) * 2 ** 20 / (x2 - x1))
+    sy = round((q1 - q2) * 2 ** 20 / (z2 - z1))
+    ox = p1 - sf(x1, sx)
+    oy = q1 + sf(z1, sy)
+    for (w, p) in waende['x']:
+        assert sf(w, sx) + ox == p, ('x-Wand', w, p, sf(w, sx) + ox)
+    for (w, q) in waende['z']:
+        assert -sf(w, sy) + oy == q, ('z-Wand', w, q, -sf(w, sy) + oy)
+    return (ox, oy, sx, sy, 0, 0, 0)
+
+
 # ---- gemalte Symbole (Katalog) ---------------------------------------------------------------
 def _katalog():
     p = os.path.join(HIER, '..', '..', 'analysis', 'kartensymbole', 'symbolkatalog.csv')
@@ -211,9 +229,13 @@ PLAENE[8] = dict(skala=None, orte={
                    eigen_rot=True),
     (0x4070, 0): O(7, 'min', 71, 'Treppenhaus (Band 12)', 'R0', baender={12}),
     # 4080 = rechte Haelfte des Rings (r8 + Diagonalstueck r13 an 4030)
-    (0x4080, 0): O(8, 'min', 72, 'Ring rechts (r8)', 'R0', ziel=(162, 111, 218, 167)),
+    # Stufe 3 Runde 4: Zeile aus den WAENDEN (Pruefbericht pruef_s3_r3: Ostarm ohne Mitlaufen, 4080_t3 auf der Wandlinie):
+    # x 2000 Ostkante Zelle 3 @ROOM4080.RDT 0x00580 -> Linie x177 (r11), x 25457 Westkante Zelle 1 @0x00568 -> x218 (r8),
+    # z -3430 Suedkante Zelle 0 @0x0055C -> y124 (r9/r8), z -27103 Nordkante Zelle 2 @0x00574 -> y167 (r11).
+    (0x4080, 0): O(8, 'min', 72, 'Ring rechts (r8)', 'R0', ziel=(162, 111, 218, 167),
+                   waende={'x': [(2000, 177), (25457, 218)], 'z': [(-3430, 124), (-27103, 167)]}),
     (0x4080, 1): O(13, 'wie:4080.0', 120, 'Ring rechts, Diagonale an 4030 (r13)', 'R0',
-                   bbox=(-9338, -6600, 5232, 7039)),
+                   bbox=(-4700, -2800, 1100, 3000)),   # Stufe 3 Runde 4: begehbare Flaeche des schmalen Gangs (bis Zelle 18/19)
     (0x4090, 0): O(9, 'echt', 73, ''),
     (0x40A0, 0): O(10, 'echt', 74, ''),
     (0x40B0, 0): O(11, 'min', 75, '', 'R0',
@@ -658,6 +680,9 @@ def loese(pg, log=print):
             rows[u] = rows[(int(a, 16), int(b))][:7] + ('selber Rahmen wie ROOM%s' % a,)
     for u, o in sorted(orte.items()):
         if u in rows or o['quelle'].startswith('wie:'):
+            continue
+        if o.get('waende'):                     # Stufe 3 Runde 4: Zeile aus WANDFLAECHEN -> gemalten Linien
+            rows[u] = zeile_wand(o['waende'], o['rot']) + ('aus den Waenden %s' % o['rot'],)
             continue
         ziel = o['ziel'] or gemalt(pg, o['rect'])
         row = zeile_rot(o['fit'] or bb[u], ziel, o['rot'], skala, o.get('anker', ''))
