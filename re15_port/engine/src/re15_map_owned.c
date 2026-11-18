@@ -97,6 +97,8 @@ int re15_map_owned_page(unsigned page)
      * NICHT in s_map_funde, deren Riegel nur RDT-belegte Stellen zulaesst). */
     { extern int re15_story3a_r42_blatt(unsigned);   /* Runde 42 Story STAGE3a: Fabrikplan aus Marvins Uebergabe (Bit 35, L6/F-05) */
       if (re15_story3a_r42_blatt(page)) return 1; }
+    { extern int re15_ungenutzt_r42_blatt(unsigned);   /* Runde 42 rest Stufe 3 (U-11): Wandplan 402 -> Blatt 8 (Bit 36) */
+      if (re15_ungenutzt_r42_blatt(page)) return 1; }
     return re15_kartenitems_r36_blatt_besitz(page);
 }
 
@@ -110,5 +112,7 @@ uint32_t re15_map_owned_bits(void)
             m |= (uint32_t)1u << s_map_funde[i].page;
     { extern int re15_story3a_r42_blatt(unsigned);
       if (re15_story3a_r42_blatt(RE15_S3A_FABRIK_BLATT_OWNED)) m |= (uint32_t)1u << RE15_S3A_FABRIK_BLATT_OWNED; }   /* Runde 42 Story STAGE3a */
+    { extern int re15_ungenutzt_r42_blatt(unsigned);
+      if (re15_ungenutzt_r42_blatt(8)) m |= (uint32_t)1u << 8; }   /* Runde 42 rest Stufe 3 (U-11), re15_ungenutzt_r42.h RE15_U42_PLAN_BLATT */
     return m | re15_kartenitems_r36_besitz_bits();   /* Runde 36 Spur N */
 }

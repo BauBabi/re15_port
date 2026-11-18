@@ -703,6 +703,8 @@ int scd_event_fire(uint8_t event_id)
                pc = re15_story3a_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 Story STAGE3a: 3020 Ereignis 2 = sub02 mit Zeilen 7/8 (Leon) */
     if (!pc) { extern const uint8_t *re15_hintergruende_r42_ereignis(uint16_t, uint8_t);
                pc = re15_hintergruende_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 rest Stufe 2: 10F0/10F1 Ereignis 31/30, 1010/1011 Ereignis 31 (re15_hintergruende_r42.h) */
+    if (!pc) { extern const uint8_t *re15_ungenutzt_r42_ereignis(uint16_t, uint8_t);
+               pc = re15_ungenutzt_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 rest Stufe 3: 5010/3 + 5011/8 Rechner (U-05), 4020/4021/11 Wandplan (U-11) (re15_ungenutzt_r42.h) */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
@@ -789,6 +791,7 @@ void scd_vm_tick(void)
     if (!s_vm_room_init) { extern void re15_story3a_r42_tick(void); re15_story3a_r42_tick(); }   /* Runde 42 Story STAGE3a: Signale/Abblende/Schuesse 3060, Wiedersehen, "Gunshots" 3020 */
     if (!s_vm_room_init) { extern void re15_story3b_r42_tick(void); re15_story3b_r42_tick(); }   /* Runde 42 Story STAGE3b: Signal FREI 30E0, Zeile 3070 */
     if (!s_vm_room_init) { extern void re15_story6_r42_tick(void); re15_story6_r42_tick(); }   /* Runde 42 Story STAGE6: Toene Zugstart 6031 */
+    if (!s_vm_room_init) { extern void re15_ungenutzt_r42_tick(void); re15_ungenutzt_r42_tick(); }   /* Runde 42 rest Stufe 3: Signal FREI der neuen 3091-Zeilen (U-01) */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
 
@@ -1309,6 +1312,9 @@ static int op_evt_exec(scd_thread_t *t)
      * -> Zugstart E9 bzw. Wagen vor dem Zugstart (re15_story6_r42.h). */
     { extern const uint8_t *re15_story6_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
       target_pc = re15_story6_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
+    /* Runde 42 rest Stufe 3: ROOM3091 sub07 (Hoftuer + D309 #21/#24, U-01) und sub04 ("There's a power supply.", U-02) (re15_ungenutzt_r42.h). */
+    { extern const uint8_t *re15_ungenutzt_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
+      target_pc = re15_ungenutzt_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
     if (!target_pc) return 1;   /* no such sub → drop */
 
     int slot;
