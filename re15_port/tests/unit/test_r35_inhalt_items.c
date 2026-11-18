@@ -176,11 +176,19 @@ int main(void)
                   "P ROOM%04X obj %d bei (%d,%d,%d) rot (%d,%d,%d), Flags 0x000B, Welt", rr->id, s->obj, s->x, s->y, s->z,
                   s->rotx, s->rot, s->rotz);
             const re15_aot_t *a = &g_aot.slots[s->slot];
+            /* Runde 42 rest Stufe 2 (re15_hintergruende_r42.h): die Memory Card wird in der Form der Leiche ROOM1051 genommen -
+             * Item-Platz mit Rechteck 0 (@0x00C22), das Aufhebe-Rechteck traegt der Ereignis-Platz 11 (@0x00C0E, Ereignis 31,
+             * Programm mit Cut 7 + Aot_on). Die Shotgun Shells bleiben ein gewoehnlicher Item-Platz. */
+            const re15_aot_t *z = (s->item == 0x21) ? &g_aot.slots[11] : a;
             CHECK(a->active && a->type == RE15_AOT_TYPE_ITEM && g_aot.item_params[s->slot].item_type == s->item &&
                   g_aot.item_params[s->slot].amount == s->menge && a->sce_flags == 0x31 && a->band == s->floor &&
-                  a->x == s->rx + s->rw / 2 && a->z == s->rz + s->rd / 2 && a->half_w == s->rw / 2 && a->half_h == s->rd / 2,
-                  "Z ROOM%04X Slot %d: Item 0x%02X x%d, sat 0x31, Etage %d, Rechteck x[%d..%d] z[%d..%d]",
-                  rr->id, s->slot, s->item, s->menge, s->floor, s->rx, s->rx + s->rw, s->rz, s->rz + s->rd);
+                  (s->item != 0x21 || (a->x == 0 && a->z == 0 && a->half_w == 0 && a->half_h == 0)) &&
+                  (s->item != 0x21 || (z->active && z->type == RE15_AOT_TYPE_GENERIC && z->event_id == 31 &&
+                                       (z->sce_flags & 0x7f) == 0x31 && z->band == s->floor)) &&
+                  z->x == s->rx + s->rw / 2 && z->z == s->rz + s->rd / 2 && z->half_w == s->rw / 2 && z->half_h == s->rd / 2,
+                  "Z ROOM%04X Slot %d: Item 0x%02X x%d, sat 0x31, Etage %d, Rechteck x[%d..%d] z[%d..%d]%s",
+                  rr->id, s->slot, s->item, s->menge, s->floor, s->rx, s->rx + s->rw, s->rz, s->rz + s->rd,
+                  s->item == 0x21 ? " (auf Ereignis-Platz 11, Item-Platz Rechteck 0)" : "");
             hochfahren(rr, s->stand_x, s->stand_y, s->stand_z, s->bit);
             CHECK(slot_von(s->obj) < 0 && !(g_aot.slots[s->slot].active &&
                   g_aot.slots[s->slot].type == RE15_AOT_TYPE_ITEM &&
@@ -230,6 +238,11 @@ int main(void)
             raum_t *rr = &r[k * 2 + v];
             druck(rr, s->stand_x, s->stand_y, s->stand_z, s->stand_rot);
             uint8_t typ = 0; int wahl = -1, w = 0;
+            /* Memory Card (Runde 42 rest Stufe 2): Druck -> Ereignis 31 -> Programm (Cut 7, Aot_on 10) -> Modal */
+            if (!re15_item_modal_active() && g_aot.fired_event_id_this_frame) {
+                (void)scd_event_fire(g_aot.fired_event_id_this_frame);
+                for (int f = 0; f < 60 && !re15_item_modal_active(); f++) scd_vm_tick();
+            }
             int modal = re15_item_modal_active();
             while (re15_item_modal_active() && !re15_item_modal_prompt_ready() && w++ < 800)
                 re15_item_modal_tick(0, 0);

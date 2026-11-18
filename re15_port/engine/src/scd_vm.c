@@ -701,6 +701,8 @@ int scd_event_fire(uint8_t event_id)
                pc = re15_story2_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 Story STAGE2: 2080 Ereignis 2 (+Hinweis) + 30, 2070/11A0/2040 Ereignis 30 */
     if (!pc) { extern const uint8_t *re15_story3a_r42_ereignis(uint16_t, uint8_t);
                pc = re15_story3a_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 Story STAGE3a: 3020 Ereignis 2 = sub02 mit Zeilen 7/8 (Leon) */
+    if (!pc) { extern const uint8_t *re15_hintergruende_r42_ereignis(uint16_t, uint8_t);
+               pc = re15_hintergruende_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 rest Stufe 2: 10F0/10F1 Ereignis 31/30, 1010/1011 Ereignis 31 (re15_hintergruende_r42.h) */
     if (!pc) pc = s_current_rdt->sub_scd[event_id];
     if (!pc) return -1;
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++) {
