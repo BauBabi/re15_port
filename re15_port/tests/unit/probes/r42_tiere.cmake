@@ -18,3 +18,14 @@ add_test(NAME unit_r42_tiere COMMAND test_r42_tiere alle)
 set_tests_properties(unit_r42_tiere PROPERTIES TIMEOUT 300)
 add_test(NAME unit_r42_tiere_aus COMMAND test_r42_tiere aus)
 set_tests_properties(unit_r42_tiere_aus PROPERTIES TIMEOUT 120)
+
+# Stufe 2 Runde 2 (Pruefbericht s2 r1 Gelb 2): der Durchgang durch die Gitterhaende im ECHTEN Spiel (kein Schuss)
+if(TARGET re15_pc)
+    add_test(NAME integration_r42_gitter
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_TOOL=$<TARGET_FILE:test_r42_tiere>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r42_gitter_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_gitter.cmake)
+    set_tests_properties(integration_r42_gitter PROPERTIES TIMEOUT 900)
+endif()

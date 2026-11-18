@@ -10,7 +10,8 @@
  *         13 Teile (GIB 0x80102CA0); Messer w1, Beretta w5, Ingram w12 nicht. Messung der Sichtbarkeit der Teile.
  *         RE1.5-Gehirn: Pistole -> GIB-Spur (+0x5 = 7).
  *   [u7]  Spinne: Platzen (RE2-Tod w7 Krit, RE1.5-Tod w9) -> Teile 0/19 platzen, die Beine 3..18 bleiben dran
- *         ((w & 0x41) == 1, kein Flugbit 0x20).
+ *         ((w & 0x41) == 1, kein Flugbit 0x20). Stufe 2 Runde 2 (145-149): der Kadaver liegt im Disc-Platzweg-Clip 1 und
+ *         haelt dessen letztes Bild (RE2- und RE1.5-Gehirn), statt auf dem Ruecken mit Clip 12/13 (5) zu zappeln.
  *   [u16] Hund: RE2-Gehirn, Handgranate (Art 2) -> RE2-Teile-Wurf 0x80104440 (Flagwort 0x4A), nach 29 Bildern weg
  *         (@0x80028DCC/DC); Werfer-Explosivrunde (0x10020009, +0x1D2 >= 3) -> kein Teile-Wurf (@0x801046A8-D4).
  *   [u9]  Riesenform (0x30 in ROOM5080): Schaden je Waffe = RE2-G4-Zeile Klammer 0 (@0x800A5BE4 + (Zeile-1)*20); dieselbe
@@ -188,10 +189,12 @@ static void abschnitt_u4(void)
     re15_enemy_apply_hitbox(e, 0x30);
     re15_enemy_spawn_root(1);
     PRUEF(100, e->hp == 300, "Birkin 0x30 (ROOM3070) INIT-HP %d, Soll 300 = `ori v0,zero,0x12c` @0x8011690c (Disc, Faktor 1)", e->hp);
-    /* Pistole am echten Resolver: ROOM-unabhaengig, freie Bahn */
+    /* Pistole am echten Resolver: ROOM-unabhaengig, freie Bahn. Stufe 2 Runde 2 (Pruefbericht Gelb 5): die HP kommen aus dem
+     * INIT oben, nicht aus einer gesetzten Zahl. */
+    const int16_t hp_init = e->hp;
     spieler();
     g_current_room_id = 0x3070;
-    re15_actor_t *b = ziel(1, 0x30, -19600, 300);
+    re15_actor_t *b = ziel(1, 0x30, -19600, hp_init);
     int lebt20 = 1, tot21 = 0;
     for (int k = 1; k <= 21; k++) {
         b->hit_react = 0; b->state = 1;
@@ -199,7 +202,8 @@ static void abschnitt_u4(void)
         if (k <= 20 && b->hp < 0) lebt20 = 0;
         if (k == 21 && b->hp < 0) tot21 = 1;
     }
-    PRUEF(101, lebt20 && tot21, "Birkin 300: 20 Pistolentreffer zu 15 (@0x8006F15C) leben, der 21. toetet (hp %d)", b->hp);
+    PRUEF(101, lebt20 && tot21, "Birkin INIT-HP %d: 20 Pistolentreffer zu 15 (@0x8006F15C) leben, der 21. toetet (hp %d)",
+          hp_init, b->hp);
 }
 
 /* ================================================================================================================== */
@@ -218,7 +222,7 @@ static void abschnitt_u3(void)
     PRUEF(111, RE15_R39_ZUCK_SCHWELLE == 36, "Zuck-Schwelle bleibt 3 x 12 = 36 (F3 a), ist %d", RE15_R39_ZUCK_SCHWELLE);
     spieler();
     g_current_room_id = 0x11C0;
-    re15_actor_t *g = ziel(1, 0x27, -19600, 180);
+    re15_actor_t *g = ziel(1, 0x27, -19600, hp);   /* Stufe 2 Runde 2 (Gelb 5): HP aus dem INIT-Leser oben */
     int lebt15 = 1, tot16 = 0;
     for (int k = 1; k <= 16; k++) {
         g->hit_react = 0; g->state = 1;
@@ -226,7 +230,8 @@ static void abschnitt_u3(void)
         if (k <= 15 && g->hp < 0) lebt15 = 0;
         if (k == 16 && g->hp < 0) tot16 = 1;
     }
-    PRUEF(112, lebt15 && tot16, "Gorilla 180: 15 Pistolentreffer zu 12 (@0x8006ee44) leben, der 16. toetet (hp %d)", g->hp);
+    PRUEF(112, lebt15 && tot16, "Gorilla INIT-HP %d: 15 Pistolentreffer zu 12 (@0x8006ee44) leben, der 16. toetet (hp %d)",
+          hp, g->hp);
 }
 
 /* ================================================================================================================== */
@@ -276,13 +281,21 @@ static void abschnitt_u5(int aus)
     for (unsigned k = 0; k < sizeof F / sizeof F[0]; k++) {
         re15_actor_t *e = kraehe(-1500);
         e->state = 2; e->sub_state_1 = F[k].w; e->sub_state_2 = 0;
+        /* Stufe 2 Runde 2 (Pruefbericht Gelb 5: bei 125-127 starb die Kraehe gar nicht, HP 10): jeder Fall ist ein TOEDLICHER
+         * Treffer - die HP stehen nach dem Abzug unter 0 (der Applier zieht vor dem HURT-Handler ab, Todesregel hp < 0). */
+        e->hp = -1;
         re15_re2z_rng_reset();
         re15_re2crow_hurt_test(e, pl);
         int soll = aus ? F[k].gib_aus : F[k].gib;
+        /* Ohne GIB stirbt die RE2-Kraehe im HURT-Zustand selbst (hp < 0 -> Phase 5 @0x80102B6C-98, danach Leiche 7/0, 7/2
+         * oder 7/3); den Ablauf bis zur Leiche weiterlaufen lassen (hoechstens 400 Takte). */
+        for (int t = 0; t < 400 && e->state == 2; t++) re15_re2crow_hurt_test(e, pl);
         int z = kraehe_zerlegt(e);
-        PRUEF(nr0 + (int)k, soll ? (z == 13 && e->state == 7 && e->hp < 0) : (z == 0),
-              "RE2-Kraehe %s: %s (13 Teile mit eigener Matrix: %d, Zustand %d, hp %d)", F[k].n,
-              soll ? "zerfaellt in Fetzen (GIB 0x80102CA0)" : "faellt ganz (kein GIB)", z, e->state, e->hp);
+        PRUEF(nr0 + (int)k, soll ? (z == 13 && e->state == 7 && e->hp < 0)
+                                 : (z == 0 && e->hp < 0 && e->state == 7 && e->sub_state_1 != 1),
+              "RE2-Kraehe %s, toedlich: %s (13 Teile mit eigener Matrix: %d, Zustand %d, hp %d)", F[k].n,
+              soll ? "zerfaellt in Fetzen (GIB 0x80102CA0)" : "stirbt und faellt ganz (kein GIB, Leiche nicht 7/1)", z, e->state,
+              e->hp);
     }
     if (aus) return;
     /* Messung: wie lange sind die Fetzen sichtbar? Maske 0x1F (alle Wurf) und 0 (Wirbel), Flughoehe -1500 und Boden -250 */
@@ -356,6 +369,108 @@ static int spinne_platzt(int *beine_dran, int *flug)
     }
     return (t[0].w & 0x4a) == 0x4a && (t[19].w & 0x4a) == 0x4a;
 }
+/* ---- Stufe 2 Runde 2 (Pruefbericht s2 r1 Rot 1): die LIEGE-POSE des geplatzten Kadavers ------------------------------
+ * Disc STAGE2: Platzweg Phase 0 Clip 1 (`sb v1(1),0x94` @0x80114058), Phase 1 spielt ihn (`jal 0x8001f314` a3 0x200
+ * @0x80114548-4c), Leiche Platzweg ohne Clip und ohne Vorschub (`j 0x8011559c` @0x801154b4); leichter Tod Clip 5
+ * (@0x80115520). RE2: Clip 12 (@0x80103DC0 / @0x80104578), Leiche Clip 13 (@0x80104D5C). Bild: 80 % F2 0:15,0-0:15,5. */
+static int bank_re15_spinne(void)
+{
+    re15_enemy_reset();
+    re15_enemy_bank_t *eb = re15_enemy_alloc(0x25);
+    if (!eb) return 0;
+    static uint8_t *s_ems = NULL; static size_t s_n = 0;
+    if (!s_ems) s_ems = slurp(RE15_ASSET_PSX_DIR "/EMD/CDEMD0.EMS", &s_n);
+    size_t off = 0, len = 0;
+    if (!s_ems || re15_ems_get_entry(s_ems, s_n, re15_ems_index_for_type(0x25), &off, &len) != 0) return 0;
+    re15_tim_t tim; memset(&tim, 0, sizeof tim);
+    if (re15_emd_parse_container(s_ems + off, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) return 0;
+    eb->buf = NULL; eb->ok = 1;
+    return 1;
+}
+static int clip_len(int clip)
+{
+    re15_enemy_bank_t *eb = re15_enemy_find(0x25);
+    return (eb && eb->ok && clip < eb->anim.clip_count) ? eb->anim.clips[clip].frame_count : -1;
+}
+/* RE2-Gehirn, Tod mit Waffe w / Treffer-Bits h93: Takte bis zur Leiche, dann 300 Leichen-Takte. Rueckgabe 1 = jeder
+ * Leichen-Takt zeigt Clip c_soll; *letztes = letztes Bild; *mo_tod = Clip nach dem ersten Todestakt; *bis = Takte bis zur
+ * Leiche. */
+static int spinne_re2_tod(int w, uint8_t h93, int c_soll, int *mo_tod, int *bis, int *letztes)
+{
+    spinne_frisch(RE15_AI_FLAVOR_RE2);
+    re15_enemy_reset(); load_re2_bank(0x25, 0x25);
+    re15_actor_t *sp = &g_actors[SPS];
+    sp->state = 0; spinne_takt();
+    sp->state = 3; sp->sub_state_1 = (uint8_t)w; sp->sub_state_2 = 0; sp->sub_state_3 = 0; sp->hp = -20; sp->hit_react = h93;
+    re15_teile_reset(SPS);
+    spinne_takt();
+    *mo_tod = sp->motion;
+    int t = 1;
+    while (t < 400 && sp->state != 7) { spinne_takt(); t++; }
+    *bis = t;
+    int ok = (sp->state == 7);
+    for (int k = 0; k < 300 && ok; k++) {
+        spinne_takt();
+        if (c_soll >= 0 && sp->motion != c_soll) ok = 0;
+    }
+    *letztes = (int)sp->anim_frame;
+    return ok;
+}
+static void abschnitt_u7_pose(void)
+{
+    int mo_tod = -1, bis = 0, letztes = -1, ok;
+    /* 145: RE2-Gehirn, Redhawk-Krit (w7, 0x41 = Platzer): Clip 1, nach dessen Ende Leiche, dann 300 Takte Clip 1 Bild 7 */
+    ok = spinne_re2_tod(7, 0x41, 1, &mo_tod, &bis, &letztes);
+    int l1 = clip_len(1);
+    PRUEF(145, ok && mo_tod == 1 && l1 > 0 && letztes == l1 - 1 && bis <= l1 + 1,
+          "RE2-Spinne geplatzt (w7 Krit): Todestakt Clip %d (Soll 1, @0x80114058), Leiche nach %d Takten (Clip 1 = %d Bilder, "
+          "@0x80114548-4c), 300 Leichen-Takte Clip 1, zuletzt Bild %d (Soll %d, Leiche ohne Vorschub @0x801154b4) -> %s",
+          mo_tod, bis, l1, letztes, l1 - 1, ok ? "ja" : "NEIN (Clip 12/13 = auf dem Ruecken)");
+    /* 146: der geplatzte Kadaver wird erneut getroffen (RE2-Leiche bleibt beschiessbar, re15_damage.c "RE2-ADULT-SPINNE";
+     * Wiedereintritt mit +0x224 = 1 wie nach der allgemeinen Zeile @0x80103EB8): die Pose bleibt Clip 1 Bild 7 */
+    {   re15_actor_t *sp = &g_actors[SPS];
+        int vorher = re15_teile(SPS) ? (int)re15_teile(SPS)[0].w : -1;
+        sp->state = 3; sp->sub_state_1 = 3; sp->sub_state_2 = 0; sp->hp = -1; sp->hit_react = 0x01; sp->re2s_done224 = 1;
+        spinne_takt();
+        int mo1 = sp->motion, af1 = (int)sp->anim_frame;
+        int t = 0; while (t++ < 50 && sp->state != 7) spinne_takt();
+        for (int k = 0; k < 60; k++) spinne_takt();
+        int nachher = re15_teile(SPS) ? (int)re15_teile(SPS)[0].w : -2;
+        PRUEF(146, mo1 == 1 && af1 == l1 - 1 && sp->state == 7 && sp->motion == 1 && (int)sp->anim_frame == l1 - 1 &&
+                   vorher == nachher,
+              "Kadaver nachgeschossen: Clip %d Bild %d im Treffertakt, danach Zustand %d Clip %d Bild %d, Teil-0-Wort %04x -> %04x "
+              "(kein zweites Platzen)", mo1, af1, sp->state, sp->motion, (int)sp->anim_frame, vorher, nachher); }
+    /* 147: RE2-Gehirn, Tod ohne Platzen (Pistole w3, kein Krit) -> RE2 wie bisher: Clip 12, Leiche Clip 12/13 */
+    {   ok = spinne_re2_tod(3, 0x01, -1, &mo_tod, &bis, &letztes);
+        re15_actor_t *sp = &g_actors[SPS];
+        PRUEF(147, mo_tod == 12 && sp->state == 7 && (sp->motion == 12 || sp->motion == 13),
+              "Gegenpol RE2-Spinne Pistole ohne Krit: Todestakt Clip %d (Soll 12 @0x80103DC0), Leiche Clip %d (12/13 @0x80104D5C)",
+              mo_tod, sp->motion); }
+    /* 148: RE1.5-Gehirn mit der Disc-Bank, Tod w9 (Platzweg): Leiche haelt Clip 1 Bild 7 */
+    {   int bank = bank_re15_spinne();
+        spinne_frisch(RE15_AI_FLAVOR_RE15);
+        re15_actor_t *sp = &g_actors[SPS];
+        sp->state = 3; sp->sub_state_1 = 9; sp->sub_state_3 = 0; sp->hp = -5; sp->hit_react = 0x01;
+        int t = 0; while (t++ < 100 && sp->state != 7) re15_enemy_ai_run_all(1);
+        int st = sp->state, mo = sp->motion, af = (int)sp->anim_frame, gleich = 1;
+        for (int k = 0; k < 200; k++) {
+            re15_enemy_ai_run_all(1);
+            if (sp->motion != 1 || (int)sp->anim_frame != clip_len(1) - 1) gleich = 0;
+        }
+        PRUEF(148, bank && st == 7 && mo == 1 && af == clip_len(1) - 1 && gleich,
+              "RE1.5-Spinne Tod w9 (Platzweg): Leiche Clip %d Bild %d (Soll 1/%d), 200 Takte unveraendert %d (Leiche ohne Clip "
+              "@0x80115414-68, ohne Vorschub @0x801154b4)", mo, af, clip_len(1) - 1, gleich); }
+    /* 149: RE1.5-Gehirn, leichter Tod w3 -> Leiche Clip 5 (@0x80115520), unveraendert */
+    {   spinne_frisch(RE15_AI_FLAVOR_RE15);
+        re15_actor_t *sp = &g_actors[SPS];
+        sp->state = 3; sp->sub_state_1 = 3; sp->sub_state_3 = 0; sp->hp = -5; sp->hit_react = 0x01;
+        int t = 0; while (t++ < 100 && sp->state != 7) re15_enemy_ai_run_all(1);
+        re15_enemy_ai_run_all(1);
+        PRUEF(149, sp->state == 7 && sp->motion == 5, "Gegenpol RE1.5-Spinne leichter Tod w3: Leiche Clip %d (Soll 5 @0x80115520)",
+              sp->motion); }
+    re15_enemy_reset();
+}
+
 static void abschnitt_u7(int aus)
 {
     int dran, flug, p;
@@ -381,6 +496,7 @@ static void abschnitt_u7(int aus)
         PRUEF(nr0 + 1, p && dran == 16 && flug == 0, "RE1.5-Spinne Tod w9: platzt (%d), Beine dran %d, fliegend %d", p, dran, flug);
     else
         PRUEF(nr0 + 1, p && flug == 16, "AUS: RE1.5-Spinne Tod w9 wirft wie die Disc alle Beine (@0x8011419c-52c): fliegend %d", flug);
+    if (!aus) abschnitt_u7_pose();
     re15_spinnengore_test_schalter(-1);
 }
 
@@ -736,9 +852,54 @@ static void abschnitt_u8(void)
 }
 
 /* ================================================================================================================== */
+/* Stufe 2 Runde 2 (Pruefbericht s2 r1 Gelb 2: die Vorpruefung 200 setzt die Spielerlage je Bild neu): Auswerter des ECHTEN
+ * Durchgangs durch ROOM1210/1211 (integration_r42_gitter, RE15_STATE_LOG der exe, nur Vorwaertslaufen, kein Schuss).
+ * Gelesen werden nur die Zeilen mit Arm-Klammern [.. t=1a ..] (der Raum der Arme). Gruen, wenn
+ *   - in jeder dieser Zeilen die Spieler-HP 100 sind (ein Griff kostet keine HP),
+ *   - mindestens ein Arm wach ist (st=1) - sonst prueft der Lauf nichts,
+ *   - der Spieler hinter den letzten Arm kommt: min z(Spieler) < min z(Arm).
+ * Messgroesse: Bilder mit Griff (gr != 0). Das ist eine VORBEDINGUNG des Baus (U8: "erst pruefen, ob man ohne Schiessen
+ * vorbeikommt"), sie ist auf jedem Stand gruen. */
+static int pruef_gitter(const char *pfad)
+{
+    FILE *f = fopen(pfad, "r");
+    if (!f) { printf("FAIL: kein Log %s\n", pfad); return 1; }
+    static char z[65536];
+    int zeilen = 0, hp_falsch = 0, wach = 0, griff = 0, hp_min = 1000;
+    int32_t pz_min = 0x7fffffff, az_min = 0x7fffffff;
+    while (fgets(z, sizeof z, f)) {
+        if (!strstr(z, " t=1a ")) continue;
+        int px, pz, rot, hp;
+        const char *pl = strstr(z, "PL(");
+        if (!pl || sscanf(pl, "PL(%d,%d,rot=%d,hp=%d)", &px, &pz, &rot, &hp) != 4) continue;
+        zeilen++;
+        if (hp != 100) hp_falsch++;
+        if (hp < hp_min) hp_min = hp;
+        if (pz < pz_min) pz_min = pz;
+        const char *g = strstr(z, " gr=");
+        int gr = 0;
+        if (g && sscanf(g, " gr=%d", &gr) == 1 && gr != 0) griff++;
+        for (const char *q = strchr(z, '['); q; q = strchr(q + 1, '[')) {
+            int slot, st; unsigned t;
+            if (sscanf(q, "[%d t=%x st=%d", &slot, &t, &st) != 3 || t != 0x1a) continue;
+            const char *a = strstr(q, "@(");
+            int ax, az;
+            if (st == 1) {
+                wach++;
+                if (a && sscanf(a, "@(%d,%d", &ax, &az) == 2 && az < az_min) az_min = az;
+            }
+        }
+    }
+    fclose(f);
+    printf("pruef_gitter: Zeilen %d, HP nicht 100 in %d (min %d), wache Arm-Eintraege %d, Bilder mit Griff %d, "
+           "Spieler min z %d, letzter Arm z %d\n", zeilen, hp_falsch, hp_min, wach, griff, (int)pz_min, (int)az_min);
+    return (zeilen > 0 && hp_falsch == 0 && wach > 0 && pz_min < az_min) ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = (argc > 1) ? argv[1] : "alle";
+    if (argc > 2 && !strcmp(teil, "pruef_gitter")) return pruef_gitter(argv[2]);
     int alle = !strcmp(teil, "alle");
     if (!strcmp(teil, "aus")) {
         if (!getenv("RE15_KEIN_80PROZENT_GORE")) {

@@ -40,6 +40,8 @@
  * Modus 2 `pruef_log <log> <art>` = Auswerter des Integrationslaufs (RE15_SPINNEN_LOG mit {G..}-Klammern):
  *   art "platzt": eine RE2-Spinne (o=1) stirbt (st=3) und traegt danach sh mit Teil 0 und 19; seit Runde 42 U7 fliegt kein
  *                 Bein (fl & 0x7fff8 == 0; bis dahin fl == 0x7fff8).
+ *                 Stufe 2 Runde 2: jede Leichen-Zeile (st=7) eines geplatzten Platzes zeigt Clip 1 (mo=1) mit EINEM Bild
+ *                 (Disc-Platzweg @0x80114058, Leiche ohne Vorschub @0x801154b4), mindestens 30 solche Zeilen.
  *   art "bein":   eine RE2-Spinne im Treffer (st=2) traegt ein geplatztes Beinpaar (sh-Bits in 3..18).
  *   art "aus":    eine RE2-Spinne stirbt, die Teilschicht bleibt aus (ta=0 in jedem Bild).
  * Modus 3 `pruef_lache <log> <art>` = Auswerter von RE15_LACHE_LOG (main.c, je Schatten einer Spinne):
@@ -1041,6 +1043,9 @@ static int pruef_log(const char *pfad, const char *art)
     if (!f) { printf("FAIL: kein Log %s\n", pfad); return 1; }
     static char z[65536];
     int tod_re2 = 0, platzt = 0, bein = 0, ta_an = 0, zeilen = 0;
+    /* Runde 42 Gore U7, Stufe 2 Runde 2: je Platz "geplatzt gesehen" und die Leichen-Pose danach (mo/af der [..]-Klammer) */
+    int geplatzt[64] = { 0 }, leiche_bilder = 0, leiche_clip1 = 0, leiche_ruecken = 0, af_erst[64], af_wechsel = 0;
+    for (int i = 0; i < 64; i++) af_erst[i] = -1;
     while (fgets(z, sizeof z, f)) {
         zeilen++;
         for (const char *q = strchr(z, '['); q; q = strchr(q + 1, '[')) {
@@ -1060,20 +1065,86 @@ static int pruef_log(const char *pfad, const char *art)
                 if ((sh & 0x80001u) == 0x80001u && (fl & 0x7fff8u) == 0u) platzt = 1;
             }
             if (st == 2 && (sh & 0x7fff8u)) bein = 1;
+            if (slot > 0 && slot < 64) {
+                if ((sh & 0x80001u) == 0x80001u || (un & 0x80001u) == 0x80001u) geplatzt[slot] = 1;
+                int mo = -1, af = -1; const char *m = strstr(q, " mo=");
+                if (m && sscanf(m, " mo=%d af=%d", &mo, &af) == 2 && st == 7 && geplatzt[slot]) {
+                    /* Disc: Leiche des Platzwegs ohne Clip/Vorschub (@0x801154b4) -> Clip 1 (@0x80114058), ein Bild */
+                    leiche_bilder++;
+                    if (mo == 1) leiche_clip1++;
+                    if (mo == 12 || mo == 13) leiche_ruecken++;
+                    if (af_erst[slot] < 0) af_erst[slot] = af; else if (af != af_erst[slot]) af_wechsel++;
+                }
+            }
         }
     }
     fclose(f);
     printf("pruef_log %s: Zeilen %d, RE2-Tod %d, Platzen %d, Bein %d, Teilschicht %d\n", art, zeilen, tod_re2, platzt, bein, ta_an);
-    if (!strcmp(art, "platzt")) return (tod_re2 && platzt) ? 0 : 1;
+    printf("  Leiche geplatzt: Bilder %d, Clip 1 %d, Clip 12/13 (Ruecken) %d, Bildwechsel %d\n",
+           leiche_bilder, leiche_clip1, leiche_ruecken, af_wechsel);
+    if (!strcmp(art, "platzt"))
+        return (tod_re2 && platzt && leiche_bilder >= 30 && leiche_clip1 == leiche_bilder && !af_wechsel) ? 0 : 1;
     if (!strcmp(art, "bein"))   return bein ? 0 : 1;
     if (!strcmp(art, "aus"))    return (tod_re2 && !ta_an) ? 0 : 1;
     printf("FAIL: unbekannte Art %s\n", art);
     return 1;
 }
 
+/* Runde 42 Gore U7, Stufe 2 Runde 2 (Pruefbericht s2 r1 Rot 1 "Beine senkrecht hoch"): Auswerter der Zeichner-Messschiene
+ * RE15_GORE_ZEICHEN_LOG (main.c, Zeilen "GS"), je GEZEICHNETEM Teil einer toten Spinne die Welt-Lage.
+ * Pruefungen je Bild und Platz: (a) die geplatzten Teile 0 und 19 werden nicht als Koerper gezeichnet (nur Scherben sc=1); (b) alle 16 Beinteile 3..18
+ * werden gezeichnet; (c) LIEGT AUF DEN BEINEN: bei jedem Bein k liegt das Knie (Teil 2k+4) hoeher als die Huefte
+ * (Teil 2k+3), also w.y(Knie) < w.y(Huefte) (PSX: -y = oben). Gemessen an der Bank (Sonde s2r2/probe/pose.c):
+ * Clip 1 Bild 7 Knie -730..-1107 gegen Huefte -292 (Knie oben); RE2 Clip 13 Bild 67 Knie -99..+8 gegen Huefte -276..-382
+ * (auf dem Ruecken: Knie unten, Fuesse senkrecht hoch). Kein Schwellwert, nur die Reihenfolge. Mindestens 30 Bilder.
+ * (d) Ruhe: kein gezeichnetes Beinteil aendert seine Welt-Lage zwischen zwei Leichen-Bildern desselben Platzes. */
+static int pruef_zeichen(const char *pfad)
+{
+    FILE *f = fopen(pfad, "r");
+    if (!f) { printf("FAIL: kein Log %s\n", pfad); return 1; }
+    char z[512];
+    unsigned bild = 0xffffffffu; int slot_akt = -1;
+    int hy[20], gez[20], hw[20][3], vw[64][20][3], v_da[64];
+    int bilder = 0, koerper = 0, beine_fehlen = 0, ruecken = 0, gut = 0, bewegt = 0;
+    memset(v_da, 0, sizeof v_da);
+    /* (d) RUHE: die Leiche des Platzwegs spielt keinen Clip (@0x801154b4) -> kein gezeichnetes Beinteil bewegt sich von
+     *     Bild zu Bild desselben Platzes (Stufe 2 Runde 2: vorher hingen die Beine 29 Bilder am fliegenden Teil 0). */
+    #define PZ_BILD_ENDE() do { if (slot_akt >= 0) { bilder++; \
+        if (slot_akt < 64) { int dif = 0; \
+            for (int k = 3; k <= 18; k++) if (gez[k]) { \
+                if (v_da[slot_akt] && (vw[slot_akt][k][0] != hw[k][0] || vw[slot_akt][k][1] != hw[k][1] || \
+                                       vw[slot_akt][k][2] != hw[k][2])) dif = 1; \
+                vw[slot_akt][k][0] = hw[k][0]; vw[slot_akt][k][1] = hw[k][1]; vw[slot_akt][k][2] = hw[k][2]; } \
+            if (dif) bewegt++; v_da[slot_akt] = 1; } \
+        if (gez[0] || gez[19]) koerper++; \
+        int fehlt = 0, unten = 0; \
+        for (int k = 3; k <= 18; k++) if (!gez[k]) fehlt = 1; \
+        if (!fehlt) for (int b = 0; b < 8; b++) if (!(hy[2 * b + 4] < hy[2 * b + 3])) unten++; \
+        if (fehlt) beine_fehlen++; else if (unten) ruecken++; else gut++; } } while (0)
+    while (fgets(z, sizeof z, f)) {
+        unsigned F; int s, b, mo, af, y, wx, wy, wz, sc = 0;
+        if (sscanf(z, "GS F=%u s=%d b=%d mo=%d af=%d y=%d w=(%d,%d,%d) sc=%d", &F, &s, &b, &mo, &af, &y, &wx, &wy, &wz, &sc) < 9)
+            continue;
+        if (sc) continue;   /* Scherben-Flug der geplatzten Teile (Wort & 0x08) ist kein Koerper */
+        if (F != bild || s != slot_akt) {
+            PZ_BILD_ENDE();
+            bild = F; slot_akt = s;
+            memset(gez, 0, sizeof gez); memset(hy, 0, sizeof hy);
+        }
+        if (b >= 0 && b < 20) { gez[b] = 1; hy[b] = wy; hw[b][0] = wx; hw[b][1] = wy; hw[b][2] = wz; }
+    }
+    PZ_BILD_ENDE();
+    #undef PZ_BILD_ENDE
+    fclose(f);
+    printf("pruef_zeichen: Bilder %d, auf den Beinen %d, auf dem Ruecken %d, Beine fehlen %d, Koerper 0/19 gezeichnet %d, "
+           "Bilder mit bewegten Beinen %d\n", bilder, gut, ruecken, beine_fehlen, koerper, bewegt);
+    return (bilder >= 30 && gut == bilder && !koerper && !bewegt) ? 0 : 1;
+}
+
 int main(int argc, char **argv)
 {
     if (argc >= 4 && !strcmp(argv[1], "pruef_log")) return pruef_log(argv[2], argv[3]);
+    if (argc >= 3 && !strcmp(argv[1], "pruef_zeichen")) return pruef_zeichen(argv[2]);
     if (argc >= 4 && !strcmp(argv[1], "pruef_lache")) return pruef_lache(argv[2], argv[3]);
     if (argc >= 3 && !strcmp(argv[1], "pruef_flecken")) return pruef_flecken(argv[2]);
     if (argc >= 4 && !strcmp(argv[1], "pruef_federn")) return pruef_federn(argv[2], argv[3]);

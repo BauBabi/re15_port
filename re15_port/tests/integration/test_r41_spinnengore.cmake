@@ -6,6 +6,8 @@ cmake_minimum_required(VERSION 3.16)
 # analysis/befunde_runde41/S_spinnengore.md. Gemessen vorher: RE2-Gehirn besitzt jede 0x25, +0x93 = 0x41 beim
 # Redhawk-Tod, Teilschicht aus (ta=0). Nachher: Teile 0/19 platzen, alle Beine fliegen (sh 0x80001, fl 0x7fff8).
 # Runde 42 Strang gore U7 (Nutzerregel 16.11.2026, 80 %-Video F08 F2 0:15,1-0:15,5): die Beine bleiben am Kadaver (fl ohne 0x7fff8).
+# Stufe 2 Runde 2: der Kadaver liegt im Disc-Platzweg-Clip 1 (letztes Bild gehalten) statt auf dem Ruecken (Clip 12/13);
+# L7 prueft zusaetzlich die gezeichnete Lage (pruef_zeichen).
 #
 #   ECHTER WEG: Debug-Sprung nach ROOM2070 (Leon) bzw. ROOM2071 (Elza, RE15_TITLE_SHOT_CHAR=1), Waffe per
 #   RE15_GIVE/RE15_EQUIP (die Super Redhawk liegt im Spiel in ROOM3050/3051 @RDT 0x1ec6), Zielen + Feuern im Wechsel
@@ -70,7 +72,7 @@ function(r41s_lauf _name _raum _waffe _art _lache)
         RE15_DEBUG_JUMP=${_raum}@250
         RE15_GIVE=${_waffe}:60 RE15_EQUIP=${_waffe}
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=5 "RE15_INPUT_SCRIPT=${_skript}"
-        RE15_SPINNEN_LOG=sp.log RE15_LACHE_LOG=lache.log
+        RE15_SPINNEN_LOG=sp.log RE15_LACHE_LOG=lache.log RE15_GORE_ZEICHEN_LOG=gz.log
         "RE15_EXIT_AT=400#${_raum}"
         "${_exe}")
     if(NOT EXISTS "${WORKDIR}/sp.log")
@@ -100,6 +102,19 @@ function(r41s_lauf _name _raum _waffe _art _lache)
 endfunction()
 
 r41s_lauf(L7 2070 7 platzt re2)
+# Runde 42 Gore U7, Stufe 2 Runde 2 (Pruefbericht s2 r1 Rot 1): was der ZEICHNER von der geplatzten Leiche setzt
+# (main.c GS-Zeilen): Teile 0/19 nicht gezeichnet, alle 16 Beinteile gezeichnet, jedes Knie hoeher als seine Huefte
+# (auf den Beinen liegend wie 80 % F2 0:15,0-0:15,5; auf dem Ruecken = Knie unten).
+if(EXISTS "${_basis}_L7/gz.log")
+    execute_process(COMMAND "${RE15_TOOL}" pruef_zeichen "${_basis}_L7/gz.log"
+                    WORKING_DIRECTORY "${_basis}_L7" TIMEOUT 120 RESULT_VARIABLE _rz OUTPUT_VARIABLE _oz)
+    message(STATUS "r41_spinnengore[L7] Zeichner\n${_oz}")
+    if(NOT _rz EQUAL 0)
+        set(_fehler "${_fehler}\n[L7] pruef_zeichen exit=${_rz}\n${_oz}")
+    endif()
+else()
+    set(_fehler "${_fehler}\n[L7] kein gz.log (Zeichner-Messschiene)")
+endif()
 r41s_lauf(E7 2071 7 platzt - RE15_TITLE_SHOT_CHAR=1)
 r41s_lauf(L8 2070 8 bein -)
 r41s_lauf(L7AUS 2070 7 aus - RE15_KEIN_80PROZENT_GORE=1)

@@ -11400,6 +11400,16 @@ re_title:;
                          * Lage, die die Riegel pruefen). Ein Teil, das `continue` oben auslaesst, erscheint nicht. */
                         static FILE *s_gz = NULL; static int s_gz_init = 0;
                         if (!s_gz_init) { s_gz_init = 1; const char *gp = getenv("RE15_GORE_ZEICHEN_LOG"); if (gp && *gp) s_gz = fopen(gp, "w"); }
+                        /* Runde 42 Gore U7, Stufe 2 Runde 2 (Pruefbericht s2 r1 Rot 1, kein Verhalten): je GEZEICHNETEM Teil einer
+                         * toten Spinne 0x25 (Zustand 7) die Welt-Lage, mit der der Zeichner es setzt. Teile, die `continue` oben
+                         * auslaesst (un-Bit), erscheinen nicht; sc=1 = als Scherben gezeichnet (Wort & 0x08, @0x80023410). Auswerter test_r41_spinnengore pruef_zeichen. */
+                        if (s_gz && npc->type == 0x25u && npc->state == 7u) {
+                            fprintf(s_gz, "GS F=%u s=%d b=%d mo=%d af=%d y=%d w=(%d,%d,%d) sc=%d\n",
+                                    (unsigned)g_engine.frame_count, (int)(npc - g_actors), nbi, (int)npc->motion,
+                                    (int)npc->anim_frame, (int)npc->y,
+                                    (int)nbone_world_trans[0], (int)nbone_world_trans[1], (int)nbone_world_trans[2], r15_scherben);
+                            fflush(s_gz);
+                        }
                         if (s_gz && nbi <= 7 && npc->type >= 0x10u && npc->type <= 0x18u &&
                             (npc->hp < 0 || npc->re2z_rag_anchor_on || npc->re2z_ok_modus != 0u)) {
                             int32_t q[3];

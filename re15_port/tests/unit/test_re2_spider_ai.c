@@ -15,6 +15,7 @@
 #include "re15_enemy_ai.h"
 #include "re15_damage.h"
 #include "re15_aot.h"        /* sce-8-Wasserzone fuer den FUN_800527B4-Kanal */
+#include "re15_spinnengore_r41.h" /* Runde 42 Gore U7: reiner RE2-Pin ohne die 80 %-Liege-Pose */
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
@@ -474,9 +475,13 @@ int main(void)
     /* ---- F5. DEATH-Sonderzeile @0x801044D0 (Modus 0 @0x8010452C) -> BABY-SPINNEN -----------
      * w7 -> Zeile 5. P0: +0x23A = 1 (@0x80104574), Clip-Wort 0x0007000C (@0x80104578),
      * FUN_80105D38(self, 0x2002, (rand&3)+6) (@0x80104590-A4) = 6..9 Kinder vom Typ 0x26. */
-    {   fresh(2000, 0, 0); tick();
+    /* Runde 42 Gore U7 (Stufe 2 Runde 2): unter der 80 %-Gestaltung setzt das Platzen danach den Disc-Platzweg-Clip 1
+     * (spinnengore_r41.c, Riegel test_r42_tiere 145-149). Dieser Abschnitt pinnt das reine RE2-Wort -> Schalter aus. */
+    {   re15_spinnengore_test_schalter(0);
+        fresh(2000, 0, 0); tick();
         SP->state = 3; SP->sub_state_1 = 7; SP->sub_state_2 = 0;
         tick();
+        re15_spinnengore_test_schalter(-1);
         CHECK(SP->re2s_row23c == 5, "DEATH w7 -> Zeile 5 (@0x801044D0)");
         CHECK(SP->re2s_c23a == 1, "DEATH-Sonderzeile P0: +0x23A = 1 @0x80104574 (ist %d)",
               (int)SP->re2s_c23a);

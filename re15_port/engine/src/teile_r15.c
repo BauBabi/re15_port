@@ -111,7 +111,7 @@ int re15_teil_stufe(int slot, int k, int parent, int32_t rot[9], int32_t trans[3
         versetzt = 1;
     } else {
         t->fest = 0;
-        if (parent >= 0 && parent < RE15_TEILE_MAX && s_versetzt[parent]) {
+        if (parent >= 0 && parent < RE15_TEILE_MAX && s_versetzt[parent] && !s_teile[slot][parent].keine_kinder) {
             /* +0x40 = Eltern+0x40 (Ergebnis) o lokal (CompMatrix 0x80022da0 @0x8001ea24); lokal = Pose_p^T o Pose_k. */
             int32_t pt[9]; for (int i = 0; i < 3; i++) for (int j = 0; j < 3; j++) pt[i*3+j] = s_pose_r[parent][j*3+i];
             int32_t lr[9]; mul33(pt, rot, lr);

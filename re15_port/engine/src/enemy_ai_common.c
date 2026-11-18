@@ -11177,6 +11177,16 @@ static int re15_aspider_anim(re15_actor_t *e)
     if (e->anim_frac > 0) e->anim_frac--;
     return done;
 }
+/* Runde 42 Gore U7, Stufe 2 Runde 2: Liege-Pose des Platzwegs = letztes Bild von Clip 1 (`sb v1(1),0x94` @0x80114058; die
+ * Leiche 0x801153d4 spielt im Platzweg keinen Clip, @0x801154b4). */
+static void re15_aspider_platz_halten(re15_actor_t *e)
+{
+    re15_enemy_bank_t *pb = re15_enemy_find(e->type);
+    int pfc = (pb && pb->ok && 1 < pb->anim.clip_count) ? pb->anim.clips[1].frame_count : 0;
+    e->motion = 1;
+    e->anim_frame = (uint8_t)((pfc > 0) ? pfc - 1 : 0);
+    e->anim_frac = 0;
+}
 #include "re15_spinne_r42.h"
 #include "spinne_r42.inc"   /* Runde 42: Wand/Absatz/Decke 0x801118a8 + ACT 9/10/12/13 (STAGE2) */
 static void re15_adult_spider_ai_tick(int slot)
@@ -11527,6 +11537,8 @@ static void re15_adult_spider_ai_tick(int slot)
             e->sub_state_3 = 1;
         } else if (re15_aspider_anim(e)) {
             e->state = 7;
+            if (re15_spinnengore_platzwaffe(e->sub_state_1))
+                re15_aspider_platz_halten(e);   /* Runde 42 Gore U7: der Wrap auf Bild 0 ist kein Bild (Leiche haelt die Pose) */
             /* Runde 41 Spur S, Nachbesserung 2: Eintritts-Phase der Leiche je Todesweg (+0x7): Platzweg 0x80113ff8
              * Phase 2 `sw v0(7),4(v1)` @0x80114578-80 -> 0; Weg 0x8011461c Phase 4 `sw v1(0x03000007),4(v0)`
              * @0x80114d4c-60 -> 3. Die Wurzel waehlt den Weg ueber +0x5 (Tabelle @0x80118f38). */
@@ -11540,8 +11552,17 @@ static void re15_adult_spider_ai_tick(int slot)
                * je Takt wachsen (@0x801154a8-b8); am Ende Raum-SE 9 (@0x801155bc-cc). Offen bleibt das Flag-Wort |= 2|0x40.
                * Der Port posiert die Leiche wie bisher mit Clip 5 (Original: Phase 3 `sb 5,148` @0x80115520). */
         re15_spinnenlache_r15_leiche(e);
-        if (e->motion != 5) re15_aspider_clip(e, 5);
-        re15_aspider_anim(e);
+        if (re15_spinnengore_platzwaffe(e->sub_state_1)) {
+            /* ⛔ Runde 42 Gore U7, Stufe 2 Runde 2: der PLATZWEG (+0x5 -> Tabelle @0x80118f38 -> 0x80113ff8, Eintritt +0x7 = 0)
+             * setzt in der Leiche KEINEN Clip und spielt keinen (Phase 0 @0x80115414-68, Phase 1 `j 0x8011559c` @0x801154b4 am
+             * `jal 0x8001f314` @0x80115594 vorbei): der Kadaver bleibt auf dem letzten Bild des Tod-Clips 1 liegen
+             * (`sb v1(1),0x94` @0x80114058) - flach mit den Knien oben, wie im 80 %-Video F2 0:15,0-0:15,5. Vorher
+             * posierte der Port jede Leiche mit Clip 5 (auf dem Ruecken). Clip 5 bleibt dem leichten Tod (@0x80115520). */
+            re15_aspider_platz_halten(e);
+        } else {
+            if (e->motion != 5) re15_aspider_clip(e, 5);
+            re15_aspider_anim(e);
+        }
         break;
 
     default:  /* unreachable states -> resume the brain */
