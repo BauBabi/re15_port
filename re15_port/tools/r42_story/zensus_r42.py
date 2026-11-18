@@ -276,6 +276,9 @@ ZEILEN = [
     # ---- Block A: Finale 5090 Leon (L22, K-11; Strang finale Stufe 1, include/re15_finale_r42.h RE15_FI_MSG_ZEILE_LEON) ----
     ("A", V31, 0x5090, 2, "NEU", "Leon", "Game over.", "", "beim Abschuss mit dem Raketenwerfer; Aufnahme = voice/leon/VOICE07.XAS[1]_02.wav (RE2, K-11) nach synchro kopieren", "L22 K-11"),
     ("A", V31, 0x5091, 2, "NEU", "Elza", "You lose, big guy!", "", "beim Abschuss mit dem Raketenwerfer; Aufnahme = voice/Clair/VOICE17.XAS[7]_1.wav (RE2 Claire, K-11) nach synchro kopieren", "E-20 K-11"),
+    # ---- Block A: Wurfszene (K-13, Strang finale Stufe 3, include/re15_finale_wurf_r42.h RE15_FW_MSG_ZURUF; Nutzer 17.11.) ----
+    ("A", V31, 0x5090, 3, "NEU", "John", "Leon, catch! Send him to hell!", "", "ruft laut ueber den Wagen, wirft dabei den Raketenwerfer (RE2: Adas Ruf beim Zuwerfen)", "L22 K-13"),
+    ("A", V31, 0x5091, 3, "NEU", "John", "Elza, catch! Let's finish this!", "", "ruft laut ueber den Wagen, wirft dabei den Raketenwerfer (RE2: Adas Ruf beim Zuwerfen)", "E-20 K-13"),
 ]
 
 BITS = [  # (makro, bit, block, gebaut, zweck)
@@ -287,6 +290,7 @@ BITS = [  # (makro, bit, block, gebaut, zweck)
     ("RE15_R42_BIT_3020_SCHUESSE", 123, "B", V31, "3020: Leon hoert die Schuesse (L5)"),
     ("RE15_R42_BIT_3060_UEBERGABE", 124, "B", V31, "3060: Wiedersehen + Uebergabe, oeffnet Kartentuer 3010 (L5-L7, L-10)"),
     ("RE15_R42_BIT_FINALE_ENDE", 129, "A", V31, "Finale beendet, Abspann frei (T-07)"),
+    ("RE15_R42_BIT_WERFER_FINALE", 137, "A", V31, "Raketenwerfer aus der Wurfszene 5090/5091 aufgehoben (K-13, Strang finale S5)"),
     ("RE15_R42_BIT_ZUG_ELZA", 130, "C", V31, "Zugstart 6031 gesehen (E9)"),
     ("RE15_R42_BIT_ALARM", 131, "C", V32, "Alarm/Durchsage 5060/5061 (L13/E4)"),
     ("RE15_R42_BIT_IMPFUNG", 132, "C", V32, "Begleiter geimpft 4010/5011 (L13/E4)"),
@@ -308,6 +312,10 @@ BITS = [  # (makro, bit, block, gebaut, zweck)
     ("RE15_R42_BIT_PLAN_UBAHN", 37, "C", V32, "Lageplan U-Bahn 6010/6011 (6b)"),
 ]
 DISC_BIT_OK = {17}
+# N6-Ausnahme: neue Zeilen, deren Aufnahme der Nutzer schon nach synchro/ hat legen lassen (Commit a89c8254f auf r42/finale,
+# Nutzer 18.11.2026 "selbstverständlich! Sollst du sogar!"): Kopien von voice/leon/VOICE07.XAS[1]_02.wav bzw.
+# voice/Clair/VOICE17.XAS[7]_1.wav (K-11).
+SCHON_AUFGENOMMEN = {(0x5090, 2): "RE2 Leon VOICE07.XAS[1]_02, a89c8254f", (0x5091, 2): "RE2 Claire VOICE17.XAS[7]_1, a89c8254f"}
 # Bank-9-Bits offener, noch nicht integrierter Zweige (git diff HEAD...<zweig> -- test_r36_kartenbits.c, 2026-11-14).
 # 38/39 nachgetragen 2026-11-16 (Pruefer Kleinkram R1): include/re15_birkin_formen.h `#define RE15_BF_HANGAR_BANK 9`,
 # `#define RE15_BF_HANGAR_BIT 38`, `#define RE15_BF_BESIEGT_BIT 39` in r41/sichel_szene (Z. 153/174), r42/hangar_aussen
@@ -427,9 +435,11 @@ def pruefen():
                 msgs.append("N5 Id gibt es nicht"); fehler += 1
         voice = stimme(r, i)
         da = os.path.exists(os.path.join(REPO, voice)) or os.path.exists(os.path.join(HAUPT, voice))
-        if art == "NEU" and da:
-            msgs.append("N6 Datei liegt schon: %s" % voice); fehler += 1
         hinweis = ""
+        if art == "NEU" and da and (r, i) in SCHON_AUFGENOMMEN:
+            hinweis = "Aufnahme liegt (%s)" % SCHON_AUFGENOMMEN[(r, i)]
+        elif art == "NEU" and da:
+            msgs.append("N6 Datei liegt schon: %s" % voice); fehler += 1
         if art == "NEUAUF":
             hinweis = "alte Aufnahme liegt" if da else "keine alte Aufnahme"
         print("  %s %s ROOM%04X %2d %-6s %-9s %s %s%s" % (

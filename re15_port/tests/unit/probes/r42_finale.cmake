@@ -37,3 +37,26 @@ target_include_directories(test_r42_finale_assets PRIVATE ${CMAKE_SOURCE_DIR}/in
 target_compile_definitions(test_r42_finale_assets PRIVATE RE15_REPO_ROOT="${_r42f_repo_root}" RE15_ASSETS_PATH=${RE15_ASSETS_PATH})
 add_test(NAME unit_r42_finale_assets COMMAND test_r42_finale_assets)
 set_tests_properties(unit_r42_finale_assets PROPERTIES TIMEOUT 120)
+# Stufe 3 (Plan S5, include/re15_finale_wurf_r42.h): Wurfszene - Quellbytes, Programm = sub12, Flugschleife, Aufnahme ohne Verlust
+# der Zellen 8/9, JOHN_49_WURF.EMD / R702_WERFER.* bytegleich (tests/unit/test_r42_finale_wurf.c), Integrationslaeufe Leon/Elza
+# (tests/integration/test_r42_finale_wurf.cmake).
+add_executable(test_r42_finale_wurf ${CMAKE_CURRENT_LIST_DIR}/../test_r42_finale_wurf.c)
+target_link_libraries(test_r42_finale_wurf PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_finale_wurf PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_finale_wurf PRIVATE RE15_REPO_ROOT="${_r42f_repo_root}" RE15_ASSETS_PATH=${RE15_ASSETS_PATH})
+if(NOT WIN32)
+    target_link_libraries(test_r42_finale_wurf PRIVATE m)
+endif()
+add_test(NAME unit_r42_finale_wurf COMMAND test_r42_finale_wurf)
+set_tests_properties(unit_r42_finale_wurf PROPERTIES TIMEOUT 120)
+if(TARGET re15_pc)
+    foreach(_fw_teil leon elza)
+        add_test(NAME integration_r42_finale_wurf_${_fw_teil}
+                 COMMAND "${CMAKE_COMMAND}"
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r42_finale_wurf_${_fw_teil}_wd
+                         -DTEIL=${_fw_teil}
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_finale_wurf.cmake)
+        set_tests_properties(integration_r42_finale_wurf_${_fw_teil} PROPERTIES TIMEOUT 600)
+    endforeach()
+endif()

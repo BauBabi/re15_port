@@ -231,8 +231,10 @@
   C v0.8.32 ROOM6010 31 SYS    System    OK You've taken the subway map.
   C v0.8.32 ROOM6011 30 SYS    System    OK There's a map on the wall. Will you take it?
   C v0.8.32 ROOM6011 31 SYS    System    OK You've taken the subway map.
-  A v0.8.31 ROOM5090  2 NEU    Leon      OK Game over.
-  A v0.8.31 ROOM5091  2 NEU    Elza      OK You lose, big guy!
+  A v0.8.31 ROOM5090  2 NEU    Leon      OK (Aufnahme liegt (RE2 Leon VOICE07.XAS[1]_02, a89c8254f)) Game over.
+  A v0.8.31 ROOM5091  2 NEU    Elza      OK (Aufnahme liegt (RE2 Claire VOICE17.XAS[7]_1, a89c8254f)) You lose, big guy!
+  A v0.8.31 ROOM5090  3 NEU    John      OK Leon, catch! Send him to hell!
+  A v0.8.31 ROOM5091  3 NEU    John      OK Elza, catch! Let's finish this!
 
 -- Bank-9-Bits --
   Original (Mod-Baum): 85 belegt; Port: 70 belegt; 40-%-Disc: 15 belegt
@@ -251,9 +253,11 @@
   Bit 124 RE15_R42_BIT_3060_UEBERGABE  B   v0.8.31 OK  3060: Wiedersehen + Uebergabe, oeffnet Kartentuer 3010 (L5-L7, L-10)
           EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_3060_UEBERGABE): engine/src/story3a_r42.c (Wrapper, RE15_R42_BIT_3060_UEBERGABE), engine/src/story3a_r42.c:414
   Bit 129 RE15_R42_BIT_FINALE_ENDE     A   v0.8.31 OK  Finale beendet, Abspann frei (T-07)
-          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_FINALE_ENDE): engine/src/aot_common.c:731, engine/src/finale_r42.c:112, engine/src/finale_r42.c:364, engine/src/scd_vm.c (Wrapper, RE15_R42_BIT_FINALE_ENDE), engine/src/scd_vm.c:1286
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_FINALE_ENDE): engine/src/aot_common.c:731, engine/src/finale_r42.c:148, engine/src/finale_r42.c:491, engine/src/scd_vm.c (Wrapper, RE15_R42_BIT_FINALE_ENDE), engine/src/scd_vm.c:1286, platform/pc/main.c:5386
+  Bit 137 RE15_R42_BIT_WERFER_FINALE   A   v0.8.31 OK  Raketenwerfer aus der Wurfszene 5090/5091 aufgehoben (K-13, Strang finale S5)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_WERFER_FINALE): engine/src/finale_wurf_r42.c:175, engine/src/finale_wurf_r42.c:385, engine/src/item_modal_common.c (Wrapper, RE15_R42_BIT_WERFER_FINALE)
   Bit 130 RE15_R42_BIT_ZUG_ELZA        C   v0.8.31 OK  Zugstart 6031 gesehen (E9)
-          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_ZUG_ELZA): engine/src/gen/story6_r42_szenen.inc:75, engine/src/story6_r42.c:108
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_ZUG_ELZA): engine/src/gen/story6_r42_szenen.inc:79, engine/src/story6_r42.c:108, engine/src/zug_r42.c:36
   Bit 131 RE15_R42_BIT_ALARM           C   v0.8.32 OK  Alarm/Durchsage 5060/5061 (L13/E4)
   Bit 132 RE15_R42_BIT_IMPFUNG         C   v0.8.32 OK  Begleiter geimpft 4010/5011 (L13/E4)
   Bit  23 RE15_R42_BIT_SCHUTZRAUM      C   v0.8.32 OK  Schutzraum-Szene 6020/6021 (L18/E5)
@@ -273,6 +277,6 @@
           EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_PLAN_FABRIK): engine/src/story3a_r42.c (Wrapper, RE15_R42_BIT_PLAN_FABRIK)
   Bit  36 RE15_R42_BIT_PLAN_FORSCHUNG  C   v0.8.32 OK  Lageplan Forschungszentrum 4010/4011 (6b)
   Bit  37 RE15_R42_BIT_PLAN_UBAHN      C   v0.8.32 OK  Lageplan U-Bahn 6010/6011 (6b)
-  danach noch frei (Original, Port, Disc): 76 Bits, Auszug [0, 3, 4, 7, 8, 9, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 137, 139, 145, 156, 157, 158]
+  danach noch frei (Original, Port, Disc): 75 Bits, Auszug [0, 3, 4, 7, 8, 9, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 139, 145, 156, 157, 158, 159]
 
-ERGEBNIS: FREI (183 Zeilen, 27 Bits, 0 Fehler)
+ERGEBNIS: FREI (185 Zeilen, 28 Bits, 0 Fehler)

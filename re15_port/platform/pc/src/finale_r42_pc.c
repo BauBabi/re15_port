@@ -19,6 +19,12 @@
 #include "re15_engine.h"
 #include "re15_finale_r42.h"
 #include "asset_root_pc.h"             /* re15_pc_read_re2 */
+#include "re15_finale_wurf_r42.h"      /* Stufe 3: Werfer-Lage */
+#include "re15_md1.h"
+#include "re15_tim.h"
+#include "re15_camera.h"
+#include "re15_light.h"
+#include "re15_objpoly_r38.h"
 
 extern long re15_audio_cap_tick(void);   /* audio_pc.c: Mitschnitt-Takt */
 extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
@@ -74,3 +80,128 @@ static void spielen(int satz)
 unsigned re15_pc_finale_r42_gespielt(void) { return s_gespielt; }
 
 void re15_pc_finale_r42_init(void) { re15_finale_r42_se_hook(spielen); }
+
+/* ---- Stufe 3 (Plan S5/D13): der geworfene Raketenwerfer = RE2 ROOM7020 Raumobjekt 0 (shared_assets/RE2/R702_WERFER.MD1/.TIM,
+ * tools/r42_finale/re2_r702_esp.py: OBJ-Tabelle @0x00264 `9c 4f 02 00 44 20 00 00` = TIM @0x24F9C, MD1 @0x02044). Gezeichnet wie ein
+ * RDT-Prop und wie der Kanister (kanister2080_pc.c: view x Welt, RTPT/NCLIP ueber objpoly_r38, Licht des aktiven Cuts). TIM-Platz 57
+ * (render_pc.c RE15_TIM_SLOT_MAX: "57 = bis v0.8.30 Tunnellampen des G5-Auftritts, seit Runde 42 frei"). Plan-D13-Vorbehalt
+ * (Aussehen gegen PL00W12.PLW, U12) offen. */
+#define FW_TIM_SLOT 57
+extern void re15_render_pc_bind_tim_slot(int slot);
+extern void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot);
+static int        s_w_modell;          /* 0 ungeprueft, 1 geladen, -1 fehlt */
+static uint8_t   *s_w_md1_raw;
+static re15_md1_t s_w_md1;
+
+static int werfer_laden(void)
+{
+    if (s_w_modell) return s_w_modell > 0;
+    s_w_modell = -1;
+    int n = 0;
+    s_w_md1_raw = re15_pc_read_re2("R702_WERFER.MD1", &n);
+    if (!s_w_md1_raw || re15_md1_parse(s_w_md1_raw, n, &s_w_md1) != 0 || s_w_md1.mesh_count < 1) {
+        fprintf(stderr, "[finale] shared_assets/RE2/R702_WERFER.MD1 fehlt/unlesbar -> kein Werfer-Modell\n");
+        return 0;
+    }
+    int tn = 0;
+    uint8_t *tim_raw = re15_pc_read_re2("R702_WERFER.TIM", &tn);
+    re15_tim_t tim;
+    if (!tim_raw || re15_tim_parse(tim_raw, tn, &tim) != 0) {
+        fprintf(stderr, "[finale] shared_assets/RE2/R702_WERFER.TIM fehlt/unlesbar -> kein Werfer-Modell\n");
+        free(tim_raw); return 0;
+    }
+    re15_render_pc_upload_tim_slot(&tim, FW_TIM_SLOT);
+    free(tim_raw);
+    s_w_modell = 1;
+    fprintf(stderr, "[finale] Werfer-Modell R702_WERFER geladen: %d Meshes, TIM-Platz %d\n", s_w_md1.mesh_count, FW_TIM_SLOT);
+    return 1;
+}
+
+static unsigned s_w_dreiecke;
+unsigned re15_pc_finale_wurf_dreiecke(void) { return s_w_dreiecke; }
+
+void re15_pc_finale_wurf_zeichnen(const void *cam_view_v, int cx, int cy)
+{
+    int32_t pos[3], rot[9];
+    if (!re15_finale_wurf_werfer_lage(pos, rot)) return;
+    if (!werfer_laden()) return;
+    const re15_camera_view_t *cam_view = (const re15_camera_view_t *)cam_view_v;
+    re15_render_pc_bind_tim_slot(FW_TIM_SLOT);
+    re15_actor_lightctx_t lw, lctx;
+    if (g_re15_room_lights_ok && g_re15_active_cut >= 0 && g_re15_active_cut < g_re15_room_lights.cut_count) {
+        re15_light_setup_actor(&g_re15_room_lights.cuts[g_re15_active_cut], pos, NULL, &lw);
+        re15_light_ctx_rotate_for_bone(&lw, rot, &lctx);
+    } else {
+        memset(&lctx, 0, sizeof lctx);
+    }
+    int32_t bm[9], bt[3];
+    re15_camera_compose_view_bone(cam_view, rot, pos, bm, bt);
+    unsigned tris = 0;
+    int x0 = 9999, x1 = -9999, y0 = 9999, y1 = -9999;
+    for (int mi = 0; mi < s_w_md1.mesh_count; mi++) {
+        const re15_md1_mesh_t *hm = &s_w_md1.meshes[mi];
+        for (int ti = 0; ti < hm->triangle_count; ti++) {
+            const re15_md1_triangle_t *tr = &hm->triangles[ti];
+            if (tr->v0 >= (uint32_t)hm->tri_vertex_count || tr->v1 >= (uint32_t)hm->tri_vertex_count
+                || tr->v2 >= (uint32_t)hm->tri_vertex_count) continue;
+            const re15_md1_vertex_t *vp[3] = { &hm->tri_vertices[tr->v0], &hm->tri_vertices[tr->v1], &hm->tri_vertices[tr->v2] };
+            int ax[3], ay[3], wz = 0;
+            if (!re15_objpoly_r38_tri_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz)) continue;
+            const re15_md1_tri_uv_t *uv = &hm->triangle_uvs[ti];
+            int po = (int)((uv->page & 0x000F) * 128);
+            uint8_t c[3][3];
+            for (int k = 0; k < 3; k++) {
+                uint32_t ni = (k == 0) ? tr->n0 : (k == 1) ? tr->n1 : tr->n2;
+                if (hm->tri_normals && ni < (uint32_t)hm->tri_normal_count)
+                    re15_light_shade_vertex(&lctx, hm->tri_normals[ni].x, hm->tri_normals[ni].y, hm->tri_normals[ni].z,
+                                            &c[k][0], &c[k][1], &c[k][2]);
+                else { c[k][0] = g_re15_light_tint[0]; c[k][1] = g_re15_light_tint[1]; c[k][2] = g_re15_light_tint[2]; }
+                if (ax[k] < x0) x0 = ax[k]; if (ax[k] > x1) x1 = ax[k];
+                if (ay[k] < y0) y0 = ay[k]; if (ay[k] > y1) y1 = ay[k];
+            }
+            re15_render_textured_tri_lit(ax[0], ay[0], (int)uv->u0 + po, (int)uv->v0, ax[1], ay[1], (int)uv->u1 + po, (int)uv->v1,
+                                         ax[2], ay[2], (int)uv->u2 + po, (int)uv->v2, (int)uv->page, (int)uv->clut, wz,
+                                         c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2], c[2][0], c[2][1], c[2][2]);
+            tris++;
+        }
+        for (int qi = 0; qi < hm->quad_count; qi++) {
+            const re15_md1_quad_t *qd = &hm->quads[qi];
+            if (qd->v0 >= (uint32_t)hm->quad_vertex_count || qd->v1 >= (uint32_t)hm->quad_vertex_count
+                || qd->v2 >= (uint32_t)hm->quad_vertex_count || qd->v3 >= (uint32_t)hm->quad_vertex_count) continue;
+            const re15_md1_vertex_t *vp[4] = { &hm->quad_vertices[qd->v0], &hm->quad_vertices[qd->v1],
+                                               &hm->quad_vertices[qd->v2], &hm->quad_vertices[qd->v3] };
+            int ax[4], ay[4], wz = 0; uint8_t ok[2];
+            if (!re15_objpoly_r38_quad_mesh(vp, bm, bt, cam_view->fov_screen_dist, cx, cy, ax, ay, &wz, ok)) continue;
+            const re15_md1_quad_uv_t *uv = &hm->quad_uvs[qi];
+            int po = (int)((uv->page & 0x000F) * 128);
+            uint8_t c[4][3];
+            for (int k = 0; k < 4; k++) {
+                uint32_t ni = (k == 0) ? qd->n0 : (k == 1) ? qd->n1 : (k == 2) ? qd->n2 : qd->n3;
+                if (hm->quad_normals && ni < (uint32_t)hm->quad_normal_count)
+                    re15_light_shade_vertex(&lctx, hm->quad_normals[ni].x, hm->quad_normals[ni].y, hm->quad_normals[ni].z,
+                                            &c[k][0], &c[k][1], &c[k][2]);
+                else { c[k][0] = g_re15_light_tint[0]; c[k][1] = g_re15_light_tint[1]; c[k][2] = g_re15_light_tint[2]; }
+                if (ax[k] < x0) x0 = ax[k]; if (ax[k] > x1) x1 = ax[k];
+                if (ay[k] < y0) y0 = ay[k]; if (ay[k] > y1) y1 = ay[k];
+            }
+            if (ok[0])
+                re15_render_textured_tri_lit(ax[0], ay[0], (int)uv->u0 + po, (int)uv->v0, ax[1], ay[1], (int)uv->u1 + po, (int)uv->v1,
+                                             ax[3], ay[3], (int)uv->u3 + po, (int)uv->v3, (int)uv->page, (int)uv->clut, wz,
+                                             c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2], c[3][0], c[3][1], c[3][2]);
+            if (ok[1])
+                re15_render_textured_tri_lit(ax[0], ay[0], (int)uv->u0 + po, (int)uv->v0, ax[3], ay[3], (int)uv->u3 + po, (int)uv->v3,
+                                             ax[2], ay[2], (int)uv->u2 + po, (int)uv->v2, (int)uv->page, (int)uv->clut, wz,
+                                             c[0][0], c[0][1], c[0][2], c[3][0], c[3][1], c[3][2], c[2][0], c[2][1], c[2][2]);
+            tris++;
+        }
+    }
+    s_w_dreiecke += tris;
+    /* Messzeile bei jedem Zustands- und Schnittwechsel (Hand/Flug/liegt) */
+    static int s_alt_z = -1, s_alt_cut = -99;
+    const int z = re15_finale_wurf_werfer_zustand();
+    if (z != s_alt_z || g_re15_active_cut != s_alt_cut) {
+        s_alt_z = z; s_alt_cut = g_re15_active_cut;
+        fprintf(stderr, "[finale] F%u Werfer gezeichnet: Zustand %d Lage (%d,%d,%d) Cut %d Flaechen %u Kasten (%d..%d,%d..%d)\n",
+                (unsigned)g_engine.frame_count, z, (int)pos[0], (int)pos[1], (int)pos[2], g_re15_active_cut, tris, x0, x1, y0, y1);
+    }
+}

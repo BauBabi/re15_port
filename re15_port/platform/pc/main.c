@@ -978,6 +978,19 @@ static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
         }
         if (an) fprintf(stderr, "[enemy] EM%02X: RE2/%s fehlt -> Auslieferungsmodell\n", type, an);
     }
+    /* Runde 42 Strang finale Stufe 3 (re15_finale_wurf_r42.h): John (0x49) in 5090/5091 mit Adas Wurf-Clip als Clip 24 (Paar 1),
+     * sonst bytegleich der 0x49-Block (tools/r42_finale/john_wurf_modell.py). Fehlt die Datei: Auslieferungsmodell (kein Wurf-Clip). */
+    {
+        extern const char *re15_finale_wurf_emd_datei(uint8_t type);
+        const char *fw = re15_finale_wurf_emd_datei(type);
+        int sz = 0; uint8_t *buf;
+        if (fw && (buf = re15_pc_read_re2(fw, &sz)) != NULL) {
+            if (out_len) *out_len = (size_t)sz;
+            fprintf(stderr, "[enemy] EM%02X: Ersatzmodell RE2/%s (Raum %04X)\n", type, fw, g_current_room_id);
+            return buf;
+        }
+        if (fw) fprintf(stderr, "[enemy] EM%02X: RE2/%s fehlt -> Auslieferungsmodell\n", type, fw);
+    }
     { extern uint8_t *re15_roy_pc_emd(uint8_t, size_t *);   /* Runde 37 Spur K/N: JEDER Typ aus CDEMD1.EMS, */
       uint8_t *rb = re15_roy_pc_emd(type, out_len);          /* wenn das Elza-Bit beim Sce_em_set stand    */
       if (rb) return rb; }                                   /* (bltz @0x80022334, Datei 0x27), roy_pc.c   */
@@ -11831,6 +11844,7 @@ re_title:;
 
             re15_gr2_pc_zeichnen(&cam_view, cx, cy);   /* Runde 41 Spur B: Kanister-Prop (ROOM40A0 Modell 1) */
             { extern void re15_k2080_pc_zeichnen(const void *, int, int); re15_k2080_pc_zeichnen(&cam_view, cx, cy); }   /* Runde 41 Spur G: Kanister in 2080 */
+            { extern void re15_pc_finale_wurf_zeichnen(const void *, int, int); re15_pc_finale_wurf_zeichnen(&cam_view, cx, cy); }   /* Runde 42 finale S5: Raketenwerfer */
 
             /* Cut/player HUD + projection marker silenced. */
             (void)active_cut_count;

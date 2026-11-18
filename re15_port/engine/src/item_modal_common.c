@@ -226,6 +226,10 @@ void re15_item_modal_tick(uint16_t pad_edge, uint16_t pad_held)
                   * then FUN_80027e68(a1=0x100) opens the item prompt — script[0] "WILL YOU TAKE THE
                   * <item>." Yes/No if there's room, script[1] "YOU CAN'T CARRY ANY MORE ITEMS" if full
                   * (a2 = weapon/slot branch @0x8001df40-df48). NOT a fade, NOT audio. state=6. */
+            /* Runde 42 Strang finale Stufe 3 (Auftrag "ohne die Zellen 8/9 zu verlieren"): NUR der geworfene Raketenwerfer
+             * (Taken-Bit RE15_R42_BIT_WERFER_FINALE) schliesst vorher die Luecken (FUN_8004dadc), damit der 2-Zellen-Schub
+             * unten (inventory_common.c:40-55) nichts aus 8/9 schiebt. Jede andere Aufnahme bleibt byte-true. */
+            { extern void re15_finale_wurf_vor_aufnahme(uint8_t, uint8_t); re15_finale_wurf_vor_aufnahme(s_type, s_taken); }
             s_grant   = inv_free_slot();
             /* WIDE WEAPON (id 0x0e-0x13) needs a 2-cell front-shift (FUN_8004dc4c); the original state-5
              * weapon branch (@0x8001df40 `addiu -14; sltiu 6` gates id in [0x0e,0x13]; then reads the

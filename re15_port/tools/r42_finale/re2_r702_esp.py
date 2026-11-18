@@ -18,6 +18,11 @@ Quelle: info/re2leon/PL0/RDT/ROOM7020.RDT. Kopf: 8 Byte Zaehler, dann 23 Offsets
                    Satz 0x0F (@0x05CCC `00 00 c3 20`) = Einschlag (Se_on 0x020F0001 @0x80103b54-5c, CDEMD0 EM2B), Satz 0x0E (@0x05CC8) =
                    Landung des Werfers (ROOM7020 sub13, Stufe 3). Runde 3 (Pruefbericht s1 r2 R2).
 
+  R702_WERFER.MD1/.TIM = Raumobjekt 0 = der Raketenwerfer, den Ada wirft (Stufe 3, Plan D13): OBJ-Tabelle @0x00264
+                   `9c 4f 02 00 44 20 00 00` (RDT-Kopf offs[10] = 0x264, nOmodel 1 @0x0002) = TIM @0x24F9C, MD1 @0x02044; das MD1 reicht bis
+                   zum naechsten Block, dem ESP @0x02788 (offs[18]); das TIM bis zum Dateiende 0x271BC (Kopf-Laengen geprueft).
+                   Gesetzt von MAIN sub00 Obj_model_set @0x01150 (Objekt 0), an Adas Hand gehaengt Super_set @0x01854.
+
 Aufruf: python re15_port/tools/r42_finale/re2_r702_esp.py [--install]   (ohne --install nach build/r42_finale_esp)
 Ausgabe: Name, Laenge, md5.
 """
@@ -90,13 +95,36 @@ def tonbank(a):
     return teile
 
 
+def werfer(a):
+    """Raumobjekt 0 (OBJ-Tabelle @0x264): (MD1, TIM)."""
+    assert a[2] == 1, "nOmodel (Kopf `00 10 01 ..` = nSprite 0, nCut 16, nOmodel 1)"
+    assert struct.unpack_from("<I", a, 8 + 10 * 4)[0] == 0x264, "offs[10]"
+    tim_off, md1_off = struct.unpack_from("<II", a, 0x264)
+    if (tim_off, md1_off) != (0x24F9C, 0x2044):
+        die("OBJ-Tabelle @0x264: %x %x" % (tim_off, md1_off))
+    md1 = a[md1_off:ESP_VON]
+    tim = a[tim_off:]
+    if struct.unpack_from("<I", tim, 0)[0] != 0x10:
+        die("Werfer-TIM-Kopf")
+    flags = struct.unpack_from("<I", tim, 4)[0]
+    n = 8
+    if flags & 8:
+        n += struct.unpack_from("<I", tim, n)[0]
+    n += struct.unpack_from("<I", tim, n)[0]
+    if n != len(tim):
+        die("Werfer-TIM %d B, Kopf sagt %d" % (len(tim), n))
+    return md1, tim
+
+
 def main():
     install = "--install" in sys.argv
     a = open(RDT, "rb").read()
     e, tims = lesen(a)
     out = RE2 if install else os.path.join(REPO, "build", "r42_finale_esp")
     os.makedirs(out, exist_ok=True)
-    dateien = [("R702.ESP", e)] + [("R702_%02X.TIM" % b, tims[b]) for b in IDS] + sorted(tonbank(a).items())
+    md1, wtim = werfer(a)
+    dateien = ([("R702.ESP", e)] + [("R702_%02X.TIM" % b, tims[b]) for b in IDS] + sorted(tonbank(a).items())
+               + [("R702_WERFER.MD1", md1), ("R702_WERFER.TIM", wtim)])
     for name, data in dateien:
         open(os.path.join(out, name), "wb").write(data)
         print("  %s %d B md5 %s" % (os.path.join(out, name), len(data), hashlib.md5(data).hexdigest()))

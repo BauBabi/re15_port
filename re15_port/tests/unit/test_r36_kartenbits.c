@@ -560,6 +560,7 @@ static const port_bit_t k_port[] = {
     { RE15_R42_BANK, RE15_R42_BIT_PLAN_FABRIK, "RE15_R42_BIT_PLAN_FABRIK", "Fabrikplan aus Marvins Uebergabe 3060, story3a_r42.c geben (Runde 42 Story STAGE3a, L6/F-05)" },
     { RE15_R42_BANK, RE15_R42_BIT_PLAN_FABRIK, "RE15_R42_BIT_PLAN_FABRIK", "Fabrikplan aus Marvins Uebergabe 3060, story3a_r42.c geben (Runde 42 Story STAGE3a, L6/F-05)" },
     { RE15_R42_BANK, RE15_R42_BIT_FINALE_ENDE, "RE15_R42_BIT_FINALE_ENDE", "Finale beendet, Abspann frei (Runde 42 Story, T-07)" },
+    { RE15_R42_BANK, RE15_R42_BIT_WERFER_FINALE, "RE15_R42_BIT_WERFER_FINALE", "Raketenwerfer der Wurfszene 5090/5091 genommen (Runde 42 finale S5)" },
     { RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA, "RE15_R42_BIT_ZUG_ELZA", "Zugstart 6031 Elza gesehen (Runde 42 Story, E9)" },
     { RE15_R42_BANK, RE15_R42_BIT_ALARM, "RE15_R42_BIT_ALARM", "Alarm/Durchsage 5060/5061 (Runde 42 Story, reserviert v0.8.32)" },
     { RE15_R42_BANK, RE15_R42_BIT_IMPFUNG, "RE15_R42_BIT_IMPFUNG", "Begleiter geimpft 4010/5011 (Runde 42 Story, reserviert v0.8.32)" },

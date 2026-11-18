@@ -27,8 +27,15 @@ sys.path.insert(0, os.path.join(HIER, '..', 'r42_story'))
 import texte_stage2 as t2  # noqa: E402  (Glyphen, Breiten, Kopfform)
 
 ZIEL = os.path.join(t2.PORT, 'engine', 'src', 'gen', 'finale_r42_texte.inc')
+# Stufe 3 (Plan S5, K-13): Zuruf des Werfers, Id 3 (erste freie Id hinter RDT 0..1 und Id 2; 40..43 = Annette, VERTRAG 2.1).
+# NUTZERENTSCHEID 17.11.2026 (woertlich): "Aber ein Spruch wäre schon gut beim zuwerfen, so etwas wie: Leon, send him to hell, oder
+# Leon, let's finish this oder sowas." -> John->Leon "Leon, catch! Send him to hell!", John->Elza "Elza, catch! Let's finish this!".
+# Farbe 07 = John (ROOM2001 msg 0 @0x1E0A `05 07`, texte_stage2.py). Halt 71 = Lesefenster von Adas Ruf Xa 0 (@0x01888): STAGE7.BIN
+# @0x144 `06 00 5c 00 18 00` = Laenge 24 -> 24*16 - 0x1E = 354 Sektoren / 150 je s = 2,36 s = 70,8 -> 71 Bilder (Wsleep @0x018C2).
 ZEILEN = ((0x5090, 2, 0x01, 'Leon', 'Game over.', 33),
-          (0x5091, 2, 0x01, 'Elza', 'You lose, big guy!', 71))
+          (0x5091, 2, 0x01, 'Elza', 'You lose, big guy!', 71),
+          (0x5090, 3, 0x07, 'John', 'Leon, catch! Send him to hell!', 71),
+          (0x5091, 3, 0x07, 'John', "Elza, catch! Let's finish this!", 71))
 
 
 def kodiere(farbe, name, text, halt):

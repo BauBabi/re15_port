@@ -54,6 +54,7 @@ Frei in allen Quellen (Auszug): 118..124, 129..132, 23..51. Die VERTRAG-R41-Rese
 | 123 | RE15_R42_BIT_3020_SCHUESSE | B | v0.8.31 | 3020: Leon hoert die Schuesse (L5) |
 | 124 | RE15_R42_BIT_3060_UEBERGABE | B | v0.8.31 | 3060: Wiedersehen + Uebergabe, oeffnet Kartentuer 3010 (L5-L7, L-10) |
 | 129 | RE15_R42_BIT_FINALE_ENDE | A | v0.8.31 | Finale beendet, Abspann frei (T-07) |
+| 137 | RE15_R42_BIT_WERFER_FINALE | A | v0.8.31 | Raketenwerfer der Wurfszene 5090/5091 aufgehoben (K-13, Strang finale Stufe 3; Taken-Bit des Item_aot_set) |
 | 130 | RE15_R42_BIT_ZUG_ELZA | C | v0.8.31 | Zugstart 6031 gesehen (E9) |
 | 131 | RE15_R42_BIT_ALARM | C | v0.8.32 | Alarm/Durchsage 5060/5061 (L13/E4) |
 | 132 | RE15_R42_BIT_IMPFUNG | C | v0.8.32 | Begleiter geimpft 4010/5011 (L13/E4) |

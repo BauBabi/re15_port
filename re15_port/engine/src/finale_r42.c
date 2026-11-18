@@ -10,6 +10,7 @@
 #include "re15_story_r42.h"
 #include "re15_birkin_formen.h"   /* re15_bf_bahnsteig_aktiv, re15_bb_bank_da */
 #include "re15_annette_r41.h"     /* re15_annette_r41_besitzt: die Szene davor */
+#include "re15_finale_wurf_r42.h"  /* Stufe 3: Wurfszene (Plan S5) */
 
 #include <string.h>
 #include <stdlib.h>
@@ -102,6 +103,14 @@ static void protokoll(const char *fmt, int a, int b, int c)
 
 static int bildlage(int32_t x, int32_t y, int32_t z, int *u, int *tiefe);   /* Messzeile, unten */
 
+/* Stufe 3 (finale_wurf_r42.c): dieselbe Messschiene und dieselbe Raumtonbank. */
+void re15_finale_r42_wurf_protokoll(const char *fmt, int a, int b, int c) { protokoll(fmt, a, b, c); }
+void re15_finale_r42_se(int satz)
+{
+    if (s_se) s_se(satz);
+    protokoll("Se_on Raumbank R702 Satz 0x%02X (PC-Haken %d)", satz, s_se != NULL, 0);
+}
+
 /* ---- Raum ------------------------------------------------------------------------------------------------------------- */
 int re15_finale_r42_raum(void) { return re15_bf_bahnsteig_aktiv(); }
 
@@ -110,6 +119,7 @@ void re15_finale_r42_reset(void)
     const uint16_t r = s_fi.raum;
     memset(&s_fi, 0, sizeof s_fi);
     s_fi.raum = r; s_fi.form = -1; s_fi.uhr = -1; s_fi.w_platz = -1;
+    re15_finale_wurf_reset();
 }
 
 void re15_finale_r42_install(uint16_t room_id)
@@ -120,11 +130,18 @@ void re15_finale_r42_install(uint16_t room_id)
         re15_msg_install_text(RE15_FI_MSG_ZEILE_LEON, k_fi_5090_msg02, sizeof k_fi_5090_msg02);
         const int d = re15_msg_compute_duration(k_fi_5090_msg02, sizeof k_fi_5090_msg02, 0);
         if (d > 0 && d < 65535) re15_msg_install_durations(RE15_FI_MSG_ZEILE_LEON, d);
+        /* Stufe 3: Zuruf des Werfers (RE15_FW_MSG_ZURUF, tools/r42_finale/texte_finale.py) */
+        re15_msg_install_text(RE15_FW_MSG_ZURUF, k_fi_5090_msg03, sizeof k_fi_5090_msg03);
+        const int dz = re15_msg_compute_duration(k_fi_5090_msg03, sizeof k_fi_5090_msg03, 0);
+        if (dz > 0 && dz < 65535) re15_msg_install_durations(RE15_FW_MSG_ZURUF, dz);
     }
     if (room_id == 0x5091u) {
         re15_msg_install_text(RE15_FI_MSG_ZEILE_ELZA, k_fi_5091_msg02, sizeof k_fi_5091_msg02);
         const int d = re15_msg_compute_duration(k_fi_5091_msg02, sizeof k_fi_5091_msg02, 0);
         if (d > 0 && d < 65535) re15_msg_install_durations(RE15_FI_MSG_ZEILE_ELZA, d);
+        re15_msg_install_text(RE15_FW_MSG_ZURUF, k_fi_5091_msg03, sizeof k_fi_5091_msg03);
+        const int dz = re15_msg_compute_duration(k_fi_5091_msg03, sizeof k_fi_5091_msg03, 0);
+        if (dz > 0 && dz < 65535) re15_msg_install_durations(RE15_FW_MSG_ZURUF, dz);
     }
 }
 
@@ -138,6 +155,7 @@ int re15_finale_r42_wurf_faellig(void) { return s_fi.wurf; }
  * die KI kommt nicht zurueck). */
 int re15_finale_r42_besitzt(int slot)
 {
+    if (re15_finale_wurf_besitzt(slot)) return 1;                       /* Stufe 3: Form ruht in der Wurfszene (+0x10E = 0x8000) */
     return s_fi.phase != RE15_FI_AUS && (s_fi.phase < RE15_FI_ENDE || s_fi.getoetet) && slot == s_fi.form;
 }
 int re15_finale_r42_kein_ziel(const re15_actor_t *e)
@@ -178,13 +196,24 @@ void re15_finale_r42_form_takt(int slot, int gehen, int32_t dist)
     if (e->hp < RE15_FI_HP_GENUG && !s_fi.genug) { s_fi.genug = 1; protokoll("genug Schaden (hp %d < 20000)", e->hp, 0, 0); }
     if (e->hp < RE15_FI_HP_UNTEN) e->hp = RE15_FI_HP_UNTEN;
     /* Uhr sub10 */
-    if (s_fi.uhr < 0 && kampf_laeuft(slot)) { s_fi.uhr = RE15_FI_UHR; protokoll("Kampf laeuft, Uhr %d Bilder", RE15_FI_UHR, 0, 0); }
+    if (s_fi.uhr < 0 && kampf_laeuft(slot)) {
+        s_fi.uhr = RE15_FI_UHR;
+#ifdef RE15_PLATFORM_PC
+        {   /* PRUEFHAKEN RE15_FINALE_UHR=<n> (Stufe 3, kein Spielverhalten): Uhr fuer die Integrationslaeufe der Wurfszene kuerzen;
+             * der Wert im Spiel bleibt RE15_FI_UHR = 1800 (sub10 @0x017D4, Riegel unit_r42_finale). */
+            const char *eu = getenv("RE15_FINALE_UHR");
+            if (eu && *eu && atoi(eu) > 0) s_fi.uhr = atoi(eu);
+        }
+#endif
+        protokoll("Kampf laeuft, Uhr %d Bilder", s_fi.uhr, 0, 0);
+    }
     else if (s_fi.uhr > 0 && --s_fi.uhr == 0) { s_fi.uhr_ab = 1; protokoll("Uhr abgelaufen (Set(5,0x0F))", 0, 0, 0); }
     /* sub11 @0x017DE-0x01818, von sub01 @0x0134A je Bild gerufen solange Ck(5,0x0D)=0:
      *   if (+0x1D8 == 1 && +0x1DA == 1) or (Ck(5,0x0F) == 1 && +0x1DA == 1)  ->  Set(5,0x0D,1), Evt_exec sub12 (Wurf). */
     if (!s_fi.wurf && s_fi.uhr >= 0 && s_fi.phase == RE15_FI_AUS && s_fi.passend && (s_fi.genug || s_fi.uhr_ab)) {
         s_fi.wurf = 1;
-        protokoll("Wurf faellig (genug %d, Uhr ab %d, Abstand %d) - Wurfszene folgt in Stufe 3", s_fi.genug, s_fi.uhr_ab, dist);
+        protokoll("Wurf faellig (genug %d, Uhr ab %d, Abstand %d)", s_fi.genug, s_fi.uhr_ab, dist);
+        (void)re15_finale_wurf_start(slot);                             /* Evt_exec sub12 @0x017F6 / @0x01812 (Stufe 3) */
     }
 }
 
@@ -201,6 +230,8 @@ static int32_t peilung(int32_t x0, int32_t z0, int32_t x1, int32_t z1)
 
 /* FUN_801016cc(e, d): Spieler d vor den Gegner (`lh a0,0x76(s0)` Gier, FUN_80077384 = RotMatrix(0,gier,0) + ApplyMatrixSV auf
  * (d,0,0) @0x801016d8-f0, + Gegnerlage @0x801016f8-734), Spielergier = Peilung Spieler -> Gegner - 0x32 (@0x80101738-50). */
+int32_t re15_finale_r42_peilung(int32_t x0, int32_t z0, int32_t x1, int32_t z1) { return peilung(x0, z0, x1, z1); }
+
 static void spieler_vor(const re15_actor_t *e, int32_t d)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -346,6 +377,7 @@ static int programm_starten(void)
 static int ausloeser(uint16_t *pad, uint16_t *pressed)
 {
     if (s_fi.form < 0 || s_fi.getoetet || s_fi.uhr < 0) return 0;
+    if (re15_finale_wurf_aktiv()) return 0;                             /* Stufe 3: Pad gesperrt (Set(2,7,1) @0x0181A), Form ruht */
     re15_actor_t *e = &g_actors[s_fi.form];
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     if (!e->active || !re15_bb_bank_da(e)) return 0;
@@ -393,6 +425,17 @@ static int fixpunkte_und_schnitt(re15_actor_t *e, re15_actor_t *pl)
     const int vorher = (int)g_scd.work_vars[0x0A];
     kamera(RE15_FI_CUT_ZEILE);                                            /* FUN_8002c7ac(11) @0x801036d8 -> U3 Runde 4: Schnitt 15 */
     return vorher;
+}
+
+/* Stufe 3 (Reaktions-Schnitt, re15_finale_wurf_r42.h): Leons "Game over"-Lage = 7668 vor der "Game over"-Lage der Form, wie
+ * fixpunkte_und_schnitt (FUN_801016cc-Regel), ohne die Form zu bewegen. */
+void re15_finale_r42_go_spieler(int32_t *x, int32_t *z)
+{
+    const uint16_t rot[3] = { 0, (uint16_t)(RE15_FI_GO_FORM_GIER & 0xfff), 0 };
+    int16_t m[9];
+    re15_door_rotmatrix(rot, m);
+    *x = (int16_t)(RE15_FI_GO_FORM_X + (int32_t)(((int64_t)m[0] * RE15_FI_T_ABSTAND) >> 12));
+    *z = (int16_t)(RE15_FI_GO_FORM_Z + (int32_t)(((int64_t)m[6] * RE15_FI_T_ABSTAND) >> 12));
 }
 
 int re15_finale_r42_schnitt_test(int form_slot)
@@ -807,6 +850,7 @@ int re15_finale_r42_vor_spielzug(uint16_t *pad, uint16_t *pressed)
 {
     if (!re15_finale_r42_raum()) return 0;
     s_fi.takt++;
+    re15_finale_wurf_takt();                                            /* Stufe 3: Signale, Flug, Aufnahme-Messzeile */
     if (s_fi.phase == RE15_FI_AUS) {
         if (!ausloeser(pad, pressed)) return 0;
         phase0();
