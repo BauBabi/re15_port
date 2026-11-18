@@ -243,8 +243,12 @@ static int ist_markenbalken(int page, const re15_inv_op_t *o)
  * die Lage sitzt aber neben der Kunst. Ursache nicht untersucht, NICHT Teil der Runde 30.
  * ⛔ BENANNTE LISTE, KEINE ZAHL "<= 4": eine fuenfte faellt damit auf. Gefuehrt ueber
  * (Blatt, Lage), weil sich die Tabellen-Nummer bei jeder Streichung verschiebt. */
+/* r42/karte (v0.8.31): (6,129,153), (6,139,153) und (7,224,175) sind ENTFALLEN - sie gehoerten zu
+ * ROOM2030/2080 bzw. ROOM30B0, die auf FREMDEN Rechtecken standen (Blatt 6 rect 0 = U-Kanal von
+ * ROOM2000, Blatt 7 rect 9). Mit der neuen Zuordnung (re15_map_zones.h, Abschnitt r42) sind alle
+ * Marken der Blaetter 6/7 neu gesetzt und tragen ihr Rechteck. */
 static const struct { int page, mx, my; } KLASSE_C[] = {
-    { 6, 129, 153 }, { 6, 139, 153 }, { 7, 224, 175 }, { 9, 190, 91 },
+    { 9, 190, 91 },
 };
 static int ist_klasse_c(int page, int mx, int my)
 {
@@ -459,8 +463,8 @@ int main(void)
         snprintf(t, sizeof t, "B2 KEINE Marke ohne Traeger ausser der benannten Klasse C "
                  "(vorher 10) - sind %d", unb);
         CHECK(t, unb == 0);
-        snprintf(t, sizeof t, "B2 die Klasse C ist genau die benannte Liste (4) - sind %d", kc);
-        CHECK(t, kc == 4);
+        snprintf(t, sizeof t, "B2 die Klasse C ist genau die benannte Liste (1) - sind %d", kc);
+        CHECK(t, kc == (int)(sizeof KLASSE_C / sizeof KLASSE_C[0]));
 
         /* Schema-Fuellungen und Innenwaende tragen die dekodierten Palettenwerte. */
         {

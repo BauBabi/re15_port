@@ -1,0 +1,16 @@
+# Strang r42/karte (v0.8.31): Karte STAGE2-6 so sauber wie STAGE1.
+# Eigene Datei, damit die parallelen r42-Straenge nicht dieselbe CMakeLists editieren.
+add_executable(probe_r42_karte_bestand probe_r42_karte_bestand.c)
+target_link_libraries(probe_r42_karte_bestand PRIVATE re15_engine re15_test_support)
+target_include_directories(probe_r42_karte_bestand PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(probe_r42_karte_bestand PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+
+# RIEGEL: Karte STAGE2 (Blatt 6) + STAGE3 (Blatt 7) - Zone, Marker auf der Kachel, Mitlaufen, Tuermarken.
+add_executable(test_r42_karte_st23 test_r42_karte_st23.c)
+target_link_libraries(test_r42_karte_st23 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_karte_st23 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_karte_st23 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r42_karte_st23 COMMAND test_r42_karte_st23)
+set_tests_properties(unit_r42_karte_st23 PROPERTIES TIMEOUT 120)
