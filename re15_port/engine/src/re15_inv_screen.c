@@ -43,6 +43,7 @@
 #include "re15_karte_fahrstuhl.h" /* Runde 35 Spur G: Klemmfenster der Fahrstuhlkabine */
 #include "re15_karte_r39.h"      /* Runde 39 Spur G: Kachel-Korrekturen nach den Nutzer-Vorlagen */
 #include "re15_karte_r41.h"   /* Runde 41 Spur E: Tuer-Zug auf die Zone der Ankunft (karte_r41.c) */
+#include "re15_karte_r42.h"   /* r42/karte Stufe 3 Runde 2: Marker auf die gemalte Kachel (karte_r42.c) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Name + CHECK-Text der Ids 0x42/0x45 */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: "Empty Fire Extinguisher" (Nachtrag 4c) */
 #include "re15_dining_r38.h"     /* Runde 38 Spur F: Name + CHECK-Text der Id 0x43 (Dining Room Key) */
@@ -334,6 +335,22 @@ static int karten_zeile(unsigned slot, int *ox, int *oy, int *sx, int *sz)
         return 1;
     }
     return 0;
+}
+
+/* r42/karte Stufe 3 Runde 2: rechnet die Zone mit der AUSGELIEFERTEN Zeile ihres Raums? Dann gilt sie byte-true
+ * (Auftrag: "Wo es eine echte Massstabszeile gibt, gilt sie") und der Marker wird NICHT auf die Kunst geklemmt.
+ * Zeilenindex = Stage-Basis + Raumnummer, Basen 0/38/50/65/77/98 wie der Seiten-Setzer FUN_8004b568
+ * (Memory reai-v2-karte-massstabstabelle; dieselbe Tabelle in probe_r42_karte_bestand.c s_basis). */
+static int zone_echte_zeile(const re15_map_zone_t *zn)
+{
+    static const unsigned char basis[6] = { 0, 38, 50, 65, 77, 98 };
+    unsigned st = ((unsigned)zn->room >> 12) & 0xFu;
+    uint32_t row;
+    if (st < 1 || st > 6) return 0;
+    row = 0x800768B0u + ((unsigned)basis[st - 1] + (((unsigned)zn->room >> 4) & 0xFFu)) * 8u;
+    if (mu16(row + 4u) <= 1 || mu16(row + 6u) <= 1) return 0;
+    return zn->ox == (short)(int16_t)mu16(row) && zn->oy == (short)mu16(row + 2u) &&
+           zn->sx == mu16(row + 4u) && zn->sy == mu16(row + 6u) && !zn->flip_x && !zn->flip_z && !zn->tausch;
 }
 
 /* Die Original-Projektion FUN_800473f8 @0x8004741c-0x80047528 mit einer gegebenen
@@ -891,6 +908,13 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                 if (*mx > hi_x) *mx = (int16_t)hi_x;
                 if (*my < lo_y) *my = (int16_t)lo_y;
                 if (*my > hi_y) *my = (int16_t)hi_y;
+                /* r42/karte Stufe 3 Runde 2 (PORT-WAHL, include/re15_karte_r42.h): auf Blatt 6..12 vom Rechteck
+                 * weiter auf die GEMALTE Kachel - die Bbox ist nicht die Kunst (6000 Gang nach 50B0, 4040/4050/4080
+                 * Ankunft an der Tuer). Zonen mit eigenen Teilbereichen (Zug 5090) und Zonen mit der
+                 * AUSGELIEFERTEN Zeile (byte-true, zone_echte_zeile) bleiben unberuehrt. */
+                if (zrc != 255 && !zone_echte_zeile(zn) &&
+                    !re15_map_teil_hat_zid((unsigned)zpg, (unsigned)zrc, zn->zid))
+                    (void)re15_karte_r42_kunst_klemmen((unsigned)zpg, (unsigned)zrc, mx, my);
                 tuer_anziehen(zn, world_x, world_z, (int)g_inv_screen.map_page, mx, my);
                 /* ⛔ NACH DEM ZUG NICHT NOCHMAL KLEMMEN - gemessen und verworfen
                  * (2026-09-03). Naheliegend, weil das Tuersymbol auf der WAND zwischen

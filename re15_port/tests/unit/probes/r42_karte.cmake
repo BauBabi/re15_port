@@ -32,3 +32,14 @@ target_compile_definitions(test_r42_karte_sichtbar PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r42_karte_sichtbar COMMAND test_r42_karte_sichtbar)
 set_tests_properties(unit_r42_karte_sichtbar PROPERTIES TIMEOUT 120)
+
+# RIEGEL Stufe 3 Runde 2: an jeder ECHTEN Ankunftslage (Tuer-Spawn) steht der Punkt auf der eigenen GEMALTEN Kachel
+# (Blatt 6-12, hergeleitete Zeilen); Pruefgroesse = Texel aus DATA/MAP0x.PIX, Zeilen direkt aus PSX.EXE.
+add_executable(test_r42_karte_ankunft test_r42_karte_ankunft.c)
+target_link_libraries(test_r42_karte_ankunft PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_karte_ankunft PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_karte_ankunft PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_EXE_PFAD="${CMAKE_SOURCE_DIR}/../info/Re1.5/PSX.EXE")
+add_test(NAME unit_r42_karte_ankunft COMMAND test_r42_karte_ankunft)
+set_tests_properties(unit_r42_karte_ankunft PROPERTIES TIMEOUT 180)

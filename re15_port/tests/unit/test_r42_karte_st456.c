@@ -157,13 +157,14 @@ static const struct { unsigned room; int zone; char pruef; const char *grund; } 
     /* Etagen-Raeume: ohne Band zeigt das Spiel das Band-0-Blatt (Gast-Zeile Blatt 11), nicht die Hauptzeile */
     { 0x4070, 0, 'B', "Treppenhaus: Blatt haengt am Band (s_map_floors), Band 0 -> Blatt 11 r3" },
     { 0x50D0, 0, 'B', "zwei Stockwerke: Band 0 -> Blatt 11 r1, Band 3 -> Blatt 10 r1" },
-    /* Hergeleitet, Kunst passt nicht zur Kollision - gemessen, OFFEN */
-    { 0x4040, 0, 'B', "Ring-Diagonalen: Bbox ueberspannt die ungemalte Ringmitte (11/18)" },
-    { 0x4080, 0, 'B', "Ring-Diagonalen: dito (9/14)" },
-    { 0x5070, 0, 'B', "T-Gang: 14/19 (74 %)" },
-    { 0x5130, 0, 'B', "T-Gang: 14/19 (74 %)" },
-    { 0x5080, 0, 'B', "r6 ist anders geformt als die Kollision von 5080 (36/49)" },
-    { 0x6000, 0, 'B', "r5: ungemalter Block oben links, Kollision ohne Massstab-Gegenstueck (25/48)" },
+    /* Hergeleitet, Kunst passt nicht zur Kollision: seit Stufe 3 Runde 2 klemmt re15_karte_r42_kunst_klemmen den
+     * Marker auf die gemalte Kachel (Blatt 6-12, hergeleitete Zeilen) - die frueheren [B]-Ausnahmen 4040/4080 Ring,
+     * 5070/5130 T-Gang, 5080 r6 und 6000 r5 sind gestrichen und muessen jetzt bestehen. */
+    /* [C] 4080 Zone 1 = Diagonalstueck r13 (16x16, gemalt nur der schmale Streifen): das Bbox-Raster legt 16 der
+     * 28 Punkte neben den Streifen (vorher 12/28 auf der Kunst, 14 verschiedene Lagen); die Klemme setzt sie auf
+     * den naechsten Streifen-Texel -> 13 verschiedene. Die echten Lagen dort pruefen unit_r42_karte_ankunft und
+     * die Abzuege L4080_t0/w0 (Stufe 3 Runde 2). */
+    { 0x4080, 1, 'C', "Diagonalstueck r13: Raster ueberwiegend neben dem gemalten Streifen (Stufe 3 Runde 2: 13/28)" },
 };
 static int ausnahme(unsigned room, int zone, char p)
 {

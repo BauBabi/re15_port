@@ -67,6 +67,8 @@ int re15_map_rect_state_fremd(unsigned page, unsigned rect_idx);
  * re15_map_teil_count/get liefern die Teile eines Rechtecks; hat es keine, gilt
  * re15_map_rect_state wie bisher fuer das ganze Rechteck. */
 int re15_map_teil_count(unsigned page, unsigned rect_idx);
+/* r42/karte Stufe 3 Runde 2: 1, wenn das Rechteck einen Teilbereich DIESER Zone (zid) traegt. */
+int re15_map_teil_hat_zid(unsigned page, unsigned rect_idx, unsigned char zid);
 int re15_map_teil_get(unsigned page, unsigned rect_idx, int n,
                       int *tx, int *ty, int *tw, int *th, int *state);
 

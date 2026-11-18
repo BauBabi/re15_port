@@ -22,6 +22,8 @@
  *   ROOM rid st room origpage ncut ndoor nsca nzone
  *   CAM  rid cut x z zpage zrect zidx zid synth shownpage mx my rot n_akt n_bes n_unb n_fill
  *   DOOR rid slot dest x z sx sz band | page mx my | mark mpage mx my kind ident | dpage dmx dmy drot
+ *   EIN  dest von slot sx sy sz yaw   (Stufe 3 Runde 2: Ankunftslage + Blickrichtung aus dem Door_aot_set -
+ *        dort stellt das Spiel die Figur beim Betreten hin = Messlage, an der man wirklich steht)
  * ========================================================================== */
 #include <stdio.h>
 #include <stdlib.h>
@@ -309,6 +311,8 @@ int main(void)
                                    &drot, &na, &nb, &nu, &nf, &dz))
                             dseite = -2;
                     }
+                    printf("EIN %04X %04X %d %d %d %d %d\n", ziel, rid, k, (int)d->spawn_x, (int)d->spawn_y,
+                           (int)d->spawn_z, (int)d->spawn_yaw_4096);
                     printf("DOOR %04X %d %04X %d %d %d %d %d | %d %d %d %d | %d %d %d %d %d %d | %d %d %d %d\n",
                            rid, k, ziel, (int)a->x, (int)a->z, (int)d->spawn_x, (int)d->spawn_z, (int)d->band,
                            seite, (int)mx, (int)my, rot,

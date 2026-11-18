@@ -840,6 +840,11 @@ static int teil_zustand(const re15_map_teil_t *t)
     }
 }
 
+int re15_map_teil_hat_zid(unsigned page, unsigned rect_idx, unsigned char zid)
+{
+    return teil_zid(page, rect_idx, zid);
+}
+
 int re15_map_teil_count(unsigned page, unsigned rect_idx)
 {
     int i, n = 0;
