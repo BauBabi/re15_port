@@ -1893,8 +1893,10 @@ static re15_actor_t *gator_aktor(void)
     return NULL;
 }
 /* Alligator tot: RE2-R1-Endzustand (Kanister/Kiefer, +0x10E |= 0x4000 @0x80102654-64 = re15_gr2_tot) ODER die Todesrolle
- * Clip 7 des Boss-Moduls (Explosionen/GB_TEST=3) mit dem byte-true CORPSE-Zustand 7 (enemy_ai_boss_gator.c GBP_DIE -> GBP_DEAD
- * `e->state = 7`). */
+ * Clip 7 des Boss-Moduls mit dem byte-true CORPSE-Zustand 7 (enemy_ai_boss_gator.c GBP_DIE -> GBP_DEAD `e->state = 7`).
+ * Seit K-12 (NUTZERWUNSCH 17.11., ec0d39bb9) fuehrt im Spiel kein Treffer mehr in die Todesrolle (gb_absorb_hit hebt HP < 0
+ * auf 1 und Zustand 3 auf 2); einziger Weg ist der Pruefhaken RE15_GB_TEST=3 der Szenen-Tests. Im Spiel stirbt der Alligator
+ * nur ueber den Kanister (erster Zweig). */
 static int gator_tot(void)
 {
     if (re15_gr2_tot()) return 1;
