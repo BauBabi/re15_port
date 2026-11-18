@@ -124,6 +124,9 @@ void re15_player_continue_reload(void);  /* death sequence complete (timer hit 0
  * per-weapon line-vs-box cone tester + the aim/fire input FSM (@0x80035810) + the hit-direction clip
  * are the deferred refinements. */
 int  re15_player_weapon_fire(int weapon_id);
+/* Runde 42 Strang gore U6: 1 = gegen diesen Gegner zaehlt ein Feuerstoss (Waffe 5/6) als EIN Treffer mit Spalte 5/6 der
+ * Disc-Zeile (Begruendung und Belege am Definitionsort, re15_damage.c). */
+int  re15_feuerstoss_ein_treffer(const re15_actor_t *e);
 
 /* Runde 38 Integration: der Elevations-Band-Stempel FUN_80012aa4(R) (@0x80012aa4-bf0) fuer den Takt eines Gegners,
  * Ergebnis in der aim_band-Kodierung (4 UP / 2 LEVEL / 1 DOWN); Abstand wie im Original intern (SquareRoot0

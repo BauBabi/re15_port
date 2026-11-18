@@ -22,7 +22,8 @@
  *                  Ruhe nach <= 45 Bildern, gestreut, alles weiter gezeichnet, Rauch-Nachlauf 6 Kinder.
  *   [3] r15      — RE1.5-Gehirn (Flavor re15, Import-Option an): z_granate -> dieselben sieben Stuecke, liegen, Leiche,
  *                  kein Kriecher.
- *   [5] hund     — RE2- und RE1.5-Hund (ROOM11D0): 7 Parts @0x80105680 fliegen 0x1062, Farbe 0x101040, liegen.
+ *   [5] hund     — RE2- und RE1.5-Hund (ROOM11D0): 7 Parts @0x80105680 driften 0x4A, Farbe 0x101040, nach 29 Bildern weg
+ *                  (Runde 42 U16: RE2 genau; bis dahin 0x1062 und liegen).
  *   [4] aus      — eigener Prozess mit RE15_KEIN_80PROZENT_GORE=1: keine Zerfetzung (RE2 0x80108BEC wie vorher), der
  *                  Schaden bleibt D_G (Staerke haengt nicht am Gore-Schalter).
  * Rueckgabe 0 = gruen, sonst die Nummer der ersten fehlgeschlagenen Pruefung.
@@ -538,16 +539,17 @@ static void abschnitt_boss(void)
     };
     /* Soll je Fall: Form-HP, Raketenschaden, Granaten bis zum Formende, Raketen bis zum Formende (999 = nie). */
     static const struct { int hp0, d_rak, n_gr, n_rak; } soll[] = {
-        { 360,   200, 2, 2 },     /* Gorilla 180 @0x8011f514 x 2; Rakete Licker @0x800A485C: 360-251=109, -142 / 160, -40 */
+        { 180,   200, 1, 1 },     /* Runde 42 U3: Gorilla 180 @0x8011f514 x 1; Rakete Licker @0x800A485C: -71 / -20 */
         { 300,   110, 2, 3 },     /* RE1.5-Alligator @0x801175dc; Rakete @0x800A4B54: 49, -202 / 190, 80, -30 */
-        { 600,   200, 3, 4 },     /* 0x12c @0x8011690c x 2; G1 @0x800A58B0: 349, 98, -153 / 400, 200, 0, -200 */
-        { 1000,  301, 4, 4 },     /* Stufe 3: 5080 = Riesenform (re15_bf_riesenform_raum); G4-Ctor 1000 @0x80100678, Rakete G4 301 @0x800A5D24 */
-        { 600,   200, 3, 4 },
-        { 600,   200, 3, 4 },
-        { 600,   200, 2, 3 },     /* Form 1 bis hp < 200 (`slti 100` @0x8011667c x 2): 349, 98 / 400, 200, 0 */
+        { 300,   200, 2, 2 },     /* Runde 42 U4: 0x12c @0x8011690c x 1; G1 @0x800A58B0: 49, -202 / 100, -100 */
+        { 1000,  301, 4, 4 },     /* Stufe 3: 5080 = Riesenform (re15_bf_riesenform_raum); G4-Ctor 1000 @0x80100678, Rakete G4 301 @0x800A5D24;
+                                   * Handgranate bleibt D_G 251 (Runde 42 U9, NUTZERWUNSCH 16.11.) */
+        { 300,   200, 2, 2 },
+        { 300,   200, 2, 2 },
+        { 300,   200, 1, 2 },     /* Form 1 bis hp < 100 (`slti 100` @0x8011667c x 1): 49 / 100, -100 */
         { 1000,  301, 4, 4 },     /* Stufe 3: 5091 (Elza) = Riesenform wie 5080/5090 */
-        { 300,   200, 999, 999 }, /* waehrend der Mutation: ein toedlicher Treffer setzt 100 (Revive @0x8011a530 x 2) */
-        { 300,   200, 2, 2 },     /* nach der Mutation 0x96 @0x80118094 x 2: 49, -202 / 100, -100 */
+        { 150,   200, 999, 999 }, /* waehrend der Mutation: ein toedlicher Treffer setzt 50 (Revive @0x8011a530 x 1) */
+        { 150,   200, 1, 1 },     /* nach der Mutation 0x96 @0x80118094 x 1: -101 / -50 */
         { 1000,  301, 4, 4 },     /* G4-Ctor @0x80100678; G4 @0x800A5D24: 749, 498, 247, -4 / 699, 398, 97, -204 */
         { 600,   200, 3, 4 },     /* G5-Ctor @0x801003fc; G5 @0x800A601C: 349, 98, -153 / 400, 200, 0, -200 */
         { 25240, 110, 1, 3 },     /* H3: 25000 + 240 (@0x801045ec, Bit 0x40 @0x8002b4ac); Schwaeche < 25000 @0x80101ec4:
@@ -555,7 +557,7 @@ static void abschnitt_boss(void)
     };
     const unsigned NF = sizeof fall / sizeof fall[0];
     for (unsigned i = 0; i < NF; i++) {
-        if (fall[i].ende == -1) fall[i].ende = RE15_BIRKIN_HP_MUT_TOR;  /* `slti v0,v0,100` @0x8011667c x 2 */
+        if (fall[i].ende == -1) fall[i].ende = RE15_BIRKIN_HP_MUT_TOR;  /* `slti v0,v0,100` @0x8011667c x Faktor (Runde 42 U4: 1) */
         if (fall[i].ende == -2) fall[i].ende = RE15_GR2_HP_SOCKEL;      /* `slti v0,v0,25000` @0x80101ec4 */
     }
     printf("   %-44s | Form-HP | Ende  | Pistole | Granate | Rakete | Granaten bis Ende (HP-Folge)      | Raketen bis Ende (HP-Folge)\n", "Boss");
@@ -946,12 +948,17 @@ static void abschnitt_hund(void)
         const int32_t p[3] = { e->x + 300, e->y - 500, e->z };
         int n = re15_granate_r35_explosion(p, 0, 2);
         frame();
-        int w_ok = (e->re2z_part_gr == 0x079Cu) && re15_re2d_granate_zahl() == h0 + 1u;
+        /* ⛔ Runde 42 Strang gore U16 (Nutzerregel 16.11.2026): RE2 GENAU - der Teile-Wurf 0x80104440 setzt das Flagwort 0x4A
+         * (`ori v0,v0,0x4a` @0x801044a4, Drift), Farbe 0x101040 (@0x801044c8); die Teile sind nach 29 Bildern weg
+         * (`sltiu v0,v0,0x1d` @0x80028DCC / `sw zero,0` @0x80028DDC) statt liegen zu bleiben. */
+        int w_ok = re15_re2d_granate_zahl() == h0 + 1u;
         static const int teile[7] = { 2, 3, 4, 7, 8, 9, 10 };      /* @0x80105680 */
-        for (int i = 0; i < 7; i++) w_ok &= (e->re2z_part_flags[teile[i]] & 0x1062u) == 0x1062u &&
+        for (int i = 0; i < 7; i++) w_ok &= (e->re2z_part_flags[teile[i]] & 0x4Au) == 0x4Au && !(e->re2z_part_flags[teile[i]] & 0x20u) &&
                                            e->re2z_part_tint[teile[i]] == 0x00101040u;
         int g_ok = re15_re2z_gore_active(e);
         flug_t fl = flug_messen(e, 0x079Cu, 150, 17);
+        {   int weg = 1; for (int i = 0; i < 7; i++) weg &= e->re2z_part_flags[teile[i]] == 0u;
+            fl.liegen = weg; }                                           /* hier: "nach 150 Bildern weg" */
         printf("   %s Hund Slot %d: Treffer %d Zustand %d Waffe %u Maske 0x%04x Bruecke %d liegen %d Scheitel %d..%d "
                "Bilder %d gestreut %d/7\n", namen[k], (int)(e - g_actors), n, e->state, e->sub_state_1,
                (unsigned)e->re2z_part_gr, g_ok, fl.liegen, fl.scheitel_min, fl.scheitel_max, fl.bilder_max, fl.gestreut);
@@ -959,10 +966,10 @@ static void abschnitt_hund(void)
         if (fl.liegen) liegen++;
         if (g_ok) aktiv++;
     }
-    PRUEF(51, ok == 2, "Hund zerfetzt unter beiden KIs: 7 Parts {2,3,4,7,8,9,10} (@0x80105680) fliegen 0x1062, Farbe 0x101040 "
-                       "(@0x801044c8), einmal je Tod %d/2", ok);
+    PRUEF(51, ok == 2, "Hund an der Handgranate unter beiden KIs: 7 Parts {2,3,4,7,8,9,10} (@0x80105680) driften 0x4A "
+                       "(@0x801044a4), Farbe 0x101040 (@0x801044c8), einmal je Tod %d/2", ok);
     PRUEF(52, aktiv == 2, "Part-Bruecke aktiv (RE2-KI und RE1.5-KI nach dem Wurf) %d/2", aktiv);
-    PRUEF(53, liegen == 2, "die Hund-Teile liegen nach 150 Bildern am Boden %d/2", liegen);
+    PRUEF(53, liegen == 2, "die Hund-Teile sind nach 150 Bildern weg (29 Bilder @0x80028DCC/DC, Runde 42 U16) %d/2", liegen);
 }
 
 /* ================================================================================================

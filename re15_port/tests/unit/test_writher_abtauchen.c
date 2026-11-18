@@ -164,7 +164,12 @@ int main(void)
         pl->x = sx; pl->z = sz; pl->rot_y = sr;
     }
 
-    /* --- (2) BESCHUSS mit der Pistole: wie viele Treffer bis zum Abtauchen? ------------- */
+    /* --- (2) BESCHUSS mit der Pistole --------------------------------------------------------
+     * ⛔ RUNDE 42 STRANG GORE U8 (BAUPLAN gore_matrix U8, Nutzerregel 16.11.2026 "80% build ist ausschlaggebend, dann 40% build";
+     * "anschiessbare Gitterhaende" ist ein aufgehobener Entscheid): wie auf der Disc gehen Schuesse DURCH (kein Zielband, kein
+     * `jal 0x80012aa4` / `jal 0x80012974` im Arm-Code 0x8010c1ec-0x8010d7a0). Die Wache prueft jetzt: 400 Bilder Dauerfeuer
+     * registrieren KEINEN Treffer, der Arm vergraebt sich nicht. Den Abtauch-Ast (Budget < 0, `lb +0x1D2` @0x8010d144 / `bgez`
+     * @0x8010d14c) betritt danach ein Treffer-Analog mit den Resolver-Feldern (Referenz-Pin der RE1.5-Maschine). */
     int schuesse = 0, budget0 = 0;
     re15_actor_t *e = arm_spawn(1, 0, 0);
     budget0 = e->writher_hits;
@@ -172,32 +177,30 @@ int main(void)
     CHECK(budget0 >= 1 && budget0 <= 4,
           "das Startbudget liegt in 1..4 (%d) — (rng & 3) + 1 @0x8010c400/@0x8010c404",
           budget0);
-
+    int16_t hp_start = e->hp;
     for (int f = 0; f < 400 && e->sub_state_1 != 7; f++) {
-        if (e->state == 1 && (f % 20) == 0) {
-            /* FIXTURE-KORREKTUR 2026-08-29: nur REGISTRIERTE Treffer zaehlen (Rueckgabe
-             * slot+1), nicht Versuche — seit der Flinch byte-true die volle Clip-2-Laenge
-             * spielt (+0x95=0 @0x8010d210) und +0x9c=0 (@0x8010d26c) die Lunge sofort
-             * re-armt, kann ein Versuch den gerade AUSGEFAHRENEN Arm (2420 an der
-             * Spieler-Position vorbei) verfehlen. Die Wache behauptet "Treffer" — jetzt
-             * misst sie sie. */
-            if (re15_player_weapon_fire(3) != 0)   /* Waffen-Id 3 = Pistole, Kosten -1 */
-                schuesse++;
-        }
+        if (e->state == 1 && (f % 20) == 0)
+            if (re15_player_weapon_fire(3) != 0) schuesse++;
         re15_enemy_ai_run_all(0);
     }
-    printf("  (2) nach %d Pistolentreffern: Sub %u, HP %d, Budget %d\n",
-           schuesse, e->sub_state_1, e->hp, (int8_t)e->writher_hits);
-    CHECK(e->sub_state_1 == 7,
-          "der Arm ist nach %d Pistolentreffern VERGRABEN (Sub %u) — das Budget lief unter "
-          "null (`lb +0x1D2` @0x8010d144 / `bgez` @0x8010d14c)", schuesse, e->sub_state_1);
-    CHECK(schuesse >= 2 && schuesse <= 5,
-          "und es waren %d Treffer, also im Bereich 2..5 — Budget 1..4 plus der Treffer, der "
-          "unter null drueckt, bei Pistolenkosten -1 (Tabelle @0x80120c40[3] -> 0x8010d0b8)",
-          schuesse);
-    CHECK(e->hp > 0,
-          "die HP sind dabei NICHT aufgebraucht (%d von %d) — der Zaehler gewinnt vor dem "
-          "Schaden, genau wie im Original", e->hp, budget0 ? e->hp : 0);
+    printf("  (2) Dauerfeuer: %d registrierte Treffer, Sub %u, HP %d\n", schuesse, e->sub_state_1, e->hp);
+    CHECK(schuesse == 0 && e->sub_state_1 != 7 && e->hp == hp_start,
+          "Runde 42 U8: kein Pistolenschuss trifft den Arm (%d Treffer), er vergraebt sich nicht (Sub %u), HP %d = %d",
+          schuesse, e->sub_state_1, e->hp, hp_start);
+    {   extern const signed char re15_writher_hit_cost[22];
+        int n = 0;
+        for (int f = 0; f < 800 && e->sub_state_1 != 7; f++) {
+            if (e->state == 1 && e->sub_state_1 != 6 && (f % 20) == 0 && n < 8) {   /* Sub 6 = Abtauchen laeuft */      /* Treffer-Analog: Felder wie der Resolver bei einem Treffer */
+                e->sub_state_3 = 0; e->sub_state_1 = 3; e->hit_react |= 1u;
+                e->writher_hits = (uint8_t)((int)e->writher_hits + re15_writher_hit_cost[3]);
+                e->state = 2; n++;
+            }
+            re15_enemy_ai_run_all(0);
+        }
+        printf("  (2b) Treffer-Analog: %d Treffer -> Sub %u, Budget %d\n", n, e->sub_state_1, (int8_t)e->writher_hits);
+        CHECK(e->sub_state_1 == 7 && n >= 2 && n <= 5,
+              "Maschinen-Pin: nach %d Treffern (Budget 1..4 + 1) VERGRABEN (Sub %u) - `bgez` @0x8010d14c", n, e->sub_state_1);
+    }
 
     /* --- (3) UND ER KOMMT NICHT WIEDER --------------------------------------------------- */
     {
@@ -221,6 +224,6 @@ int main(void)
           "aus der Zielauswahl des Aufloesers", e->hit_react);
 
     if (fails) { printf("\nABTAUCHEN: FAIL (%d)\n", fails); return 1; }
-    printf("\nABTAUCHEN: die Arme lassen sich wegschiessen und bleiben weg\n");
+    printf("\nABTAUCHEN: Schuesse gehen durch (Runde 42 U8); ein vergrabener Arm bleibt weg\n");
     return 0;
 }

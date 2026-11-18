@@ -10,8 +10,8 @@
  *     auf den Boden der Kraehe (+0x1C2, nicht ihre Flughoehe) und verlieren beim zweiten Kontakt Bit 0
  *     (FUN_80028AD8 `and v0,v0,-2` @0x80028CA0) -> nach spaetestens 120 Bildern ist KEIN Teil mehr gezeichnet
  *     (re15_re2z_gore_resolve out_draw == 0 fuer alle 13).
- *  D  Der Kraehen-HURT-Dispatch (@0x80104A18): Redhawk w7 -> RE2-Zeile 5 -> GIB; Pistole w3 -> Zeile 3 ->
- *     Flug-Treffer (kein GIB) — ueber re2c_hurt am echten Aktor (RE2-KI).
+ *  D  Der Kraehen-HURT-Dispatch (@0x80104A18): Redhawk w7 -> RE2-Zeile 5 -> GIB; Beretta w5 -> Zeile 4 ->
+ *     Flug-Treffer (kein GIB; bis Runde 42 die Pistole w3, die seit U5 zerlegt) — ueber re2c_hurt am echten Aktor (RE2-KI).
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -152,10 +152,12 @@ static void teil_d(void)
           "Redhawk (Zeile 5 @0x80104A2C): GIB -> 13 Teile mit eigener Matrix, Zustand (7,1), crow_hide 0 (ist %d/%u/%u/%u)",
           zerlegt, e->state, e->sub_state_1, e->crow_hide);
     e = kraehe();
-    e->state = 2; e->sub_state_1 = 3; e->sub_state_2 = 0;     /* HURT, +0x5 = Pistole (w3 -> Zeile 3) */
+    /* Runde 42 gore U5: die Pistole (w3) zerlegt die Kraehe jetzt (80 %-Video F07 F1 0:54,55, test_r42_tiere [u5]); der
+     * Flug-Treffer der Zeilen 0..4 bleibt fuer die Beretta (w5 -> Zeile 4). */
+    e->state = 2; e->sub_state_1 = 5; e->sub_state_2 = 0;     /* HURT, +0x5 = Beretta (w5 -> Zeile 4) */
     re15_re2crow_hurt_test(e, pl);
     zerlegt = 0; for (int i = 0; i < 13; i++) zerlegt += (e->re2z_part_flags[i] & 0x40u) ? 1 : 0;
-    CHECK(21, zerlegt == 0 && e->state == 2, "Pistole (Zeile 3 @0x80104A24 -> 0x80102934): kein GIB, Flug-Treffer (ist %d, st=%u)", zerlegt, e->state);
+    CHECK(21, zerlegt == 0 && e->state == 2, "Beretta (Zeile 4 @0x80104A24 -> 0x80102934): kein GIB, Flug-Treffer (ist %d, st=%u)", zerlegt, e->state);
 }
 
 int main(void)

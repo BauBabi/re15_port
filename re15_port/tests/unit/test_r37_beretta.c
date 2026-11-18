@@ -7,6 +7,11 @@
  * Ziel bei (200,-19600), zweites Ziel (200,-21600) — dieselbe freie Bahn wie die exe-Messung (Plaetze 5/4) und
  * integration_r36_schuss "frei".
  *
+ *  ⛔ RUNDE 42 STRANG GORE U6/U8 (BAUPLAN gore_matrix, Nutzerregel 16.11.2026): gegen DISC-ZEILEN (RE1.5-Gehirne 0x27/0x29/
+ *     0x2b/0x30, RE1.5-Zeilen bei Import AUS bzw. RE1.5-KI) zaehlt der Stoss wieder als EIN Treffer mit Spalte 5/6 (Disc
+ *     @0x8003396c); RE2-Zeilen (Zombie-Familie mit Import, Hund/Kraehe/Spinne unter dem RE2-Modell) behalten je Kugel einen
+ *     Treffer; der Alligator 0x23 bleibt unberuehrt (K-12). Der Gitterarm 0x1A ist kein Ziel mehr (U8): Teil J prueft, dass die
+ *     Kugeln durch ihn auf den 0x2b dahinter gehen. Die Abschnitte C/I/J sind entsprechend umgestellt.
  *  A  Kugel-Takt: Kugel 2/3 in Tick 3/6 (`addiu v0,zero,3/6` @0x80048914/1c, ESP-Routine-15-Kette Warte
  *     0/2/2 @CORE00.ESP 0x1188/0x11B0/0x11D8); Ticks 1/2/4/5/7.. loesen nichts auf.
  *  B  Drei Treffer auf DENSELBEN Zombie im RE1.5-Modus: der RE1.5-Riegel +0x93 Bit 0 (`ori v0,v0,0x1`
@@ -178,17 +183,28 @@ static void teil_i_standard_ki(int Z)
         int r1 = eintritt(w, 3);
         re2_nachlauf();
         re2_nachlauf();                                 /* zwei weitere Nachlaeufe: KEIN Filter gibt Bit 0 frei */
-        CHECK(71 + 4 * k, r1 == Z + 1 && e->hp == 2000 - T[k].sp3 && (e->hit_react & 1u),
+        /* ⛔ RUNDE 42 STRANG GORE U6 (BAUPLAN gore_matrix U6, Nutzerregel 16.11.2026 "80% build ist ausschlaggebend, dann 40%
+         * build"): gegen eine DISC-ZEILE zaehlt der Stoss wie auf der Disc als EIN Treffer mit Spalte 5/6 (ein `jal 0x80011f50`
+         * @0x8003396c, drei Patronen @0x80033974/7c/84). Ausgenommen bleibt der Alligator 0x23 (K-12, nicht anfassen): drei
+         * Treffer zu Spalte 3 wie seit Runde 37. */
+        const int ein = (T[k].t != 0x23);
+        const int k1 = ein ? T[k].sp5 : T[k].sp3;
+        CHECK(71 + 4 * k, r1 == Z + 1 && e->hp == 2000 - k1 && (e->hit_react & 1u),
               "Typ 0x%02x: Kugel 1 trifft (r=%d hp=%d, erwartet %d), Riegel +0x93 Bit 0 bleibt im RE2-Nachlauf stehen "
-              "(+0x93=%02x)", T[k].t, r1, e->hp, 2000 - T[k].sp3, e->hit_react);
+              "(+0x93=%02x)", T[k].t, r1, e->hp, 2000 - k1, e->hit_react);
         int n = ticks_re2(8, bei, 8);
         re15_beretta_r37_mess(&m);
-        CHECK(72 + 4 * k, n == 2 && bei[0] == 3 && bei[1] == 6 && m.treffer == 3 && m.riegel_geloest == 2,
-              "Typ 0x%02x: Kugel 2/3 treffen in Tick 3/6 (n=%d bei %d/%d, Treffer %u, Riegel %u)",
-              T[k].t, n, bei[0], bei[1], m.treffer, m.riegel_geloest);
-        CHECK(73 + 4 * k, e->hp == 2000 - 3 * T[k].sp3 && 3 * T[k].sp3 >= T[k].sp5,
-              "Typ 0x%02x: Stoss = 3 x Spalte 3 = %d (hp %d), nicht weniger als der alte EINE Treffer Spalte 5 = %d",
-              T[k].t, 3 * T[k].sp3, e->hp, T[k].sp5);
+        if (ein)
+            CHECK(72 + 4 * k, n == 0 && m.kugeln == 3 && m.treffer == 1 && m.riegel_geloest == 0,
+                  "Typ 0x%02x: EIN Treffer je Stoss (Runde 42 U6): Kugel 2/3 treffen nicht (n=%d, Kugeln %u, Treffer %u, Riegel %u)",
+                  T[k].t, n, m.kugeln, m.treffer, m.riegel_geloest);
+        else
+            CHECK(72 + 4 * k, n == 2 && bei[0] == 3 && bei[1] == 6 && m.treffer == 3 && m.riegel_geloest == 2,
+                  "Typ 0x%02x: Kugel 2/3 treffen in Tick 3/6 (n=%d bei %d/%d, Treffer %u, Riegel %u)",
+                  T[k].t, n, bei[0], bei[1], m.treffer, m.riegel_geloest);
+        CHECK(73 + 4 * k, e->hp == 2000 - (ein ? T[k].sp5 : 3 * T[k].sp3),
+              "Typ 0x%02x: Stoss = %s = %d (hp %d)", T[k].t, ein ? "EIN Treffer Spalte 5" : "3 x Spalte 3",
+              ein ? T[k].sp5 : 3 * T[k].sp3, e->hp);
         CHECK(74 + 4 * k, e->state == 2 && e->sub_state_1 == w, "Typ 0x%02x: Reaktion je Treffer (state %d, +0x5 %d)",
               T[k].t, e->state, e->sub_state_1);
     }
@@ -295,31 +311,29 @@ static int arm_szenario(int Z, int waffe, re15_ai_flavor_t fl, arm_erg_t *o)
 }
 static void teil_j_gitterarm(int Z)
 {
-    printf("== J Gitterarm 0x1A (RE2-Arm-Gehirn): Kugel 2/3 gehen am getroffenen Arm vorbei\n");
+    /* ⛔ RUNDE 42 STRANG GORE U8 (BAUPLAN gore_matrix U8, Nutzerregel 16.11.2026; "anschiessbare Gitterhaende" ist ein
+     * aufgehobener Entscheid): der Arm hat wie auf der Disc kein Zielband mehr (kein `jal 0x80012aa4` / `jal 0x80012974` im
+     * Arm-Code 0x8010c1ec-0x8010d7a0) - jede Kugel geht durch ihn hindurch auf den naechsten Kandidaten, den 0x2b dahinter.
+     * Der 0x2b traegt eine Disc-Zeile -> U6: EIN Treffer je Stoss mit Spalte 5 = 20 (@0x8006EFAC); die Browning trifft ihn mit
+     * Spalte 3 = 10 (@0x8006EFA4). Der Arm zieht sich nicht zurueck. */
+    printf("== J Gitterarm 0x1A (RE2-Arm-Gehirn): Schuesse gehen durch den Arm (Runde 42 U8)\n");
     arm_erg_t b, r;
-    /* Kontrolle: Browning, EIN Treffer -> Rueckzug-Ende = Bezug (exe: F80 = E+10, Dossier 9.1) */
     const int ok_b = arm_szenario(Z, 3, RE15_AI_FLAVOR_RE2, &b);
-    const int schaden = b.hp0 - b.hp_e;                   /* Spalte 3 = Einzelschuss (Browning und Kugel je M93R) */
-    CHECK(100, ok_b && schaden > 0 && b.treffer_arm == 0 && b.hp_rest == b.hp_e && b.rz_starts == 1 && b.ende > 0
-               && b.hinten == 0,
-          "Kontrolle Browning (RE2): Arm heraus %d, EIN Treffer (hp %d -> %d, Rest %d), Rueckzug %d x, Ende Tick %d, "
-          "dahinter -%d", b.raus, b.hp0, b.hp_e, b.hp_rest, b.rz_starts, b.ende, b.hinten);
+    CHECK(100, ok_b && b.hp_e == b.hp0 && b.treffer_arm == 0 && b.rz_starts == 0 && b.hinten == 10,
+          "Kontrolle Browning (RE2): Arm heraus %d, KEIN Treffer am Arm (hp %d -> %d), Rueckzug %d x, der 0x2b dahinter -%d "
+          "(Spalte 3 = 10)", b.raus, b.hp0, b.hp_e, b.rz_starts, b.hinten);
     static const re15_ai_flavor_t FL[3] = { RE15_AI_FLAVOR_RE2, RE15_AI_FLAVOR_RE15, RE15_AI_FLAVOR_MIXED };
     static const char *const FN[3] = { "RE2 (Standard)", "RE1.5", "MIXED" };
     for (int k = 0; k < 3; k++) {
         const int ok = arm_szenario(Z, 5, FL[k], &r);
-        CHECK(101 + 3 * k, ok && (r.d1d3 & 0x80u) && re15_beretta_r37_re2_pause_regelt(0x1Au) == 0,
-              "%s: Arm heraus %d, +0x1D3 vor Kugel 2 = %02x (Bit 0x80 aus arm_hurt @0x80100fa8-b0), kein Pausenfilter",
-              FN[k], r.raus, r.d1d3);
-        CHECK(102 + 3 * k, r.hp_e == r.hp0 - schaden && r.treffer_arm == 0 && r.hp_rest == r.hp_e
-                           && r.m.riegel_geloest == 1 && r.m.kugeln == 3,
-              "%s: EIN Treffer am Arm (hp %d -> %d, Rest %d, weitere %d); geloest wird nur der Riegel des 0x2b vor "
-              "Kugel 3 (%u, erwartet 1), drei Kugeln (%u)",
-              FN[k], r.hp0, r.hp_e, r.hp_rest, r.treffer_arm, r.m.riegel_geloest, r.m.kugeln);
-        CHECK(103 + 3 * k, r.rz_starts == 1 && r.ende == b.ende && r.hinten == 20 && r.m.treffer == 3,
-              "%s: Rueckzug EINMAL (%d x), Ende Tick %d wie Browning %d; Kugel 2/3 treffen den naechsten Kandidaten "
-              "0x2b (-%d, erwartet 2 x Spalte 3 = 20 @0x8006EFA4), Treffer gesamt %u",
-              FN[k], r.rz_starts, r.ende, b.ende, r.hinten, r.m.treffer);
+        CHECK(101 + 3 * k, ok && re15_beretta_r37_re2_pause_regelt(0x1Au) == 0,
+              "%s: Arm heraus %d, kein Pausenfilter fuer 0x1A", FN[k], r.raus);
+        CHECK(102 + 3 * k, r.hp_e == r.hp0 && r.treffer_arm == 0 && r.rz_starts == 0 && r.m.kugeln == 3,
+              "%s: KEINE Kugel trifft den Arm (hp %d -> %d, weitere %d, Rueckzug %d x), drei Kugeln (%u)",
+              FN[k], r.hp0, r.hp_e, r.treffer_arm, r.rz_starts, r.m.kugeln);
+        CHECK(103 + 3 * k, r.hinten == 20 && r.m.treffer == 1,
+              "%s: der 0x2b dahinter nimmt den Stoss als EINEN Treffer (-%d, erwartet Spalte 5 = 20 @0x8006EFAC), Treffer %u",
+              FN[k], r.hinten, r.m.treffer);
     }
 }
 
@@ -368,15 +382,16 @@ int main(void)
     spieler();
     z = mk(Z, 0x10, -19600, 250);
     eintritt(5, 3);
-    CHECK(20, z->hp == 245, "RE1.5-Zeile Zombie: Kugel 1 = 5 (Spalte 3), nicht 15 (Spalte 5): hp %d", z->hp);
+    /* Runde 42 U6: die RE1.5-Zeile ist eine Disc-Zeile -> EIN Treffer mit Spalte 5 = 15 (@0x8006e0d0 + 0x10*0x58 + 5*4) */
+    CHECK(20, z->hp == 235, "RE1.5-Zeile Zombie (Import AUS): Kugel 1 = 15 (Spalte 5, EIN Treffer je Stoss, U6): hp %d", z->hp);
     ticks(8, bei, 8);
-    CHECK(21, z->hp == 235, "drei Kugeln = 15 = der RE1.5-Feuerstoss (3 x 5): hp %d", z->hp);
+    CHECK(21, z->hp == 235, "Stoss = 15 = der RE1.5-Feuerstoss, Kugel 2/3 ohne Treffer: hp %d", z->hp);
     re15_beretta_r37_reset();
     spieler();
     z = mk(Z, 0x20, -19600, 500);                       /* Hund (RE1.5-Zeile): Spalte 3 = 10, Spalte 5 = 24 */
     eintritt(5, 3);
-    CHECK(22, z->hp == 490, "Hund 0x20 (RE1.5-Zeile @0x8006e0d0+0x20*0x58): Kugel 1 = 10 (Spalte 3), nicht 24 "
-          "(Spalte 5): hp %d", z->hp);
+    CHECK(22, z->hp == 476, "Hund 0x20 (RE1.5-Zeile @0x8006e0d0+0x20*0x58): Kugel 1 = 24 (Spalte 5, EIN Treffer, Runde 42 U6): "
+          "hp %d", z->hp);
     re15_re15_re2z_import_set(1);
     re15_beretta_r37_reset();
     spieler();

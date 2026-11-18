@@ -6800,6 +6800,13 @@ static void re15_crow_death(re15_actor_t *e)
     {
         int wl = e->sub_state_1;
         int gib = (wl >= 7 && wl <= 11) || wl == 13 || (wl >= 15 && wl <= 18);
+        /* Runde 42 Strang gore U5 (Nutzerregel 16.11.2026 "80% build ist ausschlaggebend"): die Pistole (Browning w3,
+         * SIG P228 w4) laesst die Kraehe in Fetzen zerfallen, 80 %-Video F07 F1 0:54,55-0:55,40 (Disc-Klasse waere
+         * @0x801211cc[3]/[4] = 0x80114738 "faellt ganz"). Unter dem 80 %-Schalter (RE15_KEIN_80PROZENT_GORE). */
+        {
+            extern int re15_zgore_80prozent(void);
+            if ((wl == 3 || wl == 4) && re15_zgore_80prozent()) gib = 1;
+        }
         if (gib && e->sub_state_1 != 7) e->sub_state_1 = 7;   /* auf die Port-GIB-Spur mappen */
     }
     if (e->sub_state_1 == 7) {   /* GIB lane 0x801149c4: 13 feather children (@0x80114a50) -> corpse */
@@ -8492,13 +8499,13 @@ static void re15_dog_ai_tick(int slot)
 
     case 3: { /* DEATH dispatcher FUN_80110dc0 -> rows @0x80121070 (audit #5 + verified detour claim) */
         re15_dog_fall_physics(e);
-        {   /* Runde 41 Spur GR N1 (GESTALTUNG / PORT-WAHL, Block re15_re2d_granate_teile in enemy_ai_re2_dog.c): auch der
-             * RE1.5-Hund zerfetzt bei Tod durch eine Explosivgranate (+0x5 = 9 Handgranate, 15 Werfer-Explosivrunde) —
-             * das RE1.5-Gehirn hat keine Teile-Mechanik (Luft-Tod FUN_80110eb0: nur Blut an Bone 0), die Teile kommen aus
-             * RE2 0x80104440 und fahren ueber die Part-Bruecke der Spur S. Einmal je Tod (re2z_part_gr). */
+        {   /* Runde 42 Strang gore U16 (ersetzt Runde 41 GR N1, Block re15_re2d_granate_teile in enemy_ai_re2_dog.c): der
+             * RE1.5-Hund an der HANDGRANATE (+0x5 = 9) bekommt den RE2-Teile-Wurf 0x80104440 (Drift, nach 29 Bildern weg) wie
+             * der RE2-Hund (Klammer K 0 -> Spalte < 3 @0x801046A8-C4); die Werfer-Explosivrunde (+0x5 = 15, K 1) wirft keine
+             * Teile. Das RE1.5-Gehirn selbst hat keine Teile-Mechanik (Luft-Tod FUN_80110eb0: nur Blut an Bone 0). */
             extern void re15_re2d_granate_teile(re15_actor_t *e);
             extern int  re15_zgore_80prozent(void);
-            if ((e->sub_state_1 == 9 || e->sub_state_1 == 15) && !e->re2z_part_gr && re15_zgore_80prozent())
+            if (e->sub_state_1 == 9 && !e->re2z_part_gr && re15_zgore_80prozent())
                 re15_re2d_granate_teile(e);
         }
         if (!re15_dog_row_airborne(e->sub_state_1)) {
@@ -11170,6 +11177,16 @@ static int re15_aspider_anim(re15_actor_t *e)
     if (e->anim_frac > 0) e->anim_frac--;
     return done;
 }
+/* Runde 42 Gore U7, Stufe 2 Runde 2: Liege-Pose des Platzwegs = letztes Bild von Clip 1 (`sb v1(1),0x94` @0x80114058; die
+ * Leiche 0x801153d4 spielt im Platzweg keinen Clip, @0x801154b4). */
+static void re15_aspider_platz_halten(re15_actor_t *e)
+{
+    re15_enemy_bank_t *pb = re15_enemy_find(e->type);
+    int pfc = (pb && pb->ok && 1 < pb->anim.clip_count) ? pb->anim.clips[1].frame_count : 0;
+    e->motion = 1;
+    e->anim_frame = (uint8_t)((pfc > 0) ? pfc - 1 : 0);
+    e->anim_frac = 0;
+}
 #include "re15_spinne_r42.h"
 #include "spinne_r42.inc"   /* Runde 42: Wand/Absatz/Decke 0x801118a8 + ACT 9/10/12/13 (STAGE2) */
 static void re15_adult_spider_ai_tick(int slot)
@@ -11520,6 +11537,8 @@ static void re15_adult_spider_ai_tick(int slot)
             e->sub_state_3 = 1;
         } else if (re15_aspider_anim(e)) {
             e->state = 7;
+            if (re15_spinnengore_platzwaffe(e->sub_state_1))
+                re15_aspider_platz_halten(e);   /* Runde 42 Gore U7: der Wrap auf Bild 0 ist kein Bild (Leiche haelt die Pose) */
             /* Runde 41 Spur S, Nachbesserung 2: Eintritts-Phase der Leiche je Todesweg (+0x7): Platzweg 0x80113ff8
              * Phase 2 `sw v0(7),4(v1)` @0x80114578-80 -> 0; Weg 0x8011461c Phase 4 `sw v1(0x03000007),4(v0)`
              * @0x80114d4c-60 -> 3. Die Wurzel waehlt den Weg ueber +0x5 (Tabelle @0x80118f38). */
@@ -11533,8 +11552,17 @@ static void re15_adult_spider_ai_tick(int slot)
                * je Takt wachsen (@0x801154a8-b8); am Ende Raum-SE 9 (@0x801155bc-cc). Offen bleibt das Flag-Wort |= 2|0x40.
                * Der Port posiert die Leiche wie bisher mit Clip 5 (Original: Phase 3 `sb 5,148` @0x80115520). */
         re15_spinnenlache_r15_leiche(e);
-        if (e->motion != 5) re15_aspider_clip(e, 5);
-        re15_aspider_anim(e);
+        if (re15_spinnengore_platzwaffe(e->sub_state_1)) {
+            /* ⛔ Runde 42 Gore U7, Stufe 2 Runde 2: der PLATZWEG (+0x5 -> Tabelle @0x80118f38 -> 0x80113ff8, Eintritt +0x7 = 0)
+             * setzt in der Leiche KEINEN Clip und spielt keinen (Phase 0 @0x80115414-68, Phase 1 `j 0x8011559c` @0x801154b4 am
+             * `jal 0x8001f314` @0x80115594 vorbei): der Kadaver bleibt auf dem letzten Bild des Tod-Clips 1 liegen
+             * (`sb v1(1),0x94` @0x80114058) - flach mit den Knien oben, wie im 80 %-Video F2 0:15,0-0:15,5. Vorher
+             * posierte der Port jede Leiche mit Clip 5 (auf dem Ruecken). Clip 5 bleibt dem leichten Tod (@0x80115520). */
+            re15_aspider_platz_halten(e);
+        } else {
+            if (e->motion != 5) re15_aspider_clip(e, 5);
+            re15_aspider_anim(e);
+        }
         break;
 
     default:  /* unreachable states -> resume the brain */

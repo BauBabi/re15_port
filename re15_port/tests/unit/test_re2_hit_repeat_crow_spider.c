@@ -306,14 +306,16 @@ int main(void)
     res_t c2air;
     run_ex("RE2   Kraehe Pistole IN DER LUFT", RE15_AI_FLAVOR_RE2, 0x21, 3, 900, 1200, &c2air);
 
-    CHECK(c2g.hits >= 3,
-          "(1) RE2 + Kraehe + Pistole: %d Treffer (>=3 gefordert) — mit dem +0x93-Latch-Bug war "
-          "es GENAU 1 und die Kraehe (HP 10 @0x80100324/348) blieb unsterblich "
-          "(Freigabe @0x80105F9C-FAC, Latch @0x800124E8/@0x800120F4-0x80012100)", c2g.hits);
+    /* ⛔ RUNDE 42 STRANG GORE U5 (Nutzerregel 16.11.2026, 80 %-Video F07 F1 0:54,55-0:55,40): die Pistole laesst die Kraehe beim
+     * ERSTEN Treffer in Fetzen zerfallen (RE2-GIB 0x80102CA0, hp -1) - mehrere Pistolentreffer an derselben Kraehe gibt es nicht
+     * mehr. Die Latch-Freigabe der HURT-Wurzel (@0x80102C7C) misst jetzt der Messer-Lauf (2)/(1c), dessen Flug-Treffer weiter
+     * ueberlebt wird. */
+    CHECK(c2g.hits >= 1 && c2g.killed,
+          "(1) RE2 + Kraehe + Pistole: %d Treffer, tot %d — der erste Pistolentreffer zerlegt sie (U5)", c2g.hits, c2g.killed);
     CHECK(c2g.killed,
           "(1b) RE2 + Kraehe + Pistole: die Kraehe stirbt (hp<0) — end-to-end");
-    CHECK(c2g.released,
-          "(1c) RE2 + Kraehe: +0x93 Bit 0 wird nach dem Treffer wieder frei "
+    CHECK(c2k.released,
+          "(1c) RE2 + Kraehe (Messer): +0x93 Bit 0 wird nach dem Treffer wieder frei "
           "(HURT-Wurzel -> ACTIVE @0x80102C7C mit a1=1, a2=9/0)");
     CHECK(c2k.hits >= 3,
           "(2) RE2 + Kraehe + Messer: %d Treffer (>=3 gefordert)", c2k.hits);
@@ -327,10 +329,10 @@ int main(void)
     /* (3b) GENAU DER FALL, der im Fix eb841053 unmessbar blieb ("die Kraehe fliegt aus dem
      *      Elevations-Band"): erst abheben lassen (Wake dist<0x709 @0x80100704), dann im
      *      Flug abschiessen — das Band folgt dem aim_band-Stempel ueber das D-Pad. */
-    CHECK(c2air.hits >= 3 && (c2air.killed || c2air.corpse),
-          "(3b) RE2 + Kraehe + Pistole IN DER LUFT: %d Treffer, tot=%d/corpse=%d (>=3 und tot "
-          "gefordert) — die fliegende Kraehe ist im richtigen Elevations-Band treffbar UND "
-          "wiederholt treffbar", c2air.hits, c2air.killed, c2air.corpse);
+    CHECK(c2air.hits >= 1 && (c2air.killed || c2air.corpse),
+          "(3b) RE2 + Kraehe + Pistole IN DER LUFT: %d Treffer, tot=%d/corpse=%d — die fliegende Kraehe ist im "
+          "richtigen Elevations-Band treffbar; seit Runde 42 U5 zerlegt sie der erste Pistolentreffer",
+          c2air.hits, c2air.killed, c2air.corpse);
 
     /* ===================== SPINNE — der Raum mit einer lebenden 0x25 ===================== */
     /* ROOM1090 stellt KEINE Typ-0x25 auf (gemessen: 0x25=0, 0x26=7 Baby-Spinnen) — der

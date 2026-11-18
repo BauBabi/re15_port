@@ -47,7 +47,16 @@ void re15_spinnengore_bein_ab(re15_actor_t *e, int leg);/* Paar leg/leg+1 + Blut
 /* Hebung in das RE2-Gehirn (enemy_ai_re2_spider.c). beine_vor = +0x220 vor dem Zeilen-Handler, frisch = erster Takt
  * des Treffers (+0x6 == 0). weapon_id = +0x5 VOR der Zeilen-Uebersetzung, row = +0x23C danach. */
 void re15_spinnengore_re2_treffer(re15_actor_t *e, uint8_t beine_vor, int frisch);
-void re15_spinnengore_re2_tod(re15_actor_t *e, int weapon_id, int row);
+/* Rueckgabe (Runde 42 Gore U7, Stufe 2 Runde 2): 0 = Pose bleibt beim RE2-Gehirn, RE15_SPINNENGORE_POSE_START = geplatzt,
+ * der Aufrufer setzt den Disc-Platzweg-Clip 1 (Bild 0, Ueberblendung 7, @0x80114054-88), RE15_SPINNENGORE_POSE_HALTEN = schon
+ * geplatzter Kadaver erneut getroffen, letztes Bild von Clip 1 halten. Kopf und Belege in spinnengore_r41.c. */
+#define RE15_SPINNENGORE_POSE_START   1
+#define RE15_SPINNENGORE_POSE_HALTEN  2
+#define RE15_SPINNENGORE_POSE_CLIP    1u   /* `ori v1,zero,1` / `sb v1,0x94(v0)` @0x80114054-58 (Disc STAGE2) */
+int  re15_spinnengore_re2_tod(re15_actor_t *e, int weapon_id, int row);
+/* 1 = dieser Platz traegt die Liege-Pose des geplatzten Kadavers (nur RE2-Gehirn, Typ 0x25). */
+int  re15_spinnengore_platzpose(const re15_actor_t *e);
+void re15_spinnengore_platzpose_loeschen(const re15_actor_t *e);
 
 /* Schritt 5 (Inventur je RE2-Gehirn): Hund 0x20 — Part-Bruecke beim RE2-Teile-Wurf 0x80104440 seeden, damit die
  * 7 geworfenen Parts (@0x80105680) gezeichnet werden (re15_re2z_gore_active Typ 0x20). */

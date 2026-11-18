@@ -10591,6 +10591,42 @@ re_title:;
                             re15_render_shadow_quad(nsx[0], nsy[0], nsx[1], nsy[1],
                                                     nsx[2], nsy[2], nsx[3], nsy[3]);
                     }
+                    /* Runde 42 Gore U13: die Lache des liegenden Granaten-Ueberlebenden (re15_re2z_lache_tick) liegt FEST am
+                     * Boden, nicht am Aktor - eigenes Viereck mit derselben Projektion und der Leichen-Tinte des RE2-Gehirns
+                     * (0x00BFBF10 @0x8010a4c0-508). */
+                    if (npc->re2z_lache_an >= 2u && nis_zombie) {   /* 2 = waechst, 3 = fertig (Runde 3) */
+                        int32_t lw = npc->re2z_lache_w, lh = npc->re2z_lache_h;
+                        int32_t lc[4][3] = { { -lw, 0, lh }, { -lw, 0, -lh }, { lw, 0, lh }, { lw, 0, -lh } };
+                        int32_t lyaw[9];
+                        re15_camera_yaw_matrix_angle(npc->re2z_lache_yaw, lyaw);
+                        int32_t lwelt[3] = { npc->re2z_lache_x, npc->re2z_lache_y, npc->re2z_lache_z };
+                        int32_t lrot[9], ltr[3], lmac[4][3];
+                        re15_camera_compose_view_bone(&cam_view, lyaw, lwelt, lrot, ltr);
+                        for (int v = 0; v < 4; v++)
+                            for (int r = 0; r < 3; r++)
+                                lmac[v][r] = (int32_t)(((int64_t)lc[v][0] * lrot[r*3+0] + (int64_t)lc[v][1] * lrot[r*3+1] +
+                                                        (int64_t)lc[v][2] * lrot[r*3+2]) >> 12) + ltr[r];
+                        int lsx[4] = { 0 }, lsy[4] = { 0 };
+                        int32_t lvz = 0;
+                        uint8_t ltri[2];
+                        int lok = re15_objpoly_r38_schatten(lmac, (int)cam_view.fov_screen_dist, cx, cy, lsx, lsy, &lvz, ltri);
+                        {   /* Runde 3 MESSSCHIENE (kein Verhalten): geht das Lachen-Viereck an den Zeichner? */
+                            static FILE *s_gl = NULL; static int s_gl_init = 0;
+                            if (!s_gl_init) { s_gl_init = 1; const char *gp = getenv("RE15_GORE_ZEICHEN_LOG"); if (gp && *gp) { char n2[600]; snprintf(n2, sizeof n2, "%s.lache", gp); s_gl = fopen(n2, "w"); } }
+                            if (s_gl) {
+                                fprintf(s_gl, "GL F=%u s=%d an=%u halb=%d/%d welt=(%d,%d,%d) gezeichnet=%d ecken=(%d,%d)(%d,%d)(%d,%d)(%d,%d)\n",
+                                        (unsigned)g_engine.frame_count, (int)(npc - g_actors), (unsigned)npc->re2z_lache_an, (int)lw, (int)lh,
+                                        (int)lwelt[0], (int)lwelt[1], (int)lwelt[2], lok, lsx[0], lsy[0], lsx[1], lsy[1], lsx[2], lsy[2], lsx[3], lsy[3]);
+                                fflush(s_gl);
+                            }
+                        }
+                        if (lok) {
+                            re15_render_pc_shadow_tiefe(lvz, 0);
+                            re15_render_pc_shadow_dreiecke((uint8_t)(ltri[0] | (ltri[1] << 1)));
+                            re15_render_shadow_quad_c(lsx[0], lsy[0], lsx[1], lsy[1], lsx[2], lsy[2], lsx[3], lsy[3],
+                                                      0x10, 0xBF, 0xBF);
+                        }
+                    }
                 }
 
                 /* GIB-Scatter (Kraehe): Original zerlegt den Koerper in die 13 Bone-Parts
@@ -11199,19 +11235,28 @@ re_title:;
                     static re15_skel_pose_t s_low_poses[RE15_EMD_MAX_BONES];
                     static int s_low_kf_cache = -1;
                     static const re15_emd_skeleton_t *s_low_skel_cache = NULL;
-                    if (npc->re2z_rag_anchor_on && nbi >= 1 && nbi <= 6 &&
+                    static int s_low_frz_cache = -1;   /* Runde 42 Gore Runde 3: eingefrorenes Becken (re15_re2z_beine_einfrieren) */
+                    /* Runde 42 U1 (PORT-WAHL, re15_damage.c re15_enemy_bone_world_pos): die stehenden Granatwerfer-Beine
+                     * (re2z_ok_modus 1) posieren auch Part 7 (linker Fuss) aus der eigenen Pose. */
+                    if (npc->re2z_rag_anchor_on && nbi >= 1 && nbi <= (npc->re2z_ok_modus != 0u ? 7 : 6) &&
                         nbi < npc_bones && npc_skel) {
                         const re15_emd_skeleton_t *lskel = NULL;
                         int lkf = re15_re2z_lower_kf(npc, &lskel);
                         if (!lskel) lskel = npc_skel;   /* Bank fehlt -> Haupt-Skel */
-                        if (lkf != s_low_kf_cache || lskel != s_low_skel_cache) {
+                        int lfrz = (npc->re2z_low_frozen && npc->re2z_ok_modus != 3u) ? 1 + (npc->re2z_ok_modus != 0u) : 0;
+                        if (lkf != s_low_kf_cache || lskel != s_low_skel_cache || lfrz != s_low_frz_cache) {
                             void *sav = g_anim_pose_actor;
                             g_anim_pose_actor = NULL;       /* QUERY: den Crossfade nicht stoeren */
                             /* MIT lskel posieren, nicht mit npc_skel: beide Paare teilen zwar
                              * das Struktur-EMR (dir[2]), haben aber EIGENE Keyframe-Pools
                              * (dir[4] bzw. dir[6], re2_ems.c:144-150). */
                             if (re15_skel_compute_pose(lskel, lkf, s_low_poses) == 0) {
-                                s_low_kf_cache = lkf; s_low_skel_cache = lskel;
+                                /* Runde 42 Gore Runde 3: nach part[1] |= 0x40 bleibt die Becken-Matrix stehen, die Kinder
+                                 * haengen daran (RE2 FUN_80027434 @0x80027498-9C, Block ueber re15_re2z_beine_einfrieren) */
+                                extern void re15_re2z_beine_einfrieren(const re15_actor_t *e, const re15_emd_skeleton_t *skel,
+                                                                       re15_skel_pose_t *P);
+                                re15_re2z_beine_einfrieren(npc, lskel, s_low_poses);
+                                s_low_kf_cache = lkf; s_low_skel_cache = lskel; s_low_frz_cache = lfrz;
                             } else {
                                 s_low_kf_cache = -1;
                             }
@@ -11265,12 +11310,25 @@ re_title:;
                     /* Tentakel-Meshes 1..3 (RE2-RAM s09: je 4 Vertices +-5 = Platzhalter-Quad) stehen an den Teil-Lagen der
                      * GESTRECKTEN Kette (oben re15_g5_tentakel_kette_strecken); Teile 1..3 tragen kein Flag 0x400 (Ctor
                      * `ori 0x4800` @0x80100774-0x8010078c), also keine zweite Streckung um Teil 0. */
+                    /* Runde 42 Gore Runde 2: abgetrennte Beine mit eigener (eingefrorener) Drehung, Block ueber
+                     * re15_re2z_beine_eigene_drehung (Disc `ori 0x40` @0x80108820-98, RE2 @0x8010BA88-9C). */
+                    const int32_t *nyaw_b = nyaw;
+                    int32_t nyaw_beine[9];
+                    {   int16_t byaw;
+                        if (re15_re2z_beine_eigene_drehung(npc, nbi, &byaw)) {
+                            int32_t bs = re15_sin_q12(byaw), bc = re15_cos_q12(byaw);
+                            int32_t m[9] = { bc, 0, bs, 0, 0x1000, 0, -bs, 0, bc };
+                            for (int k = 0; k < 9; k++)
+                                nyaw_beine[k] = npc->render_scale_q12 ? ((m[k] * (int32_t)npc->render_scale_q12) >> 12) : m[k];
+                            nyaw_b = nyaw_beine;
+                        }
+                    }
                     int32_t nyawed_rot[9];
                     for (int r = 0; r < 3; r++) {
                         for (int c = 0; c < 3; c++) {
                             int64_t s = 0;
                             for (int k = 0; k < 3; k++)
-                                s += (int64_t)nyaw[r*3+k] * (int64_t)np->rot[k*3+c];
+                                s += (int64_t)nyaw_b[r*3+k] * (int64_t)np->rot[k*3+c];
                             nyawed_rot[r*3+c] = (int32_t)(s >> 12);
                         }
                     }
@@ -11278,7 +11336,7 @@ re_title:;
                     for (int r = 0; r < 3; r++) {
                         int64_t s = 0;
                         for (int k = 0; k < 3; k++)
-                            s += (int64_t)nyaw[r*3+k] * (int64_t)np->trans[k];
+                            s += (int64_t)nyaw_b[r*3+k] * (int64_t)np->trans[k];
                         nyawed_trans[r] = (int32_t)(s >> 12);
                     }
                     int32_t nbone_world_trans[3] = {
@@ -11352,6 +11410,37 @@ re_title:;
                         (void)re15_re2z_gore_part_matrix(npc, nbi,
                                                          (uint32_t)g_engine.frame_count,
                                                          nyawed_rot, nbone_world_trans);
+                    {   /* Runde 42 Gore Runde 3 (Pruefbericht R1) MESSSCHIENE RE15_GORE_ZEICHEN_LOG=<datei>, kein Verhalten: je
+                         * GEZEICHNETEM Teil 0..7 eines sterbenden/toten RE2-Zombies (0x10-0x18) die Welt-Lage, mit der der
+                         * Zeichner ihn wirklich setzt (nach Bodenanker und Gore-Matrix), daneben re15_enemy_bone_world_pos (die
+                         * Lage, die die Riegel pruefen). Ein Teil, das `continue` oben auslaesst, erscheint nicht. */
+                        static FILE *s_gz = NULL; static int s_gz_init = 0;
+                        if (!s_gz_init) { s_gz_init = 1; const char *gp = getenv("RE15_GORE_ZEICHEN_LOG"); if (gp && *gp) s_gz = fopen(gp, "w"); }
+                        /* Runde 42 Gore U7, Stufe 2 Runde 2 (Pruefbericht s2 r1 Rot 1, kein Verhalten): je GEZEICHNETEM Teil einer
+                         * toten Spinne 0x25 (Zustand 7) die Welt-Lage, mit der der Zeichner es setzt. Teile, die `continue` oben
+                         * auslaesst (un-Bit), erscheinen nicht; sc=1 = als Scherben gezeichnet (Wort & 0x08, @0x80023410). Auswerter test_r41_spinnengore pruef_zeichen. */
+                        if (s_gz && npc->type == 0x25u && npc->state == 7u) {
+                            fprintf(s_gz, "GS F=%u s=%d b=%d mo=%d af=%d y=%d w=(%d,%d,%d) sc=%d\n",
+                                    (unsigned)g_engine.frame_count, (int)(npc - g_actors), nbi, (int)npc->motion,
+                                    (int)npc->anim_frame, (int)npc->y,
+                                    (int)nbone_world_trans[0], (int)nbone_world_trans[1], (int)nbone_world_trans[2], r15_scherben);
+                            fflush(s_gz);
+                        }
+                        if (s_gz && nbi <= 7 && npc->type >= 0x10u && npc->type <= 0x18u &&
+                            (npc->hp < 0 || npc->re2z_rag_anchor_on || npc->re2z_ok_modus != 0u)) {
+                            int32_t q[3];
+                            re15_enemy_bone_world_pos(npc, nbi, q);
+                            fprintf(s_gz, "GZ F=%u s=%d b=%d st=%u/%u/%u hp=%d ok=%u/%u anc=%u f10e=%04x xz=(%d,%d) rot=%d "
+                                          "w=(%d,%d,%d) q=(%d,%d,%d)\n",
+                                    (unsigned)g_engine.frame_count, (int)(npc - g_actors), nbi, (unsigned)npc->state,
+                                    (unsigned)npc->sub_state_1, (unsigned)npc->sub_state_2, (int)npc->hp,
+                                    (unsigned)npc->re2z_ok_modus, (unsigned)npc->re2z_ok_steh, (unsigned)npc->re2z_rag_anchor_on,
+                                    (unsigned)npc->re2z_f10e, (int)npc->x, (int)npc->z, (int)npc->rot_y,
+                                    (int)nbone_world_trans[0], (int)nbone_world_trans[1], (int)nbone_world_trans[2],
+                                    (int)q[0], (int)q[1], (int)q[2]);
+                            fflush(s_gz);
+                        }
+                    }
                     /* CANONICAL per-bone light fold (2026-06-02). */
                     if (npc_lit)
                         re15_light_ctx_rotate_for_bone(&lctx_npc_world, nyawed_rot,

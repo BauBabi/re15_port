@@ -409,6 +409,7 @@ static void re2s_init(re15_actor_t *e)
 
     re2s_clip(e, 0x00000001u);                             /* +0x14C = 1 @0x8010035C */
     (void)re2s_advance(e, 256);                            /* @0x80100358 */
+    re15_spinnengore_platzpose_loeschen(e);                /* Runde 42 Gore U7: Liege-Pose gehoert dem vorigen Leben */
 
     /* ===== DIE TREFFERBOX +0x98 / +0x9E ===================================================
      * EMS25.BIN kopiert sie als BLOCK von acht Woertern nach +0x84..+0xA0. Der Vollscan
@@ -2460,11 +2461,55 @@ static void re2s_sink_drive(re15_actor_t *e)
     e->re2s_sink23e = 3;                                   /* @0x8010500C */
 }
 
+/* ⛔ RUNDE 42 STRANG GORE U7, Stufe 2 Runde 2 (Pruefbericht s2 r1 Rot 1) — LIEGE-POSE des geplatzten Kadavers, Kopf und Belege
+ * in spinnengore_r41.c (re15_spinnengore_platzpose). Hier die beiden Bausteine im RE2-Gehirn:
+ *   halten: letztes Bild von Clip 1 stehen lassen (die Disc-Leiche 0x801153d4 spielt im Platzweg keinen Clip,
+ *           `j 0x8011559c` @0x801154b4 ueberspringt `jal 0x8001f314` @0x80115594);
+ *   Tod:    Clip 1 bis zum Ende (Disc-Phase 1 `jal 0x8001f314`, a3 = 0x200 @0x80114548-4c), dann der Uebergang der
+ *           RE2-Zeile selbst — der Wasser-Zweig (allgemein @0x80103E3C-94, Sonderzeile wortgleich @0x801045E4-3C), das
+ *           Leichen-Wort 7 (@0x80103E9C / @0x80104644) und nur in der allgemeinen Zeile HP = 1 / +0x224 = 1 bei +0x239 == 0
+ *           (@0x80103EA0-B8; die Sonderzeile 5,6,7,8,17 und Zeile 9 setzen beides nicht, Kopf re2s_death_row_special).
+ *           PORT-WAHL: das Bild des Uebergangs ist das Ende von Clip 1 (8 Bilder) statt des Clip-12-Flags 0x80000/0x40000. */
+static void re2s_platzpose_halten(re15_actor_t *e)
+{
+    e->motion      = (int16_t)RE15_SPINNENGORE_POSE_CLIP;
+    int fc = re15_actor_clip_len(e);                       /* Laenge von Clip 1 (erst NACH dem Clip-Wechsel lesen) */
+    e->anim_frame  = (fc > 0) ? (uint32_t)(fc - 1) : 0u;
+    e->anim_frac   = 0;
+    e->anim_freeze = 0;
+    e->anim_flags &= (uint16_t)~(0x80u | 0x04u);
+}
+
+static void re2s_death_platzpose(re15_actor_t *e)
+{
+    if (re2s_advance(e, 512)) {                            /* Disc @0x80114548-4c (a3 = 0x200) */
+        const int sonderzeile = (e->re2s_row23c == 5u || e->re2s_row23c == 6u || e->re2s_row23c == 7u ||
+                                 e->re2s_row23c == 8u || e->re2s_row23c == 17u || e->re2s_row23c == 9u);
+        re2s_platzpose_halten(e);
+        if (e->re2s_water10c != 0) {                       /* @0x80103E3C / @0x801045E4 */
+            if (e->re2s_row23c == 9u || e->re2s_row23c == 10u || e->re2s_row23c == 16u)
+                re2s_gore(e);                              /* @0x80103E70 / @0x80104618 */
+            e->re2s_c23a = -1;                             /* @0x80103E84 / @0x8010462C */
+            if (e->re2s_sink23e == 0u) {                   /* @0x80103E88 / @0x80104628 */
+                e->re2s_sink23e = 3;                       /* @0x80103E8C / @0x80104634 */
+                e->re2s_sink23f = 1;                       /* @0x80103E94 / @0x8010463C */
+            }
+        }
+        re2s_word(e, 7u);                                  /* @0x80103E9C / @0x80104644 */
+        if (!sonderzeile && e->re2s_dead239 == 0u) {       /* @0x80103EA0-A8 */
+            e->hp = 1;                                     /* @0x80103EB0 */
+            e->re2s_done224 = 1;                           /* @0x80103EB8 */
+        }
+    }
+    if (e->re2s_c23a < 0) re2s_sink_drive(e);              /* Tail @0x80103CF8-D04 */
+}
+
 static void re2s_death(re15_actor_t *e, re15_actor_t *pl)
 {
     (void)pl;
     const int frisch = (e->sub_state_2 == 0);
     const int waffe  = e->sub_state_1;                     /* RE1.5-Waffen-Id VOR der Uebersetzung (Runde 41 Spur S) */
+    if (!frisch && re15_spinnengore_platzpose(e)) { re2s_death_platzpose(e); return; }   /* Runde 42 Gore U7 */
     if (frisch) {
         e->sub_state_1 = re2s_row_translate(e->sub_state_1);     /* PORT-ZUORDNUNG, s. HURT */
         e->re2s_row23c = e->sub_state_1;                   /* +0x23C @0x80103C9C-B4 */
@@ -2487,7 +2532,15 @@ static void re2s_death(re15_actor_t *e, re15_actor_t *pl)
     /* Runde 41 Spur S (PORT-WAHL Gore-Maximum, RE15_KEIN_80PROZENT_GORE): im frischen Takt der RE1.5-Komplett-Platzer
      * (0x80113ff8 Phase 0 @0x8011403c) fuer RE1.5-Platzwaffen (@0x80118f38), Krit (@0x801146b0) und die RE2-Platzzeilen
      * (FUN_80104890 @0x80104588 / Zeile 9 @0x80104A2C, Saeure Teil 19 @0x80104bcc), sonst Blut an Teil 0 (@0x80114654). */
-    if (frisch) re15_spinnengore_re2_tod(e, waffe, (int)e->re2s_row23c);
+    if (frisch) {
+        const int pose = re15_spinnengore_re2_tod(e, waffe, (int)e->re2s_row23c);
+        /* Runde 42 Gore U7: Disc-Platzweg Phase 0 — Clip 1 Bild 0 Ueberblendung 7 (@0x80114054-58, @0x80114078,
+         * @0x80114084-88), als Clip-Wort (7 << 16) | 1. */
+        if (pose == RE15_SPINNENGORE_POSE_START)
+            re2s_clip(e, 0x00070000u | RE15_SPINNENGORE_POSE_CLIP);
+        else if (pose == RE15_SPINNENGORE_POSE_HALTEN)
+            re2s_platzpose_halten(e);
+    }
 }
 
 static void re2s_death_row_generic(re15_actor_t *e)
@@ -2574,7 +2627,11 @@ static void re2s_state4(re15_actor_t *e) { (void)e; }      /* @0x80104CF0-F4 */
  *   word0 |= 0x400 @0x80104DB0; Y < Spieler-Y -> word0 |= 0x00800000 @0x80104DD0 (Render).  */
 static void re2s_corpse(re15_actor_t *e)
 {
-    if (e->sub_state_1 == 0) {                             /* @0x80104D10 */
+    if (re15_spinnengore_platzpose(e)) {
+        /* Runde 42 Gore U7: der geplatzte Kadaver liegt still auf dem letzten Bild von Clip 1 (Disc-Leiche Platzweg: kein
+         * Clip, kein `jal 0x8001f314`, @0x801154b4 -> @0x8011559c). Der Clip-13-Zyklus (@0x80104D10-64) entfaellt. */
+        re2s_platzpose_halten(e);
+    } else if (e->sub_state_1 == 0) {                      /* @0x80104D10 */
         if (re2s_advance(e, 512)) {                        /* @0x80104D18-20 */
             e->sub_state_1 = 1;                            /* @0x80104D2C */
             e->re2z_dir16a = (uint8_t)((re2s_rand() & 0x1fu) + 30u);   /* +0x16A @0x80104D30-3C */

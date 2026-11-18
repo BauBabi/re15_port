@@ -97,7 +97,25 @@ void re15_spinnengore_platzen(re15_actor_t *e)
     re15_spinnengore_teil_platzt(slot, 19);
     re15_enemy_fx19700(e, 0x00082000u, 0, null3);
     re15_enemy_fx19700(e, 0x00082000u, 19, null3);
-    (void)re15_spinnengore_beine_fliegen(slot);
+    /* ⛔ RUNDE 42 STRANG GORE U7 (BAUPLAN gore_matrix U7, Nutzerregel 16.11.2026 "80% build ist ausschlaggebend"): im
+     * 80 %-Video platzt die Spinne, und der flache Kadaver sackt MIT gespreizten Beinen zusammen - F08 F2 0:14,72-0:15,52
+     * (Platzen), Kadaver mit Beinen 0:15,1-0:15,5; E21 B 5:18,23-5:18,90. Der Disc-Beinflug (@0x8011419c-52c, Zwilling
+     * @0x80114778-b0c) ist das andere Bild und laeuft nur noch ohne 80 %-Gestaltung (RE15_KEIN_80PROZENT_GORE=1), in beiden
+     * Gehirnen (diese Funktion ist der einzige Platzer). Schon vorher abgeschossene Beine bleiben ab (re15_spinnengore_bein_ab). */
+    if (!re15_spinnengore_an()) {
+        (void)re15_spinnengore_beine_fliegen(slot);
+    } else {
+        /* ⛔ Stufe 2 Runde 2 (Messung im Fenster 2026-11-18, ROOM2070): Teil 0 und 19 haben nach dem Platzen die eigene
+         * Matrix 0x40 und fliegen als Scherben (vy -50, +3 je Bild, @0x801140f4-fc). Der Zeichner haengt jedes Kind OHNE
+         * eigene Matrix an die Matrix seines Elternteils (FUN_8001e9ec: `andi 0x40` @0x8001ea10, CompMatrix 0x80022da0
+         * @0x8001ea24). Die Disc trifft diesen Fall nie, weil dort alle Beine selbst 0x40 bekommen und wegfliegen. Mit
+         * den Beinen am Kadaver hingen sie am fliegenden Teil 0: gemessen (gz.log, integration_r41_spinnengore L7) stiegen
+         * und fielen die Knie 29 Bilder lang mit den Scherben (y -901 -> -1001 -> -791 bei festem x/z) und sprangen dann
+         * in die Liege-Pose, als Teil 0 erlosch (@0x8001f208-214). Im 80 %-Video (F2 0:14,7-0:15,0) bleiben die Beine
+         * waehrend des Scherbenflugs am Boden. PORT-WAHL: die Kinder der beiden Rumpfteile verketten nicht an deren Flug. */
+        re15_teil_t *t = re15_teile(slot);
+        if (t) { t[0].keine_kinder = 1; t[19].keine_kinder = 1; }
+    }
 }
 
 /* Beinpaar leg/leg+1 platzt, Blut zweimal an Teil leg+2 (a2 = pool + 172*leg + 408 @0x80113dc8 / @0x80113e20). */
@@ -141,15 +159,69 @@ void re15_spinnengore_re2_treffer(re15_actor_t *e, uint8_t beine_vor, int frisch
  *   - die RE2-Zeile ihren eigenen Hinterleib-Platzer faehrt: FUN_80104890 aus 0x801044D0 (Zeilen 5,6,7,8,17,
  *     `jal 0x80104890` @0x80104588) und ueber Zeile 9 (@0x80104A2C), Saeure-Zeile 11 wirft Teil 19 (@0x80104bcc-bf4).
  * Sonst das RE1.5-Todesblut an Teil 0 (0x8011461c @0x80114654). */
-void re15_spinnengore_re2_tod(re15_actor_t *e, int weapon_id, int row)
+/* ⛔ RUNDE 42 STRANG GORE U7, Stufe 2 Runde 2 (Pruefbericht s2 r1 Rot 1: "vor der Kamera stehen nur acht Beine senkrecht
+ * hoch und zappeln", 80 %-Video F2 0:15,0-0:15,5 dagegen flach gespreizt am Boden): die LIEGE-POSE des geplatzten Kadavers.
+ *
+ * MECHANISMUS (Disc STAGE2.BIN, selbst disassembliert): der Platzweg 0x80113ff8 setzt in Phase 0 den Clip 1
+ *   `ori v1,zero,1` / `sb v1,0x94(v0)` @0x80114054-58 (Clip 1), `sb zero,0x95(v0)` @0x80114078 (Bild 0),
+ *   `ori v0,zero,7` / `sb v0,0x8f(v1)` @0x80114084-88 (Ueberblendung 7);
+ * Phase 1 spielt ihn mit `jal 0x8001f314`, a3 = 0x200 @0x80114548-4c bis zum Ende (+0x7 += Ergebnis @0x80114564),
+ * Phase 2 schreibt das Leichen-Wort `ori v0,zero,7` / `sw v0,4(v1)` @0x80114578-80. Die Leiche 0x801153d4 (Phasentabelle
+ * @0x801002a4 = {0x80115414, 0x8011546c, 0x801155d4, 0x801154bc, 0x80115534}) setzt im Platzweg (Eintritt +0x7 = 0)
+ * KEINEN Clip und spielt keinen: Phase 1 springt `j 0x8011559c` @0x801154b4 am `jal 0x8001f314` @0x80115594 vorbei.
+ * Nur der leichte Tod (Eintritt 3) setzt Clip 5 (`sb v0(5),0x94` @0x80115520) und spielt ihn (Phase 4).
+ * Die Pose bleibt also auf dem LETZTEN Bild von Clip 1 stehen: Koerper am Boden, Knie hoch, Fuesse am Boden.
+ *
+ * Gemessen (Sonde s2r2/probe/pose.c, beide Baenke): RE2-EMS25 Clip 1 == RE1.5-EM025 Clip 1 (8 Bilder, Keyframes 16..30,
+ * 0 Abweichungen in Winkeln und Wurzel). RE2 Clip 12/13 == RE1.5 Clip 4/5 = auf den Ruecken drehen / auf dem Ruecken
+ * zappeln (Clip 13 Bild 67: Knie y -61..+8, Fussspitzen bis -1530 = "Beine senkrecht hoch"). Das 80 %-Video zeigt beides:
+ * F08 (Platzen) liegt flach mit gespreizten Beinen = Clip 1 gehalten, F11 (Dauerfeuer, kein Platzen) dreht sich auf den
+ * Ruecken = Clip 4/12. Das RE2-Gehirn spielte nach dem Platzen Clip 12/13 -> Rot 1.
+ *
+ * Marke je Platz: gesetzt beim Platzen im RE2-Gehirn (nur unter re15_spinnengore_an, sonst gibt es dort kein Platzen),
+ * geloescht im RE2-INIT und bei jedem Tod ohne Platzen. */
+static uint8_t s_platzpose[RE15_ACTOR_MAX];
+
+int re15_spinnengore_platzpose(const re15_actor_t *e)
+{
+    if (!e) return 0;
+    int slot = (int)(e - g_actors);
+    if (slot <= 0 || slot >= RE15_ACTOR_MAX) return 0;
+    return s_platzpose[slot] && e->type == 0x25u;
+}
+
+void re15_spinnengore_platzpose_loeschen(const re15_actor_t *e)
+{
+    if (!e) return;
+    int slot = (int)(e - g_actors);
+    if (slot <= 0 || slot >= RE15_ACTOR_MAX) return;
+    s_platzpose[slot] = 0;
+}
+
+int re15_spinnengore_re2_tod(re15_actor_t *e, int weapon_id, int row)
 {
     static const int32_t null3[3] = { 0, 0, 0 };
-    if (!e || !re15_spinnengore_an()) return;
+    if (!e) return 0;
+    int slot = (int)(e - g_actors);
+    if (slot <= 0 || slot >= RE15_ACTOR_MAX) return 0;
+    if (s_platzpose[slot]) {
+        /* Der geplatzte Kadaver (RE2-Leiche HP 1, bleibt beschiessbar, re15_damage.c "RE2-ADULT-SPINNE") wird erneut
+         * getroffen: kein zweites Platzen (Teile 0/19 sind schon Scherben), die Liege-Pose bleibt (Disc: der Platzweg
+         * hat keinen zweiten Eintritt, die Leiche 0x801153d4 spielt keinen Clip). */
+        return RE15_SPINNENGORE_POSE_HALTEN;
+    }
+    if (!re15_spinnengore_an()) return 0;
     int re2_platzt = (row == 5 || row == 6 || row == 7 || row == 8 || row == 9 || row == 11 || row == 17);
-    if (re15_spinnengore_platzwaffe(weapon_id) || (e->hit_react & 0x40) || re2_platzt)
+    if (re15_spinnengore_platzwaffe(weapon_id) || (e->hit_react & 0x40) || re2_platzt) {
         re15_spinnengore_platzen(e);
-    else
-        re15_enemy_fx19700(e, 0x00082000u, 0, null3);
+        /* PORT-WAHL: an der Wand/Decke (+0x222 != 0) bleibt der RE2-Sturz (Clip 12 ab Bild 9, y += 800 @0x80103F38-50);
+         * die Liege-Pose gilt fuer die Spinne am Boden, wie in F08. */
+        if (e->re2s_mode222 != 0u) return 0;
+        s_platzpose[slot] = 1;
+        return RE15_SPINNENGORE_POSE_START;
+    }
+    re15_enemy_fx19700(e, 0x00082000u, 0, null3);
+    return 0;
 }
 
 /* ===== Schritt 5: Hund 0x20 — der RE2-TEILE-WURF wird gezeichnet ==============================================

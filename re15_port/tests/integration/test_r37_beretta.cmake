@@ -224,24 +224,11 @@ function(r37_schaden_pruefen _lauf _dir _dhp)
     message(STATUS "${_tag} [${_lauf}]: OK — Schaden je Kugel ${_dhp}")
 endfunction()
 
-# Runde 38 Spur T: der Spiderman (0x2B) mit grid 0x41 steckt byte-true versteckt im Schacht, bis der Spieler den
-# Ausloeser betritt (Untertabelle @0x8011A270 [1], P1 wartet auf grid 0x42 @0x8011545C-60) — und ist dort kein Ziel
-# (Aim-Latch grid & 0x60 @0x8003710c). Der Fall nimmt deshalb den SCHON DRAUSSEN stehenden Spiderman (Ck(4,0xD6)=1 ->
-# Sce_em_set grid 0 @0x017D4, (-23943,-18285)) und stellt Leon 1500 davor; Absicht des Falls (drei Kugeln je -10) bleibt.
-set(_d "${_wurzel}/t2b_std_w5")
-set(R37_ZUSATZ_ENV "RE15_SET_FLAG=4:214")
-r37_exe("t2b_std_w5" "${_d}" leon 5040 "200#5040" "-23943,-16785,1024" 5 std "M2.0,MA0.1,M3.0,W2")
-unset(R37_ZUSATZ_ENV)
-r37_feuerstoss_pruefen("t2b_std_w5" "${_d}")
-r37_schaden_pruefen("t2b_std_w5" "${_d}" -10)
-
-set(_d "${_wurzel}/roach_std_w5")
-r37_exe("roach_std_w5" "${_d}" leon 3040 "200#3040" "-13500,-18500,3072" 5 std "M2.0,MA0.1,M3.0,W2")   # Runde 38 Integration: s. Kopf
-r37_feuerstoss_pruefen("roach_std_w5" "${_d}")
-r37_schaden_pruefen("roach_std_w5" "${_d}" -14)
-
-# Nachbesserung 2: Gitterarm — EIN Treffer je Feuerstoss, Rueckzug einmal (Ende E+10)
-function(r37_arm_pruefen _lauf _dir)
+# Runde 42 Strang gore U6 (BAUPLAN gore_matrix U6, Nutzerregel 16.11.2026 "80% build ist ausschlaggebend, dann 40% build"):
+# gegen eine DISC-ZEILE (RE1.5-Gehirne 0x2b, 0x29, 0x27, 0x30) zaehlt der Stoss wie auf der Disc als EIN Treffer
+# (ein `jal 0x80011f50` @0x8003396c, drei Patronen @0x80033974/7c/84) mit Spalte 5 der Zeile. Erwartet: Munition -3 im
+# Eintrittsbild, genau EIN HP-Abzug in E mit _dhp.
+function(r37_ein_treffer_pruefen _lauf _dir _dhp)
     r37_auswerten("${_dir}/state.log" _E _ab _tr)
     if(_E LESS 0)
         r37_fehler("${_lauf}" "kein Munitionsabzug im state.log — der Abzug kam nicht")
@@ -250,21 +237,42 @@ function(r37_arm_pruefen _lauf _dir)
         r37_fehler("${_lauf}" "Munition im Eintrittsbild F${_E}: -${_ab}, erwartet -3 (@0x80033974/7c/84)")
     endif()
     list(LENGTH _tr _n)
-    set(_ok 0)
-    if(_n EQUAL 2)
-        list(GET _tr 0 _t0)
-        list(GET _tr 1 _t1)
-        if(_t0 MATCHES "^0:([0-9]+):-5$")
-            set(_s "${CMAKE_MATCH_1}")
-            if(_t1 STREQUAL "10:${_s}:-246")
-                set(_ok 1)
-            endif()
-        endif()
+    if(NOT _n EQUAL 1 OR NOT _tr MATCHES "^0:[0-9]+:${_dhp}$")
+        r37_fehler("${_lauf}" "HP-Abzuege ab F${_E}: '${_tr}' (Bild-E:Platz:dHP), erwartet EINEN in E mit ${_dhp} (Runde 42 U6)")
     endif()
-    if(NOT _ok)
-        r37_fehler("${_lauf}" "Arm ab F${_E}: '${_tr}' (Bild-E:Platz:dHP), erwartet EIN Treffer in E (-5) und das Rueckzug-Ende in E+10 (245 -> -1)")
+    message(STATUS "${_tag} [${_lauf}]: OK — F${_E} Munition -3, EIN Treffer ${_tr}")
+endfunction()
+
+# Runde 38 Spur T: der Spiderman (0x2B) mit grid 0x41 steckt byte-true versteckt im Schacht, bis der Spieler den
+# Ausloeser betritt (Untertabelle @0x8011A270 [1], P1 wartet auf grid 0x42 @0x8011545C-60) — und ist dort kein Ziel
+# (Aim-Latch grid & 0x60 @0x8003710c). Der Fall nimmt deshalb den SCHON DRAUSSEN stehenden Spiderman (Ck(4,0xD6)=1 ->
+# Sce_em_set grid 0 @0x017D4, (-23943,-18285)) und stellt Leon 1500 davor; Absicht des Falls (drei Kugeln je -10) bleibt.
+set(_d "${_wurzel}/t2b_std_w5")
+set(R37_ZUSATZ_ENV "RE15_SET_FLAG=4:214")
+r37_exe("t2b_std_w5" "${_d}" leon 5040 "200#5040" "-23943,-16785,1024" 5 std "M2.0,MA0.1,M3.0,W2")
+unset(R37_ZUSATZ_ENV)
+r37_ein_treffer_pruefen("t2b_std_w5" "${_d}" -20)   # Runde 42 U6: Spalte 5 der Zeile 0x2b = 20 @0x8006EFAC
+
+set(_d "${_wurzel}/roach_std_w5")
+r37_exe("roach_std_w5" "${_d}" leon 3040 "200#3040" "-13500,-18500,3072" 5 std "M2.0,MA0.1,M3.0,W2")   # Runde 38 Integration: s. Kopf
+r37_ein_treffer_pruefen("roach_std_w5" "${_d}" -25)   # Runde 42 U6: Spalte 5 der Zeile 0x29 = 25 @0x8006EEFC
+
+# Nachbesserung 2 (seit Runde 42 U8 umgestellt): Gitterarm — Schuesse gehen durch, kein Treffer
+function(r37_arm_pruefen _lauf _dir)
+    r37_auswerten("${_dir}/state.log" _E _ab _tr)
+    if(_E LESS 0)
+        r37_fehler("${_lauf}" "kein Munitionsabzug im state.log — der Abzug kam nicht")
     endif()
-    message(STATUS "${_tag} [${_lauf}]: OK — F${_E} Munition -3, Arm ${_tr} (ein Treffer, Rueckzug einmal)")
+    if(NOT _ab EQUAL 3)
+        r37_fehler("${_lauf}" "Munition im Eintrittsbild F${_E}: -${_ab}, erwartet -3 (@0x80033974/7c/84)")
+    endif()
+    # Runde 42 Strang gore U8 (BAUPLAN gore_matrix U8, Nutzerregel 16.11.2026): der Arm hat wie auf der Disc kein Zielband
+    # mehr (kein `jal 0x80012aa4` / `jal 0x80012974` im Arm-Code 0x8010c1ec-0x8010d7a0) - keine Kugel trifft ihn, kein HP-Abzug.
+    list(LENGTH _tr _n)
+    if(NOT _n EQUAL 0)
+        r37_fehler("${_lauf}" "Arm ab F${_E}: '${_tr}' (Bild-E:Platz:dHP), erwartet KEINEN Abzug (Runde 42 U8: Schuesse gehen durch)")
+    endif()
+    message(STATUS "${_tag} [${_lauf}]: OK — F${_E} Munition -3, kein Treffer am Arm (Runde 42 U8)")
 endfunction()
 
 set(_d "${_wurzel}/arm_std_w5")

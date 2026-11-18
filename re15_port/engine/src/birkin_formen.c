@@ -111,19 +111,21 @@ int re15_bf_hangar_aktiv(void)
  * Runde 41 Spur WS: die Handgranate fragt die Form nicht mehr (D_G 251 fuer jeden Gegner, re15_granate_schaden); gebraucht wird
  * die Funktion als Riesenform-Praedikat der Rakete (form_hp == RE15_BB_FORM_HP -> RE2-G4 301 @0x800A5D24, re15_rakete_schaden)
  * und von den Tests (Formende).
- * (Zahlen nach Nachbesserung 3: x RE15_BIRKIN_HP_FAKTOR = 2, Bahnsteig-Form = G4-HP 1000, re15_birkin_formen.h)
+ * (Zahlen seit Runde 42 Gore U4: RE15_BIRKIN_HP_FAKTOR = 1 = Disc-Werte, re15_birkin_formen.h; vorher Faktor 2 mit
+ *  600/300. Bahnsteig-Form = G4-HP 1000)
  *   Bahnsteig-Form (G4-Bank oder 5090 nach der Mutation) 1000 bis hp < 0   (birkin_bahnsteig.c Eintritt RE15_BB_FORM_HP,
  *                                                                            G4-Ctor `sh v0,342(s1)` @0x8010067c)
- *   Mutation laeuft (+0x1dd & 8)                           300 bis hp < 0   (`ori v0,zero,0x96` @0x80118094; ein toedlicher
- *                                                                            Treffer wird hier ohnehin zu HP 100 = 0x32 @0x8011a534 x 2)
- *   nach der Mutation (Merker, ausserhalb 5090)            300 bis hp < 0   (dieselbe Zuweisung; der Merker gilt nur, solange
- *                                                                            hp <= 300 - ein neuer INIT schreibt 600)
- *   Form 1, Mutation offen (Wurzel-Tor wie unten)          600 bis hp < 200 (`ori v0,zero,0x12c` @0x8011690c, Tor
+ *   Mutation laeuft (+0x1dd & 8)                           150 bis hp < 0   (`ori v0,zero,0x96` @0x80118094; ein toedlicher
+ *                                                                            Treffer wird hier ohnehin zu HP 50 = 0x32 @0x8011a530)
+ *   nach der Mutation (Merker, ausserhalb 5090)            150 bis hp < 0   (dieselbe Zuweisung; der Merker gilt nur, solange
+ *                                                                            hp <= 150 - ein neuer INIT schreibt 300)
+ *   Form 1, Mutation offen (Wurzel-Tor wie unten)          300 bis hp < 100 (`ori v0,zero,0x12c` @0x8011690c, Tor
  *                                                                            `slti v0,v0,100` @0x8011667c -> 0x601)
- *   sonst (Form-2-Bit vom Spawn, z.B. 3070 grid 0x10)      600 bis hp < 0   (INIT @0x8011690c, Tod `bltz` am Applier)
+ *   sonst (Form-2-Bit vom Spawn, z.B. 3070 grid 0x10)      300 bis hp < 0   (INIT @0x8011690c, Tod `bltz` am Applier)
  * Das Wurzel-Tor ist das von enemy_ai_common.c (re15_birkin_root, Abnahme 1 M3):
  * `!(grid & 0x10)` (`andi 0x10` @0x801164e8) oder 5090 vor dem Mutationsstart. */
-/* Nachbesserung 3: die Zahlen laufen ueber die HP-Skala RE15_BIRKIN_HP_* (re15_birkin_formen.h, x RE15_BIRKIN_HP_FAKTOR). */
+/* Nachbesserung 3: die Zahlen laufen ueber die HP-Skala RE15_BIRKIN_HP_* (re15_birkin_formen.h, x RE15_BIRKIN_HP_FAKTOR,
+ * seit Runde 42 Gore U4 = 1). */
 #define BF_HP_INIT      RE15_BIRKIN_HP_INIT       /* 0x12c @0x8011690c (STAGE3/STAGE5 INIT, unbedingt) */
 #define BF_HP_MUTATION  RE15_BIRKIN_HP_MUTATION   /* 0x96 @0x80118094-98 */
 #define BF_HP_MUT_TOR   RE15_BIRKIN_HP_MUT_TOR    /* slti 100 @0x8011667c */

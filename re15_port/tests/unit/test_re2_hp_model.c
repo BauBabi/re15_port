@@ -90,6 +90,10 @@ static const uint8_t GUN_STRIP[22] = { 1,0,0,1,1,1,1,1,1,0,0,0,1,1,0,0,0,0,0,1,1
  * weapon_id == 6) dmg = dmg_row[3]`, Belege include/re15_beretta_r37.h) — die RE1.5-Spalte 5/6 ist der Schaden
  * des ganzen Stosses (3 Kugeln); in den RE2-Zeilen ist Spalte 5 == Spalte 3. */
 #define R35_W(w) ((w) == 20 ? 7 : ((w) == 5 || (w) == 6) ? 3 : (w))
+/* ⛔ Runde 42 Strang gore U6 (Nutzerregel 16.11.2026 "80% build ist ausschlaggebend, dann 40% build"): gegen eine DISC-ZEILE
+ * (@0x8006e0d0 + Typ*0x58) zaehlt der Feuerstoss wieder als EIN Treffer mit Spalte 5/6 (ein `jal 0x80011f50` @0x8003396c) -
+ * der Resolve der Waffen 5/6 schadet dort mit der eigenen Spalte. RE2-Zeilen bleiben bei Spalte 3 je Kugel. */
+#define R35_W_DISC(w) ((w) == 20 ? 7 : (w))
 #define R35_KRIT(w) ((w) == 7 || (w) == 20)
 
 /* Die vier RE2-INIT-HP-Tabellen des ausgelieferten Zweigs (selbst gedumpt, s. Kopf). */
@@ -186,10 +190,11 @@ static void check_row(const char *tag, int flavor, int model_on, uint8_t type, c
         /* RE1.5-Crit (@0x800124FC-51C, in BEIDEN Modi aktiv — er sitzt im RE1.5-Hitscan, nicht
          * im Schadensmodell): Waffe 7 toetet Typen < 0x20 sofort (Waffe 8 nur unter 3000). */
         int crit = (R35_KRIT(w) && type < 0x20);
-        int want = crit ? -1 : (2000 - exp[R35_W(w)]);
+        const int wi = (exp == E15_ZOMBIE || exp == E15_DOG || exp == E15_CROW || exp == E15_SPIDER) ? R35_W_DISC(w) : R35_W(w);
+        int want = crit ? -1 : (2000 - exp[wi]);
         if (e->hp != (int16_t)want) {
             CHECK(0, "%s typ=0x%02X w%d: hp %d, erwartet %d (Schaden %d%s)",
-                  tag, type, w, e->hp, want, exp[R35_W(w)], crit ? ", Crit" : "");
+                  tag, type, w, e->hp, want, exp[wi], crit ? ", Crit" : "");
             bad++;
         }
     }
@@ -471,7 +476,7 @@ int main(void)
                 re15_player_set_equipped_weapon(w);
                 if (!re15_player_weapon_fire(w)) { bad++; continue; }
                 re15_actor_t *e = &g_actors[slot];
-                int want = (R35_KRIT(w) && keep[k].t < 0x20) ? -1 : (2000 - keep[k].row[R35_W(w)]);
+                int want = (R35_KRIT(w) && keep[k].t < 0x20) ? -1 : (2000 - keep[k].row[R35_W_DISC(w)]);   /* Disc-Zeilen (U6) */
                 if (e->hp != (int16_t)want) {
                     CHECK(0, "RE1.5+Option %s w%d: hp %d, erwartet %d — die Option darf NUR "
                              "die Zombie-Familie treffen", keep[k].name, w, e->hp, want);

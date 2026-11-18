@@ -103,21 +103,36 @@ int re15_schuss_r36_gezeichnet(const re15_actor_t *e, int bone, int32_t R[9], in
     }
     if (rv != 0) return 0;
     np = &po[bone];
-    if (e->re2z_rag_anchor_on && bone >= 1 && bone <= 6) {   /* Unterhaelfte: eigener Clip (main.c:10195-10220) */
+    if (e->re2z_rag_anchor_on && bone >= 1 && bone <= (e->re2z_ok_modus != 0u ? 7 : 6)) {   /* Unterhaelfte: eigener Clip
+                                                              * (main.c), Runde 42 U1: Part 7 bei Modus 1 */
         const re15_emd_skeleton_t *ls = NULL;
         int lkf = re15_re2z_lower_kf(e, &ls);
         void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
-        if (re15_skel_compute_pose(ls ? ls : sk, lkf, lo) == 0) np = &lo[bone];
+        if (re15_skel_compute_pose(ls ? ls : sk, lkf, lo) == 0) {
+            /* Runde 42 Gore Runde 3: eingefrorenes Becken (RE2 FUN_80027434 @0x80027498-9C), wie main.c */
+            extern void re15_re2z_beine_einfrieren(const re15_actor_t *e, const re15_emd_skeleton_t *skel, re15_skel_pose_t *P);
+            re15_re2z_beine_einfrieren(e, ls ? ls : sk, lo);
+            np = &lo[bone];
+        }
         g_anim_pose_actor = save;
     }
-    for (r = 0; r < 3; r++) {                                 /* R = Ryaw * R_part, T = Ryaw * t_part + Wurzel */
-        int64_t a = 0;
-        for (q = 0; q < 3; q++) {
-            R[r*3+q] = (int32_t)(((int64_t)ny[r*3+0] * np->rot[0*3+q] + (int64_t)ny[r*3+1] * np->rot[1*3+q] +
-                                  (int64_t)ny[r*3+2] * np->rot[2*3+q]) >> 12);
-            a += (int64_t)ny[r*3+q] * np->trans[q];
+    {   int16_t byaw;                                         /* Runde 42 Runde 2: abgetrennte Beine mit eigener Drehung */
+        int32_t nb[9];
+        const int32_t *nyb = ny;
+        if (re15_re2z_beine_eigene_drehung(e, bone, &byaw)) {
+            int32_t bs = re15_sin_q12(byaw), bc = re15_cos_q12(byaw);
+            nb[0] = bc; nb[1] = 0; nb[2] = bs; nb[3] = 0; nb[4] = 0x1000; nb[5] = 0; nb[6] = -bs; nb[7] = 0; nb[8] = bc;
+            nyb = nb;
         }
-        T[r] = (int32_t)(a >> 12);
+        for (r = 0; r < 3; r++) {                             /* R = Ryaw * R_part, T = Ryaw * t_part + Wurzel */
+            int64_t a = 0;
+            for (q = 0; q < 3; q++) {
+                R[r*3+q] = (int32_t)(((int64_t)nyb[r*3+0] * np->rot[0*3+q] + (int64_t)nyb[r*3+1] * np->rot[1*3+q] +
+                                      (int64_t)nyb[r*3+2] * np->rot[2*3+q]) >> 12);
+                a += (int64_t)nyb[r*3+q] * np->trans[q];
+            }
+            T[r] = (int32_t)(a >> 12);
+        }
     }
     T[0] += e->x; T[1] += e->y; T[2] += e->z;
     if (e->re2z_rag_anchor_on) {                              /* Ragdoll-Bodenanker (main.c:10315-10330) */

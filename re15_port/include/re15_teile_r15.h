@@ -31,6 +31,9 @@ typedef struct {
     int32_t  rot[9];       /* +0x40 Weltmatrix, gueltig wenn `fest` (Bit 0x40) */
     int32_t  t[3];
     uint8_t  fest;         /* Matrix bereits uebernommen */
+    uint8_t  keine_kinder; /* PORT-WAHL (Runde 42 Gore U7, Stufe 2 Runde 2): Kinder verketten NICHT an die eigene Matrix dieses
+                            * Teils (re15_teil_stufe), sie behalten ihre Skelett-Pose. Gesetzt nur fuer die geplatzten Spinnen-
+                            * Rumpfteile 0/19, wenn die Beine dranbleiben (spinnengore_r41.c). Kein Original-Feld. */
 } re15_teil_t;
 
 /* Teilstand des Aktor-Slots (NULL bei ungueltigem Slot). `an` = mindestens ein Erzeuger hat geschrieben. */

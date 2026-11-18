@@ -148,11 +148,13 @@ file(STRINGS "${_dir}/gegner_r39.log" _mh REGEX "^messhaken RE15_R39_MESS_SPIELE
 if(NOT _mh)
     string(APPEND _fehler " (a)Messhaken-nicht-aktiv")
 endif()
-file(STRINGS "${_dir}/gegner_r39.log" _init360 REGEX "^affen init slot=[0-9]+ raum=1141 typ=27 hp=360 .*regel 1\\)")
-file(STRINGS "${_dir}/gegner_r39.log" _init180 REGEX "^affen init slot=[0-9]+ raum=1141 typ=27 hp=180 ")
+# Runde 42 Strang gore U3 (Nutzerregel 16.11.2026 "80% build ist ausschlaggebend"): Verdopplung aufgehoben, RE15_R39_AFFEN_HP_FAKTOR 1 ->
+# jeder INIT mit hp=180 (@0x8011f514) und regel 1, keiner mit 360 (Variablennamen _init360/_init180 bleiben).
+file(STRINGS "${_dir}/gegner_r39.log" _init360 REGEX "^affen init slot=[0-9]+ raum=1141 typ=27 hp=180 .*regel 1\\)")
+file(STRINGS "${_dir}/gegner_r39.log" _init180 REGEX "^affen init slot=[0-9]+ raum=1141 typ=27 hp=360 ")
 list(LENGTH _init360 _n360)
 if(_n360 LESS 2 OR _init180)
-    string(APPEND _fehler " (a)INIT:${_n360}x360/180=[${_init180}]")
+    string(APPEND _fehler " (a)INIT:${_n360}x180/360=[${_init180}]")
 endif()
 # ---- (b) Schwelle je Treffer-Zeile, Muster je Gorilla ----
 file(STRINGS "${_dir}/gegner_r39.log" _tr REGEX "^affen treffer F[0-9]+ slot=[0-9]+ raum=1141 ")
@@ -229,4 +231,4 @@ endif()
 if(_fehler)
     message(FATAL_ERROR "${_tag}:${_fehler} (Treffer ${_ntr}: FLINCH ${_nfl} / OHNE ${_noz}; ${_dir})")
 endif()
-message(STATUS "${_tag}: OK — INIT 360 x ${_n360}, ${_ntr} Treffer-Zeilen (FLINCH ${_nfl} nur bei akku >= 36, OHNE ZUCKEN ${_noz}), Flinch-Beginne im state.txt ${_fl_state}; ${_dir}")
+message(STATUS "${_tag}: OK — INIT 180 x ${_n360}, ${_ntr} Treffer-Zeilen (FLINCH ${_nfl} nur bei akku >= 36, OHNE ZUCKEN ${_noz}), Flinch-Beginne im state.txt ${_fl_state}; ${_dir}")

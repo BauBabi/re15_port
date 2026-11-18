@@ -61,7 +61,11 @@
 
 #define RE15_R39_AFFEN_TYP           0x27u     /* Gorilla: Wurzel 0x80116db8 -> Dispatch 0x80072c48 (@0x8011e900-0c); 0x29 = kleiner Affe, unberuehrt */
 #define RE15_R39_AFFEN_HP_TABELLE    180       /* @0x8011f514 (Zeile 0x27, 16 Spalten gleich), Saat @0x80117104 */
-#define RE15_R39_AFFEN_HP_FAKTOR     2         /* NUTZER-VORGABE "doppelt so viel Energie" */
+/* ⛔ RUNDE 42 STRANG GORE U3 (BAUPLAN gore_matrix U3, Nutzerregel 16.11.2026 "80% build ist ausschlaggebend, dann 40% build"):
+ * die NUTZER-VORGABE "doppelt so viel Energie" (Runde 39) ist aufgehoben -> Faktor 1 = Disc 180 (@0x8011f514, 16 x `b4 00`,
+ * Saat `sh v0,0x9a(a1)` @0x80117104, STAGE1.BIN Version_40%, selbst nachgelesen 18.11.). Das Zucken erst nach 3
+ * Pistolentreffern (RE15_R39_ZUCK_TREFFER) bleibt: Nutzerentscheid F3 a 16.11. "Ja, alle vier so". */
+#define RE15_R39_AFFEN_HP_FAKTOR     1
 #define RE15_R39_PISTOLE_SCHADEN     12        /* @0x8006ee44 (Zeile 0x27 @0x8006ee38, Waffe 3 = Pistole) */
 #define RE15_R39_ZUCK_TREFFER        3         /* NUTZER-VORGABE "3x mit der Handfeuerwaffe" */
 #define RE15_R39_ZUCK_SCHWELLE       (RE15_R39_ZUCK_TREFFER * RE15_R39_PISTOLE_SCHADEN)   /* 36 Energie */

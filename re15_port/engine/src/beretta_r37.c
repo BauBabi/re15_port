@@ -119,6 +119,7 @@ static void riegel_loesen(void)
         re15_actor_t *e = &g_actors[s];
         if (!s_getroffen[s] || !e->active) continue;
         if (e->hp < 0) continue;                                   /* sterbend: Riegel bleibt (@0x80012520-2c) */
+        if (re15_feuerstoss_ein_treffer(e)) continue;              /* Runde 42 U6: Disc-Zeile, EIN Treffer je Stoss */
         if (re2_pausenfilter_laeuft((unsigned)e->type)) continue;  /* RE2-Pause (+0x1D3) + Filter regeln selbst */
         if (re2_kugel_gate_sperrt(e)) continue;                    /* +0x1D3 != 0 @0x80041270-78 (Gitterarm 0x1A) */
         if (e->hit_react & 0x3u) {
@@ -139,7 +140,21 @@ int re15_beretta_r37_tick_ex(int noch_im_feuer)
     s_bild++;
     if (s_bild != BERETTA_KUGEL_ABSTAND * s_naechste) return 0;
     riegel_loesen();
+    /* Runde 42 Strang gore U6 (Disc: EIN Resolver-Aufruf je Stoss `jal 0x80011f50` @0x8003396c): ein Gegner mit Disc-Zeile, den
+     * dieser Stoss schon getroffen hat, ist fuer Kugel 2/3 KEIN Kandidat. Sie gehen an ihm vorbei auf den naechsten (der Fixpunkt
+     * `(+0x93 & 3) == 3` der Kandidatenschleife, @0x800120C0-0x80012100). Nur fuer diese eine Aufloesung: danach steht +0x93
+     * wieder so, wie das Gehirn es hatte (der Gorilla loescht ihn schon im naechsten Takt, gegner_r39.c). */
+    uint8_t vorher[RE15_ACTOR_MAX];
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        vorher[s] = e->hit_react;
+        if (s_getroffen[s] && e->active && re15_feuerstoss_ein_treffer(e)) e->hit_react |= 0x3u;
+    }
     int r = re15_player_weapon_fire(s_waffe);
+    for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
+        re15_actor_t *e = &g_actors[s];
+        if (s_getroffen[s] && e->active && re15_feuerstoss_ein_treffer(e)) e->hit_react = vorher[s];
+    }
     s_mess.kugeln++;
     merke_treffer(r);
     s_naechste++;

@@ -6544,6 +6544,7 @@ static int re2z_root_py(const re15_actor_t *e)
  * SCHROTFLINTE). Das schaltet die zwei `lbu v1,4` -Zweige scharf, die im HURT strukturell tot
  * sind: P0 @0x80106808-34 (3/4 -> +0x231 = 1 -> FUN_80109610 = WEGSCHLEUDERN mit
  * Fleischbrocken) und P2 @0x80106ACC-E8 (HP = 10 -> der Zombie steht als KRIECHER wieder auf). */
+int re15_zgore_80prozent(void);   /* zombiegore_r15.c (Runde 42 U17) */
 static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
 {
     if (e->re2z_rag231 == 1u) {                                    /* `bne v0,t2` @0x80106740 */
@@ -6569,7 +6570,8 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
          * (@0x801067BC). Der Port-Produzent des Bits ist die Ziel-Elevation.
          * KEIN death-Gate (das Original prueft +0x4 hier nicht), und der
          * rand-Wurf unten laeuft bei HOCH gar nicht erst an. */
-        {
+        if (e->re2z_ok_modus != 1u) {   /* Runde 42 U1: der Granatwerfer-Oberkoerper (re2z_gl_oberkoerper_ab) laeuft
+                                         * ohne die beiden Eingangs-Weichen dieses Schrot-Handlers */
             extern int re15_player_aim_elevation(void);
             if (re15_player_aim_elevation() > 0) {
                 e->re2z_rag231 = 2u;                               /* sb 2,561 @0x801067B0 */
@@ -6580,7 +6582,7 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
         /* `+0x10C != 0` / `0x800CFBD8 & 0x10000000` @0x801067CC-EC (-> +0x231 = 1 ->
          * FUN_80109610): zwei weitere Eingaben ohne Port-Produzenten (OPEN, mit
          * Adresse) -> der Pfad faellt bis zum Wurf. */
-        if ((re2z_rand() & 3u) != 0u && death) {                   /* jal @0x801067F4 (IMMER),
+        if (e->re2z_ok_modus != 1u && (re2z_rand() & 3u) != 0u && death) {   /* jal @0x801067F4 (IMMER),
                                                                     * `andi 0x3 / beq zero`
                                                                     * @0x801067FC-800,
                                                                     * `lbu v1,4 / bne 3`
@@ -6669,8 +6671,19 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
          * FUN_8010B7D4 scharf, die die Unterhaelfte WEGSCHIEBT. Wer den Aushang hier
          * loest, klebt Becken und Beine wieder an den Rumpf - der Zombie bleibt ganz,
          * und genau das hat der Nutzer gemeldet. */
-        e->re2z_low_state = 0u;         /* +0x219 = 0: die Maschine startet in Zustand 0 */
-        e->re2z_low_frozen = 0u;
+        if (e->re2z_ok_modus != 1u && e->re2z_ok_modus != 3u) {   /* Runde 42 U1: die Granatwerfer-Beine haengen schon
+                                         * aus (re2z_gl_oberkoerper_ab / re2z_gl_oberkoerper_liegend) */
+            e->re2z_low_state = 0u;     /* +0x219 = 0: die Maschine startet in Zustand 0 */
+            e->re2z_low_frozen = 0u;
+            /* ⛔ RUNDE 42 GORE U17 (BAUPLAN U17, Regel 1 des Nutzers vom 16.11.: "80% build ist ausschlaggebend, dann 40%
+             * build ..."): die Disc laesst die Beine des Schrot-Kriechers AM ALTEN PLATZ liegen - Oberkoerperzweig des
+             * Schrot-Krits, `ori 0x40` an Teil 1, 2, 4, 5 (+172/+344/+688/+860) @0x80108820-98 (STAGE1.BIN), kein Schub.
+             * 80 % zeigt den Schrot-Kriecher nicht. Die Unterhaelfte laeuft deshalb weiter durch FUN_8010B7D4 (Umkippen,
+             * Einfrieren, Ausklang, alle RNG-Wuerfe an ihren Stellen), aber ohne das Wegschieben (+0x130/+0x138
+             * @0x8010B970-9C / @0x8010BA4C). Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1 (dann RE2). */
+            if (re15_zgore_80prozent()) e->re2z_ok_modus = 2u;   /* HURT- und DEATH-Ausgang: beide haengen die
+                                                                  * Unterhaelfte aus (`+0x21A |= 1` @0x80106AD0) */
+        }
         /* CROSSFADE-SAAT fuer den Kriech-Clip (versinken2.md §4): das Original setzt die
          * Blend-QUELLE auf eine LIEGENDE Pose - `sh -200,58(s3)` @0x80106AAC (part0
          * "prev root py") und `sh 0/0/1024,104..108(s3)` @0x80106AB4-BC (part0-Winkel
@@ -6741,7 +6754,9 @@ static void re2z_hit_ragdoll(re15_actor_t *e, re15_actor_t *pl, int death)
      * Uebergangs-Tick nach +0x6 == 2 schon oben (@0x80106A04-3C) — beides dieselbe Operation. */
     re2z_lean_pair(e, e->re2_lean[0], e->re2_lean[1], e->re2_lean[2]);
 
-    if (frame == 20 && e->sub_state_2 == 1) {                      /* @0x80106CD8-F0 */
+    if (frame == 20 && e->sub_state_2 == 1 && e->re2z_ok_modus != 1u) {   /* @0x80106CD8-F0; Runde 42 U1: beim
+                                                                    * Granatwerfer-Oberkoerper haengt die Unterhaelfte
+                                                                    * schon seit dem Tod am Todesort aus */
         /* BODENANKER fuer Becken+Beine (versinken2.md §3): das Original haengt hier
          * Part 1 aus der Kette (`sw v0,288(v1)` = part1+0x74 := entity+0x11C
          * @0x80106D00) und friert x/z der Ankermatrix auf die Entity-Position ein
@@ -7564,6 +7579,14 @@ static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)
     if (e->sub_state_2 == 0u) {
         if (e->re2_gl_stamp) e->re2_gl_stamp = 0u;
         else                 re2z_stamp_hit(e, pl);
+        /* Runde 42 Gore U13 (Block ueber re15_re2z_lache_tick): ein Explosionstreffer (Zeile 9-11) wurde UEBERLEBT */
+        if (e->sub_state_1 >= 9u && e->sub_state_1 <= 11u && e->hp >= 0 && e->re2z_lache_an == 0u && re15_zgore_80prozent())
+            e->re2z_lache_an = 1u;
+        /* Runde 3 (Pruefbericht G2): ein Treffer einer ANDEREN Zeile, bevor er nach der Granate lag, loescht den
+         * Ausloeser - die Lache gehoert zum Liegen NACH DER GRANATE (80 % B 8:17,40 Granate -> 8:17,7-8:18,4 Sturz),
+         * nicht zu einem spaeteren Umwerfen durch Schrot oder Pistole. */
+        else if (e->re2z_lache_an == 1u && (e->sub_state_1 < 9u || e->sub_state_1 > 11u))
+            e->re2z_lache_an = 0u;
     }
 
     re2z_grab_abort(e, pl);                                        /* @0x80104F68-FDC */
@@ -7983,8 +8006,133 @@ static void re2z_granate_zerfetzen(re15_actor_t *e, re15_actor_t *pl)
     re15_esp_fx_splatter(re15_esp_room_bank(), 0, 2, e->x, e->y - 300, e->z, e->y);
     re2z_se(2);                                                           /* @0x8010905C-60 */
     if (getenv("RE15_ZGORE_TEST") || getenv("RE15_GR_LOG"))
-        fprintf(stderr, "[gr] RE2 Slot %d Typ 0x%02x Zeile %u: ZERFETZT (HP %d)\n", slot, (unsigned)e->type,
-                (unsigned)e->sub_state_1, (int)e->hp);
+        fprintf(stderr, "[gr] RE2 Slot %d Typ 0x%02x Zeile %u: ZERFETZT (HP %d, Handgranate %u, +0x10E 0x%04x, +0x21A 0x%04x)\n",
+                slot, (unsigned)e->type, (unsigned)e->sub_state_1, (int)e->hp, (unsigned)e->re2z_hg,
+                (unsigned)e->re2z_f10e, (unsigned)e->re2z_flags21a);
+}
+
+/* ---- RUNDE 42 GORE U1: DER GRANATWERFER TRENNT DEN OBERKOERPER (BAUPLAN U1, NUTZERENTSCHEID F1 16.11.2026) ---------
+ * NUTZERWUNSCH woertlich: "Der Granatwerfer trennt den oberkoerper, die handgranate zerteilt." Auslegung im Entscheid:
+ * IMMER "Oberkoerper ab, Beine bleiben stehen und kippen", der Oberkoerper kriecht (Kriecher wie RE2).
+ * VORLAGE 80 % hart: F13 = E18 Cut 4, Raum 301, Elza, Film 3 0:18,085-0:19,89 (= Video B 3:36,00-3:37,87): Saeule am
+ *   Oberkoerper 0:18,185-0:18,45, ab 0:18,45 nur noch die Beine; V-Stellung 0:18,58-0:19,05, Sinken ab 0:19,00, liegend
+ *   ab 0:19,10-0:19,12 (Pruefboegen gore_matrix/pruefung_plan_r1/boegen x01/x02).
+ * MECHANISMEN (je Teil ein belegter Einzelmechanismus, keine neue Physik):
+ *   Oberkoerper: der RE2-Ragdoll 66FC (re2z_hit_ragdoll, death = 1) OHNE seine beiden Eingangs-Weichen (Kopfplatzer bei
+ *     Hochziel @0x8010679C-BC, Wegschleudern `rand & 3` @0x801067F4-828) - er faellt mit Clip 4/3 und Schub -250/+100
+ *     (@0x80106728-89C) und wird in Phase 2 zum RE2-Kriecher: +0x10E = 0x2001 (@0x80106B0C-10), HP 10 (@0x80106ACC-E8).
+ *   Beine: die abgetrennte Unterhaelfte FUN_8010B7D4 (re15_re2z_lower_body_tick), Aushang SOFORT statt bei Bild 20
+ *     (66FC `sw v0,288(v1)` @0x80106D00), ohne Gleiten (Modus 1): erst stehen (Clip 1 Bild 0, Bank B), dann Clip 1 =
+ *     UMKIPPEN (@0x8010B9B0), danach Einfrieren `part[1] |= 0x40` (@0x8010BA88-9C) und der RE2-Ausklang (Clip 22).
+ *   Blutsaeule: Wolken 8096/6096 (FUN_80109610 P0 @0x801096E8-0x80109734), Fontaene 0x00021F40 (92C4 @0x80109428-38),
+ *     Spreng-Russ FUN_8010640C (Zeile 9 @0x80108CD8-EC), SE 2 (@0x8010905C-60).
+ * Die Stehzeit kommt aus den 80 %-Zeitstempeln (keine runde Zahl). Der Port-Zaehler startet im Todesbild = beim EINSCHLAG,
+ * also zaehlt sie vom Einschlag 0:18,085 (= Video B 3:36,00) bis zum Sinken 0:19,00: 0,915 s x 30 Spielschritte/s
+ * (platform/pc/main.c:6037-6039, SCD-/Spieltakt 30 Hz) = 27,45 -> 28 Bilder (das Sinken ist erst im Bild 0:19,00 zu
+ * sehen, bis dahin stehen die Beine). Video B bestaetigt das im eigenen Raster (15 verschiedene Bilder/s): Einschlag
+ * 3:36,00, Kippen ab 3:37,00 = 1,0 s +- 1/15 s. Runde 1 zaehlte erst ab "Oberkoerper weg" 0:18,45 (17 Bilder) - aber die
+ * Beine stehen schon unter der Saeule (0:18,185-0:18,45); im Port deckte die Explosionswolke die 17 Bilder fast ganz zu
+ * (Pruefbericht R3, Video Runde 2 werfer.mp4 9,8-10,4 s). Kippen: 0:19,00 bis liegend 0:19,10 = 0,10 s = 3 Bilder; das
+ * Umkippen von Clip 1 (Bank B, gemessen re15_re2z_lower_kf) erreicht den Boden in RE15_OK_KIPP_BIS Bildern, also
+ * RE15_OK_KIPP_SCHRITT Clip-Bilder je Spielschritt, bis der Boden erreicht ist; danach normal (RE2 @0x8002A430-58). */
+#define RE15_OK_STEH          28   /* 80 % Einschlag 0:18,085 -> Sinken 0:19,00 = 0,915 s x 30/s = 27,45 -> 28 (oben) */
+/* Clip 1 der Unterhaelfte (Bank B = Entity+0x180/+0x184 @0x80100548-54, 60 Bilder) GEMESSEN mit test_r42_gore mess
+ * (re15_re2z_lower_kf + re15_skel_compute_pose, EM010 aus CDEMD0.EMS): Becken-Hoehe Bild 0..3 = 1976..1979 (Stand),
+ * Bild 14 = 907 (Knie), Bild 32..35 = 1118, Bild 44 = 463, Bild 46 = 183 (erstes Bild mit dem Becken am Boden, hoechster
+ * Beinknochen 186), danach 183..400. Liegend also ab Clip-Bild 46. Das 80 %-Kippen dauert 3 Bilder (oben) ->
+ * ceil(46 / 3) = 16 Clip-Bilder je Spielschritt, bis Bild 46 erreicht ist; danach 1 Bild je Schritt (@0x8002A430-58). */
+#define RE15_OK_KIPP_BIS      46   /* gemessen: Clip 1 Bank B, Becken-Hoehe 183 ab Bild 46 */
+#define RE15_OK_KIPP_SCHRITT  16   /* ceil(RE15_OK_KIPP_BIS / 3), 3 = 80 % 0:19,00 -> 0:19,10 x 30/s */
+static unsigned s_re2z_ok_zahl = 0;   /* Port-Diagnose (Tests): Zahl der Oberkoerper-Abtrennungen seit Programmstart */
+unsigned re15_re2z_oberkoerper_ab_zahl(void) { return s_re2z_ok_zahl; }
+static void re2z_gl_oberkoerper_ab(re15_actor_t *e, re15_actor_t *pl)
+{
+    int bear = re2z_bearing_to(e, pl);
+    s_re2z_ok_zahl++;
+    if (!(e->re2z_f10e & 0x80u)) re2z_gore_soot(e);                      /* Zeile 9 @0x80108CD8-EC */
+    {   /* Blutsaeule am Oberkoerper (80 % 0:18,185-0:18,45) */
+        static const int32_t a3_8096[3] = { 0, -300, 0 };                /* @0x801096F8-704 */
+        static const int32_t a3_6096[3] = { 0, -100, 0 };                /* @0x80109720-2C */
+        int32_t a3m[3];
+        re2z_gore_fx_a3(e, 0, 8096u, (int16_t)bear, a3_8096);            /* @0x801096E8 / @0x80109710 */
+        re2z_gore_fx_a3(e, 0, 6096u, (int16_t)bear, a3_6096);            /* @0x80109718 / @0x80109734 */
+        re2z_blood_a3(e, 1, 0, -100, a3m);                                /* (P8.x, P8.y - 100, P8.z) @0x80109414-24 */
+        re2z_gore_fx_a3(e, 0, 0x00021F40u, (int16_t)e->rot_y, a3m);      /* Fontaene @0x80109438 */
+    }
+    /* Die Beine bleiben am Todesort stehen: Aushang sofort (Bodenanker der Unterhaelfte, Block ueber
+     * re15_re2z_ragdoll_part_anchor), Unterhaelften-Maschine direkt im Zustand 3 (Clip 1 UMKIPPEN, @0x8010B9AC-C4),
+     * aber erst nach RE15_OK_STEH Bildern Stand (re15_re2z_lower_body_tick Modus 1). */
+    e->re2z_gy232         = e->re2z_ground_y;                             /* +0x232 = +0x1C2 wie @0x80106994-A0 */
+    e->re2z_rag_anchor_x  = e->x;
+    e->re2z_rag_anchor_z  = e->z;
+    e->re2z_rag_anchor_on = 1u;
+    e->re2z_low_x         = e->x;
+    e->re2z_low_z         = e->z;
+    e->re2z_low_yaw       = (int16_t)e->rot_y;
+    e->re2z_low_clip      = 1u;                                           /* +0x21C = 1 @0x8010B9B0 */
+    e->re2z_low_c1        = 0u;                                           /* +0x21D = 0 @0x8010B9C0 */
+    e->re2z_low_c2        = 7u;                                           /* +0x21E = 7 @0x8010B9B8 */
+    e->re2z_low_state     = 3u;                                           /* +0x219 = 3 @0x8010B9C4 */
+    e->re2z_low_frozen    = 0u;
+    e->re2z_ok_steh       = RE15_OK_STEH;
+    e->re2z_flags21a     |= 1u;                                           /* Gate der Maschine @0x8010B830-3C */
+    e->re2z_rag231        = 0u;
+    e->sub_state_2        = 0u;                                           /* 66FC Phase 0 im selben Bild */
+    re2z_se(2);                                                           /* @0x8010905C-60 */
+    if (getenv("RE15_ZGORE_TEST") || getenv("RE15_GR_LOG"))
+        fprintf(stderr, "[gr] RE2 Slot %d Typ 0x%02x Zeile %u: OBERKOERPER AB (Granatwerfer, HP %d)\n",
+                (int)(e - g_actors), (unsigned)e->type, (unsigned)e->sub_state_1, (int)e->hp);
+}
+
+/* ---- RUNDE 42 GORE U1, Runde 2 (Pruefbericht R1): DER GRANATWERFER TRENNT AUCH BEI EINEM LIEGENDEN ZOMBIE DEN OBERKOERPER
+ * NUTZERENTSCHEID F1 16.11.2026 woertlich: "Der Granatwerfer trennt den oberkoerper, die handgranate zerteilt." Auslegung
+ * im Entscheid: "Granatwerfer (alle Toetungen von Zombies): IMMER". Runde 1 trennte nur STEHENDE Zombies und zerteilte
+ * Liegende (+0x21A & 2), Aufsteher/Niedergeworfene (+0x21A & 0x10) und Kriecher mit Beinen weiter - das war das Bild der
+ * Handgranate. Hier: jeder Zombie, der seine Beine noch hat, verliert den Oberkoerper.
+ * Die Beine liegen schon - sie koennen nicht stehen und kippen. Mechanismus fuer sie ist der Disc-Oberkoerperzweig des
+ * Schrot-Krits: `ori 0x40` an Teil 1, 2, 4, 5 (+172/+344/+688/+860) @0x80108820-98 (STAGE1.BIN, Repo und Version_40%
+ * gleich) - die Beinteile bleiben IN IHRER LETZTEN POSE am alten Platz. Der Port friert dafuer die Pose des Todesbilds ein
+ * (re2z_low_kf = Haupt-Keyframe, dasselbe Feld wie der 66FC-Aushang @0x80106D00) und laesst die RE2-Unterhaelften-Maschine
+ * FUN_8010B7D4 nicht laufen (Modus 3): kein Umkippen aus dem Stand (Clip 1 @0x8010B9B0 beginnt aufrecht, Becken 1976).
+ * Der Oberkoerper liegt schon am Boden und wird sofort RE2-Kriecher: 66FC Phase 2 (@0x80106A8C ff.) mit seiner LIEGENDEN
+ * Blend-Saat (`sh -200,58` @0x80106AAC, 90 Grad um Z @0x80106AB4-BC), +0x10E = 0x2001 (@0x80106B0C-10), HP 10
+ * (@0x80106ACC-E8). Das Liegen endet wie beim Aufstehen: `+0x21A &= ~0x12` (`andi 0xffed` @0x80107EA0-A4) - sonst
+ * schickte der HURT-Liegezweig (`+0x21A & 2` @0x80105168) jeden Treffer am Kriecher in den Knockdown-Executor.
+ * Blutsaeule, Russ und SE wie im stehenden Fall (re2z_gl_oberkoerper_ab). */
+static void re2z_gl_oberkoerper_liegend(re15_actor_t *e, re15_actor_t *pl)
+{
+    int bear = re2z_bearing_to(e, pl);
+    s_re2z_ok_zahl++;
+    if (!(e->re2z_f10e & 0x80u)) re2z_gore_soot(e);                      /* Zeile 9 @0x80108CD8-EC */
+    {
+        static const int32_t a3_8096[3] = { 0, -300, 0 };                /* @0x801096F8-704 */
+        static const int32_t a3_6096[3] = { 0, -100, 0 };                /* @0x80109720-2C */
+        int32_t a3m[3];
+        re2z_gore_fx_a3(e, 0, 8096u, (int16_t)bear, a3_8096);            /* @0x801096E8 / @0x80109710 */
+        re2z_gore_fx_a3(e, 0, 6096u, (int16_t)bear, a3_6096);            /* @0x80109718 / @0x80109734 */
+        re2z_blood_a3(e, 1, 0, -100, a3m);                                /* @0x80109414-24 */
+        re2z_gore_fx_a3(e, 0, 0x00021F40u, (int16_t)e->rot_y, a3m);      /* Fontaene @0x80109438 */
+    }
+    {   re15_enemy_bank_t *bk = re15_enemy_find(e->type);                /* Pose des Todesbilds (wie @0x80106D00) */
+        e->re2z_low_kf = (int16_t)(bk && bk->ok ? re15_compute_actor_kf(&bk->anim, &bk->skel, e, -1, e->anim_frame) : 0); }
+    e->re2z_gy232         = e->re2z_ground_y;                             /* +0x232 = +0x1C2 wie @0x80106994-A0 */
+    e->re2z_rag_anchor_x  = e->x;
+    e->re2z_rag_anchor_z  = e->z;
+    e->re2z_rag_anchor_on = 1u;
+    e->re2z_low_x         = e->x;
+    e->re2z_low_z         = e->z;
+    e->re2z_low_yaw       = (int16_t)e->rot_y;
+    e->re2z_low_state     = 0u;
+    e->re2z_low_frozen    = 1u;
+    e->re2z_part_flags[1] |= 0x40u;                                       /* eingefroren (Disc `ori 0x40` @0x80108820-98) */
+    e->re2z_ok_steh       = 0u;
+    e->re2z_flags21a     &= (uint16_t)~0x12u;                             /* `andi 0xffed` @0x80107EA0-A4 */
+    e->re2z_rag231        = 0u;
+    e->sub_state_2        = 2u;                                           /* 66FC Phase 2 (@0x80106A8C) im selben Bild */
+    re2z_se(2);                                                           /* @0x8010905C-60 */
+    if (getenv("RE15_ZGORE_TEST") || getenv("RE15_GR_LOG"))
+        fprintf(stderr, "[gr] RE2 Slot %d Typ 0x%02x Zeile %u: OBERKOERPER AB LIEGEND (Granatwerfer, HP %d)\n",
+                (int)(e - g_actors), (unsigned)e->type, (unsigned)e->sub_state_1, (int)e->hp);
 }
 
 /* Fuer das RE1.5-Gehirn (zombiegore_r15.c z_granate): dieselben Teile, wenn der RE2-Modellblock dem Typ gehoert
@@ -8438,9 +8586,42 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
     /* Runde 41 Spur GR (GESTALTUNG, Block ueber re2z_granate_zerfetzen): der Explosionstod (Zeile 9 = Handgranate
      * w9 und Granatwerfer-Explosivrunde w15, re2z_row_from_weapon) zerfetzt den Zombie in JEDEM Zweig der Wurzel
      * (stehend, liegend, Kriecher) einmal; Zweig 4 faehrt danach den normalen Sturz. */
+    /* ⛔ RUNDE 42 GORE U1 (NUTZERENTSCHEID F1 16.11.2026, woertlich: "Der Granatwerfer trennt den oberkoerper, die
+     * handgranate zerteilt."): Zeile 9 traegt im RE2-Gehirn BEIDE Waffen (re2z_row_from_weapon[9] = [15] = 9). Die
+     * Handgranate (re2z_hg, gesetzt in re15_enemy_take_damage_at fuer Art 2) zerteilt weiter. Der Granatwerfer trennt
+     * den Oberkoerper (re2z_gl_oberkoerper_ab, 80 % F13 = Film 3 0:18,085-0:19,89). Runde 1 zerriss Liegende, Kriecher
+     * und Halbierte noch (BAUPLAN U1 Weg 4, vor dem Entscheid "IMMER") - seit Runde 2 nicht mehr, Block unten. */
+    /* Runde 42 Runde 2 (Pruefbericht R1, Entscheid F1 "IMMER"): der Granatwerfer zerteilt KEINEN Zombie mehr.
+     *   - beinloser Kriecher (Unterhaelfte schon ausgehaengt: 66FC, U1, U17): der Oberkoerper ist schon ab. Er stirbt mit
+     *     seinem eigenen Kriecher-Tod - RE2 ZWEIG 1 (`+0x10E & 1` @0x801083B0-BC), und auf der Disc genauso: die DEATH-
+     *     Wurzel FUN_80106ba4 schickt jeden Kriecher (`lbu v0,9 / andi 0x80 / beqz` @0x80106bb4-c0) VOR der Waffenzelle in
+     *     FUN_80107cb0 (`jal` @0x80106bc8). Kein Zerteilen.
+     *   - liegend, niedergeworfen, aufstehend oder Kriecher MIT Beinen: Oberkoerper ab, Beine bleiben liegen (Modus 3,
+     *     re2z_gl_oberkoerper_liegend).
+     *   - stehend: Oberkoerper ab, Beine stehen und kippen (Modus 1, re2z_gl_oberkoerper_ab). */
     if (e->sub_state_1 == 9u && !(e->zg_9f & 0x08) && re15_zgore_80prozent()) {
         e->zg_9f |= 0x08;
-        re2z_granate_zerfetzen(e, pl);
+        if (e->re2z_hg) {
+            re2z_granate_zerfetzen(e, pl);
+        } else if (e->re2z_rag_anchor_on) {
+            /* beinlos: weiter unten ZWEIG 1 */
+        } else if ((e->re2z_f10e & 1u) || (e->re2z_flags21a & 0x12u)) {
+            e->re2z_ok_modus = 3u;
+            re2z_gl_oberkoerper_liegend(e, pl);
+            s_re2z_last_death_handler = (int)RE2ZD_66FC;
+            re2z_hit_ragdoll(e, pl, 1);                                   /* 66FC Phase 2 -> Kriecher, HP 10 */
+            return;
+        } else {
+            e->re2z_ok_modus = 1u;
+            re2z_gl_oberkoerper_ab(e, pl);
+        }
+    }
+    if (e->re2z_ok_modus == 1u && e->sub_state_1 == 9u && (e->zg_9f & 0x08) && !(e->re2z_f10e & 1u)) {
+        /* Der Oberkoerper fliegt/faellt mit dem 66FC-Ablauf (Phasen 0..2, death = 1) und kriecht danach als RE2-Kriecher
+         * mit HP 10 (`sh 10,342` @0x80106ACC-E8, Regel 2 des Nutzers vom 16.11.: Treffer bis zum Tod wie RE2). */
+        s_re2z_last_death_handler = (int)RE2ZD_66FC;
+        re2z_hit_ragdoll(e, pl, 1);
+        return;
     }
 
     if (e->re2z_f10e & 1u) {                                       /* ZWEIG 1 @0x801083B0-BC */
@@ -8505,6 +8686,55 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
             return;
         }
     }
+}
+
+/* ---- RUNDE 42 GORE U13: BLUTLACHE UNTER EINEM ZOMBIE, DER EINE GRANATE UEBERLEBT HAT UND LIEGT ------------------------
+ * VORLAGE 80 % hart (BAUPLAN U13, ABGLEICH B12): Video B E39 A, Raum 107 Kamera 3, Elza, Granate 4 um 8:17,40, der
+ * Zombie geht 8:17,7-8:18,4 zu Boden, "sehr grosse runde Lache" 8:19-8:25, er richtet sich 8:24,6-8:25,4 auf, die Lache
+ * bleibt dabei am Boden liegen (B 8:25,0).
+ * GROESSE GEMESSEN (Runde 2, Werkzeuge scratchpad/gore_bau/u13r2): Kamera = RDT ROOM1070 Schnitt 3 (Auge 13122/-3402/2034,
+ * Ziel 16128/1548/15498, fov 26684 -> H 208; Disc 40 % und Repo gleich). Der Hintergrund des Videos ist BSS ROOM107
+ * Schnitt 3 (Bildvergleich NCC 0,78, Versatz 0/+1 px) - also dieselbe Kamera. Die Lachenpixel (B 8:24,0-8:25,0, sieben
+ * Bilder) wurden auf den Boden y = 0 zurueckprojiziert; dieselbe Messung lief auf einer nachgebauten Lache (Blob
+ * shadow_blob_data.h, Abzug wie der Zeichner, Port-Tinte 0x00BFBF10) bekannter Groesse. Zwei Masse: Rot-minus-Blau
+ * ueber Halbwert -> Halbausdehnung ~1453, Abdunklung (Summe RGB) ueber Halbwert -> ~1526. Mittel 1490 (x), z wie bei
+ * der Leiche +100 (Basis 600/700). Das ist 13 % mehr als die Disc-Leichenlache (1320/1420).
+ * MECHANISMUS je Teil:
+ *   - Rate +8 je Bild: der Disc-Leichen-Grower FUN_80109554 (Port main.c: `600 + 8 * grow`): `addiu +8` auf +0xbc/+0xbe
+ *     @0x80109710-24 (Runde 3, Pruefbericht G1: @0x801095e8-614 ist das Farbwort lui 0xff / ori 0xff38 -> +0xc4/+0xec). Ab der Basis 600/700 (FUN_8001af5c-Argumente 0x258/0x2bc wie die Leichenlache) bis zum Messwert:
+ *     (1490 - 600) / 8 = 112 Bilder (3,7 s; im Video ist sie bei 8:19-8:20 schon gross, das Wachsen selbst ist durch den
+ *     Koerper verdeckt und nicht messbar).
+ *   - Farbe: die Leichen-Tinte des Gehirns (RE2 0x00BFBF10 @0x8010a4c0-508), Zeichner main.c.
+ *   - Ausloeser: ein Treffer der Explosionszeilen 9-11 (re2z_row_from_weapon) wird UEBERLEBT (HURT), danach liegt der
+ *     Zombie (+0x21A & 2, Knockdown-Executor EXEC[5] `ori 0x2` @0x80104438-48). Die Lache waechst nur, solange er liegt
+ *     (80 %: Granate 3 um 8:10,3 - kurz am Boden 8:10,8-8:12,5 - zeigt keine grosse Lache).
+ *   - Die Lache bleibt an ihrem Platz, auch wenn er aufsteht oder stirbt (dann kommt die Leichenlache dazu).
+ * Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1. */
+#define RE15_LACHE_BASIS_X   600    /* FUN_8001af5c 0x258 (Leichen-Basis) */
+#define RE15_LACHE_BASIS_Z   700    /* FUN_8001af5c 0x2bc */
+#define RE15_LACHE_RATE        8    /* Disc FUN_80109554 +8 je Bild: addiu +8 auf +0xbc/+0xbe @0x80109710-24 */
+#define RE15_LACHE_ZIEL_X   1490    /* gemessen 80 % B 8:24,0-8:25,0 (Block oben) */
+void re15_re2z_lache_tick(re15_actor_t *e);
+void re15_re2z_lache_tick(re15_actor_t *e)
+{
+    if (!e || !re15_zgore_80prozent()) return;
+    if (e->re2z_lache_an == 1u && (e->re2z_flags21a & 2u) && e->state != 3u && e->state != 7u) {
+        e->re2z_lache_x   = e->x;
+        e->re2z_lache_z   = e->z;
+        e->re2z_lache_y   = (int32_t)e->re2z_ground_y;             /* Boden wie +0x232 = +0x1C2 */
+        e->re2z_lache_yaw = (int16_t)e->rot_y;
+        e->re2z_lache_w   = RE15_LACHE_BASIS_X;
+        e->re2z_lache_h   = RE15_LACHE_BASIS_Z;
+        e->re2z_lache_an  = 2u;
+    }
+    if (e->re2z_lache_an == 2u && (e->re2z_flags21a & 2u) && e->re2z_lache_w < RE15_LACHE_ZIEL_X) {
+        e->re2z_lache_w = (uint16_t)(e->re2z_lache_w + RE15_LACHE_RATE);
+        e->re2z_lache_h = (uint16_t)(e->re2z_lache_h + RE15_LACHE_RATE);
+    }
+    /* Runde 3 (Pruefbericht G2): steht er wieder auf, ist die Lache fertig (3) - sie bleibt liegen (80 % B 8:24,6-8:25,0),
+     * waechst aber bei einem spaeteren Liegen nicht weiter, schon gar nicht am alten Ort. Eine Lache je Zombie. */
+    if (e->re2z_lache_an == 2u && !(e->re2z_flags21a & 2u))
+        e->re2z_lache_an = 3u;
 }
 
 /* Test-Export (80%-Gore im RE2-Gehirn): EIN Tick der DEATH-Wurzel FUN_80108250 mit gestempelter Zeile/Spalte.
@@ -8852,6 +9082,7 @@ static void re2z_init(int slot, re15_actor_t *e)
     {   const int8_t *perm = NULL; int n = re2_hybrid_perm((int)e->type, &perm);
         if (n > 0 && perm && re15_teile_an(slot)) re15_teile_umordnen(slot, perm, n); }
     e->zg_9f = 0;                                                  /* 80%-Gore-Latches (re2z_80_zerfetzen) */
+    e->re2z_ok_modus = 0; e->re2z_ok_steh = 0; e->re2z_hg = 0;     /* Runde 42 Gore U1/U17 (PORT-Felder) */
 
     /* RE2 INIT seeds (@0x8010065C..): */
     e->re2z_self1d3  = 0;                                          /* sb zero,467 @0x801006C8 */
@@ -9442,6 +9673,7 @@ int re15_re2z_tick(int slot)
      * Routine-Dispatch (@0x80100550, nach dem Routine-Call). Sie tut nichts, solange der
      * Ragdoll nicht in Phase 2 `+0x21A |= 1` gesetzt hat. */
     re15_re2z_lower_body_tick(e);
+    re15_re2z_lache_tick(e);                                       /* Runde 42 U13 (Block ueber der Funktion) */
 
     /* +0x228 = ZUSTANDSWORT AM TICK-ENDE (Runde 16, aufstehen-schuss.md §2.5):
      *   8010061c: lw v0,4(s0)          ; Zustandswort NACH dem Dispatch dieses Ticks
@@ -9730,7 +9962,13 @@ void re15_re2z_ragdoll_part_anchor(const re15_actor_t *e, int bone,
      * sichtbar vom Rumpf weg (+0x130/+0x138 @0x8010B970-9C bzw. @0x8010BA5C-84), bis
      * Zustand 4 sie mit part[1] |= 0x40 einfriert. re2z_low_state != 0 heisst: die
      * Maschine hat den Startwert aus part[1] bereits uebernommen. */
-    if (e->re2z_low_state != 0u) {
+    if (e->re2z_ok_modus == 1u || e->re2z_ok_modus == 3u) {
+        /* Runde 42 U1 (Modus 3 = liegende Beine, Runde 2 genauso): die Granatwerfer-Beine stehen am Todesort (re2z_low_x/z) in ihrer EIGENEN Pose (Bank B,
+         * re15_re2z_lower_kf); die Wurzel des fallenden Oberkoerpers darf sie in x/z nicht mitziehen, deshalb steht der
+         * Anker hier um die Wurzel-Lage relativ zum Aktor versetzt (Ergebnis: Bein = Todesort + eigene Pose). */
+        anker[0] = e->re2z_low_x + (part0_welt[0] - e->x);
+        anker[2] = e->re2z_low_z + (part0_welt[2] - e->z);
+    } else if (e->re2z_low_state != 0u) {
         anker[0] = e->re2z_low_x;
         anker[2] = e->re2z_low_z;
     } else {
@@ -9741,6 +9979,27 @@ void re15_re2z_ragdoll_part_anchor(const re15_actor_t *e, int bone,
                                                     /* +0x134 = part0.t[1] + +0x232
                                                      * @0x80106E64-74 - OHNE das sinkende +0x3C */
     for (k = 0; k < 3; k++) trans[k] += anker[k] - part0_welt[k];
+}
+
+/* ---- RUNDE 42 GORE Runde 2: DIE ABGETRENNTEN BEINE DREHEN SICH NICHT MIT DEM KRIECHER -------------------------------
+ * Gemessen (test_r42_gore, R42_DBG2): Kriecher mit Beinen + Granatwerfer - das Becken blieb am Ort, die Fuesse wanderten
+ * aber bis 3093 Einheiten mit, weil der Kriecher sich zum Spieler drehte (+0x2A von 976 auf 2333) und die Beinknochen mit
+ * der Aktor-Drehung gezeichnet wurden. Im Original haben die liegengebliebenen Beine eine EIGENE Matrix: Disc `ori 0x40`
+ * an Teil 1/2/4/5 @0x80108820-98 (der RE1.5-Zeichner nimmt bei 0x40 die Matrix des Teils, Teilstufe FUN_8001e9ec), RE2
+ * `part[1] |= 0x40` @0x8010BA88-9C (Zeichner `andi v0,s3,0x40` @0x80027498 / `bne` @0x8002749C). Beides friert auch die
+ * DREHUNG ein. Der Port zeichnet die Beine darum mit der Drehung des Todesbilds: +0x220 (re2z_low_yaw, `sh` @0x8010B8A0
+ * = Aktor-Drehung beim Aushaengen). Gilt fuer die Runde-42-Modi 1 und 3 (ab dem Tod) und 2 (ab dem Start der Maschine);
+ * Modus 0 (RE15_KEIN_80PROZENT_GORE=1) bleibt wie vor Runde 42. Rueckgabe 1 = `*yaw` benutzen. */
+int re15_re2z_beine_eigene_drehung(const re15_actor_t *e, int bone, int16_t *yaw)
+{
+    if (!e || !e->re2z_rag_anchor_on || bone < 1) return 0;
+    if (bone > (e->re2z_ok_modus != 0u ? 7 : 6)) return 0;
+    if (e->re2z_ok_modus == 1u || e->re2z_ok_modus == 3u ||
+        (e->re2z_ok_modus == 2u && e->re2z_low_state != 0u)) {
+        if (yaw) *yaw = e->re2z_low_yaw;
+        return 1;
+    }
+    return 0;
 }
 
 
@@ -9869,13 +10128,82 @@ int re15_re2z_lower_kf(const re15_actor_t *e, const re15_emd_skeleton_t **skel_o
     if (e->re2z_low_state == 1u && b->loco_ok) { A = &b->anim_loco; S = &b->skel_loco; }
     else if (b->own_ok)                        { A = &b->anim_own;  S = &b->skel_own;  }
     else                                       { A = &b->anim;      S = &b->skel;      }
+    if (e->re2z_ok_modus == 3u) {
+        /* Runde 42 U1 Runde 2 (Modus 3, re2z_gl_oberkoerper_liegend): die Beine des LIEGENDEN Zombies bleiben in der
+         * Pose des Todesbilds (Haupt-Keyframe, Haupt-Skelett), Disc `ori 0x40` an Teil 1/2/4/5 @0x80108820-98. */
+        if (skel_out) *skel_out = &b->skel;
+        return (int)e->re2z_low_kf;
+    }
     if ((int)e->re2z_low_clip >= A->clip_count) return 0;
     f = (e->re2z_low_state >= 7u) ? 0 : (int)e->re2z_low_c1;
     if (f >= A->clips[e->re2z_low_clip].frame_count) f = 0;
+    /* Runde 42 U1 (gemessen test_r42_gore, R42_DBG): im Umlaufbild von Clip 1 steht die Maschine in Zustand 4 mit c1 = 0
+     * (Rueckgabe 1 @0x8002A454-58, `addu` @0x8010B9FC) - der Port zeigte dann EIN Bild lang Clip 1 Bild 0 = die STEHENDEN
+     * Beine (Becken 1976 statt 210). Im Original posiert FUN_80029E10 die Parts VOR dem Bildzaehler (Schreibkette
+     * @0x80029F40-0x8002A098, Zaehler erst @0x8002A430-58), das Umlaufbild zeigt also das LETZTE Clip-Bild; Zustand 4
+     * (@0x8010BA88-0x8010BB08) ruft keinen Anim-Schritt. */
+    if (e->re2z_low_state == 4u && A->clips[e->re2z_low_clip].frame_count > 0)
+        f = A->clips[e->re2z_low_clip].frame_count - 1;
     idx = A->clips[e->re2z_low_clip].first_frame + f;
     if (idx < 0 || idx >= A->frame_count) return 0;
     if (skel_out) *skel_out = S;
     return (int)(A->frames[idx] & 0xFFFu);
+}
+
+/* ---- RUNDE 42 GORE Runde 3: DAS EINGEFRORENE BECKEN (Pruefbericht R1, gemessen RE15_GORE_ZEICHEN_LOG) -----------------
+ * GEMESSEN (ROOM1010, Granatwerfer, Laeufe vid3/m4 + mv8): im Bild, in dem die Maschine von Zustand 3 nach 4 geht (Ende von
+ * Clip 1, part[1] |= 0x40 @0x8010BA88-9C), drehten die gezeichneten Beine um ~180 Grad - die Fuesse sprangen um ~3300
+ * Einheiten (F81 Fuss 4 (-710,7206) -> F82 (2608,7240), Becken fest (934/935,7442/7434)). Ursache: der Port posiert die Teile
+ * 1..7 nach dem Einfrieren ABSOLUT aus Clip 22 Bild 0 - samt Becken-Drehung dieses Clips.
+ * ORIGINAL (RE2 PSX.EXE, selbst gelesen): der Teile-Zeichner FUN_80027160 ruft je Teil FUN_80027434 mit a3 = Teil + 0x48
+ * (`jal 0x80027434` / `addiu a3,s2,0x48` @0x8002738C-90 bzw. `move a3,s0` @0x800273D4-D8, s0 = s2 + 0x48, Schritt 0xAC) -
+ * das ist die BLEIBENDE Weltmatrix des Teils. Ohne 0x40 wird sie neu gebildet: SetRotMa/SetTrans aus der Eltern-Matrix
+ * (+0x74) und die lokale Drehung (+0x18 ff.) daraufmultipliziert (@0x800274A4-0x800275D4). MIT 0x40 springt der Zeichner
+ * darueber (`andi v0,s3,0x40` @0x80027498 / `bne v0,zero,0x800275E4` @0x8002749C): die Matrix bleibt, wie sie im letzten
+ * Bild vor dem Einfrieren war. Die Kinder 2..7 (Eltern 2:1 3:2 4:3 5:1 6:5 7:6) haengen weiter an dieser Matrix und
+ * bekommen ihre lokalen Drehungen aus Clip 22 (Masken-Durchlauf @0x8010B904 / Maske 0x7E @0x8010024C).
+ * PORT: das Becken behaelt die Pose des letzten Bilds vor dem Einfrieren = Clip 1 letztes Bild (das Umlaufbild, das
+ * re15_re2z_lower_kf in Zustand 4 zeigt); jedes Kind b wird mit seiner Lage RELATIV zum Becken der aktuellen Pose daran
+ * gehaengt: P'[b] = F[1] * P[1]^-1 * P[b]. Gilt nicht fuer Modus 3 (dort steht ohnehin das Todesbild, re2z_low_kf).
+ * `skel` = das Skelett, mit dem der Aufrufer P gerechnet hat. */
+void re15_re2z_beine_einfrieren(const re15_actor_t *e, const re15_emd_skeleton_t *skel, re15_skel_pose_t *P);
+void re15_re2z_beine_einfrieren(const re15_actor_t *e, const re15_emd_skeleton_t *skel, re15_skel_pose_t *P)
+{
+    re15_actor_t vor;
+    re15_skel_pose_t F[RE15_EMD_MAX_BONES];
+    const re15_emd_skeleton_t *fs = NULL;
+    int kf, hi, b, r, c, k;
+    int32_t RT[9];                                         /* F1.R * P1.R^T */
+    if (!e || !P || !skel || !e->re2z_rag_anchor_on || !e->re2z_low_frozen || e->re2z_ok_modus == 3u) return;
+    if (skel->bone_count < 8) return;
+    vor = *e;                                              /* das Bild VOR dem Einfrieren: Zustand 4 auf Clip 1 = letztes Bild */
+    vor.re2z_low_state = 4u; vor.re2z_low_clip = 1u; vor.re2z_low_frozen = 0u;
+    kf = re15_re2z_lower_kf(&vor, &fs);
+    if (re15_skel_compute_pose(fs ? fs : skel, kf, F) != 0) return;
+    for (r = 0; r < 3; r++)
+        for (c = 0; c < 3; c++) {
+            int64_t s = 0;
+            for (k = 0; k < 3; k++) s += (int64_t)F[1].rot[r*3+k] * P[1].rot[c*3+k];   /* (P1.R^T)[k][c] = P1.R[c][k] */
+            RT[r*3+c] = (int32_t)(s >> 12);
+        }
+    hi = (e->re2z_ok_modus != 0u) ? 7 : 6;
+    for (b = 2; b <= hi; b++) {
+        int32_t d[3], nr[9];
+        for (r = 0; r < 3; r++) d[r] = P[b].trans[r] - P[1].trans[r];
+        for (r = 0; r < 3; r++) {
+            int64_t s = 0;
+            for (k = 0; k < 3; k++) s += (int64_t)RT[r*3+k] * d[k];
+            P[b].trans[r] = (int32_t)(s >> 12) + F[1].trans[r];
+        }
+        for (r = 0; r < 3; r++)
+            for (c = 0; c < 3; c++) {
+                int64_t s = 0;
+                for (k = 0; k < 3; k++) s += (int64_t)RT[r*3+k] * P[b].rot[k*3+c];
+                nr[r*3+c] = (int32_t)(s >> 12);
+            }
+        memcpy(P[b].rot, nr, sizeof nr);
+    }
+    P[1] = F[1];
 }
 
 void re15_re2z_lower_body_tick(re15_actor_t *e)
@@ -9884,6 +10212,9 @@ void re15_re2z_lower_body_tick(re15_actor_t *e)
     if (!(e->re2z_flags21a & 1u)) return;          /* Gate @0x8010B830-3C */
     if (!e->re2z_rag_anchor_on) return;            /* ohne Aushang gibt es keine Unterhaelfte */
     if (e->re2z_low_state >= 9u) return;           /* `sltiu v0,v1,0x9` @0x8010B84C */
+    if (e->re2z_ok_modus == 3u) return;            /* Runde 42 U1 Runde 2: liegende Granatwerfer-Beine sind seit dem Tod
+                                                     * eingefroren (Disc `ori 0x40` @0x80108820-98), Block ueber
+                                                     * re2z_gl_oberkoerper_liegend - die Maschine laeuft nicht */
 
     switch (e->re2z_low_state) {
     case 0: {                                       /* @0x8010B870 - Init, FAELLT durch */
@@ -9905,10 +10236,13 @@ void re15_re2z_lower_body_tick(re15_actor_t *e)
                                                      * Rueckgabe wertet Zustand 1 NICHT aus,
                                                      * der Bildzaehler +0x21D laeuft aber mit */
         schritt = (int32_t)((re2z_rand() & 7u) + 10u);                /* @0x8010B948-60 */
+        if (e->re2z_ok_modus == 0u) {                 /* Runde 42 U17/U1: Modus 1/2 schiebt nicht (Block ueber
+                                                       * re2z_hit_ragdoll Phase 2 bzw. re2z_gl_oberkoerper_ab) */
         int32_t cs = re15_cos_q12((int)e->re2z_low_yaw);
         int32_t sn = re15_sin_q12((int)e->re2z_low_yaw);
         e->re2z_low_x += (int32_t)(((int64_t)cs * schritt) >> 12);
         e->re2z_low_z += (int32_t)((-(int64_t)sn * schritt) >> 12);
+        }
         if (e->re2z_low_timer == 0u) e->re2z_low_state = 2u;          /* @0x8010B998-A8 */
         else e->re2z_low_timer--;
         break;
@@ -9920,18 +10254,30 @@ void re15_re2z_lower_body_tick(re15_actor_t *e)
         e->re2z_low_state = 3u;                     /* +0x219 = 3 @0x8010B9C4 */
         /* fall through */
     case 3: {                                       /* @0x8010B9C8 - schnelles Gleiten */
+        if (e->re2z_ok_modus == 1u && e->re2z_ok_steh != 0u) {
+            /* Runde 42 U1: die Granatwerfer-Beine STEHEN RE15_OK_STEH Bilder (Clip 1 Bild 0 = Stand, Block ueber
+             * re2z_gl_oberkoerper_ab), erst dann kippen sie. */
+            e->re2z_ok_steh--;
+            break;
+        }
+        if (e->re2z_ok_modus == 0u) {                 /* Runde 42 U17/U1: Modus 1/2 schiebt nicht */
         int32_t cs = re15_cos_q12((int)e->re2z_low_yaw);
         int32_t sn = re15_sin_q12((int)e->re2z_low_yaw);
         e->re2z_low_x += (int32_t)(((int64_t)cs * 30) >> 12);         /* Schrittweite 30
                                                                        * @0x8010BA4C */
         e->re2z_low_z += (int32_t)((-(int64_t)sn * 30) >> 12);
+        }
         /* +0x219 += Rueckgabe des Anim-Schritts (`addu v1,v1,v0` @0x8010B9FC): der Zustand
          * endet am ENDE VON CLIP 1, nicht an einem Timer.
          * ⛔ HIER STAND `if (e->re2z_low_timer == 0u)`. Der Timer stand beim Eintritt aus
          * Zustand 1 aber bereits auf 0 - Zustand 2 setzt ihn nicht neu -, also lief dieser
          * Zustand GENAU EIN BILD: die Unterhaelfte rutschte 30 Einheiten statt 60 x 30 =
          * 1800 und blieb dann stehen. Das ist der Nutzer-Befund. */
-        if (re2z_low_anim_step(e)) e->re2z_low_state = 4u;
+        {   /* Runde 42 U1: die Granatwerfer-Beine kippen in 3 Bildern (RE15_OK_KIPP_*), danach normal */
+            int n = (e->re2z_ok_modus == 1u && e->re2z_low_c1 < RE15_OK_KIPP_BIS) ? RE15_OK_KIPP_SCHRITT : 1;
+            for (int k = 0; k < n; k++)
+                if (re2z_low_anim_step(e)) { e->re2z_low_state = 4u; break; }
+        }
         break;
     }
     case 4:                                         /* @0x8010BA88 - EINFRIEREN */
