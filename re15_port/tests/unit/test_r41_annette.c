@@ -37,6 +37,7 @@
 #include "re15_room.h"
 #include "re15_birkin_formen.h"
 #include "re15_annette_r41.h"
+#include "re15_zws_r41.h"
 #include "re15_esp.h"
 #include "re2_ems.h"
 
@@ -275,7 +276,8 @@ static void test_programm_zug(void)
     for (int i = 0; i < len;) {
         const int l = scd_opcode_size_at(p + i);
         if (l <= 0 || i + l > len) { CHECK(0, "Zugstart: Opcode 0x%02X @%d ohne Laenge", p[i], i); break; }
-        if (p[i] == 0x2b && nm < 8) ms[nm++] = p[i + 1];
+        /* Strang finale Stufe 2: die Zugfilm-Zeile 60 (RE15_ZUG600_MSG_FILM) zeigt keinen Text - Riegel unit_r42_zug_leon */
+        if (p[i] == 0x2b && p[i + 1] != RE15_ZUG600_MSG_FILM && nm < 8) ms[nm++] = p[i + 1];
         if (p[i] == 0x04 && p[i + 3] == 5) fahrt++;
         if (p[i] == 0x44 && p[i + 2] == 0x4d) em++;
         if (p[i] == 0x01) ende = (i + l == len);
@@ -647,6 +649,7 @@ static void test_zugstart(void)
     int ende = -1, ton_an = -1, ton_krach = -1, f, cut_vorher = -1, cut_vor_weg = -1, cut_weg = -1;
     int tuer_auf = -1, tuer_zu = -1, tuer_n = 0, leon_ziel = 0, f_weg = -1;   /* NB4 N4 */
     { scd_audio_event_t ev; while (scd_audio_queue_pop(&ev)) {} }
+    const unsigned filme0 = g_re15_zws_filme;
     for (f = 0; f < 3000; f++) {
         re15_game_flag_set(5, 0x20, 1);                  /* Plc_dest-Ankunft Leon */
         scd_vm_tick();
@@ -662,14 +665,16 @@ static void test_zugstart(void)
         }
         if (as > 0 && cut_weg < 0 && g_actors[as].z == 8646) { cut_weg = (int)g_scd.work_vars[0x0A]; cut_vor_weg = cut_vorher; f_weg = f; }
         cut_vorher = (int)g_scd.work_vars[0x0A];
-        if (ton_an < 0 && re15_annette_r41_ton(RE15_AN_SE_ZUG_AN)) ton_an = f;
+        if (ton_an < 0 && g_re15_zws_filme != filme0) ton_an = f;   /* Strang finale Stufe 2: Zugfilm-Zeile statt Zug-an-Ton */
         if (ton_krach < 0 && re15_annette_r41_ton(RE15_AN_SE_KRACH)) ton_krach = f;
         if (f > 30 && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27)) { ende = f; break; }
     }
-    fprintf(stderr, "Zugstart: Ton an F%d, Krach F%d, Ende F%d, Annette (%d,%d,%d)\n", ton_an, ton_krach, ende,
+    fprintf(stderr, "Zugstart: Zugfilm F%d, Krach F%d, Ende F%d, Annette (%d,%d,%d)\n", ton_an, ton_krach, ende,
             as > 0 ? (int)g_actors[as].x : 0, as > 0 ? (int)g_actors[as].y : 0, as > 0 ? (int)g_actors[as].z : 0);
     CHECK(ende > 0, "Zugstart endet nicht (Sperren (2,7)/(1,27) bleiben)");
-    CHECK(ton_an >= 0 && ton_krach > ton_an, "Toene: Zug an F%d, Krach F%d", ton_an, ton_krach);
+    CHECK(ton_an >= 0 && ton_krach > ton_an && re15_annette_r41_ton(RE15_AN_SE_ZUG_AN) == 0,
+          "Zugfilm-Zeile F%d vor dem Krach F%d, kein Zug-an-Ton (%d; der Film traegt ihn)", ton_an, ton_krach,
+          re15_annette_r41_ton(RE15_AN_SE_ZUG_AN));
     if (as > 0) CHECK(g_actors[as].z == 8646 && g_actors[as].x == -10507, "Annette nach dem Abgang nicht versteckt (6000 @0x0100A)");
     /* NB3 M2: Abgang in Cut 0 (Tuer im Bild), versteckt im selben Bild wie der Schnitt auf Cut 1 (Auge in der Tuer) */
     CHECK(cut_vor_weg == 0 && cut_weg == 1, "Abgang: vor dem Verstecken Cut %d (statt 0), beim Verstecken Cut %d (statt 1)",

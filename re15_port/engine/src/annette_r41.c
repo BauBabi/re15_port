@@ -13,6 +13,7 @@
  */
 #include "re15_annette_r41.h"
 #include "re15_story80_r41.h"   /* Integration A2: RE15_S80_BIT_NACHTRAG (Zugstart wartet auf den Sherry-Nachtrag) */
+#include "re15_zws_r41.h"       /* Strang finale Stufe 2: RE15_ZUG600_MSG_FILM (Zugfilm-Zeile im Zugstart) */
 
 #include <string.h>
 #include <stdlib.h>
@@ -277,7 +278,18 @@ static const uint8_t z_kopf[]     = { 0x09, 0x0a, 0x01, 0x00, 0x29, 0x01, 0x2e, 
                                       0x02, 0xf9, 0x00, 0xa9, 0x09, 0x0a, 0x0a, 0x00 };   /* @0x01146: Sleep 1, Cut 1, Leon dreht sich */
 static const uint8_t z_work_an[]  = { 0x2e, 0x02, 0x00, 0x00 };                             /* @0x011CC Work_set(2,0) */
 static const uint8_t z_pult[]     = { 0x29, 0x03, 0x3f, 0x00, 0x12, 0x00, 0x09, 0x0a, 0x50, 0x00 };   /* @0x011F6 Cut 3, Pult, Sleep 80 */
-static const uint8_t z_sig_an[]   = { 0x22, 0x05, RE15_AN_SIG_ZUG_AN, 0x01 };              /* Port: Ton Zug an (Set-Form) */
+/* Runde 42 Strang finale, Stufe 2 (Zugfilm): der fruehere Port-Befehl z_sig_an `22 05 10 01` (Signal -> ANNETTE_SE Satz 3 =
+ * RE2 Leon ROOM7020 snd0 Satz 0x0C, EDT @0x5C90, Satzbytes `00 00 93 00` @0x5CC0, Aufruf MAIN sub04 @0x014AA `36 02 0c 00`) ist
+ * entfallen: der Zugfilm des Nutzers spielt GENAU diesen Satz selbst bei Film-Bild 18 (Ton-Beleg des Films
+ * zug600/film/r1/ton_belege.md: "hochfahren" = ROOM7020 snd0 Satz 0x0C @0x5CC0, VAG 14, 12 736 B), 1 s nach dem Pultlicht.
+ * Beide zusammen = derselbe Ton zweimal (Pruefberichte des Films R1/R2 Punkt "Einbau-Hinweis"). Ohne den Port-Befehl ist der
+ * Pult-Abschnitt wieder bytegleich zum Original (sub08 @0x011F6..@0x01223 hat keinen Ton). */
+/* Zugfilm (Nutzer 2026-11-17 "Ja, die Zugfahrt ist grosse Klasse!", Einbau nach dem Fahrpult, vor "There! The train's moving."):
+ * Port-Zeile ohne Text `2b 3c 00 00` = Message_on 60 in der Form der Pult-Zeile sub08 @0x01200 `2b 0e 00 00` (die das Port-
+ * Programm wie bisher auslaesst). Haken re15_zws_r41_message_on (Tabelle k_filme "zug600"): Film R600ZUG.STR, das Skript parkt,
+ * danach 15 Bilder Einblenden aus Schwarz wie RE2 (re15_zws_r41.h). Id 60: ROOM6030 belegt 0..20 (RDT), 21..26, 27..30, 31, 40
+ * (VERTRAG Runde 42 Abschnitt 2.2) - 60 ist frei. */
+static const uint8_t z_film[]     = { 0x2b, RE15_ZUG600_MSG_FILM, 0x00, 0x00 };             /* Form sub08 @0x01200 */
 /* Pult: sub08 @0x01210..@0x01223 wechselt Cut 4 (Pult dunkel) und Cut 5 (rotes WARNING) = der gescheiterte Start "Not enough
  * power!". Fuer den gelungenen Start nur Cut 4 (PORT-WAHL, Fensterlauf: Cut 5 zeigt WARNING): Set(1,28,1) + Cut 4 + Sleep 15
  * @0x01210, Sleep 15 @0x01216, Set(1,28,0) @0x01220 - Original-Bytes ohne `29 05`. */
@@ -291,6 +303,15 @@ static const uint8_t z_geste16[]  = { 0x3f, 0x00, 0x09, 0x00, 0x09, 0x0a, 0x19, 
                                       0x80, 0x00, 0x09, 0x0a, 0x19, 0x00, 0x3f, 0x00, 0x0b, 0x00, 0x09, 0x0a, 0x32, 0x00,
                                       0x3f, 0x00, 0x10, 0x00, 0x09, 0x0a, 0x14, 0x00 };   /* @0x0129A Annette nach msg 16 */
 static const uint8_t z_sig_krach[]= { 0x22, 0x05, RE15_AN_SIG_KRACH, 0x01 };               /* Port: Krach (RE2 @0x01040) */
+/* WARNING beim Krachen (Strang finale Stufe 2, Vorschlag A7 "Fuehrerstand 603: WARNING beim Krachen", Nutzer 2026-11-17 zum
+ * Loch "Loch ist einfach da": beim Anfahren kracht es, im Fuehrerstand blinkt WARNING). Original-Bytes des gescheiterten Starts
+ * ROOM6030 sub08 @0x01224..@0x0123F unveraendert: Set(1,29,1) @0x01224, For 3 @0x01228 { Cut 4 @0x0122E (Pult dunkel),
+ * Sleep 15 @0x01230, Cut 5 @0x01234 (rotes WARNING, BSS ROOM603 Bild 5; Kamera 5 @0x0100 = Kamera 4 @0x00E0), Sleep 15
+ * @0x01236 } Next @0x0123A, Set(1,29,0) @0x0123C = drei Wechsel 4/5 in 90 Bildern. Danach zurueck auf Cut 1 = sub08 @0x01254
+ * `29 01` (die Kamera, in der die Szene weiterlaeuft). Bank 1 Bit 29 ist im Port ungebunden (game_state.c, Zone 1 = DAT_800aca3c). */
+static const uint8_t z_warnung[]  = { 0x22, 0x01, 0x1d, 0x01, 0x0d, 0x00, 0x1a, 0x00, 0x03, 0x00, 0x29, 0x04, 0x09, 0x0a,
+                                      0x0f, 0x00, 0x29, 0x05, 0x09, 0x0a, 0x0f, 0x00, 0x0e, 0x00, 0x22, 0x01, 0x1d, 0x00 }; /* @0x01224 */
+static const uint8_t z_cut1_w[]   = { 0x29, 0x01 };                                         /* sub08 @0x01254 */
 static const uint8_t z_schlaf25[] = { 0x09, 0x0a, 0x19, 0x00 };                             /* RE2 @0x0104C `0a 19 00` */
 static const uint8_t z_work_leon[]= { 0x2e, 0x01, 0x00, 0x00 };                             /* @0x0125A Work_set(1,0) */
 static const uint8_t z_dreh_leon[]= { 0x40, 0x00, 0x09, 0x20, LE16(Z_TUER_X), LE16(Z_TUER_Z) };   /* Form @0x01150 */
@@ -352,10 +373,10 @@ static const uint8_t z_ende[]     = { 0x01, 0x00 };                             
 #define SEG(a, off) { a, (uint16_t)sizeof a, (uint16_t)(off) }
 static const an_seg_t k_zug_seg[] = {
     SEG(z_bit, 0),          SEG(z_sperre, 0x0113E), SEG(z_emset, 0x010F8),  SEG(z_kopf, 0x01146),
-    SEG(z_work_an, 0x011CC), SEG(z_pult, 0x011F6),   SEG(z_sig_an, 0),       SEG(z_licht, 0x01210),
-    SEG(z_schlaf15, 0x01216), SEG(z_licht_aus, 0x01220),
+    SEG(z_work_an, 0x011CC), SEG(z_pult, 0x011F6),   SEG(z_licht, 0x01210),
+    SEG(z_schlaf15, 0x01216), SEG(z_licht_aus, 0x01220), SEG(z_film, 0),
     SEG(z_cut1, 0x01254),    SEG(z_fahrt, 0x01132),  SEG(z_work_an2, 0x012E2), SEG(z_m27, 0),
-    SEG(z_geste16, 0x0129A), SEG(z_sig_krach, 0),    SEG(z_schlaf25, 0),
+    SEG(z_geste16, 0x0129A), SEG(z_sig_krach, 0),    SEG(z_warnung, 0x01224), SEG(z_cut1_w, 0x01254), SEG(z_schlaf25, 0),
     SEG(z_work_leon, 0x0125A), SEG(z_dreh_leon, 0),  SEG(z_warte20, 0x01358),
     SEG(z_work_an2, 0x012E2), SEG(z_dreh_an, 0),     SEG(z_warte21, 0x0128A), SEG(z_schlaf36, 0),
     SEG(z_m28, 0),           SEG(z_geste11, 0x01178),

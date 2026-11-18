@@ -178,14 +178,16 @@ ENDE
     # Wagen vor dem Zugstart
     pruefe("Wagen vor dem Zugstart: Tuer nach hinten zu" "ROOM6031 Evt_exec sub05 -> Programm (44 B): Wagen vor dem Zugstart")
     # E9 Zugstart
-    pruefe("E9: Zugstart-Programm" "ROOM6031 Evt_exec sub05 -> Programm (422 B): Zugstart E9")
-    pruefe_re("E9: Zug-an-Ton, msg 14, Krachen, msg 15, 16, 17 in dieser Folge"
-        "Zug-an-Ton [(]ANNETTE_SE Satz 3[)].*msgtext] room=6031 id=14 .*Krachen aus dem hinteren Wagen.*msgtext] room=6031 id=15 .*msgtext] room=6031 id=16 .*msgtext] room=6031 id=17 ")
+    pruefe("E9: Zugstart-Programm" "ROOM6031 Evt_exec sub05 -> Programm (452 B): Zugstart E9")
+    # Runde 42 Strang finale Stufe 2: statt des Zug-an-Tons der Zugfilm R600ZUG.STR (re15_zws_r41.h "Zugfilm Raum 600")
+    pruefe_re("E9: Zugfilm, msg 14, Krachen, msg 15, 16, 17 in dieser Folge"
+        "[[]zug601[]] Film angefordert.*[[]zug601[]] Film zu Ende: 405 von 405 Bildern.*msgtext] room=6031 id=14 .*Krachen aus dem hinteren Wagen.*msgtext] room=6031 id=15 .*msgtext] room=6031 id=16 .*msgtext] room=6031 id=17 ")
     pruefe("E9: msg 14" "[msgtext] room=6031 id=14 \"Sherry: It's moving! Elza, we did it!\"")
     pruefe("E9: msg 15" "[msgtext] room=6031 id=15 \"John: What the hell was that? It came from the back car!\"")
     pruefe("E9: msg 16" "[msgtext] room=6031 id=16 \"Sherry: It's that monster... it followed us!\"")
     pruefe("E9: msg 17" "[msgtext] room=6031 id=17 \"Elza: John, stay with Sherry and Marvin. Don't open that door for anyone but me.\"")
-    pruefe_re("Toene: ANNETTE_SE Satz 3 (Zug an) vor Satz 0 (Krachen)" "[[]annette] F[0-9]+ Ton 3 .*[[]annette] F[0-9]+ Ton 0 ")
+    pruefe_re("Toene: Zugfilm vor ANNETTE_SE Satz 0 (Krachen)" "[[]zug601[]] Film zu Ende.*[[]annette] F[0-9]+ Ton 0 ")
+    pruefe_nicht("kein Zug-an-Ton (ANNETTE_SE Satz 3) - der Zugfilm traegt ihn" "Zug-an-Ton (ANNETTE_SE Satz 3)")
     # danach wie heute: nach hinten in 5091
     pruefe("5091 erreicht" "EXIT_AT: Bild 200 in Raum 5091")
     _fertig()

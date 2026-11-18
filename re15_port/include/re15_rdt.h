@@ -257,6 +257,11 @@ int re15_rdt_parse(const uint8_t *data, size_t size, re15_rdt_t *out);
  * starting at `slot_offset`. Skips zones with cam_to=0 (decorative per
  * ZoneRvdParser:71-73). Returns the number of AOTs installed. */
 int re15_rdt_apply_zones_as_aots(const re15_rdt_t *rdt, int slot_offset);
+/* Runde 42 Strang finale Stufe 2: die RVD-Zonen (RDT+0x28) aus den residenten Raum-Bytes neu lesen - fuer den Wiedereintritt
+ * in DENSELBEN Raum (Tuer mit Ziel = dieser Raum). Das Original liest bei JEDEM Raumladen die RDT neu (FUN_800396fc @0x800397e8
+ * `jal FUN_80013b60` laedt die Datei an die Arena-Basis DAT_800ac778, @0x80039800.. versetzt die Zeiger), ein Cut_replace
+ * (op_cut_replace) gilt also nur bis zum naechsten Raumladen. 0 = ok. */
+int re15_rdt_zonen_auffrischen(re15_rdt_t *rdt);
 
 /* Per-cut region quad (anchor zone with cam_from==cut_id) for the prop/NPC
  * region cull. Returns 1 + fills xs/zs[4], 0 if none. (PSX FUN_80014324.) */

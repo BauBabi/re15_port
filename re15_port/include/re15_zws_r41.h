@@ -174,6 +174,22 @@
 #define RE15_ZWS11C_FILM         "MOVIE/R11CGORI.STR"
 #define RE15_ZWS11C_FILM_BILDER  362      /* Quelle: 362 Bilder bei 30/s (Riegel prueft die Datei) */
 
+/* ---- Zugfilm Raum 600 (Runde 42 Strang finale, Stufe 2): Zugstart ROOM6030 (Leon, annette_r41.c k_zug_seg) und ROOM6031 (Elza,
+ * gen/story6_r42_szenen.inc k_s6_6031_zug). NUTZER (2026-11-17 zur Fassung v2 mit Raumdeko): "Ja, die Zugfahrt ist grosse
+ * Klasse!"; Einbau nach dem Fahrpult, vor "There! The train's moving." (Leon) bzw. "It's moving! Elza, we did it!" (Elza), ein
+ * Film fuer beide. Kein Schrei, kein Anker: nur die Port-Zeile `2b 3c 00 00` im Zugstart-Programm (Form der Pult-Zeile ROOM6030
+ * sub08 @0x01200 `2b 0e 00 00` bzw. ROOM6031 sub08 @0x00FC4 `2b 06 00 00`, die beide Programme auslassen), danach dasselbe
+ * Einblenden wie 114 (RE2 ROOM1080 sub14, unten). Id 60: ROOM6030 belegt 0..20, 21..26, 27..30, 31, 40; ROOM6031 0..11, 12..17
+ * (VERTRAG Runde 42 Abschnitt 2.2/2.3). Ton: der Film traegt das Hochfahren selbst (ROOM7020 snd0 Satz 0x0C bei Film-Bild 18),
+ * deshalb spielen die Programme den Port-Satz ANNETTE_SE 3 nicht mehr (annette_r41.c z_film). Datei: tools/r41_zws114/
+ * film_bauen.py --film 600 aus Cutscenes/Rooms/600_601/Nachbau_Blender/Zugfilm_v2_Raumdeko/Raum600_Zug_Ton.mp4 (unveraendert,
+ * md5 dc3e25e8...), 405 Bilder bei 30/s. */
+#define RE15_ZUG600_RAUM_LEON    0x6030u
+#define RE15_ZUG600_RAUM_ELZA    0x6031u
+#define RE15_ZUG600_MSG_FILM     60
+#define RE15_ZUG600_FILM         "MOVIE/R600ZUG.STR"
+#define RE15_ZUG600_FILM_BILDER  405      /* Quelle: 405 Bilder bei 30/s (film_bau: 405 Bilder, 254 Ton-Sektoren) */
+
 /* Einblenden nach dem Film = RE2 ROOM1080 sub14 @0x0252A `53 02 02 07 00 f8` (Sce_fade_set, Handler LAB_80057ef0). */
 #define RE15_ZWS_BLENDE_KANAL 2        /* pc[1] @0x0252B (`lbu s0,1(s2)` @0x80057f18)                          */
 #define RE15_ZWS_BLENDE_ABR   2        /* pc[2] @0x0252C: B - F subtraktiv (@0x80057f38 -> FUN_8002c1a0 abr<<5)  */

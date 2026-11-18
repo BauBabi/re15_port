@@ -2412,6 +2412,10 @@ void re15_game_step(const re15_game_ctx_t *c)
          * scd_room_reenter, damit ein Plc_motion des Szenario-main00 gewinnt (SCD @0x8001cdec
          * vor Dispatcher @0x8001ce0c) — gemessen mit unit_elliot_1170_run / probe_1090_cutscene. */
         re15_player_room_entry_pose();
+        /* Runde 42 Strang finale Stufe 2: der Raumlader des Originals liest die RDT auch hier neu (FUN_800396fc @0x800397e8,
+         * include/re15_rdt.h re15_rdt_zonen_auffrischen) - ein Cut_replace des vorigen Besuchs (ROOM5090/5091 Wagen B, Loch)
+         * gilt danach nicht mehr und wird von sub00 neu gesetzt, statt sich beim zweiten Mal zurueckzutauschen. */
+        re15_rdt_zonen_auffrischen((re15_rdt_t *)c->rdt);
         scd_room_reenter(c->rdt, pl->x, pl->z, sc);
         /* Latch the byte-true intro handoff (ROOM1170 sub11 Aot_on(3) → door 3 → this reenter).
          * The intro's single Aot_on(3) is the ONLY reenter the original performs; the PC

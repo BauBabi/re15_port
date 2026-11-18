@@ -1313,6 +1313,10 @@ static int op_evt_exec(scd_thread_t *t)
      * -> Zugstart E9 bzw. Wagen vor dem Zugstart (re15_story6_r42.h). */
     { extern const uint8_t *re15_story6_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
       target_pc = re15_story6_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
+    /* Runde 42 Strang finale Stufe 2: ROOM5090/5091 sub00 @0x0127C / @0x01260 Evt_exec sub03 nach dem Zugstart -> Cut_replace(8,10)
+     * + sub03 (Loch im Boden von Wagen B, re15_zug_r42.h). */
+    { extern const uint8_t *re15_zug_r42_evt_exec(uint16_t, uint8_t, const uint8_t *);
+      target_pc = re15_zug_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc); }
     if (!target_pc) return 1;   /* no such sub → drop */
 
     int slot;
@@ -4732,6 +4736,18 @@ int op_cut_replace(scd_thread_t *t)
         extern void re15_aot_cut_replace(uint8_t a, uint8_t b);
         re15_aot_cut_replace(a, b);   /* also swap the live CAM_SWITCH AOTs (cam_from/target) */
     }
+#ifdef RE15_PLATFORM_PC
+    {   /* Messzeile (Runde 42 finale Stufe 2): Tausch im Zonen-Satz und in den Kamera-AOTs sichtbar machen */
+        int za = 0, zb = 0, aa = 0, ab = 0;
+        if (s_current_rdt)
+            for (int i = 0; i < s_current_rdt->zone_count; i++) { za += s_current_rdt->zones[i].cam_to == a; zb += s_current_rdt->zones[i].cam_to == b; }
+        for (int i = 0; i < RE15_AOT_MAX; i++)
+            if (g_aot.slots[i].active && g_aot.slots[i].type == RE15_AOT_TYPE_CAM_SWITCH) {
+                aa += g_aot.slots[i].event_id == a; ab += g_aot.slots[i].event_id == b; }
+        fprintf(stderr, "[scd F%u] Cut_replace(%d,%d): Zonen nach %d/%d = %d/%d, Kamera-AOTs nach %d/%d = %d/%d\n",
+                (unsigned)g_engine.frame_count, a, b, a, b, za, zb, a, b, aa, ab);
+    }
+#endif
     /* KEIN Kamera-Wechsel im Schwanz — das Original macht hier ein ZEIGER-FIXUP, keine Umschaltung.
      *
      * Der frueher hier stehende Block ("if (active_cut == a) -> cam_id = b, cam_change_pending = 1",

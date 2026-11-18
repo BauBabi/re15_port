@@ -408,6 +408,18 @@ int re15_rdt_floor_sound(const re15_rdt_t *rdt, int32_t px, int32_t pz)
     }
 }
 
+/* Herleitung im Kopf (include/re15_rdt.h). Nur die Zonen werden ersetzt - alle anderen Zeiger zeigen ohnehin in dieselben
+ * residenten Bytes. */
+int re15_rdt_zonen_auffrischen(re15_rdt_t *rdt)
+{
+    static re15_rdt_t s_frisch;
+    if (!rdt || !rdt->raw || rdt->raw_size <= 0) return -1;
+    if (re15_rdt_parse(rdt->raw, (size_t)rdt->raw_size, &s_frisch) != 0) return -1;
+    memcpy(rdt->zones, s_frisch.zones, sizeof rdt->zones);
+    rdt->zone_count = s_frisch.zone_count;
+    return 0;
+}
+
 int re15_rdt_apply_zones_as_aots(const re15_rdt_t *rdt, int slot_offset)
 {
     if (!rdt) return 0;
