@@ -46,6 +46,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 #ifndef RE15_ASSET_PSX_DIR
 #error RE15_ASSET_PSX_DIR fehlt
@@ -308,11 +309,26 @@ static void teil_texte(void)
 
 /* ================================================ Szenen ======================================================= */
 /* Laeuft die Szene bis zum Ende des Programms (Faden verlaesst es) und vergleicht die Text- und Stimmen-Folge. */
+/* U-03 (Runde 42 rest Stufe 3): Bilder, in denen Elza vor msg 0 zu Marvin (Mod-6031 (-21241,-26118)) gedreht steht. Gier-Konvention
+ * dir = (cos, -sin), 0 = +X, 1024 = -Z (dachkiste_r36.c wp_yaw_zu). */
+static int s_u03_marvin_bilder = 0;
+static void u03_messen(uint16_t raum)
+{
+    if (raum != 0x6031 || s_prot_n > 0) return;
+    const re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const double dx = -21241.0 - p->x, dz = -26118.0 - p->z;
+    int soll = (int)lround(atan2(-dz, dx) / (2.0 * 3.14159265358979) * 4096.0) & 4095;
+    int d = ((int)(p->rot_y & 4095) - soll) & 4095; if (d > 2048) d = 4096 - d;
+    if (d <= 64 && re15_game_flag_get(2, 7)) s_u03_marvin_bilder++;
+}
+
 static void szene_pruefen(const uint8_t *prog, int pn, const uint8_t *folge, int fn, uint16_t raum, int max_bilder)
 {
     int start = -1, ende = -1;
+    s_u03_marvin_bilder = 0;
     for (int f = 0; f < max_bilder; f++) {
         frame();
+        u03_messen(raum);
         if (start < 0) { if (faden_im_programm(prog, pn) >= 0) start = s_bild; }
         else if (faden_im_programm(prog, pn) < 0) { ende = s_bild; break; }
     }
@@ -386,8 +402,23 @@ static void teil_wagen6031(void)
           re15_game_flag_get(2, 7), re15_game_flag_get(1, 27), re15_game_flag_get(3, 22));
     /* Programmkopf = Original-Bytes sub02 [@0x00D78, @0x00DB2), dann Runde 42 rest Stufe 2 (D4) Cut_chg 11 in Leons Form
      * (ROOM6030 sub02 @0x00DC0 `29 0b` vor msg 0), dann [@0x00DB2, @0x00DFA) */
-    PRUEF(pn > 0x84 && s_rawsz > 0x0DFA && !memcmp(prog, s_raw + 0x0D78, 0x3A) && prog[0x3A] == 0x29 && prog[0x3B] == 0x0B &&
-          !memcmp(prog + 0x3C, s_raw + 0x0DB2, 0x48), "Programmkopf = ROOM6031 @0x00D78..@0x00DB2 + `29 0b` + @0x00DB2..@0x00DFA");
+    /* Runde 42 rest Stufe 3, U-03: nach dem Cut 11 Capcoms Blick auf Marvin (Disc Version_40% ROOM6041 sub06 @0x00724..@0x00746,
+     * Ziele um Marvins Mod-Versatz (0,+400) verschoben), Nacken zurueck (Disc ROOM6040 @0x006F8), dieselbe Drehung @0x00D9E..@0x00DB2,
+     * dann wie bisher [@0x00DB2, @0x00DFA). Block = 8 + 12 + 10 + 4 + 10 + 4 + 10 = 58 Byte (0x3A). */
+    static const uint8_t k_u03[0x3A] = {
+        0x40, 0x00, 0x09, 0x20, 0xbd, 0xad, 0xde, 0x99,                         /* drehen (-21059,-26146) = Disc @0x00724 + (0,400) */
+        0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, 0x20, 0x00, /* warten (5,0x20)                                   */
+        0x41, 0x01, 0x07, 0xad, 0x00, 0x00, 0xfa, 0x99, 0x28, 0x28,             /* Nacken Marvin (-21241,-26118) = Disc @0x0072E +400 */
+        0x09, 0x0a, 0x28, 0x00,                                                 /* Sleep 40  = Disc @0x00738                          */
+        0x41, 0x01, 0x99, 0xa7, 0x00, 0x00, 0x4f, 0x9f, 0x28, 0x28,             /* Nacken Wagenmitte = Disc @0x0073C                  */
+        0x09, 0x0a, 0x78, 0x00,                                                 /* Sleep 120 = Disc @0x00746                          */
+        0x41, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x28, 0x28 };           /* Nacken zurueck = Disc ROOM6040 @0x006F8            */
+    PRUEF(pn > 0x84 + 0x3A + 0x14 && s_rawsz > 0x0DFA && !memcmp(prog, s_raw + 0x0D78, 0x3A) && prog[0x3A] == 0x29 &&
+          prog[0x3B] == 0x0B && !memcmp(prog + 0x3C, k_u03, sizeof k_u03) && !memcmp(prog + 0x76, s_raw + 0x0D9E, 0x14) &&
+          !memcmp(prog + 0x8A, s_raw + 0x0DB2, 0x48),
+          "Programmkopf = ROOM6031 @0x00D78..@0x00DB2 + `29 0b` + U-03 (Disc ROOM6041 sub06) + @0x00D9E..@0x00DFA");
+    PRUEF(s_u03_marvin_bilder >= 30, "U-03: Elza blickt vor msg 0 zu Marvin (Gier +-64 zur Richtung Marvin in %d Bildern, Soll >= 30)",
+          s_u03_marvin_bilder);
     /* D4: Elzas Gespraech beginnt mit dem Gruppenbild Cut 11 (wie Leon), Schluss wie Original Cut 9 (@0x00DFA) */
     PRUEF(s_prot_n >= 1 && s_prot_id[0] == 0 && s_prot_cut[0] == 11, "D4: msg 0 mit Cut 11 (gemessen Cut %d)",
           s_prot_n >= 1 ? s_prot_cut[0] : -1);
