@@ -1,7 +1,32 @@
 /*
- * RE1.5 Rebuilt — LAGEPLAENE ZUM AUFSAMMELN (Runde 36 Spur N): je Polizei-Etage ein RE2-Lageplan an
- * der Wand; Aufnehmen schaltet das Kartenblatt der Etage frei wie in Resident Evil 2.
- * Dossier mit allen Messungen: analysis/befunde_runde36/N_kartenitems.md.
+ * RE1.5 Rebuilt — LAGEPLAENE ZUM AUFSAMMELN (Runde 36 Spur N, Runde 42 Strang lageplaene): EIN Revierplan und
+ * EIN Kellerplan an der Wand; Aufnehmen schaltet ALLE Kartenblaetter des Bereichs frei wie in Resident Evil 2.
+ * Dossier mit allen Messungen: analysis/befunde_runde36/N_kartenitems.md (Runde 36: fuenf Etagenplaene).
+ *
+ * RUNDE 42 — RE2-FORM (Strang lageplaene, Stufe 1):
+ *   NUTZERWUNSCH 18.11.2026 woertlich: "Dann will ich das nicht so. Ich will das es mehr funktioniert wie in
+ *   Resident Evil 2." und "nicht benötigte maps kommen weg."
+ *   RE2 room20B0 sub10 @0x037BA..0x0381A: EIN Plan ("A police station map. / Will you take it?" RDT @0x3B92,
+ *   "You've taken a / police station map." @0x3DB8) setzt in EINEM Ereignis Set(33,2) Set(33,3) Set(33,4)
+ *   @0x037DA/@0x037DE/@0x037E2 (Besitz 1F/2F/3F) und Set(35,2..4) @0x037E6-EE (Etagenwahl). Eigener B1-Plan
+ *   room2130 (@0x1B32 / @0x1D57). Port: Revierplan = 1F+2F+3F (Blatt 2/3/4, Bits 89/88/87), Kellerplan =
+ *   B2+B1 (Blatt 1/0, Bits 77/78; Name "police basement map" = PORT-WAHL, RE2 hat nur einen Kellerstock).
+ *   Das Port-Programm setzt je Blatt ein Bank-9-Bit hintereinander wie RE2 die drei Set(33,n).
+ *   ORT (PORT-WAHL nach Nutzer-Regel "die Stelle, die beide auf dem Pflichtweg zuerst erreichen"):
+ *     Revierplan ROOM1030/1031 (Lobby, Stelle der Runde 36 unveraendert): Elza STARTET in 1031 (PSX.EXE
+ *       @0x8001d324 Raum 0x03), Leon kommt auf dem Abstieg hindurch (1040 Slot 1 -> 1030 @0x010B8, weiter
+ *       1030 Slot 0 -> 1050 @0x01C6A); die anderen Stellen 1140 (Leon Nebenweg; Elza erst E16) und 10D0
+ *       (Leon L13, Elza Kette G2) liegen spaeter.
+ *     Kellerplan ROOM1200/1201 (Leichenhalle, Stelle der Runde 36 unveraendert): Pflicht fuer beide
+ *       (Minidisc Player 1200 sub00 @0x00932 -> Stimmschloss 1100 -> Blue Keycard -> Kartenleser 10D0 ->
+ *       10F0/10F1; Leon L12-L14 -> P5, Elza D1_elza_pflichtweg.md G1..G6); 11D0 ist fuer keinen Pflicht
+ *       (Tueren nur 1180/1230 @0x011E2/@0x01206 und 1260 @0x01228; beide verlassen STAGE1 ueber
+ *       11B0 Slot 5 @0x01034 bzw. 10B1 Slot 1 @0x016F2 -> 1260, nicht ueber 11D0).
+ *   ENTFALLEN: die Wandplaene 1140 (3F), 10D0 (2F), 11D0 (B1) — kein Prop, keine Zone, keine Texte mehr;
+ *   die Waende dort sehen wieder aus wie ausgeliefert. Ihre Bits 87/88/78 bleiben die Besitz-Bits ihrer
+ *   Blaetter und werden vom zustaendigen Plan mitgesetzt.
+ *   ALTE SPIELSTAENDE: Besitz je Blatt = sein Bit (unveraendert). Ein Plan haengt, solange EINES seiner Bits
+ *   fehlt (wer frueher nur den 3F-Plan nahm, findet den Revierplan in der Lobby und bekommt 1F/2F dazu).
  *
  * NUTZER-VORGABE (AUFTRAG.md Z. 73-77, woertlich): "Extrahiere mir Karte01 oder Karte02 ... Haenge sie
  *   mir beispielhaft an die Stelle von map3F.bmp, und schalte damit die Map fuer Etage 3F frei, wie das
@@ -60,22 +85,27 @@
 
 #include <stdint.h>
 
+#define RE15_R36K_MAX_BLAETTER 3   /* Revierplan: 1F/2F/3F                                                */
+
 typedef struct {
     uint16_t raum;             /* Leon-Variante; Elza = raum | 1 (derselbe Ort)                        */
-    uint8_t  blatt;            /* Kartenblatt (re15_map_zones.h): 4 = 3F, 3 = 2F, 2 = 1F, 1 = B2, 0 = B1 */
-    uint8_t  bit;              /* Bank-9-Bit: 87/88/89/77/78 (Kopf BANK-9-BITS; nie ein Original-Bit)   */
+    uint8_t  blatt;            /* Kartenblatt der FUNDSTELLE (re15_map_zones.h) = blaetter[0]          */
+    uint8_t  bit;              /* Bank-9-Bit der Fundstelle = bits[0] (Kopf BANK-9-BITS)               */
     uint8_t  aot_slot;         /* Slot des Aufhebe-Ereignisses                                         */
     uint8_t  verdraengt_nach;  /* 0xFF = keiner; sonst: der Satz in aot_slot zieht dorthin um (Vorrang) */
     int32_t  x, y, z;          /* Prop-Ursprung (Welt)                                                  */
     int16_t  rot_x, rot_y, rot_z;   /* Pool +0x68/+0x6A/+0x6C (scd_vm.c Member 3..5)                    */
     int32_t  rect_x, rect_z;   /* Ecke des Aufhebe-Rechtecks, Groesse RE15_R36K_RECT                    */
+    uint8_t  n_blaetter;       /* Runde 42: Blaetter dieses Plans (Revier 3, Keller 2)                 */
+    uint8_t  blaetter[RE15_R36K_MAX_BLAETTER];  /* 4 = 3F, 3 = 2F, 2 = 1F, 1 = B2, 0 = B1               */
+    uint8_t  bits[RE15_R36K_MAX_BLAETTER];      /* je Blatt sein Bank-9-Bit: 89/88/87 bzw. 77/78        */
 } re15_kartenitem_r36_t;
 
-#define RE15_R36K_ANZAHL       5
+#define RE15_R36K_ANZAHL       2   /* Runde 42: Revierplan ROOM1030 + Kellerplan ROOM1200 (vorher 5) */
 #define RE15_R36K_BANK         9         /* Bank-9-Bits (gespeichert mit g_game.flags)                   */
 #define RE15_R36K_EREIGNIS     28        /* VERTRAG.md 1.3 Spur N                                       */
 #define RE15_R36K_OBJ          15        /* Prop-Pool-Id; TIM-Slot RE15_TIM_SLOT_PROP(15) = 35; kein Raum
-                                          * der fuenf hat nOmodel > 8, kein Port-Prop nutzt 8..16         */
+                                          * der fuenf (Runde 36) hat nOmodel > 8, kein Port-Prop nutzt 8..16 */
 #define RE15_R36K_MSG_FRAGE    30        /* VERTRAG.md 1.2 (ROOM1150-Liste: 28/29 belegt -> 30/31)      */
 #define RE15_R36K_MSG_GENOMMEN 31
 #define RE15_R36K_RECT         1000      /* r35-Muster: haeufigste Item-Groesse (69 von 162)            */
@@ -89,7 +119,7 @@ typedef struct {
                                           * FUN_8002c18c @0x8002c2f4 -> FUN_80022f0c flach, 0x808080      */
 #define RE15_R36K_PROP_BAND    1         /* wie r35 RE15_R35I_PROP_BAND (100 von 121 Item-Props)          */
 
-/* Prop + Aufhebe-Zone beim Raumstart anlegen (nur solange das Bank-9-Bit fehlt). Gerufen an BEIDEN
+/* Prop + Aufhebe-Zone beim Raumstart anlegen (nur solange EINES der Bank-9-Bits des Plans fehlt). Gerufen an BEIDEN
  * Raumstart-Wegen (scd_room_setup.c, platform/pc/main.c Boot/CONTINUE) nach dem Init-Lauf von main00.
  * Idempotent; tut in jedem anderen Raum nichts. */
 void re15_kartenitems_r36_install(uint16_t room_id);
@@ -104,7 +134,7 @@ const uint8_t *re15_kartenitems_r36_md1_bytes(uint16_t room_id, int *out_size);
 const uint8_t *re15_kartenitems_r36_tim_bytes(uint16_t room_id, int *out_size);
 
 /* HAKEN re15_map_owned.c: Besitz eines Kartenblatts aus den Bank-9-Bits 87/88/89/77/78 (Gegenstueck zu RE2
- * Bank 33 @0x8006E66C). */
+ * Bank 33 @0x8006E66C). Runde 42: je Blatt sein Bit (blaetter[]/bits[] aller Plaene). */
 int      re15_kartenitems_r36_blatt_besitz(unsigned page);
 uint32_t re15_kartenitems_r36_besitz_bits(void);
 
@@ -114,6 +144,8 @@ const re15_kartenitem_r36_t *re15_kartenitems_r36_zeile(int i);
 const re15_kartenitem_r36_t *re15_kartenitems_r36_des_raums(uint16_t room_id);
 const uint8_t *re15_kartenitems_r36_programm(uint16_t room_id, int *out_len);
 /* welche: 0 = Frage (Nachricht 30), 1 = "You've taken ..." (31). */
+/* Runde 42: 1 = alle Bits des Plans gesetzt (dann haengt er nicht mehr). */
+int re15_kartenitems_r36_genommen(const re15_kartenitem_r36_t *z);
 const uint8_t *re15_kartenitems_r36_meldung(uint16_t room_id, int welche, int *out_len);
 
 #endif /* RE15_KARTENITEMS_R36_H */
