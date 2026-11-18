@@ -173,20 +173,40 @@ set(_wp_unten3010 "OBJ 0" "RAUM 3010" "GEGNERWEG" "WARTE 30" "FLAG 9 20" "BLICK 
     "AKTION" "WARTE 60" "AKTION" "WARTE 100" "FLAG 9 20" "ENDE")
 _lauf(unten3010 400 _wp_unten3010 RE15_DEBUG_JUMP=3010@250 "RE15_PLAYER_POS=-10700,844,0,0" "RE15_EXIT_AT=500")
 _muss("loaded room3010.rdt" _dbg "unten3010: ROOM3010 nicht geladen")
-_gesperrt(unten3010 3010 5 1 0 3)
+# Querbezug Runde 42 gegenstaende (Zuender V-06, re15_gegenstaende_r42.c fundstelle_anlegen): auf Slot 5 liegt jetzt die
+# Fundstelle des Zuenders (Vorrang), die Schrotpatronen (item 0x16, Taken-Bit 20, Original @0x02094) ziehen auf einen freien
+# Slot von oben um (debug.log "[gegenstaende42] ROOM3010 Slot 5: Fundstelle ..."; Patronen danach Slot 45). Der Riegel prueft
+# die Patronen deshalb am Gegenstand (item 0x16 tk 20), nicht an der Slot-Nummer. Gemessen 18.11.2026 (Integration r42/story):
+# "F85 room=3010 ITEM slot 45 floor 1 item 0x16 tk 20 spieler-band 0 ... -> GESPERRT".
+_gesperrt(unten3010 3010 "[0-9]+" 1 0 3)
+string(REGEX MATCHALL "room=3010 ITEM slot [0-9]+ floor 1 item 0x16 tk 20 spieler-band 0 [^\n]*-> GESPERRT" _ges3010 "${_item}")
+list(LENGTH _ges3010 _n_ges3010)
+if(_n_ges3010 LESS 3)
+    _fehler("unten3010: nur ${_n_ges3010} gesperrte Druecke an den Schrotpatronen (item 0x16 tk 20), erwartet >= 3 (itemband.txt: ${_item})")
+endif()
 _flag_ende(unten3010 9 20 0)
 message(STATUS "r37_itemband unten3010: Schrotpatronen auf dem Steg von Band 0 (darunter) gesperrt, (9,20) = 0")
 
-set(_wp_weg3010 "OBJ 0" "RAUM 3010" "GEGNERWEG" "WARTE 30" "FLAG 9 20" "GEHE -10400 -11100 120" "BLICK 3072" "WARTE 20"
-    "AKTION" "WARTE 150" "GEHE -10700 -8000" "GEHE -10700 844 100" "BLICK 0" "WARTE 20" "AKTION" "WARTE 60" "AKTION"
-    "WARTE 60" "AKTION" "WARTE 100" "FLAG 9 20" "ENDE")
-_lauf(weg3010 500 _wp_weg3010 RE15_DEBUG_JUMP=3010@250 "RE15_PLAYER_POS=-7400,-18400,3072,0" "RE15_EXIT_AT=1050")
+# Querbezug Runde 42 gegenstaende: an derselben Stelle liegt jetzt zuerst der Zuender (Fundstelle Slot 5, Ereignis 26 -> Text 21
+# -> Aufnahme-Fenster, Bit (9,48), Vorrang vor den Patronen). Gemessen 19.11.2026 (Integration r42/story): mit drei bzw. sechs
+# Einzeldruecken im Abstand von 63 Bildern wurde weder der Zuender noch die Patronen genommen. Der Plan drueckt deshalb wie ein
+# Spieler (TIPPE = Quadrat 3 Bilder je 30, bis das Bit steht): erst der Zuender (9,48), dann die Patronen (9,20).
+set(_wp_weg3010 "OBJ 0" "RAUM 3010" "GEGNERWEG" "WARTE 30" "FLAG 9 20" "FLAG 9 48" "GEHE -10400 -11100 120" "BLICK 3072" "WARTE 20"
+    "AKTION" "WARTE 150" "GEHE -10700 -8000" "GEHE -10700 844 100" "BLICK 0" "WARTE 20" "TIPPE 9 48 900" "WARTE 30"
+    "FLAG 9 48" "TIPPE 9 20 900" "WARTE 30" "FLAG 9 20" "ENDE")
+_lauf(weg3010 900 _wp_weg3010 RE15_DEBUG_JUMP=3010@250 "RE15_PLAYER_POS=-7400,-18400,3072,0" "RE15_EXIT_AT=2700")
 file(READ "${_sub}/climb.txt" _climb3010)
 string(REGEX MATCH "room=3010 [^\n]*band=0 sub=9" _kl3010 "${_climb3010}")
 if("${_kl3010}" STREQUAL "")
     _fehler("weg3010: kein Klettern (Substate 9) an r0[4] — climb.txt")
 endif()
-_frei(weg3010 3010 5 1)
+# Querbezug Runde 42 gegenstaende (s. unten3010): Patronen am Gegenstand statt an Slot 5 pruefen.
+_frei(weg3010 3010 "[0-9]+" 1)
+string(REGEX MATCH "room=3010 ITEM slot [0-9]+ floor 1 item 0x16 tk 20 spieler-band 1 [^\n]*-> FREI" _frei3010 "${_item}")
+if("${_frei3010}" STREQUAL "")
+    _fehler("weg3010: keine Aufnahme (FREI) der Schrotpatronen (item 0x16 tk 20) auf Band 1 (itemband.txt: ${_item})")
+endif()
+_flag_ende(weg3010 9 48 1)
 _flag_ende(weg3010 9 20 1)
 message(STATUS "r37_itemband weg3010: Klettern an r0[4] (Band 0 -> 1) -> FREI -> (9,20) = 1")
 
