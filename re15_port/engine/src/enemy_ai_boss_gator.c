@@ -1057,7 +1057,9 @@ static void gb_absorb_hit(re15_actor_t *e, gb_state_t *g)
      * alligator wirklich nur mit den gascontainer getötet werden kann. Auf keinen Fall ander."
      * Bis hier: HP < 0 -> state 3 (RE1.5-Todesregel `bgez` @0x80013014 / state 3 @0x80013020, Port re15_damage.c; RE2-Applier
      * `sw 2 / sw 3` @0x80047288/90) -> Todesrolle GBP_DIE (Clip 7), also nach 25240 Schadenspunkten auch OHNE Kanister (mit
-     * Messer/Rohr ohne Mengengrenze rechnerisch erreichbar). RE2 kennt den Tod durch Beschuss (R2 @0x801028ac / R3 @0x80102b1c),
+     * Messer/Rohr ohne Mengengrenze rechnerisch erreichbar). RE2 kennt den Tod durch Beschuss (Routinen R2 @0x801026b8 / R3 @0x80102924,
+     * Zeiger @0x80104684/@0x80104688 in EM23_OVL_0000.BIN; darin das Loeschen der Kampf-Bits `addiu v1,zero,-0x101` @0x801028ac /
+     * @0x80102b1c),
      * im Port nicht gebaut (Entscheid B2). PORT-WAHL nach dem Nutzerwunsch: Zustand 3 wird 2, und nur NEGATIVE HP werden auf 1
      * gehoben (HP < 0 = tot, Gate 3 @0x80047148-50 - mit 1 bleibt er Ziel fuer Zielhilfe und Schuss; HP 0 lebt nach derselben Regel
      * `bgez` @0x80013014, positive HP bleiben unberuehrt). Der Treffer laeuft als gewoehnlicher Treffer weiter:
