@@ -11299,9 +11299,9 @@ re_title:;
                         nyawed_trans[1] + npc->y,
                         nyawed_trans[2] + npc->z,
                     };
-                    /* Runde 42 Stufe 2 Runde 4: Gitterhaende mit dem RE1.5-Modell EM1A — der ganze Koerper wie das Original (Weg B[1],
-                     * Wiegen B[2], Arme wachsen B[3]), im RE2-Griff eingefroren (enemy_ai_re2_zellenarm.c, Bloecke MODELL / KOERPER);
-                     * 0 fuer alle anderen. arm_sk = Skalierung der lokalen y-Achse (nur B[3] des Originals). */
+                    /* Runde 42 Stufe 2 Runde 5: Gitterhaende mit dem RE1.5-Modell EM1A — der ganze Koerper wie das Original (Weg B[1],
+                     * Wiegen B[2], B[3]), im RE2-Griff Clip 2 an der Wandklemme (enemy_ai_re2_zellenarm.c, Bloecke MODELL / KOERPER);
+                     * 0 fuer alle anderen. arm_sk = Skalierung der lokalen y-Achse (seit Runde 5 immer 4096, Faktor 1). */
                     int32_t arm_sk = 4096;
                     if (npc->type == 0x1Au) {
                         const int zt = re15_re2arm_zeichen_teil(npc, nbi, npc_poses, npc_skel->bone_count,
