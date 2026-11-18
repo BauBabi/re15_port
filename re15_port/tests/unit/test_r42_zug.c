@@ -12,6 +12,12 @@
  *   leon     Zugstart ROOM6030: Pultlicht -> Film-Zeile -> Cut 1 + Sleep 60 -> msg 27; kein Zug-an-Signal; nach dem Krachen
  *            das WARNING-Blinken (= ROOM6030 @0x01224..@0x0123F bytegleich) und Cut 1, vor msg 28
  *   elza     Zugstart ROOM6031: dasselbe (ROOM6031 @0x00FF0..@0x0100B), vor msg 14 bzw. 15
+ *   musik    Stufe 2 Runde 2 (Pruefbericht s2r1 Rot 1, Raummusik unter dem Film): direkt vor der Film-Zeile MAIN (Slot 0) anhalten
+ *            (Sce_bgm_control Op 4 = SsSeqPause, RE1.5 FUN_80044da4 @0x80044efc), direkt danach weiter (Op 3 = SsSeqReplay
+ *            @0x80044ec4); Form der Original-Zeile 6030 sub06 @0x01092 bzw. 6031 @0x00EB8 (nur das Op-Byte anders); Vorbild RE2
+ *            ROOM1080 sub14 @0x02524/@0x02536. Kein Befehl an Slot 1 (SUB laeuft bei (3,89)=1 nicht: 6030 @0x01060/@0x01118,
+ *            6031 @0x00E86/@0x00F3A; ein Op 3 wuerde ihn einschalten). In der VM: der Halte-Befehl geht in die Ton-Warteschlange,
+ *            BEVOR die Film-Zeile parkt; waehrend des Films nichts; nach dem Film der Weiter-Befehl
  *   loch     Hook + VM: 5090/5091 Evt_exec sub03 nach dem Zugstart -> Cut_replace(8,10) + sub03 (bytegleich 5090 @0x012DA /
  *            5091 @0x012BE); Zonen 7->10 und 9->10 statt 7->8 / 9->8; ohne Zugstart-Bit Original (7->8, 9->8)
  */
@@ -173,6 +179,9 @@ static int zaehle(const uint8_t *p, int len, const uint8_t *pat, int n)
     return c;
 }
 
+static const uint8_t k_halt[6]   = { 0x54, 0x00, 0x04, 0x00, 0x00, 0x00 };
+static const uint8_t k_weiter[6] = { 0x54, 0x00, 0x03, 0x00, 0x00, 0x00 };
+
 static void programm_pruefen(const char *wer, const uint8_t *p, int len, const char *rdt, unsigned warn_off, uint8_t msg_danach,
                              uint8_t msg_nach_krach, uint8_t sig_an, uint8_t sig_krach)
 {
@@ -188,9 +197,10 @@ static void programm_pruefen(const char *wer, const uint8_t *p, int len, const c
     const uint8_t m1[4] = { 0x2b, msg_danach, 0x00, 0x00 }, m2[4] = { 0x2b, msg_nach_krach, 0x00, 0x00 };
     const int i_aus = finde(p, len, 0, licht_aus, 4), i_film = finde(p, len, 0, film, 4);
     const int i_cut = i_film >= 0 ? finde(p, len, i_film, cut1_60, 6) : -1, i_m1 = finde(p, len, 0, m1, 4);
-    PRUEF(zaehle(p, len, film, 4) == 1 && i_aus >= 0 && i_film == i_aus + 4 && i_cut == i_film + 4 && i_m1 > i_cut,
-          "%s: Pultlicht aus @+0x%X -> Film-Zeile 60 @+0x%X -> Cut 1 + Sleep 60 @+0x%X -> msg %d @+0x%X", wer, i_aus, i_film, i_cut,
-          msg_danach, i_m1);
+    /* Stufe 2 Runde 2: zwischen Pultlicht und Film die Halte-Befehle, zwischen Film und Cut 1 die Weiter-Befehle (Teil musik) */
+    PRUEF(zaehle(p, len, film, 4) == 1 && i_aus >= 0 && i_film == i_aus + 4 + 6 && i_cut == i_film + 4 + 6 && i_m1 > i_cut,
+          "%s: Pultlicht aus @+0x%X -> Musik halt -> Film-Zeile 60 @+0x%X -> Musik weiter -> Cut 1 + Sleep 60 @+0x%X -> msg %d @+0x%X",
+          wer, i_aus, i_film, i_cut, msg_danach, i_m1);
     PRUEF(zaehle(p, len, an, 4) == 0, "%s: kein Zug-an-Signal Set(5,0x%02X) mehr (der Film traegt den Ton)", wer, sig_an);
     const int i_kr = finde(p, len, 0, krach, 4), i_w = i_kr >= 0 ? i_kr + 4 : -1, i_m2 = finde(p, len, 0, m2, 4);
     const int w_ok = i_w >= 0 && i_w + 28 <= len && warn_off + 28 <= rn && !memcmp(p + i_w, r + warn_off, 28);
@@ -219,6 +229,74 @@ static void teil_elza(void)
     int len = 0;
     const uint8_t *p = re15_story6_r42_programm(RE15_S6_P_ZUG, &len);
     programm_pruefen("Elza ROOM6031", p, len, "STAGE6/ROOM6031.RDT", 0x00FF0u, 14, 15, RE15_S6_SIG_ZUG_AN, RE15_S6_SIG_KRACH);
+}
+
+/* ---- musik --------------------------------------------------------------------------------------------------- */
+static void musik_pruefen(const char *wer, const uint8_t *p, int len, const char *rdt, unsigned raum, unsigned off_main)
+{
+    size_t rn = 0;
+    uint8_t *r = asset(rdt, &rn);
+    static const uint8_t film[4] = { 0x2b, RE15_ZUG600_MSG_FILM, 0x00, 0x00 };
+    const int i_film = (p && len > 0) ? finde(p, len, 0, film, 4) : -1;
+    PRUEF(r && i_film >= 6 && i_film + 10 <= len, "%s: Programm (%d B), Film-Zeile @+0x%X", wer, len, i_film);
+    if (!r || i_film < 6 || i_film + 10 > len) { free(r); return; }
+    const uint8_t *h = p + i_film - 6, *w = p + i_film + 4;
+    int n54 = 0, slot1 = 0;
+    for (int i = 0; i < len;) {
+        const int l = scd_opcode_size_at(p + i);
+        if (l <= 0) break;
+        if (p[i] == 0x54) { n54++; if (p[i + 1] != 0) slot1++; }
+        i += l;
+    }
+    PRUEF(!memcmp(h, k_halt, 6) && !memcmp(w, k_weiter, 6) && n54 == 2 && slot1 == 0,
+          "%s: direkt vor dem Film MAIN Op 4, direkt danach MAIN Op 3; im Programm %d x 0x54 (Soll 2), davon %d an Slot != 0 (Soll 0)",
+          wer, n54, slot1);
+    /* Form = Original-Zeile des Raums (Zweig Ck(3,89)=1), nur das Op-Byte (pc[2]) anders */
+    int gleich = off_main + 6 <= rn && !memcmp(r + off_main, "\x54\x00\x01\x00\x00\x00", 6);
+    for (int k = 0; k < 6 && gleich; k++) if (k != 2) gleich = h[k] == r[off_main + k] && w[k] == r[off_main + k];
+    PRUEF(gleich, "%s: Form = %s @0x%05X `54 00 01 00 00 00` (MAIN), nur Op 4/3 statt 1", wer, rdt, off_main);
+    free(r);
+    /* VM: Halt -> Film (parkt) -> Weiter, ueber die Ton-Warteschlange */
+    static uint8_t prog[64];
+    memcpy(prog, h, 6 + 4 + 6);
+    prog[16] = 0x01; prog[17] = 0x00;                           /* Evt_end */
+    g_current_room_id = raum;
+    scd_register_current_rdt(NULL);
+    scd_vm_init();
+    re15_zws_r41_install((uint16_t)raum);
+    re15_zws_r41_film_spieler = 1;
+    scd_audio_event_t ev;
+    while (scd_audio_queue_pop(&ev)) { }
+    scd_thread_start(1, prog);
+    for (int i = 0; i < 4; i++) scd_vm_tick();
+    int ev_vor[4][2], n_vor = 0;
+    while (scd_audio_queue_pop(&ev)) if (ev.kind == SCD_AUDIO_SEQ_CTL && n_vor < 4) { ev_vor[n_vor][0] = ev.bank; ev_vor[n_vor][1] = ev.volume; n_vor++; }
+    PRUEF(n_vor == 1 && ev_vor[0][0] == 0 && ev_vor[0][1] == 4 && re15_zws_r41_film_offen(),
+          "%s VM: vor dem Film %d Ton-Befehl(e), (Slot,Op) = (%d,%d) [Soll 1: (0,4)], Film angefordert, Skript parkt", wer, n_vor,
+          n_vor > 0 ? ev_vor[0][0] : -1, n_vor > 0 ? ev_vor[0][1] : -1);
+    for (int i = 0; i < 10; i++) scd_vm_tick();
+    int n_film = 0;
+    while (scd_audio_queue_pop(&ev)) if (ev.kind == SCD_AUDIO_SEQ_CTL) n_film++;
+    PRUEF(n_film == 0 && re15_zws_r41_film_offen(), "%s VM: waehrend des Films kein Musik-Befehl (%d)", wer, n_film);
+    re15_zws_r41_film_gespielt();
+    for (int i = 0; i < 4; i++) scd_vm_tick();
+    int ev_nach[4][2], n_nach = 0;
+    while (scd_audio_queue_pop(&ev)) if (ev.kind == SCD_AUDIO_SEQ_CTL && n_nach < 4) { ev_nach[n_nach][0] = ev.bank; ev_nach[n_nach][1] = ev.volume; n_nach++; }
+    PRUEF(n_nach == 1 && ev_nach[0][0] == 0 && ev_nach[0][1] == 3,
+          "%s VM: nach dem Film %d Ton-Befehl(e), (Slot,Op) = (%d,%d) [Soll 1: (0,3)]", wer, n_nach,
+          n_nach > 0 ? ev_nach[0][0] : -1, n_nach > 0 ? ev_nach[0][1] : -1);
+    re15_zws_r41_film_spieler = 0;
+}
+
+static void teil_musik(void)
+{
+    printf("== musik ==\n");
+    int len = 0;
+    const uint8_t *p = re15_annette_r41_programm_zug(&len);
+    musik_pruefen("Leon ROOM6030", p, len, "STAGE6/ROOM6030.RDT", RE15_ZUG600_RAUM_LEON, 0x01092u);
+    len = 0;
+    p = re15_story6_r42_programm(RE15_S6_P_ZUG, &len);
+    musik_pruefen("Elza ROOM6031", p, len, "STAGE6/ROOM6031.RDT", RE15_ZUG600_RAUM_ELZA, 0x00EB8u);
 }
 
 /* ---- loch ----------------------------------------------------------------------------------------------------- */
@@ -310,6 +388,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(t, "tabelle")) teil_tabelle();
     if (alle || !strcmp(t, "leon"))    teil_leon();
     if (alle || !strcmp(t, "elza"))    teil_elza();
+    if (alle || !strcmp(t, "musik"))   teil_musik();
     if (alle || !strcmp(t, "loch"))    teil_loch();
     printf("%s: %d Fehler\n", g_fail ? "ROT" : "GRUEN", g_fail);
     return g_fail ? 1 : 0;

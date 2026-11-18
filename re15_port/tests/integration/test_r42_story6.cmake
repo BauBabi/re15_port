@@ -118,7 +118,7 @@ BLICK 2048
 AKTION
 ")
 set(_basis RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1 SDL_AUDIODRIVER=dummy
-           RE15_STIMME_LOG=1 RE15_SE_DEBUG=1 RE15_WEGPLAN_LOG=wegplan.txt RE15_STATE_LOG=state.log "RE15_PLAYER_POS=1693,-9900,1024,2")
+           RE15_STIMME_LOG=1 RE15_SE_DEBUG=1 RE15_BGM_CTL_DEBUG=1 RE15_WEGPLAN_LOG=wegplan.txt RE15_STATE_LOG=state.log "RE15_PLAYER_POS=1693,-9900,1024,2")
 
 if(TEIL STREQUAL "elza")
     file(WRITE "${WORKDIR}/plan.txt" "RAUM 6001
@@ -178,10 +178,16 @@ ENDE
     # Wagen vor dem Zugstart
     pruefe("Wagen vor dem Zugstart: Tuer nach hinten zu" "ROOM6031 Evt_exec sub05 -> Programm (44 B): Wagen vor dem Zugstart")
     # E9 Zugstart
-    pruefe("E9: Zugstart-Programm" "ROOM6031 Evt_exec sub05 -> Programm (452 B): Zugstart E9")
+    pruefe("E9: Zugstart-Programm" "ROOM6031 Evt_exec sub05 -> Programm (464 B): Zugstart E9")
     # Runde 42 Strang finale Stufe 2: statt des Zug-an-Tons der Zugfilm R600ZUG.STR (re15_zws_r41.h "Zugfilm Raum 600")
     pruefe_re("E9: Zugfilm, msg 14, Krachen, msg 15, 16, 17 in dieser Folge"
         "[[]zug601[]] Film angefordert.*[[]zug601[]] Film zu Ende: 405 von 405 Bildern.*msgtext] room=6031 id=14 .*Krachen aus dem hinteren Wagen.*msgtext] room=6031 id=15 .*msgtext] room=6031 id=16 .*msgtext] room=6031 id=17 ")
+    # Stufe 2 Runde 2: Musik unter dem Zugfilm angehalten, danach weiter (RE2 ROOM4090 @0x027FA/@0x02804 Op 4, @0x02824/@0x0282B
+    # Op 3; RE1.5 FUN_80044da4 SsSeqPause @0x80044efc / SsSeqReplay @0x80044ec4). Ausgefuehrt im Ton-Takt (audio_pc.c), VOR dem
+    # ersten Filmbild, und nicht vor dem Filmende wieder an.
+    pruefe_re("E9: MAIN angehalten vor dem ersten Filmbild, weiter nach dem Filmende"
+        "Sce_bgm_control slot=0 op=4 .*[[]zug601[]] F[0-9]+ Film MOVIE/R600ZUG[.]STR: .*[[]zug601[]] Film zu Ende: [0-9]+ von 405 Bildern.*Sce_bgm_control slot=0 op=3 ")
+    pruefe_nicht("E9: SUB (Slot 1) nicht angefasst - laeuft bei (3,89)=1 nicht (6031 @0x00E86/@0x00F3A)" "Sce_bgm_control slot=1 op=3 ")
     pruefe("E9: msg 14" "[msgtext] room=6031 id=14 \"Sherry: It's moving! Elza, we did it!\"")
     pruefe("E9: msg 15" "[msgtext] room=6031 id=15 \"John: What the hell was that? It came from the back car!\"")
     pruefe("E9: msg 16" "[msgtext] room=6031 id=16 \"Sherry: It's that monster... it followed us!\"")
@@ -245,6 +251,9 @@ ENDE
     pruefe("Wagen vor dem Zugstart (Spur AN)" "[annette] ROOM6030 Wagen (Cut 6): Zugstart nicht gelaufen")
     pruefe("Zugstart Leon (Spur AN)" "ROOM6030 Zugstart-Szene statt sub05")
     pruefe_re("Zugstart Leon: msg 27..30" "room=6030 id=27 .*room=6030 id=28 .*room=6030 id=29 .*room=6030 id=30 ")
+    pruefe_re("Zugstart Leon: MAIN angehalten vor dem ersten Filmbild, weiter nach dem Filmende (Stufe 2 Runde 2)"
+        "Sce_bgm_control slot=0 op=4 .*[[]zug600[]] F[0-9]+ Film MOVIE/R600ZUG[.]STR: .*[[]zug600[]] Film zu Ende: [0-9]+ von 405 Bildern.*Sce_bgm_control slot=0 op=3 .*room=6030 id=27 ")
+    pruefe_nicht("Zugstart Leon: SUB (Slot 1) nicht angefasst - laeuft bei (3,89)=1 nicht (6030 @0x01060/@0x01118)" "Sce_bgm_control slot=1 op=3 ")
     pruefe_nicht("keine Elza-Programme in 6030" "ROOM6031 Evt_exec")
     pruefe("5090 erreicht" "EXIT_AT: Bild 200 in Raum 5090")
     _fertig()

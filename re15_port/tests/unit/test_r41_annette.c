@@ -255,16 +255,27 @@ static void test_programm_zug(void)
     if (!p) return;
     CHECK(p[0] == 0x22 && p[1] == RE15_AN_ZUG_BANK && p[2] == RE15_AN_ZUG_BIT && p[3] == 1, "Zugstart setzt (9,133) nicht zuerst");
     /* NB2 Punkt 3: der Port setzt keine Musik. Der Wechsel beim Tor ist Original (ROOM6030 sub06 @0x01092 / sub07 @0x0112C
-     * `54 00 01 00 00 00` hinter Ck(3,89)=1 @0x0108E / @0x01128) - in keinem der drei Port-Programme steht Sce_bgm_control. */
+     * `54 00 01 00 00 00` hinter Ck(3,89)=1 @0x0108E / @0x01128) - in keinem der drei Port-Programme steht ein Musikwechsel
+     * (nur Anhalten/Weiter um den Zugfilm, Strang finale Stufe 2 Runde 2). */
     {
-        int lp = 0, lt = 0, bgm = 0;
+        int lp = 0, lt = 0, bgm = 0, f = -1;
+        for (int i = 0; i < len;) {   /* Zugfilm-Zeile `2b 3c 00 00` im Zugstart */
+            const int l = scd_opcode_size_at(p + i);
+            if (l <= 0) break;
+            if (p[i] == 0x2b && p[i + 1] == 60) f = i;
+            i += l;
+        }
         const uint8_t *prog[3] = { p, re15_annette_r41_programm(&lp), re15_annette_r41_programm_tuer(&lt) };
         const int plen[3] = { len, lp, lt };
         for (int k = 0; k < 3; k++)
             for (int i = 0; prog[k] && i < plen[k];) {
                 const int l = scd_opcode_size_at(prog[k] + i);
                 if (l <= 0) break;
-                if (prog[k][i] == 0x54) bgm++;
+                /* Strang finale Stufe 2 Runde 2: einzige Ausnahme sind MAIN anhalten (Op 4) vor und weiter (Op 3) nach der Zugfilm-Zeile 60
+                 * im Zugstart, nur Slot 0 (kein Musikwechsel; RE2 ROOM1080 sub14 @0x02524/@0x02536; Riegel unit_r42_zug_musik) */
+                const int op = prog[k][i + 2];
+                const int um_film = k == 0 && f >= 6 && prog[k][i + 1] == 0 && ((i == f - 6 && op == 4) || (i == f + 4 && op == 3));
+                if (prog[k][i] == 0x54 && !um_film) bgm++;
                 i += l;
             }
         CHECK(bgm == 0, "Port-Programm setzt Musik (%d x Sce_bgm_control 0x54)", bgm);

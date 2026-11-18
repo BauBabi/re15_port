@@ -137,8 +137,17 @@ P_ZUG = [
     orig(0x0FDC, 0x0FE6, "Pultlicht: Set(1,28,1), Cut 4, Sleep 15 (sub08 @0x00FDC..)"),
     orig(0x0FE8, 0x0FEC, "Sleep 15 (@0x00FE8; Cut 5 @0x00FE6 = rotes WARNING des gescheiterten Starts entfaellt wie bei Leon)"),
     orig(0x0FEC, 0x0FF0, "Set(1,28,0) (@0x00FEC)"),
+    # Musik unter dem Zugfilm (Stufe 2 Runde 2, wie Leons z_musik_halt/z_musik_weiter in annette_r41.c): die laufende Spur MAIN vor
+    # dem Film anhalten, danach weiter = RE2 ROOM1080 sub14 @0x02524 (Op 4) / @0x02536 (Op 3), ROOM4090 @0x02804/@0x0282B;
+    # RE1.5-Handler FUN_80044da4 Fall 4 SsSeqPause @0x80044efc, Fall 3 SsSeqReplay @0x80044ec4. Nur Slot 0: bei (3,89)=1 spielt
+    # 6031 nur MAIN (sub06 @0x00EB4 Ck(3,89)=1 -> @0x00EB8, sub07 @0x00F4A -> @0x00F4E); SUB (Slot 1) nur im (3,89)=0-Zweig
+    # @0x00E86 -> @0x00E8A / @0x00F3A -> @0x00F3E, ein Op 3 darauf wuerde ihn einschalten.
+    op(RAUM, 0x0EB8, [0x54, 0x00, 0x01, 0x00, 0x00, 0x00], [0x54, 0x00, 0x04, 0x00, 0x00, 0x00],
+       "Sce_bgm_control MAIN (Slot 0) anhalten (Form sub06 @0x00EB8, Op 4 = SsSeqPause @0x80044efc)"),
     msg_on(FILM_MSG, RAUM, 0x0FC4, 6, "Zugfilm R600ZUG.STR (Port-Zeile ohne Text, Form der Pult-Zeile msg 6 @0x00FC4, die das Programm "
                                        "auslaesst; Haken re15_zws_r41_message_on Tabelle zug601) - nach dem Pultlicht, vor Cut 1"),
+    op(RAUM, 0x0EB8, [0x54, 0x00, 0x01, 0x00, 0x00, 0x00], [0x54, 0x00, 0x03, 0x00, 0x00, 0x00],
+       "Sce_bgm_control MAIN (Slot 0) weiter (Form sub06 @0x00EB8, Op 3 = SsSeqReplay @0x80044ec4)"),
     orig(0x1020, 0x1026, "Cut 1, Sleep 60 (sub08 @0x01020)"),
     orig(0x0F54, 0x0F58, "Evt_exec sub05 Licht-Schleife = Fahrt (sub07 @0x00F54, Zweig Ck(3,89)=1)"),
     orig(0x0F82, 0x0F96, "Sherry dreht sich zu Elza: Plc_dest 9 Bit 0x21 auf (-3873,-23487) + warten (sub08 @0x00F82..@0x00F96)"),

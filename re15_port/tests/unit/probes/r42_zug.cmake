@@ -6,6 +6,7 @@
 #   unit_r42_zug_tabelle  Filmtabelle zug600/zug601 an Port-Zeile 60, parkt bis Filmende, Einblenden wie 114
 #   unit_r42_zug_leon     ROOM6030 Zugstart: Pultlicht -> Film -> Cut 1 -> msg 27; kein Zug-an-Signal; Krachen -> WARNING @0x01224
 #   unit_r42_zug_elza     ROOM6031 Zugstart: dasselbe mit @0x00FF0, msg 14 / 15
+#   unit_r42_zug_musik    Stufe 2 Runde 2: vor dem Film MAIN (Slot 0) Sce_bgm_control Op 4 (SsSeqPause @0x80044efc), danach Op 3 (SsSeqReplay @0x80044ec4)
 #   unit_r42_zug_loch     5090/5091 nach dem Zugstart Cut_replace(8,10): Zonen 7->10 / 9->10; vorher Original
 add_executable(test_r42_zug ${CMAKE_CURRENT_LIST_DIR}/../test_r42_zug.c)
 target_link_libraries(test_r42_zug PRIVATE re15_engine re15_test_support)
@@ -15,7 +16,7 @@ target_compile_definitions(test_r42_zug PRIVATE
 if(NOT WIN32)
     target_link_libraries(test_r42_zug PRIVATE m)
 endif()
-foreach(_teil datei tabelle leon elza loch)
+foreach(_teil datei tabelle leon elza musik loch)
     add_test(NAME unit_r42_zug_${_teil} COMMAND test_r42_zug ${_teil}
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r42_zug_${_teil} PROPERTIES TIMEOUT 300)
