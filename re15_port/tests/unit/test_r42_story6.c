@@ -72,6 +72,7 @@ static int                s_bild = 0;
 #define PROT_N 64
 static int  s_prot_id[PROT_N];
 static int  s_prot_bild[PROT_N];
+static int  s_prot_cut[PROT_N];   /* Runde 42 rest Stufe 2: angezeigter Cut im Oeffnungsbild (D4) */
 static char s_prot_text[PROT_N][192];
 static int  s_prot_n = 0;
 static int  s_stimme[PROT_N];
@@ -134,6 +135,7 @@ static void protokoll(void)
         const char *t = re15_msg_get_text(id);
         s_prot_id[s_prot_n] = id;
         s_prot_bild[s_prot_n] = s_bild;
+        s_prot_cut[s_prot_n] = s_shown;
         snprintf(s_prot_text[s_prot_n], sizeof s_prot_text[0], "%s", t ? t : "");
         s_prot_n++;
     }
@@ -382,8 +384,15 @@ static void teil_wagen6031(void)
     PRUEF(!re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27) && re15_game_flag_get(3, 22),
           "nach der Szene: Sperren (2,7)=%d (1,27)=%d frei (sub02 @0x00E00/@0x00E04), (3,22)=%d (@0x00D78)",
           re15_game_flag_get(2, 7), re15_game_flag_get(1, 27), re15_game_flag_get(3, 22));
-    /* Programmkopf = Original-Bytes sub02 [@0x00D78, @0x00DFA) */
-    PRUEF(pn > 0x82 && s_rawsz > 0x0DFA && !memcmp(prog, s_raw + 0x0D78, 0x82), "Programmkopf = ROOM6031 @0x00D78..@0x00DFA (130 B)");
+    /* Programmkopf = Original-Bytes sub02 [@0x00D78, @0x00DB2), dann Runde 42 rest Stufe 2 (D4) Cut_chg 11 in Leons Form
+     * (ROOM6030 sub02 @0x00DC0 `29 0b` vor msg 0), dann [@0x00DB2, @0x00DFA) */
+    PRUEF(pn > 0x84 && s_rawsz > 0x0DFA && !memcmp(prog, s_raw + 0x0D78, 0x3A) && prog[0x3A] == 0x29 && prog[0x3B] == 0x0B &&
+          !memcmp(prog + 0x3C, s_raw + 0x0DB2, 0x48), "Programmkopf = ROOM6031 @0x00D78..@0x00DB2 + `29 0b` + @0x00DB2..@0x00DFA");
+    /* D4: Elzas Gespraech beginnt mit dem Gruppenbild Cut 11 (wie Leon), Schluss wie Original Cut 9 (@0x00DFA) */
+    PRUEF(s_prot_n >= 1 && s_prot_id[0] == 0 && s_prot_cut[0] == 11, "D4: msg 0 mit Cut 11 (gemessen Cut %d)",
+          s_prot_n >= 1 ? s_prot_cut[0] : -1);
+    PRUEF(s_shown == 9 || g_scd.cam_id == 9, "D4: nach der Szene Cut 9 wie Original @0x00DFA (angezeigt %d, cam %d)", s_shown,
+          g_scd.cam_id);
 }
 
 /* Fuehrerstand betreten: Eintritt Cut 0 (sub00 @0x00D2A Case 0 -> Gosub sub07), Elza am Ziel der Tuer Slot 1 (main00 @0x00C52) */

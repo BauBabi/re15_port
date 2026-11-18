@@ -154,7 +154,7 @@ ENDE
     endif()
     file(READ "${WORKDIR}/debug.log" _dbg)
     # E6 Wagen-Szene
-    pruefe("E6: Wagen-Programm" "ROOM6031 Evt_exec sub02 -> Programm (190 B): Wagen-Szene E6")
+    pruefe("E6: Wagen-Programm" "ROOM6031 Evt_exec sub02 -> Programm (192 B): Wagen-Szene E6")
     pruefe_re("E6: Zeilen 0, 1, 2, 12, 13 in dieser Folge"
         "msgtext] room=6031 id=0 .*msgtext] room=6031 id=1 .*msgtext] room=6031 id=2 .*msgtext] room=6031 id=12 .*msgtext] room=6031 id=13 ")
     pruefe("E6: msg 0 bleibt" "[msgtext] room=6031 id=0 \"Elza: Sherry! Is anyone else here?\"")

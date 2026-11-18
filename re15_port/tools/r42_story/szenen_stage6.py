@@ -105,8 +105,17 @@ WORK_JOHN = op(RAUM, 0x0F7E, [0x2E, 0x02, 0x00, 0x00], [0x2E, 0x02, 0x01, 0x00],
 # ------------------------------------------------------------------------------------------------------------------------------
 # E6: Wagen-Szene sub02 - msg 0 (story_r36), 1, 2 wie heute, dann 12 Sherry, 13 Elza.
 P_WAGEN = [
-    orig(0x0D78, 0x0DFA, "sub02 @0x00D78..: Set(3,22) @0x00D78, Sperren, Cut 10, Elza geht zur Marke und dreht sich, msg 0 Elza + "
-                         "Gesten 13/13/16, msg 1 Sherry + Sleep 100 @0x00DD6, msg 2 Elza + Gesten 12/12/16 (bis Sleep 20 @0x00DF6)"),
+    orig(0x0D78, 0x0DB2, "sub02 @0x00D78..: Set(3,22) @0x00D78, Sperren, Cut 10, Elza geht zur Marke und dreht sich (bis Edwhile "
+                         "@0x00DAE)"),
+    # Runde 42 rest Stufe 2, D4 (scratchpad hintergruende/VORSCHLAEGE.md D4, PRUEFUNG.md Abschnitt 1 Zeile 17: 6031 Cut 11 zeigt
+    # Elza nie): Elzas Gespraech beginnt wie Leons mit dem Gruppenbild Cut 11 (Kamera RDT @0x1C0). Leon: ROOM6030 sub02 @0x00DC0
+    # `29 0b` direkt vor Message_on 0 @0x00DC2. Elza steht nach @0x00D8A bei (-23705,-24482); in Cut 11 projiziert (241,126),
+    # Sherry (-24026,-26208) -> (199,109), John (-26055,-25784) -> (234,99), Marvin (-21241,-26118) -> (149,137)
+    # (Messbild scratchpad rest/s2/M4_6031_Cut10_11_9.png, H = fov>>7 = 208). Der Rest bleibt Original (Cut 9 @0x00DFA).
+    op(RAUM, 0x0D84, [0x29, 0x0A], [0x29, 0x0B], "Cut_chg 11 Gruppenbild (Form @0x00D84; Leon ROOM6030 sub02 @0x00DC0 `29 0b` "
+                                                 "vor msg 0)"),
+    orig(0x0DB2, 0x0DFA, "msg 0 Elza + Gesten 13/13/16, msg 1 Sherry + Sleep 100 @0x00DD6, msg 2 Elza + Gesten 12/12/16 (bis Sleep "
+                         "20 @0x00DF6)"),
     msg_on(MSG["E6a"], RAUM, 0x0DD2, 1, "msg 12 Sherry (Form msg 1 @0x00DD2)"),
     orig(0x0DD6, 0x0DDA, "Sleep 100 wie nach msg 1 (@0x00DD6; Sherry hat in sub02 keinen Gestenblock)"),
     msg_on(MSG["E6b"], RAUM, 0x0DDA, 2, "msg 13 Elza (Form msg 2 @0x00DDA)"),
