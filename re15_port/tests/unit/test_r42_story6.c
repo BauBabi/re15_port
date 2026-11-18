@@ -493,6 +493,59 @@ static void teil_zug6031(void)
     PRUEF(g_re15_s6_zaehler[RE15_S6_P_ZUG] == 0 && s_prot_n == 0, "kein zweiter Zugstart, kein Text (%d)", s_prot_n);
 }
 
+/* ================================================ Ruckeln (Runde 42 rest b) ===================================== */
+/* E9-Fahrt: ab dem ersten Takt mit aktivem sub05-Faden (Licht-Schleife @0x00E2A) zeigt der Port das RE2-Ruckeln ROOM7030 sub14
+ * (story6_r42.c k_ruck): sichtbar nur die Sce_shake_on mit pc[1] = 1 (FUN_8002ac94 `bgtz a1` @0x8002acb8), je Durchlauf 64 Bilder,
+ * ab dem dritten jeder zweite ein Bild laenger (Evt_next @0x0BDC). Vor der Fahrt kein Ruckeln. */
+static void teil_ruck6031(void)
+{
+    printf("== ruck6031: Ruckeln der Fahrt nach dem Zugstart E9 ==\n");
+    re15_game_state_init();
+    re15_inv_init();
+    zaehler_null();
+    re15_game_flag_set(3, 22, 1); re15_game_flag_set(4, 23, 1); re15_game_flag_set(3, 89, 1);
+    if (fuehrerstand() != 0) return;
+    const uint8_t *licht = s_rdt.sub_scd[RE15_S6_SUB_LICHT];
+    static const struct { int bild, dx, dy; } k_soll[] = {   /* sichtbare Bilder eines Durchlaufs (RE2 ROOM7030 sub14) */
+        { 0, 1, 1 }, { 2, 1, 0 }, { 7, 1, 0 }, { 9, 1, 1 }, { 21, 1, 1 }, { 32, 1, 1 }, { 34, 1, 0 }, { 39, 1, 0 }, { 41, 1, 1 }, { 52, 1, 1 },
+    };
+    enum { N = 387 };   /* k = 1..386 = Bild 0..385 = Durchlaeufe 0..5 (Start 322, Ende 385) */
+    static int s_dx[N], s_dy[N];
+    int licht_bild = -1, vorher = 0, n = 0;
+    for (int f = 0; f < 9000 && n < N; f++) {
+        frame();
+        int dx = 0, dy = 0;
+        const int an = re15_story6_r42_ruck(&dx, &dy);
+        if (licht_bild < 0) {
+            if (an) vorher++;
+            if (licht && faden_im_programm(licht, 24) >= 0) licht_bild = s_bild;
+            else continue;
+        }
+        s_dx[n] = dx; s_dy[n] = dy; n++;
+    }
+    PRUEF(licht_bild > 0 && vorher == 0, "Licht-Schleife sub05 ab Bild %d, davor %d Bilder mit Ruckeln", licht_bild, vorher);
+    /* Takt der Licht-Schleife = k = 0; das Ruckeln beginnt im naechsten Takt (story6-Takt vor den Faeden, PORT-WAHL im Kopf). */
+    int fehler = 0, sichtbar = 0;
+    for (int k = 1; k < n; k++) {
+        const int b = k - 1;                           /* Bild seit Beginn des Ruckelns */
+        int t, it;                                     /* Durchlauf it, Bild t darin: Starts 0, 64, 128, 193, 257, 322 */
+        static const int k_start[] = { 0, 64, 128, 193, 257, 322, 386 };
+        for (it = 0; it < 6 && b >= k_start[it + 1]; it++) {}
+        t = b - k_start[it];
+        int sdx = 0, sdy = 0;
+        for (unsigned i = 0; i < sizeof k_soll / sizeof k_soll[0]; i++)
+            if (k_soll[i].bild == t) { sdx = k_soll[i].dx; sdy = k_soll[i].dy; }
+        if (s_dx[k] || s_dy[k]) sichtbar++;
+        if (s_dx[k] != sdx || s_dy[k] != sdy) {
+            if (fehler < 6) printf("        Bild %d (Durchlauf %d, Takt %d): (%d,%d), Soll (%d,%d)\n", b, it, t, s_dx[k], s_dy[k], sdx, sdy);
+            fehler++;
+        }
+    }
+    PRUEF(n == N && fehler == 0 && sichtbar == 60,
+          "%d Bilder der Fahrt gemessen: %d sichtbare Ruckler (Soll 6 Durchlaeufe x 10 = 60), %d Abweichungen vom RE2-Takt", n, sichtbar,
+          fehler);
+}
+
 /* ================================================ T-05 ========================================================= */
 #include "gen_r42_liege_tiefe.inc"
 static uint8_t *msk_laden(uint16_t raum, size_t *n)
@@ -551,6 +604,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "vorher6031") || !strcmp(teil, "alle")) teil_vorher6031();
     if (!strcmp(teil, "tuer6031")   || !strcmp(teil, "alle")) teil_tuer6031();
     if (!strcmp(teil, "zug6031")    || !strcmp(teil, "alle")) teil_zug6031();
+    if (!strcmp(teil, "ruck6031")   || !strcmp(teil, "alle")) teil_ruck6031();
     if (!strcmp(teil, "t05")        || !strcmp(teil, "alle")) teil_t05();
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;

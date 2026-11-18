@@ -4992,6 +4992,9 @@ int op_sce_fade_set(scd_thread_t *t)
     return 1;
 }
 /* Sce_shake_on (0x5C) — RE1.5 = 4 bytes (disasm LAB_80042a10; retail RE2 = 3). */
+/* Runde 42 rest (b): der Name stammt aus RE2. In RE1.5 schuettelt 0x5C NICHT: LAB_80042a10 lhu a0,0(pc) @0x80042a28 -> FUN_80044fec
+ * @0x80042a2c = Halbwort in die Raum-BGM-Tabelle 0x80074828; keine ausgelieferte RDT benutzt 0x5C (Zensus, re15_story6_r42.h
+ * "E9 Ruckeln"). Das Zug-Ruckeln ROOM6031 kommt aus RE2 ROOM7030 sub14 (story6_r42.c), nicht ueber diesen Opcode. */
 int op_sce_shake_on(scd_thread_t *t)      { t->pc += 4; return 1; }
 /* Plc_rot (0x58) — 4 bytes. NOTE: the "Plc_rot/rotate" name is from retail RE2;
  * RE1.5's real 0x58 handler (LAB_8003fd54) is a Ck-style FLAG-CHECK evaluator
