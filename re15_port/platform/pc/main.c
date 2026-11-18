@@ -11183,7 +11183,9 @@ re_title:;
                     static re15_skel_pose_t s_low_poses[RE15_EMD_MAX_BONES];
                     static int s_low_kf_cache = -1;
                     static const re15_emd_skeleton_t *s_low_skel_cache = NULL;
-                    if (npc->re2z_rag_anchor_on && nbi >= 1 && nbi <= 6 &&
+                    /* Runde 42 U1 (PORT-WAHL, re15_damage.c re15_enemy_bone_world_pos): die stehenden Granatwerfer-Beine
+                     * (re2z_ok_modus 1) posieren auch Part 7 (linker Fuss) aus der eigenen Pose. */
+                    if (npc->re2z_rag_anchor_on && nbi >= 1 && nbi <= (npc->re2z_ok_modus == 1u ? 7 : 6) &&
                         nbi < npc_bones && npc_skel) {
                         const re15_emd_skeleton_t *lskel = NULL;
                         int lkf = re15_re2z_lower_kf(npc, &lskel);

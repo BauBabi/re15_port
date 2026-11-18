@@ -467,9 +467,18 @@ int re15_zgore_tod(re15_actor_t *e, int slot)
      * (DEATH[9..11][1] @0x8011feac = 0 -> jalr 0). Das Video zeigt Ober- und Unterkoerper getrennt, der Oberkoerper
      * kriecht weiter, grosse Blutlachen — genau der Oberkoerper-Zweig von 0x80107ee0. Abschaltbar:
      * RE15_KEIN_80PROZENT_GORE=1 (dann Standard-Tod wie bisher). */
-    if ((w == 9 || w == 15) && re15_zgore_80prozent()) { z_granate(e, slot); return 1; }   /* Runde 41 Spur GR (N1: auch die
-                                                                  * Werfer-Explosivrunde +0x5 = 15), Block z_granate */
-    if (w >= 9 && w <= 11 && re15_zgore_80prozent()) { z_schrot(e, slot, 1); return 1; }
+    /* ⛔ RUNDE 42 GORE U1 (NUTZERENTSCHEID F1 16.11.2026, woertlich: "Der Granatwerfer trennt den oberkoerper, die
+     * handgranate zerteilt."): die Handgranate (+0x5 = 9 = DAT_8006f430[2] @0x8006f432) zerteilt weiter (z_granate);
+     * die Granatwerfer-Explosivrunde (+0x5 = 15 = DAT_8006f430[6] @0x8006f436, Art 6 aus dem GL-Applier) laeuft in den
+     * OBERKOERPER-Zweig des Schrot-Tods 0x80107ee0 (@0x801082d4 ff.: Oberkoerper fliegt @0x80108448, Beine bleiben
+     * `ori 0x40` @0x80108820-98, Kriecher +9 = 0x81 @0x8010894c-50, HP 30 @0x8010896c-70) - das RE1.5-Gehirn bildet die
+     * Disc nach, deshalb hier der Disc-Kriecher mit 30 (BAUPLAN U1 Weg 5). Mit `granate` = 1 ueberspringt z_schrot die
+     * Muenze `rand & 1` @0x801080c8-d4 (immer Oberkoerper ab, Entscheid F1 "IMMER"). */
+    if (w == 9 && re15_zgore_80prozent())  { z_granate(e, slot); return 1; }       /* Runde 41 Spur GR, Block z_granate */
+    if (w == 15 && re15_zgore_80prozent()) { z_schrot(e, slot, 1); return 1; }     /* Runde 42 U1 */
+    /* Runde 42 U1 (BAUPLAN U1 Weg 5, PRUEFUNG_plan_r1 R8): die fruehere Zeile "w 9..11 -> z_schrot" entfaellt. Saeure-
+     * und Brand-Granate (+0x5 = 10/11) laufen in den Standard-Tod (`return 0`, Disc 0x80106c18) wie jede Waffe ohne
+     * eigene Zelle: DEATH[10..11][Hoehe] @0x8011feac ist auf der Disc 0, Abtrennen zeigt fuer sie keine Quelle. */
     return 0;                                                     /* uebrige Zellen: Standard-Tod 0x80106c18 */
 }
 int re15_zgore_tod_lokobank(const re15_actor_t *a)

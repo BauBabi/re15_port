@@ -103,7 +103,8 @@ int re15_schuss_r36_gezeichnet(const re15_actor_t *e, int bone, int32_t R[9], in
     }
     if (rv != 0) return 0;
     np = &po[bone];
-    if (e->re2z_rag_anchor_on && bone >= 1 && bone <= 6) {   /* Unterhaelfte: eigener Clip (main.c:10195-10220) */
+    if (e->re2z_rag_anchor_on && bone >= 1 && bone <= (e->re2z_ok_modus == 1u ? 7 : 6)) {   /* Unterhaelfte: eigener Clip
+                                                              * (main.c), Runde 42 U1: Part 7 bei Modus 1 */
         const re15_emd_skeleton_t *ls = NULL;
         int lkf = re15_re2z_lower_kf(e, &ls);
         void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;

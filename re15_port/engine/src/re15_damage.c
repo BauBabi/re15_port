@@ -3327,6 +3327,11 @@ static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const
      * sonst — und fuer alle RE1.5-KI-Typen — bleibt der bisherige Stempel. */
     if (!(p && re2_gl_explosion_stempel(e, type, p)))
         re15_re2_stamp_hit(e, 1, (unsigned)type);                 /* RE2-Flavor: +0x1D2 + ZEILE (s.o.) */
+    /* Runde 42 Gore U1 (PORT-Feld re2z_hg, Nutzerentscheid F1 16.11.2026 "Der Granatwerfer trennt den oberkoerper, die
+     * handgranate zerteilt."): im RE2-Gehirn fuehren Handgranate und Granatwerfer dieselbe Zeile 9
+     * (re2z_row_from_weapon[9] = [15] = 9), die Waffe geht beim Stempel verloren. Art 2 = Handgranate (Resolver-Aufruf
+     * `ori a2,zero,0x2` @0x800185b4); der Granatwerfer kommt ueber den Applier (re2_gl_stempel, setzt 0). */
+    e->re2z_hg = (uint8_t)(type == 2u);
     /* ⛔ PORT-OPTION (Nutzer-Auftrag): der RE2-Zerleger auch aus dem Trefferbox-Pfad. Die
      * Peilungsquelle des +0x1D0-Stempels ist der TREFFPUNKT: beim Spieler-Angriff ohne Punkt
      * der Spieler, beim Resolver-Aufruf mit Punkt (Explosion, Runde 34 B3) der Punkt P selbst
@@ -3404,7 +3409,10 @@ void re15_enemy_bone_world_pos(const re15_actor_t *e, int bone, int32_t out[3])
      * sein Maskenbit ist nicht gesetzt.
      * Der Renderer (main.c) macht dasselbe; hier steht es, damit Messschienen, Kollision
      * und Effekt-Anker nicht eine ANDERE Welt sehen als das Bild. */
-    if (e->re2z_rag_anchor_on && bone >= 1 && bone <= 6) kf = re15_re2z_lower_kf(e, NULL);
+    /* Runde 42 U1 (PORT-WAHL): bei den STEHENDEN Granatwerfer-Beinen (re2z_ok_modus 1) gehoert auch Part 7 (linker Fuss,
+     * Eltern 5 -> 6 -> 7) zur eigenen Pose - sonst stuende er in der Pose des fallenden Rumpfes neben dem Bein. RE2 laesst
+     * ihn aus (Maske 0x7E @0x8010024C), dort liegt die Haelfte beim Aushaengen aber schon. */
+    if (e->re2z_rag_anchor_on && bone >= 1 && bone <= (e->re2z_ok_modus == 1u ? 7 : 6)) kf = re15_re2z_lower_kf(e, NULL);
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
     void *save = g_anim_pose_actor;
     g_anim_pose_actor = NULL;                          /* QUERY: don't mutate the crossfade blend */
@@ -4522,6 +4530,7 @@ static void re2_gl_stempel(re15_actor_t *e, const re2_gl_typ_t *t, const int32_t
     e->re2z_self1d3 = (uint8_t)((e->re2z_self1d3 & 0x80u) | ((w1 >> 9) & 0x7Fu));  /* @0x8004731c-4c */
     re2gl_richtung(e, p);
     e->re2_gl_stamp = 1u;                                              /* re2z_hurt: kein 2. Stempel */
+    e->re2z_hg = 0u;                                                   /* Runde 42 U1: Applier = Granatwerfer/Feuer */
     e->anim_flags &= (uint16_t)~0x80u;                                 /* Port-Buchfuehrung wie die
                                                                         * beiden anderen Applier */
 }

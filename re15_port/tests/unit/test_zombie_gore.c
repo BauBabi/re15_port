@@ -156,15 +156,18 @@ static void test_beine(void)
 
 /* Runde 41 Spur GR (GR_granate.md, zombiegore_r15.c z_granate): die HANDGRANATE (w9) zerfetzt — Kopf, Arme,
  * Unterschenkel/Fuesse platzen (0x80107ee0 ZERFETZEN + 0x80108abc BEINE WEG), kein Kriecher, Leiche.
- * Saeure/Brand (w10/w11) behalten die fruehere Gestaltung (Oberkoerper ab, kriecht weiter). */
+ * ⛔ Runde 42 Gore U1 (Nutzerentscheid F1 16.11.2026 "Der Granatwerfer trennt den oberkoerper, die handgranate zerteilt."):
+ * die Werfer-Explosivrunde w15 laeuft jetzt in den Oberkoerper-Zweig (kriecht weiter, HP 30 @0x80108970); Saeure/Brand
+ * (w10/w11) laufen in den Standard-Tod (Zelle DEATH[10][1] @0x8011fff0 = 0, BAUPLAN U1 Weg 5). Vorher pinnte dieser Test
+ * "w15 zerfetzt" und "w10 Oberkoerper ab" - beides durch die Nutzerregel vom 16.11. umgestellt, nicht geloescht. */
 int re15_re15_re2z_import_owns(unsigned type);   /* enemy_ai_re2_zombie.c */
 static void test_granate(void)
 {
     /* Nachbesserung 1 (Spur GR N1): mit RE2-Modellblock (Vorgabe re15_re15_re2z_import) fliegen sieben Stuecke mit dem
      * Wurf 0x1062 und bleiben liegen (Maske 0x1327 = Parts 0,1,2,5,8,9,12); ohne Block platzen die Glieder (0x4a),
      * Wurzel 0 und Rumpf 7 sind weg. Beides fuer die Handgranate w9 UND die Werfer-Explosivrunde w15. */
-    static const uint8_t waffen[2] = { 9, 15 };
-    for (int wi = 0; wi < 2; wi++) {
+    static const uint8_t waffen[1] = { 9 };
+    for (int wi = 0; wi < 1; wi++) {
         re15_damage_seed_rng(11);
         re15_actor_t *e = zombie(3, waffen[wi], 1, 1);
         re15_enemy_ai_live_death(Z);
@@ -189,12 +192,19 @@ static void test_granate(void)
     }
     re15_actor_t *e; re15_teil_t *t; int n;
     re15_damage_seed_rng(11);
+    e = zombie(3, 15, 1, 1);
+    re15_enemy_ai_live_death(Z);
+    t = re15_teile(Z);
+    CHECK((t[7].w & 0x40) && e->sub_state_3 == 1, "Werfer w15: Oberkoerper nicht ab (w7 0x%x ph %d)", t[7].w, e->sub_state_3);
+    for (n = 0; n < 400 && e->grid_id != 0x81; n++) { t[7].fest = 1; takt(re15_enemy_ai_live_death); }
+    CHECK(e->grid_id == 0x81 && e->hp == 30, "Werfer w15: kein Kriecher");
+    re15_damage_seed_rng(11);
     e = zombie(3, 10, 1, 1);
     re15_enemy_ai_live_death(Z);
     t = re15_teile(Z);
-    CHECK((t[7].w & 0x40) && e->sub_state_3 == 1, "Saeure w10: Oberkoerper nicht ab (w7 0x%x ph %d)", t[7].w, e->sub_state_3);
-    for (n = 0; n < 400 && e->grid_id != 0x81; n++) { t[7].fest = 1; takt(re15_enemy_ai_live_death); }
-    CHECK(e->grid_id == 0x81 && e->hp == 30, "Saeure w10: kein Kriecher");
+    CHECK(!(t[7].w & 0x40), "Saeure w10: Oberkoerper ab (w7 0x%x), soll Standard-Tod", t[7].w);
+    for (n = 0; n < 400 && e->state == 3; n++) takt(re15_enemy_ai_live_death);
+    CHECK(e->grid_id != 0x81, "Saeure w10: Kriecher (grid 0x%x), soll Standard-Tod", e->grid_id);
 }
 
 static void test_beretta(void)
