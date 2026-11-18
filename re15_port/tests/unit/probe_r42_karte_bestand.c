@@ -166,6 +166,30 @@ int main(void)
     static re15_aot_door_params_t sn_d[RE15_AOT_MAX];
     unsigned st, r, v;
     const char *nur = getenv("RE15_BESTAND_STAGE");   /* z.B. "23" = nur STAGE2+3 */
+    const char *punkte = getenv("RE15_BESTAND_PUNKTE");
+
+    /* Stufe 3: Erwartung je Abzug an der TATSAECHLICHEN Lage aus dem Spiel-Log.
+     * Datei mit Zeilen "<tag> <hexraum> <x> <z>" -> "PUNKT tag raum x z seite mx my zid rot". */
+    if (punkte && *punkte) {
+        FILE *f = fopen(punkte, "r");
+        char tag[64];
+        unsigned rid;
+        int x, z;
+        if (!f) { printf("FAIL: %s\n", punkte); return 1; }
+        while (fscanf(f, "%63s %x %d %d", tag, &rid, &x, &z) == 4) {
+            int16_t mx = 0, my = 0;
+            int seite = -1, rot = 0, na, nb, nu, nf;
+            const re15_map_zone_t *zn = NULL;
+            if (!schau(rid, x, z, -1, ops, 1024, &seite, &mx, &my, &rot, &na, &nb, &nu, &nf, &zn)) {
+                printf("PUNKT %s %04X %d %d -1 0 0 -1 0\n", tag, rid, x, z);
+                continue;
+            }
+            printf("PUNKT %s %04X %d %d %d %d %d %d %d\n", tag, rid, x, z, seite, (int)mx, (int)my,
+                   zn ? (int)zn->zid : -1, rot);
+        }
+        fclose(f);
+        return 0;
+    }
 
     printf("# r42 karte bestand\n");
     for (st = 1; st <= 6; st++) {

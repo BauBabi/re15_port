@@ -1,0 +1,36 @@
+Laeufe 464 {'ok': 429, 'KEIN MARKER': 10, 'KEIN ROT': 7, 'KEIN ABZUG': 18}
+   L10B0_0 KEIN MARKER (7622, -10625) (2, 0, 0, 11, 0) None blatt 2 0.984
+   L10B0_1 KEIN MARKER (-13864, -12789) (2, 0, 0, 11, 0) None blatt 2 0.984
+   L10B0_2 KEIN MARKER (-7524, -7694) (2, 0, 0, 11, 0) None blatt 2 0.984
+   L1110_2 KEIN ROT (-19750, 4250) (3, 214, 142, 17, 0) (214, 142) blatt 3 1.0
+   L1240_0 KEIN ABZUG (-6748, -20899) (1, 0, 0, -1, 0) None blatt None None
+   L1260_0 KEIN MARKER (-10268, -4500) (1, 128, 135, -1, 0) None blatt 0 1.0
+   L1260_1 KEIN MARKER (28118, 13450) (1, 214, 96, -1, 0) None blatt 0 1.0
+   L1260_2 KEIN MARKER (-18282, -12450) (1, 111, 153, -1, 0) None blatt 0 1.0
+   L20B0_0 KEIN ABZUG (-13013, -4132) (13, 0, 0, -1, 0) None blatt None None
+   L20B0_1 KEIN ABZUG (-13013, -4132) (13, 0, 0, -1, 0) None blatt None None
+   L20B0_2 KEIN ABZUG (-13013, -4132) (13, 0, 0, -1, 0) None blatt None None
+   L3080_0 KEIN ABZUG (-21442, -21981) (7, 69, 164, 57, 1) None blatt None None
+   L3080_1 KEIN ABZUG (-21442, -21981) (7, 69, 164, 57, 1) None blatt None None
+   L3080_2 KEIN ABZUG (-21442, -21981) (7, 69, 164, 57, 1) None blatt None None
+   L5090_0 KEIN ROT (13562, 5087) (9, 202, 98, 84, 0) (202, 98) blatt 9 0.999
+   L5090_1 KEIN ROT (11231, -23368) (9, 199, 153, 84, 0) (199, 153) blatt 9 0.999
+   L5090_2 KEIN ROT (22525, -23300) (9, 216, 153, 84, 1) (216, 153) blatt 9 0.999
+   L6040_0 KEIN ABZUG (-6748, -20899) (12, 255, 113, -1, 0) None blatt None None
+   E10B1_0 KEIN MARKER (7622, -10625) (2, 0, 0, 11, 0) None blatt 2 0.984
+   E10B1_1 KEIN MARKER (-7524, -7694) (2, 0, 0, 11, 0) None blatt 2 0.984
+   E1111_1 KEIN ROT (-19750, 4250) (3, 214, 142, 17, 0) (214, 142) blatt 3 1.0
+   E1241_0 KEIN ABZUG (-6748, -20899) (1, 0, 0, -1, 0) None blatt None None
+   E1261_0 KEIN MARKER (-10268, -4500) (1, 128, 135, -1, 0) None blatt 0 1.0
+   E1261_1 KEIN MARKER (-18282, -12450) (1, 111, 153, -1, 0) None blatt 0 1.0
+   E20B1_0 KEIN ABZUG (-13013, -4132) (13, 0, 0, -1, 0) None blatt None None
+   E20B1_1 KEIN ABZUG (-13013, -4132) (13, 0, 0, -1, 0) None blatt None None
+   E3081_0 KEIN ABZUG (-4608, -3901) (7, 69, 164, 57, 1) None blatt None None
+   E3081_1 KEIN ABZUG (-4608, -3901) (7, 69, 164, 57, 1) None blatt None None
+   E4001_0 KEIN ABZUG (-7037, -5402) (8, 173, 67, 65, 1) None blatt None None
+   E4001_1 KEIN ABZUG (-7037, -5402) (8, 173, 67, 65, 1) None blatt None None
+   E4031_0 KEIN ABZUG (-23066, -19748) (8, 161, 106, 68, 1) None blatt None None
+   E4031_1 KEIN ABZUG (-23066, -19748) (8, 161, 106, 68, 1) None blatt None None
+   E5091_0 KEIN ROT (13562, 5087) (9, 202, 98, 84, 0) (202, 98) blatt 9 0.999
+   E5091_1 KEIN ROT (22525, -23300) (9, 216, 153, 84, 1) (216, 153) blatt 9 0.999
+   E6041_0 KEIN ABZUG (-6748, -20899) (12, 255, 113, -1, 0) None blatt None None
