@@ -343,15 +343,25 @@ static void teil_szene(void)
         if (f > 100 && !laeuft() && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27)) break;
     }
     zeige("Folge");
-    static const int k_soll[] = { 32, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 33, 25, 26, 27, 28, 34, 29, 30 };
+    static const int k_soll[] = { 32, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 33, 25, 26, 27, 28, 34, 36, 29,
+                                  30 };
     const int ns = (int)(sizeof k_soll / sizeof k_soll[0]);
     int ok = s_prot_n == ns;
     for (int i = 0; i < ns && i < s_prot_n; i++) if (s_prot_id[i] != k_soll[i]) ok = 0;
-    PRUEF(ok, "Folge 32, 9..24, 33 (D309 #21), 25..28, 34 (D309 #24), 29, 30 (%d Zeilen)", s_prot_n);
-    int i33 = -1, i34 = -1;
-    for (int i = 0; i < s_prot_n; i++) { if (s_prot_id[i] == 33) i33 = i; if (s_prot_id[i] == 34) i34 = i; }
+    PRUEF(ok, "Folge 32, 9..24, 33 (D309 #21), 25..28, 34 (D309 #24), 36 (D309 #25), 29, 30 (%d Zeilen)", s_prot_n);
+    int i33 = -1, i34 = -1, i36 = -1;
+    for (int i = 0; i < s_prot_n; i++) {
+        if (s_prot_id[i] == 33) i33 = i;
+        if (s_prot_id[i] == 34) i34 = i;
+        if (s_prot_id[i] == 36) i36 = i;
+    }
     PRUEF(i33 >= 0 && strstr(s_prot_text[i33], "swarming back") != NULL, "msg 33 John: \"%s\"", i33 >= 0 ? s_prot_text[i33] : "-");
     PRUEF(i34 >= 0 && strstr(s_prot_text[i34], "all right, won't you") != NULL, "msg 34 Elza: \"%s\"", i34 >= 0 ? s_prot_text[i34] : "-");
+    /* Runde 2 (Pruefung s3_r1 G2): Johns Antwort D309 #25 @0x1BEF direkt nach Elzas Frage, mit John-Farbe 07 */
+    PRUEF(i36 >= 0 && i36 == i34 + 1 && strstr(s_prot_text[i36], "John: Leave it to me!") != NULL,
+          "msg 36 John direkt nach msg 34: \"%s\"", i36 >= 0 ? s_prot_text[i36] : "-");
+    PRUEF(i34 >= 0 && i36 > i34 && s_prot_bild[i36] - s_prot_bild[i34] >= 40,
+          "msg 34 steht, bis sie zu Ende ist (%d Bilder bis msg 36)", i36 > i34 && i34 >= 0 ? s_prot_bild[i36] - s_prot_bild[i34] : -1);
     PRUEF(i33 >= 0 && i33 + 1 < s_prot_n && s_prot_bild[i33 + 1] - s_prot_bild[i33] >= 60,
           "msg 33 steht, bis sie zu Ende ist (%d Bilder bis msg 25)", i33 >= 0 && i33 + 1 < s_prot_n ? s_prot_bild[i33 + 1] - s_prot_bild[i33] : -1);
     printf("   bei msg 22 (Bild %d): John Hof %d / Lobby %d, Elza Hof %d / Lobby %d (Gier-Abstand, 4096 = 360 Grad)\n", bild22,
@@ -379,7 +389,9 @@ static void teil_bytes(void)
     const uint8_t *x = re15_ungenutzt_r42_text(0x4020, 2, &t);
     if (rdt_laden(0x5030) == 0) {
         const uint8_t *q = s_raw + 0x1132;
-        PRUEF(x && t == 36 && !memcmp(x, q, 36), "4020 msg 2 = ROOM5030 msg 1 @0x1132 Byte fuer Byte");
+        /* Runde 2 (Pruefung s3_r1 G6): `04 02` + Leerzeile `08` (Form ROOM4020 msg 0 @0x0B84) + ROOM5030 msg 1 ab @0x1134 */
+        PRUEF(x && t == 37 && !memcmp(x, q, 2) && x[2] == 0x08 && !memcmp(x + 3, q + 2, 34),
+              "4020 msg 2 = `04 02 08` + ROOM5030 msg 1 @0x1134 Byte fuer Byte (Leerzeile vorn wie 4020 msg 0/1)");
     }
     if (rdt_laden(0x3091) == 0) {
         memset(&g_room_rdt, 0, sizeof g_room_rdt);
@@ -392,10 +404,17 @@ static void teil_bytes(void)
               p[0x1ACA - 0x16CA + 4] == k_hof[0] && p[0x1ACA - 0x16CA + 7] == k_hof[3],
               "3091 sub07: Blickziele @0x1AA6/@0x1ACA = Disc-Tonort `46 a0 .. dc 05` (@0x1778)");
         PRUEF(p && !memcmp(p + n - (0x1DB2 - 0x1C64), s_raw + 0x1C64, 0x1DB2 - 0x1C64), "3091 sub07: Schluss ab @0x1C64 unveraendert");
+        /* Runde 2: Johns msg 36 (D309 #25) mit dem Gestenblock nach "Will do!" [@0x1BF6, @0x1C0A) vor dem Schluss; danach
+         * Sleep 2 + Warten (16 Byte, ungenutzt_r42.c zeile()) */
+        static const uint8_t k_m36[4] = { 0x2b, 36, 0x00, 0x00 };
+        const int g = 0x1C0A - 0x1BF6, vor = n - (0x1DB2 - 0x1C64) - 16 - g;
+        PRUEF(p && vor > 4 && !memcmp(p + vor - 4, k_m36, 4) && !memcmp(p + vor, s_raw + 0x1BF6, g),
+              "3091 sub07: msg 36 John + Gesten [@0x1BF6, @0x1C0A) vor dem Schluss @0x1C64");
         memset(&g_room_rdt, 0, sizeof g_room_rdt);
     }
 #else
-    printf("  (Modul re15_ungenutzt_r42.h nicht im Baum - uebersprungen)\n");
+    /* Runde 2 (Pruefung s3_r1 G4): ohne Modul ROT statt uebersprungen - sonst hat der Riegel auf aaea5f8c2 keine Gegenprobe */
+    PRUEF(0, "Modul re15_ungenutzt_r42.h fehlt (Stand vor U-05/U-11/U-02/U-01)");
 #endif
 }
 

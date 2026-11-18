@@ -5,7 +5,7 @@
 #   unit_r42_ungenutzt_rechner   5010/5011 (U-05): Disc #40 vor dem Speicher-Text, jedes Mal
 #   unit_r42_ungenutzt_plan      4020/4021 (U-11): Wandplan gibt Blatt 8 (Bit 36) einmal, mit "You've taken the laboratory map."
 #   unit_r42_ungenutzt_schalter  3091 (U-02): ohne Strom "There's a power supply." vor "I can't reach the breaker switch..."
-#   unit_r42_ungenutzt_szene     3091 (U-01): Blick zur Hoftuer, D309 #21 (msg 33) und #24 (msg 34) in der Szene
+#   unit_r42_ungenutzt_szene     3091 (U-01): Blick zur Hoftuer, D309 #21 (msg 33), #24 (msg 34), #25 (msg 36) in der Szene
 #   unit_r42_ungenutzt_bytes     Programme gegen die Original-Saetze
 add_executable(test_r42_ungenutzt ${CMAKE_CURRENT_LIST_DIR}/../test_r42_ungenutzt.c)
 target_link_libraries(test_r42_ungenutzt PRIVATE re15_engine re15_test_support)
@@ -18,3 +18,13 @@ foreach(_teil rechner plan schalter szene bytes)
     add_test(NAME unit_r42_ungenutzt_${_teil} COMMAND test_r42_ungenutzt ${_teil} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r42_ungenutzt_${_teil} PROPERTIES TIMEOUT 600)
 endforeach()
+# Runde 2 (Pruefung s3_r1 G3): die ausgelieferte neue 3091-Szene im echten Spiel (ohne Messhaken RE15_U42_ORIGINAL)
+#   integration_r42_ungenutzt_3091  echte exe, Riegeltuer 3091 -> sub07: Blick zum Tonort, Zeilen 33/34/36, danach Lobby 30C1
+if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_ungenutzt_3091.cmake)
+    add_test(NAME integration_r42_ungenutzt_3091
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r42_ungenutzt_3091_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_ungenutzt_3091.cmake)
+    set_tests_properties(integration_r42_ungenutzt_3091 PROPERTIES TIMEOUT 1200)
+endif()

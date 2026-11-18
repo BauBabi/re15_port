@@ -13,17 +13,23 @@ analysis/story_begegnungen/werkzeuge/jp.py.
                           PORT-WAHL Uebersetzung: "Hey, let's get going. If we stay here, they'll come swarming back."
   ROOM3091 msg 34  Elza   D309 #24 (Disc ROOM3091 @0x1BD6): 「ちょっと、大丈夫でしょうね？」
                           PORT-WAHL Uebersetzung: "Hey... you'll be all right, won't you?"
+  ROOM3091 msg 36  John   D309 #25 (Disc ROOM3091 @0x1BEF): 「任せとけ！」 (Antwort auf #24; Runde 2, Pruefung s3_r1 G2)
+                          PORT-WAHL Uebersetzung: "Leave it to me!"
   ROOM3091 msg 35  System 80 % T25 (analysis/story80/KATALOG_80.md:215, Video A 0:40.84 = Foto A#051): 「電げんがある」, englische
                           Spalte des Katalogs "There's a power supply." (zweite Zeile im Foto unlesbar -> nicht erfunden).
+                          PORT-WAHL Uebersetzung (Katalogspalte) und PORT-WAHL Stelle (Schalter-Platz Slot 5, Pruefung G7).
   ROOM4020/4021 msg 2     KEIN neuer Satz: Bytes = Mod ROOM5030 msg 1 @0x1132 "You've taken the laboratory map." (der einzige
                           Kartenfund des Spiels, 5030 sub02 @0x10CC); Blatt 8 heisst im Kartenbild "Laboratory B1"
                           (menu_common.c ORDER: 8-11 Laboratory B1-B4). Das Werkzeug liest die Bytes aus der RDT.
+                          Runde 2 (Pruefung s3_r1 G6): mit der Leerzeile vorn wie beide Texte desselben Raums (ROOM4020/4021
+                          msg 0 @0x0B84 und msg 1 @0x0BAA `04 02 08`), damit die Zeile im Nahbild Cut 3 nicht auf der Legende
+                          des Plans steht: `04 02` + `08` + ROOM5030 msg 1 ab @0x1134.
 
 Kodierung = texte_stage3a.py (importiert): Untertitel `04 00 05 <Farbe> <Name:> 05 00 00 <Text> 04 01 01 N`, N aus den Original-
 Zeilen desselben Raums (nachlauf_r42.py: ROOM3091 hat eigene Untertitel). Farben aus den ausgelieferten 3091-Zeilen: Elza 01
 (msg 21 @0x234B `05 01`), John 07 (msg 23 @0x238A `05 07`). Systemtext in der Form ROOM3091 msg 3 @0x1F36 `04 02 08 .. 01 00`
 (Leerzeile vorn wie msg 2/3/4/8 desselben Raums).
-Ids: ROOM3091 traegt msg 0..32 (Tabelle @0x1E74, 33 Eintraege), synchro/STAGE3/room3091 main00..main30 -> 33..35 frei;
+Ids: ROOM3091 traegt msg 0..32 (Tabelle @0x1E74, 33 Eintraege), synchro/STAGE3/room3091 main00..main30 -> 33..36 frei;
 ROOM4020/4021 msg 0..1 (@0xB80, 2 Eintraege) -> 2 frei.
 """
 import os
@@ -43,14 +49,15 @@ UNTERTITEL = (
     (0x3091, 33, JOHN, "Hey, let's get going. If we stay here, they'll come swarming back.",
      'D309 #21 Disc ROOM3091 @0x1B4E'),
     (0x3091, 34, ELZA, "Hey... you'll be all right, won't you?", 'D309 #24 Disc ROOM3091 @0x1BD6'),
+    (0x3091, 36, JOHN, "Leave it to me!", 'D309 #25 Disc ROOM3091 @0x1BEF'),
 )
 SYSTEM = (
-    (0x3091, 35, "There's a power supply.", '80 % T25 Foto A#051 (KATALOG_80.md:215)'),
+    (0x3091, 35, "There's a power supply.", '80 % T25 Foto A#051 (KATALOG_80.md:215); PORT-WAHL Uebersetzung + Stelle'),
 )
-# (Raum, Id, Quellraum, Quell-Id, erwarteter Text) - Bytes unveraendert aus der RDT
+# (Raum, Id, Quellraum, Quell-Id, erwarteter Text, Leerzeile vorn) - Text-Bytes unveraendert aus der RDT
 KOPIE = (
-    (0x4020, 2, 0x5030, 1, "You've taken the laboratory map."),
-    (0x4021, 2, 0x5030, 1, "You've taken the laboratory map."),
+    (0x4020, 2, 0x5030, 1, "You've taken the laboratory map.", True),
+    (0x4021, 2, 0x5030, 1, "You've taken the laboratory map.", True),
 )
 # Pruefung der Formbelege (Datei-Offset, erwartete Bytes)
 BELEGE = (
@@ -58,6 +65,10 @@ BELEGE = (
     (0x3091, 0x238A, bytes([0x04, 0x00, 0x05, 0x07])),          # msg 23 John Farbe 07
     (0x3091, 0x1F36, bytes([0x04, 0x02, 0x08])),                # msg 3 Systemtext mit Leerzeile vorn
     (0x5030, 0x1132, bytes([0x04, 0x02, 0x35, 0x4B, 0x51])),    # msg 1 "You..."
+    (0x4020, 0x0B84, bytes([0x04, 0x02, 0x08])),                # msg 0 Leerzeile vorn
+    (0x4020, 0x0BAA, bytes([0x04, 0x02, 0x08])),                # msg 1 Leerzeile vorn
+    (0x4021, 0x0B84, bytes([0x04, 0x02, 0x08])),
+    (0x4021, 0x0BAA, bytes([0x04, 0x02, 0x08])),
 )
 
 
@@ -84,7 +95,7 @@ def main():
             fehler.append('Beleg ROOM%04X @0x%04X ist %s, erwartet %s' % (raum, off, rdt(raum)[off:off + len(soll)].hex(' '),
                                                                         soll.hex(' ')))
     out = ['/* Generiert von re15_port/tools/r42_story/texte_ungenutzt.py - nicht von Hand aendern. Runde 42 rest Stufe 3 (U-01, U-02,',
-           ' * U-11): Capcom-/80-%-Wortlaut, englische Fassung PORT-WAHL; 4020/4021 msg 2 = Bytes ROOM5030 msg 1. */']
+           ' * U-11): Capcom-/80-%-Wortlaut, englische Fassung PORT-WAHL; 4020/4021 msg 2 = Bytes ROOM5030 msg 1 mit Leerzeile vorn. */']
     tab = []
     for raum, mid, (farbe, name), text, beleg in UNTERTITEL:
         b, zeilen, bw = T.untertitel(farbe, name, text, raum)
@@ -113,15 +124,19 @@ def main():
         out += T.carr(n, b, 'ROOM%04X %d System (%s): [leer] / %s  (Zeilen %s px; Form ROOM3091 msg 3 @0x1F36)'
                       % (raum, mid, beleg, ' / '.join(zeilen), '/'.join(map(str, bw))))
         tab.append((raum, mid, n))
-    for raum, mid, qraum, qid, soll in KOPIE:
+    for raum, mid, qraum, qid, soll, leer in KOPIE:
         b, a, nq = rdt_msg(qraum, qid)
         if bytes(b[2:-2]) != bytes(T.kod(soll)):
             fehler.append('ROOM%04X msg %d @0x%04X ist nicht "%s"' % (qraum, qid, a, soll))
+        if leer:
+            b = b[:2] + bytes([0x08]) + b[2:]       # Form ROOM4020 msg 0/1 `04 02 08` (Leerzeile vorn)
         _, _, nziel = rdt_msg(raum, 0)
         if mid != nziel:
             fehler.append('ROOM%04X: Ziel-Id %d, RDT hat %d Nachrichten' % (raum, mid, nziel))
         n = 'k_u42_%04x_msg%d' % (raum, mid)
-        out += T.carr(n, list(b), 'ROOM%04X %d = ROOM%04X msg %d @0x%04X Byte fuer Byte: %s' % (raum, mid, qraum, qid, a, soll))
+        out += T.carr(n, list(b), 'ROOM%04X %d = ROOM%04X msg %d @0x%04X Byte fuer Byte%s: %s'
+                      % (raum, mid, qraum, qid, a, ' + Leerzeile vorn (Form ROOM%04X msg 0 @0x0B84 `04 02 08`)' % raum if leer
+                         else '', soll))
         tab.append((raum, mid, n))
     out.append('typedef struct { uint16_t raum; uint8_t id; const uint8_t *b; uint16_t n; } u42_text_t;')
     out.append('static const u42_text_t k_u42_texte[] = {')

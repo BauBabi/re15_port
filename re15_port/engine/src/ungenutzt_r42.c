@@ -83,7 +83,8 @@ static const uint8_t k_schalter[] = {
     0x08, 0x00,                          /* Endif                       Form ROOM3091 sub06 @0x016C6                         */
     0x06, 0x00, 0x12, 0x00,              /* Ifel_ck (Ck 4 + Msg 4 + 2 + Msg 4 + 2 + Endif 2)                                  */
     0x21, 0x04, 0x08, 0x00,              /* Ck(4,8)=0 kein Strom (Sherry allein, sub05 @0x016AA setzt (4,8))                   */
-    0x2b, RE15_U42_MSG_STROM, 0xff, 0xff, 0x02, 0x00,   /* msg 35 "There's a power supply." (80 % T25), Form @0x015DC      */
+    0x2b, RE15_U42_MSG_STROM, 0xff, 0xff, 0x02, 0x00,   /* msg 35 "There's a power supply." (80 % T25; PORT-WAHL Stelle: am
+                                                         * Schalter-Platz Slot 5, das 80-%-Foto zeigt eher Cut 6), Form @0x015DC */
     0x2b, 0x03, 0xff, 0xff, 0x02, 0x00,  /* msg 3 "I can't reach the breaker switch..." = @0x015DC..@0x015E1                  */
     0x08, 0x00,
     0x01, 0x00,                          /* Evt_end                     = @0x015E4                                           */
@@ -103,11 +104,14 @@ static const uint8_t k_kopf07[8]  = { 0x2b, 0x20, 0xff, 0xff, 0x02, 0x00, 0x22, 
 static const uint8_t k_ende07[4]  = { 0x47, 0x00, 0x01, 0x00 };                           /* @0x1DAE Aot_on 0, Evt_end */
 static const uint8_t k_geste_j0[4] = { 0x3f, 0x00, 0x04, 0x00 };                          /* @0x1B2A Plc_motion 4 (John nach msg 23) */
 static const uint8_t k_geste_e0[4] = { 0x3f, 0x00, 0x05, 0x00 };                          /* @0x1BCA Plc_motion 5 (Elza nach msg 25) */
+static const uint8_t k_geste_j1[4] = { 0x3f, 0x00, 0x03, 0x00 };                          /* @0x1BF6 Plc_motion 3 (John nach msg 26) */
 
 #define U42_GESTE_J_OFF  0x1B2A   /* [@0x1B2A, @0x1B5A): Johns Gesten nach msg 23 (4,4,0,0,8; 25+25+25+25+20 Bilder) */
 #define U42_GESTE_J_ENDE 0x1B5A
 #define U42_GESTE_E_OFF  0x1BCA   /* [@0x1BCA, @0x1BEE): Elzas Gesten nach msg 25 (5,5,2,9; 25+25+50+20 Bilder) */
 #define U42_GESTE_E_ENDE 0x1BEE
+#define U42_GESTE_J2_OFF  0x1BF6  /* [@0x1BF6, @0x1C0A): Johns Gesten nach msg 26 "Will do!" (3,3; 50+51 Bilder) - fuer msg 36 */
+#define U42_GESTE_J2_ENDE 0x1C0A
 #define U42_EIN_JOHN     0x1BC2   /* vor msg 25 */
 #define U42_EIN_ELZA     0x1C64   /* vor Work 2,1 / msg 29 */
 
@@ -123,7 +127,8 @@ static int pruefen07(void)
            rdt_bytes(0x1AA6, k_neck_lobby, 10) && rdt_bytes(0x1AB0, k_dest_e, 8) &&
            rdt_bytes(0x1AC0, k_neck_lobby, 10) && rdt_bytes(0x1ACA, k_dest_j, 8) &&
            rdt_bytes(U42_EIN_JOHN - 4, k_vor_25, 8) && rdt_bytes(U42_EIN_ELZA - 4, k_vor_29, 8) &&
-           rdt_bytes(U42_GESTE_J_OFF, k_geste_j0, 4) && rdt_bytes(U42_GESTE_E_OFF, k_geste_e0, 4);
+           rdt_bytes(U42_GESTE_J_OFF, k_geste_j0, 4) && rdt_bytes(U42_GESTE_E_OFF, k_geste_e0, 4) &&
+           rdt_bytes(U42_GESTE_J2_OFF, k_geste_j1, 4);
 }
 
 /* Eine neue Zeile in der Form der Mod-Zeilen (Work_set des Sprechers, Message_on Maske 0, Gestenblock) und danach WARTEN, bis
@@ -162,6 +167,8 @@ static int szene_bauen(void)
     put(&k, r + U42_EIN_JOHN, U42_EIN_ELZA - U42_EIN_JOHN);
     /* Elza msg 34 (D309 #24) nach Sherrys msg 28 */
     zeile(&k, 0x01, RE15_U42_MSG_ELZA, U42_GESTE_E_OFF, U42_GESTE_E_ENDE);
+    /* John msg 36 (D309 #25 「任せとけ！」, Disc-Antwort auf #24) direkt danach, Gesten wie zu "Will do!" (G2 Pruefung s3_r1) */
+    zeile(&k, 0x00, RE15_U42_MSG_JOHN2, U42_GESTE_J2_OFF, U42_GESTE_J2_ENDE);
     /* [@0x1C64, @0x1DB2) */
     put(&k, r + U42_EIN_ELZA, RE15_U42_SUB07_ENDE - U42_EIN_ELZA);
     if (k > (int)sizeof s_szene) return 0;
@@ -229,8 +236,8 @@ const uint8_t *re15_ungenutzt_r42_evt_exec(uint16_t room_id, uint8_t sub, const 
         if (getenv("RE15_U42_ORIGINAL")) { U42_LOG("ROOM3091 sub07: Messhaken RE15_U42_ORIGINAL -> Mod-Szene"); return pc; }
         if (!szene_bauen()) { g_re15_u42_zaehler[4]++; U42_LOG("ROOM3091 sub07: Pruefbytes anders - Original"); return pc; }
         g_re15_u42_zaehler[1]++;
-        U42_LOG("ROOM3091 sub07: Blick zur Hoftuer (%d,%d), Zeilen %d (John) und %d (Elza), Programm %d B - U-01",
-                RE15_U42_HOF_X, RE15_U42_HOF_Z, RE15_U42_MSG_JOHN, RE15_U42_MSG_ELZA, s_szene_n);
+        U42_LOG("ROOM3091 sub07: Blick zur Hoftuer (%d,%d), Zeilen %d (John), %d (Elza), %d (John), Programm %d B - U-01",
+                RE15_U42_HOF_X, RE15_U42_HOF_Z, RE15_U42_MSG_JOHN, RE15_U42_MSG_ELZA, RE15_U42_MSG_JOHN2, s_szene_n);
         return s_szene;
     }
     if (sub == RE15_U42_3091_SUB_SCHALTER) {

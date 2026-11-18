@@ -33,15 +33,21 @@
  *       [@0x1B2A, @0x1B5A) (Bewegung 4/4/0/0/8);
  *   (c) Elza msg 34 (= D309 #24) NACH Sherrys msg 28 "Yes sir." vor @0x1C64 (Disc: #23 John "Sherry, du kommst mit mir" -> #24 Elza;
  *       Mod #27 John "You stay with me now" / #28 Sherry), Gestenblock = Elzas Block nach msg 25 [@0x1BCA, @0x1BEE) (5/5/2/9).
+ *   (d) Runde 2 (Pruefung s3_r1 G2): John msg 36 (= D309 #25 @0x1BEF 「任せとけ！」, auf der Disc die Antwort auf #24) direkt nach
+ *       msg 34, Gestenblock = Johns Block nach msg 26 "Will do!" [@0x1BF6, @0x1C0A) (3/3). Englisch PORT-WAHL "Leave it to me!".
+ *   NICHT geaendert (Pruefung s3_r1 G1, offen): der Schluss @0x1D5E `40 00 09 20 bf 90 65 ff` dreht Elza zur Lobby-Tuer, und
+ *   @0x1DAE `47 00` (Aot_on Slot 0) feuert genau diese Tuer (S198 -> 30C1, Marvin in der Lobby, ROOM30C1 sub03). Elzas weiterer
+ *   Weg fuehrt in der Mod zwingend durch die Lobby; sie zur Hoftuer zu drehen und dann in die Lobby zu schicken waere schlechter.
  *   Jede neue Zeile wartet danach, bis Zeile UND Stimme zu Ende sind (Form story3b_r42.c OP_ZEILE: Signal Bank 5 0x14, RE2 Wsleep
  *   ROOM7020 sub12 @0x079A); 3091 nutzt in Bank 5 nur 0x20..0x22 (sub09..sub11 @0x1DCA/@0x1DD8/@0x1DE6).
  *   Work_set (2,0) = John (sub00 @0x014E0 Sce_em_set Slot 0 Typ 0x49), (2,1) = Elza (@0x014F4 Slot 1).
  *
  * ---- U-02 (309 "There's a power supply.", 80 % T25) -------------------------------------------------------------------------
  * 80 %: KATALOG_80.md K071/T25, Video A 0:40.84 = Foto A#051: Sherry allein in 309 "an der Kiste beim Kasten", 「電げんがある」.
- * Stelle am Bild (Messbild scratchpad rest/s3/bild/MB_u02_a051_3091*.png): das Foto zeigt die warm beleuchtete hintere Ecke
- *   (Cut 6/14: Kisten links, Tuer hinten, Wandgeraet rechts); die Schiebekiste obj 0 (sub00 @0x01448, (-23550,-8024), Typ 4) und der
- *   Schalter-Platz Slot 5 (main00 @0x013EC, Rechteck (-22900,-4750,500,1000)) liegen dort zusammen - "Kiste beim Kasten".
+ * Stelle am Bild (Messbild scratchpad rest/s3/bild/MB_u02_a051_3091*.png): das Foto aehnelt der warm beleuchteten hinteren Ecke
+ *   (Cut 6/14: Kisten links, Tuer hinten, Wandgeraet rechts). Berichtigt (Pruefung s3_r1 G7): die Schiebekiste obj 0 (sub00
+ *   @0x01448, z ~ -8024) und der Schalter-Platz Slot 5 (main00 @0x013EC, Rechteck (-22900,-4750,500,1000), im gruenen Gang Cut 1/2)
+ *   liegen rund 3800 auseinander. PORT-WAHL Stelle: der Satz kommt am Schalter-Platz Slot 5, wo "I can't reach..." steht.
  * Mod-Ablauf: Slot 5 sce 5 -> V[0] = 5 -> sub01 @0x01542 Cmp V[0]==5 -> Evt_exec sub04 @0x015CA: Strom an (Ck(4,8)=1) msg 2, sonst
  *   msg 3 "I can't reach the breaker switch..." (Sherry steht unten; auf der Kiste ist es Slot 6 floor 1 -> sub05 Schalter).
  * BAU: sub04 als zwei Ifel-Bloecke (Form ROOM3091 sub06 @0x016B4 `06 00 10 00`): Ck(4,8)=1 -> msg 2 wie bisher; Ck(4,8)=0 -> erst
@@ -89,7 +95,8 @@
 #define RE15_U42_LOBBY_Z          (-155)   /* Mod @0x1AA6 `65 ff`                                                              */
 #define RE15_U42_MSG_JOHN         33       /* D309 #21 */
 #define RE15_U42_MSG_ELZA         34       /* D309 #24 */
-#define RE15_U42_MSG_STROM        35       /* 80 % T25 */
+#define RE15_U42_MSG_JOHN2        36       /* D309 #25 @0x1BEF 「任せとけ！」 (Runde 2, G2)                                   */
+#define RE15_U42_MSG_STROM        35       /* 80 % T25; Uebersetzung = englische Spalte KATALOG_80.md:215 (PORT-WAHL)            */
 #define RE15_U42_SIG_FREI         0x14     /* Bank 5, Takt -> Programm: keine Zeile, keine Stimme (wie RE15_S3B_SIG_FREI)       */
 
 /* ---- U-11 ------------------------------------------------------------------------------------------------------------- */
