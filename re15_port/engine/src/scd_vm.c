@@ -787,6 +787,7 @@ void scd_vm_tick(void)
     if (!s_vm_room_init) { extern void re15_story3a_r42_tick(void); re15_story3a_r42_tick(); }   /* Runde 42 Story STAGE3a: Signale/Abblende/Schuesse 3060, Wiedersehen, "Gunshots" 3020 */
     if (!s_vm_room_init) { extern void re15_story3b_r42_tick(void); re15_story3b_r42_tick(); }   /* Runde 42 Story STAGE3b: Signal FREI 30E0, Zeile 3070 */
     if (!s_vm_room_init) { extern void re15_story6_r42_tick(void); re15_story6_r42_tick(); }   /* Runde 42 Story STAGE6: Toene Zugstart 6031 */
+    if (!s_vm_room_init) { extern void re15_leichenhalle_r42_tick(void); re15_leichenhalle_r42_tick(); }   /* Runde 42 Strang original: Ausloeser Kuehlfach 1200/1201 (Disc main00 @0x007D2, re15_leichenhalle_r42.h) */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
 
@@ -1259,6 +1260,13 @@ static int op_evt_exec(scd_thread_t *t)
         t->pc += 4;
         return SCD_R_CONTINUE;   /* wie der Opcode selbst nach dem Start (`return 1` unten) */
     }
+    /* Runde 42 Strang original: Mod-sub03 @0x00A0C ruft sub02 (Kuehlfach auf) - ausgelassen, wenn der Disc-Ablauf das Fach
+     * schon geoeffnet hat (re15_leichenhalle_r42.h). Weiter wie nach dem Start. */
+    { extern int re15_leichenhalle_r42_evt_exec_gestrichen(uint16_t, const uint8_t *, const re15_rdt_t *);
+      if (re15_leichenhalle_r42_evt_exec_gestrichen((uint16_t)g_current_room_id, t->pc, s_current_rdt)) {
+          t->pc += 4;
+          return SCD_R_CONTINUE;
+      } }
     t->pc += 4;                 /* advance BEFORE spawn (byte-true @0x8003f2b8) */
 
     if (!s_current_rdt) return 1;

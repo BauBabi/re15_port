@@ -536,6 +536,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     { extern void re15_story1_r42_install(uint16_t); re15_story1_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 Story STAGE1: Texte + Ausloesezone der Szene an der Leiter 11A0/11A1 (re15_story1_r42.h); NACH story2 */
     { extern void re15_story3a_r42_install(uint16_t); re15_story3a_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 Story STAGE3a: Texte 3020/3060, Schuesse 3020, Kartentuer 3010 (re15_story3a_r42.h) */
     { extern void re15_story3b_r42_install(uint16_t); re15_story3b_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 Story STAGE3b: 30E0 ein Besuch, 3070-Zeile (re15_story3b_r42.h) */
+    { extern void re15_leichenhalle_r42_install(uint16_t); re15_leichenhalle_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 Strang original: Leichenhalle 1200/1201 Kuehlfach klappert, Zombie kriecht heraus wie Version_40% (re15_leichenhalle_r42.h) */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
      * Der Einmal-Start war die Ursache dafuer, dass ROOM1040s Schalter beim Druecken nichts tat und
