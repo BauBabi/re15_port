@@ -45,7 +45,7 @@
 #define RE15_G42_BIT_WERFER      45   /* Granatwerfer genommen, 1071 (Elza)                                      */
 #define RE15_G42_BIT_HUELSEN_1191 46  /* Leere Granathuelsen 1191 (Elza)                                         */
 #define RE15_G42_BIT_HUELSEN_30E1 47  /* Leere Granathuelsen 30E1 (Elza)                                         */
-#define RE15_G42_BIT_ZUENDER     48   /* Zuender 3000/3001 (der EINZIGE im Spiel)                                */
+#define RE15_G42_BIT_ZUENDER     48   /* Zuender 3010/3011 (der EINZIGE im Spiel)                                */
 #define RE15_G42_BIT_NITRO       49   /* Nitro-Kapsel 30E0/30E1                                                  */
 #define RE15_G42_BIT_SAEURE_40B1 50   /* Saeure-Kapsel 40B1 (Elza)                                               */
 #define RE15_G42_BIT_SPIND_4050  51   /* Spind 4050 Brennstoff (Leon) / 4051 Saeure-Kapsel (Elza): Spiegelraeume  */
