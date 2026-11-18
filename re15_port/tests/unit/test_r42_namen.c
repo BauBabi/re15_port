@@ -18,6 +18,14 @@
  *           mit `04 00 05 01 "Leon:" 05 00`.
  * Gegenprobe (rot auf r42/story 8db089f5d): texte meldet 4 Seiten ohne Namen (6000 msg 40/41/42 Seite 2, 6030 msg 4 Seite 2),
  * seite meldet das Fenster ohne Kopf (Bericht BERICHT_s1_r1.md).
+ *
+ * Stufe 2 (Mod-Fortsetzungszeilen, include/re15_namen_r42.h, tools/r42_namen/fortsetzung_bauen.py):
+ *   fortsetzung  ROOM10D0/1150/2000 (Leon) und 10D1/1151/2001 (Elza) wie im Spiel geladen. (1) Jede Nachricht mit eigener Aufnahme
+ *           (synchro/STAGEn/roomXXXX/mainNN.wav vorhanden, audio_pc.c-Regel) beginnt mit einem Namenskopf. (2) Die fuenf Paare zeigen
+ *           genau den Satz ihrer Aufnahme (Whisper medium.en, scratchpad/sprechernamen/asr_out.txt): Text je Nachricht gleich der
+ *           erwarteten Fassung. (3) Wortlaut der Mod: A+B zusammen sind Wort fuer Wort die RDT-Nachrichten A+B (ohne Gross/Klein
+ *           und Komma/Punkt am Wortende; nur die Trennstelle unterscheidet sich darin). (4) Laenge <= 128 Byte (PSX MSG_RAW_LEN).
+ *           Gegenprobe rot auf 8db089f5d: 10D0 msg 19/25, 1150 msg 13, 2000 msg 5/8 ohne Namen, Texte am alten Schnitt.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -176,11 +184,118 @@ static void teil_seite(void)
     PRUEF(fenster_ok, "gezeigtes Fenster von Seite 2 beginnt mit `04 00 05 01 \"Leon:\" 05 00`");
 }
 
+/* ---- Stufe 2: Mod-Fortsetzungszeilen ---------------------------------------------------------------------------------------- */
+#ifndef RE15_SYNCHRO_DIR
+#error RE15_SYNCHRO_DIR fehlt
+#endif
+
+static int datei_da(const char *p) { FILE *f = fopen(p, "rb"); if (!f) return 0; fclose(f); return 1; }
+
+/* RDT-Nachricht direkt aus dem Block (Offsettabelle wie msg_common.c re15_msg_load_room_block), ohne Port-Texte */
+static int rdt_nachricht(int id, const uint8_t **out)
+{
+    const uint8_t *blk = s_rdt.messages; const int bs = (int)s_rdt.messages_size;
+    if (!blk || bs < 4) return 0;
+    const int n_off = (blk[0] | (blk[1] << 8)) / 2;
+    if (id >= n_off) return 0;
+    const int o0 = blk[id * 2] | (blk[id * 2 + 1] << 8);
+    int o1 = bs;
+    if (id + 1 < n_off) { const int nx = blk[(id + 1) * 2] | (blk[(id + 1) * 2 + 1] << 8); if (nx > o0 && nx <= bs) o1 = nx; }
+    *out = blk + o0;
+    return o1 - o0;
+}
+
+/* Woerter ohne Gross/Klein, Komma/Punkt am Wortende weg; mit ab: Sprecherkopf "Name:" am Anfang weg. */
+static int norm_worte(const char *txt, char w[][32], int max, int ab)
+{
+    int n = 0; const char *p = txt;
+    if (ab) { const char *c = strchr(p, ':'); if (c && c - p < 12) p = c + 1; }
+    while (*p && n < max) {
+        while (*p == ' ') p++;
+        if (!*p) break;
+        int k = 0;
+        while (*p && *p != ' ' && k < 31) { const char c = *p++; w[n][k++] = (c >= 'A' && c <= 'Z') ? (char)(c + 32) : c; }
+        while (*p && *p != ' ') p++;
+        while (k > 0 && (w[n][k - 1] == ',' || w[n][k - 1] == '.')) k--;
+        w[n][k] = 0; n++;
+    }
+    return n;
+}
+
+static void teil_fortsetzung(void)
+{
+    printf("=== fortsetzung: Mod-Fortsetzungszeilen am Satzende der Aufnahme, jede mit Namen (10D0/1150/2000 + Elza 10D1/1151/2001) ===\n");
+    static const struct { unsigned raum; int a, b; const char *ta, *tb; } paare[5] = {
+        { 0x10D0, 18, 19, "Marvin: You've already seen him, I thought he was the only one left at the station.",
+                          "Marvin: Tell me, are there other survivors?" },
+        { 0x10D0, 24, 25, "Leon: I don't know, it remains to try, the helicopter abandoned us, the phones are down.",
+                          "Leon: And with the building besieged by those things, I don't see any more options." },
+        { 0x1150, 12, 13, "Irons: And remember this Leon, never let your guard down... uniform or not.",
+                          "Irons: Those things... are no longer what they were, don't make my mistake..." },
+        { 0x2000, 4, 5,   "Leon: Yes, before meeting Ada I saw her coming in this way, if I hadn't seen her...",
+                          "Leon: Maybe we wouldn't have found this way out." },
+        { 0x2000, 7, 8,   "Ada: So there is no time to lose, we do not know what things are in the sewers.",
+                          "Ada: Zombies are not the only things we should worry about here." },
+    };
+    static const unsigned raeume[6] = { 0x10D0, 0x1150, 0x2000, 0x10D1, 0x1151, 0x2001 };
+    int stimmen = 0, ohne = 0;
+    for (int r = 0; r < 6; r++) {
+        const unsigned room = raeume[r];
+        if (raum_laden(room) != 0) { PRUEF(0, "ROOM%04X ladbar", room); continue; }
+        int st = 0, oh = 0;
+        for (int id = 0; id < 64; id++) {
+            char wav[700];
+            snprintf(wav, sizeof wav, "%s/STAGE%u/room%04X/main%02d.wav", RE15_SYNCHRO_DIR, room >> 12, room, id);
+            if (!datei_da(wav)) continue;
+            int len = 0;
+            const unsigned char *m = re15_msg_get_raw(id, &len);
+            if (!m || len < 6) continue;
+            st++;
+            const int kl = (m[0] == 0x04 && m[1] == 0x00) ? kopf_laenge(m + 2, len - 2) : 0;
+            if (!kl) {
+                char txt[512];
+                re15_msg_decode_text(m, (size_t)len, txt, sizeof txt);
+                printf("        ROOM%04X msg %2d mit Aufnahme OHNE NAMEN: \"%.60s\"\n", room, id, txt);
+                oh++;
+            }
+        }
+        printf("    ROOM%04X: %d Nachrichten mit Aufnahme, %d ohne Namen\n", room, st, oh);
+        stimmen += st; ohne += oh;
+    }
+    PRUEF(stimmen > 20 && ohne == 0, "jede Nachricht mit Aufnahme beginnt mit dem Namen: %d mit Aufnahme, %d ohne Namen", stimmen, ohne);
+
+    for (int i = 0; i < 5; i++) {
+        if (raum_laden(paare[i].raum) != 0) { PRUEF(0, "ROOM%04X ladbar", paare[i].raum); continue; }
+        char ta[512] = "", tb[512] = "", oa[512] = "", ob[512] = "";
+        int la = 0, lb = 0;
+        const unsigned char *ma = re15_msg_get_raw(paare[i].a, &la), *mb = re15_msg_get_raw(paare[i].b, &lb);
+        if (ma) re15_msg_decode_text(ma, (size_t)la, ta, sizeof ta);
+        if (mb) re15_msg_decode_text(mb, (size_t)lb, tb, sizeof tb);
+        PRUEF(!strcmp(ta, paare[i].ta), "ROOM%04X msg %d = Satz der Aufnahme main%02d: \"%s\"", paare[i].raum, paare[i].a, paare[i].a, ta);
+        PRUEF(!strcmp(tb, paare[i].tb), "ROOM%04X msg %d = Satz der Aufnahme main%02d: \"%s\"", paare[i].raum, paare[i].b, paare[i].b, tb);
+        PRUEF(la > 0 && la <= 128 && lb > 0 && lb <= 128, "ROOM%04X msg %d/%d: %d/%d Byte <= 128 (PSX MSG_RAW_LEN)", paare[i].raum,
+              paare[i].a, paare[i].b, la, lb);
+        /* Wortlaut der Mod: RDT A+B gegen Port A+B */
+        const uint8_t *ra = NULL, *rb = NULL;
+        const int nra = rdt_nachricht(paare[i].a, &ra), nrb = rdt_nachricht(paare[i].b, &rb);
+        if (nra > 0) re15_msg_decode_text(ra, (size_t)nra, oa, sizeof oa);
+        if (nrb > 0) re15_msg_decode_text(rb, (size_t)nrb, ob, sizeof ob);
+        static char w1[96][32], w2[96][32];
+        int n1 = norm_worte(oa, w1, 96, 1); n1 += norm_worte(ob, w1 + n1, 96 - n1, 0);
+        int n2 = norm_worte(ta, w2, 96, 1); n2 += norm_worte(tb, w2 + n2, 96 - n2, 1);
+        int gleich = (n1 == n2 && n1 > 5);
+        for (int k = 0; gleich && k < n1; k++) if (strcmp(w1[k], w2[k])) gleich = 0;
+        PRUEF(gleich, "ROOM%04X msg %d/%d: Wortlaut der Mod Wort fuer Wort erhalten (%d/%d Woerter)", paare[i].raum, paare[i].a,
+              paare[i].b, n1, n2);
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
     if (!strcmp(teil, "texte") || !strcmp(teil, "alle")) teil_texte();
     if (!strcmp(teil, "seite") || !strcmp(teil, "alle")) teil_seite();
+    if (!strcmp(teil, "fortsetzung") || !strcmp(teil, "alle")) teil_fortsetzung();
     printf(g_fail ? "=== FAIL ===\n" : "=== OK ===\n");
     return g_fail;
 }

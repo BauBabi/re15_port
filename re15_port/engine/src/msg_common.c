@@ -368,6 +368,7 @@ void re15_msg_load_room_block(const uint8_t *block, int block_size)
     { extern void re15_story6_r42_texte(uint16_t); re15_story6_r42_texte((uint16_t)g_current_room_id); }   /* Runde 42 STAGE6: 6030 msg 2..5/21/22 (L21), 6031 msg 1/2/12..17 (E6/E9) (re15_story6_r42.h) */
     { extern void re15_ungenutzt_r42_texte(uint16_t); re15_ungenutzt_r42_texte((uint16_t)g_current_room_id); }   /* Runde 42 rest Stufe 3: 3091 msg 33..35, 4020/4021 msg 2 (re15_ungenutzt_r42.h) */
     { extern void re15_birkinfilm_r42_texte(uint16_t); re15_birkinfilm_r42_texte((uint16_t)g_current_room_id); }   /* Runde 42 birkinfilm: 6000 msg 40..42 Annettes RE2-Rahmenzeilen (re15_birkinfilm_r42.h) */
+    { extern void re15_namen_r42_texte(uint16_t); re15_namen_r42_texte((uint16_t)g_current_room_id); }   /* Runde 42 namen Stufe 2: 10D0 msg 18/19/24/25, 1150 msg 12/13, 2000 msg 4/5/7/8 - jeder Satz mit Namen (re15_namen_r42.h) */
 }
 
 /* ===== BYTE-TRUE dialog typewriter FSM (FUN_80028134) ======================
