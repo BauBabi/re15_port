@@ -81,7 +81,7 @@ const uint8_t *re15_inv_desc_entry(int id)
     { extern const uint8_t *re15_story_klein_r42_desc(uint8_t); const uint8_t *q = re15_story_klein_r42_desc((uint8_t)id);
       if (q) return q; }                                                               /* Runde 42 Story T-09: Blue Master Keycard "Michael" */
     { extern const uint8_t *re15_gegenstaende_r42_desc(uint8_t); const uint8_t *q = re15_gegenstaende_r42_desc((uint8_t)id);
-      if (q) return q; }                                                               /* Runde 42 Gegenstaende (K-10): Mutter, Bausatz 0x1C..0x20 */
+      if (q) return q; }                                                               /* Runde 42 Gegenstaende (K-10): Mutter, Bausatz 0x1C..0x20, Python 0x14, Magnum 0x17 */
     return re15_inv_desc_blob + re15_inv_desc_off[id];
 }
 int re15_inv_desc_nids(void) { return RE15_INV_DESC_NIDS; }
@@ -1144,6 +1144,7 @@ static void emit_name_at(emit_t *e, int id, int x0, int y0)
     if (!p) p = re15_dining_r38_name((uint8_t)id);               /* Runde 38 Spur F: Dining Room Key */
     if (!p) p = re15_keyitems_r41_name((uint8_t)id);             /* Runde 41 Spur O: Crank (Id 0x33) */
     if (!p) p = re15_gatorszene_r41_name((uint8_t)id);           /* Runde 41 Spur F: Water Key (Id 0x34) */
+    if (!p) { extern const uint8_t *re15_gegenstaende_r42_name(uint8_t); p = re15_gegenstaende_r42_name((uint8_t)id); }   /* Runde 42 Gegenstaende: Detonator (Id 0x1C) */
     if (!p) p = re15_inv_name_blob + re15_inv_name_off[id];
     while ((code = name_next_code(&p)) != 7 && guard-- > 0) {
         sprt(e, RE15_INV_PAGE_FONT4, RE15_INV_CLUT_TEXROW0,
@@ -1164,6 +1165,7 @@ static void emit_name(emit_t *e, int id)
     if (!p) p = re15_dining_r38_name((uint8_t)id);               /* Runde 38 Spur F: Dining Room Key */
     if (!p) p = re15_keyitems_r41_name((uint8_t)id);             /* Runde 41 Spur O: Crank (Id 0x33) */
     if (!p) p = re15_gatorszene_r41_name((uint8_t)id);           /* Runde 41 Spur F: Water Key (Id 0x34) */
+    if (!p) { extern const uint8_t *re15_gegenstaende_r42_name(uint8_t); p = re15_gegenstaende_r42_name((uint8_t)id); }   /* Runde 42 Gegenstaende: Detonator (Id 0x1C) */
     if (!p) p = re15_inv_name_blob + re15_inv_name_off[id];
     while ((code = name_next_code(&p)) != 7 && guard-- > 0) {   /* terminator @0x80028ce4-ce8 */
         /* 16x16 SPRT, prim word 0x7c808080 (rgb neutral) @0x80028d14-1c; glyph cell

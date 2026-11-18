@@ -289,6 +289,60 @@ static void teil_r505(void)
     }
 }
 
+/* ---- zielkreis (Nacharbeit gelb G9) ---------------------------------------------------------------------------------------
+ * 5050/5051: der gruene Zielkreis (obj 0, sub00 @0x00794) darf nicht auf dem Bildschirm-Bild 5 liegen. Gemessen wird nach jedem
+ * Praesentations-Apply (re15_cam_present_tick, im Spiel am Bildanfang vor dem Zeichnen, main.c pc_cam_present_apply): der
+ * praesentierte Cut (work_vars[0x0A]) gegen das Zeichen-Bit props[].active des Zielkreises. */
+static int obj0(void)
+{
+    for (int k = 0; k < (int)g_scd.prop_count; k++) if (g_scd.props[k].obj_id == 0) return k;
+    return -1;
+}
+static int s_zk_5_an, s_zk_5_aus, s_zk_4_an, s_zk_4_aus;
+static void zk_bild(uint16_t k)
+{
+    folge_bild(k);                                 /* SCD-Takt + Praesentations-Apply + Spielbild (Harness-Reihenfolge) */
+    re15_cam_present_tick();                       /* ein noch offener Wechsel (Spiel: am naechsten Bildanfang) */
+    const int angezeigt = g_scd.work_vars[0x0A];   /* = zuletzt praesentierter Cut (room_common.c @0x80021bfc) */
+    const int o = obj0();
+    if (o < 0) return;
+    const int an = g_scd.props[o].active;
+    if (angezeigt == 5) { if (an) s_zk_5_an++; else s_zk_5_aus++; }
+    if (angezeigt == 4) { if (an) s_zk_4_an++; else s_zk_4_aus++; }
+}
+static void teil_zielkreis(void)
+{
+    printf("== zielkreis ==\n");
+    for (int v = 0; v < 2; v++) {
+        const uint16_t raum = (uint16_t)(0x5050 + v);
+        bits_loeschen();
+        re15_inv_init();
+        if (room_boot(raum, -17000, 0, -22300, 2048, 0) != 0) continue;
+        for (int f = 0; f < 10; f++) frame(0, 0);
+        PRUEF(obj0() >= 0 && g_scd.props[obj0()].active, "ROOM%04X: Zielkreis obj 0 da (sub00 @0x00794)", raum);
+        s_zk_5_an = s_zk_5_aus = s_zk_4_an = s_zk_4_aus = 0;
+        folge_start();
+        PRUEF(scd_event_fire(2) >= 0, "ROOM%04X: Ereignis 2 (Rechner) startet", raum);
+        for (int f = 0; f < 900; f++) {
+            const uint16_t k = ((f % 15) == 0 && g_scd.message_active) ? RE15_PAD_BIT_SQUARE : 0;
+            zk_bild(k);
+            if (re15_game_flag_get(5, 5) && !g_scd.message_active && f > 60) break;
+        }
+        PRUEF(scd_thread_start(SCD_EVENT_SLOT_FIRST + 1, k_evt_exec_03) == 0, "ROOM%04X: Evt_exec sub03 gestartet", raum);
+        for (int f = 0; f < 2000; f++) {
+            const uint16_t k = ((f % 15) == 0 && (g_scd.message_active || re15_discard_active())) ? RE15_PAD_BIT_SQUARE : 0;
+            zk_bild(k);
+            if (f > 90 && !g_scd.message_active && !g_scd.threads[SCD_EVENT_SLOT_FIRST].active &&
+                !g_scd.threads[SCD_EVENT_SLOT_FIRST + 1].active) break;
+        }
+        folge_druck(v ? "5051" : "5050");
+        printf("  Bilder: Bild 5 mit Kreis %d / ohne %d, Cut 4 mit Kreis %d / ohne %d\n", s_zk_5_an, s_zk_5_aus, s_zk_4_an, s_zk_4_aus);
+        PRUEF(s_zk_5_aus > 0 && s_zk_5_an == 0, "ROOM%04X: auf dem Bildschirm-Bild 5 nie der Zielkreis (%d Bilder mit)", raum, s_zk_5_an);
+        PRUEF(s_zk_4_an > 0 && s_zk_4_aus == 0, "ROOM%04X: auf dem Rechner-Bild 4 immer der Zielkreis (%d Bilder ohne)", raum, s_zk_4_aus);
+        PRUEF(obj0() >= 0 && g_scd.props[obj0()].active, "ROOM%04X: Zielkreis nach dem Spiel wieder an", raum);
+    }
+}
+
 /* ---- s2080 ---------------------------------------------------------------------------------------------------------------- */
 static void teil_s2080(void)
 {
@@ -349,6 +403,7 @@ int main(int argc, char **argv)
     if (!strcmp(t, "karte")) teil_karte();
     else if (!strcmp(t, "r305")) teil_r305();
     else if (!strcmp(t, "r505")) teil_r505();
+    else if (!strcmp(t, "zielkreis")) teil_zielkreis();
     else if (!strcmp(t, "s2080")) teil_s2080();
     else if (!strcmp(t, "leiche9")) teil_leiche9();
     else { printf("unbekannter Teil '%s'\n", t); return 2; }

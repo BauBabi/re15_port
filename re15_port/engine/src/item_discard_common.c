@@ -19,8 +19,8 @@
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: weggeworfener Loescher liegt in ROOM1090 */
 #include "re15_gatorszene_r41.h"    /* Runde 41 Spur F: Port-Benutzungsstelle Tor 2090/2091 msg 43 (Water Key 0x34) */
 #include "re15_dining_r38.h"      /* Runde 38 Spur F: Port-Benutzungsstelle 1131 msg 41 (0x43 Dining Room Key) */
-#include "re15_story2_r42.h"
-#include "re15_gegenstaende_r42.h"   /* Runde 42 Gegenstaende: Benutzungsstelle Mutter 2030/2031 msg 58 */       /* Runde 42 Story: Port-Benutzungsstelle Schluesselloch 2080/2081 msg 54 (Water Key 0x34) */
+#include "re15_story2_r42.h"       /* Runde 42 Story: Port-Benutzungsstelle Schluesselloch 2080/2081 msg 54 (Water Key 0x34) */
+#include "re15_gegenstaende_r42.h" /* Runde 42 Gegenstaende: Benutzungsstelle Mutter 2030/2031 msg 58 */
 
 /* Port-Prompt-Schluessel 8 -> BSS-Skript [6] (item_prompt_common.c:60). */
 #define RE15_DISCARD_PROMPT_KEY 8

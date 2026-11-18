@@ -698,7 +698,7 @@ int scd_event_fire(uint8_t event_id)
     if (!pc) { extern const uint8_t *re15_rb42_ereignis(uint16_t, uint8_t);
                pc = re15_rb42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 Gegenstaende Stufe 2: 5050/5051 Ereignis 2 = sub02 mit Cut 5 (Rechner-Bildschirm) */
     if (!pc) { extern const uint8_t *re15_gegenstaende_r42_ereignis(uint16_t, uint8_t);
-               pc = re15_gegenstaende_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 Gegenstaende (K-10): 1050 Ereignis 5 (Leiche/Glock), 2030/2031 Ereignis 24 ohne Mutter; VOR der Ventilkette */
+               pc = re15_gegenstaende_r42_ereignis((uint16_t)g_current_room_id, event_id); }   /* Runde 42 Gegenstaende (K-10): 1050 Ereignis 5 (Leiche/Glock), 2030/2031 Ereignis 24 ohne Mutter, Fundstellen 1071/3010/3011/5021 Ereignis 26; VOR der Ventilkette */
     if (!pc) pc = re15_ventilkette_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur C: 2030/17-27, 2050/2+4+9, 2010/20 (re15_ventilkette_r41.h; 2080 seit Nachtrag 7 Original) */
     if (!pc) pc = re15_gatorszene_r41_ereignis((uint16_t)g_current_room_id, event_id); /* Runde 41 Spur F: 2090/2091 + 2080/2081 Ereignis 18 */
     if (!pc) { extern const uint8_t *re15_story2_r42_ereignis(uint16_t, uint8_t);
@@ -789,8 +789,8 @@ void scd_vm_tick(void)
     if (!s_vm_room_init) { extern void re15_story2_r42_tick(void); re15_story2_r42_tick(); }   /* Runde 42 Story STAGE2: Signale der 2080-Szene, Uhr-Hinweis 2090 */
     if (!s_vm_room_init) { extern void re15_story1_r42_tick(void); re15_story1_r42_tick(); }   /* Runde 42 Story STAGE1: Ausloesung, Signale, Abblende der Szene an der Leiter 11A0/11A1 */
     if (!s_vm_room_init) { extern void re15_story3a_r42_tick(void); re15_story3a_r42_tick(); }   /* Runde 42 Story STAGE3a: Signale/Abblende/Schuesse 3060, Wiedersehen, "Gunshots" 3020 */
-    if (!s_vm_room_init) { extern void re15_story3b_r42_tick(void); re15_story3b_r42_tick(); }
-    if (!s_vm_room_init) { extern void re15_gegenstaende_r42_tick(void); re15_gegenstaende_r42_tick(); }   /* Runde 42 Gegenstaende: 1050 Leiche wie 1051 sub01 @0x00CB2 */   /* Runde 42 Story STAGE3b: Signal FREI 30E0, Zeile 3070 */
+    if (!s_vm_room_init) { extern void re15_story3b_r42_tick(void); re15_story3b_r42_tick(); }   /* Runde 42 Story STAGE3b: Signal FREI 30E0, Zeile 3070 */
+    if (!s_vm_room_init) { extern void re15_gegenstaende_r42_tick(void); re15_gegenstaende_r42_tick(); }   /* Runde 42 Gegenstaende: 1050 Leiche wie 1051 sub01 @0x00CB2; Fundstellen mit Text 1071/3010/3011/5021 nach der Aufnahme */
     if (!s_vm_room_init) { extern void re15_story6_r42_tick(void); re15_story6_r42_tick(); }   /* Runde 42 Story STAGE6: Toene Zugstart 6031 */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 

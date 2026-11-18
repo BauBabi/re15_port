@@ -94,6 +94,15 @@ int re15_ultimate15_modell_quelle(unsigned item, const char **rdt_rel, int *prop
 }
 
 /* ---- Puffer ---------------------------------------------------------------------------------------------------- */
+/* Runde 42 Gegenstaende, Nacharbeit gelb G5 ("je Modus EINE Bildquelle"): die Disc-Kacheln, die itemall_bauen fuer die Kapseln
+ * 0x1E..0x20 einsetzt, merkt sich der Puffer-Bau; itps_bauen baut daraus deren Aufnahme-Bild (re15_gegenstaende_r42.h). Reihenfolge
+ * an allen Ladestellen: ITEMALL vor ITPS (platform/pc/main.c, inv_render_pc.c). Nur PC (die PSX zeichnet kein ITPS-Bild). */
+#ifdef RE15_PLATFORM_PC
+#include "re15_gegenstaende_r42.h"
+static uint8_t s_kapsel_kachel[3][RE15_U15_KACHEL_B];
+static int     s_kapsel_da = 0;
+#endif
+
 int re15_ultimate15_itemall_bauen(uint8_t *dst, const uint8_t *basis, int n, const uint8_t *disc, int dn)
 {
     int k = 0;
@@ -104,6 +113,9 @@ int re15_ultimate15_itemall_bauen(uint8_t *dst, const uint8_t *basis, int n, con
         int q = re15_ultimate15_icon_quelle(id);
         if (q < 0 || (q + 1) * RE15_U15_KACHEL_B > dn) continue;
         memcpy(dst + id * RE15_U15_KACHEL_B, disc + q * RE15_U15_KACHEL_B, RE15_U15_KACHEL_B);
+#ifdef RE15_PLATFORM_PC
+        if (id >= 0x1Eu && id <= 0x20u) { memcpy(s_kapsel_kachel[id - 0x1Eu], disc + q * RE15_U15_KACHEL_B, RE15_U15_KACHEL_B); s_kapsel_da |= 1 << (id - 0x1Eu); }
+#endif
         k++;
     }
     return k;
@@ -147,6 +159,12 @@ int re15_ultimate15_itps_bauen(uint8_t *dst, const uint8_t *basis, int n, const 
             k++;
         }
     }
+#ifdef RE15_PLATFORM_PC
+    if (s_kapsel_da == 7) {   /* Kapseln: Bild aus derselben Disc-Kachel wie das Symbol (zaehlt nicht als Disc-Bild) */
+        const uint8_t *const kachel[3] = { s_kapsel_kachel[0], s_kapsel_kachel[1], s_kapsel_kachel[2] };
+        re15_gegenstaende_r42_kapseln_aus_kacheln(dst, n, kachel);
+    }
+#endif
     return k;
 }
 

@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """Runde 42 Strang "gegenstaende": Item-Bilder (ITPS, 112x72) der drei Kapseln 0x1E/0x1F/0x20 -> engine/src/gen/gegenstaende_r42_bilder.inc
 
+Nacharbeit (gelb G5/G7): die .inc traegt nur noch die drei Inventar-Kacheln (je 1200 B) und die CLUT; das 112x72-Bild baut
+engine/src/gegenstaende_r42.c (kachel_zu_bild) zur Laufzeit nach GENAU der Regel von bild() unten. So leitet ULTIMATE 1.5 dasselbe
+Bild aus der Disc-Kachel ab (eine Bildquelle je Modus), und der PC-Bau traegt 4 KB statt 24 KB (die PSX zeichnet kein ITPS-Bild).
+
     python re15_port/tools/r42_gegenstaende/kapselbilder.py [--check] [--messbild <png>]
 
 Warum: Im Mod-Baum tragen die ITPS-Bloecke 0x1E..0x20 nur Capcoms Platzhalter (仮キャラ/"BOSS"), auf der 40-%-Disc ebenso
@@ -42,7 +46,8 @@ def main():
     pix = open(os.path.join(PSX, 'DATA', 'ITEMALL.PIX'), 'rb').read()
     clut = clut_st00()
     out = ['/* Generiert von re15_port/tools/r42_gegenstaende/kapselbilder.py - nicht von Hand aendern. Item-Bilder der Kapseln',
-           ' * 0x1E/0x1F/0x20 = Inventar-Kachel (DATA/ITEMALL.PIX Kachel = Id, 40x30) 2-fach, mittig; CLUT = ST_00.TIM Zeile 0. */',
+           ' * 0x1E/0x1F/0x20 = Inventar-Kachel (DATA/ITEMALL.PIX Kachel = Id, 40x30) 2-fach, mittig (zur Laufzeit, gegenstaende_r42.c);',
+           ' * CLUT = ST_00.TIM Zeile 0. Nur PC (#ifdef RE15_PLATFORM_PC in gegenstaende_r42.c). */',
            'static const uint8_t k_g42_kapsel_clut[512] = {']
     for i in range(0, 512, 16):
         out.append('    ' + ' '.join('0x%02x,' % b for b in clut[i:i + 16]))
@@ -51,11 +56,18 @@ def main():
     for i in IDS:
         b, hg = bild(pix, i)
         bilder[i] = b
-        out.append('/* Item 0x%02X: Kachel @ITEMALL.PIX 0x%05X, Hintergrund-Index %d */' % (i, i * 1200, hg))
-        out.append('static const uint8_t k_g42_kapsel_%02x[%d] = {' % (i, len(b)))
-        for k in range(0, len(b), 24):
-            out.append('    ' + ','.join('%d' % v for v in b[k:k + 24]) + ',')
+        t = pix[i * 1200:(i + 1) * 1200]
+        out.append('/* Item 0x%02X: Kachel @ITEMALL.PIX 0x%05X (40x30), Hintergrund-Index %d; Bild = kachel_zu_bild() */' % (i, i * 1200, hg))
+        out.append('static const uint8_t k_g42_kachel_%02x[%d] = {' % (i, len(t)))
+        for k in range(0, len(t), 24):
+            out.append('    ' + ','.join('%d' % v for v in t[k:k + 24]) + ',')
         out.append('};')
+    out.append('/* Mass der Laufzeit-Regel (= bild() in kapselbilder.py) */')
+    out.append('#define K_G42_BILD_W %d' % W)
+    out.append('#define K_G42_BILD_H %d' % H)
+    out.append('#define K_G42_KACHEL_W %d' % TW)
+    out.append('#define K_G42_KACHEL_H %d' % TH)
+    out.append('#define K_G42_FAKTOR %d' % S)
     text = chr(10).join(out) + chr(10)
     if '--messbild' in sys.argv:
         from PIL import Image, ImageDraw

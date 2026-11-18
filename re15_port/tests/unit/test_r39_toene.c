@@ -193,6 +193,9 @@ static int schublade_oeffnen(uint16_t room, int zweites_mal)
 {
     /* Spieler am Schreibtisch (AOT 13 main00 @0x00CE6: Rechteck (10200,-15950) 1500 x 1000). Der Schreibtisch feuert ueber
      * dieselbe Stelle wie der Aktionsdruck: re15_aot_fire_slot -> handler[3] @0x800430F0 -> Evt_exec sub19. */
+    /* Runde 42 Gegenstaende (K-10, 537349109): das Rohr nimmt am Schreibtisch den Vorrang-Slot 13 (gegenstaende_r42.c), der
+     * Schreibtisch-Platz zieht nach oben um. Mit genommenem Rohr (9,44) steht Slot 13 wieder fuer die Schublade. */
+    re15_game_flag_set(9, 44, 1);
     if (room_boot(room, 10950, -14600, 1024, 0) != 0) return -1;
     if (s_ohne_anker) g_re15_toene39_anker_n = 0;
     if (zweites_mal) re15_game_flag_set(9, 99, 1);     /* Patronen schon genommen (Item_aot_set @0x00CFA Bit (9,99)) */

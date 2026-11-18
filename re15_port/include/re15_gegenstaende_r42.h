@@ -68,6 +68,7 @@
 #define RE15_G42_BRAND      0x20   /* @0x80074D48 `20 20 05 00 1c 0b 06 0b 1d 1b 06 0e`                                     */
 #define RE15_G42_MUTTER     0x2F   /* Name @0x800739d7 (Disc ナット); Eigenschaften @0x80074FDC `01 ..` Obergrenze 1         */
 #define RE15_G42_HG_MUNITION 0x15  /* H. Gun Bullets                                                                         */
+#define RE15_G42_MAGNUM     0x17   /* Magnum Bullets (CHECK-Text V-02 mit Python, Nacharbeit gelb G4)                        */
 
 /* ---- Mengen ---------------------------------------------------------------------------------------------------------------------
  * Waffen = Magazin des Eigenschaftssatzes (Regel aus dem Bestand: alle 13 ausgelieferten Waffen-Item_aot_set tragen Menge == Magazin,
@@ -119,8 +120,11 @@ void re15_gegenstaende_r42_tick(void);
 const uint8_t *re15_gegenstaende_r42_ereignis(uint16_t room_id, uint8_t event_id);
 /* item_discard_common.c: Benutzungsstelle (2030/2031, Text 58) -> Mutter. */
 int re15_gegenstaende_r42_discard_stelle(unsigned room_id, uint8_t msg_id, uint8_t *out_item);
-/* re15_inv_desc_entry: CHECK-Texte 0x2F, 0x1C..0x20; sonst NULL. */
+/* re15_inv_desc_entry: CHECK-Texte 0x2F, 0x1C..0x20, 0x14 (Python), 0x17 (Magnum); sonst NULL. */
 const uint8_t *re15_gegenstaende_r42_desc(uint8_t item_id);
+/* Namens-Ersatz (item_prompt_common.c name_glyphen, re15_inv_screen.c emit_name/emit_name_at): 0x1C "Detonator" statt
+ * "Remote Detonator" (GEGENSTAENDE.md V-06, Disc-Name 信[管] = Zuender); Glyphen + 0x07; sonst NULL. */
+const uint8_t *re15_gegenstaende_r42_name(uint8_t item_id);
 /* menu_common.c Klassifizierer: 1 = KEIN Heilmittel, obwohl im Original-Fenster @0x8004ab48 `sltiu v0,v0,0xe` (0x22..0x2F).
  * PORT-KORREKTUR fuer 0x2F: das Original setzt beim Benutzen HP := 77 (@0x8004ae98 `ori v0,zero,0x4d` / @0x8004aea0
  * `sh v0,-13586(at)`) und verbraucht die Mutter; sie soll am Panel wirken (K-10 "Einbaufallen"). */
@@ -134,12 +138,16 @@ int re15_gegenstaende_r42_kein_heilmittel(uint8_t item_id);
 int re15_gegenstaende_r42_paar(uint8_t id_a, uint8_t id_b, uint8_t *res, uint8_t *pic);
 
 /* ITPS-Puffer (alle drei Ladestellen wie re15_gatorszene_r41_bild_einsetzen): Item-Bilder der Kapseln 0x1E..0x20 = ihre
- * Inventar-Kachel 2-fach (tools/r42_gegenstaende/kapselbilder.py); die Mod-/Disc-Bloecke tragen nur Capcoms Platzhalter.
+ * Inventar-Kachel 2-fach (tools/r42_gegenstaende/kapselbilder.py; seit der Nacharbeit zur Laufzeit aus der Kachel gebaut, nur PC);
+ * die Mod-/Disc-Bloecke tragen nur Capcoms Platzhalter.
  * Stufe 2: Block 0x47 (Blue Master Keycard, Item 0x47; Fundort ROOM4010 main00 @0x00592) traegt "MICHAEL" statt "GORO / MACIDA"
  * (tools/r42_gegenstaende/michaelkarte.py; nur Bild +0x220, CLUT +0x14 bleibt). Die Notiz in 4010 (msg 39 @0x183D) nennt Michael.
  * ULTIMATE 1.5 nimmt fuer 0x47 kein Disc-Bild (re15_ultimate15_bild_quelle), zeigt also dasselbe Bild. */
 #define RE15_G42_KARTE_ID   0x47
 void re15_gegenstaende_r42_bild_einsetzen(uint8_t *itps, int size);
+/* ULTIMATE 1.5 (Nacharbeit gelb G5): Aufnahme-Bilder 0x1E..0x20 nach derselben Regel aus den gegebenen Inventar-Kacheln (kachel[0..2]
+ * = Kachel fuer 0x1E/0x1F/0x20, 40x30) - gerufen von re15_ultimate15_itps_bauen mit den Disc-Kacheln des Symbols. Rueckgabe = Anzahl. */
+int re15_gegenstaende_r42_kapseln_aus_kacheln(uint8_t *itps, int size, const uint8_t *const kachel[3]);
 
 /* Pruefhaken (Riegel). */
 int  re15_gegenstaende_r42_stellen_anzahl(void);

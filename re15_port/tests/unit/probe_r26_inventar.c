@@ -39,6 +39,7 @@
 #include "re15_dining_r38.h"     /* Runde 38 Spur F: Port-Name der Id 0x43 "Dining Room Key" (B3 + B4c wie 0x42/0x45) */
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: Port-Name der Id 0x34 "Water Key" (B3 + B4c wie 0x42/0x43/0x45) */
 #include "re15_keyitems_r41.h"   /* Runde 41 Spur O: Port-Name der Id 0x33 "Crank" (B3 + B4c wie 0x34/0x42/0x43/0x45) */
+#include "re15_gegenstaende_r42.h" /* Runde 42 Gegenstaende (Nacharbeit gelb G4): Port-Name der Id 0x1C "Detonator" (B4c) */
 
 /* Die AUSGELIEFERTEN Prompt-Tabellen als Vergleichsquelle (dieselbe Datei, die die Engine
  * einbindet; erzeugt von tools/gen_item_prompt_data.py aus DEBUG.BIN @0x800c4fc6/@0x800c495c).
@@ -283,11 +284,13 @@ int main(void)
                  * Namen ein (der Soll-Lauf mit dem AUSGELIEFERTEN Namen enthaelt ihn), steht im Lauf
                  * der Port-Name und nicht mehr der ausgelieferte; sonst ist der Lauf bit-gleich. */
                 if (re15_schluessel_r36_name((uint8_t)id) || re15_dining_r38_name((uint8_t)id) ||   /* + 0x43 Runde 38 Spur F */
-                    re15_gatorszene_r41_name((uint8_t)id) || re15_keyitems_r41_name((uint8_t)id)) {  /* + 0x34 Runde 41 Spur F, 0x33 Spur O */
+                    re15_gatorszene_r41_name((uint8_t)id) || re15_keyitems_r41_name((uint8_t)id) ||   /* + 0x34 Runde 41 Spur F, 0x33 Spur O */
+                    re15_gegenstaende_r42_name((uint8_t)id)) {                                         /* + 0x1C Runde 42 Gegenstaende */
                     const uint8_t *pn = re15_schluessel_r36_name((uint8_t)id);
                     if (!pn) pn = re15_dining_r38_name((uint8_t)id);
                     if (!pn) pn = re15_gatorszene_r41_name((uint8_t)id);
                     if (!pn) pn = re15_keyitems_r41_name((uint8_t)id);
+                    if (!pn) pn = re15_gegenstaende_r42_name((uint8_t)id);
                     const uint8_t *an = re15_item_prompt_name_blob + re15_item_prompt_name_off[id];
                     int pl = 0, al = 0; while (pn[pl] != 0x07) pl++; while (an[al] != 0x07) al++;
                     lauf_t lq; int nq = lauf_holen(pk, (uint8_t)id, &lq);
@@ -340,12 +343,12 @@ int main(void)
          * Tabelle fuehrt. Die Gleichung ueber alle 102 Ids bleibt. */
         const int n_dok = re15_files_doc_count();
         PRUEFE("B4 kein Kollateral in den uebrigen Skripten",
-               ok && gefahren == 9 * (re15_item_prompt_name_count() - n_dok - 5) &&                 /* 5 Port-Namen (R41 F: + 0x34, R41 O: + 0x33) */
-               basis == 0x48 && gefahren_unter_basis == 9 * (basis - 5) && dokumente_unter_basis == 0);
+               ok && gefahren == 9 * (re15_item_prompt_name_count() - n_dok - 6) &&                 /* 6 Port-Namen (R41 F: + 0x34, R41 O: + 0x33, R42 Gegenstaende: + 0x1C) */
+               basis == 0x48 && gefahren_unter_basis == 9 * (basis - 6) && dokumente_unter_basis == 0);
         /* Integration Runde 38: G (genaue Pruefung unter der Basis) + F (dritter Port-Name 0x43 < 0x48). */
         printf("  (B4c Laeufe 0x42/0x43/0x45: %d, davon mit Namens-Einsatz: %d)\n", port_namen, port_einsatz);
         PRUEFE("B4c 0x42/0x45 (Runde 36 Spur Q) + 0x43 (Runde 38 Spur F): Port-Name statt ausgeliefertem Namen, sonst bit-gleich",
-               port_ok && port_namen == 9 * 5 && port_einsatz >= 4 * 2);                            /* + 0x34 Runde 41 Spur F, 0x33 Spur O */
+               port_ok && port_namen == 9 * 6 && port_einsatz >= 4 * 2);                            /* + 0x34 Runde 41 Spur F, 0x33 Spur O, 0x1C R42 */
         PRUEFE("B4b genau die Dokument-Ids der Tabelle ausgenommen (0x48..), je Schluessel einmal",
                dokumente == 9 * n_dok);
     }

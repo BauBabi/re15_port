@@ -10,6 +10,7 @@
 #include "re15_rechnerbilder_r42.h"
 #include "re15_rdt.h"
 #include "re15_room.h"     /* g_room_rdt */
+#include "re15_scd.h"      /* g_scd.props (Zielkreis 505, Nacharbeit G9) */
 
 extern unsigned g_current_room_id;
 
@@ -41,6 +42,33 @@ int re15_rb42_standbild(void)
         g_re15_rb42_zaehler[1]++;
     }
     return s_bild;
+}
+
+/* Nacharbeit gelb G9 (PORT-WAHL): 5050/5051 Bild 5 zeigt den Bildschirm von vorn; Kamera 5 @0x100 hat dieselbe Lage wie Kamera 4
+ * @0xE0, deshalb laege der gruene Zielkreis des Fingerabdruck-Spiels (obj 0, sub00 @0x00794 `2d 00 04 00 00 00 00 01 ..`, Lage
+ * (-19554,0,22684)) mitten auf dem Bildschirm-Fenster. Er gehoert zum Rechner-Bild (Cut 4, auf dem das Spiel laeuft), nicht zum
+ * Bildschirm: solange Bild 5 ANGEZEIGT wird, ist sein Zeichen-Bit geloescht (Form des Originals: Pool-Flags 0x80000000 =
+ * props[].active, scd_prop_hide_by_obj_id). Gerufen vom Praesentations-Apply re15_cam_present_tick (room_common.c, Apply-Kopf
+ * FUN_80021bbc @0x80021bfc work_vars[0x0A] = angezeigter Cut) - am Bildanfang, vor dem SCD-Takt und vor dem Zeichnen; der
+ * SCD-Takt selbst steht waehrend der Texte (RE15_PAUSE_SCD @0x8003f04c) und kaeme fuer Bild 5 zu spaet. Gesetzt wird nur, was
+ * hier geloescht wurde. */
+#define RB42_ZIELKREIS_OBJ 0
+static unsigned s_kreis_raum = 0;
+static int      s_kreis_aus  = 0;
+void re15_rb42_tick(void)
+{
+    if (s_kreis_raum != g_current_room_id) { s_kreis_raum = g_current_room_id; s_kreis_aus = 0; }
+    if (!basis((uint16_t)g_current_room_id, RE15_RB42_RAUM_505)) return;
+    const int angezeigt = (int)g_scd.work_vars[0x0A];
+    const int aus = (angezeigt == RE15_RB42_CUT_505);
+    for (int k = 0; k < (int)g_scd.prop_count; k++) {
+        if (g_scd.props[k].obj_id != RB42_ZIELKREIS_OBJ) continue;
+        if (aus && g_scd.props[k].active)  { g_scd.props[k].active = 0; s_kreis_aus = 1; }
+        else if (!aus && s_kreis_aus)      { g_scd.props[k].active = 1; s_kreis_aus = 0; }
+        else continue;
+        RB_LOG("ROOM%04X: angezeigt Cut %d -> Zielkreis obj %d %s\n", g_current_room_id, angezeigt, RB42_ZIELKREIS_OBJ,
+               g_scd.props[k].active ? "an" : "aus");
+    }
 }
 
 int re15_rb42_cut_chg(uint8_t cut)

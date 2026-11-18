@@ -55,6 +55,8 @@
 
 /* scd_vm.c op_cut_chg: 1 = als Standbild uebernommen (Kamera bleibt), 0 = normaler Cut_chg (beendet ein laufendes Standbild). */
 int re15_rb42_cut_chg(uint8_t cut);
+/* Nach jedem Praesentations-Apply (room_common.c re15_cam_present_tick): 5050/5051 Zielkreis obj 0 nicht zeichnen, solange Bild 5 angezeigt wird (Nacharbeit gelb G9). */
+void re15_rb42_tick(void);
 /* Laufendes Standbild (Bild-Nummer im BSS des Raums) oder -1. */
 int re15_rb42_standbild(void);
 /* scd_vm.c: Ereignis-/Evt_exec-Haken (NULL = ausgelieferter sub). */
