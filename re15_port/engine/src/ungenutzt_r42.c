@@ -1,6 +1,6 @@
 /*
  * RE1.5 Rebuilt — Runde 42 Strang "rest", Stufe 3: ungenutzte Capcom-/80-%-Inhalte STAGE2-6 (U-05 501 Rechner, U-01 3091 Hoftuer
- * + D309 #21/#24, U-02 3091 "There's a power supply.", U-11 402 Wandplan -> Blatt 8).
+ * + D309 #21/#24, U-02 3091 "There's a power supply.", U-11 402 Wandplan -> Blatt 8; Stufe 5: U-08 Elzas Tuer 4001 -> 401).
  * Herleitung, Belege und Formen: include/re15_ungenutzt_r42.h. Kein Asset-Patch: die Programme sind Original-Befehle; 3091 sub07
  * wird zur Laufzeit aus den RDT-Bytes kopiert, nachdem die Pruefbytes stimmen (sonst laeuft das Original).
  */
@@ -174,6 +174,34 @@ static int szene_bauen(void)
     if (k > (int)sizeof s_szene) return 0;
     s_szene_n = k;
     return 1;
+}
+
+/* ==== U-08: 4001 Tuer Slot 1 nach 401 fuer Elza ========================================================================== */
+/* Mod ROOM4001 main00 @0x1084, 32 Byte (Rechteckform, sat 0x31). Disc ROOM4001 @0x1012 ist bis auf pc[2] (0x02) derselbe Satz. */
+static const uint8_t k_tuer401_mod[32] = {
+    0x3b, RE15_U42_TUER401_SLOT, 0x00, 0x31, 0x00, 0x00,
+    LE16(-17100), LE16(-4600), LE16(1600), LE16(2200),          /* Rechteck @0x108A..@0x1091 `34 bd 08 ee 40 06 98 08`       */
+    LE16(-21044), LE16(0), LE16(-24000), LE16(-2048),           /* Ankunft in 401 @0x1092..@0x1099 `cc ad 00 00 40 a2 00 f8` */
+    0x03, 0x01, 0x00,                                           /* Stufe 3, Raum 01, Cut 0 @0x109A..@0x109C                  */
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,                   /* @0x109D..@0x10A3                                          */
+};
+
+uint8_t re15_ungenutzt_r42_tuer_sce(uint16_t room_id, const uint8_t *pc)
+{
+    const uint8_t sce = pc[2];
+    if (room_id != RE15_U42_RAUM_4001) return sce;
+    const re15_rdt_t *r = &g_room_rdt;
+    if (!r->raw || pc < r->raw || pc + sizeof k_tuer401_mod > r->raw + r->raw_size) return sce;
+    if ((int)(pc - r->raw) != RE15_U42_TUER401_OFF) return sce;
+    if (memcmp(pc, k_tuer401_mod, sizeof k_tuer401_mod) != 0) {
+        g_re15_u42_zaehler[4]++;
+        U42_LOG("ROOM4001 @0x%04X: Tuersatz anders als die Mod - unveraendert", RE15_U42_TUER401_OFF);
+        return sce;
+    }
+    g_re15_u42_zaehler[5]++;
+    U42_LOG("ROOM4001 Slot %d @0x%04X: Tuer nach 401 offen (sce %d wie Disc @0x1012 statt %d), U-08", RE15_U42_TUER401_SLOT,
+            RE15_U42_TUER401_OFF, RE15_U42_TUER401_SCE, sce);
+    return RE15_U42_TUER401_SCE;
 }
 
 /* ==== Texte ============================================================================================================= */

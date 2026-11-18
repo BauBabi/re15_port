@@ -4201,7 +4201,10 @@ static int op_door_aot_set(scd_thread_t *t)
          * permanently dead — e.g. ROOM1250 slots 0-2, 1180 slot 4, 5070 slots 1-2).
          * door_params stay stored so the retype arms a working door. The old code
          * never read pc[2] and armed every install. */
-        if (t->pc[2] == 0)
+        /* Runde 42 rest Stufe 5 (U-08, NUTZERWUNSCH 18.11.): Mod ROOM4001 @0x1084 Slot 1 bekommt sce 2 wie Disc @0x1012
+         * (Elzas Tuer nach 401); alle anderen Saetze geben pc[2] unveraendert zurueck (re15_ungenutzt_r42.h). */
+        extern uint8_t re15_ungenutzt_r42_tuer_sce(uint16_t, const uint8_t *);
+        if (re15_ungenutzt_r42_tuer_sce((uint16_t)g_current_room_id, t->pc) == 0)
             g_aot.slots[slot].type = RE15_AOT_TYPE_NONE;
     }
     /* PC-Vorschub konditional pc[3]&0x80: 4P-Tür (40 B) vs Standard (32 B). Byte-true:

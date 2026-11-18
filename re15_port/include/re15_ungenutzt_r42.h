@@ -62,6 +62,28 @@
  *   402, VORSCHLAEGE U-11) und msg 2 = Bytes von ROOM5030 msg 1 "You've taken the laboratory map." - Form des einzigen Kartenfunds
  *   ROOM5030 sub00 @0x1086 `21 03 73 00` (nur ohne Bit) / sub02 @0x10C8 `22 03 73 01` Set + @0x10CC `2b 01 ff ff` Message_on.
  *   PORT-WAHL: ohne Ja/Nein-Frage (der 402-Text fragt nicht).
+ *
+ * ---- U-08 (Stufe 5: Elzas Tuer 4001 -> 401) ----------------------------------------------------------------------------------
+ * NUTZERWUNSCH 18.11.2026 (Frage 1 der Ungenutzt-Zaehlung, darf Elza in den Sicherheitsraum 401?): "ja, warum nicht?"
+ *   (Konzept 11_story_v0831/KONZEPT.md K-15). Nur die Tuer; Capcoms Satz D401 #18 an der Liege (Disc 4011 @0x04B6) erst v0.8.32.
+ * Disc ROOM4001 main00 @0x1012 `3b 01 02 31 00 00 34 bd 08 ee 40 06 98 08 cc ad 00 00 40 a2 00 f8 03 01 00 ..` = Door_aot_set
+ *   Slot 1 sce 2 (Tuer), Rechteck (-17100,-4600,1600,2200), Ziel Stufe 3 Raum 01 Cut 0 (= 401, Elza -> ROOM4011), Ankunft
+ *   (-21044,0,-24000) Richtung -2048; Disc 4001 hat weder Aot_reset noch Aot_on (Pruefung U-08) -> die Tuer ist immer offen.
+ * Mod ROOM4001 main00 @0x1084 = derselbe Satz Byte fuer Byte, nur pc[2] = 0 (sce 0): der Scan ueberspringt ihn
+ *   (@0x80042f48 `lbu v0,0(s0)` / @0x80042f50 `beq v0,zero,0x8004301c`). Kein Aot_reset/Aot_on fuer Slot 1 in Mod 4001.
+ *   Auf demselben Rechteck liegt Mod-Slot 8 @0x110C `2c 08 01 31 .. 0e 00 ff ff` = msg 14 "Security Room / It's locked.".
+ * Tuer-Zensus aller RDTs (Disc und Mod, ungenutzt/tmp/pruef/doorcensus.py): nach Stufe 3 Raum 01 fuehren nur 4000/4001 Slot 1
+ *   (Disc 4000 @0x102A, 4001 @0x1012; Mod 4000 @0x109C sce 2 = Leon offen, 4001 @0x1084 sce 0).
+ * BAU: beim Installieren genau dieses Satzes (Raum 0x4001, Datei-Offset 0x1084, alle 32 Byte = Mod-Satz) gilt sce 2 wie Disc
+ *   @0x1012 pc[2]. Der Rest des Satzes ist schon Disc-gleich. Slot 8 bleibt, wird aber nie mehr erreicht: der Aktions-Scan laeuft
+ *   die Satzliste aufsteigend ab (@0x80042c50 `lw s0,0(s4)` / @0x80042c54 `addiu s4,s4,4`) und kehrt nach dem ersten Treffer
+ *   zurueck (@0x80042fb4 `jalr v0` -> @0x80042fbc `j 0x80043028`); Slot 1 und Slot 8 haben dasselbe Rechteck und dieselbe
+ *   Treffart 0x31, also gewinnt immer die Tuer (wie auf der Disc, die keinen Slot 8 hat).
+ * In 401 (Mod ROOM4011 main00 @0x04D2..@0x0624): Tuer Slot 0 zurueck nach 400 (= 4001, Ankunft (-15608,0,-3524) Richtung 0,
+ *   Cut 0), sechs Untersuchen-Texte, Kiste Slot 9 -> sub02 msg 6 (re15_itembox.c {0x4011,0x06}), Rechner Slot 10 -> sub03 msg 7
+ *   (re15_savepoint.c {0x4011,0x07,6}), Funde Slot 7 First Aid Spray x1 Bit (9,11) und Slot 8 Shotgun Shells x7 Bit (9,12) -
+ *   kein Sce_em_set, kein Set/Ck, kein Ereignis ausser Kiste und Rechner. Bits (9,11)/(9,12) liest und setzt sonst nur 4010
+ *   (Leon, eigener Spielstand). Leon unveraendert: sein 4000-Satz @0x109C ist schon sce 2, der Haken fasst nur 0x4001 an.
  */
 #ifndef RE15_UNGENUTZT_R42_H
 #define RE15_UNGENUTZT_R42_H
@@ -106,16 +128,24 @@
 #define RE15_U42_PLAN_MSG         2
 #define RE15_U42_PLAN_BLATT       8        /* EXE @0x8004BDB4 `ori v1,zero,0x8`; "Laboratory B1"                              */
 
+/* ---- U-08 ------------------------------------------------------------------------------------------------------------- */
+#define RE15_U42_RAUM_4001        0x4001u
+#define RE15_U42_TUER401_OFF      0x1084   /* Mod ROOM4001 main00 Door_aot_set Slot 1 (sce 0)                                     */
+#define RE15_U42_TUER401_SLOT     1
+#define RE15_U42_TUER401_SCE      2        /* Disc ROOM4001 @0x1012 pc[2] = 0x02 (Tuer)                                          */
+
 /* ---- Haken ------------------------------------------------------------------------------------------------------------ */
 const uint8_t *re15_ungenutzt_r42_ereignis(uint16_t room_id, uint8_t event_id);              /* scd_vm.c scd_event_fire */
 const uint8_t *re15_ungenutzt_r42_evt_exec(uint16_t room_id, uint8_t sub, const uint8_t *pc); /* scd_vm.c op_evt_exec  */
 void re15_ungenutzt_r42_texte(uint16_t room_id);                                             /* msg_common.c          */
+uint8_t re15_ungenutzt_r42_tuer_sce(uint16_t room_id, const uint8_t *pc);                   /* scd_vm.c op_door_aot_set */
 void re15_ungenutzt_r42_tick(void);                                                          /* scd_vm.c scd_vm_tick  */
 int  re15_ungenutzt_r42_blatt(unsigned page);                                                /* re15_map_owned.c      */
 
 /* Pruefhaken */
 const uint8_t *re15_ungenutzt_r42_programm(uint16_t room_id, int welches, int *out_len);   /* 0 Hauptprogramm des Raums */
 const uint8_t *re15_ungenutzt_r42_text(uint16_t room_id, uint8_t id, int *out_len);
-extern unsigned g_re15_u42_zaehler[6];   /* 0 Rechner 501, 1 Szene 3091, 2 Schalter 3091, 3 Plan 402 genommen, 4 Bytes anders */
+extern unsigned g_re15_u42_zaehler[6];   /* 0 Rechner 501, 1 Szene 3091, 2 Schalter 3091, 3 Plan 402 genommen, 4 Bytes anders,
+                                         * 5 Tuer 4001 -> 401 offen (U-08) */
 
 #endif /* RE15_UNGENUTZT_R42_H */

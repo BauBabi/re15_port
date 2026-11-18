@@ -13,7 +13,11 @@
  *   szene    3091 (U-01): Szene sub07 -> Folge 32, 9..24, 33, 25..28, 34, 29, 30; nach den Schlaegen blicken John und Elza zur
  *            Hoftuer (-24506,1500), nicht zur Lobby-Tuer (-28481,-155)
  *   bytes    Programme gegen die Original-Saetze (nur mit Modul; die Gegenprobe auf aaea5f8c2 laeuft ohne)
- * Aufruf: test_r42_ungenutzt [rechner|plan|schalter|szene|bytes|alle]
+ *   tuer401  Stufe 5, U-08 (NUTZERWUNSCH 18.11. "ja, warum nicht?"): Elza ROOM4001 Slot 1 ist eine Tuer wie Disc @0x1012 (sce 2)
+ *            und fuehrt nach ROOM4011 (-21044,-24000) Cut 0, nicht zu msg 14 "It's locked."; in 4011 Kiste (msg 6 -> Kistenbild),
+ *            Rechner (msg 7 -> Speicher-Ablauf), zwei Funde (Bit 11/12) und die Tuer zurueck nach ROOM4001 (-15608,-3524);
+ *            Leon ROOM4000 Slot 1 unveraendert (-> ROOM4010), der Haken fasst 4000 nicht an
+ * Aufruf: test_r42_ungenutzt [rechner|plan|schalter|szene|bytes|tuer401|alle]
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -37,6 +41,8 @@
 #include "re15_elza_r36.h"
 #include "re15_kleinkram_r38.h"
 #include "re15_map_owned.h"
+#include "re15_itembox.h"
+#include "re15_savepoint.h"
 #if defined(__has_include)
 #  if __has_include("re15_ungenutzt_r42.h")
 #    include "re15_ungenutzt_r42.h"
@@ -418,6 +424,120 @@ static void teil_bytes(void)
 #endif
 }
 
+/* ---- tuer401 (U-08, Stufe 5) ------------------------------------------------------------------------------------------- */
+/* Aktion an (x,z,rot) wie untersuchen(), aber ohne langen Nachlauf: liefert, ob eine Tuer einen Raumwechsel angemeldet hat. */
+static int tuer_versuch(int32_t x, int32_t z, int rot)
+{
+    re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    p->x = x; p->z = z; p->rot_y = (int16_t)rot;
+    for (int i = 0; i < 10; i++) frame(0);
+    prot_leeren();
+    g_room_change.pending = 0;
+    g_aot.fired_event_id_this_frame = 0;
+    g_aot_action_pressed = 1;
+    re15_aot_scan(p->x, p->z, 0xFF);
+    g_aot_action_pressed = 0;
+    if (g_aot.fired_event_id_this_frame) (void)scd_event_fire(g_aot.fired_event_id_this_frame);
+    const int w = g_room_change.pending;
+    for (int f = 0; f < 60; f++) frame(1);
+    return w;
+}
+
+static void teil_tuer401(void)
+{
+    printf("== tuer401 (U-08, Elza 4001 -> 401) ==\n");
+#ifdef U42_MODUL
+    const unsigned z5 = g_re15_u42_zaehler[5];
+#endif
+    /* Elza: 4001 nach der Eintrittsszene ((3,0x21) = 1 sub01 @0x0137C -> sonst sub10; (4,20) = 1 sub00 @0x0120C), Gitter-Ablaeufe vorbei ((3,0x91)/(3,0xAF) = 1, sub00
+     * @0x01214/@0x012A6) - so steht Elza in der Halle, wenn sie frei laeuft. Stand = Ankunft aus 401 (Mod 4011 @0x04D2
+     * `08 c3 .. 3c f2`) (-15608,-3524), Blick -x (2048): Vorwaertspunkt (-16228,-3524) liegt im Rechteck x -17100..-15500,
+     * z -4600..-2400 (Mod 4001 @0x108A). */
+    re15_game_state_init(); re15_inv_init();
+    re15_game_flag_set(3, 0x21, 1); re15_game_flag_set(4, 20, 1); re15_game_flag_set(3, 0x91, 1); re15_game_flag_set(3, 0xAF, 1);
+    if (room_boot(0x4001, -15608, -3524, 2048, NULL, 0) == 0) {
+        const re15_aot_t *a = &g_aot.slots[1];
+        printf("   ROOM4001 Slot 1: aktiv %d Typ %d Ziel Stufe %d Raum %02X Cut %d\n", a->active, a->type,
+               g_aot.door_params[1].dest_stage, g_aot.door_params[1].dest_room, g_aot.door_params[1].target_cut);
+        PRUEF(a->active && a->type == RE15_AOT_TYPE_DOOR && g_aot.door_params[1].dest_stage == 3 &&
+              g_aot.door_params[1].dest_room == 0x01,
+              "ROOM4001 Slot 1 ist eine Tuer nach Stufe 3 Raum 01 (Disc @0x1012 sce 2; Mod @0x1084 sce 0)");
+        const int w = tuer_versuch(-15608, -3524, 2048);
+        zeige("Aktion vor der Tuer");
+        printf("   Raumwechsel %d -> ROOM%04X (%d,%d,%d) Richtung %d Cut %d\n", w, g_room_change.room_id, g_room_change.x,
+               g_room_change.y, g_room_change.z, g_room_change.yaw_4096, g_room_change.target_cut);
+        PRUEF(w && g_room_change.room_id == 0x4011 && g_room_change.x == -21044 && g_room_change.z == -24000 &&
+              g_room_change.target_cut == 0,
+              "Aktion vor der Tuer: Raumwechsel nach ROOM4011 (-21044,-24000) Cut 0 (Disc @0x1012 Nutzlast)");
+        int m14 = 0;
+        for (int i = 0; i < s_prot_n; i++) if (s_prot_id[i] == 14) m14 = 1;
+        PRUEF(!m14, "nicht mehr msg 14 \"Security Room / It's locked.\" (Mod-Slot 8 @0x110C liegt hinter der Tuer)");
+        PRUEF(g_aot.slots[8].active && g_aot.slots[8].type != RE15_AOT_TYPE_NONE,
+              "Mod-Slot 8 @0x110C bleibt installiert (nur verdeckt: Scan aufsteigend @0x80042c50, erster Treffer gewinnt)");
+    }
+#ifdef U42_MODUL
+    PRUEF(g_re15_u42_zaehler[5] > z5, "Haken hat den Satz @0x1084 erkannt (Zaehler %u -> %u)", z5, g_re15_u42_zaehler[5]);
+#endif
+
+    /* Leon: 4000 Slot 1 @0x109C ist schon sce 2 und fuehrt nach 4010 - unveraendert, der Haken zaehlt dort nicht.
+     * Eintrittsszene vorbei: Mod 4000 sub00 @0x0129E Ck(4,0x26)=0 -> sub05. */
+    re15_game_state_init(); re15_inv_init();
+    re15_game_flag_set(4, 0x26, 1);
+#ifdef U42_MODUL
+    const unsigned z5l = g_re15_u42_zaehler[5];
+#endif
+    if (room_boot(0x4000, -15608, -3524, 2048, NULL, 0) == 0) {
+        const int w = tuer_versuch(-15608, -3524, 2048);
+        PRUEF(g_aot.slots[1].type == RE15_AOT_TYPE_DOOR && w && g_room_change.room_id == 0x4010,
+              "Leon ROOM4000 Slot 1: Tuer nach ROOM4010 wie bisher (Mod @0x109C sce 2)");
+    }
+#ifdef U42_MODUL
+    PRUEF(g_re15_u42_zaehler[5] == z5l, "Leon: Haken greift in ROOM4000 nicht");
+#endif
+
+    /* Elza in 401 */
+    re15_game_state_init(); re15_inv_init();
+    if (room_boot(0x4011, -21044, -24000, 2048, NULL, 0) == 0) {
+        PRUEF(g_aot.slots[7].active && g_aot.slots[7].type == RE15_AOT_TYPE_ITEM && g_aot.slots[8].active &&
+              g_aot.slots[8].type == RE15_AOT_TYPE_ITEM,
+              "ROOM4011: Funde Slot 7 (First Aid Spray, Bit 11 @0x056A) und Slot 8 (Shotgun Shells x7, Bit 12 @0x0580) liegen");
+        int n = 0;
+        for (int i = 0; i < RE15_AOT_MAX; i++)
+            if (g_aot.slots[i].active && g_aot.slots[i].type == RE15_AOT_TYPE_DOOR) n++;
+        PRUEF(n == 1, "ROOM4011: genau eine Tuer (%d)", n);
+        /* Kiste Slot 9 @0x0596 `4e a8 70 9a 40 06 e8 03` = Rechteck x -22450..-20850, z -26000..-25000: Stand (-21650,-24500),
+         * Blick -z (1024) -> Vorwaertspunkt (-21650,-25120) */
+        re15_itembox_reset();
+        untersuchen(-21650, -24500, 1024, 600);
+        zeige("Kiste");
+        PRUEF(re15_itembox_pending(), "ROOM4011 Kiste (Slot 9 -> sub02 msg 6): Kistenbild angefordert");
+        re15_itembox_reset();
+        /* Rechner Slot 10 @0x05AA `44 99 b8 a7 14 05 c4 09` = Rechteck x -26300..-25000, z -22600..-20100 (Tisch; westlich von
+         * x -24752 schiebt die Kollision zurueck): Stand (-24700,-21350), Blick -x (2048) -> Vorwaertspunkt (-25320,-21350) */
+        untersuchen(-24700, -21350, 2048, 600);
+        zeige("Rechner");
+        PRUEF(s_prot_n >= 1 && s_prot_id[0] == RE15_SAVEPOINT_MSG_ID && strstr(s_prot_text[0], "Memory Card") != NULL,
+              "ROOM4011 Rechner (Slot 10 -> sub03 msg 7): Speicher-Ablauf (Memory-Card-Text)");
+        /* Funde Slot 7/8 @0x056A/@0x0580 `50 97 20 b8 40 06 d0 07` = Rechteck x -26800..-25200, z -18400..-16400 (beide
+         * dasselbe): Stand (-24752,-17671) = dort haelt die Kollision an (Echtlauf), Blick -x -> Vorwaertspunkt (-25372,-17671) */
+        for (int k = 0; k < 2; k++) {
+            untersuchen(-24752, -17671, 2048, 900);
+            printf("   Fund %d: Slot 7 aktiv %d, Slot 8 aktiv %d, Bits (9,11)=%d (9,12)=%d\n", k + 1, g_aot.slots[7].active,
+                   g_aot.slots[8].active, re15_game_flag_get(9, 11), re15_game_flag_get(9, 12));
+        }
+        PRUEF(re15_game_flag_get(9, 11) && re15_game_flag_get(9, 12) && re15_inv_find_item(0x22) >= 0 &&
+              re15_inv_find_item(0x16) >= 0,
+              "ROOM4011 Funde: First Aid Spray (0x22, Bit 11) und Shotgun Shells (0x16, Bit 12) aufgehoben");
+        /* zurueck: Tuer Slot 0 @0x04D2 `cc ac 20 9f 84 03 78 05` = Rechteck x -21300..-20400, z -24800..-23400 (oestlich von
+         * x -21044 ist Wand): Stand (-21700,-24100), Blick +x (0) -> Vorwaertspunkt (-21080,-24100) */
+        const int w = tuer_versuch(-21700, -24100, 0);
+        printf("   zurueck: Raumwechsel %d -> ROOM%04X (%d,%d) Cut %d\n", w, g_room_change.room_id, g_room_change.x,
+               g_room_change.z, g_room_change.target_cut);
+        PRUEF(w && g_room_change.room_id == 0x4001 && g_room_change.x == -15608 && g_room_change.z == -3524,
+              "ROOM4011 Tuer zurueck nach ROOM4001 (-15608,-3524) (Mod 4011 @0x04D2)");
+    }
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -426,6 +546,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "schalter") || !strcmp(teil, "alle")) teil_schalter();
     if (!strcmp(teil, "szene")    || !strcmp(teil, "alle")) teil_szene();
     if (!strcmp(teil, "bytes")    || !strcmp(teil, "alle")) teil_bytes();
+    if (!strcmp(teil, "tuer401")  || !strcmp(teil, "alle")) teil_tuer401();
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;
 }
