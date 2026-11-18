@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die uebrigen Integrationsskripte (Linux-Container CMake 3.28)
 # =============================================================================
-# FINALE 5090/5091: DIE WURFSZENE. Runde 42 Strang finale, Stufe 3 (Plan S5, K-13; include/re15_finale_wurf_r42.h), Runde 2.
+# FINALE 5090/5091: DIE WURFSZENE. Runde 42 Strang finale, Stufe 3 (Plan S5, K-13; include/re15_finale_wurf_r42.h), Runde 3.
 #
 # NUTZERWUNSCH 07.11.2026: "... Das jemand Leon den Raketenwerfer zuwirft ...". NUTZERENTSCHEID 17.11.2026: "Ok, passt für mich. Aber
 # ein Spruch wäre schon gut beim zuwerfen, so etwas wie: Leon, send him to hell, oder Leon, let's finish this oder sowas."
@@ -13,9 +13,13 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die uebrigen Int
 # ROOM7020 sub12/sub13 und den RE1.5-Wurf:
 #   W = "Bild 0" ein Takt nach dem Szenenstart: John erscheint an der Ankunft (24800,-23550) (Tuer Slot 2 @0x0108E), Schnitt 13;
 #   Loslassen im Clip-Bild 22 (@0x800336fc) bei W+53 (Sleep 1 + 30 @0x0187C/@0x01892, dann 22 Bilder Wurf), Zuruf Id 3 im Bild danach;
-#   Landung nach 28 Flugbildern (RE2-Flugdauer) mit Se_on Raumbank 0x0E im selben Takt (@0x019DE-E2), hoechstens 1100 vom Spieler;
-#   Schnitt auf die Kamera des Spielers waehrend des Flugs; Reaktion 16 Takte nach der Landung (Do/Edwhile + Sleep 15 @0x018C4-D0);
-#   John geht durch die Tuer ab (Punkt 620 voraus im Tuer-AOT Slot 4, @0x80042bd0) innerhalb von 60 Takten, Ende im Takt danach;
+#   Landung nach 28 Flugbildern (RE2-Flugdauer) mit Se_on Raumbank 0x0E im selben Takt (@0x019DE-E2), hoechstens 1700 vom Spieler
+#   (Spieler im RE2-Aufnahme-Rechteck 3400x2500);
+#   Schnitt auf die Kamera des Spielers waehrend des Flugs, sobald der Werfer eine Werferlaenge (1771) von der Hand weg ist; Reaktion 16
+#   Takte nach der Landung (Do/Edwhile + Sleep 15 @0x018C4-D0);
+#   Runde 3: John LAEUFT zur Tuer (Plc_dest Modus 5) und kommt innerhalb von 10..60 Takten an, Tuerton der Tuersequenz (DOOR2A V2,
+#   Eintrag 0); wie RE2 erst der Schnitt zurueck (@0x01948), dann das Parken (@0x01954): John wird NIE in einem Bild geparkt, in dem
+#   der Schnitt 13 (oder eine Kamera, die ihn sieht) noch gilt - Riegel gegen Rot 1 aus s3 r2 ("verschwindet vor der Tuer");
 #   Aufnahme-AOT Slot 6 Gegenstand 0x12 Anzahl 2 Taken-Bit 137, nach dem Aufheben Zellen 0/1 = 0x12 mit Anzahl 2.
 #   debug.log: Schnitte 13 (W) / 13 (Reaktion) / zurueck auf die gemerkte Kamera (Ende), John aus JOHN_49_WURF.EMD mit 26 Clips, der
 #   Werfer in der Hand im Schnitt 13, im Flug im Schnitt 13 und in der Kamera des Spielers, am Boden in der Kamera des Spielers.
@@ -96,10 +100,11 @@ takt_von("Wurf: Landung nach 28 Flugbildern" _L)
 takt_von("Se_on Raumbank R702 Satz 0x0E [(]PC-Haken 1[)]" _SE)
 takt_von("Wurf: Schnitt auf die Kamera des Spielers" _SK)
 takt_von("Wurf: Reaktion" _R)
-takt_von("Wurf: John durch die Tuer" _J)
+takt_von("Wurf: John an der Tuer" _J)
+takt_von("Wurf: John geparkt" _P)
 takt_von("Wurf: Ende" _E)
-if(NOT _LOS OR NOT _L OR NOT _SE OR NOT _SK OR NOT _R OR NOT _J OR NOT _E)
-    string(APPEND _f "\n Loslassen '${_LOS}' / Landung 28 '${_L}' / Se_on 0x0E '${_SE}' / Schnitt Spieler '${_SK}' / Reaktion '${_R}' / John weg '${_J}' / Ende '${_E}' fehlt")
+if(NOT _LOS OR NOT _L OR NOT _SE OR NOT _SK OR NOT _R OR NOT _J OR NOT _E OR NOT _P)
+    string(APPEND _f "\n Loslassen '${_LOS}' / Landung 28 '${_L}' / Se_on 0x0E '${_SE}' / Schnitt Spieler '${_SK}' / Reaktion '${_R}' / John an der Tuer '${_J}' / Ende '${_E}' / John geparkt '${_P}' fehlt")
 else()
     math(EXPR _dl "${_L} - ${_LOS}")
     if(NOT _dl EQUAL 28)
@@ -117,19 +122,36 @@ else()
     endif()
     math(EXPR _dj "${_J} - ${_R}")
     if(_dj GREATER 60 OR _dj LESS 10)
-        string(APPEND _f "\n John nach ${_dj} Takten durch die Tuer (erwartet 10..60: umdrehen, gehen, Wand)")
+        string(APPEND _f "\n John nach ${_dj} Takten an der Tuer (erwartet 10..60: umdrehen, laufen)")
     endif()
     math(EXPR _de "${_E} - ${_J}")
-    if(NOT _de EQUAL 1)
-        string(APPEND _f "\n Ende ${_de} Takte nach Johns Abgang statt 1")
+    if(_de LESS 0 OR _de GREATER 1)
+        string(APPEND _f "\n Ende ${_de} Takte nach Johns Ankunft an der Tuer statt 0..1")
     endif()
+    if(_P LESS _E)
+        string(APPEND _f "\n John geparkt T${_P} VOR dem Schnitt zurueck T${_E} (RE2: Cut_chg @0x01948 vor Pos_set @0x01954)")
+    endif()
+    if(NOT _log MATCHES "Wurf: John ausser Bild der Kamera [0-9]+ (nach dem Schnitt zurueck|- jetzt geparkt)")
+        string(APPEND _f "\n John nicht ausser Bild geparkt")
+    endif()
+endif()
+if(NOT _log MATCHES "Wurf: Schnitt: Werfer ([0-9]+) von der Loslasslage [(]Werferlaenge 1771[)]")
+    string(APPEND _f "\n Schnitt im Flug nicht nach einer Werferlaenge")
+elseif(CMAKE_MATCH_1 LESS 1771)
+    string(APPEND _f "\n Schnitt im Flug schon bei ${CMAKE_MATCH_1} < 1771")
+endif()
+if(NOT _log MATCHES "Wurf: Tuerton: Archiv 2 DOOR2A Variante 2" OR NOT _log MATCHES "Wurf: Tuerton: Seite S[0-9]+, Se_on Tuerbank Eintrag 0")
+    string(APPEND _f "\n Tuerton beim Abgang (DOOR2A V2, Eintrag 0) fehlt")
+endif()
+if(NOT _dbg MATCHES "Werfer-Modell PLD/PL00W12.PLW geladen: Waffenband 38 von 72 Dreiecken")
+    string(APPEND _f "\n Werfer nicht als PL00W12-Waffenband geladen")
 endif()
 if(_log MATCHES "Abgang per Notbremse")
     string(APPEND _f "\n John ging per Notbremse ab")
 endif()
 if(_log MATCHES "Landung: Abstand zum Spieler ([0-9]+)")
-    if(CMAKE_MATCH_1 GREATER 1100)
-        string(APPEND _f "\n Werfer landet ${CMAKE_MATCH_1} vom Spieler (> 1100)")
+    if(CMAKE_MATCH_1 GREATER 1700)
+        string(APPEND _f "\n Werfer landet ${CMAKE_MATCH_1} vom Spieler (> 1700, Spieler ausserhalb des Aufnahme-Rechtecks)")
     endif()
 else()
     string(APPEND _f "\n Abstand Landung - Spieler fehlt")
@@ -171,4 +193,4 @@ endif()
 if(_f)
     message(FATAL_ERROR "r42_finale_wurf_${TEIL}: FEHLER${_f}\n--- finale.log ---\n${_log}")
 endif()
-message(STATUS "r42_finale_wurf_${TEIL}: OK (W ${_W}, Loslassen T${_LOS}, Landung T${_L}, Reaktion T${_R}, John weg T${_J}, Ende T${_E})")
+message(STATUS "r42_finale_wurf_${TEIL}: OK (W ${_W}, Loslassen T${_LOS}, Schnitt T${_SK}, Landung T${_L}, Reaktion T${_R}, John an der Tuer T${_J}, Ende T${_E}, geparkt T${_P})")

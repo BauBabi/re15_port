@@ -7,16 +7,18 @@
  *             @0x800336fc; Version_40% bytegleich, nicht versioniert - im Bericht gemessen).
  *   programm  Das Port-Programm = sub12 Befehl fuer Befehl (Schnitt 13, John Typ 0x49 an der Ankunft mit Gier zum Spieler,
  *             Plc_motion(1,24) Heben, Sleeps 1/30, Plc_motion(1,25) Wurf, Warten aufs Loslassen, Zuruf Id 3, Landung, Sleep 15,
- *             Reaktion Schnitt 13, Sleep 1, Plc_dest Modus 4 zur Tuer, zurueck auf die gemerkte Kamera, Item_aot_set Slot 6
+ *             Reaktion Schnitt 13, Sleep 1, Plc_dest Modus 5 (laufen) zur Tuer-Vorderkante, zurueck auf die gemerkte Kamera VOR dem Parken, Item_aot_set Slot 6
  *             Gegenstand 0x12 Anzahl 2 Taken-Bit 137, Ende wie sub18).
  *   bahn      Die Flugschleife (Add_speed, Add_aspeed, Ende y >= -800): mit Adas Werten vom Steg genau 28 Bilder (10 n^2 + 10 n >=
  *             7850); die Startwerte des Ports landen nach genau 28 Bildern an der Landestelle (kurze und lange Wuerfe); die
- *             Landestelle liegt 1000 vor dem Spieler in Richtung John, hoechstens auf halber Strecke.
+ *             Landestelle liegt so weit vor dem Spieler (Richtung John), wie das RE2-Aufnahme-Rechteck 3400x2500 ihn mit Rand 100
+ *             einschliesst (laengs des Wagens 1600), hoechstens auf halber Strecke.
  *   luecken   Aufnahme des Werfers mit belegten Zellen 8/9 und Luecken davor: nichts geht verloren, Werfer in 0/1 mit Anzahl 2;
  *             Negativ-Kontrolle: derselbe Einfuegeweg OHNE das Schliessen verliert 8/9 (byte-true FUN_8004dc4c); andere Aufnahmen
  *             (anderes Taken-Bit) bleiben unberuehrt.
  *   modelle   JOHN_49_WURF.EMD: Paar 1 hat 26 Clips, Clip 24/25 = PL00W09.PLW Clip 6/7 (Keyframes bytegleich), Clips 0..23 und
- *             ihre Keyframes bytegleich mit dem 0x49-Block; R702_WERFER.MD1/.TIM = ROOM7020 @0x2044..0x2788 / @0x24F9C..Ende.
+ *             ihre Keyframes bytegleich mit dem 0x49-Block; Werfer = PL00W12.PLW dir[2] Waffenband (38 Dreiecke, v >= 224, u 72..127,
+ *             Rohr y -744..1027 = RE15_FW_W12_LAENGE), dir[3] 8 bpp 56x32, bei PL04W12 bytegleich (Runde 3).
  *   ersatz    John-Ersatzmodell nur fuer 0x49 in 5090/5091.
  */
 #include <stdint.h>
@@ -82,8 +84,14 @@ static void t_quelle(void)
         CHECK(r[0x0187E] == RE15_FW_SCHLAF_1 && r[0x01894] == RE15_FW_SCHLAF_30 && r[0x018B0] == RE15_FW_SCHLAF_20 &&
               r[0x018D2] == RE15_FW_SCHLAF_15 && r[0x01900] == RE15_FW_SCHLAF_1, "Sleeps 1/30/20/15/1 @0x0187C/92/AE/D0/FE");
         CHECK(hex_gleich(r, n, 0x01854, "4800818a 0000 5802 ceff 80fc 0000 0004"), "Super_set @0x01854");
-        CHECK(r[0x01857] == (0x80 | RE15_FW_TEIL) && s16(r + 0x0185A) == RE15_FW_VERSATZ_Y && s16(r + 0x0185C) == RE15_FW_VERSATZ_Z &&
-              s16(r + 0x0185E) == RE15_FW_HAND_RX && s16(r + 0x01862) == RE15_FW_HAND_RZ, "Super_set-Werte");
+        CHECK(r[0x01857] == (0x80 | RE15_FW_ADA_TEIL) && s16(r + 0x0185A) == RE15_FW_ADA_VERSATZ_Y &&
+              s16(r + 0x0185C) == RE15_FW_ADA_VERSATZ_Z && s16(r + 0x0185E) == RE15_FW_ADA_HAND_RX && s16(r + 0x01862) == RE15_FW_ADA_HAND_RZ,
+              "Super_set-Werte (RE2-Beleg Adas Teil 10; Port Teil 11 = Leons Griff)");
+        CHECK(RE15_FW_TEIL == 11, "Port-Teil = rechte Hand 11 (Waffenteil)");
+        /* Runde 3, Abgang: RE2 schneidet ZURUECK (@0x01948), BEVOR Ada geparkt wird (@0x01954) - Reihenfolge an den Bytes */
+        CHECK(hex_gleich(r, n, 0x0193A, "40001523 40066000") && hex_gleich(r, n, 0x01942, "0b0c 1d040100 2900") &&
+              hex_gleich(r, n, 0x0194A, "46050231 11000200 2800 2e020000 3200a092 c8ce14ba"),
+              "Abgang sub12: Plc_dest @0x0193A, Wsleep @0x01942, Work_copy/Cut_chg @0x01944/48, Aot_reset @0x0194A, Pos_set Parken @0x01954");
         CHECK(s16(r + 0x018B8) == RE15_FW_FLUG_RX && s16(r + 0x018BA) == RE15_FW_FLUG_RY && s16(r + 0x018BC) == RE15_FW_FLUG_RZ,
               "Super_reset @0x018B6");
         CHECK(s16(r + 0x019FC) == RE15_FW_LIEG_RX && s16(r + 0x01A00) == RE15_FW_LIEG_RZ, "Dir_set Landung @0x019FA");
@@ -109,7 +117,7 @@ static void t_quelle(void)
         CHECK(memcmp(a + 0x010CE, b + 0x010CE, 32) == 0, "Tuer Slot 4 5090 != 5091");
         CHECK(a[0x010CE] == 0x3b && a[0x010CF] == 4 && s16(a + 0x010D4) == RE15_FW_TUER_X0 && s16(a + 0x010D6) == RE15_FW_TUER_Z0 &&
               s16(a + 0x010D8) == RE15_FW_TUER_W && s16(a + 0x010DA) == RE15_FW_TUER_D &&
-              RE15_FW_TUER_X == RE15_FW_TUER_X0 + RE15_FW_TUER_W / 2 && RE15_FW_TUER_Z == RE15_FW_TUER_Z0 + RE15_FW_TUER_D / 2,
+              RE15_FW_TUER_X == RE15_FW_TUER_X0 && RE15_FW_TUER_Z == RE15_FW_TUER_Z0 + RE15_FW_TUER_D / 2,
               "Tuer-AOT Slot 4 @0x010CE (%d,%d %dx%d)", s16(a + 0x010D4), s16(a + 0x010D6), s16(a + 0x010D8), s16(a + 0x010DA));
         /* AOT-Slot 6 frei: main00 belegt 0..5 (Door_aot_set @0x0104E + 32 i) */
         for (int i = 0; i < 6; i++) CHECK(a[0x0104E + 32 * i] == 0x3b && a[0x0104F + 32 * i] == i, "5090 main00 Slot %d", i);
@@ -128,6 +136,10 @@ static void t_quelle(void)
         CHECK(hex_gleich(e, ne, 0x800 + 0x800334b0 - 0x80010000, "07004224"), "%s: Wurf `addiu v0,v0,7` @0x800334b0", exes[k]);
         CHECK(hex_gleich(e, ne, 0x800 + 0x800336fc - 0x80010000, "16000234 13006214") &&
               e[0x800 + 0x800336fc - 0x80010000] == RE15_FW_LOS_BILD, "%s: Loslassbild `ori v0,zero,0x16` @0x800336fc", exes[k]);
+        /* Runde 3: NPC-Plc_dest-Subs @0x80076ca0: [4] = 0x80051148 Gehen, [5] = 0x80051484 Laufen (RE15_FW_GEHEN_MODUS = 5) */
+        const size_t ot = 0x800 + 0x80076ca0 - 0x80010000;
+        CHECK(ot + 24 <= ne && u32(e + ot + 16) == 0x80051148u && u32(e + ot + 4 * RE15_FW_GEHEN_MODUS) == 0x80051484u,
+              "%s: NPC-Sub-Tabelle @0x80076ca0 [4]/[5]", exes[k]);
         free(e);
     }
 }
@@ -149,7 +161,7 @@ static void t_programm(void)
         0x2b, RE15_FW_MSG_ZURUF, 0x00, 0x00,
         0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_FW_SIG_GELANDET, 0x00,
         0x09, 0x0a, 0x0f, 0x00, 0x22, 0x05, RE15_FW_SIG_REAKTION, 0x01, 0x29, RE15_FW_CUT_REAKTION, 0x09, 0x0a, 0x01, 0x00,
-        0x40, 0x00, RE15_FW_GEHEN_MODUS, RE15_FW_SIG_TUER, 0x00, 0x64, 0xe3, 0xa4,   /* (25600, -23325) */
+        0x40, 0x00, RE15_FW_GEHEN_MODUS, RE15_FW_SIG_TUER, 0x3e, 0x62, 0xe3, 0xa4,   /* (25150, -23325) Vorderkante Tuer-AOT */
         0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_FW_SIG_TUER, 0x00,
         0x29, 12 };
     CHECK(n > (int)sizeof soll_kopf && memcmp(p, soll_kopf, sizeof soll_kopf) == 0, "Programm (sub12 @0x0181A-0x01948) weicht ab");
@@ -191,7 +203,9 @@ static void t_bahn(void)
         const int32_t ddx = lx - f[3], ddz = lz - f[4], djx = RE15_FW_JOHN_X - f[3], djz = RE15_FW_JOHN_Z - f[4];
         const int32_t dl = (int32_t)re15_squareroot0((uint32_t)(ddx * ddx + ddz * ddz));
         const int32_t dj = (int32_t)re15_squareroot0((uint32_t)((int64_t)djx * djx + (int64_t)djz * djz));
-        CHECK(dl <= RE15_FW_LANDUNG_ABSTAND + 2 && dl <= dj / 2 + 2, "Fall %u: Landestelle (%d,%d) %d vom Spieler", k, lx, lz, dl);
+        /* Spieler im Aufnahme-Rechteck um die Landestelle, mit Rand; hoechstens halbe Strecke; laengs des Wagens (Fall 0) = 1600 */
+        CHECK(abs(ddx) <= RE15_FW_AOT_W / 2 - RE15_FW_LANDUNG_RAND + 2 && abs(ddz) <= RE15_FW_AOT_D / 2 - RE15_FW_LANDUNG_RAND + 2 &&
+              dl <= dj / 2 + 2 && (k != 0 || (dl >= 1598 && dl <= 1602)), "Fall %u: Landestelle (%d,%d) %d vom Spieler", k, lx, lz, dl);
         re15_finale_wurf_startwerte(f, lx, lz, vv, aa, &g);
         re15_finale_wurf_bahn(f, vv, aa, e, &nb);
         const int32_t fx = e[0] - lx, fz = e[2] - lz;
@@ -244,9 +258,9 @@ static void t_modelle(void)
     uint8_t *r = slurp(RE15_REPO_ROOT "/info/re2leon/PL0/RDT/ROOM7020.RDT", &nr);
     size_t nw = 0;
     uint8_t *w9 = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/PLD/PL00W09.PLW", &nw);
-    uint8_t *m = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/../RE2/R702_WERFER.MD1", &nm);
-    uint8_t *t = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/../RE2/R702_WERFER.TIM", &nt);
-    CHECK(j && r && m && t, "JOHN_49_WURF.EMD / ROOM7020.RDT / R702_WERFER.* fehlen");
+    uint8_t *m = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/" RE15_FW_W12_DATEI, &nm);
+    uint8_t *t = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/PLD/PL04W12.PLW", &nt);
+    CHECK(j && r && m && t, "JOHN_49_WURF.EMD / ROOM7020.RDT / PL00W12.PLW / PL04W12.PLW fehlen");
     CHECK(w9 != NULL, "PL00W09.PLW fehlt");
     if (j && w9) {
         re15_emd_skeleton_t sk; re15_emd_animation_t an;
@@ -275,14 +289,43 @@ static void t_modelle(void)
             CHECK(ok, "Clips 24/25 != PL00W09.PLW Clip 6/7 (Keyframes/Flags)");
         }
     }
-    if (r && m && t) {
-        CHECK(nm == 0x2788 - 0x2044 && memcmp(m, r + 0x2044, nm) == 0, "R702_WERFER.MD1 != ROOM7020 @0x2044..0x2788");
-        CHECK(nt == nr - 0x24F9C && memcmp(t, r + 0x24F9C, nt) == 0, "R702_WERFER.TIM != ROOM7020 @0x24F9C..Ende");
+    if (m && t) {
+        /* PLW: u32 dir_off, dir = 4 x u32 (EDD, EMR, MD1, TIM); TIM endet am Verzeichnis */
+        const uint32_t dm = u32(m), m2 = u32(m + dm + 8), m3 = u32(m + dm + 12);
+        const uint32_t dt = u32(t), t3 = u32(t + dt + 12);
         re15_md1_t md; memset(&md, 0, sizeof md);
-        CHECK(re15_md1_parse(m, (int)nm, &md) == 0 && md.mesh_count >= 1, "R702_WERFER.MD1 nicht lesbar");
+        CHECK(m2 < m3 && m3 < dm && re15_md1_parse(m + m2, (int)(m3 - m2), &md) == 0 && md.mesh_count == 1, "PL00W12 dir[2] nicht lesbar");
+        if (md.mesh_count == 1) {
+            const re15_md1_mesh_t *hm = &md.meshes[0];
+            int band = 0, rest_ok = 1, ymin = 99999, ymax = -99999, umin = 999, umax = -1, vmax = -1;
+            for (int i = 0; i < hm->triangle_count; i++) {
+                const re15_md1_tri_uv_t *uv = &hm->triangle_uvs[i];
+                const int ist = uv->v0 >= RE15_FW_W12_V_MIN && uv->v1 >= RE15_FW_W12_V_MIN && uv->v2 >= RE15_FW_W12_V_MIN;
+                const int hand = uv->v0 < RE15_FW_W12_V_MIN && uv->v1 < RE15_FW_W12_V_MIN && uv->v2 < RE15_FW_W12_V_MIN;
+                if (!ist && !hand) rest_ok = 0;
+                if (!ist) continue;
+                band++;
+                const uint8_t us[3] = { uv->u0, uv->u1, uv->u2 }, vs[3] = { uv->v0, uv->v1, uv->v2 };
+                const uint32_t vi[3] = { hm->triangles[i].v0, hm->triangles[i].v1, hm->triangles[i].v2 };
+                for (int k = 0; k < 3; k++) {
+                    if (us[k] < umin) umin = us[k];
+                    if (us[k] > umax) umax = us[k];
+                    if (vs[k] > vmax) vmax = vs[k];
+                    const int y = hm->tri_vertices[vi[k]].y;
+                    if (y < ymin) ymin = y;
+                    if (y > ymax) ymax = y;
+                }
+            }
+            CHECK(hm->triangle_count == 72 && band == 38 && rest_ok, "PL00W12: %d Dreiecke, Waffenband %d (soll 72/38, keine gemischten)",
+                  hm->triangle_count, band);
+            CHECK(umin == RE15_FW_W12_U0 && umax == 127 && vmax == 255, "Waffenband UV u %d..%d v ..%d (soll 72..127, ..255)", umin, umax, vmax);
+            CHECK(ymin == -744 && ymax == 1027 && RE15_FW_W12_LAENGE == ymax - ymin, "Rohr y %d..%d", ymin, ymax);
+        }
         re15_tim_t tm; memset(&tm, 0, sizeof tm);
-        CHECK(re15_tim_parse(t, (int)nt, &tm) == 0 && tm.bpp == 8, "R702_WERFER.TIM nicht lesbar / nicht 8 bpp");
-        printf("modelle: Werfer %d Meshes, TIM %d bpp %dx%d\n", md.mesh_count, tm.bpp, tm.width, tm.height);
+        CHECK(re15_tim_parse(m + m3, (int)(dm - m3), &tm) == 0 && tm.bpp == 8 && tm.width == 56 && tm.height == 32,
+              "PL00W12 dir[3] nicht 8 bpp 56x32 (%d bpp %dx%d)", tm.bpp, tm.width, tm.height);
+        CHECK(dm - m3 == dt - t3 && memcmp(m + m3, t + t3, dm - m3) == 0, "PL04W12 dir[3] != PL00W12 dir[3]");
+        printf("modelle: Werfer = PL00W12 Waffenband, TIM %d bpp %dx%d\n", tm.bpp, tm.width, tm.height);
     }
     free(j); free(r); free(m); free(t); free(w9);
 }

@@ -279,6 +279,35 @@ static uint32_t rd32le(const uint8_t *p)
  * ihrer Summe erreicht (Drehung unter 256 oder keine: Lage y/z; Lage x ist die Kamerafahrt zur
  * Tuer hin). Anfang =
  * vor der ersten Bewegung irgendeines Objekts nach dem Einblenden (Bild 16..20). */
+/* Runde 42 Strang finale, Stufe 3 Runde 3 (engine/src/finale_wurf_r42.c, Haken re15_finale_wurf_tuer_ton_hook): John verlaesst Wagen C
+ * durch die Tuer, an der der Port beim Spieler die RE2-Sequenz spielt. Ohne Bildfolge: dieselbe Skriptmaschine wie die echte Sequenz
+ * (re15_door_seq_start/_bild, Trockenlauf wie bogen_bilder) bis zum ERSTEN Se_on der Tuerbank (vab 0), dieser Ton wird gespielt
+ * (Tonteil des Archivs wie im Szenenpfad, re15_audio_re2_tuer_laden). Rueckgabe = Tonkopf-Eintrag, -1 = kein Ton/kein Archiv. */
+int re15_pc_tuer_ton_vorspielen(const re15_door_seq_anfrage_t *a)
+{
+    if (!a || a->archiv != RE15_DOOR_ARCHIV_RE2) return -1;
+    re2_archiv_t arch;
+    if (re2_archiv_lesen(a->re2_nr, a->eigen, &arch) != 0) return -1;
+    static re15_door_seq_t t;
+    if (re15_door_seq_start(&t, arch.modell, arch.n_modell, a->variante, a->bit7 ? 0x80 : 0, a->tuer_nr) != 0) {
+        free(arch.datei); return -1;
+    }
+    const int ton_ok = re15_audio_re2_tuer_laden(arch.ton, arch.n_ton);
+    int bild = 0, se = -1, se_bild = -1;
+    while (bild < 4000 && se < 0 && re15_door_seq_bild(&t, 1)) {
+        for (int i = 0; i < t.n_ton; i++)
+            if (t.ton[i].vab == 0 && se < 0) { se = t.ton[i].se; se_bild = bild; }
+        bild++;
+    }
+    if (se >= 0 && ton_ok) re15_audio_re2_tuer_se(se);
+    extern long re15_audio_cap_tick(void);   /* audio_pc.c: Mitschnitt-Takt (Messschiene Ton/Bild) */
+    fprintf(stderr, "[tuer] Finale-Abgang F%u capTick %ld: DOOR%02X V%d S%03u erster Tuerbank-Ton Eintrag %d (Sequenzbild %d), Tonteil %s\n",
+            (unsigned)g_engine.frame_count, re15_audio_cap_tick(), a->re2_nr, a->variante, a->seite, se, se_bild,
+            ton_ok ? "geladen" : "nicht spielbar");
+    free(arch.datei);
+    return se;
+}
+
 static int32_t absdiff16(uint16_t a, uint16_t b) { int32_t d = (int16_t)(uint16_t)(a - b); return d < 0 ? -d : d; }
 
 static void bogen_bilder(const uint8_t *teil, int n, const re15_door_seq_anfrage_t *a, int *anfang, int *mitte)

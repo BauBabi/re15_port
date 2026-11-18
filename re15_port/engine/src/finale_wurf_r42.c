@@ -27,6 +27,12 @@
 #include "re15_math.h"            /* re15_squareroot0 */
 #include "re15_room.h"            /* g_room_rdt (Kameras der Schnitte) */
 #include "re15_camera.h"          /* re15_camera_build_view */
+#include "re15_esp.h"             /* re15_esp_fx_get (Messzeile Landestelle) */
+#include "re15_door_seq.h"        /* re15_door_seq_zuordnen_flaeche (Tuerton beim Abgang) */
+
+/* PC: Tuerton der Tuer, durch die John geht (platform/pc/src/door_scene_pc.c re15_pc_tuer_ton_vorspielen); NULL = stumm (PSX, Riegel). */
+static int (*s_tuer_ton)(const re15_door_seq_anfrage_t *q);
+void re15_finale_wurf_tuer_ton_hook(int (*fn)(const re15_door_seq_anfrage_t *q)) { s_tuer_ton = fn; }
 
 extern unsigned g_current_room_id;
 /* finale_r42.c */
@@ -68,6 +74,9 @@ static struct {
     int      abgang, abgang_t;        /* John geht ab (Takt des Reaktions-Signals) */
     int32_t  jx_alt, jz_alt; int gegangen;
     int      john_weg;
+    int      an_tuer;                 /* John ist an der Tuer angekommen (Signal an das Programm, noch NICHT geparkt) */
+    int      parken_offen;            /* RE2 @0x01954: parken, sobald ihn das aktuelle Bild nicht zeigt */
+    int32_t  start[3];                /* Loslasslage (Schnitt im Flug nach einer Werferlaenge) */
     int      prog_n, item_at;
     unsigned takt, t0;
     int      z_an, z_aus;             /* Messzeile: Zuruf stand von/bis (Takt) */
@@ -140,8 +149,8 @@ static int im_bild(int cut, int32_t x, int32_t y, int32_t z, int *u_rel, int *v_
     return u >= -160 && u <= 160 && w >= -120 && w <= 120;
 }
 
-/* Teil 10 + Versatz (0,600,-50) im Bild `bild` des laufenden Clips (Paar 1 bei Sub 1, sonst Paar 2): Weltlage + Weltdrehung
- * (Super_set @0x01854: Teil-Matrix x Objekt-Drehung (-896,0,1024), Lage = Teil-Matrix * Versatz). 0 = keine Bank. */
+/* Teil 11 (rechte Hand) im Bild `bild` des laufenden Clips (Paar 1 bei Sub 1, sonst Paar 2): Weltlage + Weltdrehung der Teil-Matrix =
+ * der Rahmen, in dem das PL00W12-Waffenband liegt (Kopf RE15_FW_TEIL: Leons Griff). 0 = keine Bank. */
 static int hand_welt(const re15_actor_t *n, int bild, int32_t pos[3], int32_t rot[9])
 {
     const re15_enemy_bank_t *bk = re15_enemy_find(n->type);
@@ -161,28 +170,25 @@ static int hand_welt(const re15_actor_t *n, int bild, int32_t pos[3], int32_t ro
     g_anim_pose_actor = pa;
     if (rv != 0) return 0;
     const re15_skel_pose_t *t = &p[RE15_FW_TEIL];
-    const int32_t o[3] = {
-        t->trans[0] + (int32_t)(((int64_t)t->rot[1] * RE15_FW_VERSATZ_Y + (int64_t)t->rot[2] * RE15_FW_VERSATZ_Z) >> 12),
-        t->trans[1] + (int32_t)(((int64_t)t->rot[4] * RE15_FW_VERSATZ_Y + (int64_t)t->rot[5] * RE15_FW_VERSATZ_Z) >> 12),
-        t->trans[2] + (int32_t)(((int64_t)t->rot[7] * RE15_FW_VERSATZ_Y + (int64_t)t->rot[8] * RE15_FW_VERSATZ_Z) >> 12) };
-    re15_skel_bone_to_world(o, n->rot_y, n->x, n->y, n->z, pos);
+    re15_skel_bone_to_world(t->trans, n->rot_y, n->x, n->y, n->z, pos);
     if (rot) {
-        int32_t my[9], mo[9], tmp[9];
+        int32_t my[9];
         mat_y(n->rot_y, my);
-        re15_skel_euler_matrix(RE15_FW_HAND_RX, 0, RE15_FW_HAND_RZ, mo);
-        mat_mul(my, t->rot, tmp);
-        mat_mul(tmp, mo, rot);
+        mat_mul(my, t->rot, rot);                                      /* wie main.c WEAPON-IN-HAND: Teil-11-Matrix, keine Zusatzdrehung */
     }
     return 1;
 }
 
-/* RE2-Drehung (rx, ry, rz) fuer Adas Gier 3700, im Port um (Gier John - 3700) um die Welt-Hochachse gedreht (Kopf). */
+/* RE2-Drehung (rx, ry, rz) fuer Adas Gier 3700 und das R702-Modell, im Port um (Gier John - 3700) um die Welt-Hochachse gedreht und
+ * ueber die Achsenzuordnung W12 -> R702 (Kopf RE15_FW_TEIL: W12-y -> R702-x, W12-x -> R702-y, W12-z -> -R702-z) auf das W12-Modell. */
+static const int32_t s_w12_nach_r702[9] = { 0, 4096, 0,   4096, 0, 0,   0, 0, -4096 };
 static void dreh_aus_re2(int rx, int ry, int rz, int32_t rot[9])
 {
-    int32_t e[9], my[9];
+    int32_t e[9], my[9], t[9];
     re15_skel_euler_matrix(rx, ry, rz, e);
     mat_y((int16_t)((s_w.john_gier - RE15_FW_ADA_GIER) & 0xfff), my);
-    mat_mul(my, e, rot);
+    mat_mul(my, e, t);
+    mat_mul(t, s_w12_nach_r702, rot);
 }
 
 int re15_finale_wurf_werfer_lage(int32_t pos[3], int32_t rot[9])
@@ -255,8 +261,11 @@ void re15_finale_wurf_landestelle(int32_t px, int32_t pz, int32_t jx, int32_t jz
 {
     const int32_t dx = jx - px, dz = jz - pz;
     const int32_t d = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
-    int32_t k = RE15_FW_LANDUNG_ABSTAND;
-    if (k > d / 2) k = d / 2;
+    /* der Spieler steht im Rechteck (halbe Masse 1700 x 1250) um die Landestelle: |k ux| <= 1700 - Rand, |k uz| <= 1250 - Rand */
+    const int32_t adx = dx < 0 ? -dx : dx, adz = dz < 0 ? -dz : dz;
+    int32_t k = d / 2;
+    if (adx) { const int32_t kx = (int32_t)((int64_t)(RE15_FW_AOT_W / 2 - RE15_FW_LANDUNG_RAND) * d / adx); if (kx < k) k = kx; }
+    if (adz) { const int32_t kz = (int32_t)((int64_t)(RE15_FW_AOT_D / 2 - RE15_FW_LANDUNG_RAND) * d / adz); if (kz < k) k = kz; }
     *lx = d ? px + (int32_t)((int64_t)dx * k / d) : px;
     *lz = d ? pz + (int32_t)((int64_t)dz * k / d) : pz;
 }
@@ -284,13 +293,13 @@ static void programm_bauen(void)
     PUT(OP_SIG(RE15_FW_SIG_REAKTION));                               /* Dir_set @0x018E0 (Takt) */
     PUT(OP_CUT(RE15_FW_CUT_REAKTION));                               /* Cut_chg 11 @0x018FC -> 13 */
     PUT(OP_SLEEP(RE15_FW_SCHLAF_1));                                 /* @0x018FE */
-    PUT(OP_DEST(RE15_FW_GEHEN_MODUS, RE15_FW_SIG_TUER, RE15_FW_TUER_X, RE15_FW_TUER_Z));   /* Plc_dest @0x0193A: John geht zur Tuer */
-    PUT(OP_POLL(RE15_FW_SIG_TUER));                                  /* durch die Tuer (Takt parkt ihn, @0x01954) */
-    PUT(OP_CUT((uint8_t)s_w.cut));                                   /* Work_copy + Cut_chg @0x01944/@0x01948: gemerkte Kamera */
+    PUT(OP_DEST(RE15_FW_GEHEN_MODUS, RE15_FW_SIG_TUER, RE15_FW_TUER_X, RE15_FW_TUER_Z));   /* Plc_dest @0x0193A: John laeuft zur Tuer */
+    PUT(OP_POLL(RE15_FW_SIG_TUER));                                  /* PORT-WAHL statt Wsleep @0x01942: bis er an der Tuer ist */
+    PUT(OP_CUT((uint8_t)s_w.cut));                                   /* Work_copy + Cut_chg @0x01944/@0x01948: gemerkte Kamera, VOR dem Parken */
     s_w.item_at = n;                                                 /* Aot_reset 5 @0x0194A: Werfer aufhebbar (Item_aot_set, Kopf) */
     PUT(0x50, RE15_FW_AOT_SLOT, 0x09, 0x31, 0x00, 0x00, LE16(0), LE16(0), LE16(RE15_FW_AOT_W), LE16(RE15_FW_AOT_D),
         LE16(RE15_FW_ITEM), LE16(RE15_FW_ANZAHL), LE16(RE15_R42_BIT_WERFER_FINALE), 0xff, 0x00);
-    PUT(OP_SIG(RE15_FW_SIG_ENDE));                                   /* @0x01968-0x019A6 (Takt) */
+    PUT(OP_SIG(RE15_FW_SIG_ENDE));                                   /* John parken @0x01950-0x01960 + @0x01968-0x019A6 (Takt) */
     PUT(OP_SLEEP(RE15_FW_SCHLAF_1));                                 /* @0x019AA */
     PUT(OP_WORK(1, 0), 0x42, 0x00);                                  /* sub18 Work_set + Plc_ret @0x01B54/@0x01B57 */
     PUT(OP_SET(2, 7, 0), OP_SET(1, 27, 0));                          /* @0x01B58 / @0x01B5C */
@@ -331,7 +340,7 @@ int re15_finale_wurf_start(int form_slot)
     s_w.fx = e->x;  s_w.fz = e->z;  s_w.fg = e->rot_y;
     s_w.f_motion = e->motion; s_w.f_frame = e->anim_frame; s_w.f_frac = e->anim_frac;
     s_w.z_an = s_w.z_aus = -1;
-    s_w.bild0 = 0; s_w.flug_schnitt = 0; s_w.abgang = 0; s_w.john_weg = 0;
+    s_w.bild0 = 0; s_w.flug_schnitt = 0; s_w.abgang = 0; s_w.john_weg = 0; s_w.an_tuer = 0; s_w.parken_offen = 0;
     static const uint8_t sigs[] = { RE15_FW_SIG_WURF, RE15_FW_SIG_GELANDET, RE15_FW_SIG_REAKTION, RE15_FW_SIG_ENDE, RE15_FW_SIG_TUER };
     for (unsigned i = 0; i < sizeof sigs; i++) sig_setzen(sigs[i], 0);
     programm_bauen();
@@ -387,6 +396,7 @@ static void loslassen(void)
     }
     re15_finale_wurf_landestelle(pl->x, pl->z, RE15_FW_JOHN_X, RE15_FW_JOHN_Z, &s_w.ziel_x, &s_w.ziel_z);
     memcpy(s_w.pos, p0, sizeof s_w.pos);                             /* Super_reset @0x018B6: Weltlage der Hand */
+    memcpy(s_w.start, p0, sizeof s_w.start);
     re15_finale_wurf_startwerte(s_w.pos, s_w.ziel_x, s_w.ziel_z, s_w.v, s_w.a, &s_w.flug_gier);
     s_w.flug_n = 0;
     s_w.w = RE15_FW_W_FLUG;
@@ -417,12 +427,18 @@ static void flug_takt(void)
         LOG("Flug %d: y %d, Schnitt 13 Bild-y/1000 %d", s_w.flug_n, s_w.pos[1], i13 ? v : -9999);
         LOG("Flug %d: im Bild Schnitt 13 %d, Kamera des Spielers %d", s_w.flug_n, i13, ic);
         (void)u; (void)u2; (void)v2;
-        /* PORT-WAHL (Kopf "Ablauf"): Schnitt auf die Kamera des Spielers im ersten Flugbild, in dem der Werfer in ihrem Bild ist -
-         * er bleibt so in jedem Bild sichtbar und landet sichtbar neben dem Spieler (RE2 hat eine Kamera fuer Wurf und Landung). */
-        if (!s_w.flug_schnitt && s_w.cut != RE15_FW_CUT_WURF && ic) {
+        /* PORT-WAHL (Kopf "Ablauf", Runde 3): Schnitt auf die Kamera des Spielers, sobald der Werfer eine Werferlaenge (PL00W12-Rohr,
+         * RE15_FW_W12_LAENGE) von der Loslasslage weg ist - er hat Johns Hand sichtbar verlassen. Runde 2 schnitt erst, als er im Bild
+         * des Spielers war (Flugbild 14): 13 Bilder + Standbild des Schnitts hing er im Schnitt 13 ueber Johns Kopf (Pruefbericht s3 r2,
+         * Rot 2). Der Schnitt kostet das gehaltene Bild + 6 Standbilder (kamerahalt_r41.c KH_STANDBILDER, @0x80021d2c), die Logik steht
+         * dabei mit. */
+        const int64_t ddx = s_w.pos[0] - s_w.start[0], ddy = s_w.pos[1] - s_w.start[1], ddz = s_w.pos[2] - s_w.start[2];
+        const int32_t weg = (int32_t)re15_squareroot0((uint32_t)(ddx * ddx + ddy * ddy + ddz * ddz));
+        if (!s_w.flug_schnitt && s_w.cut != RE15_FW_CUT_WURF && weg >= RE15_FW_W12_LAENGE) {
             s_w.flug_schnitt = 1;
             kamera(s_w.cut);
             LOG("Schnitt auf die Kamera des Spielers %d im Flugbild %d", s_w.cut, s_w.flug_n, 0);
+            LOG("Schnitt: Werfer %d von der Loslasslage (Werferlaenge %d), im Bild des Spielers %d", weg, RE15_FW_W12_LAENGE, ic);
         }
     }
     if (weiter && s_w.flug_n < RE15_FW_FLUG_MAX) return;
@@ -441,6 +457,18 @@ static void flug_takt(void)
         const int32_t dx = s_w.pos[0] - pl->x, dz = s_w.pos[2] - pl->z;
         LOG("Landung nach %d Flugbildern bei (%d,%d)", s_w.flug_n, s_w.pos[0], s_w.pos[2]);
         LOG("Landung: Abstand zum Spieler %d", (int)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz)), 0, 0);
+        int u = 0, v = 0;
+        const int ib = im_bild(s_w.cut, s_w.pos[0], -100, s_w.pos[2], &u, &v);
+        LOG("Landung im Bild der Kamera %d: %d, Bild-x/1000 %d", s_w.cut, ib, u);
+        LOG("Landung: Bild-y/1000 %d; Spieler Bild-x/1000 folgt", v, 0, 0);
+        if (im_bild(s_w.cut, pl->x, -100, pl->z, &u, &v)) LOG("Landung: Spieler Fuesse Bild-x/1000 %d Bild-y/1000 %d", u, v, 0);
+        for (int i = 0; i < RE15_ESP_FX_MAX; i++) {                   /* Messzeile: Effekte (Flammen) um die Landestelle */
+            const re15_esp_fx_t *fx = re15_esp_fx_get(i);
+            if (!fx) continue;
+            const int32_t ex = fx->x - s_w.pos[0], ez = fx->z - s_w.pos[2];
+            if (ex > -3000 && ex < 3000 && ez > -3000 && ez < 3000)
+                LOG("Landung: Effekt-Platz %d bei (%d,%d) relativ", i, ex, ez);
+        }
     }
 }
 
@@ -453,33 +481,67 @@ static void reaktion(void)
     LOG("Reaktion: Spieler (%d,%d) blickt zu John, Gier %d", pl->x, pl->z, pl->rot_y);
 }
 
-/* John durch die Tuer (Kopf "Abgang"): er geht zur Tuer, bis ihn die Wand davor haelt (Wandklemme Radius 450 wie der Spieler,
- * re15_collision.c; kein Fortschritt mehr in Blickrichtung), und benutzt sie wie der Spieler: der Punkt 620 voraus (`ori 0x26c` @0x80042bd0, FUN_80042bac) liegt im
- * Tuer-AOT (FUN_80042b64). Dann wird er geparkt (Ada @0x01954-0x01960). Ebenso bei Ankunft (Plc_dest-Bit) oder im AOT selbst. */
+/* John sichtbar im Schnitt `cut`? Quader RE15_FW_JOHN_HUELLE_* um seine Lage, 8 Ecken; eine Ecke im Bild = sichtbar. */
+static int john_sichtbar(const re15_actor_t *n, int cut)
+{
+    for (int i = 0; i < 8; i++) {
+        const int32_t x = n->x + ((i & 1) ? RE15_FW_JOHN_HUELLE_XZ : -RE15_FW_JOHN_HUELLE_XZ);
+        const int32_t z = n->z + ((i & 2) ? RE15_FW_JOHN_HUELLE_XZ : -RE15_FW_JOHN_HUELLE_XZ);
+        const int32_t y = (i & 4) ? -RE15_FW_JOHN_HUELLE_Y : 0;
+        if (im_bild(cut, x, y, z, NULL, NULL)) return 1;
+    }
+    return 0;
+}
+
+/* RE2 @0x01954-0x01960: Ada parken (hier: John aus, nicht gezeichnet). */
+static void john_parken(re15_actor_t *n, const char *warum)
+{
+    LOG("John geparkt bei (%d,%d)", n->x, n->z, 0);
+    re15_finale_r42_wurf_protokoll(warum, (int)g_scd.cam_id, 0, 0);
+    n->active = 0; n->no_draw = 1;
+    s_w.john_weg = 1; s_w.parken_offen = 0;
+}
+
+/* John laeuft zur Tuer (Kopf "Abgang"): Ankunft = Plc_dest-Bit (Lauf-Sub 5 < 300 @0x80051764), die Wand vor der Tuer haelt ihn (kein
+ * Fortschritt mehr in Blickrichtung, Wandklemme wie der Spieler) oder der Punkt 620 voraus (`ori 0x26c` @0x80042bd0, FUN_80042bac) liegt
+ * im Tuer-AOT (FUN_80042b64). Dann NUR das Signal an das Programm - geparkt wird erst nach dem Schnitt zurueck (RE2 @0x01948 vor
+ * @0x01954), in ende(). */
 static void abgang_takt(void)
 {
     re15_actor_t *n = john();
-    if (!n || s_w.john_weg) return;
+    if (!n || s_w.john_weg || s_w.an_tuer) return;
     const int32_t c = re15_cos_q12(n->rot_y & 0xfff), sn = re15_sin_q12(n->rot_y & 0xfff);
     const int32_t vx = n->x + ((620 * c) >> 12), vz = n->z - ((620 * sn) >> 12);
     const int vorn_in_tuer = vx >= RE15_FW_TUER_X0 && vx <= RE15_FW_TUER_X0 + RE15_FW_TUER_W &&
                              vz >= RE15_FW_TUER_Z0 && vz <= RE15_FW_TUER_Z0 + RE15_FW_TUER_D;
     const int im_aot = n->x >= RE15_FW_TUER_X0 && n->x <= RE15_FW_TUER_X0 + RE15_FW_TUER_W &&
                        n->z >= RE15_FW_TUER_Z0 && n->z <= RE15_FW_TUER_Z0 + RE15_FW_TUER_D;
-    /* Fortschritt in Blickrichtung (vorwaerts(g) = (cos, -sin)): > 0 = er geht, <= 0 nach dem Gehen = die Wand haelt ihn (er gleitet
-     * hoechstens seitlich an ihr entlang) */
+    /* Fortschritt in Blickrichtung (vorwaerts(g) = (cos, -sin)): > 0 = er laeuft, <= 0 nach dem Laufen = die Wand haelt ihn */
     const int32_t vor = (int32_t)((((int64_t)(n->x - s_w.jx_alt) * c) - ((int64_t)(n->z - s_w.jz_alt) * sn)) >> 12);
     if (vor > 0 && (int)s_w.takt > s_w.abgang_t + 1) s_w.gegangen = 1;
     const int an_der_wand = s_w.gegangen && vor <= 0 && vorn_in_tuer;
     const int notbremse = (int)s_w.takt - s_w.abgang_t >= RE15_FW_ABGANG_MAX;
     s_w.jx_alt = n->x; s_w.jz_alt = n->z;
-    if (im_aot || an_der_wand || sig(RE15_FW_SIG_TUER) || notbremse) {
-        LOG("John durch die Tuer bei (%d,%d) nach %d Bildern", n->x, n->z, (int)s_w.takt - s_w.abgang_t);
-        LOG("John Gier %d, Punkt voraus (%d,%d) im Tuer-AOT", n->rot_y, vx, vz);
+    const int bit = sig(RE15_FW_SIG_TUER);
+    if (im_aot || an_der_wand || bit || notbremse) {
+        LOG("John an der Tuer bei (%d,%d) nach %d Bildern", n->x, n->z, (int)s_w.takt - s_w.abgang_t);
+        LOG("John Gier %d, Punkt voraus (%d,%d)", n->rot_y, vx, vz);
+        LOG("Ankunft: Plc_dest-Bit %d, Wand %d, im AOT %d", bit, an_der_wand, im_aot);
         if (notbremse) LOG("Abgang per Notbremse", 0, 0, 0);
-        n->active = 0; n->no_draw = 1;
-        s_w.john_weg = 1;
+        s_w.an_tuer = 1;
         sig_setzen(RE15_FW_SIG_TUER, 1);
+        /* PORT-WAHL "Tuer hoerbar" (Pruefbericht s3 r2: "die Tuer oeffnet sich sichtbar bzw. hoerbar (Tuergeraeusch ... aus dem
+         * Original belegen)"): der erste Ton der Tuersequenz, die der Port an GENAU dieser Tuer spielt (Tuer-AOT Slot 4 @0x010CE ->
+         * gen/tuer_zuordnung.inc Zeile S283/T144 bzw. 5091 -> RE2-Archiv, Se_on der Tuerbank). RE2 hat fuer Adas Abgang keinen Ton
+         * (sub12 @0x0193A-0x01960 ohne Se_on) - sie verlaesst einen Steg, keine Tuer. */
+        re15_door_seq_anfrage_t q;
+        memset(&q, 0, sizeof q);
+        const int arch = re15_door_seq_zuordnen_flaeche(g_current_room_id & 0xFFFFu, 0, RE15_FW_TUER_X0 + RE15_FW_TUER_W / 2,
+                                                        RE15_FW_TUER_Z0 + RE15_FW_TUER_D / 2, RE15_FW_TUER_W / 2,
+                                                        RE15_FW_TUER_D / 2, NULL, NULL, 0, &q);
+        const int se = (arch != RE15_DOOR_ARCHIV_KEINS && s_tuer_ton) ? s_tuer_ton(&q) : -1;
+        LOG("Tuerton: Archiv %d DOOR%02X Variante %d", arch, q.re2_nr, q.variante);
+        LOG("Tuerton: Seite S%03d, Se_on Tuerbank Eintrag %d (-1 = stumm)", (int)q.seite, se, 0);
     }
 }
 
@@ -487,7 +549,14 @@ static void ende(void)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_actor_t *n = john();
-    if (n) { n->active = 0; n->no_draw = 1; }                          /* Ada parken @0x01954-0x01960 */
+    if (n && !s_w.john_weg) {                                          /* Ada parken @0x01954-0x01960, NACH dem Schnitt @0x01948 */
+        if (john_sichtbar(n, (int)g_scd.cam_id)) {
+            s_w.parken_offen = 1;
+            LOG("John bleibt an der Tuer: im Bild der Kamera %d nach dem Schnitt", (int)g_scd.cam_id, 0, 0);
+        } else {
+            john_parken(n, "Wurf: John ausser Bild der Kamera %d nach dem Schnitt zurueck (RE2 @0x01948 vor @0x01954)");
+        }
+    }
     if (s_w.form >= 0) {
         re15_actor_t *e = &g_actors[s_w.form];
         if (s_w.form_versteckt) e->no_draw = 0;
@@ -516,6 +585,11 @@ void re15_finale_wurf_takt(void)
         LOG("aufgehoben: Anzahl %d/%d", z0 >= 0 ? g_inv.slots[z0].qty : -1, z1 >= 0 ? g_inv.slots[z1].qty : -1, 0);
         for (int i = 0; i < 10; i++)
             LOG("Inventar Zelle %d: Gegenstand 0x%02x Anzahl %d", i, g_inv.slots[i].id, g_inv.slots[i].qty);
+    }
+    if (s_w.parken_offen && !s_w.aktiv) {
+        re15_actor_t *nj = john();
+        if (!nj) s_w.parken_offen = 0;
+        else if (!john_sichtbar(nj, (int)g_scd.cam_id)) john_parken(nj, "Wurf: John ausser Bild der Kamera %d - jetzt geparkt");
     }
     if (!s_w.aktiv) return;
     if (s_w.form >= 0 && s_w.form < RE15_ACTOR_MAX) form_ruht(&g_actors[s_w.form]);
