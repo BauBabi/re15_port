@@ -13,6 +13,7 @@
 #include "re15_engine.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "gen/ungenutzt_r42_texte.inc"
 
@@ -222,6 +223,10 @@ const uint8_t *re15_ungenutzt_r42_evt_exec(uint16_t room_id, uint8_t sub, const 
 {
     if (room_id != RE15_U42_RAUM_3091) return pc;
     if (sub == RE15_U42_3091_SUB_SZENE) {
+        /* MESSHAKEN RE15_U42_ORIGINAL (env, KEIN Spielverhalten): die ausgelieferte Mod-Szene unveraendert laufen lassen - fuer
+         * integration_r41_stage3szenen_b_3091, das die Clipfolge der Mod-Szene gegen den DuckStation-GDB-Lauf prueft (die neue
+         * Fassung pruefen unit_r42_ungenutzt_szene/_bytes). */
+        if (getenv("RE15_U42_ORIGINAL")) { U42_LOG("ROOM3091 sub07: Messhaken RE15_U42_ORIGINAL -> Mod-Szene"); return pc; }
         if (!szene_bauen()) { g_re15_u42_zaehler[4]++; U42_LOG("ROOM3091 sub07: Pruefbytes anders - Original"); return pc; }
         g_re15_u42_zaehler[1]++;
         U42_LOG("ROOM3091 sub07: Blick zur Hoftuer (%d,%d), Zeilen %d (John) und %d (Elza), Programm %d B - U-01",
