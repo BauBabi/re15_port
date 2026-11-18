@@ -3454,6 +3454,20 @@ static void pc_cam_present_apply(const re15_rdt_t *rdt, int rdt_ok)
                     g_re15_light_tint[2]);
         }
     }
+    /* Runde 42 Gegenstaende Stufe 2 (re15_rechnerbilder_r42.h): Standbild = BSS-Bild ohne Kamera (2080/2081 Bild 9). Die Kamera
+     * bleibt; nur der Hintergrund-Puffer zeigt Scheibe n (bg_pc.c Original-Scheibe n * 0x10000), am Ende wieder den laufenden
+     * Cut. Figuren, Schatten und Masken verwirft der Bildschluss (unten bei re15_menu_is_open). */
+    {
+        extern int re15_rb42_standbild(void);
+        static int s_rb42_geladen = -1;
+        const int sb = re15_rb42_standbild();
+        if (sb != s_rb42_geladen) {
+            const int rv = re15_bg_load_cut(sb >= 0 ? sb : active_cut_idx);
+            fprintf(stderr, "[rechnerbilder42] F%u ROOM%04X Standbild %d -> %d (Hintergrund %s %d, rv=%d)\n", g_engine.frame_count,
+                    g_current_room_id, s_rb42_geladen, sb, sb >= 0 ? "Bild" : "Cut", sb >= 0 ? sb : active_cut_idx, rv);
+            s_rb42_geladen = sb;
+        }
+    }
 }
 
 /* MESSSCHIENE RE15_CUT_SYNC_LOG=<datei> (Runde 30, Spur cut-blitz; KEIN Verhalten).
@@ -12073,10 +12087,11 @@ re_title:;
          * end_frame composites the queued 3D meshes, character-shadow blobs AND the room PRI
          * overdraw rects ON TOP of the framebuffer — the PSX screen task draws none of the frozen
          * scene, so drop all three while the menu is open. */
-        if (re15_menu_is_open()) {
+        { extern int re15_rb42_standbild(void);   /* Runde 42 Gegenstaende Stufe 2: Standbild ohne Figuren (re15_rechnerbilder_r42.h) */
+        if (re15_menu_is_open() || re15_rb42_standbild() >= 0) {
             extern void re15_render_pc_clear_scene_overlays(void);
             re15_render_pc_clear_scene_overlays();
-        }
+        } }
 
         /* ITEM-GET MODAL overlay: hand the current-frame item quad to the renderer. It is drawn
          * AFTER the 3D meshes in end_frame (see re15_render_pc_item_modal) so the zooming/flipping

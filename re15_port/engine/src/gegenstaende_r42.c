@@ -16,6 +16,7 @@
 
 #include "gen/gegenstaende_r42_texte.inc"
 #include "gen/gegenstaende_r42_bilder.inc"
+#include "gen/gegenstaende_r42_karte.inc"   /* Stufe 2: Blue Master Keycard 0x47 mit "MICHAEL" (tools/r42_gegenstaende/michaelkarte.py) */
 
 /* Bruecken-Bits (re15_ventilkette_r41.h RE15_R41C_BIT_DRUCK80 / _BRUECKE_UNTEN, Bank 9) und Pult-Ereignis 24
  * (RE15_R41C_EV_PULT): hier als Zahl, damit der Strang keinen Kopf der Ventilkette einbinden muss. */
@@ -334,4 +335,9 @@ void re15_gegenstaende_r42_bild_einsetzen(uint8_t *itps, int size)
         memcpy(b + 0x14, k_g42_kapsel_clut, sizeof k_g42_kapsel_clut);
         memcpy(b + 0x220, bild[k], 112 * 72);
     }
+    /* Stufe 2 (Konzept T-09, Uebergabe 11-17 "Kartenbild Michael"): Block 0x47 @0xD5000 = Blue Master Keycard. Nur das Bild
+     * (+0x220, 112x72) wird ersetzt, die CLUT (+0x14) bleibt die des Blocks; geaendert sind nur die Pixel des alten Namens
+     * "GORO / MACIDA" (Herleitung und Messung im Kopf von gen/gegenstaende_r42_karte.inc). */
+    if ((RE15_G42_KARTE_ID + 1) * 0x3000 <= size)
+        memcpy(itps + RE15_G42_KARTE_ID * 0x3000 + 0x220, k_g42_karte47, sizeof k_g42_karte47);
 }

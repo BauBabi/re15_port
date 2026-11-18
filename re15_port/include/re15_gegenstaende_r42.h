@@ -134,7 +134,11 @@ int re15_gegenstaende_r42_kein_heilmittel(uint8_t item_id);
 int re15_gegenstaende_r42_paar(uint8_t id_a, uint8_t id_b, uint8_t *res, uint8_t *pic);
 
 /* ITPS-Puffer (alle drei Ladestellen wie re15_gatorszene_r41_bild_einsetzen): Item-Bilder der Kapseln 0x1E..0x20 = ihre
- * Inventar-Kachel 2-fach (tools/r42_gegenstaende/kapselbilder.py); die Mod-/Disc-Bloecke tragen nur Capcoms Platzhalter. */
+ * Inventar-Kachel 2-fach (tools/r42_gegenstaende/kapselbilder.py); die Mod-/Disc-Bloecke tragen nur Capcoms Platzhalter.
+ * Stufe 2: Block 0x47 (Blue Master Keycard, Item 0x47; Fundort ROOM4010 main00 @0x00592) traegt "MICHAEL" statt "GORO / MACIDA"
+ * (tools/r42_gegenstaende/michaelkarte.py; nur Bild +0x220, CLUT +0x14 bleibt). Die Notiz in 4010 (msg 39 @0x183D) nennt Michael.
+ * ULTIMATE 1.5 nimmt fuer 0x47 kein Disc-Bild (re15_ultimate15_bild_quelle), zeigt also dasselbe Bild. */
+#define RE15_G42_KARTE_ID   0x47
 void re15_gegenstaende_r42_bild_einsetzen(uint8_t *itps, int size);
 
 /* Pruefhaken (Riegel). */
