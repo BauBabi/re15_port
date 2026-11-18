@@ -45,11 +45,20 @@ const re15_kartenitem_r36_t *re15_kartenitems_r36_des_raums(uint16_t room_id)
 
 /* Runde 42: genommen = ALLE Bits des Plans gesetzt. Fehlt eines (frischer Stand, oder alter Spielstand mit
  * einem einzelnen Etagenplan der Runde 36), haengt der Plan und setzt bei der Aufnahme alle. */
+/* Zeile ohne Gruppe (n_blaetter 0, z.B. eine spaeter von Hand eingetragene Zeile im alten 13-Felder-Format) zaehlt als
+ * Ein-Blatt-Plan mit blatt/bit — sonst hinge sie nie (leere Gruppe = "alle genommen"). */
+static int n_von(const re15_kartenitem_r36_t *z)
+{
+    return z->n_blaetter < 1 ? 1 : (z->n_blaetter > RE15_R36K_MAX_BLAETTER ? RE15_R36K_MAX_BLAETTER : z->n_blaetter);
+}
+static uint8_t bit_von(const re15_kartenitem_r36_t *z, int i)   { return z->n_blaetter < 1 ? z->bit : z->bits[i]; }
+static uint8_t blatt_von(const re15_kartenitem_r36_t *z, int i) { return z->n_blaetter < 1 ? z->blatt : z->blaetter[i]; }
+
 int re15_kartenitems_r36_genommen(const re15_kartenitem_r36_t *z)
 {
     if (!z) return 0;
-    for (int i = 0; i < z->n_blaetter && i < RE15_R36K_MAX_BLAETTER; i++)
-        if (!re15_game_flag_get(RE15_R36K_BANK, z->bits[i])) return 0;
+    for (int i = 0; i < n_von(z); i++)
+        if (!re15_game_flag_get(RE15_R36K_BANK, bit_von(z, i))) return 0;
     return 1;
 }
 
@@ -181,15 +190,15 @@ const uint8_t *re15_kartenitems_r36_programm(uint16_t room_id, int *out_len)
     if (out_len) *out_len = 0;
     if (k < 0) return NULL;
     const re15_kartenitem_r36_t *z = &k_r36k_lage[k];
-    int n = z->n_blaetter < 1 ? 1 : (z->n_blaetter > RE15_R36K_MAX_BLAETTER ? RE15_R36K_MAX_BLAETTER : z->n_blaetter);
+    int n = n_von(z);
     int extra = 4 * (n - 1);
     /* Kopf bis einschliesslich erstem Set, dann die weiteren Sets, dann der Rest der Vorlage. */
     memcpy(s_programm, k_programm, PRG_SET + 4);
     s_programm[PRG_SLOT] = z->aot_slot;
-    s_programm[PRG_BIT]  = z->bits[0];
+    s_programm[PRG_BIT]  = bit_von(z, 0);
     for (int i = 1; i < n; i++) {
         uint8_t *q = s_programm + PRG_SET + 4 * i;
-        q[0] = 0x22; q[1] = RE15_R36K_BANK; q[2] = z->bits[i]; q[3] = 0x01;   /* Set(9,Bit,1) = RE2 @0x037DE/@0x037E2 */
+        q[0] = 0x22; q[1] = RE15_R36K_BANK; q[2] = bit_von(z, i); q[3] = 0x01;   /* Set(9,Bit,1) = RE2 @0x037DE/@0x037E2 */
     }
     memcpy(s_programm + PRG_SET + 4 + extra, k_programm + PRG_SET + 4, sizeof k_programm - (PRG_SET + 4));
     s_programm[PRG_IFEL] = (uint8_t)(k_programm[PRG_IFEL] + extra);           /* Blockende wandert mit */
@@ -257,8 +266,8 @@ const uint8_t *re15_kartenitems_r36_tim_bytes(uint16_t room_id, int *out_size)
 int re15_kartenitems_r36_blatt_besitz(unsigned page)
 {
     for (int k = 0; k < N_ZEILEN; k++)
-        for (int i = 0; i < k_r36k_lage[k].n_blaetter && i < RE15_R36K_MAX_BLAETTER; i++)
-            if (k_r36k_lage[k].blaetter[i] == page && re15_game_flag_get(RE15_R36K_BANK, k_r36k_lage[k].bits[i]))
+        for (int i = 0; i < n_von(&k_r36k_lage[k]); i++)
+            if (blatt_von(&k_r36k_lage[k], i) == page && re15_game_flag_get(RE15_R36K_BANK, bit_von(&k_r36k_lage[k], i)))
                 return 1;
     return 0;
 }
@@ -267,8 +276,8 @@ uint32_t re15_kartenitems_r36_besitz_bits(void)
 {
     uint32_t m = 0;
     for (int k = 0; k < N_ZEILEN; k++)
-        for (int i = 0; i < k_r36k_lage[k].n_blaetter && i < RE15_R36K_MAX_BLAETTER; i++)
-            if (k_r36k_lage[k].blaetter[i] < 32 && re15_game_flag_get(RE15_R36K_BANK, k_r36k_lage[k].bits[i]))
-                m |= (uint32_t)1u << k_r36k_lage[k].blaetter[i];
+        for (int i = 0; i < n_von(&k_r36k_lage[k]); i++)
+            if (blatt_von(&k_r36k_lage[k], i) < 32 && re15_game_flag_get(RE15_R36K_BANK, bit_von(&k_r36k_lage[k], i)))
+                m |= (uint32_t)1u << blatt_von(&k_r36k_lage[k], i);
     return m;
 }
