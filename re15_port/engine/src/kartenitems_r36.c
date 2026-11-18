@@ -113,11 +113,12 @@ void re15_kartenitems_r36_install(uint16_t room_id)
         g_scd.props[i].active     = 1;
         g_scd.props[i].obj_id     = RE15_R36K_OBJ;
         g_scd.props[i].obj_type   = 0;                     /* pc[2] -> pool+8 @0x8004095c   */
-        /* pc[4] -> pool+130 @0x80040974. Runde 42 Stufe 2: eine Etage UEBER dem Standort wie die Wandobjekte der Disc -
-         * ROOM1200 obj 0/1 @0x007DA/@0x00804 Band 1 (Boden Band 0), ROOM2000 obj 0..2 @0x016E6/@0x01708/@0x0172A Band 2
-         * (Gehweg Band 1), ROOM6000 obj 0/1 @0x00E16/@0x00E38 Band 3 (Absatz Band 2). Im Band des Spielers waere das Plakat
-         * fuer die Klettersonde ein Objekt (FUN_8002d2c0 @0x8002d370 Band-Gate, Kasten 0 mit Rand -112 trifft fast ueberall):
-         * gemessen 2000, Aktion vor der Wand -> Klettern auf y -3600 statt Ereignis 28. Stufe 1 (Band 0): 1 wie bisher. */
+        /* pc[4] -> pool+130 @0x80040974. Runde 42 Stufe 2: eine Etage UEBER dem Standort = PORT-WAHL AUS MESSUNG, keine
+         * Disc-Regel (Kopf re15_kartenitems_r36.h PROP-BAND; die frueher hier als Vorbild genannten Wandobjekte ROOM2000
+         * @0x016E6.., ROOM6000 @0x00E16, ROOM1200 @0x007DA zeigen keine +1-Regel). Im Band des Spielers waere das Plakat fuer
+         * die Klettersonde ein Objekt (FUN_8002d2c0 @0x8002d364-70 Band-Gate obj+0x82 == Spieler-Band, Kasten FUN_8002da4c
+         * mit Rand -112 trifft fast ueberall): GEGENPROBE B gemessen in 2000 - Aktion vor der Wand -> Klettern auf y -3600
+         * statt Ereignis 28 (unit kanal + integration_r42_lageplaene2_weg rot). Stufe 1 (Band 0): 1 wie bisher. */
         g_scd.props[i].band       = (uint8_t)(g->band + RE15_R36K_PROP_BAND);
         g_scd.props[i].parent_obj = -1;                    /* pc[5] = 0x00 = Weltraum        */
         g_scd.props[i].x = g->x;
@@ -135,12 +136,13 @@ void re15_kartenitems_r36_install(uint16_t room_id)
     /* ZONE — EVENT-Satz wie ROOM5030 sub00 @0x0108A (sce 3, sat 0x31, p0 0x00FF, p1 = Sub<<8|0x18). */
     if (g->aot_slot >= RE15_AOT_MAX || ist_unsere_zone(g->aot_slot)) return;
     if (g->verdraengt_nach < RE15_AOT_MAX) {
-        /* ROOM1030/1031: Slot 8 ist der Muenztelefon-Satz (main00 Aot_set @0x01D2E bzw. @0x01D9C,
-         * sce 1, Rechteck 4096 x 4096 ueber der ganzen Rueckwand). Der Aktions-Scan nimmt je Druck den
+        /* ROOM1030/1031 (Nacharbeit): Slot 9 ist die Notfall-Tafel (main00 Aot_set @0x01D42, sce 1, msg 4,
+         * Rechteck x 480..2864 z -15769..-14139 vor der Ostwand). Der Aktions-Scan nimmt je Druck den
          * KLEINSTEN treffenden Slot (FUN_80042bac, aot_common.c "one action handler per press") — die
          * Karte in einem hohen Slot waere dort nie erreichbar. Der Satz zieht deshalb unveraendert in
-         * den freien Slot verdraengt_nach um, die Karte nimmt seinen Platz; ausserhalb ihres Rechtecks
-         * antwortet das Telefon wie bisher, nach der Aufnahme (Aot_reset(8,0)) ueberall. */
+         * den freien Slot verdraengt_nach (39) um, die Karte nimmt seinen Platz; ausserhalb ihres Rechtecks
+         * antwortet die Tafel wie bisher, nach der Aufnahme (Aot_reset(9,0)) ueberall. (Bis zur Nacharbeit
+         * war es Slot 8 = Muenztelefon @0x01D2E an der alten Stelle der Rueckwand.) */
         if (g_aot.slots[g->aot_slot].active) {
             if (g_aot.slots[g->verdraengt_nach].active) return;   /* kein freier Platz: nichts anlegen */
             satz_umziehen(g->aot_slot, g->verdraengt_nach);
@@ -157,10 +159,14 @@ void re15_kartenitems_r36_install(uint16_t room_id)
     re15_aot_retype(g->aot_slot, RE15_R36K_AOT_SCE, RE15_R36K_AOT_SAT, RE15_R36K_AOT_P0,
                     (uint16_t)((RE15_R36K_EREIGNIS << 8) | 0x18), 0);
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[kartenitems] ROOM%04X: Karte Blatt %d (Bit 9,%d) Prop obj %d bei (%ld,%ld,%ld), "
-                    "Zone Slot %d%s\n", (unsigned)room_id, g->blatt, g->bit, RE15_R36K_OBJ,
-            (long)g->x, (long)g->y, (long)g->z, g->aot_slot,
-            g->verdraengt_nach < RE15_AOT_MAX ? " (Muenztelefon -> Slot 39)" : "");
+    {
+        char umzug[48] = "";
+        if (g->verdraengt_nach < RE15_AOT_MAX)
+            snprintf(umzug, sizeof umzug, " (verdraengter Satz -> Slot %d)", (int)g->verdraengt_nach);
+        fprintf(stderr, "[kartenitems] ROOM%04X: Karte Blatt %d (Bit 9,%d) Prop obj %d bei (%ld,%ld,%ld), "
+                        "Zone Slot %d%s\n", (unsigned)room_id, g->blatt, g->bit, RE15_R36K_OBJ,
+                (long)g->x, (long)g->y, (long)g->z, g->aot_slot, umzug);
+    }
 #endif
 }
 
@@ -169,7 +175,7 @@ void re15_kartenitems_r36_install(uint16_t room_id)
  * dem Endif (0x010B2 + 4 + 0x1E = 0x010D4). Vorlage mit EINEM Set: +0x06 + 4 + 0x2C = +0x36.
  * Runde 42: je weiteres Blatt des Plans ein weiteres `22 09 bb 01` direkt hinter dem ersten (wie RE2 room20B0
  * Set(33,2) @0x037DA, Set(33,3) @0x037DE, Set(33,4) @0x037E2 hintereinander); jedes verlaengert den
- * Ifel-Block um 4 Byte. Revierplan: 3 Sets -> 64 Byte, Ifel-Laenge 0x34; Kellerplan: 2 Sets -> 60 Byte, 0x30. */
+ * Ifel-Block um 4 Byte. Revierplan (Nacharbeit, mit Dach): 4 Sets -> 68 Byte, Ifel-Laenge 0x38; Kellerplan: 2 Sets -> 60 Byte, 0x30. */
 static const uint8_t k_programm[] = {
     /* +00 */ 0x2b, RE15_R36K_MSG_FRAGE, 0xff, 0xff,   /* Message_on 30 (Frage), Maske 0xFFFF  = ROOM5030 sub02 @0x010AC */
     /* +04 */ 0x02, 0x00,                              /* Evt_next + Nop                       = @0x010B0                 */

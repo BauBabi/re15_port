@@ -4,6 +4,8 @@
  * 89/88/87) und Kellerplan ROOM1200 (Blatt 1/0, Bits 77/78); die Wandplaene 1140/10D0/11D0 sind entfernt
  * (NUTZERWUNSCH 18.11.: "nicht benötigte maps kommen weg."). Der eigene Riegel der Umstellung ist
  * test_r42_lageplaene.c; dieser Test misst weiter die Mechanik (Prop, Zone, Druck, Karte, Spielstand).
+ * NACHARBEIT (Strang lageplaene_nach): Revierplan zusaetzlich Dach (Blatt 5, Bit 42) und an der Ostwand der Lobby neben
+ * der Ausgangstuer (Slot 9 = Notfall-Tafel @0x01D42 zieht nach Slot 39; das Muenztelefon Slot 8 bleibt unberuehrt).
  *
  * Jeder Teil misst die MECHANIK am echten Port-Code (echte RDT, scd_room_reenter mit allen
  * Port-Installern, echter Bild-Ablauf re15_game_step -> Aktions-Scan -> scd_event_fire ->
@@ -12,8 +14,8 @@
  *      1.1), MD1/TIM parsen, die 5 MD1 unterscheiden sich NUR in den Ecken (@0x44, 40 Byte),
  *      Texte = RE2-Wortlaut (room2130 sub00/sub12-Rahmen), Frage hat die Auswahl (0x03).
  *   R  Raumstart Leon UND Elza (xxx0/xxx1): Prop obj 15 an Lage/Drehung der Tabelle, EVENT-Satz
- *      Ereignis 28 (sce 3, sat 0x31) im Slot; ROOM1030/1031: Muenztelefon-Satz in Slot 39.
- *   G  Bit gesetzt -> kein Prop, keine Zone, ROOM1030 Slot 8 bleibt das Telefon.
+ *      Ereignis 28 (sce 3, sat 0x31) im Slot; ROOM1030/1031: Notfall-Tafel (msg 4) in Slot 39.
+ *   G  Bit gesetzt -> kein Prop, keine Zone, ROOM1030 Slot 9 bleibt die Tafel.
  *   D  echter Druck vor der Karte (1140 Leon, 10D1 Elza): Frage 30 -> Ja -> Bit (9,87/88),
  *      Zone weg (Aot_reset), Modell bei (20000,20000,20000) (RE2 Pos_set @0x037F6), Meldung 31;
  *      Nein -> nichts genommen, Zone bleibt.
@@ -132,8 +134,8 @@ static void teil_t(void)
      * seit dem Nachtrag kartenbits (90/91 = Original-Taken-Bits ROOM2090 @0x00A12 / ROOM2040 @0x01364). */
     static const uint16_t raeume[2] = { 0x1030, 0x1200 };
     static const uint8_t  bits[2]   = { 89, 77 };
-    static const uint8_t  n_soll[2] = { 3, 2 };
-    static const uint8_t  alle_bl[2][3] = { { 2, 3, 4 }, { 1, 0, 0 } }, alle_bits[2][3] = { { 89, 88, 87 }, { 77, 78, 0 } };
+    static const uint8_t  n_soll[2] = { 4, 2 };   /* Nacharbeit: Revierplan + Dach (Blatt 5, Bit 42) */
+    static const uint8_t  alle_bl[2][4] = { { 2, 3, 4, 5 }, { 1, 0, 0, 0 } }, alle_bits[2][4] = { { 89, 88, 87, 42 }, { 77, 78, 0, 0 } };
     static const char    *name[2]   = { "police station map", "police basement map" };
     static const char    *art[2]    = { "You've taken a", "You've taken the" };   /* RE2 room20B0 @0x3DB8 / room2130 @0x1D57 */
     CHECK("5 Zeilen (Runde 42: Revier + Keller, Stufe 2 Kanalisation/Fabrik/U-Bahn - die drei prueft unit_r42_lageplaene2)",
@@ -194,13 +196,14 @@ static void teil_t(void)
      * hintereinander wie RE2 room20B0 Set(33,2) @0x037DA, Set(33,3) @0x037DE, Set(33,4) @0x037E2. */
     int pl = 0;
     const uint8_t *p = re15_kartenitems_r36_programm(0x1030, &pl);
-    CHECK("Revierplan: Programm 64 Byte, Aot_reset auf Slot 8 (1030), Set(9,89,1) Set(9,88,1) Set(9,87,1)",
-          p && pl == 64 && p[0x0E] == 0x46 && p[0x0F] == 8 &&
+    CHECK("Revierplan: Programm 68 Byte, Aot_reset auf Slot 9 (1030), Set(9,89,1) Set(9,88,1) Set(9,87,1) Set(9,42,1) (Dach)",
+          p && pl == 68 && p[0x0E] == 0x46 && p[0x0F] == 9 &&
           p[0x1C] == 0x22 && p[0x1D] == 9 && p[0x1E] == 89 && p[0x1F] == 1 &&
           p[0x20] == 0x22 && p[0x21] == 9 && p[0x22] == 88 && p[0x23] == 1 &&
-          p[0x24] == 0x22 && p[0x25] == 9 && p[0x26] == 87 && p[0x27] == 1 && p[0x28] == 0x2e);
-    CHECK("Revierplan: Ifel_ck-Blockende = hinter dem Endif (+0x0A + 0x34 = +0x3E)",
-          p && p[0x06] == 0x06 && p[0x08] == 0x34 && p[0x3C] == 0x08 && p[0x3E] == 0x01);
+          p[0x24] == 0x22 && p[0x25] == 9 && p[0x26] == 87 && p[0x27] == 1 &&
+          p[0x28] == 0x22 && p[0x29] == 9 && p[0x2A] == 42 && p[0x2B] == 1 && p[0x2C] == 0x2e);
+    CHECK("Revierplan: Ifel_ck-Blockende = hinter dem Endif (+0x0A + 0x38 = +0x42)",
+          p && p[0x06] == 0x06 && p[0x08] == 0x38 && p[0x40] == 0x08 && p[0x42] == 0x01);
     p = re15_kartenitems_r36_programm(0x1200, &pl);
     CHECK("Kellerplan: Programm 60 Byte, Aot_reset Slot 40, Set(9,77,1) Set(9,78,1), Ifel 0x30, Endif +0x38",
           p && pl == 60 && p[0x0F] == 40 && p[0x1E] == 77 && p[0x22] == 78 && p[0x24] == 0x2e &&
@@ -244,13 +247,15 @@ static void teil_rg(raum_t *r)
               a->x == z->rect_x + 500 && a->z == z->rect_z + 500);
     if (z->verdraengt_nach < RE15_AOT_MAX) {
         const re15_aot_t *t = &g_aot.slots[z->verdraengt_nach];
-        snprintf(nm, sizeof nm, "Muenztelefon (Aot_set Slot 8, 4096x4096) in Slot %d umgezogen", z->verdraengt_nach);
-        CHECK(nm, t->active && t->type == RE15_AOT_TYPE_MESSAGE && t->half_w == 2048 && t->half_h == 2048);
+        snprintf(nm, sizeof nm, "Notfall-Tafel (Aot_set Slot 9 @0x01D42, msg 4, 2384 x 1631) in Slot %d umgezogen",
+                 z->verdraengt_nach);
+        CHECK(nm, t->active && t->type == RE15_AOT_TYPE_MESSAGE && t->event_id == 4 &&
+                  t->x - t->half_w == 480 && t->z - t->half_h == -15769);
     }
     /* zweiter Installer-Lauf (Boot-Weg nach Tuer-Weg) aendert nichts */
     int pc0 = (int)g_scd.prop_count;
     re15_kartenitems_r36_install(r->id);
-    CHECK("Installer idempotent (kein zweites Prop, Telefon nicht ueberschrieben)",
+    CHECK("Installer idempotent (kein zweites Prop, Tafel nicht ueberschrieben)",
           (int)g_scd.prop_count == pc0 &&
           (z->verdraengt_nach >= RE15_AOT_MAX || g_aot.slots[z->verdraengt_nach].type == RE15_AOT_TYPE_MESSAGE));
 
@@ -261,7 +266,7 @@ static void teil_rg(raum_t *r)
           !(g_aot.slots[z->aot_slot].active && g_aot.slots[z->aot_slot].type == RE15_AOT_TYPE_GENERIC &&
             g_aot.slots[z->aot_slot].event_id == RE15_R36K_EREIGNIS));
     if (z->verdraengt_nach < RE15_AOT_MAX)
-        CHECK("Bit gesetzt -> Slot 8 bleibt das Muenztelefon, Slot 39 leer",
+        CHECK("Bit gesetzt -> Slot 9 bleibt die Notfall-Tafel, Slot 39 leer",
               g_aot.slots[z->aot_slot].type == RE15_AOT_TYPE_MESSAGE && !g_aot.slots[z->verdraengt_nach].active);
     CHECK("Bit gesetzt -> Ereignis 28 liefert kein Programm", re15_kartenitems_r36_ereignis(r->id, 28) == NULL);
 }
@@ -350,13 +355,13 @@ static void teil_d(raum_t *r, int ja, int32_t px, int32_t pz)
         snprintf(nm, sizeof nm, "JA -> Blatt %d im Besitz und waehlbar", z->blatt);
         CHECK(nm, re15_map_owned_page(z->blatt) && re15_map_blatt_waehlbar(z->blatt));
         if (z->verdraengt_nach < RE15_AOT_MAX) {
-            /* ROOM1030/1031: nach der Aufnahme antwortet an derselben Stelle wieder das Telefon (Slot 39).
+            /* ROOM1030/1031: nach der Aufnahme antwortet an derselben Stelle wieder die Tafel (Slot 39).
              * Erst die Meldung 31 wegdruecken (Ende-Code 01 00 = auf Taste warten). */
             for (int f = 0; f < 200 && g_scd.message_active; f++) bild(f % 20 == 0 ? RE15_PAD_BIT_SQUARE : 0,
                                                                       f % 20 == 0 ? RE15_PAD_BIT_SQUARE : 0);
             for (int f = 0; f < 30; f++) bild(0, 0);
             CHECK("Meldung 31 weggedrueckt", !g_scd.message_active);
-            CHECK("Telefon-Satz steht nach der Aufnahme weiter in Slot 39",
+            CHECK("Tafel-Satz steht nach der Aufnahme weiter in Slot 39",
                   g_aot.slots[z->verdraengt_nach].active && g_aot.slots[z->verdraengt_nach].type == RE15_AOT_TYPE_MESSAGE);
             int tel = (int)g_aot.slots[z->verdraengt_nach].event_id, gesehen = 0;
             bild(RE15_PAD_BIT_SQUARE, RE15_PAD_BIT_SQUARE);
@@ -364,7 +369,7 @@ static void teil_d(raum_t *r, int ja, int32_t px, int32_t pz)
                 if (g_scd.message_active && (int)g_scd.message_id == tel) gesehen = 1;
                 bild(0, 0);
             }
-            snprintf(nm, sizeof nm, "zweiter Druck an derselben Stelle -> Telefon-Text (Nachricht %d)", tel);
+            snprintf(nm, sizeof nm, "zweiter Druck an derselben Stelle -> Tafel-Text (Nachricht %d)", tel);
             CHECK(nm, gesehen);
         }
     } else {
@@ -490,9 +495,9 @@ int main(void)
         teil_rg(&raeume[i]);
     }
     /* D: Standorte aus der Abdeckungsmessung (probe_r34n_e_dokumente abdeckung, Dossier 3.4) */
-    teil_d(&raeume[0], 1, -1690, -22900);    /* 1030 Leon, vor der Rueckwand (Slot 8, Telefon -> 39) */
-    teil_d(&raeume[1], 0, -1690, -22900);    /* 1031 Elza, NEIN                                      */
-    teil_d(&raeume[1], 1, -1690, -22900);    /* 1031 Elza, JA                                        */
+    teil_d(&raeume[0], 1, 1700, -14000);     /* 1030 Leon, Streifen Bank/Tuer (Slot 9, Tafel -> 39)  */
+    teil_d(&raeume[1], 0, 1700, -14000);     /* 1031 Elza, NEIN                                      */
+    teil_d(&raeume[1], 1, 1700, -14000);     /* 1031 Elza, JA                                        */
     teil_d(&raeume[3], 1, -25700, -15683);   /* 1201 Elza, vor der Vitrinenfront (x -26330, SCA 6)   */
     teil_k();
     teil_s();

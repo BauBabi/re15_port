@@ -307,10 +307,12 @@ static void teil_alt(void)
     re15_game_flag_set(BANK9, 89, 1);
     PRUEFE(besitz() == 0x04, "nur Bit 89: Blatt 2 (1F) im Besitz (0x%02X)", besitz());
     PRUEFE(haengt(0x1030) == 1, "nur Bit 89 (alter 1F-Plan genommen): Revierplan haengt trotzdem in ROOM1030");
-    /* alle drei */
+    /* alle drei Etagen-Bits. Nacharbeit (Strang lageplaene_nach): der Revierplan gibt auch das Dach (Blatt 5, Bit 42) -
+     * ohne Bit 42 haengt er deshalb noch (Riegel unit_r42_lageplaene3_dach), mit allen vier nicht mehr. */
     re15_game_state_init();
     for (int b = 87; b <= 89; b++) re15_game_flag_set(BANK9, (uint8_t)b, 1);
-    PRUEFE(haengt(0x1030) == 0 && haengt(0x1031) == 0, "Bits 87/88/89: Revierplan haengt nicht mehr");
+    re15_game_flag_set(BANK9, 42, 1);
+    PRUEFE(haengt(0x1030) == 0 && haengt(0x1031) == 0, "Bits 87/88/89 (+ Dach 42): Revierplan haengt nicht mehr");
     /* nur B1 (Bit 78, alter Plan ROOM11D0) */
     re15_game_state_init();
     re15_game_flag_set(BANK9, 78, 1);

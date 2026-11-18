@@ -18,7 +18,8 @@
  *   ubahn    6000 UND 6001 (Band des Treppenabsatzes): Bit 37, Blatt 12
  *   texte    RE2-Wortlaut "There's a <Plan>. / Will you take it?" und "You've taken / the <Plan>."
  *   sicht    die Plakatflaeche liegt auf der SCA-Wand (Bytes aus dem RDT an der zitierten Stelle) und ganz im Bild der
- *            zitierten Kamera (re15_camera_build_view), 1080 x 720 wie das RE2-MD1
+ *            zitierten Kamera (re15_camera_build_view), in BEIDEN Fassungen (2000/2001, 30C1, 6000/6001; Nacharbeit);
+ *            Kanalisation/U-Bahn 1080 x 720 wie das RE2-MD1, Fabrik 2160 x 1440 (Nacharbeit s = 2)
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -334,56 +335,67 @@ static void teil_texte(void)
 }
 
 /* ------------------------------------------------------------------------------------------------ sicht */
+/* Nacharbeit (Strang lageplaene_nach, Pruefer s2 gelb 7): der Riegel prueft BEIDE Fassungen (raum und raum2 = Elzas 2001/6001;
+ * die SCA-Zelle steht dort am selben Datei-Offset, ROOM2001 @0x012A4 und ROOM6001 @0x00828 mit denselben Bytes, Kamera 11 bzw. 0
+ * dieselbe). Groesse: s aus den MD1-Ecken (Kanalisation/U-Bahn 1080 x 720 = RE2 karte01; Fabrik seit der Nacharbeit s = 2,
+ * 2160 x 1440, PORT-WAHL "gut SICHTBAR"); die Flaeche liegt 85 * s vor dem Prop-Ursprung (karten_export.py). */
 static void teil_sicht(void)
 {
-    printf("=== sicht: Plakat auf der SCA-Wand und ganz im Bild der Ankunfts-/Pflichtkamera ===\n");
+    printf("=== sicht: Plakat auf der SCA-Wand und ganz im Bild der Ankunfts-/Pflichtkamera (Leon- UND Elza-Fassung) ===\n");
+    static const int16_t k_soll_breite[3] = { 1080, 2160, 1080 };   /* Fabrik s = 2 (Nacharbeit) */
     for (int i = 0; i < 3; i++) {
         const soll_t *s = &k_soll[i];
-        const re15_kartenitem_r36_t *z = re15_kartenitems_r36_des_raums(s->raum);
-        double M[3], n[3];
-        if (!z || lage(z, M, n) != 0) { PRUEFE(0, "ROOM%04X: keine Zeile", (unsigned)s->raum); continue; }
-        raum_t r;
-        if (raum_laden(&r, s->raum) != 0) continue;
-        /* Wand aus den RDT-Bytes: 12-B-Eintrag w u16, d u16, x s16, z s16 (re15_rdt.h re15_sca_entry_t) */
-        const uint8_t *e = r.buf + s->sca_off;
-        int32_t w = (int32_t)(e[0] | (e[1] << 8)), x0 = (int16_t)(e[4] | (e[5] << 8)), z0 = (int16_t)(e[6] | (e[7] << 8));
-        int32_t kante = s->achse == 0 ? x0 + w : z0;
-        double wand = s->achse == 0 ? M[0] : M[2];
-        PRUEFE(kante == s->kante && fabs(wand - kante) < 1.0,
-               "ROOM%04X: SCA @0x%05X Kante %ld (soll %ld), Plakatflaeche bei %.1f", (unsigned)s->raum, (unsigned)s->sca_off,
-               (long)kante, (long)s->kante, wand);
-        PRUEFE(fabs(M[1] - (s->boden - 2000)) < 1.0, "ROOM%04X: Mitte %.0f = Boden %ld - 2000 (PORT-WAHL Augenhoehe)",
-               (unsigned)s->raum, M[1], (long)s->boden);
-        re15_camera_view_t v;
-        int ok = s->cut < r.rdt.cut_count && re15_camera_build_view(&r.rdt.cuts[s->cut], &v) == 0;
-        double rx[3] = { n[2], 0, -n[0] };   /* rechts = unten x (-n), unten = (0,1,0) */
-        int drin = ok;
-        double bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9;
-        for (int a = -1; ok && a <= 1; a += 2)
-            for (int b = -1; b <= 1; b += 2) {
-                double p[3] = { M[0] + a * 540.0 * rx[0], M[1] + b * 360.0, M[2] + a * 540.0 * rx[2] };
-                double vx = (v.rot[0] * p[0] + v.rot[1] * p[1] + v.rot[2] * p[2]) / 4096.0 + v.trans[0];
-                double vy = (v.rot[3] * p[0] + v.rot[4] * p[1] + v.rot[5] * p[2]) / 4096.0 + v.trans[1];
-                double vz = (v.rot[6] * p[0] + v.rot[7] * p[1] + v.rot[8] * p[2]) / 4096.0 + v.trans[2];
-                if (vz <= 0) { drin = 0; continue; }
-                double sx = 160.0 + v.fov_screen_dist * vx / vz, sy = 120.0 + v.fov_screen_dist * vy / vz;
-                if (sx < 0 || sx >= 320 || sy < 0 || sy >= 240) drin = 0;
-                if (sx < bx0) bx0 = sx; if (sx > bx1) bx1 = sx; if (sy < by0) by0 = sy; if (sy > by1) by1 = sy;
+        for (int f = 0; f < 2; f++) {
+            uint16_t raum = f == 0 ? s->raum : s->raum2;
+            if (!raum) continue;
+            const re15_kartenitem_r36_t *z = re15_kartenitems_r36_des_raums(raum);
+            int msz = 0;
+            const uint8_t *md1 = re15_kartenitems_r36_md1_bytes(raum, &msz);
+            int16_t ex0 = 0, ex1 = 0, ez0 = 0, ez1 = 0;
+            for (int k = 0; md1 && k < 5 && 0x44 + 8 * k + 6 <= msz; k++) {
+                int16_t mx = (int16_t)(md1[0x44 + 8 * k] | (md1[0x45 + 8 * k] << 8));
+                int16_t mz = (int16_t)(md1[0x48 + 8 * k] | (md1[0x49 + 8 * k] << 8));
+                if (mx < ex0) ex0 = mx; if (mx > ex1) ex1 = mx; if (mz < ez0) ez0 = mz; if (mz > ez1) ez1 = mz;
             }
-        PRUEFE(drin, "ROOM%04X Cut %d: Plakat ganz im Bild x %.0f..%.0f y %.0f..%.0f", (unsigned)s->raum, s->cut,
-               bx0, bx1, by0, by1);
-        int msz = 0;
-        const uint8_t *md1 = re15_kartenitems_r36_md1_bytes(s->raum, &msz);
-        int16_t ex0 = 0, ex1 = 0, ez0 = 0, ez1 = 0;
-        for (int k = 0; md1 && k < 5 && 0x44 + 8 * k + 6 <= msz; k++) {
-            int16_t mx = (int16_t)(md1[0x44 + 8 * k] | (md1[0x45 + 8 * k] << 8));
-            int16_t mz = (int16_t)(md1[0x48 + 8 * k] | (md1[0x49 + 8 * k] << 8));
-            if (mx < ex0) ex0 = mx; if (mx > ex1) ex1 = mx; if (mz < ez0) ez0 = mz; if (mz > ez1) ez1 = mz;
+            double sk = (double)(ez1 - ez0) / 1080.0;
+            PRUEFE(md1 && ez1 - ez0 == k_soll_breite[i] && 3 * (ex1 - ex0) == 2 * k_soll_breite[i],
+                   "ROOM%04X: MD1-Flaeche %d x %d (soll %d x %d, 3:2 wie RE2 karte01)", (unsigned)raum, ez1 - ez0, ex1 - ex0,
+                   k_soll_breite[i], k_soll_breite[i] * 2 / 3);
+            double M[3], n[3];
+            if (!z || lage(z, M, n) != 0) { PRUEFE(0, "ROOM%04X: keine Zeile", (unsigned)raum); continue; }
+            M[0] += 85.0 * (sk - 1.0) * n[0]; M[2] += 85.0 * (sk - 1.0) * n[2];   /* Flaeche 85 * s vor dem Ursprung */
+            raum_t r;
+            if (raum_laden(&r, raum) != 0) continue;
+            /* Wand aus den RDT-Bytes: 12-B-Eintrag w u16, d u16, x s16, z s16 (re15_rdt.h re15_sca_entry_t) */
+            const uint8_t *e = r.buf + s->sca_off;
+            int32_t w = (int32_t)(e[0] | (e[1] << 8)), x0 = (int16_t)(e[4] | (e[5] << 8)), z0 = (int16_t)(e[6] | (e[7] << 8));
+            int32_t kante = s->achse == 0 ? x0 + w : z0;
+            double wand = s->achse == 0 ? M[0] : M[2];
+            PRUEFE(kante == s->kante && fabs(wand - kante) < 1.0,
+                   "ROOM%04X: SCA @0x%05X Kante %ld (soll %ld), Plakatflaeche bei %.1f", (unsigned)raum, (unsigned)s->sca_off,
+                   (long)kante, (long)s->kante, wand);
+            PRUEFE(fabs(M[1] - (s->boden - 2000)) < 1.0, "ROOM%04X: Mitte %.0f = Boden %ld - 2000 (PORT-WAHL Augenhoehe)",
+                   (unsigned)raum, M[1], (long)s->boden);
+            re15_camera_view_t v;
+            int ok = s->cut < r.rdt.cut_count && re15_camera_build_view(&r.rdt.cuts[s->cut], &v) == 0;
+            double rx[3] = { n[2], 0, -n[0] };   /* rechts = unten x (-n), unten = (0,1,0) */
+            int drin = ok;
+            double bx0 = 1e9, bx1 = -1e9, by0 = 1e9, by1 = -1e9;
+            for (int a = -1; ok && a <= 1; a += 2)
+                for (int b = -1; b <= 1; b += 2) {
+                    double p[3] = { M[0] + a * 540.0 * sk * rx[0], M[1] + b * 360.0 * sk, M[2] + a * 540.0 * sk * rx[2] };
+                    double vx = (v.rot[0] * p[0] + v.rot[1] * p[1] + v.rot[2] * p[2]) / 4096.0 + v.trans[0];
+                    double vy = (v.rot[3] * p[0] + v.rot[4] * p[1] + v.rot[5] * p[2]) / 4096.0 + v.trans[1];
+                    double vz = (v.rot[6] * p[0] + v.rot[7] * p[1] + v.rot[8] * p[2]) / 4096.0 + v.trans[2];
+                    if (vz <= 0) { drin = 0; continue; }
+                    double sx = 160.0 + v.fov_screen_dist * vx / vz, sy = 120.0 + v.fov_screen_dist * vy / vz;
+                    if (sx < 0 || sx >= 320 || sy < 0 || sy >= 240) drin = 0;
+                    if (sx < bx0) bx0 = sx; if (sx > bx1) bx1 = sx; if (sy < by0) by0 = sy; if (sy > by1) by1 = sy;
+                }
+            PRUEFE(drin, "ROOM%04X Cut %d: Plakat ganz im Bild x %.0f..%.0f y %.0f..%.0f", (unsigned)raum, s->cut,
+                   bx0, bx1, by0, by1);
+            free(r.buf);
         }
-        PRUEFE(md1 && ex1 - ex0 == 720 && ez1 - ez0 == 1080,
-               "ROOM%04X: MD1-Flaeche %d x %d = RE2 karte01 unskaliert (1080 x 720, PORT-WAHL Plakat)", (unsigned)s->raum,
-               ez1 - ez0, ex1 - ex0);
-        free(r.buf);
     }
 }
 

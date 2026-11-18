@@ -43,3 +43,34 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_lageplaene2_weg.cmake)
     set_tests_properties(integration_r42_lageplaene2_weg PROPERTIES TIMEOUT 900)
 endif()
+
+# Runde 42 Strang lageplaene_nach (Nacharbeit): Dach (Blatt 5, Bit 42), Revierplan an der Tuerkamera 2 der Lobby (s = 2),
+# Fabrikplan s = 2. Belege: include/re15_kartenitems_r36.h (RUNDE 42 NACHARBEIT).
+#   unit_r42_lageplaene3_dach / _revier / _druck / _fabrik   (tests/unit/test_r42_lageplaene3.c)
+# Gegenprobe: auf aaea5f8c2 und auf bce9c91a8 (Stand vor der Nacharbeit) sind alle vier Teile rot.
+add_executable(test_r42_lageplaene3 ${CMAKE_CURRENT_LIST_DIR}/../test_r42_lageplaene3.c)
+target_link_libraries(test_r42_lageplaene3 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_lageplaene3 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_lageplaene3 PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r42_lageplaene3 PRIVATE m)
+endif()
+foreach(_teil dach revier druck fabrik)
+    add_test(NAME unit_r42_lageplaene3_${_teil} COMMAND test_r42_lageplaene3 ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(unit_r42_lageplaene3_${_teil} PROPERTIES TIMEOUT 300)
+endforeach()
+
+#   integration_r42_lageplaene3_weg   echte exe: Leon 1030 (aus Kamera 4) und Elza 1031 (vom Spielbeginn) gehen zur
+#                                     Ausgangstuer nach 1050; Kamera 2 schaltet VOR der Aufnahme; Aktion im Streifen
+#                                     Bank/Tuer -> Ereignis 28 (kein Klettern), Ja -> Meldung 31. Gegenprobe auf bce9c91a8
+#                                     und aaea5f8c2 rot (dort haengt der Plan an der Rueckwand).
+if(TARGET re15_pc)
+    add_test(NAME integration_r42_lageplaene3_weg
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DRE15_KARTE_TOOL=$<TARGET_FILE:probe_r36_schluessel_karte>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r42_lageplaene3_weg_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_lageplaene3_weg.cmake)
+    set_tests_properties(integration_r42_lageplaene3_weg PROPERTIES TIMEOUT 900)
+endif()

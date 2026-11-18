@@ -12,6 +12,14 @@ RUNDE 42 (Strang lageplaene, Stufe 1) - RE2-FORM: EIN Revierplan + EIN Kellerpla
   include/re15_kartenitems_r36.h). Die Stellen ROOM1140 (3F), ROOM10D0 (2F), ROOM11D0 (B1) entfallen;
   ihre Bits setzt der zustaendige Plan mit (alte Spielstaende mit Einzelbits bleiben gueltig).
 
+RUNDE 42 NACHARBEIT (Strang lageplaene_nach):
+  - Revierplan schaltet zusaetzlich das Dach frei (Blatt 5 = ROOM1170/1171, re15_map_zones.h), Orchestrator-Entscheid
+    18.11.2026 "das Dach gehoert zum Revier"; Bank-9-Bit 42 (frei: Mod-RDT-Zensus, Port-Zensus, 40-%-Disc, alle r42-Zweige).
+  - Revierplan NEU an der Ostwand der Lobby neben der Ausgangstuer nach 1050 (Kamera 2 = Tuerkamera beider Figuren),
+    ueber der Notfall-Tafel (msg 4), Groesse s = 2; Fabrikplan 30C1 an derselben Stelle wie Stufe 2, s = 2.
+    NUTZERWUNSCH 18.11. "gut SICHTBAR"; PORT-WAHL s = 2 (RE2-Wandplan karte01 = 1080 x 720; RE2s Polizeiplaene room20B0
+    obj 8 / room2130 obj 0 sind KEINE Wandplaene, sondern das gefaltete karte00, MD1 @0x004FDC md5 735097e1, 112 x 538).
+
 Erzeugt re15_port/engine/src/gen/kartenitems_r36.inc (KEIN Asset-Patch, shared_assets bleibt
 unangetastet). Dossier: analysis/befunde_runde36/N_kartenitems.md (Abschnitt 3).
 
@@ -55,7 +63,7 @@ ZIEL = os.path.join(REPO, "re15_port", "engine", "src", "gen", "kartenitems_r36.
 MD1_OFF, MD1_LEN, MD1_MD5 = 0x0045C8, 236, "99dae1332d75c51a2621b73737f60a26"
 TIM_OFF, TIM_LEN, TIM_MD5 = 0x02C6D4, 16928, "bf0fbcc75f644b18391b3cea57bd280d"
 VERT_OFF, VERT_N = 0x44, 5
-RE15_R36K_MAX_BLAETTER = 3          # = include/re15_kartenitems_r36.h (Revierplan 1F/2F/3F)          # MD1: 5 Ecken a 8 Byte (x,y,z,pad s16) ab Datei 0x44
+RE15_R36K_MAX_BLAETTER = 4          # = include/re15_kartenitems_r36.h (Revierplan 1F/2F/3F + Dach)   # MD1: 5 Ecken a 8 Byte (x,y,z,pad s16) ab Datei 0x44
 
 # ---- Kameras: `probe_r34n_e_dokumente kamera <raum>` (VIEW-Zeile: R Q12 zeilenweise, T, H) ------
 CAMS = {
@@ -79,11 +87,8 @@ EBENEN = {
 # Port-Version je benutzt (git log --all, Tags v0.8.21-23).
 # Runde 42: EIN Plan je Bereich (RE2 room20B0 Set(33,2..4) @0x037DA-E2). Erstes Blatt = Etage der Fundstelle.
 PLAENE = [  # (raum, name, artikel, rahmen, [(blatt, bit, etage)], aot_slot, verdraengt_nach)
-    # Revierplan: Name und Rahmen woertlich RE2 room20B0 msg 0 @0x3B92 "A police station map. / Will you take it?"
-    # und msg 17 @0x3DB8 "You've taken a / police station map."
-    (0x1030, "police station map", "a", "room20B0", [(2, 89, "1F"), (3, 88, "2F"), (4, 87, "3F")], 8, 39),
-    # Slot 8 = Muenztelefon-Satz (Aot_set @0x01D2E, 4096x4096) wird nach Slot 39 verschoben, die Karte nimmt
-    # Slot 8 (Vorrang)
+    # Revierplan: seit der Nacharbeit NICHT mehr an der Nutzer-Marke map1F.bmp (Cut 3, ~11 x 8 Bildpunkte), sondern
+    # direkt gesetzt - Zeile in PLAENE2 (dort steht Ort, Groesse und Begruendung). Die Zeilenfolge bleibt: 1030 zuerst.
     # Kellerplan: Rahmen RE2 room2130 @0x1B32 "A police B1 map. / Will you take it?" und @0x1D57 "You've taken
     # the / police B1 map."; Name "police basement map" fuer zwei Kellerebenen = PORT-WAHL (RE2 kennt nur B1).
     (0x1200, "police basement map", "the", "room2130", [(1, 77, "B2"), (0, 78, "B1")], 40, 0xFF),
@@ -96,11 +101,28 @@ PLAENE = [  # (raum, name, artikel, rahmen, [(blatt, bit, etage)], aot_slot, ver
 # `probe_r34n_e_dokumente kamera RAUM` und dienen nur der Kontrollausgabe (Plakat im Bild).
 # Variante: 0 = beide Fassungen, 2 = nur Elza (re15_kartenitems_r36.h RE15_R36K_VARIANTE_ELZA).
 VIEWS2 = {
+    0x1030: (2, (-1520, 0, -3823, -718, 4027, 285, 3758, 769, -1495), (-13985, 2547, 3264), 208),
     0x2000: (11, (3258, 0, -2484, 531, 4007, 696, 2430, -876, 3187), (-13607, 6361, 18908), 208),
     0x30C0: (1, (3923, 0, 1210, 49, 4085, -160, -1207, 167, 3912), (9505, 2234, 7886), 208),
     0x6000: (0, (1581, 0, 3796, 872, 3988, -364, -3696, 941, 1539), (-2778, 3515, 11446), 208),
 }
 PLAENE2 = [
+    # REVIERPLAN (Nacharbeit; Zeile 0 der Tabelle). Name/Rahmen woertlich RE2 room20B0 msg 0 @0x3B92 "A police station map. /
+    # Will you take it?" und msg 17 @0x3DB8 "You've taken a / police station map."; Gruppe 1F/2F/3F wie RE2 Set(33,2..4)
+    # @0x037DA-E2 plus DACH Blatt 5 (Bit 42, Orchestrator-Entscheid 18.11.2026).
+    # ORT: Ostwand der Lobby x = 2398 (ROOM1030 SCA-Zelle 1 @0x01A1C x[2398..4198] z[-23528..-9632], n = -x) neben der
+    # Ausgangstuer nach 1050 (main00 Door_aot_set Slot 0 @0x01C6A x 1500..3000 z -13800..-11600), ueber der Notfall-Tafel
+    # (Slot 9 @0x01D42 msg 4 "Some sort of reference chart for / identifying emergency severity."). Beide Figuren verlassen
+    # die Lobby durch diese Tuer (Leon L6 @0x01C6A, Elza E2->E3 1031 Slot 0 @0x01CD8) und stehen davor in Kamera 2: RVD
+    # 1->2 @0x00294 und 3->2 @0x0030C sind die einzigen Wege in den Tuerbereich (0->2 gibt es nicht). Mitte z -14900,
+    # y -4150 (unterkante -3430 ueber den Aushaengen, oberkante -4870 unter dem Deckenbalken) = PORT-WAHL, am Bild gemessen.
+    # Aufhebe-Rechteck NICHT um Mitte+300n: vor der Bank/Tischreihe (SCA-Zelle 14 @0x01AB8 x[952..2752] z[-23204..-14744])
+    # kommt man nicht an die Wand; das Rechteck liegt im freien Streifen z -14744..-13800 zwischen Bank und Tuer
+    # (Mitte (2098, -14300)). Slot 9: die Tafel (Slot 9, 2384 x 1631 ueber dieser Stelle) zieht nach Slot 39 um, denn der
+    # Aktions-Scan nimmt je Druck den KLEINSTEN treffenden Slot (FUN_80042bac); 39 ist in 1030/1031 frei (aots-Sonde).
+    dict(raum=0x1030, name="police station map", artikel="a", rahmen="room20B0",
+         gruppe=[(2, 89, "1F"), (3, 88, "2F"), (4, 87, "3F"), (5, 42, "Dach")], slot=9, verdr=39,
+         variante=0, n=(-1.0, 0.0, 0.0), boden=0, mitte=(2398.0, -4150.0, -14900.0), s=2.0, rect=(2098.0, -14300.0)),
     # Kanalisation: Rahmen RE2 room4040 @0x1B9B "There's a sewer map. / Will you take it?", @0x1BCB "You've taken / the
     # sewer map."; Nordwand des Nordgangs z = -19800 (ROOM2000 SCA-Zelle 7 @0x012A4 x[-19850..7450] z[-19800..-17800],
     # floor 19 = Band 1, n = -z) links neben der Ostleiter (Tuer Slot 0 x 3900..4900), Mitte x 1500: frei von Elzas
@@ -111,8 +133,10 @@ PLAENE2 = [
     # Fabrik (nur Elza, 30C1): Name RE2 room5040 @0x2341/@0x2376 "factory map"; Wand z = 1100 (ROOM30C1 SCA-Zelle 1
     # @0x007F8 x[-27200..-5300] z[1100..1600], n = -z), Mitte x -7600 zwischen Treppenfuss (Zelle 10..13 bis x -9400) und
     # Ostwand x -5800 (Zelle 0 @0x007EC), Boden 0 (3091 Slot 0 @0x01332 next_y 0).
+    # Nacharbeit: s = 2 (NUTZERWUNSCH "gut SICHTBAR", Pruefer s2 gelb 2: s = 1 war in Kamera 1 nur ~20 x 14 Bildpunkte im
+    # 320er Bild). Die Wand x -9400..-5800 traegt die 2160 Breite (Plakat x -8680..-6520).
     dict(raum=0x30C0, name="factory map", rahmen="room4040", gruppe=[(7, 35, "Fabrik")], slot=20, verdr=0xFF,
-         variante=2, n=(0.0, 0.0, -1.0), boden=0, mitte=(-7600.0, 0.0 - 2000.0, 1100.0)),
+         variante=2, n=(0.0, 0.0, -1.0), boden=0, mitte=(-7600.0, 0.0 - 2000.0, 1100.0), s=2.0),
     # U-Bahn: Name "subway map" = PORT-WAHL im Rahmen room4040; Wand x = 2025 (ROOM6000 SCA-Zelle 17 @0x00828
     # x[25..2025] z[-2400..3725], n = +x), Mitte z -400 auf der linken Tafel der Rueckwand (Bild-x 80..115 = z -1000..272;
     # Hangar-Tuer Slot 0 erst ab z 2200), Boden -3600 (50B0 Slot 1 @0x004AE next_y `f0 f1`).
@@ -286,7 +310,7 @@ def main():
         blatt, bit, etage = p["gruppe"][0]
         n = np.array(p["n"])
         mitte = np.array(p["mitte"])
-        s = S2
+        s = p.get("s", S2)   # Nacharbeit: Revier- und Fabrikplan s = 2 (PORT-WAHL "gut SICHTBAR"), sonst RE2-Groesse
         unten = np.array([0.0, 1.0, 0.0])
         vor = -n
         rechts = np.cross(unten, vor)
@@ -295,8 +319,17 @@ def main():
         assert np.abs(wieder(rx, ry, rz) - M).max() < 1e-9
         urs = mitte - 85.0 * s * n
         rmitte = mitte + 300.0 * n
-        md1s.append(bytes(md1))   # s = 1: das RE2-MD1 unveraendert
-        texte.append((frage_4040(p["name"]), genommen_4040(p["name"])))
+        if "rect" in p:   # Nacharbeit Revierplan: Rechteck im erreichbaren Streifen vor der Wand (Kommentar PLAENE2)
+            rmitte = np.array([p["rect"][0], mitte[1], p["rect"][1]])
+        sk = bytearray(md1)   # s = 1: das RE2-MD1 unveraendert; sonst nur die 5 Ecken @0x44 gleichmaessig skaliert
+        for i, e in enumerate(ecken):
+            v = np.round(e * s).astype(int)
+            sk[VERT_OFF + 8 * i:VERT_OFF + 8 * i + 6] = np.array(v, dtype="<i2").tobytes()
+        md1s.append(bytes(sk))
+        if p["rahmen"] == "room20B0":
+            texte.append((frage(p["name"]), genommen(p["name"], p["artikel"])))
+        else:
+            texte.append((frage_4040(p["name"]), genommen_4040(p["name"])))
         cut, R, T, H = VIEWS2[raum]
         R = np.array(R, float).reshape(3, 3) / 4096.0
         ecken_bild = []
@@ -305,7 +338,7 @@ def main():
                 v = R @ (mitte + a * s * rechts + b * s * unten) + np.array(T, float)
                 ecken_bild.append((160.0 + H * v[0] / v[2], 120.0 + H * v[1] / v[2]))
         zeilen.append(dict(raum=raum, blatt=blatt, bit=bit, etage=etage, slot=p["slot"], verdr=p["verdr"],
-                           name=p["name"], artikel="the", rahmen=p["rahmen"], gruppe=p["gruppe"],
+                           name=p["name"], artikel=p.get("artikel", "the"), rahmen=p["rahmen"], gruppe=p["gruppe"],
                            x=int(round(urs[0])), y=int(round(urs[1])), z=int(round(urs[2])),
                            rx=q12(rx), ry=q12(ry), rz=q12(rz),
                            rx0=int(round(rmitte[0])) - 500, rz0=int(round(rmitte[2])) - 500,
@@ -318,6 +351,9 @@ def main():
                  zeilen[-1]["rx0"], zeilen[-1]["rz0"], p["slot"], cut,
                  min(e[0] for e in ecken_bild), max(e[0] for e in ecken_bild),
                  min(e[1] for e in ecken_bild), max(e[1] for e in ecken_bild)))
+    # Zeilenfolge: Revierplan ROOM1030 bleibt Zeile 0 (Riegel unit_r42_lageplaene_tabelle), dann Keller, dann STAGE2..6.
+    folge = sorted(range(len(zeilen)), key=lambda i: (0 if zeilen[i]["raum"] == 0x1030 else 1, i))
+    zeilen, md1s, texte = [zeilen[i] for i in folge], [md1s[i] for i in folge], [texte[i] for i in folge]
     if not schreiben:
         return
 

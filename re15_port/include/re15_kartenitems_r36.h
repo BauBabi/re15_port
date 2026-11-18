@@ -53,12 +53,49 @@
  *     3091 @0x01332; 6000 y -3600 aus 50B0 @0x004AE `f0 f1`) = PORT-WAHL (Augenhoehe-Plakat).
  *   TEXT im Rahmen RE2 room4040 @0x1B9B "There's a / sewer map. / Will you take it?" und @0x1BCB "You've taken / the sewer
  *     map."; "factory map" = RE2 room5040 @0x2341/@0x2376; "subway map" = PORT-WAHL (RE2 hat keinen U-Bahn-Plan).
- *   PROP-BAND = Band des Standorts + 1 wie die Wandobjekte der Disc (ROOM2000 obj 0..2 @0x016E6.. Band 2, ROOM6000 obj 0/1
- *     @0x00E16/@0x00E38 Band 3). GEMESSEN 18.11.: mit Band 1 im Gehweg-Band 1 von 2000 nahm die Klettersonde FUN_8002d474
- *     (Objekt-Test FUN_8002d2c0 @0x8002d370) das Plakat als Kiste - Leon kletterte auf y -3600 statt die Frage zu sehen.
+ *   PROP-BAND = Band des Standorts + 1 = PORT-WAHL AUS MESSUNG (keine Disc-Regel). Mess-Beleg: die Klettersonde
+ *     FUN_8002d474 laesst ein Objekt nur zu, wenn Objekt-Band == Spieler-Band (Objekt-Test FUN_8002d2c0 @0x8002d364-70,
+ *     `lbu v0,130(s0)` / `bne v1,v0,0x8002d3a4` @0x8002d370), und der Kasten-Test FUN_8002da4c (@0x8002da8c-a4, Rand -112)
+ *     trifft das flache Plakat fast ueberall. GEGENPROBE B (18.11., Prop-Band 1 im Gehweg-Band 1 von 2000): unit kanal rot
+ *     (2000/2001, Klettersonde an 4 von 5 Standorten), integration_r42_lageplaene2_weg rot (Leon kletterte auf y -3600,
+ *     F 16222) - mit +1 gruen. ⛔ Die frueher hier zitierten Wandobjekte der Disc zeigen KEINE +1-Regel (Pruefer s2 gelb 1,
+ *     selbst nachgelesen, Obj_model_set pc[4] / pc[12..13] = y): ROOM2000 obj 0 @0x016E6 Band 2 bei y -900 (Gehweg -1800,
+ *     Band 1), ROOM6000 obj 0 @0x00E16 Band 3 bei y 0, ROOM1200 obj 0 @0x007DA Band 1 bei y -2858 (= sein eigenes Band
+ *     -(y/0x708)). Dieselbe FORM "eine Etage ueber dem Boden" haben die Null-Box-Requisiten ROOM1091 obj 2 @0x02202 (Band 2
+ *     bei y -2653, Boden -1800 = Band 1) und ROOM1010 obj 0 @0x00930 (Band 1 bei y -1600, Boden 0) - Formbeispiele, keine Regel.
  *   SLOT 20 und Ereignis 28 in allen drei Raeumen frei (RDT-Saetze nur Slots 0..7, Kamerazonen ab 26/42/44; Subs < 28).
  *   NACHRICHTEN 30/31: RDT-Block 2000 12, 2001 15, 30C1 11, 6000 8, 6001 3 Eintraege; Port belegt dort 40 (2000/2001),
  *     21..26 (30C1), 0/3 als Neutext (6000) — 30/31 frei (analysis/befunde_runde42/belege/zensus_r42.txt).
+ *
+ * RUNDE 42 NACHARBEIT (Strang lageplaene_nach, nach den Pruefberichten s1/s2):
+ *   DACH: der Revierplan schaltet zusaetzlich Blatt 5 frei (Hubschrauberlandeplatz ROOM1170/1171 = einziger Raum des Blatts,
+ *     re15_map_zones.h Zeilen 0x1170/0x1171 Spalte Blatt 5). Orchestrator-Entscheid 18.11.2026: "das Dach gehoert zum Revier".
+ *     Bank-9-Bit 42 = PORT-WAHL aus dem Zensus: frei im Mod-RDT-Zensus (bank9_zensus.py original, 206 RDTs), im Port-Zensus
+ *     (bank9_zensus.py port), auf der 40-%-Disc (Version_40%/PSX, 96 RDTs) und in keinem r42-Zweig/keinem Tag v0.8.19..30 belegt.
+ *     RE2-Form unveraendert: ein weiteres Set hinter den drei Set(33,2..4) @0x037DA-E2. Alte Spielstaende mit 87/88/89: der
+ *     Plan haengt wieder (das Dach-Bit fehlt) und gibt beim Nehmen das Dach dazu.
+ *   ORT REVIERPLAN NEU (Pruefer s1 gelb 6: an der Marke map1F.bmp nur ~11 x 8 Bildpunkte im 320er Bild): Ostwand der Lobby
+ *     x = 2398 (ROOM1030 SCA-Zelle 1 @0x01A1C x[2398..4198]) neben der Ausgangstuer nach 1050 (Door_aot_set Slot 0 @0x01C6A
+ *     x 1500..3000 z -13800..-11600), ueber der Notfall-Tafel (Aot_set Slot 9 @0x01D42 msg 4 @0x297F "Some sort of reference
+ *     chart for / identifying emergency severity."). WARUM DORT: beide Figuren verlassen die Lobby durch diese Tuer (Leon L6
+ *     ROOM1030 Slot 0 @0x01C6A -> 1050; Elza E2 -> E3 ROOM1031 Slot 0 @0x01CD8 -> 1051), und in den Tuerbereich fuehren nur
+ *     die RVD-Zonen 1->2 (1030 @0x00294 / 1031 @0x002B4, x -2900..1800 z -15400..-10500) und 3->2 (@0x0030C / @0x0032C,
+ *     x -3899..2907 z -15799..-10299) - es gibt keine Zone 0->2 und keine aus 4..8 nach 2 (sub00 Cut_replace @0x01FF4-FD
+ *     tauscht nur 0/3/4/6 gegen 9..12, Kamera 2 bleibt). Kamera 2 (Cut @0x000A0 pos (-7668,-3114,-11934)) ist damit die
+ *     Tuerkamera BEIDER Figuren (gemessen am echten Weg: Leon 4 -> 1 -> 2, Elza 6 -> 1 -> 2, integration_r42_lageplaene3_weg). Mitte (2398,-4150,-14900), Groesse s = 2 (2160 x 1440): im 320er Bild der Kamera 2
+ *     x 117..161 y 41..74 (vorher Kamera 3 ~11 x 8). Mitte/Hoehe = PORT-WAHL am Hintergrundbild gemessen (ueber den Aushaengen,
+ *     unter dem Deckenbalken). Aufhebe-Rechteck x 1598..2598 z -14800..-13800 im freien Streifen zwischen Bank/Tischreihe
+ *     (SCA-Zelle 14 @0x01AB8 x[952..2752] z[-23204..-14744]) und Tuer; die Tafel (Slot 9, Rechteck 2384 x 1631) zieht dafuer
+ *     unveraendert nach Slot 39 um (Aktions-Scan FUN_80042bac nimmt je Druck den KLEINSTEN treffenden Slot; 39 frei in
+ *     1030/1031, Sonde probe_r34n_e_dokumente aots) - nach der Aufnahme antwortet dort wieder die Tafel. Das Muenztelefon
+ *     (Slot 8 @0x01D2E) bleibt jetzt unberuehrt in Slot 8. Standort zum Nehmen z -14000 (gemessen: bei z -14300 haelt die
+ *     Bank den Spieler auf).
+ *   FABRIKPLAN 30C1 (Pruefer s2 gelb 2: ~35 x 25 Bildpunkte bei 640 x 480): gleiche Stelle, s = 2; Kamera 1 x 188..229
+ *     y 108..136 (320er Bild, vorher 198..218 x 115..129).
+ *   GROESSE s = 2 = PORT-WAHL (NUTZERWUNSCH 18.11. "gut SICHTBAR"). Massstab-Bezug: RE2s Wandplaene karte01/karte02 sind
+ *     1080 x 720 (room3060/4040 bzw. room5040/5060, MD1 @0x44); RE2s Polizeiplaene room20B0 obj 8 und room2130 obj 0 sind
+ *     KEINE Wandplaene, sondern das gefaltete Faltblatt karte00 (room20B0 MD1 @0x004FDC, 1428 B, md5 735097e1, Ecken
+ *     x -56..56, y -96..1, z -269..269 = 112 x 538) - als Plakat-Massstab nicht brauchbar.
  *
  * NUTZER-VORGABE (AUFTRAG.md Z. 73-77, woertlich): "Extrahiere mir Karte01 oder Karte02 ... Haenge sie
  *   mir beispielhaft an die Stelle von map3F.bmp, und schalte damit die Map fuer Etage 3F frei, wie das
@@ -117,7 +154,7 @@
 
 #include <stdint.h>
 
-#define RE15_R36K_MAX_BLAETTER 3   /* Revierplan: 1F/2F/3F                                                */
+#define RE15_R36K_MAX_BLAETTER 4   /* Revierplan: 1F/2F/3F + Dach (Nacharbeit, Orchestrator-Entscheid 18.11.) */
 
 typedef struct {
     uint16_t raum;             /* Leon-Variante; Elza = raum | 1 (derselbe Ort)                        */
@@ -128,9 +165,10 @@ typedef struct {
     int32_t  x, y, z;          /* Prop-Ursprung (Welt)                                                  */
     int16_t  rot_x, rot_y, rot_z;   /* Pool +0x68/+0x6A/+0x6C (scd_vm.c Member 3..5)                    */
     int32_t  rect_x, rect_z;   /* Ecke des Aufhebe-Rechtecks, Groesse RE15_R36K_RECT                    */
-    uint8_t  n_blaetter;       /* Runde 42: Blaetter dieses Plans (Revier 3, Keller 2)                 */
-    uint8_t  blaetter[RE15_R36K_MAX_BLAETTER];  /* 4 = 3F, 3 = 2F, 2 = 1F, 1 = B2, 0 = B1               */
-    uint8_t  bits[RE15_R36K_MAX_BLAETTER];      /* je Blatt sein Bank-9-Bit: 89/88/87 bzw. 77/78        */
+    uint8_t  n_blaetter;       /* Runde 42: Blaetter dieses Plans (Revier 4, Keller 2). 0 = Zeile im alten 13-Felder-
+                                * Format: gilt als Ein-Blatt-Plan mit blatt/bit (kartenitems_r36.c n_von, seit bb87d614c) */
+    uint8_t  blaetter[RE15_R36K_MAX_BLAETTER];  /* 5 = Dach, 4 = 3F, 3 = 2F, 2 = 1F, 1 = B2, 0 = B1      */
+    uint8_t  bits[RE15_R36K_MAX_BLAETTER];      /* je Blatt sein Bank-9-Bit: 89/88/87/42 bzw. 77/78     */
     uint8_t  variante;         /* Runde 42 Stufe 2: RE15_R36K_VARIANTE_* (0 = beide Fassungen des Raums)  */
     uint8_t  band;             /* Runde 42 Stufe 2: Aot_set pc[4] der Zone = Boden-Band des Standorts -(y/0x708)
                                 * (re15_collision.c:186; Scan-Gatter @0x80042cac); Stufe 1: 0 wie ROOM5030       */

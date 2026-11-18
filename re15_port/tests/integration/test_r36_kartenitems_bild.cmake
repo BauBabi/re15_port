@@ -89,10 +89,15 @@ endfunction()
 # Fenster = Marken-Huelle (analysis/befunde_runde36/marken/map*.bmp) +-3 px. Gemessen 2026-10-11
 # (Dossier 5.2, Lade-Weg F100): 1140 73, 10D0 219, 1030 81, 1200 177, 11D0 169 Pixel, ausserhalb je 0.
 # Schwelle = rund die Haelfte.
+# NACHARBEIT (Strang lageplaene_nach): der Revierplan haengt jetzt an der Ostwand neben der Ausgangstuer (Kamera 2 = Tuer-
+# kamera beider Figuren, s = 2) und setzt zusaetzlich das Dach-Bit 42. Gemessen 2026-11-18 (Lade-Weg F100, RE15_FORCE_CUT):
+# Cut 2 1263 Pixel, Huelle x117..159 y41..72; Cut 1 319 Pixel, Huelle x276..308 y76..97 (vom Fernseher am Pfeiler teilweise
+# verdeckt); ausserhalb je 0. Fenster = Huelle +-3, Schwelle = rund die Haelfte. Der Vergleichs-Cut fuer die Helligkeit ist
+# jetzt Cut 1 (vorher Cut 0; Cut 0 zeigt die Ostwand nicht).
 set(_faelle
-    "1f|1030|-18000|-12000|0|3|89+88+87|152|100|167|116|40|452"
+    "1f|1030|-18000|-12000|0|2|89+88+87+42|114|38|162|75|631|452"
     "b2|1200|-20000|-26000|0|2|77+78|55|77|77|96|88|381"
-    "1f0|1030|-18000|-12000|0|0|89+88+87|88|104|101|115|24|452")
+    "1f0|1030|-18000|-12000|0|1|89+88+87+42|273|73|311|100|159|452")
 # Sechster Fall (Nachbesserung 1): ROOM1030 im Cut 0 — die Karte an der Rueckwand zwischen den Aushaengen,
 # gemessen 2026-10-11 (neue exe, Lade-Weg F100): 48 Pixel, Huelle x91..98 y107..112, Mittel (105,107,96),
 # 48 von 48 Palettenfarben. Fenster = Huelle +-3, Schwelle = die Haelfte.
@@ -172,8 +177,10 @@ foreach(_f ${_faelle})
     endif()
 endforeach()
 
-# ROOM1030 Cut 3 gegen Cut 0 (Raumlicht (54,54,59) gegen (89,89,94), Faktor 1,65 — Abnahme 0 Abschnitt 4):
-# ohne Raumlicht ist die Karte in beiden Cuts gleich hell. Gemessen 2026-10-11: Summe 297 (Cut 3, 88 Pixel)
+# ROOM1030 zwei Cuts (bis zur Nacharbeit Cut 3 gegen Cut 0, Raumlicht (54,54,59) gegen (89,89,94), Faktor 1,65 — Abnahme 0
+# Abschnitt 4; seit der Nacharbeit Cut 2 gegen Cut 1, Werte unten): ohne Raumlicht ist die Karte in beiden Cuts gleich hell.
+# Nacharbeit gemessen 2026-11-18: Cut 2 Summe 296 (1263 Pixel, Mittel 99/103/93), Cut 1 Summe 282 (319 Pixel), Abstand 14,
+# je 100 % Palettenfarben. Bis zur Nacharbeit: Summe 297 (Cut 3, 88 Pixel)
 # und 310 (Cut 0, 48 Pixel); Abstand 13. Zulaessig: 1/10 der Summe (29) fuer die Texel-Abtastung bei
 # verschiedener Bildgroesse — ein NCCT-Unterschied von 1,65 waere ein Abstand von rund 120.
 if(DEFINED _summe_1f AND DEFINED _summe_1f0)
@@ -182,27 +189,28 @@ if(DEFINED _summe_1f AND DEFINED _summe_1f0)
         math(EXPR _abstand "0 - ${_abstand}")
     endif()
     math(EXPR _zul "${_summe_1f} / 10")
-    message(STATUS "kartenitems_bild 1F Cut 3 Summe ${_summe_1f} gegen Cut 0 Summe ${_summe_1f0}: Abstand ${_abstand} (zulaessig ${_zul})")
+    message(STATUS "kartenitems_bild 1F Cut 2 Summe ${_summe_1f} gegen Cut 1 Summe ${_summe_1f0}: Abstand ${_abstand} (zulaessig ${_zul})")
     if(_abstand GREATER _zul)
-        string(APPEND _fehler "1F: Karte in Cut 3 und Cut 0 verschieden hell (${_summe_1f} gegen ${_summe_1f0}) — Raumlicht statt Flach-Weg\n")
+        string(APPEND _fehler "1F: Karte in Cut 2 und Cut 1 verschieden hell (${_summe_1f} gegen ${_summe_1f0}) — Raumlicht statt Flach-Weg\n")
     endif()
 else()
     string(APPEND _fehler "1F: Helligkeit in Cut 3/Cut 0 nicht gemessen\n")
 endif()
 
 # ---- Teil 2: echter Weg in ROOM1030 (Runde 42: Revierplan; vorher ROOM1140) -------------------------
-# Spieler (-1690,-22900) Blick -z (rot 1024, Zone x -2192..-1192 z -23780..-22780 = Slot 8; unit_r36_kartenitems D).
+# Nacharbeit: Spieler (1700,-14000) im Streifen zwischen Bank und Tuer, Blick Ostwand (rot 0; Zone x 1598..2598
+# z -14800..-13800 = Slot 9, die Notfall-Tafel zieht nach 39; unit_r36_kartenitems D, unit_r42_lageplaene3_druck).
 # Skript (Spielbilder ab 30): A Aktion | W3 Frage tippt | A Ja | W3 Meldung | A weg | W2 | S Status | W2 | Q Karte | W4
 set(_auf  "A0.1,W3,A0.1,W3,A0.1,W2,S0.3,W2,Q0.3,W4")
 set(_kein "W3,W3,W3,W2,S0.3,W2,Q0.3,W4")
-lauf(weg_auf  1030 -1690 -22900 1024 3 "" "${_auf}"  140 270)
+lauf(weg_auf  1030 1700 -14000 0 2 "" "${_auf}"  140 270)
 set(_dir_auf "${LAUF_DIR}")
 hexof("[kartenitems] ROOM1030 Ereignis 28 -> Port-Programm" _hp)
 string(FIND "${LAUF_LOG}" "${_hp}" _p)
 if(_p LESS 0)
     string(APPEND _fehler "weg: Aktionsdruck vor der Tafel startete das Karten-Programm nicht (Ereignis 28)\n")
 endif()
-lauf(weg_kein 1030 -1690 -22900 1024 3 "" "${_kein}" 140 270)
+lauf(weg_kein 1030 1700 -14000 0 2 "" "${_kein}" 140 270)
 set(_dir_kein "${LAUF_DIR}")
 if(NOT EXISTS "${_dir_auf}/karte.bmp" OR NOT EXISTS "${_dir_kein}/karte.bmp")
     string(APPEND _fehler "weg: kein Kartenschirm-Abzug (RE15_INV_FB_SHOT)\n")

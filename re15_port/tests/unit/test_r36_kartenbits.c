@@ -197,6 +197,16 @@ static int orig_raum_scharf(int i)
     return satz_scharf(&k_orig[i]);
 }
 
+/* Runde 42 lageplaene_nach (Pruefer s1 gelb 7): Blatt-Gruppe einer Zeile GENAU wie der Motor seit bb87d614c
+ * (kartenitems_r36.c n_von/bit_von/blatt_von): n_blaetter 0 = Zeile im alten 13-Felder-Format -> Ein-Blatt-Plan mit
+ * blatt/bit. So bricht eine spaeter eingetragene Zeile ohne Gruppe (z.B. r42/rest Laborblatt 8, U-11) die Teile V/P nicht. */
+static int plan_n(const re15_kartenitem_r36_t *z)
+{
+    return z->n_blaetter < 1 ? 1 : (z->n_blaetter > RE15_R36K_MAX_BLAETTER ? RE15_R36K_MAX_BLAETTER : z->n_blaetter);
+}
+static unsigned plan_bit(const re15_kartenitem_r36_t *z, int i)   { return z->n_blaetter < 1 ? z->bit : z->bits[i]; }
+static unsigned plan_blatt(const re15_kartenitem_r36_t *z, int i) { return z->n_blaetter < 1 ? z->blatt : z->blaetter[i]; }
+
 /* Lageplan k ueber das ECHTE Port-Programm nehmen: Raum starten (Installer legt Prop + Zone an), Ereignis 28
  * feuern (= was der Aktions-Scan des EVENT-Satzes tut, scd_event_fire), jede Ja/Nein-Frage mit JA beantworten
  * (virtuelles Bestaetigen-Bit 0x4000, wie probe_besitz_zensus.c), bis der Faden endet. Rueckgabe: Anzahl der
@@ -269,11 +279,11 @@ static void teil_v(void)
         int bit = -1;
         int n = plan_nehmen(k, &bit);
         /* Runde 42: ein Plan setzt die Bits ALLER seiner Blaetter (Revier 89/88/87, Keller 77/78) und keine anderen */
-        int alle = n == (int)z->n_blaetter;
-        for (int i = 0; i < z->n_blaetter; i++) if (!s_plan_gesetzt[z->bits[i]]) alle = 0;
+        int alle = n == plan_n(z);
+        for (int i = 0; i < plan_n(z); i++) if (!s_plan_gesetzt[plan_bit(z, i)]) alle = 0;
         PRUEFE(alle,
-               "Plan Blatt %u (ROOM%04X): Port-Programm Ereignis 28 lief zu Ende, setzte %d Bank-9-Bit(s) (soll %u: die "
-               "Bits seiner Blaetter)", (unsigned)z->blatt, (unsigned)z->raum, n, (unsigned)z->n_blaetter);
+               "Plan Blatt %u (ROOM%04X): Port-Programm Ereignis 28 lief zu Ende, setzte %d Bank-9-Bit(s) (soll %d: die "
+               "Bits seiner Blaetter)", (unsigned)z->blatt, (unsigned)z->raum, n, plan_n(z));
         uint8_t stand[256];
         bank9_lesen(stand);
         for (int i = 0; i < N_ORIG; i++) {
@@ -609,8 +619,8 @@ static void teil_p(void)
     const int n_plaene = re15_kartenitems_r36_anzahl();
     for (int k = 0; k < n_plaene; k++) {
         const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(k);
-        for (int bi = 0; bi < z->n_blaetter; bi++) {   /* Runde 42: alle Bits des Plans (Revier 3, Keller 2) */
-            const unsigned bit = z->bits[bi], blatt = z->blaetter[bi];
+        for (int bi = 0; bi < plan_n(z); bi++) {   /* Runde 42: alle Bits des Plans (Revier 4, Keller 2; ohne Gruppe 1) */
+            const unsigned bit = plan_bit(z, bi), blatt = plan_blatt(z, bi);
             int im_original = s_z.belegt[bit];
             PRUEFE(RE15_R36K_BANK == 9 && !im_original, "Bit %3u Lageplan Blatt %u ROOM%04X (k_r36k_lage, Spur N) — %s%s",
                    bit, blatt, (unsigned)z->raum,
@@ -622,8 +632,8 @@ static void teil_p(void)
                 if (k_port[i].bit == bit && strncmp(k_port[i].makro, "RE15_R42_BIT_PLAN_", 18) != 0) doppelt = 1;
             for (int j = 0; j < n_plaene; j++) {
                 const re15_kartenitem_r36_t *y = re15_kartenitems_r36_zeile(j);
-                for (int bj = 0; bj < y->n_blaetter; bj++)
-                    if ((j != k || bj != bi) && y->bits[bj] == bit) doppelt = 1;
+                for (int bj = 0; bj < plan_n(y); bj++)
+                    if ((j != k || bj != bi) && plan_bit(y, bj) == bit) doppelt = 1;
             }
             PRUEFE(!doppelt, "Lageplan-Bit %u ist kein anderes Port-Bit", bit);
             alle[n++] = bit;
