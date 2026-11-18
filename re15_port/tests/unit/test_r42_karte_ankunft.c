@@ -12,10 +12,13 @@
  * DATA/MAP0x.PIX gelesen (Seite p -> MAP0<p+1>, Kachel-uv aus re15_map_rect_uv).
  *
  *  [A] Blatt 6..12 (STAGE2-6), Zone mit HERGELEITETER Zeile (Port-Ergaenzung): der Punkt liegt auf einem
- *      gemalten Texel der eigenen Kachel. Auf aaea5f8c2 / 6e0f3db61 ROT: 6000 aus 50B0 (8 px ueber r5, der
+ *      Texel des RAUMKOERPERS der eigenen Kachel (Index != 0 und != 4 = nicht auf der Wandlinie). Auf aaea5f8c2 / 6e0f3db61 ROT: 6000 aus 50B0 (8 px ueber r5, der
  *      Gang ist nicht gemalt), 4040 aus 4050, 4050 (2 Lagen), 4080 aus 4090, 11A0 aus 3000 (Blatt 6).
  *  [B] Blatt 6..12, Zone mit AUSGELIEFERTER Zeile (@0x800768b0): nur gezaehlt und gemeldet (byte-true,
  *      der Marker wird dort nicht geklemmt; 2000/3090/4030 liegen an der Tuer 1 px auf der Nachbarkachel).
+ *  [C] Blatt 6..12: Zonen DESSELBEN Raums mit DERSELBEN Zeile auf demselben Blatt (4040 r4+r12, 4080 r8+r13,
+ *      5140 r10+r12) sind ein Ort - steht die Figur in einer, sind die Kacheln aller aktuell (re15_map_rect_state).
+ *      Auf 6e0f3db61 ROT (4080 aus 4030: nur der Streifen r13 rot, Pruefbericht s3 r1).
  * Nicht hier: 5090/5091 (U-12, r42/rest), Raeume ohne Zone (1240/1260/6040, Szenen- bzw. Seitenlose Raeume).
  * ========================================================================== */
 #include <stdio.h>
@@ -83,7 +86,10 @@ static int gemalt(int page, int rect, int x, int y)
     if (!re15_map_rect_geometry((unsigned)page, (unsigned)rect, &rx, &ry, &rw, &rh)) return 0;
     if (!re15_map_rect_uv((unsigned)page, (unsigned)rect, &ru, &rv)) return 0;
     if (x < rx || y < ry || x >= rx + rw || y >= ry + rh) return 0;
-    return texel(page, ru + x - rx, rv + y - ry) != 0;
+    {   /* Raumkoerper: Index 0 = transparent, Index 4 = Wandlinie (CLUT 0x5ad6) - auf der Linie steht der Punkt halb draussen */
+        int t = texel(page, ru + x - rx, rv + y - ry);
+        return t != 0 && t != 4;
+    }
 }
 
 /* Zeile {s16 ox, s16 oy, u16 sx, u16 sy} @0x800768b0 + 8*(Basis+Raum) DIREKT aus PSX.EXE (Datei-Offset
@@ -210,6 +216,45 @@ int main(void)
             snprintf(e, sizeof e, " %04X<-%04X(B%d r%d %d,%d)", rid, s_ank[i].von, seite, rc, mx, my);
             strncat(la, e, sizeof la - strlen(la) - 1);
         }
+    }
+    /* [C] ein Ort auf zwei Kacheln */
+    {
+        int c_n = 0, c_ok = 0, a2, b2;
+        char lc[1000] = "";
+        for (a2 = 0; a2 < re15_map_zone_count(); a2++) {
+            const re15_map_zone_t *za = re15_map_zone_by_index(a2);
+            int32_t cx, cz;
+            if (!za || za->etage || za->page < 6 || za->page > 12 || za->rect == 255) continue;
+            cx = (za->wx0 + za->wx1) / 2; cz = (za->wz0 + za->wz1) / 2;
+            for (b2 = 0; b2 < re15_map_zone_count(); b2++) {
+                const re15_map_zone_t *zb2 = re15_map_zone_by_index(b2);
+                const re15_map_zone_t *zc;
+                if (!zb2 || zb2 == za || zb2->room != za->room || zb2->idx == za->idx || zb2->etage) continue;
+                if (zb2->page != za->page || zb2->rect == 255 || zb2->rect == za->rect) continue;
+                if (zb2->ox != za->ox || zb2->oy != za->oy || zb2->sx != za->sx || zb2->sy != za->sy) continue;
+                if (zb2->flip_x != za->flip_x || zb2->flip_z != za->flip_z || zb2->tausch != za->tausch) continue;
+                if ((za->sx | za->sy) == 0) continue;
+                re15_map_visited_reset();
+                re15_collision_reset_band();
+                g_current_room_id = za->room;
+                g_actors[RE15_ACTOR_SLOT_PLAYER].x = cx; g_actors[RE15_ACTOR_SLOT_PLAYER].z = cz;
+                re15_map_zone_update(za->room, cx, cz);
+                zc = re15_map_zone_current();
+                if (!zc || zc->idx != za->idx) continue;
+                c_n++;
+                if (re15_map_rect_state(za->page, za->rect) == RE15_MAP_RECT_CURRENT &&
+                    re15_map_rect_state(zb2->page, zb2->rect) == RE15_MAP_RECT_CURRENT) c_ok++;
+                else {
+                    char e[64];
+                    snprintf(e, sizeof e, " %04X.z%d->r%d", za->room, za->idx, zb2->rect);
+                    strncat(lc, e, sizeof lc - strlen(lc) - 1);
+                }
+            }
+        }
+        re15_map_visited_reset();
+        printf("  [C] ein Ort auf zwei Kacheln: %d/%d Paare beide rot%s%s\n", c_ok, c_n, lc[0] ? ", nicht:" : "", lc);
+        CHECK("[C] gleiche Zeile, gleiches Blatt: beide Kacheln des Raums sind aktuell (4040/4080/5140, Leon+Elza)",
+              c_n >= 12 && c_ok == c_n);
     }
     printf("  [A] hergeleitete Zeile, Blatt 6-12: %d/%d Ankunftslagen auf der eigenen gemalten Kachel\n", a_ok, a_n);
     printf("      daneben:%s\n", la[0] ? la : " keine");

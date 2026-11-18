@@ -13,10 +13,18 @@
  *
  * PORT-WAHL (kein Original-Vorbild: RE1.5 klemmt gar nicht, die Formel FUN_800473f8 @0x8004741c-0x80047528
  * schreibt den Punkt ungeprueft; fuer 39 von 72 Raeumen ist ihre Zeile ein Stub {0,0,1,1}): nach der
- * Rechteck-Klemmung wird der Punkt, falls er nicht auf einem gemalten Texel der EIGENEN Kachel liegt, auf den
- * naechsten gemalten Texel dieser Kachel gesetzt (euklidisch, bei Gleichstand die erste Spanne in Zeilen-
- * reihenfolge). Gemalt = Index != 0 in DATA/MAP0x.PIX an der Kachel-uv der Seitentabelle @0x80076840
- * (tools/gen_map_kunst.py -> engine/src/re15_map_kunst.h). Keine Schwelle, keine freie Zahl.
+ * Rechteck-Klemmung wird der Punkt, falls er nicht auf dem RAUMKOERPER der EIGENEN Kachel liegt, auf den
+ * naechsten Texel des Raumkoerpers gesetzt (euklidisch, bei Gleichstand die erste Spanne in Zeilenreihenfolge).
+ * Raumkoerper = Index != 0 (transparent) und != 4 (Wandlinie, CLUT-Index 4 = 0x5ad6, Beleg re15_inv_screen.c
+ * Tuer-Nische an DATA/MAP05.PIX) in DATA/MAP0x.PIX an der Kachel-uv der Seitentabelle @0x80076840
+ * (tools/gen_map_kunst.py -> engine/src/re15_map_kunst.h). Auf der Wandlinie stuende der Punkt halb ausserhalb
+ * des roten Raums (Abzug L6000_t0). Keine Schwelle, keine freie Zahl.
+ *
+ * Dazu (re15_map_zones.c rect_state_impl, Blatt 6..12): Zonen DESSELBEN Raums mit DERSELBEN Zeile auf demselben
+ * Blatt sind ein Ort, den der Kuenstler auf zwei Kacheln gemalt hat (4040 r4+r12, 4080 r8+r13 Ring-Diagonale,
+ * 5140 r10+r12 mit der AUSGELIEFERTEN Zeile @0x80076BB8) - steht die Figur in einer, sind beide aktuell (rot).
+ * Vorher war in 4080 aus 4030 kommend nur der 2-3 px schmale Streifen r13 rot (Pruefbericht s3 r1: "Raum nur als
+ * Linie rot", 35-39 rote Pixel).
  * Nur Blatt 6..12: auf Blatt 1-4 zeichnet der Port die Kacheln nach den Nutzer-Vorlagen der Runde 39 um
  * (karte_r39.c), dort ist die PIX-Maske nicht das gezeigte Bild; STAGE1 ist ausserdem die Messlatte.
  * Nicht fuer Zonen mit eigenen Teilbereichen (Zug 5090 auf Blatt 9 r7, U-12 in r42/rest) und nicht fuer Zonen,
@@ -27,11 +35,11 @@
 #define RE15_KARTE_R42_H
 #include <stdint.h>
 
-/* Setzt (*mx,*my) auf den naechsten gemalten Texel von Kachel <rect> auf Blatt <page>, falls er nicht schon auf
+/* Setzt (*mx,*my) auf den naechsten Texel des Raumkoerpers von Kachel <rect> auf Blatt <page>, falls er nicht schon auf
  * einem liegt. Rueckgabe: quadrierte Verschiebung in Pixeln (0 = unveraendert oder keine Kunst bekannt). */
 int re15_karte_r42_kunst_klemmen(unsigned page, unsigned rect, int16_t *mx, int16_t *my);
 
-/* 1, wenn (x,y) auf einem gemalten Texel von Kachel <rect> auf Blatt <page> liegt (Messhilfe fuer Riegel). */
+/* 1, wenn (x,y) auf einem Texel des Raumkoerpers von Kachel <rect> auf Blatt <page> liegt (Messhilfe fuer Riegel). */
 int re15_karte_r42_kunst_gemalt(unsigned page, unsigned rect, int x, int y);
 
 #endif

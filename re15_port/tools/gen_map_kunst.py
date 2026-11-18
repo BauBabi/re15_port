@@ -11,8 +11,10 @@ Quelle (nichts gewaehlt):
   - Rechtecke {x,y,w,h,u,v}: Seitentabelle @0x80076840 (u16 Anzahl, u32 Zeiger je Seite, 12 B je Rechteck,
     u = Byte +8, v = Byte +10) - dieselbe Lesung wie gen_map_zones.rects()/rect_uv() inkl. RECT_FIX Seite 3;
   - Texel: DATA/MAP0x.PIX (Datei-Id u16 @0x80074c4c + 2*Seite = 12..24 -> MAP01..MAP0D), headerlos,
-    256x256 4 bpp, 128 B je Zeile, unteres Nibble = linkes Pixel; "gemalt" = Index != 0 (Index 0 ist transparent,
-    der Kachel-SPRT zeichnet ihn nicht).
+    256x256 4 bpp, 128 B je Zeile, unteres Nibble = linkes Pixel. RAUMKOERPER = Index != 0 und != 4: Index 0 ist
+    transparent (der Kachel-SPRT zeichnet ihn nicht), Index 4 ist die WANDLINIE (CLUT-Index 4 = 0x5ad6, abgemessen
+    an DATA/MAP05.PIX Seite 4 Rect 4, Beleg re15_inv_screen.c Tuer-Nische). Auf der Wandlinie stand der Punkt halb
+    ausserhalb des Raums (Abzug L6000_t0 Stufe 3 Runde 2: um 0.07); im Koerper steht er auf der Raumfarbe.
 Ausgabe je Rechteck, das eine Zone traegt: Spannen (y, x0, Laenge) relativ zur Rechteck-Ecke.
 
 Aufruf: python re15_port/tools/gen_map_kunst.py        (schreibt engine/src/re15_map_kunst.h)
@@ -50,9 +52,9 @@ def spannen(pg, r):
     for dy in range(rh):
         dx = 0
         while dx < rw:
-            if 0 <= v + dy < 256 and 0 <= u + dx < 256 and pix[v + dy][u + dx]:
+            if 0 <= v + dy < 256 and 0 <= u + dx < 256 and pix[v + dy][u + dx] not in (0, 4):
                 a = dx
-                while dx < rw and 0 <= u + dx < 256 and pix[v + dy][u + dx]:
+                while dx < rw and 0 <= u + dx < 256 and pix[v + dy][u + dx] not in (0, 4):
                     dx += 1
                 out.append((dy, a, dx - a))
             else:
@@ -67,7 +69,7 @@ def erzeugen():
         idx.append((pg, r, rx, ry, len(sp), len(s)))
         sp.extend(s)
     z = ['/* GENERIERT von tools/gen_map_kunst.py - NICHT VON HAND AENDERN.',
-         ' * Die GEMALTE Flaeche jeder Karten-Kachel (Index != 0 in DATA/MAP0x.PIX, Kachel-uv aus der Seitentabelle',
+         ' * Der RAUMKOERPER jeder Karten-Kachel (Index != 0 und != 4 = ohne Wandlinie, DATA/MAP0x.PIX, Kachel-uv aus der Seitentabelle',
          ' * @0x80076840) als Zeilen-Spannen relativ zur Rechteck-Ecke. Verbraucher: re15_karte_r42_kunst_klemmen',
          ' * (karte_r42.c) - PORT-WAHL r42/karte Stufe 3 Runde 2, siehe dort. */',
          'typedef struct { unsigned char page, rect; short rx, ry; unsigned short erst, anzahl; } re15_map_kunst_idx_t;',

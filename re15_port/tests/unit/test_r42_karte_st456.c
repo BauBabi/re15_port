@@ -165,6 +165,11 @@ static const struct { unsigned room; int zone; char pruef; const char *grund; } 
      * den naechsten Streifen-Texel -> 13 verschiedene. Die echten Lagen dort pruefen unit_r42_karte_ankunft und
      * die Abzuege L4080_t0/w0 (Stufe 3 Runde 2). */
     { 0x4080, 1, 'C', "Diagonalstueck r13: Raster ueberwiegend neben dem gemalten Streifen (Stufe 3 Runde 2: 13/28)" },
+    /* [C] 4020 Fahrstuhlkabine (Bestand-Zeile 122/87/1760/1760): gemalt ist nur 12x12 der 16x16-Kachel, der
+     * Raumkoerper 10x10 (DATA/MAP09.PIX Blatt 8 r2: Wand Index 4 in Zeile 0/11 und Spalte 0/11, rechts/unten 4 px
+     * leer). Die Zeile spannt die Kabine ueber die ganze Kachel; Rasterpunkte jenseits der gemalten Wand landen
+     * seit Stufe 3 Runde 2 auf dem Innenrand statt auf leerem Blau -> 20/49 verschiedene Lagen. */
+    { 0x4020, 0, 'C', "Kabine: gemalt 12x12 von 16x16, Punkte jenseits der Wand auf dem Innenrand (Stufe 3 Runde 2: 20/49)" },
 };
 static int ausnahme(unsigned room, int zone, char p)
 {

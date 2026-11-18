@@ -706,6 +706,16 @@ static int rect_state_impl(unsigned page, unsigned rect_idx, int nur_fremd)
                 return RE15_MAP_RECT_CURRENT;
             }
         }
+        /* r42/karte Stufe 3 Runde 2 (PORT-WAHL, include/re15_karte_r42.h): auf Blatt 6..12 sind Zonen DESSELBEN Raums
+         * mit DERSELBEN Zeile auf demselben Blatt EIN Ort, den der Kuenstler auf zwei Kacheln gemalt hat (4040 r4+r12,
+         * 4080 r8+r13, 5140 r10+r12) - steht die Figur in einer, ist auch die andere aktuell. Vorher war in 4080 aus
+         * 4030 kommend nur der schmale Diagonalstreifen r13 rot (Pruefbericht s3 r1). Nicht fuer Etagen-/Gast-Zeilen. */
+        if (cur && page >= 6 && page <= 12 && eigen && zn->room == cur->room && zn->idx != cur->idx &&
+            !zn->etage && !cur->etage && !hat_etage && zn->page == cur->page &&
+            zn->ox == cur->ox && zn->oy == cur->oy && zn->sx == cur->sx && zn->sy == cur->sy &&
+            zn->flip_x == cur->flip_x && zn->flip_z == cur->flip_z && zn->tausch == cur->tausch &&
+            (zn->sx | zn->sy) != 0)
+            return RE15_MAP_RECT_CURRENT;
         /* ⛔ EINE GAST-ZEILE HAENGT AM ETAGEN-BIT, NICHT AM ZONEN-BIT.
          * Nutzer 2026-09-12: "der kleine Raum ganz hinten wird schon gezeichnet,
          * obwohl ich da noch gar nicht drin war." Das Zonen-Bit ist EIN Bit je
