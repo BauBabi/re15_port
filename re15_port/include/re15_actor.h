@@ -498,13 +498,24 @@ typedef struct {
      *   0 = RE2 (FUN_8010B7D4 schiebt sie weg, @0x8010B970-9C / @0x8010BA4C);
      *   1 = Granatwerfer "Oberkoerper ab" (80 % F13 = Film 3 0:18,085-0:19,89): die Beine bleiben am Todesort
      *       stehen, kippen und bleiben liegen;
-     *   2 = Schrot-Kriecher 66FC (Disc @0x80108820-98 `ori 0x40` an Teil 1/2/4/5: die Beine bleiben am alten Platz).
+     *   2 = Schrot-Kriecher 66FC (Disc @0x80108820-98 `ori 0x40` an Teil 1/2/4/5: die Beine bleiben am alten Platz);
+     *   3 = Granatwerfer an einem LIEGENDEN Zombie mit Beinen (Runde 42 Runde 2): die Beine bleiben in der Pose des
+     *       Todesbilds (re2z_low_kf) am Todesort liegen, dieselbe Disc-Stelle; FUN_8010B7D4 laeuft nicht.
      * re2z_ok_steh: Stehzaehler der Beine in Modus 1 (Bilder bis zum Kippen).
      * re2z_hg: 1 = der letzte Explosionstreffer kam von der HANDGRANATE (Art 2, re15_enemy_take_damage_at), 0 = vom
      *   Granatwerfer-Applier (re2_gl_stempel) oder einem anderen Treffer. Beide fuehren im RE2-Gehirn die Zeile 9. */
     uint8_t  re2z_ok_modus;
     uint8_t  re2z_ok_steh;
     uint8_t  re2z_hg;
+    /* ---- RUNDE 42 GORE U13 (PORT-Felder, enemy_ai_re2_zombie.c re2z_lache_tick): Blutlache unter einem Zombie, der eine
+     * Granate UEBERLEBT hat und liegt (80 % Video B E39 A, Raum 107, 8:17,4-8:25,6). Die Lache liegt fest am Boden (sie
+     * bleibt, wenn der Zombie aufsteht, 80 % B 8:24,6-8:25,0) - darum eigene Weltlage statt des Aktor-Schattens.
+     * re2z_lache_an: 0 = nichts, 1 = Granate ueberlebt (Explosionszeile 9-11), Lache startet beim naechsten Liegen,
+     *                2 = Lache liegt. */
+    int32_t  re2z_lache_x, re2z_lache_y, re2z_lache_z;
+    uint16_t re2z_lache_w, re2z_lache_h;
+    int16_t  re2z_lache_yaw;
+    uint8_t  re2z_lache_an;
     /* ---- RE2-GORE/ZERLEGER (enemy_ai_re2_zombie.c, Welle E) ---------------------------------
      * Die drei ZONEN-POOLS +0x151/+0x152/+0x153 sind KEINE Erfindung: der RE2-INIT setzt alle
      * drei auf 13 (`addiu v0,zero,13` @0x8010081C, `sb v0,337/338/339(s2)` @0x80100820/24/28,
@@ -1284,6 +1295,9 @@ int re15_re2z_gore_part_matrix(re15_actor_t *e, int part, uint32_t frame,
  * Senke, die der Port heute mitzeichnet. Ausserhalb des Ragdolls tut die Funktion nichts. */
 void re15_re2z_ragdoll_part_anchor(const re15_actor_t *e, int bone,
                                    const int32_t part0_welt[3], int32_t trans[3]);
+/* Runde 42 Gore Runde 2: 1 = Beinknochen `bone` der abgetrennten Unterhaelfte mit der eingefrorenen Drehung *yaw zeichnen
+ * (re2z_low_yaw, Disc `ori 0x40` @0x80108820-98 / RE2 part[1] |= 0x40 @0x8010BA88-9C = eigene Matrix). */
+int re15_re2z_beine_eigene_drehung(const re15_actor_t *e, int bone, int16_t *yaw);
 
 /* ---- DIE ABGETRENNTE UNTERHAELFTE (FUN_8010B7D4, Runde 9) -----------------------------------
  * Pro Frame zu rufen, solange der Zombie lebt oder liegt. Schiebt die beim Ragdoll

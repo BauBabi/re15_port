@@ -3409,17 +3409,21 @@ void re15_enemy_bone_world_pos(const re15_actor_t *e, int bone, int32_t out[3])
      * sein Maskenbit ist nicht gesetzt.
      * Der Renderer (main.c) macht dasselbe; hier steht es, damit Messschienen, Kollision
      * und Effekt-Anker nicht eine ANDERE Welt sehen als das Bild. */
-    /* Runde 42 U1 (PORT-WAHL): bei den STEHENDEN Granatwerfer-Beinen (re2z_ok_modus 1) gehoert auch Part 7 (linker Fuss,
-     * Eltern 5 -> 6 -> 7) zur eigenen Pose - sonst stuende er in der Pose des fallenden Rumpfes neben dem Bein. RE2 laesst
-     * ihn aus (Maske 0x7E @0x8010024C), dort liegt die Haelfte beim Aushaengen aber schon. */
-    if (e->re2z_rag_anchor_on && bone >= 1 && bone <= (e->re2z_ok_modus == 1u ? 7 : 6)) kf = re15_re2z_lower_kf(e, NULL);
+    /* Runde 42 U1 (PORT-WAHL): bei den Runde-42-Beinen (re2z_ok_modus 1/2/3) gehoert auch Part 7 (linker Fuss,
+     * Eltern 5 -> 6 -> 7) zur eigenen Pose. RE2 laesst ihn aus der Maske (0x7E @0x8010024C) - nur seine LOKALE Drehung
+     * kommt dort aus dem Rumpf-Clip, die Lage haengt der Zeichner an Teil 6. Der Port posiert absolut: ohne diese Wahl
+     * stuende der Fuss in der Pose des Rumpfes, und beim Schrot-Kriecher (Modus 2) wanderte er mit dem kriechenden
+     * Oberkoerper mit (gemessen Runde 2, test_r42_gore Pruefung 43: 2648 Einheiten). */
+    if (e->re2z_rag_anchor_on && bone >= 1 && bone <= (e->re2z_ok_modus != 0u ? 7 : 6)) kf = re15_re2z_lower_kf(e, NULL);
     re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
     void *save = g_anim_pose_actor;
     g_anim_pose_actor = NULL;                          /* QUERY: don't mutate the crossfade blend */
     int rv = re15_skel_compute_pose(&b->skel, kf, poses);
     g_anim_pose_actor = save;
     if (rv != 0) return;
-    re15_skel_bone_to_world(poses[bone].trans, e->rot_y, e->x, e->y, e->z, out);
+    {   int16_t byaw = (int16_t)e->rot_y;                 /* Runde 42 Runde 2: abgetrennte Beine mit eigener Drehung */
+        (void)re15_re2z_beine_eigene_drehung(e, bone, &byaw);
+        re15_skel_bone_to_world(poses[bone].trans, byaw, e->x, e->y, e->z, out); }
     /* RAGDOLL-BODENANKER (Runde 8, versinken2.md §3): waehrend des Ragdolls haengen
      * Becken+Beine (parts 1..7) im Original an der eingefrorenen Ankermatrix statt an
      * der sinkenden Entity (@0x80106D00 / @0x80106E64-74). Der Renderer wendet das in

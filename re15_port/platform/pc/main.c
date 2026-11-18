@@ -10575,6 +10575,31 @@ re_title:;
                             re15_render_shadow_quad(nsx[0], nsy[0], nsx[1], nsy[1],
                                                     nsx[2], nsy[2], nsx[3], nsy[3]);
                     }
+                    /* Runde 42 Gore U13: die Lache des liegenden Granaten-Ueberlebenden (re15_re2z_lache_tick) liegt FEST am
+                     * Boden, nicht am Aktor - eigenes Viereck mit derselben Projektion und der Leichen-Tinte des RE2-Gehirns
+                     * (0x00BFBF10 @0x8010a4c0-508). */
+                    if (npc->re2z_lache_an == 2u && nis_zombie) {
+                        int32_t lw = npc->re2z_lache_w, lh = npc->re2z_lache_h;
+                        int32_t lc[4][3] = { { -lw, 0, lh }, { -lw, 0, -lh }, { lw, 0, lh }, { lw, 0, -lh } };
+                        int32_t lyaw[9];
+                        re15_camera_yaw_matrix_angle(npc->re2z_lache_yaw, lyaw);
+                        int32_t lwelt[3] = { npc->re2z_lache_x, npc->re2z_lache_y, npc->re2z_lache_z };
+                        int32_t lrot[9], ltr[3], lmac[4][3];
+                        re15_camera_compose_view_bone(&cam_view, lyaw, lwelt, lrot, ltr);
+                        for (int v = 0; v < 4; v++)
+                            for (int r = 0; r < 3; r++)
+                                lmac[v][r] = (int32_t)(((int64_t)lc[v][0] * lrot[r*3+0] + (int64_t)lc[v][1] * lrot[r*3+1] +
+                                                        (int64_t)lc[v][2] * lrot[r*3+2]) >> 12) + ltr[r];
+                        int lsx[4], lsy[4];
+                        int32_t lvz = 0;
+                        uint8_t ltri[2];
+                        if (re15_objpoly_r38_schatten(lmac, (int)cam_view.fov_screen_dist, cx, cy, lsx, lsy, &lvz, ltri)) {
+                            re15_render_pc_shadow_tiefe(lvz, 0);
+                            re15_render_pc_shadow_dreiecke((uint8_t)(ltri[0] | (ltri[1] << 1)));
+                            re15_render_shadow_quad_c(lsx[0], lsy[0], lsx[1], lsy[1], lsx[2], lsy[2], lsx[3], lsy[3],
+                                                      0x10, 0xBF, 0xBF);
+                        }
+                    }
                 }
 
                 /* GIB-Scatter (Kraehe): Original zerlegt den Koerper in die 13 Bone-Parts
@@ -11185,7 +11210,7 @@ re_title:;
                     static const re15_emd_skeleton_t *s_low_skel_cache = NULL;
                     /* Runde 42 U1 (PORT-WAHL, re15_damage.c re15_enemy_bone_world_pos): die stehenden Granatwerfer-Beine
                      * (re2z_ok_modus 1) posieren auch Part 7 (linker Fuss) aus der eigenen Pose. */
-                    if (npc->re2z_rag_anchor_on && nbi >= 1 && nbi <= (npc->re2z_ok_modus == 1u ? 7 : 6) &&
+                    if (npc->re2z_rag_anchor_on && nbi >= 1 && nbi <= (npc->re2z_ok_modus != 0u ? 7 : 6) &&
                         nbi < npc_bones && npc_skel) {
                         const re15_emd_skeleton_t *lskel = NULL;
                         int lkf = re15_re2z_lower_kf(npc, &lskel);
@@ -11251,12 +11276,25 @@ re_title:;
                     /* Tentakel-Meshes 1..3 (RE2-RAM s09: je 4 Vertices +-5 = Platzhalter-Quad) stehen an den Teil-Lagen der
                      * GESTRECKTEN Kette (oben re15_g5_tentakel_kette_strecken); Teile 1..3 tragen kein Flag 0x400 (Ctor
                      * `ori 0x4800` @0x80100774-0x8010078c), also keine zweite Streckung um Teil 0. */
+                    /* Runde 42 Gore Runde 2: abgetrennte Beine mit eigener (eingefrorener) Drehung, Block ueber
+                     * re15_re2z_beine_eigene_drehung (Disc `ori 0x40` @0x80108820-98, RE2 @0x8010BA88-9C). */
+                    const int32_t *nyaw_b = nyaw;
+                    int32_t nyaw_beine[9];
+                    {   int16_t byaw;
+                        if (re15_re2z_beine_eigene_drehung(npc, nbi, &byaw)) {
+                            int32_t bs = re15_sin_q12(byaw), bc = re15_cos_q12(byaw);
+                            int32_t m[9] = { bc, 0, bs, 0, 0x1000, 0, -bs, 0, bc };
+                            for (int k = 0; k < 9; k++)
+                                nyaw_beine[k] = npc->render_scale_q12 ? ((m[k] * (int32_t)npc->render_scale_q12) >> 12) : m[k];
+                            nyaw_b = nyaw_beine;
+                        }
+                    }
                     int32_t nyawed_rot[9];
                     for (int r = 0; r < 3; r++) {
                         for (int c = 0; c < 3; c++) {
                             int64_t s = 0;
                             for (int k = 0; k < 3; k++)
-                                s += (int64_t)nyaw[r*3+k] * (int64_t)np->rot[k*3+c];
+                                s += (int64_t)nyaw_b[r*3+k] * (int64_t)np->rot[k*3+c];
                             nyawed_rot[r*3+c] = (int32_t)(s >> 12);
                         }
                     }
@@ -11264,7 +11302,7 @@ re_title:;
                     for (int r = 0; r < 3; r++) {
                         int64_t s = 0;
                         for (int k = 0; k < 3; k++)
-                            s += (int64_t)nyaw[r*3+k] * (int64_t)np->trans[k];
+                            s += (int64_t)nyaw_b[r*3+k] * (int64_t)np->trans[k];
                         nyawed_trans[r] = (int32_t)(s >> 12);
                     }
                     int32_t nbone_world_trans[3] = {

@@ -11,7 +11,8 @@ add_executable(test_r42_gore
 target_link_libraries(test_r42_gore PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r42_gore PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/platform/pc/src)
 target_compile_definitions(test_r42_gore PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_R42_LACHE=1)   # Runde 2: die Lache-Felder gibt es (fuer die Gegenprobe gegen aaea5f8c2 ohne diesen Schalter bauen)
 if(NOT WIN32)
     target_link_libraries(test_r42_gore PRIVATE m)
 endif()
