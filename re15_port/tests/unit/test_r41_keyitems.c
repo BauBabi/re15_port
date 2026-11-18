@@ -344,7 +344,10 @@ static void teil_aktion(void)
             if (ev >= 0) scd_event_fire((uint8_t)ev);
             else { g_scd.work_vars[0] = (int16_t)slot; }
             int nachrichten = 0, auswahl = 0, vor_id = -1;
-            for (int k = 0; k < 400; k++) {
+            /* Runde 42 rest (a): ROOM2040/2041 Ereignis 7 zeigt vor der Frage 5 den Aushang msg 0 (411 Byte, fuenf Seiten). Bis dahin
+             * schnitt der Port ihn nach 192 Byte ab (msg_common.c MSG_RAW_LEN), dann reichten 400 Bilder; der volle Text braucht mehr. */
+            const int bilder = ((raum & 0xFFFEu) == 0x2040u) ? 1200 : 400;
+            for (int k = 0; k < bilder; k++) {
                 bild((k % 8) == 7 ? RE15_PAD_BIT_SQUARE : 0, 0);
                 if (g_scd.message_active && (int)g_scd.message_id != vor_id) { nachrichten++; vor_id = g_scd.message_id; }
                 if (g_scd.message_active && g_scd.message_fsm == 3) auswahl++;

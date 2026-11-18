@@ -26,15 +26,25 @@
  * stack collided with BSS → hang. RE1.5 rooms use only a handful of messages
  * (room1170 = 12), so the PSX build uses a small table; the PC keeps the full
  * domain. msg_id is bound-checked against MSG_TABLE_N everywhere it indexes
- * these tables (durations stays [256] — only 512 B — so any byte id is safe). */
+ * these tables (durations stays [256] — only 512 B — so any byte id is safe).
+ *
+ * Runde 42 rest (a): KEINE dieser Laengen stammt aus dem Original. Das Original kopiert keine Nachricht: Message_on (@0x800404f4,
+ * a1 = 0x300 @0x80040500) -> FUN_80027e68 Zweig 0x300 -> `jal 0x800c004c` @0x80027fb4; die Laufzeit-Routine @0x800c004c
+ * (Savestate stage_saves/mzd_stage1_briefing.sav: `lw v0,-0x3888(v0)` = RDT-Zeiger 0x800ac778, `lw v0,0x3c(v0)` = RDT+0x3C,
+ * `lhu t0,0(t0) / jr ra / addu v0,v0,t0` @0x800c0094-a4) gibt den Zeiger IN die RDT, FUN_80028134 liest bis zum 0x01. Die 128 der
+ * PSX-Fassung sind eine PORT-WAHL (RAM, s. oben). Die PC-Kapazitaet war 192/160 - ebenfalls Port-Wahl - und schnitt ROOM2040/2041
+ * msg 0 ab (Aushang "Notice of damage door", 411 Byte bis zum 0x01, RDT-Datei-Offset 0x175C; die Schreibmaschine endete nach
+ * 192 Byte mitten im Satz). PC jetzt 512: laengste Nachricht aller ausgelieferten RDTs 411 Byte (Zensus test_r42_rest msglaenge),
+ * laengster Port-Text 139 Byte (ROOM6030 msg 4). Riegel: unit_r42_rest_msglaenge / _schreibmaschine. Die PSX-Fassung schneidet
+ * ROOM2040 msg 0 und ROOM6030 msg 4 weiter ab (OFFEN, PSX-Bau ist nicht ausgeliefert). */
 #ifdef PSN00BSDK
 #define MSG_TABLE_N    32
 #define MSG_TEXT_LEN   128
 #define MSG_RAW_LEN    128
 #else
 #define MSG_TABLE_N    256
-#define MSG_TEXT_LEN   160
-#define MSG_RAW_LEN    192
+#define MSG_TEXT_LEN   512   /* PORT-WAHL >= 411 (Runde 42 rest a, s. oben) */
+#define MSG_RAW_LEN    512   /* PORT-WAHL >= 411 (Runde 42 rest a, s. oben) */
 #endif
 
 /* Pre-computed duration table populated by host at startup; queried by SCD VM
