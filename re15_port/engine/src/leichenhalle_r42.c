@@ -302,6 +302,11 @@ void re15_leichenhalle_r42_install(uint16_t room_id)
                RE15_R42L_BANK, RE15_R42L_BIT);
         return;
     }
+    if (re15_game_flag_get(RE15_R42L_MD_BANK, RE15_R42L_MD_BIT)) {   /* Kopf "MINIDISC ZUERST" */
+        LH_LOG("ROOM%04X: Ck(%d,%d)=1 (Mod-sub03 @0x00A08 vor Evt_exec @0x00A0C) -> Mod oeffnet das Fach, kein Ausloeser",
+               (unsigned)room_id, RE15_R42L_MD_BANK, RE15_R42L_MD_BIT);
+        return;
+    }
     s_scharf = 1;
     LH_LOG("ROOM%04X: Ausloeser scharf, Etage %d, Rechteck x %d..%d z %d..%d (Disc main00 @0x007D2)", (unsigned)room_id,
            RE15_R42L_ETAGE, RE15_R42L_X, RE15_R42L_X + RE15_R42L_B, RE15_R42L_Z, RE15_R42L_Z + RE15_R42L_T);
@@ -314,6 +319,13 @@ void re15_leichenhalle_r42_tick(void)
     if (re15_game_flag_get(RE15_R42L_BANK, RE15_R42L_BIT)) {   /* Mod-sub03 hat das Fach schon geoeffnet */
         s_scharf = 0;
         LH_LOG("ROOM%04X: Ck(%d,%d)=1 waehrend des Besuchs (Mod-sub03 @0x00A36) -> Ausloeser aus", (unsigned)s_raum,
+               RE15_R42L_BANK, RE15_R42L_BIT);
+        return;
+    }
+    if (re15_game_flag_get(RE15_R42L_MD_BANK, RE15_R42L_MD_BIT)) {   /* Minidisc zuerst (Kopf "MINIDISC ZUERST") */
+        s_scharf = 0;
+        LH_LOG("ROOM%04X: Ck(%d,%d)=1 (Minidisc genommen, Mod-sub03 @0x00A08 -> Evt_exec @0x00A0C oeffnet das Fach, "
+               "Set(%d,%d) erst @0x00A36) -> Ausloeser aus", (unsigned)s_raum, RE15_R42L_MD_BANK, RE15_R42L_MD_BIT,
                RE15_R42L_BANK, RE15_R42L_BIT);
         return;
     }
@@ -342,7 +354,13 @@ int re15_leichenhalle_r42_evt_exec_gestrichen(uint16_t room_id, const uint8_t *p
     if (pc[0] != 0x04 || pc[1] != 0xFF || pc[2] != 0x18 || pc[3] != 0x02) return 0;
     if (!anker_ok(rdt)) return 0;
     const int offen = s_gestartet || re15_game_flag_get(RE15_R42L_BANK, RE15_R42L_BIT);
-    if (!offen) return 0;
+    if (!offen) {   /* die Mod oeffnet das Fach JETZT selbst (sub02 @0x009A0) -> der Disc-Ausloeser darf nicht mehr kommen */
+        if (s_scharf && (uint16_t)room_id == s_raum) {
+            s_scharf = 0;
+            LH_LOG("ROOM%04X: Mod-sub03 @0x00A0C Evt_exec(sub02) laeuft - Mod oeffnet das Fach, Ausloeser aus", (unsigned)room_id);
+        }
+        return 0;
+    }
     s_ausgelassen++;
     LH_LOG("ROOM%04X: Mod-sub03 @0x00A0C Evt_exec(sub02) ausgelassen - Kuehlfach schon offen (%s)", (unsigned)room_id,
            s_gestartet ? "Disc-Ablauf in diesem Besuch" : "Ck(4,17)=1");

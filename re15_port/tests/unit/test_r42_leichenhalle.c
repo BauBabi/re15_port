@@ -24,6 +24,7 @@
  *      und landet auf der Spieler-Ebene (y 0, Etage 0) — in BEIDEN KI-Geschmaeckern, Spieler vor den Faechern.
 
  *   F  Wiederbetreten nach dem Ablauf ohne Minidisc (Stufe 1 Runde 2, Pruefbericht R1): Hinterhalt bleibt, s. wieder().
+ *   G  Minidisc ZUERST, danach sofort in die Flaeche (Stufe 1 Runde 3, Pruefbericht Runde 2 R1): kein zweiter Ablauf, s. md_zuerst().
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -392,6 +393,96 @@ static void wieder(uint16_t room, re15_ai_flavor_t fl, const char *name)
     tote_loeschen();
 }
 
+/* G: Minidisc ZUERST (Pruefbericht Stufe 1 Runde 2, R1). Mod-sub03 @0x009F4 oeffnet das Fach selbst (@0x00A08 Ck(9,104)==1,
+ * @0x00A0C Evt_exec sub02 @0x009A0) und setzt (4,17) erst 10 Bilder spaeter (@0x00A1E/@0x00A2A Sleep 5+5, @0x00A36 Set).
+ *   G0 echter Weg: an der Nordwand (z -15900) von Osten nach Westen bis an die Klemme, OHNE das Disc-Rechteck (Disc main00
+ *      @0x007D2: x -26590 +1410, z -17180 +1150) zu betreten; die Aktion dort feuert Ereignis 3 (Mod sub00 @0x0091E Aot 2 =
+ *      sub03). Bis dahin klappert nichts.
+ *   G1 sub03 ab @0x00A04 mit (9,104)=1, der Spieler tritt nach K Bildern (K = 0..20) in die Flaeche: die Tuer klappert NICHT
+ *      (z bleibt -14382, kein Pos_set der Disc @0x00922..) und endet bei derselben Drehung wie ohne Betreten (Mod allein). */
+static int g_im_rechteck(int32_t px, int32_t pz)   /* FUN_80042b64 `sltu` @0x80042b78 / @0x80042b94, Satz @0x007D2 */
+{
+    return (uint32_t)(px - (-26590)) <= 1410u && (uint32_t)(pz - (-17180)) <= 1150u;
+}
+static void g_schritt(uint16_t pad)
+{
+    const unsigned char *raw; int len, id;
+    re15_msg_tick(&raw, &len, &id);
+    s_ctx.pad_current = pad; s_ctx.pad_pressed = 0;
+    scd_vm_tick();
+    re15_game_step(&s_ctx);
+}
+/* K < 0: der Spieler bleibt draussen (Bezug = Mod allein). Rueckgabe: Endrot der Tuer; *z_wechsel = Zahl der z-Aenderungen. */
+static int g_lauf(uint16_t room, int K, int *z_wechsel, int *f17)
+{
+    raum_betreten_mit(room, RE15_AI_FLAVOR_RE2, 0, 0);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int o = obj1();
+    if (o < 0) return -99999;
+    for (int f = 0; f < 20; f++) { pl->hp = 100; pl->x = -25788; pl->z = -15900; pl->floor = 0; pl->y = 0; frame_step(); }
+    re15_game_flag_set(9, 104, 1);                                 /* Aufnahme bestaetigt (sub03 @0x00A00/@0x00A02) */
+    int slot = -1;
+    for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST; s++)
+        if (!g_scd.threads[s].active && scd_thread_start(s, s_rdt.raw + 0x00A04) == 0) { slot = s; break; }
+    if (slot < 0) return -99998;
+    *z_wechsel = 0; *f17 = -1;
+    int32_t vz = g_scd.props[o].z;
+    for (int f = 0; f < 400; f++) {
+        pl->hp = 100; pl->floor = 0; pl->y = 0;
+        if (K < 0 || f < K) { pl->x = -25788; pl->z = -15900; } else { pl->x = -25885; pl->z = -16605; }
+        frame_step();
+        if (g_scd.props[o].z != vz) { (*z_wechsel)++; vz = g_scd.props[o].z; }
+        if (*f17 < 0 && re15_game_flag_get(4, 17)) *f17 = f;
+    }
+    return g_scd.props[o].rot_y;
+}
+static void md_zuerst(uint16_t room, const char *name)
+{
+    /* G0 */
+    raum_betreten_mit(room, RE15_AI_FLAVOR_RE2, 0, 0);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int o = obj1();
+    CHECK(o >= 0, "[%s G0] obj 1 fehlt", name);
+    if (o < 0) return;
+    pl->x = -23800; pl->z = -15900; pl->rot_y = 2048;
+    int drin = 0, zw = 0; int32_t vz = g_scd.props[o].z;
+    for (int f = 0; f < 300; f++) {
+        pl->hp = 100; g_schritt(RE15_PAD_BIT_UP);
+        if (g_im_rechteck(pl->x, pl->z)) drin++;
+        if (g_scd.props[o].z != vz) { zw++; vz = g_scd.props[o].z; }
+    }
+    pl->rot_y = 2048;
+    for (int f = 0; f < 3; f++) { pl->hp = 100; g_schritt(0); }
+    g_aot_action_pressed = 1;
+    re15_aot_scan(pl->x, pl->z, 0);
+    const int ev = g_aot.fired_event_id_this_frame;
+    g_aot_action_pressed = 0;
+    CHECK(drin == 0 && zw == 0, "[%s G0] auf dem Weg an der Nordwand: %d Bilder im Rechteck, %d Klapper-Schritte", name, drin, zw);
+    CHECK(ev == 3, "[%s G0] Aktion bei (%d,%d): Ereignis %d, erwartet 3 (Mod sub00 @0x0091E Aot 2 -> sub03)", name, pl->x, pl->z, ev);
+    printf("  [G0 %s] Nordwand bis (%d,%d) ohne Rechteck (%d Bilder drin), Aktion -> Ereignis %d (sub03 Minidisc)\n", name,
+           pl->x, pl->z, drin, ev);
+
+    /* G1 */
+    int zb = 0, f17b = -1;
+    const int bezug = g_lauf(room, -1, &zb, &f17b);
+    CHECK(zb == 0 && f17b > 0, "[%s G1] Bezug Mod allein: z-Wechsel %d, (4,17) ab Bild %d", name, zb, f17b);
+    static const int ks[] = { 0, 1, 2, 3, 5, 8, 10, 12, 20 };
+    int schlecht = 0;
+    for (unsigned i = 0; i < sizeof ks / sizeof ks[0]; i++) {
+        int zwk = 0, f17 = -1;
+        const int rot = g_lauf(room, ks[i], &zwk, &f17);
+        if (zwk != 0 || rot != bezug) {
+            schlecht++;
+            printf("    [G1 %s] K=%d: z-Wechsel %d, Endrot %d (Mod allein %d)\n", name, ks[i], zwk, rot, bezug);
+        }
+        CHECK(zwk == 0, "[%s G1] K=%d: Tuer klappert nach dem Minidisc (%d z-Wechsel, Disc-Pos_set @0x00922..)", name, ks[i], zwk);
+        CHECK(rot == bezug, "[%s G1] K=%d: Tuer endet bei %d statt %d (Mod-sub02 @0x009A0 allein)", name, ks[i], rot, bezug);
+        CHECK(f17 > 0 && re15_game_flag_get(9, 104), "[%s G1] K=%d: (4,17) ab Bild %d", name, ks[i], f17);
+    }
+    printf("  [G1 %s] Minidisc zuerst, K = 0..20 Bilder spaeter in die Flaeche: %d von %u Laeufen falsch, Tuer endet bei %d "
+           "(Mod allein), (4,17) ab Bild %d\n", name, schlecht, (unsigned)(sizeof ks / sizeof ks[0]), bezug, f17b);
+}
+
 int main(void)
 {
     size_t n = 0;
@@ -440,6 +531,11 @@ int main(void)
     wieder(0x1200, RE15_AI_FLAVOR_RE2,  "Leon RE2");
     wieder(0x1201, RE15_AI_FLAVOR_RE2,  "Elza RE2");
     wieder(0x1200, RE15_AI_FLAVOR_RE15, "Leon RE1.5");
+
+    /* G: Minidisc zuerst (Pruefbericht Stufe 1 Runde 2, R1) */
+    tote_loeschen();
+    md_zuerst(0x1200, "Leon");
+    md_zuerst(0x1201, "Elza");
 
     free(buf);
     if (fails) { printf("test_r42_leichenhalle: %d FAIL\n", fails); return 1; }

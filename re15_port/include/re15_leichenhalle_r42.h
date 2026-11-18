@@ -74,6 +74,20 @@
  *                     @0x00976 Ck(7,142) (Musik, wenn alle vier tot sind) weiter zaehlt.
  *   Die Kuehlfach-Tuer steht dann nach Mod main00 Else @0x0082A offen (Gier 2949 = Disc @0x0085A). Mit Minidisc ((9,104)=1)
  *   laeuft der Mod-Else-Zweig unveraendert.
+ *
+ * MINIDISC ZUERST (Stufe 1 Runde 3, Pruefbericht Runde 2 R1): Der Spieler kann an der Nordwand entlang bis (-25788,-15900)
+ *   gehen, ohne das Disc-Rechteck (z -17180..-16030) zu betreten, und dort per Aktion Aot 2 (Mod sub00 @0x0091E) = sub03
+ *   ausloesen (gemessen, Probe pruef_s1_r2/probe/probe_untersuchen.c). Mod-sub03 @0x009F4:
+ *     @0x00A00 `47 03` Aot_on(3) / @0x00A02 `02` Evt_next (Aufnahme)  ->  @0x00A08 `21 09 68 01` Ck(9,104)==1  ->  @0x00A0C `04 ff 18 02` Evt_exec(sub02)
+ *     (Mod-Tuerschwung + Kriecher 0x81)  ->  @0x00A1E / @0x00A2A `09 0a 05 00` Sleep 5 + 5  ->  @0x00A36 `22 04 11 01` Set(4,17,1).
+ *   Zwischen dem Evt_exec und Set(4,17) liegen 10 Bilder; nur an (4,17) gemessen war der Ausloeser dort noch scharf, und wer
+ *   in die Flaeche trat, startete den Disc-Ablauf auf die schon schwingende Tuer (Drehung bis 4052 statt 2130).
+ *   PORT-WAHL: der Ausloeser ist aus, sobald (9,104)=1 ist (die Bedingung @0x00A08 direkt vor dem Evt_exec; Zensus Runde 2:
+ *   in der Mod folgt auf (9,104)=1 stets Evt_exec @0x00A0C und Set(4,17) @0x00A36) und ebenso, sobald das Evt_exec @0x00A0C
+ *   wirklich ausgefuehrt wird. Gleiches beim Betreten mit (9,104)=1. Der Disc-Ablauf selbst bleibt Byte fuer Byte.
+ *   Gemessen im echten Fenster (Eingabeskript, Stufe 1 Runde 3): sub03 haelt die Pad-Sperre @0x009F4 `22 02 07 01` bis
+ *   @0x00A42 `22 02 07 00` ueber das ganze Fenster (state.log pf=0x01000000) - mit echter Eingabe kommt der Spieler dort
+ *   nicht in die Flaeche. Die Sperre ist trotzdem gesetzt, damit kein anderer Weg (Stoss, Teleport, Riegel) den Fall oeffnet.
  */
 #ifndef RE15_LEICHENHALLE_R42_H
 #define RE15_LEICHENHALLE_R42_H
