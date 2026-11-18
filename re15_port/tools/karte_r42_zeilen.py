@@ -76,8 +76,10 @@ def gemalt(pg, r):
     return min(xs), min(ys), max(xs), max(ys)
 
 
-def zeile_rot(bbox, ziel, rot, skala):
-    """Kollisions-Bbox mittig in den Zielkasten, Massstab je KARTEN-Achse hoechstens der des Blatts."""
+def zeile_rot(bbox, ziel, rot, skala, anker=''):
+    """Kollisions-Bbox mittig in den Zielkasten, Massstab je KARTEN-Achse hoechstens der des Blatts.
+    anker (Stufe 2): 'W'/'E'/'N'/'S' = statt mittig an diese Kante des Zielkastens (die Tuerlinie, an der das
+    Original die Tuersymbole malt - ROOM6000: Westwand von r5 = Ostwand von r0)."""
     fx, fz, ts = ROT[rot]
     x0, z0, x1, z1 = bbox
     a0, a1 = (z0, z1) if ts else (x0, x1)
@@ -88,6 +90,14 @@ def zeile_rot(bbox, ziel, rot, skala):
     ca, cb = (a0 + a1) // 2, (b0 + b1) // 2
     ox = round((X0 + X1) / 2 - (-sf(ca, sx) if fx else sf(ca, sx)))
     oy = round((Y0 + Y1) / 2 - (sf(cb, sy) if fz else -sf(cb, sy)))
+    if 'W' in anker or 'E' in anker:
+        lo = min(-sf(a0, sx), -sf(a1, sx)) if fx else min(sf(a0, sx), sf(a1, sx))
+        hi = max(-sf(a0, sx), -sf(a1, sx)) if fx else max(sf(a0, sx), sf(a1, sx))
+        ox = X0 - lo if 'W' in anker else X1 - hi
+    if 'N' in anker or 'S' in anker:
+        lo = min(sf(b0, sy), sf(b1, sy)) if fz else min(-sf(b0, sy), -sf(b1, sy))
+        hi = max(sf(b0, sy), sf(b1, sy)) if fz else max(-sf(b0, sy), -sf(b1, sy))
+        oy = Y0 - lo if 'N' in anker else Y1 - hi
     return (ox, oy, sx, sy, fx, fz, ts)
 
 
@@ -122,7 +132,12 @@ def wandpunkt(s, wand=None):
 #   Flaeche des Rechtecks), bbox = Zonen-Kasten im Header (sonst unveraendert), fit = Kasten nur fuer
 #   die Zeile (Zonen-Kasten bleibt).
 def O(rect, quelle, zid, notiz, rot=None, **kw):
-    d = dict(rect=rect, quelle=quelle, zid=zid, notiz=notiz, rot=rot or 'R0', ziel=None, bbox=None, fit=None)
+    # Stufe 2: etage = GAST-Zeile (derselbe Ort auf einem fremden Etagen-Blatt, Header-Feld etage = 1),
+    # baender = nur Tueren/Treppen dieser Baender gehoeren auf dieses Blatt (Treppenhaus 4070, 50D0),
+    # eigen_rot = die Zone ist ein ABGETRENNTER Teil des Raums (nur per Warp erreichbar, ROOM4050):
+    # ihre Drehung wird je Zone geprueft, nicht je Raum.
+    d = dict(rect=rect, quelle=quelle, zid=zid, notiz=notiz, rot=rot or 'R0', ziel=None, bbox=None, fit=None,
+             etage=0, baender=None, eigen_rot=False)
     d.update(kw)
     return d
 
@@ -172,19 +187,125 @@ PLAENE = {
     }),
 }
 
+# ---- STUFE 2: STAGE4 (Blatt 8), STAGE5 (Blaetter 9-11), STAGE6 (Blatt 12) ------------------------------
+# Rechteck je Raum: ausgelieferte Zeile -> das Rechteck, auf das ihre SCA-Zellen fallen (Memory
+# karte-massstabstabelle); sonst Tuer-Identitaet (gemaltes Symbol an der Grenze, Nachbar mit ausgelieferter
+# Zeile) und die Form der gemalten Kachel. Belege je Raum: analysis/karte_r42/BESTAND_s2_r1.md.
+PLAENE[8] = dict(skala=None, orte={
+    (0x4000, 0): O(0, 'echt', 65, ''),
+    (0x4010, 0): O(1, 'echt', 66, ''),
+    # Fahrstuhl 402 (16x16 auf Blatt 8/9/10, Spawn immer (-21400,-23400), keine eigene Tuer im RDT): Bestand
+    (0x4020, 0): O(2, 'bestand', 67, 'Fahrstuhlkabine'),
+    (0x4030, 0): O(3, 'echt', 68, ''),
+    # 4040 = linke Haelfte des Rings (gemalt r4 + Diagonalstueck r12 an 4030): senkrechter Gang mit den
+    # Tueren nach 4050, Diagonale hinab zu 4070 (gemalt TUER E (139,161) auf r4), Diagonale hinauf zu 4030.
+    (0x4040, 0): O(4, 'min', 69, 'Ring links (r4)', 'R0', ziel=(102, 100, 157, 175)),
+    (0x4040, 1): O(12, 'wie:4040.0', 119, 'Ring links, Diagonale an 4030 (r12)', 'R0',
+                   bbox=(-400, 3400, 9525, 13300)),   # der Teil, den die Zeile auf r12 legt
+    # 4050 = Labyrinth (8 Zellen, nur per Warp verbunden). Gemalt sind die zwei Kammern am 4040-Gang:
+    # r5 (Tuer an seiner Ostseite oben) und r6 (Tuer an seiner Westseite). Zone 0 = Verteiler A
+    # (Tuer slot 0 -> 4040, Spawn aus 4040-Tuer 1), Zone 1 = Verteiler B (slot 4 -> 4040, aus 4040-Tuer 2).
+    (0x4050, 0): O(5, 'min', 70, 'Labyrinth Verteiler A (r5)', 'R90ccw', bbox=(-3000, -13600, 12650, -5450),
+                   eigen_rot=True),
+    (0x4050, 1): O(6, 'min', 118, 'Labyrinth Verteiler B (r6)', 'R90cw', bbox=(-19500, -29000, -3850, -20500),
+                   eigen_rot=True),
+    (0x4070, 0): O(7, 'min', 71, 'Treppenhaus (Band 12)', 'R0', baender={12}),
+    # 4080 = rechte Haelfte des Rings (r8 + Diagonalstueck r13 an 4030)
+    (0x4080, 0): O(8, 'min', 72, 'Ring rechts (r8)', 'R0', ziel=(162, 111, 218, 167)),
+    (0x4080, 1): O(13, 'wie:4080.0', 120, 'Ring rechts, Diagonale an 4030 (r13)', 'R0',
+                   bbox=(-9338, -6600, 5232, 7039)),
+    (0x4090, 0): O(9, 'echt', 73, ''),
+    (0x40A0, 0): O(10, 'echt', 74, ''),
+    (0x40B0, 0): O(11, 'min', 75, '', 'R0',
+                   port_wahl='einzige Tuer im Rauminneren (Trigger mittig, Trigger-Form W gegen Ankunfts-Yaw E): keine '
+                             'Weltseite; R0 wie der Bestand, gemalter Eingang oben links in r11 an der 4080-Diagonale'),
+})
+PLAENE[9] = dict(skala=None, orte={
+    (0x5000, 0): O(0, 'min', 76, 'Kreuz r0', 'R90cw'),
+    (0x5010, 0): O(1, 'echt', 77, ''),
+    (0x5020, 0): O(2, 'min', 78, '', 'R0'),
+    (0x5030, 0): O(3, 'echt', 79, ''),
+    (0x5040, 0): O(4, 'echt', 80, ''),
+    (0x5050, 0): O(5, 'min', 81, 'Kammer in r4', 'R0',
+                   port_wahl='eine Tuer; (b) 5040 @0x80076B38 -> (88,100) auf der Westkante von r5, Weltseite W: '
+                             'nur R0 bildet das ab'),
+    (0x5060, 0): O(6, 'echt', 82, ''),
+    (0x5070, 0): O(7, 'min', 115, 'T-Gang r7', 'R180', bbox=(-32318, -28450, 4352, 16907)),
+    (0x50A0, 0): O(10, 'echt', 85, ''),
+    (0x50B0, 0): O(11, 'min', 86, '', 'R0'),
+    (0x5110, 0): O(3, 'echt', 92, ''),
+    (0x5120, 0): O(4, 'echt', 93, ''),
+    (0x5130, 0): O(7, 'min', 116, 'T-Gang r7 (Variante von 5070)', 'R180', bbox=(-32318, -28450, 4352, 16907)),
+    (0x5140, 0): O(10, 'echt', 94, ''),
+    (0x5140, 1): O(12, 'echt', 117, 'Ostgang (nur 5140) = r12', bbox=(-500, -17700, 19702, -9100)),
+    # Gast-Zeilen
+    (0x4020, 0): O(13, 'bestand', 67, 'Fahrstuhlkabine', etage=1),
+    (0x4070, 0): O(14, 'min', 71, 'Treppenhaus (Band 8)', 'R0', etage=1, baender={8}),
+    # 6020 (STAGE6): zwei gleiche Achteck-Raeume, je eine Tuer nach 5130 - gemalt sind sie NUR hier
+    # (r8/r9, an den zwei gemalten Ost-Tueren von r7). PORT-WAHL Blatt 9 statt 12.
+    (0x6020, 0): O(8, 'min', 97, 'Achteck Sued (r8) - PORT-WAHL Blatt 9', 'R90cw'),
+    (0x6020, 1): O(9, 'min', 98, 'Achteck Nord (r9) - PORT-WAHL Blatt 9', 'R90cw'),
+})
+PLAENE[10] = dict(skala=None, orte={
+    (0x50C0, 0): O(0, 'echt', 87, ''),
+    (0x50D0, 0): O(1, 'min', 88, 'Oberes Stockwerk (Band 3)', 'R0', baender={3}),
+    (0x50E0, 0): O(2, 'min', 89, '', 'R0',
+                   port_wahl='eine Tuer (Westwand), r1 = 50D0 liegt westlich (c): nur R0 bildet das ab'),
+    (0x4020, 0): O(3, 'bestand', 67, 'Fahrstuhlkabine', etage=1),
+})
+PLAENE[11] = dict(skala=None, orte={
+    (0x5100, 0): O(0, 'echt', 91, ''),
+    (0x50D0, 0): O(1, 'min', 88, 'Unteres Stockwerk (Band 0)', 'R0', etage=1, baender={0}),
+    (0x50F0, 0): O(2, 'min', 90, '', 'R0',
+                   port_wahl='eine Tuer (Westwand), r1 = 50D0 liegt westlich (c): nur R0 bildet das ab'),
+    (0x4070, 0): O(3, 'min', 71, 'Treppenhaus (Band 0)', 'R0', etage=1, baender={0}),
+})
+PLAENE[12] = dict(skala=None, orte={
+    # 6000/6010: beide Kollisionen reichen ~9400 Einheiten UEBER die gemeinsame Tuerlinie (x ~ -5000) hinaus
+    # (Gleisbereich in beiden RDTs). Gemalt ist die Tuerlinie als Ostwand von r0 = Westwand von r5 mit zwei
+    # Tuersymbolen (191,103)/(191,133). PORT-WAHL: Kasten fuer die Zeile nur bis zur Tuerlinie (fit), 6000 an
+    # die Westkante von r5 gelegt (anker W); die Belege [F] dieser zwei Tueren sind fuer 6000 daher nicht frei.
+    (0x6000, 0): O(5, 'min', 95, 'Bahnsteig Ost (r5)', 'R0', fit=(-4900, -25284, 22283, 6701), anker='W'),
+    (0x6010, 0): O(0, 'min', 96, 'Bahnsteig West mit Treppen (r0)', 'R0', fit=(-32012, -32020, -5215, 4435)),
+    (0x6030, 0): O(7, 'echt', 99, ''),
+    # 5080 (STAGE5) liegt an der Westtuer von 6010 = gemalt r6 (TUER E (135,130)). PORT-WAHL Blatt 12 statt 9.
+    (0x5080, 0): O(6, 'min', 83, 'Raum an 6010 (r6) - PORT-WAHL Blatt 12', 'R0',
+                   port_wahl='eine Tuer (Ostwand), gemalt TUER E (135,130) zwischen r6 und r0: nur R0 bildet das ab'),
+}, marken={
+    # 6000<->6030: die AUSGELIEFERTE 6030-Zeile @0x80076BD8 legt die Tuer nach 6000 auf (272,111), an das
+    # gemalte Sprossenband (271,107) der Ostkante von r5. Die Marke sitzt dort (Stufe-1-Regel: gemalt vor Mitte).
+    (0x6000, 0x6030): (272, 111, 1, 'AUSGELIEFERTE 6030-Zeile @0x80076BD8 am gemalten Sprossenband (271,107)'),
+})
 
-def zonen_bbox():
+
+def kopf_zeilen():
     kopf = io.open(os.path.join(HIER, '..', 'engine', 'src', 're15_map_zones.h'), encoding='utf-8').read()
     i = kopf.index('s_map_zones[] = {')
     j = kopf.index('\n};', i)
-    out = {}
+    out = []
     for z in kopf[i:j].split('\n'):
         if not z.strip().startswith('{'):
             continue
         m = [int(x, 0) for x in re.findall(r'0x[0-9A-Fa-f]+|-?\d+', z.split('/*')[0])]
-        if len(m) >= 17 and not m[16] and (m[0], m[7]) not in out:
+        if len(m) >= 17:
+            out.append(m + [0] * (18 - len(m)))
+    return out
+
+
+def zonen_bbox():
+    out = {}
+    for m in kopf_zeilen():
+        if not m[16] and (m[0], m[7]) not in out:
             out[(m[0], m[7])] = (m[1], m[2], m[3], m[4])
     return out
+
+
+def bestand_zeile(rid, zone, pg):
+    """Die Zeile, die der Header HEUTE fuer diesen Ort auf diesem Blatt traegt (quelle 'bestand')."""
+    for m in kopf_zeilen():
+        if m[0] == rid and m[7] == zone and m[5] == pg:
+            return (m[9], m[10], m[11], m[12], m[13], m[14], m[17])
+    raise KeyError('%04X.%d ohne Zeile auf Blatt %d' % (rid, zone, pg))
 
 
 def tueren(rid):
@@ -198,22 +319,44 @@ def treppen(rid):
 
 
 def ort_von(orte, bb, rid, x, z, slack=1500):
-    best = None
+    """Wie re15_map_zone_at (re15_map_zones.c zone_index_at): Zonen, deren Kasten +-ZONE_SLACK (1500) den Punkt
+    enthaelt -> die mit der KLEINSTEN Flaeche; sonst die naechste (Abstand zum Kasten). slack begrenzt wie
+    bisher den Manhattan-Abstand, ab dem der Punkt zu keinem Ort gehoert."""
+    drin, nah = None, None
     for (r, i) in orte:
         if r != rid:
             continue
         x0, z0, x1, z1 = bb[(r, i)]
         d = max(x0 - x, 0, x - x1) + max(z0 - z, 0, z - z1)
-        if best is None or d < best[0]:
-            best = (d, (r, i))
-    return best[1] if best and best[0] <= slack else None
+        dx, dz = max(x0 - x, 0, x - x1) // 64, max(z0 - z, 0, z - z1) // 64
+        if x0 - 1500 <= x <= x1 + 1500 and z0 - 1500 <= z <= z1 + 1500:
+            a = ((x1 - x0) // 64) * ((z1 - z0) // 64)
+            if drin is None or a < drin[0]:
+                drin = (a, d, (r, i))
+        if nah is None or dx * dx + dz * dz < nah[0]:
+            nah = (dx * dx + dz * dz, d, (r, i))
+    best = drin or nah
+    return best[2] if best and best[1] <= slack else None
+
+
+def band_ok(orte, u, band):
+    """Gehoert eine Tuer/Treppe dieses Bands auf das Blatt des Orts u? (Gast-Zeilen von Treppenhaus
+    und Mehr-Etagen-Raeumen: nur die Baender, die dorthin fuehren - s_map_floors.)"""
+    b = orte[u].get('baender') if u in orte else None
+    return b is None or band in b
+
+
+# Stufe 2: Ereignis-Varianten desselben Orts (gleiche Kollision, eigene Raumnummer). Die Gegen-Tuer kann in
+# die Variante fuehren: 6020 hat nur Tueren nach 5130, 5070 (= 5130 vor dem Ereignis) fuehrt nach 6020.
+VARIANTE = {0x5070: 0x5130, 0x5130: 0x5070, 0x5030: 0x5110, 0x5110: 0x5030,
+            0x5040: 0x5120, 0x5120: 0x5040, 0x50A0: 0x5140, 0x5140: 0x50A0}
 
 
 def gegen_tuer(R, d):
     """Der reziproke Datensatz im Zielraum (Spawn hier am eigenen Trigger und umgekehrt)."""
     best = None
     for e in tueren(d['dest']):
-        if e['dest'] != R:
+        if e['dest'] != R and e['dest'] != VARIANTE.get(R):
             continue
         dd = (abs(e['nx'] - d['lx']) + abs(e['nz'] - d['lz']) + abs(d['nx'] - e['lx']) + abs(d['nz'] - e['lz']))
         if dd <= 8000 and (best is None or dd < best[0]):
@@ -221,7 +364,7 @@ def gegen_tuer(R, d):
     return best[1] if best else None
 
 
-def paare(orte, bb):
+def paare(orte, bb, pg=0):
     raeume = sorted({r for r, _ in orte})
     out = []
     for R in raeume:
@@ -230,11 +373,16 @@ def paare(orte, bb):
             if N == R or N not in raeume:
                 continue
             e = gegen_tuer(R, d)
+            if not e and pg >= 8 and VARIANTE.get(N) is None and not any(
+                    x['dest'] in (R, VARIANTE.get(R)) for x in tueren(N) if x['rw'] or x['rd']):
+                # Stufe 2: ROOM4030 fuehrt seine Tueren nach 4040/4080 nicht als lesbaren Aot_set (read_rdt
+                # liefert dort Unsinn: Ziel 0xBF0A0/0xC5F00). Ersatz-Gegenstueck = der Spawn in N.
+                e = dict(lx=d['nx'], lz=d['nz'], rw=0, rd=0, band=0, slot=-1, dest=R, yaw=d['yaw'], nx=d['lx'], nz=d['lz'])
             if not e:
                 continue
             u = ort_von(orte, bb, R, d['lx'], d['lz'])
             v = ort_von(orte, bb, N, e['lx'], e['lz'])
-            if u and v:
+            if u and v and band_ok(orte, u, d['band']) and band_ok(orte, v, e['band']):
                 out.append((u, v, d, e))
     return out
 
@@ -291,7 +439,7 @@ def grenz_symbole(pg, ra, rb, treppe=False):
     uy0, uy1 = max(A[1], B[1]) - 4, min(A[1] + A[3], B[1] + B[3]) + 3
     out = []
     for s in KATALOG:
-        if s['pg'] != pg or len(s['wand']) != 1:
+        if s['pg'] != pg or s['wand'] not in ('N', 'S', 'E', 'W'):
             continue
         if not (s['typ'].startswith('TUER') or (treppe and s['typ'] == 'TREPPE')):
             continue
@@ -339,7 +487,7 @@ def passt(welt, karte):
     return out
 
 
-def belege(pg, u, orte, bb):
+def belege(pg, u, orte, bb, rows=None, belegt=()):
     """-> Liste (Tuer, Welt-Angabe, Belegart, Karten-Angabe, Drehungen) fuer den Ort u.
     Welt-Angabe = Wandseite der Tuer (Trigger-Form + Lage, gegengeprueft am Ankunfts-Yaw), bei einem
     QUADRATISCHEN Trigger in einer Ecke der Zonen-Bbox die Ecke (z.B. 'SE').
@@ -348,17 +496,23 @@ def belege(pg, u, orte, bb):
     wohin der Durchgang fuehrt - (99,103) W in r0 liegt an der Westwand, 2000->2050 geht nach Norden);
     (b) Gegen-Tuer mit AUSGELIEFERTER Zeile (die Zeile ist ungedreht, also gibt die Trigger-Form der
     Gegen-Tuer die Wandachse AUF DEM BLATT; die Seite ist die naehere Kante des eigenen Rechtecks);
-    (c) Lage des Nachbar-Rechtecks (nicht, wenn eines das andere fast ganz enthaelt)."""
+    (c) Lage des Nachbar-Rechtecks (nicht, wenn eines das andere fast ganz enthaelt);
+    (d) Stufe 2: Gegen-Tuer mit der HERGELEITETEN Zeile eines Nachbarn, dessen Drehung selbst BELEGT ist
+    (Kette ueber Sackgassen-Raeume mit nur einer Tuer: 5020 an 5000, 50E0/50F0 an 50D0, 5080 an 6010 ...).
+    Die Kartenseite folgt wie bei (b) aus der Trigger-Form der Gegen-Tuer, gedreht mit der Drehung des
+    Nachbarn."""
     o = orte[u]
     R = rects(pg)[o['rect']]
     nb_rects = {}
     for d in tueren(u[0]):
+        if not band_ok(orte, u, d['band']) or d['dest'] == u[0]:      # Warp im selben Raum: kein Nachbar
+            continue
         for k, v in orte.items():
             if k[0] == d['dest'] and v['rect'] != o['rect']:
                 nb_rects.setdefault(v['rect'], set()).add(d['dest'])
     out = []
     for d in tueren(u[0]):
-        if ort_von(orte, bb, u[0], d['lx'], d['lz']) != u or d['dest'] == u[0]:
+        if ort_von(orte, bb, u[0], d['lx'], d['lz']) != u or d['dest'] == u[0] or not band_ok(orte, u, d['band']):
             continue
         e = gegen_tuer(u[0], d)
         ws, ys = weltseite(bb[u], d, e)
@@ -385,6 +539,19 @@ def belege(pg, u, orte, bb):
                     if ms:
                         out.append((d, welt, '(b) %04X ausgeliefert @0x%08X -> (%d,%d), Gegen-Trigger %dx%d' % (
                             d['dest'], z[4], p[0], p[1], e['rw'], e['rd']), ms, passt(welt, ms)))
+            v = ort_von(orte, bb, d['dest'], e['lx'], e['lz'])
+            if z[2] <= 1 and rows and v in rows and v in orte and v[0] in belegt and v != u:
+                p = proj(e['lx'], e['lz'], rows[v])
+                x, y, w, h = R
+                ts = rows[v][6]
+                kurz_x = (e['rw'] < e['rd']) != bool(ts)          # Trigger auf dem BLATT schmal in x?
+                if e['rw'] != e['rd'] and x - 6 <= p[0] <= x + w + 5 and y - 6 <= p[1] <= y + h + 5:
+                    if kurz_x:
+                        ms = 'W' if abs(p[0] - x) < abs(p[0] - (x + w - 1)) else 'E'
+                    else:
+                        ms = 'N' if abs(p[1] - y) < abs(p[1] - (y + h - 1)) else 'S'
+                    out.append((d, welt, '(d) %04X hergeleitet %s (belegt) -> (%d,%d), Gegen-Trigger %dx%d' % (
+                        d['dest'], orte[v]['rot'], p[0], p[1], e['rw'], e['rd']), ms, passt(welt, ms)))
         nb = [(v['rect'], k) for k, v in orte.items() if k[0] == d['dest']]
         for rn, k in nb:
             if e and ort_von(orte, bb, d['dest'], e['lx'], e['lz']) not in (k, None):
@@ -412,15 +579,27 @@ def belege(pg, u, orte, bb):
     return out
 
 
-def pruefe_drehung(pg, rid, orte, bb, log=print):
-    """Drehung je RAUM (alle Zonen eines RDT teilen das Koordinatensystem)."""
-    us = sorted(u for u in orte if u[0] == rid and orte[u]['quelle'] == 'min')
+def pruefe_drehung(pg, rid, orte, bb, log=print, nur=None, rows=None, belegt=()):
+    """Drehung je RAUM (alle Zonen eines RDT teilen das Koordinatensystem). Ausnahme eigen_rot: ein nur
+    per Warp erreichbarer Teil (ROOM4050-Labyrinth) wird je Zone geprueft (nur = diese Zone)."""
+    us = sorted(u for u in orte if u[0] == rid and orte[u]['quelle'] == 'min'
+                and (nur is None or u == nur) and (nur is not None or not orte[u]['eigen_rot']))
     rots = {orte[u]['rot'] for u in us}
     assert len(rots) == 1, 'ROOM%04X: Zonen mit verschiedener Drehung %s' % (rid, rots)
     rot = rots.pop()
     bl = []
-    for u in us:
-        bl += belege(pg, u, orte, bb)
+    # Stufe 2: auch Zonen im selben Rahmen ('wie:<rid>.<z>', z.B. das Diagonalstueck 4080 Zone 1 auf r13)
+    # tragen Tueren dieses Raums.
+    mit = us + sorted(u for u in orte if u[0] == rid and orte[u]['quelle'].startswith('wie:%04X.' % rid)
+                      and nur is None)
+    for u in mit:
+        bl += belege(pg, u, orte, bb, rows, belegt)
+    # Stufe 2: (a) vor (c). Das gemalte Symbol an GENAU dieser Tuer ist der direkte Beleg ihrer Kartenseite,
+    # die Lage des Nachbar-Rechtecks nur ein Ersatz dafuer - und bei den Diagonal-Raeumen des Rings (Blatt 8)
+    # ein falscher: r11 liegt "suedlich" von r8, die Tuer 4080->40B0 sitzt aber auf der Diagonale, an der
+    # Westseite (gemalt TUER2 (175,163) auf r11). Hat eine Tuer eine (a)-Stimme, zaehlt ihre (c)-Stimme nicht.
+    mit_a = {(b[0]['dest'], b[0]['lx'], b[0]['lz']) for b in bl if b[2].startswith('(a)')}
+    bl = [b for b in bl if not (b[2].startswith('(c)') and (b[0]['dest'], b[0]['lx'], b[0]['lz']) in mit_a)]
     dafuer = [b for b in bl if b[4] and rot in b[4]]
     dagegen = [b for b in bl if b[4] and rot not in b[4]]
     tueren_dafuer = {(b[0]['dest'], b[0]['lx'], b[0]['lz']) for b in dafuer}
@@ -441,6 +620,20 @@ def pruefe_drehung(pg, rid, orte, bb, log=print):
     return ok, dafuer, dagegen
 
 
+def drehungen_belegt(pg, orte, bb, rows):
+    """Raeume mit belegter Drehung - iteriert, weil (d) eine Kette ueber belegte Nachbarn ist."""
+    still = lambda *a: None
+    belegt = set()
+    while True:
+        neu = set(belegt)
+        for rid in sorted({u[0] for u in orte if orte[u]['quelle'] == 'min' and not orte[u]['eigen_rot']}):
+            if pruefe_drehung(pg, rid, orte, bb, log=still, rows=rows, belegt=belegt)[0]:
+                neu.add(rid)
+        if neu == belegt:
+            return belegt
+        belegt = neu
+
+
 def loese(pg, log=print):
     plan = PLAENE[pg]
     orte = plan['orte']
@@ -452,20 +645,28 @@ def loese(pg, log=print):
             z = zeile(u[0])
             assert z[2] > 1, '%04X ohne ausgelieferte Zeile' % u[0]
             rows[u] = (z[0], z[1], z[2], z[3], 0, 0, 0, 'ausgeliefert @0x%08X' % z[4])
+        elif o['quelle'] == 'bestand':
+            rows[u] = bestand_zeile(u[0], u[1], pg) + ('Bestand (unveraendert)',)
     if skala is None:
-        skala = (int(statistics.median(r[2] for r in rows.values())),
-                 int(statistics.median(r[3] for r in rows.values())))
+        echt = [r for u, r in rows.items() if orte[u]['quelle'] == 'echt']
+        skala = (int(statistics.median(r[2] for r in echt)),
+                 int(statistics.median(r[3] for r in echt)))
     for u, o in orte.items():
-        if o['quelle'].startswith('wie:'):
+        if o['quelle'].startswith('wie:') and len(o['quelle'][4:].split('.')[0]) == 4 and \
+                (int(o['quelle'][4:8], 16), int(o['quelle'][9:])) in rows:
             a, b = o['quelle'][4:].split('.')
             rows[u] = rows[(int(a, 16), int(b))][:7] + ('selber Rahmen wie ROOM%s' % a,)
     for u, o in sorted(orte.items()):
-        if u in rows:
+        if u in rows or o['quelle'].startswith('wie:'):
             continue
         ziel = o['ziel'] or gemalt(pg, o['rect'])
-        row = zeile_rot(o['fit'] or bb[u], ziel, o['rot'], skala)
+        row = zeile_rot(o['fit'] or bb[u], ziel, o['rot'], skala, o.get('anker', ''))
         rows[u] = row + ('hergeleitet %s' % o['rot'],)
-    return rows, paare(orte, bb), bb, skala
+    for u, o in orte.items():
+        if u not in rows and o['quelle'].startswith('wie:'):
+            a, b = o['quelle'][4:].split('.')
+            rows[u] = rows[(int(a, 16), int(b))][:7] + ('selber Rahmen wie ROOM%s Zone %s' % (a, b),)
+    return rows, paare(orte, bb, pg), bb, skala
 
 
 def projektion_pruefung(pg, rows, P, orte):
@@ -487,6 +688,33 @@ def projektion_pruefung(pg, rows, P, orte):
     return out
 
 
+def stufe2_lage(pg, ra, rb, mx, my):
+    """Stufe 2 (nur Blatt 8-12, Blatt 0-7 bleiben bytegleich): (1) liegt die Marke bis 7 px neben der Kasten-
+    Ueberdeckung der beiden Rechtecke, kommt sie hinein (Pin unit_map_durchgang: Marke in der Ueberdeckung -
+    die Wandlinie x-1/x+w des gemalten Symbols liegt sonst 1 px daneben); (2) traegt dort keine gemalte Kachel
+    (+-1 px), rueckt sie auf das naechste gemalte Texel (Pin unit_r30_karte_nutzerstand: keine Marke ohne
+    Traeger; 4000<->4030 Mitte (161,91) im Gang r14, 6000->50B0 im ungemalten Teil von r5)."""
+    A = rects(pg)[ra]
+    kasten = A
+    if rb is not None:
+        B = rects(pg)[rb]
+        ux0, ux1 = max(A[0], B[0]), min(A[0] + A[2], B[0] + B[2]) - 1
+        uy0, uy1 = max(A[1], B[1]), min(A[1] + A[3], B[1] + B[3]) - 1
+        if ux0 <= ux1 and uy0 <= uy1:
+            kasten = (ux0, uy0, ux1 - ux0 + 1, uy1 - uy0 + 1)
+            nx, ny = min(max(mx, ux0), ux1), min(max(my, uy0), uy1)
+            if abs(nx - mx) + abs(ny - my) <= 7:
+                mx, my = nx, ny
+    pix = set()
+    for r in ([ra] if rb is None else [ra, rb]):
+        pix |= G['_kunst_flaeche'](pg, r)
+    if any((mx + dx, my + dy) in pix for dx in (-1, 0, 1) for dy in (-1, 0, 1)):
+        return mx, my
+    kx, ky, kw, kh = kasten
+    kand = [p for p in pix if kx <= p[0] < kx + kw and ky <= p[1] < ky + kh] or list(pix)
+    return min(kand, key=lambda p: (abs(p[0] - mx) + abs(p[1] - my), p))
+
+
 def marken(pg, rows, P, orte, bb):
     out = []
     gesehen = set()
@@ -496,6 +724,8 @@ def marken(pg, rows, P, orte, bb):
         if (b, a, e['slot'], d['slot']) in gesehen:
             continue
         gesehen.add((a, b, d['slot'], e['slot']))
+        if not rows[a][2] or not rows[b][2]:
+            continue                             # Stufe 2: Fahrstuhl 4020 ohne Zeile (Bbox-Streckung) - keine Lage
         p1 = proj(d['lx'], d['lz'], rows[a])
         p2 = proj(e['lx'], e['lz'], rows[b])
         mx, my = (p1[0] + p2[0]) // 2, (p1[1] + p2[1]) // 2
@@ -518,8 +748,10 @@ def marken(pg, rows, P, orte, bb):
         if i in zu:
             continue
         paar = {orte[k[0]]['zid'], orte[k[1]]['zid']}
+        kan = lambda u: (min(u[0], VARIANTE.get(u[0], u[0])), u[1])      # Stufe 2: 5130 = 5070 usw.
         for i2, s in list(zu.items()):
-            if {orte[kand[i2][0]]['zid'], orte[kand[i2][1]]['zid']} == paar and s in k[8]:
+            if ({orte[kand[i2][0]]['zid'], orte[kand[i2][1]]['zid']} == paar or
+                    {kan(kand[i2][0]), kan(kand[i2][1])} == {kan(k[0]), kan(k[1])}) and s in k[8]:
                 zu[i] = s
                 break
     for i, (a, b, d, e, p1, p2, mx, my, syms) in enumerate(kand):
@@ -547,6 +779,15 @@ def marken(pg, rows, P, orte, bb):
                 senkrecht = abs(vx) >= abs(vy)
             kind = (1 if vx > 0 else 3) if senkrecht else (2 if vy > 0 else 0)
             herkunft = 'Mitte der Projektionen (kein gemaltes Symbol)'
+        ov = PLAENE[pg].get('marken', {}).get((min(a[0], b[0]), max(a[0], b[0])))
+        if ov:
+            mx, my, kind, herkunft = ov
+            if orte[a]['rect'] != orte[b]['rect'] and not (ax <= mx < ax + aw and ay <= my < ay + ah):
+                a, b = b, a
+                ax, ay, aw, ah, bx, by, bw, bh = bx, by, bw, bh, ax, ay, aw, ah
+        if pg >= 8:
+            mx, my = stufe2_lage(pg, orte[a]['rect'], orte[b]['rect'] if orte[b]['rect'] != orte[a]['rect'] else None,
+                                 mx, my)
         partner = 1 if (bx <= mx < bx + bw and by <= my < by + bh) else 0
         out.append((pg, orte[a]['rect'], mx, my, kind, orte[a]['zid'], orte[b]['zid'], partner,
                     '%04X.%d<->%04X.%d' % (a[0], a[1], b[0], b[1]), luecke, herkunft))
@@ -562,7 +803,7 @@ def marken(pg, rows, P, orte, bb):
             continue
         gesehen_p = set()
         for d in tueren(u[0]):
-            if d['dest'] in raeume or d['dest'] == u[0] or d['sce'] == 0:
+            if d['dest'] in raeume or d['dest'] == u[0] or d['sce'] == 0 or not band_ok(orte, u, d['band']):
                 continue
             if ort_von(orte, bb, u[0], d['lx'], d['lz']) != u:
                 continue
@@ -570,6 +811,8 @@ def marken(pg, rows, P, orte, bb):
             mx, my = proj(d['lx'], d['lz'], rows[u])
             mx = min(max(mx, x), x + w - 1)
             my = min(max(my, y), y + h - 1)
+            if pg >= 8:
+                mx, my = stufe2_lage(pg, orte[u]['rect'], None, mx, my)
             if (mx, my) in gesehen_p:
                 continue
             gesehen_p.add((mx, my))
@@ -602,6 +845,9 @@ def treppen_marken(pg, rows, orte, bb):
         punkte = []
         for i, s in enumerate(st):
             p = merge.get(i, (s['x'], s['z']))
+            uu = ort_von(orte, bb, rid, p[0], p[1], slack=10 ** 9)
+            if uu is not None and not band_ok(orte, uu, s['band']):
+                continue
             if (p, s['axis']) not in punkte:
                 punkte.append((p, s['axis']))
         for (wx, wz), axis in punkte:
@@ -634,16 +880,19 @@ if __name__ == '__main__':
     rows, P, bb, skala = loese(pg)
     print('Blattmassstab', skala)
     print('== DREHUNG (Belege, Pruefbericht R1: nur Drehungen, je zwei Stimmen)')
-    for rid in sorted({u[0] for u in orte if orte[u]['quelle'] == 'min'}):
-        pruefe_drehung(pg, rid, orte, bb)
+    belegt = drehungen_belegt(pg, orte, bb, rows)
+    for rid in sorted({u[0] for u in orte if orte[u]['quelle'] == 'min' and not orte[u]['eigen_rot']}):
+        pruefe_drehung(pg, rid, orte, bb, rows=rows, belegt=belegt)
+    for u in sorted(u for u in orte if orte[u]['quelle'] == 'min' and orte[u]['eigen_rot']):
+        pruefe_drehung(pg, u[0], orte, bb, nur=u, rows=rows, belegt=belegt)
     print('== ZEILEN')
     for u in sorted(rows):
         o = orte[u]
         r = rows[u]
         x0, z0, x1, z1 = bb[u]
-        print('    { 0x%04X, %6d, %6d, %6d, %6d, %2d, %3d, %d, %3d, %5d, %5d, %5d, %5d, %d, %d,   0, 0, %d },'
+        print('    { 0x%04X, %6d, %6d, %6d, %6d, %2d, %3d, %d, %3d, %5d, %5d, %5d, %5d, %d, %d,   0, %d, %d },'
               '   /* %s; %s */' % (u[0], x0, z0, x1, z1, pg, o['rect'], u[1], o['zid'], r[0], r[1], r[2], r[3],
-                                  r[4], r[5], r[6], o['notiz'], r[7]))
+                                  r[4], r[5], o['etage'], r[6], o['notiz'], r[7]))
     print('== TUERMARKEN')
     for m in marken(pg, rows, P, orte, bb):
         print('    { %2d, %2d, %4d, %4d, %d, %3d, %3d, %d },   /* %s, Luecke %d px, %s */' % m)

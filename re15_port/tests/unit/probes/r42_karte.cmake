@@ -14,3 +14,12 @@ target_compile_definitions(test_r42_karte_st23 PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r42_karte_st23 COMMAND test_r42_karte_st23)
 set_tests_properties(unit_r42_karte_st23 PROPERTIES TIMEOUT 120)
+
+# RIEGEL Stufe 2: Karte STAGE4 (Blatt 8), STAGE5 (Blaetter 9-11), STAGE6 (Blatt 12).
+add_executable(test_r42_karte_st456 test_r42_karte_st456.c)
+target_link_libraries(test_r42_karte_st456 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_karte_st456 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_karte_st456 PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r42_karte_st456 COMMAND test_r42_karte_st456)
+set_tests_properties(unit_r42_karte_st456 PROPERTIES TIMEOUT 120)
