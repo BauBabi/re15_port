@@ -1,0 +1,96 @@
+{
+ "_doc": "K5g2 (Runde 41, Riesenform, Auftrag K5g Runde 2 von 2 (Befunde PRUEFUNG_K5G2_r1_zahlen/_sicht), 2026-11-09): Grundlage v2 Zone fuer Zone (E3), Streifen weg (E1), Krallen (E2), Textur nach V1-V6. Jeder Wert mit Quelle. Verboten (Memory reai-v2-texturen-nicht-aus-video-eichen mit Nachtraegen 2026-11-08/09): Eichung je Region/Fleck/Texel am Video, additive Hebung.",
+ "name": "K5g2",
+ "geometrie": {
+  "rand": 16,
+  "rand_quelle": "E1 'mit Rand': kleinster Rand, mit dem die gerundeten Ecken (ganze Einheiten, Port-Abschneiden >> 12) in allen Bedingungs-Bildern ausserhalb bleiben; 16 Einheiten = 1/103 der Kopfhoehe 1656 (STREIFEN_HERKUNFT 1). Gemessen: Keil-Pixel ausserhalb der Ausnahme-Clips fallen von 1 134 xxx auf 1 xxx (FARBE.md K5g2 E1).",
+  "anker_kopf": [
+   800,
+   0,
+   0
+  ],
+  "anker_kopf_quelle": "Kopfraum (x = Schnauze, y unten): Punkt vor dem Halsende, in allen Bedingungs-Bildern ausserhalb Brust 10/Hals 21 (gemessen: nie innen; Halsende liegt bei Kopf-x ~460, Hals-Versatz 503 und Hals-x bis 963). Zuruecknehmen = auf der Geraden zu diesem Punkt (E1 Weg a, 'Hinterkopf-/Nackenecken zuruecknehmen').",
+  "anker_kiefer": [
+   900,
+   100,
+   0
+  ],
+  "anker_kiefer_quelle": "Unterkieferraum: Punkt an der Kieferspitze (Kiefer-x bis 949), in allen Bildern ausserhalb Brust/Hals (gemessen -1e9 = ausserhalb des Huellquaders).",
+  "ausnahme_clips": [
+   10,
+   12
+  ],
+  "ausnahme_quelle": "Gemessen (FARBE.md K5g2 E1): in Clip 10 und 12 zieht die Animation (EMR, bleibt) den Kopfkern in die Brust: Punkte auf halbem Weg zwischen Kopfhaut und Kopfmitte liegen in einem Bild von Clip 12 zu 63 %, Clip 10 zu 32 % innen, schon in Clip 12 Bild 0 (Bild-2-Pose) zu 30 %. Diese Bilder in die Bedingung zu nehmen, verschiebt Stirn/Augenring um 380-510 Einheiten (zur3, Ecken 179-190) und den Hinterkopf bis an die Kieferspitze; das verletzt 'Gesicht, Augen, Maul unveraendert' und 'Kopfhoehe und Kopfgroesse bleiben'. Reste dort werden gezeigt (Tafel 11) und begruendet. Runde 2: die Ausnahme gilt NUR noch fuer Weg (a) (Ecken zuruecknehmen); die Keile in Clip 10/12 behandelt die Unterteilung, der Riegel E1.1 zaehlt ALLE Clips.",
+  "krallen": {
+   "pose": [
+    12,
+    0
+   ],
+   "pose_quelle": "Bild-2-Haltung = Spiel-Clip 12 Bild 0 (= FORM Clip 1 Bild 0, gemessen R/T gleich); dort bewertet der Nutzer die rechte Hand (Tafel 10, Nutzerwort 35.3)",
+   "verschub": {
+    "20": [
+     -520,
+     0,
+     200
+    ],
+    "29": [
+     -320,
+     -440,
+     -200
+    ]
+   },
+   "verschub_quelle": "Runde 2, Pruefer r1 Sicht (5): 29/20 stehen als Stachel zu 100 % ueber dem Hintergrund. Gemessen: auch das exakte Spiegelbild in der Bild-2-Haltung (Drehpunkt ausgeglichen) liegt ueber dem Hintergrund (20: 541 px, 29: 676 px), weil Hand 18 anders geformt und anders gehalten ist als Hand 13. Nutzer zu 35.3: 'wahrscheinlich auch 4 krallen. Man sieht es nur nicht wegen der Schrift' / 'so aussieht wie auf der linken Hand auch'. Darum bleiben Form, Laenge und Ausrichtung gespiegelt, nur die Lage von 20 und 29 an der Hand wandert: kleinster Verschub (Gitter 40 Einheiten im Kralle-Raum, +-800) mit Wurzel in der Hand 18, Vorstand aus der Hand >= linker Partner, in Bild 2 0 px ueber Hintergrund und 0 px ueber der sichtbaren Hand (gerendert, krallen_masken_bild2.npz); Suche scratchpad k5g2/r2_kr10.py + r2_kr12.py (1068 Lagen gerendert). 19 und 31 brauchen keinen Verschub (Bild 2: 0 bzw. 8 px ueber Hintergrund)."
+  },
+  "unterteilung": {
+   "runden": 3,
+   "quelle": "E1 Weg (b') Runde 2: Unterteilung der Keil-Flaechen von 10/21/22/23 (kf_k5g2_unterteil.py). Gemessen je Runde (Keil-Pixel alle Clips/5 Ansichten; sichtbare Dreiecke der Form max): 0: 74025 / 3276, 1: 44630 / 3548, 2: 25057 / 4155, 3: siehe k5g2_unterteilung.json. Grenze 3 Runden = Dreiecks-Warteschlange render_pc.c:226 TEXTRI_QUEUE_MAX 8192 je Bild mit 1400 Dreiecken Reserve fuer Leon (render_pc.c:226 '~700 quads = ONE actor'); Runde 4 wuerde die Form nach Hochrechnung (je Runde x1,3 sichtbare Dreiecke) an diese Grenze bringen (Riegel T7)."
+  }
+ },
+ "textur": {
+  "haut": {
+   "f": 1.339,
+   "f_quelle": "kf_k5g2.py --f: kleinster Faktor (Bisektion [0,6; 3,0], 10 Schritte, aufgerundet auf 0,001) mit Bild 2 Video (3 Saaten, Pixelmenge V4F 3.1) >= Vorlage 15.37 (W6 wie K5f, EIN globaler Helligkeitswert); Ergebnis 15.372. Protokoll [f, Bild 2]: [[1.8, 17.673], [1.2, 14.847], [1.5, 16.107], [1.35, 15.484], [1.275, 15.098], [1.3125, 15.279], [1.33125, 15.323], [1.34063, 15.404], [1.33594, 15.357], [1.33828, 15.372]]",
+   "knie": 75.0,
+   "knie_quelle": "Messblatt K5F 3.1: L > 75 -> 75 + 25 tanh((L - 75)/25) (betrifft nur helle G4-Eintraege)",
+   "C_ziel": 4.0,
+   "C_ziel_quelle": "eichung/GEGENPRUEFUNG_EICHUNG.md 0 (belastbar): Haut fast unbunt, C* 2-6; Mitte 4 fuer den texelgewichteten Median der G4-Hautklasse. k = C_ziel / Median (Bau rechnet k aus der G4-Rampe, bau.json textur.haut)",
+   "h": 20.5,
+   "h_quelle": "Mitte des Farbtonbandes der Originale [14, 27] Grad (Auftrag QUELLEN eichung (a); GEGENPRUEFUNG_EICHUNG 4: sichtbare Albedo G4 hinten +14, EM30-Haut +24/+27). Der texelgewichtete Ton der G4-Hautklasse unter der K5c-UV liegt bei -30 Grad (violett, bau.json textur.haut h_g4_hautklasse_info); die sichtbar warme G4 entsteht erst mit ihren roten Adern. V2 verlangt den Ton im Band, darum EIN Ton je Material aus dem Band, nicht der Ton je Eintrag (K5f v1: Ton je Eintrag -> F_fremd 13-22, unruhig)",
+   "ton_band": [
+    14.0,
+    27.0
+   ],
+   "ton_band_quelle": "Auftrag QUELLEN eichung (a): Originale G4/EM30 +14..+27 Grad; K5-Staende -9..-35 Grad violett. Der Bau nimmt den G4-Hautton selbst (texelgewichteter Kreismittel der G4-Hautklasse) und bricht ab, wenn er ausserhalb liegt (V2 'weg vom Violetten')"
+  },
+  "fleisch": {
+   "L_ziel": 36.0,
+   "C_ziel": 24.0,
+   "quelle": "Auftrag QUELLEN eichung (b) belastbar: Buckel L* 33-39, C* 22-26 (fleischrot); Mitte des Bandes fuer den texelgewichteten Median der Quelle (G4-Eintraege der K5c-Buckelflaechen, G4-Seite 1). Farbton = Kreismittel der Quelle (Eichung: Rot nur Obergrenze, Ton nicht belastbar)"
+  },
+  "weiss": {
+   "quantil": 0.75,
+   "quelle": "V3 'weisse Musterung = helle, fast unbunte Gelenk-Eintraege': die G4-Eintraege der K5c-Gelenkflaechen derselben G4-Seite mit L* >= texelgewichtetes 75-%-Quantil (oberes Viertel = hell); Transformation = Haut (k klein = fast unbunt)"
+  },
+  "braun": {
+   "ton": [
+    35.0,
+    80.0
+   ],
+   "C_min": 6.0,
+   "quelle": "V3 'braeunliche Musterung = braeunliche G4-Eintraege': G4-Eintraege der Hautflaechen derselben Seite mit Farbton 35-80 Grad (braun-orange) und C* > 6; Helligkeit wie Haut (f), Buntheit der Eintraege (k 1), Farbton = Kreismittel der Quelle"
+  },
+  "rundung": {
+   "fenster": 7.5,
+   "cmin": 3.0,
+   "quelle": "kf_k5f.runde15_zeile (Riegel K5f H4: Farbtonspanne <= 15 Grad -> halbe Spanne 7,5; unbunt unter C* 3): 15-Bit-Wahl nur unter den 5-Bit-Nachbarn, Rangfolge erhalten"
+  },
+  "auge": {
+   "quantil": 0.9,
+   "quelle": "Runde 2, Pruefer r1 Sicht (2) 'Augen fehlen' (Augenflaechen L* 2-13): E3 'Augen = nur die hellen Nutzerpunkte' + V3 'Auge = G4-Augeneintraege' -> nur die hellen G4-Augeneintraege: L* >= texelgewichtetes 90-%-Quantil der Eintraege der K5c-Augenflaechen auf G4-Zeile 0 (oberes Zehntel = die roten Glanzeintraege 0x0c69..0x2511, bau.json textur.auge); Helligkeit wie die Haut (dieselbe globale f, V1), Buntheit/Ton der Quelle"
+  },
+  "hand_kralle": {
+   "regel": "Rang-Tausch auf die Hautrampe der eigenen G4-Seite (wie Lippe/Unterkiefer)",
+   "quelle": "Runde 2, Pruefer r1 Sicht (6): Hand 18/13 lasen helle G4-Eintraege (L* Median 31,4/25,1 gegen Haut 6,7, 1132 px reinweiss); Sicht-Befund 2 'Die Hand muss im Band der uebrigen Haut liegen, ohne reinweisse Texel. Erst dann ist Krallen wie die Hand sinnvoll' + V5 'Krallenfarbe wie die Hand'"
+  }
+ }
+}

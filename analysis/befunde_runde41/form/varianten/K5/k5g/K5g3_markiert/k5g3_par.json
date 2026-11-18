@@ -1,0 +1,69 @@
+{
+ "_doc": "K5g3 Textur (Runde 41, Riesenform; Auftrag K5g3 Textur-Bauer Runde 1, 2026-11-14): E3 Grundlage v2 Zone fuer Zone, V1-V6, O3-O5 auf der Geometrie K5g3 (Spalt B4 G1, rechte Krallen K5c G2). Jeder Wert mit Quelle. Verboten (Memory reai-v2-texturen-nicht-aus-video-eichen mit Nachtraegen 2026-11-08/09): Eichung je Region/Fleck/Texel am Video, additive Hebung. Fortschreibung von k5g/K5g2/k5g2_par.json (Textur-Teil); die Geometrie kommt aus kf_k5g3_geo (keine Parameter hier). Runde 3 (2026-11-14, Orchestrator-Entscheide G6-G9 nach PRUEFUNG_K5G3_r2_zahlen/_sicht): G6 braeunliche Musterung als EINE Transformation auf die G4-Helligkeit der Zonen-Texel; G7 Zone 44 ohne Zone-27-Fleisch (V4 vor Fleck, Code kf_k5g3_tex.V4_ZONEN); G8 Deckel L* <= haut.L_max; G9 Seitenfaktoren unveraendert, Herleitung in FARBE.md K5g3 Runde 3.",
+ "name": "K5g3",
+ "textur": {
+  "haut": {
+   "f": 1.86,
+   "f_quelle": "O3 + Messblatt K5F 1.2/2.1: kleinster globaler Faktor mit P L* >= 7,71 (Median der vier Original-Gegner Zombie 8,04 / Gorilla 7,38 / EM30 18,80 / Tyrant 5,57 im eigenen Raumlicht) im echten Spiel (5080 Bild-1-Lage, Bilder 360-440, eigenes Normal-/Schluessel-Paar, kf_k5g3_zlauf.sh), aufgerundet auf 0,01; zweite Untergrenze W6 (Bild 2 Video >= Vorlage 15,37: f >= 1,339 aus K5g2 Runde 2, dieselbe Haut-Abbildung). Bei s 0.5000 gemessen; Bisektion kf_k5g3.py --f, 4 Schritte. Protokoll [f, P L*, P L-cv, P C*, Q C*]: [[2.0, 8.51, 0.701, 5.08, 14.07], [1.8348, 7.7, 0.709, 4.74, 13.46], [1.9174, 8.05, 0.719, 4.88, 13.76], [1.8761, 7.83, 0.715, 4.78, 13.51], [1.8555, 7.77, 0.707, 4.76, 13.45]]",
+   "knie": 75.0,
+   "knie_quelle": "Messblatt K5F 3.1: L > 75 -> 75 + 25 tanh((L - 75)/25) (betrifft nur helle G4-Eintraege)",
+   "h": 20.5,
+   "h_quelle": "Mitte des Farbtonbandes der Originale [14, 27] Grad (Auftrag QUELLEN eichung (a); GEGENPRUEFUNG_EICHUNG 4: sichtbare Albedo G4 hinten +14, EM30-Haut +24/+27). Der texelgewichtete Ton der G4-Hautklasse unter der K5c-UV liegt bei -30 Grad (violett, bau.json textur.haut h_g4_hautklasse_info); die sichtbar warme G4 entsteht erst mit ihren roten Adern. V2 verlangt den Ton im Band, darum EIN Ton je Material aus dem Band, nicht der Ton je Eintrag (K5f v1: Ton je Eintrag -> F_fremd 13-22, unruhig)",
+   "ton_band": [
+    14.0,
+    27.0
+   ],
+   "ton_band_quelle": "Auftrag QUELLEN eichung (a): Originale G4/EM30 +14..+27 Grad; K5-Staende -9..-35 Grad violett. Der Bau nimmt den G4-Hautton selbst (texelgewichteter Kreismittel der G4-Hautklasse) und bricht ab, wenn er ausserhalb liegt (V2 'weg vom Violetten')",
+   "s": 0.5225,
+   "s_quelle": "O3 + Messblatt K5F 3.1: kleinste Buntheit (C' = s x L') mit Z4 P-C* >= 4,41, Z8 Q-C* >= 12,09, Z5 P C-std >= 2,39 und Z9 Q C-std >= 6,53 im echten Spiel (5080 Bild-1-Lage, Bilder 360-440, eigenes Normal-/Schluessel-Paar, kf_k5g3_zlauf.sh mit RE15_FORCE_CUT=1); Bisektion kf_k5g3.py --s [0.5207, 0.5225], 3 Schritte. Protokoll [s, P L*, P C*, Q C*, P C-std, Q C-std]: [[0.53, 7.8, 4.95, 14.03, 3.23, 6.65], [0.5225, 7.8, 4.91, 13.92, 3.18, 6.53], [0.5188, 7.8, 4.9, 13.9, 3.17, 6.49], [0.5207, 7.79, 4.91, 13.92, 3.18, 6.52]]",
+   "seiten_angleichen": true,
+   "seiten_angleichen_quelle": "O3 \"Kein fast schwarzer, unbunter Sattel auf Huefte und Ruecken (Sicht-Pruefer r1)\": Pruefer K5g2 r1 Sicht (1): Teile 0/7 lasen haut0 (G4-Seite 0) mit L* 11,3/9,9, C* 0,1 gegen haut1 L* 24-31. Je G4-Seite s der Faktor g_s = Median L* der Hautklasse auf Seite 1 / auf Seite s (texelgewichtet ueber die Hautflaechen der Seite), f_s = f x g_s - multiplikativ (V1), Rang und Kontrastverhaeltnis je Seite bleiben (bau.json textur.haut).",
+   "L_max": 85.0,
+   "L_max_quelle": "Orchestrator G8 (Runde 3): \"fast weisse Haut 0x7FFE/0x7BDF/0x77BF (L* 95-99; im Spiel 107 Pixel mit L* > 90) sind wie reinweiss zu behandeln (Sinn von O5). Kein Haut-Texel liest einen Eintrag mit L* > 85 ... dann den naechsten Rang der Rampe darunter nehmen.\" Umsetzung kf_k5g3_tex.deckel: Hautzeilen (und damit Tausch-, Loch- und Fleck-Grundworte), die umgefaerbten F1-Randeintraege und alle Fleck-Materialrampen ausser Auge (O4) und rotem Fleisch (F1-Kern-Worte K5c, V6); Zaehne (K5c-Zeile 7) und Maul (G4-Zeile 0) sind keine Haut und bleiben"
+  },
+  "fleisch": {
+   "L_ziel": 36.0,
+   "C_ziel": 24.0,
+   "quelle": "Auftrag QUELLEN eichung (b) belastbar: Buckel L* 33-39, C* 22-26 (fleischrot); Mitte des Bandes fuer den texelgewichteten Median der Quelle (G4-Eintraege der K5c-Buckelflaechen, G4-Seite 1). Farbton = Kreismittel der Quelle (Eichung: Rot nur Obergrenze, Ton nicht belastbar)",
+   "k": 0.7825,
+   "k_quelle": "Eichung b (Buckel C* 22-26, Mitte 24): kleinstes k mit Median C* der Zone-27-Material-Texelzugriffe >= 24 am gebauten Pruef-Stand (wie Riegel V3.3); Bisektion kf_k5g3.py --fleisch [0.7806, 0.7825], 6 Schritte. Protokoll [k, L*, C*]: [[0.8, 36.24, 24.99], [0.7378, 36.24, 22.35], [0.7689, 36.24, 22.35], [0.7845, 36.24, 24.99], [0.7767, 36.24, 22.35], [0.7806, 36.24, 22.35], [0.7825, 36.24, 24.99]]"
+  },
+  "weiss": {
+   "quantil": 0.75,
+   "quelle": "V3 'weisse Musterung = helle, fast unbunte Gelenk-Eintraege': die G4-Eintraege der K5c-Gelenkflaechen derselben G4-Seite mit L* >= texelgewichtetes 75-%-Quantil (oberes Viertel = hell) und Quell-C* <= C_max (fast unbunt); Transformation: Helligkeit multiplikativ f_s wie die Haut, Buntheit der Quelle (Runde 2; in Runde 1 C' = s_haut x L', Pruefer ROT)",
+   "C_max": 6.0,
+   "C_max_quelle": "Runde 2 (Zahlen-Pruefer K5g3 r1 ROT 1: weisse Musterung C* 18-25, so bunt wie das Fleisch): 'fast unbunt' = Quell-C* der hellen G4-Gelenk-Eintraege <= 6 = Obergrenze des belastbaren Bandes 'Haut wenig bunt (C* 2-6)' (GEGENPRUEFUNG_EICHUNG (a)); Buntheit der Quelle (k 1), Helligkeit f_s der Seite. Gemessen (t3r2/w/ana2.py): Seite 2 hat 31 von 33, Seite 1 5 von 108 helle Gelenk-Eintraege mit C* <= 6"
+  },
+  "braun": {
+   "ton": [
+    35.0,
+    80.0
+   ],
+   "C_min": 6.0,
+   "quelle": "V3 \"braeunliche Musterung = braeunliche G4-Eintraege\" + Orchestrator G6 (Runde 3): \"Braun als EINE Transformation auf die G4-Helligkeit der Zonen-Texel, so dass die Helligkeitsstruktur der Original-Texel erhalten bleibt\". Je Zonen-Texel sein eigener G4-Eintrag: L = knie(b x f_s x L_G4), C = r x L, Ton h. Die braeunlichen G4-Eintraege (Hautflaechen, Ton 35-80 Grad, C* > 6, Quell-L* <= P90 der Haut ihrer Seite) liefern h (Kreismittel), r (Median C*/L*) und das Helligkeitsniveau (b: Median b x f_s x L_G4 der Zonen-Texel = Median f_s x L der braeunlichen Eintraege, dasselbe Niveau wie Runde 2); alle drei texelgewichtet wie die Hautflaechen sie lesen. Runde 2 (Rang-Tausch auf die 3 braeunlichen Eintraege) ergab 2 Stufen (Pruefer r2 ROT)",
+   "L_quantil": 0.9,
+   "L_quantil_quelle": "Runde 2 (Zahlen-Pruefer K5g3 r1 Gelb 2: Zonen 16/19 L* 72,6/67,2 bei Haut 23,3, 'hell-beige statt braun'): braeunlich = dunkles Orange, nicht heller als die Haut der Seite: Quell-L* <= texelgewichtetes 90-%-Quantil der Hautklasse derselben G4-Seite (das helle Ende der Haut; P90 = Seite 0 8,7 / Seite 1 17,5 / Seite 2 21,0, t3r2/w/ana2.py). Eine Rampe aus allen Seiten (Seite 2 allein haette 2 Eintraege)"
+  },
+  "rundung": {
+   "fenster": 7.5,
+   "cmin": 3.0,
+   "quelle": "kf_k5f.runde15_zeile (Riegel K5f H4: Farbtonspanne <= 15 Grad -> halbe Spanne 7,5; unbunt unter C* 3): 15-Bit-Wahl nur unter den 5-Bit-Nachbarn, Rangfolge erhalten"
+  },
+  "auge": {
+   "quantil": 0.9,
+   "quelle": "Runde 2, Pruefer K5g3 r1 Sicht (5) 'Augen verschwunden': E3 'Augen = nur die hellen Nutzerpunkte (eigene Texel)' + V3 'Auge = G4-Augeneintraege' -> die hellen G4-Augeneintraege (L* >= texelgewichtetes 90-%-Quantil der Eintraege der K5c-Augenflaechen auf G4-Zeile 0) auf eigenen Texeln an den Nutzerpunkten (Lage und Groesse: generator/k5g3_augen_mitten.json aus zonen_v2 augen.nutzerpunkte)",
+   "f": 2.6972,
+   "f_quelle": "O4 (Runde 2): kleinster Faktor (multiplikativ auf die hellen G4-Augeneintraege, Knie wie die Haut), mit dem in Bild 2 (Buehne, Licht der Szene, ohne Videofilter) an beiden Nutzerpunkten der Median der Augen-Pixel (eigene Augen-Texel, kf_k5g3_auge) >= 3.0 x Median der Kopfhaut daneben ist (Ring 4-12 px). Runde 1: 9x9-Maximum >= 2 x (Sicht-Pruefer r1: im Spielfenster kein Auge). Gemessen am Stand mit f 1,98: Bild 2 2,1/2,5-fach, im Spielfenster 5080 von vorn 2,2/2,7-fach (L* 10,1/11,2 gegen 4,7/4,1) - zu schwach. Bisektion kf_k5g3.py --auge [2.6813, 2.6972], 6 Schritte. Protokoll [f, Median1, Ring1, Median2, Ring2]: [[3.0, 20.21, 5.74, 23.21, 5.74], [2.49, 15.63, 5.74, 18.11, 5.74], [2.745, 18.18, 5.74, 20.54, 5.74], [2.6175, 17.0, 5.74, 19.5, 5.74], [2.6813, 17.0, 5.74, 20.02, 5.74], [2.7131, 18.18, 5.74, 20.54, 5.74], [2.6972, 17.52, 5.74, 20.54, 5.74]]",
+   "texel_je_radius": 4.0,
+   "texel_je_radius_quelle": "Runde 2 (eigene Augen-Texel, kf_k5g3_auge.dekal): Massstab der eigenen UV der Augen-Dreiecke = 4 Texel je Augenradius (Augenscheibe 8 Texel breit, rund genug fuer die floor-Abtastung). Gemessen (t3r2/w/dichte.py): die alte UV der 11 Augen-Dreiecke hat 0,03-0,09 Texel je Einheit (Wurzel des Flaechenverhaeltnisses; 287/288 UV-entartet), je Kante hoechstens 0,199; die neue 4/17,5 = 0,228 bzw. 4/18,8 = 0,213 ist feiner als jede alte Kante - die Rueckabtastung der Haut ausserhalb der Augenscheibe trifft darum Texel fuer Texel die alte Farbe"
+  },
+  "hand_kralle": {
+   "regel": "Rang-Tausch auf die Hautrampe der eigenen G4-Seite (wie Lippe/Unterkiefer)",
+   "quelle": "Runde 2, Pruefer r1 Sicht (6): Hand 18/13 lasen helle G4-Eintraege (L* Median 31,4/25,1 gegen Haut 6,7, 1132 px reinweiss); Sicht-Befund 2 'Die Hand muss im Band der uebrigen Haut liegen, ohne reinweisse Texel. Erst dann ist Krallen wie die Hand sinnvoll' + V5 'Krallenfarbe wie die Hand'"
+  },
+  "loch": {
+   "anteil": 0.5,
+   "quelle": "Runde 2 (Sicht-Pruefer K5g3 r1 (5): runder schwarzer Fleck an der rechten Augenhoehle, Netz 22, Zeile haut1, Eintraege 213/204/255; weisses Licht von vorn 57 nahezu schwarze Pixel auf Netz 22, K5e 6): Flaechen, deren gelesene Texel zu mindestens der Haelfte unter dem texelgewichteten 1-%-Quantil der Hautklasse ihrer G4-Seite liegen, sind ein schwarzes G4-Detail, das die K5c-UV ganz auf sie legt; sie bekommen eigene Texel mit Haut (Rang-Tausch auf die Hautzeile ihrer Seite; E3 'der Rest des heutigen Augenfelds wird Haut'). Gemessen (t3r2/w/dunkel.py): Anteil >= 0,5 trifft genau 22|0|28-35 (0,50-1,00); die naechste Flaeche 16|0|23 hat 0,32"
+  }
+ }
+}

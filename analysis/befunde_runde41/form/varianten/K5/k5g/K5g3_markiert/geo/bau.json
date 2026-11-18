@@ -1,0 +1,60 @@
+{
+ "basis": "f277916d7d6518b5fee621dc3b1a50ebc8cf5861ba6cc290818139449da9a5e1",
+ "emd": {
+  "bytes": 586012,
+  "datei": "BAHNSTEIG_FORM.EMD",
+  "sha256": "db9404a18368f420050cddbc45f06fca11c24c80a0d315082668280576590e00"
+ },
+ "form_emd": {
+  "bytes": 462920,
+  "datei": "FORM.EMD",
+  "sha256": "d84d4762965e8b0f4b6feb7a587212ae3f106b2de0853aceb13b97b9d801fd8a"
+ },
+ "krallen": {
+  "datei": "k5g3_krallen_k5c.json",
+  "quelle_k5c": "1ab56076b20ef022c45a4517d944c0829ff93120124b6c7bb3601c7373736041",
+  "sha256": "677aa8cf522e1e9b824fba52521937a61adae43a4248b8786af2f778f6ffd7b6"
+ },
+ "posen": {
+  "datei": null,
+  "hinweis": "keine Posen-Datei: Posen = K5c = K5e_f1 (Sektionen 0-6 byte-gleich)"
+ },
+ "spalt": {
+  "sha256": "99a4f142c2d01c5eb8e70dd299c0cd98c3e34268adc8473454dcfb42b4cd6d07",
+  "tabelle": "k5g3_spalt_b4_tabelle.json"
+ },
+ "spalt_uv_tabelle": {
+  "datei": "spalt_uv_tabelle.json",
+  "sha256": "cfec25bcb194f9909e0ecef18a7fb938d687cf7bb8187d9c9e6268bdb89f0897"
+ },
+ "stufen": [
+  "posen",
+  "krallen",
+  "spalt",
+  "uvfein"
+ ],
+ "tim": "K5/ruhe/K5e_f1/BAHNSTEIG_FORM.TIM (sha 31a35e66428bac1e8783587f2336ea0bec7aab6e34876b0be87a144c576445b8)",
+ "uvfein": {
+  "geaendert": 3743,
+  "gruende": {
+   "aussen": 2186,
+   "aussen+linie/kipp": 476,
+   "aussen, im Gebiet nur Linie -> B4 bleibt": 49,
+   "linie/kipp": 1179
+  },
+  "kinder": 9961,
+  "nachher": {
+   "aussen": 49,
+   "fehlrate_gew": 0.247789,
+   "kipp": 3,
+   "linie": 207
+  },
+  "viereck_kinder_unveraendert": 0,
+  "vorher": {
+   "aussen": 2711,
+   "fehlrate_gew": 0.239498,
+   "kipp": 98,
+   "linie": 1556
+  }
+ }
+}
