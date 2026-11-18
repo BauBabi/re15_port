@@ -530,6 +530,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     re15_ventilkette_r41_install((uint16_t)g_current_room_id, rdt); /* Runde 41 Spur C: Leiter 2000, Bruecke/Ventile 2030, 20B0, Pult 2050, Strom -> Relinghoehe 2030 (re15_ventilkette_r41.h) */
     re15_gatorszene_r41_install((uint16_t)g_current_room_id);   /* Runde 41 Spur F: 2090/2091 Ankunftsszene + Montage 2080/2081 (re15_gatorszene_r41.h) */
     re15_annette_r41_install((uint16_t)g_current_room_id);      /* Runde 41 Spur AN: 5090 Texte 40/42/43, 6030 Texte 27-30, Zustand je Raum (re15_annette_r41.h) */
+    { extern void re15_finale_r42_install(uint16_t); re15_finale_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 Strang finale: 5090 Text 2 "Game over.", Zustand je Raum (re15_finale_r42.h) */
     { extern void re15_kanister2080_r41_install(uint16_t); re15_kanister2080_r41_install((uint16_t)g_current_room_id); }   /* Runde 41 Spur G: 2080 Knall (Knall-Bank Satz 0) + Zombies / Kanister-Szene, 2090 Kanister im Becken (re15_kanister2080_r41.h) */
     { extern void re15_keyitems_r41_raum(uint16_t); re15_keyitems_r41_raum((uint16_t)g_current_room_id); }   /* Runde 41 Spur O: USE-Lauf und Flanken-Merker je Raum */
     { extern void re15_story2_r42_install(uint16_t); re15_story2_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 Story STAGE2: Schluesselloch/Szene 2080, Tueren 2070/11A0/2040, Uhr 2090 (re15_story2_r42.h); NACH gatorszene/kanister */

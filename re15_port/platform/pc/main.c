@@ -4844,6 +4844,21 @@ re_title:;
             re15_audio_prime_weapon(re15_player_equipped_weapon());   /* re15_audio.h / re15_damage.h */
         }
     }
+    /* Runde 42 Strang finale, Stufe 1 (PRUEFHAKEN, kein Spielverhalten): RE15_FINALE_WERFER=1 gibt Leon den Raketenwerfer, bis die
+     * Wurfszene (Stufe 3) ihn liefert. Ueber den Original-Einfuegeweg (re15_inv_grant = FUN_8004dc4c, breite Waffe wie dort) mit der
+     * Anzahl des RE2-Ereignisses: Item_aot_set ROOM7020 @0x01202 `.. 11 00 02 00 ..`, Anzahl 2 @0x01212 (Plan D3); ausgeruestet wie
+     * der Statusschirm-Commit (DAT_800aca5d := Id @0x80046688, Bank-Lader @0x800466c4). */
+    {
+        const char *fw = getenv("RE15_FINALE_WERFER");
+        if (fw && *fw && *fw != '0') {
+            extern void re15_player_set_equipped_weapon(int weapon_id);
+            const int rv = re15_inv_grant(0x12, 2);
+            const int sl = re15_inv_find_item(0x12);
+            if (sl >= 0) { re15_inv_set_equipped_slot(sl); re15_player_set_equipped_weapon(0x12); re15_audio_prime_weapon(0x12); }
+            fprintf(stderr, "[finale] RE15_FINALE_WERFER: Raketenwerfer x2 grant=%d -> slot %d, ausgeruestet %d\n", rv, sl,
+                    re15_player_equipped_weapon());
+        }
+    }
     /* Load the item-icon sheet via the cwd-independent asset root (pc_read_shared) and hand it to the
      * engine — re15_asset_read_file only fopen's a raw relative path, which fails when the .exe runs
      * from the build dir (that made the icons blank AND re-tried the open every pixel = dog-slow). */
@@ -8179,6 +8194,19 @@ re_title:;
                                                + ((pc_now % pc_hz) * 1000000ull) / pc_hz);
                 }
                 re15_game_step(&gctx);
+                /* Runde 42 Strang finale (Plan S8): Ende der Abspann-Diashow ROOM6040/6041, Set(0,1,0) @0x00590 = INGAME aus
+                 * (@0x8001ca2c-cbf4 / @0x80015838) -> zurueck zum Titel, mit derselben Aufraeumung wie nach dem Tod (unten). */
+                if (re15_gameflow_ingame_aus_faellig()) {
+                    fprintf(stderr, "[finale] F%u ROOM%04X Set(0,1,0): INGAME aus -> Titel\n",
+                            (unsigned)g_engine.frame_count, (unsigned)g_current_room_id);
+                    re15_audio_seq_ctl(0, 2);
+                    re15_audio_seq_ctl(1, 2);
+                    re15_audio_seq_ctl(2, 2);
+                    memset(&g_inv,  0, sizeof g_inv);
+                    memset(&g_game, 0, sizeof g_game);
+                    re15_gameflow_to_title();
+                    running = 0;
+                }
                 re15_trage1200_mess();   /* Runde 35 Spur H: Messschiene RE15_GEGNER_Y_LOG (env, kein Verhalten) */
                 re15_r36_affen_log_tick();   /* Runde 36 Spur F: Messschiene RE15_AFFEN_LOG (env, kein Verhalten) */
                 /* Runde 34 C1 (E10): ESP-Tick + RE2-FX-Pumpe HINTER dem Spielschritt und VOR dem

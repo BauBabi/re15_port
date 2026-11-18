@@ -98,5 +98,10 @@ static inline void re15_gameflow_set_mode(re15_gameflow_mode_t m) { g_gameflow.m
 void re15_gameflow_new_game(int char_index); /* TITLE -> (CHARSELECT ->) enter INGAME at start_room */
 void re15_gameflow_to_gameover(void);        /* INGAME -> GAMEOVER (death FSM took over)            */
 void re15_gameflow_to_title(void);           /* GAMEOVER/attract -> TITLE (clears the INGAME flag)  */
+/* Runde 42 Strang finale (Plan S8): Set(0,1,0) = INGAME-Bit 0x40000000 von DAT_800aca38 loeschen (ROOM6040/6041 sub02 @0x00590
+ * `22 00 01 00`, Ende der Abspann-Diashow). Im Original fuehrt das zurueck zum Titel (@0x8001ca2c-cbf4 / @0x80015838). Die Engine
+ * merkt die Anfrage (game_state.c), die Plattform fuehrt sie aus wie den Weg nach dem Tod (main.c) und loescht sie. */
+void re15_gameflow_ingame_aus(void);
+int  re15_gameflow_ingame_aus_faellig(void);   /* 1 = Anfrage offen; liest und loescht */
 
 #endif /* RE15_GAMEFLOW_H */

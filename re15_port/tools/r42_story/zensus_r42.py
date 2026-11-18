@@ -273,6 +273,9 @@ ZEILEN = [
     ("C", V32, 0x6010, 31, "SYS", "System", "You've taken the subway map.", "", "", "6b"),
     ("C", V32, 0x6011, 30, "SYS", "System", "There's a map on the wall. Will you take it?", "", "Wandplan U-Bahn", "6b"),
     ("C", V32, 0x6011, 31, "SYS", "System", "You've taken the subway map.", "", "", "6b"),
+    # ---- Block A: Finale 5090 Leon (L22, K-11; Strang finale Stufe 1, include/re15_finale_r42.h RE15_FI_MSG_ZEILE_LEON) ----
+    ("A", V31, 0x5090, 2, "NEU", "Leon", "Game over.", "", "beim Abschuss mit dem Raketenwerfer; Aufnahme = voice/leon/VOICE07.XAS[1]_02.wav (RE2, K-11) nach synchro kopieren", "L22 K-11"),
+    ("A", V31, 0x5091, 2, "NEU", "Elza", "You lose, big guy!", "", "beim Abschuss mit dem Raketenwerfer; Aufnahme = voice/Clair/VOICE17.XAS[7]_1.wav (RE2 Claire, K-11) nach synchro kopieren", "E-20 K-11"),
 ]
 
 BITS = [  # (makro, bit, block, gebaut, zweck)

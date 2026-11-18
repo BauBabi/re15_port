@@ -73,6 +73,8 @@ Bis zur Neuaufnahme spielt das Spiel die alte Datei (falls vorhanden) unter dem 
 | `STAGE5/room5090/main40.wav` | Annette | W-William! You're alive! | neu |
 | `STAGE5/room5090/main41.wav` | Annette | (Schrei, ohne Untertitel) | neu |
 | `STAGE5/room5090/main42.wav` | Leon | Annette! | neu |
+| `STAGE5/room5090/main02.wav` | Leon | Game over. (Finale, beim Abschuss mit dem Raketenwerfer, v0.8.31) | keine Aufnahme noetig: Kopie von `voice/leon/VOICE07.XAS[1]_02.wav` (RE2, K-11) |
+| `STAGE5/room5091/main02.wav` | Elza | You lose, big guy! (Finale, beim Abschuss mit dem Raketenwerfer, v0.8.31) | keine Aufnahme noetig: Kopie von `voice/Clair/VOICE17.XAS[7]_1.wav` (RE2 Claire, K-11); Ordner `room5091` neu |
 
 Vorlagen aus RE2: `info/re2leon/PL0/VOICE/` (Ordner Anette): `VOICE16.XAS[9]_3.wav` (Satz), `[12]_2.wav` (Schrei).
 

@@ -87,6 +87,7 @@
 #include "re15_gatorszene_r41.h" /* Runde 41 Spur F: ROOM2090/2091 ohne Spinnen, Ankunftsszene (gatorszene_r41.c) */
 #include "re15_annette_r41.h"   /* Runde 41 Spur AN: Annette-Szene ROOM5090 (annette_r41.c) */
 #include "re15_zws_r41.h"      /* Runde 41 ZWS114/ZWS11C: Gorilla-Schrei + Film (ROOM1141 John/Elza, ROOM11C0 Leon/Ada; zws_r41.c) */
+#include "re15_story_r42.h"   /* Runde 42 Strang finale: RE15_R42_BIT_FINALE_ENDE (Abspann-Freigabe) */
 
 scd_vm_t g_scd;
 
@@ -1278,6 +1279,11 @@ static int op_evt_exec(scd_thread_t *t)
             { 0x5090u, 0x02u }, { 0x5091u, 0x02u },
         };
         unsigned gi;
+        /* Runde 42 Strang finale (Plan S7, Konzept T-07): die Streichung gilt nur, solange das Finale nicht beendet ist
+         * (Bank 9 Bit 129 RE15_R42_BIT_FINALE_ENDE, Setzer finale_r42.c im Kill-Bild = RE2 FUN_80018fb0 @0x80103d7c). Danach laeuft
+         * sub02 wie ausgeliefert: Set(2,7,1) @0x012C2, Set(1,27,1) @0x012C6, Sleep 20 @0x012CA, Message_on 0 @0x012CE,
+         * Sleep 100 @0x012D2, Aot_on(5) @0x012D6 -> ROOM6040/6041 (Tuer-Riegel aot_common.c haengt am selben Bit). */
+        if (!re15_game_flag_get(RE15_R42_BANK, RE15_R42_BIT_FINALE_ENDE))
         for (gi = 0; gi < sizeof gestrichen / sizeof gestrichen[0]; gi++)
             if (gestrichen[gi].room == (uint16_t)g_current_room_id &&
                 gestrichen[gi].sub  == sub_id)

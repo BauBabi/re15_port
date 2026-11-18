@@ -912,7 +912,14 @@ void re15_annette_r41_tick(void)
     }
     if (s_an.form < 0 || s_an.frau < 0) return;
     re15_actor_t *f = &g_actors[s_an.form], *a = &g_actors[s_an.frau];
-    if (!f->active || !a->active) { s_an.phase = RE15_AN_FREI; return; }
+    if (!f->active || !a->active) {
+        s_an.phase = RE15_AN_FREI;
+        /* Runde 42 Strang finale: nach dem Abschuss ist die Form fort (finale_r42.c), die Leiche bleibt liegen wie in RE15_AN_FREI
+         * (Clip 24 Bild 0 gehalten, PORT-WAHL "Halten statt Schleife" oben). Vorher lief hier ab dem Kill die Liegeschleife an
+         * (gemessen integration_r41_annette_g5: F1315 af=1, F1316 af=2). */
+        if (a->active && s_an.frau >= 0) leiche_halten(a);
+        return;
+    }
     s_an.t++;
     if (s_an.phase < RE15_AN_FREI && re15_game_flag_get(5, RE15_AN_SIG_BRUELL)) {
         re15_game_flag_set(5, RE15_AN_SIG_BRUELL, 0); ton(RE15_AN_SE_BRUELL);

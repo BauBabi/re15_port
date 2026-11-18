@@ -579,6 +579,17 @@ int re15_player_granate_frame(void)
 }
 /* Test-Sichtfenster (nur Diagnose, kein Spiel-Code liest das): Phase im Low-Nibble,
  * Recoil-Flag in Bit 4. */
+/* Runde 42 Strang finale (Plan D4): RE2 setzt Bank 1 Bit 0x40000 im Zielzustand +0x06 = 1 bei Waffe 17 (`beq v0,v1` @0x80043714 ->
+ * `or v1,v1,0x40000 / sw` @0x800437b8-cc), VOR der Feuerpruefung (@0x80043820); der Tyrant liest das Bit im Folgebild (Gegnerschleife
+ * vor dem Spieler). Das Bit steht also auch fuer das Bild, in dem der Spieler mit gehaltenem Feuer in den Schuss wechselt; die Rakete
+ * erscheint erst mit Clip-Bild 1 (`lbu v1,333(s0)` @0x8004559c). Port-Gegenstueck: Halten (READY) ohne Rueckstoss oder im
+ * Rueckstoss-Bild 0 (noch keine Rakete, werfer_r35.c spawnt bei Bild 1). */
+int re15_player_werfer_zielt(void)
+{
+    if (s_aim_melee || s_aim_auto || s_player_aim_phase != RE15_AIM_READY) return 0;
+    if (!s_aim_recoil) return 1;
+    return g_actors[RE15_ACTOR_SLOT_PLAYER].anim_frame == 0;
+}
 int re15_player_aim_phase_debug(void) { return (int)s_player_aim_phase | (s_aim_recoil ? 0x10 : 0); }
 /* Test-Sichtfenster auf den Klassen-Latch s_aim_melee (NUR lesend, kein Spiel-Code liest
  * das). Das Original hat diesen Latch nicht - es liest die angelegte Waffe jedes Bild frisch

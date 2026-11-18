@@ -21,6 +21,7 @@
 #include "re15_birkin_klaue_r41.h"
 #include "re15_fussanker_r41.h"   /* Runde 41 Spur J: Glied-Anker FUN_800369f8 */
 #include "re15_annette_r41.h"     /* Runde 41 Spur AN: Annette-Szene 5090 */
+#include "re15_finale_r42.h"      /* Runde 42 Strang finale: Tyrant-Wurzel, Abschuss 5090 */
 #include "re15_ai_flavor.h"
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm (Typ 0x2D) fuer die 0x1A-Gitterhaende */
 #include "re15_enemy.h"    /* re15_enemy_find — the loaded model bank (death-clip framecount) */
@@ -13031,7 +13032,16 @@ static void re15_birkin_ai_tick(int slot)
                 e->state = 1; e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* wie sw 0x601 @0x80116684 */
                 break;
             }
-            re15_bf_rueckstoss_start(slot); break;
+            /* Runde 42 Strang finale (Plan S4): keine Rueckstoss-Szene, kein G5 - HP-Untergrenze wie der Tyrant
+             * (`slti 0x2710` / `sh 0x2710,0x156(s0)` @0x80101ac8-dc), weiter wie der Revive-Zweig oben (resume +0x1d8 @0x8011a568). */
+            e->hp = RE15_FI_HP_UNTEN;
+            e->birkin_hurt_cd = 9;
+            e->hit_react = (uint8_t)(e->hit_react & ~1u);
+            e->state = e->birkin_saved_state;
+            e->sub_state_1 = e->birkin_saved_sub;
+            e->sub_state_2 = e->birkin_saved_ph2;
+            e->sub_state_3 = e->birkin_saved_ph3;
+            break;
         }
         /* real death down-machine 0x8011a5d8 — 7-phase morph tail on +0x7 (sub_state_3) */
         switch (e->sub_state_3) {
@@ -15619,6 +15629,7 @@ void re15_enemy_ai_run_all(int combat_active)
         re15_szenenschutz_gegner(s);        /* Runde 38 Spur B: Sicht je Gegner (re15_szenenschutz_r38.h) */
         if (re15_bf_szene_besitzt(s)) continue;   /* von der Hangar-Szene gefuehrt (birkin_formen.c) */
         if (re15_annette_r41_besitzt(s)) continue;   /* Runde 41 Spur AN: von der 5090-Szene gefuehrt (annette_r41.c) */
+        if (re15_finale_r42_besitzt(s)) continue;    /* Runde 42 Strang finale: Form im Abschuss (RE2 Zustand 3, finale_r42.c) */
         /* EM-STATUS KILL PERSISTENCE (FUN_80109554 @0x801096fc / FUN_80106edc @0x8010716c setzen
          * flag[entity+0x1C6] am Todes-Commit): ist ein Gegner CORPSE (state 7), wird sein
          * em-Status-Kill-Flag gesetzt, damit ein Wieder-Betreten des Raums ihn NICHT respawnt

@@ -26,6 +26,7 @@
 #include "re15_enemy_ai.h"
 #include "re15_damage.h"
 #include "re15_room.h"
+#include "re15_finale_r42.h"
 #include "re15_birkin_formen.h"
 #include "re2_ems.h"
 #include "re15_g5auftritt_r41.h"   /* Runde 41: G5-Auftritt nach RE2 room7040 sub06 */
@@ -527,63 +528,26 @@ static void test_bahnsteig(void)
     b->x = 1200; b->z = -23350; b->grid_id = 0x13;
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->x = 300; pl->z = -23400; pl->hp = 100;
-    re15_enemy_ai_run_all(0);                            /* erster Formen-Tick: Ctor-Teil, eigene HP RE15_BB_FORM_HP */
-    CHECK(b->hp == RE15_BB_FORM_HP, "Form kommt mit HP %d statt %d (G4-Ctor @0x8010067c, GR NB3)", b->hp, RE15_BB_FORM_HP);
+    re15_enemy_ai_run_all(0);                            /* erster Formen-Tick: Ctor-Teil, eigene HP */
+    /* Runde 42 Strang finale (Plan S4, NUTZERWUNSCH 07.11. "die Form Birkin G5 aus dem Finale wieder entfernst"): in 5090 traegt die
+     * Form die HP des RE2-Super-Tyrant 20000 + 200 (@0x80101b78-0x80101be0, re15_finale_r42.h) statt der G4-1000; ein toedlicher
+     * Zustand fuehrt weder in die Rueckstoss-Szene noch zum G5, die HP stehen auf der Untergrenze 10000 (@0x80101ac8-dc). Bis Runde 41
+     * prueften diese Zeilen Rueckstoss, Sturz und G5-Auftritt (Stand aaea5f8c2). */
+    CHECK(b->hp == RE15_FI_HP_START, "Form kommt mit HP %d statt %d (Tyrant-Ctor @0x80101be0)", b->hp, RE15_FI_HP_START);
     b->state = 3; b->sub_state_3 = 0; b->hp = 0; b->birkin_flags = 0;
-    int f, gefeuert = 0, versteckt = 0, zonen_an = 0, sturz = 0;
-    int32_t x_min = b->x;
-    g_scd.cut_auto_enabled = 1;                          /* ROOM5090 sub04 Cut_auto 01 @0x134C */
-    for (f = 0; f < 900 && b->type == 0x30u; f++) {
+    int f, szene = 0, g5 = 0, hp_min = 32767;
+    for (f = 0; f < 900; f++) {
+        pl->hp = 100; pl->hit_react = 0;
         re15_enemy_ai_run_all(0);
-        if (re15_bf_rueckstoss_phase() != 0 && g_scd.cut_auto_enabled) zonen_an++;
-        if (re15_bf_rueckstoss_phase() == 1) {
-            uint16_t pr = 0, pad = re15_bf_pad(0, &pr);
-            if ((pad & 0x0800u) && (pad & 0x8000u)) gefeuert = 1;
-        }
-        if (re15_bf_rueckstoss_phase() == 3 && b->motion == 12 && !b->no_draw) sturz = 1;
-        if (b->no_draw) versteckt = 1;
-        if (b->x < x_min) x_min = b->x;
+        if (re15_bf_rueckstoss_phase() != 0) szene = 1;
+        if (b->type != 0x30u) g5 = 1;
+        if (b->hp < hp_min) hp_min = b->hp;
     }
-    CHECK(sturz, "Stufe 3: kein Sturz-Clip 12 am Zugende");
-    CHECK(zonen_an == 0, "M9: Kamerazonen in %d Szenen-Bildern an", zonen_an);
-    CHECK(gefeuert, "Spieler zielt/feuert in der Rueckstoss-Szene nicht");
-    CHECK(x_min < -5683, "Birkin verlaesst den Zug nicht nach Westen (min x %d)", x_min);
-    CHECK(versteckt, "Birkin verschwindet hinter dem Zugende nicht");
-    CHECK(b->type == 0x36u, "kein Morph zum G5 nach %d Ticks (state %d ph3 %d)", f, b->state, b->sub_state_3);
-    /* Runde 41 G5-Auftritt, Nachbesserung 1 (M7): die Szene beginnt mit RE2s Vorlauf (sub06 @0x0187C..@0x018D6); bis zur Armierung
-     * @0x018DE ist der G5 unarmiert und geparkt (RE2 Sce_em_set @0x011AC (-32000,0,-32000)). */
-    CHECK(b->grid_id != 0x13u && b->x == -32000, "G5 im Vorlauf nicht unarmiert geparkt (grid 0x%02X x %d)", b->grid_id, (int)b->x);
-    CHECK(!b->no_draw, "G5 bleibt unsichtbar");
-    /* Runde 41 G5-Auftritt: RE2 room7040 Schnitt 9 (Szenen-Schnitt 16), nicht mehr Cut 11 (Dossier G5_auftritt.md). */
-    CHECK(g_scd.cam_id == RE15_G5A_SCHNITT, "G5-Auftritt nicht auf dem Szenen-Schnitt %d (RE2 Schnitt 9), cam %d", RE15_G5A_SCHNITT, g_scd.cam_id);
-    CHECK(re15_game_flag_get(5, 0x1c) == 0, "Birkin-Schalter z5:0x1C schon beim Tod der Form gesetzt");
-    /* M9: die Szene haelt die Zonen aus, danach Zonen an, Schnitt aus der Spielerlage (Leon weit im Osten: Cut 14).
-     * ⛔ Runde 41 G5-Auftritt: die Freigabe kommt jetzt wie in RE2 am Szenenende @0x01981 (Bild 1162, nach Sub 2), mit gesperrtem
-     * Spieler; die Abnahme-2-Gestaltung "Freigabe mit [T2]" galt dem frei laufenden Spieler und ist ersetzt. Der Vorlauf braucht den
-     * Plc_dest-Walker (main.c vor dem Spielschritt) und den Szenen-Spielermodus (main.c: flag(1,27)||flag(2,7) -> 2). */
-    {
-        int zonen_im_auftritt = 0, frei = -1, sub = 2, ph = 0, n, sub_bei_frei = -1, armiert = -1;
-        for (n = 0; n < 1700 && frei < 0; n++) {
-            pl->hp = 100; pl->hit_react = 0;
-            if (re15_cine_active()) g_scd.player_mode = 2;
-            re15_actor_step_all_walkers();
-            re15_enemy_ai_run_all(0);
-            if (armiert < 0 && re15_g5a_bild() == 0) armiert = n;
-            if (re15_g5_boss_zustand(&sub, &ph, NULL) && sub == 2 && ph < 3 && g_scd.cut_auto_enabled) zonen_im_auftritt++;
-            if (g_scd.cut_auto_enabled) { frei = n; sub_bei_frei = sub; }
-        }
-        CHECK(armiert > 0 && b->grid_id == 0x13u, "G5 nach dem Vorlauf nicht armiert (Bild %d, grid 0x%02X)", armiert, b->grid_id);
-        CHECK(zonen_im_auftritt == 0, "M9: Kamerazonen in %d Auftritts-Bildern an", zonen_im_auftritt);
-        CHECK(frei >= 0, "M9: Kamerazonen nach dem Hereinziehen nicht wieder an (%d Ticks, Sub %d Ph %d)", n, sub, ph);
-        CHECK(frei - armiert == RE15_G5A_BILD_ENDE, "Zonen frei %d Bilder nach der Armierung statt am Szenenende Bild %d (@0x01981)",
-              frei - armiert, RE15_G5A_BILD_ENDE);
-        (void)sub_bei_frei;
-        /* Runde 41 G5-Auftritt: die Szene setzt Leon am Ende selbst (RE2 Pos_set @0x0196C, Port-Lage 13873), der Schnitt folgt dieser
-         * Lage (Cut 12), nicht mehr der Lage, in der er vor der Szene stand (hier 20748, frueher Cut 14). */
-        CHECK(g_scd.cam_id == 0x0C, "Szenenende: Cut %d statt 12 (Spielerlage 13873 nach @0x0196C)", g_scd.cam_id);
-        fprintf(stderr, "Bahnsteig: Kamerazonen %d Ticks nach dem Morph wieder an, Cut %d\n", frei, g_scd.cam_id);
-    }
-    fprintf(stderr, "Bahnsteig: Rueckstoss + Morph nach %d Ticks (min x %d)\n", f, x_min);
+    CHECK(!szene, "Rueckstoss-Szene lief (kein G5-Uebergang mehr, Plan S4)");
+    CHECK(!g5 && b->type == 0x30u && b->active, "Form wurde 0x%02X / inaktiv (kein G5 mehr)", b->type);
+    CHECK(hp_min >= RE15_FI_HP_UNTEN, "HP fielen auf %d unter die Untergrenze %d", hp_min, RE15_FI_HP_UNTEN);
+    CHECK(re15_game_flag_get(5, 0x1c) == 0, "Birkin-Schalter z5:0x1C ohne Abschuss gesetzt");
+    fprintf(stderr, "Bahnsteig: toedlicher Zustand -> HP %d, kein Rueckstoss, kein G5 (%d Ticks)\n", b->hp, f);
     free(buf);
 }
 

@@ -38,6 +38,7 @@
 #include "re15_treffer_r39.h" /* re15_treffer_r39_zielhilfe_verdeckt — RE2 FUN_80042144 @0x800422a8 (Runde 39 D) */
 #include "re15_spiderman_r38.h" /* Runde 38 Spur T: Spiderman im Schacht kein Ziel (@0x8003710c / @0x80111C14-20) */
 #include "re15_spinnen_r38.h"  /* Runde 38 Integration: Schachtspinne ohne Band (@0x800120e4-ec), Latch im Schacht */
+#include "re15_finale_r42.h"   /* Runde 42 finale: Gate 2 der Riesenform (Tyrant +0x1D3 & 0x80) */
 #include "re15_birkin_formen.h" /* Runde 41 Spur WS: re15_bf_granate_form + RE15_BB_FORM_HP (Riesenform-Praedikat der Rakete) */
 
 /* Runde 34 B3/B4 — der RE2-GL-Applier-Stempel (Definition am Dateiende, s. re15_re2_gl_apply). */
@@ -4597,6 +4598,11 @@ int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box_in[4],
         if (!e->active) continue;                                      /* Gate 1 @0x8004712c-30 */
         const int re2 = re2_gl_typ(e, &t);
         if (re2 && e->re2z_self1d3 != 0u) continue;                    /* Gate 2 @0x80047138-40 */
+        /* Runde 42 Strang finale: Gate 2 fuer die Riesenform in 5090/5091 wie beim RE2-Super-Tyrant - dessen Wurzel setzt +0x1D3 Bit 0x80,
+         * solange der Spieler den Raketenwerfer fuehrt (`lhu v1,-0x2fa(v1)` 0x800cfd06 / `addiu v0,zero,0x11` / `bne` / `ori 0x80`
+         * @0x801018d4-0x80101900, sonst `andi 0x7f`), und Phase 0 des Abschusses noch einmal (`ori v0,v0,0x80 / sb v0,0x1d3(s2)`
+         * @0x8010361c-24): keine Rakete trifft ihn, er stirbt nur durch den Abschuss (finale_r42.c). */
+        if (re15_finale_r42_kein_ziel(e)) continue;
         /* ⛔ RUNDE 34 NACHBESSERUNG (mess_sb 3.1 / 3.2) — Gate 2 AUCH fuer RE1.5-KI-Kandidaten.
          * RE2 (info/re2leon/PSX.EXE, selbst nachgelesen): `lbu v0,467(s0)` @0x80047138 /
          * `bne v0,zero,0x8004740c` @0x80047140 — ein gesperrter Kandidat wird VOR jedem Schreiben

@@ -893,8 +893,11 @@ void re15_render_init(void)
     fprintf(stderr, "[window] %s %dx%d\n",
             (win_flags & SDL_WINDOW_FULLSCREEN_DESKTOP) ? "FULLSCREEN (RE15_FULLSCREEN set)" : "windowed",
             SCREEN_XRES * scale, SCREEN_YRES * scale);
+    /* MESSHAKEN RE15_FENSTERTITEL (Runde 42, kein Spielverhalten): eigener Fenstertitel, damit ffmpeg gdigrab bei parallel
+     * laufenden Testfenstern (alle "RE1.5 Rebuilt — PC") genau dieses Fenster abgreift. */
+    const char *fenstertitel = getenv("RE15_FENSTERTITEL");
     s_window = SDL_CreateWindow(
-        "RE1.5 Rebuilt — PC",
+        (fenstertitel && *fenstertitel) ? fenstertitel : "RE1.5 Rebuilt — PC",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         SCREEN_XRES * scale, SCREEN_YRES * scale,
         win_flags);

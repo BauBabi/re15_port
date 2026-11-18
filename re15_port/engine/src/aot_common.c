@@ -40,6 +40,7 @@
 #include "re15_kollision_r41.h"  /* Runde 41 Spur H: Objekt-gegen-Objekt-Pass @0x8002c03c-c0a8 */
 #include "re15_fahrstuhl_r37.h" /* Runde 37 Spur C: Tuersequenz beim Aussteigen aus den Fahrstuhlkabinen */
 #include "re15_lastenaufzug_r37.h" /* Runde 37 Spur C N1: Ausstieg Lastenaufzug ROOM3080 -> ROOM4000 */
+#include "re15_story_r42.h"   /* Runde 42 Strang finale: RE15_R42_BIT_FINALE_ENDE (Abspann-Freigabe) */
 
 re15_aot_state_t g_aot;
 uint8_t g_aot_action_pressed = 0;   /* set per-frame by the main loop (door action gate) */
@@ -724,7 +725,10 @@ static int aot_fire_door(int i)
          * loesen hierher auf - ROOM5090 und ROOM5091, main00 Slot 5 (Rect 0x0,
          * @0x010EE). Dieser Riegel greift fuer den Scan-Pfad wie fuer Aot_on(5)
          * gleichermassen, weil beide durch aot_fire_door laufen. */
-        if (dest_id == 0x6040u || dest_id == 0x6041u) {
+        /* Runde 42 Strang finale (Plan S7, Konzept T-07 "Beide Sperren aufheben ... eigenes Kennzeichen Finale beendet"): der
+         * Abspann ist frei, sobald das Finale beendet ist (Bank 9 Bit 129 RE15_R42_BIT_FINALE_ENDE, gesetzt im Kill-Bild
+         * finale_r42.c = RE2 FUN_80018fb0 @0x80103d7c; Gegenstueck RE2 Set(4,0x97,1) @0x01B10). Vorher bleibt der Riegel. */
+        if ((dest_id == 0x6040u || dest_id == 0x6041u) && !re15_game_flag_get(RE15_R42_BANK, RE15_R42_BIT_FINALE_ENDE)) {
             a->was_inside = 1;                 /* wie ein bereits betretener AOT */
             return 1;
         }

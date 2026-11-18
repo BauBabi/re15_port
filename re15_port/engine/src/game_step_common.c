@@ -6,6 +6,7 @@
  * which stays in each main.c.
  */
 #include "re15_birkin_formen.h"
+#include "re15_finale_r42.h"   /* Runde 42 Strang finale: Abschuss-Ausloeser vor dem Spieler */
 #include <stdio.h>              /* fprintf — the dropped-event diagnostic below */
 #include <stdlib.h>             /* getenv — RE15_STAIR_DEMO */
 #include "re15_game_step.h"
@@ -1167,6 +1168,17 @@ void re15_game_step(const re15_game_ctx_t *c)
         c_szene = *c;
         c_szene.pad_current = re15_bf_pad(c->pad_current, &c_szene.pad_pressed);
         c = &c_szene;
+    }
+    /* Runde 42 Strang finale (Plan D4/S6): Abschuss-Ausloeser und Sequenz des RE2-Super-Tyrant VOR dem Spieler. RE2 laeuft die
+     * Gegnerschleife vor dem Spieler (@0x80026570-0x80026604 vor 0x8003bfac @0x80026620): im Ausloesebild ist das Feuer schon
+     * verbraucht (@0x801019ec-a00), im Freigabebild setzt die Wurzel Anschlag+Feuer 0x140 (@0x80103730-4c) und der Spieler schiesst
+     * im selben Bild. Im Port laeuft der Schuss vor der KI (birkin_bahnsteig.c "Abnahme 1 M1"), darum steht der Haken hier. */
+    {
+        uint16_t fp = c->pad_current, fpp = c->pad_pressed;
+        if (re15_finale_r42_vor_spielzug(&fp, &fpp)) {
+            if (c != &c_szene) { c_szene = *c; c = &c_szene; }
+            c_szene.pad_current = fp; c_szene.pad_pressed = fpp;
+        }
     }
 
     /* ---- POSITIONS-SPIEGEL Spieler+0x40/+0x42/+0x44 --------------------------------------

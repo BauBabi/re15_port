@@ -25,6 +25,7 @@
 #include "re15_damage.h"
 #include "re15_room.h"
 #include "re15_skeleton.h"
+#include "re15_finale_r42.h"
 #include "re15_birkin_formen.h"
 #include "re15_birkin_opfer.h"
 #include "re2_ems.h"
@@ -416,44 +417,25 @@ static void test_ablauf(unsigned raum, const char *rdt)
     for (int i = 0; i < 3; i++) { stelle(b, pl, 7000); b->state = 2; b->sub_state_1 = 3; b->sub_state_2 = 1; tick(1); }
     CHECK(b->motion == 8, "kein Zucken nach vier Pistolentreffern (Clip %d)", b->motion);
 
-    /* Tod: Rueckstoss-Szene, dann G5. Nachbesserung 1 M5: Phase 1 taumelt mit Clip 13 (Spur -80 je Bild) statt auf Clip 8 zu
-     * gleiten (vorher 147 je Bild); Clip 8 nur noch am Platz an der Sturzgrenze. M1: der Sturz (Phase 3) beginnt im Wagen bei
-     * x <= -2500, nicht erst hinter der Tuer (-6283). */
+    /* Tod: Runde 42 Strang finale (Plan S4, NUTZERWUNSCH 07.11. "die Form Birkin G5 aus dem Finale wieder entfernst"): in 5090/5091
+     * keine Rueckstoss-Szene und kein G5 mehr; der toedliche Zustand setzt die HP auf die Tyrant-Untergrenze 10000 (`slti 0x2710` /
+     * `sh 0x2710,0x156(s0)` @0x80101ac8-dc) und die Form kaempft weiter. Bis Runde 41 prueften diese Zeilen Taumeln, Sturz und G5. */
     beruhigen(b, pl, 30);
-    b->x = 6000; b->z = -23400; pl->x = b->x + 7000; pl->z = b->z;   /* Kampflage wie im Lauf l5090_feuer (Form x 5994 bei HP 0) */
+    b->x = 6000; b->z = -23400; pl->x = b->x + 7000; pl->z = b->z;
     b->hp = -1; b->state = 3; b->sub_state_3 = 0;
     {
-        int f, szene = 0, taumel = 0, sturz_x_ok = -1;
-        int32_t schritt_max = 0;
-        for (f = 0; f < 1200 && b->type == 0x30u; f++) {
-            const int ph0 = re15_bf_rueckstoss_phase();
-            const int32_t x0 = b->x, z0 = b->z;
+        int f, szene = 0, g5 = 0;
+        for (f = 0; f < 600; f++) {
             tick(1);
-            if (re15_bf_rueckstoss_phase() == 1) {
-                szene = 1;
-                CHECK(b->motion == 13 || b->motion == 8, "Rueckstoss: Clip %d", b->motion);
-                if (b->motion == 13) {
-                    int32_t dx = b->x - x0, dz = b->z - z0, s = (int32_t)re15_squareroot0((uint32_t)(dx * dx + dz * dz));
-                    taumel++;
-                    if (s > schritt_max) schritt_max = s;
-                }
-            }
-            if (ph0 == 1 && re15_bf_rueckstoss_phase() == 3) sturz_x_ok = (b->x <= -2500 && b->x > -3500);
+            if (re15_bf_rueckstoss_phase() != 0) szene = 1;
+            if (b->type != 0x30u) g5 = 1;
+            if (re15_bk_opfer_cmd()) { re15_bk_opfer_reset(); re15_player_clear_hit_guard(pl); }
+            pl->hp = 100;
         }
-        CHECK(szene, "keine Rueckstoss-Szene");
-        CHECK(taumel > 20, "Rueckstoss: kaum Taumeln (%d Bilder Clip 13)", taumel);
-        CHECK(schritt_max <= 100, "Rueckstoss: Schritt %d je Bild (Gleiten wie vorher 147?)", schritt_max);
-        CHECK(sturz_x_ok == 1, "Rueckstoss: Sturz nicht im Wagen begonnen (%d)", sturz_x_ok);
-        /* G5-Auftritt Nachbesserung 1 (M7): erst RE2s Vorlauf (Leon laeuft per Plc_dest-Walker von -3800 nach 1400, sub06 @0x018B0),
-         * dann die Armierung @0x018DE (grid 0x13). Der Walker laeuft in main.c vor dem Spielschritt, der Szenenmodus kommt aus
-         * flag(1,27)||flag(2,7). */
-        for (int v = 0; v < 200 && b->type == 0x36u && b->grid_id != 0x13u; v++) {
-            if (re15_cine_active()) g_scd.player_mode = 2;
-            re15_actor_step_all_walkers();
-            tick(1);
-        }
-        CHECK(b->type == 0x36u && b->grid_id == 0x13u, "kein G5 (Typ 0x%02X)", b->type);
-        fprintf(stderr, "%s: Rueckstoss + G5 nach %d Ticks\n", rdt, f);
+        CHECK(!szene, "Rueckstoss-Szene lief (Plan S4: kein G5-Uebergang mehr)");
+        CHECK(!g5 && b->type == 0x30u, "Form wurde Typ 0x%02X (kein G5 mehr)", b->type);
+        CHECK(b->hp >= RE15_FI_HP_UNTEN, "HP %d unter der Untergrenze %d", b->hp, RE15_FI_HP_UNTEN);
+        fprintf(stderr, "%s: toedlicher Zustand -> HP %d, kein Rueckstoss/G5 (%d Ticks)\n", rdt, b->hp, f);
     }
     free(buf);
 }
@@ -1493,8 +1475,9 @@ static void test_n3_wagenweg(unsigned raum, const char *rdt)
         if (!b) break;
         tick(2);                                       /* grid 0x33: Wurzel friert ein, die Form wartet */
         fprintf(stderr, "%s Wagenweg: %s hp %d st %d/%d grid 0x%02x\n", rdt, k_tuer[w].name, b->hp, b->state, b->sub_state_1, b->grid_id);
-        CHECK(b->hp == RE15_BB_FORM_HP, "Wagenweg %s Wagen %s: Form mit HP %d statt %d (G4-Ctor @0x8010067c)", rdt, k_tuer[w].name,
-              b->hp, RE15_BB_FORM_HP);
+        /* Runde 42 Strang finale (Plan D1): in 5090/5091 die Tyrant-HP 20000 + 200 (@0x80101be0) statt der G4-1000 (@0x8010067c) */
+        CHECK(b->hp == RE15_FI_HP_START, "Wagenweg %s Wagen %s: Form mit HP %d statt %d (Tyrant-Ctor @0x80101be0)", rdt, k_tuer[w].name,
+              b->hp, RE15_FI_HP_START);
         CHECK(b->state == 1 && b->sub_state_1 == 0, "Wagenweg %s Wagen %s: Zustand %d/%d statt Auftritt 1/0 (+0x4 = 1 @0x80100654)",
               rdt, k_tuer[w].name, b->state, b->sub_state_1);
     }

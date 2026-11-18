@@ -4160,15 +4160,17 @@ target_compile_definitions(test_schwanz_r41 PRIVATE
 add_test(NAME unit_schwanz_r41 COMMAND test_schwanz_r41)
 set_tests_properties(unit_schwanz_r41 PROPERTIES TIMEOUT 30)
 if(TARGET re15_pc)
-    # Abnahme 1 Spur R: Pistole, Dauerbeschuss, EM30 -> Mutation -> Form -> G5, Leon und Elza, kein Messhaken.
-    add_test(NAME integration_r41_birkin_pistole
-             COMMAND "${CMAKE_COMMAND}"
-                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_birkin_pistole_wd
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_birkin_pistole.cmake)
-    # Runde 41 Spur GR NB3: zwei Laeufe zu je hoechstens 600 s (Form 1 600 HP, Riesenform 1000 HP; Endbild 6500 seit der Integration GR + G5A).
-    # G5-Auftritt NB2: 2 Laeufe a 5400 Bilder (900 s); Integration Runde 41: GR-Limit 1300 s, beide Spuren laufen zusammen.
-    set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 1300)
+    # ⛔ Runde 42 Strang finale (Plan S4/S10, NUTZERWUNSCH 07.11.2026 "die Form Birkin G5 aus dem Finale wieder entfernst"):
+    # integration_r41_birkin_pistole prueft "die Pistole besiegt Form und G5" (Rueckstoss, Sturz, G5, G5 tot). In 5090/5091 stirbt die
+    # Form jetzt nur durch den Abschuss (Tyrant-HP 20200, Untergrenze 10000 @0x80101ac8-dc), der G5 entfaellt; gegenstandslos, nicht mehr
+    # eingetragen (Skript bleibt bis S10). Ersatz: integration_r42_finale_schuss, integration_r41_annette_g5, integration_r41_form_wagenweg*.
+    # # Abnahme 1 Spur R: Pistole, Dauerbeschuss, EM30 -> Mutation -> Form -> G5, Leon und Elza, kein Messhaken.
+    # add_test(NAME integration_r41_birkin_pistole
+    #          COMMAND "${CMAKE_COMMAND}"
+    #                  -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+    #                  -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_birkin_pistole_wd
+    #                  -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_birkin_pistole.cmake)
+    # set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 1300)
     # Form Nachbesserung 3 (AN-Abnahme 2 N1): ECHTER Wagenweg A -> B -> C - integration_r41_form_wagenweg samt Elza- und
     # Zurueckweichen-Teilen und Kamera-Pruefung (Nachbesserung 4) jetzt in probes/r41_form_kamera.cmake.
     # Spur SF: Hangar-/Labor-Birkin EM30_HANGAR mit Schwanzkette in 50A0 und 50E0 geladen und mit 23 Teilen gezeichnet.
@@ -4223,21 +4225,25 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_form_dreiecke_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_form_dreiecke.cmake)
     set_tests_properties(integration_r41_form_dreiecke PROPERTIES TIMEOUT 900)
-    # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
-    add_test(NAME integration_r41_g5_westen
-             COMMAND "${CMAKE_COMMAND}"
-                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_g5_westen_wd
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_g5_westen.cmake)
-    set_tests_properties(integration_r41_g5_westen PROPERTIES TIMEOUT 1500)   # Abnahme G5 1 M11: 3 Laeufe a 3540 Bilder
-    # Abnahme 2 Spur R: G5 frisst den Spieler, YOU DIED, Titel, Leon und Elza, kein Messhaken.
-    add_test(NAME integration_r41_g5_tod
-             COMMAND "${CMAKE_COMMAND}"
-                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_g5_tod_wd
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_g5_tod.cmake)
-    # Integration Runde 41 (GR-HP): Rueckstoss und G5-Szene liegen ~1400 Bilder spaeter, Laeufe je 600 s -> 1300 s.
-    set_tests_properties(integration_r41_g5_tod PROPERTIES TIMEOUT 1300)
+    # ⛔ Runde 42 Strang finale (Plan S4/S10, NUTZERWUNSCH 07.11.2026 "die Form Birkin G5 aus dem Finale wieder entfernst"): der Weg
+    # Riesenform -> Rueckstoss -> G5 in 5090/5091 ist gekappt (birkin_bahnsteig.c Zustand 3). integration_r41_g5_westen und
+    # integration_r41_g5_tod pruefen genau diesen Weg (Rakete bis zum Tod der Form, dann G5) und sind damit gegenstandslos; sie sind
+    # nicht mehr eingetragen (Skripte bleiben bis zum Ausbau der G5-Module in S10). Ersatz: integration_r42_finale_schuss.
+    # # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
+    # add_test(NAME integration_r41_g5_westen
+    #          COMMAND "${CMAKE_COMMAND}"
+    #                  -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+    #                  -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_g5_westen_wd
+    #                  -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_g5_westen.cmake)
+    # set_tests_properties(integration_r41_g5_westen PROPERTIES TIMEOUT 1500)   # Abnahme G5 1 M11: 3 Laeufe a 3540 Bilder
+    # # Abnahme 2 Spur R: G5 frisst den Spieler, YOU DIED, Titel, Leon und Elza, kein Messhaken.
+    # add_test(NAME integration_r41_g5_tod
+    #          COMMAND "${CMAKE_COMMAND}"
+    #                  -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+    #                  -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_g5_tod_wd
+    #                  -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_g5_tod.cmake)
+    # # Integration Runde 41 (GR-HP): Rueckstoss und G5-Szene liegen ~1400 Bilder spaeter, Laeufe je 600 s -> 1300 s.
+    # set_tests_properties(integration_r41_g5_tod PROPERTIES TIMEOUT 1300)
 endif()
 
 # --- ZOMBIE-GORE je Waffe (zombiegore_r15.c) + RE1.5-Teilschicht (teile_r15.c) ---

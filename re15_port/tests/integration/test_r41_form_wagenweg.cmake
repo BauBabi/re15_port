@@ -98,6 +98,15 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: ohne diese Zeile gelten im Li
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> [-DRE15_FORM_HP_HEADER=<re15_birkin_formen.h>] [-DTEIL=leon|elza|zurueck_leon|
 #         zurueck_elza|warten_leon|warten_elza] [-DRE15_BILD_TOOL=<probe_r41_form_kamera_bild>] -P test_r41_form_wagenweg.cmake
+#
+#
+# RUNDE 42 STRANG FINALE, Stufe 1 (Plan S4, NUTZERWUNSCH 07.11.2026 "die Form Birkin G5 aus dem Finale wieder entfernst ... ein
+# finale wie beim Golem am Ende von Resident Evil 2"): in 5090/5091 traegt die Form die HP des RE2-Super-Tyrant 20000 + 200
+# (@0x80101be0, include/re15_finale_r42.h RE15_FI_HP_START, von dort gelesen) und stirbt nur durch den Abschuss; die Rueckstoss-Szene
+# und der G5 sind entfallen. Umgestellt: Pruefung 2 Soll-HP = RE15_FI_HP_START; Raketen-Teile: der Abschuss-Ausloeser (finale.log,
+# RE15_FINALE_LOG) beendet das Kampffenster statt der Rueckstoss-Szene, Pruefung 3 (>= HP/301 Treffer) und 5 entfallen, Pruefung 6
+# (Kamera der Taumelbilder) wird "kein Taumelbild" (die Szene darf nicht mehr kommen); Laufende ohne Raumbedingung (nach dem Abschuss
+# folgt der Abspann in 6040). Pruefung 1, 4 und 7 unveraendert.
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
     message(FATAL_ERROR "r41_form_wagenweg: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
@@ -120,11 +129,12 @@ endif()
 if(NOT RE15_FORM_HP_HEADER)
     set(RE15_FORM_HP_HEADER "${CMAKE_CURRENT_LIST_DIR}/../../include/re15_birkin_formen.h")
 endif()
-file(STRINGS "${RE15_FORM_HP_HEADER}" _hp_zeile REGEX "^#define RE15_BB_FORM_HP [0-9]+")
-if(NOT _hp_zeile MATCHES "RE15_BB_FORM_HP ([0-9]+)")
-    message(FATAL_ERROR "r41_form_wagenweg: RE15_BB_FORM_HP nicht in ${RE15_FORM_HP_HEADER}")
+# Runde 42 Strang finale: 5090/5091 = Tyrant-HP RE15_FI_HP_START "(20000 + 200)" aus include/re15_finale_r42.h
+file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/../../include/re15_finale_r42.h" _hp_zeile REGEX "^#define RE15_FI_HP_START")
+if(NOT _hp_zeile MATCHES "RE15_FI_HP_START +\\(([0-9]+) \\+ ([0-9]+)\\)")
+    message(FATAL_ERROR "r41_form_wagenweg: RE15_FI_HP_START nicht in include/re15_finale_r42.h")
 endif()
-set(_form_hp_soll "${CMAKE_MATCH_1}")
+math(EXPR _form_hp_soll "${CMAKE_MATCH_1} + ${CMAKE_MATCH_2}")
 # Lauf A2 (s. Kopf): Rakete 301 an der Riesenform, tot nach HP / 301 + 1 Treffern.
 set(_rak_schaden 301)      # RE2-G4 w0 0x12D4B52D @0x800A5D24, & 0x3FF (`andi v1,v1,0x3ff` @0x8004725c); Port s_rak_g4 (re15_damage.c)
 math(EXPR _rak_n "${_form_hp_soll} / ${_rak_schaden} + 1")   # Todesregel hp < 0 (`bgez v1` @0x80047284 RE2, @0x80013014 RE1.5)
@@ -133,6 +143,10 @@ set(_treffer_min ${_rak_n})
 # ein spaeteres Szenenende ist rot (Pruefung 6, "Taumeln erreicht das Laufende").
 set(_exit_bild 2000)
 set(_rakete 1)
+# Runde 42 Strang finale: der Abschuss kommt im Raketen-Lauf um F1365-F1400 (gemessen), Kill + Abspann-Vorspann ~F1860 -> ROOM6040.
+# Danach zaehlt der Bildzaehler im Abspannraum dieselben Nummern noch einmal (gemessen: deck.log/state.log F1150.. doppelt, der
+# Framedump rs_001150.. wurde mit den Diashow-Bildern ueberschrieben, 909 Promille fast schwarz). Laufende darum F1700 in 5090/5091.
+set(_exit_bild 1700)
 # Pruefung 7 Kampfteil (nach dem Auftritt bis vor die Szene): Hoechstzahl Bilder > 600 Promille und hoechster Wert, je Teil GEMESSEN
 # mit K5c (Stand bf5001400, Dossier "Integration 1000 HP (Lauf A2)"): leon/elza 0 (max 553 / 531); zurueck_leon 4 (max 623),
 # zurueck_elza 3 (max 617): Cut 13 um F1325 (Ansturm der Form); warten_leon 5 (max 698), warten_elza 4 (max 653): Cut 13 F1917-F1921,
@@ -256,7 +270,7 @@ re15_start_spiel(_rv ${_limit_s}
     RE15_SLOTDECKUNG=deck.log "RE15_FRAMEDUMP=1150-${_exit_bild}/1:rs_"
     RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=27200,4900,2048,0" "RE15_SET_FLAG=3:89"
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=6 "RE15_INPUT_SCRIPT=${_skript}"
-    RE15_SPAWN_DIAG=1 RE15_STATE_LOG=state.log ${_waffe_env}
+    RE15_SPAWN_DIAG=1 RE15_STATE_LOG=state.log ${_waffe_env} RE15_FINALE_LOG=1
     "RE15_EXIT_AT=${_exit_bild}#${_raum}"
     "${_exe_kopie}")
 file(REMOVE "${_exe_kopie}")
@@ -368,6 +382,24 @@ foreach(_z IN LISTS _zeilen)
     set(_pl_alt "${_php}")
 endforeach()
 
+# Runde 42 Strang finale: Kampfende = Abschuss-Ausloeser (finale.log), keine Rueckstoss-Szene mehr
+set(_abschuss "")
+if(EXISTS "${WORKDIR}/finale.log")
+    file(READ "${WORKDIR}/finale.log" _fin)
+    if(_fin MATCHES "\\[finale\\] T[0-9]+ F([0-9]+) Ausloeser")
+        set(_abschuss "${CMAKE_MATCH_1}")
+    endif()
+endif()
+if(NOT _rueck STREQUAL "")
+    string(APPEND _f "\n Rueckstoss-Szene F${_rueck} lief (Plan S4: in 5090/5091 entfallen)")
+endif()
+set(_rueck "${_abschuss}")
+if(_rakete)
+    set(_treffer_min 0)
+    if(_abschuss STREQUAL "")
+        string(APPEND _f "\n kein Abschuss-Ausloeser bis F${_exit_bild} (finale.log), Form bei HP '${_form_alt}'")
+    endif()
+endif()
 if(NOT _hp_b STREQUAL "${_form_hp_soll}")
     string(APPEND _f "\n Wagen B: Form mit HP '${_hp_b}', erwartet ${_form_hp_soll} (RE15_BB_FORM_HP)")
 endif()
@@ -383,18 +415,18 @@ endif()
 if(NOT _hp_hoch STREQUAL "")
     string(APPEND _f "\n Kampf: HP der Form steigen im Kampf (${_hp_hoch}), der Schaden bleibt nicht")
 endif()
-if(NOT _rueck STREQUAL "")
+if(FALSE)   # Runde 42: Pruefung 5 entfaellt (keine Rueckstoss-Szene, Tod nur durch den Abschuss)
     math(EXPR _abzug_min "${_form_hp_soll} - ${_max_einzel}")
     if(_abzug LESS _abzug_min OR _abzug LESS 1)
         string(APPEND _f "\n Kampf: Rueckstoss-Szene F${_rueck} schon nach ${_abzug} HP Abzug, erwartet >= ${_abzug_min} (${_form_hp_soll} - Einzelabzug ${_max_einzel})")
     endif()
 elseif((_form_alt STREQUAL "" OR NOT _form_alt GREATER 0) AND NOT _warten)
-    string(APPEND _f "\n keine Rueckstoss-Szene (Clip 13, HP 1) bis F${_exit_bild}, Form steht bei HP '${_form_alt}'")
+    string(APPEND _f "\n Form ohne HP vor dem Abschuss (F${_exit_bild}, HP '${_form_alt}')")
 endif()
 # Lauf A2: Fenster ab dem Eintritt in Wagen C (F${_bild_c}); die Rakete betaeubt die Form (Zustand 2) bis zum Tod, ihr Angriff faellt
 # vor die erste Rakete (Ansturm F1322 leon/elza, F1336 zurueck_*, gemessen).
 if(_pl_treffer LESS 1)
-    string(APPEND _f "\n Kampf: ${_figur} wird zwischen dem Eintritt in Wagen C (F${_bild_c}) und dem Kampfende (Rueckstoss F${_rueck}) nicht getroffen")
+    string(APPEND _f "\n Kampf: ${_figur} wird zwischen dem Eintritt in Wagen C (F${_bild_c}) und dem Kampfende (Abschuss F${_rueck}) nicht getroffen")
 endif()
 
 # --- 6 Kamera der Rueckstoss-Szene (Nachbesserung 4) ---
@@ -412,8 +444,11 @@ set(_k "")
 set(_kam_info "")
 if(_warten)
     set(_kam_info "keine Szene bis F${_exit_bild} (Teil warten)")
-elseif(_taumel_n LESS 60)
-    string(APPEND _f "\n Kamera: nur ${_taumel_n} Taumelbilder (Clip 13, HP 1) im state.log, erwartet >= 60")
+elseif(TRUE)   # Runde 42 Strang finale: keine Rueckstoss-Szene mehr -> kein Taumelbild; die Kamerapruefung 6 entfaellt
+    if(_taumel_n GREATER 0)
+        string(APPEND _f "\n ${_taumel_n} Taumelbilder (Clip 13, HP 1) im state.log: die Rueckstoss-Szene lief (Plan S4: entfallen)")
+    endif()
+    set(_kam_info "Rueckstoss-Szene entfallen (Plan S4), ${_taumel_n} Taumelbilder, Abschuss F${_abschuss}")
 elseif(NOT EXISTS "${WORKDIR}/deck.log")
     string(APPEND _f "\n Kamera: kein deck.log (Messschiene RE15_SLOTDECKUNG fehlt in dieser exe)")
 else()
