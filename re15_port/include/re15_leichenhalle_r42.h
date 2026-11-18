@@ -51,6 +51,29 @@
  *   - Mod-sub03 @0x00A0C Evt_exec(sub02): ausgelassen, wenn das Kuehlfach schon offen ist (Disc-Ablauf in diesem Besuch
  *     gestartet ODER Ck(4,17)==1) — sonst schwaenge die Tuer ein zweites Mal und der Kriecher bekaeme 0x81 erneut. Der Rest
  *     von sub03 (Minidisc, Musik, Wecken, Set(4,17)) bleibt unberuehrt. PORT-WAHL.
+ *
+ * WIEDERBETRETEN (Stufe 1 Runde 2, Pruefbericht R1): (4,17) hat ZWEI Bedeutungen.
+ *   Disc: "Kuehlfach offen" — einziger Setzer sub02 @0x00A1E; Leser main00 @0x007CE (Ausloeser), @0x007EC (Tueren zu/offen),
+ *         @0x008AA (Gegner 2 im Fach oder Kriecher am Boden @0x008C6).
+ *   Mod:  "Minidisc genommen, Liegende geweckt" — einziger Setzer sub03 @0x00A36, und zwar NUR hinter @0x00A08 Ck(9,104)==1
+ *         (Zensus aller 240 Mod-RDTs, opcode-exakter Walk scd_walk_lib: Set(4,17) nur dort, Ck(4,17) nur main00 @0x00800 und
+ *         @0x00852; Port-Quelltext: kein Zugriff). Mod main00 @0x00852 Ck(4,17)==0 waehlt die Gegner:
+ *           ja   @0x00856/@0x0086A/@0x0087E/@0x00892  0x88 / 0x87 / 0xA1 (im Fach) / 0x87  (drei Liegende = Minidisc-Hinterhalt)
+ *           nein @0x008AA/@0x008BE/@0x008D2/@0x008E6  vier stehende 0x0D (Zustand NACH dem Hinterhalt)
+ *   Der uebernommene Disc-Ablauf setzt (4,17) ohne Minidisc. Wer danach geht und wiederkommt, bekaeme die vier Stehenden —
+ *   der Hinterhalt waere weg (gemessen im Pruefbericht, Probe pruef_s1_r1/probe/probe_wieder.c).
+ *   Der Zustand "(4,17)=1 und (9,104)=0" entsteht in der Mod NIE (s. Zensus) — nur durch den Disc-Ablauf. Genau dann
+ *   ersetzt der Port beim Raumaufbau die vier Saetze des Else-Zweigs (PORT-WAHL, "die Mod-Bedeutung beim Wiederbetreten
+ *   herstellen"; kein neues Merkzeichen, der Disc-Ablauf bleibt Byte fuer Byte):
+ *     Gegner 0/1/3 <- die Mod-Saetze des Ja-Zweigs @0x00856 / @0x0086A / @0x00892 (die Liegenden, Hinterhalt bleibt;
+ *                     Mod-sub03 @0x00A1A/@0x00A26/@0x00A32 weckt sie spaeter wie bisher)
+ *     Gegner 2     <- Disc-Satz @0x008C6 `44 02 10 81 00 00 01 ff a8 a0 00 00 e4 c1 00 00 18 01 00 00` (der Kriecher am Boden,
+ *                     (-24408,0,-15900), Gier 280, so stellt ihn die Disc beim Wiederbetreten hin), mit EINER Aenderung:
+ *                     pc[7] = 0x8E statt 0xFF = das Tod-Merkzeichen der Mod (@0x0087E / @0x008D2 pc[7]), damit ein
+ *                     getoeteter Kriecher tot bleibt (Tor `lbu a1,7(a1)` / `jal 0x8004efe4` @0x80042120-38) und Mod-sub01
+ *                     @0x00976 Ck(7,142) (Musik, wenn alle vier tot sind) weiter zaehlt.
+ *   Die Kuehlfach-Tuer steht dann nach Mod main00 Else @0x0082A offen (Gier 2949 = Disc @0x0085A). Mit Minidisc ((9,104)=1)
+ *   laeuft der Mod-Else-Zweig unveraendert.
  */
 #ifndef RE15_LEICHENHALLE_R42_H
 #define RE15_LEICHENHALLE_R42_H
@@ -80,12 +103,31 @@
 #define RE15_R42L_MOD_SUB03_LEN    84u
 #define RE15_R42L_MOD_EVT_OFF      0x00A0Cu
 
+/* Minidisc genommen: Taken-Bit des Mod-Gegenstands 0x44, sub00 @0x00932 Item_aot_set (Bit-Feld @0x00944 `68 00`),
+ * gelesen von sub03 @0x009FC `21 09 68 00` / @0x00A08 `21 09 68 01`. */
+#define RE15_R42L_MD_BANK          9
+#define RE15_R42L_MD_BIT           104
+/* Mod main00 Else-Zweig (Ck(4,17)==0 @0x00852 nein): die vier Sce_em_set-Saetze, je 20 B. */
+#define RE15_R42L_MOD_ELSE_0       0x008AAu
+#define RE15_R42L_MOD_ELSE_1       0x008BEu
+#define RE15_R42L_MOD_ELSE_2       0x008D2u
+#define RE15_R42L_MOD_ELSE_3       0x008E6u
+/* Kriecher am Boden beim Wiederbetreten: Disc main00 @0x008C6 (Lage, Gier, grid); Tod-Merkzeichen der Mod @0x0087E pc[7]. */
+#define RE15_R42L_KRIECHER_X       (-24408)   /* Disc @0x008CE `a8 a0` */
+#define RE15_R42L_KRIECHER_Z       (-15900)   /* Disc @0x008D2 `e4 c1` */
+#define RE15_R42L_KRIECHER_GIER    280        /* Disc @0x008D6 `18 01` */
+#define RE15_R42L_KRIECHER_GRID    0x81       /* Disc @0x008C9 */
+#define RE15_R42L_KRIECHER_TOD     0x8E       /* Mod  @0x00885 (Satz @0x0087E pc[7]) */
+
 /* Raumaufbau (scd_room_setup.c, nach dem Init-Lauf): Zustand loeschen, Anker pruefen, scharf schalten. */
 void re15_leichenhalle_r42_install(uint16_t room_id);
 /* Je Spielbild (scd_vm_tick, nicht im Raumaufbau): Rechteck-Test, Ablauf starten. */
 void re15_leichenhalle_r42_tick(void);
 /* op_evt_exec: 1 = diesen Evt_exec (Mod-sub03 @0x00A0C) auslassen. */
 int  re15_leichenhalle_r42_evt_exec_gestrichen(uint16_t room_id, const uint8_t *pc, const re15_rdt_t *rdt);
+/* op_sce_em_set: Ersatz-Satz (20 B) fuer einen Mod-Else-Satz beim Wiederbetreten nach dem Disc-Ablauf ohne Minidisc
+ * ((4,17)=1, (9,104)=0), sonst NULL. */
+const uint8_t *re15_leichenhalle_r42_em_ersatz(uint16_t room_id, const uint8_t *pc, const re15_rdt_t *rdt);
 
 /* Pruefhaken */
 const uint8_t *re15_leichenhalle_r42_programm(uint16_t room_id, int *out_len);
@@ -93,6 +135,7 @@ int            re15_leichenhalle_r42_scharf(void);      /* 1 = wartet auf den Sp
 int            re15_leichenhalle_r42_gestartet(void);   /* 1 = Ablauf in diesem Besuch gestartet */
 unsigned       re15_leichenhalle_r42_starts(void);
 unsigned       re15_leichenhalle_r42_ausgelassen(void);
+unsigned       re15_leichenhalle_r42_ersetzt(void);     /* Zahl der ersetzten Sce_em_set-Saetze (seit Programmstart) */
 int            re15_leichenhalle_r42_im_rechteck(int32_t px, int32_t pz);
 
 #endif /* RE15_LEICHENHALLE_R42_H */

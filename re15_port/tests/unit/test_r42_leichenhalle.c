@@ -22,6 +22,8 @@
  *   D  (4,17)=1 beim Betreten: kein Ausloeser (Disc main00 @0x007CE).
  *   E  der Kriecher verlaesst das Fach: nach grid 0x81 bewegt sich Gegner 2 aus dem Fach (z unter die Tuerlinie -14382)
  *      und landet auf der Spieler-Ebene (y 0, Etage 0) — in BEIDEN KI-Geschmaeckern, Spieler vor den Faechern.
+
+ *   F  Wiederbetreten nach dem Ablauf ohne Minidisc (Stufe 1 Runde 2, Pruefbericht R1): Hinterhalt bleibt, s. wieder().
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -137,18 +139,24 @@ static int em_slot(int32_t x, int32_t z)
     return -1;
 }
 
-static void raum_betreten(uint16_t room, re15_ai_flavor_t fl, int bit17)
+/* bit17 / md: 0 oder 1 setzen, -1 = stehen lassen (Wiederbetreten, Teil F). */
+static void raum_betreten_mit(uint16_t room, re15_ai_flavor_t fl, int bit17, int md)
 {
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
     re15_ai_flavor_set(fl);
+    /* Wiederbetreten (bit17 < 0): scd_vm_init loescht g_game.flags (re15_game_state_init) wie ein neues Spiel - der Riegel
+     * stellt sie danach wieder her, so wie ein Raumwechsel sie stehen laesst (scd_room_reenter fasst sie nicht an). */
+    static uint32_t merk[sizeof g_game.flags / sizeof(uint32_t)];
+    if (bit17 < 0) memcpy(merk, g_game.flags, sizeof g_game.flags);
     re15_actor_init(); re15_aot_init(); scd_vm_init();
+    if (bit17 < 0) memcpy(g_game.flags, merk, sizeof g_game.flags);
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
     re15_player_cmd_reset();
     re15_damage_seed_rng(0x1200u);
     g_current_room_id = room;
-    re15_game_flag_set(4, 17, (uint8_t)bit17);
-    re15_game_flag_set(9, 104, 0);
+    if (bit17 >= 0) re15_game_flag_set(4, 17, (uint8_t)bit17);
+    if (md >= 0)    re15_game_flag_set(9, 104, (uint8_t)md);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
     pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
@@ -158,6 +166,7 @@ static void raum_betreten(uint16_t room, re15_ai_flavor_t fl, int bit17)
     scd_room_reenter(&s_rdt, pl->x, pl->z, 0);
     if (fl == RE15_AI_FLAVOR_RE2) (void)load_bank_re2(0x10); else (void)load_bank_re15(0x10);
 }
+static void raum_betreten(uint16_t room, re15_ai_flavor_t fl, int bit17) { raum_betreten_mit(room, fl, bit17, 0); }
 
 /* A + C + E je Figur und Geschmack. */
 static void lauf(uint16_t room, re15_ai_flavor_t fl, const char *name)
@@ -253,6 +262,136 @@ static void lauf(uint16_t room, re15_ai_flavor_t fl, const char *name)
     }
 }
 
+/* F: Wiederbetreten nach dem Disc-Ablauf OHNE Minidisc (Pruefbericht Stufe 1 Runde 1, R1). (4,17) heisst in der Mod "Minidisc
+ * genommen, Liegende geweckt" (einziger Setzer sub03 @0x00A36 hinter @0x00A08 Ck(9,104)==1); Mod main00 @0x00852 waehlt daran
+ * die Gegner. Erwartet (re15_leichenhalle_r42.h "WIEDERBETRETEN"):
+ *   F1 echter Weg: Ablauf ausloesen, ohne Minidisc gehen, wiederkommen -> Gegner 0/1/3 liegen wie im Mod-Ja-Zweig
+ *      (@0x00856 0x88 / @0x0086A 0x87 / @0x00892 0x87), Gegner 2 ist der Disc-Kriecher am Boden (@0x008C6: grid 0x81,
+ *      (-24408,0,-15900), Gier 280) mit dem Mod-Tod-Merkzeichen 0x8E, KEIN stehender 0x0D; Tuer offen (Mod @0x0082A Gier
+ *      2949), kein zweites Klappern.
+ *   F2 danach Minidisc (sub03 @0x00A04): die drei Liegenden werden geweckt (Hinterhalt da), die Tuer schwingt nicht.
+ *   F3 nochmal wiederkommen (jetzt (9,104)=1): Mod-Else-Zweig unveraendert = vier stehende 0x0D.
+ *   F4 Kriecher getoetet ((7,0x8E)=1), ohne Minidisc wiederkommen: Gegner 2 bleibt weg (Tor @0x80042120-38). */
+extern uint8_t re15_em_status_zone(void);
+static int em_bei(int32_t x, int32_t z, uint8_t grid)
+{
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == 0x10 && g_actors[s].x == x && g_actors[s].z == z &&
+            g_actors[s].grid_id == grid) return s;
+    return -1;
+}
+static int zaehle_grid(uint8_t grid)
+{
+    int n = 0;
+    for (int s = 1; s < RE15_ACTOR_MAX; s++)
+        if (g_actors[s].active && g_actors[s].type == 0x10 && g_actors[s].grid_id == grid) n++;
+    return n;
+}
+static void tote_loeschen(void)
+{
+    g_current_room_id = 0x1200;
+    for (int b = 0x8c; b <= 0x8f; b++) re15_game_flag_set(re15_em_status_zone(), (unsigned)b, 0);
+}
+static void liegende_pruefen(const char *name, const char *teil)
+{
+    CHECK(em_bei(-20950, -21700, 0x88) > 0, "[%s %s] Gegner 0 liegt nicht (Mod @0x00856 0x88 (-20950,-21700))", name, teil);
+    CHECK(em_bei(-24249, -18579, 0x87) > 0, "[%s %s] Gegner 1 liegt nicht (Mod @0x0086A 0x87 (-24249,-18579))", name, teil);
+    CHECK(em_bei(-19622, -16118, 0x87) > 0, "[%s %s] Gegner 3 liegt nicht (Mod @0x00892 0x87 (-19622,-16118))", name, teil);
+    CHECK(zaehle_grid(0x0D) == 0, "[%s %s] %d stehende 0x0D (Mod-Else-Zweig @0x008AA..@0x008E6) - Hinterhalt weg", name, teil,
+          zaehle_grid(0x0D));
+}
+static void wieder(uint16_t room, re15_ai_flavor_t fl, const char *name)
+{
+    tote_loeschen();
+    raum_betreten_mit(room, fl, 0, 0);
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    int f17 = -1;
+    for (int f = 0; f < 600 && f17 < 0; f++) {                  /* im Rechteck bleiben; Fach >= 3029 entfernt */
+        pl->hp = 100; pl->x = -25885; pl->z = -16605; pl->floor = 0; pl->y = 0;
+        frame_step();
+        if (re15_game_flag_get(4, 17)) f17 = f;
+    }
+    CHECK(f17 > 0, "[%s F1] Disc-Ablauf hat (4,17) nicht gesetzt (Disc @0x00A1E)", name);
+    CHECK(!re15_game_flag_get(9, 104), "[%s F1] Minidisc (9,104) gesetzt", name);
+    printf("  [F1 %s] Ablauf ohne Minidisc: (4,17) ab Bild %d; gehen und wiederkommen\n", name, f17);
+
+    raum_betreten_mit(room, fl, -1, -1);                         /* Flags stehen lassen: (4,17)=1, (9,104)=0 */
+    liegende_pruefen(name, "F1");
+    const int k = em_bei(-24408, -15900, 0x81);
+    CHECK(k > 0, "[%s F1] Gegner 2 ist nicht der Kriecher am Boden (Disc @0x008C6 grid 0x81 (-24408,0,-15900))", name);
+    if (k > 0)
+        CHECK(g_actors[k].y == 0 && g_actors[k].floor == 0 && g_actors[k].rot_y == 280 && g_actors[k].em_flag_id == 0x8E,
+              "[%s F1] Kriecher y %d b%d Gier %d Tod-Merkzeichen %02x (erwartet 0/0/280/8e)", name, g_actors[k].y,
+              g_actors[k].floor, g_actors[k].rot_y, g_actors[k].em_flag_id);
+    const int o = obj1();
+    CHECK(o >= 0 && g_scd.props[o].rot_y == 2949, "[%s F1] Tuer rot %d (Mod Else @0x0082A 2949)", name,
+          o >= 0 ? g_scd.props[o].rot_y : -1);
+    int bewegt = 0;
+    for (int f = 0; f < 200 && o >= 0; f++) {
+        const int32_t vz = g_scd.props[o].z; const int16_t vr = g_scd.props[o].rot_y;
+        pl->hp = 100; pl->x = -25885; pl->z = -16605; pl->floor = 0; pl->y = 0;
+        frame_step();
+        if (g_scd.props[o].z != vz || g_scd.props[o].rot_y != vr) bewegt++;
+    }
+    CHECK(bewegt == 0, "[%s F1] Tuer bewegt sich beim Wiederbetreten (%d Bilder)", name, bewegt);
+    if (k > 0) {   /* der Kriecher lebt am Boden weiter: Spieler ~1640 entfernt (Disc-Wecken Weg 2 < 3000 @0x80104718) */
+        const re15_actor_t *z = &g_actors[k];
+        CHECK(z->active && z->y == 0 && z->floor == 0 && z->type == 0x10,
+              "[%s F1] Kriecher nach 200 Bildern: aktiv %d y %d b%d", name, z->active, z->y, z->floor);
+        printf("  [F1 %s] Kriecher nach 200 Bildern: st=%d/%d/%d g=%02x mo=%d @(%d,%d,%d) b%d hp %d\n", name, z->state,
+               z->sub_state_1, z->sub_state_2, z->grid_id, z->motion, z->x, z->y, z->z, z->floor, z->hp);
+        /* Spieler VOR den Kriecher (Gier 280 ~ +x), 1408 entfernt: er setzt sich in Bewegung (Disc-Wecken Weg 2: < 3000
+         * `sltiu 0xbb8` @0x80104718 im Bogen 0x200 @0x8010472c). Seitlich/hinten (oben, ~1640) blieb er liegen. */
+        int los = -1;
+        for (int f = 0; f < 300 && los < 0; f++) {
+            pl->hp = 100; pl->x = -23000; pl->z = -15900; pl->floor = 0; pl->y = 0;
+            frame_step();
+            if (z->x != -24408 || z->z != -15900) los = f;
+        }
+        CHECK(los >= 0, "[%s F1] Kriecher bleibt liegen, obwohl der Spieler vor ihm steht", name);
+        printf("  [F1 %s] Spieler vor dem Kriecher: er kriecht ab Bild %d los\n", name, los);
+    }
+    printf("  [F1 %s] wieder da: Liegende 0x88/0x87/0x87, Kriecher 0x81 am Boden (Slot %d), 0x0D %d, Tuer rot %d, Bewegung %d\n",
+           name, k, zaehle_grid(0x0D), o >= 0 ? g_scd.props[o].rot_y : -1, bewegt);
+
+    /* F2: Minidisc -> Mod-sub03 ab @0x00A04 */
+    {
+        uint8_t g_vor[RE15_ACTOR_MAX];
+        for (int s = 0; s < RE15_ACTOR_MAX; s++) g_vor[s] = g_actors[s].grid_id;
+        const int16_t ry_vor = o >= 0 ? g_scd.props[o].rot_y : 0;
+        re15_game_flag_set(9, 104, 1);
+        int slot = -1;
+        for (int s = SCD_EVENT_SLOT_FIRST; s <= SCD_EVENT_SLOT_LAST; s++)
+            if (!g_scd.threads[s].active && scd_thread_start(s, s_rdt.raw + 0x00A04) == 0) { slot = s; break; }
+        CHECK(slot >= 0, "[%s F2] kein Faden fuer sub03 @0x00A04", name);
+        for (int f = 0; f < 200; f++) { pl->hp = 100; pl->x = -25885; pl->z = -16605; frame_step(); }
+        int geweckt = 0;
+        for (int s = 1; s < RE15_ACTOR_MAX; s++)
+            if (g_actors[s].active && g_actors[s].type == 0x10 && (g_vor[s] == 0x87 || g_vor[s] == 0x88) &&
+                g_actors[s].grid_id != g_vor[s]) geweckt++;
+        CHECK(geweckt == 3, "[%s F2] %d von 3 Liegenden geweckt (Mod sub03 @0x00A1A/@0x00A26/@0x00A32)", name, geweckt);
+        CHECK(o >= 0 && g_scd.props[o].rot_y == ry_vor, "[%s F2] Tuer schwang (rot %d -> %d)", name, ry_vor,
+              o >= 0 ? g_scd.props[o].rot_y : -1);
+        printf("  [F2 %s] Minidisc: %d Liegende geweckt, Tuer rot %d\n", name, geweckt, o >= 0 ? g_scd.props[o].rot_y : -1);
+    }
+    /* F3: wiederkommen mit Minidisc -> Mod-Else-Zweig unveraendert */
+    tote_loeschen();
+    raum_betreten_mit(room, fl, -1, -1);
+    CHECK(zaehle_grid(0x0D) == 4, "[%s F3] %d stehende 0x0D, erwartet 4 (Mod-Else @0x008AA..@0x008E6 unveraendert)", name,
+          zaehle_grid(0x0D));
+    printf("  [F3 %s] mit Minidisc wieder da: %d stehende 0x0D (Mod)\n", name, zaehle_grid(0x0D));
+    /* F4: Kriecher tot, ohne Minidisc wiederkommen */
+    re15_game_flag_set(9, 104, 0);
+    re15_game_flag_set(4, 17, 1);
+    g_current_room_id = room;
+    re15_game_flag_set(re15_em_status_zone(), 0x8E, 1);
+    raum_betreten_mit(room, fl, -1, -1);
+    CHECK(em_bei(-24408, -15900, 0x81) < 0, "[%s F4] getoeteter Kriecher wieder da (Tod-Merkzeichen 0x8E)", name);
+    liegende_pruefen(name, "F4");
+    printf("  [F4 %s] Kriecher getoetet: bleibt weg, Liegende liegen\n", name);
+    tote_loeschen();
+}
+
 int main(void)
 {
     size_t n = 0;
@@ -296,6 +435,11 @@ int main(void)
         CHECK(o >= 0 && bewegt == 0, "D: (4,17)=1 und trotzdem Klappern (%d)", bewegt);
         printf("  [D] (4,17)=1: Tuer ruht (Mod main00 Else-Zweig rot %d)\n", o >= 0 ? g_scd.props[o].rot_y : -1);
     }
+
+    /* F: Wiederbetreten (Pruefbericht R1) */
+    wieder(0x1200, RE15_AI_FLAVOR_RE2,  "Leon RE2");
+    wieder(0x1201, RE15_AI_FLAVOR_RE2,  "Elza RE2");
+    wieder(0x1200, RE15_AI_FLAVOR_RE15, "Leon RE1.5");
 
     free(buf);
     if (fails) { printf("test_r42_leichenhalle: %d FAIL\n", fails); return 1; }

@@ -3886,6 +3886,11 @@ static uint8_t re15_enemy_spawn_action(uint8_t type, uint8_t behavior)
 
 static int op_sce_em_set(scd_thread_t *t)
 {
+    /* Runde 42 Strang original (Stufe 1 Runde 2): Leichenhalle 1200/1201 nach dem Disc-Ablauf ohne Minidisc — der Mod-Else-Satz
+     * wird durch einen 20-B-Ersatz gelesen (re15_leichenhalle_r42.h "WIEDERBETRETEN"); danach weiter hinter dem Dateisatz. */
+    { extern const uint8_t *re15_leichenhalle_r42_em_ersatz(uint16_t, const uint8_t *, const re15_rdt_t *);
+      const uint8_t *ers = re15_leichenhalle_r42_em_ersatz((uint16_t)g_current_room_id, t->pc, s_current_rdt);
+      if (ers) { const uint8_t *orig = t->pc; t->pc = ers; const int r = op_sce_em_set(t); t->pc = orig + 20; return r; } }
     uint8_t  slot     = t->pc[1];
     uint8_t  type     = t->pc[2];
     uint8_t  behavior = t->pc[3];

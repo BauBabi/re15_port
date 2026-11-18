@@ -238,6 +238,25 @@ static const uint8_t k_mod_sub03[RE15_R42L_MOD_SUB03_LEN] = {   /* @0x009F4, Evt
     0x07, 0x00, 0x01, 0x00,
 };
 
+/* Wiederbetreten nach dem Disc-Ablauf ohne Minidisc (Kopf "WIEDERBETRETEN"): Mod main00 Else-Saetze (Anker) und ihr Ersatz. */
+static const uint32_t k_else_off[4] = { RE15_R42L_MOD_ELSE_0, RE15_R42L_MOD_ELSE_1, RE15_R42L_MOD_ELSE_2, RE15_R42L_MOD_ELSE_3 };
+static const uint8_t k_mod_else[4][20] = {
+    { 0x44, 0x00, 0x10, 0x0d, 0x00, 0x00, 0x00, 0x8c, 0x2a, 0xae, 0x00, 0x00, 0x3c, 0xab, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00 }, /* @0x008AA */
+    { 0x44, 0x01, 0x10, 0x0d, 0x00, 0x00, 0x01, 0x8d, 0x04, 0xac, 0x00, 0x00, 0x6d, 0xb7, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00 }, /* @0x008BE */
+    { 0x44, 0x02, 0x10, 0x0d, 0x00, 0x00, 0x01, 0x8e, 0xa8, 0xa0, 0x00, 0x00, 0xe4, 0xc1, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00 }, /* @0x008D2 */
+    { 0x44, 0x03, 0x10, 0x0d, 0x00, 0x00, 0x01, 0x8f, 0x5a, 0xb3, 0x00, 0x00, 0x0a, 0xc1, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00 }, /* @0x008E6 */
+};
+/* Gegner 0/1/3 = Mod Ja-Zweig (Anker: die Datei muss dort genau diese Bytes tragen); Gegner 2 = Disc @0x008C6 mit pc[7] 0x8E. */
+static const uint32_t k_ja_off[4] = { 0x00856u, 0x0086Au, 0u, 0x00892u };
+static const uint8_t k_ersatz[4][20] = {
+    { 0x44, 0x00, 0x10, 0x88, 0x00, 0x00, 0x00, 0x8c, 0x2a, 0xae, 0x00, 0x00, 0x3c, 0xab, 0x00, 0x00, 0x20, 0x03, 0x00, 0x00 }, /* Mod @0x00856 */
+    { 0x44, 0x01, 0x10, 0x87, 0x01, 0x00, 0x01, 0x8d, 0x47, 0xa1, 0xf8, 0xf8, 0x6d, 0xb7, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }, /* Mod @0x0086A */
+    { 0x44, 0x02, 0x10, 0x81, 0x00, 0x00, 0x01, RE15_R42L_KRIECHER_TOD,                                                        /* Disc @0x008C6, */
+      0xa8, 0xa0, 0x00, 0x00, 0xe4, 0xc1, 0x00, 0x00, 0x18, 0x01, 0x00, 0x00 },                                               /* pc[7] Mod @0x00885 */
+    { 0x44, 0x03, 0x10, 0x87, 0x00, 0x00, 0x01, 0x8f, 0x5a, 0xb3, 0x00, 0x00, 0x0a, 0xc1, 0x00, 0x00, 0xaf, 0x05, 0x00, 0x00 }, /* Mod @0x00892 */
+};
+
+static unsigned s_ersetzt;
 static int      s_scharf;        /* 1 = Ck(4,17)==0 beim Betreten, Anker stimmt, Ablauf noch nicht gestartet */
 static int      s_gestartet;     /* 1 = Disc-Ablauf in diesem Besuch gestartet (ersetzt Aot_reset @0x0090E)   */
 static uint16_t s_raum;
@@ -330,6 +349,27 @@ int re15_leichenhalle_r42_evt_exec_gestrichen(uint16_t room_id, const uint8_t *p
     return 1;
 }
 
+const uint8_t *re15_leichenhalle_r42_em_ersatz(uint16_t room_id, const uint8_t *pc, const re15_rdt_t *rdt)
+{
+    if (!ist_raum(room_id) || !pc || !rdt || !rdt->raw) return NULL;
+    const uintptr_t a = (uintptr_t)pc, lo = (uintptr_t)rdt->raw, n = (uintptr_t)rdt->raw_size;
+    if (a < lo || a >= lo + n) return NULL;                      /* der Ersatz selbst liegt ausserhalb der Datei */
+    const uint32_t off = (uint32_t)(a - lo);
+    int i = 0;
+    while (i < 4 && k_else_off[i] != off) i++;
+    if (i == 4 || (uintptr_t)off + 20u > n) return NULL;
+    if (memcmp(pc, k_mod_else[i], 20) != 0) return NULL;
+    if (k_ja_off[i] && ((uintptr_t)k_ja_off[i] + 20u > n || memcmp(rdt->raw + k_ja_off[i], k_ersatz[i], 20) != 0)) return NULL;
+    if (!anker_ok(rdt)) return NULL;
+    if (!re15_game_flag_get(RE15_R42L_BANK, RE15_R42L_BIT)) return NULL;        /* Ja-Zweig laeuft ohnehin */
+    if (re15_game_flag_get(RE15_R42L_MD_BANK, RE15_R42L_MD_BIT)) return NULL;   /* Minidisc genommen: Mod-Bedeutung gilt */
+    s_ersetzt++;
+    LH_LOG("ROOM%04X: Wiederbetreten nach dem Disc-Ablauf ohne Minidisc ((4,17)=1, (9,104)=0): Gegner %d Satz @0x%05X -> %s",
+           (unsigned)room_id, i, (unsigned)off, i == 2 ? "Disc-Kriecher @0x008C6 (pc[7] 0x8E)" : "Mod Ja-Zweig (liegend)");
+    return k_ersatz[i];
+}
+
+unsigned re15_leichenhalle_r42_ersetzt(void)     { return s_ersetzt; }
 int      re15_leichenhalle_r42_scharf(void)      { return s_scharf; }
 int      re15_leichenhalle_r42_gestartet(void)   { return s_gestartet; }
 unsigned re15_leichenhalle_r42_starts(void)      { return s_starts; }
