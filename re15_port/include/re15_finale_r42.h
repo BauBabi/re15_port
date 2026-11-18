@@ -85,25 +85,32 @@ extern "C" {
 #define RE15_FI_XA03_DATEI_ELZA   "R702_XA03_CLAIRE.XAS"
 #define RE15_FI_XA03_LESE_ELZA    1234
 
-/* ---- U3: Fixpunkte und Schnitte in Wagen C (Messung Strang-Scratchpad u3/u3_suche3.py, Ergebnis u3/u3_ergebnis.txt) -----------
+/* ---- U3: Fixpunkte und Schnitte in Wagen C (Messung tools/r42_finale/u3_schnitte.py = Strang-Scratchpad u3b/u3_suche4.py) -------
  * RE2 stellt im Ausloesebild beide auf Fixpunkte (Tyrant (-14547,-14636) @0x801035cc-e0, Leon (-19025,-20861) @0x80103638-74;
  * Abstand 7668) und schneidet auf 11 ("Game over"), in den Wiederholungen auf 8/9/10 (`jal 0x8002c7ac` a0 = 11 @0x801036d8,
  * 8 @0x801037dc, 9 @0x801038fc, 0xa @0x80103a00). Diese Schnitte zeigen in ROOM702.BSS den Bahnsteig (Plan D6). PORT-ZUORDNUNG nach
- * Rolle: je RE2-Schnitt wurde Bild-x und Groesse von Form und Schuetze (bzw. Spieler) aus den RID-Bytes gerechnet (ROOM7020 @0x64 +
- * 32*Schnitt, ROOM5090/5091 @0x60 + 32*Schnitt, gleiche Masse wie Dossier A 4) und ueber alle Lagen der Form im Gang von Wagen C
- * (SCA 5090) und alle Blickachsen der Wagen-C-Schnitt gesucht, der am naechsten liegt (Bedingungen: Form in W1-W3 deutlich im
- * Bild, Schuetze in W1/W3 im Bild und in W2 ausserhalb wie RE2, W1/W2/W3 drei Schnitte, Wechsel zu W1 ist ein Schnitt):
- *   Form (1750,-23000), Blickachse 4032 (RE2 Gier 0x598 schaut auf Leon), Spieler 7668 davor auf der Achse (FUN_801016cc-Regel).
- *   "Game over" Schnitt 15 (RE2 11), W1 Schnitt 12 (RE2 8), W2 Schnitt 11 (RE2 9), W3 Schnitt 15 (RE2 10).
+ * Rolle: je RE2-Schnitt Bild-x und Groesse von Form und Schuetze (bzw. Spieler) aus den RID-Bytes (ROOM7020 @0x64 + 32*Schnitt,
+ * ROOM5090/5091 @0x60 + 32*Schnitt), Suche ueber alle Lagen der Form in Wagen C und alle Blickachsen.
+ * Runde 3 (Pruefbericht s1 r2 R1: W3 lag auf dem "Game over"-Schnitt 15 HINTER der Form, verdeckt; "Game over" zeigte die Form
+ * bildfuellend statt ausser Bild): die Form ist jetzt das Modell BAHNSTEIG_FORM.EMD in der Sequenzpose (Clip 2 Bild 0, form_halten)
+ * als Tiefenpuffer je Schnitt. Harte Regeln: "Game over" Form ausser Bild (RE2 Schnitt 11: +86,5 Grad) und Spieler sichtbar; W1-W3
+ * Form im Bild und die Bahn der Wiederholungsrakete zu >= 60 % sichtbar (nicht hinter der Form); W3 Quelle vor der Form (RE2 1181 vor
+ * 4112); jede Rolle ein eigener Schnitt gegenueber der vorigen und W3 != "Game over"; die Form steht ganz im Wagen (SCA 5090).
+ * Ergebnis: mit den fuenf Wagen-C-Schnitten 11-15 gibt es KEINE Lage mit drei verschiedenen W-Kameras (u3b/diag5.py) - W1 und W3
+ * teilen sich Schnitt 13 (nicht aufeinanderfolgend, die Rakete startet in W3 7000 naeher an der Form). Beste Loesung (Kosten 9,28,
+ * Gleichstand-Regel: innerhalb 0,1 der kleinsten Kosten die groesste Summe der Sichtbarkeit):
+ *   Form (22000,-23250) am Vorraum-Ende, Gier 2016 (Achse 130/256), Spieler 7668 davor auf der Achse (FUN_801016cc-Regel).
+ *   "Game over" Schnitt 12 (RE2 11): Form ausser Bild (Bedeckung 0,02), Spieler 4200 vor der Kamera.
+ *   W1 Schnitt 13 (RE2 8), W2 Schnitt 14 (RE2 9), W3 Schnitt 13 (RE2 10).
  * 5091 hat dieselben RID-Daten (Schnitte 0-15 bytegleich, @0x60-0x25F). */
-#define RE15_FI_FORM_X      1750
-#define RE15_FI_FORM_Z    (-23000)
-#define RE15_FI_FORM_GIER   4032
+#define RE15_FI_FORM_X     22000
+#define RE15_FI_FORM_Z    (-23250)
+#define RE15_FI_FORM_GIER   2016
 #define RE15_FI_T_ABSTAND   7668   /* |(-14547,-14636) - (-19025,-20861)| (@0x801035cc-e0 / @0x80103638-74) */
-#define RE15_FI_CUT_ZEILE     15
-#define RE15_FI_CUT_W1        12
-#define RE15_FI_CUT_W2        11
-#define RE15_FI_CUT_W3        15
+#define RE15_FI_CUT_ZEILE     12
+#define RE15_FI_CUT_W1        13
+#define RE15_FI_CUT_W2        14
+#define RE15_FI_CUT_W3        13
 /* Quelle der Wiederholungsrakete: Teil 11 des Spielers (`addiu a2,s0,0x7ac` = 11*0xAC + 0x48 @0x80103858/@0x8010395c/@0x80103a5c)
  * + Versatz (600, 0, 400) (`addiu v0,zero,0x258 / sh 0x10(sp)`, `addiu v0,zero,0x190 / sh 0x14(sp)`, `sh zero,0x12(sp)`
  * @0x80103828-38 / @0x80103a30-40); a1 = 0x80/0x81/0x82 (@0x80103854/@0x80103958/@0x80103a50) -> +0x22 = a1 >> 16 = 0 (@0x8001c988-8c).
@@ -131,6 +138,16 @@ extern "C" {
  * hat 32. PORT-ZUORDNUNG nach Rolle (Messung Strang-Scratchpad u5/u5_zuordnung.md, Tabelle in finale_r42.c k_flug/k_brocken). */
 #define RE15_FI_TEILE_FLUG     15   /* `sltiu v0,s3,0xf` @0x8010021c / `sltiu v0,s4,0xf` @0x80100578 */
 #define RE15_FI_TEILE_BROCKEN   6   /* sechs `jal 0x8010158c` @0x80103c0c-50 (RE2-Teile; in der Form 15 Teile, s. k_brocken) */
+
+/* ---- S1 Raumtonbank R702 (shared_assets/RE2/R702.EDT/.VH/.VB = ROOM7020 snd0, RDT-Kopf +0x08/+0x0C/+0x10 = @0x05C90/@0x05D50/
+ * @0x06B70, tools/r42_finale/re2_r702_esp.py). Einschlag: Se_on 0x020F0001 = Raumbank 2 Satz 0x0F (`lui a0,0x20f / ori a0,a0,1 /
+ * jal 0x8005ba28` @0x80103b54-5c; EDT @0x05CCC `00 00 c3 20`), a1 = Lage der Form (+0x38). Landung des Werfers Satz 0x0E (@0x05CC8,
+ * Stufe 3). PORT-WAHL: wie die uebrigen RE2-Raumbaenke im Port nicht positional (re15_audio_se_play_bank). */
+#define RE15_FI_SE_EINSCHLAG  0x0F
+#define RE15_FI_SE_LANDUNG    0x0E
+#define RE15_FI_TONBANK       "R702"
+/* PC-Seite (platform/pc/src/finale_r42_pc.c), gesetzt in platform/pc/main.c. */
+void re15_finale_r42_se_hook(void (*fn)(int satz));
 
 /* Phasen (RE2 Zustand 3 +0x06; 0 = aus, 1.. = Phase + 1) */
 enum {

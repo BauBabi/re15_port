@@ -12,6 +12,12 @@ Quelle: info/re2leon/PL0/RDT/ROOM7020.RDT. Kopf: 8 Byte Zaehler, dann 23 Offsets
                    RDT[20]; Laenge je TIM aus dem Kopf (8 + CLUT-Block + Bild-Block).
                    0x16 = RDT[0x1F55C:0x205FC] == GATOR40A0_16.TIM, 0x1A = RDT[0x226FC:0x24F7C] == GATOR40A0_1A.TIM (hier geprueft).
 
+  R702.EDT/.VH/.VB = Raumtonbank (snd0) = RDT-Kopfworte +0x08/+0x0C/+0x10 (FUN_80059e54: DAT_800dbb80 = [RDT+8], Muster
+                   tools/r35_fenster/glas1090_extrakt.py): EDT @0x05C90 (0xC0 B = 48 Saetze), VH @0x05D50 (3616 B), VB @0x06B70; VB-Laenge =
+                   VAB-Gesamtgroesse VH+0x0C (104448) - VH-Laenge. Gegenprobe gegen den RDT-Extrakt info/re2leon/PL0/RDT/room7020/snd0.*.
+                   Satz 0x0F (@0x05CCC `00 00 c3 20`) = Einschlag (Se_on 0x020F0001 @0x80103b54-5c, CDEMD0 EM2B), Satz 0x0E (@0x05CC8) =
+                   Landung des Werfers (ROOM7020 sub13, Stufe 3). Runde 3 (Pruefbericht s1 r2 R2).
+
 Aufruf: python re15_port/tools/r42_finale/re2_r702_esp.py [--install]   (ohne --install nach build/r42_finale_esp)
 Ausgabe: Name, Laenge, md5.
 """
@@ -63,13 +69,34 @@ def lesen(a):
     return e, tims
 
 
+def tonbank(a):
+    """R702.EDT/.VH/.VB: RDT-Kopfworte +0x08/+0x0C/+0x10, VB-Laenge aus dem VAB-Kopf (+0x0C Gesamtgroesse)."""
+    edt, vh, vb = struct.unpack_from("<III", a, 8)
+    if (edt, vh, vb) != (0x5C90, 0x5D50, 0x6B70):
+        die("Tonbank-Kopf %x %x %x" % (edt, vh, vb))
+    if a[vh:vh + 4] != b"pBAV":
+        die("VH ohne pBAV")
+    gesamt = struct.unpack_from("<I", a, vh + 12)[0]
+    teile = {"R702.EDT": a[edt:vh], "R702.VH": a[vh:vb], "R702.VB": a[vb:vb + gesamt - (vb - vh)]}
+    if len(teile["R702.VB"]) != gesamt - (vb - vh):
+        die("VB kuerzer als der VAB-Kopf sagt")
+    ex = os.path.join(REPO, "info", "re2leon", "PL0", "RDT", "room7020")
+    for name, quelle in (("R702.EDT", "snd0.edt"), ("R702.VH", "snd0.vh"), ("R702.VB", "snd0.vb")):
+        q = os.path.join(ex, quelle)
+        if os.path.exists(q) and open(q, "rb").read() != teile[name]:
+            die("%s != room7020/%s" % (name, quelle))
+    if teile["R702.EDT"][0x0F * 4:0x10 * 4] != bytes.fromhex("0000c320"):
+        die("Satz 0x0F %s" % teile["R702.EDT"][0x3C:0x40].hex())
+    return teile
+
+
 def main():
     install = "--install" in sys.argv
     a = open(RDT, "rb").read()
     e, tims = lesen(a)
     out = RE2 if install else os.path.join(REPO, "build", "r42_finale_esp")
     os.makedirs(out, exist_ok=True)
-    dateien = [("R702.ESP", e)] + [("R702_%02X.TIM" % b, tims[b]) for b in IDS]
+    dateien = [("R702.ESP", e)] + [("R702_%02X.TIM" % b, tims[b]) for b in IDS] + sorted(tonbank(a).items())
     for name, data in dateien:
         open(os.path.join(out, name), "wb").write(data)
         print("  %s %d B md5 %s" % (os.path.join(out, name), len(data), hashlib.md5(data).hexdigest()))

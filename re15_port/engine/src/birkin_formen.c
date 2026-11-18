@@ -5,6 +5,7 @@
  * Zahlen sind aus Video 1 (Complete Disc, 4:36-4:40) zurueckprojiziert oder Gestaltung und sind so markiert.
  */
 #include "re15_birkin_formen.h"
+#include "re15_finale_r42.h"     /* Runde 42: Kamera gehoert ab dem Abschuss dem Finale */
 #include "re15_actor.h"
 #include "re15_enemy.h"
 #include "re15_damage.h"        /* re15_enemy_apply_hitbox, re15_enemy_bone_world_pos */
@@ -2012,6 +2013,10 @@ static void bf_kamera_zurueck(void)
 
 static void bf_nahsicht_wache(void)
 {
+    /* Runde 42 Strang finale, Stufe 1 Runde 3: ab dem Abschuss gehoert die Kamera dem Finale (RE2 Phase 0 setzt Bank 1 |= 0x100 =
+     * Zonen aus @0x801036bc-d4 und schneidet selbst, @0x801036d8/@0x801037dc/@0x801038fc/@0x80103a00). Gemessen (finale.log Runde 3,
+     * debug.log [walk] F420 cut=13): die Wache schaltete den "Game over"-Schnitt 12 und W2-Schnitt 14 auf ihre Gegenkamera 13. */
+    if (re15_finale_r42_phase() != RE15_FI_AUS) { s_kam_wache = 0; s_kam_wache_halt = 0; return; }
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     int s = (re15_bf_bahnsteig_aktiv() && !re15_bb_pose_aktiv()) ? bf_riesenform_slot() : -1;
     const re15_actor_t *e = s >= 0 ? &g_actors[s] : NULL;

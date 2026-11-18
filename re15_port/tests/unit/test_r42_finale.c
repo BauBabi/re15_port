@@ -20,6 +20,8 @@
 #include "re15_finale_r42.h"
 #include "re2_buehne.h"
 #include "re2_fx.h"
+#include "re15_camera.h"
+#include <math.h>
 
 #define RE15_XSTR_(x) #x
 #define RE15_XSTR(x)  RE15_XSTR_(x)
@@ -216,15 +218,47 @@ static void t_xa_ende(void)
 
 /* U3: Schnitte aus Wagen C (Kameras 11-15 von ROOM5090, RID @0x60 + 32*Schnitt) - W1/W2/W3 verschieden (RE2 8/9/10), der Wechsel
  * "Game over" -> W1 ist ein Schnitt (RE2 11 -> 8); 5091 hat dieselben Kameras (bytegleich @0x60-0x25F). */
+/* Weltpunkt -> Bild 320x240 mit RID-Schnitt c (re15_camera_build_view, u = 160 + H * x / z). */
+static void bild(const uint8_t *rdt, int c, double x, double y, double z, double *u, double *t)
+{
+    re15_camera_cut_t cut;
+    memcpy(&cut, rdt + 0x60 + 32 * c, sizeof cut);
+    re15_camera_view_t v;
+    *u = -1; *t = 0;
+    if (re15_camera_build_view(&cut, &v) != 0) return;
+    const double vx = (v.rot[0] * x + v.rot[1] * y + v.rot[2] * z) / 4096.0 + v.trans[0];
+    const double vz = (v.rot[6] * x + v.rot[7] * y + v.rot[8] * z) / 4096.0 + v.trans[2];
+    *t = vz;
+    if (vz > 0) *u = 160 + v.fov_screen_dist * vx / vz;
+}
+
 static void t_schnitte(void)
 {
     const int z = RE15_FI_CUT_ZEILE, a = RE15_FI_CUT_W1, b = RE15_FI_CUT_W2, c = RE15_FI_CUT_W3;
     CHECK(z >= 11 && z <= 15 && a >= 11 && a <= 15 && b >= 11 && b <= 15 && c >= 11 && c <= 15, "Schnitt ausserhalb Wagen C");
-    CHECK(a != b && b != c && a != c && z != a, "Schnittfolge ohne Wechsel (%d %d %d %d)", z, a, b, c);
+    /* Runde 3 (Pruefbericht s1 r2 R1): jeder Rollenwechsel ein Schnitt, W3 != "Game over"; W1 == W3 ist erlaubt (u3b/diag5.py: fuenf
+     * Wagen-C-Schnitte geben keine drei W-Kameras mit sichtbarer Rakete). */
+    CHECK(z != a && a != b && b != c && z != c, "Schnittfolge ohne Wechsel (%d %d %d %d)", z, a, b, c);
     size_t n0 = 0, n1 = 0;
     uint8_t *r0 = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/STAGE5/ROOM5090.RDT", &n0);
     uint8_t *r1 = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/STAGE5/ROOM5091.RDT", &n1);
     CHECK(r0 && r1 && n0 > 0x260 && n1 > 0x260 && memcmp(r0 + 0x60, r1 + 0x60, 0x200) == 0, "5090/5091 Kameras nicht gleich");
+    /* Bildlage aus den RID-Bytes (ROOM5090 @0x60 + 32 * Schnitt) mit derselben Kamera-Rechnung wie der Renderer: "Game over" Formmitte
+     * ausser Bild und Spieler (7668 vor der Form) im Bild (RE2 Schnitt 11); W3 Schuetze (3000 vor der Form) im Bild und naeher an der
+     * Kamera als die Form (RE2 Schnitt 10: 1181 vor 4112); W1/W2 Formmitte im Bild. */
+    if (r0 && n0 > 0x260) {
+        const double g = RE15_FI_FORM_GIER * 6.283185307179586 / 4096.0, fx = cos(g), fz = -sin(g);   /* +x der Form (spieler_vor) */
+        double u, t, uf, tf;
+#define PUNKT(c, d, y, U, T) bild(r0, (c), RE15_FI_FORM_X + fx * (d), (y), RE15_FI_FORM_Z + fz * (d), &(U), &(T))
+        PUNKT(z, 0, -1500, uf, tf); PUNKT(z, RE15_FI_T_ABSTAND, -900, u, t);
+        CHECK(tf <= 0 || uf < 0 || uf >= 320, "Game over: Formmitte im Bild (u %.0f Tiefe %.0f)", uf, tf);
+        CHECK(t > 0 && u >= 0 && u < 320, "Game over: Spieler ausser Bild (u %.0f Tiefe %.0f)", u, t);
+        PUNKT(c, 0, -1500, uf, tf); PUNKT(c, RE15_FI_W3_ABSTAND, -900, u, t);
+        CHECK(t > 0 && u >= 0 && u < 320 && t < tf, "W3: Schuetze (u %.0f Tiefe %.0f) nicht im Bild vor der Form (Tiefe %.0f)", u, t, tf);
+        PUNKT(a, 0, -1500, uf, tf); CHECK(tf > 0 && uf >= 0 && uf < 320, "W1: Formmitte ausser Bild");
+        PUNKT(b, 0, -1500, uf, tf); CHECK(tf > 0 && uf >= 0 && uf < 320, "W2: Formmitte ausser Bild");
+#undef PUNKT
+    }
     free(r0); free(r1);
 }
 

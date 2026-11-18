@@ -34,7 +34,8 @@
 #include "re15_teile_r15.h"        /* U5: Teil-Schicht (Bit 0x40 eigene Weltmatrix, 0x08 Scherben) */
 
 #include "gen/finale_r42_texte.inc"   /* k_fi_5090_msg02, k_fi_5091_msg02 (tools/r42_finale/texte_finale.py) */
-#include "re15_room.h"                 /* g_current_room_id */
+#include "re15_room.h"                 /* g_current_room_id, g_room_rdt */
+#include "re15_camera.h"               /* re15_camera_build_view: Messzeile Bildlage */
 
 int re15_player_gunbone_matrix(int32_t rot[9], int32_t t[3]);   /* re15_damage.c */
 
@@ -80,6 +81,10 @@ static struct {
     fi_flug_t fl[RE15_FI_TEILE_FLUG];
 } s_fi = { .form = -1, .uhr = -1, .w_platz = -1 };
 
+/* S1: Raumtonbank R702 (PC-Seite platform/pc/src/finale_r42_pc.c) */
+static void (*s_se)(int satz) = NULL;
+void re15_finale_r42_se_hook(void (*fn)(int satz)) { s_se = fn; }
+
 /* ---- Messschiene ------------------------------------------------------------------------------------------------------ */
 static void protokoll(const char *fmt, int a, int b, int c)
 {
@@ -94,6 +99,8 @@ static void protokoll(const char *fmt, int a, int b, int c)
     (void)fmt; (void)a; (void)b; (void)c;
 #endif
 }
+
+static int bildlage(int32_t x, int32_t y, int32_t z, int *u, int *tiefe);   /* Messzeile, unten */
 
 /* ---- Raum ------------------------------------------------------------------------------------------------------------- */
 int re15_finale_r42_raum(void) { return re15_bf_bahnsteig_aktiv(); }
@@ -242,7 +249,15 @@ static void wiederholung(uint32_t a0, uint8_t besitzer)
     static const int16_t OM[4] = { RE15_FI_QUELLE_X, 0, RE15_FI_QUELLE_Z, 0 };   /* (600,0,400) @0x80103828-38 */
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     int i = -1;
-    if (quelle_bauen()) {
+    int aus = 0;
+#ifdef RE15_PLATFORM_PC
+    {   /* MESSHAKEN RE15_FINALE_W_AUS=<Besitzer hex> (Runde 3, kein Spielverhalten): diese Wiederholung ohne Effekt - der Bildvergleich
+         * mit einem Lauf mit Effekt zaehlt dessen sichtbare Bildpunkte (Pruefbericht s1 r2 R1: W3 war verdeckt). */
+        const char *ev = getenv("RE15_FINALE_W_AUS");
+        aus = (ev && *ev && (uint8_t)strtoul(ev, NULL, 16) == besitzer);
+    }
+#endif
+    if (!aus && quelle_bauen()) {
         re2fx_boden_basis_setzen(pl->y);
         /* FUN_8001c8c4(a0, a1 = Besitzer, a2 = Teil 11, a3 = Versatz) @0x8010385c / @0x80103960 / @0x80103a60: +0x22 = a1 >> 16 = 0 */
         i = re2fx_spawn_besitzer(a0, besitzer, 0, s_fi.mtx, OM);
@@ -380,6 +395,10 @@ static void phase0(void)
     s_fi.t_ausl = s_fi.takt;
     protokoll("Ausloeser: Abschuss (Form hp %d), Programm Slot %d, Schnitt %d", e->hp, slot, RE15_FI_CUT_ZEILE);
     protokoll("Fixpunkte: Form (%d,%d), Spieler x %d", e->x, e->z, pl->x);
+    {   int uf = -1, tf = 0, us = -1, ts = 0;
+        const int df = bildlage(e->x, -1500, e->z, &uf, &tf), ds = bildlage(pl->x, -900, pl->z, &us, &ts);
+        protokoll("Bildlage Game over: Form u %d Tiefe %d", df ? uf : -9999, tf, 0);
+        protokoll("Bildlage Game over: Spieler u %d Tiefe %d", ds ? us : -9999, ts, 0); }
 }
 
 static void loesche_rauch_und(uint8_t besitzer)
@@ -603,6 +622,22 @@ int re15_finale_r42_teil(int i, int *re2, int *form, int *marke)
     return 0;
 }
 
+/* Messzeile Bildlage (Runde 3, Pruefbericht s1 r2 R1): Weltpunkt -> Bild 320x240 mit der Kamera des aktuellen Schnitts (RID-Satz wie
+ * der Renderer, re15_camera_build_view = FUN_80076cb0-Nachbau, u = 160 + H * x / z). Rueckgabe 0 = hinter dem Auge. Nur Messung. */
+static int bildlage(int32_t x, int32_t y, int32_t z, int *u, int *tiefe)
+{
+    const int cut = (int)g_scd.cam_id;
+    if (!g_room_rdt_ok || !g_room_rdt.cuts || cut < 0 || cut >= g_room_rdt.cut_count) return 0;
+    re15_camera_view_t v;
+    if (re15_camera_build_view(&g_room_rdt.cuts[cut], &v) != 0) return 0;
+    const int64_t vx = (((int64_t)v.rot[0] * x + (int64_t)v.rot[1] * y + (int64_t)v.rot[2] * z) >> 12) + v.trans[0];
+    const int64_t vz = (((int64_t)v.rot[6] * x + (int64_t)v.rot[7] * y + (int64_t)v.rot[8] * z) >> 12) + v.trans[2];
+    *tiefe = (int)vz;
+    if (vz <= 0) return 0;
+    *u = (int)(160 + (int64_t)v.fov_screen_dist * vx / vz);
+    return 1;
+}
+
 /* Messzeile: Weltlage der Wiederholungsrakete (+0x34/+0x36/+0x38, re2_fx.c) und Abstand zur Form, je Bild bis zum Einfrieren. */
 static void rakete_messen(const re15_actor_t *e)
 {
@@ -612,7 +647,11 @@ static void rakete_messen(const re15_actor_t *e)
     const int32_t x = (int16_t)(b[0x34] | b[0x35] << 8), y = (int16_t)(b[0x36] | b[0x37] << 8), z = (int16_t)(b[0x38] | b[0x39] << 8);
     const int32_t dx = x - e->x, dz = z - e->z;
     protokoll("Rakete (%d,%d) Abstand zur Form %d", x, z, (int)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz)));
-    (void)y;
+    int u = -1, t = 0, uf = -1, tf = 0;
+    const int da = bildlage(x, y, z, &u, &t), df = bildlage(e->x, -1500, e->z, &uf, &tf);
+    const int w = s_fi.phase == RE15_FI_P2 ? 1 : s_fi.phase == RE15_FI_P4 ? 2 : 3;
+    protokoll("Bildlage Rakete W%d u %d Tiefe %d", w, da ? u : -9999, t);
+    protokoll("Bildlage Form W%d u %d Tiefe %d", w, df ? uf : -9999, tf);
 }
 
 static void sequenz(uint16_t *pad)
@@ -631,7 +670,8 @@ static void sequenz(uint16_t *pad)
             if (dt <= 3u || du <= 8u)
                 protokoll("Spieler: Zielphase 0x%02x, Bild %d, Form-HP %d", re15_player_aim_phase_debug(), (int)pl->anim_frame, (int)e->hp);
         }
-        /* Tastenwort ERGAENZT, nicht ersetzt (`ori v1,v1,0x140` @0x80103724 / `ori 0x100` @0x80103740, Pruefbericht s1 r1) */
+        /* Tastenwort ERGAENZT, nicht ersetzt (Pruefbericht s1 r1): +0x15A == 0 -> `ori v1,v1,0x140` @0x80103740, sonst
+         * `ori v0,v0,0x100` @0x80103724 (Runde 3: Adressen berichtigt, Pruefbericht s1 r2) */
         if (!s_fi.frei) { *pad = (uint16_t)(*pad | RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE); s_fi.z16a = 1; }   /* 0x140 @0x80103730-4c */
         else *pad = (uint16_t)(*pad | RE15_PAD_BIT_R1);                   /* 0x100 @0x80103714-2c */
         if (s_fi.z16a == RE15_FI_RAKETE_WEG) { const int n = re2fx_loesche_bank_sub(2, 0x0D, NULL); protokoll("echte Rakete geloescht (%d Plaetze)", n, 0, 0); }
@@ -690,8 +730,10 @@ static void sequenz(uint16_t *pad)
         re2b_vsync_setzen(RE15_FI_VSYNC_KNALL);                           /* @0x80103b00-08 */
         const int16_t ofs[4] = { (int16_t)e->x, FI_KNALL_Y, (int16_t)e->z, 0 };   /* `lw v1,0x38 / sh` @0x80103b18-3c */
         const int k = re2fx_spawn_sofort(FI_KNALL, 0, re2fx_einheitsmatrix, ofs); /* FUN_8001bf10 @0x80103b38, a2 = 0x8009db44 */
-        /* Se_on 0x010a0001 (ARMS11 Satz 0x0A leer = stumm, Dossier A 3.6) und 0x020f0001 (Raumbank Satz 0x0F, R702.EDT: S1 offen)
-         * @0x80103b40-60 */
+        /* Se_on 0x010a0001 (ARMS11 Satz 0x0A leer = stumm, Dossier A 3.6) @0x80103b40-4c und 0x020f0001 (Raumbank R702 Satz 0x0F)
+         * @0x80103b54-5c */
+        if (s_se) s_se(RE15_FI_SE_EINSCHLAG);
+        protokoll("Se_on 0x020F0001: Raumbank R702 Satz 0x%02X (PC-Haken %d)", RE15_FI_SE_EINSCHLAG, s_se != NULL, 0);
         for (int b = 0x90; b <= 0x9e; b++) re2fx_loesche_besitzer((uint8_t)b);   /* @0x80103b74-be8 */
         (void)re15_audio_re2_xa(ist_elza() ? RE15_FI_XA03_DATEI_ELZA : RE15_FI_XA03_DATEI,
                                 ist_elza() ? RE15_FI_XA03_LESE_ELZA : RE15_FI_XA03_LESE);   /* Xa 0x03 @0x80103bec-f4 */

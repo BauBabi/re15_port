@@ -30,3 +30,10 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r42_finale_abspann COMMAND test_r42_finale_abspann)
 set_tests_properties(unit_r42_finale_abspann PROPERTIES TIMEOUT 120)
+# Plan S1 (Pruefbericht s1 r2 R2): R702.ESP, R702_xx.TIM, Raumtonbank R702.EDT/.VH/.VB und R702_XA03_LEON.XAS bytegleich mit ROOM7020.RDT
+# bzw. VOICE07.XAS (tests/unit/test_r42_finale_assets.c). Gegenprobe ueber RE15_R42F_RE2=<anderer RE2-Ordner>.
+add_executable(test_r42_finale_assets ${CMAKE_CURRENT_LIST_DIR}/../test_r42_finale_assets.c)
+target_include_directories(test_r42_finale_assets PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_finale_assets PRIVATE RE15_REPO_ROOT="${_r42f_repo_root}" RE15_ASSETS_PATH=${RE15_ASSETS_PATH})
+add_test(NAME unit_r42_finale_assets COMMAND test_r42_finale_assets)
+set_tests_properties(unit_r42_finale_assets PROPERTIES TIMEOUT 120)

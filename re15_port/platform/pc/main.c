@@ -4243,6 +4243,7 @@ re_title:;
     { extern void re15_pc_elza_se_init(void); re15_pc_elza_se_init(); }   /* Runde 36 Spur L: ELZASE.VBS-Haken */
     { extern void re15_pc_lift2030_se_init(void); re15_pc_lift2030_se_init(); }   /* Runde 37 Spur C N1: LIFT6030.VBS-Haken */
     { extern void re15_pc_annette_se(int); re15_annette_r41_se_hook(re15_pc_annette_se); }   /* Runde 41 Spur AN: ANNETTE_SE.VBS */
+    { extern void re15_pc_finale_r42_init(void); re15_pc_finale_r42_init(); }   /* Runde 42 Strang finale S1: Raumtonbank R702 */
     re15_bf_ruf_hook(re15_audio_birkin_ruf);   /* NUTZERWUNSCH 2026-11-16: Sherry-Ruf in der Hangar-Szene (ROOM3070 snd1 Satz 10) */
     { extern void re15_audio_stimme(uint16_t, int); re15_annette_r41_stimme_hook(re15_audio_stimme); }   /* Runde 41 Spur AN N1: Schrei 5090 nur als Ton */
     { extern int re15_pc_annette_tuerbank(void); re15_annette_r41_tuerbank_hook(re15_pc_annette_tuerbank); }   /* Runde 41 Spur AN NB4: Tuerton 6030 (DOOR2A) */
