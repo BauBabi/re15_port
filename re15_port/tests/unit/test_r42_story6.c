@@ -312,6 +312,7 @@ static void teil_texte(void)
 /* U-03 (Runde 42 rest Stufe 3): Bilder, in denen Elza vor msg 0 zu Marvin (Mod-6031 (-21241,-26118)) gedreht steht. Gier-Konvention
  * dir = (cos, -sin), 0 = +X, 1024 = -Z (dachkiste_r36.c wp_yaw_zu). */
 static int s_u03_marvin_bilder = 0;
+static int s_u03_nacken_bilder = 0;
 static void u03_messen(uint16_t raum)
 {
     if (raum != 0x6031 || s_prot_n > 0) return;
@@ -320,12 +321,16 @@ static void u03_messen(uint16_t raum)
     int soll = (int)lround(atan2(-dz, dx) / (2.0 * 3.14159265358979) * 4096.0) & 4095;
     int d = ((int)(p->rot_y & 4095) - soll) & 4095; if (d > 2048) d = 4096 - d;
     if (d <= 64 && re15_game_flag_get(2, 7)) s_u03_marvin_bilder++;
+    /* G5 (Pruefung s3_r1): Nackenziel in allen drei Achsen = Mod-Marvin @0x00E42 (-21241,-920,-26118), wie Disc @0x0072E =
+     * Disc-Marvin @0x005EA. Ein Nackenziel mit y 0 (Boden unter der Liege) zaehlt nicht. */
+    if (p->neck_tx == -21241 && p->neck_ty == -920 && p->neck_tz == -26118 && (p->neck_flags & 0x04)) s_u03_nacken_bilder++;
 }
 
 static void szene_pruefen(const uint8_t *prog, int pn, const uint8_t *folge, int fn, uint16_t raum, int max_bilder)
 {
     int start = -1, ende = -1;
     s_u03_marvin_bilder = 0;
+    s_u03_nacken_bilder = 0;
     for (int f = 0; f < max_bilder; f++) {
         frame();
         u03_messen(raum);
@@ -408,7 +413,7 @@ static void teil_wagen6031(void)
     static const uint8_t k_u03[0x3A] = {
         0x40, 0x00, 0x09, 0x20, 0xbd, 0xad, 0xde, 0x99,                         /* drehen (-21059,-26146) = Disc @0x00724 + (0,400) */
         0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, 0x20, 0x00, /* warten (5,0x20)                                   */
-        0x41, 0x01, 0x07, 0xad, 0x00, 0x00, 0xfa, 0x99, 0x28, 0x28,             /* Nacken Marvin (-21241,-26118) = Disc @0x0072E +400 */
+        0x41, 0x01, 0x07, 0xad, 0x68, 0xfc, 0xfa, 0x99, 0x28, 0x28,             /* Nacken Marvin (-21241,-920,-26118) = Mod @0x00E42 */
         0x09, 0x0a, 0x28, 0x00,                                                 /* Sleep 40  = Disc @0x00738                          */
         0x41, 0x01, 0x99, 0xa7, 0x00, 0x00, 0x4f, 0x9f, 0x28, 0x28,             /* Nacken Wagenmitte = Disc @0x0073C                  */
         0x09, 0x0a, 0x78, 0x00,                                                 /* Sleep 120 = Disc @0x00746                          */
@@ -419,6 +424,8 @@ static void teil_wagen6031(void)
           "Programmkopf = ROOM6031 @0x00D78..@0x00DB2 + `29 0b` + U-03 (Disc ROOM6041 sub06) + @0x00D9E..@0x00DFA");
     PRUEF(s_u03_marvin_bilder >= 30, "U-03: Elza blickt vor msg 0 zu Marvin (Gier +-64 zur Richtung Marvin in %d Bildern, Soll >= 30)",
           s_u03_marvin_bilder);
+    PRUEF(s_u03_nacken_bilder >= 40, "U-03/G5: Nackenziel = Mod-Marvin (-21241,-920,-26118) in %d Bildern (Soll >= 40 = Sleep 40 "
+          "Disc @0x00738)", s_u03_nacken_bilder);
     /* D4: Elzas Gespraech beginnt mit dem Gruppenbild Cut 11 (wie Leon), Schluss wie Original Cut 9 (@0x00DFA) */
     PRUEF(s_prot_n >= 1 && s_prot_id[0] == 0 && s_prot_cut[0] == 11, "D4: msg 0 mit Cut 11 (gemessen Cut %d)",
           s_prot_n >= 1 ? s_prot_cut[0] : -1);

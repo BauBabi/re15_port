@@ -66,6 +66,9 @@ JOHN = (-2900, -23800)
 JOHN_GIER = 3481
 # U-03 (Runde 42 rest Stufe 3): Marvin in Mod-6031 (Sce_em_set @0x00E42) und Elzas Drehziel = Disc ROOM6041 @0x00724 + (0,400)
 MARVIN = (-21241, -26118)
+# G5 (Pruefung s3_r1): Disc-Blickziel @0x0072E (-21241,0,-26518) = Disc-Marvin Sce_em_set @0x005EA `07 ad 00 00 6a 98` in ALLEN
+# drei Achsen. Dieselbe Beziehung in der Mod: Ziel = Mod-Marvin @0x00E42 `07 ad 68 fc fa 99` -> y = -920 (0xFC68, er liegt).
+MARVIN_Y = -920
 MARVIN_DREH = (-21059, -26146)
 
 
@@ -130,8 +133,9 @@ P_WAGEN = [
     # und dieselbe Drehung wie vorher (sub02 @0x00D9E..@0x00DB2), dann msg 0.
     drehen(AN_ELZA, MARVIN_DREH, "zu Marvin (Disc ROOM6041 @0x00724 (-21059,-26546) + (0,400))"),
     warte(AN_ELZA, "Drehung zu Marvin (Disc @0x0072C Gosub sub13)"),
-    port([0x41, 0x01] + LE16(MARVIN[0]) + [0x00, 0x00] + LE16(MARVIN[1]) + [0x28, 0x28],
-         "Plc_neck auf Marvin (Disc ROOM6041 @0x0072E `41 01 07 ad 00 00 6a 98 28 28`, z + 400)"),
+    port([0x41, 0x01] + LE16(MARVIN[0]) + LE16(MARVIN_Y) + LE16(MARVIN[1]) + [0x28, 0x28],
+         "Plc_neck auf Marvin (Disc ROOM6041 @0x0072E `41 01 07 ad 00 00 6a 98 28 28` = Disc-Marvin @0x005EA; Mod-Marvin "
+         "@0x00E42: y -920, z + 400)"),
     port([0x09, 0x0A, 0x28, 0x00], "Sleep 40 (Disc ROOM6041 @0x00738)"),
     port([0x41, 0x01, 0x99, 0xA7, 0x00, 0x00, 0x4F, 0x9F, 0x28, 0x28], "Plc_neck Wagenmitte (-22631,-24753) (Disc ROOM6041 @0x0073C)"),
     port([0x09, 0x0A, 0x78, 0x00], "Sleep 120 (Disc ROOM6041 @0x00746)"),
