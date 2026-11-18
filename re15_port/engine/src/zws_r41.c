@@ -14,6 +14,7 @@
 #include "re15_engine.h" /* g_engine.frame_count (Meldungen) */
 #include "re15_scd.h"    /* g_scd.props (Endzustand Objekt 0 nach dem Vorspulen) */
 #include "re15_actor.h"  /* g_actors (Endzustand Work 2/1, 2/2) */
+#include "re15_birkinfilm_r42.h"   /* Runde 42 birkinfilm: Tabellenzeile birk6000 (ROOM6000, RE2-Film R409) */
 
 #include <stdlib.h>
 #include <string.h>
@@ -26,6 +27,13 @@ extern int g_re15_voice_laeuft, g_re15_voice_restbilder;   /* scd_vm.c: Stimmen-
 
 /* ============================ Tabelle ============================ */
 static const re15_zws_film_t k_filme[] = {
+    /* Runde 42 birkinfilm: ROOM6000 Port-Zeile 44 im Programm k_bf_6000_prog (gen/birkinfilm_r42.inc), ohne Schrei, ohne Vorspulen,
+     * Uebergang RE2 ROOM4090 (64 ab / Film / 64 auf), Bild 40 Zeilen tiefer (re15_birkinfilm_r42.h). */
+    {   "birk6000", RE15_BF_RAUM,
+        { -1, 0, { 0 }, 0 },
+        { RE15_BF_MSG_FILM, 0, { 0 }, 0 },
+        { -1, 0, { 0 }, 0 },
+        -1, RE15_BF_FILM, RE15_BF_FILM_BILDER, RE15_ZWS_BLENDART_4090, RE15_BF_FILM_Y },
     {   "zws114", RE15_ZWS114_RAUM,
         { RE15_ZWS114_MSG_SCHREI, 0, { 0 }, 0 },                     /* ENTRIEGELN39: vor Sleep 20 @0x00DC6 + msg 6 */
         { RE15_ZWS114_MSG_FILM,   0, { 0 }, 0 },                     /* ENTRIEGELN39: nach Sleep 86 @0x00E10, vor msg 7 */
@@ -66,6 +74,7 @@ static int s_schrei_laeuft = 0;
 static int s_film = RE15_ZWS_FILM_AUS;
 static unsigned s_warte = 0;      /* Anker: Takte auf eine laufende Sprachzeile */
 static int s_vorspulen = 0;       /* 1 = Auftritt nach dem Film laeuft unsichtbar (11C) */
+static int s_abblend_takte = 0;   /* Blendenart 4090: Takte seit der Abblende (RE15_ZWS4090_AB_BILDER) */
 
 static void meldung(const re15_zws_film_t *f, const char *t, int a, int b)
 {
@@ -85,6 +94,7 @@ void re15_zws_r41_install(uint16_t room_id)
     s_warte = 0;
     s_aktiv = NULL;
     s_vorspulen = 0;
+    s_abblend_takte = 0;
 }
 
 void re15_zws_r41_raum_scan(const uint8_t *raw, long raw_size, unsigned room_id)
@@ -148,11 +158,27 @@ static void vorspulen_ende(const char *grund)
     einblenden("Einblenden aus Schwarz wie RE2 ROOM1080 sub14 (Kanal, Pegel)");
 }
 
-/* Film zu Ende. 114: sofort einblenden. 11C (Tabellenspalte sichtbar): erst den Original-Auftritt unsichtbar vorspulen. */
+/* Blendenart 4090 (re15_zws_r41.h "ZWEITE BLENDENART"): Kanal, ABR, RGB und Ebene wie ROOM1080 (dieselben Bytes @0x027F5-@0x027F7
+ * `02 02 07` und `li a3,0x7` @0x80057f14), nur Wert und Pegel anders. */
+static void blende_4090(int16_t wert, uint16_t pegel, const char *was)
+{
+    re15_fade_config(RE15_ZWS_BLENDE_KANAL, RE15_ZWS_BLENDE_ABR, RE15_ZWS_BLENDE_RGB, wert, RE15_ZWS_BLENDE_EBENE);
+    g_fade_ch[RE15_ZWS_BLENDE_KANAL].level = pegel;
+    meldung(s_aktiv, was, (int)wert, (int)pegel);
+}
+
+/* Film zu Ende. 114: sofort einblenden. 11C (Tabellenspalte sichtbar): erst den Original-Auftritt unsichtbar vorspulen.
+ * Blendenart 4090: Pegel 0x7FFF wie RE2 @0x0281C (die Einblende selbst ist seit der Anforderung gesetzt). */
 void re15_zws_r41_film_gespielt(void)
 {
     if (s_film != RE15_ZWS_FILM_OFFEN) return;
     s_film = RE15_ZWS_FILM_GESPIELT;
+    if (s_aktiv && s_aktiv->blende == RE15_ZWS_BLENDART_4090) {
+        g_fade_ch[RE15_ZWS_BLENDE_KANAL].level = RE15_ZWS4090_NACH_PEGEL;
+        meldung(s_aktiv, "Film zu Ende: Einblende wie RE2 ROOM4090 @0x0281C (Kanal, Pegel)", RE15_ZWS_BLENDE_KANAL,
+                RE15_ZWS4090_NACH_PEGEL);
+        return;
+    }
     if (s_aktiv && s_aktiv->sichtbar.n > 0 && s_anker == s_aktiv) {
         s_vorspulen = 1;
         g_re15_zws_vorspul_bilder = 0;
@@ -206,8 +232,21 @@ static int film(const re15_zws_film_t *f)
             meldung(f, "Film: keine Plattform - Stelle laeuft durch", 0, 0);
             return 1;
         }
+        if (f->blende == RE15_ZWS_BLENDART_4090) {       /* RE2 ROOM4090 @0x027F4: erst 64 Bilder abblenden */
+            s_film = RE15_ZWS_FILM_ABBLENDEN;
+            s_abblend_takte = 0;
+            blende_4090(RE15_ZWS4090_AB_WERT, RE15_ZWS4090_AB_PEGEL, "Abblende wie RE2 ROOM4090 @0x027F4 (Wert, Pegel)");
+            return 2;
+        }
         s_film = RE15_ZWS_FILM_OFFEN;
         meldung(f, "Film angefordert", f->film_bilder, 0);
+        return 2;
+    }
+    if (s_film == RE15_ZWS_FILM_ABBLENDEN) {
+        if (++s_abblend_takte < RE15_ZWS4090_AB_BILDER) return 2;
+        blende_4090(RE15_ZWS4090_AUF_WERT, RE15_ZWS4090_AUF_PEGEL, "Einblende gesetzt wie RE2 ROOM4090 @0x02812 (Wert, Pegel)");
+        s_film = RE15_ZWS_FILM_OFFEN;                   /* @0x02818 `6f 0b`: der Film laeuft zu Beginn des naechsten Bilds */
+        meldung(f, "Film angefordert (nach der Abblende, Takte)", f->film_bilder, s_abblend_takte);
         return 2;
     }
     if (s_film == RE15_ZWS_FILM_OFFEN) return 2;

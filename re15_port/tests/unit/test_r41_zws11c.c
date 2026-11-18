@@ -161,7 +161,7 @@ static void teil_anker(void)
 {
     printf("== anker ==\n");
     const re15_zws_film_t *f114 = re15_zws_r41_film_fuer_raum(RE15_ZWS114_RAUM), *f11c = re15_zws_r41_film_fuer_raum(0x11C0);
-    PRUEF(re15_zws_r41_anzahl() == 2 && f114 && f11c && f114 != f11c, "Tabelle: zwei Filme (114, 11C)");
+    PRUEF(re15_zws_r41_anzahl() == 3 && f114 && f11c && f114 != f11c, "Tabelle: drei Filme (114, 11C, birk6000 Runde 42)");
     if (!f114 || !f11c) return;
     PRUEF(f114->schrei.msg == RE15_ZWS114_MSG_SCHREI && f114->film.msg == RE15_ZWS114_MSG_FILM &&
           !strcmp(f114->film_datei, RE15_ZWS114_FILM) && f114->film_bilder == RE15_ZWS114_FILM_BILDER &&

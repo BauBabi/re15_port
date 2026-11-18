@@ -1,0 +1,9 @@
+R409BIRK.STR - Herkunft (Runde 42 Strang birkinfilm, RE2-Film "Birkins Mutation" ohne Einschub)
+Quelle: info/re2leon/PL0/ZMOVIE/R409.STR (RE2 Leon-Disc, Movie_on 0x0B, ROOM4090 sub02 @0x2818), md5 80241f0a3211979b83410e7565cda960,
+        21465 Sektoren zu 2336 B, 4293 Bilder 320x160 bei 30/s, CD-XA 37800 Hz Stereo 4 Bit.
+Schnitt: Sektoren [11630, 13460) entfernt = Bilder 2327..2692 (STR-Kopf +0x08) = Filmzeit 1:17,53..1:29,70 (Annette in der
+        Gegenwart, Off-Frage), darin 229 Tonsektoren. Alle uebrigen Sektoren bytegleich, in Reihenfolge.
+Werkzeug: re15_port/tools/r42_birkinfilm/film_schneiden.py
+Ergebnis: 3927 Bilder 320x160, 2454 Ton-Sektoren, 45867360 B, md5 f68f48a2d8246fa75854e303be2c0407
+Bildlage im Port: 40 Zeilen Rand oben wie RE2 (Filmtabelle @0x800a22cc +0x12 = 0x0028, FUN_80032150 @0x80032254).
+Abspielen: engine/src/zws_r41.c + platform/pc/src/zws_r41_pc.c (include/re15_zws_r41.h, include/re15_birkinfilm_r42.h).
