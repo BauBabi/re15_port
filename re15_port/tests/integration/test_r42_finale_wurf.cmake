@@ -1,22 +1,24 @@
 cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die uebrigen Integrationsskripte (Linux-Container CMake 3.28)
 # =============================================================================
-# FINALE 5090/5091: DIE WURFSZENE. Runde 42 Strang finale, Stufe 3 (Plan S5, K-13; include/re15_finale_wurf_r42.h).
+# FINALE 5090/5091: DIE WURFSZENE. Runde 42 Strang finale, Stufe 3 (Plan S5, K-13; include/re15_finale_wurf_r42.h), Runde 2.
 #
 # NUTZERWUNSCH 07.11.2026: "... Das jemand Leon den Raketenwerfer zuwirft ...". NUTZERENTSCHEID 17.11.2026: "Ok, passt für mich. Aber
 # ein Spruch wäre schon gut beim zuwerfen, so etwas wie: Leon, send him to hell, oder Leon, let's finish this oder sowas."
+# NUTZER 18.11.2026: "... würde ich John eher am Eingang stehen lassen ..." / "John kann danach gerne wieder raus laufen. ..."
 #
 # Ein Lauf je Figur (TEIL leon = ROOM5090, elza = ROOM5091): Debug-Sprung nach Wagen B, durch die Tuer nach Wagen C bis zum
 # Kampfbeginn (Weg wie integration_r42_finale_schuss), dann OHNE Waffe/Messhaken warten. Pruefhaken RE15_FINALE_UHR=60 kuerzt nur die
-# Uhr (Spielwert 1800 prueft unit_r42_finale), RE15_FINALE_WURF_HIN=1 stellt Leon nach der Szene neben den Werfer; das Aufheben laeuft
-# ueber den echten Item-Weg (Taste, Ja). Geprueft aus finale.log (Takte = Spieltakt des Finale-Moduls, W = Szenenstart) gegen RE2
-# ROOM7020 sub12/sub13:
-#   John erscheint W+1 (Bild 0) an der Ankunft (24800,-23550) (Tuer Slot 2 @0x0108E), Zuruf Id 3 W+2 (Bild 1, @0x0188C),
-#   Loslassen W+52 = Bild 51 (Sleep 1 + 30 + 20 @0x0187C/@0x01892/@0x018AE) im Clip-Bild 19, Landung mit Se_on Raumbank 0x0E im selben
-#   Takt (@0x019DE-E2), Zuruf 71 Bilder (Xa 0 = 354 Sektoren), Reaktion 17 Takte nach dem Spaeteren von Zuruf-Ende und Landung
-#   (Wsleep + Do/Edwhile + Sleep 15 @0x018C2-0x018D0), Ende 88 Takte danach (Sleep 1 @0x018FE + Xa-1-Fenster 87 @0x01942),
+# Uhr (Spielwert 1800 prueft unit_r42_finale). KEIN Haken stellt den Spieler um: der Werfer landet neben ihm, die Aufnahme laeuft ueber
+# den echten Item-Weg (Taste, Ja) von dort, wo er steht. Geprueft aus finale.log (Takte = Spieltakt des Finale-Moduls) gegen RE2
+# ROOM7020 sub12/sub13 und den RE1.5-Wurf:
+#   W = "Bild 0" ein Takt nach dem Szenenstart: John erscheint an der Ankunft (24800,-23550) (Tuer Slot 2 @0x0108E), Schnitt 13;
+#   Loslassen im Clip-Bild 22 (@0x800336fc) bei W+53 (Sleep 1 + 30 @0x0187C/@0x01892, dann 22 Bilder Wurf), Zuruf Id 3 im Bild danach;
+#   Landung nach 28 Flugbildern (RE2-Flugdauer) mit Se_on Raumbank 0x0E im selben Takt (@0x019DE-E2), hoechstens 1100 vom Spieler;
+#   Schnitt auf die Kamera des Spielers waehrend des Flugs; Reaktion 16 Takte nach der Landung (Do/Edwhile + Sleep 15 @0x018C4-D0);
+#   John geht durch die Tuer ab (Punkt 620 voraus im Tuer-AOT Slot 4, @0x80042bd0) innerhalb von 60 Takten, Ende im Takt danach;
 #   Aufnahme-AOT Slot 6 Gegenstand 0x12 Anzahl 2 Taken-Bit 137, nach dem Aufheben Zellen 0/1 = 0x12 mit Anzahl 2.
-#   debug.log: Schnitte 14 (W+1) / 15 (Reaktion) / zurueck auf die gemerkte Kamera (Ende), John aus JOHN_49_WURF.EMD, der Werfer in
-#   Hand, Flug und am Boden im Schnitt 14 mit Flaechen gezeichnet.
+#   debug.log: Schnitte 13 (W) / 13 (Reaktion) / zurueck auf die gemerkte Kamera (Ende), John aus JOHN_49_WURF.EMD mit 26 Clips, der
+#   Werfer in der Hand im Schnitt 13, im Flug im Schnitt 13 und in der Kamera des Spielers, am Boden in der Kamera des Spielers.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=leon|elza -P test_r42_finale_wurf.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -49,7 +51,7 @@ re15_start_spiel(_rv 500
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_figur_env}
     RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=500,-9175,2048,0"
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U8.5,W7.3,A0.1,W3.5,A0.1,W4"
-    RE15_FINALE_LOG=1 RE15_FINALE_UHR=60 RE15_FINALE_WURF_HIN=1 "RE15_EXIT_AT=1000"
+    RE15_FINALE_LOG=1 RE15_FINALE_UHR=60 "RE15_EXIT_AT=1000"
     "${_exe_kopie}")
 file(REMOVE "${_exe_kopie}")
 
@@ -66,12 +68,16 @@ function(takt_von _muster _var)
         set(${_var} "" PARENT_SCOPE)
     endif()
 endfunction()
-takt_von("Wurf: Szene startet" _W)
-if(NOT _W)
-    message(FATAL_ERROR "r42_finale_wurf_${TEIL}: keine Wurfszene im finale.log (exit=${_rv})\n${_log}")
+takt_von("Wurf: Szene startet" _S)
+takt_von("Wurf: Bild 0: John erscheint [(]Aktor [0-9]+[)] an [(]24800,-23550[)]" _W)
+if(NOT _S OR NOT _W)
+    message(FATAL_ERROR "r42_finale_wurf_${TEIL}: keine Wurfszene / kein Bild 0 im finale.log (exit=${_rv})\n${_log}")
 endif()
-foreach(_paar "Wurf: John erscheint [(]Aktor [0-9]+[)] an [(]24800,-23550[)]:1" "Wurf: Zuruf an [(]Id 3[)]:2"
-              "Wurf: Loslassen im Clip-Bild 19 [(]Takt W[+]52[)]:52")
+math(EXPR _ws "${_W} - ${_S}")
+if(NOT _ws EQUAL 1)
+    string(APPEND _f "\n Bild 0 ${_ws} Takte nach dem Szenenstart statt 1 (VM laeuft vor dem Spielzug)")
+endif()
+foreach(_paar "Wurf: Loslassen im Clip-Bild 22 bei W[+]53:53" "Wurf: Zuruf an [(]Id 3[)] bei W[+]54:54")
     string(REGEX MATCH "^(.*):([0-9]+)$" _x "${_paar}")
     set(_m "${CMAKE_MATCH_1}")
     set(_soll "${CMAKE_MATCH_2}")
@@ -85,29 +91,48 @@ foreach(_paar "Wurf: John erscheint [(]Aktor [0-9]+[)] an [(]24800,-23550[)]:1" 
         endif()
     endif()
 endforeach()
-takt_von("Wurf: Landung nach [0-9]+ Flugbildern" _L)
+takt_von("Wurf: Loslassen" _LOS)
+takt_von("Wurf: Landung nach 28 Flugbildern" _L)
 takt_von("Se_on Raumbank R702 Satz 0x0E [(]PC-Haken 1[)]" _SE)
-takt_von("Wurf: Zuruf aus nach 71 Bildern" _Z)
+takt_von("Wurf: Schnitt auf die Kamera des Spielers" _SK)
 takt_von("Wurf: Reaktion" _R)
+takt_von("Wurf: John durch die Tuer" _J)
 takt_von("Wurf: Ende" _E)
-if(NOT _L OR NOT _SE OR NOT _Z OR NOT _R OR NOT _E)
-    string(APPEND _f "\n Landung '${_L}' / Se_on 0x0E '${_SE}' / Zuruf 71 '${_Z}' / Reaktion '${_R}' / Ende '${_E}' fehlt")
+if(NOT _LOS OR NOT _L OR NOT _SE OR NOT _SK OR NOT _R OR NOT _J OR NOT _E)
+    string(APPEND _f "\n Loslassen '${_LOS}' / Landung 28 '${_L}' / Se_on 0x0E '${_SE}' / Schnitt Spieler '${_SK}' / Reaktion '${_R}' / John weg '${_J}' / Ende '${_E}' fehlt")
 else()
+    math(EXPR _dl "${_L} - ${_LOS}")
+    if(NOT _dl EQUAL 28)
+        string(APPEND _f "\n Landung ${_dl} Takte nach dem Loslassen statt 28")
+    endif()
     if(NOT _SE EQUAL _L)
         string(APPEND _f "\n Landeton T${_SE} nicht im Landetakt T${_L} (@0x019E2)")
     endif()
-    set(_spaet ${_Z})
-    if(_L GREATER _Z)
-        set(_spaet ${_L})
+    if(_SK LESS_EQUAL _LOS OR _SK GREATER _L)
+        string(APPEND _f "\n Schnitt auf den Spieler T${_SK} nicht im Flug (T${_LOS}..T${_L})")
     endif()
-    math(EXPR _dr "${_R} - ${_spaet}")
-    math(EXPR _de "${_E} - ${_R}")
-    if(NOT _dr EQUAL 17)
-        string(APPEND _f "\n Reaktion ${_dr} Takte nach Zuruf-Ende/Landung statt 17 (Wsleep + Do/Edwhile + Sleep 15)")
+    math(EXPR _dr "${_R} - ${_L}")
+    if(NOT _dr EQUAL 16)
+        string(APPEND _f "\n Reaktion ${_dr} Takte nach der Landung statt 16 (Do/Edwhile + Sleep 15)")
     endif()
-    if(NOT _de EQUAL 88)
-        string(APPEND _f "\n Ende ${_de} Takte nach der Reaktion statt 88 (Sleep 1 + 87)")
+    math(EXPR _dj "${_J} - ${_R}")
+    if(_dj GREATER 60 OR _dj LESS 10)
+        string(APPEND _f "\n John nach ${_dj} Takten durch die Tuer (erwartet 10..60: umdrehen, gehen, Wand)")
     endif()
+    math(EXPR _de "${_E} - ${_J}")
+    if(NOT _de EQUAL 1)
+        string(APPEND _f "\n Ende ${_de} Takte nach Johns Abgang statt 1")
+    endif()
+endif()
+if(_log MATCHES "Abgang per Notbremse")
+    string(APPEND _f "\n John ging per Notbremse ab")
+endif()
+if(_log MATCHES "Landung: Abstand zum Spieler ([0-9]+)")
+    if(CMAKE_MATCH_1 GREATER 1100)
+        string(APPEND _f "\n Werfer landet ${CMAKE_MATCH_1} vom Spieler (> 1100)")
+    endif()
+else()
+    string(APPEND _f "\n Abstand Landung - Spieler fehlt")
 endif()
 foreach(_m "Aufnahme-AOT Slot 6: Typ 2" "Aufnahme-AOT: Gegenstand 0x12 Anzahl 2 Taken-Bit 137" "aufgehoben: Zellen 0/1 = 0x12"
            "aufgehoben: Anzahl 2/2")
@@ -116,25 +141,28 @@ foreach(_m "Aufnahme-AOT Slot 6: Typ 2" "Aufnahme-AOT: Gegenstand 0x12 Anzahl 2 
     endif()
 endforeach()
 # debug.log: Schnitte, Modell, Werfer gezeichnet
-math(EXPR _w1 "${_W} + 1")
-if(NOT _dbg MATCHES "\\[scd F${_w1}\\] Cut_chg\\(14\\)")
-    string(APPEND _f "\n Cut_chg(14) nicht im Bild 0 (F${_w1})")
+if(NOT _dbg MATCHES "\\[scd F${_W}\\] Cut_chg\\(13\\)")
+    string(APPEND _f "\n Cut_chg(13) nicht im Bild 0 (F${_W})")
 endif()
-if(_R AND NOT _dbg MATCHES "\\[scd F${_R}\\] Cut_chg\\(15\\)")
-    string(APPEND _f "\n Cut_chg(15) nicht im Reaktionsbild F${_R}")
+if(_R AND NOT _dbg MATCHES "\\[scd F${_R}\\] Cut_chg\\(13\\)")
+    string(APPEND _f "\n Cut_chg(13) nicht im Reaktionsbild F${_R}")
 endif()
+set(_vorher "")
 if(_log MATCHES "Kamera vorher ([0-9]+)")
     set(_vorher ${CMAKE_MATCH_1})
     if(_E AND NOT _dbg MATCHES "\\[scd F${_E}\\] Cut_chg\\(${_vorher}\\)")
         string(APPEND _f "\n Rueckschnitt auf ${_vorher} nicht im Endbild F${_E}")
     endif()
 endif()
-if(NOT _dbg MATCHES "EM49: Ersatzmodell RE2/JOHN_49_WURF.EMD \\(Raum ${_raum}\\)")
-    string(APPEND _f "\n John nicht aus JOHN_49_WURF.EMD")
+if(NOT _dbg MATCHES "EM49: Ersatzmodell RE2/JOHN_49_WURF.EMD \\(Raum ${_raum}\\)" OR NOT _dbg MATCHES "EM49 loaded: [0-9]+ meshes, 15 bones, 26 clips")
+    string(APPEND _f "\n John nicht aus JOHN_49_WURF.EMD (26 Clips)")
 endif()
-foreach(_z 1 2 3)
-    if(NOT _dbg MATCHES "Werfer gezeichnet: Zustand ${_z} Lage [^\n]* Cut 14 Flaechen [1-9]")
-        string(APPEND _f "\n Werfer im Zustand ${_z} nicht im Schnitt 14 gezeichnet")
+foreach(_zc "1:13" "2:13" "2:${_vorher}" "3:${_vorher}")
+    string(REPLACE ":" ";" _zl "${_zc}")
+    list(GET _zl 0 _z)
+    list(GET _zl 1 _c)
+    if(NOT _dbg MATCHES "Werfer gezeichnet: Zustand ${_z} Lage [^\n]* Cut ${_c} Flaechen [1-9]")
+        string(APPEND _f "\n Werfer im Zustand ${_z} nicht im Schnitt ${_c} gezeichnet")
     endif()
 endforeach()
 if(_log MATCHES "Ausloeser: Abschuss")
@@ -143,4 +171,4 @@ endif()
 if(_f)
     message(FATAL_ERROR "r42_finale_wurf_${TEIL}: FEHLER${_f}\n--- finale.log ---\n${_log}")
 endif()
-message(STATUS "r42_finale_wurf_${TEIL}: OK (W ${_W}, Landung T${_L}, Reaktion T${_R}, Ende T${_E})")
+message(STATUS "r42_finale_wurf_${TEIL}: OK (W ${_W}, Loslassen T${_LOS}, Landung T${_L}, Reaktion T${_R}, John weg T${_J}, Ende T${_E})")

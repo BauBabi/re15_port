@@ -978,8 +978,9 @@ static uint8_t *pc_enemy_read_re15_emd(uint8_t type, size_t *out_len)
         }
         if (an) fprintf(stderr, "[enemy] EM%02X: RE2/%s fehlt -> Auslieferungsmodell\n", type, an);
     }
-    /* Runde 42 Strang finale Stufe 3 (re15_finale_wurf_r42.h): John (0x49) in 5090/5091 mit Adas Wurf-Clip als Clip 24 (Paar 1),
-     * sonst bytegleich der 0x49-Block (tools/r42_finale/john_wurf_modell.py). Fehlt die Datei: Auslieferungsmodell (kein Wurf-Clip). */
+    /* Runde 42 Strang finale Stufe 3 (re15_finale_wurf_r42.h): John (0x49) in 5090/5091 mit dem stehenden Granatenwurf des Spielers
+     * (PL00W09 Clip 6/7) als Clips 24/25 (Paar 1), sonst bytegleich der 0x49-Block (tools/r42_finale/john_wurf_modell.py). Fehlt die
+     * Datei: Auslieferungsmodell (kein Wurf-Clip). */
     {
         extern const char *re15_finale_wurf_emd_datei(uint8_t type);
         const char *fw = re15_finale_wurf_emd_datei(type);

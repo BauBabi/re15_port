@@ -1,6 +1,6 @@
 /*
  * RE1.5 Rebuilt — Runde 42 Strang finale, Stufe 3 (Plan S5, Konzept K-13): die WURFSZENE. John wirft Leon (ROOM5090) bzw. Elza
- * (ROOM5091) den Raketenwerfer zu, mit Zuruf, danach liegt der Werfer mit 2 Raketen zum Aufheben bereit.
+ * (ROOM5091) den Raketenwerfer zu, mit Zuruf, danach liegt der Werfer mit 2 Raketen neben dem Spieler zum Aufheben bereit.
  *
  * NUTZERWUNSCH 07.11.2026 (woertlich): "... machen wir ein finale wie beim Golem am Ende von Resident Evil 2. Das jemand Leon den
  * Raketenwerfer zuwirft, und man dann damit episch von mehreren Wiederholungen sieht, wie die Rakete angeflogen kommen und den Gegner
@@ -9,24 +9,35 @@
  * Leon, send him to hell, oder Leon, let's finish this oder sowas." -> v0.8.31: John wirft bei Leon UND Elza; Zuruf John->Leon
  * "Leon, catch! Send him to hell!", John->Elza "Elza, catch! Let's finish this!" als Message_on mit Untertitel (VOICE-Option gilt,
  * Stimme synchro/STAGE5/room509x/main03.wav, solange sie fehlt nur Text).
+ * NUTZER 18.11.2026 (woertlich, gilt ab Stufe 3 Runde 2):
+ *   (1) "Die Wurf Animation ist aktuell noch Schrott. - zumindest in der Vorschau. Orientiere dich da mehr an Resident Evil 2."
+ *   (2) "Aus der Vorschau - die Wurfanimation sah immer noch unpassend aus. Außerdem würde ich John eher am Eingang stehen lassen, als
+ *       das er kurz da ist und dann mitten im Gang plötzlich verschwindet."
+ *   (3) "John kann danach gerne wieder raus laufen. Sollte er auch, aber das geht schneller vom Eingang aus."
+ *   -> John erscheint am Eingang von Wagen C, wirft STEHEND (ohne Knien) von dort, geht danach durch dieselbe Tuer hinaus; Kamera
+ *      frontal und hell auf John; der Werfer fliegt sichtbar im Bogen bis neben den SPIELER.
  *
  * VORLAGE = RE2 ROOM7020 (info/re2leon/PL0/RDT/ROOM7020.RDT, Datei-Offsets @0x0xxxx) MAIN sub11 (Ausloeser, finale_r42.c), sub12
- * @0x0181A (Szene) und sub13 @0x019B2 (Flug). Ada -> John (Typ 0x49), Leon -> Leon/Elza. Belege je Konstante unten; was der Zugwagen
- * anders braucht, steht als PORT-ZUORDNUNG (mit Messung, Werkzeug tools/r42_finale/u_wurf.py) bzw. PORT-WAHL.
+ * @0x0181A (Szene) und sub13 @0x019B2 (Flug). Ada -> John (Typ 0x49), Leon -> Leon/Elza. Der Wurf selbst kommt aus RE1.5 (Handgranate
+ * des Spielers, PSX.EXE @0x800xxxxx, Bank PLD/PL00W09.PLW). Belege je Konstante unten; was der Zugwagen anders braucht, steht als
+ * PORT-ZUORDNUNG (mit Messung, Werkzeug tools/r42_finale/u_wurf.py, Messzeilen finale.log) bzw. PORT-WAHL.
  *
- * Ablauf (Programm aus RE1.5-Opcodes wie annette_r41.c / kanister2080_r41.c; Signale Bank 5 Wort 0):
- *   W     Set(2,7,1) @0x0181A, Set(1,27,1) @0x0181E; Form ruht (+0x10E = 0x8000 @0x01822-26: Typroutine uebersprungen -> Pose steht);
- *         Kamera/Lagen merken @0x0182A-0x0184A; Cut_chg 7 @0x0184E -> Ankunfts-Schnitt der Tuer nach Wagen C; John erscheint an der
- *         Ankunft (Sce_em_set); Werfer an Johns Teil 10 (Super_set @0x01854); Plc_motion Wurf-Clip @0x01878
- *   W+1   Sleep 1 @0x0187C; Zuruf = Message_on (Xa_on 0 @0x01888 + Message_on 5 @0x0188C; K-11-Weg)
- *   +30   Plc_motion Wurf-Clip noch einmal (Sleep 30 @0x01892, @0x018AA)
- *   +20   Loslassen (Sleep 20 @0x018AE, Super_reset @0x018B6, Flug sub13 @0x018BE)
- *   Flug  je Bild Lage += v, v += a bis y >= Boden - 800 (@0x019CE-0x019D8); Landung: Set(5,0x0E), Se_on Raumbank 0x0E, Lage + Drehung
- *         fest (@0x019DE-0x01A02)
- *   ...   Wsleep @0x018C2 (Zuruf zu Ende), Do..Edwhile Ck(5,0x0E) @0x018C4-0x018CC, Sleep 15 @0x018D0, Lagen @0x018D4-0x018FA,
- *         Cut_chg 11 @0x018FC (Reaktion), Sleep 1 @0x018FE, Wsleep @0x01942 (Leons Antwort Xa 1 = Lesefenster), Cut zurueck
- *         @0x01944/@0x01948, Aot_reset 5 @0x0194A (Werfer aufhebbar), Ada parken @0x01954, Form-KI an @0x01968-76, Lagen zurueck
- *         @0x0197A-0x019A6, Sleep 1 @0x019AA, sub18 @0x01B54-0x01B60 (Plc_ret, Set(2,7,0), Set(1,27,0), Cut_auto 1).
+ * Ablauf (Programm aus RE1.5-Opcodes wie annette_r41.c / kanister2080_r41.c; Signale Bank 5 Wort 0). W = erstes Programmbild
+ * (sub12 Bild 0; der Ausloeser laeuft im Port in der Form-KI ein Bild davor, die VM vor dem Spielzug):
+ *   W     Set(2,7,1) @0x0181A, Set(1,27,1) @0x0181E; Form ruht und ist ausser Bild (+0x10E = 0x8000 @0x01822-26; RE2 zeigt den
+ *         Tyrant in keinem Szenenbild: Schnitt 7 blickt zum Steg hoch, Schnitt 11 nach dem Wegstellen @0x018EC); Kamera/Lagen merken
+ *         @0x0182A-0x0184A; Cut_chg 7 @0x0184E -> Schnitt 13 (frontal auf die Tuer); John erscheint an der Ankunft von Wagen C
+ *         (Sce_em_set statt Pos_set @0x01868), Blick zum Spieler; Werfer an Johns Teil 10 (Super_set @0x01854); Plc_motion HEBEN
+ *         (@0x01878)
+ *   W+31  Sleep 1 @0x0187C + Sleep 30 @0x01892, Plc_motion WURF (@0x018AA)
+ *   Los   Clip-Bild 22 des Wurfs (RE1.5 @0x800336fc statt Sleep 20 @0x018AE): Loslassen (Super_reset @0x018B6, Flug sub13 @0x018BE),
+ *         Zuruf = Message_on (PORT-WAHL "beim Loslassen", RE2 Xa_on 0 @0x01888)
+ *   Flug  je Bild Lage += v, v += a bis y >= -800 (@0x019CE-0x019D8), Schnitt auf die Kamera des Spielers, sobald der Werfer in ihrem
+ *         Bild ist; Landung: Set(5,0x0E), Se_on Raumbank 0x0E, Lage + Drehung fest (@0x019DE-0x01A02)
+ *   ...   Landung abwarten (Do..Edwhile @0x018C4-0x018CC), Sleep 15 @0x018D0, Reaktion: Spieler blickt zu John (Dir_set @0x018E0),
+ *         Cut_chg 11 @0x018FC -> Schnitt 13, Sleep 1 @0x018FE, John geht durch die Tuer ab (Plc_dest @0x0193A) und wird geparkt
+ *         (@0x01954), Cut zurueck @0x01944/@0x01948, Aot_reset 5 @0x0194A (Werfer aufhebbar), Form-KI an @0x01968-76, Sleep 1
+ *         @0x019AA, sub18 @0x01B54-0x01B60 (Plc_ret, Set(2,7,0), Set(1,27,0), Cut_auto 1).
  *
  * Messschiene: dieselbe wie finale_r42.c (RE15_FINALE_LOG=1 -> finale.log, Zeilen "[finale] T.. F.. Wurf: ...").
  */
@@ -44,25 +55,39 @@ extern "C" {
 #define RE15_FW_JOHN_TYP     0x49   /* John (ROOM2001 @0x0179E `44 00 49 40 ..`; ROOM6031 sub06 @0x00E56 Typ 0x49) */
 #define RE15_FW_JOHN_GRID    0x40   /* stehender NPC (ROOM2000/2001 pc[3] = 0x40, re15_kanister2080_r41.h RE15_K2080_NPC_GRID) */
 #define RE15_FW_JOHN_SLOT    8      /* PORT-WAHL Skript-Slot wie RE15_K2080_NPC_SLOT (5090 belegt 0/1 @0x0122A/@0x0124A, 5091 0 @0x01232) */
-/* PORT-ZUORDNUNG "Ada steht auf dem Steg" -> "John kommt durch die einzige Tuer nach Wagen C": Lage, Gier und Schnitt = Ziel von
- * ROOM5090 main00 Door_aot_set Slot 2 @0x0108E `.. e0 60 00 00 02 a4 00 08 04 09 0e ..` (5091 bytegleich, tools/r42_finale/u_wurf.py
- * Assert) = die Ankunft jeder Figur, die Wagen C betritt. Gemessen (u_wurf.py): im Schnitt 14 Bild-x +0,324, Groesse 0,0332 - RE2
- * Schnitt 7 zeigt Ada mit +0,022 / 0,0323 (Ada (-28000,-7500,-17900) @0x01868 Gier 3700 @0x01870). */
+/* NUTZER 18.11. (2)/(3): John steht am EINGANG von Wagen C = Ziel der einzigen Tuer nach Wagen C (ROOM5090 main00 Door_aot_set Slot 2
+ * @0x0108E `.. e0 60 00 00 02 a4 00 08 04 09 0e ..` = (24800,0,-23550), Richtung 0x0800, Schnitt 0x0E; 5091 bytegleich) = die Ankunft
+ * jeder Figur, die Wagen C betritt. RE2 setzt Ada an den Wurfort (Pos_set @0x01868, Dir_set 3700 @0x01870: Ada blickt in Wurfrichtung,
+ * RE2-v (25,10) liegt 148/4096 neben ihrer Gier). PORT-WAHL: Johns Gier = Peilung John -> Spieler beim Szenenstart (er wirft zum
+ * Spieler); RE15_FW_JOHN_GIER bleibt die Ankunfts-Gier der Tuer (Riegel, Rueckfall ohne Spieler). */
 #define RE15_FW_JOHN_X       24800
 #define RE15_FW_JOHN_Z     (-23550)
 #define RE15_FW_JOHN_GIER    0x0800
-#define RE15_FW_CUT_WURF     14     /* RE2 Cut_chg 7 @0x0184E -> Ankunfts-Schnitt @0x0108E +24 */
-/* Wurf-Clip: RE2 Plc_motion `3f 0a 12 40` @0x01878 / @0x018AA = Clip 0x12 des ROOM7020-RBJ (55 Bilder) -> JOHN_49_WURF.EMD Paar 1
- * Clip 24 (tools/r42_finale/john_wurf_modell.py: gleiches Gerippe, 15 Knochen, Eltern gleich, Keyframe 80 B). Port: Plc_motion(1, 24)
- * = State 4 Sub 1 = Paar 1 (main.c Executor-Kanal-Render). Flags 0 wie die NPC-Gesten des Ports (kanister2080_r41.c OP_MOTION). */
-#define RE15_FW_CLIP_WURF    24
+/* PORT-ZUORDNUNG Wurf-Kamera (RE2 Cut_chg 7 @0x0184E zeigt Ada frontal: Bild-x +0,022, frontal 0,985, u_wurf.py): Schnitt 13 (RID
+ * 5090 @0x60 + 13*32: Auge (11050,-3110,-24812) blickt den Gang entlang zur Tuer, 5091 bytegleich) zeigt John an der Ankunft von
+ * vorn (frontal 0,996 bei Gier 0x0800, Bild-x +0,299, Groesse 0,0167); der Ankunfts-Schnitt 14 zeigt ihn von der Seite (frontal 0,164,
+ * Runde 1 - "Schrott"). Keine andere Kamera von Wagen C hat John im Bild (u_wurf.py: Schnitte 11/12/15 hinter dem Auge bzw. Bild-x > 1). */
+#define RE15_FW_CUT_WURF     13
+#define RE15_FW_CUT_REAKTION 13     /* RE2 Cut_chg 11 @0x018FC zeigt Leon zum Werfer und Ada beim Abgang (Plc_dest @0x0193A): John geht
+                                     * im Schnitt 13 durch die Tuer ab */
+/* Wurf OHNE Knien (Vorgabe Runde 2): der Handgranaten-Wurf des RE1.5-Spielers aus PLD/PL00W09.PLW, auf Johns Gerippe (gleiche Eltern,
+ * gleiche Beine; tools/r42_finale/john_wurf_modell.py) als Clips 24/25 in Paar 1 von JOHN_49_WURF.EMD. Port: Plc_motion(1, c) = State 4
+ * Sub 1 = Paar 1 (main.c Executor-Kanal-Render), Flags 0 = einmal spielen und halten (op_plc_motion @0x80041bb0).
+ *   HEBEN = W09-Clip 6 (10 Bilder): Feuer-FSM Sub 0 `ori v0,zero,0x6` / `sb v0,-13592(at)` (0x800acae8) @0x80032f68-0x80032f70
+ *   WURF  = W09-Clip 7 (35 Bilder): Sub 2 Clip 7 + 2*hoch + 4*tief @0x800334a8-0x800334c8 (MITTE = 7)
+ *   LOS   = Clip-Bild 0x16 = 22: `ori v0,zero,0x16` / `bne v1,v0` (0x800acae9) mit Flag MITTE 0x4000 -> Wurfkoerper 0x040D1000
+ *           (`jal 0x80019700`) @0x800336fc-0x8003374c (Waffe 9, Gate @0x80033684-0x8003368c). Ersetzt Adas Sleep 20 @0x018AE (ihr
+ *           Loslassbild im Clip 0x12). */
+#define RE15_FW_CLIP_HEBEN   24
+#define RE15_FW_CLIP_WURF    25
+#define RE15_FW_LOS_BILD     22
 #define RE15_FW_EMD_DATEI    "JOHN_49_WURF.EMD"
-#define RE15_FW_SCHLAF_1      1     /* @0x0187C `09 0a 01 00` */
+#define RE15_FW_SCHLAF_1      1     /* @0x0187C `09 0a 01 00` (und @0x018FE) */
 #define RE15_FW_SCHLAF_30    30     /* @0x01892 `09 0a 1e 00` */
-#define RE15_FW_SCHLAF_20    20     /* @0x018AE `09 0a 14 00` */
+#define RE15_FW_SCHLAF_20    20     /* @0x018AE `09 0a 14 00` - nur RE2-Beleg (Adas Loslassbild), Port: RE15_FW_LOS_BILD */
 #define RE15_FW_SCHLAF_15    15     /* @0x018D0 `09 0a 0f 00` */
 /* Super_set @0x01854 `48 00 81 8a 00 00 58 02 ce ff 80 fc 00 00 00 04`: Teil pc[3] & 0x7F = 10, Versatz (0, 600, -50), Drehung
- * (-896, 0, 1024) (Handler 0x8005550c, @0x80055640-0x80055670). */
+ * (-896, 0, 1024) (Handler 0x8005550c, @0x80055640-0x80055670). Teil 10 ist auch im W09-Wurf der werfende Arm (9-10-11). */
 #define RE15_FW_TEIL         10
 #define RE15_FW_VERSATZ_Y    600
 #define RE15_FW_VERSATZ_Z   (-50)
@@ -70,38 +95,58 @@ extern "C" {
 #define RE15_FW_HAND_RZ      1024
 /* Super_reset @0x018B6 `49 00 40 fb 40 02 00 04`: Drehung (-1216, 576, 1024) (Handler 0x800558b0). Landung Dir_set @0x019FA
  * `33 00 00 fc 00 00 00 04` = (-1024, 0, 1024). PORT-ZUORDNUNG: beide gelten in RE2 fuer Ada mit Gier 3700 (@0x01870); im Port um
- * (Gier John - 3700) um die Hochachse gedreht (Weltdrehung links), damit der Werfer beim Loslassen in der Hand bleibt, wie bei Ada. */
+ * (Gier John - 3700) um die Hochachse gedreht (Weltdrehung links). */
 #define RE15_FW_FLUG_RX     (-1216)
 #define RE15_FW_FLUG_RY       576
 #define RE15_FW_FLUG_RZ      1024
 #define RE15_FW_LIEG_RX     (-1024)
 #define RE15_FW_LIEG_RZ      1024
 #define RE15_FW_ADA_GIER     3700   /* Dir_set `33 00 00 00 74 0e 00 00` @0x01870 */
-/* Flug sub13: Speed_set 6 -> 5, 7 -> 20, 8 -> 0 (@0x019CA/@0x019C6/@0x019C2) = Beschleunigung (5, 20, 0) je Bild (Add_aspeed
- * 0x80055b2c: v += a), Add_speed 0x80055ab0 (Lage += v, Weltachsen @0x80055abc-e0), Ende sobald y >= -800 (Member_cmp `3e 00 0c 03
- * e0 fc` @0x019D8). RE2-Startgeschwindigkeit (25, 20, 10) (@0x019BE/@0x019BA/@0x019B6) gilt fuer Adas Steg (y -7500): von dort
- * faellt der Werfer 28 Bilder. PORT-ZUORDNUNG (Plan U7): aus Johns Standhoehe ist die Startgeschwindigkeit der Weg der Wurfhand
- * (Teil 10 + Versatz) im Loslassbild des Clips (Bild -> Bild + 1), die Beschleunigung die von sub13 im Blickrahmen des Werfers
- * (RE2 wirft nach +x, wie re15_kanister2080_r41.h vektor_drehen). */
+/* Flug sub13 (selbst gelesen): Speed_set 2 -> 10, 1 -> 20, 0 -> 25 (@0x019B6/@0x019BA/@0x019BE) = Startgeschwindigkeit (25, 20, 10),
+ * Speed_set 8 -> 0, 7 -> 20, 6 -> 5 (@0x019C2/@0x019C6/@0x019CA) = Beschleunigung (5, 20, 0); Schleife Evt_next / Add_speed 0x80055ab0
+ * (Lage += v, Weltachsen @0x80055abc-e0) / Add_aspeed 0x80055b2c (v += a); Ende sobald y >= -800 (Member_cmp `3e 00 0c 03 e0 fc`
+ * @0x019D8). Aus Adas Abwurfhoehe (Steg y -7500 @0x01868 + Hand Teil 10 + (0,600,-50) im Clip 0x12 Bild 19/20 = -8635/-8650) dauert
+ * der RE2-Flug 28 Bilder (10n^2+10n >= 7835/7850; u_wurf.py Assert, Riegel).
+ * PORT-WAHL (Vorgabe Runde 2: "Flug nach RE2 sub13 ... mit an die Entfernung John-Spieler angepasster Startgeschwindigkeit"):
+ * Beschleunigung, Schleife, Bodentest und Flugdauer 28 Bilder wie RE2; a_h = 5 (RE2 a_x) in Wurfrichtung (Peilung Hand -> Landestelle),
+ * a_y = 20. Die Startgeschwindigkeit wird so gewaehlt, dass der Werfer nach 28 Bildern an der Landestelle liegt: je Achse
+ * v = (Weg - a*378)/28 gerundet (378 = 28*27/2; bei D < 1890 a_h = D/378), v_y = die langsamste Startgeschwindigkeit (ab RE2 +20 abwaerts gezaehlt), mit
+ * der die Schleife ab der Handhoehe genau nach 28 Bildern endet (re15_finale_wurf_vy).
+ * Landestelle (PORT-WAHL "bis neben den SPIELER"): RE15_FW_LANDUNG_ABSTAND vor dem Spieler in Richtung John (hoechstens die halbe
+ * Strecke), damit der Spieler in dem RE2-Aufnahme-Rechteck 3400 x 2500 (@0x0120C/0E) um die Landestelle steht und sie vor sich hat. */
+#define RE15_FW_FLUG_VX        25
+#define RE15_FW_FLUG_VY        20
+#define RE15_FW_FLUG_VZ        10
 #define RE15_FW_FLUG_AX         5
 #define RE15_FW_FLUG_AY        20
 #define RE15_FW_FLUG_AZ         0
 #define RE15_FW_FLUG_STOP     800
+#define RE15_FW_FLUG_BILDER    28
 #define RE15_FW_FLUG_MAX      120   /* Notbremse der Schleife (kein Boden erreicht) - RE2 kennt keine */
+#define RE15_FW_LANDUNG_ABSTAND 1000
 #define RE15_FW_SE_LANDUNG   0x0E   /* Se_on `36 02 0e 00 ..` @0x019E2 -> Raumbank R702 Satz 0x0E (re15_finale_r42.h) */
 /* Reaktion: RE2 stellt Leon auf (-18600,0,-21700) Gier 0xF8F8 & 0xFFF = 0x8F8 (@0x018D8/@0x018E0) = Peilung Leon -> Ada - 2
- * (u_wurf.py: 4094), und den Tyrant ausser Sicht (@0x018EC (-8000,0,-25000)); Schnitt 11 zeigt Leon von hinten (frontal -0,96).
- * PORT-ZUORDNUNG: Leon auf die "Game over"-Lage der Stufe 1 (RE15_FI_GO_*: Schnitt 15, gemessen +0,15 / 0,085 gegen RE2 Schnitt 11
- * +0,18 / 0,089), Gier = Peilung Leon -> John - 2, die Form unsichtbar (statt geparkt). */
-#define RE15_FW_CUT_REAKTION  15
+ * (u_wurf.py: 4094) und stellt die Lage am Ende zurueck (@0x0197A-0x0198E). PORT-WAHL: der Spieler bleibt stehen (der Werfer liegt
+ * neben ihm), nur die Gier wird Peilung Spieler -> John - 2 und bleibt danach (er blickt zum Werfer, der zwischen ihm und John liegt). */
 #define RE15_FW_LEON_REL     (-2)   /* (0x8F8 - Peilung((-18600,-21700) -> (-28000,-17900))) & 0xFFF = 4094 */
-/* Leons Antwort Xa 1 (@0x0190A/@0x01918 `59 00 01 00`): STAGE7.BIN @0x14A `04 00 54 00 1d 00` = Kanal 4, Block 84, Laenge 29 ->
- * 29*16 - 0x1E = 434 Sektoren / 150 je s (@0x80012ae8-0x80012b10) = 2,893 s = 86,8 Bilder -> Wsleep @0x01942 wartet 87. Der Port
- * hat fuer diese Stelle keine Zeile (F2: nur der Werfer ruft) - PORT-WAHL: das RE2-Lesefenster bleibt als Dauer des Reaktions-Schnitts. */
-#define RE15_FW_REAKTION_BILDER 87
+/* Abgang: RE2 laesst Ada im Reaktions-Schnitt gehen (Plc_dest @0x0193A) und parkt sie danach (@0x01954-0x01960). Port: John geht zur
+ * Tuer zurueck, durch die er kam = Mitte des Tuer-AOT Slot 4 (5090/5091 @0x010CE `3b 04 02 31 00 00 3e 62 2c 9d 84 03 6e 0f ..` =
+ * x 25150 + 900/2, z -25300 + 3950/2; Ziel Wagen B) mit Plc_dest Modus 4 = gehen (Form ROOM1021 sub02 @0x020B2 `40 00 04 22 ..`,
+ * ROOM6000 sub02 @0x00FB0). Die Wand vor der Tuer haelt ihn (Wandklemme Radius 450, gemessen bei x 25024); er benutzt die Tuer wie
+ * der Spieler: der Punkt 620 voraus (`ori 0x26c` @0x80042bd0, FUN_80042bac) liegt im Tuer-AOT (FUN_80042b64) -> geparkt. */
+#define RE15_FW_TUER_X       25600
+#define RE15_FW_TUER_Z     (-23325)
+#define RE15_FW_TUER_X0      25150
+#define RE15_FW_TUER_Z0    (-25300)
+#define RE15_FW_TUER_W       900
+#define RE15_FW_TUER_D       3950
+#define RE15_FW_GEHEN_MODUS   4
+#define RE15_FW_ABGANG_MAX  150     /* Notbremse (Bilder) fuer den Abgang - RE2 kennt keine */
 /* Zuruf: Xa 0 (@0x01888) = STAGE7.BIN @0x144 `06 00 5c 00 18 00` = Kanal 6, Block 92, Laenge 24 -> 354 Sektoren = 2,36 s = 71 Bilder
  * (Halt der Zeile, tools/r42_finale/texte_finale.py). Id 3 = erste freie Id hinter RDT 0..1 und der Schlusszeile 2 (VERTRAG 2.1,
- * tools/r42_story/zensus_r42.py; 40..43 = Annette in 5090). */
+ * tools/r42_story/zensus_r42.py; 40..43 = Annette in 5090). RE2 wartet nach dem Loslassen auf das Ende von Xa 0 (Wsleep @0x018C2);
+ * dort ist es bei W+72 laengst vor der Landung (W+79) vorbei, wirksam ist nur die Landung. Der Port ruft erst beim Loslassen und wartet
+ * darum wie RE2 nur auf die Landung; die Zeile laeuft in den Reaktions-Schnitt weiter. */
 #define RE15_FW_MSG_ZURUF     3
 #define RE15_FW_ZURUF_BILDER 71
 /* Aufnahme: Item_aot_set @0x01202 `4e 05 02 31 00 00 a8 99 60 a5 48 0d c4 09 11 00 02 00 28 00 00 01` = Rechteck 3400 x 2500 um
@@ -116,11 +161,11 @@ extern "C" {
 
 /* Signale Programm <-> Takt (Bank 5 Wort 0; 5090/5091 belegen (5,0x1C) und (5,32) (scd_dump_room.py), Annette 0x10..0x13,
  * Abschuss 0x14/0x16/0x17 (re15_finale_r42.h)). */
-#define RE15_FW_SIG_WURF      0x18u   /* Programm -> Takt: loslassen (Super_reset @0x018B6 + sub13) */
+#define RE15_FW_SIG_WURF      0x18u   /* Takt -> Programm: losgelassen im Clip-Bild 22 (Super_reset @0x018B6 + sub13) */
 #define RE15_FW_SIG_GELANDET  0x19u   /* Takt -> Programm: Landung (Set(5,0x0E) @0x019DE) */
-#define RE15_FW_SIG_WSLEEP    0x1Au   /* Takt -> Programm: Zuruf und Stimme zu Ende (Wsleeping @0x80053ac0, kanister2080_r41.h) */
-#define RE15_FW_SIG_REAKTION  0x1Bu   /* Programm -> Takt: Lagen fuer den Reaktions-Schnitt (@0x018D4-0x018FA) */
-#define RE15_FW_SIG_ENDE      0x1Du   /* Programm -> Takt: Werfer frei, John parken, Form-KI an, Lagen zurueck (@0x0194A-0x019A6) */
+#define RE15_FW_SIG_REAKTION  0x1Bu   /* Programm -> Takt: Spieler blickt zu John (@0x018D4-0x018FA) */
+#define RE15_FW_SIG_ENDE      0x1Du   /* Programm -> Takt: Werfer frei, Form-KI an (@0x0194A-0x019A6) */
+#define RE15_FW_SIG_TUER      0x1Eu   /* Plc_dest-Ankunft bzw. Takt: John ist durch die Tuer (Ada parken @0x01954) */
 
 /* Zustand des Werfers (Gegenstand) */
 enum { RE15_FW_W_AUS = 0, RE15_FW_W_HAND, RE15_FW_W_FLUG, RE15_FW_W_LIEGT, RE15_FW_W_GENOMMEN };
@@ -143,8 +188,16 @@ const char *re15_finale_wurf_emd_datei(uint8_t type);
 void re15_finale_wurf_vor_aufnahme(uint8_t type, uint8_t taken_bit);
 /* Programm (nur Riegel): gebaut fuer die aktuellen Lagen. */
 const uint8_t *re15_finale_wurf_programm(int *out_len);
-/* Flugbahn (nur Riegel): Start, v, Gier -> Ende/Bilder (Schleife wie der Takt). */
-void re15_finale_wurf_bahn(const int32_t start[3], const int32_t v[3], int16_t gier, int32_t ende[3], int *bilder);
+/* Flugbahn (nur Riegel): Start, v, a -> Ende/Bilder (Schleife wie der Takt). */
+void re15_finale_wurf_bahn(const int32_t start[3], const int32_t v[3], const int32_t a[3], int32_t ende[3], int *bilder);
+/* Startwerte des Flugs (Kopf "Flug sub13"): von `start` zur Landestelle `ziel` (x/z) in RE15_FW_FLUG_BILDER Bildern. Liefert v, a und
+ * die Wurfrichtung (Gier). a_h = 5 in Wurfrichtung (ganzzahlig je Achse, auf 0 gerundet), v_x/v_z danach so, dass der Weg nach 28
+ * Bildern trifft (gerundete Division: hoechstens 14 daneben je Achse). */
+void re15_finale_wurf_startwerte(const int32_t start[3], int32_t ziel_x, int32_t ziel_z, int32_t v[3], int32_t a[3], int16_t *gier);
+/* v_y des Flugs: langsamste Startgeschwindigkeit (ab +20 abwaerts), mit der die RE2-Schleife ab y0 nach genau RE15_FW_FLUG_BILDER endet. */
+int32_t re15_finale_wurf_vy(int32_t y0);
+/* Landestelle neben dem Spieler (Kopf): ab Spieler (px,pz) RE15_FW_LANDUNG_ABSTAND in Richtung (jx,jz), hoechstens die halbe Strecke. */
+void re15_finale_wurf_landestelle(int32_t px, int32_t pz, int32_t jx, int32_t jz, int32_t *lx, int32_t *lz);
 /* Luecken im Inventar schliessen (FUN_8004dadc so oft, bis keine Luecke vor einem belegten Platz liegt). Rueckgabe = Schuebe. */
 int  re15_finale_wurf_luecken_schliessen(void);
 

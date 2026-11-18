@@ -1,17 +1,22 @@
-/* test_r42_finale_wurf.c — Runde 42 Strang finale, Stufe 3 (include/re15_finale_wurf_r42.h): die Wurfszene.
+/* test_r42_finale_wurf.c — Runde 42 Strang finale, Stufe 3 (include/re15_finale_wurf_r42.h): die Wurfszene (Runde 2: John am
+ * Eingang, stehender Wurf, Flug bis neben den Spieler, Abgang durch die Tuer).
  *
  *   quelle    Jede Konstante gegen die Original-Bytes: RE2 ROOM7020.RDT (sub12 @0x0181A-0x019AE, sub13 @0x019B2-0x01A02,
- *             Item_aot_set @0x01202, RBJ @0x2E34), RE2 STAGE7.BIN (Xa 0 @0x144, Xa 1 @0x14A), ROOM5090/5091.RDT (Tuer Slot 2 @0x0108E).
- *   programm  Das Port-Programm = sub12 Befehl fuer Befehl (Reihenfolge, Sleeps 1/30/20/15/1/87, Schnitte 14/15/zurueck, John Typ 0x49
- *             an die Ankunft, Plc_motion(1,24) zweimal, Zuruf Id 3, Item_aot_set Slot 6 Gegenstand 0x12 Anzahl 2 Taken-Bit 137 ohne
- *             Modell, Ende wie sub18).
- *   bahn      Die Flugschleife (Add_speed, Add_aspeed, Ende y >= -800): mit Adas Werten vom Steg genau 28 Bilder (geschlossene Form
- *             10 n^2 + 10 n >= 7850), aus Johns Standhoehe mit dem gemessenen Handweg 8 Bilder.
+ *             Item_aot_set @0x01202), RE2 STAGE7.BIN (Xa 0 @0x144), ROOM5090/5091.RDT (Tuer Slot 2 @0x0108E = Ankunft, Slot 4
+ *             @0x010CE = Tuer-AOT des Abgangs), RE1.5 PSX.EXE (Heben Clip 6 @0x80032f68, Wurf Clip 7 @0x800334b0, Loslassbild 22
+ *             @0x800336fc; Version_40% bytegleich, nicht versioniert - im Bericht gemessen).
+ *   programm  Das Port-Programm = sub12 Befehl fuer Befehl (Schnitt 13, John Typ 0x49 an der Ankunft mit Gier zum Spieler,
+ *             Plc_motion(1,24) Heben, Sleeps 1/30, Plc_motion(1,25) Wurf, Warten aufs Loslassen, Zuruf Id 3, Landung, Sleep 15,
+ *             Reaktion Schnitt 13, Sleep 1, Plc_dest Modus 4 zur Tuer, zurueck auf die gemerkte Kamera, Item_aot_set Slot 6
+ *             Gegenstand 0x12 Anzahl 2 Taken-Bit 137, Ende wie sub18).
+ *   bahn      Die Flugschleife (Add_speed, Add_aspeed, Ende y >= -800): mit Adas Werten vom Steg genau 28 Bilder (10 n^2 + 10 n >=
+ *             7850); die Startwerte des Ports landen nach genau 28 Bildern an der Landestelle (kurze und lange Wuerfe); die
+ *             Landestelle liegt 1000 vor dem Spieler in Richtung John, hoechstens auf halber Strecke.
  *   luecken   Aufnahme des Werfers mit belegten Zellen 8/9 und Luecken davor: nichts geht verloren, Werfer in 0/1 mit Anzahl 2;
  *             Negativ-Kontrolle: derselbe Einfuegeweg OHNE das Schliessen verliert 8/9 (byte-true FUN_8004dc4c); andere Aufnahmen
  *             (anderes Taken-Bit) bleiben unberuehrt.
- *   modelle   JOHN_49_WURF.EMD: Paar 1 hat 25 Clips, Clip 24 = 55 Bilder mit den Keyframes des RBJ-Clips 0x12 (bytegleich),
- *             Clips 0..23 bytegleich mit dem 0x49-Block; R702_WERFER.MD1/.TIM = ROOM7020 @0x2044..0x2788 / @0x24F9C..Ende.
+ *   modelle   JOHN_49_WURF.EMD: Paar 1 hat 26 Clips, Clip 24/25 = PL00W09.PLW Clip 6/7 (Keyframes bytegleich), Clips 0..23 und
+ *             ihre Keyframes bytegleich mit dem 0x49-Block; R702_WERFER.MD1/.TIM = ROOM7020 @0x2044..0x2788 / @0x24F9C..Ende.
  *   ersatz    John-Ersatzmodell nur fuer 0x49 in 5090/5091.
  */
 #include <stdint.h>
@@ -27,6 +32,7 @@
 #include "re15_tim.h"
 #include "re15_story_r42.h"
 #include "re15_finale_wurf_r42.h"
+#include "re15_math.h"
 
 #define RE15_XSTR_(x) #x
 #define RE15_XSTR(x)  RE15_XSTR_(x)
@@ -71,6 +77,8 @@ static void t_quelle(void)
     CHECK(r && st && a && b, "Quellen fehlen (ROOM7020.RDT / STAGE7.BIN / ROOM5090/5091.RDT)");
     if (r && st && a && b) {
         CHECK(hex_gleich(r, n, 0x01878, "3f0a1240") && hex_gleich(r, n, 0x018AA, "3f0a1240"), "Plc_motion @0x01878/@0x018AA");
+        CHECK(hex_gleich(r, n, 0x019B6, "2f020a00 2f011400 2f001900") && r[0x019B8] == RE15_FW_FLUG_VZ && r[0x019BC] == RE15_FW_FLUG_VY &&
+              r[0x019C0] == RE15_FW_FLUG_VX, "Speed_set v (25,20,10) @0x019B6-BE");
         CHECK(r[0x0187E] == RE15_FW_SCHLAF_1 && r[0x01894] == RE15_FW_SCHLAF_30 && r[0x018B0] == RE15_FW_SCHLAF_20 &&
               r[0x018D2] == RE15_FW_SCHLAF_15 && r[0x01900] == RE15_FW_SCHLAF_1, "Sleeps 1/30/20/15/1 @0x0187C/92/AE/D0/FE");
         CHECK(hex_gleich(r, n, 0x01854, "4800818a 0000 5802 ceff 80fc 0000 0004"), "Super_set @0x01854");
@@ -91,16 +99,37 @@ static void t_quelle(void)
         CHECK(hex_gleich(st, ns, 0x144, "06005c001800") && hex_gleich(st, ns, 0x14A, "040054001d00"), "STAGE7.BIN @0x144/@0x14A");
         const int x0 = (s16(st + 0x148) * 16 - 30), x1 = (s16(st + 0x14E) * 16 - 30);
         CHECK((x0 * 30 + 149) / 150 == RE15_FW_ZURUF_BILDER, "Xa 0: %d Sektoren -> %d Bilder", x0, (x0 * 30 + 149) / 150);
-        CHECK((x1 * 30 + 149) / 150 == RE15_FW_REAKTION_BILDER, "Xa 1: %d Sektoren -> %d Bilder", x1, (x1 * 30 + 149) / 150);
+        (void)x1;
         CHECK(memcmp(a + 0x0108E, b + 0x0108E, 32) == 0, "Tuer Slot 2 5090 != 5091");
         CHECK(a[0x0108E] == 0x3b && a[0x0108F] == 2 && s16(a + 0x0109C) == RE15_FW_JOHN_X && s16(a + 0x0109E) == 0 &&
-              s16(a + 0x010A0) == RE15_FW_JOHN_Z && (s16(a + 0x010A2) & 0xfff) == RE15_FW_JOHN_GIER && a[0x010A6] == RE15_FW_CUT_WURF,
+              s16(a + 0x010A0) == RE15_FW_JOHN_Z && (s16(a + 0x010A2) & 0xfff) == RE15_FW_JOHN_GIER && a[0x010A6] == 14,
               "Ankunft Wagen C @0x0108E: (%d,%d,%d) %d Schnitt %d", s16(a + 0x0109C), s16(a + 0x0109E), s16(a + 0x010A0),
               s16(a + 0x010A2), a[0x010A6]);
+        /* Tuer-AOT des Abgangs: Slot 4 @0x010CE (x 25150 w 900, z -25300 d 3950), Ziel Wagen B; 5091 bytegleich */
+        CHECK(memcmp(a + 0x010CE, b + 0x010CE, 32) == 0, "Tuer Slot 4 5090 != 5091");
+        CHECK(a[0x010CE] == 0x3b && a[0x010CF] == 4 && s16(a + 0x010D4) == RE15_FW_TUER_X0 && s16(a + 0x010D6) == RE15_FW_TUER_Z0 &&
+              s16(a + 0x010D8) == RE15_FW_TUER_W && s16(a + 0x010DA) == RE15_FW_TUER_D &&
+              RE15_FW_TUER_X == RE15_FW_TUER_X0 + RE15_FW_TUER_W / 2 && RE15_FW_TUER_Z == RE15_FW_TUER_Z0 + RE15_FW_TUER_D / 2,
+              "Tuer-AOT Slot 4 @0x010CE (%d,%d %dx%d)", s16(a + 0x010D4), s16(a + 0x010D6), s16(a + 0x010D8), s16(a + 0x010DA));
         /* AOT-Slot 6 frei: main00 belegt 0..5 (Door_aot_set @0x0104E + 32 i) */
         for (int i = 0; i < 6; i++) CHECK(a[0x0104E + 32 * i] == 0x3b && a[0x0104F + 32 * i] == i, "5090 main00 Slot %d", i);
     }
     free(r); free(st); free(a); free(b);
+    /* RE1.5 PSX.EXE (Datei = 0x800 + Adresse - 0x80010000): Heben, Wurf MITTE, Loslassbild 22 - Mod-Baum und echte Disc */
+    /* Version_40%/PSX.EXE (echte Disc, nicht versioniert) traegt an allen drei Stellen dieselben Bytes (xxd, Bericht s3 r2) */
+    static const char *exes[1] = { RE15_REPO_ROOT "/info/Re1.5/PSX.EXE" };
+    for (int k = 0; k < 1; k++) {
+        size_t ne = 0;
+        uint8_t *e = slurp(exes[k], &ne);
+        CHECK(e != NULL, "%s fehlt", exes[k]);
+        if (!e) continue;
+        CHECK(hex_gleich(e, ne, 0x800 + 0x80032f68 - 0x80010000, "06000234"),
+              "%s: Heben `ori v0,zero,0x6` @0x80032f68", exes[k]);
+        CHECK(hex_gleich(e, ne, 0x800 + 0x800334b0 - 0x80010000, "07004224"), "%s: Wurf `addiu v0,v0,7` @0x800334b0", exes[k]);
+        CHECK(hex_gleich(e, ne, 0x800 + 0x800336fc - 0x80010000, "16000234 13006214") &&
+              e[0x800 + 0x800336fc - 0x80010000] == RE15_FW_LOS_BILD, "%s: Loslassbild `ori v0,zero,0x16` @0x800336fc", exes[k]);
+        free(e);
+    }
 }
 
 static void t_programm(void)
@@ -109,49 +138,69 @@ static void t_programm(void)
     re15_finale_wurf_reset();
     int n = 0;
     const uint8_t *p = re15_finale_wurf_programm(&n);
-    /* erwartete Folge, je Satz die Bytes (Kopf re15_finale_wurf_r42.h) */
+    /* erwartete Folge, je Satz die Bytes (Kopf re15_finale_wurf_r42.h); Gier im Riegel = Ankunfts-Gier 0x0800 */
     static const uint8_t soll_kopf[] = {
         0x22, 0x02, 0x07, 0x01, 0x22, 0x01, 0x1b, 0x01, 0x29, RE15_FW_CUT_WURF,
         0x44, RE15_FW_JOHN_SLOT, RE15_FW_JOHN_TYP, RE15_FW_JOHN_GRID, 0x00, 0x00, 0x00, 0xff,
         0xe0, 0x60, 0x00, 0x00, 0x02, 0xa4, 0x00, 0x00, 0x00, 0x08, 0x00, 0x00,
-        0x2e, 0x02, RE15_FW_JOHN_SLOT, 0x00, 0x3f, 0x01, RE15_FW_CLIP_WURF, 0x00, 0x09, 0x0a, 0x01, 0x00,
-        0x2b, RE15_FW_MSG_ZURUF, 0x00, 0x00, 0x09, 0x0a, 0x1e, 0x00, 0x3f, 0x01, RE15_FW_CLIP_WURF, 0x00, 0x09, 0x0a, 0x14, 0x00,
-        0x22, 0x05, RE15_FW_SIG_WURF, 0x01 };
-    CHECK(n > (int)sizeof soll_kopf && memcmp(p, soll_kopf, sizeof soll_kopf) == 0, "Programmkopf (sub12 @0x0181A-0x018BE) weicht ab");
-    /* Rest: Poll Wsleep, Poll Landung, Sleep 15, Reaktion, Cut 15, Sleep 1, Sleep 87, Cut 12 (gemerkt), Item_aot_set, Ende */
-    static const uint8_t soll_rest[] = {
-        0x22, 0x05, RE15_FW_SIG_WSLEEP, 0x00, 0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_FW_SIG_WSLEEP, 0x00,
+        0x2e, 0x02, RE15_FW_JOHN_SLOT, 0x00, 0x3f, 0x01, RE15_FW_CLIP_HEBEN, 0x00, 0x09, 0x0a, 0x01, 0x00,
+        0x09, 0x0a, 0x1e, 0x00, 0x3f, 0x01, RE15_FW_CLIP_WURF, 0x00,
+        0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_FW_SIG_WURF, 0x00,
+        0x2b, RE15_FW_MSG_ZURUF, 0x00, 0x00,
         0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_FW_SIG_GELANDET, 0x00,
         0x09, 0x0a, 0x0f, 0x00, 0x22, 0x05, RE15_FW_SIG_REAKTION, 0x01, 0x29, RE15_FW_CUT_REAKTION, 0x09, 0x0a, 0x01, 0x00,
-        0x09, 0x0a, RE15_FW_REAKTION_BILDER, 0x00, 0x29, 12 };
+        0x40, 0x00, RE15_FW_GEHEN_MODUS, RE15_FW_SIG_TUER, 0x00, 0x64, 0xe3, 0xa4,   /* (25600, -23325) */
+        0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, RE15_FW_SIG_TUER, 0x00,
+        0x29, 12 };
+    CHECK(n > (int)sizeof soll_kopf && memcmp(p, soll_kopf, sizeof soll_kopf) == 0, "Programm (sub12 @0x0181A-0x01948) weicht ab");
+    if (n > (int)sizeof soll_kopf)
+        for (int i = 0; i < (int)sizeof soll_kopf; i++)
+            if (p[i] != soll_kopf[i]) { fprintf(stderr, "  erste Abweichung Byte %d: %02x statt %02x\n", i, p[i], soll_kopf[i]); break; }
     const int o = (int)sizeof soll_kopf;
-    CHECK(n > o + (int)sizeof soll_rest && memcmp(p + o, soll_rest, sizeof soll_rest) == 0, "Programm-Mitte (@0x018C2-0x01948) weicht ab");
-    const uint8_t *it = p + o + sizeof soll_rest;
+    const uint8_t *it = p + o;
     CHECK(it[0] == 0x50 && it[1] == RE15_FW_AOT_SLOT && it[2] == 0x09 && it[3] == 0x31 && s16(it + 10) == RE15_FW_AOT_W &&
           s16(it + 12) == RE15_FW_AOT_D && s16(it + 14) == RE15_FW_ITEM && s16(it + 16) == RE15_FW_ANZAHL &&
           s16(it + 18) == RE15_R42_BIT_WERFER_FINALE && it[20] == 0xff, "Item_aot_set (Form ROOM40A1 @0x00ED0) weicht ab");
     static const uint8_t soll_ende[] = { 0x22, 0x05, RE15_FW_SIG_ENDE, 0x01, 0x09, 0x0a, 0x01, 0x00, 0x2e, 0x01, 0x00, 0x00, 0x42, 0x00,
                                          0x22, 0x02, 0x07, 0x00, 0x22, 0x01, 0x1b, 0x00, 0x3c, 0x01, 0x01, 0x00 };
-    CHECK(n == o + (int)sizeof soll_rest + 22 + (int)sizeof soll_ende && memcmp(it + 22, soll_ende, sizeof soll_ende) == 0,
-          "Programm-Ende (@0x01954-0x019AE, sub18 @0x01B54-0x01B60) weicht ab (Laenge %d)", n);
+    CHECK(n == o + 22 + (int)sizeof soll_ende && memcmp(it + 22, soll_ende, sizeof soll_ende) == 0,
+          "Programm-Ende (@0x01968-0x019AE, sub18 @0x01B54-0x01B60) weicht ab (Laenge %d)", n);
     printf("programm: %d Bytes, sub12 in RE1.5-Opcodes\n", n);
 }
 
 static void t_bahn(void)
 {
-    /* Ada vom Steg: Hand im Loslassbild (Clip 0x12 Bild 20, Ada-Gerippe, Gier 3700) ~ y -8650; RE2 v (25,20,10) Gier 0 = Weltachsen */
-    const int32_t s[3] = { 0, -8650, 0 }, v[3] = { 25, 20, 10 };
+    /* Ada vom Steg: Hand im Loslassbild (Clip 0x12 Bild 20, Ada-Gerippe, Gier 3700) ~ y -8650; RE2 v (25,20,10) a (5,20,0) Weltachsen */
+    const int32_t s[3] = { 0, -8650, 0 }, v[3] = { RE15_FW_FLUG_VX, RE15_FW_FLUG_VY, RE15_FW_FLUG_VZ };
     int32_t e[3]; int nb = 0;
-    re15_finale_wurf_bahn(s, v, 0, e, &nb);
-    CHECK(nb == 28, "Steg-Fall %d Bilder statt 28 (10n^2+10n >= 7850)", nb);
+    const int32_t a2[3] = { RE15_FW_FLUG_AX, RE15_FW_FLUG_AY, RE15_FW_FLUG_AZ };
+    re15_finale_wurf_bahn(s, v, a2, e, &nb);
+    CHECK(nb == RE15_FW_FLUG_BILDER, "Steg-Fall %d Bilder statt 28 (10n^2+10n >= 7850)", nb);
     CHECK(e[1] == -8650 + 10 * 28 * 28 + 10 * 28 && e[0] == 25 * 28 + 5 * 28 * 27 / 2 && e[2] == 10 * 28,
           "Steg-Fall Ende (%d,%d,%d)", e[0], e[1], e[2]);
-    /* Johns Wurf (finale.log Messlauf: Start (24197,-1196,-23097), v (-50,-15,-22), Gier 2048 -> a (-5,20,0)) */
-    const int32_t sj[3] = { 24197, -1196, -23097 }, vj[3] = { -50, -15, -22 };
-    re15_finale_wurf_bahn(sj, vj, 0x0800, e, &nb);
-    CHECK(nb == 8 && e[1] >= -RE15_FW_FLUG_STOP, "John-Wurf %d Bilder, y %d", nb, e[1]);
-    CHECK(e[0] == 24197 - 50 * 8 - 5 * 28 && e[2] == -23097 - 22 * 8, "John-Wurf Ende (%d,%d) statt (23657,-23273)", e[0], e[2]);
-    printf("bahn: Steg 28 Bilder, John 8 Bilder -> (%d,%d)\n", e[0], e[2]);
+    /* Port: von der Hand (Bild 22 des Wurfs, ~2 m hoch) zur Landestelle neben dem Spieler - nach genau 28 Bildern, <= 30 daneben */
+    static const int32_t faelle[][5] = {   /* Start x, y, z, Spieler x, z */
+        { 24120, -2010, -23120,  8150, -23550 },     /* Integrationslauf Leon (Spieler im Schnitt 12) */
+        { 24120, -2010, -23120, 21000, -23000 },     /* kurz: Spieler 3,8 m vor John */
+        { 24120, -2010, -23120, 23300, -24200 },     /* sehr kurz: halbe Strecke */
+    };
+    for (unsigned k = 0; k < sizeof faelle / sizeof faelle[0]; k++) {
+        const int32_t *f = faelle[k];
+        int32_t lx, lz, vv[3], aa[3]; int16_t g;
+        re15_finale_wurf_landestelle(f[3], f[4], RE15_FW_JOHN_X, RE15_FW_JOHN_Z, &lx, &lz);
+        const int32_t ddx = lx - f[3], ddz = lz - f[4], djx = RE15_FW_JOHN_X - f[3], djz = RE15_FW_JOHN_Z - f[4];
+        const int32_t dl = (int32_t)re15_squareroot0((uint32_t)(ddx * ddx + ddz * ddz));
+        const int32_t dj = (int32_t)re15_squareroot0((uint32_t)((int64_t)djx * djx + (int64_t)djz * djz));
+        CHECK(dl <= RE15_FW_LANDUNG_ABSTAND + 2 && dl <= dj / 2 + 2, "Fall %u: Landestelle (%d,%d) %d vom Spieler", k, lx, lz, dl);
+        re15_finale_wurf_startwerte(f, lx, lz, vv, aa, &g);
+        re15_finale_wurf_bahn(f, vv, aa, e, &nb);
+        const int32_t fx = e[0] - lx, fz = e[2] - lz;
+        CHECK(nb == RE15_FW_FLUG_BILDER && fx * fx + fz * fz <= 30 * 30 && e[1] >= -RE15_FW_FLUG_STOP,
+              "Fall %u: %d Bilder, Ende (%d,%d,%d) statt (%d,%d)", k, nb, e[0], e[1], e[2], lx, lz);
+        printf("bahn: Fall %u Spieler (%d,%d) -> Landung (%d,%d) nach %d Bildern, v (%d,%d,%d) a (%d,%d,%d)\n", k, f[3], f[4], e[0], e[2],
+               nb, vv[0], vv[1], vv[2], aa[0], aa[1], aa[2]);
+    }
+    CHECK(re15_finale_wurf_vy(-2010) < 0, "v_y aus Handhoehe muss nach oben zeigen");
 }
 
 static void inv_setzen(const uint8_t ids[10])
@@ -193,31 +242,37 @@ static void t_modelle(void)
     size_t n = 0, nr = 0, nm = 0, nt = 0;
     uint8_t *j = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/../RE2/JOHN_49_WURF.EMD", &n);
     uint8_t *r = slurp(RE15_REPO_ROOT "/info/re2leon/PL0/RDT/ROOM7020.RDT", &nr);
+    size_t nw = 0;
+    uint8_t *w9 = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/PLD/PL00W09.PLW", &nw);
     uint8_t *m = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/../RE2/R702_WERFER.MD1", &nm);
     uint8_t *t = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/../RE2/R702_WERFER.TIM", &nt);
     CHECK(j && r && m && t, "JOHN_49_WURF.EMD / ROOM7020.RDT / R702_WERFER.* fehlen");
-    if (j && r) {
+    CHECK(w9 != NULL, "PL00W09.PLW fehlt");
+    if (j && w9) {
         re15_emd_skeleton_t sk; re15_emd_animation_t an;
         memset(&sk, 0, sizeof sk); memset(&an, 0, sizeof an);
         CHECK(re15_emd_parse_loco_bank(j, n, &sk, &an) == 0, "Paar 1 nicht lesbar");
-        CHECK(an.clip_count == 25 && an.clips[RE15_FW_CLIP_WURF].frame_count == 55, "Paar 1: %d Clips, Clip 24 %d Bilder",
-              an.clip_count, an.clip_count > 24 ? an.clips[24].frame_count : -1);
-        if (an.clip_count == 25 && sk.keyframe_size_bytes == 80) {
-            /* RBJ @0x2E34: Trailer @+0x2E54 (Record 0: EMR-Praefix, EDD), Keyframes ab Praefix + 4 + o_frm */
-            const uint8_t *rb = r + 0x2E34;
-            const uint32_t pre = u32(rb + 0x2E54), edd = u32(rb + 0x2E58);
-            const int o_frm = s16(rb + pre + 6), o0 = s16(rb + edd + 2);
-            int erst = 0;
-            for (int c = 0; c < 0x12; c++) erst += (c == 0) ? s16(rb + edd) : s16(rb + edd + 4 * c);
+        CHECK(an.clip_count == 26 && an.clips[RE15_FW_CLIP_HEBEN].frame_count == 10 && an.clips[RE15_FW_CLIP_WURF].frame_count == 35,
+              "Paar 1: %d Clips, Clip 24 %d / 25 %d Bilder", an.clip_count, an.clip_count > 24 ? an.clips[24].frame_count : -1,
+              an.clip_count > 25 ? an.clips[25].frame_count : -1);
+        if (an.clip_count == 26 && sk.keyframe_size_bytes == 80) {
+            /* PL00W09.PLW: [u32 dir_off][u32 n] .. dir[0] = EDD, dir[1] = EMR; EDD-Tabelle (u16 Bilder, u16 Offset) je Clip, Bild-Eintraege
+             * u32; EMR-Kopf (u16 0, u16 Keyframe-Offset, u16 15, u16 80) */
+            const uint32_t dof = u32(w9), d0 = u32(w9 + dof), d1 = u32(w9 + dof + 4);
+            const uint8_t *edd = w9 + d0, *emr = w9 + d1;
+            const uint8_t *kd = emr + s16(emr + 2);
+            static const int quelle[2][2] = { { 6, RE15_FW_CLIP_HEBEN }, { 7, RE15_FW_CLIP_WURF } };
             int ok = 1;
-            for (int f = 0; f < 55; f++) {
-                const uint32_t e = u32(rb + edd + o0 + 4 * (erst + f));
-                const uint32_t w = re15_emd_get_frame_entry(&an, RE15_FW_CLIP_WURF, f);
-                const uint8_t *kr = rb + pre + 4 + o_frm + (e & 0xfff) * 80;
-                const uint8_t *kp = sk.keyframe_data + (w & 0xfff) * 80;
-                if (memcmp(kr, kp, 80) != 0 || (w & ~0xfffu) != (e & ~0xfffu)) ok = 0;
+            for (int q = 0; q < 2; q++) {
+                const int cnt = s16(edd + 4 * quelle[q][0]), off = s16(edd + 4 * quelle[q][0] + 2);
+                if (cnt != an.clips[quelle[q][1]].frame_count) ok = 0;
+                for (int f = 0; f < cnt && ok; f++) {
+                    const uint32_t e = u32(edd + off + 4 * f);
+                    const uint32_t w = re15_emd_get_frame_entry(&an, quelle[q][1], f);
+                    if (memcmp(kd + (e & 0xfff) * 80, sk.keyframe_data + (w & 0xfff) * 80, 80) != 0 || (w & ~0xfffu) != (e & ~0xfffu)) ok = 0;
+                }
             }
-            CHECK(ok, "Clip 24 != RBJ-Clip 0x12 (Keyframes/Flags)");
+            CHECK(ok, "Clips 24/25 != PL00W09.PLW Clip 6/7 (Keyframes/Flags)");
         }
     }
     if (r && m && t) {
@@ -229,7 +284,7 @@ static void t_modelle(void)
         CHECK(re15_tim_parse(t, (int)nt, &tm) == 0 && tm.bpp == 8, "R702_WERFER.TIM nicht lesbar / nicht 8 bpp");
         printf("modelle: Werfer %d Meshes, TIM %d bpp %dx%d\n", md.mesh_count, tm.bpp, tm.width, tm.height);
     }
-    free(j); free(r); free(m); free(t);
+    free(j); free(r); free(m); free(t); free(w9);
 }
 
 static void t_ersatz(void)
