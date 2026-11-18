@@ -34,6 +34,13 @@ static const re15_zws_film_t k_filme[] = {
         { RE15_BF_MSG_FILM, 0, { 0 }, 0 },
         { -1, 0, { 0 }, 0 },
         -1, RE15_BF_FILM, RE15_BF_FILM_BILDER, RE15_ZWS_BLENDART_4090, RE15_BF_FILM_Y },
+    /* Runde 42 birkinfilm Stufe 2: ROOM5011 Port-Zeile 47 im Programm k_bf_5011_prog (Elza, zwischen msg 3 @0x00640 und msg 4
+     * @0x00690), sonst wie birk6000 (derselbe Film, Uebergang RE2 ROOM4090, Bild 40 Zeilen tiefer). */
+    {   "birk5011", RE15_BF_RAUM_ELZA,
+        { -1, 0, { 0 }, 0 },
+        { RE15_BF_ELZA_MSG_FILM, 0, { 0 }, 0 },
+        { -1, 0, { 0 }, 0 },
+        -1, RE15_BF_FILM, RE15_BF_FILM_BILDER, RE15_ZWS_BLENDART_4090, RE15_BF_FILM_Y },
     {   "zws114", RE15_ZWS114_RAUM,
         { RE15_ZWS114_MSG_SCHREI, 0, { 0 }, 0 },                     /* ENTRIEGELN39: vor Sleep 20 @0x00DC6 + msg 6 */
         { RE15_ZWS114_MSG_FILM,   0, { 0 }, 0 },                     /* ENTRIEGELN39: nach Sleep 86 @0x00E10, vor msg 7 */

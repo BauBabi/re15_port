@@ -46,6 +46,23 @@ Satz): Seitenwechsel nach N Bildern = RE2-Sleep zwischen den beiden Nachrichten 
 STIMMEN: shared_assets/RE2/R409_XA09/11/14.XAS (tools/r42_birkinfilm/xa_schneiden.py), Zuordnung (Raum, Id) ->
 Datei in engine/src/birkinfilm_r42.c, gespielt ueber den Sprachkanal (platform/pc/src/audio_pc.c re15_voice_load_clip).
 Ids 40..44: ROOM6000 RDT 0..7, Port 0/3 (story_r36 Neutext), 30/31 (r42/lageplaene Lageplan) -> 40..44 frei, < 64 (VOICE_MAX_MSG).
+
+STUFE 2 - ELZA ROOM5011 (ORCHESTRATOR-ENTSCHEID 18.11.: Film zwischen msg 3 @0x00640 "John. I read some files ... terrifying
+things." und msg 4 @0x00690 "She's been infected by what they were working on here."; keine neuen Saetze).
+ORIGINAL ROOM5011 sub02 [@0x0055A, @0x0093A) (Zeigertabelle sub_scd @0x00524), gestartet von sub00 @0x0053E `04 ff 18 02` nur bei
+Ck(4,237)=1 (@0x0053A); sub02 loescht als ERSTES Set(4,237,0) @0x0055A `22 04 ed 00`. Zensus (--zensus, alle RDTs): (4,237)=1
+schreibt nur ROOM5021 sub02 @0x01356 (dort vorher Set(4,192,1) @0x01352, sub00 @0x012EA startet nur bei Ck(4,192)=0) -> die Szene
+(und der Film) laeuft einmal je Spielstand, ohne neues Bit.
+PROGRAMM = sub02 [@0x0055A, @0x00690) + EINSCHUB + sub02 [@0x00690, @0x0093A); sub02 hat keine Sprung-Opcodes.
+EINSCHUB vor @0x00690 (msg 4) = der Einschub von 6000 ab der Warte-Zeile, ohne Rahmenzeilen:
+  2b 2e 00 00  Warte-Zeile 46        RE2 @0x027E2 Wsleep (Stimme von msg 3 + Untertitel zu Ende)
+  09 0a 02 00  Sleep 2               RE2 @0x027E4
+  09 0a 3c 00  Sleep 60              RE2 @0x027F0
+  54 00 04 00 00 00  MAIN anhalten   RE2 @0x02804 (ROOM5011: Musiktabelle @0x800748C4 `24 ff` = MAIN 0x24, kein SUB)
+  2b 2f 00 00  Film-Zeile 47         RE2 @0x027F4 / @0x02812 / @0x02818 `6f 0b` / @0x0281C (Blendenart RE15_ZWS_BLENDART_4090)
+  09 0a 3f 00  Sleep 63              RE2 @0x02820
+  54 00 03 00 00 00  MAIN weiter     RE2 @0x0282B
+Ids 46/47: ROOM5011 RDT 0..45, Port 0x2C/0x2D (RDT-Ids), r42/rest 40/45 (RDT-Ids) -> frei, < 64.
 """
 import os
 import sys
@@ -65,6 +82,13 @@ MAX_LEN = 192
 SCHWANZ = [0x04, 0x01, 0x01, 0x63]
 
 MSG_XA09, MSG_XA11, MSG_XA14, MSG_WARTEN, MSG_FILM = 40, 41, 42, 43, 44
+
+RDT5011 = os.path.join(PORT, 'shared_assets', 'PSX', 'STAGE5', 'ROOM5011.RDT')
+SUB02_5011 = (0x0055A, 0x0093A)
+ANKER_5011 = 0x00690
+MSG5011_WARTEN, MSG5011_FILM = 46, 47
+# Ablauf-Opcodes mit Sprungweite: Ifel_ck, Else_ck, Endif, For, Next, While, Ewhile, Do, Edwhile, Switch, Case, Default, Eswitch, Goto (scd_dump_room.NAMES)
+SPRUENGE = {0x06, 0x07, 0x08, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17}
 ANNETTE = (0x02, 'Annette')
 # (Id, Seite 1, Seite 2, Seitenwechsel N, Beleg N)
 UNTERTITEL = (
@@ -124,7 +148,77 @@ def programm(d):
     return sub, prog, ein, len(vor)
 
 
+def rdt_walk():
+    sys.path.insert(0, os.path.join(PORT, 'tools'))
+    import scd_walk_lib as L  # noqa: E402
+    return L
+
+
+def programm5011(d):
+    """ROOM5011 sub02 mit dem Einschub vor msg 4 @0x00690 (Belege im Kopf)."""
+    a, e = SUB02_5011
+    L = rdt_walk()
+    ss = L.u32(d, 0x44)
+    assert ss == 0x00524 and ss + L.u16(d, ss + 4) == a and ss + L.u16(d, ss + 6) == e, "Zeigertabelle sub_scd @0x00524: sub02"
+    assert d[0x0053A:0x0053E] == bytes([0x21, 0x04, 0xed, 0x01]), "Ck(4,237)=1 @0x0053A"
+    assert d[0x0053E:0x00542] == bytes([0x04, 0xff, 0x18, 0x02]), "Evt_exec sub02 @0x0053E"
+    assert d[a:a + 4] == bytes([0x22, 0x04, 0xed, 0x00]), "Set(4,237,0) @0x0055A"
+    assert d[0x00640:0x00644] == bytes([0x2b, 0x03, 0x00, 0x00]), "msg 3 @0x00640"
+    assert d[0x0068C:0x00690] == bytes([0x09, 0x0a, 0x1a, 0x00]), "Sleep 26 @0x0068C"
+    assert d[ANKER_5011:ANKER_5011 + 4] == bytes([0x2b, 0x04, 0x00, 0x00]), "msg 4 @0x00690"
+    assert d[e - 2:e] == bytes([0x01, 0x00]), "Evt_end am Ende von sub02"
+    ops = L.walk_ops(d, a, e)
+    assert ops[-1][0] == e - 2 and sum(z for _, _, z in ops) == e - a, "sub02 opcode-genau bis Evt_end"
+    assert ANKER_5011 in [pc for pc, _, _ in ops], "msg 4 ist ein Opcode-Anfang"
+    spr = [(pc, op) for pc, op, _ in ops if op in SPRUENGE]
+    assert not spr, "Sprung-Opcodes in sub02: %r" % spr
+    ein = [
+        (bytes([0x2b, MSG5011_WARTEN, 0, 0]), 'Warte-Zeile 46 = RE2 Wsleep @0x027E2 `0b 0c` (Stimme msg 3 + Untertitel)'),
+        (bytes([0x09, 0x0a, 0x02, 0x00]), 'Sleep 2 = RE2 @0x027E4'),
+        (bytes([0x09, 0x0a, 0x3c, 0x00]), 'Sleep 60 = RE2 @0x027F0'),
+        (bytes([0x54, 0x00, 0x04, 0x00, 0x00, 0x00]), 'MAIN anhalten = RE2 @0x02804 (Op 4; 5011 = MAIN 0x24 @0x800748C4)'),
+        (bytes([0x2b, MSG5011_FILM, 0, 0]), 'Film-Zeile 47: Abblende 64 / Film / Einblende 64 = RE2 @0x027F4..@0x0281C'),
+        (bytes([0x09, 0x0a, 0x3f, 0x00]), 'Sleep 63 = RE2 @0x02820'),
+        (bytes([0x54, 0x00, 0x03, 0x00, 0x00, 0x00]), 'MAIN weiter = RE2 @0x0282B (Op 3)'),
+    ]
+    vor = d[a:ANKER_5011]
+    nach = d[ANKER_5011:e]
+    prog = vor + b''.join(x for x, _ in ein) + nach
+    return d[a:e], prog, ein, len(vor)
+
+
+def zensus():
+    """(4,237) ueber alle RDTs und die Message-Ids im SCD von ROOM5011 (Beleg 'einmal je Spielstand', Ids 46/47 frei)."""
+    import glob
+    L = rdt_walk()
+    treffer = []
+    for p in sorted(glob.glob(os.path.join(PORT, 'shared_assets', 'PSX', 'STAGE*', 'ROOM*.RDT'))):
+        d = open(p, 'rb').read()
+        if len(d) < 0x100:
+            continue                      # 4-Byte-Platzhalter (ROOM1270 usw.)
+        for (tag, idx), ops in L.regionen(d).items():
+            for pc, op, sz in ops:
+                if op in (0x21, 0x22) and d[pc + 1] == 4 and d[pc + 2] == 237:
+                    treffer.append((os.path.basename(p)[:-4], tag, idx, pc, 'Ck' if op == 0x21 else 'Set', d[pc + 3]))
+    for t in sorted(treffer):
+        print('%s %s%02d @0x%05X %s(4,237)=%d' % t)
+    soll = [('ROOM5011', 'sub', 0, 0x0053A, 'Ck', 1), ('ROOM5011', 'sub', 2, 0x0055A, 'Set', 0),
+            ('ROOM5021', 'sub', 2, 0x01356, 'Set', 1)]
+    assert sorted(treffer) == sorted(soll), treffer
+    d = open(RDT5011, 'rb').read()
+    msgs = set()
+    for (tag, idx), ops in L.regionen(d).items():
+        for pc, op, sz in ops:
+            if op == 0x2b:
+                msgs.add(d[pc + 1])
+    assert MSG5011_WARTEN not in msgs and MSG5011_FILM not in msgs, sorted(msgs)
+    print('Message_on-Ids im SCD von ROOM5011:', sorted(msgs), '-> 46/47 frei')
+
+
 def main():
+    if '--zensus' in sys.argv:
+        zensus()
+        return
     d = open(RDT, 'rb').read()
     fehler = []
     sub, prog, ein, n_vor = programm(d)
@@ -155,6 +249,17 @@ def main():
         out += T.carr(nm, b, 'ROOM6000 %d Annette: %s  (Seitenwechsel nach %d Bildern = %s; %d B, Zeilen %s px)' % (
             mid, ' // '.join(' / '.join(z) for z in zeilen), n, beleg, len(b), '/'.join(map(str, bw))))
         tab.append((mid, nm))
+    d5 = open(RDT5011, 'rb').read()
+    sub5, prog5, ein5, n_vor5 = programm5011(d5)
+    out += T.carr('k_bf_5011_sub02', list(sub5), 'ROOM5011 sub02 [@0x0055A, @0x0093A) bytegleich = Signatur (%d B)' % len(sub5))
+    out.append('#define BF5011_EINSCHUB_AB %d   /* Programm-Offset des Einschubs = @0x00690 - @0x0055A */' % n_vor5)
+    kom = ['/* ROOM5011 Einschub vor @0x00690 (msg 4):']
+    for x, k in ein5:
+        kom.append(' *   %-60s %s' % (x.hex(' '), k))
+    kom.append(' */')
+    out += kom
+    out += T.carr('k_bf_5011_prog', list(prog5),
+                  'Programm = sub02 [@0x0055A,@0x00690) + Einschub + sub02 [@0x00690,@0x0093A) (%d B)' % len(prog5))
     out.append('typedef struct { uint8_t id; const uint8_t *b; uint16_t n; } bf_text_t;')
     out.append('static const bf_text_t k_bf_texte[] = {')
     for mid, nm in tab:

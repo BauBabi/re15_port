@@ -13,6 +13,13 @@
  *             Ende von Stimme 41 + Sleep 2 + Sleep 60 + 64 Abblendbildern; Blende vor dem Film 0, 4 ... 252 (64 Bilder) + 252,
  *             nach dem Film 255, 251 ... 3 (64 Bilder), dann Halt; MAIN Op 4 vor, Op 3 nach (Sleep 63); msg 42 nach Sleep 63
  *   einmal    zweites Betreten mit (3,100)=1: keine Umleitung, kein Film
+ * Stufe 2 (Elza ROOM5011, ohne neue Saetze):
+ *   programm5011  Programm = sub02 bytegleich + Einschub vor @0x00690 (Warte-Zeile 46, Sleep 2, Sleep 60, MAIN Op 4, Film 47,
+ *                 Sleep 63, MAIN Op 3), Umleitung nur 5011 sub02 mit Signatur, Filmtabelle birk5011, keine RE2-Stimme in 5011
+ *   ablauf5011    ROOM5011 am VM (Ankunft wie nach 5021: (4,237)=1, (3,58)=1): Zeilen 0..16 unveraendert in Folge, Film genau
+ *                 einmal zwischen msg 3 und msg 4, erst nach Stimme 3 (synchro main03.wav) + Sleep 2 + 60 + 64 Abblendbildern;
+ *                 Blenden wie 6000; msg 4 nach Sleep 63; MAIN Op 4 / Op 3; (4,237) danach 0, Szene endet wie im Original
+ *   einmal5011    zweites Betreten ((4,237)=0 nach der Szene): keine Szene, kein Film, keine Umleitung
  * Gegenprobe (rot auf aaea5f8c2): ohne die Haken (scd_vm.c / msg_common.c / zws_r41.c) laufen ablauf und einmal ohne Film und
  * ohne Zeilen 40..42 (Bericht BERICHT_s1_r1.md).
  */
@@ -53,6 +60,9 @@
 #endif
 #ifndef RE15_INFO_RE2_DIR
 #error RE15_INFO_RE2_DIR fehlt
+#endif
+#ifndef RE15_SYNCHRO_DIR
+#error RE15_SYNCHRO_DIR fehlt
 #endif
 
 void re15_actor_step_all_walkers(void);
@@ -208,6 +218,35 @@ static musik_t s_musik[64];
 static int     s_n_musik = 0;
 static int     s_stimme_rest = 0;   /* Plattform-Ersatz Sprachkanal: Restbilder der laufenden RE2-Stimme */
 static int     s_stimmen[8], s_n_stimmen = 0;
+static int     s_synchro = 0;       /* 1 = auch synchro-Aufnahmen als laufende Stimme nachbilden (Stufe 2, ROOM5011) */
+static int     s_synchro_bilder[64];   /* je Id: Laenge der Aufnahme in Bildern (0 = keine Datei) */
+static int     s_synchro_raum = -1;
+
+/* Laenge einer synchro-Aufnahme in Bildern (30/s): RIFF "fmt " Byte-Rate, "data"-Groesse; aufgerundet. 0 = keine Datei. */
+static int synchro_bilder(unsigned raum, int id)
+{
+    char p[700];
+    snprintf(p, sizeof p, "%s/STAGE%X/room%04X/main%02d.wav", RE15_SYNCHRO_DIR, (raum >> 12) & 0xF, raum & 0xFFFF, id);
+    FILE *f = fopen(p, "rb");
+    if (!f) return 0;
+    uint8_t h[12]; uint32_t rate = 0, data = 0;
+    if (fread(h, 1, 12, f) != 12 || memcmp(h, "RIFF", 4) || memcmp(h + 8, "WAVE", 4)) { fclose(f); return 0; }
+    for (;;) {
+        uint8_t c[8];
+        if (fread(c, 1, 8, f) != 8) break;
+        const uint32_t n = (uint32_t)c[4] | ((uint32_t)c[5] << 8) | ((uint32_t)c[6] << 16) | ((uint32_t)c[7] << 24);
+        if (!memcmp(c, "fmt ", 4)) {
+            uint8_t fm[16];
+            if (n < 16 || fread(fm, 1, 16, f) != 16) break;
+            rate = (uint32_t)fm[8] | ((uint32_t)fm[9] << 8) | ((uint32_t)fm[10] << 16) | ((uint32_t)fm[11] << 24);
+            if (n > 16) fseek(f, (long)(n - 16 + (n & 1)), SEEK_CUR);
+        } else if (!memcmp(c, "data", 4)) { data = n; break; }
+        else fseek(f, (long)(n + (n & 1)), SEEK_CUR);
+    }
+    fclose(f);
+    if (!rate || !data) return 0;
+    return (int)(((unsigned long long)data * 30u + rate - 1) / rate);
+}
 
 static int rdt_laden(uint16_t room)
 {
@@ -257,6 +296,12 @@ static void spielbild(uint16_t held, uint16_t edge)
             if (re15_birkinfilm_r42_stimme(g_current_room_id, e.sample_id, &lese)) {
                 s_stimme_rest = (lese + 4) / 5;    /* 150 Sektoren/s, 30 Bilder/s */
                 if (s_n_stimmen < 8) s_stimmen[s_n_stimmen++] = e.sample_id;
+            } else if (s_synchro && e.sample_id >= 0 && e.sample_id < 64) {
+                if (s_synchro_raum != (int)g_current_room_id) {
+                    s_synchro_raum = (int)g_current_room_id;
+                    for (int i = 0; i < 64; i++) s_synchro_bilder[i] = synchro_bilder(g_current_room_id, i);
+                }
+                if (s_synchro_bilder[e.sample_id] > 0) s_stimme_rest = s_synchro_bilder[e.sample_id];
             }
         }
     }
@@ -271,17 +316,22 @@ static void frame(uint16_t held, uint16_t edge)
 
 static uint8_t *s_ems = NULL;
 static int      s_ems_sz = 0;
-static uint8_t  s_bank[0x60000];
-static void bank_annette(void)   /* Annette (Typ 0x4D) aus CDEMD1.EMS (Muster test_r41_zws114.c bank_john) */
+static uint8_t *s_baenke[3];
+/* Begleiter-Bank aus CDEMD1.EMS (Muster test_r41_zws114.c bank_john): Annette 0x4D (6000), John 0x49 / Sherry 0x4B (5011). Je Typ
+ * ein eigener Puffer (die Bank zeigt in ihn). */
+static void bank_typ(uint8_t typ, int platz)
 {
     if (!s_ems) { size_t n = 0; s_ems = aus(RE15_ASSET_PSX_DIR, "EMD/CDEMD1.EMS", &n); s_ems_sz = (int)n; }
     if (!s_ems) { printf("  FEHLER: CDEMD1.EMS fehlt\n"); g_fail++; return; }
-    int idx = re15_ems_index_for_type(0x4D);
+    int idx = re15_ems_index_for_type(typ);
     size_t off = 0, len = 0;
-    if (idx < 0 || re15_ems_get_entry(s_ems, (size_t)s_ems_sz, idx, &off, &len) != 0 || len > sizeof s_bank) {
-        printf("  FEHLER: Bank 0x4D nicht im Archiv\n"); g_fail++; return; }
-    re15_enemy_bank_t *eb = re15_enemy_alloc(0x4D);
+    if (idx < 0 || re15_ems_get_entry(s_ems, (size_t)s_ems_sz, idx, &off, &len) != 0 || len == 0) {
+        printf("  FEHLER: Bank 0x%02X nicht im Archiv\n", typ); g_fail++; return; }
+    re15_enemy_bank_t *eb = re15_enemy_alloc(typ);
     if (!eb) return;
+    free(s_baenke[platz]); s_baenke[platz] = (uint8_t *)malloc(len);
+    if (!s_baenke[platz]) return;
+    uint8_t *s_bank = s_baenke[platz];
     memcpy(s_bank, s_ems + off, len);
     re15_tim_t tim = (re15_tim_t){0};
     if (re15_emd_parse_container(s_bank, len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) return;
@@ -290,7 +340,9 @@ static void bank_annette(void)   /* Annette (Typ 0x4D) aus CDEMD1.EMS (Muster te
     eb->victim_ok = (re15_emd_parse_victim_bank(s_bank, len, &eb->skel_victim, &eb->anim_victim) == 0);
     eb->own_ok    = (re15_emd_parse_own_bank(s_bank, len, &eb->skel_own, &eb->anim_own) == 0);
 }
+static void bank_annette(void) { bank_typ(0x4D, 0); }
 
+static int s_band = 2;   /* Bodenband des Spawns: 6000 = 2 (Tuer-Ziel), 5011 = 0 (Door_aot @0x0039A floor 0) */
 static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t cut)
 {
     if (rdt_laden(room) != 0) { printf("  FEHLER: ROOM%04X nicht ladbar\n", room); g_fail++; return -1; }
@@ -300,7 +352,8 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t
     re15_actor_init(); re15_aot_init(); scd_vm_init();
     g_game = flags_vorher;
     re15_enemy_reset(); re15_enemy_ai_set_paused(0);
-    bank_annette();
+    if (room == 0x5011) { bank_typ(0x49, 1); bank_typ(0x4B, 2); }   /* main00 @0x004E0 / @0x004F4 Sce_em_set 0x49 / 0x4B */
+    else bank_annette();
     re15_discard_reset();
     re15_player_cmd_reset();
     re15_pauseflags_clear();
@@ -312,7 +365,7 @@ static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, uint8_t
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
     pl->state = 1; pl->motion = 0; pl->floor = 0; pl->y = 0;
     pl->x = px; pl->z = pz; pl->rot_y = rot;
-    re15_collision_set_band(2);
+    re15_collision_set_band(s_band);
     s_shown = cut; s_cine_was = 0; s_bild = 0; s_n_musik = 0; s_stimme_rest = 0; s_n_stimmen = 0;
     g_scd.player_mode = 0; g_scd.letterbox_countdown = 0;
     re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
@@ -404,6 +457,7 @@ typedef struct {
     int  msg42_im_film;
 } lauf_t;
 
+static int s_folge_msg = 42;   /* die Zeile nach dem Film: 6000 msg 42, 5011 msg 4 */
 static void lauf(lauf_t *L, int bilder)
 {
     memset(L, 0, sizeof *L);
@@ -427,7 +481,7 @@ static void lauf(lauf_t *L, int bilder)
         const int v = c->drawn ? c->out_r : -1;
         if (L->b_film_an < 0 && (v >= 0 || L->n_vor > 0) && L->n_vor < 80) L->vor[L->n_vor++] = v;
         if (L->b_film_aus >= 0 && L->n_nach < 80) L->nach[L->n_nach++] = v;
-        if (L->b_film_aus < 0 && L->b_film_an >= 0 && g_scd.message_active && g_scd.message_id == 42) L->msg42_im_film = 1;
+        if (L->b_film_aus < 0 && L->b_film_an >= 0 && g_scd.message_active && g_scd.message_id == s_folge_msg) L->msg42_im_film = 1;
     }
 }
 
@@ -514,6 +568,157 @@ static void teil_einmal(void)
           "zweites Betreten mit (3,100)=1: keine Szene, kein Film (%d), keine Umleitung", L.filme);
 }
 
+/* ==== Stufe 2: Elza ROOM5011 ======================================================================================== */
+#define E_VOR   (0x00690 - 0x0055A)   /* sub02 [@0x0055A, @0x00690) */
+#define E_NACH  (0x0093A - 0x00690)   /* sub02 [@0x00690, @0x0093A) */
+
+static void teil_programm5011(void)
+{
+    printf("== programm5011 ==\n");
+    size_t nr = 0;
+    uint8_t *r = aus(RE15_ASSET_PSX_DIR, "STAGE5/ROOM5011.RDT", &nr);
+    int np = 0;
+    const uint8_t *p = re15_birkinfilm_r42_programm_raum(RE15_BF_RAUM_ELZA, &np);
+    PRUEF(r && nr > 0x0093A && p && np > 0, "ROOM5011.RDT und Programm (%d B)", np);
+    if (!r || !p) { free(r); return; }
+    const long ein = np - E_VOR - E_NACH;
+    PRUEF(r[0x00524 + 4] == 0x36 && r[0x00524 + 5] == 0x00 && r[0x00524 + 6] == 0x16 && r[0x00524 + 7] == 0x04,
+          "Zeigertabelle sub_scd @0x00524: sub02 = @0x0055A, sub03 = @0x0093A");
+    PRUEF(!memcmp(r + 0x0053A, "\x21\x04\xed\x01\x04\xff\x18\x02", 8),
+          "sub00 @0x0053A Ck(4,237)=1 -> @0x0053E Evt_exec sub02");
+    PRUEF(!memcmp(p, r + 0x0055A, (size_t)E_VOR) && !memcmp(p + E_VOR + ein, r + 0x00690, (size_t)E_NACH),
+          "sub02 bytegleich: [@0x0055A, @0x00690) vorn, [@0x00690, @0x0093A) hinten, Einschub %ld B", ein);
+    PRUEF(p[0] == 0x22 && p[1] == 0x04 && p[2] == 0xed && p[3] == 0x00, "erstes Byte = Set(4,237,0) @0x0055A (einmal je Spielstand)");
+    PRUEF(!memcmp(r + 0x00640, "\x2b\x03\x00\x00", 4) && !memcmp(r + 0x00690, "\x2b\x04\x00\x00", 4),
+          "msg 3 @0x00640, msg 4 @0x00690 (Anker)");
+    static const uint8_t soll[] = { 0x2b, 46, 0, 0,  0x09, 0x0a, 0x02, 0x00,  0x09, 0x0a, 0x3c, 0x00,  0x54, 0, 4, 0, 0, 0,
+                                    0x2b, 47, 0, 0,  0x09, 0x0a, 0x3f, 0x00,  0x54, 0, 3, 0, 0, 0 };
+    PRUEF(ein == (long)sizeof soll && !memcmp(p + E_VOR, soll, sizeof soll),
+          "Einschub vor msg 4: Warte-Zeile 46, Sleep 2 (@0x027E4), Sleep 60 (@0x027F0), MAIN Op 4 (@0x02804), Film 47, "
+          "Sleep 63 (@0x02820), MAIN Op 3 (@0x0282B) - ohne neue Zeilen");
+    int n2b = 0;
+    for (long i = 0; i < (long)sizeof soll; i += (soll[i] == 0x54 ? 6 : 4)) if (soll[i] == 0x2b) n2b++;
+    PRUEF(n2b == 2 && RE15_BF_ELZA_MSG_WARTEN == 46 && RE15_BF_ELZA_MSG_FILM == 47, "nur zwei Port-Zeilen ohne Text (46, 47)");
+    /* Haken: Umleitung nur fuer ROOM5011 sub02 mit passender Signatur */
+    const uint8_t *orig = r + 0x0055A;
+    const unsigned u0 = g_re15_bf_umleitungen;
+    PRUEF(re15_birkinfilm_r42_evt_exec(0x5011, 2, orig) == p && g_re15_bf_umleitungen == u0 + 1, "Evt_exec sub02 in ROOM5011 -> Programm");
+    PRUEF(re15_birkinfilm_r42_evt_exec(0x5010, 2, orig) == orig && re15_birkinfilm_r42_evt_exec(0x5011, 4, orig) == orig &&
+          re15_birkinfilm_r42_evt_exec(0x5011, 6, orig) == orig, "andere Raeume/Subs unberuehrt (5010 sub02, 5011 sub04/sub06)");
+    uint8_t *falsch = (uint8_t *)malloc(0x0093A - 0x0055A);
+    if (falsch) {
+        memcpy(falsch, orig, 0x0093A - 0x0055A); falsch[0x00690 - 0x0055A + 1] = 0x05;
+        PRUEF(re15_birkinfilm_r42_evt_exec(0x5011, 2, falsch) == falsch, "abweichende Bytes -> Original-Ablauf");
+        free(falsch);
+    }
+    const re15_zws_film_t *f = re15_zws_r41_film_fuer_raum(RE15_BF_RAUM_ELZA);
+    PRUEF(f && f->film.msg == RE15_BF_ELZA_MSG_FILM && f->schrei.msg < 0 && f->schrei.n == 0 && f->sichtbar.n == 0 &&
+          !strcmp(f->film_datei, RE15_BF_FILM) && f->film_bilder == RE15_BF_FILM_BILDER
+#ifdef RE15_ZWS_BLENDART_4090
+          && f->blende == RE15_ZWS_BLENDART_4090 && f->bild_y == RE15_BF_FILM_Y
+#endif
+          , "Filmtabelle: ROOM5011 Zeile 47, %s, %d Bilder, Blendenart 4090, Bild 40 Zeilen tiefer", RE15_BF_FILM,
+          RE15_BF_FILM_BILDER);
+    PRUEF(!re15_zws_r41_film_fuer_raum(0x5010), "ROOM5010 ohne Film");
+    PRUEF(!re15_birkinfilm_r42_stimme(RE15_BF_RAUM_ELZA, 3, NULL) && !re15_birkinfilm_r42_stimme(RE15_BF_RAUM_ELZA, 46, NULL) &&
+          !re15_birkinfilm_r42_stimme(RE15_BF_RAUM_ELZA, 47, NULL), "ROOM5011: keine RE2-Stimme (Elzas Zeilen bleiben synchro)");
+    free(r);
+}
+
+/* Ankunft in 5011 wie nach ROOM5021 sub02: (4,237)=1 (@0x01356) und (3,58)=1 (@0x0135A, main00 @0x004DC setzt dann John/Sherry).
+ * Lage = Tuer-Ziel aus 5000 (re15_room_spawns.h ROOM5011 (-23636,-18240) yaw 456), Band 0 (Door_aot @0x0039A floor 0). */
+static int boot5011(void)
+{
+    s_band = 0;
+    s_synchro = 1; s_synchro_raum = -1;
+    s_folge_msg = 4;
+    return room_boot(0x5011, -23636, -18240, 456, 0);
+}
+
+static void teil_ablauf5011(void)
+{
+    printf("== ablauf5011 ==\n");
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    re15_fade_init();
+    re15_zws_r41_film_spieler = 1;
+    re15_game_flag_set(4, 237, 1);
+    re15_game_flag_set(3, 58, 1);
+    const unsigned u0 = g_re15_bf_umleitungen;
+    if (boot5011() != 0) return;
+    PRUEF(g_re15_bf_umleitungen == u0 + 1, "sub00 @0x0053E Evt_exec sub02 -> Programm (%u Umleitung)", g_re15_bf_umleitungen - u0);
+    const int st3 = synchro_bilder(0x5011, 3);
+    PRUEF(st3 > 0, "synchro/STAGE5/room5011/main03.wav: %d Bilder (Stimme von msg 3)", st3);
+    lauf_t L;
+    lauf(&L, 12000);
+    printf("    Nachrichten:"); for (int i = 0; i < L.n_msg; i++) printf(" %d@%ld", L.msgs[i], L.b_msg[i]); printf("\n");
+    printf("    Film an Bild %ld, aus %ld (%d mal); Warte-Zeile %u Takte auf den Untertitel; Musik:", L.b_film_an, L.b_film_aus,
+           L.filme, g_re15_bf_warten);
+    for (int i = 0; i < s_n_musik; i++) printf(" (%d,%d)@%ld", s_musik[i].slot, s_musik[i].op, s_musik[i].bild);
+    printf("\n    Blende vor dem Film (%d):", L.n_vor); for (int i = 0; i < L.n_vor; i++) printf(" %d", L.vor[i]);
+    printf("\n    Blende nach dem Film (%d):", L.n_nach); for (int i = 0; i < L.n_nach && i < 70; i++) printf(" %d", L.nach[i]);
+    printf("\n");
+    int folge = L.n_msg >= 17;
+    for (int i = 0; folge && i < 17; i++) if (L.msgs[i] != i) folge = 0;
+    PRUEF(folge, "Zeilenfolge 0..16 wie im Original, keine neue Zeile (46/47 ohne Text)");
+    const int i3 = idx(&L, 3), i4 = idx(&L, 4);
+    PRUEF(idx(&L, 46) < 0 && idx(&L, 47) < 0 && s_n_stimmen == 0, "keine Zeile 46/47 sichtbar, keine RE2-Stimme");
+    PRUEF(L.filme == 1 && i3 >= 0 && i4 >= 0 && L.b_film_an > L.b_msg[i3] && L.b_film_an < L.b_msg[i4],
+          "Film genau einmal, zwischen msg 3 (Bild %ld) und msg 4 (Bild %ld): Bild %ld", i3 >= 0 ? L.b_msg[i3] : -1L,
+          i4 >= 0 ? L.b_msg[i4] : -1L, L.b_film_an);
+    PRUEF(i3 >= 0 && L.b_film_an - L.b_msg[i3] >= st3 + 2 + 60 + 64,
+          "Film erst nach Stimme 3 (%d Bilder) + Sleep 2 + Sleep 60 + 64 Abblendbildern: %ld Bilder nach msg 3", st3,
+          i3 >= 0 ? L.b_film_an - L.b_msg[i3] : -1L);
+    {   int ok = L.n_vor == 65;
+        for (int i = 0; ok && i < 64; i++) if (L.vor[i] != 4 * i) ok = 0;
+        if (ok && L.vor[64] != 252) ok = 0;
+        PRUEF(ok, "Abblende wie RE2 ROOM4090 @0x027F4: %d Bilder 0, 4 ... 248, 252 und im Bild der Anforderung 252 (@0x02812) "
+                  "- gelesen %d, %d ... %d, %d", L.n_vor, L.n_vor > 0 ? L.vor[0] : -9, L.n_vor > 1 ? L.vor[1] : -9,
+              L.n_vor > 63 ? L.vor[63] : -9, L.n_vor > 64 ? L.vor[64] : -9);
+    }
+    {   int ok = L.n_nach >= 66;
+        for (int i = 0; ok && i < 64; i++) if (L.nach[i] != 255 - 4 * i) ok = 0;
+        if (ok && (L.nach[64] != -1 || L.nach[65] != -1)) ok = 0;
+        PRUEF(ok, "Einblende wie RE2 @0x0281C (Pegel 0x7FFF): 255, 251 ... 3 (64 Bilder), dann Halt - gelesen %d, %d ... %d, %d",
+              L.n_nach > 0 ? L.nach[0] : -9, L.n_nach > 1 ? L.nach[1] : -9, L.n_nach > 63 ? L.nach[63] : -9,
+              L.n_nach > 64 ? L.nach[64] : -9);
+    }
+    PRUEF(!L.msg42_im_film && i4 >= 0 && L.b_msg[i4] - L.b_film_aus >= 63 && L.b_msg[i4] - L.b_film_aus <= 65,
+          "msg 4 nach Sleep 63 @0x02820: %ld Bilder nach dem Film", i4 >= 0 ? L.b_msg[i4] - L.b_film_aus : -1L);
+    int halt = -1, weiter = -1, andere = 0;
+    for (int i = 0; i < s_n_musik; i++) {
+        if (s_musik[i].slot == 0 && s_musik[i].op == 4 && halt < 0) halt = i;
+        else if (s_musik[i].slot == 0 && s_musik[i].op == 3 && weiter < 0) weiter = i;
+        else andere++;
+    }
+    PRUEF(halt >= 0 && weiter >= 0 && s_musik[halt].bild <= L.b_film_an - 64 && s_musik[weiter].bild >= L.b_film_aus + 62 &&
+          andere == 0, "MAIN Op 4 im Bild der Abblende (%ld), Op 3 nach Sleep 63 (%ld), sonst kein Musikbefehl",
+          halt >= 0 ? s_musik[halt].bild : -1L, weiter >= 0 ? s_musik[weiter].bild : -1L);
+    PRUEF(!re15_game_flag_get(RE15_BF_ELZA_BANK, RE15_BF_ELZA_BIT), "(4,237) = 0 (sub02 @0x0055A, Szene gesehen)");
+    PRUEF(!re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27),
+          "Szene zu Ende wie im Original: (2,7) und (1,27) wieder 0 (sub02 @0x00930 / @0x00934)");
+}
+
+static void teil_einmal5011(void)
+{
+    printf("== einmal5011 ==\n");
+    re15_game_state_init();
+    re15_inv_load_briefing();
+    re15_fade_init();
+    re15_zws_r41_film_spieler = 1;
+    re15_game_flag_set(4, 237, 1);
+    re15_game_flag_set(3, 58, 1);
+    if (boot5011() != 0) return;
+    lauf_t L;
+    lauf(&L, 12000);
+    PRUEF(L.filme == 1, "erstes Betreten: Film %d mal", L.filme);
+    const unsigned u = g_re15_bf_umleitungen;
+    if (boot5011() != 0) return;   /* (4,237) ist jetzt 0 (g_game uebernommen) */
+    lauf(&L, 3000);
+    PRUEF(L.filme == 0 && g_re15_bf_umleitungen == u && idx(&L, 3) < 0,
+          "zweites Betreten mit (4,237)=0: keine Szene, kein Film (%d), keine Umleitung", L.filme);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -523,6 +728,9 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "programm")) teil_programm();
     if (alle || !strcmp(teil, "ablauf"))   teil_ablauf();
     if (alle || !strcmp(teil, "einmal"))   teil_einmal();
+    if (alle || !strcmp(teil, "programm5011")) teil_programm5011();
+    if (alle || !strcmp(teil, "ablauf5011"))   teil_ablauf5011();
+    if (alle || !strcmp(teil, "einmal5011"))   teil_einmal5011();
     printf("%s: %d Fehler\n", teil, g_fail);
     return g_fail ? 1 : 0;
 }

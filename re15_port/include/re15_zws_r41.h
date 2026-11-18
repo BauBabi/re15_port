@@ -4,6 +4,7 @@
  *   11C  Parkplatz/Garage,  Leons Szenario ROOM11C0, Leon und Ada   -> MOVIE/R11CGORI.STR
  *   birk6000  Bahnsteig ROOM6000, Leons erstes Treffen mit Annette    -> MOVIE/R409BIRK.STR (RE2-Film "Birkins Mutation",
  *             Runde 42 Strang birkinfilm, include/re15_birkinfilm_r42.h; Blendenart RE15_ZWS_BLENDART_4090, Bild 40 Zeilen tiefer)
+ *   birk5011  Monitorraum ROOM5011, Elza zwischen msg 3 und msg 4    -> derselbe Film (Runde 42 birkinfilm Stufe 2)
  * Je Film: Gorilla-Schrei vor der "Was war das?"-Zeile, Tonende + kurze Pause, die Zeile, kurz warten, harter Schnitt in
  * den Film, danach 15 Bilder Einblenden aus Schwarz wie RE2 und der Dialog laeuft weiter. Code: engine/src/zws_r41.c
  * (Tabelle k_filme), platform/pc/src/zws_r41_pc.c (Ton + Filmspieler).

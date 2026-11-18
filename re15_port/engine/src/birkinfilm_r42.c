@@ -4,8 +4,11 @@
  * tools/r42_birkinfilm/szene_bauen.py (erzeugt gen/birkinfilm_r42.inc). Film und Blenden: engine/src/zws_r41.c (Tabellenzeile
  * "birk6000", Blendenart RE15_ZWS_BLENDART_4090).
  *
- * PORT-STORY. Kein Asset-Patch: der Port tauscht nur das Ziel des Evt_exec sub06 (sub00 @0x00F58), wenn sub06 im geladenen RDT
- * bytegleich k_bf_6000_sub06 ist (Form story6_r42.c umleiten, hier die ganzen 316 Bytes).
+ * Stufe 2: Elzas Fassung ROOM5011 sub02 (Film zwischen msg 3 @0x00640 und msg 4 @0x00690, keine neuen Saetze; Herleitung im
+ * Header, Abschnitt "Stufe 2"), Tabellenzeile "birk5011" in zws_r41.c.
+ *
+ * PORT-STORY. Kein Asset-Patch: der Port tauscht nur das Ziel des Evt_exec sub06 (6000 sub00 @0x00F58) bzw. sub02 (5011 sub00
+ * @0x0053E), wenn das Sub im geladenen RDT bytegleich der Signatur ist (Form story6_r42.c umleiten, hier die ganzen Subs).
  */
 #include <stdint.h>
 #include <string.h>
@@ -47,13 +50,13 @@ const uint8_t *re15_birkinfilm_r42_text(uint8_t id, int *out_len)
 
 void re15_birkinfilm_r42_texte(uint16_t room_id)
 {
-    if (room_id != RE15_BF_RAUM) return;   /* nur Leons ROOM6000; ROOM6001 (Elza) hat keine Annette-Szene */
+    s_warte = 0;                           /* Warte-Zeile 43 (6000) / 46 (5011): je Raumladen neu */
+    if (room_id != RE15_BF_RAUM) return;   /* nur Leons ROOM6000; ROOM6001 (Elza) hat keine Annette-Szene, 5011 keine neuen Saetze */
     for (int i = 0; i < BF_TEXTE_N; i++) {
         re15_msg_install_text(k_bf_texte[i].id, k_bf_texte[i].b, (size_t)k_bf_texte[i].n);
         const int d = re15_msg_compute_duration(k_bf_texte[i].b, k_bf_texte[i].n, 0);   /* wie re15_msg_load_room_block */
         if (d > 0 && d < 65535) re15_msg_install_durations(k_bf_texte[i].id, d);
     }
-    s_warte = 0;
     BF_LOG("ROOM6000: %d Rahmenzeilen eingesetzt (msg 40..42)", BF_TEXTE_N);
 }
 
@@ -64,8 +67,29 @@ const uint8_t *re15_birkinfilm_r42_programm(int *out_len)
     return k_bf_6000_prog;
 }
 
+const uint8_t *re15_birkinfilm_r42_programm_raum(unsigned room_id, int *out_len)
+{
+    if ((room_id & 0xFFFFu) == RE15_BF_RAUM_ELZA) {
+        if (out_len) *out_len = (int)sizeof k_bf_5011_prog;
+        return k_bf_5011_prog;
+    }
+    if ((room_id & 0xFFFFu) == RE15_BF_RAUM) return re15_birkinfilm_r42_programm(out_len);
+    if (out_len) *out_len = 0;
+    return NULL;
+}
+
 const uint8_t *re15_birkinfilm_r42_evt_exec(uint16_t room_id, uint8_t sub, const uint8_t *pc)
 {
+    if (room_id == RE15_BF_RAUM_ELZA && sub == RE15_BF_ELZA_SUB && pc) {   /* Stufe 2: 5011 sub00 @0x0053E Evt_exec sub02 */
+        if (memcmp(pc, k_bf_5011_sub02, sizeof k_bf_5011_sub02) != 0) {
+            BF_LOG("ROOM5011 sub02 weicht von der Signatur ab - Original-Ablauf ohne Film");
+            return pc;
+        }
+        g_re15_bf_umleitungen++;
+        BF_LOG("ROOM5011 Evt_exec sub02 -> Programm (%u B): Film R409BIRK zwischen msg 3 und msg 4 (Elza)",
+               (unsigned)sizeof k_bf_5011_prog);
+        return k_bf_5011_prog;
+    }
     if (room_id != RE15_BF_RAUM || sub != RE15_BF_SUB || !pc) return pc;
     if (memcmp(pc, k_bf_6000_sub06, sizeof k_bf_6000_sub06) != 0) {
         BF_LOG("ROOM6000 sub06 weicht von der Signatur ab - Original-Ablauf ohne Film");
@@ -80,12 +104,16 @@ const uint8_t *re15_birkinfilm_r42_evt_exec(uint16_t room_id, uint8_t sub, const
 /* ==== Warte-Zeile 43 (RE2 Wsleep @0x027E2) ================================================================================ */
 int re15_birkinfilm_r42_message_on(const uint8_t *pc)
 {
-    if (!pc || (uint16_t)g_current_room_id != RE15_BF_RAUM || pc[1] != RE15_BF_MSG_WARTEN) return 0;
-    /* Der Stimmen-Riegel davor (scd_vm.c) hat das Ende von Xa 0x11 abgewartet. PORT-WAHL: auch den Untertitel abwarten. */
+    if (!pc) return 0;
+    const uint16_t raum = (uint16_t)g_current_room_id;
+    if (!((raum == RE15_BF_RAUM && pc[1] == RE15_BF_MSG_WARTEN) ||
+          (raum == RE15_BF_RAUM_ELZA && pc[1] == RE15_BF_ELZA_MSG_WARTEN))) return 0;
+    /* Der Stimmen-Riegel davor (scd_vm.c) hat das Ende der Stimme abgewartet (6000: Xa 0x11; 5011: synchro main03 = msg 3).
+     * PORT-WAHL: auch den Untertitel abwarten. */
     if (g_scd.message_active && s_warte < RE15_BF_WARTEN_NOTBREMSE) { s_warte++; return 2; }
     g_re15_bf_warten = s_warte;
-    BF_LOG("Warte-Zeile 43: Stimme und Untertitel zu Ende (%u Takte auf den Untertitel)%s", s_warte,
-           s_warte >= RE15_BF_WARTEN_NOTBREMSE ? " NOTBREMSE" : "");
+    BF_LOG("ROOM%04X Warte-Zeile %d: Stimme und Untertitel zu Ende (%u Takte auf den Untertitel)%s", (unsigned)raum, pc[1],
+           s_warte, s_warte >= RE15_BF_WARTEN_NOTBREMSE ? " NOTBREMSE" : "");
     s_warte = 0;
     return 1;
 }
