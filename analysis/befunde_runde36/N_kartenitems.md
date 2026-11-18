@@ -9,7 +9,7 @@ Dossier wird fortlaufend geschrieben (Sitzungslimit).
 >
 > | Plan | Raum (Fassung) | Blaetter | Bank-9-Bits | Ort | Groesse |
 > |---|---|---|---|---|---|
-> | Revierplan "police station map" | 1030/1031 | 2 (1F), 3 (2F), 4 (3F), **5 (Dach)** | 89, 88, 87, **42** | Ostwand der Lobby neben der Ausgangstuer nach 1050, Kamera 2 (Nacharbeit) | 2160 x 1440 |
+> | Revierplan "police station map" | 1030/1031 | 2 (1F), 3 (2F), 4 (3F), **5 (Dach)** | 89, 88, 87, **42** | Ostwand der Lobby LINKS neben der Ausgangstuer nach 1050 auf Augenhoehe (Mitte y -2658), Kamera 2 (lageplaene_nach2) | 1620 x 1080 |
 > | Kellerplan "police basement map" | 1200/1201 | 1 (B2), 0 (B1) | 77, 78 | Leichenhalle neben der Vitrine (Stelle der Runde 36) | 745 x 497 |
 > | Kanalisation "sewer map" | 2000/2001 | 6 | 34 | Nordwand links der Ostleiter, Kamera 11 | 1080 x 720 |
 > | Fabrik "factory map" | nur 30C1 (Elza) | 7 | 35 (= Leons Uebergabe 3060) | Nordwand rechts der Treppe, Kamera 1 | 2160 x 1440 (Nacharbeit) |
@@ -18,8 +18,8 @@ Dossier wird fortlaufend geschrieben (Sitzungslimit).
 > Entfallen: 1140 (3F), 10D0 (2F), 11D0 (B1). Nicht in dieser Tabelle: Forschungszentrum (Blatt 8, Bit 36, baut r42/rest
 > als eigenes Modul an Capcoms Wandplan 4020/4021) und Labor (Original ROOM5030 sub02, Flag (3,115)).
 > Belege und Begruendungen: Kopf `re15_port/include/re15_kartenitems_r36.h` (Abschnitte RUNDE 42, RUNDE 42 STUFE 2,
-> RUNDE 42 NACHARBEIT) und Abschnitt **10** unten. Riegel: `unit_r42_lageplaene_*`, `unit_r42_lageplaene2_*`,
-> `unit_r42_lageplaene3_*`, `integration_r42_lageplaene2_weg`, `integration_r42_lageplaene3_weg`.
+> RUNDE 42 NACHARBEIT, STRANG LAGEPLAENE_NACH2) und Abschnitt **10** unten. Riegel: `unit_r42_lageplaene_*`, `unit_r42_lageplaene2_*`,
+> `unit_r42_lageplaene3_*`, `unit_r42_lageplaene4_*`, `integration_r42_lageplaene2_weg`, `integration_r42_lageplaene3_weg`.
 
 ## Auftrag (woertlich, AUFTRAG.md Z. 73-77)
 
@@ -821,6 +821,27 @@ fremde Sitzung (ctest + re15_pc_r36r_haken-exe); kein Test flatterte.
 * Riegel `unit_r42_lageplaene3_{dach,revier,druck,fabrik}` und `integration_r42_lageplaene3_weg` (Leon 1030 aus Kamera 4,
   Elza 1031 vom Spielbeginn: Kamera 1 -> 2, Aktion -> Ereignis 28 -> Meldung 31). `unit_r42_lageplaene2_sicht` prueft jetzt
   auch Elzas 2001/6001. `unit_r36_kartenbits` Teile V/P behandeln eine Zeile ohne Gruppe wie der Motor.
+
+### 10.5 Augenhoehe (Strang `lageplaene_nach2`)
+* NUTZERWUNSCH 18.11.2026 woertlich: "Bei 1030 und 1031 passt das nicht. Das der Revierplan so weit über den Spieler hängt,
+  das geht so nicht." (10.3: Mitte y -4150, Unterkante -3430 = 410 ueber Leons Scheitel.)
+* **Kopfhoehe gemessen** (Riegel `unit_r42_lageplaene4_hoehe`): Kopfband = Ursprung Knochen 8 (Plc_neck, neck_bone 8
+  @0x80031938, Formel skeleton_common.c) bis hoechste Ecke des Kopf-Meshs, Clip 0 Bild 0. Leon PL00.PLD -2513..-3009, Elza
+  PL04.PLD -2332..-2778 (Boden 0). Vergleich: WANTED-Aushang rechts der Tuer (BSS Kamera 2, Bild x 128..149 y 78..103 auf die
+  Wand zurueckgerechnet) y -1950..-3230, zweiter Aushang -2147..-3135; Plaene 2000/30C1/6000 Mitte 2000 ueber dem Boden
+  (unter beiden Hals-Ursprungen), Kellerplan 1200 y -2573.
+* **Ort**: rechts der Tuer ist auf Augenhoehe kein Platz (Aushaenge ab z -14260, davor Bank/Tischreihe). Neu LINKS der Tuer
+  auf dem freien Wandstueck zwischen Door_aot_set Slot 0 (z bis -11600, @0x01C6A / @0x01CD8) und Ende der SCA-Zelle 1
+  (z -9632, @0x01A1C / @0x01A80): Mitte (2398,-2658,-10616), y = Mittel der Kopfband-Mitten, s = 1.5 (1620 x 1080,
+  PORT-WAHL: je 174 Rand zu Tuer und Wandende, deckt beide Kopfbaender).
+* **Gemessen** (Framedump F100, RE15_FORCE_CUT): Kamera 2 1139 Pixel, Huelle x18..64 y78..103 (320er Bild), 1139 von 1139
+  Palettenfarben; Kamera 1 179 Pixel, Huelle x233..247 y101..112 (15 x 12, ganz sichtbar - der Fernseher steht weiter rechts).
+* **Aufheben**: Slot 21 (frei in 1030/1031), Rechteck x 1598..2598 z -12010..-11010. Der Tresen (SCA-Zelle 0 @0x01A10 z
+  -10568) haelt den Spieler bei z -11036 an (gemessen, Leon und Elza); Tresen-Satz Slot 10 (@0x01D56, z -11000..-7839) wird
+  nicht beruehrt, ueber der Tuer gewinnt Slot 0. Die Notfall-Tafel bleibt in Slot 9. Klettersperre unveraendert (Prop-Band
+  +1); Gegenprobe mit Prop-Band +0: Klettersonde an 5 bzw. 4 von 5 Standorten (unit_r42_lageplaene4_druck rot).
+* Wege: Leon und Elza biegen vor der Tuer nach Norden ab (L0.15), gehen am Tresen entlang bis an die Wand (1930,-11036),
+  Kamera 2 schon ab x ~ -2200; Aktion -> Ereignis 28 -> Meldung 31 (`integration_r42_lageplaene3_weg` mit den neuen Wegen).
 
 ### 10.4 Hinweise an andere Straenge
 * **r42/rest (U-11 Laborblatt 8)**: baut seinen Plan als eigenes Modul (ungenutzt_r42.c, Bit 36), nicht in `k_r36k_lage`.

@@ -97,6 +97,27 @@
  *     KEINE Wandplaene, sondern das gefaltete Faltblatt karte00 (room20B0 MD1 @0x004FDC, 1428 B, md5 735097e1, Ecken
  *     x -56..56, y -96..1, z -269..269 = 112 x 538) - als Plakat-Massstab nicht brauchbar.
  *
+ * STRANG LAGEPLAENE_NACH2 (18.11.2026) - REVIERPLAN AUF AUGENHOEHE:
+ *   NUTZERWUNSCH 18.11.2026 woertlich: "Bei 1030 und 1031 passt das nicht. Das der Revierplan so weit über den Spieler
+ *     hängt, das geht so nicht." (Stand 10287b077: Mitte y -4150, Unterkante -3430 = 410 ueber Leons Scheitel -3020.)
+ *   KOPFHOEHE GEMESSEN aus den Knochenlagen (Riegel unit_r42_lageplaene4_hoehe, Formel skeleton_common.c Plc_neck-Ursprung,
+ *     neck_bone 8 @0x80031938; Clip 0 Bild 0 = RE15_R36_KOPF_CLIP): Kopfband = Ursprung Knochen 8 .. hoechste Ecke des Kopf-
+ *     Meshs. Leon PLD/PL00.PLD -2513..-3009, Elza PLD/PL04.PLD -2332..-2778 (Boden 0). Zum Vergleich (Hintergrund Kamera 2,
+ *     Bildpunkte auf die Wand x 2398 zurueckgerechnet): WANTED-Aushang rechts der Tuer Bild x 128..149 y 78..103 -> z -14260..
+ *     -15391, y -1950..-3230 (Mitte -2590); zweiter Aushang y -2147..-3135 (Mitte -2641). Die Plaene 2000/30C1/6000 haengen
+ *     2000 ueber dem Boden (unter beiden Hals-Ursprungen), der Kellerplan 1200 bei y -2573.
+ *   ORT: Ostwand x 2398 LINKS neben der Ausgangstuer - das freie Wandstueck zwischen Door_aot_set Slot 0 (@0x01C6A / 1031
+ *     @0x01CD8, z bis -11600) und dem Ende der SCA-Zelle 1 (@0x01A1C / @0x01A80, z -9632), Mitte z -10616. Rechts der Tuer
+ *     ist auf Augenhoehe kein Platz (Aushaenge ab z -14260, davor Bank/Tischreihe SCA-Zelle 14). Kamera 2 bleibt die
+ *     Tuerkamera beider Figuren (RVD 1->2 / 3->2, Abschnitt NACHARBEIT); der Fernseher am Pfeiler steht im Bild rechts,
+ *     weit weg von dieser Stelle.
+ *   MITTE y -2658 = Mittel der beiden Kopfband-Mitten (-2761, -2555). GROESSE s = 1.5 (1620 x 1080) = PORT-WAHL: passt mit
+ *     je 174 Rand zwischen Tuerkante und Wandende und deckt beide Kopfbaender ganz (y -2118..-3198).
+ *   AUFHEBEN: Rechteck x 1598..2598 z -12010..-11010 (Slot 21, frei in 1030/1031). Der Tresen (SCA-Zelle 0 @0x01A10,
+ *     z >= -10568) haelt den Spieler bei z -11036 an (gemessen), sein Nachrichtensatz Slot 10 (@0x01D56, z -11000..-7839)
+ *     wird nicht beruehrt; ueber der Tuer (z <= -11600) gewinnt Slot 0 den Aktions-Scan (kleinster Slot, FUN_80042bac).
+ *     Die Notfall-Tafel bleibt in Slot 9 (kein Umzug mehr). Klettersperre unveraendert: Prop-Band = Standort-Band + 1.
+ *
  * NUTZER-VORGABE (AUFTRAG.md Z. 73-77, woertlich): "Extrahiere mir Karte01 oder Karte02 ... Haenge sie
  *   mir beispielhaft an die Stelle von map3F.bmp, und schalte damit die Map fuer Etage 3F frei, wie das
  *   Kartensystem in Resident Evil 2 auch funktioniert. Auch mit den Text." + 2F ROOM10D0 (map2F.bmp),

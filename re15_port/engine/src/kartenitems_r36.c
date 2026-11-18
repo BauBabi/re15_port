@@ -136,7 +136,9 @@ void re15_kartenitems_r36_install(uint16_t room_id)
     /* ZONE — EVENT-Satz wie ROOM5030 sub00 @0x0108A (sce 3, sat 0x31, p0 0x00FF, p1 = Sub<<8|0x18). */
     if (g->aot_slot >= RE15_AOT_MAX || ist_unsere_zone(g->aot_slot)) return;
     if (g->verdraengt_nach < RE15_AOT_MAX) {
-        /* ROOM1030/1031 (Nacharbeit): Slot 9 ist die Notfall-Tafel (main00 Aot_set @0x01D42, sce 1, msg 4,
+        /* Umzug eines Original-Satzes (seit Strang lageplaene_nach2 von KEINER Zeile benutzt: der Revierplan liegt jetzt
+         * in Slot 21 links der Tuer, die Notfall-Tafel bleibt in Slot 9). Fruehere Belegung:
+         * ROOM1030/1031 (Nacharbeit): Slot 9 ist die Notfall-Tafel (main00 Aot_set @0x01D42, sce 1, msg 4,
          * Rechteck x 480..2864 z -15769..-14139 vor der Ostwand). Der Aktions-Scan nimmt je Druck den
          * KLEINSTEN treffenden Slot (FUN_80042bac, aot_common.c "one action handler per press") — die
          * Karte in einem hohen Slot waere dort nie erreichbar. Der Satz zieht deshalb unveraendert in

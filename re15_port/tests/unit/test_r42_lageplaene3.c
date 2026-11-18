@@ -17,8 +17,9 @@
  *               (b) Plakat auf der Ostwand x 2398 neben der Tuer (z-Bereich ausserhalb der Tuer), ganz im Bild der Kamera 2 und
  *               mindestens 40 Bildpunkte breit (Massstab: Kanalisationsplakat in seiner Kamera 11 = 37 Bildpunkte, Ort vom
  *               Nutzer am 18.11. mit "ja" bestaetigt) — in 1030 UND 1031.
- *   druck       ECHTER Aktionsdruck im Streifen zwischen Bank und Tuer (1700,-14000) Blick Ostwand, 1030 UND 1031: keine
- *               Klettersonde an 5 Standorten, re15_aot_scan liefert Ereignis 28 (die Notfall-Tafel Slot 9 ist verdraengt).
+ *   druck       ECHTER Aktionsdruck vor dem Plan Blick Ostwand, 1030 UND 1031: keine Klettersonde an 5 Standorten,
+ *               re15_aot_scan liefert Ereignis 28. Strang lageplaene_nach2: Standort (1500,-11300) links der Tuer (vorher
+ *               (1700,-14000) im Streifen Bank/Tuer, Tafel Slot 9 verdraengt); eigener Riegel test_r42_lageplaene4.c.
  *   fabrik      Fabrikplan 30C1: MD1-Flaeche 2160 x 1440 und im Bild der Kamera 1 mindestens 40 Bildpunkte breit.
  */
 #include "re15_rdt.h"
@@ -285,13 +286,13 @@ static void teil_revier(void)
 /* ------------------------------------------------------------------------------------------------ druck */
 static void teil_druck(void)
 {
-    printf("=== druck: echter Aktionsdruck im Streifen zwischen Bank und Tuer ===\n");
+    printf("=== druck: echter Aktionsdruck vor dem Plan (lageplaene_nach2: links der Tuer) ===\n");
     static const uint16_t raeume[2] = { 0x1030, 0x1031 };
     for (int i = 0; i < 2; i++) {
         raum_t r;
         if (raum_laden(&r, raeume[i]) != 0) continue;
         re15_game_state_init();
-        const int32_t sx = 1700, sz = -14000;   /* gemessen: bei z -14300 haelt die Bank (SCA 14 z -14744) Leon auf */
+        const int32_t sx = 1500, sz = -11300;   /* lageplaene_nach2: vor dem Plan links der Tuer (Zone z -12010..-11010) */
         raum_start(&r, sx, 0, sz);
         re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
         const int rot = 0;   /* Vorwaertspunkt fx = x + 620 cos r (@0x80042bd0): r = 0 -> Blick +x = Ostwand */

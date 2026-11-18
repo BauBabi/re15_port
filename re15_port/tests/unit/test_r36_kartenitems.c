@@ -6,6 +6,8 @@
  * test_r42_lageplaene.c; dieser Test misst weiter die Mechanik (Prop, Zone, Druck, Karte, Spielstand).
  * NACHARBEIT (Strang lageplaene_nach): Revierplan zusaetzlich Dach (Blatt 5, Bit 42) und an der Ostwand der Lobby neben
  * der Ausgangstuer (Slot 9 = Notfall-Tafel @0x01D42 zieht nach Slot 39; das Muenztelefon Slot 8 bleibt unberuehrt).
+ * STRANG LAGEPLAENE_NACH2: Revierplan LINKS der Ausgangstuer auf Augenhoehe, eigene Zone Slot 21 (frei in 1030/1031) -
+ * kein Satz zieht mehr um, die Tafel bleibt in Slot 9. Druck jetzt bei (1500,-11300) vor dem Plan.
  *
  * Jeder Teil misst die MECHANIK am echten Port-Code (echte RDT, scd_room_reenter mit allen
  * Port-Installern, echter Bild-Ablauf re15_game_step -> Aktions-Scan -> scd_event_fire ->
@@ -14,7 +16,8 @@
  *      1.1), MD1/TIM parsen, die 5 MD1 unterscheiden sich NUR in den Ecken (@0x44, 40 Byte),
  *      Texte = RE2-Wortlaut (room2130 sub00/sub12-Rahmen), Frage hat die Auswahl (0x03).
  *   R  Raumstart Leon UND Elza (xxx0/xxx1): Prop obj 15 an Lage/Drehung der Tabelle, EVENT-Satz
- *      Ereignis 28 (sce 3, sat 0x31) im Slot; ROOM1030/1031: Notfall-Tafel (msg 4) in Slot 39.
+ *      Ereignis 28 (sce 3, sat 0x31) im Slot; ROOM1030/1031 bis lageplaene_nach2: Notfall-Tafel (msg 4) in Slot 39
+ *      (seitdem kein Umzug: Zeile mit verdraengt_nach 0xFF, die Pruefungen dazu laufen dann nicht).
  *   G  Bit gesetzt -> kein Prop, keine Zone, ROOM1030 Slot 9 bleibt die Tafel.
  *   D  echter Druck vor der Karte (1140 Leon, 10D1 Elza): Frage 30 -> Ja -> Bit (9,87/88),
  *      Zone weg (Aot_reset), Modell bei (20000,20000,20000) (RE2 Pos_set @0x037F6), Meldung 31;
@@ -196,8 +199,8 @@ static void teil_t(void)
      * hintereinander wie RE2 room20B0 Set(33,2) @0x037DA, Set(33,3) @0x037DE, Set(33,4) @0x037E2. */
     int pl = 0;
     const uint8_t *p = re15_kartenitems_r36_programm(0x1030, &pl);
-    CHECK("Revierplan: Programm 68 Byte, Aot_reset auf Slot 9 (1030), Set(9,89,1) Set(9,88,1) Set(9,87,1) Set(9,42,1) (Dach)",
-          p && pl == 68 && p[0x0E] == 0x46 && p[0x0F] == 9 &&
+    CHECK("Revierplan: Programm 68 Byte, Aot_reset auf Slot 21 (1030, lageplaene_nach2), Set(9,89,1) Set(9,88,1) Set(9,87,1) Set(9,42,1) (Dach)",
+          p && pl == 68 && p[0x0E] == 0x46 && p[0x0F] == 21 &&
           p[0x1C] == 0x22 && p[0x1D] == 9 && p[0x1E] == 89 && p[0x1F] == 1 &&
           p[0x20] == 0x22 && p[0x21] == 9 && p[0x22] == 88 && p[0x23] == 1 &&
           p[0x24] == 0x22 && p[0x25] == 9 && p[0x26] == 87 && p[0x27] == 1 &&
@@ -495,9 +498,9 @@ int main(void)
         teil_rg(&raeume[i]);
     }
     /* D: Standorte aus der Abdeckungsmessung (probe_r34n_e_dokumente abdeckung, Dossier 3.4) */
-    teil_d(&raeume[0], 1, 1700, -14000);     /* 1030 Leon, Streifen Bank/Tuer (Slot 9, Tafel -> 39)  */
-    teil_d(&raeume[1], 0, 1700, -14000);     /* 1031 Elza, NEIN                                      */
-    teil_d(&raeume[1], 1, 1700, -14000);     /* 1031 Elza, JA                                        */
+    teil_d(&raeume[0], 1, 1500, -11300);     /* 1030 Leon, vor dem Plan links der Tuer (Slot 21)     */
+    teil_d(&raeume[1], 0, 1500, -11300);     /* 1031 Elza, NEIN                                      */
+    teil_d(&raeume[1], 1, 1500, -11300);     /* 1031 Elza, JA                                        */
     teil_d(&raeume[3], 1, -25700, -15683);   /* 1201 Elza, vor der Vitrinenfront (x -26330, SCA 6)   */
     teil_k();
     teil_s();

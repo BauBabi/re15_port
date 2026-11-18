@@ -15,8 +15,9 @@ RUNDE 42 (Strang lageplaene, Stufe 1) - RE2-FORM: EIN Revierplan + EIN Kellerpla
 RUNDE 42 NACHARBEIT (Strang lageplaene_nach):
   - Revierplan schaltet zusaetzlich das Dach frei (Blatt 5 = ROOM1170/1171, re15_map_zones.h), Orchestrator-Entscheid
     18.11.2026 "das Dach gehoert zum Revier"; Bank-9-Bit 42 (frei: Mod-RDT-Zensus, Port-Zensus, 40-%-Disc, alle r42-Zweige).
-  - Revierplan NEU an der Ostwand der Lobby neben der Ausgangstuer nach 1050 (Kamera 2 = Tuerkamera beider Figuren),
-    ueber der Notfall-Tafel (msg 4), Groesse s = 2; Fabrikplan 30C1 an derselben Stelle wie Stufe 2, s = 2.
+  - Revierplan an der Ostwand der Lobby neben der Ausgangstuer nach 1050 (Kamera 2 = Tuerkamera beider Figuren);
+    Strang lageplaene_nach2: LINKS der Tuer auf AUGENHOEHE (Mitte y -2658 aus den Kopfbaendern Leon/Elza), s = 1.5, Slot 21
+    (vorher ueber der Notfall-Tafel bei y -4150, s = 2). Fabrikplan 30C1 an derselben Stelle wie Stufe 2, s = 2.
     NUTZERWUNSCH 18.11. "gut SICHTBAR"; PORT-WAHL s = 2 (RE2-Wandplan karte01 = 1080 x 720; RE2s Polizeiplaene room20B0
     obj 8 / room2130 obj 0 sind KEINE Wandplaene, sondern das gefaltete karte00, MD1 @0x004FDC md5 735097e1, 112 x 538).
 
@@ -110,19 +111,28 @@ PLAENE2 = [
     # REVIERPLAN (Nacharbeit; Zeile 0 der Tabelle). Name/Rahmen woertlich RE2 room20B0 msg 0 @0x3B92 "A police station map. /
     # Will you take it?" und msg 17 @0x3DB8 "You've taken a / police station map."; Gruppe 1F/2F/3F wie RE2 Set(33,2..4)
     # @0x037DA-E2 plus DACH Blatt 5 (Bit 42, Orchestrator-Entscheid 18.11.2026).
-    # ORT: Ostwand der Lobby x = 2398 (ROOM1030 SCA-Zelle 1 @0x01A1C x[2398..4198] z[-23528..-9632], n = -x) neben der
-    # Ausgangstuer nach 1050 (main00 Door_aot_set Slot 0 @0x01C6A x 1500..3000 z -13800..-11600), ueber der Notfall-Tafel
-    # (Slot 9 @0x01D42 msg 4 "Some sort of reference chart for / identifying emergency severity."). Beide Figuren verlassen
-    # die Lobby durch diese Tuer (Leon L6 @0x01C6A, Elza E2->E3 1031 Slot 0 @0x01CD8) und stehen davor in Kamera 2: RVD
-    # 1->2 @0x00294 und 3->2 @0x0030C sind die einzigen Wege in den Tuerbereich (0->2 gibt es nicht). Mitte z -14900,
-    # y -4150 (unterkante -3430 ueber den Aushaengen, oberkante -4870 unter dem Deckenbalken) = PORT-WAHL, am Bild gemessen.
-    # Aufhebe-Rechteck NICHT um Mitte+300n: vor der Bank/Tischreihe (SCA-Zelle 14 @0x01AB8 x[952..2752] z[-23204..-14744])
-    # kommt man nicht an die Wand; das Rechteck liegt im freien Streifen z -14744..-13800 zwischen Bank und Tuer
-    # (Mitte (2098, -14300)). Slot 9: die Tafel (Slot 9, 2384 x 1631 ueber dieser Stelle) zieht nach Slot 39 um, denn der
-    # Aktions-Scan nimmt je Druck den KLEINSTEN treffenden Slot (FUN_80042bac); 39 ist in 1030/1031 frei (aots-Sonde).
+    # ORT (Strang lageplaene_nach2, NUTZERWUNSCH 18.11.2026 woertlich: "Bei 1030 und 1031 passt das nicht. Das der
+    # Revierplan so weit über den Spieler hängt, das geht so nicht."): Ostwand der Lobby x = 2398 (ROOM1030 SCA-Zelle 1
+    # @0x01A1C x[2398..4198] z[-23528..-9632], n = -x) LINKS neben der Ausgangstuer nach 1050 (Kamera 2): das freie Wandstueck
+    # zwischen Tuer (main00 Door_aot_set Slot 0 @0x01C6A z -13800..-11600) und Wandende (SCA-Zelle 1 z -9632), 1968 breit,
+    # Mitte z -10616. Rechts der Tuer haengen auf Augenhoehe die Aushaenge (WANTED z -14260..-15391, y -1950..-3230), davor Bank/Tischreihe
+    # (SCA-Zelle 14 @0x01AB8 z <= -14744) - dort ist auf Augenhoehe kein Platz.
+    # HOEHE = Augenhoehe, GEMESSEN aus den Knochenlagen (test_r42_lageplaene4 hoehe; PLD/PL00.PLD Leon, PLD/PL04.PLD Elza,
+    # Clip 0 Bild 0 wie RE15_R36_KOPF_CLIP): Kopfband = Ursprung Knochen 8 (Plc_neck, neck_bone 8 @0x80031938) bis Scheitel
+    # (hoechste Ecke des Kopf-Meshs): Leon -2513..-3009, Elza -2332..-2778. Mitte y = Mittel der beiden Kopfband-Mitten
+    # ((-2761) + (-2555)) / 2 = -2658 (Boden 0: ROOM1040 Door_aot_set Slot 1 @0x010B8 next_y `00 00` @0x010C8).
+    # GROESSE s = 1.5 (1620 x 1080) = PORT-WAHL: passt mit je 174 Rand zwischen Tuerkante und Wandende (s = 1.822 = 1968
+    # haette den Tuerrahmen beruehrt, Messbild m_kand_b), deckt beide Kopfbaender ganz ab (y -2118..-3198).
+    # AUFHEBE-RECHTECK x 1598..2598 z -12010..-11010: der Streifen vor dem Plan, den der Spieler erreicht - noerdlich
+    # beginnt der Tresen (SCA-Zelle 0 @0x01A10 z >= -10568) mit seinem Nachrichtensatz Slot 10 (@0x01D56 z -11000..-7839,
+    # msg 6), suedlich die Tuer Slot 0 (z <= -11600, kleinerer Slot gewinnt den Aktions-Scan FUN_80042bac). Das Rechteck
+    # beruehrt Slot 10 nicht; ueber der Tuer gewinnt Slot 0 wie bisher. Effektiv: Vorwaertspunkt (@0x80042bd0, 620 voraus)
+    # in z -11600..-11010.
+    # SLOT 21: frei in 1030 und 1031 (RDT-Saetze Slots 0..17 bzw. 0..19, Port-Saetze 20/39, Kamerazonen ab 41; Sonde aots);
+    # die Notfall-Tafel bleibt in Slot 9 (kein Umzug mehr).
     dict(raum=0x1030, name="police station map", artikel="a", rahmen="room20B0",
-         gruppe=[(2, 89, "1F"), (3, 88, "2F"), (4, 87, "3F"), (5, 42, "Dach")], slot=9, verdr=39,
-         variante=0, n=(-1.0, 0.0, 0.0), boden=0, mitte=(2398.0, -4150.0, -14900.0), s=2.0, rect=(2098.0, -14300.0)),
+         gruppe=[(2, 89, "1F"), (3, 88, "2F"), (4, 87, "3F"), (5, 42, "Dach")], slot=21, verdr=0xFF,
+         variante=0, n=(-1.0, 0.0, 0.0), boden=0, mitte=(2398.0, -2658.0, -10616.0), s=1.5, rect=(2098.0, -11510.0)),
     # Kanalisation: Rahmen RE2 room4040 @0x1B9B "There's a sewer map. / Will you take it?", @0x1BCB "You've taken / the
     # sewer map."; Nordwand des Nordgangs z = -19800 (ROOM2000 SCA-Zelle 7 @0x012A4 x[-19850..7450] z[-19800..-17800],
     # floor 19 = Band 1, n = -z) links neben der Ostleiter (Tuer Slot 0 x 3900..4900), Mitte x 1500: frei von Elzas

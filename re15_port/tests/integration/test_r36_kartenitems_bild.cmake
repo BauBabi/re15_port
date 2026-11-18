@@ -94,10 +94,14 @@ endfunction()
 # Cut 2 1263 Pixel, Huelle x117..159 y41..72; Cut 1 319 Pixel, Huelle x276..308 y76..97 (vom Fernseher am Pfeiler teilweise
 # verdeckt); ausserhalb je 0. Fenster = Huelle +-3, Schwelle = rund die Haelfte. Der Vergleichs-Cut fuer die Helligkeit ist
 # jetzt Cut 1 (vorher Cut 0; Cut 0 zeigt die Ostwand nicht).
+# STRANG LAGEPLAENE_NACH2 (Augenhoehe links der Tuer, Mitte (2398,-2658,-10616), s = 1.5): gemessen 2026-11-18 (Lade-Weg F100,
+# RE15_FORCE_CUT, Fenster 0..319 x 0..239): Cut 2 1139 Pixel, Huelle x18..64 y78..103, 1139 von 1139 Palettenfarben; Cut 1
+# 179 Pixel, Huelle x233..247 y101..112 (15 x 12 = 180: ganz sichtbar, der Fernseher am Pfeiler steht weiter rechts);
+# ausserhalb je 0. Fenster = Huelle +-3, Schwelle = rund die Haelfte.
 set(_faelle
-    "1f|1030|-18000|-12000|0|2|89+88+87+42|114|38|162|75|631|452"
+    "1f|1030|-18000|-12000|0|2|89+88+87+42|15|75|67|106|569|452"
     "b2|1200|-20000|-26000|0|2|77+78|55|77|77|96|88|381"
-    "1f0|1030|-18000|-12000|0|1|89+88+87+42|273|73|311|100|159|452")
+    "1f0|1030|-18000|-12000|0|1|89+88+87+42|230|98|250|115|89|452")
 # Sechster Fall (Nachbesserung 1): ROOM1030 im Cut 0 — die Karte an der Rueckwand zwischen den Aushaengen,
 # gemessen 2026-10-11 (neue exe, Lade-Weg F100): 48 Pixel, Huelle x91..98 y107..112, Mittel (105,107,96),
 # 48 von 48 Palettenfarben. Fenster = Huelle +-3, Schwelle = die Haelfte.
@@ -199,18 +203,19 @@ endif()
 
 # ---- Teil 2: echter Weg in ROOM1030 (Runde 42: Revierplan; vorher ROOM1140) -------------------------
 # Nacharbeit: Spieler (1700,-14000) im Streifen zwischen Bank und Tuer, Blick Ostwand (rot 0; Zone x 1598..2598
-# z -14800..-13800 = Slot 9, die Notfall-Tafel zieht nach 39; unit_r36_kartenitems D, unit_r42_lageplaene3_druck).
+# z -14800..-13800 = Slot 9, die Notfall-Tafel zog nach 39). Strang lageplaene_nach2: Spieler (1500,-11300) vor dem Plan
+# links der Tuer, Blick Ostwand (rot 0; Zone Slot 21 x 1598..2598 z -12010..-11010; unit_r42_lageplaene4_druck).
 # Skript (Spielbilder ab 30): A Aktion | W3 Frage tippt | A Ja | W3 Meldung | A weg | W2 | S Status | W2 | Q Karte | W4
 set(_auf  "A0.1,W3,A0.1,W3,A0.1,W2,S0.3,W2,Q0.3,W4")
 set(_kein "W3,W3,W3,W2,S0.3,W2,Q0.3,W4")
-lauf(weg_auf  1030 1700 -14000 0 2 "" "${_auf}"  140 270)
+lauf(weg_auf  1030 1500 -11300 0 2 "" "${_auf}"  140 270)
 set(_dir_auf "${LAUF_DIR}")
 hexof("[kartenitems] ROOM1030 Ereignis 28 -> Port-Programm" _hp)
 string(FIND "${LAUF_LOG}" "${_hp}" _p)
 if(_p LESS 0)
-    string(APPEND _fehler "weg: Aktionsdruck vor der Tafel startete das Karten-Programm nicht (Ereignis 28)\n")
+    string(APPEND _fehler "weg: Aktionsdruck vor dem Plan startete das Karten-Programm nicht (Ereignis 28)\n")
 endif()
-lauf(weg_kein 1030 1700 -14000 0 2 "" "${_kein}" 140 270)
+lauf(weg_kein 1030 1500 -11300 0 2 "" "${_kein}" 140 270)
 set(_dir_kein "${LAUF_DIR}")
 if(NOT EXISTS "${_dir_auf}/karte.bmp" OR NOT EXISTS "${_dir_kein}/karte.bmp")
     string(APPEND _fehler "weg: kein Kartenschirm-Abzug (RE15_INV_FB_SHOT)\n")

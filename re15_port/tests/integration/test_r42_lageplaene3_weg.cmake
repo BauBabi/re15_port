@@ -17,6 +17,12 @@
 # Halt (1586,-13941).
 # Gegenprobe: auf bce9c91a8 (Plan an der Rueckwand) und aaea5f8c2 startet die Aktion dort kein Ereignis 28 -> c) d) rot.
 #
+# STRANG LAGEPLAENE_NACH2 (Plan auf Augenhoehe LINKS der Tuer, Zone Slot 21 x 1598..2598 z -12010..-11010): beide Wege
+# biegen vor der Tuer nach Norden ab (L0.15 = rot -480, gemessen) und gehen am Tresen entlang (SCA-Zelle 0 @0x01A10 z -10568
+# haelt bei z -11036) bis an die Ostwand. Gemessen 2026-11-18 (Laeufe l3/e2 des Strangs): Leon F360 (1005,-11036) cut=2,
+# Halt (1930,-11036); Elza F390 (1091,-11036) cut=2, Halt (1930,-11036); beide Ereignis 28 und Meldung 31.
+# Gegenprobe: auf 10287b077 (Plan ueber den Aushaengen, Zone z -14800..-13800) und aaea5f8c2 kein Ereignis 28 -> rot.
+#
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_KARTE_TOOL=<probe_r36_schluessel_karte> -DWORKDIR=<dir> -P test_r42_lageplaene3_weg.cmake
 
 foreach(_v RE15_PC_EXE RE15_KARTE_TOOL)
@@ -41,8 +47,8 @@ endfunction()
 
 # name | raum | x | z | blick | cut | skript | ende | kartenargumente ("+"-getrennt)
 set(_faelle
-    "leon|1030|-15000|-14000|0|4|W2,U7.75,W1,A0.1,W3,A0.1,W3,A0.1,W3|760|"
-    "elza|1031|-8200|-22500|1024|0|W2,R0.7,U3.78,R0.35,U4.5,W1,A0.1,W3,A0.1,W3,A0.1,W3|950|elza+flag:3:0xC1+flag:3:0x7D")
+    "leon|1030|-15000|-14000|0|4|W2,U5.2,L0.15,U2.2,R0.15,U2,W1,A0.1,W3,A0.1,W3,A0.1,W3|760|"
+    "elza|1031|-8200|-22500|1024|0|W1,R0.7,U3.78,R0.35,U2.13,L0.15,U2.2,R0.15,U2,W1,A0.1,W3,A0.1,W3,A0.1,W3|950|elza+flag:3:0xC1+flag:3:0x7D")
 
 set(_fehler "")
 foreach(_f ${_faelle})

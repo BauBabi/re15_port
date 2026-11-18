@@ -74,3 +74,21 @@ if(TARGET re15_pc)
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_lageplaene3_weg.cmake)
     set_tests_properties(integration_r42_lageplaene3_weg PROPERTIES TIMEOUT 900)
 endif()
+
+# Strang lageplaene_nach2: Revierplan in 1030/1031 auf AUGENHOEHE links der Ausgangstuer (Mitte y -2658 aus den Kopfbaendern
+# Leon/Elza, s = 1.5, Slot 21). NUTZERWUNSCH 18.11.2026 "Das der Revierplan so weit über den Spieler hängt, das geht so nicht."
+# Belege: include/re15_kartenitems_r36.h (STRANG LAGEPLAENE_NACH2).
+#   unit_r42_lageplaene4_hoehe / _ort / _druck   (tests/unit/test_r42_lageplaene4.c)
+# Gegenprobe: auf 10287b077 (Plan ueber den Aushaengen, y -4150) und auf aaea5f8c2 (Rueckwand) sind alle drei Teile rot.
+add_executable(test_r42_lageplaene4 ${CMAKE_CURRENT_LIST_DIR}/../test_r42_lageplaene4.c)
+target_link_libraries(test_r42_lageplaene4 PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_lageplaene4 PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_lageplaene4 PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r42_lageplaene4 PRIVATE m)
+endif()
+foreach(_teil hoehe ort druck)
+    add_test(NAME unit_r42_lageplaene4_${_teil} COMMAND test_r42_lageplaene4 ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(unit_r42_lageplaene4_${_teil} PROPERTIES TIMEOUT 300)
+endforeach()
