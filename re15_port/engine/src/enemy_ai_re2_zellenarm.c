@@ -96,6 +96,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>             /* sqrt: Streckung des RE2-Arms (nur Zeichen-Lage) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"      /* re15_ai_re2_for_type / re15_re2_rand / re15_re2z_* Shims  */
 #include "re15_enemy_ai.h"       /* re15_ai_set_state_word / re15_player_victim_force / _end   */
@@ -106,6 +107,7 @@
 #include "re15_emd.h"            /* RE15_EMD_MAX_BONES                                          */
 #include "re15_math.h"           /* re15_squareroot0 (SquareRoot0)                              */
 #include "re15_room.h"           /* g_current_room_id / g_room_rdt                               */
+#include "re15_collision.h"      /* re15_collision_constrain_enemy (FUN_8003b0a4, Koerper-Weg)    */
 #include "re15_esp.h"            /* RE1.5-Raumbank-Blut (Stand-in fuer FUN_8001BF10)             */
 #include "re15_audio.h"          /* re15_audio_core_se (Hook-P0 0x8005BA28)                      */
 #include "re15_scd.h"            /* g_re15_pauseflags / RE15_PAUSE_PLAYER (NB4 Blick)              */
@@ -180,6 +182,15 @@ typedef struct {
     int32_t  prot[RE15_EMD_MAX_BONES][9];
     int8_t   logik_clip;
     uint16_t logik_frame;
+    /* Runde 42 Stufe 2 Runde 3: der RE1.5-KOERPER (s. MODELL, ZEICHNEN / KOERPER-WEG). Record-Lage vor dem Anker,
+     * Bilder seit dem Ausloeser, Lage nach B[1] + Wandklemme, eigene Pose (Clip/Bild) fuer die Zeit ohne RE2-Arm. */
+    int32_t  rec_x, rec_y, rec_z;
+    int16_t  rec_yaw;
+    uint8_t  koerper_an;
+    uint16_t koerper_bild;
+    int32_t  kx, kz;
+    uint8_t  kclip;
+    uint16_t kframe;
 } re2arm_t;
 static re2arm_t s_arm[RE15_ACTOR_MAX];
 
@@ -227,41 +238,86 @@ static re2arm_t s_arm[RE15_ACTOR_MAX];
  *                    Clip 1 — naechstliegende RE1.5-Pose, im Bericht gemeldet.
  *   2 -> 0           wird am Arm nie gesetzt
  *
- * WAS DAS ORIGINAL ZEIGT (Runde 2 dieser Stufe, GEMESSEN im echten RE1.5: DuckStation, MZD-Disc, Debug-JUMP 0x121 =
- * ROOM1210, Leon; Lauf + Bilder scratchpad original/s2r2/orig, Live-Savestates je ~0,23 s):
- *   - RAM vor dem Ausloeser: alle zehn Typ-0x1A-Entities auf ihrem Record-x (-25000 West / -14000 Ost, y 0), Wort 0
- *     0x40000001, +0x5 = 0 (B[0]), Clip 0 laeuft — sie werden gezeichnet, stehen aber 3910 (West, Wandflaeche -21090)
- *     hinter der Wand. Im Bild ist JEDES Gitterfenster leer (Video t 10..13 s).
- *   - Nach dem Ausloeser (Aot 6, Spieler bei z -13959): alle zehn springen in B[1] (+0x5 = 1, Clip 2) und stehen danach
- *     bei x -22580 (West, 1490 hinter der Wandflaeche) / -16358 (Ost). Part-Matrizen (Pool *(+0x188), Stride 0xAC,
- *     Translation +0x54): Teil 0 Rumpf (-16358,-1969,-14197), Teile 2/3 = Schultern (-16297,-2516/-2541,+-356 um z).
- *   - Im Bild sind danach NUR DIE BEIDEN ARME zu sehen, die durch die Gitter in den Flur ragen — Rumpf und Kopf in
- *     keinem einzigen Bild (Video t 13,8..28 s, Ausschnitte). Das ist das RE1.5-Aussehen der Gitterhaende.
+ * WAS DAS ORIGINAL ZEIGT (GEMESSEN im echten RE1.5: DuckStation, MZD-Disc, Debug-JUMP 0x121 = ROOM1210, Leon; Lauf +
+ * Bilder scratchpad original/s2r2/orig, Live-Savestates je ~0,23 s; BERICHTIGT in Runde 3 nach dem Pruefbericht Runde 2 R1):
+ *   - Vor dem Ausloeser: alle zehn Typ-0x1A-Entities auf ihrem Record-x (-25000 West / -14000 Ost, y 0), Wort 0
+ *     0x40000001, +0x5 = 0 (B[0]), Clip 0 — sie werden gezeichnet, stehen aber 3910 (West, Wandflaeche -21090) hinter
+ *     der Wand. Im Bild ist JEDES Gitterfenster leer (Video lauf3/original_0.mp4 t 13,0 s).
+ *   - Ausloeser (Aot 6, Spieler bei z -13959): A[0] @0x8010c614 sieht +0x9 & 0x1F == 1 und setzt +0x5 = 1; B[1]
+ *     (Tabelle @0x80120984[1] = 0x8010c714) laeuft im selben Bild an und schiebt den Zombie nach vorn (KOERPER-WEG unten).
+ *     Danach stehen sie bei x -22580 (West) / -16358 (Ost) und wiegen sich in B[2]/B[3].
+ *   - Im Bild stehen danach ZWEI ZOMBIE-GESTALTEN HINTER JEDEM GITTER (dunkelrote Haare, helles Hemd, Blut; Video t 15,4
+ *     bis 30 s, Messbilder pruef_s2_r2/fr/orig_kopf3.png, vergleich_fenster.png); ihre Arme ragen durch die Staebe.
+ *     ⛔ Die Aussage aus Runde 2 "Rumpf und Kopf in keinem einzigen Bild" war FALSCH (Pruefbericht Runde 2 R1).
+ *     Speicher passt: s4/s5 auf x -22580, Rumpf T0 y -1969, Kopf T1 (-22672,-2645) (lauf4/p030.sav, teile.py) — nur
+ *     ~430 hinter der Zellenseite der Wand (Wand x -22150..-21090).
+ *   - Die RE1.5-Arme sind kurz: Handgelenk-Ring lokal y ~1215, Fingerspitzen y bis 1543 (EM1A Mesh 2/3). Der
+ *     RE1.5-Arm greift im Original nie (kein Griff im Overlay, Runde 1). Von der Original-Stelle aus reicht er nicht bis
+ *     zur RE2-Hand: im Riegel unit_r42_arme_re15_modell muss er dafuer um Faktor 1,00..2,38 gestreckt werden (K5).
  *
- * ZEICHNEN (PORT-WAHL, aus der Messung oben): Gezeichnet werden die beiden EM1A-Arme (Teile 2/3) mit ihrer Textur und
- * ihren Clips; Rumpf und Kopf (Teile 0/1) nicht (re15_re2arm_part_hide_mask = 0x0003) — im Original verdeckt sie die
- * Wand, im Port stuende der Rumpf sonst dort, wo das RE2-Verhalten die Arme hinstellt (Pruefbericht Runde 1 R1:
- * Hemd unter der Fensterbank, Kopf vor den Gitterstaeben). Die Lage des gezeichneten Modells: das EM1A-Handgelenk des
- * Arms (Arm A -> Teil 2, Arm B -> Teil 3) liegt in jedem Bild genau auf der RE2-Hand (re15_re2arm_zeichen_versatz,
- * Aufruf im Zeichner platform/pc/main.c) — die RE1.5-Arme greifen also genau dorthin, wo das RE2-Verhalten greift.
- * Handgelenk = der Vertex-Ring, an dem die Hand beginnt: Quad-Vertices 4..7 von Mesh 2/3 (EM1A-Datei @0x12DC..0x12FB
- * bzw. @0x13AC..0x13CB, lokal (225,1215,+-86) (225,1215,-+56) (126,1214,+-88) (124,1215,-+42)).
- * Sichtbar/verborgen bleibt das RE2-Verhalten (0x80101164, s. arm_show): vor dem Weckruf und nach dem Rueckzug ist
- * nichts zu sehen — genau wie im Original vor dem Ausloeser (Fenster leer, s.o.).
+ * KOERPER-WEG B[1] (STAGE1.BIN, Disc == Mod byte-gleich; selbst disassembliert, re15_disasm.py dis 0x8010c714):
+ *   Schritt = FUN_800245d8(yaw_ofs) (x += cos(yaw+ofs) * +0x8C, z -= sin * +0x8C; Katalog FUN_800245d8), danach im Root
+ *   die Wandklemme FUN_8003b0a4(+0x34, *(+0x78)+6, 4) @0x8010c320 (a2 = 4 @0x8010c318, Radius `lhu a1,6(v0)` @0x8010c31c
+ *   = 300: *(+0x78) = *(0x80120934) = 0x8012091c @0x8010c3bc, Halbwort @0x80120922 = `2c 01`).
+ *     Bild 0..2  : Clip 0 (`sb zero,148` @0x8010c778), +0x8C = 0x320 = 800 @0x8010c7b4, +0x9C = 3 @0x8010c7a4,
+ *                  vorwaerts (a0 = 0 @0x8010c914)                                                  -> +800 je Bild
+ *     Bild 3     : +0x9C == 0 -> Clip 2 (`sb a0,148` a0 = 2 @0x8010c818), +0x8C = 0x14 @0x8010c7f4,
+ *                  +0x9C = 0x1E @0x8010c804, vorwaerts (`j 0x8010c8f8` @0x8010c828)                -> +20
+ *     Bild 4..33 : +0x9C 30..1, rueckwaerts (a0 = 0x800 im Delay-Slot @0x8010c8b4)               -> -20 je Bild
+ *     Bild 34    : +0x9C == 0 -> Clip 0 (@0x8010c880), +0x8C = 0xC8 @0x8010c85c, +0x9C = 3 @0x8010c86c,
+ *                  rueckwaerts (@0x8010c8b4)                                                       -> -200
+ *     Bild 35..38: vorwaerts (@0x8010c8f8/@0x8010c914), in Bild 38 +0x5 = 2/3 per rng (@0x8010c8e0-e4) -> +200 je Bild
+ *   Summe +2420: West -25000 + 2420 = -22580 = gemessen. Ost -14000 - 2420 = -16420; gemessen -16358 — die Wandklemme
+ *   (Radius 300) schiebt den Ost-Zombie zurueck (Port: re15_collision_constrain_enemy, Wert im Riegel K2).
+ *   Bildzaehler: +0x95 wird nur in Sub 0 genullt (@0x8010c788), anim_set (0x8001f314, a3 = 0x200) zaehlt +1 je Aufruf
+ *   (RE_15_Quellcode_V2/FUN_8001f3bc.c Z. 89-93); gemessen Bild 24 = af 25 (lauf1/proben.txt t 48,62 s).
+ *
+ * ZEICHNEN (Runde 3; PORT-WAHL, wo nicht anders belegt):
+ *   - Der KOERPER (Rumpf, Kopf und der zweite Arm) steht dort, wo ihn das Original zeigt: Record-Lage (vor dem
+ *     Anker gemerkt) + KOERPER-WEG B[1] ab dem Ausloeser (+0x9 & 0x1F == 1 — derselbe, der auch das RE2-Gehirn weckt),
+ *     Blick = Record-Blick, Hoehe = Record-y (bodenbezogenes EM1A). Vor dem Ausloeser wird nichts gezeichnet (PORT-WAHL:
+ *     das Original zeichnet ihn 3910 hinter der Wand, im Bild ist das Fenster leer).
+ *   - Pose des Koerpers: solange der RE2-Arm sichtbar ist, die Pose des Zeichners (EM1A-Clip aus der CLIP-ZUORDNUNG,
+ *     RE2-Takt); sonst die eigene RE1.5-Pose — B[1]-Clips wie oben, danach Clip 0 im Kreis (PORT-WAHL: B[2]/B[3]
+ *     waehlen Clip 0/1 per rng @0x8010c9fc und schieben den Zombie bis ~800 zurueck und wieder vor; das ist nicht
+ *     uebernommen, der Koerper bleibt an der Ruhestelle).
+ *   - Der RE2-ARM (Arm A -> Teil 2, Arm B -> Teil 3), solange RE2 ihn zeigt (0x80101164): er sitzt am Schultergelenk des
+ *     Koerpers (Teil-Lage aus der Pose, Eltern 0) und zeigt mit dem Handgelenk-Ring auf die RE2-Hand (Pin-Quelle). Reicht
+ *     der RE1.5-Arm nicht so weit, wird er entlang seiner Laengsachse GESTRECKT, bis das Handgelenk auf der RE2-Hand
+ *     liegt (Faktor >= 1, nie gestaucht). PORT-WAHL wegen des Zielkonflikts: Die RE2-Reichweite (Hand bis x ~ -20614,
+ *     Leon 1251 vom RE2-Ursprung) ist mit der RE1.5-Armlaenge vom Original-Koerper aus nicht erreichbar (s.o.); ein
+ *     losgeloester Arm (Runde 2: Schulter-Ende frei im Fenster) oder ein Koerper in der Wand (Runde 1: Hemd unter der
+ *     Fensterbank) widersprechen dem RE1.5-Aussehen staerker. Offen beim Nutzer (Bericht Runde 3).
+ *   - Ist der RE2-Arm verborgen (vor dem Weckruf, nach dem Rueckzug), haengt er normal am Koerper.
+ *   - Kein Schatten: der RE1.5-Typ-0x1A-Code ruft den Schatten 0x8001b064 nie (kein `jal 0x8001b064` in
+ *     0x8010c1ec..0x8010d7cc, re15_disasm.py), anders als der RE2-Arm (`jal 0x80016480` @0x801003A0).
  *
  * HAND (Pin-Quelle @0x80100C18-38, Tore @0x801007C4 / @0x801009BC) und damit die REICHWEITE bleiben RE2: mit geladener
  * EM2D-Logik-Bank rechnen die Parts (0x80029614) auf EM2D, Clip/Bild = RE2-Takt, Hand = EM2D-Handknochen 3 (Arm A) /
  * 10 (Arm B) wie bis Runde 41 (Tabelle @0x80101414, [var*7 + 2] @0x801007DC / @0x801009D4 / @0x80100BEC). Ohne
- * RE2-Archiv (keine Logik-Bank) misst das Gehirn am EM1A-Handgelenk.
- *
- * HOEHE: keine Wurzel-Hebung mehr — die Lage des gezeichneten Modells folgt der RE2-Hand in allen drei Achsen. */
+ * RE2-Archiv (keine Logik-Bank) misst das Gehirn am EM1A-Handgelenk des Arms am RE2-Anker; gezeichnet wird auch dann
+ * der Koerper an der RE1.5-Stelle und der Arm zur Gehirn-Hand. */
 static const re15_emd_animation_t *s_logik_anim = NULL;   /* EM2D Paar 1 (RE2-Takt) */
 static const re15_enemy_bank_t    *s_logik_bank = NULL;   /* EM2D ganz (Parts, Hand) — Runde 2 */
 static const uint8_t k_em1a_clip[6] = { 0, 1, 0, 2, 3, 1 };
 #define RE2ARM_EM1A_KNOCHEN   4      /* EM1A: 4 Knochen (em_dump, s.o.); EM2D: 15 */
 #define RE2ARM_EM1A_RING_V0   4      /* Handgelenk-Ring = Quad-Vertices 4..7 von Mesh 2/3 */
 #define RE2ARM_EM1A_RING_N    4
-#define RE2ARM_EM1A_VERBORGEN 0x0003u /* Teile 0 (Rumpf) + 1 (Kopf) nicht zeichnen (s. ZEICHNEN) */
+/* KOERPER-WEG B[1] (s. MODELL): Schritt je Bild ab dem Ausloeser, + = vorwaerts (yaw_ofs 0), - = rueckwaerts (0x800). */
+#define RE2ARM_B1_BILDER      39
+static const int16_t k_b1_schritt[RE2ARM_B1_BILDER] = {
+    800, 800, 800,                    /* 0x320 @0x8010c7b4, +0x9C = 3 @0x8010c7a4, a0 = 0 @0x8010c914           */
+    20,                               /* 0x14 @0x8010c7f4, `j 0x8010c8f8` @0x8010c828                            */
+    -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, -20,   /* +0x9C = 0x1E @0x8010c804,   */
+    -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, -20, -20,   /* a0 = 0x800 @0x8010c8b4      */
+    -200,                             /* 0xC8 @0x8010c85c, rueckwaerts @0x8010c8b4                                 */
+    200, 200, 200, 200                /* +0x9C = 3 @0x8010c86c, vorwaerts @0x8010c8f8 / @0x8010c914              */
+};
+/* B[1]-Clip je Bild: 0 bis Bild 2 (@0x8010c778), 2 ab Bild 3 (@0x8010c818), 0 ab Bild 34 (@0x8010c880). */
+static int b1_clip(int bild) { return (bild >= 3 && bild < 34) ? 2 : 0; }
+#define RE2ARM_KOERPER_RADIUS 300    /* *(0x80120934) = 0x8012091c (@0x8010c3bc), Halbwort +6 @0x80120922 `2c 01`,
+                                      * `lhu a1,6(v0)` @0x8010c31c -> FUN_8003b0a4 @0x8010c320 */
+#define RE2ARM_KOERPER_MASKE  4u     /* `ori a2,zero,0x4` @0x8010c318 */
 
 /* ---- ROOM1210-ANKER (Port-Bruecke, am Original-Hintergrund GEMESSEN) ---------------------- */
 /* SCA-Zellen ROOM1210 (Band 0): [6] x -22150..-21090 = Westwand, [11] x -17696..-16676 = Ostwand
@@ -657,9 +713,9 @@ void re15_re2arm_home(int slot, int16_t *yaw, int32_t *x, int32_t *z)
 uint16_t re15_re2arm_part_hide_mask(const re15_actor_t *e)
 {
     if (!re15_re2arm_owns(e)) return 0;
-    /* EM1A (Runde 2): beide Arme (Teile 2/3) zeichnen, Rumpf und Kopf (Teile 0/1) nicht — im Original sind sie in
-     * keinem Bild zu sehen (Messung im Block MODELL, WAS DAS ORIGINAL ZEIGT / ZEICHNEN). */
-    if (re15_re2arm_modell_re15(e)) return RE2ARM_EM1A_VERBORGEN;
+    /* EM1A (Runde 3): alle vier Teile — im Original stehen die Zombies sichtbar hinter dem Gitter (Block MODELL, WAS DAS
+     * ORIGINAL ZEIGT; die Maske 0x0003 aus Runde 2 beruhte auf einer falschen Aussage). Lage/Pose: re15_re2arm_zeichen_teil. */
+    if (re15_re2arm_modell_re15(e)) return 0;
     /* Die sieben Bones des ANDEREN Arms: word0 = 0 (@0x80100240 fuer Arm B inaktiv -> 1..7 weg,
      * @0x801002F8 fuer Arm A inaktiv -> 8..14 weg). */
     return (e->re2z_f10e & 1u) ? 0x00FEu : 0x7F00u;
@@ -806,23 +862,138 @@ int re15_re2arm_hand_parts(int slot, int32_t gemischt[3], int32_t rein[3])
     }
     return s_arm[slot].pvalid;
 }
-/* ZEICHEN-LAGE (Runde 2, s. ZEICHNEN): Versatz, um den der Zeichner das EM1A verschiebt, damit das Handgelenk des
- * gezeichneten Arms (Teil em1a_arm, Pose `poses` = genau die Pose, die der Zeichner rechnet) auf der RE2-Hand liegt
- * (arm_hand_pose: EM2D-Parts des letzten Advance = Pin-Quelle @0x80100C18-38). 1 = Versatz gilt, 0 = nicht (d = 0). */
-int re15_re2arm_zeichen_versatz(const re15_actor_t *e, const re15_skel_pose_t *poses, int n, int32_t d[3])
+/* ---- KOERPER + ZEICHEN-LAGE (Runde 42 Stufe 2 Runde 3, Belege im Block MODELL: KOERPER-WEG / ZEICHNEN) ---------------- */
+/* Ein Bild des KOERPER-WEGS B[1] bzw. danach die Ruhe-Pose: Clip/Bild wie anim_set (+1 je Aufruf, Wrap an der Clip-Laenge),
+ * dann der Schritt FUN_800245d8 und die Wandklemme FUN_8003b0a4 (Radius 300, Maske 4) wie der Root @0x8010c320. */
+static void koerper_tick(re15_actor_t *e, re2arm_t *a)
 {
-    d[0] = d[1] = d[2] = 0;
-    if (!poses || !re15_re2arm_owns(e) || !re15_re2arm_modell_re15(e)) return 0;
-    if (!logik_em2d(e)) {      /* ohne RE2-Archiv: EM1A bodenbezogen auf Record-y 0 (@0x1D90 ff.) statt auf dem Anker */
-        d[1] = 0 - RE2ARM_1210_Y;
-        return 1;
+    if (!re15_re2arm_modell_re15(e)) return;
+    if (!a->koerper_an) {                                 /* Ausloeser: A[0] @0x8010c614 -> +0x5 = 1, B[1] im selben Bild */
+        a->koerper_an = 1; a->koerper_bild = 0;
+        a->kx = a->rec_x; a->kz = a->rec_z;
+        a->kclip = 0; a->kframe = 0;                      /* `sb zero,148` @0x8010c778, `sb zero,149` @0x8010c788 */
     }
-    const int slot = arm_slot(e), k = em1a_arm(e);
-    int32_t c[3], w[3], h[3];
-    if (k >= n || !s_arm[slot].pvalid || !em1a_ring(re15_enemy_find(e->type), k, c)) return 0;
-    em1a_ring_welt(e, c, poses[k].rot, poses[k].trans, w);
+    const int bild = (int)a->koerper_bild;
+    const int clip = (bild < RE2ARM_B1_BILDER) ? b1_clip(bild) : 0;   /* danach Clip 0 im Kreis (PORT-WAHL, s. ZEICHNEN) */
+    a->kclip = (uint8_t)clip;                             /* Clipwechsel ohne +0x95-Reset (@0x8010c7ec-818 / @0x8010c874-880) */
+    {   const int l = em1a_len(e, clip);
+        const int f = (int)a->kframe + 1;                 /* anim_set +1 (FUN_8001f3bc Z. 89-93) */
+        a->kframe = (uint16_t)((l > 0 && f >= l) ? 0 : f);
+    }
+    if (bild < RE2ARM_B1_BILDER) {
+        const int st = k_b1_schritt[bild];
+        const int spd = st < 0 ? -st : st;
+        const int yaw = ((int)a->rec_yaw + (st < 0 ? 0x800 : 0)) & 0xfff;   /* a0 = 0 / 0x800 */
+        int32_t nx = a->kx + (int32_t)(((int32_t)re15_cos_q12(yaw) * spd) >> 12);
+        int32_t nz = a->kz - (int32_t)(((int32_t)re15_sin_q12(yaw) * spd) >> 12);
+        if (g_room_rdt_ok)
+            re15_collision_constrain_enemy(&g_room_rdt, a->kx, a->kz, &nx, &nz, RE2ARM_KOERPER_RADIUS, a->rec_y,
+                                           RE2ARM_KOERPER_MASKE);
+        a->kx = nx; a->kz = nz;
+        a->koerper_bild = (uint16_t)(bild + 1);
+    }
+}
+int re15_re2arm_koerper_lage(const re15_actor_t *e, int32_t p[3])
+{
+    if (!e || !re15_re2arm_owns(e) || !re15_re2arm_modell_re15(e)) return 0;
+    const re2arm_t *a = &s_arm[arm_slot(e)];
+    if (!a->koerper_an) return 0;
+    if (p) { p[0] = a->kx; p[1] = a->rec_y; p[2] = a->kz; }
+    return 1;
+}
+int re15_re2arm_koerper_info(int slot, int *bild, int *clip, int *frame, int32_t rec[3])
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
+    const re2arm_t *a = &s_arm[slot];
+    if (bild)  *bild  = a->koerper_an ? (int)a->koerper_bild : -1;
+    if (clip)  *clip  = (int)a->kclip;
+    if (frame) *frame = (int)a->kframe;
+    if (rec)   { rec[0] = a->rec_x; rec[1] = a->rec_y; rec[2] = a->rec_z; }
+    return a->koerper_an;
+}
+/* Eigene RE1.5-Pose des Koerpers (reine Keyframe-Pose von kclip/kframe), 0 = nicht berechenbar. */
+static int koerper_pose(const re15_actor_t *e, const re2arm_t *a, re15_skel_pose_t *out)
+{
+    const re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || a->kclip >= b->anim.clip_count) return 0;
+    const int fc = b->anim.clips[a->kclip].frame_count;
+    if (fc <= 0) return 0;
+    const int kf = (int)(re15_emd_get_frame_entry(&b->anim, a->kclip, (int)a->kframe % fc) & 0xfffu);
+    void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    const int rv = re15_skel_compute_pose(&b->skel, kf, out);
+    g_anim_pose_actor = save;
+    return rv == 0;
+}
+/* Welt-Lage eines EM1A-Teils (s. ZEICHNEN). `poses`/`n` = die Pose des Zeichners (EM1A-Clip aus dem RE2-Takt). Rueckgabe
+ * 1 = rot/trans (Weltraum, wie im Zeichner nyaw * Pose + Lage) gesetzt; 0 = nicht dieser Weg (Zeichner rechnet selbst);
+ * -1 = Teil nicht zeichnen (Koerper noch nicht da). `streck` (darf NULL sein) = Streckfaktor Q12 des RE2-Arms, sonst 4096. */
+int re15_re2arm_zeichen_teil(const re15_actor_t *e, int teil, const re15_skel_pose_t *poses, int n,
+                             int32_t rot[9], int32_t trans[3], int32_t *streck)
+{
+    if (streck) *streck = 4096;
+    if (!e || !re15_re2arm_owns(e) || !re15_re2arm_modell_re15(e)) return 0;
+    const int slot = arm_slot(e);
+    const re2arm_t *a = &s_arm[slot];
+    if (!a->koerper_an) return -1;
+    static re15_skel_pose_t s_eigen[RE15_EMD_MAX_BONES];
+    const re15_skel_pose_t *P = poses;
+    if (a->hidden || !poses) {                           /* RE2-Arm verborgen: eigene RE1.5-Pose des Koerpers */
+        if (!koerper_pose(e, a, s_eigen)) return -1;
+        P = s_eigen; n = RE2ARM_EM1A_KNOCHEN;
+    }
+    if (teil < 0 || teil >= n || teil >= RE2ARM_EM1A_KNOCHEN) return -1;
+    const int32_t fs = re15_sin_q12((int)a->rec_yaw), fc = re15_cos_q12((int)a->rec_yaw);
+    const int32_t ny[9] = { fc, 0, fs, 0, 0x1000, 0, -fs, 0, fc };   /* wie der Zeichner (platform/pc/main.c nyaw) */
+    for (int r = 0; r < 3; r++) {
+        for (int c = 0; c < 3; c++) {
+            int64_t s = 0;
+            for (int k = 0; k < 3; k++) s += (int64_t)ny[r*3+k] * (int64_t)P[teil].rot[k*3+c];
+            rot[r*3+c] = (int32_t)(s >> 12);
+        }
+        int64_t t = 0;
+        for (int k = 0; k < 3; k++) t += (int64_t)ny[r*3+k] * (int64_t)P[teil].trans[k];
+        trans[r] = (int32_t)(t >> 12);
+    }
+    trans[0] += a->kx; trans[1] += a->rec_y; trans[2] += a->kz;
+    if (a->hidden || teil != em1a_arm(e) || !s_arm[slot].pvalid) return 1;
+    /* RE2-ARM: am Schultergelenk (trans) bleiben, Handgelenk-Ring auf die RE2-Hand drehen, bei Bedarf strecken. */
+    int32_t c[3], h[3];
+    if (!em1a_ring(re15_enemy_find(e->type), teil, c)) return 1;
     arm_hand_pose(&g_actors[slot], slot, h);
-    for (int i = 0; i < 3; i++) d[i] = h[i] - w[i];
+    double u[3], v[3];
+    for (int r = 0; r < 3; r++) {
+        u[r] = (double)(((int64_t)rot[r*3+0] * c[0] + (int64_t)rot[r*3+1] * c[1] + (int64_t)rot[r*3+2] * c[2]) >> 12);
+        v[r] = (double)(h[r] - trans[r]);
+    }
+    const double lu = sqrt(u[0]*u[0] + u[1]*u[1] + u[2]*u[2]), lv = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+    if (lu < 1.0 || lv < 1.0) return 1;
+    double au[3], av[3];
+    for (int r = 0; r < 3; r++) { au[r] = u[r] / lu; av[r] = v[r] / lv; }
+    const double sk = (lv > lu) ? lv / lu : 1.0;          /* nie stauchen */
+    const double kx = au[1]*av[2] - au[2]*av[1], ky = au[2]*av[0] - au[0]*av[2], kz = au[0]*av[1] - au[1]*av[0];
+    const double co = au[0]*av[0] + au[1]*av[1] + au[2]*av[2];
+    double Q[9] = { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
+    if (co > -0.999) {                                    /* Q = I + K + K^2 / (1 + c): dreht au auf av */
+        const double K[9] = { 0, -kz, ky, kz, 0, -kx, -ky, kx, 0 };
+        double K2[9];
+        for (int r = 0; r < 3; r++) for (int cc = 0; cc < 3; cc++) {
+            double s = 0; for (int k = 0; k < 3; k++) s += K[r*3+k] * K[k*3+cc]; K2[r*3+cc] = s;
+        }
+        for (int i = 0; i < 9; i++) Q[i] += K[i] + K2[i] / (1.0 + co);
+    }
+    double S[9];                                          /* S = I + (sk - 1) au au^T: nur entlang der Armachse */
+    for (int r = 0; r < 3; r++) for (int cc = 0; cc < 3; cc++)
+        S[r*3+cc] = (r == cc ? 1.0 : 0.0) + (sk - 1.0) * au[r] * au[cc];
+    double QS[9];
+    for (int r = 0; r < 3; r++) for (int cc = 0; cc < 3; cc++) {
+        double s = 0; for (int k = 0; k < 3; k++) s += Q[r*3+k] * S[k*3+cc]; QS[r*3+cc] = s;
+    }
+    int32_t alt[9]; memcpy(alt, rot, sizeof alt);
+    for (int r = 0; r < 3; r++) for (int cc = 0; cc < 3; cc++) {
+        double s = 0; for (int k = 0; k < 3; k++) s += QS[r*3+k] * (double)alt[k*3+cc];
+        rot[r*3+cc] = (int32_t)(s >= 0 ? s + 0.5 : s - 0.5);
+    }
+    if (streck) *streck = (int32_t)(sk * 4096.0 + 0.5);
     return 1;
 }
 
@@ -876,6 +1047,8 @@ static void arm_init(re15_actor_t *e, int slot)
     {   int k = s_spawn_count++ % 5;
         e->re2z_f10e = (uint16_t)(((k & 1) ? 1u : 0u) | ((k == 0) ? 0x10u : 0u));
     }
+    a->rec_x = e->x; a->rec_y = e->y; a->rec_z = e->z;    /* Runde 3: Record-Lage fuer den RE1.5-Koerper (s. MODELL) */
+    a->rec_yaw = e->rot_y; a->koerper_an = 0;
     arm_anker_1210(e);                                    /* Port-Bruecke: Ursprung an die Wand (s. Kopf) */
     a->home_yaw = e->rot_y; a->home_x = e->x; a->home_z = e->z;   /* +0x218/+0x21C/+0x220 @0x80100188-194 */
     a->bone_base = (uint8_t)((e->re2z_f10e & 1u) ? 8 : 1);        /* +0x1C1 = 0x80101414[var*7] @0x801001D0/@0x80100288 */
@@ -1031,7 +1204,11 @@ static void arm_B4(re15_actor_t *e, re15_actor_t *pl, int slot)
          * Clip 5 Bild 0: Leon stand bis ~170 Einheiten seitlich versetzt (Messung Dossier 4.1). */
         arm_hand_pose(e, slot, h);
         if (getenv("RE15_RE2_TRACE")) {                   /* Messschiene: alter gegen neuer Pin */
-            int32_t alt[3], rein[3]; re15_enemy_bone_world_pos(e, re15_re2arm_hand_bone(e), alt);
+            int32_t alt[3], rein[3];
+            /* Runde 3 (Pruefbericht Runde 2 G5): "Clip 5 Bild 0" auf der Bank, auf der der Hand-Knochen liegt — mit
+             * EM2D-Logik-Bank ist das EM2D (Knochen 3/10), nicht die gezeichnete EM1A-Bank (4 Knochen). */
+            if (!logik_em2d(e) || !logik_knochen_rein(e, 5, 0, re15_re2arm_hand_bone(e), alt))
+                re15_enemy_bone_world_pos(e, re15_re2arm_hand_bone(e), alt);
             (void)re15_re2arm_hand_parts(slot, NULL, rein);
             FILE *o = re15_re2_trace_out() ? re15_re2_trace_out() : stderr;
             fprintf(o, "[re2arm] PIN slot %d yaw %d: Parts gemischt Clip %d Bild %u -> (%d,%d); rein (ohne +0x14E) "
@@ -1205,6 +1382,7 @@ int re15_re2arm_tick(int slot)
     /* SCHLAF: +0x10E & 0x8000 -> kein Tick (@0x80026590-9C). ROOM1210: +0x9 & 0x1F != 1 (sub02
      * Member_set(12,1) @0x1EDA -> `sb a2,9(a0)` @0x800411F8). */
     if ((e->grid_id & 0x1Fu) != 1u) return 1;
+    koerper_tick(e, &s_arm[slot]);                        /* Runde 3: RE1.5-Koerper B[1] ab dem Ausloeser (s. MODELL) */
 
     /* +0x1F0 = SquareRoot0(dx^2 + dz^2) @0x800265A4-E0 (32-bit-Deltas). */
     {   int32_t dx = e->x - pl->x, dz = e->z - pl->z;

@@ -10355,7 +10355,10 @@ re_title:;
                  * Original an part[0]+0x5C, @0x80100378-A4, und ein verborgener Arm hat
                  * keinen sichtbaren Part). Das generische no_draw darunter laesst den
                  * Schatten stehen (Feuer-Emitter 0x26), deshalb der eigene Ausstieg HIER. */
-                if (npc->type == 0x1Au && npc->no_draw && re15_re2arm_owns(npc)) continue;
+                /* Runde 42 Stufe 2 Runde 3: mit dem RE1.5-Modell EM1A steht ab dem Ausloeser der RE1.5-Koerper sichtbar hinter dem
+                 * Gitter, auch wenn der RE2-Arm verborgen ist (enemy_ai_re2_zellenarm.c, Block MODELL / ZEICHNEN). */
+                const int arm_koerper = (npc->type == 0x1Au) ? re15_re2arm_koerper_lage(npc, NULL) : 0;
+                if (npc->type == 0x1Au && npc->no_draw && re15_re2arm_owns(npc) && !arm_koerper) continue;
                 if (re15_gr2_pc_untergetaucht(npc, npc_region_culled)) continue;   /* Runde 41 Spur B (Entscheid B9): Boss-Alligator vor dem Durchbruch untergetaucht wie RE2 (Sce_em_set y=+3000 @RDT 0x25A0) - Mesh UND Schatten aus */
                 /* Runde 41 Spur G2-RE2 (aus r41/gatorfix NB7): Alligator mit dem Kanister - im Tauchgang der Notloesung untergetaucht Mesh aus, beim Ab-/Auftauchen
                  * Schnitt an der Wasserlinie, immer Schnitt an den Bloecken Plattform/Rampe unter dem Deck (gator_re2_pc.c re15_gr2_pc_wl_poly) */
@@ -10370,7 +10373,9 @@ re_title:;
                  * Typ-Code des Overlays (`jal 0x8001b064`, z.B. Feuer-Emitter 0x26 @0x80116740; STAGE2.BIN: 8 Stellen
                  * 0x80100500/0x8010a9a4/0x8010c550/0x80110b50/0x80115870/0x80115e40/0x80116404/0x801169cc). Der
                  * EM024-Code 0x8010ee9c..0x80110a00 (Flut 20B0/20B1) ruft ihn NIE -> kein Schatten fuer Typ 0x24. */
-                if (!npc_region_culled && npc->type != 0x24u) {
+                /* Typ 0x1A mit dem RE1.5-Modell EM1A: kein Schatten — der RE1.5-Typ-0x1A-Code ruft 0x8001b064 nie (kein
+                 * `jal 0x8001b064` in 0x8010c1ec..0x8010d7cc; enemy_ai_re2_zellenarm.c, Block MODELL / ZEICHNEN). */
+                if (!npc_region_culled && npc->type != 0x24u && !(npc->type == 0x1Au && re15_re2arm_modell_re15(npc))) {
                     /* byte-true actor-yaw shadow matrix = RotMatrixY(npc->rot_y) via the trig LUT. */
                     int32_t nyaw[9];
                     re15_camera_yaw_matrix_angle(npc->rot_y, nyaw);
@@ -11020,6 +11025,7 @@ re_title:;
                         npc_pos_w[1] += (int32_t)(((int64_t)nyaw[3] * t0[0] + (int64_t)nyaw[4] * t0[1] + (int64_t)nyaw[5] * t0[2]) >> 12);
                         npc_pos_w[2] += (int32_t)(((int64_t)nyaw[6] * t0[0] + (int64_t)nyaw[7] * t0[1] + (int64_t)nyaw[8] * t0[2]) >> 12);
                     }
+                    (void)re15_re2arm_koerper_lage(npc, npc_pos_w);   /* Runde 42 Stufe 2 Runde 3: Licht am RE1.5-Koerper */
                     re15_light_setup_actor(
                         &g_re15_room_lights.cuts[g_re15_active_cut],
                         npc_pos_w, NULL, &lctx_npc_world);
@@ -11042,7 +11048,7 @@ re_title:;
                  * Die Maske sitzt hier, NACH Schatten und Lichtkontext: im Original haengen
                  * Schatten (@0x80116740) und Kollision (@0x80116368) an eigenen Aufrufen und
                  * bleiben unberuehrt. */
-                if (npc->no_draw) continue;
+                if (npc->no_draw && !arm_koerper) continue;   /* Runde 42 Stufe 2 Runde 3: RE1.5-Koerper s.o. */
 
                 int npc_bones = npc_skel->bone_count;
                 /* Ohne Remap ist Mesh-Index == Bone-Index (emd_common.c:190), also darf die
@@ -11174,10 +11180,6 @@ re_title:;
                  * Dieselbe flache Part-Maske wie beim Gore (kein Kaskaden-Effekt noetig: die
                  * Kinder des inaktiven Arms stehen alle selbst in der Maske). */
                 const uint16_t arm_hide = re15_re2arm_part_hide_mask(npc);
-                /* Runde 42 Stufe 2 Runde 2: das RE1.5-EM1A steht so, dass das Handgelenk des gezeichneten Arms auf der
-                 * RE2-Hand liegt (enemy_ai_re2_zellenarm.c, Block MODELL / ZEICHNEN); 0 fuer alle anderen Typen. */
-                int32_t arm_versatz[3];
-                (void)re15_re2arm_zeichen_versatz(npc, npc_poses, npc_skel->bone_count, arm_versatz);
                 for (int nbi = 0; nbi < npc_zeichen_n; nbi++) {
                     if (arm_hide & (1u << nbi)) continue;
                     /* Bit 0 klar -> dieser Part wird nicht gezeichnet. Das `continue` ist
@@ -11293,10 +11295,17 @@ re_title:;
                         nyawed_trans[r] = (int32_t)(s >> 12);
                     }
                     int32_t nbone_world_trans[3] = {
-                        nyawed_trans[0] + npc->x + arm_versatz[0],
-                        nyawed_trans[1] + npc->y + arm_versatz[1],
-                        nyawed_trans[2] + npc->z + arm_versatz[2],
+                        nyawed_trans[0] + npc->x,
+                        nyawed_trans[1] + npc->y,
+                        nyawed_trans[2] + npc->z,
                     };
+                    /* Runde 42 Stufe 2 Runde 3: Gitterhaende mit dem RE1.5-Modell EM1A — Koerper an der RE1.5-Stelle, der RE2-Arm
+                     * am Schultergelenk zur RE2-Hand (enemy_ai_re2_zellenarm.c, Block MODELL / ZEICHNEN); 0 fuer alle anderen. */
+                    if (npc->type == 0x1Au) {
+                        const int zt = re15_re2arm_zeichen_teil(npc, nbi, npc_poses, npc_skel->bone_count,
+                                                                nyawed_rot, nbone_world_trans, NULL);
+                        if (zt < 0) continue;
+                    }
                     if (nbi >= npc_bones && !npc_remap)   /* Runde 35 Spur J: Mesh ohne Knochen weltfest, FUN_8001e5b0 (re15_affen.h (2c)) */
                         (void)re15_affen_teil_weltfest(npc->type, npc_skel, nbi, nyawed_rot, nbone_world_trans);
                     /* MESS-SCHIENE Teil 2 (RE15_BIRKIN_DBG -> birkin_dbg.log): die

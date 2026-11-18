@@ -30,8 +30,8 @@ void re15_re2arm_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_
 /* Zeichner-Seite: Bitmaske der Parts (Bone-Index), die NICHT gezeichnet werden — die sieben
  * Bones des inaktiven Arms (INIT `sw zero,0(part)` @0x80100240 / @0x801002F8). Der ganze
  * Aktor ist ausserdem ueber e->no_draw verborgen, solange Entity-Bit 2 gesetzt ist
- * (0x80101164 mit a2 = 0). Mit dem RE1.5-Modell EM1A (Runde 42 Stufe 2, Runde 2): 0x0003 = Rumpf und Kopf aus,
- * beide Arme an (im Original sind nur die Arme zu sehen, Messung am Modul). */
+ * (0x80101164 mit a2 = 0). Mit dem RE1.5-Modell EM1A (Runde 42 Stufe 2, Runde 3): 0 = alle vier Teile (im Original
+ * stehen die Zombies sichtbar hinter dem Gitter; die Maske 0x0003 aus Runde 2 beruhte auf einer falschen Aussage). */
 uint16_t re15_re2arm_part_hide_mask(const re15_actor_t *e);
 
 /* Mess-/Test-Auskunft: Heimat (+0x218 Yaw, +0x21C x, +0x220 z) und der globale Griff-
@@ -55,10 +55,15 @@ int  re15_re2arm_modell_re15(const re15_actor_t *e);
 int  re15_re2arm_em1a_clip(int re2_clip);
 /* RE2-Takt des Arms (Logik-Clip/-Bild), Test-/Mess-Auskunft. 1 = Slot gueltig. */
 int  re15_re2arm_takt(int slot, int *re2_clip, int *re2_bild);
-/* Runde 2: Zeichen-Lage des EM1A. Der Zeichner (platform/pc/main.c) addiert `d` auf jede Teil-Lage: danach liegt das
- * Handgelenk des gezeichneten EM1A-Arms (Arm A Teil 2, Arm B Teil 3; Pose `poses` mit `n` Knochen = die gezeichnete) auf
- * der RE2-Hand (Pin-Quelle). 1 = Versatz gilt, 0 = kein EM1A mit EM2D-Logik (d = 0). Belege am Modul, Block MODELL. */
-int  re15_re2arm_zeichen_versatz(const re15_actor_t *e, const re15_skel_pose_t *poses, int n, int32_t d[3]);
+/* Runde 3: Zeichen-Lage des EM1A (Belege am Modul, Block MODELL: WAS DAS ORIGINAL ZEIGT / KOERPER-WEG / ZEICHNEN).
+ * Der Koerper (Rumpf, Kopf, zweiter Arm) steht an der RE1.5-Stelle (Record-Lage + B[1]-Weg ab dem Ausloeser), der RE2-Arm
+ * sitzt an dessen Schultergelenk und zeigt mit dem Handgelenk auf die RE2-Hand (gestreckt, wenn er zu kurz ist).
+ * zeichen_teil: 1 = rot/trans (Welt) gesetzt, 0 = nicht dieser Weg, -1 = Teil nicht zeichnen; streck = Faktor Q12.
+ * koerper_lage: 1 = Koerper wird gezeichnet, p = Welt-Lage. koerper_info: Mess-/Test-Auskunft (bild -1 = vor dem Ausloeser). */
+int  re15_re2arm_zeichen_teil(const re15_actor_t *e, int teil, const re15_skel_pose_t *poses, int n,
+                              int32_t rot[9], int32_t trans[3], int32_t *streck);
+int  re15_re2arm_koerper_lage(const re15_actor_t *e, int32_t p[3]);
+int  re15_re2arm_koerper_info(int slot, int *bild, int *clip, int *frame, int32_t rec[3]);
 /* Runde 35 Spur H, Nachbesserung 3: RE2-Koerper-Push FUN_80034D0C(Arm, Spieler) mit dem Arm-Segment
  * r 800 / Halbhoehe 500 (@0x80100328-64) gegen das Spieler-Segment r 450 / Y -1530 / 1530 — aus dem
  * Spieler-Pass (FUN_800355C4 @0x80026628). 1 = geschoben. */
