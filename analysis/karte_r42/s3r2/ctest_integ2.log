@@ -1,0 +1,31 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r42_karte/re15_port/build
+      Start  638: integration_r36_kartenitems_bild
+      Start  635: integration_r36_karte
+      Start  575: integration_r35_karte_fahrstuhl
+      Start 1094: integration_r39_karten
+ 1/13 Test #1094: integration_r39_karten ..................   Passed  208.64 sec
+      Start 1534: integration_r42_klein_glyphe_karte
+ 2/13 Test  #575: integration_r35_karte_fahrstuhl .........   Passed  247.60 sec
+      Start  574: integration_r35_karte
+ 3/13 Test  #635: integration_r36_karte ...................   Passed  274.39 sec
+      Start  986: integration_r39_elza_karte
+ 4/13 Test #1534: integration_r42_klein_glyphe_karte ......   Passed  111.09 sec
+      Start 1324: integration_r41_keyitems_karte_aktion
+ 5/13 Test  #986: integration_r39_elza_karte ..............   Passed   63.94 sec
+      Start 1338: integration_r41_kleinkram_b_karte
+ 6/13 Test #1324: integration_r41_keyitems_karte_aktion ...   Passed   36.40 sec
+      Start  945: integration_r38_tagebuch_karte
+ 7/13 Test  #574: integration_r35_karte ...................   Passed  109.92 sec
+      Start 1323: integration_r41_keyitems_karte
+ 8/13 Test #1338: integration_r41_kleinkram_b_karte .......   Passed   38.97 sec
+      Start 1635: integration_map_raum_live
+ 9/13 Test #1635: integration_map_raum_live ...............   Passed   14.06 sec
+      Start 1634: integration_map_uebergang
+10/13 Test  #945: integration_r38_tagebuch_karte ..........   Passed   35.32 sec
+11/13 Test #1323: integration_r41_keyitems_karte ..........   Passed   34.44 sec
+12/13 Test #1634: integration_map_uebergang ...............   Passed    1.19 sec
+13/13 Test  #638: integration_r36_kartenitems_bild ........   Passed  675.06 sec
+
+100% tests passed, 0 tests failed out of 13
+
+Total Test time (real) = 675.12 sec

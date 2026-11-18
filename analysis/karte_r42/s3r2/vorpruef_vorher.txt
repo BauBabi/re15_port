@@ -1,0 +1,60 @@
+Lagen 459 {'SCHEMA': 31, 'auf': 386, 'rand': 14, 'NEBEN': 28}
+  1000_t0 lage (650, 3250) yaw 2048 aus 1050 erw (2, 209, 142, 101) SCHEMA 
+  1000_t1 lage (650, 50) yaw 2048 aus 1050 erw (2, 209, 135, 1) SCHEMA 
+  1000_t2 lage (21850, -13400) yaw 2048 aus 1050 erw (2, 209, 92, 0) SCHEMA 
+  1001_t0 lage (650, 3250) yaw 2048 aus 1051 erw (2, 209, 142, 101) SCHEMA 
+  1001_t1 lage (650, 50) yaw 2048 aus 1051 erw (2, 209, 135, 1) SCHEMA 
+  1001_t2 lage (21850, -13400) yaw 2048 aus 1051 erw (2, 209, 92, 0) SCHEMA 
+  1090_t1 lage (-13600, 1300) yaw 3072 aus 10F0 erw (2, 184, 74, 22) NEBEN ['1050/r0', '1051/r0']
+  1091_t1 lage (-13600, 1300) yaw 3072 aus 10F1 erw (2, 184, 74, 22) NEBEN ['1050/r0', '1051/r0']
+  10B0_t0 lage (-21159, 3289) yaw 1024 aus 1260 erw (2, 0, 0, 11) SCHEMA 
+  10B1_t0 lage (16490, -8110) yaw 544 aus 1171 erw (2, 0, 0, 11) SCHEMA 
+  10B1_t1 lage (-21159, 3289) yaw 1024 aus 1261 erw (2, 0, 0, 11) SCHEMA 
+  1160_t0 lage (-300, -17400) yaw 1024 aus 1180 erw (0, 135, 175, 30) SCHEMA 
+  1161_t0 lage (-300, -17400) yaw 1024 aus 1181 erw (0, 135, 175, 30) SCHEMA 
+  1180_t0 lage (-358, -6536) yaw 3072 aus 10A0 erw (0, 145, 152, 25) SCHEMA 
+  1180_t1 lage (-4729, -16018) yaw 3072 aus 1160 erw (0, 135, 172, 25) SCHEMA 
+  1180_t2 lage (-8133, 10226) yaw 3072 aus 1190 erw (0, 127, 114, 25) SCHEMA 
+  1180_t3 lage (4725, 28650) yaw 2048 aus 11B0 erw (0, 156, 73, 25) SCHEMA 
+  1181_t0 lage (-358, -6536) yaw 3072 aus 10A1 erw (0, 145, 152, 25) SCHEMA 
+  1181_t1 lage (-4729, -16018) yaw 3072 aus 1161 erw (0, 135, 172, 25) SCHEMA 
+  1181_t2 lage (-8133, 10226) yaw 3072 aus 1191 erw (0, 127, 114, 25) SCHEMA 
+  1181_t3 lage (4725, 28650) yaw 2048 aus 11B1 erw (0, 156, 73, 25) SCHEMA 
+  1190_t0 lage (3174, -11182) yaw 1024 aus 1180 erw (0, 128, 117, 26) SCHEMA 
+  1191_t0 lage (3174, -11182) yaw 1024 aus 1181 erw (0, 128, 117, 26) SCHEMA 
+  11A0_t1 lage (-50, 24200) yaw 1024 aus 3000 erw (6, 109, 62, 27) NEBEN 
+  11A1_t1 lage (-50, 24200) yaw 1024 aus 3001 erw (6, 109, 62, 27) NEBEN 
+  11B0_t0 lage (-26483, -18094) yaw 0 aus 1180 erw (0, 160, 75, 28) SCHEMA 
+  11B0_t1 lage (-25552, -25331) yaw 3067 aus 11C0 erw (0, 162, 92, 28) SCHEMA 
+  11B0_t2 lage (-195, -21821) yaw 1024 aus 1260 erw (0, 218, 83, 28) SCHEMA 
+  11B1_t0 lage (-26483, -18094) yaw 0 aus 1181 erw (0, 160, 75, 28) SCHEMA 
+  11B1_t1 lage (-25552, -25331) yaw 3067 aus 11C1 erw (0, 162, 92, 28) SCHEMA 
+  11B1_t2 lage (-195, -21821) yaw 1024 aus 1261 erw (0, 218, 83, 28) SCHEMA 
+  11C0_t0 lage (-25279, 17268) yaw 4603 aus 11B0 erw (0, 163, 95, 29) SCHEMA 
+  11C1_t0 lage (-25279, 17268) yaw 4603 aus 11B1 erw (0, 163, 95, 29) SCHEMA 
+  11D0_t0 lage (3900, -22000) yaw 0 aus 1260 erw (0, 144, 186, 111) SCHEMA 
+  11D1_t0 lage (3900, -22000) yaw 0 aus 1261 erw (0, 144, 186, 111) SCHEMA 
+  1240_t0 lage (-26214, -3861) yaw 0 aus 1170 erw (1, 0, 0, -1) NEBEN 
+  1241_t0 lage (-26214, -3861) yaw 0 aus 1031 erw (1, 0, 0, -1) NEBEN 
+  1260_t0 lage (-20250, -6700) yaw 1024 aus 10B0 erw (1, 106, 140, -1) NEBEN ['11F0/r1', '11F1/r1']
+  1260_t1 lage (20900, -8100) yaw 2048 aus 11D0 erw (1, 198, 143, -1) NEBEN 
+  1260_t2 lage (-8750, -6900) yaw 3072 aus 2000 erw (1, 132, 141, -1) NEBEN ['11F0/r1', '11F1/r1']
+  1260_t3 lage (19700, -5000) yaw 1024 aus 2000 erw (1, 195, 137, -1) NEBEN 
+  1261_t0 lage (-20250, -6700) yaw 1024 aus 10B1 erw (1, 106, 140, -1) NEBEN ['11F0/r1', '11F1/r1']
+  1261_t1 lage (20900, -8100) yaw 2048 aus 11D1 erw (1, 198, 143, -1) NEBEN 
+  1261_t2 lage (-8750, -6900) yaw 3072 aus 2001 erw (1, 132, 141, -1) NEBEN ['11F0/r1', '11F1/r1']
+  1261_t3 lage (19700, -5000) yaw 1024 aus 2001 erw (1, 195, 137, -1) NEBEN 
+  4040_t2 lage (-23400, 6950) yaw 2048 aus 4050 erw (8, 113, 121, 69) NEBEN ['4050/r6', '4051/r6']
+  4041_t2 lage (-23400, 6950) yaw 2048 aus 4051 erw (8, 113, 121, 69) NEBEN ['4050/r6', '4051/r6']
+  4050_t3 lage (-9350, -16700) yaw 3072 aus 4050 erw (8, 129, 114, 118) NEBEN 
+  4050_t5 lage (10050, -24750) yaw 0 aus 4050 erw (8, 106, 104, 70) NEBEN ['4040/r4', '4041/r4']
+  4051_t3 lage (-9350, -16700) yaw 3072 aus 4051 erw (8, 129, 114, 118) NEBEN 
+  4051_t5 lage (10050, -24750) yaw 0 aus 4051 erw (8, 106, 104, 70) NEBEN ['4040/r4', '4041/r4']
+  4080_t1 lage (22000, -5450) yaw 0 aus 4090 erw (8, 206, 128, 72) NEBEN ['4090/r9', '4091/r9']
+  4081_t1 lage (22000, -5450) yaw 0 aus 4091 erw (8, 206, 128, 72) NEBEN ['4090/r9', '4091/r9']
+  5090_t2 lage (300, 5000) yaw 0 aus 5090 erw (9, 182, 98, 84) NEBEN 
+  5091_t2 lage (300, 5000) yaw 0 aus 5091 erw (9, 182, 98, 84) NEBEN 
+  6000_t0 lage (5200, 1600) yaw 1024 aus 50B0 erw (12, 215, 76, 95) NEBEN 
+  6001_t0 lage (5200, 1600) yaw 1024 aus 50B1 erw (12, 215, 76, 95) NEBEN 
+  6040_t0 lage (-26214, -3861) yaw 0 aus 5090 erw (12, 214, 78, -1) NEBEN 
+  6041_t0 lage (-26214, -3861) yaw 0 aus 5091 erw (12, 214, 78, -1) NEBEN 
