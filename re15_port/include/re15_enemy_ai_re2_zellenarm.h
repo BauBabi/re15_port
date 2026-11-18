@@ -13,6 +13,7 @@
 
 #include <stdint.h>
 #include "re15_actor.h"
+#include "re15_enemy.h"     /* re15_enemy_bank_t (Runde 42 Stufe 2: Modell-Anmeldung) */
 
 /* 1 = dieser Aktor gehoert dem RE2-Zellenarm-Gehirn (Typ 0x1A UND RE2-Flavor fuer 0x1A). */
 int  re15_re2arm_owns(const re15_actor_t *e);
@@ -38,7 +39,20 @@ int  re15_re2arm_holder_slot(void);      /* -1 = kein Arm haelt den Spieler */
 /* Runde 35 Spur H, Nachbesserung 2: Hand der GEMISCHTEN Parts (+0x14E-Ueberblendung wie 0x80029614,
  * = Pin-Quelle @0x80100C18-38) und die reine Keyframe-Hand derselben Parts-Pose; 1 = Parts gueltig. */
 int  re15_re2arm_hand_parts(int slot, int32_t gemischt[3], int32_t rein[3]);
-int  re15_re2arm_hand_bone(const re15_actor_t *e);   /* 3 (Arm A) oder 10 (Arm B) */
+int  re15_re2arm_hand_bone(const re15_actor_t *e);   /* EM2D: 3 (Arm A) / 10 (Arm B); EM1A: 2 / 3 */
+
+/* Runde 42 Strang "original" Stufe 2 (NUTZERWUNSCH 18.11.2026: "...du solltest EIGENTLICH NUR die funktionalitaet aus
+ * Resident Evil 2 übernehmen, nicht das Modell. Das Modell darf schon noch das aus Resident Evil 1.5 sein"):
+ * Der Lader (platform/pc/main.c) laedt fuer Typ 0x1A das RE1.5-Modell EM1A als Zeichen-Bank und meldet es hier an.
+ * `em2d_logik` ist die RE2-Bank EM2D (CDEMD0.EMS kind 0x2D), nur noch als Takt (Cliplaengen Paar 1) und als Quelle
+ * fuer Leons Opfer-Clips (Paar 3); NULL = ohne RE2-Archiv (Takt dann auf den EM1A-Laengen). Belege am Modul. */
+void re15_re2arm_modell_einrichten(re15_enemy_bank_t *anzeige, const re15_enemy_bank_t *em2d_logik);
+/* 1 = dieser Arm zeichnet das RE1.5-Modell EM1A (4 Knochen), 0 = RE2-EM2D (15 Knochen). */
+int  re15_re2arm_modell_re15(const re15_actor_t *e);
+/* RE2-Clip (0..5, CDEMD0_EM2D_ai1.BIN) -> EM1A-Clip (0..3); -1 ausserhalb. */
+int  re15_re2arm_em1a_clip(int re2_clip);
+/* RE2-Takt des Arms (Logik-Clip/-Bild), Test-/Mess-Auskunft. 1 = Slot gueltig. */
+int  re15_re2arm_takt(int slot, int *re2_clip, int *re2_bild);
 /* Runde 35 Spur H, Nachbesserung 3: RE2-Koerper-Push FUN_80034D0C(Arm, Spieler) mit dem Arm-Segment
  * r 800 / Halbhoehe 500 (@0x80100328-64) gegen das Spieler-Segment r 450 / Y -1530 / 1530 — aus dem
  * Spieler-Pass (FUN_800355C4 @0x80026628). 1 = geschoben. */

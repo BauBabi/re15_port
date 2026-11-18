@@ -1299,7 +1299,8 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
         fprintf(stderr, "[enemy] RE2 EM0%02X nicht ladbar -> RE1.5-Modell\n", type);
     }
 
-    /* ROOM1210-GITTERHAENDE IM RE2-FLAVOR (Runde 16 / Phase 2, arme-1210-re2.md 4.2): das
+    /* BIS RUNDE 41 (abgeloest durch den naechsten Block): ROOM1210-GITTERHAENDE IM RE2-FLAVOR (Runde 16 /
+     * Phase 2, arme-1210-re2.md 4.2): das
      * RE2-Modell EM2D (CDEMD0.EMS kind 0x2D: TOC @0x8009ADF4, Sektoren 0x9B0/0x9B3 KI,
      * 0x9B6 TIM 128x256, 0x9C7 EMD 0x6020 B; 15 Bones = 2 Arme x 7, Paar 1 = 6 Clips,
      * Paar 3 = 2 Opfer-Clips fuer Leon) REIN, ohne Hybrid — wie Birkin EM36 oben. Die
@@ -1309,20 +1310,35 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
      * fuehrt Leon ohnehin im Victim-Modus 4 direkt (enemy_ai_re2_zellenarm.c arm_hook).
      * Typ 0x1A kommt game-weit nur in ROOM1210/1211 vor (RDT-Zensus, enemy_ai_common.c),
      * das Tor haengt deshalb allein am Flavor. Ohne RE2-Archiv: RE1.5-EM01A wie bisher. */
+    /* RUNDE 42 STRANG "original" STUFE 2 (NUTZERWUNSCH 18.11.2026: "...du solltest EIGENTLICH NUR die
+     * funktionalitaet aus Resident Evil 2 uebernehmen, nicht das Modell. Das Modell darf schon noch das aus
+     * Resident Evil 1.5 sein"): EM2D wird nur noch als LOGIK-Bank geladen (RE2-Takt = Cliplaengen Paar 1, Leons
+     * Opfer-Clips = Paar 3) — in eine eigene Bank ausserhalb der Registry, ohne TIM-Upload. Gezeichnet wird das
+     * RE1.5-Modell EM1A ueber den normalen RE1.5-Weg darunter (TOC @0x80072f38 / @0x80073178, Eintrag 0x1A);
+     * am Ende meldet re15_re2arm_modell_einrichten beide Banken beim Gehirn an. Belege: enemy_ai_re2_zellenarm.c
+     * Block MODELL. */
+    static re15_enemy_bank_t s_arm_em2d_logik;         /* gross (Frames-Tabellen) -> statisch */
+    int arm_logik_ok = 0;
     if (type == 0x1Au && allow_re2 && re15_ai_re2_for_type(0x1Au)) {
-        if (pc_enemy_load_re2_kind(type, 0x2D, eb)) {
+        size_t ems_sz = 0;
+        const uint8_t *ems = pc_re2_cdemd(&ems_sz);
+        re15_tim_t tim_logik = {0};
+        memset(&s_arm_em2d_logik, 0, sizeof s_arm_em2d_logik);
+        if (ems && re2_ems_load_bank(ems, ems_sz, 0x2D, &s_arm_em2d_logik, &tim_logik) == 0) {
+            s_arm_em2d_logik.buf = NULL;               /* aliast das residente EMS */
+            arm_logik_ok = 1;
             /* ENEMSE-Bank 42, zweite Haelfte (Paar-Zeile {0x05,0x11} @0x800A7400 = Datei
              * 0x97C54; em-Id 0x11 aus den ROOM2050-Records +7 -> +0x1FA @0x80057274-80).
              * Der Hook ruft bank_fn vor jedem se_fn (Mehrbank-Cache in audio_pc.c kommt
              * von anderer Hand). */
             re15_re2arm_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
-            fprintf(stderr, "[enemy] ROOM1210-Arme: RE2 EM2D (kind 0x2D) geladen, %d Bones, "
-                            "%d Clips, Opferbank %d Clips\n",
-                    eb->skel.bone_count, eb->anim.clip_count,
-                    eb->victim_ok ? eb->anim_victim.clip_count : 0);
-            return;                                    /* REIN, kein Hybrid */
+            fprintf(stderr, "[enemy] ROOM1210-Arme: RE2 EM2D (kind 0x2D) als Logik-Bank (Takt %d Clips, "
+                            "Opferbank %d Clips), gezeichnet wird RE1.5-EM1A\n",
+                    s_arm_em2d_logik.anim.clip_count,
+                    s_arm_em2d_logik.victim_ok ? s_arm_em2d_logik.anim_victim.clip_count : 0);
+        } else {
+            fprintf(stderr, "[enemy] RE2 EM2D nicht ladbar -> Takt auf den EM1A-Laengen, ohne RE2-Opferbank\n");
         }
-        fprintf(stderr, "[enemy] RE2 EM2D nicht ladbar -> RE1.5-EM01A fuer die Gitterhaende\n");
     }
 
     /* RE2-Flavor-Zweig (WELLE A) — VOR dem RE1.5-Zweig, nur wenn ein RE2-Brain den Typ
@@ -1488,6 +1504,13 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
     eb->ok = 1;
     fprintf(stderr, "[enemy] EM%02X loaded: %d meshes, %d bones, %d clips -> slot %d\n",
             type, eb->md1.mesh_count, eb->skel.bone_count, eb->anim.clip_count, eb->pc_tex_slot);
+    /* Runde 42 Stufe 2: Gitterhaende im RE2-Flavor = EM1A zeichnen, RE2-Gehirn behalten (Block oben). */
+    if (type == 0x1Au && allow_re2 && re15_ai_re2_for_type(0x1Au)) {
+        re15_re2arm_modell_einrichten(eb, arm_logik_ok ? &s_arm_em2d_logik : NULL);
+        fprintf(stderr, "[enemy] ROOM1210-Arme: RE1.5-EM1A gezeichnet (%d Knochen, %d Clips), Opferbank %d Clips, "
+                        "RE2-Takt %s\n", eb->skel.bone_count, eb->anim.clip_count,
+                eb->victim_ok ? eb->anim_victim.clip_count : 0, arm_logik_ok ? "EM2D" : "EM1A");
+    }
 }
 
 /* Default: der RE2-Zweig darf greifen (unveraendertes Verhalten fuer alle Typen ausser 0x26,
