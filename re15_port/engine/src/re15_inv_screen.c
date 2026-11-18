@@ -2887,10 +2887,49 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                             int clut_grund = (fs == RE15_MAP_RECT_CURRENT) ? RE15_INV_CLUT_MAP_AKTUELL
                                            : (fs == RE15_MAP_RECT_VISITED) ? RE15_INV_CLUT_MAP_BESUCHT
                                            : RE15_INV_CLUT_MAP_UNBESUCHT;
-                            if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i, clut_grund,
-                                    rx, ry, rw, rh, ru, rv, 128, 128, 128))
-                            sprt(&e, RE15_INV_PAGE_MAP4, clut_grund,
-                                 rx, ry, rw, rh, ru, rv, 128, 128, 128, 1);
+                            /* r42/karte Stufe 3 Runde 3 (Pruefbericht pruef_s3_r2 ROT 1): der Grund spart die
+                             * Flaechen der Teile AUS, die ueber ihm gemalt werden. Die Aktuell-Zeile 502 traegt
+                             * 680808 MIT STP (RE2 `addiu s5,s5,1` @0x8006E648, s.o.) - ein halbtransparenter
+                             * roter Zugteil auf gruenem Grund wurde braun (56,32,24) statt (48,8,48) wie auf
+                             * aaea5f8c2 und wie die Teile von ROOM1110. Ohne Ueberlappung liegt jeder Teil wie
+                             * vorher direkt auf dem Blatt; keine neue Zahl, nur die Teil-Ausschnitte. */
+                            int sx0[32], sy0[32], sx1[32], sy1[32], ns = 1, k3;
+                            sx0[0] = rx; sy0[0] = ry; sx1[0] = rx + rw; sy1[0] = ry + rh;
+                            for (k3 = 0; k3 < nteil; k3++) {
+                                int tx, ty, tw, th, ts, a, nn;
+                                if (!re15_map_teil_get((unsigned)st->map_page, (unsigned)i, k3,
+                                                       &tx, &ty, &tw, &th, &ts)) continue;
+                                if (ts <= fs) continue;                         /* Grund malt ihn */
+                                if (ts == RE15_MAP_RECT_UNVISITED &&
+                                    !re15_map_owned_page((unsigned)st->map_page)) continue;   /* nicht gemalt */
+                                nn = ns;
+                                for (a = 0; a < ns; a++) {
+                                    int ax0 = sx0[a], ay0 = sy0[a], ax1 = sx1[a], ay1 = sy1[a];
+                                    int bx0 = tx > ax0 ? tx : ax0, by0 = ty > ay0 ? ty : ay0;
+                                    int bx1 = tx + tw < ax1 ? tx + tw : ax1, by1 = ty + th < ay1 ? ty + th : ay1;
+                                    if (bx0 >= bx1 || by0 >= by1) continue;     /* kein Schnitt */
+                                    if (nn + 4 > 32) break;                     /* (bei 5 Teilen nie erreicht, [L]) */
+                                    sx0[a] = sx1[a] = 0;                        /* Stueck a entfaellt ... */
+                                    if (ay0 < by0) { sx0[nn] = ax0; sy0[nn] = ay0; sx1[nn] = ax1; sy1[nn] = by0; nn++; }
+                                    if (by1 < ay1) { sx0[nn] = ax0; sy0[nn] = by1; sx1[nn] = ax1; sy1[nn] = ay1; nn++; }
+                                    if (ax0 < bx0) { sx0[nn] = ax0; sy0[nn] = by0; sx1[nn] = bx0; sy1[nn] = by1; nn++; }
+                                    if (bx1 < ax1) { sx0[nn] = bx1; sy0[nn] = by0; sx1[nn] = ax1; sy1[nn] = by1; nn++; }
+                                }
+                                ns = 0;                                         /* ... und zerfaellt in <= 4 */
+                                for (a = 0; a < nn; a++)                        /* entfallene Stuecke streichen */
+                                    if (sx1[a] > sx0[a]) { sx0[ns] = sx0[a]; sy0[ns] = sy0[a];
+                                                           sx1[ns] = sx1[a]; sy1[ns] = sy1[a]; ns++; }
+                            }
+                            for (k3 = 0; k3 < ns; k3++) {
+                                int gw = sx1[k3] - sx0[k3], gh = sy1[k3] - sy0[k3];
+                                if (gw <= 0 || gh <= 0) continue;
+                                if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i, clut_grund,
+                                        sx0[k3], sy0[k3], gw, gh, ru + (sx0[k3] - rx), rv + (sy0[k3] - ry),
+                                        128, 128, 128))
+                                sprt(&e, RE15_INV_PAGE_MAP4, clut_grund,
+                                     sx0[k3], sy0[k3], gw, gh, ru + (sx0[k3] - rx), rv + (sy0[k3] - ry),
+                                     128, 128, 128, 1);
+                            }
                         }
                     }
                 }

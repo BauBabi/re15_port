@@ -23,7 +23,8 @@
  *      Ausnahme sind nur Rechtecke, die ein Raum MIT Teilbereichen selbst besitzt (ROOM1110,
  *      Zug 5090): dort ist bewusst nur der Teil rot, in dem die Figur steht (Nutzer 2026-09-07,
  *      fehler/howto4.png).
- * Nicht hier: 5090/5091 (U-12 in r42/rest; Wagenkacheln Blatt 12).
+ * [K]/[L] (unten) pruefen die Teil-Rechtecke selbst: Zug 5090 (Blatt 9 r7) und ROOM1110 (Blatt 3 r5).
+ * Nicht in [I]/[J]: 5090/5091 (Zugteile, dort gilt [L]).
  * ========================================================================== */
 #include <stdio.h>
 #include <stdlib.h>
@@ -197,34 +198,95 @@ int main(void)
             printf("    %04X.z%d Blatt %2u r%-2u: Marker auf Rot %2d/%2d, gemalte Texel rot %4d/%4d (Marker %d,%d)\n",
                    z->room, z->idx, z->page, z->rect, rot, punkte, deck, bemalt, mx, my);
     }
-    /* [K] Gegenrichtung auf demselben Rechteck: im Zug 5090 (Teil 0 seiner Weltbox, s_map_teile Blatt 9 r7
-     * (-5683,-13414)-(26019,-4716)) nach einem Besuch im T-Gang 5070. Der 5090-Teil bleibt rot und liegt OBEN
-     * (frueher eingetragen = oben, Op-Liste von hinten gerastert), der T-Gang darunter gruen. Belegt, dass die
-     * Teilbereiche fuer ihren eigenen zid unveraendert gelten (U-12 in r42/rest baut 5090 um). */
+    /* [K] Gegenrichtung auf demselben Rechteck: im Zug 5090 nach einem Besuch im T-Gang 5070 (Blatt 9 r7).
+     * [L] (Stufe 3 Runde 3, Pruefbericht pruef_s3_r2 ROT 1): KEIN Pixel eines Aktuell-Teils liegt auf einem
+     *     anders gefaerbten Stueck DESSELBEN Rechtecks. Die Aktuell-Zeile 502 traegt 680808 MIT STP (RE2
+     *     `addiu s5,s5,1` @0x8006E648) - auf dem gruenen Grund des T-Gangs wurde der rote Zugteil braun
+     *     (56,32,24) statt (48,8,48) wie auf aaea5f8c2 und wie die Teile von ROOM1110 (Blatt 3 r5). Fuer
+     *     jeden der fuenf Zugteile (Mitte seiner Weltbox, s_map_teile) und fuer 1110 (drei Teile), je ohne
+     *     und mit besuchtem Nachbarn auf demselben Rechteck. Dazu: die gemalten Texel des Rechtecks sind
+     *     zu >= 90 % gezeichnet (rot oder gruen) - der T-Gang bleibt also sichtbar (Stufe 2 Runde 2).
+     *     Vorher [K] verlangte ein GANZES gruenes Rechteck unter dem roten Teil - genau der Defekt.
+     *     Gegenprobe: aaea5f8c2 ROT (T-Gang nicht gezeichnet, Deckung), 821a8b120 ROT (Ueberlappung). */
     {
-        int nops, o, i_rot = -1, i_gruen = -1, rx, ry, rw, rh;
-        re15_map_visited_reset();
-        re15_collision_reset_band();
-        re15_map_visited_mark_at(0x5070, -14000, -6000);
-        g_current_room_id = 0x5090;
-        g_actors[RE15_ACTOR_SLOT_PLAYER].x = 10168;
-        g_actors[RE15_ACTOR_SLOT_PLAYER].z = -9065;
-        re15_map_zone_update(0x5090, 10168, -9065);
-        memset(&g_inv_screen, 0, sizeof g_inv_screen);
-        g_inv_screen.substate = 1; g_inv_screen.item_state = 1;
-        g_inv_screen.map_page = 9;
-        re15_map_rect_geometry(9, 7, &rx, &ry, &rw, &rh);
-        nops = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
-        for (o = 0; o < nops; o++) {
-            const re15_inv_op_t *q = &ops[o];
-            if (q->kind != RE15_INV_OP_SPRT || q->page != RE15_INV_PAGE_MAP4) continue;
-            if (q->x < rx || q->y < ry || q->x + q->w > rx + rw || q->y + q->h > ry + rh) continue;
-            if (q->clut == RE15_INV_CLUT_MAP_AKTUELL && i_rot < 0) i_rot = o;
-            if (q->clut == RE15_INV_CLUT_MAP_BESUCHT && q->w == rw && q->h == rh) i_gruen = o;
+        static const struct { unsigned room, nach; int page, rect, nach_x, nach_z; } fall[] = {
+            { 0x5090, 0x5070, 9, 7, -14000, -6000 },
+            { 0x5090, 0x5130, 9, 7, -14000, -6000 },
+            { 0x5090, 0,      9, 7, 0, 0 },
+            { 0x1110, 0,      3, 5, 0, 0 },
+        };
+        static unsigned char farbe[256][512];
+        int f, k, l_fehl = 0, l_fall = 0, k_ok = 1;
+        char ll[2048] = "";
+        for (f = 0; f < (int)(sizeof fall / sizeof fall[0]); f++)
+        for (k = 0; k < re15_map_teil_count((unsigned)fall[f].page, (unsigned)fall[f].rect); k++) {
+            int tx, ty, tw, th, ts, nops, o, x, y, rx, ry, rw, rh, ru, rv, ueber = 0, bemalt = 0, deck = 0, rot_op = -1, gruen_op = -1;
+            int32_t qx, qz;
+            /* Mitte der Weltbox des k-ten Teils (re15_map_zones.h s_map_teile, gleiche Reihenfolge wie
+             * re15_map_teil_get; hier abgeschrieben, damit der Riegel auch auf aaea5f8c2 baut) */
+            static const int32_t welt9[5][4] = {
+                {  -5683, -13414, 26019,  -4716 }, { 20532,    850, 29067, 11288 },
+                {  20532, -26982, 29067, -18632 }, { 20532,  -3672, 26019,   155 },
+                {  20532, -17589, 26019, -14458 } };
+            static const int32_t welt3[3][4] = {
+                {  -2909,  -7522, 14950,   7087 }, { -13521, -3806, -3686, 1320 },
+                { -13521,   1961, -3686,   7087 } };
+            const int32_t *w = (fall[f].page == 9) ? (k < 5 ? welt9[k] : 0) : (k < 3 ? welt3[k] : 0);
+            if (!w) continue;
+            qx = (w[0] + w[2]) / 2; qz = (w[1] + w[3]) / 2;
+            re15_map_visited_reset();
+            re15_collision_reset_band();
+            if (fall[f].nach) re15_map_visited_mark_at(fall[f].nach, fall[f].nach_x, fall[f].nach_z);
+            if (fall[f].nach == 0x5130) re15_map_visited_mark_at(0x5070, -14000, -6000);
+            g_current_room_id = fall[f].room;
+            g_actors[RE15_ACTOR_SLOT_PLAYER].x = qx;
+            g_actors[RE15_ACTOR_SLOT_PLAYER].z = qz;
+            re15_map_zone_update(fall[f].room, qx, qz);
+            re15_map_teil_get((unsigned)fall[f].page, (unsigned)fall[f].rect, k, &tx, &ty, &tw, &th, &ts);
+            if (ts != RE15_MAP_RECT_CURRENT) continue;   /* Mitte ausserhalb des Teils (Rand) - nicht messbar */
+            memset(&g_inv_screen, 0, sizeof g_inv_screen);
+            g_inv_screen.substate = 1; g_inv_screen.item_state = 1;
+            g_inv_screen.map_page = (uint8_t)fall[f].page;
+            re15_map_rect_geometry((unsigned)fall[f].page, (unsigned)fall[f].rect, &rx, &ry, &rw, &rh);
+            re15_map_rect_uv((unsigned)fall[f].page, (unsigned)fall[f].rect, &ru, &rv);
+            nops = re15_inv_screen_build(&g_inv_screen, ops, RE15_INV_MAX_OPS);
+            memset(farbe, 0, sizeof farbe);
+            for (o = 0; o < nops; o++) {
+                const re15_inv_op_t *q = &ops[o];
+                int bit;
+                if (q->kind != RE15_INV_OP_SPRT || q->page != RE15_INV_PAGE_MAP4) continue;
+                if (q->x < rx || q->y < ry || q->x + q->w > rx + rw || q->y + q->h > ry + rh) continue;
+                /* nur Stuecke DIESER Kachel (uv im Kachel-Fenster, gleicher Versatz) */
+                if (q->u - ru != q->x - rx || q->v - rv != q->y - ry) continue;
+                bit = (q->clut == RE15_INV_CLUT_MAP_AKTUELL) ? 1 : 2;
+                if (bit == 1 && rot_op < 0) rot_op = o;
+                if (bit == 2) gruen_op = o;
+                for (y = q->y; y < q->y + q->h; y++) for (x = q->x; x < q->x + q->w; x++) farbe[y][x] |= (unsigned char)bit;
+            }
+            for (y = 0; y < rh; y++) for (x = 0; x < rw; x++) {
+                if (farbe[ry + y][rx + x] == 3) ueber++;
+                if (!texel(fall[f].page, ru + x, rv + y)) continue;
+                bemalt++;
+                if (farbe[ry + y][rx + x]) deck++;
+            }
+            l_fall++;
+            if (ueber > 0 || rot_op < 0 || (fall[f].nach && deck * 10 < bemalt * 9)) {
+                char e[96]; l_fehl++;
+                snprintf(e, sizeof e, " %04X-Teil%d(nach %04X: %d px rot auf anderem Stueck, gezeichnet %d/%d)",
+                         fall[f].room, k, fall[f].nach, ueber, deck, bemalt);
+                strncat(ll, e, sizeof ll - strlen(ll) - 1);
+            }
+            /* [K] 5090 Teil 0 nach 5070: rot liegt OBEN (frueher eingetragen) ueber dem gruenen T-Gang */
+            if (f == 0 && k == 0) {
+                printf("  [K] im Zug 5090 nach 5070: 5090-Teil rot Op %d, T-Gang gruen bis Op %d\n", rot_op, gruen_op);
+                k_ok = rot_op >= 0 && gruen_op >= 0 && rot_op < gruen_op;
+            }
         }
-        printf("  [K] im Zug 5090 nach 5070: 5090-Teil rot Op %d, T-Gang ganz gruen Op %d\n", i_rot, i_gruen);
-        CHECK("[K] im Zug 5090 bleibt sein Teil rot und liegt ueber dem gruenen T-Gang",
-              i_rot >= 0 && i_gruen >= 0 && i_rot < i_gruen);
+        printf("  [L] %d Faelle (Zugteile 5090, Teile 1110):%s\n", l_fall, ll[0] ? ll : " kein Pixel rot auf anderem Stueck");
+        CHECK("[K] im Zug 5090 bleibt sein Teil rot und liegt ueber dem gruenen T-Gang", k_ok);
+        CHECK("[L] genug Teil-Faelle gemessen", l_fall >= 12);
+        CHECK("[L] ein aktueller Teil liegt auf keinem anders gefaerbten Stueck seines Rechtecks (STP-Rot bleibt rot)",
+              l_fehl == 0);
     }
     re15_map_visited_reset();
     re15_collision_reset_band();
