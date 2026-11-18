@@ -63,6 +63,7 @@
 extern void re15_player_aim_reset(void);
 extern void re15_player_set_aim_clip_len(int fc);
 extern int  re15_re2z_last_death_handler(void);
+extern int  re15_re2z_last_hit_handler(void);
 extern unsigned re15_re2z_granate_zerfetzt_zahl(void);
 extern void re15_re2_damage_model_set(int on);
 extern int  re15_enemy_waffen_schaden(const re15_actor_t *e, int weapon_id);
@@ -549,6 +550,7 @@ static void abschnitt_u10(void)
  * ================================================================================================ */
 /* Gibt die Strecke zurueck, die die Unterhaelfte zwischen Maschinenstart und Bild 400 zuruecklegt; -1 = kein 66FC-Kriecher. */
 static int s_u17_dreh = 0, s_u17_beine = 0, s_u17_hoch = 0;   /* je Fall: Kriecher-Drehung, Beinweg, Becken-Sprung */
+static int s_u17_klapp = 0, s_u17_klapp_n = 0;   /* Runde 3: groesster Fuss-Sprung je Bild, nachdem das Becken liegt (Bilder) */
 static int u17_strecke(uint32_t seed, int *kriecher)
 {
     re15_actor_t *e = zombie_arena(RE15_AI_FLAVOR_RE2, 0x10, 0x10);
@@ -563,7 +565,8 @@ static int u17_strecke(uint32_t seed, int *kriecher)
     int32_t b0[8][3], b1[8][3];
     int rot0 = 0, unten = 0, rot0_ok = 0;
     *kriecher = 0;
-    s_u17_dreh = 0; s_u17_beine = 0; s_u17_hoch = 0;
+    s_u17_dreh = 0; s_u17_beine = 0; s_u17_hoch = 0; s_u17_klapp = 0; s_u17_klapp_n = 0;
+    int32_t fv[8][3]; int fv_ok = 0, unten_seit = -1;
     for (int f = 0; f < 400; f++) {
         frame();
         if (f == 0 && (re15_re2z_last_death_handler() != 4 || e->re2z_rag231 != 0)) return -1;
@@ -573,9 +576,21 @@ static int u17_strecke(uint32_t seed, int *kriecher)
         if (e->re2z_rag_anchor_on && e->re2z_low_state != 0u) {
             int hb = 0, hk = 0;
             if (unterhaelfte_hoehe(e, &hb, &hk) >= 0) {
-                if (hb < 300) unten = 1;
+                if (hb < 300) { if (!unten) unten_seit = f; unten = 1; }
                 else if (unten && hb > 1500 && hb > s_u17_hoch) s_u17_hoch = hb;
             }
+        }
+        /* Runde 3 (Pruefbericht R1, gemessen im Fenster): ab 4 Bildern nach dem Liegen springt kein Fuss (Teile 4 und 7) mehr
+         * um > 700 je Bild - beim Einfrieren (Zustand 4, part[1] |= 0x40 @0x8010BA88-9C) klappten die Beine vorher um ~180 Grad */
+        if (unten && f >= unten_seit + 4) {
+            int32_t fn[8][3];
+            beine_welt(e, fn);
+            if (fv_ok)
+                for (int b = 4; b <= 7; b += 3) {
+                    int d = abstand(fn[b][0], fn[b][2], fv[b][0], fv[b][2]);
+                    if (d > s_u17_klapp) s_u17_klapp = d;
+                }
+            memcpy(fv, fn, sizeof fv); fv_ok = 1; s_u17_klapp_n++;
         }
         /* eingefrorene Beine drehen nicht mit dem Kriecher: nur in den Halte-Zustaenden 7/8 der Maschine vergleichen (Clip 22
          * Bild 0 @0x8010BBA4-E4 / @0x8010BBE8), dazwischen zuckt RE2 die Beine (Zustand 5, Clip 22) */
@@ -595,7 +610,7 @@ static int u17_strecke(uint32_t seed, int *kriecher)
 static void abschnitt_u17(int soll_bleiben)
 {
     if (room_load(0x1140, "STAGE1") != 0) { PRUEF(40, 0, "ROOM1140 fehlt"); return; }
-    int faelle = 0, bleibt = 0, kr = 0, nicht_gedreht = 0, gedreht = 0, kein_sprung = 0;
+    int faelle = 0, bleibt = 0, kr = 0, nicht_gedreht = 0, gedreht = 0, kein_sprung = 0, kein_klapp = 0, klapp_max = 0;
     for (uint32_t seed = 1; seed < 200 && faelle < 4; seed++) {
         int k = 0;
         int s = u17_strecke(seed * 2654435761u, &k);
@@ -605,6 +620,9 @@ static void abschnitt_u17(int soll_bleiben)
         if (s_u17_dreh >= 64) gedreht++;
         if (s_u17_beine <= 30) nicht_gedreht++;
         if (s_u17_hoch == 0) kein_sprung++;
+        if (s_u17_klapp_n >= 100 && s_u17_klapp <= 700) kein_klapp++;
+        if (s_u17_klapp > klapp_max) klapp_max = s_u17_klapp;
+        printf("   Seed %u: groesster Fuss-Sprung je Bild am Boden %d (%d Bilder)\n", seed, s_u17_klapp, s_u17_klapp_n);
         printf("   Seed %u: Kriecher dreht sich um %d, Beinknochen wandern %d, Becken springt hoch auf %d" "\n",
                seed, s_u17_dreh, s_u17_beine, s_u17_hoch);
         if (soll_bleiben ? (s == 0) : (s > 300)) bleibt++;
@@ -619,6 +637,9 @@ static void abschnitt_u17(int soll_bleiben)
               faelle, gedreht);
         PRUEF(44, kein_sprung == faelle, "Umlaufbild: einmal am Boden springt das Becken nie wieder hoch (Zustand 4 zeigt das letzte "
               "Clip-Bild, Pose-Kette @0x80029F40-0x8002A098 vor dem Zaehler @0x8002A430-58) %d/%d", kein_sprung, faelle);
+        PRUEF(45, kein_klapp == faelle, "Einfrieren: die liegenden Beine klappen nicht um (Becken behaelt seine Matrix, RE2 "
+              "FUN_80027434 `andi v0,s3,0x40` / `bne` @0x80027498-9C; groesster Fuss-Sprung %d <= 700) %d/%d", klapp_max, kein_klapp,
+              faelle);
     } else {
         PRUEF(42, faelle == 4 && bleibt == 4, "Schalter aus: die Beine gleiten wie RE2 (> 300, @0x8010B970-9C / @0x8010BA4C) %d/%d",
               bleibt, faelle);
@@ -668,8 +689,10 @@ static void abschnitt_u13(int soll)
     if (u13_fall(1, 0, &w, &h, &n, &bl, &an) != 0) { PRUEF(70, 0, "kein Zombie"); return; }
     if (soll) {
         /* Basis 600 (FUN_8001af5c 0x258), +8 je Bild (Disc FUN_80109554 @0x801095e8-614) bis zum Messwert 1490:
-         * (1490 - 600) / 8 = 111,25 -> 112 Bilder, Endmass 600 + 8 * 112 = 1496 / 700 + 896 = 1596 */
-        PRUEF(70, an == 2 && w == 1496 && h == 1596 && n == 112,
+         * (1490 - 600) / 8 = 111,25 -> 112 Bilder, Endmass 600 + 8 * 112 = 1496 / 700 + 896 = 1596. Rate: `addiu +8` auf
+         * +0xbc/+0xbe @0x80109710-24 (Runde 3, Pruefbericht G1; @0x801095e8-614 ist das Farbwort). Am Ende steht er wieder:
+         * Zustand 3 = fertig (Runde 3, G2). */
+        PRUEF(70, an == 3 && w == 1496 && h == 1596 && n == 112,
               "Granate ueberlebt + liegt: Lache waechst +8 je Bild in %d Bildern auf %d/%d (Messwert 1490, 80 %% B 8:24-8:25)", n, w, h);
         PRUEF(71, bl, "die Lache bleibt am Boden liegen, als der Zombie aufsteht und weggeht (80 %% B 8:24,6-8:25,0)");
         int w2 = 0, h2 = 0, n2 = 0, bl2 = 0, an2 = 0;
@@ -677,6 +700,136 @@ static void abschnitt_u13(int soll)
         int w3 = 0, h3 = 0, n3 = 0, bl3 = 0, an3 = 0;
         u13_fall(0, 1, &w3, &h3, &n3, &bl3, &an3);
         PRUEF(72, an2 == 0 && an3 == 0, "ohne Granatentreffer keine Lache (nur Sturz %d, Pistole + Sturz %d)", an2, an3);
+        /* Runde 3, Pruefbericht G2 (1): der Ausloeser klebte. Granate ueberlebt, er liegt NICHT; spaeter wirft ihn ein
+         * Pistolentreffer (andere Zeile) um -> keine Lache. Positivkontrolle = Riegel 70 (an == 3). */
+        {   re15_actor_t *e = zombie_arena(RE15_AI_FLAVOR_RE2, 0x10, 0x10);
+            int an4 = -1, an4_vor = -1, an4_nach = -1;
+            if (e) {
+                e->hp = 120;
+                {   /* HOHE Explosion (P.y = Fuss - 1500 < Fuss - 750 -> Zone 1, `slt` @0x800472c8): Spalte 1 + 3K = 4 ->
+                     * 0x80105438, er bleibt stehen (Riegel 76) */
+                    const int16_t box[4] = RE15_GRANATE_R35_BOX_EXPLOSION;
+                    const int32_t p[3] = { e->x + 300, e->y - 1500, e->z };
+                    (void)re15_re2_gl_apply(p, 0, box, 0x10020009u);
+                }
+                int lag = 0;
+                for (int f = 0; f < 60; f++) { frame(); if (e->re2z_flags21a & 2u) lag = 1; }
+#ifdef RE15_R42_LACHE
+                an4_vor = lag ? -2 : e->re2z_lache_an;
+#endif
+                re15_ai_set_state_word(e, 0x0302); e->sub_state_2 = 0; e->re2z_hits1d2 = 1;   /* HURT Zeile 3, Pistole */
+                for (int f = 0; f < 3; f++) frame();
+#ifdef RE15_R42_LACHE
+                an4_nach = e->re2z_lache_an;
+#endif
+                re15_ai_set_state_word(e, 0x501);                      /* Sturz wie in u13_fall */
+                for (int f = 0; f < 200; f++) frame();
+#ifdef RE15_R42_LACHE
+                an4 = e->re2z_lache_an;
+#endif
+            }
+            printf("   G2 (1): Granate ueberlebt ohne Liegen (Ausloeser %d), Pistole (Ausloeser %d), Sturz -> Lache %d\n",
+                   an4_vor, an4_nach, an4);
+            PRUEF(74, an == 3 && an4_vor == 1 && an4_nach == 0 && an4 == 0,
+                  "Granate ueberlebt, er liegt nicht; ein spaeterer Pistolentreffer wirft ihn um -> KEINE Lache (Ausloeser "
+                  "%d -> %d, Lache %d; Positivkontrolle Riegel 70: %d)", an4_vor, an4_nach, an4, an);
+        }
+        /* Runde 3, Pruefbericht G2 (2): eine NICHT volle Lache wuchs bei einem spaeteren Liegen am alten Ort weiter. Der Tick
+         * direkt: 11 Ticks liegen (Anlegen 600 + 11 x 8 = 688, wie in Riegel 70 waechst der erste Tick mit), aufstehen,
+         * 10 Ticks wieder liegen -> bleibt 688, Zustand 3 (fertig). */
+        {   int w5a = -1, w5b = -1, an5 = -1;
+#ifdef RE15_R42_LACHE
+            extern void re15_re2z_lache_tick(re15_actor_t *e);
+            re15_actor_t *e = zombie_arena(RE15_AI_FLAVOR_RE2, 0x10, 0x10);
+            if (e) {
+                re15_ai_set_state_word(e, 0x0201);
+                e->re2z_lache_an = 1u; e->re2z_flags21a |= 2u;
+                for (int f = 0; f < 11; f++) re15_re2z_lache_tick(e);   /* 1. Tick legt sie an (600), dann 10 x +8 */
+                w5a = e->re2z_lache_w;
+                e->re2z_flags21a &= (uint16_t)~2u;                      /* aufgestanden */
+                re15_re2z_lache_tick(e);
+                e->re2z_flags21a |= 2u;                                 /* spaeter wieder am Boden */
+                for (int f = 0; f < 10; f++) re15_re2z_lache_tick(e);
+                w5b = e->re2z_lache_w; an5 = e->re2z_lache_an;
+            }
+#endif
+            printf("   G2 (2): nach 10 Bildern Liegen %d, nach Aufstehen und erneutem Liegen %d, Zustand %d\n", w5a, w5b, an5);
+            PRUEF(75, w5a == 688 && w5b == 688 && an5 == 3,
+                  "eine nicht volle Lache waechst bei einem spaeteren Liegen nicht weiter (%d -> %d, Zustand %d)", w5a, w5b, an5);
+        }
+        /* Runde 3, Pruefbericht G3: liegt ein RE2-Zombie nach einer ueberlebten Granate VON SELBST? GEMESSEN (ohne 0x501):
+         *  - Granatwerfer: Hitcode 0x10020009, Klammer K = hitcode >> 28 = 1 (`srl s6,s5,28` @0x80047114), Spalte = Zone + 3K
+         *    (@0x80047310-30) = 3 (tief) / 4 (hoch). HURT-Tabelle Zeile 9 @0x8010CA84 (0x8010C940 + 9 * 36, EMOVL10_S0.BIN selbst gelesen: 0x80107438, 0x80105BC0 x 2,
+         *    0x80105438 x 6) Spalte 3/4 = 0x80105438: er liegt NICHT.
+         *  - Handgranate (Art 2): Spalte 1 -> 0x80105BC0 (Taumeln): er liegt NICHT (Messzeile unten).
+         *  Ein STEHENDER Zombie faellt nach einer ueberlebten Granate also nie (Regel 2, BAUPLAN U1: "Das Umwerfen und
+         *  Wiederaufstehen aus 80 % E39 A wird nicht nachgebaut"). Die Lache kommt im Spiel nur, wenn er schon LIEGT: dann
+         *  schickt ihn der Treffer zurueck in den Liege-Clip (`lui 6 / ori 0x501 / sw` = 0x60501 @0x8010517C-84) und er bleibt
+         *  liegen. ABER: liegend ist er die ersten ~49 Bilder NICHT treffbar (+0x1D3 = 0x80, Gate 2 `lbu v0,467(s0)` /
+         *  `bne v0,zero` @0x80047138-40; gemessen 49 von 248 Liegebildern, Messzeile). Riegel 76 prueft beide Wege ohne
+         *  erzwungenes 0x501 nach der Granate. */
+        {   int sp_steh = -1, hd_steh = -1, l_steh = -1, an_steh = -1, l_lieg = -1, an_lieg = -1, w_lieg = -1;
+            re15_actor_t *e = zombie_arena(RE15_AI_FLAVOR_RE2, 0x10, 0x10);
+            if (e) {                                                   /* (a) steht */
+                e->hp = 120;
+                (void)werfer(e);
+                sp_steh = e->re2z_hits1d2; l_steh = 0;
+                for (int f = 0; f < 200; f++) {
+                    frame();
+                    if (f == 0) hd_steh = re15_re2z_last_hit_handler();
+                    if (e->re2z_flags21a & 2u) l_steh = f + 1;
+                }
+#ifdef RE15_R42_LACHE
+                an_steh = e->re2z_lache_an;
+#endif
+            }
+            e = zombie_arena(RE15_AI_FLAVOR_RE2, 0x10, 0x10);
+            if (e) {                                                   /* (b) liegt schon (vorher umgeworfen) */
+                e->hp = 120;
+                re15_ai_set_state_word(e, 0x501);
+                for (int f = 0; f < 120 && !(e->re2z_flags21a & 2u); f++) frame();
+                {   /* MESSUNG (kein Riegel): wie lange liegt er, ab wann ist er treffbar (+0x1D3 == 0, Gate 2 @0x80047138-40)? */
+                    int liegt_n = 0, frei_n = 0, erste_frei = -1;
+                    for (int f = 0; f < 900; f++) {
+                        frame();
+                        if (e->re2z_flags21a & 2u) { liegt_n++; if (e->re2z_self1d3 == 0u) { frei_n++; if (erste_frei < 0) erste_frei = f; } }
+                        else break;
+                    }
+                    printf("   MESSUNG Liegezeit nach 0x501: %d Bilder, davon treffbar (1D3 == 0) %d, erstes treffbares Bild %d\n",
+                           liegt_n, frei_n, erste_frei);
+                }
+                e = zombie_arena(RE15_AI_FLAVOR_RE2, 0x10, 0x10);
+                e->hp = 120;
+                re15_ai_set_state_word(e, 0x501);
+                for (int f = 0; f < 120 && !(e->re2z_flags21a & 2u); f++) frame();
+                for (int f = 0; f < 60; f++) frame();   /* treffbar ab Bild 49 des Liegens (Messzeile oben) */
+                (void)werfer(e);
+                printf("   liegend nach dem Granatwerfer: HP %d Zustand %u/%u/%u +0x21A 0x%04x\n", e->hp, e->state, e->sub_state_1,
+                       e->sub_state_2, e->re2z_flags21a);
+                l_lieg = 0;
+                for (int f = 0; f < 60; f++) { frame(); if (e->re2z_flags21a & 2u) l_lieg++; }
+#ifdef RE15_R42_LACHE
+                an_lieg = e->re2z_lache_an; w_lieg = e->re2z_lache_w;
+#endif
+            }
+            {   re15_actor_t *h2 = zombie_arena(RE15_AI_FLAVOR_RE2, 0x10, 0x10);   /* MESSUNG Handgranate (kein Riegel) */
+                if (h2) {
+                    h2->hp = 400;
+                    const int32_t pp[3] = { h2->x + 300, h2->y - 500, h2->z };
+                    (void)re15_granate_r35_explosion(pp, 0, 2u);
+                    int sp2 = h2->re2z_hits1d2, l2 = 0, hd2 = -1;
+                    for (int f = 0; f < 120; f++) { frame(); if (f == 0) hd2 = re15_re2z_last_hit_handler();
+                                                     if (h2->re2z_flags21a & 2u) l2 = f + 1; }
+                    printf("   MESSUNG Handgranate ueberlebt (HP 400): Spalte %d Handler %d liegt %d\n", sp2, hd2, l2);
+                }
+            }
+            printf("   G3: steht -> Spalte %d Handler %d liegt %d Lache %d; liegt schon -> liegt %d/60 Lache %d (%d)\n",
+                   sp_steh, hd_steh, l_steh, an_steh, l_lieg, an_lieg, w_lieg);
+            PRUEF(76, sp_steh == 3 && hd_steh == 1 && l_steh == 0 && l_lieg == 60 && an_lieg == 2 && w_lieg > 600,
+                  "Granatwerfer ueberlebt: STEHEND Spalte 3 -> 0x80105438, er faellt nicht (liegt %d); LIEGEND bleibt er liegen "
+                  "(0x60501 @0x8010517C-84, %d/60 Bilder) und die Lache waechst von selbst (Zustand %d, %d)",
+                  l_steh, l_lieg, an_lieg, w_lieg);
+        }
     } else {
         PRUEF(73, an == 0, "Schalter aus: keine Lache (%d)", an);
     }

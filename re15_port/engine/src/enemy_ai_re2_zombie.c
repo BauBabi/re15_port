@@ -7582,6 +7582,11 @@ static void re2z_hurt(re15_actor_t *e, re15_actor_t *pl)
         /* Runde 42 Gore U13 (Block ueber re15_re2z_lache_tick): ein Explosionstreffer (Zeile 9-11) wurde UEBERLEBT */
         if (e->sub_state_1 >= 9u && e->sub_state_1 <= 11u && e->hp >= 0 && e->re2z_lache_an == 0u && re15_zgore_80prozent())
             e->re2z_lache_an = 1u;
+        /* Runde 3 (Pruefbericht G2): ein Treffer einer ANDEREN Zeile, bevor er nach der Granate lag, loescht den
+         * Ausloeser - die Lache gehoert zum Liegen NACH DER GRANATE (80 % B 8:17,40 Granate -> 8:17,7-8:18,4 Sturz),
+         * nicht zu einem spaeteren Umwerfen durch Schrot oder Pistole. */
+        else if (e->re2z_lache_an == 1u && (e->sub_state_1 < 9u || e->sub_state_1 > 11u))
+            e->re2z_lache_an = 0u;
     }
 
     re2z_grab_abort(e, pl);                                        /* @0x80104F68-FDC */
@@ -8695,8 +8700,8 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
  * ueber Halbwert -> Halbausdehnung ~1453, Abdunklung (Summe RGB) ueber Halbwert -> ~1526. Mittel 1490 (x), z wie bei
  * der Leiche +100 (Basis 600/700). Das ist 13 % mehr als die Disc-Leichenlache (1320/1420).
  * MECHANISMUS je Teil:
- *   - Rate +8 je Bild: der Disc-Leichen-Grower FUN_80109554 (Port main.c: `600 + 8 * grow`, @0x801095e8-614 /
- *     @0x80109710-24). Ab der Basis 600/700 (FUN_8001af5c-Argumente 0x258/0x2bc wie die Leichenlache) bis zum Messwert:
+ *   - Rate +8 je Bild: der Disc-Leichen-Grower FUN_80109554 (Port main.c: `600 + 8 * grow`): `addiu +8` auf +0xbc/+0xbe
+ *     @0x80109710-24 (Runde 3, Pruefbericht G1: @0x801095e8-614 ist das Farbwort lui 0xff / ori 0xff38 -> +0xc4/+0xec). Ab der Basis 600/700 (FUN_8001af5c-Argumente 0x258/0x2bc wie die Leichenlache) bis zum Messwert:
  *     (1490 - 600) / 8 = 112 Bilder (3,7 s; im Video ist sie bei 8:19-8:20 schon gross, das Wachsen selbst ist durch den
  *     Koerper verdeckt und nicht messbar).
  *   - Farbe: die Leichen-Tinte des Gehirns (RE2 0x00BFBF10 @0x8010a4c0-508), Zeichner main.c.
@@ -8707,7 +8712,7 @@ static void re2z_death(re15_actor_t *e, re15_actor_t *pl)
  * Abschaltbar mit RE15_KEIN_80PROZENT_GORE=1. */
 #define RE15_LACHE_BASIS_X   600    /* FUN_8001af5c 0x258 (Leichen-Basis) */
 #define RE15_LACHE_BASIS_Z   700    /* FUN_8001af5c 0x2bc */
-#define RE15_LACHE_RATE        8    /* Disc FUN_80109554 +8 je Bild (@0x801095e8-614) */
+#define RE15_LACHE_RATE        8    /* Disc FUN_80109554 +8 je Bild: addiu +8 auf +0xbc/+0xbe @0x80109710-24 */
 #define RE15_LACHE_ZIEL_X   1490    /* gemessen 80 % B 8:24,0-8:25,0 (Block oben) */
 void re15_re2z_lache_tick(re15_actor_t *e);
 void re15_re2z_lache_tick(re15_actor_t *e)
@@ -8726,6 +8731,10 @@ void re15_re2z_lache_tick(re15_actor_t *e)
         e->re2z_lache_w = (uint16_t)(e->re2z_lache_w + RE15_LACHE_RATE);
         e->re2z_lache_h = (uint16_t)(e->re2z_lache_h + RE15_LACHE_RATE);
     }
+    /* Runde 3 (Pruefbericht G2): steht er wieder auf, ist die Lache fertig (3) - sie bleibt liegen (80 % B 8:24,6-8:25,0),
+     * waechst aber bei einem spaeteren Liegen nicht weiter, schon gar nicht am alten Ort. Eine Lache je Zombie. */
+    if (e->re2z_lache_an == 2u && !(e->re2z_flags21a & 2u))
+        e->re2z_lache_an = 3u;
 }
 
 /* Test-Export (80%-Gore im RE2-Gehirn): EIN Tick der DEATH-Wurzel FUN_80108250 mit gestempelter Zeile/Spalte.
@@ -10139,6 +10148,62 @@ int re15_re2z_lower_kf(const re15_actor_t *e, const re15_emd_skeleton_t **skel_o
     if (idx < 0 || idx >= A->frame_count) return 0;
     if (skel_out) *skel_out = S;
     return (int)(A->frames[idx] & 0xFFFu);
+}
+
+/* ---- RUNDE 42 GORE Runde 3: DAS EINGEFRORENE BECKEN (Pruefbericht R1, gemessen RE15_GORE_ZEICHEN_LOG) -----------------
+ * GEMESSEN (ROOM1010, Granatwerfer, Laeufe vid3/m4 + mv8): im Bild, in dem die Maschine von Zustand 3 nach 4 geht (Ende von
+ * Clip 1, part[1] |= 0x40 @0x8010BA88-9C), drehten die gezeichneten Beine um ~180 Grad - die Fuesse sprangen um ~3300
+ * Einheiten (F81 Fuss 4 (-710,7206) -> F82 (2608,7240), Becken fest (934/935,7442/7434)). Ursache: der Port posiert die Teile
+ * 1..7 nach dem Einfrieren ABSOLUT aus Clip 22 Bild 0 - samt Becken-Drehung dieses Clips.
+ * ORIGINAL (RE2 PSX.EXE, selbst gelesen): der Teile-Zeichner FUN_80027160 ruft je Teil FUN_80027434 mit a3 = Teil + 0x48
+ * (`jal 0x80027434` / `addiu a3,s2,0x48` @0x8002738C-90 bzw. `move a3,s0` @0x800273D4-D8, s0 = s2 + 0x48, Schritt 0xAC) -
+ * das ist die BLEIBENDE Weltmatrix des Teils. Ohne 0x40 wird sie neu gebildet: SetRotMa/SetTrans aus der Eltern-Matrix
+ * (+0x74) und die lokale Drehung (+0x18 ff.) daraufmultipliziert (@0x800274A4-0x800275D4). MIT 0x40 springt der Zeichner
+ * darueber (`andi v0,s3,0x40` @0x80027498 / `bne v0,zero,0x800275E4` @0x8002749C): die Matrix bleibt, wie sie im letzten
+ * Bild vor dem Einfrieren war. Die Kinder 2..7 (Eltern 2:1 3:2 4:3 5:1 6:5 7:6) haengen weiter an dieser Matrix und
+ * bekommen ihre lokalen Drehungen aus Clip 22 (Masken-Durchlauf @0x8010B904 / Maske 0x7E @0x8010024C).
+ * PORT: das Becken behaelt die Pose des letzten Bilds vor dem Einfrieren = Clip 1 letztes Bild (das Umlaufbild, das
+ * re15_re2z_lower_kf in Zustand 4 zeigt); jedes Kind b wird mit seiner Lage RELATIV zum Becken der aktuellen Pose daran
+ * gehaengt: P'[b] = F[1] * P[1]^-1 * P[b]. Gilt nicht fuer Modus 3 (dort steht ohnehin das Todesbild, re2z_low_kf).
+ * `skel` = das Skelett, mit dem der Aufrufer P gerechnet hat. */
+void re15_re2z_beine_einfrieren(const re15_actor_t *e, const re15_emd_skeleton_t *skel, re15_skel_pose_t *P);
+void re15_re2z_beine_einfrieren(const re15_actor_t *e, const re15_emd_skeleton_t *skel, re15_skel_pose_t *P)
+{
+    re15_actor_t vor;
+    re15_skel_pose_t F[RE15_EMD_MAX_BONES];
+    const re15_emd_skeleton_t *fs = NULL;
+    int kf, hi, b, r, c, k;
+    int32_t RT[9];                                         /* F1.R * P1.R^T */
+    if (!e || !P || !skel || !e->re2z_rag_anchor_on || !e->re2z_low_frozen || e->re2z_ok_modus == 3u) return;
+    if (skel->bone_count < 8) return;
+    vor = *e;                                              /* das Bild VOR dem Einfrieren: Zustand 4 auf Clip 1 = letztes Bild */
+    vor.re2z_low_state = 4u; vor.re2z_low_clip = 1u; vor.re2z_low_frozen = 0u;
+    kf = re15_re2z_lower_kf(&vor, &fs);
+    if (re15_skel_compute_pose(fs ? fs : skel, kf, F) != 0) return;
+    for (r = 0; r < 3; r++)
+        for (c = 0; c < 3; c++) {
+            int64_t s = 0;
+            for (k = 0; k < 3; k++) s += (int64_t)F[1].rot[r*3+k] * P[1].rot[c*3+k];   /* (P1.R^T)[k][c] = P1.R[c][k] */
+            RT[r*3+c] = (int32_t)(s >> 12);
+        }
+    hi = (e->re2z_ok_modus != 0u) ? 7 : 6;
+    for (b = 2; b <= hi; b++) {
+        int32_t d[3], nr[9];
+        for (r = 0; r < 3; r++) d[r] = P[b].trans[r] - P[1].trans[r];
+        for (r = 0; r < 3; r++) {
+            int64_t s = 0;
+            for (k = 0; k < 3; k++) s += (int64_t)RT[r*3+k] * d[k];
+            P[b].trans[r] = (int32_t)(s >> 12) + F[1].trans[r];
+        }
+        for (r = 0; r < 3; r++)
+            for (c = 0; c < 3; c++) {
+                int64_t s = 0;
+                for (k = 0; k < 3; k++) s += (int64_t)RT[r*3+k] * P[b].rot[k*3+c];
+                nr[r*3+c] = (int32_t)(s >> 12);
+            }
+        memcpy(P[b].rot, nr, sizeof nr);
+    }
+    P[1] = F[1];
 }
 
 void re15_re2z_lower_body_tick(re15_actor_t *e)

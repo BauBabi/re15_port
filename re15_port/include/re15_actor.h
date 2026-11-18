@@ -511,7 +511,8 @@ typedef struct {
      * Granate UEBERLEBT hat und liegt (80 % Video B E39 A, Raum 107, 8:17,4-8:25,6). Die Lache liegt fest am Boden (sie
      * bleibt, wenn der Zombie aufsteht, 80 % B 8:24,6-8:25,0) - darum eigene Weltlage statt des Aktor-Schattens.
      * re2z_lache_an: 0 = nichts, 1 = Granate ueberlebt (Explosionszeile 9-11), Lache startet beim naechsten Liegen,
-     *                2 = Lache liegt. */
+     *                2 = Lache liegt und waechst (nur solange er liegt), 3 = fertig (er ist aufgestanden; sie bleibt
+     *                liegen, waechst nicht mehr). Ein Treffer einer anderen Zeile vor dem Liegen loescht 1 (Runde 3, G2). */
     int32_t  re2z_lache_x, re2z_lache_y, re2z_lache_z;
     uint16_t re2z_lache_w, re2z_lache_h;
     int16_t  re2z_lache_yaw;

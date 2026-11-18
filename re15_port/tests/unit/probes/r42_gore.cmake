@@ -20,3 +20,13 @@ add_test(NAME unit_r42_gore COMMAND test_r42_gore alle)
 set_tests_properties(unit_r42_gore PROPERTIES TIMEOUT 300)
 add_test(NAME unit_r42_gore_aus COMMAND test_r42_gore aus)
 set_tests_properties(unit_r42_gore_aus PROPERTIES TIMEOUT 120)
+
+# Runde 3 (Pruefbericht R1): das ZEICHNEN der Granatwerfer-Beine im echten Fenster (main.c, Messschiene RE15_GORE_ZEICHEN_LOG)
+if(TARGET re15_pc)
+    add_test(NAME integration_r42_gore_bild
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r42_gore_bild_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_gore_bild.cmake)
+    set_tests_properties(integration_r42_gore_bild PROPERTIES TIMEOUT 700)
+endif()

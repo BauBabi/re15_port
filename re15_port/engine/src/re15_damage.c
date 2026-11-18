@@ -3419,6 +3419,11 @@ void re15_enemy_bone_world_pos(const re15_actor_t *e, int bone, int32_t out[3])
     void *save = g_anim_pose_actor;
     g_anim_pose_actor = NULL;                          /* QUERY: don't mutate the crossfade blend */
     int rv = re15_skel_compute_pose(&b->skel, kf, poses);
+    if (rv == 0 && e->re2z_rag_anchor_on && bone >= 1 && bone <= (e->re2z_ok_modus != 0u ? 7 : 6)) {
+        /* Runde 42 Gore Runde 3: eingefrorenes Becken nach part[1] |= 0x40 (RE2 FUN_80027434 @0x80027498-9C), wie main.c */
+        extern void re15_re2z_beine_einfrieren(const re15_actor_t *e, const re15_emd_skeleton_t *skel, re15_skel_pose_t *P);
+        re15_re2z_beine_einfrieren(e, &b->skel, poses);
+    }
     g_anim_pose_actor = save;
     if (rv != 0) return;
     {   int16_t byaw = (int16_t)e->rot_y;                 /* Runde 42 Runde 2: abgetrennte Beine mit eigener Drehung */
