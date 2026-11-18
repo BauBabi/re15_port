@@ -21,6 +21,7 @@
 #include "re2_buehne.h"
 #include "re2_fx.h"
 #include "re15_camera.h"
+#include "re15_kamerahalt_r41.h"
 #include <math.h>
 
 #define RE15_XSTR_(x) #x
@@ -232,6 +233,21 @@ static void bild(const uint8_t *rdt, int c, double x, double y, double z, double
     if (vz > 0) *u = 160 + v.fov_screen_dist * vx / vz;
 }
 
+/* RVD-Lauf-Kameras als Bitmaske (Ziele echter Wechsel, je Kamera der erste Eintrag = Anker). */
+static int lauf_kameras(const uint8_t *rdt, size_t n, unsigned *maske)
+{
+    if (!rdt || n < 0x30) return 0;
+    size_t o = (size_t)(rdt[0x28] | rdt[0x29] << 8 | rdt[0x2A] << 16 | (uint32_t)rdt[0x2B] << 24);
+    int vorher = -1;
+    *maske = 0;
+    while (o + 20 <= n && rdt[o] != 0xFF) {
+        if (rdt[o + 2] == vorher && rdt[o + 3] < 32) *maske |= 1u << rdt[o + 3];
+        vorher = rdt[o + 2];
+        o += 20;
+    }
+    return o + 20 <= n;
+}
+
 static void t_schnitte(void)
 {
     const int z = RE15_FI_CUT_ZEILE, a = RE15_FI_CUT_W1, b = RE15_FI_CUT_W2, c = RE15_FI_CUT_W3;
@@ -250,16 +266,59 @@ static void t_schnitte(void)
         const double g = RE15_FI_FORM_GIER * 6.283185307179586 / 4096.0, fx = cos(g), fz = -sin(g);   /* +x der Form (spieler_vor) */
         double u, t, uf, tf;
 #define PUNKT(c, d, y, U, T) bild(r0, (c), RE15_FI_FORM_X + fx * (d), (y), RE15_FI_FORM_Z + fz * (d), &(U), &(T))
-        PUNKT(z, 0, -1500, uf, tf); PUNKT(z, RE15_FI_T_ABSTAND, -900, u, t);
-        CHECK(tf <= 0 || uf < 0 || uf >= 320, "Game over: Formmitte im Bild (u %.0f Tiefe %.0f)", uf, tf);
-        CHECK(t > 0 && u >= 0 && u < 320, "Game over: Spieler ausser Bild (u %.0f Tiefe %.0f)", u, t);
+        {   /* Runde 4: "Game over" hat eine eigene Lage (PORT-WAHL RE15_FI_GO_*) */
+            const double gg = RE15_FI_GO_FORM_GIER * 6.283185307179586 / 4096.0, gx = cos(gg), gz = -sin(gg);
+            bild(r0, z, RE15_FI_GO_FORM_X, -1500, RE15_FI_GO_FORM_Z, &uf, &tf);
+            bild(r0, z, RE15_FI_GO_FORM_X + gx * RE15_FI_T_ABSTAND, -900, RE15_FI_GO_FORM_Z + gz * RE15_FI_T_ABSTAND, &u, &t);
+            CHECK(tf <= 0 || uf < 0 || uf >= 320, "Game over: Formmitte im Bild (u %.0f Tiefe %.0f)", uf, tf);
+            CHECK(t > 0 && u >= 80 && u < 240, "Game over: Spieler nicht in der Bildmitte (u %.0f Tiefe %.0f; RE2 Schnitt 11 u +0,18)", u, t);
+        }
         PUNKT(c, 0, -1500, uf, tf); PUNKT(c, RE15_FI_W3_ABSTAND, -900, u, t);
         CHECK(t > 0 && u >= 0 && u < 320 && t < tf, "W3: Schuetze (u %.0f Tiefe %.0f) nicht im Bild vor der Form (Tiefe %.0f)", u, t, tf);
         PUNKT(a, 0, -1500, uf, tf); CHECK(tf > 0 && uf >= 0 && uf < 320, "W1: Formmitte ausser Bild");
         PUNKT(b, 0, -1500, uf, tf); CHECK(tf > 0 && uf >= 0 && uf < 320, "W2: Formmitte ausser Bild");
 #undef PUNKT
     }
-    free(r0); free(r1);
+    /* Runde 4 (Pruefbericht s1 r3 R1): "Game over" ist keine Lauf-Kamera. RVD (RDT-Kopf +0x28, 20 Byte je Eintrag: Flag, Stockwerk,
+     * von, nach, 4 Ecken; je Kamera ist der erste Eintrag der Anker FUN_80014324, die uebrigen sind echte Wechsel): Lauf-Kamera = Ziel
+     * eines echten Wechsels. Selbstprobe an RE2 ROOM7020: Schnitt 11 ("Game over" @0x801036d8) ist dort keine Lauf-Kamera. */
+    size_t n2 = 0;
+    uint8_t *r2 = slurp(RE15_REPO_ROOT "/info/re2leon/PL0/RDT/ROOM7020.RDT", &n2);
+    unsigned lauf0 = 0, lauf1 = 0, lauf2 = 0;
+    CHECK(r0 && r1 && r2 && lauf_kameras(r0, n0, &lauf0) && lauf_kameras(r1, n1, &lauf1) && lauf_kameras(r2, n2, &lauf2),
+          "RVD von ROOM5090/5091/RE2 ROOM7020 nicht lesbar");
+    CHECK(!(lauf2 & (1u << 11)) && lauf2 != 0, "RE2 ROOM7020: Schnitt 11 waere Lauf-Kamera (Ziele 0x%x) - Regel stimmt nicht", lauf2);
+    CHECK((lauf0 & 0xF800u) == 0x7800u && (lauf1 & 0xF800u) == 0x7800u,
+          "Wagen C: Lauf-Kameras 0x%x / 0x%x statt 11-14 (RVD @0x00490-0x00530)", lauf0 & 0xF800u, lauf1 & 0xF800u);
+    CHECK(!(lauf0 & (1u << z)) && !(lauf1 & (1u << z)), "\"Game over\"-Schnitt %d ist eine Lauf-Kamera (5090 0x%x, 5091 0x%x)",
+          z, lauf0, lauf1);
+    free(r0); free(r1); free(r2);
+    /* Und in der Engine: Ausloesen in jeder Lauf-Kamera von Wagen C fordert einen Wechsel an, und das Bild mit dem Versetzen auf die
+     * Fixpunkte wird gehalten (kamerahalt_r41.c = RE2 FUN_8002b968 @0x8002ba50 `jal 0x8002bdf4` + @0x8002bb58 `j 0x8002bd60` ueber die
+     * DrawOTag); gezeigt wird erst das Folgebild im "Game over"-Schnitt. */
+    for (int k = 11; k <= 15; k++) {
+        if (!(lauf0 & (1u << k))) continue;
+        memset(g_actors, 0, sizeof g_actors);
+        re15_actor_t *e = &g_actors[3], *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+        e->active = 1; e->type = 0x30; e->x = 1300; e->z = -23400;
+        pl->active = 1; pl->x = 8150; pl->z = -23550; pl->rot_y = 2065;     /* Lage des Ausloesers in Runde 3 (debug.log F390) */
+        g_current_room_id = 0x5090u;
+        re15_finale_r42_install(0x5090u);
+        g_scd.work_vars[0x0A] = (int16_t)k; g_scd.cam_id = (uint8_t)k; g_scd.cam_change_pending = 0; g_scd.cut_auto_enabled = 1;
+        (void)re15_kamerahalt_r41_haelt(0x5090u); (void)re15_kamerahalt_r41_haelt(0x5090u);   /* Raum gesehen, Bild ohne Wechsel */
+        const int vorher = re15_finale_r42_schnitt_test(3);
+        const int versetzt = pl->x != 8150 || pl->z != -23550;
+        const int halt = re15_kamerahalt_r41_haelt(0x5090u);
+        CHECK(vorher == k, "Kamera %d: vorher %d", k, vorher);
+        CHECK(versetzt, "Kamera %d: Spieler nicht auf den Fixpunkt versetzt", k);
+        CHECK((int)g_scd.cam_id != k && g_scd.cam_change_pending, "Ausloesen in Lauf-Kamera %d: kein Kamerawechsel (angefordert %d)",
+              k, (int)g_scd.cam_id);
+        CHECK(halt, "Ausloesen in Lauf-Kamera %d: das Bild mit dem Versetzen wird in Kamera %d gezeigt", k, k);
+        g_scd.work_vars[0x0A] = (int16_t)g_scd.cam_id; g_scd.cam_change_pending = 0;            /* Apply im Folgebild */
+        CHECK(!re15_kamerahalt_r41_haelt(0x5090u) && g_scd.work_vars[0x0A] == RE15_FI_CUT_ZEILE && RE15_FI_CUT_ZEILE != k,
+              "Kamera %d: Folgebild nicht im \"Game over\"-Schnitt %d", k, RE15_FI_CUT_ZEILE);
+    }
+    re15_finale_r42_reset();
 }
 
 /* U5: Zuordnung gegen die Bytes des Tyrant-Overlays (CDEMD0.EMS, EM2B ai1 ab Datei 0x48A800 = 0x80100000): Tabelle @0x8010476c

@@ -16,6 +16,18 @@
 #   - W2 "Schuetze ausser Bild" (RE2 +48 Grad) ist nur noch Kosten (|u| geklemmt 1,5): hart gibt es keine Loesung, W2 und W3 brauchen
 #     dann stets dieselbe Kamera (diag5.py). Mit --w2hart wie Runde 2.
 # Kosten je Rolle wie Runde 2 (PORT-WAHL): |du| (geklemmt +-1,5) + |ln(s/s*)| fuer Form und Gegenstand, Ziele aus ROOM7020 (re2check.py).
+#
+# Runde 4 (Pruefbericht s1 r3, R1): "Game over" ist KEINE Lauf-Kamera. Harte Regel aus den RVD-Bytes (Kamera-Wechselzonen, RDT-Kopf
+# +0x28, 20 Byte je Eintrag: Flag, Stockwerk, von, nach, 4 Ecken x/z; je Kamera ist der ERSTE Eintrag das Anker-Viereck FUN_80014324 =
+# rdt_common.c re15_rdt_get_region_quad, die uebrigen sind echte Wechsel). Lauf-Kamera = Ziel ("nach") eines echten Wechsels.
+#   RE2 ROOM7020 (@0x26C-0x44B): echte Wechsel nur nach 0..3 (z. B. `01ff0001` @0x00280, `01ff0203` @0x002F8) - Schnitt 11 ("Game
+#     over", `jal 0x8002c7ac / addiu a0,zero,0xb` @0x801036d8) ist keine Lauf-Kamera, der Wechsel ist darum immer ein Schnitt.
+#   ROOM5090 Wagen C (@0x47C-0x557): 11->12 @0x00490, 12->11 @0x004B8, 12->13 @0x004CC, 13->12 @0x004F4, 13->14 @0x00508,
+#     14->13 @0x00530; Kamera 15 hat nur ihren Anker `01ff0f00` @0x00544 (SCD-Kamera: Cut_chg(15) im Auftritt der Riesenform).
+# Warum es den Schnitt braucht: RE2 zeichnet das Bild, in dem der Schnitt angefordert wird, nicht (FUN_8002b968: Dirty @0x8002ba0c,
+# `jal 0x8002bdf4` @0x8002ba50, `j 0x8002bd60` @0x8002bb58 ueber die DrawOTag @0x8002bd40-58; RE1.5 gleich @0x80021558/@0x80021560,
+# Port kamerahalt_r41.c). Ist die "Game over"-Kamera die gerade gezeigte, gibt es keinen Wechsel und das Versetzen auf die Fixpunkte
+# ist im selben Bild zu sehen (Runde 3: Schnitt 12, Leon springt 6191 nach vorn).
 import math, os, struct, sys, itertools, json
 import numpy as np
 REPO = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', '..'))
@@ -32,6 +44,21 @@ def rid(path, base):
 RE2 = rid(os.path.join(REPO, 'info/re2leon/PL0/RDT/ROOM7020.RDT'), 0x64)
 P50 = rid(os.path.join(REPO, 're15_port/shared_assets/PSX/STAGE5/ROOM5090.RDT'), 0x60)
 WC = (11, 12, 13, 14, 15)
+
+def lauf_kameras(path):
+    """Ziele der echten RVD-Wechsel (ohne den Anker je Kamera) -> Menge, dazu die Belegzeilen."""
+    d = open(path, 'rb').read(); o = struct.unpack_from('<I', d, 0x28)[0]
+    ziele, beleg, vorher = set(), [], None
+    while d[o] != 0xFF:
+        von, nach = d[o + 2], d[o + 3]
+        if von == vorher:
+            ziele.add(nach); beleg.append('%02x%02x%02x%02x @0x%05X (%d->%d)' % (d[o], d[o + 1], von, nach, o, von, nach))
+        vorher = von; o += 20
+    return ziele, beleg
+LAUF_RE2, BELEG_RE2 = lauf_kameras(os.path.join(REPO, 'info/re2leon/PL0/RDT/ROOM7020.RDT'))
+LAUF_50, BELEG_50 = lauf_kameras(os.path.join(REPO, 're15_port/shared_assets/PSX/STAGE5/ROOM5090.RDT'))
+assert 11 not in LAUF_RE2, 'RE2 Schnitt 11 waere eine Lauf-Kamera'
+GO_ERLAUBT = tuple(k for k in WC if k not in LAUF_50)    # Runde 4: nur (15,)
 KAM = {}
 for k in list(WC):
     h, e, t = P50[k]; KAM[k] = (h, e, blickmatrix(e, t))
@@ -159,7 +186,7 @@ def bewerte(F, w, voll=False):
         vk = sicht(k, zb, koerper(pl[0], pl[1], dx, dz)).mean()
         ms = mass_p(k, pl)
         r = {}
-        if vk >= 0.6:
+        if vk >= 0.6 and k in GO_ERLAUBT:                       # Runde 4: "Game over" keine Lauf-Kamera (Kopf)
             sp = min((1, -1), key=lambda sp: k1(ms, (ZIEL['GameOver'][1][0] * sp, ZIEL['GameOver'][1][1])))
             r['GameOver'] = (k1(ms, (ZIEL['GameOver'][1][0] * sp, ZIEL['GameOver'][1][1])) + 6.0 * bed, ms, mf, bed, vk)
         for nm, d in (('W1', 10000), ('W2', 5000), ('W3', 3000)):
@@ -187,32 +214,105 @@ def bewerte(F, w, voll=False):
         tab[k] = r
     return tab
 
+def zeile(fx):
+    """--gemeinsam (Runde 3 / Runde 4 Schritt 0): alle vier Rollen an EINER Lage."""
+    out = []
+    for fz in range(-24750, -22000, 250):
+        for w in range(256):
+            a = w * 2 * math.pi / 256; dx, dz = math.cos(a), math.sin(a)
+            if not all(drin(fx + dx * d, fz + dz * d) for d in (7668, 10000, 5000, 3000)): continue
+            tab = bewerte((fx, fz), w)
+            best = None
+            for g, a1, a2, a3 in itertools.product(WC, WC, WC, WC):
+                if g in (a1, a3) or a1 == a2 or a2 == a3: continue      # jeder Rollenwechsel ist ein Schnitt (RE2 11 -> 8 -> 9 -> 10)
+                if a1 == a3 and '--streng' in sys.argv: continue        # Runde 2: drei verschiedene W-Kameras (gibt es nicht, diag5.py)
+                z = [tab[g].get('GameOver'), tab[a1].get('W1'), tab[a2].get('W2'), tab[a3].get('W3')]
+                if any(v is None for v in z): continue
+                s = sum(v[0] for v in z)
+                if best is None or s < best[0]: best = (s, (g, a1, a2, a3), [v[0] for v in z], [v[3] for v in z], [v[4] for v in z])
+            if best: out.append((best[0], fx, fz, w) + best[1:])
+    return out
+
+def zeile_w(fx):
+    """Runde 4 Schritt 1: Lage der Wiederholungen (W1/W2/W3, jeder Wechsel ein Schnitt, W1 = W3 erlaubt)."""
+    out = []
+    for fz in range(-24750, -22000, 250):
+        for w in range(256):
+            a = w * 2 * math.pi / 256; dx, dz = math.cos(a), math.sin(a)
+            if not all(drin(fx + dx * d, fz + dz * d) for d in (10000, 5000, 3000)): continue
+            tab = bewerte((fx, fz), w)
+            best = None
+            for a1, a2, a3 in itertools.product(WC, WC, WC):
+                if a1 == a2 or a2 == a3 or a3 in GO_ERLAUBT and len(GO_ERLAUBT) == 1: continue   # W3 != "Game over" (Schnitt 15)
+                z = [tab[a1].get('W1'), tab[a2].get('W2'), tab[a3].get('W3')]
+                if any(v is None for v in z): continue
+                s = sum(v[0] for v in z)
+                if best is None or s < best[0]: best = (s, (a1, a2, a3), [v[0] for v in z], [v[3] for v in z], [v[4] for v in z])
+            if best: out.append((best[0], fx, fz, w) + best[1:])
+    return out
+
+def zeile_go(fx):
+    """Runde 4 Schritt 2: eigene Lage fuer "Game over" auf einer Nicht-Lauf-Kamera (PORT-WAHL, Kopf von re15_finale_r42.h).
+    Hart: Form ganz im Wagen, Spieler (7668 vor der Form, RE2-Fixpunkte) zu mindestens 80 % sichtbar, Formmitte ausser Bild (RE2 11:
+    +86,5 Grad). Kosten wie oben: k1 gegen RE2 Schnitt 11 + 6 x Bedeckung."""
+    out = []
+    for fz in range(-26500, -20000, 250):
+        for w in range(256):
+            a = w * 2 * math.pi / 256; dx, dz = math.cos(a), math.sin(a)
+            pl = (fx + dx * 7668, fz + dz * 7668)
+            if not drin(*pl): continue
+            gier = (-w * 16) & 4095
+            FW = welt(FORM_ALL, (fx, fz), gier)
+            if not im_wagen(FW): continue
+            for k in GO_ERLAUBT:
+                zb, bed = zpuffer(k, FW)
+                vk = sicht(k, zb, koerper(pl[0], pl[1], dx, dz)).mean()
+                ms = mass_p(k, pl)
+                if vk < 0.8 or ms is None: continue
+                uc, vc, zc = proj(k, np.array([[fx, -1500.0, fz]]))
+                if zc[0] > 50 and 0 <= uc[0] < 320 and 0 <= vc[0] < 240: continue
+                Z = ZIEL['GameOver'][1]
+                kk = min(k1(ms, (Z[0] * sp, Z[1])) for sp in (1, -1)) + 6.0 * bed
+                out.append((kk, fx, fz, w, gier, k, ms[0], ms[1], bed, vk, float(uc[0]), pl))
+    return out
+
 def main():
+    print('Lauf-Kameras RE2 ROOM7020:', sorted(LAUF_RE2), '| ROOM5090:', sorted(LAUF_50), '| "Game over" erlaubt:', GO_ERLAUBT)
+    for b in BELEG_50:
+        if int(b.split('(')[1].split('-')[0]) >= 11: print('  5090', b)
+    from multiprocessing import Pool
+    n = int(os.environ.get('U3_PROZESSE', '1'))
+    if '--gemeinsam' in sys.argv:
+        res = []
+        with Pool(n) as pool:
+            for r in pool.map(zeile, range(-1000, 25001, 500)): res.extend(r)
+        res.sort(key=lambda r: r[0])
+        print(len(res), 'Loesungen (alle vier Rollen an einer Lage)')
+        for r in res[:25]:
+            s, fx, fz, w, ks, kost, bed, vis = r
+            print('%.2f F=(%d,%d) Achse %d/256 (Gier %d) GO %d W1 %d W2 %d W3 %d  Kosten [%s] Bedeckung [%s] sichtbar [%s]' % (
+                s, fx, fz, w, (-w * 16) & 4095, *ks, ' '.join('%.2f' % v for v in kost), ' '.join('%.2f' % v for v in bed),
+                ' '.join('%.2f' % v for v in vis)))
+        return
     res = []
-    grob = '--fein' not in sys.argv
-    for fx in range(-1000, 25001, 500):
-        for fz in range(-24750, -22000, 250):
-            for w in range(256):
-                a = w * 2 * math.pi / 256; dx, dz = math.cos(a), math.sin(a)
-                if not all(drin(fx + dx * d, fz + dz * d) for d in (7668, 10000, 5000, 3000)): continue
-                tab = bewerte((fx, fz), w)
-                best = None
-                for g, a1, a2, a3 in itertools.product(WC, WC, WC, WC):
-                    if g in (a1, a3) or a1 == a2 or a2 == a3: continue      # jeder Rollenwechsel ist ein Schnitt (RE2 11 -> 8 -> 9 -> 10)
-                    if a1 == a3 and '--streng' in sys.argv: continue        # Runde 2: drei verschiedene W-Kameras (gibt es nicht, diag5.py)
-                    z = [tab[g].get('GameOver'), tab[a1].get('W1'), tab[a2].get('W2'), tab[a3].get('W3')]
-                    if any(v is None for v in z): continue
-                    s = sum(v[0] for v in z)
-                    if best is None or s < best[0]: best = (s, (g, a1, a2, a3), [v[0] for v in z], [v[3] for v in z], [v[4] for v in z])
-                if best: res.append((best[0], fx, fz, w) + best[1:])
+    with Pool(n) as pool:
+        for r in pool.map(zeile_w, range(-1000, 25001, 500)): res.extend(r)
     res.sort(key=lambda r: r[0])
-    print(len(res), 'Loesungen')
-    for r in res[:25]:
+    print('Schritt 1 - Wiederholungen:', len(res), 'Loesungen')
+    for r in res[:10]:
         s, fx, fz, w, ks, kost, bed, vis = r
-        print('%.2f F=(%d,%d) Achse %d/256 (Gier %d) GO %d W1 %d W2 %d W3 %d  Kosten [%s] Bedeckung [%s] sichtbar [%s]' % (
+        print('%.2f F=(%d,%d) Achse %d/256 (Gier %d) W1 %d W2 %d W3 %d  Kosten [%s] Bedeckung [%s] sichtbar [%s]' % (
             s, fx, fz, w, (-w * 16) & 4095, *ks, ' '.join('%.2f' % v for v in kost), ' '.join('%.2f' % v for v in bed),
             ' '.join('%.2f' % v for v in vis)))
-    json.dump([list(map(lambda x: x if not isinstance(x, tuple) else list(x), r)) for r in res[:200]], open(os.path.join(os.getcwd(), 'u3_schnitte_top.json'), 'w'))
+    go = []
+    with Pool(n) as pool:
+        for r in pool.map(zeile_go, range(-1000, 25001, 250)): go.extend(r)
+    best = min(r[0] for r in go)
+    go.sort(key=lambda r: (r[0] > best + 0.01, -r[9], r[0]))   # Gleichstand (0,01): groesste Sichtbarkeit des Spielers
+    print('Schritt 2 - "Game over" mit eigener Lage:', len(go), 'Lagen')
+    for r in go[:12]:
+        print('%.2f F=(%d,%d) Achse %d/256 (Gier %d) Schnitt %d  Spieler u %+.2f Groesse %.3f  Bedeckung %.2f  sichtbar %.2f  Formmitte u %.0f'
+              '  Spieler (%d,%d)' % (r[:11] + (int(r[11][0]), int(r[11][1]))))
 
 if __name__ == '__main__':
     main()

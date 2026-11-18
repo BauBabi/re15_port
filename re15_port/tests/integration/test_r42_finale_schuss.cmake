@@ -13,7 +13,11 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die uebrigen Int
 #   W2 U+77 (40 Bilder @0x801038a4), Rakete U+78, Einfrieren U+84 (t 7), W3 U+109 (32 @0x801039a8), Ruetteln U+118 (10 @0x80103a80),
 #   Einschlag U+119, Wackeln aus U+134 (Bild 16 @0x80103d24), Kill = Einschlag + 83 (Xa 0x03 1026 Sektoren = 6,84 s ECHTZEIT: Bit 0x20
 #   @0x80103d64-74, VSync 5 @0x80103b00-08 = 5 Austastungen je Bild, 410,4 Austastungen -> 83. Bild; Pruefbericht s1 r1 R1), Phase 9 +1.
-#   Schnitte (U3 Runde 3, include/re15_finale_r42.h): Ausloeser 12, W1 13, W2 14, W3 13. Bildlage (Runde 3, Pruefbericht s1 r2 R1) mit der
+#   Schnitte (U3 Runde 4, include/re15_finale_r42.h): Ausloeser 15, W1 13, W2 14, W3 13. Runde 4 (Pruefbericht s1 r3 R1): der Ausloeser
+#   fordert einen Wechsel aus der Lauf-Kamera an (finale.log "Ausloese-Schnitt: vorher 11..14, angefordert 15, Wechsel 1"), und das Bild
+#   des Ausloesers - das mit dem Versetzen auf die Fixpunkte - wird gehalten (RE15_KAMERAHALT_LOG: "[kamerahalt] F<Ausloeser> ... ->
+#   HALTEN"; RE2 FUN_8002b968 @0x8002ba50/@0x8002bb58 zeichnet das Bild der Schnitt-Anforderung nicht). "Game over" hat eine eigene
+#   Lage (PORT-WAHL RE15_FI_GO_*, finale.log "Fixpunkte: Form (9250,-25750)"), W1 setzt die Form auf die W-Lage (22000,-23250). Bildlage (Runde 3, Pruefbericht s1 r2 R1) mit der
 #   Kamera des Schnitts: "Game over" Form ausser Bild und Spieler im Bild (RE2 Schnitt 11); W3 Effekt in jedem Bild im Bild und naeher
 #   an der Kamera als die Form (RE2 1181 vor 4112); W1/W2 Rakete in mindestens der Haelfte der Flugbilder im Bild. Einschlag: Raumtonbank
 #   R702 Satz 0x0F (Se_on 0x020F0001 @0x80103b54-5c) im Einschlagbild, Bank geladen. Zerplatzen (U5): Bild 16 loescht die Brocken und setzt
@@ -46,7 +50,7 @@ re15_start_spiel(_rv 800
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=5090@250 "RE15_PLAYER_POS=500,-9175,2048,0"
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U8.5,MA6,W60"
-    RE15_FINALE_WERFER=1 RE15_FINALE_LOG=1 RE15_BOOT_EXIT_AT=2 "RE15_EXIT_AT=7000"
+    RE15_FINALE_WERFER=1 RE15_FINALE_LOG=1 RE15_KAMERAHALT_LOG=1 RE15_BOOT_EXIT_AT=2 "RE15_EXIT_AT=7000"
     "${_exe_kopie}")
 file(REMOVE "${_exe_kopie}")
 
@@ -91,7 +95,7 @@ if(NOT _log MATCHES "echte Rakete geloescht \\([1-9][0-9]* Plaetze\\)")
     string(APPEND _f "\n der echte Schuss im Freigabebild U hat keine Rakete (2,0x0D) erzeugt (RE2: Rakete ab Clip-Bild 1, @0x8004559c)")
 endif()
 # [^\n] statt .: der CMake-Punkt passt auch auf den Zeilenumbruch (Runde 3: "Ausloeser: .*Schnitt 12" fand "W1 ... Schnitt 12" der Runde 2)
-foreach(_paar "Ausloeser: [^\n]*Schnitt 12" "W1: Spieler 10000 vor der Form, Schnitt 13" "W2: Spieler 5000 vor der Form, Schnitt 14"
+foreach(_paar "Ausloeser: [^\n]*Schnitt 15" "Fixpunkte: Form [(]9250,-25750[)]" "Wiederholung Form [(]22000,-23250[)] Schnitt 13" "W1: Spieler 10000 vor der Form, Schnitt 13" "W2: Spieler 5000 vor der Form, Schnitt 14"
               "W3: Spieler 3000 vor der Form, Schnitt 13" "Kill: [^\n]*Xa-Fenster 415 Austastungen")
     if(NOT _log MATCHES "${_paar}")
         string(APPEND _f "\n '${_paar}' fehlt (U3-Schnitte / R1-Echtzeit)")
@@ -157,6 +161,26 @@ if(_w12 LESS 10 OR _w12_im LESS _halb)
 endif()
 message(STATUS "r42_finale_schuss: Bildlage W3 ${_w3_vorn}/${_w3} vorn, W1/W2 ${_w12_im}/${_w12} im Bild")
 file(READ "${WORKDIR}/debug.log" _dbg)
+# Runde 4 (R1): Wechsel beim Ausloesen und kein gezeigtes Bild mit dem Versetzen in der alten Kamera.
+if(_log MATCHES "\\[finale\\] T[0-9]+ F([0-9]+) Ausloeser: ")
+    set(_fa "${CMAKE_MATCH_1}")
+    if(_log MATCHES "Ausloese-Schnitt: vorher (-?[0-9]+), angefordert ([0-9]+), Wechsel ([01])")
+        set(_vor "${CMAKE_MATCH_1}")
+        set(_neu "${CMAKE_MATCH_2}")
+        set(_wx "${CMAKE_MATCH_3}")
+        if(_vor EQUAL _neu OR NOT _wx EQUAL 1)
+            string(APPEND _f "\n Ausloeser ohne Kamerawechsel (vorher ${_vor}, angefordert ${_neu}, Wechsel ${_wx})")
+        endif()
+        if(_vor LESS 11 OR _vor GREATER 14)
+            string(APPEND _f "\n Ausloeser nicht in einer Lauf-Kamera von Wagen C (vorher ${_vor}) - der Lauf prueft die Regel nicht")
+        endif()
+    else()
+        string(APPEND _f "\n Messzeile Ausloese-Schnitt fehlt")
+    endif()
+    if(NOT _dbg MATCHES "\\[kamerahalt\\] F${_fa} raum=5090 [^\n]* -> HALTEN")
+        string(APPEND _f "\n Bild F${_fa} (Ausloeser, Versetzen auf die Fixpunkte) wird gezeigt statt gehalten")
+    endif()
+endif()
 if(NOT _dbg MATCHES "\\[finale-se\\] Raumbank R702 \\(RE2 ROOM7020 snd0\\) geladen")
     string(APPEND _f "\n Raumtonbank R702 nicht geladen (Einschlag stumm)")
 endif()

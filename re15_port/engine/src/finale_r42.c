@@ -369,18 +369,19 @@ static int ausloeser(uint16_t *pad, uint16_t *pressed)
     return 1;
 }
 
-/* Phase 0 @0x801035c0-0x80103700 */
-static void phase0(void)
+/* Phase 0, Teil Fixpunkte + Schnitt (@0x801035cc-0x801036dc). Eigene Funktion fuer den Riegel re15_finale_r42_schnitt_test (Runde 4,
+ * Pruefbericht s1 r3 R1): Ausloesen in jeder Lauf-Kamera 11-14 muss einen Kamerawechsel anfordern, damit das Bild mit dem Versetzen
+ * gehalten wird (kamerahalt_r41.c = RE2 @0x8002ba50/@0x8002bb58). Rueckgabe: der Schnitt vor dem Ausloesen. */
+static int fixpunkte_und_schnitt(re15_actor_t *e, re15_actor_t *pl)
 {
-    re15_actor_t *e = &g_actors[s_fi.form];
-    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     /* Lagen: RE2 stellt Gegner (-14547,-14636) Gier 1432 und Leon (-19025,200,-20861) Gier 4433 fest (@0x801035cc-e0 /
      * @0x80103638-74); Leon steht damit 7668 vor dem Gegner, Gegnergier = Peilung zu Leon (1432 gegen gerechnet 1430).
      * U3 (Kopf RE15_FI_FORM_*): Form auf den Fixpunkt in Wagen C, Spieler 7668 davor auf ihrer Achse (Spielergier nach der Regel von
      * FUN_801016cc @0x80101738-50; die feste RE2-Gier 0x1151 gilt fuer ROOM7020-Koordinaten). */
     s_fi.fo_x = e->x; s_fi.fo_z = e->z;                                   /* +0x230/+0x232 @0x80103610-14 */
     s_fi.pl_x = pl->x; s_fi.pl_z = pl->z; s_fi.pl_gier = pl->rot_y;       /* @0x801036a4-b0 (vor dem Versetzen gemerkt) */
-    e->x = RE15_FI_FORM_X; e->z = RE15_FI_FORM_Z; e->rot_y = RE15_FI_FORM_GIER;
+    e->x = RE15_FI_GO_FORM_X; e->z = RE15_FI_GO_FORM_Z; e->rot_y = RE15_FI_GO_FORM_GIER;   /* PORT-WAHL Runde 4: eigene "Game over"-
+                                                                           * Lage auf Schnitt 15 (Kopf RE15_FI_GO_*) */
     form_halten(e);                                                       /* +0x14C = 0x0A05 @0x801035e8-ec (D11, U4) */
     spieler_vor(e, RE15_FI_T_ABSTAND);
     s_fi.cut = (int)g_scd.work_vars[0x0A];                                /* @0x8010369c / @0x801036cc */
@@ -389,12 +390,30 @@ static void phase0(void)
     re15_game_flag_set(1, 27, 1);                                         /* Bank 1 |= 0x10 @0x801036b8-c4 (Kinobalken) */
     g_scd.cut_auto_enabled = 0;                                           /* Bank 1 |= 0x100 @0x801036bc-d4 (1,0x17): Zonenwechsel
                                                                            * aus (PORT-ZUORDNUNG wie bf_kamera) */
-    kamera(RE15_FI_CUT_ZEILE);                                            /* FUN_8002c7ac(11) @0x801036d8 -> U3: Schnitt 15 */
+    const int vorher = (int)g_scd.work_vars[0x0A];
+    kamera(RE15_FI_CUT_ZEILE);                                            /* FUN_8002c7ac(11) @0x801036d8 -> U3 Runde 4: Schnitt 15 */
+    return vorher;
+}
+
+int re15_finale_r42_schnitt_test(int form_slot)
+{
+    if (form_slot < 0 || form_slot >= RE15_ACTOR_MAX) return -1;
+    s_fi.form = form_slot;
+    return fixpunkte_und_schnitt(&g_actors[form_slot], &g_actors[RE15_ACTOR_SLOT_PLAYER]);
+}
+
+/* Phase 0 @0x801035c0-0x80103700 */
+static void phase0(void)
+{
+    re15_actor_t *e = &g_actors[s_fi.form];
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    const int vorher = fixpunkte_und_schnitt(e, pl);
     s_fi.phase = RE15_FI_P1; s_fi.t = 0; s_fi.z16a = 0; s_fi.frei = 0;   /* +0x1D6 = 1, +0x158 = 0, Phase 1 @0x801036f4-700 */
     const int slot = programm_starten();                                  /* RE2: +0x1D6 = 1 -> sub01/sub14 -> sub15 */
     s_fi.t_ausl = s_fi.takt;
     protokoll("Ausloeser: Abschuss (Form hp %d), Programm Slot %d, Schnitt %d", e->hp, slot, RE15_FI_CUT_ZEILE);
     protokoll("Fixpunkte: Form (%d,%d), Spieler x %d", e->x, e->z, pl->x);
+    protokoll("Ausloese-Schnitt: vorher %d, angefordert %d, Wechsel %d", vorher, (int)g_scd.cam_id, g_scd.cam_change_pending ? 1 : 0);
     {   int uf = -1, tf = 0, us = -1, ts = 0;
         const int df = bildlage(e->x, -1500, e->z, &uf, &tf), ds = bildlage(pl->x, -900, pl->z, &us, &ts);
         protokoll("Bildlage Game over: Form u %d Tiefe %d", df ? uf : -9999, tf, 0);
@@ -411,6 +430,8 @@ static void loesche_rauch_und(uint8_t besitzer)
 static void wiederholungs_schnitt(int32_t abstand, int cut, const char *name)
 {
     re15_actor_t *e = &g_actors[s_fi.form];
+    e->x = RE15_FI_FORM_X; e->z = RE15_FI_FORM_Z; e->rot_y = RE15_FI_FORM_GIER;   /* PORT-WAHL Runde 4: W-Lage (U3 Schritt 1); RE2 hat
+                                                                           * nur die eine Lage @0x801035cc-e0, umgesetzt im Schnittbild */
     spieler_vor(e, abstand);
     s_fi.w_platz = -1;
     kamera(cut);                                                          /* Schnitt 8/9/10 @0x801037dc/@0x801038fc/@0x80103a00 -> U3 */

@@ -100,14 +100,38 @@ extern "C" {
  * teilen sich Schnitt 13 (nicht aufeinanderfolgend, die Rakete startet in W3 7000 naeher an der Form). Beste Loesung (Kosten 9,28,
  * Gleichstand-Regel: innerhalb 0,1 der kleinsten Kosten die groesste Summe der Sichtbarkeit):
  *   Form (22000,-23250) am Vorraum-Ende, Gier 2016 (Achse 130/256), Spieler 7668 davor auf der Achse (FUN_801016cc-Regel).
- *   "Game over" Schnitt 12 (RE2 11): Form ausser Bild (Bedeckung 0,02), Spieler 4200 vor der Kamera.
  *   W1 Schnitt 13 (RE2 8), W2 Schnitt 14 (RE2 9), W3 Schnitt 13 (RE2 10).
- * 5091 hat dieselben RID-Daten (Schnitte 0-15 bytegleich, @0x60-0x25F). */
+ * Runde 4 (Pruefbericht s1 r3 R1: Runde 3 nahm "Game over" = Schnitt 12, eine LAUF-Kamera in der Mitte von Wagen C; drueckte man dort
+ * ab, gab es keinen Schnitt und Leon sprang im selben Bild 6191 nach vorn): "Game over" ist wie RE2 Schnitt 11 KEINE Lauf-Kamera.
+ *   Beleg RVD (Kopf +0x28, je Kamera erster Eintrag = Anker FUN_80014324, die uebrigen = echte Wechsel): RE2 ROOM7020 wechselt nur nach
+ *   1..3 (`01ff0001` @0x00280, `01ff0102` @0x002BC, `01ff0203` @0x002F8, `01ff0302` @0x00320); ROOM5090 Wagen C: 11->12 @0x00490,
+ *   12->11 @0x004B8, 12->13 @0x004CC, 13->12 @0x004F4, 13->14 @0x00508, 14->13 @0x00530 - nur Schnitt 15 hat bloss seinen Anker
+ *   `01ff0f00` @0x00544 (SCD-Kamera des Auftritts, Cut_chg(15)). Damit ist der Ausloeser in jeder Lauf-Kamera 11-14 ein Wechsel, und
+ *   das Bild mit dem Versetzen wird nicht gezeigt: RE2 zeichnet das Bild der Schnitt-Anforderung nicht (FUN_8002b968 Dirty @0x8002ba0c,
+ *   `jal 0x8002bdf4` @0x8002ba50, `j 0x8002bd60` @0x8002bb58 ueber die DrawOTag @0x8002bd40-58; RE1.5 @0x80021558/@0x80021560 = Port
+ *   kamerahalt_r41.c).
+ *   Neu gerechnet (u3_schnitte.py --gemeinsam, Strang-Scratchpad u3c/ergebnis.txt): an EINER Lage fuer alle vier Rollen gibt es nur
+ *   noch 3 Loesungen, alle mit der W-Lage unten und "Game over" 15 - dort steht Leon aber am rechten Bildrand (Bild-x 315-319, 34
+ *   Bildpunkte hoch, Groesse 0,015 gegen RE2 0,089) und die Form ist zu 74 % im Bild. Ein "Game over" auf 15 mit Leon gross und der
+ *   Form ausser Bild gibt es nur mit der Form um x 9250 - dort ist keine Wiederholung moeglich (u3c/diag_go15_alle.txt).
+ *   PORT-WAHL (Runde 4): "Game over" bekommt eine EIGENE Lage (RE15_FI_GO_*), die Wiederholungen behalten ihre (RE15_FI_FORM_*).
+ *   RE2 stellt nur eine Lage (@0x801035cc-e0); der Port setzt die Form erst beim Schnitt auf W1 um (Wiederholung = Schnitt, Bild 0
+ *   nicht gezeigt wie oben). Die echte Rakete des "Game over"-Bilds ist 7 Bilder nach der Freigabe geloescht (@0x80103750-68), sie
+ *   erreicht die Form in keiner der beiden Lagen. Ohne "Game over" ergibt die Suche fuer die Wiederholungen dieselbe Lage wie Runde 3
+ *   (Schritt 1: 21 Loesungen, beste (22000,-23250) Achse 130, 13/14/13); drei verschiedene W-Kameras gibt es auch so nicht
+ *   (u3c/diag_w_ohne_go.txt: 0 Lagen).
+ *   Schritt 2 (Spieler >= 80 % sichtbar, Formmitte ausser Bild, Kosten k1 + 6 x Bedeckung): Form (9250,-25750) Gier 2288 (Achse
+ *   113/256), Spieler 7668 davor bei (2095,-22990): u +0,15, Groesse 0,085 (RE2 Schnitt 11: +0,18 / 0,089), Formmitte Bild-x 394,
+ *   Bedeckung 0,07 (Teile der Form am rechten Rand).
+ * 5091 hat dieselben RID-Daten (Schnitte 0-15 bytegleich, @0x60-0x25F) und dieselbe RVD fuer Wagen C (unit_r42_finale t_schnitte). */
 #define RE15_FI_FORM_X     22000
 #define RE15_FI_FORM_Z    (-23250)
 #define RE15_FI_FORM_GIER   2016
 #define RE15_FI_T_ABSTAND   7668   /* |(-14547,-14636) - (-19025,-20861)| (@0x801035cc-e0 / @0x80103638-74) */
-#define RE15_FI_CUT_ZEILE     12
+#define RE15_FI_GO_FORM_X     9250   /* PORT-WAHL Runde 4: eigene "Game over"-Lage (u3_schnitte.py Schritt 2, Kopf oben) */
+#define RE15_FI_GO_FORM_Z  (-25750)
+#define RE15_FI_GO_FORM_GIER  2288
+#define RE15_FI_CUT_ZEILE     15   /* Runde 4: keine Lauf-Kamera (RVD Wagen C nur Anker `01ff0f00` @0x00544), RE2 11 @0x801036d8 */
 #define RE15_FI_CUT_W1        13
 #define RE15_FI_CUT_W2        14
 #define RE15_FI_CUT_W3        13
@@ -185,6 +209,9 @@ int  re15_finale_r42_uhr(void);              /* verbleibende Bilder, -1 = noch n
 int  re15_finale_r42_wurf_faellig(void);
 const uint8_t *re15_finale_r42_programm(int elza, int *out_len);
 void re15_finale_r42_kampf_start_test(void);  /* nur Riegel: Uhr starten wie das Ende von sub04 */
+/* nur Riegel (Runde 4, Pruefbericht s1 r3 R1): Fixpunkte + "Game over"-Schnitt der Phase 0 (@0x801035cc-0x801036dc) mit der Form in
+ * form_slot; Rueckgabe = Schnitt vor dem Ausloesen (work_vars[0x0A]). */
+int  re15_finale_r42_schnitt_test(int form_slot);
 /* R1: 1, sobald das Xa-0x03-Lesefenster (Sektoren) nach vbl Austastungen abgelaufen ist (vbl * 150 >= Sektoren * 60). */
 int  re15_finale_r42_xa_aus(uint32_t vbl, int sektoren);
 /* U5: Eintrag i der Zuordnung (0..14 Flugteile, ab 15 Brocken): RE2-Teil, Form-Teil, Marke. 0 = kein Eintrag. */
