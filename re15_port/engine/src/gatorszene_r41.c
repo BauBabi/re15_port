@@ -1895,9 +1895,9 @@ static re15_actor_t *gator_aktor(void)
 /* Alligator tot: RE2-R1-Endzustand (Kanister/Kiefer, +0x10E |= 0x4000 @0x80102654-64 = re15_gr2_tot) ODER die Todesrolle
  * Clip 7 des Boss-Moduls mit dem byte-true CORPSE-Zustand 7 (enemy_ai_boss_gator.c GBP_DIE -> GBP_DEAD `e->state = 7`).
  * Die Todesrolle erreicht man seit ec0d39bb9 (NUTZERWUNSCH 17.11. "nur mit den gascontainer", K-12) nur noch ueber den
- * Pruefhaken RE15_GB_TEST=3; Explosionen und Beschuss toeten nicht mehr (gb_absorb_hit), im Spiel kommt der Tod nur ueber R1
- * mit dem Kanister. Unter RE15_GATOR_ORIGINAL=1 laeuft das Boss-Modul gar nicht (re15_gator_boss_active), dort gilt die
- * ausgelieferte RE1.5-Regel. */
+ * Pruefhaken RE15_GB_TEST=3 der Szenen-Tests; Explosionen und Beschuss toeten nicht mehr (gb_absorb_hit hebt HP < 0 auf 1
+ * und Zustand 3 auf 2), im Spiel kommt der Tod nur ueber R1 mit dem Kanister (erster Zweig). Unter RE15_GATOR_ORIGINAL=1
+ * laeuft das Boss-Modul gar nicht (re15_gator_boss_active), dort gilt die ausgelieferte RE1.5-Regel. */
 static int gator_tot(void)
 {
     if (re15_gr2_tot()) return 1;

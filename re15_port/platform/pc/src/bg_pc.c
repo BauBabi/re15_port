@@ -62,7 +62,10 @@ extern void re15_render_pc_set_pri_atlas(const uint32_t *rgba, int w, int h);
  * +CLUT → RGBA with index0 keyed transparent, hand it to the renderer's overdraw.
  * Returns 1 if the cut has a foreground atlas, 0 otherwise (overdraw stays off). */
 static const char *re15_bg_room_prefix(unsigned room_id);   /* fwd (defined below) */
-static uint32_t s_pri_atlas_rgba[256 * 256];
+/* Runde 42 rest Stufe 6: 256 x 512 statt 256 x 256 - unter den Atlas des Cuts (hoechstens 256 Zeilen) kommt der Atlas der
+ * RE2-Zusatzmasken (re15_pri_re2_zusatz unten, hoechstens 256 Zeilen). s_pri_atlas_w/h_akt = Abmessung des zuletzt gesetzten Atlas. */
+static uint32_t s_pri_atlas_rgba[256 * 512];
+static int s_pri_atlas_w_akt = 0, s_pri_atlas_h_akt = 0;
 
 /* Asset-Pfad-Konsolidierung (2026-07-02): die per-cut Hintergründe (BSS/ROOM####/BG##.BSS)
  * und Vordergrund-Atlanten (BSS/ROOM####/PRI##.TIM) liegen jetzt in der EINEN Asset-Wurzel
@@ -171,6 +174,7 @@ static int pri_publish_tim(const uint8_t *data, int size)
         s_pri_atlas_rgba[i] = (r << 24) | (g << 16) | (b << 8) | 0xFFu;
     }
     re15_render_pc_set_pri_atlas(s_pri_atlas_rgba, tim.width, tim.height);
+    s_pri_atlas_w_akt = tim.width; s_pri_atlas_h_akt = tim.height;   /* Runde 42 rest s6 */
     return 1;
 }
 
@@ -237,6 +241,61 @@ int re15_pri_load_cut_atlas_ex(int cut_idx, int nachgezeichnet)
 }
 
 int re15_pri_load_cut_atlas(int cut_idx) { return re15_pri_load_cut_atlas_ex(cut_idx, 0); }
+
+/* RE2-ZUSATZMASKEN (Runde 42 rest Stufe 6, re15_pri.h re15_pri_re2_anhaengen; Daten tools/maske/re2_uebernahme_r42.py).
+ * Liest MASKS/ROOM%04X_RE2.MSK (R15M, Sektion dieses Cuts) nach *zus und haengt den Atlas MASKS/ROOM%04X_RE2_%02d.TIM UNTER den
+ * eben gesetzten Atlas des Cuts (basis_da = 1: die Masken des Cuts sind gesetzt und tasten Zeile 0..h-1 ab) bzw. setzt ihn allein
+ * (basis_da = 0). Raum-Id voll (Leon- und Elza-Datei liegen beide vor, bytegleich). Rueckgabe: Atlaszeile, ab der der Zusatz liegt
+ * (= Versatz fuer srcY), oder -1 (keine Zusatzmasken fuer diesen Cut / Atlas fehlt -> dann bleibt *zus leer). */
+int re15_pri_re2_zusatz(int cut_idx, int basis_da, re15_pri_cut_t *zus)
+{
+    char rel[96];
+    uint8_t *buf; int sz = 0, n = 0;
+    re15_tim_t tim;
+    if (!zus) return -1;
+    memset(zus, 0, sizeof *zus);
+    snprintf(rel, sizeof rel, "MASKS/ROOM%04X_RE2.MSK", g_current_room_id);
+    buf = re15_pc_read_cd(rel, &sz);
+    if (!buf) return -1;
+    {   uint32_t off = re15_pri_msk_section_offset(buf, (size_t)sz, cut_idx);
+        if (off) n = re15_pri_parse_section(buf, (size_t)sz, off, zus); }
+    free(buf);
+    if (n <= 0 || zus->draw_count <= 0) { memset(zus, 0, sizeof *zus); return -1; }
+    snprintf(rel, sizeof rel, "MASKS/ROOM%04X_RE2_%02d.TIM", g_current_room_id, cut_idx);
+    buf = re15_pc_read_cd(rel, &sz);
+    if (!buf || re15_tim_parse(buf, sz, &tim) != 0 || tim.bpp != 8 || !tim.has_clut) {
+        fprintf(stderr, "[pri-re2] ROOM%04X Cut %d: Atlas %s fehlt/unlesbar - Zusatz aus\n", g_current_room_id, cut_idx, rel);
+        free(buf); memset(zus, 0, sizeof *zus); return -1;
+    }
+    {   const int yv = (basis_da && s_pri_atlas_w_akt == tim.width) ? s_pri_atlas_h_akt : 0;
+        if (basis_da && s_pri_atlas_w_akt != tim.width) {
+            fprintf(stderr, "[pri-re2] ROOM%04X Cut %d: Atlasbreite %d != %d - Zusatz aus\n", g_current_room_id, cut_idx,
+                    s_pri_atlas_w_akt, tim.width);
+            free(buf); memset(zus, 0, sizeof *zus); return -1;
+        }
+        if ((long)tim.width * (yv + tim.height) > (long)(sizeof s_pri_atlas_rgba / sizeof s_pri_atlas_rgba[0])) {
+            fprintf(stderr, "[pri-re2] ROOM%04X Cut %d: Atlas %dx%d passt nicht unter %d Zeilen - Zusatz aus\n", g_current_room_id,
+                    cut_idx, tim.width, tim.height, yv);
+            free(buf); memset(zus, 0, sizeof *zus); return -1;
+        }
+        {   const uint8_t *idx = (const uint8_t *)tim.pixels;
+            uint32_t *ziel = s_pri_atlas_rgba + (size_t)yv * (size_t)tim.width;
+            for (int i = 0; i < tim.width * tim.height; i++) {
+                uint8_t ix = idx[i];
+                if (ix == 0) { ziel[i] = 0; continue; }          /* Index 0 = durchsichtig, wie pri_publish_tim */
+                uint16_t c = tim.clut[ix];
+                uint32_t r = (uint32_t)((c & 0x1f) << 3), g = (uint32_t)(((c >> 5) & 0x1f) << 3),
+                         b = (uint32_t)(((c >> 10) & 0x1f) << 3);
+                ziel[i] = (r << 24) | (g << 16) | (b << 8) | 0xFFu;
+            } }
+        free(buf);
+        re15_render_pc_set_pri_atlas(s_pri_atlas_rgba, tim.width, yv + tim.height);
+        s_pri_atlas_w_akt = tim.width; s_pri_atlas_h_akt = yv + tim.height;
+        fprintf(stderr, "[pri-re2] ROOM%04X Cut %d: %d RE2-Masken, Atlas %dx%d ab Zeile %d (%s)\n", g_current_room_id, cut_idx,
+                zus->draw_count, tim.width, tim.height, yv, basis_da ? "unter dem Atlas des Cuts" : "allein");
+        return yv;
+    }
+}
 
 #define BG_WIDTH   320
 #define BG_HEIGHT  240

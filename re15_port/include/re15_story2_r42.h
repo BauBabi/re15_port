@@ -132,6 +132,10 @@
 #define RE15_S2_TYP_JOHN         0x49     /* ROOM2001 @0x0179E `44 00 49 40 ..`                                             */
 #define RE15_S2_TYP_SHERRY       0x4B     /* ROOM2001 @0x0180A `44 00 4b 40 ..`                                             */
 #define RE15_S2_NPC_GRID         0x40     /* stehender NPC (ROOM2000/2001 pc[3] = 0x40)                                     */
+/* Runde 42 rest Stufe 3, U-07: "Sherry wartet im Pausenraum 2011" - Set Mod ROOM2001 sub05 @0x1A92 `22 03 4a 01`, einziger Leser Mod
+ * ROOM2011 sub00 @0x08BC `21 03 4a 01` (-> Sce_em_set Typ 0x4B @0x08C0). Elzas Szene 2081 loescht ihn, sobald Sherry dort erscheint. */
+#define RE15_S2_SHERRY_2011_BANK 3
+#define RE15_S2_SHERRY_2011_BIT  74
 /* Signale Bank 5 (Raum-Scratch, geloescht beim Raum-Init FUN_8003ecec @0x8003ed74; ROOM2080/2081-Skripte ohne Bank 5, Zensus
  * kanister2080 Kopf; Kanister-Szene 0x17..0x1F nur in ihrer Phase vor dem Tod des Alligators). */
 #define RE15_S2_SIG_FREI         0x14     /* Takt -> Programm: keine Zeile, keine Stimme mehr (Form RE15_K2080_SIG_WSLEEP)   */

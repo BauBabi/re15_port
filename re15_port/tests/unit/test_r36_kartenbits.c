@@ -566,7 +566,7 @@ static const port_bit_t k_port[] = {
     { RE15_R42_BANK, RE15_R42_BIT_3020_SCHUESSE, "RE15_R42_BIT_3020_SCHUESSE", "3020 Leon hoert die Schuesse, gesehen (Runde 42 Story, L5)" },
     { RE15_R42_BANK, RE15_R42_BIT_3060_UEBERGABE, "RE15_R42_BIT_3060_UEBERGABE", "Wiedersehen 3060 mit Uebergabe gesehen (Runde 42 Story, L5-L7)" },
     { RE15_R42_BANK, RE15_R42_BIT_PLAN_FABRIK, "RE15_R42_BIT_PLAN_FABRIK", "Fabrikplan aus Marvins Uebergabe 3060, story3a_r42.c geben (Runde 42 Story STAGE3a, L6/F-05)" },
-    { RE15_R42_BANK, RE15_R42_BIT_PLAN_FABRIK, "RE15_R42_BIT_PLAN_FABRIK", "Fabrikplan aus Marvins Uebergabe 3060, story3a_r42.c geben (Runde 42 Story STAGE3a, L6/F-05)" },
+    { RE15_R42_BANK, RE15_R42_BIT_PLAN_FORSCHUNG, "RE15_R42_BIT_PLAN_FORSCHUNG", "Laborplan Blatt 8 am Wandplan 4020/4021, ungenutzt_r42.c k_plan (Runde 42 rest Stufe 3, U-11)" },
     { RE15_R42_BANK, RE15_R42_BIT_FINALE_ENDE, "RE15_R42_BIT_FINALE_ENDE", "Finale beendet, Abspann frei (Runde 42 Story, T-07)" },
     { RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA, "RE15_R42_BIT_ZUG_ELZA", "Zugstart 6031 Elza gesehen (Runde 42 Story, E9)" },
     { RE15_R42_BANK, RE15_R42_BIT_ALARM, "RE15_R42_BIT_ALARM", "Alarm/Durchsage 5060/5061 (Runde 42 Story, reserviert v0.8.32)" },
@@ -620,6 +620,18 @@ static void teil_p(void)
                im_original ? "KOLLISION mit " : "im Original frei", im_original ? s_z.erste[k_port[i].bit] : "");
         alle[n++] = k_port[i].bit;
     }
+    /* Runde 42 rest (e): k_port fuehrt jedes Port-Bit genau EINMAL - dieselbe Zeile doppelt (Stand aaea5f8c2:
+     * RE15_R42_BIT_PLAN_FABRIK) zaehlte ein Bit zweimal. Gleiches BIT unter verschiedenen Makros ist erlaubt (Leser fremder Bits,
+     * z. B. RE15_TUER1060_K_BIT liest die 10F0-Szene 71), gleiches MAKRO nicht. */
+    int doppelt_port = 0;
+    for (int i = 0; i < N_PORT; i++)
+        for (int j = i + 1; j < N_PORT; j++)
+            if (strcmp(k_port[i].makro, k_port[j].makro) == 0) {
+                printf("        doppelt: Zeile %d %s und Zeile %d %s (Bank %u Bit %u)\n", i, k_port[i].makro, j, k_port[j].makro,
+                       k_port[i].bank, k_port[i].bit);
+                doppelt_port++;
+            }
+    PRUEFE(doppelt_port == 0, "k_port: %d Eintraege, %d Makros doppelt", N_PORT, doppelt_port);
     const int n_plaene = re15_kartenitems_r36_anzahl();
     for (int k = 0; k < n_plaene; k++) {
         const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(k);

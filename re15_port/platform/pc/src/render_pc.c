@@ -17,6 +17,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL.h>
+#include "re15_story6_r42.h"   /* Runde 42 rest (b): re15_story6_r42_ruck */
 #include "re15_engine.h"
 #include "re15_gpu_grenze_r41.h"   /* Runde 41 Spur Q: Groessengrenze der PSX-GPU */
 #include "re15_pri.h"
@@ -1410,6 +1411,31 @@ void re15_render_end_frame(void)
         SDL_Rect vp = beben_vp_alt; vp.y -= s_beben_dy;
         SDL_RenderSetViewport(s_renderer, &vp); beben_vp = 1;
     }
+    /* Runde 42 rest (b): Ruckeln der Fahrt ROOM6031, seit Stufe 4 auch ROOM6030 (RE2 ROOM7030 sub14 Sce_shake_on @0x80058164 -> FUN_8002ac94; Belege
+     * include/re15_story6_r42.h "E9 Ruckeln"). RE2 kopiert je Zeile x pc[1]..319 nach x 0 (Breite 320 - pc[1] @0x8002acc4), Quelle
+     * Zeile + pc[2] (@0x8002ad10, am Rand geklemmt @0x8002ad14-38): der Szenenteil rueckt pc[1] nach links und pc[2] nach oben,
+     * Spalte 319 und die letzte Zeile behalten ihren Inhalt. Ein Viewport mit NEGATIVEM Ursprung zeichnet im direct3d-Renderer
+     * nichts (gemessen: jedes Ruckel-Bild schwarz), darum hier ueber ein Zwischenziel in Fenstergroesse (PORT-WAHL): Szene
+     * hinein, danach ganz und darueber um (pc[1], pc[2]) versetzt auf den Schirm; Balken, Text und Blenden folgen unverschoben. */
+    int ruck_dx = 0, ruck_dy = 0, ruck_ziel = 0;
+    static SDL_Texture *s_ruck_ziel = NULL;
+    static int s_ruck_zw = 0, s_ruck_zh = 0;
+    float ruck_sx = 1.0f, ruck_sy = 1.0f;
+    if (re15_story6_r42_ruck(&ruck_dx, &ruck_dy) && ruck_dx >= 0 && ruck_dy >= 0) {
+        SDL_RenderGetScale(s_renderer, &ruck_sx, &ruck_sy);
+        const int zw = (int)(SCREEN_XRES * ruck_sx + 0.5f), zh = (int)(SCREEN_YRES * ruck_sy + 0.5f);
+        if (s_ruck_ziel && (zw != s_ruck_zw || zh != s_ruck_zh)) { SDL_DestroyTexture(s_ruck_ziel); s_ruck_ziel = NULL; }
+        if (!s_ruck_ziel) {
+            s_ruck_ziel = SDL_CreateTexture(s_renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, zw, zh);
+            s_ruck_zw = zw; s_ruck_zh = zh;
+        }
+        if (s_ruck_ziel && SDL_SetRenderTarget(s_renderer, s_ruck_ziel) == 0) {
+            SDL_RenderSetScale(s_renderer, ruck_sx, ruck_sy);
+            SDL_SetRenderDrawColor(s_renderer, 0, 0, 0, 255);
+            SDL_RenderClear(s_renderer);
+            ruck_ziel = 1;
+        }
+    }
     if (!s_black_bg) {
         SDL_RenderCopy(s_renderer, s_texture, NULL, NULL);
     } else if (s_gameover_tex) {
@@ -1705,6 +1731,14 @@ void re15_render_end_frame(void)
     s_textri_count = 0;  /* reset queue for next frame */
 
     if (beben_vp) SDL_RenderSetViewport(s_renderer, &beben_vp_alt);   /* BEBEN: Balken, Text, Blenden unverschoben */
+    if (ruck_ziel) {   /* Runde 42 rest (b): Zwischenziel ganz, dann um (pc[1], pc[2]) versetzt darueber (s. oben) */
+        SDL_SetRenderTarget(s_renderer, NULL);
+        SDL_RenderCopy(s_renderer, s_ruck_ziel, NULL, NULL);
+        const int qx = (int)(ruck_dx * ruck_sx + 0.5f), qy = (int)(ruck_dy * ruck_sy + 0.5f);
+        SDL_Rect quelle = { qx, qy, s_ruck_zw - qx, s_ruck_zh - qy };
+        SDL_Rect ziel   = { 0, 0, SCREEN_XRES - ruck_dx, SCREEN_YRES - ruck_dy };
+        SDL_RenderCopy(s_renderer, s_ruck_ziel, &quelle, &ziel);
+    }
     s_beben_dy = 0;
 
     /* Step 2.5: ITEM-GET pickup MODAL — the zooming/spinning/flipping item quad, ON TOP of the frozen

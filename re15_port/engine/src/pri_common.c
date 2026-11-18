@@ -231,3 +231,24 @@ fertig:
     if (out->draw_count > out_count) out->draw_count = out_count;
     return out_count;
 }
+
+/* RE2-Zusatzmasken anhaengen (Runde 42 rest Stufe 6, re15_pri.h). Die Basis behaelt ihre gezeichneten Masken an derselben Stelle;
+ * gebaute, aber nicht gezeichnete Basis-Saetze (mask_count > draw_count, ROOM1210 Cut 4) werden ueberschrieben, weil der Zeichner
+ * nur draw_count Saetze laeuft (@0x80039358). */
+int re15_pri_re2_anhaengen(re15_pri_cut_t *pri, const re15_pri_cut_t *zus, int src_y_versatz)
+{
+    if (!pri || !zus) return 0;
+    int basis = pri->draw_count;
+    if (basis < 0) basis = 0;
+    if (basis > RE15_PRI_MAX_MASKS_PER_CUT) basis = RE15_PRI_MAX_MASKS_PER_CUT;
+    int n = 0;
+    for (int i = 0; i < zus->draw_count && i < zus->mask_count && basis + n < RE15_PRI_MAX_MASKS_PER_CUT; i++) {
+        re15_pri_mask_t m = zus->masks[i];
+        m.srcY = (uint16_t)((int)m.srcY + src_y_versatz);
+        pri->masks[basis + n] = m;
+        n++;
+    }
+    pri->draw_count = basis + n;
+    pri->mask_count = basis + n;
+    return n;
+}

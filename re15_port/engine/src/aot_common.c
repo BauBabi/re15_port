@@ -1125,6 +1125,9 @@ void re15_aot_scan(int32_t player_x, int32_t player_z, uint8_t active_cut)
          * 2070/2071 s4, 20A0/20A1 s2, 3040/3041 s0, 6010/6011 s1; 4x nach sce-1 MESSAGE:
          * 5070/5071 s1+s2) — die uebrigen 14 sind PERMANENT tot (1170 s1, 1180/1181 s4,
          * 1250/1251 s0-2, 4001 s1, 5120/5121 s2-3) und muessen es im Port auch sein.
+         * AUSNAHME 4001 s1 (Runde 42 rest Stufe 5, U-08, NUTZERWUNSCH 18.11. "ja, warum nicht?"):
+         * Elzas Tuer nach 401 installiert der Port mit sce 2 wie die Capcom-Disc ROOM4001 @0x1012
+         * (Mod @0x1084 sce 0) - op_door_aot_set -> re15_ungenutzt_r42_tuer_sce, re15_ungenutzt_r42.h.
          * (Die alte Beispielliste nannte 5070 s1-2 als „permanently dead" — die werden in
          * Wahrheit zu sce-1 retyped; korrigiert.) */
         if (a->type == RE15_AOT_TYPE_NONE) continue;

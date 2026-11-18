@@ -22,8 +22,31 @@
  * (sub08 @0x00FDC..@0x00FEC ohne Cut 5), Cut 1 + Licht-Schleife = Fahrt (@0x01020, @0x00F54), msg 14, Krachen, alle drehen sich zur
  * Wagentuer, msg 15 (John), 16 (Sherry), 17 (Elza). John steht im Fuehrerstand (Satz sub06 @0x00E56 Slot 1, Lage PORT-STORY, Werkzeug
  * tools/r42_story/szenen_stage6.py). Danach wie heute: Wagen nach (3,89) = sub06 (msg 11, Licht-Schleife, Tuer nach 5091 offen).
- * "Ruck": wie bei Leon = Zug-an-Ton + Pultlicht + Licht-Schleife. Sce_shake_on (0x5C) ist im Port ein No-op (scd_vm.c op_sce_shake_on,
- * LAB_80042a10 nicht nachgebaut) - Kamerawackeln gibt es deshalb in keiner der beiden Fassungen.
+ * "Ruck": wie bei Leon = Zug-an-Ton + Pultlicht + Licht-Schleife.
+ *
+ * ---- E9 Ruckeln (Runde 42 rest b) ----------------------------------------------------------------------------------------------
+ * RE1.5 hat kein Bildwackeln, das der Zug nutzen koennte: Opcode 0x5C ist in RE1.5 KEIN Sce_shake_on. Tabelle @0x800744a8,
+ * Eintrag 0x5C @0x80074618 -> 0x80042a10: `lhu a0,0(pc)` @0x80042a28, `jal 0x80044fec` @0x80042a2c, pc += 4 @0x80042a3c;
+ * FUN_80044fec schreibt das Halbwort in die Tabelle 0x80074828 (Basis je Stufe 0x800748fc = 0/38/50/65/77/98); FUN_80044210 liest
+ * sie mit dem Index @0x800b0fe0/@0x800b0fe2 und vergleicht die unteren 6 Bit mit der laufenden BGM 0x800b2b44 (Raum-BGM-Tabelle).
+ * Keine ausgelieferte RDT benutzt 0x5C (Zensus tools/scd_dump_room.py ueber alle STAGE1-6-RDTs: 0 Treffer).
+ * RE2 (Beta -> Retail: wo RE1.5 unfertig ist, gilt RE2) faehrt den Zug in ROOM7030: sub08 @0x06F8/@0x06FC, sub12 @0x0A48/@0x0A4C
+ * und sub13 @0x0AE0/@0x0AE4 starten jedesmal ZUSAMMEN Evt_exec(7, sub15) = vorbeiziehende Lampen und Evt_exec(3, sub14) = Ruckeln.
+ * sub14 @0x0B12..@0x0BF4 ist eine Endlosschleife aus Vib_set1 (0x8B, @0x80059394) und Sce_shake_on (0x5C, @0x80058164; RE2-Laenge 3,
+ * pc[1] = dx, pc[2] = dy): Tabelle k_ruck in story6_r42.c, 64 Bilder je Durchlauf, jeder zweite ab dem dritten ein Bild laenger
+ * (var9 >= 2 -> Evt_next @0x0BDC; var9 = 0 @0x0640 in sub08). FUN_8002ac94 kopiert bei pc[1] < 0 nichts (`bgtz a1` @0x8002acb8):
+ * sichtbar sind nur die Bilder mit pc[1] = 1 (1 Bildpunkt nach links, mit pc[2] = 1 auch eine Zeile nach oben).
+ * Port (PORT-WAHL): ROOM6031 nach dem Zugstart ((9,130) = 1) - solange die Licht-Schleife sub05 laeuft (= RE2 sub15, die Fahrt),
+ * laeuft k_ruck mit; Beginn im ersten Takt, in dem der sub05-Faden aktiv ist (RE2 startet beide Faeden im selben Takt @0x0AE0/
+ * @0x0AE4; die Fadenreihenfolge des Ports kann das um 1 Bild verschieben). Gezeichnet in render_pc.c ueber ein Zwischenziel des
+ * Szenenteils (negativer Viewport-Ursprung zeichnet im direct3d-Renderer nichts), Balken und Text unverschoben.
+ * Leon 6030 (Runde 42 rest Stufe 4, NUTZERWUNSCH 18.11.2026 woertlich: "Ja, na klar, wenn du die ruckeln lassen kannst waehrend der
+ * Zug faehrt lass sie auch ruckeln."): dieselbe Regel mit Leons Zugstart-Bit (9,133) RE15_AN_ZUG_BIT und seiner Licht-Schleife
+ * ROOM6030 sub05 @0x01004..@0x0101C (24 Byte, bytegleich mit ROOM6031 @0x00E2A). Der Haken in re15_story6_r42_evt_exec merkt sich
+ * in 6030 nur den Anfang dieses sub05 und gibt das Ziel unveraendert zurueck; Leons Zugstart-Programm (annette_r41.c k_zug_seg,
+ * abgenommen), seine Texte, Kamera und Toene (annette_r41.c zug_tick) bleiben unberuehrt. Das Ruckeln beginnt also am Zugstart mit
+ * z_fahrt (Kopie von sub07 @0x01132) und laeuft bei jedem spaeteren Betreten des fahrenden Zugs (sub07 @0x01132, sub06 @0x010C4).
+ * Opcode 0x5C selbst bleibt fuer RDT-Bytecode RE1.5 (scd_vm.c op_sce_shake_on).
  * Wagen vor dem Zugstart ((3,89)=1, (9,130)=0, Cut 6/8/12: sub06 @0x00EEA `04 ff 18 05`) -> k_s6_6031_tuer: Ausgang Slot 2 wieder die
  * Tuer (main00 @0x00C72), Tuer nach 5091 zeigt msg 4 (sub06 @0x00E90) - Form Leons k_tuer.
  *
@@ -59,5 +82,7 @@ void           re15_story6_r42_tick(void);                                      
 const uint8_t *re15_story6_r42_text(uint16_t room_id, uint8_t id, int *out_len);               /* Tests                              */
 const uint8_t *re15_story6_r42_programm(int p, int *out_len);                                  /* Tests                              */
 const uint8_t *re15_story6_r42_folge(int p, int *out_n);                                       /* Tests                              */
+int            re15_story6_r42_ruck(int *dx, int *dy);                                         /* render_pc.c je Bild (rest b)       */
+extern unsigned g_re15_s6_ruck_bilder;                                                         /* Messhaken (Tests)                  */
 
 #endif

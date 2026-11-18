@@ -272,6 +272,7 @@ static void teil_loch(int elza)
     re15_game_flag_set(3, 245, 1);
     re15_game_flag_set(9, 110, 1); re15_game_flag_set(9, 111, 1); re15_game_flag_set(9, 112, 1);
     re15_game_flag_set(9, 114, 1); re15_game_flag_set(9, 115, 1);
+    if (elza) re15_game_flag_set(3, 74, 1);   /* Runde 42 rest Stufe 3, U-07: Mod ROOM2001 sub05 @0x1A92 Set(3,74) ist gelaufen */
     const uint16_t raum = elza ? 0x2081 : 0x2080;
     if (room_boot(raum, -11160, -14400, -7316, 3072, 3) != 0) return;
     for (int f = 0; f < 20; f++) frame(0, 0);
@@ -298,6 +299,9 @@ static void teil_loch(int elza)
     for (int id = 43; id <= (elza ? 51 : 48); id++) PRUEF(s_msg_gesehen[id], "Zeile %d gezeigt", id);
     PRUEF(typ_zahl(elza ? RE15_S2_TYP_JOHN : RE15_S2_TYP_MARVIN) == 1, "%s im Raum", elza ? "John" : "Marvin");
     if (elza) PRUEF(typ_zahl(RE15_S2_TYP_SHERRY) == 1, "Sherry im Raum");
+    /* Runde 42 rest Stufe 3, U-07: "Sherry wartet in 2011" ist mit der Szene vorbei - (3,74) = 0 (Mod ROOM2011 sub00 @0x08BC Ck(3,74)=1
+     * legt sie sonst @0x08C0 dort hin, und sie stuende doppelt). */
+    if (elza) PRUEF(re15_game_flag_get(3, 74) == 0, "U-07: nach Sherrys Auftritt in 2081 ist (3,74) = %d (soll 0)", re15_game_flag_get(3, 74));
     for (int f = 0; f < 60; f++) frame(0, 0);
     PRUEF(!re15_story2_r42_szene_laeuft() && !re15_cine_active(), "Szene zu Ende, Spieler frei");
     /* Wiederbetreten */
@@ -314,6 +318,15 @@ static void teil_loch(int elza)
     if (room_boot(raum, -11160, -14400, -7316, 3072, 3) != 0) return;
     for (int f = 0; f < 30; f++) frame(0, 0);
     PRUEF(typ_zahl(elza ? RE15_S2_TYP_JOHN : RE15_S2_TYP_MARVIN) == 0, "nach der Szene an der Leiter (Bit 120): niemand wartet mehr");
+    if (elza) {   /* U-07: der Pausenraum 2011 ist danach leer (Tuer Mod ROOM2001 @0x1D06 -> 201; Stand vor der Tuer main00 @0x0746) */
+        if (room_boot(0x2011, -5300, 0, -5000, 0, 0) != 0) return;
+        for (int f = 0; f < 30; f++) frame(0, 0);
+        PRUEF(typ_zahl(RE15_S2_TYP_SHERRY) == 0, "U-07: ROOM2011 nach E1 ohne Sherry (%d gefunden)", typ_zahl(RE15_S2_TYP_SHERRY));
+        re15_game_flag_set(3, 74, 1);   /* Gegenprobe im selben Lauf: mit dem Merker legt sub00 @0x08C0 sie hin */
+        if (room_boot(0x2011, -5300, 0, -5000, 0, 0) != 0) return;
+        for (int f = 0; f < 30; f++) frame(0, 0);
+        PRUEF(typ_zahl(RE15_S2_TYP_SHERRY) == 1, "U-07 Gegenprobe: mit (3,74) = 1 steht Sherry in 2011 (%d)", typ_zahl(RE15_S2_TYP_SHERRY));
+    }
 }
 
 /* ---- tor2090 ----------------------------------------------------------------------------------------------- */

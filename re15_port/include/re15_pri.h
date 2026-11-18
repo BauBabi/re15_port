@@ -172,6 +172,19 @@ int re15_pri_parse_section(const uint8_t *data, size_t data_size,
 int re15_pri_parse_section_re2(const uint8_t *data, size_t data_size,
                                uint32_t offset, re15_pri_cut_t *out);
 
+/* RE2-ZUSATZMASKEN (Runde 42 Strang rest, Stufe 6; NUTZERWUNSCH 15.11. "STAGE4 Labor: fehlende Masken/PRIs aus RE2 uebernehmen",
+ * 18.11. "ob du die grossteils von Resident Evil 2 uebernehmen kannst"). Vier Kameras mit gleichem RE2-Bild: ROOM4090/4091 K2 (= RE2
+ * ROOM60D0 K2), ROOM50D0/50D1 K10 (= RE2 ROOM6030 K10), ROOM5100/5101 K7 (= RE2 ROOM6020 K3), ROOM6000/6001 K1 (= RE2 ROOM7000 K1).
+ * Daten: MASKS/ROOM%04X_RE2.MSK (R15M, RE1.5-Sektionsform, Tiefe schon umgerechnet: d' = ceil(d/2) - 1, Herleitung und PORT-WAHL fuer
+ * ungerades d in tools/maske/re2_uebernahme_r42.py) + Atlas MASKS/ROOM%04X_RE2_%02d.TIM (RE2-Layout, Farben aus dem RE1.5-Bild).
+ * ⛔ PORT-WAHL: anders als die R15M-Seitendaten (nur bei NULL-Sektion) wird der Zusatz HINTER die Masken des Cuts gehaengt, auch hinter
+ * eine Original-Sektion (ROOM4090 K2: 24 Capcom-Masken @RDT+0x444 bleiben unveraendert und vorn). Das Original zeichnet die Liste ohne
+ * Reihenfolge-Abhaengigkeit: jede Maske kommt in ihren OT-Bucket depth (@0x80039658), die Liste bestimmt nur die Einhaengefolge im
+ * selben Bucket (AddPrim @0x80039660 = Kopf-Einhaengung).
+ * Haengt die GEZEICHNETEN Zusatzmasken (zus->draw_count) an die gezeichneten Masken von pri (pri->draw_count, @0x80039358) an;
+ * src_y_versatz = Zeile des Zusatz-Atlas im gemeinsamen Atlas. Kappt bei RE15_PRI_MAX_MASKS_PER_CUT. Rueckgabe: angehaengte Zahl. */
+int re15_pri_re2_anhaengen(re15_pri_cut_t *pri, const re15_pri_cut_t *zus, int src_y_versatz);
+
 /* ------------------------------------------------------------------------
  * NACHGEZEICHNETE MASKEN (Seitendaten-Container "R15M").
  *

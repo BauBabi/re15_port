@@ -6468,6 +6468,22 @@ re_title:;
                 extern int re15_pri_load_cut_atlas(int cut_idx);
                 extern int re15_pri_load_cut_atlas_ex(int cut, int nachgezeichnet);
                 int has_fg = re15_pri_load_cut_atlas_ex(active_cut_idx, pri_nachgezeichnet);
+                /* RE2-ZUSATZMASKEN (Runde 42 rest Stufe 6, re15_pri.h re15_pri_re2_anhaengen): ROOM4090/4091 K2, 50D0/50D1 K10,
+                 * 5100/5101 K7, 6000/6001 K1 bekommen die Masken der bildgleichen RE2-Kamera HINTER die Masken des Cuts (Original
+                 * oder R15M). Der Atlas des Zusatzes liegt unter dem Atlas des Cuts (bg_pc.c re15_pri_re2_zusatz). Nicht im
+                 * RE2-Szenen-Schnitt (pri_re2: dort gilt fuer die ganze Liste die RE2-Tiefenregel, der Zusatz ist RE1.5-Form). */
+                if (!pri_re2) {
+                    extern int re15_pri_re2_zusatz(int cut_idx, int basis_da, re15_pri_cut_t *zus);
+                    static re15_pri_cut_t s_pri_zus;
+                    const int basis_da = (has_fg && pri_n > 0);
+                    const int yv = re15_pri_re2_zusatz(active_cut_idx, basis_da, &s_pri_zus);
+                    if (yv >= 0) {
+                        if (!basis_da) { pri.mask_count = 0; pri.draw_count = 0; }   /* Basis ohne Atlas zeichnet ohnehin nicht */
+                        re15_pri_re2_anhaengen(&pri, &s_pri_zus, yv);
+                        pri_n = pri.mask_count;
+                        has_fg = 1;
+                    }
+                }
                 /* Fuer die RE15_PRI_LOG-Messschiene: welcher Cut wird gezeigt, und traegt
                  * er ueberhaupt einen Vordergrund-Atlas? Ohne beides ist "0 Masken" nicht
                  * zu deuten. */

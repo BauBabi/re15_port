@@ -1199,7 +1199,8 @@ void re15_gr2_kamera_auto(int an) { s_kam_aus = (uint8_t)(an ? 0 : 1); }
 /* Nachbesserung 2 (Abnahme 1, M1 b) + Orchestrator-Entscheid B6 "Finisher-Kamera = RE2": RE2 FRESSEN P0 sperrt die
  * Zonenkamera (`ori v0,v0,0x100 / sw v0,0(a0)` @0x80100fcc-d0 auf 0x800cfbd8) und setzt Cut 7/14 (`jal 0x8002c7ac`
  * @0x80100ff4) - Sub 4 (@0x80100f58-0x801011fc) gibt Bit 0x100 nie frei; die vier `addiu v1,zero,-257` des Overlays
- * stehen in Intro P2 @0x80100910, R1 P3 @0x80102688, R2 @0x801028ac und R3 @0x80102b1c (R2/R3 = Tod durch Beschuss,
+ * stehen in Intro P2 @0x80100910, R1 P3 @0x80102688, in R2 @0x801028ac und in R3 @0x80102b1c (R2/R3 = Tod durch Beschuss,
+ * Einspruenge 0x801026b8 / 0x80102924 aus der Routinentabelle @0x80104684/88;
  * nicht gebaut, Entscheid B2): der Schnitt steht bis zum Game Over. Der Port startet ab dem
  * Fress-Latch (Clip-4-Bild 13, RE2 @0x80101104-34) die RE1.5-Todes-Praesentation (game_step_common.c
  * re15_gameover_fsm_tick = FUN_8001500c): Weissblende sub0/1 (FUN_800217b0/80021880), flacher Schwarzgrund

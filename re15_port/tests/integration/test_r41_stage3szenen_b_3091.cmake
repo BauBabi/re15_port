@@ -56,6 +56,7 @@ foreach(_versuch 1 2)
         "RE15_SET_FLAG=4:8,9:21" "RE15_WORKVAR_AT=0x10:15@200" "RE15_DEBUG_JUMP=3090@250"
         "RE15_EQUIP=3" "RE15_R39_GIFT_AT=100"
         "RE15_PLAYER_POS=-24665,1000,3072"
+        "RE15_U42_ORIGINAL=1"   # Runde 42 rest Stufe 3: die Mod-Szene ohne U-01 (Vergleich mit dem GDB-Lauf), re15_ungenutzt_r42.h
         "RE15_PAD_AT=${_pad}" RE15_ANIM_TRACE=anim.txt
         "RE15_EXIT_AT=30#30C1"
         "${_exe}")

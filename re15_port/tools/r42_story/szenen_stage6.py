@@ -64,6 +64,12 @@ SHERRY = (-1790, -22272)
 TUER = (-3873, -22550)
 JOHN = (-2900, -23800)
 JOHN_GIER = 3481
+# U-03 (Runde 42 rest Stufe 3): Marvin in Mod-6031 (Sce_em_set @0x00E42) und Elzas Drehziel = Disc ROOM6041 @0x00724 + (0,400)
+MARVIN = (-21241, -26118)
+# G5 (Pruefung s3_r1): Disc-Blickziel @0x0072E (-21241,0,-26518) = Disc-Marvin Sce_em_set @0x005EA `07 ad 00 00 6a 98` in ALLEN
+# drei Achsen. Dieselbe Beziehung in der Mod: Ziel = Mod-Marvin @0x00E42 `07 ad 68 fc fa 99` -> y = -920 (0xFC68, er liegt).
+MARVIN_Y = -920
+MARVIN_DREH = (-21059, -26146)
 
 
 def orig(lo, hi, was):
@@ -105,8 +111,38 @@ WORK_JOHN = op(RAUM, 0x0F7E, [0x2E, 0x02, 0x00, 0x00], [0x2E, 0x02, 0x01, 0x00],
 # ------------------------------------------------------------------------------------------------------------------------------
 # E6: Wagen-Szene sub02 - msg 0 (story_r36), 1, 2 wie heute, dann 12 Sherry, 13 Elza.
 P_WAGEN = [
-    orig(0x0D78, 0x0DFA, "sub02 @0x00D78..: Set(3,22) @0x00D78, Sperren, Cut 10, Elza geht zur Marke und dreht sich, msg 0 Elza + "
-                         "Gesten 13/13/16, msg 1 Sherry + Sleep 100 @0x00DD6, msg 2 Elza + Gesten 12/12/16 (bis Sleep 20 @0x00DF6)"),
+    orig(0x0D78, 0x0DB2, "sub02 @0x00D78..: Set(3,22) @0x00D78, Sperren, Cut 10, Elza geht zur Marke und dreht sich (bis Edwhile "
+                         "@0x00DAE)"),
+    # Runde 42 rest Stufe 2, D4 (scratchpad hintergruende/VORSCHLAEGE.md D4, PRUEFUNG.md Abschnitt 1 Zeile 17: 6031 Cut 11 zeigt
+    # Elza nie): Elzas Gespraech beginnt wie Leons mit dem Gruppenbild Cut 11 (Kamera RDT @0x1C0). Leon: ROOM6030 sub02 @0x00DC0
+    # `29 0b` direkt vor Message_on 0 @0x00DC2. Elza steht nach @0x00D8A bei (-23705,-24482); in Cut 11 projiziert (241,126),
+    # Sherry (-24026,-26208) -> (199,109), John (-26055,-25784) -> (234,99), Marvin (-21241,-26118) -> (149,137)
+    # (Messbild scratchpad rest/s2/M4_6031_Cut10_11_9.png, H = fov>>7 = 208). Der Rest bleibt Original (Cut 9 @0x00DFA).
+    op(RAUM, 0x0D84, [0x29, 0x0A], [0x29, 0x0B], "Cut_chg 11 Gruppenbild (Form @0x00D84; Leon ROOM6030 sub02 @0x00DC0 `29 0b` "
+                                                 "vor msg 0)"),
+    # Runde 42 rest Stufe 3, U-03 (scratchpad ungenutzt/VORSCHLAEGE.md U-03 + PRUEFUNG.md): Capcoms nie aufgerufener Blick Elzas auf
+    # Marvin, Disc Version_40% ROOM6041 sub06 @0x0070E..@0x00758 (Aufrufer: keiner, Pruefung). Disc-Kamera 5 = Mod-Cut 11 (k+6,
+    # Pruefung U-03) - steht schon (D4). Disc-Bausteine:
+    #   @0x00724 `40 00 09 02 bd ad 4e 98` Plc_dest Modus 9 (DREHEN, nicht gehen) auf (-21059,-26546), @0x0072C Gosub sub13 (warten)
+    #   @0x0072E `41 01 07 ad 00 00 6a 98 28 28` Plc_neck auf Marvin (-21241,0,-26518), @0x00738 Sleep 40
+    #   @0x0073C `41 01 99 a7 00 00 4f 9f 28 28` Plc_neck auf (-22631,0,-24753), @0x00746 Sleep 120
+    #   (Schluss Disc: Cut 1 = Mod-Cut 7, Plc_ret - hier nicht: das Gespraech laeuft in Cut 11 weiter, Schluss Cut 9 wie Original.)
+    # ANPASSUNG an die Mod-Lage (Pruefung U-03 "Marvin weicht um 400 in z ab und liegt"): Mod-6031 Marvin (-21241,-920,-26118)
+    # Sce_em_set @0x00E42, Disc (-21241,0,-26518) @0x005EA -> Dreh- und Blickziel um (0,+400) verschoben; (-22631,-24753) ist die
+    # Wagenmitte (nicht an Marvin gebunden) und bleibt. Danach Nacken zurueck (Form Disc ROOM6040 sub04 @0x006F8 `41 00 .. 28 28`)
+    # und dieselbe Drehung wie vorher (sub02 @0x00D9E..@0x00DB2), dann msg 0.
+    drehen(AN_ELZA, MARVIN_DREH, "zu Marvin (Disc ROOM6041 @0x00724 (-21059,-26546) + (0,400))"),
+    warte(AN_ELZA, "Drehung zu Marvin (Disc @0x0072C Gosub sub13)"),
+    port([0x41, 0x01] + LE16(MARVIN[0]) + LE16(MARVIN_Y) + LE16(MARVIN[1]) + [0x28, 0x28],
+         "Plc_neck auf Marvin (Disc ROOM6041 @0x0072E `41 01 07 ad 00 00 6a 98 28 28` = Disc-Marvin @0x005EA; Mod-Marvin "
+         "@0x00E42: y -920, z + 400)"),
+    port([0x09, 0x0A, 0x28, 0x00], "Sleep 40 (Disc ROOM6041 @0x00738)"),
+    port([0x41, 0x01, 0x99, 0xA7, 0x00, 0x00, 0x4F, 0x9F, 0x28, 0x28], "Plc_neck Wagenmitte (-22631,-24753) (Disc ROOM6041 @0x0073C)"),
+    port([0x09, 0x0A, 0x78, 0x00], "Sleep 120 (Disc ROOM6041 @0x00746)"),
+    port([0x41, 0x00, 0, 0, 0, 0, 0, 0, 0x28, 0x28], "Nacken zurueck (Disc ROOM6040 sub04 @0x006F8)"),
+    orig(0x0D9E, 0x0DB2, "wieder dieselbe Drehung wie vorher (sub02 @0x00D9E Plc_dest Modus 9 + Warten bis @0x00DB2)"),
+    orig(0x0DB2, 0x0DFA, "msg 0 Elza + Gesten 13/13/16, msg 1 Sherry + Sleep 100 @0x00DD6, msg 2 Elza + Gesten 12/12/16 (bis Sleep "
+                         "20 @0x00DF6)"),
     msg_on(MSG["E6a"], RAUM, 0x0DD2, 1, "msg 12 Sherry (Form msg 1 @0x00DD2)"),
     orig(0x0DD6, 0x0DDA, "Sleep 100 wie nach msg 1 (@0x00DD6; Sherry hat in sub02 keinen Gestenblock)"),
     msg_on(MSG["E6b"], RAUM, 0x0DDA, 2, "msg 13 Elza (Form msg 2 @0x00DDA)"),

@@ -1,0 +1,627 @@
+/*
+ * test_r42_ungenutzt.c — Runde 42 Strang "rest", Stufe 3: ungenutzte Capcom-/80-%-Inhalte STAGE2-6.
+ * Herleitung: include/re15_ungenutzt_r42.h. U-07 (Sherry 2011) prueft test_r42_story2 loch_elza, U-03 (6031) test_r42_story6 wagen6031.
+ *
+ * ECHTE WEGE: RDT laden, Raum wie im Spiel hochfahren (scd_room_reenter = Installer-Block), Spieler vor die Stelle, Aktion ->
+ * re15_aot_scan -> scd_event_fire bzw. Aktions-Merker V[0] -> sub01 -> Evt_exec -> Programm; Bilder in der Reihenfolge von main.c
+ * (scd_vm_tick, Schauspieler, Nachrichten, Kamera, re15_game_step - Geruest test_r42_story6.c).
+ *   rechner  5010/5011 (U-05): Untersuchen des Speicherrechners -> erst Disc #40 (5010 msg 2 / 5011 msg 40) im Nahbild Cut 2, dann
+ *            der Speicher-Text (msg 6 / 45); zweimal hintereinander (Disc: kein Aot_reset)
+ *   plan     4020/4021 (U-11): Wandplan -> msg 0, dann msg 2 "You've taken the laboratory map.", Bit (9,36), Blatt 8 im Besitz;
+ *            zweites Untersuchen nur msg 0
+ *   schalter 3091 (U-02): Schalter-Platz Slot 5 ohne Strom -> msg 35 "There's a power supply.", dann msg 3; mit Strom nur msg 2
+ *   szene    3091 (U-01): Szene sub07 -> Folge 32, 9..24, 33, 25..28, 34, 36, 29, 30; nach den Schlaegen blicken John und Elza
+ *            (Stufe 7, NUTZERWUNSCH 18.11. "warum zielen sie denn jetzt auf die falsche Tür?") zur Lobby-Tuer (-28481,-155), durch
+ *            die Elza am Ende geht, nicht zur Hoftuer (-24506,1500) - auch noch, waehrend John die Waffe hebt (msg 23)
+ *   bytes    Programme gegen die Original-Saetze (nur mit Modul; die Gegenprobe auf aaea5f8c2 laeuft ohne); 3091: Blickziele = Mod,
+ *            Ort der vier Schlaege = Mitte der Lobby-Tuer Slot 0 (-26795,0,-1020)
+ *   namen    Stufe 7 (Nutzer 18.11.): jeder gesprochene neue Satz des Moduls traegt den Sprechernamen in der Form der uebrigen
+ *            Untertitel (`04 00 05 <Farbe> <Name:> 05 00 00`, Farbe wie die Original-Zeilen des Sprechers in 3091), reine
+ *            Untersuchungs-/Systemtexte (3091 msg 35, 4020/4021 msg 2) bleiben ohne Namen (`04 02`)
+ *   tuer401  Stufe 5, U-08 (NUTZERWUNSCH 18.11. "ja, warum nicht?"): Elza ROOM4001 Slot 1 ist eine Tuer wie Disc @0x1012 (sce 2)
+ *            und fuehrt nach ROOM4011 (-21044,-24000) Cut 0, nicht zu msg 14 "It's locked."; in 4011 Kiste (msg 6 -> Kistenbild),
+ *            Rechner (msg 7 -> Speicher-Ablauf), zwei Funde (Bit 11/12) und die Tuer zurueck nach ROOM4001 (-15608,-3524);
+ *            Leon ROOM4000 Slot 1 unveraendert (-> ROOM4010), der Haken fasst 4000 nicht an
+ * Aufruf: test_r42_ungenutzt [rechner|plan|schalter|szene|bytes|namen|tuer401|alle]
+ */
+#include "re15_rdt.h"
+#include "re15_scd.h"
+#include "re15_actor.h"
+#include "re15_aot.h"
+#include "re15_room.h"
+#include "re15_player.h"
+#include "re15_camera.h"
+#include "re15_game_step.h"
+#include "re15_collision.h"
+#include "re15_msg.h"
+#include "re15_enemy_ai.h"
+#include "re15_enemy.h"
+#include "re15_fade.h"
+#include "re15_ems.h"
+#include "re15_emd.h"
+#include "re15_tim.h"
+#include "re15_inventory.h"
+#include "re15_item_modal.h"
+#include "re15_engine.h"
+#include "re15_elza_r36.h"
+#include "re15_kleinkram_r38.h"
+#include "re15_map_owned.h"
+#include "re15_itembox.h"
+#include "re15_savepoint.h"
+#if defined(__has_include)
+#  if __has_include("re15_ungenutzt_r42.h")
+#    include "re15_ungenutzt_r42.h"
+#    define U42_MODUL 1
+#  endif
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
+
+#ifndef RE15_ASSET_PSX_DIR
+#error RE15_ASSET_PSX_DIR fehlt
+#endif
+
+void re15_actor_step_all_walkers(void);
+extern uint16_t g_scd_pad_edge;
+extern uint16_t g_scd_pad_held;
+extern uint8_t  g_aot_action_pressed;
+
+static int g_fail = 0;
+#define PRUEF(c, ...) do { if (c) { printf("  ok    "); } else { printf("  FEHLER "); g_fail++; } printf(__VA_ARGS__); printf("\n"); } while (0)
+
+static uint8_t           *s_raw = NULL;
+static size_t             s_rawsz = 0;
+static re15_rdt_t         s_rdt;
+static re15_camera_view_t s_cam;
+static re15_game_ctx_t    s_ctx;
+static int                s_shown = 0;
+static int                s_cine_was = 0;
+static uint16_t           s_rdt_raum = 0;
+
+#define PROT_N 64
+static int s_prot_id[PROT_N], s_prot_cut[PROT_N], s_prot_bild[PROT_N], s_prot_n = 0;
+static char s_prot_text[PROT_N][192];
+static int s_offen_vorher = 0, s_id_vorher = -1, s_bild = 0;
+
+static uint8_t *slurp(const char *p, size_t *n)
+{
+    FILE *f = fopen(p, "rb");
+    if (!f) return NULL;
+    fseek(f, 0, SEEK_END); long sz = ftell(f); fseek(f, 0, SEEK_SET);
+    uint8_t *b = (uint8_t *)malloc((size_t)sz);
+    if (b && fread(b, 1, (size_t)sz, f) != (size_t)sz) { free(b); b = NULL; }
+    fclose(f);
+    if (n) *n = (size_t)sz;
+    return b;
+}
+
+static uint8_t *s_ems = NULL; static size_t s_ems_sz = 0;
+static uint8_t  s_bank_buf[3][0x60000];
+static void bank_laden(uint8_t type, int buf)   /* = test_r42_story6.c bank_laden */
+{
+    if (!s_ems) {
+        char p2[600]; snprintf(p2, sizeof p2, "%s/EMD/CDEMD0.EMS", RE15_ASSET_PSX_DIR);
+        s_ems = slurp(p2, &s_ems_sz);
+    }
+    if (!s_ems) return;
+    int idx = re15_ems_index_for_type(type);
+    size_t off = 0, len = 0;
+    if (idx < 0 || re15_ems_get_entry(s_ems, s_ems_sz, idx, &off, &len) != 0) return;
+    re15_enemy_bank_t *eb = re15_enemy_alloc(type);
+    if (!eb || len > sizeof s_bank_buf[buf]) return;
+    memcpy(s_bank_buf[buf], s_ems + off, len);
+    re15_tim_t tim = (re15_tim_t){0};
+    if (re15_emd_parse_container(s_bank_buf[buf], len, &eb->md1, &eb->skel, &eb->anim, &tim) != 0) return;
+    eb->ok = 1; eb->buf = NULL;
+    eb->loco_ok   = (re15_emd_parse_loco_bank(s_bank_buf[buf], len, &eb->skel_loco, &eb->anim_loco) == 0);
+    eb->victim_ok = (re15_emd_parse_victim_bank(s_bank_buf[buf], len, &eb->skel_victim, &eb->anim_victim) == 0);
+    eb->own_ok    = (re15_emd_parse_own_bank(s_bank_buf[buf], len, &eb->skel_own, &eb->anim_own) == 0);
+}
+
+static int rdt_laden(uint16_t room)
+{
+    if (s_raw && s_rdt_raum == room) return 0;
+    char rp[600];
+    snprintf(rp, sizeof rp, "%s/STAGE%u/ROOM%04X.RDT", RE15_ASSET_PSX_DIR, (unsigned)(room >> 12), (unsigned)room);
+    free(s_raw); s_raw = slurp(rp, &s_rawsz); s_rdt_raum = 0;
+    if (!s_raw || s_rawsz < 0x100) return -1;
+    if (re15_rdt_parse(s_raw, s_rawsz, &s_rdt) < 0) return -1;
+    s_rdt_raum = room;
+    return 0;
+}
+
+static void protokoll(void)
+{
+    const int offen = g_scd.message_active ? 1 : 0;
+    const int id = offen ? (int)g_scd.message_id : -1;
+    if (offen && (!s_offen_vorher || id != s_id_vorher) && s_prot_n < PROT_N) {
+        const char *t = re15_msg_get_text(id);
+        s_prot_id[s_prot_n] = id; s_prot_cut[s_prot_n] = g_scd.work_vars[0x0A]; s_prot_bild[s_prot_n] = s_bild;
+        snprintf(s_prot_text[s_prot_n], sizeof s_prot_text[0], "%s", t ? t : "");
+        s_prot_n++;
+    }
+    s_offen_vorher = offen; s_id_vorher = id;
+}
+
+/* Ein Spielbild in der Reihenfolge von platform/pc/main.c (= test_r42_story6.c frame_pad); bestaetigen = Taste an wartenden Texten. */
+static void frame(int bestaetigen)
+{
+    const unsigned char *raw; int len, id;
+    if (bestaetigen && g_scd.message_active && (s_bild & 7) == 7 &&
+        (g_scd.message_fsm == 1 || g_scd.message_fsm == 3 || g_scd.message_fsm == 4 || g_scd.message_fsm == 7))
+        g_scd_pad_edge = 0x4000;
+    if (!re15_item_modal_active()) scd_vm_tick();
+    re15_actor_step_all_walkers();
+    re15_letterbox_tick(re15_game_flag_get(1, 27));
+    {
+        int cine = re15_game_flag_get(1, 27) || re15_game_flag_get(2, 7);
+        if (cine) { g_scd.player_mode = 2; g_scd.letterbox_countdown = -1; }
+        else if (s_cine_was) g_scd.letterbox_countdown = 15;
+        s_cine_was = cine;
+        if (g_scd.letterbox_countdown > 0 && --g_scd.letterbox_countdown == 0) {
+            g_scd.player_mode = 0;
+            re15_aot_settle_at(g_actors[RE15_ACTOR_SLOT_PLAYER].x, g_actors[RE15_ACTOR_SLOT_PLAYER].z);
+        }
+    }
+    re15_msg_tick(&raw, &len, &id);
+    g_scd_pad_edge = 0;
+    if (re15_cam_present_tick()) s_shown = (int)g_scd.cam_id;
+    s_ctx.active_cut  = s_shown;
+    s_ctx.pad_current = 0;
+    s_ctx.pad_pressed = 0;
+    re15_game_step(&s_ctx);
+    if (re15_item_modal_active()) re15_item_modal_tick(0x4000, 0);   /* Speicher-Frage: bestaetigen */
+    protokoll();
+    { scd_audio_event_t e; while (scd_audio_queue_pop(&e)) {} }
+    s_bild++;
+}
+
+static void prot_leeren(void) { s_prot_n = 0; s_offen_vorher = 0; s_id_vorher = -1; }
+
+static int room_boot(uint16_t room, int32_t px, int32_t pz, int16_t rot, const uint8_t *banken, int nb)
+{
+    if (rdt_laden(room) != 0) { printf("  FEHLER: ROOM%04X nicht ladbar\n", room); g_fail++; return -1; }
+    g_room_rdt = s_rdt; g_room_rdt_ok = 1;   /* wie der Raumlader (room_common.c); test_r42_story3b.c raum_laden */
+    memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
+    s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
+    re15_game_state_t flags_vorher = g_game;
+    re15_inventory_t inv_vorher = g_inv;
+    re15_actor_init(); re15_aot_init(); scd_vm_init();
+    g_game = flags_vorher;
+    g_inv = inv_vorher;
+    re15_enemy_reset(); re15_enemy_ai_set_paused(0);
+    for (int i = 0; i < nb && i < 3; i++) bank_laden(banken[i], i);
+    re15_player_cmd_reset();
+    re15_pauseflags_clear();
+    g_letterbox_level = 0;
+    g_current_room_id = room; g_room_change.pending = 0;
+    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
+    pl->state = 0; pl->motion = 0; pl->floor = 0; pl->y = 0;
+    pl->x = px; pl->z = pz; pl->rot_y = rot;
+    re15_collision_set_band(0);
+    s_shown = 0; s_cine_was = 0;
+    g_scd.player_mode = 0; g_scd.letterbox_countdown = 0;
+    re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
+    re15_rbj_bind_room(s_rdt.animation, s_rdt.animation_size);
+    re15_elza_r36_reset();
+    re15_kleinkram_r38_reset();
+    s_bild = 0;
+    prot_leeren();
+    scd_room_reenter(&s_rdt, pl->x, pl->z, 0);
+    re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
+    for (int f = 0; f < 40; f++) frame(0);
+    prot_leeren();
+    return 0;
+}
+
+static int laeuft(void)
+{
+    if (g_scd.message_active || re15_item_modal_active()) return 1;
+    for (int k = SCD_EVENT_SLOT_FIRST; k <= SCD_EVENT_SLOT_LAST; k++) if (g_scd.threads[k].active) return 1;
+    return 0;
+}
+
+/* Aktion an (x,z,rot); dann Bilder, bis nichts mehr laeuft. */
+static void untersuchen(int32_t x, int32_t z, int rot, int max_bilder)
+{
+    re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    p->x = x; p->z = z; p->rot_y = (int16_t)rot;
+    for (int i = 0; i < 10; i++) frame(0);
+    prot_leeren();
+    g_aot.fired_event_id_this_frame = 0;
+    g_aot_action_pressed = 1;
+    re15_aot_scan(p->x, p->z, 0xFF);
+    g_aot_action_pressed = 0;
+    if (g_aot.fired_event_id_this_frame) (void)scd_event_fire(g_aot.fired_event_id_this_frame);
+    for (int f = 0; f < max_bilder; f++) { frame(1); if (f > 40 && !laeuft()) break; }
+}
+
+static void zeige(const char *was)
+{
+    printf("   %s:", was);
+    for (int i = 0; i < s_prot_n; i++) printf(" %d@Cut%d", s_prot_id[i], s_prot_cut[i]);
+    printf("\n");
+    for (int i = 0; i < s_prot_n; i++) printf("     msg %2d \"%s\"\n", s_prot_id[i], s_prot_text[i]);
+}
+
+/* ---- rechner (U-05) ----------------------------------------------------------------------------------------------------- */
+static void teil_rechner(void)
+{
+    printf("== rechner (U-05, 501) ==\n");
+    for (int v = 0; v < 2; v++) {
+        const uint16_t r = (uint16_t)(0x5010 + v);
+        const int satz = v ? 40 : 2, speicher = v ? 45 : 6;
+        re15_game_state_init(); re15_inv_init();
+        /* Rechteck Slot 9 (5010 @0x45E) / Slot 1 (5011 @0x3BA) = (-20327,-21250,1600,2700): Stand (-20900,-19900), Blick +x */
+        if (room_boot(r, -20900, -19900, 0, NULL, 0) != 0) continue;
+        for (int n = 0; n < 2; n++) {
+            untersuchen(-20900, -19900, 0, 3000);
+            zeige(n ? "zweites Mal" : "erstes Mal");
+            PRUEF(s_prot_n >= 2 && s_prot_id[0] == satz && s_prot_cut[0] == 2 && strstr(s_prot_text[0], "used a little") != NULL,
+                  "ROOM%04X %d. Untersuchen: zuerst msg %d \"It looks like this was used a little while ago.\" im Nahbild Cut 2", r,
+                  n + 1, satz);
+            /* der Speicher-Text msg 6/45 wird im Port durch den Memory-Card-Ablauf ersetzt (scd_vm.c op_message_on ->
+             * re15_savepoint_examine, Port-Text Id 254; ohne Karte "If I had a Memory Card...") */
+            PRUEF(s_prot_n == 2 && s_prot_id[1] == 254 && strstr(s_prot_text[1], "Memory Card") != NULL && s_prot_cut[1] == 2,
+                  "ROOM%04X: danach der Speicher-Ablauf (msg %d -> Memory-Card-Text, Cut 2)", r, speicher);
+        }
+    }
+}
+
+/* ---- plan (U-11) -------------------------------------------------------------------------------------------------------- */
+static void teil_plan(void)
+{
+    printf("== plan (U-11, 402) ==\n");
+    for (int v = 0; v < 2; v++) {
+        const uint16_t r = (uint16_t)(0x4020 + v);
+        re15_game_state_init(); re15_inv_init();
+        PRUEF(!re15_map_owned_page(8), "ROOM%04X vorher: Blatt 8 nicht im Besitz", r);
+        /* Slot 8 @0x073C Rechteck (-26650,-24750,1000,2300): Stand (-25100,-23600), Blick -x (2048) */
+        if (room_boot(r, -25100, -23600, 2048, NULL, 0) != 0) continue;
+        untersuchen(-25100, -23600, 2048, 3000);
+        zeige("erstes Mal");
+        PRUEF(s_prot_n == 2 && s_prot_id[0] == 0 && s_prot_id[1] == 2 && s_prot_cut[0] == 3 &&
+              strstr(s_prot_text[1], "taken the laboratory map") != NULL,
+              "ROOM%04X: msg 0 (Cut 3), dann msg 2 \"You've taken the laboratory map.\"", r);
+        PRUEF(re15_game_flag_get(9, 36) == 1 && re15_map_owned_page(8) && (re15_map_owned_bits() & (1u << 8)),
+              "ROOM%04X: Bit (9,36) = %d, Blatt 8 im Besitz", r, re15_game_flag_get(9, 36));
+        PRUEF(!re15_map_owned_page(9) && !re15_map_owned_page(12), "ROOM%04X: nur Blatt 8, nicht 9 (5030) oder 12", r);
+        untersuchen(-25100, -23600, 2048, 3000);
+        zeige("zweites Mal");
+        PRUEF(s_prot_n == 1 && s_prot_id[0] == 0, "ROOM%04X: zweites Untersuchen nur msg 0", r);
+    }
+}
+
+/* ---- schalter (U-02) ---------------------------------------------------------------------------------------------------- */
+static void teil_schalter(void)
+{
+    printf("== schalter (U-02, 3091) ==\n");
+    for (int strom = 0; strom < 2; strom++) {
+        re15_game_state_init(); re15_inv_init();
+        re15_game_flag_set(4, 8, (uint8_t)strom);
+        re15_game_flag_set(4, 16, 1);   /* Szene vorbei (sub00 @0x01492): keine Begleiter-Saetze */
+        /* Slot 5 @0x013EC Rechteck (-22900,-4750,500,1000), floor 0: Stand (-23400,-4250), Blick +x */
+        if (room_boot(0x3091, -23400, -4250, 0, NULL, 0) != 0) continue;
+        untersuchen(-23400, -4250, 0, 2000);
+        zeige(strom ? "mit Strom" : "ohne Strom");
+        if (!strom)
+            PRUEF(s_prot_n == 2 && s_prot_id[0] == 35 && s_prot_id[1] == 3 && strstr(s_prot_text[0], "power supply") != NULL,
+                  "ohne Strom (4,8)=0: msg 35 \"There's a power supply.\", dann msg 3 \"I can't reach the breaker switch...\"");
+        else
+            PRUEF(s_prot_n == 1 && s_prot_id[0] == 2, "mit Strom (4,8)=1: nur msg 2 wie bisher");
+    }
+}
+
+/* ---- szene (U-01) ------------------------------------------------------------------------------------------------------- */
+static const re15_actor_t *aktor_typ(uint8_t typ)
+{
+    for (int i = 1; i < RE15_ACTOR_MAX; i++) if (g_actors[i].active && g_actors[i].type == typ) return &g_actors[i];
+    return NULL;
+}
+static int gier_abstand(const re15_actor_t *a, double zx, double zz)
+{
+    const double dx = zx - a->x, dz = zz - a->z;
+    int soll = (int)lround(atan2(-dz, dx) / (2.0 * 3.14159265358979) * 4096.0) & 4095;   /* dachkiste_r36.c wp_yaw_zu */
+    int d = ((int)(a->rot_y & 4095) - soll) & 4095;
+    return d > 2048 ? 4096 - d : d;
+}
+
+static void teil_szene(void)
+{
+    printf("== szene (U-01, 3091 sub07) ==\n");
+    re15_game_state_init(); re15_inv_init();
+    re15_game_flag_set(9, 21, 1);   /* sub02 @0x01596 Ck(9,21)=0 -> sonst nur msg 6; 21 setzt sub06 @0x016C2 */
+    static const uint8_t k_banken[] = { 0x49, 0x42 };   /* sub00 @0x014E0 / @0x014F4 */
+    if (room_boot(0x3091, -23592, 109, 2048, k_banken, 2) != 0) return;
+    PRUEF(aktor_typ(0x49) && aktor_typ(0x42), "John (0x49) und Elza (0x42) stehen bereit (sub00 @0x014E0/@0x014F4)");
+    int slot = -1;
+    for (int k = SCD_EVENT_SLOT_FIRST; k <= SCD_EVENT_SLOT_LAST && slot < 0; k++)
+        if (!g_scd.threads[k].active && scd_thread_start(k, s_rdt.sub_scd[2]) == 0) slot = k;   /* sub02 -> Evt_exec 7 @0x015A4 */
+    int bild22 = -1, j_hof = 9999, e_hof = 9999, j_lob = 9999, e_lob = 9999, bild23 = -1, j23_lob = 9999, j23_hof = 9999;
+    for (int f = 0; f < 20000; f++) {
+        frame(1);
+        if (bild22 < 0 && s_prot_n > 0 && s_prot_id[s_prot_n - 1] == 22) {
+            bild22 = s_bild;
+            const re15_actor_t *j = aktor_typ(0x49), *e = aktor_typ(0x42);
+            if (j && e) {
+                j_hof = gier_abstand(j, -24506, 1500); e_hof = gier_abstand(e, -24506, 1500);
+                j_lob = gier_abstand(j, -28481, -155); e_lob = gier_abstand(e, -28481, -155);
+            }
+        }
+        /* msg 23 = John "Sounds like somebody's in there." direkt nach seinem Plc_motion(2,6) @0x1B1A (Waffe gehoben) */
+        if (bild23 < 0 && s_prot_n > 0 && s_prot_id[s_prot_n - 1] == 23) {
+            bild23 = s_bild;
+            const re15_actor_t *j = aktor_typ(0x49);
+            if (j) { j23_lob = gier_abstand(j, -28481, -155); j23_hof = gier_abstand(j, -24506, 1500); }
+        }
+        if (f > 100 && !laeuft() && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27)) break;
+    }
+    zeige("Folge");
+    static const int k_soll[] = { 32, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 33, 25, 26, 27, 28, 34, 36, 29,
+                                  30 };
+    const int ns = (int)(sizeof k_soll / sizeof k_soll[0]);
+    int ok = s_prot_n == ns;
+    for (int i = 0; i < ns && i < s_prot_n; i++) if (s_prot_id[i] != k_soll[i]) ok = 0;
+    PRUEF(ok, "Folge 32, 9..24, 33 (D309 #21), 25..28, 34 (D309 #24), 36 (D309 #25), 29, 30 (%d Zeilen)", s_prot_n);
+    int i33 = -1, i34 = -1, i36 = -1;
+    for (int i = 0; i < s_prot_n; i++) {
+        if (s_prot_id[i] == 33) i33 = i;
+        if (s_prot_id[i] == 34) i34 = i;
+        if (s_prot_id[i] == 36) i36 = i;
+    }
+    PRUEF(i33 >= 0 && strstr(s_prot_text[i33], "swarming back") != NULL, "msg 33 John: \"%s\"", i33 >= 0 ? s_prot_text[i33] : "-");
+    PRUEF(i34 >= 0 && strstr(s_prot_text[i34], "all right, won't you") != NULL, "msg 34 Elza: \"%s\"", i34 >= 0 ? s_prot_text[i34] : "-");
+    /* Runde 2 (Pruefung s3_r1 G2): Johns Antwort D309 #25 @0x1BEF direkt nach Elzas Frage, mit John-Farbe 07 */
+    PRUEF(i36 >= 0 && i36 == i34 + 1 && strstr(s_prot_text[i36], "John: Leave it to me!") != NULL,
+          "msg 36 John direkt nach msg 34: \"%s\"", i36 >= 0 ? s_prot_text[i36] : "-");
+    PRUEF(i34 >= 0 && i36 > i34 && s_prot_bild[i36] - s_prot_bild[i34] >= 40,
+          "msg 34 steht, bis sie zu Ende ist (%d Bilder bis msg 36)", i36 > i34 && i34 >= 0 ? s_prot_bild[i36] - s_prot_bild[i34] : -1);
+    PRUEF(i33 >= 0 && i33 + 1 < s_prot_n && s_prot_bild[i33 + 1] - s_prot_bild[i33] >= 60,
+          "msg 33 steht, bis sie zu Ende ist (%d Bilder bis msg 25)", i33 >= 0 && i33 + 1 < s_prot_n ? s_prot_bild[i33 + 1] - s_prot_bild[i33] : -1);
+    printf("   bei msg 22 (Bild %d): John Hof %d / Lobby %d, Elza Hof %d / Lobby %d (Gier-Abstand, 4096 = 360 Grad)\n", bild22,
+           j_hof, j_lob, e_hof, e_lob);
+    /* Stufe 7: Mod-Ziel @0x1AA6/@0x1AB0 (Elza) und @0x1AC0/@0x1ACA (John) = Lobby-Tuer (-28481,-155) */
+    PRUEF(bild22 >= 0 && j_lob <= 128 && e_lob <= 128 && j_hof > 256 && e_hof > 256,
+          "nach den Schlaegen: John und Elza blicken zur Lobby-Tuer (-28481,-155), nicht zur Hoftuer (-24506,1500)");
+    printf("   bei msg 23 (Bild %d): John Lobby %d / Hof %d\n", bild23, j23_lob, j23_hof);
+    PRUEF(bild23 >= 0 && j23_lob <= 128 && j23_hof > 256, "John hebt die Waffe (Plc_motion(2,6) @0x1B1A) zur Lobby-Tuer");
+    PRUEF(re15_game_flag_get(4, 16) == 1, "Szene zu Ende: (4,16) = 1 (sub07 @0x016D0)");
+}
+
+/* ---- bytes ------------------------------------------------------------------------------------------------------------- */
+static void teil_bytes(void)
+{
+    printf("== bytes ==\n");
+#ifdef U42_MODUL
+    int n = 0;
+    const uint8_t *p = re15_ungenutzt_r42_programm(0x5010, 0, &n);
+    PRUEF(p && n == 20 && p[0] == 0x29 && p[1] == 0x02 && p[2] == 0x2b && p[3] == 2 && p[8] == 0x2b && p[9] == 6,
+          "5010: Cut 2, msg 2, msg 6 (sub03 @0x4F6 + Disc #40)");
+    p = re15_ungenutzt_r42_programm(0x5011, 0, &n);
+    PRUEF(p && n == 20 && p[3] == 40 && p[9] == 0x2d, "5011: msg 40, msg 45 (sub08 @0xE34)");
+    p = re15_ungenutzt_r42_programm(0x4020, 0, &n);
+    static const uint8_t k_plan_kern[] = { 0x21, 9, 36, 0, 0x22, 9, 36, 1, 0x2b, 2, 0xff, 0xff };
+    PRUEF(p && n > 24 && !memcmp(p + 12, k_plan_kern, sizeof k_plan_kern), "4020: Ck(9,36)=0, Set(9,36), msg 2 (Form ROOM5030 sub00/sub02)");
+    int t = 0;
+    const uint8_t *x = re15_ungenutzt_r42_text(0x4020, 2, &t);
+    if (rdt_laden(0x5030) == 0) {
+        const uint8_t *q = s_raw + 0x1132;
+        /* Runde 2 (Pruefung s3_r1 G6): `04 02` + Leerzeile `08` (Form ROOM4020 msg 0 @0x0B84) + ROOM5030 msg 1 ab @0x1134 */
+        PRUEF(x && t == 37 && !memcmp(x, q, 2) && x[2] == 0x08 && !memcmp(x + 3, q + 2, 34),
+              "4020 msg 2 = `04 02 08` + ROOM5030 msg 1 @0x1134 Byte fuer Byte (Leerzeile vorn wie 4020 msg 0/1)");
+    }
+    if (rdt_laden(0x3091) == 0) {
+        memset(&g_room_rdt, 0, sizeof g_room_rdt);
+        g_room_rdt = s_rdt;
+        p = re15_ungenutzt_r42_programm(0x3091, 0, &n);
+        const int alt = 0x1DB2 - 0x16CA;
+        PRUEF(p && n > alt && !memcmp(p, s_raw + 0x16CA, 0x1A62 - 0x16CA), "3091 sub07: Kopf bis @0x1A62 unveraendert");
+        /* Stufe 7: vier Schlaege `36 02 0d 01 00 00` + Ort (-26795,0,-1020) = Mitte Rechteck Slot 0 @0x1338 (-27090,-1740,590,1440) */
+        static const uint8_t k_schlag_lobby[12] = { 0x36, 0x02, 0x0d, 0x01, 0x00, 0x00, 0x55, 0x97, 0x00, 0x00, 0x04, 0xfc };
+        int schlaege = 0;
+        for (int i = 0; i < 4 && p; i++) {
+            const int o = 0x1A62 + 0x10 * i - 0x16CA;
+            schlaege += !memcmp(p + o, k_schlag_lobby, 12) && !memcmp(p + o + 12, s_raw + 0x1A62 + 0x10 * i + 12, 4);
+        }
+        PRUEF(schlaege == 4, "3091 sub07: vier Schlaege @0x1A62/@0x1A72/@0x1A82/@0x1A92 an der Lobby-Tuer `55 97 00 00 04 fc` (%d/4)",
+              schlaege);
+        PRUEF(p && !memcmp(p + 0x1A9E - 0x16CA, s_raw + 0x1A9E, 0x1BC2 - 0x1A9E),
+              "3091 sub07: [@0x1A9E, @0x1BC2) Byte fuer Byte = Mod (Blickziele @0x1AA6/@0x1AB0/@0x1AC0/@0x1ACA `bf 90 .. 65 ff` Lobby-Tuer)");
+        PRUEF(p && !memcmp(p + n - (0x1DB2 - 0x1C64), s_raw + 0x1C64, 0x1DB2 - 0x1C64), "3091 sub07: Schluss ab @0x1C64 unveraendert");
+        /* Runde 2: Johns msg 36 (D309 #25) mit dem Gestenblock nach "Will do!" [@0x1BF6, @0x1C0A) vor dem Schluss; danach
+         * Sleep 2 + Warten (16 Byte, ungenutzt_r42.c zeile()) */
+        static const uint8_t k_m36[4] = { 0x2b, 36, 0x00, 0x00 };
+        const int g = 0x1C0A - 0x1BF6, vor = n - (0x1DB2 - 0x1C64) - 16 - g;
+        PRUEF(p && vor > 4 && !memcmp(p + vor - 4, k_m36, 4) && !memcmp(p + vor, s_raw + 0x1BF6, g),
+              "3091 sub07: msg 36 John + Gesten [@0x1BF6, @0x1C0A) vor dem Schluss @0x1C64");
+        memset(&g_room_rdt, 0, sizeof g_room_rdt);
+    }
+#else
+    /* Runde 2 (Pruefung s3_r1 G4): ohne Modul ROT statt uebersprungen - sonst hat der Riegel auf aaea5f8c2 keine Gegenprobe */
+    PRUEF(0, "Modul re15_ungenutzt_r42.h fehlt (Stand vor U-05/U-11/U-02/U-01)");
+#endif
+}
+
+/* ---- namen (Stufe 7, Nutzer 18.11.) ------------------------------------------------------------------------------------- */
+/* Nutzer 18.11.2026: "Du hast bei den übernommenen Sätzen aus Resident Evil 2 nicht den Namen in den Dialog mit davor geschrieben wie
+ * bei den rest auch...." und Berichtigung "Nein - das theres a power supply ist ohne Name ein Systemtext". Regel: gesprochen -> Name
+ * davor in der Form der Original-Zeilen DESSELBEN Sprechers in 3091 (Elza msg 21 @0x234B, John msg 23 @0x238A, je 12 Byte
+ * `04 00 05 <Farbe> <Name:> 05 00 00`); Untersuchungs-/Systemtext -> `04 02` ohne Namen. */
+static int rdt_text(uint16_t room, int id, const uint8_t **out)
+{
+    if (rdt_laden(room) != 0) return 0;
+    const uint32_t ms = (uint32_t)s_raw[0x3C] | (uint32_t)s_raw[0x3D] << 8 | (uint32_t)s_raw[0x3E] << 16 | (uint32_t)s_raw[0x3F] << 24;
+    if (ms + 2u * (unsigned)id + 2u > s_rawsz) return 0;
+    const unsigned o = (unsigned)s_raw[ms + 2 * id] | (unsigned)s_raw[ms + 2 * id + 1] << 8;
+    if (ms + o + 4u > s_rawsz) return 0;
+    *out = s_raw + ms + o;
+    return 1;
+}
+static void teil_namen(void)
+{
+    printf("== namen ==\n");
+#ifdef U42_MODUL
+    uint8_t elza[12], john[12];
+    if (rdt_laden(0x3091) != 0) { PRUEF(0, "ROOM3091.RDT fehlt"); return; }
+    memcpy(elza, s_raw + 0x234B, 12); memcpy(john, s_raw + 0x238A, 12);
+    PRUEF(elza[0] == 0x04 && elza[1] == 0x00 && elza[2] == 0x05 && elza[3] == 0x01 && elza[10] == 0x00 && elza[11] == 0x00 &&
+          john[3] == 0x07 && john[9] == 0x05, "Form der Original-Zeilen: Elza msg 21 @0x234B Farbe 01, John msg 23 @0x238A Farbe 07");
+    static const struct { int id; int wer; const char *was; } k_gesprochen[] = {
+        { 33, 1, "D309 #21" }, { 34, 0, "D309 #24" }, { 36, 1, "D309 #25" } };
+    for (int i = 0; i < 3; i++) {
+        int n = 0;
+        const uint8_t *b = re15_ungenutzt_r42_text(0x3091, (uint8_t)k_gesprochen[i].id, &n);
+        const uint8_t *soll = k_gesprochen[i].wer ? john : elza;
+        PRUEF(b && n > 12 && !memcmp(b, soll, 12), "3091 msg %d (%s, gesprochen): Name %s davor wie die Original-Zeile",
+              k_gesprochen[i].id, k_gesprochen[i].was, k_gesprochen[i].wer ? "John:" : "Elza:");
+    }
+    static const struct { uint16_t raum; int id; const char *was; } k_system[] = {
+        { 0x3091, 35, "There's a power supply. (80 % T25, Systemtext)" },
+        { 0x4020, 2, "You've taken the laboratory map." }, { 0x4021, 2, "You've taken the laboratory map." } };
+    for (int i = 0; i < 3; i++) {
+        int n = 0;
+        const uint8_t *b = re15_ungenutzt_r42_text(k_system[i].raum, (uint8_t)k_system[i].id, &n);
+        PRUEF(b && n > 3 && b[0] == 0x04 && b[1] == 0x02 && b[2] != 0x05, "ROOM%04X msg %d (%s): ohne Namen `04 02`",
+              k_system[i].raum, k_system[i].id, k_system[i].was);
+    }
+    /* U-05: der Rechner-Satz ist der Mod-Text selbst (Disc #40, Untersuchen), nicht neu geschrieben - ohne Namen wie im Original */
+    const uint8_t *t = NULL;
+    PRUEF(rdt_text(0x5010, RE15_U42_5010_SATZ, &t) && t[0] == 0x04 && t[1] == 0x02,
+          "ROOM5010 msg %d (U-05, Untersuchen): RDT-Text `04 02` ohne Namen", RE15_U42_5010_SATZ);
+    PRUEF(rdt_text(0x5011, RE15_U42_5011_SATZ, &t) && t[0] == 0x04 && t[1] == 0x02,
+          "ROOM5011 msg %d (U-05, Untersuchen): RDT-Text `04 02` ohne Namen", RE15_U42_5011_SATZ);
+#else
+    PRUEF(0, "Modul re15_ungenutzt_r42.h fehlt (Stand vor U-05/U-11/U-02/U-01)");
+#endif
+}
+
+/* ---- tuer401 (U-08, Stufe 5) ------------------------------------------------------------------------------------------- */
+/* Aktion an (x,z,rot) wie untersuchen(), aber ohne langen Nachlauf: liefert, ob eine Tuer einen Raumwechsel angemeldet hat. */
+static int tuer_versuch(int32_t x, int32_t z, int rot)
+{
+    re15_actor_t *p = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    p->x = x; p->z = z; p->rot_y = (int16_t)rot;
+    for (int i = 0; i < 10; i++) frame(0);
+    prot_leeren();
+    g_room_change.pending = 0;
+    g_aot.fired_event_id_this_frame = 0;
+    g_aot_action_pressed = 1;
+    re15_aot_scan(p->x, p->z, 0xFF);
+    g_aot_action_pressed = 0;
+    if (g_aot.fired_event_id_this_frame) (void)scd_event_fire(g_aot.fired_event_id_this_frame);
+    const int w = g_room_change.pending;
+    for (int f = 0; f < 60; f++) frame(1);
+    return w;
+}
+
+static void teil_tuer401(void)
+{
+    printf("== tuer401 (U-08, Elza 4001 -> 401) ==\n");
+#ifdef U42_MODUL
+    const unsigned z5 = g_re15_u42_zaehler[5];
+#endif
+    /* Elza: 4001 nach der Eintrittsszene ((3,0x21) = 1 sub01 @0x0137C -> sonst sub10; (4,20) = 1 sub00 @0x0120C), Gitter-Ablaeufe vorbei ((3,0x91)/(3,0xAF) = 1, sub00
+     * @0x01214/@0x012A6) - so steht Elza in der Halle, wenn sie frei laeuft. Stand = Ankunft aus 401 (Mod 4011 @0x04D2
+     * `08 c3 .. 3c f2`) (-15608,-3524), Blick -x (2048): Vorwaertspunkt (-16228,-3524) liegt im Rechteck x -17100..-15500,
+     * z -4600..-2400 (Mod 4001 @0x108A). */
+    re15_game_state_init(); re15_inv_init();
+    re15_game_flag_set(3, 0x21, 1); re15_game_flag_set(4, 20, 1); re15_game_flag_set(3, 0x91, 1); re15_game_flag_set(3, 0xAF, 1);
+    if (room_boot(0x4001, -15608, -3524, 2048, NULL, 0) == 0) {
+        const re15_aot_t *a = &g_aot.slots[1];
+        printf("   ROOM4001 Slot 1: aktiv %d Typ %d Ziel Stufe %d Raum %02X Cut %d\n", a->active, a->type,
+               g_aot.door_params[1].dest_stage, g_aot.door_params[1].dest_room, g_aot.door_params[1].target_cut);
+        PRUEF(a->active && a->type == RE15_AOT_TYPE_DOOR && g_aot.door_params[1].dest_stage == 3 &&
+              g_aot.door_params[1].dest_room == 0x01,
+              "ROOM4001 Slot 1 ist eine Tuer nach Stufe 3 Raum 01 (Disc @0x1012 sce 2; Mod @0x1084 sce 0)");
+        const int w = tuer_versuch(-15608, -3524, 2048);
+        zeige("Aktion vor der Tuer");
+        printf("   Raumwechsel %d -> ROOM%04X (%d,%d,%d) Richtung %d Cut %d\n", w, g_room_change.room_id, g_room_change.x,
+               g_room_change.y, g_room_change.z, g_room_change.yaw_4096, g_room_change.target_cut);
+        PRUEF(w && g_room_change.room_id == 0x4011 && g_room_change.x == -21044 && g_room_change.z == -24000 &&
+              g_room_change.target_cut == 0,
+              "Aktion vor der Tuer: Raumwechsel nach ROOM4011 (-21044,-24000) Cut 0 (Disc @0x1012 Nutzlast)");
+        int m14 = 0;
+        for (int i = 0; i < s_prot_n; i++) if (s_prot_id[i] == 14) m14 = 1;
+        PRUEF(!m14, "nicht mehr msg 14 \"Security Room / It's locked.\" (Mod-Slot 8 @0x110C liegt hinter der Tuer)");
+        PRUEF(g_aot.slots[8].active && g_aot.slots[8].type != RE15_AOT_TYPE_NONE,
+              "Mod-Slot 8 @0x110C bleibt installiert (nur verdeckt: Scan aufsteigend @0x80042c50, erster Treffer gewinnt)");
+    }
+#ifdef U42_MODUL
+    PRUEF(g_re15_u42_zaehler[5] > z5, "Haken hat den Satz @0x1084 erkannt (Zaehler %u -> %u)", z5, g_re15_u42_zaehler[5]);
+#endif
+
+    /* Leon: 4000 Slot 1 @0x109C ist schon sce 2 und fuehrt nach 4010 - unveraendert, der Haken zaehlt dort nicht.
+     * Eintrittsszene vorbei: Mod 4000 sub00 @0x0129E Ck(4,0x26)=0 -> sub05. */
+    re15_game_state_init(); re15_inv_init();
+    re15_game_flag_set(4, 0x26, 1);
+#ifdef U42_MODUL
+    const unsigned z5l = g_re15_u42_zaehler[5];
+#endif
+    if (room_boot(0x4000, -15608, -3524, 2048, NULL, 0) == 0) {
+        const int w = tuer_versuch(-15608, -3524, 2048);
+        PRUEF(g_aot.slots[1].type == RE15_AOT_TYPE_DOOR && w && g_room_change.room_id == 0x4010,
+              "Leon ROOM4000 Slot 1: Tuer nach ROOM4010 wie bisher (Mod @0x109C sce 2)");
+    }
+#ifdef U42_MODUL
+    PRUEF(g_re15_u42_zaehler[5] == z5l, "Leon: Haken greift in ROOM4000 nicht");
+#endif
+
+    /* Elza in 401 */
+    re15_game_state_init(); re15_inv_init();
+    if (room_boot(0x4011, -21044, -24000, 2048, NULL, 0) == 0) {
+        PRUEF(g_aot.slots[7].active && g_aot.slots[7].type == RE15_AOT_TYPE_ITEM && g_aot.slots[8].active &&
+              g_aot.slots[8].type == RE15_AOT_TYPE_ITEM,
+              "ROOM4011: Funde Slot 7 (First Aid Spray, Bit 11 @0x056A) und Slot 8 (Shotgun Shells x7, Bit 12 @0x0580) liegen");
+        int n = 0;
+        for (int i = 0; i < RE15_AOT_MAX; i++)
+            if (g_aot.slots[i].active && g_aot.slots[i].type == RE15_AOT_TYPE_DOOR) n++;
+        PRUEF(n == 1, "ROOM4011: genau eine Tuer (%d)", n);
+        /* Kiste Slot 9 @0x0596 `4e a8 70 9a 40 06 e8 03` = Rechteck x -22450..-20850, z -26000..-25000: Stand (-21650,-24500),
+         * Blick -z (1024) -> Vorwaertspunkt (-21650,-25120) */
+        re15_itembox_reset();
+        untersuchen(-21650, -24500, 1024, 600);
+        zeige("Kiste");
+        PRUEF(re15_itembox_pending(), "ROOM4011 Kiste (Slot 9 -> sub02 msg 6): Kistenbild angefordert");
+        re15_itembox_reset();
+        /* Rechner Slot 10 @0x05AA `44 99 b8 a7 14 05 c4 09` = Rechteck x -26300..-25000, z -22600..-20100 (Tisch; westlich von
+         * x -24752 schiebt die Kollision zurueck): Stand (-24700,-21350), Blick -x (2048) -> Vorwaertspunkt (-25320,-21350) */
+        untersuchen(-24700, -21350, 2048, 600);
+        zeige("Rechner");
+        PRUEF(s_prot_n >= 1 && s_prot_id[0] == RE15_SAVEPOINT_MSG_ID && strstr(s_prot_text[0], "Memory Card") != NULL,
+              "ROOM4011 Rechner (Slot 10 -> sub03 msg 7): Speicher-Ablauf (Memory-Card-Text)");
+        /* Funde Slot 7/8 @0x056A/@0x0580 `50 97 20 b8 40 06 d0 07` = Rechteck x -26800..-25200, z -18400..-16400 (beide
+         * dasselbe): Stand (-24752,-17671) = dort haelt die Kollision an (Echtlauf), Blick -x -> Vorwaertspunkt (-25372,-17671) */
+        for (int k = 0; k < 2; k++) {
+            untersuchen(-24752, -17671, 2048, 900);
+            printf("   Fund %d: Slot 7 aktiv %d, Slot 8 aktiv %d, Bits (9,11)=%d (9,12)=%d\n", k + 1, g_aot.slots[7].active,
+                   g_aot.slots[8].active, re15_game_flag_get(9, 11), re15_game_flag_get(9, 12));
+        }
+        PRUEF(re15_game_flag_get(9, 11) && re15_game_flag_get(9, 12) && re15_inv_find_item(0x22) >= 0 &&
+              re15_inv_find_item(0x16) >= 0,
+              "ROOM4011 Funde: First Aid Spray (0x22, Bit 11) und Shotgun Shells (0x16, Bit 12) aufgehoben");
+        /* zurueck: Tuer Slot 0 @0x04D2 `cc ac 20 9f 84 03 78 05` = Rechteck x -21300..-20400, z -24800..-23400 (oestlich von
+         * x -21044 ist Wand): Stand (-21700,-24100), Blick +x (0) -> Vorwaertspunkt (-21080,-24100) */
+        const int w = tuer_versuch(-21700, -24100, 0);
+        printf("   zurueck: Raumwechsel %d -> ROOM%04X (%d,%d) Cut %d\n", w, g_room_change.room_id, g_room_change.x,
+               g_room_change.z, g_room_change.target_cut);
+        PRUEF(w && g_room_change.room_id == 0x4001 && g_room_change.x == -15608 && g_room_change.z == -3524,
+              "ROOM4011 Tuer zurueck nach ROOM4001 (-15608,-3524) (Mod 4011 @0x04D2)");
+    }
+}
+
+int main(int argc, char **argv)
+{
+    const char *teil = argc > 1 ? argv[1] : "alle";
+    if (!strcmp(teil, "rechner")  || !strcmp(teil, "alle")) teil_rechner();
+    if (!strcmp(teil, "plan")     || !strcmp(teil, "alle")) teil_plan();
+    if (!strcmp(teil, "schalter") || !strcmp(teil, "alle")) teil_schalter();
+    if (!strcmp(teil, "szene")    || !strcmp(teil, "alle")) teil_szene();
+    if (!strcmp(teil, "bytes")    || !strcmp(teil, "alle")) teil_bytes();
+    if (!strcmp(teil, "namen")    || !strcmp(teil, "alle")) teil_namen();
+    if (!strcmp(teil, "tuer401")  || !strcmp(teil, "alle")) teil_tuer401();
+    printf("%s: %d Fehler\n", teil, g_fail);
+    return g_fail ? 1 : 0;
+}
