@@ -82,17 +82,26 @@ function(lauf _name _raum _x _z _rot _cut _bitarg _script _shot_at _framedump)
     set(LAUF_LOG "${_lh}" PARENT_SCOPE)
 endfunction()
 
-# name | raum | spieler x,z,rot (verdeckt die Karte nicht) | cut | bit (= k_r36k_lage Feld 3) | fenster x0 y0 x1 y1 | min
+# Runde 42 Strang lageplaene: nur noch Revierplan (ROOM1030, Bits 89+88+87) und Kellerplan (ROOM1200, Bits 77+78);
+# die Faelle 3f (1140), 2f (10D0), b1 (11D0) entfallen mit ihren Wandplaenen. Spalte bit = ALLE Bits des Plans
+# ("+"-getrennt), denn der Plan haengt, solange eines fehlt (kartenitems_r36.c re15_kartenitems_r36_genommen).
+# name | raum | spieler x,z,rot (verdeckt die Karte nicht) | cut | bits | fenster x0 y0 x1 y1 | min
 # Fenster = Marken-Huelle (analysis/befunde_runde36/marken/map*.bmp) +-3 px. Gemessen 2026-10-11
 # (Dossier 5.2, Lade-Weg F100): 1140 73, 10D0 219, 1030 81, 1200 177, 11D0 169 Pixel, ausserhalb je 0.
 # Schwelle = rund die Haelfte.
+# NACHARBEIT (Strang lageplaene_nach): der Revierplan haengt jetzt an der Ostwand neben der Ausgangstuer (Kamera 2 = Tuer-
+# kamera beider Figuren, s = 2) und setzt zusaetzlich das Dach-Bit 42. Gemessen 2026-11-18 (Lade-Weg F100, RE15_FORCE_CUT):
+# Cut 2 1263 Pixel, Huelle x117..159 y41..72; Cut 1 319 Pixel, Huelle x276..308 y76..97 (vom Fernseher am Pfeiler teilweise
+# verdeckt); ausserhalb je 0. Fenster = Huelle +-3, Schwelle = rund die Haelfte. Der Vergleichs-Cut fuer die Helligkeit ist
+# jetzt Cut 1 (vorher Cut 0; Cut 0 zeigt die Ostwand nicht).
+# STRANG LAGEPLAENE_NACH2 (Augenhoehe links der Tuer, Mitte (2398,-2658,-10616), s = 1.5): gemessen 2026-11-18 (Lade-Weg F100,
+# RE15_FORCE_CUT, Fenster 0..319 x 0..239): Cut 2 1139 Pixel, Huelle x18..64 y78..103, 1139 von 1139 Palettenfarben; Cut 1
+# 179 Pixel, Huelle x233..247 y101..112 (15 x 12 = 180: ganz sichtbar, der Fernseher am Pfeiler steht weiter rechts);
+# ausserhalb je 0. Fenster = Huelle +-3, Schwelle = rund die Haelfte.
 set(_faelle
-    "3f|1140|-8000|-11000|0|5|87|228|69|244|84|36|268"
-    "2f|10D0|2000|-6000|0|6|88|267|117|292|138|110|311"
-    "1f|1030|-18000|-12000|0|3|89|152|100|167|116|40|452"
-    "b2|1200|-20000|-26000|0|2|77|55|77|77|96|88|381"
-    "b1|11D0|-3000|-21000|0|0|78|224|58|253|100|84|433"
-    "1f0|1030|-18000|-12000|0|0|89|88|104|101|115|24|452")
+    "1f|1030|-18000|-12000|0|2|89+88+87+42|15|75|67|106|569|452"
+    "b2|1200|-20000|-26000|0|2|77+78|55|77|77|96|88|381"
+    "1f0|1030|-18000|-12000|0|1|89+88+87+42|230|98|250|115|89|452")
 # Sechster Fall (Nachbesserung 1): ROOM1030 im Cut 0 — die Karte an der Rueckwand zwischen den Aushaengen,
 # gemessen 2026-10-11 (neue exe, Lade-Weg F100): 48 Pixel, Huelle x91..98 y107..112, Mittel (105,107,96),
 # 48 von 48 Palettenfarben. Fenster = Huelle +-3, Schwelle = die Haelfte.
@@ -117,11 +126,12 @@ foreach(_f ${_faelle})
     list(GET _t 11 _min)
     list(GET _t 12 _min_karte)
     hexof("[kartenitems] ROOM${_raum}: Karte" _hk)
+    string(REPLACE "+" ";bit:" _bitliste "bit:${_bit}")
     # Nach dem Raumbild (F100) Statusschirm + L1: Kartenschirm des eigenen Blatts (inv-Bild 140).
     lauf(${_n}_mit ${_raum} ${_x} ${_z} ${_rot} ${_cut} "" "${_karte_skript}" 140 100)
     set(_dir_mit "${LAUF_DIR}")
     string(FIND "${LAUF_LOG}" "${_hk}" _p_mit)
-    lauf(${_n}_ohne ${_raum} ${_x} ${_z} ${_rot} ${_cut} "bit:${_bit}" "${_karte_skript}" 140 100)
+    lauf(${_n}_ohne ${_raum} ${_x} ${_z} ${_rot} ${_cut} "${_bitliste}" "${_karte_skript}" 140 100)
     set(_dir_ohne "${LAUF_DIR}")
     string(FIND "${LAUF_LOG}" "${_hk}" _p_ohne)
     if(_p_mit LESS 0)
@@ -171,8 +181,10 @@ foreach(_f ${_faelle})
     endif()
 endforeach()
 
-# ROOM1030 Cut 3 gegen Cut 0 (Raumlicht (54,54,59) gegen (89,89,94), Faktor 1,65 — Abnahme 0 Abschnitt 4):
-# ohne Raumlicht ist die Karte in beiden Cuts gleich hell. Gemessen 2026-10-11: Summe 297 (Cut 3, 88 Pixel)
+# ROOM1030 zwei Cuts (bis zur Nacharbeit Cut 3 gegen Cut 0, Raumlicht (54,54,59) gegen (89,89,94), Faktor 1,65 — Abnahme 0
+# Abschnitt 4; seit der Nacharbeit Cut 2 gegen Cut 1, Werte unten): ohne Raumlicht ist die Karte in beiden Cuts gleich hell.
+# Nacharbeit gemessen 2026-11-18: Cut 2 Summe 296 (1263 Pixel, Mittel 99/103/93), Cut 1 Summe 282 (319 Pixel), Abstand 14,
+# je 100 % Palettenfarben. Bis zur Nacharbeit: Summe 297 (Cut 3, 88 Pixel)
 # und 310 (Cut 0, 48 Pixel); Abstand 13. Zulaessig: 1/10 der Summe (29) fuer die Texel-Abtastung bei
 # verschiedener Bildgroesse — ein NCCT-Unterschied von 1,65 waere ein Abstand von rund 120.
 if(DEFINED _summe_1f AND DEFINED _summe_1f0)
@@ -181,37 +193,39 @@ if(DEFINED _summe_1f AND DEFINED _summe_1f0)
         math(EXPR _abstand "0 - ${_abstand}")
     endif()
     math(EXPR _zul "${_summe_1f} / 10")
-    message(STATUS "kartenitems_bild 1F Cut 3 Summe ${_summe_1f} gegen Cut 0 Summe ${_summe_1f0}: Abstand ${_abstand} (zulaessig ${_zul})")
+    message(STATUS "kartenitems_bild 1F Cut 2 Summe ${_summe_1f} gegen Cut 1 Summe ${_summe_1f0}: Abstand ${_abstand} (zulaessig ${_zul})")
     if(_abstand GREATER _zul)
-        string(APPEND _fehler "1F: Karte in Cut 3 und Cut 0 verschieden hell (${_summe_1f} gegen ${_summe_1f0}) — Raumlicht statt Flach-Weg\n")
+        string(APPEND _fehler "1F: Karte in Cut 2 und Cut 1 verschieden hell (${_summe_1f} gegen ${_summe_1f0}) — Raumlicht statt Flach-Weg\n")
     endif()
 else()
     string(APPEND _fehler "1F: Helligkeit in Cut 3/Cut 0 nicht gemessen\n")
 endif()
 
-# ---- Teil 2: echter Weg in ROOM1140 -----------------------------------------------------------------
-# Spieler (-2050,-9900) Blick +z (rot 3071, Zone x -2551..-1551 z -9510..-8510; unit_r36_kartenitems D).
+# ---- Teil 2: echter Weg in ROOM1030 (Runde 42: Revierplan; vorher ROOM1140) -------------------------
+# Nacharbeit: Spieler (1700,-14000) im Streifen zwischen Bank und Tuer, Blick Ostwand (rot 0; Zone x 1598..2598
+# z -14800..-13800 = Slot 9, die Notfall-Tafel zog nach 39). Strang lageplaene_nach2: Spieler (1500,-11300) vor dem Plan
+# links der Tuer, Blick Ostwand (rot 0; Zone Slot 21 x 1598..2598 z -12010..-11010; unit_r42_lageplaene4_druck).
 # Skript (Spielbilder ab 30): A Aktion | W3 Frage tippt | A Ja | W3 Meldung | A weg | W2 | S Status | W2 | Q Karte | W4
 set(_auf  "A0.1,W3,A0.1,W3,A0.1,W2,S0.3,W2,Q0.3,W4")
 set(_kein "W3,W3,W3,W2,S0.3,W2,Q0.3,W4")
-lauf(weg_auf  1140 -2050 -9900 3071 5 "" "${_auf}"  140 270)
+lauf(weg_auf  1030 1500 -11300 0 2 "" "${_auf}"  140 270)
 set(_dir_auf "${LAUF_DIR}")
-hexof("[kartenitems] ROOM1140 Ereignis 28 -> Port-Programm" _hp)
+hexof("[kartenitems] ROOM1030 Ereignis 28 -> Port-Programm" _hp)
 string(FIND "${LAUF_LOG}" "${_hp}" _p)
 if(_p LESS 0)
-    string(APPEND _fehler "weg: Aktionsdruck vor der Tafel startete das Karten-Programm nicht (Ereignis 28)\n")
+    string(APPEND _fehler "weg: Aktionsdruck vor dem Plan startete das Karten-Programm nicht (Ereignis 28)\n")
 endif()
-lauf(weg_kein 1140 -2050 -9900 3071 5 "" "${_kein}" 140 270)
+lauf(weg_kein 1030 1500 -11300 0 2 "" "${_kein}" 140 270)
 set(_dir_kein "${LAUF_DIR}")
 if(NOT EXISTS "${_dir_auf}/karte.bmp" OR NOT EXISTS "${_dir_kein}/karte.bmp")
     string(APPEND _fehler "weg: kein Kartenschirm-Abzug (RE15_INV_FB_SHOT)\n")
 else()
-    # Kartenfeld des Schirms (20..300, 50..215); gemessen 2026-10-11: 537 Pixel (Huelle x120..193
-    # y80..158 = die unbesuchten 3F-Raeume als Umriss). Schwelle = die Haelfte.
-    execute_process(COMMAND "${RE15_BMP_TOOL}" "${_dir_auf}/karte.bmp" "${_dir_kein}/karte.bmp" 20 50 300 215 268
+    # Kartenfeld des Schirms (20..300, 50..215); Runde 36 (3F): 537 Pixel. Runde 42 (1F nach der Aufnahme des
+    # Revierplans): Schwelle = die Haelfte der 1F-Zahl aus Teil 1 (905 -> 452).
+    execute_process(COMMAND "${RE15_BMP_TOOL}" "${_dir_auf}/karte.bmp" "${_dir_kein}/karte.bmp" 20 50 300 215 452
                     TIMEOUT 60 RESULT_VARIABLE _rvm OUTPUT_VARIABLE _outm)
     string(STRIP "${_outm}" _outm)
-    message(STATUS "kartenitems_bild weg: Kartenschirm 3F mit/ohne Aufnahme: ${_outm}")
+    message(STATUS "kartenitems_bild weg: Kartenschirm 1F mit/ohne Aufnahme: ${_outm}")
     if(NOT _rvm EQUAL 0)
         string(APPEND _fehler "weg: Kartenschirm zeigt nach der Aufnahme keine zusaetzlichen Raeume: ${_outm}\n")
     endif()
@@ -220,4 +234,4 @@ endif()
 if(_fehler)
     message(FATAL_ERROR "kartenitems_bild: das SICHTBARE Ergebnis stimmt nicht.\n${_fehler}")
 endif()
-message(STATUS "kartenitems_bild: alle fuenf Karten an der Marke gezeichnet (Palettenfarben, kein Raumlicht), Aufnahme am echten Weg schaltet 3F frei")
+message(STATUS "kartenitems_bild: Revier- und Kellerplan an der Marke gezeichnet (Palettenfarben, kein Raumlicht), Aufnahme am echten Weg schaltet 1F frei")

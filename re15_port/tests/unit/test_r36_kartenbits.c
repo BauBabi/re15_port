@@ -205,16 +205,28 @@ static int orig_raum_scharf(int i)
     return satz_scharf(&k_orig[i]);
 }
 
+/* Runde 42 lageplaene_nach (Pruefer s1 gelb 7): Blatt-Gruppe einer Zeile GENAU wie der Motor seit bb87d614c
+ * (kartenitems_r36.c n_von/bit_von/blatt_von): n_blaetter 0 = Zeile im alten 13-Felder-Format -> Ein-Blatt-Plan mit
+ * blatt/bit. So bricht eine spaeter eingetragene Zeile ohne Gruppe (z.B. r42/rest Laborblatt 8, U-11) die Teile V/P nicht. */
+static int plan_n(const re15_kartenitem_r36_t *z)
+{
+    return z->n_blaetter < 1 ? 1 : (z->n_blaetter > RE15_R36K_MAX_BLAETTER ? RE15_R36K_MAX_BLAETTER : z->n_blaetter);
+}
+static unsigned plan_bit(const re15_kartenitem_r36_t *z, int i)   { return z->n_blaetter < 1 ? z->bit : z->bits[i]; }
+static unsigned plan_blatt(const re15_kartenitem_r36_t *z, int i) { return z->n_blaetter < 1 ? z->blatt : z->blaetter[i]; }
+
 /* Lageplan k ueber das ECHTE Port-Programm nehmen: Raum starten (Installer legt Prop + Zone an), Ereignis 28
  * feuern (= was der Aktions-Scan des EVENT-Satzes tut, scd_event_fire), jede Ja/Nein-Frage mit JA beantworten
  * (virtuelles Bestaetigen-Bit 0x4000, wie probe_besitz_zensus.c), bis der Faden endet. Rueckgabe: Anzahl der
  * Bank-9-Bits, die das Programm gesetzt hat (< 0 = Ablauf gescheitert); *out_bit = das gesetzte Bit. */
+static uint8_t s_plan_gesetzt[256];   /* Runde 42: alle Bits, die der letzte plan_nehmen gesetzt hat */
 static int plan_nehmen(int k, int *out_bit)
 {
     const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(k);
     raum_t r;
     *out_bit = -1;
-    if (!z || raum_laden(&r, z->raum) != 0) return -1;
+    /* Runde 42 Stufe 2: ein Plan nur fuer Elza (Fabrik 30C1) wird in ihrer Fassung raum|1 genommen */
+    if (!z || raum_laden(&r, (uint16_t)(z->raum | (z->variante == RE15_R36K_VARIANTE_ELZA))) != 0) return -1;
     raum_start(&r, z->rect_x + RE15_R36K_RECT / 2, z->rect_z + RE15_R36K_RECT / 2);
     int zone = g_aot.slots[z->aot_slot].active && g_aot.slots[z->aot_slot].type == RE15_AOT_TYPE_GENERIC &&
                g_aot.slots[z->aot_slot].event_id == RE15_R36K_EREIGNIS;
@@ -234,8 +246,9 @@ static int plan_nehmen(int k, int *out_bit)
     int lief_zu_ende = !g_scd.threads[slot].active;
     bank9_lesen(nach);
     int n = 0;
+    memset(s_plan_gesetzt, 0, sizeof s_plan_gesetzt);
     for (int b = 0; b < 256; b++)
-        if (nach[b] && !vor[b]) { n++; *out_bit = b; }
+        if (nach[b] && !vor[b]) { n++; *out_bit = b; s_plan_gesetzt[b] = 1; }
     free(r.buf);
     return lief_zu_ende ? n : -4;
 }
@@ -273,9 +286,12 @@ static void teil_v(void)
         re15_game_state_init();
         int bit = -1;
         int n = plan_nehmen(k, &bit);
-        PRUEFE(n == 1 && bit == z->bit,
-               "Plan Blatt %u (ROOM%04X): Port-Programm Ereignis 28 lief zu Ende, setzte %d Bank-9-Bit(s): (9,%d)",
-               (unsigned)z->blatt, (unsigned)z->raum, n, bit);
+        /* Runde 42: ein Plan setzt die Bits ALLER seiner Blaetter (Revier 89/88/87, Keller 77/78) und keine anderen */
+        int alle = n == plan_n(z);
+        for (int i = 0; i < plan_n(z); i++) if (!s_plan_gesetzt[plan_bit(z, i)]) alle = 0;
+        PRUEFE(alle,
+               "Plan Blatt %u (ROOM%04X): Port-Programm Ereignis 28 lief zu Ende, setzte %d Bank-9-Bit(s) (soll %d: die "
+               "Bits seiner Blaetter)", (unsigned)z->blatt, (unsigned)z->raum, n, plan_n(z));
         uint8_t stand[256];
         bank9_lesen(stand);
         for (int i = 0; i < N_ORIG; i++) {
@@ -300,7 +316,7 @@ static void teil_v(void)
     for (int k = 0; k < n_plaene; k++) {
         const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(k);
         raum_t r;
-        if (raum_laden(&r, z->raum) != 0) continue;
+        if (raum_laden(&r, (uint16_t)(z->raum | (z->variante == RE15_R36K_VARIANTE_ELZA))) != 0) continue;   /* Runde 42 Stufe 2 */
         bank9_schreiben(stand);
         raum_start(&r, z->rect_x + RE15_R36K_RECT / 2, z->rect_z + RE15_R36K_RECT / 2);
         int haengt = prop_slot(RE15_R36K_OBJ) >= 0 && g_aot.slots[z->aot_slot].active &&
@@ -635,16 +651,25 @@ static void teil_p(void)
     const int n_plaene = re15_kartenitems_r36_anzahl();
     for (int k = 0; k < n_plaene; k++) {
         const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(k);
-        int im_original = s_z.belegt[z->bit];
-        PRUEFE(RE15_R36K_BANK == 9 && !im_original, "Bit %3u Lageplan Blatt %u ROOM%04X (k_r36k_lage, Spur N) — %s%s",
-               (unsigned)z->bit, (unsigned)z->blatt, (unsigned)z->raum,
-               im_original ? "KOLLISION mit " : "im Original frei", im_original ? s_z.erste[z->bit] : "");
-        int doppelt = 0;
-        for (int i = 0; i < N_PORT; i++) if (k_port[i].bit == z->bit) doppelt = 1;
-        for (int j = 0; j < n_plaene; j++)
-            if (j != k && re15_kartenitems_r36_zeile(j)->bit == z->bit) doppelt = 1;
-        PRUEFE(!doppelt, "Lageplan-Bit %u ist kein anderes Port-Bit", (unsigned)z->bit);
-        alle[n++] = z->bit;
+        for (int bi = 0; bi < plan_n(z); bi++) {   /* Runde 42: alle Bits des Plans (Revier 4, Keller 2; ohne Gruppe 1) */
+            const unsigned bit = plan_bit(z, bi), blatt = plan_blatt(z, bi);
+            int im_original = s_z.belegt[bit];
+            PRUEFE(RE15_R36K_BANK == 9 && !im_original, "Bit %3u Lageplan Blatt %u ROOM%04X (k_r36k_lage, Spur N) — %s%s",
+                   bit, blatt, (unsigned)z->raum,
+                   im_original ? "KOLLISION mit " : "im Original frei", im_original ? s_z.erste[bit] : "");
+            int doppelt = 0;
+            /* Runde 42 lageplaene Stufe 2: ein Vertrags-Planbit (re15_story_r42.h RE15_R42_BIT_PLAN_*) ist DERSELBE Plan, kein
+             * zweites Bit - Bit 35 setzen Leons Uebergabe 3060 (story3a_r42.c) und Elzas Wandplan 30C1 (k_r36k_lage). */
+            for (int i = 0; i < N_PORT; i++)
+                if (k_port[i].bit == bit && strncmp(k_port[i].makro, "RE15_R42_BIT_PLAN_", 18) != 0) doppelt = 1;
+            for (int j = 0; j < n_plaene; j++) {
+                const re15_kartenitem_r36_t *y = re15_kartenitems_r36_zeile(j);
+                for (int bj = 0; bj < plan_n(y); bj++)
+                    if ((j != k || bj != bi) && plan_bit(y, bj) == bit) doppelt = 1;
+            }
+            PRUEFE(!doppelt, "Lageplan-Bit %u ist kein anderes Port-Bit", bit);
+            alle[n++] = bit;
+        }
     }
     unsigned treffer[16];
     int k = kollisionen(alle, n, treffer, 16);
@@ -673,8 +698,8 @@ static int sd_bit(const re15_savedata_t *sd, unsigned bank, unsigned bit)
  *    in keinem belegten Platz steht eines der neuen Lageplan-Bits 77/78 (kein Code hat sie je gesetzt — Dossier 9.6).
  * S2 Ein v0.8.23-Spielstand (Format v9; re15_savedata.h/.c seit v0.8.23 unveraendert), in dem "Pocket Watch" 0x3F
  *    (ROOM2090 @0x00A12, Bit 90) und "Head of Akuma" 0x32 (ROOM2040 @0x01364, Bit 91) genommen sind: ueber die echte
- *    Speicherkarte geschrieben und gelesen -> kein Polizei-Lageplan im Besitz, beide Plaene haengen in ROOM1200/
- *    11D0, und die zwei Original-Items bleiben genommen (Satz still) — der Spielfortschritt bleibt erhalten. */
+ *    Speicherkarte geschrieben und gelesen -> kein Polizei-Lageplan im Besitz, der Kellerplan haengt in ROOM1200 (Runde 42;
+ *    vorher auch 11D0), und die zwei Original-Items bleiben genommen (Satz still) — der Spielfortschritt bleibt erhalten. */
 static void teil_s(void)
 {
     printf("=== S: Alt-Spielstaende ===\n");
@@ -729,7 +754,7 @@ static void teil_s(void)
     bank9_lesen(stand);
     for (int k = 0; k < re15_kartenitems_r36_anzahl(); k++) {
         const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(k);
-        if (z->blatt > 1) continue;                    /* B2 (1) und B1 (0) */
+        if (z->blatt > 1) continue;                    /* Kellerplan (Fundstelle B2 = Blatt 1; Runde 42) */
         raum_t r;
         if (raum_laden(&r, z->raum) != 0) continue;
         bank9_schreiben(stand);

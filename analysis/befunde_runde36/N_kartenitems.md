@@ -3,6 +3,24 @@
 Baum `.claude/worktrees/r36_kartenitems`, Zweig `r36/kartenitems`, Basis master 78a4a748.
 Dossier wird fortlaufend geschrieben (Sitzungslimit).
 
+> **⛔ STAND HEUTE (Runde 42, Zweig `r42/lageplaene`, 18.11.2026) — Abschnitte 1 bis 9 beschreiben Runde 36.**
+> Seit dem Nutzerwunsch vom 18.11. ("Ich will das es mehr funktioniert wie in Resident Evil 2." / "nicht benötigte maps
+> kommen weg.") gibt es **keine fuenf Etagenplaene mehr**, sondern die RE2-Form: **einen Plan je Gebiet**.
+>
+> | Plan | Raum (Fassung) | Blaetter | Bank-9-Bits | Ort | Groesse |
+> |---|---|---|---|---|---|
+> | Revierplan "police station map" | 1030/1031 | 2 (1F), 3 (2F), 4 (3F), **5 (Dach)** | 89, 88, 87, **42** | Ostwand der Lobby LINKS neben der Ausgangstuer nach 1050 auf Augenhoehe (Mitte y -2658), Kamera 2 (lageplaene_nach2) | 1620 x 1080 |
+> | Kellerplan "police basement map" | 1200/1201 | 1 (B2), 0 (B1) | 77, 78 | Leichenhalle neben der Vitrine (Stelle der Runde 36) | 745 x 497 |
+> | Kanalisation "sewer map" | 2000/2001 | 6 | 34 | Nordwand links der Ostleiter, Kamera 11 | 1080 x 720 |
+> | Fabrik "factory map" | nur 30C1 (Elza) | 7 | 35 (= Leons Uebergabe 3060) | Nordwand rechts der Treppe, Kamera 1 | 2160 x 1440 (Nacharbeit) |
+> | U-Bahn "subway map" | 6000/6001 | 12 | 37 | Rueckwand des Treppenabsatzes, Kamera 0 | 1080 x 720 |
+>
+> Entfallen: 1140 (3F), 10D0 (2F), 11D0 (B1). Nicht in dieser Tabelle: Forschungszentrum (Blatt 8, Bit 36, baut r42/rest
+> als eigenes Modul an Capcoms Wandplan 4020/4021) und Labor (Original ROOM5030 sub02, Flag (3,115)).
+> Belege und Begruendungen: Kopf `re15_port/include/re15_kartenitems_r36.h` (Abschnitte RUNDE 42, RUNDE 42 STUFE 2,
+> RUNDE 42 NACHARBEIT, STRANG LAGEPLAENE_NACH2) und Abschnitt **10** unten. Riegel: `unit_r42_lageplaene_*`, `unit_r42_lageplaene2_*`,
+> `unit_r42_lageplaene3_*`, `unit_r42_lageplaene4_*`, `integration_r42_lageplaene2_weg`, `integration_r42_lageplaene3_weg`.
+
 ## Auftrag (woertlich, AUFTRAG.md Z. 73-77)
 
 > - Extrahiere mir Karte01 oder Karte02 von deinen Karten hier: "RE2-Weltmodelle: Öffnen Sie
@@ -761,3 +779,76 @@ fremde Sitzung (ctest + re15_pc_r36r_haken-exe); kein Test flatterte.
 * Spielstaende: unveraendert ladbar (gleiches Format). Kein veroeffentlichter Stand ist betroffen — die Lageplaene gab es
   in keiner bisher ausgelieferten Version (erst ab v0.8.24).
 * Keine neuen Dateien, keine Sprachdateien, keine sichtbare Aenderung an den Karten selbst.
+
+## 10. Runde 42 — Lageplaene wie RE2 (Strang `lageplaene`, Stufen 1/2 und Nacharbeit), 18.11.2026
+
+### 10.1 Stufe 1 (72522ef07, bb87d614c) — STAGE 1 in der RE2-Form
+* RE2 room20B0 sub10 @0x037BA..0x0381A: EIN Plan setzt in EINEM Ereignis Set(33,2) @0x037DA, Set(33,3) @0x037DE,
+  Set(33,4) @0x037E2 (Besitz 1F/2F/3F) und Set(35,2..4) @0x037E6-EE (Etagenwahl). Port: je Blatt ein Bank-9-Bit
+  hintereinander (`22 09 bb 01`), Ifel_ck-Laenge waechst um 4 je Set (Vorlage ROOM5030 sub02 @0x010B2).
+* Revierplan 1030/1031 (Bits 89/88/87), Kellerplan 1200/1201 (Bits 77/78, Name "police basement map" = PORT-WAHL).
+  Die Wandplaene 1140/10D0/11D0 sind entfernt (Riegel `unit_r42_lageplaene_weg`: Raumlage gleich wie ohne Installer).
+* Tabellenzeile `re15_kartenitem_r36_t`: neue Felder `n_blaetter`, `blaetter[]`, `bits[]`. Seit bb87d614c gilt eine Zeile
+  OHNE Gruppe (`n_blaetter` 0, altes 13-Felder-Format) als Ein-Blatt-Plan mit `blatt`/`bit` (kartenitems_r36.c `n_von`).
+* Alte Spielstaende: Besitz je Blatt = sein Bit; ein Plan haengt, solange EINES seiner Bits fehlt.
+
+### 10.2 Stufe 2 (bce9c91a8) — ein Plan je Gebiet STAGE 2..6
+* Kanalisation 2000/2001 (Blatt 6, Bit 34), Fabrik nur 30C1 (Blatt 7, Bit 35), U-Bahn 6000/6001 (Blatt 12, Bit 37);
+  Texte im Rahmen RE2 room4040 @0x1B9B/@0x1BCB ("There's a sewer map. / Will you take it?"), "factory map" room5040
+  @0x2341/@0x2376, "subway map" = PORT-WAHL. Neue Zeilenfelder `variante` (Fabrik nur Elza) und `band` (Aot_set pc[4]).
+* Prop-Band = Band des Standorts + 1 = **PORT-WAHL aus Messung** (Klettersonde FUN_8002d2c0 @0x8002d364-70, Gegenprobe B:
+  mit Band 1 kletterte Leon in 2000 auf das Plakat). ⛔ Die in bce9c91a8 als Vorbild zitierten Wandobjekte (ROOM2000
+  @0x016E6 Band 2 bei y -900, ROOM6000 @0x00E16 Band 3 bei y 0, ROOM1200 @0x007DA Band 1 bei y -2858) zeigen KEINE +1-Regel
+  (Pruefer s2 gelb 1, in der Nacharbeit nachgelesen und im Kopf berichtigt).
+
+### 10.3 Nacharbeit (Strang `lageplaene_nach`)
+* **Dach**: der Revierplan setzt zusaetzlich Bit 42 = Blatt 5 (ROOM1170/1171, einziger Raum des Blatts). Orchestrator-Entscheid
+  18.11.: "das Dach gehoert zum Revier". Bit 42: frei im Mod-RDT-Zensus (bank9_zensus.py original), im Port-Zensus, auf der
+  40-%-Disc (96 RDTs) und in allen r42-Zweigen/Tags v0.8.19..30. Programm jetzt 4 Sets, 68 Byte, Ifel-Laenge 0x38.
+* **Revierplan neu**: an der alten Stelle (Marke map1F.bmp, Kamera 3) nur ~11 x 8 Bildpunkte. Jetzt Ostwand x 2398
+  (ROOM1030 SCA-Zelle 1 @0x01A1C, ROOM1031 @0x01A80) ueber der Notfall-Tafel (Slot 9 @0x01D42, msg 4 @0x297F), neben der
+  Ausgangstuer nach 1050 (Slot 0 @0x01C6A / 1031 @0x01CD8). Beide Figuren verlassen die Lobby durch diese Tuer; in den
+  Tuerbereich fuehren nur die RVD-Zonen 1->2 (1030 @0x00294) und 3->2 (@0x0030C), Kamera 2 ist damit die Tuerkamera beider.
+  Mitte (2398,-4150,-14900), s = 2 (2160 x 1440). Gemessen (Framedump F100): Kamera 2 1263 Pixel, Huelle x117..159 y41..72
+  (320er Bild); Kamera 1 319 Pixel (teilweise hinter dem Fernseher am Pfeiler); Kamera 3 schraeg am Bildrand.
+  Aufhebe-Rechteck x 1598..2598 z -14800..-13800 (Streifen zwischen Bank/Tischreihe SCA-Zelle 14 @0x01AB8 und Tuer); die
+  Tafel zieht nach Slot 39 um (vorher zog an der alten Stelle das Muenztelefon Slot 8 nach 39). Gemessen: bei z -14300
+  haelt die Bank den Spieler auf, Standort zum Nehmen z -14000.
+* **Fabrikplan** 30C1: gleiche Stelle, s = 2; Kamera 1 749 Pixel, Huelle x187..228 y108..135 (vorher ~20 x 14).
+* **Groesse s = 2** = PORT-WAHL (NUTZERWUNSCH "gut SICHTBAR"). RE2s Wandplaene karte01/karte02 sind 1080 x 720; RE2s
+  Polizeiplaene room20B0 obj 8 / room2130 obj 0 sind KEINE Wandplaene, sondern das Faltblatt karte00 (MD1 @0x004FDC,
+  md5 735097e1, 112 x 538) - als Plakatmassstab nicht brauchbar.
+* Riegel `unit_r42_lageplaene3_{dach,revier,druck,fabrik}` und `integration_r42_lageplaene3_weg` (Leon 1030 aus Kamera 4,
+  Elza 1031 vom Spielbeginn: Kamera 1 -> 2, Aktion -> Ereignis 28 -> Meldung 31). `unit_r42_lageplaene2_sicht` prueft jetzt
+  auch Elzas 2001/6001. `unit_r36_kartenbits` Teile V/P behandeln eine Zeile ohne Gruppe wie der Motor.
+
+### 10.5 Augenhoehe (Strang `lageplaene_nach2`)
+* NUTZERWUNSCH 18.11.2026 woertlich: "Bei 1030 und 1031 passt das nicht. Das der Revierplan so weit über den Spieler hängt,
+  das geht so nicht." (10.3: Mitte y -4150, Unterkante -3430 = 410 ueber Leons Scheitel.)
+* **Kopfhoehe gemessen** (Riegel `unit_r42_lageplaene4_hoehe`): Kopfband = Ursprung Knochen 8 (Plc_neck, neck_bone 8
+  @0x80031938, Formel skeleton_common.c) bis hoechste Ecke des Kopf-Meshs, Clip 0 Bild 0. Leon PL00.PLD -2513..-3009, Elza
+  PL04.PLD -2332..-2778 (Boden 0). Vergleich: WANTED-Aushang rechts der Tuer (BSS Kamera 2, Bild x 128..149 y 78..103 auf die
+  Wand zurueckgerechnet) y -1950..-3230, zweiter Aushang -2147..-3135; Plaene 2000/30C1/6000 Mitte 2000 ueber dem Boden
+  (unter beiden Hals-Ursprungen), Kellerplan 1200 y -2573.
+* **Ort**: rechts der Tuer ist auf Augenhoehe kein Platz (Aushaenge ab z -14260, davor Bank/Tischreihe). Neu LINKS der Tuer
+  auf dem freien Wandstueck zwischen Door_aot_set Slot 0 (z bis -11600, @0x01C6A / @0x01CD8) und Ende der SCA-Zelle 1
+  (z -9632, @0x01A1C / @0x01A80): Mitte (2398,-2658,-10616), y = Mittel der Kopfband-Mitten, s = 1.5 (1620 x 1080,
+  PORT-WAHL: je 174 Rand zu Tuer und Wandende, deckt beide Kopfbaender).
+* **Gemessen** (Framedump F100, RE15_FORCE_CUT): Kamera 2 1139 Pixel, Huelle x18..64 y78..103 (320er Bild), 1139 von 1139
+  Palettenfarben; Kamera 1 179 Pixel, Huelle x233..247 y101..112 (15 x 12, ganz sichtbar - der Fernseher steht weiter rechts).
+* **Aufheben**: Slot 21 (frei in 1030/1031), Rechteck x 1598..2598 z -12010..-11010. Der Tresen (SCA-Zelle 0 @0x01A10 z
+  -10568) haelt den Spieler bei z -11036 an (gemessen, Leon und Elza); Tresen-Satz Slot 10 (@0x01D56, z -11000..-7839) wird
+  nicht beruehrt, ueber der Tuer gewinnt Slot 0. Die Notfall-Tafel bleibt in Slot 9. Klettersperre unveraendert (Prop-Band
+  +1); Gegenprobe mit Prop-Band +0: Klettersonde an 5 bzw. 4 von 5 Standorten (unit_r42_lageplaene4_druck rot).
+* Wege: Leon und Elza biegen vor der Tuer nach Norden ab (L0.15), gehen am Tresen entlang bis an die Wand (1930,-11036),
+  Kamera 2 schon ab x ~ -2200; Aktion -> Ereignis 28 -> Meldung 31 (`integration_r42_lageplaene3_weg` mit den neuen Wegen).
+
+### 10.4 Hinweise an andere Straenge
+* **r42/rest (U-11 Laborblatt 8)**: baut seinen Plan als eigenes Modul (ungenutzt_r42.c, Bit 36), nicht in `k_r36k_lage`.
+  Wer doch eine Zeile in `k_r36k_lage` eintraegt, kann das alte 13-Felder-Format nehmen (`n_blaetter` 0 -> Ein-Blatt-Plan
+  mit `blatt`/`bit`) oder die Gruppe `n_blaetter 1, { blatt, 0, 0, 0 }, { bit, 0, 0, 0 }` plus `variante`/`band` setzen; seit
+  `RE15_R36K_MAX_BLAETTER` 4 hat jede Gruppe vier Eintraege. `unit_r36_kartenbits` V/P sind fuer beide Formen gruen
+  (Gegenprobe mit einer eingefuegten Altzeile 4020/Blatt 8/Bit 36: alter Test rot "soll 0", neuer gruen).
+* **r42/rest (U-12 U-Bahn-Blatt)**: es darf nur EINEN Fund fuer Blatt 12 geben. Diesen setzt der U-Bahn-Plan 6000/6001
+  (Bit 37 = `RE15_R42_BIT_PLAN_UBAHN`). Ein zweiter Fund (z.B. am Wagen 5090/5091) darf Blatt 12 nicht noch einmal vergeben.
+

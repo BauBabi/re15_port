@@ -850,8 +850,9 @@ static int teil_wicklung(void)
     }
     printf("       %d raeumliche Modelle (Normalen-Pruefung), %d flache (Lage-Pruefung)\n", raeumlich, flache);
     CHECK("Feuerloescher (stehend + liegend) unter den Port-Modellen", fl_gesehen >= 2);
-    CHECK("flache Modelle erkannt (Parking Lot Key, Prison Key, Keycard, 5 Lageplan-Karten) und nicht nach Normalen "
-          "bewertet", flache >= 8);
+    /* Runde 42 Strang lageplaene: nur noch 2 Lageplan-Karten (Revierplan ROOM1030, Kellerplan ROOM1200; vorher 5). */
+    CHECK("flache Modelle erkannt (Parking Lot Key, Prison Key, Keycard, 2 Lageplan-Karten) und nicht nach Normalen "
+          "bewertet", flache >= 5);
     CHECK("jedes RAEUMLICHE Port-Modell wie das Original gewickelt: keine Flaeche w > 0 (Feuerloescher vorher 112 von "
           "148)", alle_ok && raeumlich >= 8);
     CHECK("Mechanik: an 60 Blicken verwirft NCLIP keine Aussenseite und zeichnet keine abgewandte Flaeche", mech_ok);

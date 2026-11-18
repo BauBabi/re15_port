@@ -2,7 +2,8 @@
 # freischalten wie in RE2. Dossier: analysis/befunde_runde36/N_kartenitems.md
 #
 #   unit_r36_kartenitems   Tabelle/Modelle/Texte, Raumstart Leon+Elza (Prop obj 15, EVENT-Satz Ereignis 28,
-#                          ROOM1030/1031 Muenztelefon -> Slot 39), Bit gesetzt -> nichts, echter Druck
+#                          ROOM1030/1031 Notfall-Tafel Slot 9 -> 39 (Nacharbeit; vorher Muenztelefon 8 -> 39)),
+#                          Bit gesetzt -> nichts, echter Druck
 #                          (Bild-Ablauf re15_game_step) -> Frage -> Ja/Nein -> Bit/Zone/Modell/Meldung,
 #                          Kartenblatt ohne/mit Plan (RE2 FUN_8006E120) + Etagenwahl (Bank 35).
 add_executable(test_r36_kartenitems ${CMAKE_CURRENT_LIST_DIR}/../test_r36_kartenitems.c)

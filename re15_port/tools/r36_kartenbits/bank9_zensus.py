@@ -282,11 +282,16 @@ def teil_port():
     # Spur-N-Tabelle (erzeugt): Feld 3 jeder Zeile von k_r36k_lage
     inc = os.path.join(PORT, "engine", "src", "gen", "kartenitems_r36.inc")
     print()
-    print("Spur-N-Tabelle %s (k_r36k_lage, Feld 3 = Bank-9-Bit):" % os.path.relpath(inc, PORT).replace("\\", "/"))
+    print("Spur-N-Tabelle %s (k_r36k_lage, Felder blaetter[]/bits[] = Bank-9-Bits je Blatt; Runde 42: ein Plan, "
+          "mehrere Blaetter):" % os.path.relpath(inc, PORT).replace("\\", "/"))
     for line in open(inc, encoding="utf-8"):
-        m = re.match(r"\s*\{\s*(0x[0-9A-Fa-f]+),\s*(\d+),\s*(\d+),", line)
+        m = re.match(r"\s*\{\s*(0x[0-9A-Fa-f]+),.*?,\s*(\d+),\s*\{([^}]*)\},\s*\{([^}]*)\}\s*\}", line)
         if m:
-            print("  ROOM%s Blatt %s -> Bit %s" % (m.group(1)[2:].upper(), m.group(2), m.group(3)))
+            n = int(m.group(2))
+            bl = [int(v) for v in m.group(3).split(",")][:n]
+            bt = [int(v) for v in m.group(4).split(",")][:n]
+            for x, y in zip(bl, bt):
+                print("  ROOM%s Blatt %d -> Bit %d" % (m.group(1)[2:].upper(), x, y))
 
 
 if __name__ == "__main__":
