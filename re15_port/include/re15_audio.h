@@ -286,8 +286,8 @@ void re15_audio_re2_hint_se(int se_id);
  * PSX: Folge-Stub wie die anderen SE-Baenke. */
 void re15_audio_re2_door_se(int se_id);
 
-/* Runde 41 G5-Auftritt (Abnahme 1 M5): RE2-XA der Szene (Birkin-Laute). `datei` = rohe 2336-Byte-Sektoren EINES Kanals unter
- * shared_assets/RE2/ (R704_XA0B.XAS / R704_XA0C.XAS, tools/r41_g5auftritt/re2_xa_schnitt.py aus PL0/VOICE/VOICE07.XAS),
+/* RE2-XA (Runde 41 eingefuehrt, seit Runde 42 das Finale: Todesschrei Xa 0x03). `datei` = rohe 2336-Byte-Sektoren EINES Kanals unter
+ * shared_assets/RE2/ (R702_XA03_LEON.XAS, tools/r42_finale/re2_xa_finale.py aus PL0/VOICE/VOICE07.XAS),
  * `lesesektoren` = Lesefenster in Laufwerkssektoren (Ende - Start, FUN_800129b4): RE2 haelt an, sobald die Lage das Ende
  * erreicht (@0x80012e3c -> CdlPause @0x80012f58-6c); je gelesenem Sektor 252 Proben (150 Sektoren/s, Modus 0xC8 @0x8009a415,
  * 37800 Hz) -> PCM auf lesesektoren * 252 Proben gekappt. Spielt ueber den einen Sprachkanal (s_xa), CD-Lautstaerke Standard

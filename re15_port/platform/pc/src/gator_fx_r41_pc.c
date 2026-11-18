@@ -86,14 +86,15 @@ extern void re15_render_textured_tri(int x0, int y0, int u0, int v0,
 
 /* RAUM-ESP-SAETZE (Runde 41 G5-Auftritt, Nachbesserung 6): der RE2-Raumlader FUN_8001bba4 registriert bei JEDEM Raumwechsel die
  * Raum-ESP des neuen Raums (FUN_8001bca0 Registry-Basis 8) und legt ihre Texturen mit FUN_8001bd38 neu ins VRAM-Fenster. Der Port
- * fuehrt dafuer je RE2-Vorlage einen Satz: Raeume, ESP-Datei, TIM-Namen. Satz 1 = ROOM7040 fuer 5090/5091 (Brocken Bank 0x19 der
- * G5-Szene, ROOM7040 sub05 @0x016DE; R704.ESP = RDT[0x35D8:0x36FC], Textur RDT[0x18984:0x1B1C4] bytegleich GATOR40A0_19.TIM,
- * geprueft in tools/r41_g5auftritt/re2_m4_7040.py). Je Satz eine eigene, einmal umgelegte ESP-Kopie; der Atlas in Platz 54 wird
+ * fuehrt dafuer je RE2-Vorlage einen Satz: Raeume, ESP-Datei, TIM-Namen. Satz 1 = ROOM7020 fuer 5090/5091 (Runde 42 Strang finale,
+ * Plan D10: Bank 0x27 = Wiederholung 3 der Todessequenz `lui a0,0x270a / ori 0x1000 / jal 0x8001c8c4` @0x80103a54-60; R702.ESP =
+ * RDT[0x2788:0x2E34] Ids `16 27 15 1a` @0x02788, Texturen R702_16/27/15/1A.TIM aus RDT[20] 0x1F55C, tools/r42_finale/re2_r702_esp.py;
+ * bis v0.8.30 ROOM7040 R704.ESP fuer die G5-Szene). Je Satz eine eigene, einmal umgelegte ESP-Kopie; der Atlas in Platz 54 wird
  * bei jedem Satzwechsel neu geladen (wie RE2 das VRAM-Fenster je Raum neu belegt). */
 typedef struct { unsigned r0, r1; const char *esp, *tim_form, *vorlage; } g41_satz_t;
 static const g41_satz_t k_saetze[] = {
     { 0x2090u, 0x2091u, "GATOR40A0.ESP", "GATOR40A0_%02X.TIM", "ROOM40A0" },
-    { 0x5090u, 0x5091u, "R704.ESP",      "GATOR40A0_%02X.TIM", "ROOM7040" },
+    { 0x5090u, 0x5091u, "R702.ESP",      "R702_%02X.TIM",      "ROOM7020" },
 };
 #define G41FX_SAETZE ((int)(sizeof k_saetze / sizeof k_saetze[0]))
 static uint8_t  *s_esp_satz[G41FX_SAETZE];      /* umgelegte Kopien (re2fx haelt den Zeiger des registrierten Satzes) */

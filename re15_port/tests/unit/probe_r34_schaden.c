@@ -691,14 +691,7 @@ static void teil_kasten(void)
         int a0 = trifft(0x24, 0, 0, 0, 400, -500, 0), a1 = trifft(0x24, 0, 0, 0, 600, -500, 0);
         CHECK(47, a0 && !a1, "Voreinstellung 0x24: 400 -> %d (1), 600 -> %d (0)", a0, a1);
     }
-    /* (48) G5-Tentakel 0x37 mit HP -1 ist KEIN Kandidat (RE2 Gate 3; em37 HP -1 @0x80100530/34). */
-    {
-        re15_actor_init(); pl_far();
-        re15_actor_t *e = mk(1, 0x37, 0, 0, 0, -1);
-        re15_attack_box_t b = box_at(0, -500, 0);
-        int n = re15_resolve_attack(&b, 2, -1);
-        CHECK(48, n == 0 && e->hp == -1 && e->state == 1, "Tentakel: n=%d hp=%d st=%d", n, e->hp, e->state);
-    }
+    /* (48) entfallen (Runde 42 Strang finale, Plan S10): der G5-Tentakel 0x37 und sein Applier-Ausschluss sind mit dem G5 entfernt. */
     /* (49) NEGATIV/REGRESSION: Zombie {0,-1440,0,400,1440,400} unveraendert (kein Versatz x/z):
      *      Gier 1024 aendert nichts; 850 trifft (R 900), 950 nicht. */
     {

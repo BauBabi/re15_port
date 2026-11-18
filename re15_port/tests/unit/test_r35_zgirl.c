@@ -458,18 +458,19 @@ static void t_selbsttueren(void)
 /* ------------------------------------------------------------------------ T9 wiedereintritt */
 /* Nachbesserung 1 (Abnahme 0, M1/M2): T8 tickt nach dem Wiedereintritt nur das SCD. Hier laeuft der
  * ECHTE Spielschritt (re15_game_step mit Gegner-KI und Raum-Modulen) durch die Selbst-Tuer:
- *   a) ROOM5090: Boss-Modul (enemy_ai_boss_g5.c). Erstbetritt Cut 0 -> G5 HP 600; Selbst-Tuer 2
+ *   a) ROOM5090: Boss 0x30 (bis v0.8.30 das G5-Modul). Erstbetritt Cut 0 -> Boss mit HP; Selbst-Tuer 2
  *      (RDT main00 @0x0108e) -> der Verbraucher in game_step_common.c steigt neu ein, sub00 @0x0124A
  *      spawnt den Boss erneut -> HP wieder 600 (Sce_em_set +0x4 = 0 @0x800421e0 -> RE2-Ctor
  *      @0x801003CC, HP @0x801003fc). Dann Kampfstart wie sub04 Member_set(0x0c,0x13) @0x130A:
  *      KEIN Todes-Trigger (Routine 3), HP bleibt 600. Vor dem Fix: HP 0 -> Routine 3.
  *   b) Spawn-Zaehler DAT_800aca4e (@0x8003f014 Raum-Init): nach jedem Wiedereintritt nur die
  *      Spawns DIESES Eintritts — ROOM5090 2 (0x4d + Boss), ROOM4050 Tuer 6 sechsmal je 1. */
-extern int re15_g5_routine(void);
-static int g5_hp(int *slot)
+/* Runde 42 Strang finale (Plan S10): der Endkampf-Boss in 5090 ist wieder der RDT-Spawn 0x30 (sub00 @0x0124A, Riesenform), das
+ * G5-Modul ist entfernt. Der Pin bleibt: Wiedereintritt spawnt den Boss neu mit Lebenspunkten, kein Todes-Trigger. */
+static int boss_hp(int *slot)
 {
     int gs = -1;
-    if (gegner(0x36, &gs) != 1) return -9999;
+    if (gegner(0x30, &gs) != 1) return -9999;
     if (slot) *slot = gs;
     return g_actors[gs].hp;
 }
@@ -488,9 +489,9 @@ static void t_wiedereintritt(void)
      * (3,42) (re15_annette_r41.h); der Zaehler zaehlt sie nur dann mit. */
     const int soll = 1 + (re15_annette_r41_spawn_weg(0x5090u, 0x4Du) ? 0 : 1);
     for (int f = 0; f < 5; f++) schritt();
-    int gs = -1, hp1 = g5_hp(&gs);
-    snprintf(m, sizeof m, "ROOM5090 Erstbetritt: Boss 0x36 HP %d (Ctor 600 @0x801003fc), Spawns %d (soll %d)", hp1, n0, soll);
-    pruefe(m, hp1 == 600 && n0 == soll);
+    int gs = -1, hp1 = boss_hp(&gs);
+    snprintf(m, sizeof m, "ROOM5090 Erstbetritt: Boss 0x30 HP %d (> 0), Spawns %d (soll %d)", hp1, n0, soll);
+    pruefe(m, hp1 > 0 && n0 == soll);
     if (gs < 0) return;
 
     g_scd_pending_scenario = -1; g_room_change.pending = 0;
@@ -505,17 +506,16 @@ static void t_wiedereintritt(void)
                           "(Boss, 0x4d nur nach dem Tor; Zaehler-Reset @0x8003f014)", g_scd_pending_scenario, n1, soll);
     pruefe(m, g_scd_pending_scenario == -1 && n1 == soll);
     for (int f = 0; f < 5; f++) schritt();
-    int hp2 = g5_hp(&gs);
-    snprintf(m, sizeof m, "nach dem Neuspawn: Boss HP %d (erwartet 600, vor dem Fix 0)", hp2);
-    pruefe(m, hp2 == 600);
+    int hp2 = boss_hp(&gs);
+    snprintf(m, sizeof m, "nach dem Neuspawn: Boss HP %d (erwartet wie beim Erstbetritt %d, vor dem Fix 0)", hp2, hp1);
+    pruefe(m, hp2 == hp1 && hp2 > 0);
     if (gs < 0) return;
 
     g_actors[gs].grid_id = 0x13;                     /* sub04 Member_set(0x0c,0x13) @0x130A */
     int tod = 0;
-    for (int f = 0; f < 120; f++) { schritt(); if (re15_g5_routine() == 3) tod = 1; }
-    snprintf(m, sizeof m, "Kampfstart: kein Todes-Trigger (Routine 3 gesehen %d), HP %d, Boss x %d (Start -9000 @0x801011d0)",
-             tod, g_actors[gs].hp, g_actors[gs].x);
-    pruefe(m, !tod && g_actors[gs].hp == 600);
+    for (int f = 0; f < 120; f++) { schritt(); if (!g_actors[gs].active || g_actors[gs].state == 3) tod = 1; }
+    snprintf(m, sizeof m, "Kampfstart: kein Todes-Trigger (Zustand 3 gesehen %d), HP %d", tod, g_actors[gs].hp);
+    pruefe(m, !tod && g_actors[gs].hp > 0);
 
     /* b) ROOM4050: sechs Wiedereintritte ueber Tuer 6 (-> Cut 9, ein Zombie-Maedchen je Eintritt). */
     raum_laden(0x4050);

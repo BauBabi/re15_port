@@ -47,9 +47,6 @@ extern void re15_player_aim_reset(void);
 extern void re15_player_set_aim_clip_len(int fc);
 extern int  re15_re2z_last_death_handler(void);
 extern int  re15_re2z_death_cell(unsigned row, unsigned col);
-extern void re15_g5_boss_tick(int slot);
-extern void re15_g5_flinch_zustand(int *akku, int *takt, int *fenster, int *sub);
-extern int  re15_g5_routine(void);
 
 /* Spion fuer die Zusatzbank (die echte Funktion steht in audio_pc.c/SDL, das die Sonde nicht linkt;
  * Muster probe_r34_plattform.c). */
@@ -545,7 +542,6 @@ typedef struct { uint8_t typ; uint16_t raum; uint8_t grid; const char *name; } b
 static const boss_t k_bosse[] = {
     { 0x30, 0x3080, 0x00, "Birkin 0x30 (RE1.5-KI)" },
     { 0x36, 0x3080, 0x00, "Birkin 0x36@3080" },
-    { 0x36, 0x5090, 0x33, "G5 0x36@5090 (RE2-Modul)" },
     { 0x23, 0x2000, 0x01, "Alligator 0x23 (RE1.5-KI)" },
     { 0x23, 0x2090, 0x01, "Gator-Boss 0x23@2090 (Modul)" },
 };
@@ -565,7 +561,7 @@ static void abschnitt_bosse(void)
                 re15_damage_seed_rng(0x0badf00du);
                 g_room_rdt_ok = 0;
                 g_current_room_id = b->raum;
-                if (flavor == RE15_AI_FLAVOR_RE2 || b->raum == 0x5090) load_re2_bank(b->typ);
+                if (flavor == RE15_AI_FLAVOR_RE2) load_re2_bank(b->typ);
                 re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
                 memset(pl, 0, sizeof *pl);
                 pl->active = 1; pl->type = 0; pl->hp = 100; pl->x = 0; pl->z = 40000;
@@ -576,7 +572,6 @@ static void abschnitt_bosse(void)
                 e->x = 0; e->y = 0; e->z = 0; e->rot_y = 0; e->em_flag_id = 0xFF;
                 re15_enemy_apply_hitbox(e, b->typ);
                 for (int f = 0; f < 3; f++) zensus_bild();
-                if (b->raum == 0x5090) { e->grid_id = 0x13; for (int f = 0; f < 3; f++) zensus_bild(); }
                 const int16_t hp_vor = e->hp;
                 /* Granate liegt `abstand` VOR dem Boss auf dem Boden (Gator-Boss im Wasser y -1200: Steg y 0). */
                 int32_t p[3] = { e->x + abstaende[ai], (b->raum == 0x2090 ? 0 : e->y) - 500, e->z };
@@ -589,17 +584,10 @@ static void abschnitt_bosse(void)
                  * Trefferzentrum bei X - 2000 (+0x94 = -2000 @0x80100534/@0x80100538) und damit hinter P - 2000 -> kein Treffer. */
                 int n = re15_granate_r35_explosion(p, 0x800, 2);
                 const int st_hit = e->state;
-                const int getroffen = (b->raum == 0x5090) ? (e->hp != hp_vor) : (st_hit == 2 || st_hit == 3);
+                const int getroffen = (st_hit == 2 || st_hit == 3);
                 int ok_reaktion = 0, verlassen = -1, ende_st = -1;
                 if (getroffen) {
-                    if (b->raum == 0x5090) {
-                        for (int f = 0; f < 60 && !ok_reaktion; f++) {
-                            zensus_bild();
-                            int akku, takt, fen, sub;
-                            re15_g5_flinch_zustand(&akku, &takt, &fen, &sub);
-                            ok_reaktion = (akku > 0 || sub == 0xF || re15_g5_routine() == 3);
-                        }
-                    } else {
+                    {
                         for (int f = 0; f < 1500 && verlassen < 0; f++) {
                             zensus_bild();
                             if (!e->active || e->state != st_hit) verlassen = f;

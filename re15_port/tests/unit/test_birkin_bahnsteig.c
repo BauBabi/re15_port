@@ -427,12 +427,11 @@ static void test_ablauf(unsigned raum, const char *rdt)
         int f, szene = 0, g5 = 0;
         for (f = 0; f < 600; f++) {
             tick(1);
-            if (re15_bf_rueckstoss_phase() != 0) szene = 1;
             if (b->type != 0x30u) g5 = 1;
             if (re15_bk_opfer_cmd()) { re15_bk_opfer_reset(); re15_player_clear_hit_guard(pl); }
             pl->hp = 100;
         }
-        CHECK(!szene, "Rueckstoss-Szene lief (Plan S4: kein G5-Uebergang mehr)");
+        (void)szene;   /* Runde 42 (Plan S10): die Rueckstoss-Szene gibt es nicht mehr */
         CHECK(!g5 && b->type == 0x30u, "Form wurde Typ 0x%02X (kein G5 mehr)", b->type);
         CHECK(b->hp >= RE15_FI_HP_UNTEN, "HP %d unter der Untergrenze %d", b->hp, RE15_FI_HP_UNTEN);
         fprintf(stderr, "%s: toedlicher Zustand -> HP %d, kein Rueckstoss/G5 (%d Ticks)\n", rdt, b->hp, f);

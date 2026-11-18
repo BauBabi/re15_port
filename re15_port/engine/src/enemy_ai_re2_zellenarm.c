@@ -245,7 +245,7 @@ static void arm_anker_1210(re15_actor_t *e)
  *   FUN_80034D0C (Decompile RE2_Quellcode_V2/FUN_80034d0c.c): Ausstieg bei (wPusher | wSpieler) & 2
  *     (verborgener Arm), wPusher & wSpieler & 0x1000, wSpieler & 4; Breitphase |dx|,|dz| <= R,
  *     dist = SquareRoot0, pen = R - dist > 0, Hoehenband |dy| < hA + hB, Schub (dx,dz) * pen / (dist+1);
- *     Vorzeichen-Dreh-Zweig gegen den Positionsspiegel (wie re15_g5_body_push_player); die 0x100000-
+ *     Vorzeichen-Dreh-Zweig gegen den Positionsspiegel (wie der Koerperschub des frueheren G5-Moduls); die 0x100000-
  *     Klemme prueft wPusher — das Arm-Overlay setzt das Bit nie (kein `lui ..,0x10` in
  *     CDEMD0_EM2D_ai1.BIN), Arm-word0 im RAM 0x0c003405.
  *   Segment des Arms (INIT): +0x1E8 = 1 `sw v0,488(s0)` @0x80100328; +0x9E Halbhoehe 500
@@ -262,7 +262,7 @@ static void arm_anker_1210(re15_actor_t *e)
 int re15_re2arm_body_push_player(re15_actor_t *e, re15_actor_t *pl)
 {
     if (!e || !pl || !pl->active || pl->hp < 0) return 0;   /* hp < 0: Port-Konvention aller Schub-Paesse
-                                                              * (re15_body_push_player / re15_g5_body_push_player) */
+                                                              * (re15_body_push_player / frueher der G5-Koerperschub) */
     const int slot = (int)(e - g_actors);
     if (slot < 0 || slot >= RE15_ACTOR_MAX || s_arm[slot].hidden) return 0;   /* (w|w) & 2 */
     const int32_t rs = RE2ARM_SEG_R + RE2ARM_PL_R;

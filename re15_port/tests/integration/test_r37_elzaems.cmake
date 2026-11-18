@@ -146,11 +146,15 @@ elseif(TEIL STREQUAL "elza11b1")
                "Typ 0x42 aus dem Elza-Archiv (Sce_em_set @0x01058)")
 elseif(TEIL STREQUAL "elza5091")
     karte(5091 -9950 -18200 2048)
-    # RE15_ENDKAMPF_NUR_G5=1: seit "Vierbein, dann G5" (birkin_formen.c) spawnt 5091 sonst zuerst den 0x30.
-    lauf(600 ${_basis} RE15_ENDKAMPF_NUR_G5=1 "RE15_EXIT_AT=150#5091")
+    # Runde 42 Strang finale (Plan S10): der Endkampf-Birkin in 5091 ist die Riesenform (0x30, RE2/BAHNSTEIG_FORM.EMD), nicht mehr
+    # das RE2-EM36 des G5 (NUTZERWUNSCH 07.11.2026 "die Form Birkin G5 aus dem Finale wieder entfernst").
+    lauf(600 ${_basis} "RE15_EXIT_AT=150#5091")
     zeile_muss("room RDT: STAGE5/ROOM5091\\.RDT" "ROOM5091 ueber CONTINUE geladen")
-    zeile_muss("\\[enemy\\] FINALER Birkin: RE2 EM036 geladen" "finaler Birkin = RE2-EM36 (NUTZER-VORGABE)")
-    zeile_nicht("\\[elzaems\\] Typ 0x3[06]" "Birkin aus einem RE1.5-Archiv statt RE2-EM36")
+    zeile_muss("\\[enemy\\] Bahnsteig-Form: " "Endkampf-Birkin = Riesenform (BAHNSTEIG_FORM)")
+    zeile_nicht("\\[enemy\\] FINALER Birkin" "kein RE2-EM36 (G5) mehr")
+    # Der Sce_em_set 0x30 zieht wie jeder Elza-Spawn den Eintrag des Elza-Archivs (unit_r37_elzaems_raeume, CDEMD1 Sektor 2015);
+    # das Modell ersetzt danach der Bahnsteig-Lader. Ein 0x36 darf es nicht mehr geben.
+    zeile_nicht("\\[elzaems\\] Typ 0x36" "G5 0x36 aus einem RE1.5-Archiv")
 elseif(TEIL STREQUAL "elza1181griff")
     karte(1181 -3758 -7436 2048)
     lauf(600 ${_basis} RE15_AI_FLAVOR=re15 RE15_ANIM_TRACE=anim.log "RE15_EXIT_AT=200#1181")

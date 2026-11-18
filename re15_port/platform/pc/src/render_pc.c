@@ -263,7 +263,7 @@ static uint32_t      rgb555_to_argb8888(uint16_t c);   /* fwd (defined with the 
 
 /* TIM slot pool — allows multiple characters/props to have their own
  * textures. Slot 0 = player default (Leon); other slots for NPCs/props. */
-#define RE15_TIM_SLOT_MAX 58   /* 57 = Runde 41 G5-Auftritt Nachbesserung 5: Tunnellampen R704_LAMPE.TIM (g5lampen_pc.c)
+#define RE15_TIM_SLOT_MAX 58   /* 57 = bis v0.8.30 Tunnellampen des G5-Auftritts (seit Runde 42 frei)
                                 * 56 = Runde 41 Spur G (Nachtrag 28, Orchestrator-Entscheid G-E6): RE2 TEX.TIM mit den Kern-
                                 *      CLUT-Zeilen 485..498 (gator_fx_r41_pc.c; 54 = Raum-ESP ROOM40A0 ebenda)
                                 * 50/51 = Runde 34 C2: die zwei GLOBAL-Effektseiten aus DATA/TEX.TIM
@@ -3087,7 +3087,7 @@ void re15_render_pc_upload_tim_slot(const re15_tim_t *tim, int slot)
  * Variable gilt der gemessene Wert. */
 /* OBJEKT-ABTASTPHASE (Runde 41 G5-Auftritt, Nachbesserung 6): ein Zeichner, dessen Objekt gegen ein PSX-Bild Pixel fuer Pixel
  * gemessen ist, kann fuer SEINE Dreiecke eine eigene Phase setzen (s_phase_objekt >= 0); danach zurueck auf < 0. Die globale
- * Phase oben gilt fuer alles andere unveraendert. Erster Nutzer: die RE2-Tunnellampen (g5lampen_pc.c) - RE2-VRAM s04 Zeilen
+ * Phase oben gilt fuer alles andere unveraendert. Erster Nutzer: die RE2-Tunnellampen des frueheren G5-Auftritts - RE2-VRAM s04 Zeilen
  * 119..123 sind mit +0.5 pixelgleich (max. 3 Stufen), mit +0.375 tastet die 1 Pixel hohe Gehaeuseflaeche die Nachbarspalte
  * u 115 statt u 116 ab (Dossier G5_auftritt.md Abschnitt 12). +0.5 liegt im Fenster [1/3, 1/2] aus re15_abtastphase.h §4. */
 static float s_phase_objekt = -1.0f;

@@ -48,7 +48,7 @@
 #include "asset_root_pc.h"   /* gemeinsame Asset-Wurzel-Aufloesung (exe-relativ) */
 #include "fx_plattform_pc.h" /* Runde 34 C4: re15_audio_arms_zusatz_se (Deklaration) */
 #include "re15_wassersprung_r41.h" /* Runde 41 Spur A: Lage des NPC-Schritts (FUN_80045a64, Entscheid A-E4) */
-#include "re15_xa.h"               /* Runde 41 G5A (M5): re15_xa_decode_sector_mono fuer RE2-VOICE07-Strecken */
+#include "re15_xa.h"               /* re15_xa_decode_sector_mono fuer RE2-VOICE07-Strecken (Finale Xa 0x03) */
 #include "re15_stimme_option.h"    /* Runde 41 Stimmen: Option VOICE ON/OFF (Tor in re15_voice_play, Stopp-Hook) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);

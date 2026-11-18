@@ -31,6 +31,7 @@
 #include "re15_werfer.h"          /* re15_audio_re2_arms_se */
 #include "re2_fx.h"
 #include "re2_buehne.h"
+#include "re15_teile_r15.h"        /* U5: Teil-Schicht (Bit 0x40 eigene Weltmatrix, 0x08 Scherben) */
 
 #include "gen/finale_r42_texte.inc"   /* k_fi_5090_msg02, k_fi_5091_msg02 (tools/r42_finale/texte_finale.py) */
 #include "re15_room.h"                 /* g_current_room_id */
@@ -43,6 +44,14 @@ int re15_player_gunbone_matrix(int32_t rot[9], int32_t t[3]);   /* re15_damage.c
 #define FI_KNALL_Y  (-1800)       /* `addiu v0,zero,-0x708 / sh v0,0x12(sp)` @0x80103b24-2c */
 #define FI_NACH_Y   (-2500)       /* `addiu v1,v1,-0x9c4` @0x80103cd8 */
 #define FI_NACH_R      20         /* r * 5 * 4: `sll v1,v0,2 / addu v1,v1,v0 / sll v1,v1,2` @0x80103ca8-b4 */
+
+/* U5: Tabelle @0x8010476c je Eintrag (+0x02 Gier, +0x04 v, +0x06 a, +0x08 vy, +0x0A Zaehler, +0x0C Dreh, +0x0E Dreh-a, +0x10 Seite)
+ * und die Euler-Lage +0x68/+0x6A/+0x6C des Teils (FUN_8007746c). */
+typedef struct {
+    int16_t gier, v, a, vy, c, dreh, dreh_a, seite;
+    int16_t eu[3];
+    uint8_t eu_da;
+} fi_flug_t;
 
 /* ---- Zustand ---------------------------------------------------------------------------------------------------------- */
 static struct {
@@ -60,13 +69,16 @@ static struct {
     int      z16a;            /* +0x16A */
     uint8_t  frei;            /* +0x15A */
     uint8_t  getoetet;        /* +0x10E |= 0x4000 (@0x80103c64-68): kein zweiter Ausloeser */
-    int      xa_rest;         /* Phase 8: Bilder bis zum Ende von Xa 0x03 */
+    uint32_t xa_vbl;          /* Phase 8: Austastungen seit dem Start von Xa 0x03 (R1, Echtzeit) */
     int32_t  pl_x, pl_z; int16_t pl_gier; int cut;   /* gemerkt @0x8010369c-cc (0x80104d54/58/5c/60) */
     int32_t  fo_x, fo_z;                             /* +0x230/+0x232 @0x80103610-14 */
     unsigned takt;            /* Spieltakte seit Raumstart (Messschiene) */
     unsigned t_ausl, t_frei;  /* T und U (Messschiene) */
     uint8_t  mtx[32];         /* Quell-Matrix der Wiederholungen (Platz +0x6C) */
-} s_fi = { .form = -1, .uhr = -1 };
+    int      w_platz;         /* Messschiene: Platz der Wiederholungsrakete */
+    uint8_t  tmtx[32];        /* U5: Teil-Matrix fuer 0x040E2000 (FUN_801005ac a2 = Teil + 0x48) */
+    fi_flug_t fl[RE15_FI_TEILE_FLUG];
+} s_fi = { .form = -1, .uhr = -1, .w_platz = -1 };
 
 /* ---- Messschiene ------------------------------------------------------------------------------------------------------ */
 static void protokoll(const char *fmt, int a, int b, int c)
@@ -90,7 +102,7 @@ void re15_finale_r42_reset(void)
 {
     const uint16_t r = s_fi.raum;
     memset(&s_fi, 0, sizeof s_fi);
-    s_fi.raum = r; s_fi.form = -1; s_fi.uhr = -1;
+    s_fi.raum = r; s_fi.form = -1; s_fi.uhr = -1; s_fi.w_platz = -1;
 }
 
 void re15_finale_r42_install(uint16_t room_id)
@@ -115,7 +127,12 @@ int re15_finale_r42_genug(void) { return s_fi.genug; }
 int re15_finale_r42_passend(void) { return s_fi.passend; }
 int re15_finale_r42_uhr(void) { return s_fi.uhr; }
 int re15_finale_r42_wurf_faellig(void) { return s_fi.wurf; }
-int re15_finale_r42_besitzt(int slot) { return s_fi.phase != RE15_FI_AUS && s_fi.phase < RE15_FI_ENDE && slot == s_fi.form; }
+/* Nach dem Kill liegen die Teile (U5); die Form bleibt im Besitz des Finales bis zum Raumwechsel (RE2: +0x10E |= 0x4000 @0x80103c64-68,
+ * die KI kommt nicht zurueck). */
+int re15_finale_r42_besitzt(int slot)
+{
+    return s_fi.phase != RE15_FI_AUS && (s_fi.phase < RE15_FI_ENDE || s_fi.getoetet) && slot == s_fi.form;
+}
 int re15_finale_r42_kein_ziel(const re15_actor_t *e)
 {
     if (!e || !re15_finale_r42_raum() || e->type != 0x30u || !re15_bb_bank_da(e)) return 0;
@@ -195,38 +212,53 @@ static void kamera(int cut)
     if ((int)g_scd.work_vars[0x0A] != cut || g_scd.cam_id != cut) { g_scd.cam_id = (uint8_t)cut; g_scd.cam_change_pending = 1; }
 }
 
-/* Quell-Matrix der Wiederholung. RE2: Teil 11 des Spielers (+0x7AC, `addiu a2,s0,0x7ac` @0x80103858) mit Versatz (600,0,400)
- * (@0x80103828-3c). PORT-ZUORDNUNG (offen, Messung im RE2-Savestate): der Port hat den Waffenknochen der echten Schuesse
- * (werfer_r35.c mtx_bauen fuer Id 18, ohne Rahmen) - die Wiederholung startet an derselben Muendung wie der echte Schuss
- * ({0,1100,0}, Raketen-Handler @0x800455a8-d0). */
+/* MATRIX{ short m[3][3]; long t[3]; } (32 Byte) aus einer Port-Weltmatrix (Q12) und Lage. */
+static void matrix_packen(uint8_t out[32], const int32_t r[9], const int32_t t[3])
+{
+    for (int k = 0; k < 9; k++) {
+        int32_t v = r[k];
+        if (v > 32767) v = 32767; else if (v < -32768) v = -32768;
+        out[2 * k] = (uint8_t)v; out[2 * k + 1] = (uint8_t)(v >> 8);
+    }
+    out[18] = 0; out[19] = 0;
+    for (int k = 0; k < 3; k++) {
+        out[20 + 4 * k] = (uint8_t)t[k]; out[21 + 4 * k] = (uint8_t)(t[k] >> 8);
+        out[22 + 4 * k] = (uint8_t)(t[k] >> 16); out[23 + 4 * k] = (uint8_t)(t[k] >> 24);
+    }
+}
+
+/* Quell-Matrix der Wiederholung: Teil 11 des Spielers (Kopf RE15_FI_QUELLE_*). Der Port stellt Knochen 11 jedes Bild, auch wenn der
+ * Spieler unsichtbar ist (main.c: Pose "auch gecullt" -> re15_player_set_hand_world/_rot), wie RE2 die Teil-Matrizen weiterrechnet. */
 static int quelle_bauen(void)
 {
     int32_t r[9], t[3];
     if (!re15_player_gunbone_matrix(r, t)) return 0;
-    for (int k = 0; k < 9; k++) {
-        int32_t v = r[k];
-        if (v > 32767) v = 32767; else if (v < -32768) v = -32768;
-        s_fi.mtx[2 * k] = (uint8_t)v; s_fi.mtx[2 * k + 1] = (uint8_t)(v >> 8);
-    }
-    s_fi.mtx[18] = 0; s_fi.mtx[19] = 0;
-    for (int k = 0; k < 3; k++) {
-        s_fi.mtx[20 + 4 * k] = (uint8_t)t[k]; s_fi.mtx[21 + 4 * k] = (uint8_t)(t[k] >> 8);
-        s_fi.mtx[22 + 4 * k] = (uint8_t)(t[k] >> 16); s_fi.mtx[23 + 4 * k] = (uint8_t)(t[k] >> 24);
-    }
+    matrix_packen(s_fi.mtx, r, t);
     return 1;
 }
 
 static void wiederholung(uint32_t a0, uint8_t besitzer)
 {
-    static const int16_t OM[4] = { 0, 1100, 0, 0 };   /* PORT-ZUORDNUNG s. quelle_bauen */
+    static const int16_t OM[4] = { RE15_FI_QUELLE_X, 0, RE15_FI_QUELLE_Z, 0 };   /* (600,0,400) @0x80103828-38 */
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     int i = -1;
     if (quelle_bauen()) {
         re2fx_boden_basis_setzen(pl->y);
-        i = re2fx_spawn_besitzer(a0, besitzer, (int16_t)pl->rot_y, s_fi.mtx, OM);   /* FUN_8001c8c4 @0x8010385c / @0x80103960 / @0x80103a60 */
+        /* FUN_8001c8c4(a0, a1 = Besitzer, a2 = Teil 11, a3 = Versatz) @0x8010385c / @0x80103960 / @0x80103a60: +0x22 = a1 >> 16 = 0 */
+        i = re2fx_spawn_besitzer(a0, besitzer, 0, s_fi.mtx, OM);
+        s_fi.w_platz = i;
         if (i >= 0 && i < RE2FX_PLAETZE) re2fx_r35_schuetze(i, pl->x, pl->z);
     }
     re15_audio_re2_arms_se(0x11, 0);                  /* Se_on 0x01000001 @0x80103864-74 (ARMS11 Satz 0, wie werfer_r35.c) */
+    {   /* Messzeilen: Quelle (Knochen 11 + Versatz) und Form, fuer die Flugrichtung gegen die Form */
+        int32_t r[9], t[3];
+        const re15_actor_t *e = &g_actors[s_fi.form];
+        if (re15_player_gunbone_matrix(r, t))
+            protokoll("Wiederholung Quelle (%d,%d,%d)", t[0] + (int32_t)(((int64_t)r[0] * OM[0] + (int64_t)r[2] * OM[2]) >> 12),
+                      t[1] + (int32_t)(((int64_t)r[3] * OM[0] + (int64_t)r[5] * OM[2]) >> 12),
+                      t[2] + (int32_t)(((int64_t)r[6] * OM[0] + (int64_t)r[8] * OM[2]) >> 12));
+        protokoll("Wiederholung Form (%d,%d) Schnitt %d", e->x, e->z, (int)g_scd.cam_id);
+    }
     protokoll("Wiederholung %08x Besitzer 0x%02x -> Platz %d", (int)a0, besitzer, i);
 }
 
@@ -246,9 +278,14 @@ static void form_halten(re15_actor_t *e)
 static const uint8_t k_prog_leon[] = {
     0x54, 0x01, 0x02, 0x00, 0x00, 0x00,           /* Kampfmusik aus: RE2 `51 02 02` @0x01A22 (Deutung U10 offen); Port = 5090 sub01
                                                    * @0x012AE `54 01 02 00 00 00` SUB stoppen (scd_vm.c Sce_bgm_control) */
+    0x22, 0x05, RE15_FI_SCHUETTEL_AUS, 0x01,      /* Set(5,0x14,1) @0x01A28 `22 05 14 01` (in 5090/5091 ohne Leser: Bit frei, Zensus) */
+                                                  /* Set(1,4,0) @0x01A2C `22 01 04 00`: PORT-WAHL weggelassen - RE2-Bank 1 Bit 4 ist dort der
+                                                   * Strom-/Lichtzustand (sub16 Set(1,4,1) mit Cut_replace 12->0), in der RE1.5-Bank 1 des Ports
+                                                   * ist Index 4 anders belegt; im Wagen gibt es keinen Stromausfall. */
     0x09, 0x0a, LE16(RE15_FI_SCHLAF_ZEILE),       /* @0x01A30 `09 0a 0f 00` */
-    0x2b, RE15_FI_MSG_ZEILE_LEON, 0x00, 0x00,     /* Xa_on(0,2) @0x01A3C + Message_on 7 @0x01A40 -> K-11: Message_on mit Stimme
-                                                   * (synchro main02.wav), Untertitel-Maske 0 wie ROOM6030 sub02 @0x00DC2 */
+    0x2b, RE15_FI_MSG_ZEILE_LEON, 0x00, 0x00,     /* IfEl Ck(1,0) @0x01A34 waehlt Xa_on(0,2) @0x01A3C + Meldung 7 (Leon) bzw. @0x01A4A +
+                                                   * Meldung 9; PORT-WAHL: je Raum ein Programm (5090 Leon, 5091 Elza), K-11: Message_on mit
+                                                   * Stimme (synchro main02.wav), Untertitel-Maske 0 wie ROOM6030 sub02 @0x00DC2 */
     0x09, 0x0a, LE16(RE15_FI_ZEILE_BILDER),       /* Wsleep/Wsleeping @0x01A56: Lesefenster 162 Sektoren = 33 Bilder (Kopf) */
     0x22, 0x05, RE15_FI_SIG_FREI, 0x01,           /* Member_set(0x18,2) @0x01A5C */
     0x09, 0x0a, LE16(RE15_FI_SCHLAF_W1A),         /* @0x01A60 */
@@ -261,6 +298,7 @@ static const uint8_t k_prog_leon[] = {
  * ist laenger (71 statt 33 Bilder, Kopf). Zeile "You lose, big guy!" (NUTZERWUNSCH 17.11., K-11 Claire). */
 static const uint8_t k_prog_elza[] = {
     0x54, 0x01, 0x02, 0x00, 0x00, 0x00,           /* SUB stoppen wie 5090 @0x012AE / 5091 @0x01292 */
+    0x22, 0x05, RE15_FI_SCHUETTEL_AUS, 0x01,      /* Set(5,0x14,1) wie Leon (ROOM7021 sub15 Befehl fuer Befehl gleich, Dossier B 2.1) */
     0x09, 0x0a, LE16(RE15_FI_SCHLAF_ZEILE),       /* @0x019F6 */
     0x2b, RE15_FI_MSG_ZEILE_ELZA, 0x00, 0x00,     /* Xa_on(0,2) @0x01A02 -> Message_on (K-11) */
     0x09, 0x0a, LE16(RE15_FI_ZEILE_BILDER_ELZA),  /* Wsleep @0x01A1C: 354 Sektoren = 71 Bilder */
@@ -323,24 +361,25 @@ static void phase0(void)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     /* Lagen: RE2 stellt Gegner (-14547,-14636) Gier 1432 und Leon (-19025,200,-20861) Gier 4433 fest (@0x801035cc-e0 /
      * @0x80103638-74); Leon steht damit 7668 vor dem Gegner, Gegnergier = Peilung zu Leon (1432 gegen gerechnet 1430).
-     * PORT-ZUORDNUNG bis U3 (Fixpunkte im Wagen C): beide bleiben stehen; die Form schaut den Spieler an wie dort. */
+     * U3 (Kopf RE15_FI_FORM_*): Form auf den Fixpunkt in Wagen C, Spieler 7668 davor auf ihrer Achse (Spielergier nach der Regel von
+     * FUN_801016cc @0x80101738-50; die feste RE2-Gier 0x1151 gilt fuer ROOM7020-Koordinaten). */
     s_fi.fo_x = e->x; s_fi.fo_z = e->z;                                   /* +0x230/+0x232 @0x80103610-14 */
-    e->rot_y = (int16_t)peilung(e->x, e->z, pl->x, pl->z);
-    form_halten(e);                                                       /* +0x14C = 0x0A05 @0x801035e8-ec (D11) */
-    s_fi.pl_x = pl->x; s_fi.pl_z = pl->z; s_fi.pl_gier = pl->rot_y;       /* @0x801036a4-b0 */
+    s_fi.pl_x = pl->x; s_fi.pl_z = pl->z; s_fi.pl_gier = pl->rot_y;       /* @0x801036a4-b0 (vor dem Versetzen gemerkt) */
+    e->x = RE15_FI_FORM_X; e->z = RE15_FI_FORM_Z; e->rot_y = RE15_FI_FORM_GIER;
+    form_halten(e);                                                       /* +0x14C = 0x0A05 @0x801035e8-ec (D11, U4) */
+    spieler_vor(e, RE15_FI_T_ABSTAND);
     s_fi.cut = (int)g_scd.work_vars[0x0A];                                /* @0x8010369c / @0x801036cc */
     re15_game_flag_set(2, 0, 1);                                          /* Bank 2 |= 0x80000000 @0x80103678-8c (Spieler) */
     re15_game_flag_set(2, 7, 1);                                          /*          |= 0x01000000 (Pad) */
     re15_game_flag_set(1, 27, 1);                                         /* Bank 1 |= 0x10 @0x801036b8-c4 (Kinobalken) */
     g_scd.cut_auto_enabled = 0;                                           /* Bank 1 |= 0x100 @0x801036bc-d4 (1,0x17): Zonenwechsel
                                                                            * aus (PORT-ZUORDNUNG wie bf_kamera) */
-    /* Schnitt 11 (FUN_8002c7ac(11) @0x801036d8): "Game over"-Schnitt = Rolle RE2 11 (Spieler im Bild), U3 offen ->
-     * PORT-ZUORDNUNG: der Schnitt, der den Spieler gerade zeigt, bleibt. */
-    kamera(s_fi.cut);
+    kamera(RE15_FI_CUT_ZEILE);                                            /* FUN_8002c7ac(11) @0x801036d8 -> U3: Schnitt 15 */
     s_fi.phase = RE15_FI_P1; s_fi.t = 0; s_fi.z16a = 0; s_fi.frei = 0;   /* +0x1D6 = 1, +0x158 = 0, Phase 1 @0x801036f4-700 */
     const int slot = programm_starten();                                  /* RE2: +0x1D6 = 1 -> sub01/sub14 -> sub15 */
     s_fi.t_ausl = s_fi.takt;
-    protokoll("Ausloeser: Abschuss (Form hp %d), Programm Slot %d", e->hp, slot, 0);
+    protokoll("Ausloeser: Abschuss (Form hp %d), Programm Slot %d, Schnitt %d", e->hp, slot, RE15_FI_CUT_ZEILE);
+    protokoll("Fixpunkte: Form (%d,%d), Spieler x %d", e->x, e->z, pl->x);
 }
 
 static void loesche_rauch_und(uint8_t besitzer)
@@ -350,15 +389,14 @@ static void loesche_rauch_und(uint8_t besitzer)
     re2fx_loesche_besitzer(besitzer);                                     /* FUN_8001cfbc @0x801038f4 / @0x801039f8 */
 }
 
-static void wiederholungs_schnitt(int32_t abstand, const char *name)
+static void wiederholungs_schnitt(int32_t abstand, int cut, const char *name)
 {
     re15_actor_t *e = &g_actors[s_fi.form];
     spieler_vor(e, abstand);
-    /* Schnitt 8/9/10 @0x801037dc / @0x801038fc / @0x80103a00: die RE2-Schnitte zeigen den Bahnsteig (ROOM702.BSS), Plan D6 ->
-     * PORT-ZUORDNUNG bis U3: der Schnitt bleibt der des Ausloesers (Rollenwahl je Wiederholung ist die Messung U3). */
-    kamera(s_fi.cut);
-    protokoll(name[1] == '1' ? "W1: Spieler %d vor der Form" : name[1] == '2' ? "W2: Spieler %d vor der Form"
-                                                               : "W3: Spieler %d vor der Form", abstand, 0, 0);
+    s_fi.w_platz = -1;
+    kamera(cut);                                                          /* Schnitt 8/9/10 @0x801037dc/@0x801038fc/@0x80103a00 -> U3 */
+    protokoll(name[1] == '1' ? "W1: Spieler %d vor der Form, Schnitt %d" : name[1] == '2' ? "W2: Spieler %d vor der Form, Schnitt %d"
+                                                               : "W3: Spieler %d vor der Form, Schnitt %d", abstand, cut, 0);
 }
 
 static void kill(void)
@@ -371,14 +409,217 @@ static void kill(void)
     re15_game_flag_set(5, 0x1c, 1);
     /* Spieler zurueck auf die gemerkte Lage, y = 0 (@0x80103d84-db8) */
     pl->x = s_fi.pl_x; pl->z = s_fi.pl_z; pl->y = 0; pl->rot_y = s_fi.pl_gier;
-    e->active = 0; e->no_draw = 1;                                        /* PORT-WAHL: der Gegner ist fort (RE2: Teile + Flag) */
-    protokoll("Kill: (5,0x1C) + Bit 129, Spieler zurueck", 0, 0, 0);
+    (void)e;                                                              /* die Teile bleiben liegen (U5); die Form gehoert dem Finale */
+    protokoll("Kill: (5,0x1C) + Bit 129, Spieler zurueck (Xa-Fenster %d Austastungen)", (int)s_fi.xa_vbl, 0, 0);
+}
+
+/* ---- U5: Zerplatzen ---------------------------------------------------------------------------------------------------
+ * PORT-ZUORDNUNG nach Rolle (Messung Strang-Scratchpad u5/u5_zuordnung.md, Gerippe gelesen aus build/extracted/re2_ems/
+ * CDEMD0_EM2B_emd.EMD = CDEMD0.EMS ab 0x48A800 + EMD): RE2-Super-Tyrant 21 Teile, Eltern [-1,0,1,2,0,4,5,6,7,7,7,7,5,12,13,13,13,13,0,18,19]
+ * = 0 Huefte; 1-2-3 Bein (z +385); 4 Rumpf; 5 Brust mit Kopf; 6-7 Arm (z +675) mit Fingern 8-11; 12-13 Arm (z -548) mit Klauen
+ * 14-17; 18-19-20 Bein (z -385). Riesenform 32 Teile (analysis/befunde_runde41/form/gerippe.json: 0 huefte, 1-6 schwanz, 7 wirbel,
+ * 8/9 oberschenkel l/r, 10 brust, 11-13 arm_l, 14/15/28 klaue_l, 16-18 arm_r, 19/20/29 klaue_r, 21 hals, 22 kopf, 23 kiefer, 24/25
+ * Bein l unten, 26/27 Bein r unten, 30/31 Klauen). Jeder RE2-Teil -> der Form-Teil derselben Rolle; die Teile der Form ohne
+ * RE2-Gegenstueck gehoeren zur Rolle ihres Elternteils: Schwanz 1-6 zur Huefte (RE2 0), Hals/Kopf/Kiefer 21-23 zur Brust (RE2 5,
+ * deren Netz den Kopf traegt). 30/31 haengen an den Haenden und folgen ihnen. */
+static const struct { uint8_t re2, form, marke; } k_flug[RE15_FI_TEILE_FLUG] = {
+    /* Tabelle @0x8010476c, Eintrag i: Teil (+0x00) und Marke (+0x12), selbst gelesen (Datei @0x476C + 20*i) */
+    { 1, 8, 1 }, { 2, 24, 1 }, { 4, 7, 1 }, { 6, 11, 1 }, { 8, 13, 0 }, { 9, 14, 0 }, { 10, 15, 0 }, { 11, 28, 0 },
+    { 12, 16, 1 }, { 14, 18, 1 }, { 15, 19, 0 }, { 16, 20, 0 }, { 17, 29, 0 }, { 18, 9, 0 }, { 19, 26, 0 } };
+#define FI_BROCKEN_N 15
+static const struct { uint8_t re2, form; } k_brocken[FI_BROCKEN_N] = {      /* a1 @0x80103c14/20/2c/38/44/50 = 0, 3, 5, 7, 13, 0x14 */
+    { 0, 0 }, { 0, 1 }, { 0, 2 }, { 0, 3 }, { 0, 4 }, { 0, 5 }, { 0, 6 },  /* Huefte + Schwanz */
+    { 3, 25 }, { 5, 10 }, { 5, 21 }, { 5, 22 }, { 5, 23 },                 /* Fuss l; Brust + Hals/Kopf/Kiefer */
+    { 7, 12 }, { 13, 17 }, { 0x14, 27 } };                                 /* Unterarm l, Unterarm r, Fuss r */
+#define FI_FLUG_V      200       /* Tabelle +0x04 (Datei @0x4770 `c8 00`) */
+#define FI_FLUG_VY   (-200)      /* Tabelle +0x08 (Datei @0x4774 `38 ff`) */
+#define FI_BROCKEN_VY  (-10)     /* `addiu v0,zero,-0xa / sh v0,0x9a(v1)` @0x801015d0-d8 */
+#define FI_BROCKEN_FARBE 0x202038u /* `lui a2,0x20 / ori a2,a2,0x2038 / sw a2,0x70(v1)` @0x8010158c/@0x801015b8/@0x801015e4 */
+#define FI_FUNKE     0x040E2000u /* FUN_801005ac `lui a0,0x40e / ori a0,a0,0x2000` @0x8010061c-20 */
+
+static int16_t teil_rand8(void) { return (int16_t)(int8_t)re15_engine_rand8(); }   /* FUN_80015fe8, unteres Byte */
+
+/* FUN_8007746c(a0, a1 = +0x68, a2 = +0x48, a3 = 0): Euler (x, y, z) der Teil-Matrix fuer RotMatrix = Rx*Ry*Rz (re15_door_rotmatrix,
+ * Zeile 0 = (cy*cz, -cy*sz, sy)). x = ratan2(-m12, m22) (@0x80077540-54), y = ratan2(m02', SquareRoot12(4096 - m02'^2)) mit
+ * m02' = (m02 << 12) / (|Spalte 2|^2 >> 12) (@0x800774c8-80077580), z = ratan2(w.y, w.x) mit w = (RotMatrix(x,y,0))^T * Spalte 0
+ * (@0x80077590-800775e0). ratan2 = PsyQ-Bibliothek (RE2 @0x8008f31c, RE1.5 @0x80065de0 = re15_ratan2); SquareRoot12 @0x8008d624 ist
+ * hier SquareRoot0(x * 4096) (re15_squareroot0) - gleiche Rechnung, Rundung der Tabelle nicht bit-gleich geprueft (Praezision). */
+static void euler_aus(const int32_t m[9], int16_t eu[3])
+{
+    const int32_t m02 = m[2], m12 = m[5], m22 = m[8];
+    int32_t q = (int32_t)(((int64_t)m02 * m02 + (int64_t)m12 * m12 + (int64_t)m22 * m22) >> 12);
+    if (q == 0) q = 1;
+    const int32_t sy = (int32_t)(((int64_t)m02 << 12) / q);
+    eu[0] = (int16_t)re15_ratan2(-m12, m22);
+    int32_t k = 4096 - (int32_t)(((int64_t)sy * sy) >> 12);
+    if (k < 0) k = 0;
+    eu[1] = (int16_t)re15_ratan2(sy, (int32_t)re15_squareroot0((uint32_t)k << 12));
+    const uint16_t xy0[3] = { (uint16_t)eu[0], (uint16_t)eu[1], 0 };
+    int16_t r[9];
+    re15_door_rotmatrix(xy0, r);
+    const int32_t c0[3] = { m[0], m[3], m[6] };
+    const int32_t wx = (int32_t)(((int64_t)r[0] * c0[0] + (int64_t)r[3] * c0[1] + (int64_t)r[6] * c0[2]) >> 12);   /* R^T */
+    const int32_t wy = (int32_t)(((int64_t)r[1] * c0[0] + (int64_t)r[4] * c0[1] + (int64_t)r[7] * c0[2]) >> 12);
+    eu[2] = (int16_t)re15_ratan2(wy, wx);
+}
+
+/* Phase 7: FUN_80100108 (15 Flugteile) und sechsmal FUN_8010158c (Brocken). */
+static void zerplatzen_start(void)
+{
+    re15_teil_t *T = re15_teile(s_fi.form);
+    if (!T) return;
+    re15_teile_reset(s_fi.form);
+    for (int i = 0; i < RE15_FI_TEILE_FLUG; i++) {
+        const int k = k_flug[i].form;
+        if (k >= RE15_TEILE_MAX) continue;
+        T[k].w |= 0x40u;                                                  /* `ori v0,v0,0x40` @0x80100178-80 */
+        s_fi.fl[i].gier = (int16_t)(((int)re15_engine_rand8() & 0xff) << 4);   /* `andi 0xff / sll 4 / sh 2(s1)` @0x80100184-90 */
+        { const int16_t r = teil_rand8();                                  /* (s8 + Vorzeichen) >> 1, `srl` + `sh` (16 Bit) @0x80100194-b4 */
+          s_fi.fl[i].v = (int16_t)(FI_FLUG_V + (int16_t)((r + (r < 0 ? 1 : 0)) >> 1)); }
+        s_fi.fl[i].a = 0;                                                 /* Tabelle +0x06 = 0 */
+        s_fi.fl[i].vy = (int16_t)(FI_FLUG_VY + teil_rand8());             /* @0x801001b8-cc */
+        s_fi.fl[i].dreh = (int16_t)(teil_rand8() * 2);                    /* `sll 0x18 / sra 0x17` @0x801001d0-e8 */
+        s_fi.fl[i].dreh_a = 0;                                            /* `sh zero,0xe(s1)` @0x801001ec */
+        s_fi.fl[i].c = 0;                                                 /* `sh zero,0xa(s1)` @0x80100224 */
+        s_fi.fl[i].eu_da = 0;                                             /* Euler + Seite (+0x10) beim ersten gezeichneten Bild */
+    }
+    for (int j = 0; j < FI_BROCKEN_N; j++) {
+        const int k = k_brocken[j].form;
+        if (k >= RE15_TEILE_MAX) continue;
+        /* RE2 Bit 0x4A = 0x40 eigene Matrix + 0x08 Drift/Zerfall (FUN_80028DAC: vy +0x9A, Ende nach 0x1D Bildern) + 0x02.
+         * Gegenstueck der RE1.5-Teilschicht: 0x40 + 0x08 Scherben (FUN_8001f1e0: vy = h94[1], += h94[3], Ende ab 0x1D). */
+        T[k].w |= 0x48u;
+        T[k].h94[1] = (uint16_t)FI_BROCKEN_VY;                            /* +0x9A = -10 */
+        T[k].h94[3] = 0;                                                  /* +0x9E = 0 */
+        T[k].h94[4] = 0;                                                  /* +0x9C = 0 */
+        T[k].col = FI_BROCKEN_FARBE;                                      /* +0x70 = 0x00202038 */
+    }
+    re15_teile_markieren(s_fi.form);
+}
+
+/* Phase 8 je Bild: FUN_8010024c @0x8010024c-0x801005a8, auf der eigenen Weltmatrix der Teilschicht. Die Teilschicht uebernimmt die
+ * Matrix beim ersten Zeichnen nach dem Setzen von 0x40 (re15_teil_stufe); bis dahin wartet der Teil (ein Bild, wie die Zombie-Teile). */
+static void zerplatzen_takt(const re15_actor_t *e)
+{
+    re15_teil_t *T = re15_teile(s_fi.form);
+    if (!T) return;
+    for (int i = 0; i < RE15_FI_TEILE_FLUG; i++) {
+        const int k = k_flug[i].form;
+        if (k >= RE15_TEILE_MAX || !T[k].fest) continue;
+        fi_flug_t *f = &s_fi.fl[i];
+        if (!f->eu_da) {                                                  /* FUN_80100108 @0x801001f8-218 */
+            euler_aus(T[k].rot, f->eu);
+            f->eu[2] = (int16_t)(f->eu[2] & 0xfff);
+            f->seite = (int16_t)((uint16_t)(f->eu[2] - 0x400) < 0x800u);
+            f->eu_da = 1;
+        }
+        /* Fall: c++, vy += 98c^2/20 - 98(c-1)^2/20 (`*0x66666667 >> 3`, je auf 0 gerundet) @0x8010028c-0x8010032c */
+        const int32_t c = (int16_t)(f->c + 1);
+        f->c = (int16_t)c;
+        const int32_t q1 = (c * (c * 98)) / 20, q0 = ((c - 1) * ((c - 1) * 98)) / 20;
+        f->vy = (int16_t)(f->vy + (q1 - q0));
+        /* Boden: Teil-y (+0x60) >= 0 (`bltz` @0x80100358) -> v /= 20, vy = -vy/28 (0x92492493, >>4), y = 0, c = 0,
+         * Dreh-a +-10 zur naechsten Lage (@0x80100360-0x80100408). Port: y relativ zum Boden der Form (e->y), wie die Zombie-Teile
+         * (enemy_ai_re2_zombie.c PORT-MAPPING (1) BODEN). */
+        if (T[k].t[1] - e->y >= 0) {
+            f->v = (int16_t)(f->v / 20);
+            f->vy = (int16_t)-(f->vy / 28);                              /* (sign) - ((hi(vy*0x92492493) + vy) >> 4) = -(vy/28) */
+            T[k].t[1] = e->y;
+            f->c = 0;
+            const int16_t rz = (int16_t)(f->eu[2] & 0xfff);
+            f->eu[2] = rz;
+            if ((uint16_t)(rz - 0x400) < 0x800u) f->dreh_a = (rz < 0x801) ? -10 : 10;
+            else f->dreh_a = (rz < 0x400) ? 10 : -10;
+        }
+        /* Drehung: z += Dreh, Dreh += Dreh-a (@0x8010040c-0x80100494) */
+        f->eu[2] = (int16_t)((f->eu[2] + f->dreh) & 0xfff);
+        f->dreh = (int16_t)(f->dreh + f->dreh_a);
+        {
+            const int16_t seite = (int16_t)((uint16_t)(f->eu[2] - 0x400) < 0x800u);
+            if (f->dreh_a == 0) f->seite = seite;                         /* @0x80100494 */
+            else if (seite != f->seite) f->dreh = (int16_t)-(f->dreh / 20);   /* (sign) - (hi(d*0x66666667) >> 3) @0x80100468-90 */
+        }
+        if (f->dreh < 10 && (uint16_t)(f->eu[2] - 0x3f7) < 0x13u) { f->dreh = 0; f->dreh_a = 0; }   /* @0x80100498-c8 */
+        if (f->dreh < 10 && (uint16_t)(f->eu[2] - 0xbf7) < 0x13u) { f->dreh = 0; f->dreh_a = 0; }   /* @0x801004cc-fc */
+        /* Weg: (v, ., 0) um Gier der Form + Eintrag gedreht (FUN_80077384 @0x80100500-20), Lage += (dx, vy, dz) (@0x80100524-60) */
+        {
+            const uint16_t g[3] = { 0, (uint16_t)(e->rot_y + f->gier), 0 };
+            int16_t m[9];
+            re15_door_rotmatrix(g, m);
+            T[k].t[0] += (int16_t)(((int32_t)m[0] * f->v) >> 12);
+            T[k].t[1] += f->vy;
+            T[k].t[2] += (int16_t)(((int32_t)m[6] * f->v) >> 12);
+        }
+        /* RotMatrix(+0x68 -> +0x48) @0x8010055c */
+        {
+            const uint16_t r3[3] = { (uint16_t)f->eu[0], (uint16_t)f->eu[1], (uint16_t)f->eu[2] };
+            int16_t m[9];
+            re15_door_rotmatrix(r3, m);
+            for (int q = 0; q < 9; q++) T[k].rot[q] = m[q];
+        }
+        f->v = (int16_t)(f->v + f->a);                                    /* @0x80100564-74 */
+    }
+}
+
+/* Phase 8 Bild 16: Brocken weg (`sw zero` auf Teil 0/3/5/7/13/20 @0x80103d48-60), FUN_801005ac: 0x040E2000 an jedem Teil mit Marke,
+ * a1 = (Zufall & 0xff) << 4, Versatz 0 (@0x8010060c-34). */
+static void zerplatzen_bild16(void)
+{
+    re15_teil_t *T = re15_teile(s_fi.form);
+    if (!T) return;
+    for (int j = 0; j < FI_BROCKEN_N; j++)
+        if (k_brocken[j].form < RE15_TEILE_MAX) T[k_brocken[j].form].w = 0;
+    static const int16_t null4[4] = { 0, 0, 0, 0 };
+    int n = 0;
+    for (int i = 0; i < RE15_FI_TEILE_FLUG; i++) {
+        const int k = k_flug[i].form;
+        if (!k_flug[i].marke || k >= RE15_TEILE_MAX) continue;
+        matrix_packen(s_fi.tmtx, T[k].rot, T[k].t);
+        if (re2fx_spawn_sofort(FI_FUNKE, (int16_t)(((int)re15_engine_rand8() & 0xff) << 4), s_fi.tmtx, null4) >= 0) n++;
+    }
+    protokoll("Bild 16: Brocken weg, %d x 0x040E2000", n, 0, 0);
+}
+
+int re15_finale_r42_xa_aus(uint32_t vbl, int sektoren)
+{
+    return vbl * (uint32_t)RE15_FI_CD_SEKTOREN_S >= (uint32_t)sektoren * (uint32_t)RE15_FI_VBL_S;
+}
+
+int re15_finale_r42_teil(int i, int *re2, int *form, int *marke)
+{
+    if (i >= 0 && i < RE15_FI_TEILE_FLUG) {
+        if (re2) *re2 = k_flug[i].re2;
+        if (form) *form = k_flug[i].form;
+        if (marke) *marke = k_flug[i].marke;
+        return 1;
+    }
+    i -= RE15_FI_TEILE_FLUG;
+    if (i >= 0 && i < FI_BROCKEN_N) {
+        if (re2) *re2 = k_brocken[i].re2;
+        if (form) *form = k_brocken[i].form;
+        if (marke) *marke = 0;
+        return 1;
+    }
+    return 0;
+}
+
+/* Messzeile: Weltlage der Wiederholungsrakete (+0x34/+0x36/+0x38, re2_fx.c) und Abstand zur Form, je Bild bis zum Einfrieren. */
+static void rakete_messen(const re15_actor_t *e)
+{
+    if (s_fi.w_platz < 0 || s_fi.w_platz >= RE2FX_PLAETZE || s_fi.t < 1 || s_fi.t > 16) return;
+    const uint8_t *b = re2fx_platz(s_fi.w_platz);
+    if (!b || !(b[0x18] | b[0x19])) return;
+    const int32_t x = (int16_t)(b[0x34] | b[0x35] << 8), y = (int16_t)(b[0x36] | b[0x37] << 8), z = (int16_t)(b[0x38] | b[0x39] << 8);
+    const int32_t dx = x - e->x, dz = z - e->z;
+    protokoll("Rakete (%d,%d) Abstand zur Form %d", x, z, (int)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz)));
+    (void)y;
 }
 
 static void sequenz(uint16_t *pad)
 {
     re15_actor_t *e = &g_actors[s_fi.form];
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (s_fi.phase == RE15_FI_P2 || s_fi.phase == RE15_FI_P4 || s_fi.phase == RE15_FI_P6) rakete_messen(e);
     if (s_fi.phase < RE15_FI_P7) form_halten(e);
     if (e->hp < RE15_FI_HP_UNTEN) e->hp = RE15_FI_HP_UNTEN;              /* die echte Rakete kann treffen; Untergrenze wie die Wurzel */
 
@@ -390,8 +631,9 @@ static void sequenz(uint16_t *pad)
             if (dt <= 3u || du <= 8u)
                 protokoll("Spieler: Zielphase 0x%02x, Bild %d, Form-HP %d", re15_player_aim_phase_debug(), (int)pl->anim_frame, (int)e->hp);
         }
-        if (!s_fi.frei) { *pad = (uint16_t)(RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE); s_fi.z16a = 1; }   /* 0x140 @0x80103730-4c */
-        else *pad = RE15_PAD_BIT_R1;                                      /* 0x100 @0x80103714-2c */
+        /* Tastenwort ERGAENZT, nicht ersetzt (`ori v1,v1,0x140` @0x80103724 / `ori 0x100` @0x80103740, Pruefbericht s1 r1) */
+        if (!s_fi.frei) { *pad = (uint16_t)(*pad | RE15_PAD_BIT_R1 | RE15_PAD_BIT_SQUARE); s_fi.z16a = 1; }   /* 0x140 @0x80103730-4c */
+        else *pad = (uint16_t)(*pad | RE15_PAD_BIT_R1);                   /* 0x100 @0x80103714-2c */
         if (s_fi.z16a == RE15_FI_RAKETE_WEG) { const int n = re2fx_loesche_bank_sub(2, 0x0D, NULL); protokoll("echte Rakete geloescht (%d Plaetze)", n, 0, 0); }
         if (s_fi.z16a > 0) s_fi.z16a++;                                   /* @0x8010376c-80 */
         if (re15_game_flag_get(5, RE15_FI_SIG_FREI)) {                    /* +0x1D6 == 2 @0x80103784-b4 */
@@ -411,7 +653,7 @@ static void sequenz(uint16_t *pad)
         re15_game_flag_set(5, RE15_FI_SIG_W1, 0);
         re15_game_flag_set(2, 0, 1);                                      /* @0x801037c8-dc */
         pl->no_draw = 1;                                                  /* 0x800cfbf8 |= 0x80400 @0x801037e4-0c: unsichtbar, ohne Schatten */
-        wiederholungs_schnitt(RE15_FI_W1_ABSTAND, "W1");
+        wiederholungs_schnitt(RE15_FI_W1_ABSTAND, RE15_FI_CUT_W1, "W1");
         s_fi.phase = RE15_FI_P2; s_fi.t = 0;                              /* @0x80103818-24, weiter im selben Bild */
         /* fallthrough */
     case RE15_FI_P2:                                                      /* @0x80103828 */
@@ -421,7 +663,7 @@ static void sequenz(uint16_t *pad)
         break;
     case RE15_FI_P2 + 1:                                                  /* Phase 3 @0x801038c8 */
         loesche_rauch_und(0x80);
-        wiederholungs_schnitt(RE15_FI_W2_ABSTAND, "W2");
+        wiederholungs_schnitt(RE15_FI_W2_ABSTAND, RE15_FI_CUT_W2, "W2");
         s_fi.phase = RE15_FI_P4; s_fi.t = 0;
         /* fallthrough */
     case RE15_FI_P4:                                                      /* @0x8010392c */
@@ -431,7 +673,7 @@ static void sequenz(uint16_t *pad)
         break;
     case RE15_FI_P4 + 1:                                                  /* Phase 5 @0x801039cc */
         loesche_rauch_und(0x81);
-        wiederholungs_schnitt(RE15_FI_W3_ABSTAND, "W3");
+        wiederholungs_schnitt(RE15_FI_W3_ABSTAND, RE15_FI_CUT_W3, "W3");
         s_fi.phase = RE15_FI_P6; s_fi.t = 0;
         /* fallthrough */
     case RE15_FI_P6:                                                      /* @0x80103a30 */
@@ -453,16 +695,15 @@ static void sequenz(uint16_t *pad)
         for (int b = 0x90; b <= 0x9e; b++) re2fx_loesche_besitzer((uint8_t)b);   /* @0x80103b74-be8 */
         (void)re15_audio_re2_xa(ist_elza() ? RE15_FI_XA03_DATEI_ELZA : RE15_FI_XA03_DATEI,
                                 ist_elza() ? RE15_FI_XA03_LESE_ELZA : RE15_FI_XA03_LESE);   /* Xa 0x03 @0x80103bec-f4 */
-        s_fi.xa_rest = ist_elza() ? RE15_FI_XA03_BILDER_ELZA : RE15_FI_XA03_BILDER;
-        /* Koerper zerplatzt (FUN_80100108 @0x80103c04, Brocken FUN_8010158c Teile 0/3/5/7/13/20 @0x80103c0c-50): U5 offen.
-         * PLATZHALTER bis U5: die Form wird im Einschlagbild unsichtbar (die Explosion deckt die Stelle). */
-        e->no_draw = 1;
+        s_fi.xa_vbl = 0;
+        zerplatzen_start();                                               /* FUN_80100108 @0x80103c04, FUN_8010158c @0x80103c0c-50 (U5) */
         s_fi.getoetet = 1;                                                /* +0x10E |= 0x4000 @0x80103c58-68 */
         s_fi.phase = RE15_FI_P8; s_fi.t = 0;
         protokoll("Einschlag: VSync 5, Explosion Platz %d, Xa 0x03 (%d Sektoren)", k, RE15_FI_XA03_LESE, 0);
     }   /* fallthrough: Phase 8 im selben Bild (@0x80103c6c-70) */
         /* fallthrough */
     case RE15_FI_P8: {                                                    /* @0x80103c70 */
+        zerplatzen_takt(e);                                               /* `jal 0x8010024c` @0x80103c70 */
         re2b_schuettel_takt(s_fi.t < RE15_FI_BROCKEN_BILD ? RE2B_SCHUETTEL_LEICHT : 0u);   /* Bank 1 |= 4 @0x80103b0c-10 */
         const int alt = s_fi.t++;
         if (alt < RE15_FI_NACHKNALL) {
@@ -474,10 +715,12 @@ static void sequenz(uint16_t *pad)
         if (s_fi.t == RE15_FI_BROCKEN_BILD) {
             re2b_schuettel_takt(0);                                       /* Bank 1 &= ~4 @0x80103d30-44 */
             protokoll("Wackeln aus (Bild 16)", 0, 0, 0);
+            zerplatzen_bild16();                                          /* @0x80103d48-60, `jal 0x801005ac` @0x80103d5c */
         }
-        /* XA-Bit @0x80103d64-74: im Startbild (Phase 7/8 desselben Bilds) steht es noch; nach n Bildern ist es aus, sobald
-         * n / 30 >= 6,84 s -> n = 206 = RE15_FI_XA03_BILDER. */
-        if (s_fi.xa_rest-- > 0) break;
+        /* XA-Bit @0x80103d64-74 (Kopf RE15_FI_XA03_LESE): Echtzeit. Im Startbild steht das Bit noch (alt == 0); jedes weitere Bild
+         * hat VSync-Wert Austastungen gedauert (VSync(DAT_800dfc1a) @0x8002b990-98). Aus, sobald vbl / 60 >= Sektoren / 150. */
+        if (alt > 0) s_fi.xa_vbl += (uint32_t)re2b_vsync();
+        if (!re15_finale_r42_xa_aus(s_fi.xa_vbl, ist_elza() ? RE15_FI_XA03_LESE_ELZA : RE15_FI_XA03_LESE)) break;
         kill();
         s_fi.phase = RE15_FI_P9;
         break;
@@ -510,6 +753,8 @@ int re15_finale_r42_vor_spielzug(uint16_t *pad, uint16_t *pressed)
     if (s_fi.form < 0 || s_fi.form >= RE15_ACTOR_MAX) { s_fi.phase = RE15_FI_ENDE; return 0; }
     uint16_t p = *pad;
     sequenz(&p);
-    if (s_fi.phase == RE15_FI_P1) { *pad = p; if (pressed) *pressed = (uint16_t)(p & RE15_PAD_BIT_SQUARE); return 1; }
+    /* Feuer-Flanke: der Port schiesst auf `pressed`; RE2 liest das Tastenwort 0x800ce30c (@0x80103724) - die Flanke wird darum mit dem
+     * Quadrat-Bit ergaenzt, die uebrigen Flanken bleiben (die Pad-Sperre (2,7) haelt Menues zu). */
+    if (s_fi.phase == RE15_FI_P1) { *pad = p; if (pressed) *pressed = (uint16_t)(*pressed | (p & RE15_PAD_BIT_SQUARE)); return 1; }
     return 0;
 }

@@ -16,7 +16,14 @@
 
 #include <stdint.h>
 
-#define RE15_TEILE_MAX 24   /* Spieler nutzt Teil 20 (0xd70 @0x80024c30), Spinne Teil 19 (0xcc4) */
+/* Spieler nutzt Teil 20 (0xd70 @0x80024c30), Spinne Teil 19 (0xcc4). Runde 42 Strang finale (U5): die Riesenform (BAHNSTEIG_FORM.EMD,
+ * 32 Teile) zerplatzt im Finale; ihre Teile 24-31 (Beine unten, Klauen) muessen dem Ergebnis der Eltern folgen -> 32 im PC-Bau.
+ * Der PSX-Bau behaelt 24 (Speicher; das Finale laeuft dort nicht, U15). */
+#if defined(RE15_PLATFORM_PSX)
+#define RE15_TEILE_MAX 24
+#else
+#define RE15_TEILE_MAX 32
+#endif
 
 typedef struct {
     uint16_t w;            /* +0x00 Teil-Wort */

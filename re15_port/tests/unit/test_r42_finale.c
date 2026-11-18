@@ -180,16 +180,93 @@ static void t_programm(void)
     int n = 0;
     const uint8_t *p = re15_finale_r42_programm(0, &n);
     static const uint8_t soll[] = {
-        0x54, 0x01, 0x02, 0x00, 0x00, 0x00, 0x09, 0x0a, 15, 0x00, 0x2b, RE15_FI_MSG_ZEILE_LEON, 0x00, 0x00, 0x09, 0x0a, 33, 0x00,
+        0x54, 0x01, 0x02, 0x00, 0x00, 0x00, 0x22, 0x05, 0x14, 0x01,   /* + Set(5,0x14,1) @0x01A28 (Runde 2) */
+        0x09, 0x0a, 15, 0x00, 0x2b, RE15_FI_MSG_ZEILE_LEON, 0x00, 0x00, 0x09, 0x0a, 33, 0x00,
         0x22, 0x05, RE15_FI_SIG_FREI, 0x01, 0x09, 0x0a, 32, 0x00, 0x09, 0x0a, 5, 0x00, 0x22, 0x05, RE15_FI_SIG_W1, 0x01, 0x01, 0x00 };
     CHECK(n == (int)sizeof soll && memcmp(p, soll, sizeof soll) == 0, "Programm weicht von ROOM7020 sub15 ab (%d Byte)", n);
     /* RE2-Zahlen: 15 (@0x01A30), 33 = ceil(162 / 150 * 30) (STAGE7.BIN @0x150), 32 + 5 (@0x01A60/@0x01A64) */
     p = re15_finale_r42_programm(1, &n);
-    CHECK(n == (int)sizeof soll && p[16] == RE15_FI_ZEILE_BILDER_ELZA && memcmp(p, soll, 16) == 0 &&
-          memcmp(p + 17, soll + 17, sizeof soll - 17) == 0, "Elza-Programm weicht von ROOM7021 sub15 ab");
-    CHECK((354 * 30 + 149) / 150 == RE15_FI_ZEILE_BILDER_ELZA && (1234 * 30 + 149) / 150 == RE15_FI_XA03_BILDER_ELZA, "Elza-Fenster");
+    CHECK(n == (int)sizeof soll && p[20] == RE15_FI_ZEILE_BILDER_ELZA && memcmp(p, soll, 20) == 0 &&
+          memcmp(p + 21, soll + 21, sizeof soll - 21) == 0, "Elza-Programm weicht von ROOM7021 sub15 ab");
+    CHECK(RE15_FI_SIG_FREI != 0x14u && RE15_FI_SIG_W1 != 0x14u, "Port-Signal belegt das RE2-Bit (5,0x14) von sub15 @0x01A28");
+    CHECK((354 * 30 + 149) / 150 == RE15_FI_ZEILE_BILDER_ELZA, "Elza-Fenster");
     CHECK(RE15_FI_SCHLAF_ZEILE + RE15_FI_ZEILE_BILDER == 48 && RE15_FI_SCHLAF_W1A + RE15_FI_SCHLAF_W1B == 37, "Takt T->U / U->W1");
-    CHECK((162 * 30 + 149) / 150 == RE15_FI_ZEILE_BILDER && (1026 * 30 + 149) / 150 == RE15_FI_XA03_BILDER, "Lesefenster in Bildern");
+    CHECK((162 * 30 + 149) / 150 == RE15_FI_ZEILE_BILDER, "Lesefenster in Bildern");
+}
+
+/* R1 (Pruefbericht s1 r1): das Kill-Bild haengt an der ECHTZEIT des Xa-0x03-Fensters (Bit 0x20 @0x80103d64-74, geloescht vom CD-Zweig
+ * @0x80012f7c, 150 Sektoren/s), nicht an 30 Bildern/s. Bei VSync 5 (@0x80103b00-08) ist es das 83. Bild (Leon, 6,92 s) bzw. das 99.
+ * (Elza); die alte Rechnung (206 / 247 Bilder) gilt nur bei VSync 2. */
+static int kill_bild(int vsync, int sektoren)
+{
+    uint32_t vbl = 0;
+    for (int n = 0; n < 2000; n++) {
+        if (n > 0) vbl += (uint32_t)vsync;
+        if (re15_finale_r42_xa_aus(vbl, sektoren)) return n;
+    }
+    return -1;
+}
+static void t_xa_ende(void)
+{
+    CHECK(kill_bild(5, RE15_FI_XA03_LESE) == 83, "Leon: Kill-Bild %d statt 83 bei VSync 5", kill_bild(5, RE15_FI_XA03_LESE));
+    CHECK(kill_bild(5, RE15_FI_XA03_LESE_ELZA) == 99, "Elza: Kill-Bild %d statt 99", kill_bild(5, RE15_FI_XA03_LESE_ELZA));
+    CHECK(kill_bild(2, RE15_FI_XA03_LESE) == 206, "Gegenprobe VSync 2: %d statt 206", kill_bild(2, RE15_FI_XA03_LESE));
+    CHECK(!re15_finale_r42_xa_aus(410, RE15_FI_XA03_LESE) && re15_finale_r42_xa_aus(411, RE15_FI_XA03_LESE), "Grenze 410,4 Austastungen");
+}
+
+/* U3: Schnitte aus Wagen C (Kameras 11-15 von ROOM5090, RID @0x60 + 32*Schnitt) - W1/W2/W3 verschieden (RE2 8/9/10), der Wechsel
+ * "Game over" -> W1 ist ein Schnitt (RE2 11 -> 8); 5091 hat dieselben Kameras (bytegleich @0x60-0x25F). */
+static void t_schnitte(void)
+{
+    const int z = RE15_FI_CUT_ZEILE, a = RE15_FI_CUT_W1, b = RE15_FI_CUT_W2, c = RE15_FI_CUT_W3;
+    CHECK(z >= 11 && z <= 15 && a >= 11 && a <= 15 && b >= 11 && b <= 15 && c >= 11 && c <= 15, "Schnitt ausserhalb Wagen C");
+    CHECK(a != b && b != c && a != c && z != a, "Schnittfolge ohne Wechsel (%d %d %d %d)", z, a, b, c);
+    size_t n0 = 0, n1 = 0;
+    uint8_t *r0 = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/STAGE5/ROOM5090.RDT", &n0);
+    uint8_t *r1 = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/STAGE5/ROOM5091.RDT", &n1);
+    CHECK(r0 && r1 && n0 > 0x260 && n1 > 0x260 && memcmp(r0 + 0x60, r1 + 0x60, 0x200) == 0, "5090/5091 Kameras nicht gleich");
+    free(r0); free(r1);
+}
+
+/* U5: Zuordnung gegen die Bytes des Tyrant-Overlays (CDEMD0.EMS, EM2B ai1 ab Datei 0x48A800 = 0x80100000): Tabelle @0x8010476c
+ * (Teil +0x00, Marke +0x12, 20 Byte je Eintrag) und die Brocken-Teile = a1 der sechs `jal 0x8010158c` (`move a1,zero` @0x80103c14,
+ * `addiu a1,zero,n` @0x80103c20/2c/38/44/50). Jeder RE2-Brocken hat mindestens einen Form-Teil, die Form-Teile sind < 32
+ * (BAHNSTEIG_FORM.EMD) und paarweise verschieden; alle 21 RE2-Teile (Gerippe EM2B) kommen vor. */
+static void t_zerplatzen(void)
+{
+    size_t n = 0;
+    uint8_t *ems = slurp(RE15_XSTR(RE15_ASSETS_PATH) "/../RE2/CDEMD0.EMS", &n);
+    const size_t ov = 0x48A800u;
+    CHECK(ems && n > ov + 0x4D00, "CDEMD0.EMS fehlt");
+    int benutzt[32] = { 0 }, re2_da[32] = { 0 }, i, brocken_re2[6];
+    if (ems && n > ov + 0x4D00) {
+        static const uint32_t stelle[6] = { 0x3c14, 0x3c20, 0x3c2c, 0x3c38, 0x3c44, 0x3c50 };
+        for (int j = 0; j < 6; j++) {
+            const uint8_t *w = ems + ov + stelle[j];
+            const uint32_t ins = (uint32_t)w[0] | (uint32_t)w[1] << 8 | (uint32_t)w[2] << 16 | (uint32_t)w[3] << 24;
+            brocken_re2[j] = (ins == 0x00002821u) ? 0 : ((ins >> 16) == 0x2405u ? (int)(ins & 0xffff) : -1);   /* move a1,zero / addiu a1,zero */
+        }
+    } else for (int j = 0; j < 6; j++) brocken_re2[j] = -2;
+    for (i = 0; re15_finale_r42_teil(i, NULL, NULL, NULL); i++) {
+        int re2 = -1, form = -1, marke = -1;
+        (void)re15_finale_r42_teil(i, &re2, &form, &marke);
+        CHECK(form >= 0 && form < 32 && !benutzt[form], "Form-Teil %d doppelt/ungueltig", form);
+        if (form >= 0 && form < 32) benutzt[form] = 1;
+        if (re2 >= 0 && re2 < 32) re2_da[re2]++;
+        if (!ems || n <= ov + 0x4D00) continue;
+        if (i < RE15_FI_TEILE_FLUG) {
+            const uint8_t *e = ems + ov + 0x476C + 20 * i;
+            CHECK(re2 == (e[0] | e[1] << 8) && marke == (e[0x12] | e[0x13] << 8), "Tabelle @0x8010476c Eintrag %d: %d/%d", i, re2, marke);
+        } else {
+            int ok = 0;
+            for (int j = 0; j < 6; j++) if (brocken_re2[j] == re2) ok = 1;
+            CHECK(ok, "Brocken-Eintrag %d: RE2-Teil %d ist kein a1 von FUN_8010158c", i, re2);
+        }
+    }
+    for (int j = 0; j < 6; j++) CHECK(brocken_re2[j] >= 0 && re2_da[brocken_re2[j]], "RE2-Brocken %d ohne Form-Teil", brocken_re2[j]);
+    for (int r = 0; r < 21; r++) CHECK(re2_da[r] > 0, "RE2-Teil %d ohne Zuordnung", r);
+    CHECK(i >= RE15_FI_TEILE_FLUG + RE15_FI_TEILE_BROCKEN, "zu wenige Eintraege (%d)", i);
+    free(ems);
 }
 
 int main(void)
@@ -199,6 +276,9 @@ int main(void)
     t_wurzel();
     t_programm();
     t_xa03();
+    t_xa_ende();
+    t_schnitte();
+    t_zerplatzen();
     if (fails) { fprintf(stderr, "test_r42_finale: %d Fehler\n", fails); return 1; }
     printf("test_r42_finale: alles gruen\n");
     return 0;

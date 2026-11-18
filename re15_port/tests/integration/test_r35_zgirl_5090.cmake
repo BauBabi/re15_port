@@ -1,4 +1,9 @@
 # =============================================================================
+# Runde 42 Strang finale (Plan S10): der Boss in 5090 ist wieder der RDT-Spawn 0x30 (Riesenform) mit den Tyrant-HP 20200
+# (re15_finale_r42.h RE15_FI_HP_START, @0x80101b78-0x80101be0); der G5 (0x36, HP 600) ist entfernt. Geprueft wird weiter: die
+# Selbst-Tuer spawnt den Boss neu, er hat danach seine Start-HP und stirbt ohne Treffer nicht. Die G5-Pruefung "laeuft von
+# x -9000 an" ([T0] @0x801011d0) entfaellt mit dem G5.
+#
 # ENDKAMPF ROOM5090 NACH EINER SELBST-TUER (Runde 35 Spur C, Nachbesserung 1 M2b,
 # analysis/befunde_runde35/C_zgirl.md).
 #
@@ -16,7 +21,7 @@
 #   2  state.log: nach der Tuer Boss-HP 600 am Ende, nie < 0 (Leon schiesst nicht; das Spawn-Bild darf 0 zeigen)
 #   3  state.log: der Boss laeuft an (x von -9000 = [T0] @0x801011d0 um >= 1500 nach vorn)
 # RE15_SOFTWARE_RENDER=1 nur fuer die Robustheit; Bilder belegt das Dossier (Framedump).
-# RE15_ENDKAMPF_NUR_G5=1: seit "Vierbein, dann G5" (birkin_formen.c) spawnt 5090 zuerst den 0x30; dieser Test
+# (Bis v0.8.30 lief dieser Test mit dem G5-Schalter; der Schalter ist entfernt.) Dieser Test
 # pinnt den Neuspawn des G5 und laeuft wie die fuenf G5-Tests in tests/unit/CMakeLists.txt auf dem alten Spawn.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r35_zgirl_5090.cmake
@@ -44,7 +49,7 @@ set(_exe_kopie "${_exe_dir}/re15_pc_r35c_5090_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 re15_start_spiel(_rv 300
-    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1 RE15_ENDKAMPF_NUR_G5=1
+    RE15_NO_INTRO=1 RE15_NOAUDIO=1 RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2
     RE15_DEBUG_JUMP=5090@gp "RE15_PLAYER_POS=500,-9175,2048,0"
     RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U12"
@@ -63,8 +68,8 @@ if(_p_tuer LESS 0 OR NOT _dbg MATCHES "DOOR FIRE slot=2 [^\n]*target_cut=14 ")
     string(APPEND _f "\n Tuer 2 -> Cut 14 nicht gefeuert")
 else()
     string(SUBSTRING "${_dbg}" ${_p_tuer} -1 _nach)
-    if(NOT _nach MATCHES "Sce_em_set type=0x36 ")
-        string(APPEND _f "\n kein zweiter Sce_em_set type=0x36 nach der Tuer (Wiedereintritt fehlt)")
+    if(NOT _nach MATCHES "Sce_em_set type=0x30 ")
+        string(APPEND _f "\n kein zweiter Sce_em_set type=0x30 nach der Tuer (Wiedereintritt fehlt)")
     endif()
 endif()
 if(NOT _dbg MATCHES "EXIT_AT: Bild 900 in Raum 5090")
@@ -75,7 +80,7 @@ if(NOT EXISTS "${WORKDIR}/state.log")
     string(APPEND _f "\n kein state.log")
 else()
     # Nur der Raum-Abschnitt (state.log beginnt nach dem Sprung neu bei F1, davor liegt der Vorspann).
-    file(STRINGS "${WORKDIR}/state.log" _zeilen REGEX "t=36 st=")
+    file(STRINGS "${WORKDIR}/state.log" _zeilen REGEX "t=30 st=")
     list(LENGTH _zeilen _n)
     if(_n LESS 600)
         string(APPEND _f "\n nur ${_n} Bilder mit dem Boss in state.log")
@@ -85,14 +90,14 @@ else()
         set(_xmax -99999)
         set(_letzte_hp "")
         foreach(_z IN LISTS _zeilen)
-            string(REGEX MATCH "t=36 st=[^]]*@\\((-?[0-9]+),(-?[0-9]+),r[0-9]+\\)\\] hp=(-?[0-9]+)" _m "${_z}")
+            string(REGEX MATCH "t=30 st=[^]]*@\\((-?[0-9]+),(-?[0-9]+),r[0-9]+\\)\\] hp=(-?[0-9]+)" _m "${_z}")
             if(NOT _m)
                 continue()
             endif()
             set(_x "${CMAKE_MATCH_1}")
             set(_hp "${CMAKE_MATCH_3}")
             set(_letzte_hp "${_hp}")
-            if(_hp EQUAL 600)
+            if(_hp EQUAL 20200)
                 set(_hp600 1)
             elseif(_hp600 AND _hp LESS 0)
                 set(_tot 1)
@@ -101,14 +106,11 @@ else()
                 set(_xmax "${_x}")
             endif()
         endforeach()
-        if(NOT _letzte_hp EQUAL 600)
-            string(APPEND _f "\n Boss-HP am Ende ${_letzte_hp}, erwartet 600 (Konstruktor @0x801003fc nach dem Neuspawn)")
+        if(NOT _letzte_hp EQUAL 20200)
+            string(APPEND _f "\n Boss-HP am Ende ${_letzte_hp}, erwartet 20200 (Tyrant-HP @0x80101be0 nach dem Neuspawn)")
         endif()
         if(_tot)
-            string(APPEND _f "\n Boss-HP fiel nach 600 unter 0 (Tod ohne Treffer)")
-        endif()
-        if(_xmax LESS -7500)
-            string(APPEND _f "\n Boss laeuft nicht an (x max ${_xmax}, Start -9000 @0x801011d0)")
+            string(APPEND _f "\n Boss-HP fiel nach 20200 unter 0 (Tod ohne Treffer)")
         endif()
         message(STATUS "r35_zgirl_5090: ${_n} Bilder, Boss-HP am Ende ${_letzte_hp}, x max ${_xmax}")
     endif()

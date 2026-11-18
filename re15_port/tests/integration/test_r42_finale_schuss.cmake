@@ -11,7 +11,10 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die uebrigen Int
 #   Ausloeser T, Freigabe U = T + 15 + 33 + 1 (sub15 @0x01A30 Sleep 15, Lesefenster 162 Sektoren = 33 Bilder, Programm ab T+1)
 #   echte Rakete weg U+7 (@0x80103750-68), W1 U+37 (Sleep 32 + 5 @0x01A60/64), Rakete U+38, Einfrieren U+52 (t 15 @0x80103848),
 #   W2 U+77 (40 Bilder @0x801038a4), Rakete U+78, Einfrieren U+84 (t 7), W3 U+109 (32 @0x801039a8), Ruetteln U+118 (10 @0x80103a80),
-#   Einschlag U+119, Wackeln aus U+134 (Bild 16 @0x80103d24), Kill = Einschlag + 206 (Xa 0x03 1026 Sektoren = 6,84 s), Phase 9 +1.
+#   Einschlag U+119, Wackeln aus U+134 (Bild 16 @0x80103d24), Kill = Einschlag + 83 (Xa 0x03 1026 Sektoren = 6,84 s ECHTZEIT: Bit 0x20
+#   @0x80103d64-74, VSync 5 @0x80103b00-08 = 5 Austastungen je Bild, 410,4 Austastungen -> 83. Bild; Pruefbericht s1 r1 R1), Phase 9 +1.
+#   Schnitte (U3, include/re15_finale_r42.h): Ausloeser 15, W1 12, W2 11, W3 15. Zerplatzen (U5): Bild 16 loescht die Brocken und setzt
+#   sechs 0x040E2000 (Marken der Tabelle @0x8010476c). VSync 5 gilt genau vom Einschlag bis Phase 9 (84 Bilder im debug.log).
 #   Danach: Abspann-Raum 6040 und Titel (zweiter Spiel-Boot, RE15_BOOT_EXIT_AT=2), kein [g5a]/G5-Auftritt im ganzen Lauf.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r42_finale_schuss.cmake
 # =============================================================================
@@ -67,7 +70,7 @@ if(NOT _d EQUAL 49)
 endif()
 foreach(_paar "echte Rakete geloescht:7" "W1:.*vor der Form:37" "Wiederholung 020d1000 Besitzer 0x80:38" "W1 eingefroren:52"
               "W2:.*vor der Form:77" "Wiederholung 020d1000 Besitzer 0x81:78" "W2 eingefroren:84" "W3:.*vor der Form:109"
-              "Ruetteln:118" "Einschlag:119" "Wackeln aus:134" "Kill:325" "Phase 9:326")
+              "Ruetteln:118" "Einschlag:119" "Wackeln aus:134" "Bild 16: Brocken weg, 6 x 0x040E2000:134" "Kill:202" "Phase 9:203")
     string(REGEX MATCH "^(.*):([0-9]+)$" _x "${_paar}")
     set(_m "${CMAKE_MATCH_1}")
     set(_soll "${CMAKE_MATCH_2}")
@@ -84,7 +87,27 @@ endforeach()
 if(NOT _log MATCHES "echte Rakete geloescht \\([1-9][0-9]* Plaetze\\)")
     string(APPEND _f "\n der echte Schuss im Freigabebild U hat keine Rakete (2,0x0D) erzeugt (RE2: Rakete ab Clip-Bild 1, @0x8004559c)")
 endif()
+foreach(_paar "Ausloeser: .*Schnitt 15" "W1: Spieler 10000 vor der Form, Schnitt 12" "W2: Spieler 5000 vor der Form, Schnitt 11"
+              "W3: Spieler 3000 vor der Form, Schnitt 15" "Kill: .*Xa-Fenster 415 Austastungen")
+    if(NOT _log MATCHES "${_paar}")
+        string(APPEND _f "\n '${_paar}' fehlt (U3-Schnitte / R1-Echtzeit)")
+    endif()
+endforeach()
 file(READ "${WORKDIR}/debug.log" _dbg)
+if(_dbg MATCHES "\\[gator-re2\\] VSync 5 [^\n]* ab F([0-9]+)(.*)$")
+    set(_v5 "${CMAKE_MATCH_1}")
+    set(_nach "${CMAKE_MATCH_2}")
+    if(_nach MATCHES "\\[gator-re2\\] VSync 2 [^\n]* ab F([0-9]+)")
+        math(EXPR _dv "${CMAKE_MATCH_1} - ${_v5}")
+        if(NOT _dv EQUAL 84)
+            string(APPEND _f "\n Zeitlupe ${_dv} Bilder statt 84 (83 bis zum Kill + Phase 9)")
+        endif()
+    else()
+        string(APPEND _f "\n VSync 2 nach der Zeitlupe fehlt")
+    endif()
+else()
+    string(APPEND _f "\n VSync 5 (Einschlag) fehlt im debug.log")
+endif()
 if(_dbg MATCHES "\\[g5a\\]")
     string(APPEND _f "\n [g5a]-Zeile im Lauf: der G5-Auftritt lief")
 endif()
@@ -93,6 +116,18 @@ if(NOT _dbg MATCHES "PC loaded room6040")
 endif()
 if(NOT _dbg MATCHES "Set\\(0,1,0\\): INGAME aus -> Titel")
     string(APPEND _f "\n Diashow-Ende Set(0,1,0) nicht gesehen")
+endif()
+# S8 (Plan): die Diashow ROOM6040 dauert die Summe ihrer Sleeps, 3952 Bilder (@0x00534-0x00586, Dossier C 1.2); der Bildzaehler
+# beginnt mit dem Raum neu, Set(0,1,0) @0x00590 faellt deshalb im Bild 3952 + Vorlauf des Raumstarts (gemessen 5: F3957).
+if(_dbg MATCHES "\\[finale\\] F([0-9]+) ROOM6040 Set\\(0,1,0\\)")
+    math(EXPR _dia "${CMAKE_MATCH_1} - 3952")
+    if(_dia LESS 0 OR _dia GREATER 8)
+        string(APPEND _f "\n Diashow-Ende im Bild ${CMAKE_MATCH_1}, erwartet 3952 + 0..8 (Summe der Sleeps @0x00534-0x00586)")
+    endif()
+endif()
+# S8: das neue Spiel nach dem Titel traegt weder das Finale-Bit 129 noch den Raketenwerfer (main.c memset g_inv/g_game).
+if(NOT _dbg MATCHES "\\[flow\\] boot #2: Raum [0-9A-F]+, Bit 129 0, Raketenwerfer im Inventar 0")
+    string(APPEND _f "\n neues Spiel nach dem Titel nicht leer (Bit 129 oder Raketenwerfer uebrig)")
 endif()
 if(NOT _dbg MATCHES "BOOT_EXIT_AT: boot #2")
     string(APPEND _f "\n Titel nicht erreicht (kein zweiter Spiel-Boot, exit=${_rv})")

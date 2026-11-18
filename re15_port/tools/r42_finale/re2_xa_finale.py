@@ -8,7 +8,7 @@ bis das Bit wieder aus ist (`andi v0,v0,0x20 / bnez` @0x80103d70-74), dann FUN_8
 FUN_800129b4 (RE2-Leon-EXE): Tabelle = *0x800ce544 = STAGE7.BIN @0x144 (Ladeadresse 0x8011a000), Eintrag 3 @0x156
 `05 00 00 00 42 00` = Kanal 5, Block 0, Laenge 66; Start = Block*16 + Kanal (@0x80012ac4-0x80012adc), Ende = -0x1E +
 (Block+Laenge)*16 + Kanal (@0x80012ae8-0x80012b10). Datei VOICE07.XAS (Stage-Tabelle @0x80010818, Index 6), Herleitung wie
-tools/r41_g5auftritt/re2_xa_schnitt.py.
+dem bis v0.8.30 benutzten Schnittwerkzeug der G5-Szene (entfernt).
 
 Ausgabe: die rohen 2336-Byte-Sektoren DES Kanals im Lesefenster [Start, Ende), Schritt 16 (Subheader Datei 1, Kanal 5,
 Submode 0x64, Codierung 0x00 = mono 37800 Hz 4 Bit):

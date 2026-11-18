@@ -732,8 +732,10 @@ static void test_schuss(void)
         if (i != s && g_actors[i].active) g_actors[i].active = 0;
     re15_actor_t *f = &g_actors[g];
     memset(f, 0, sizeof *f);
-    f->active = 1; f->type = 0x36; f->hp = 345; f->x = 1800; f->y = 0; f->z = -23400; f->rot_y = 3;
-    re15_enemy_apply_hitbox(f, 0x36u);
+    /* Runde 42 Strang finale (Plan S10): Ziel hinter der Leiche ist die Form 0x30 (der G5 0x36 ist entfernt; 0x36 ist byte-true
+     * waffenimmun, Null-Zeile @0x8006e0d0). Lage und Gate-Frage bleiben dieselben. */
+    f->active = 1; f->type = 0x30; f->hp = 345; f->x = 1800; f->y = 0; f->z = -23400; f->rot_y = 3;
+    re15_enemy_apply_hitbox(f, 0x30u);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->x = 14378; pl->y = 0; pl->z = -23510; pl->rot_y = 2049;
     const re15_actor_t a0 = *a, f0 = *f;

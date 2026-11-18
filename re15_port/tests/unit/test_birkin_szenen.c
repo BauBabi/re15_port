@@ -29,13 +29,8 @@
 #include "re15_finale_r42.h"
 #include "re15_birkin_formen.h"
 #include "re2_ems.h"
-#include "re15_g5auftritt_r41.h"   /* Runde 41: G5-Auftritt nach RE2 room7040 sub06 */
 #include "re15_esp.h"              /* gruenes Blut der Hangar-Szene: Plaetze pruefen */
 
-extern int re15_g5_boss_zustand(int *sub, int *ph, int *timer);
-extern int re15_g5_blut_zaehler(int idx);
-extern int re15_g5_biss_blut_zahl(void);
-extern void re15_g5_boss_spawn(int slot);
 extern void re15_actors_anim_advance(void);               /* player_common.c: Leiche haelt ihr Bild (Runde 42) */
 extern int  re15_player_aim_target(int32_t radius, int32_t *tx, int32_t *tz);   /* re15_damage.c: Zielhilfe (Runde 42) */
 
@@ -539,11 +534,10 @@ static void test_bahnsteig(void)
     for (f = 0; f < 900; f++) {
         pl->hp = 100; pl->hit_react = 0;
         re15_enemy_ai_run_all(0);
-        if (re15_bf_rueckstoss_phase() != 0) szene = 1;
         if (b->type != 0x30u) g5 = 1;
         if (b->hp < hp_min) hp_min = b->hp;
     }
-    CHECK(!szene, "Rueckstoss-Szene lief (kein G5-Uebergang mehr, Plan S4)");
+    (void)szene;   /* Runde 42 (Plan S10): die Rueckstoss-Szene gibt es nicht mehr */
     CHECK(!g5 && b->type == 0x30u && b->active, "Form wurde 0x%02X / inaktiv (kein G5 mehr)", b->type);
     CHECK(hp_min >= RE15_FI_HP_UNTEN, "HP fielen auf %d unter die Untergrenze %d", hp_min, RE15_FI_HP_UNTEN);
     CHECK(re15_game_flag_get(5, 0x1c) == 0, "Birkin-Schalter z5:0x1C ohne Abschuss gesetzt");
@@ -628,159 +622,6 @@ static void test_schnitt_aus_lage(const char *rdt)
     free(b);
 }
 
-/* Abnahme 2, G5-Biss: FUN_800401d4(40, 1) @0x80104118 / @0x80104170 toetet nie, klemmt auf HP 0 @0x800402b0. Devour verlangt HP <= 0
- * (`bgtz` @0x801008e0, @0x80103e80). Der Todes-Latch @0x800402d8 startet die Game-Over-FSM mitten im Fressen; der Kau-Zyklus
- * @0x80104b0c-6c senkt das Gewicht, sonst bleibt das Ende-Gate @0x80101d14 zu. */
-extern void re15_g5_boss_tick(int slot);
-extern int  re15_g5_fress_todeslatch(void);
-extern int  re15_death_presentation_active(void);
-extern int  re15_g5_blob_zustand(int *blob, int *ph, int32_t *gewicht0);
-static void test_g5_fressen(void)
-{
-    size_t n = 0;
-    uint8_t *ems = slurp(RE15_ASSET_PSX_DIR "/../RE2/CDEMD0.EMS", &n);
-    CHECK(ems != NULL, "RE2/CDEMD0.EMS fehlt");
-    if (!ems) return;
-    re15_enemy_reset();
-    re15_actor_init();
-    g_current_room_id = 0x5090u;
-    re15_enemy_bank_t *eb = re15_enemy_alloc(0x36);
-    CHECK(eb && re2_ems_load_bank(ems, n, 0x36, eb, NULL) == 0, "EM036 laedt nicht");
-    if (!eb) { free(ems); return; }
-    eb->buf = NULL; eb->ok = 1;
-    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0; pl->x = 24000; pl->z = -23400; pl->y = 0;
-    re15_actor_t *e = &g_actors[2];
-    memset(e, 0, sizeof *e);
-    e->active = 1; e->type = 0x36; e->flags = 1; e->hp = 600; e->grid_id = 0x13;
-    {   /* Auftritt bis zum Kampf */
-        int sub = 2, t;
-        for (t = 0; t < 1400 && (sub == 2 || t == 0); t++) { re15_g5_boss_tick(2); (void)re15_g5_boss_zustand(&sub, NULL, NULL); }
-        CHECK(sub != 2, "G5-Auftritt endet nicht");
-    }
-    {   /* Spieler stirbt nicht am Biss, nie bei HP > 0 gefressen, HP faellt ueber 0 */
-        int biss = 0, null_gesehen = 0, frass_bei = 999, sub = 0, ph = 0, reaktion = 0;
-        for (int t = 0; t < 12000 && !re15_g5_fress_todeslatch(); t++) {
-            int vor = pl->hp;
-            e->x = 10000; e->z = -23400;                      /* u >= 9001 @0x801008a0 */
-            pl->x = e->x + 4500; pl->z = e->z;
-            if (reaktion > 0) reaktion--; else pl->hit_react = 0;   /* Treffer-Reaktion des Spielers, je Biss ein Treffer */
-            e->hp = 600;
-            re15_g5_boss_tick(2);
-            if (vor - pl->hp == 20) biss++;                   /* 40 @0x80104118, halb auf Port-HP; Tentakel 15 @0x801016d0 zaehlt nicht */
-            if (pl->hp < vor) reaktion = 30;
-            if (pl->hp == 0) null_gesehen = 1;
-            if (pl->hp < 0) { frass_bei = vor; break; }
-        }
-        (void)re15_g5_boss_zustand(&sub, &ph, NULL);
-        CHECK(biss >= 2, "nur %d Bisse vor dem Fressen, Sperre +0x229 laeuft nicht ab (@0x80100188-98)", biss);
-        CHECK(null_gesehen, "HP faellt nicht auf 0 (Biss a1 = 1 @0x80104170 klemmt auf 0 @0x800402b0)");
-        CHECK(frass_bei == 0, "gefressen bei HP %d statt 0 (`bgtz` @0x801008e0 / @0x80103e80)", frass_bei);
-        CHECK(sub == 4, "kein Devour (Sub %d)", sub);
-    }
-    CHECK(re15_g5_fress_todeslatch(), "Todes-Latch nicht gesetzt (@0x800402d8)");
-    CHECK(re15_death_presentation_active(), "Game-Over-FSM startet nicht im Fressen (@0x80015014-30)");
-    CHECK(!re15_player_is_dead(), "Opfer-Modus 4 besitzt den Spieler, is_dead muss 0 bleiben");
-    {   /* Kauen: Gewicht pendelt, nach 150 Bildern Clip 2 faellt das Ende-Gate */
-        int blob = 4, ph = 0, p2 = 0, p3 = 0, ende = -1;
-        int32_t g0 = 0, g_max = -99999, g_min = 99999;
-        for (int t = 0; t < 2400 && ende < 0; t++) {
-            re15_g5_boss_tick(2);
-            (void)re15_g5_blob_zustand(&blob, &ph, &g0);
-            if (blob == 4 && ph == 2) p2++;
-            if (blob == 4 && ph == 3) {
-                p3++;
-                if (g0 > g_max) g_max = g0;
-                if (g0 < g_min) g_min = g0;
-            }
-            if (blob != 4) ende = t;
-        }
-        CHECK(p2 > 0 && p3 > 0, "Kau-Zyklus laeuft nicht (Phase 2 %d, Phase 3 %d)", p2, p3);
-        CHECK(g_min < 6000 && g_max >= 10001, "Kauen: Gewicht %d..%d, Ende-Gate 6000 @0x80101d14 kann nicht fallen", g_min, g_max);
-        CHECK(ende >= 0, "Ende-Gate faellt nie, Fressen laeuft endlos");
-        fprintf(stderr, "G5: Fressen Blob zurueck nach %d Ticks, Kauen %d..%d\n", ende, g_min, g_max);
-    }
-    CHECK(re15_g5_fress_todeslatch(), "Latch faellt mit dem Blob, FSM wuerde zurueckgesetzt (kein Routine-Exit @0x80101d20-24)");
-    pl->hp = 100;                                             /* Neues Spiel ueber den Titel: s_g5 steht noch */
-    CHECK(!re15_g5_fress_todeslatch(), "Latch ueberlebt den Spielerzustand");
-    free(ems);
-}
-
-/* Abnahme 3 N5: der G5 blutet. Wache `lbu v0,6(s3)` @0x801025e8 ist die Phase der Treffer-Routine (im ersten Tick 0), nicht die KI-Phase; Blick
- * `slti v0,a1,-64` @0x80102640, Zeilen 16 und 9..12 ohne Blut @0x80102658-64. Biss-Serie @0x801042d8: 3 Spawns je Bild, 10 Bilder (@0x801041a8). */
-static void test_g5_blut(void)
-{
-    size_t ems_n = 0;
-    uint8_t *ems = slurp(RE15_ASSET_PSX_DIR "/../RE2/CDEMD0.EMS", &ems_n);
-    CHECK(ems != NULL, "RE2 CDEMD0.EMS fehlt");
-    if (!ems) return;
-    re15_enemy_reset(); re15_actor_init();
-    {   re15_enemy_bank_t *eb = re15_enemy_alloc(0x36u);
-        CHECK(eb && re2_ems_load_bank(ems, ems_n, 0x36u, eb, NULL) == 0, "G5-Bank");
-        if (eb) { eb->buf = NULL; eb->ok = 1; }
-        eb = re15_enemy_alloc(0x37u);
-        CHECK(eb && re2_ems_load_bank(ems, ems_n, 0x37u, eb, NULL) == 0, "Arm-Bank");
-        if (eb) { eb->buf = NULL; eb->ok = 1; }
-    }
-    g_current_room_id = 0x5090u;
-    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER], *e = &g_actors[2];
-    pl->active = 1; pl->hp = 100; pl->x = 14000; pl->z = -23400; pl->rot_y = 2048;   /* Blick nach Westen: dirx = -4096 */
-    memset(e, 0, sizeof *e);
-    e->active = 1; e->type = 0x36u; e->flags = 1; e->grid_id = 0x13u; e->hp = 600; e->x = 8000; e->z = -23400;
-    re15_g5_boss_spawn(2);
-    re15_g5_boss_tick(2);
-    {   int sub = -1, ph = -1, n = 0;                         /* bis in die Lauf-Phase: KI-Phase != 0 */
-        for (; n < 2000; n++) { re15_g5_boss_tick(2); (void)re15_g5_boss_zustand(&sub, &ph, NULL); if (sub <= 1 && ph != 0) break; pl->hp = 100; pl->hit_react = 0; }
-        CHECK(n < 2000 && ph != 0, "G5: keine KI-Phase != 0 (Sub %d Phase %d)", sub, ph);
-    }
-    #define TREFFER(waffe) do { e->hit_react |= 1u; e->sub_state_1 = (waffe); e->re2z_self1d3 = 0; re15_g5_boss_tick(2); e->hit_react = 0; e->re2z_self1d3 = 0; re15_g5_boss_tick(2); } while (0)
-    {   int a = re15_g5_blut_zaehler(3), sub = -1, ph = -1;
-        (void)re15_g5_boss_zustand(&sub, &ph, NULL);
-        TREFFER(3);
-        CHECK(re15_g5_blut_zaehler(3) >= a + 2, "N5: Pistole, KI-Phase %d: %d Spawns statt mindestens 2 (@0x801027ec, @0x80102848)", ph, re15_g5_blut_zaehler(3) - a);
-        fprintf(stderr, "G5: Pistole in KI-Phase %d: %d Blut-Spawns\n", ph, re15_g5_blut_zaehler(3) - a);
-    }
-    for (int i = 0; i < 30; i++) { pl->hp = 100; pl->hit_react = 0; re15_g5_boss_tick(2); }
-    {   int a = re15_g5_blut_zaehler(3);
-        pl->rot_y = 0;                                        /* Blick nach Osten: dirx = +4096, `slti v0,a1,-64` @0x80102640 */
-        TREFFER(3);
-        CHECK(re15_g5_blut_zaehler(3) == a, "N5: Blick nach Osten, %d Spawns statt 0", re15_g5_blut_zaehler(3) - a);
-        pl->rot_y = 2048;
-    }
-    for (int i = 0; i < 30; i++) { pl->hp = 100; pl->hit_react = 0; re15_g5_boss_tick(2); }
-    {   int a = re15_g5_blut_zaehler(3);                      /* Waffe 15 -> Zeile 9 (Tabelle s_g5_zeile_von_waffe) */
-        TREFFER(15);
-        CHECK(re15_g5_blut_zaehler(3) == a, "N5: Zeile 9 %d Spawns statt 0 (@0x80102660-64)", re15_g5_blut_zaehler(3) - a);
-    }
-    {   /* a1-Regel FUN_800401d4: a1 = 0 @0x801016d4 Gnade -14..-1 -> HP 0 (`slti v0,v0,-14` @0x80040288), bei HP 0 tot; a1 = 1 toetet nie (`bltz` @0x80040264) */
-        extern void re15_g5_tent_treffer_test(re15_actor_t *p, int schaden, int a1);
-        pl->hp = 5;  re15_g5_tent_treffer_test(pl, 7, 0);
-        CHECK(pl->hp == 0, "Arm a1 = 0 bei HP 5: HP %d statt 0 (Gnade)", pl->hp);
-        pl->hp = 0;  re15_g5_tent_treffer_test(pl, 7, 0);
-        CHECK(pl->hp < 0, "Arm a1 = 0 bei HP 0: HP %d, muss toeten", pl->hp);
-        pl->hp = 0;  re15_g5_tent_treffer_test(pl, 7, 1);
-        CHECK(pl->hp == 0, "Arm a1 = 1 bei HP 0: HP %d, toetet nie", pl->hp);
-        pl->hp = 3;  re15_g5_tent_treffer_test(pl, 7, 1);
-        CHECK(pl->hp == 0, "Arm a1 = 1 bei HP 3: HP %d", pl->hp);
-        pl->hp = 100; pl->hit_react = 0;
-    }
-    {   /* Biss: Lunge trifft den stehenden Spieler vor der Masse, danach 10 Bilder je 3 Spawns */
-        int a = re15_g5_biss_blut_zahl(), hp0, gebissen = 0;
-        pl->x = e->x + 4500; pl->z = e->z; pl->rot_y = 2048;
-        for (int i = 0; i < 2400 && !gebissen; i++) {
-            pl->hit_react = 0;
-            hp0 = pl->hp = 100;
-            pl->x = e->x + 4500; pl->z = e->z;
-            re15_g5_boss_tick(2);
-            if (pl->hp < hp0) gebissen = 1;
-        }
-        CHECK(gebissen, "G5 beisst nicht");
-        for (int i = 0; i < 40; i++) { pl->hp = 100; re15_g5_boss_tick(2); }
-        CHECK(re15_g5_biss_blut_zahl() - a == 30, "N5: Biss-Serie %d Spawns statt 30 (@0x801042d8, +0x21B = 10 @0x801041a8)", re15_g5_biss_blut_zahl() - a);
-    }
-    free(ems);
-}
-
 int main(void)
 {
     test_modellwahl();
@@ -791,8 +632,6 @@ int main(void)
     test_bahnsteig();
     test_schnitt_aus_lage("STAGE5/ROOM5090.RDT");
     test_schnitt_aus_lage("STAGE5/ROOM5091.RDT");
-    test_g5_fressen();
-    test_g5_blut();
     if (fails) { fprintf(stderr, "test_birkin_szenen: %d Fehler\n", fails); return 1; }
     fprintf(stderr, "test_birkin_szenen: OK\n");
     return 0;

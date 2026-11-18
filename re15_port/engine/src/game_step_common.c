@@ -515,7 +515,7 @@ static void kd_clip(re15_actor_t *pl, uint8_t clip, int rev)
  * FUN_80034D0C bis 5000 Einheiten in einem Bild, die Griffe ziehen mit 800, der Wurf faehrt 1050. RE2 faengt das in der Spieler-Klemme
  * selbst ab (FUN_8003567c, Bytes am Kopf von re15_collision_constrain_re2). Die RE1.5-Beta FUN_8003b0a4 kann es nicht, und im Port hat
  * der Spieler in ROOM5090 eine viel engere Bahn als RE2 room7040 (SCA #29, #30, #28 gibt es dort nicht, Gangbreite 2582 statt 6114).
- * Die Regel gilt solange ein Birkin (0x30 EM30 und Form, 0x36 G5) im Raum aktiv ist; sonst bleibt es Byte fuer Byte FUN_8003b0a4. */
+ * Die Regel gilt solange ein Birkin (0x30 EM30 und Form, 0x36) im Raum aktiv ist; sonst bleibt es Byte fuer Byte FUN_8003b0a4. */
 static struct { int32_t x, z; uint8_t da; } s_klemme_ende;   /* letzte geklemmte Lage dieses Bildes, RE2 +0x118/+0x11a */
 
 int re15_birkin_klemme_aktiv(void)
@@ -525,14 +525,6 @@ int re15_birkin_klemme_aktiv(void)
     return 0;
 }
 
-/* SKRIPT-LAGE (Runde 41 G5-Auftritt, Nachbesserung 1): RE2s Pos_set laeuft im SCD-Faden VOR der Entity-Schleife und ist keine Bewegung
- * (op 0x32, kein Klemmaufruf). Die G5-Szene (g5auftritt_r41.c) setzt ihre Pos_set-Lagen im Gegner-Pass; ohne diesen Abgleich nahm
- * re15_player_nachklemme den Sprung (z.B. 9258 -> -3800, @0x0187C) als Schub und verwarf ihn ganz (gemessen: Fensterlauf F1558-F1597
- * Lage unveraendert 9258). */
-void re15_player_skriptlage(int32_t x, int32_t z)
-{
-    s_klemme_ende.x = x; s_klemme_ende.z = z;
-}
 
 static void spieler_klemme(const re15_rdt_t *rdt, int32_t alt_x, int32_t alt_z, int32_t *x, int32_t *z)
 {
@@ -887,8 +879,7 @@ static void re15_gameover_fsm_reset(void)
 int re15_death_presentation_active(void)
 {
     extern int re15_gator_fress_todeslatch(void);
-    extern int re15_g5_fress_todeslatch(void);   /* Fressen des G5: Latch @0x800402d8 (enemy_ai_boss_g5.c) */
-    return re15_player_is_dead() || re15_gator_fress_todeslatch() || re15_g5_fress_todeslatch();
+    return re15_player_is_dead() || re15_gator_fress_todeslatch();
 }
 
 /* ⛔ MESS-SCHIENE (Nutzer 2026-09-13, zweite Meldung: "Die Fressanimation findet immer
@@ -1161,14 +1152,7 @@ static void re15_npc_neck_spawn_init(void)
 void re15_game_step(const re15_game_ctx_t *c)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    /* RUECKSTOSS-SZENE 5090 (Port-Ergaenzung, re15_birkin_formen.h): waehrend Birkin aus dem Zug geschossen
-     * wird, zielt und feuert der Spieler selbsttaetig - derselbe Schuss-Ablauf wie mit dem Pad. */
     re15_game_ctx_t c_szene;
-    if (re15_bf_rueckstoss_phase() == 1) {
-        c_szene = *c;
-        c_szene.pad_current = re15_bf_pad(c->pad_current, &c_szene.pad_pressed);
-        c = &c_szene;
-    }
     /* Runde 42 Strang finale (Plan D4/S6): Abschuss-Ausloeser und Sequenz des RE2-Super-Tyrant VOR dem Spieler. RE2 laeuft die
      * Gegnerschleife vor dem Spieler (@0x80026570-0x80026604 vor 0x8003bfac @0x80026620): im Ausloesebild ist das Feuer schon
      * verbraucht (@0x801019ec-a00), im Freigabebild setzt die Wurzel Anschlag+Feuer 0x140 (@0x80103730-4c) und der Spieler schiesst
@@ -1176,7 +1160,7 @@ void re15_game_step(const re15_game_ctx_t *c)
     {
         uint16_t fp = c->pad_current, fpp = c->pad_pressed;
         if (re15_finale_r42_vor_spielzug(&fp, &fpp)) {
-            if (c != &c_szene) { c_szene = *c; c = &c_szene; }
+            c_szene = *c; c = &c_szene;
             c_szene.pad_current = fp; c_szene.pad_pressed = fpp;
         }
     }

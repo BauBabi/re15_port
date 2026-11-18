@@ -2,7 +2,7 @@
  *
  * Modi (Argument):
  *   rein   Die Klemme allein an den gemessenen Faellen der Abnahme, ohne Gegner.
- *   g5     Echter re15_game_step in ROOM5090 mit G5 und Armen (RE15_ENDKAMPF_NUR_G5=1, s. CMake): Startlagen entlang aller Waende.
+ *   (g5/g5saat: mit dem G5-Endkampf in Runde 42 entfernt, Plan S10.)
  *   griff  Echter re15_game_step mit EM30-Griff (Haken 0x8011afd8, cmd 5) und Wurf (cmd 6, derselbe Einstieg wie der Griff der Form bb_griff)
  *          aus allen Wandlagen in ROOM5090, ROOM5080, ROOM3070.
  *
@@ -43,11 +43,6 @@
 #define RE15_ASSET_PSX_DIR "shared_assets/PSX"
 #endif
 
-extern int re15_g5_boss_zustand(int *sub, int *ph, int *timer);
-extern int re15_g5_tentakel_zustand(int idx, int *sub, int *ph, int *ankermodus, int32_t *scale_x, uint16_t *kontakt);
-extern int re15_g5_opfer_variante(void);
-extern void re15_player_skriptlage(int32_t x, int32_t z);   /* game_step_common.c: gesetzte Lage = Vorlage +0x118 */
-extern void re15_g5_opfer_start(re15_actor_t *pl, int variante);
 
 static int fails = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); \
@@ -87,22 +82,6 @@ static int pl00_laden(void)
     if (re15_emd_parse_animation(edd, esz, &s_pl00_anim) != 0 || re15_emd_parse_skeleton(emr, rsz, &s_pl00_skel) != 0) return 0;
     re15_player_set_pl00_banks(&s_pl00_skel, &s_pl00_anim);
     return 1;                                   /* edd/emr bleiben fuer die Bank-Zeiger am Leben */
-}
-
-static int re2_baenke(void)
-{
-    size_t n = 0;
-    uint8_t *ems = slurp(RE15_ASSET_PSX_DIR "/../RE2/CDEMD0.EMS", &n);
-    if (!ems) return 0;
-    for (int k = 0; k < 2; k++) {
-        uint8_t type = k ? 0x37u : 0x36u;
-        re15_enemy_bank_t *eb = re15_enemy_find(type);
-        if (!eb) eb = re15_enemy_alloc(type);
-        if (!eb) return 0;
-        if (re2_ems_load_bank(ems, n, type, eb, NULL) != 0) return 0;
-        eb->buf = NULL; eb->ok = 1;
-    }
-    return 1;
 }
 
 static uint8_t s_blob[0x80000];
@@ -304,231 +283,6 @@ static void test_nclip(void)
     }
 }
 
-/* --- g5: Startlagen entlang aller Waende, G5 und Arme im echten Spielschritt ---------------------------------------------------- */
-static int s_boss = -1;
-static int finde_boss(uint8_t typ)
-{
-    for (int s = 1; s < RE15_ACTOR_MAX; s++)
-        if (g_actors[s].active && g_actors[s].type == typ) return s;
-    return -1;
-}
-
-extern int re15_g5_body_segment(int idx, int32_t *wx, int32_t *wy, int32_t *wz, int32_t *r);
-static int g5_drueckt(const re15_actor_t *pl)
-{
-    for (int k = 0; k < 2; k++) {
-        int32_t sx = 0, sz = 0, r = 0;
-        if (!re15_g5_body_segment(k, &sx, NULL, &sz, &r)) continue;
-        {   const int64_t dx = pl->x - sx, dz = pl->z - sz, rs = r + 450;
-            if (dx * dx + dz * dz < rs * rs) return 1; }
-    }
-    return 0;
-}
-
-static void test_g5(const char *rel, unsigned id)
-{
-    if (!raum_boot(rel, id, 25600, -23350, 14)) { CHECK(0, "%s", rel); return; }
-    if (!re2_baenke()) { CHECK(0, "RE2-Baenke"); return; }
-    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
-    scd_register_room_events(&s_rdt);
-    scd_room_reenter(&s_rdt, pl->x, pl->z, 14);
-    g_scd.cut_auto_enabled = 1;
-    s_shown = 14;
-
-    int trigger = -1;
-    for (int f = 30; f < 500; f++) {
-        int32_t nx = pl->x - 75, nz = pl->z;
-        re15_collision_constrain(&s_rdt, pl->x, pl->z, &nx, &nz);
-        pl->x = nx; pl->z = nz;
-        bild(0);
-        if (trigger < 0 && s_shown == 12) trigger = f;
-        if (trigger >= 0 && f > trigger + 3) break;
-    }
-    s_boss = finde_boss(0x36u);
-    CHECK(s_boss > 0, "kein G5");
-    if (s_boss <= 0) return;
-    re15_actor_t *e = &g_actors[s_boss];
-
-    /* N2: Leon an der Suedwand in der Reichweite der Intro-Arme, keine Eingabe. Abnahme: F1187-F1573 Lage (6865,-25290). */
-    {
-        pl->x = 7400; pl->z = -24732; pl->hp = 100; pl->rot_y = 0;
-        int n_kontakt = 0, n_wand = 0, lauf_ok = 0, lauf_try = 0, geduld = 0;
-        for (int f = 0; f < 1500 && e->motion != 5; f++) {
-            int kontakt = 0;
-            pl->hp = 100;
-            for (int k = 0; k < 4; k++) { uint16_t ko = 0; if (re15_g5_tentakel_zustand(k, NULL, NULL, NULL, NULL, &ko) == 0 && (ko & 4u)) kontakt = 1; }
-            bild(0);
-            if (kontakt) n_kontakt++;
-            if (fest(pl->x, pl->z)) n_wand++;
-            /* G5-Auftritt Nachbesserung 1 (M2): die Intro-Arme halten jetzt RE2s eingerollte letzte Austritts-Pose (sub8 ph4..ph7 ohne
-             * Anim-Schritt, +0x178 = Clip 14/16/15 Bild 29) statt der geraden Clip-0-Stange; an dieser Lage liegen sie 13 statt >= 30
-             * Bilder auf Leon. Die Laufprobe startet darum nach 10 Kontaktbildern (vorher 30).
-             * Nachbesserung G5A 4: mit der RE2-genauen Speer-Zeitfolge (Durchfaelle sub9 ph0 @0x80102140 / ph4 @0x80102378, RE2-RAM s11/s12
-             * bitgleich) liegen an dieser Lage nur noch 9 Kontaktbilder an (Testbild 408..449, [T5]); die Probe startet beim 5. (Testparameter,
-             * kein Spielwert - die Absicht "Eingabe wirkt, waehrend ein Arm am Spieler liegt" bleibt). */
-            if (kontakt && ++geduld >= 5) {
-                /* der Arm liegt: laufen. Vorher warf die Klemme jede Eingabe auf die Lage in der Wand zurueck. */
-                const int32_t sx = pl->x, sz = pl->z;
-                pl->rot_y = 0;
-                for (int g = 0; g < 30; g++) { pl->hp = 100; bild(RE15_PAD_BIT_UP); }
-                if (abs((int)(pl->x - sx)) + abs((int)(pl->z - sz)) >= 150) lauf_ok++;
-                lauf_try++; geduld = 0;
-            }
-        }
-        fprintf(stderr, "N2: Arm-Kontakt %d Bilder, Bildende in der Wand %d, Laufproben %d/%d\n", n_kontakt, n_wand, lauf_ok, lauf_try);
-        CHECK(n_kontakt > 0, "N2: kein Arm-Kontakt, der Riegel misst nichts");
-        CHECK(n_wand == 0, "N2: %d Bildenden in der Wand", n_wand);
-        CHECK(lauf_try > 0 && lauf_ok == lauf_try, "N2: Eingabe wirkt nicht (%d/%d)", lauf_ok, lauf_try);
-    }
-
-    /* N1: Leon in der Ecke #29/#30, der G5 (x 1960, Rand 4410 um x -40) drueckt mit gut 1000 je Bild. Die Rueckstellung @0x8004d8f0 nimmt den Schub
-     * zurueck; ohne die Vor-Klemme nahm sie auch die Eingabe (Lauf z_w4 F1360-F2100). */
-    {
-        int32_t weg = 0;
-        for (int f = 0; f < 240 && (re15_player_is_grabbed() || re15_player_hit_flinch_active() || re15_player_knockdown_active()); f++) { pl->hp = 100; bild(0); }
-        pl->x = 4597; pl->z = -25030; pl->rot_y = 3072;        /* Blick nach Norden, weg von der Diagonale */
-        for (int f = 0; f < 30; f++) {
-            const int32_t ax = pl->x, az = pl->z;
-            e->x = 1960; e->z = -23400; pl->hp = 100; pl->hit_react = 0;
-            bild(RE15_PAD_BIT_UP);
-            weg += abs((int)(pl->x - ax)) + abs((int)(pl->z - az));
-        }
-        fprintf(stderr, "N1: Ecke #29/#30 unter dem Koerper, 30 Bilder Vorwaerts: Weg %d, Ende (%d,%d)\n", (int)weg, (int)pl->x, (int)pl->z);
-        CHECK(weg >= 200, "N1: Eingabe wirkt in der Ecke nicht (Weg %d)", (int)weg);
-    }
-
-    lagen_bauen(-900, 20400, -26500, -20340, 300);
-    fprintf(stderr, "g5: %d wandnahe Startlagen\n", s_lagen);
-    CHECK(s_lagen >= 150, "zu wenige Startlagen: %d", s_lagen);
-    static const int32_t boss_x[] = { -1500, 1960, 4000, 6000, 8000, 10000, 12000 };
-    int n_faelle = 0, n_wandbilder = 0, n_eingekeilt = 0, laengste = 0, n_griff = 0, n_gedrueckt = 0, max_warte = 0;
-    int32_t kleinster_lauf = 0x7fffffff;
-    for (int i = 0; i < s_lagen; i++) {
-        /* aus dem Griff des Vorfalls heraus */
-        for (int f = 0; f < 240 && (re15_player_is_grabbed() || re15_player_hit_flinch_active() || re15_player_knockdown_active()); f++) { pl->hp = 100; bild(0); }
-        e->x = boss_x[zufall((unsigned)(sizeof boss_x / sizeof boss_x[0]))];
-        e->hp = 600;
-        pl->x = s_lage[i][0]; pl->z = s_lage[i][1]; pl->y = 0; pl->hp = 100; pl->rot_y = (int16_t)zufall(4096);
-        uint16_t pad = 0; int folge = 0;
-        for (int f = 0; f < 300; f++) {
-            if ((i & 1) && f % 24 == 0) {            /* jede zweite Lage: Zufallseingaben, Laufen und Drehen */
-                static const uint16_t tasten[6] = { 0, RE15_PAD_BIT_UP, RE15_PAD_BIT_DOWN, RE15_PAD_BIT_LEFT, RE15_PAD_BIT_RIGHT,
-                                                    RE15_PAD_BIT_UP | RE15_PAD_BIT_LEFT };
-                pad = tasten[zufall(6)];
-            }
-            pl->hp = 100;
-            if ((i & 3) == 2 && f == 20 && re15_g5_opfer_variante() < 0 && !re15_player_is_grabbed()) re15_g5_opfer_start(pl, (i >> 2) & 3);   /* Griff erzwingen: Zug 800, Peitsche, Spiess 600 */
-            bild(pad);
-            if (re15_g5_opfer_variante() >= 0) n_griff++;
-            if (fest(pl->x, pl->z)) { n_wandbilder++; if (++folge > laengste) laengste = folge; if (n_wandbilder <= 3)
-                fprintf(stderr, "  Wandbild: Start (%d,%d) Bild %d Lage (%d,%d) Zelle %d Boss x %d\n", (int)s_lage[i][0], (int)s_lage[i][1], f, (int)pl->x, (int)pl->z, fest(pl->x, pl->z) - 1, (int)e->x); }
-            else folge = 0;
-        }
-        for (int f = 0; f < 240 && (re15_player_is_grabbed() || re15_player_hit_flinch_active() || re15_player_knockdown_active()); f++) { pl->hp = 100; bild(0); }
-        {   const int32_t kx = pl->x, kz = pl->z;
-            int32_t weg = laufprobe(1);
-            if (weg < 300) {
-                /* Der Koerper ist ein Kreis von 6450: steht Leon in einer Nische hinter ihm, drueckt der Schub ihn in die Ecke, bis der G5
-                 * weiterzieht. Das ist kein Fehler der Klemme, also warten; was danach noch steht, ist gefangen. */
-                int warte = 0;
-                while (warte < 2400 && g5_drueckt(pl)) { pl->hp = 100; bild(0); warte++; }
-                if (warte > max_warte) max_warte = warte;
-                n_gedrueckt++;
-                weg = laufprobe(1);
-            }
-            if (weg < kleinster_lauf) kleinster_lauf = weg;
-            if (weg < 300) { n_eingekeilt++; if (n_eingekeilt <= 3) fprintf(stderr, "  eingekeilt: Start (%d,%d) Lage (%d,%d) Weg %d Boss x %d\n", (int)s_lage[i][0], (int)s_lage[i][1], (int)kx, (int)kz, (int)weg, (int)e->x); }
-        }
-        n_faelle++;
-    }
-    fprintf(stderr, "g5: %d Faelle, Griff-Bilder %d, Bildenden in fester Zelle %d (laengste Folge %d), eingekeilt %d, kleinster Laufweg %d, vom Koerper gedrueckt %d (laengste Wartezeit %d Bilder)\n",
-            n_faelle, n_griff, n_wandbilder, laengste, n_eingekeilt, (int)kleinster_lauf, n_gedrueckt, max_warte);
-    CHECK(n_faelle >= 300, "zu wenige Faelle: %d", n_faelle);
-    CHECK(n_griff > 0, "kein Griff der Arme im Fuzz, der Riegel misst ihn nicht");
-    CHECK(n_wandbilder == 0, "%d Bildenden in fester Zelle", n_wandbilder);
-    CHECK(n_eingekeilt == 0, "%d Faelle eingekeilt", n_eingekeilt);
-}
-
-/* --- g5saat: dieselbe Wand-Frage ueber viele Zufallsfolgen (Nachbesserung G5 3) ----------------------------------------------------
- * Der Fuzz "g5" laeuft mit EINER Saat (0x0badf00d). Eine einzige zusaetzliche Ziehung im G5 (RE2-Vorkampf-Puls `jal 0x80015fe8` @0x80104544)
- * verschob alle Wuerfe und legte eine Luecke frei: der Griff-Zweig im Spielschritt klemmte gegen die ungeklemmte Griff-Platzierung statt gegen
- * +0x118 (FUN_8003567c @0x800356ec-f8), Start (2100,-25900) endete in Bild 30/32 in der Diagonale #30. Hier je Raum SAATEN Folgen der
- * Engine-Ziehung (re15_damage_seed_rng) und der Testwuerfel, je Folge LAGEN wandnahe Startlagen mit Zufallsboss-x, Zufallseingaben und
- * erzwungenem Griff (alle fuenf Opfer-Varianten), BILDER Bilder je Lage. Mass: kein Bildende mit dem Mittelpunkt in fester Zelle. */
-#define G5SAAT_SAATEN 200
-#define G5SAAT_LAGEN  5
-#define G5SAAT_BILDER 150
-static void test_g5saat(const char *rel, unsigned id)
-{
-    if (!raum_boot(rel, id, 25600, -23350, 14)) { CHECK(0, "%s", rel); return; }
-    if (!re2_baenke()) { CHECK(0, "RE2-Baenke"); return; }
-    re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    re15_msg_load_room_block(s_rdt.messages, s_rdt.messages_size);
-    scd_register_room_events(&s_rdt);
-    scd_room_reenter(&s_rdt, pl->x, pl->z, 14);
-    g_scd.cut_auto_enabled = 1;
-    s_shown = 14;
-    int trigger = -1;
-    for (int f = 30; f < 500; f++) {
-        int32_t nx = pl->x - 75, nz = pl->z;
-        re15_collision_constrain(&s_rdt, pl->x, pl->z, &nx, &nz);
-        pl->x = nx; pl->z = nz;
-        bild(0);
-        if (trigger < 0 && s_shown == 12) trigger = f;
-        if (trigger >= 0 && f > trigger + 3) break;
-    }
-    s_boss = finde_boss(0x36u);
-    CHECK(s_boss > 0, "%s: kein G5", rel);
-    if (s_boss <= 0) return;
-    re15_actor_t *e = &g_actors[s_boss];
-    lagen_bauen(-900, 20400, -26500, -20340, 300);
-    CHECK(s_lagen >= 150, "%s: zu wenige Startlagen: %d", rel, s_lagen);
-    if (s_lagen <= 0) return;
-    static const int32_t boss_x[] = { -1500, -800, 1960, 4000, 6000, 8000, 10000, 12000 };
-    int n_faelle = 0, n_wandbilder = 0, n_saat_rot = 0, n_griff = 0, erste_saat = -1;
-    for (int saat = 0; saat < G5SAAT_SAATEN; saat++) {
-        int wand_dieser = 0;
-        re15_damage_seed_rng(0x9e3779b9u * (uint32_t)(saat + 1));      /* Engine-Ziehung FUN_8001af20 je Folge anders */
-        s_zufall = 0x1badb002u ^ (0x85ebca6bu * (uint32_t)(saat + 1));  /* Testwuerfel ebenso */
-        for (int k = 0; k < G5SAAT_LAGEN; k++) {
-            const int i = (int)zufall((unsigned)s_lagen);
-            for (int f = 0; f < 240 && (re15_player_is_grabbed() || re15_player_hit_flinch_active() || re15_player_knockdown_active()); f++) { pl->hp = 100; bild(0); }
-            e->x = boss_x[zufall((unsigned)(sizeof boss_x / sizeof boss_x[0]))];
-            e->hp = 600;
-            pl->x = s_lage[i][0]; pl->z = s_lage[i][1]; pl->y = 0; pl->hp = 100; pl->rot_y = (int16_t)zufall(4096);
-            re15_player_skriptlage(pl->x, pl->z);                       /* gesetzte Lage, keine Bewegung (wie Pos_set) */
-            const int griff_bild = 10 + (int)zufall(30), variante = (int)zufall(5), mit_eingabe = (int)zufall(2);
-            uint16_t pad = 0;
-            for (int f = 0; f < G5SAAT_BILDER; f++) {
-                if (mit_eingabe && f % 24 == 0) {
-                    static const uint16_t tasten[6] = { 0, RE15_PAD_BIT_UP, RE15_PAD_BIT_DOWN, RE15_PAD_BIT_LEFT, RE15_PAD_BIT_RIGHT,
-                                                        RE15_PAD_BIT_UP | RE15_PAD_BIT_LEFT };
-                    pad = tasten[zufall(6)];
-                }
-                pl->hp = 100;
-                if (f == griff_bild && re15_g5_opfer_variante() < 0 && !re15_player_is_grabbed()) re15_g5_opfer_start(pl, variante);
-                bild(pad);
-                if (re15_g5_opfer_variante() >= 0) n_griff++;
-                if (fest(pl->x, pl->z)) {
-                    n_wandbilder++; wand_dieser++;
-                    if (n_wandbilder <= 3)
-                        fprintf(stderr, "  %s Saat %d: Start (%d,%d) Bild %d Lage (%d,%d) Zelle %d Boss x %d Griff %d\n", rel, saat, (int)s_lage[i][0],
-                                (int)s_lage[i][1], f, (int)pl->x, (int)pl->z, fest(pl->x, pl->z) - 1, (int)e->x, variante);
-                }
-            }
-            n_faelle++;
-        }
-        if (wand_dieser) { n_saat_rot++; if (erste_saat < 0) erste_saat = saat; }
-    }
-    fprintf(stderr, "g5saat %s: %d Saaten x %d Lagen x %d Bilder = %d Faelle, Griff-Bilder %d, Bildenden in fester Zelle %d, Saaten mit Wandbild %d (erste %d)\n",
-            rel, G5SAAT_SAATEN, G5SAAT_LAGEN, G5SAAT_BILDER, n_faelle, n_griff, n_wandbilder, n_saat_rot, erste_saat);
-    CHECK(n_faelle == G5SAAT_SAATEN * G5SAAT_LAGEN, "%s: Faelle %d", rel, n_faelle);
-    CHECK(n_griff > 0, "%s: kein Griff im Fuzz, der Riegel misst ihn nicht", rel);
-    CHECK(n_wandbilder == 0, "%s: %d Bildenden in fester Zelle in %d Saaten", rel, n_wandbilder, n_saat_rot);
-}
-
-/* --- griff: EM30-Griff und Wurf aus allen Wandlagen ---------------------------------------------------------------------------- */
 static void griff_raum(const char *rel, unsigned id, int32_t kx, int32_t kz, int32_t bx, int32_t bz, int32_t x0, int32_t x1, int32_t z0, int32_t z1, int raster)
 {
     if (!raum_boot(rel, id, kx, kz, 0)) { CHECK(0, "%s", rel); return; }
@@ -605,9 +359,7 @@ int main(int argc, char **argv)
     const char *m = (argc > 1) ? argv[1] : "rein";
     if (!pl00_laden()) { printf("FEHLT: PL00\n"); return 77; }
     if (!strcmp(m, "rein"))  { test_rein(); test_nclip(); }
-    if (!strcmp(m, "g5"))    { test_g5("STAGE5/ROOM5090.RDT", 0x5090u); test_g5("STAGE5/ROOM5091.RDT", 0x5091u); }
     if (!strcmp(m, "griff")) test_griff();
-    if (!strcmp(m, "g5saat")) { test_g5saat("STAGE5/ROOM5090.RDT", 0x5090u); test_g5saat("STAGE5/ROOM5091.RDT", 0x5091u); }
     if (fails) { fprintf(stderr, "test_r41_birkin_wand %s: %d FEHLER\n", m, fails); return 1; }
     fprintf(stderr, "test_r41_birkin_wand %s: OK\n", m);
     return 0;

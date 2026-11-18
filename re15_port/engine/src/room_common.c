@@ -22,7 +22,6 @@
 #include "re15_scd.h"
 #include "re15_camera.h"
 #include "re15_light.h"
-#include "re15_g5auftritt_r41.h"   /* re15_g5a_licht_einsetzen */
 #include "re15_msg.h"
 #include "re15_collision.h"
 #include "re15_stair.h"
@@ -396,7 +395,6 @@ int re15_room_apply_pending(const re15_room_apply_ctx_t *c)
         re15_light_parse(c->rdt->lights, (size_t)c->rdt->lights_size,
                          &g_re15_room_lights) == 0) {
         g_re15_room_lights_ok = 1;
-        re15_g5a_licht_einsetzen(&g_re15_room_lights);   /* Runde 41 G5-Auftritt: RE2 Lichtsatz 9/10 auf 16/17 (nur 5090/5091) */
         re15_light_apply_cut(&g_re15_room_lights, cut);
     }
 

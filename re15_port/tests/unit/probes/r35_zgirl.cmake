@@ -16,7 +16,7 @@
 #   unit_r35_zgirl_wiedereintritt T9 (Nachbesserung 1) echter Spielschritt durch die Selbst-Tuer:
 #                            ROOM5090 Boss nach Tuer 2 HP 600, kein Tod beim Kampfstart (@0x800421e0 ->
 #                            Ctor @0x801003CC); Spawn-Zaehler je Eintritt neu (@0x8003f014)
-#   integration_r35_zgirl_5090  echte exe: Aktionstaste an Tuer 2 in ROOM5090, Boss-HP 600, Kampf laeuft an
+#   integration_r35_zgirl_5090  echte exe: Aktionstaste an Tuer 2 in ROOM5090, Boss-HP 20200 nach dem Neuspawn
 #                            (tests/integration/test_r35_zgirl_5090.cmake)
 add_executable(test_r35_zgirl ${CMAKE_CURRENT_LIST_DIR}/../test_r35_zgirl.c)
 target_link_libraries(test_r35_zgirl PRIVATE re15_engine re15_test_support)
@@ -36,8 +36,8 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r35_zgirl_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r35_zgirl.cmake)
     set_tests_properties(integration_r35_zgirl PROPERTIES TIMEOUT 900)
-    # Nachbesserung 1 (M2b): Endkampf ROOM5090 nach Selbst-Tuer 2 - Boss-HP 600 und Kampf laeuft an
-    # (Sce_em_set +0x4 = 0 @0x800421e0 -> RE2-Ctor @0x801003CC, HP 600 @0x801003fc).
+    # Nachbesserung 1 (M2b): Endkampf ROOM5090 nach Selbst-Tuer 2 - Boss neu gespawnt mit Start-HP, kein Tod ohne Treffer
+    # (seit Runde 42 die Riesenform 0x30 mit 20200 statt des G5 mit 600, Plan S10).
     add_test(NAME integration_r35_zgirl_5090
              COMMAND "${CMAKE_COMMAND}"
                      -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>

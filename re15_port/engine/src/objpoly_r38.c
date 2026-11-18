@@ -152,7 +152,7 @@ int re15_objpoly_r38_quad_mesh(const re15_md1_vertex_t *const v[4], const int32_
 }
 
 /* Wie re15_objpoly_r38_tri_mesh / _quad_mesh, aber mit dem ganzen Polygon (SZ, NCLIP-MAC0, OTZ, GPU-Grenze) fuer Zeichner,
- * die die Annahme-Regeln und die OT-Einsortierung selbst nachbauen (RE2-Raumobjekte, platform/pc/src/g5lampen_pc.c).
+ * die die Annahme-Regeln und die OT-Einsortierung selbst nachbauen (RE2-Raumobjekte; erster Nutzer bis v0.8.30 die Tunnellampen des G5-Auftritts).
  * Rueckgabe wie re15_objpoly_r38_tri / _quad (RE1.5-Regeln). */
 int re15_objpoly_r38_tri_mesh_p(const re15_md1_vertex_t *const v[3], const int32_t bm[9], const int32_t bt[3],
                                 int h, int ofx, int ofy, re15_objpoly_t *p)

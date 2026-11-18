@@ -816,7 +816,7 @@ static int aot_fire_door(int i)
      * `jal 0x800396fc` laedt unbedingt. Das Zombie-Maedchen (ROOM4050 Cut 9/14) erreicht man NUR
      * ueber die Selbst-Tueren 6/7; Stage 1 (21/21) bleibt unveraendert. Die Messung fand auch die
      * Port-Zustaende, die bisher nur der Raumwechsel zuruecksetzte: G5-Konstruktor
-     * (enemy_ai_boss_g5.c re15_g5_boss_spawn, ROOM5090) und Spawn-Zaehler @0x8003f014
+     * (bis v0.8.30 das Endkampf-Modul in ROOM5090) und Spawn-Zaehler @0x8003f014
      * (scd_room_setup.c scd_room_reenter); beide setzt jetzt auch der Wiedereintritt. */
     g_scd_pending_scenario = (int)d->target_cut;
     /* ⛔ RE2-ERGAENZUNG (Beta -> Retail): TUERSEQUENZ. RE1.5 startet hier die Tuermaschine
