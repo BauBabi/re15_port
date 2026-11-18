@@ -24,8 +24,9 @@
  *
  * Ablauf (Programm aus RE1.5-Opcodes wie annette_r41.c / kanister2080_r41.c; Signale Bank 5 Wort 0). W = erstes Programmbild
  * (sub12 Bild 0; der Ausloeser laeuft im Port in der Form-KI ein Bild davor, die VM vor dem Spielzug):
- *   W     Set(2,7,1) @0x0181A, Set(1,27,1) @0x0181E; Form ruht und ist ausser Bild (+0x10E = 0x8000 @0x01822-26; RE2 zeigt den
- *         Tyrant in keinem Szenenbild: Schnitt 7 blickt zum Steg hoch, Schnitt 11 nach dem Wegstellen @0x018EC); Kamera/Lagen merken
+ *   W     Set(2,7,1) @0x0181A, Set(1,27,1) @0x0181E; Form RUHT und bleibt SICHTBAR (+0x10E = 0x8000 @0x01822-26; die RE2-Schleife
+ *         @0x80026590 lhu 0x10e / @0x80026598 andi 0x8000 / @0x8002659c bne ueberspringt nur SquareRoot0 + Typ-Handler jalr
+ *         @0x800265f4 - keine KI, kein Bildvorschub, KEIN Ausblenden; Runde 4, Pruefbericht s3 r3 Rot); Kamera/Lagen merken
  *         @0x0182A-0x0184A; Cut_chg 7 @0x0184E -> Schnitt 13 (frontal auf die Tuer); John erscheint an der Ankunft von Wagen C
  *         (Sce_em_set statt Pos_set @0x01868), Blick zum Spieler; Werfer (PL00W12) in Johns rechter Hand Teil 11 wie bei Leon (statt
  *         Super_set @0x01854 an Adas Teil 10, Runde 3); Plc_motion HEBEN
@@ -37,7 +38,7 @@
  *         Werferlaenge von der Hand weg ist (Runde 3); Landung: Set(5,0x0E), Se_on Raumbank 0x0E, Lage + Drehung fest (@0x019DE-0x01A02)
  *   ...   Landung abwarten (Do..Edwhile @0x018C4-0x018CC), Sleep 15 @0x018D0, Reaktion: Spieler blickt zu John (Dir_set @0x018E0),
  *         Cut_chg 11 @0x018FC -> Schnitt 13, Sleep 1 @0x018FE, John laeuft zur Tuer (Plc_dest Modus 5 @0x0193A), an der Tuer Tuerton,
- *         Cut zurueck @0x01944/@0x01948, Aot_reset 5 @0x0194A (Werfer aufhebbar), DANACH John geparkt (@0x01954; nur ausser Bild,
+ *         Cut zurueck @0x01944/@0x01948, Aot_reset 5 @0x0194A (Werfer aufhebbar), DANACH John geparkt (@0x01958; nur ausser Bild,
  *         Runde 3), Form-KI an @0x01968-76, Sleep 1
  *         @0x019AA, sub18 @0x01B54-0x01B60 (Plc_ret, Set(2,7,0), Set(1,27,0), Cut_auto 1).
  *
@@ -137,6 +138,9 @@ extern "C" {
  * a_y = 20. Die Startgeschwindigkeit wird so gewaehlt, dass der Werfer nach 28 Bildern an der Landestelle liegt: je Achse
  * v = (Weg - a*378)/28 gerundet (378 = 28*27/2; bei D < 1890 a_h = D/378), v_y = die langsamste Startgeschwindigkeit (ab RE2 +20 abwaerts gezaehlt), mit
  * der die Schleife ab der Handhoehe genau nach 28 Bildern endet (re15_finale_wurf_vy).
+ * Scheitel (gemessen s3 r4, Hand (23542,-1998,-23121), Spieler (8150,-23550)): y -3274 in Flugbild 11 bei x 18592. Im Schnitt 13
+ * (Auge y -3110 IM Wagen) faellt der Scheitel auf die Stirnwand ueber der Tuer (unter der Lampe), nicht auf die Decke: die Sichtlinie
+ * Auge -> Stirnwand durch den Scheitel ist frei, der Scheitel liegt also unter der Decke (Messbild s3r4/mb_flugbahn_s13.png).
  * Landestelle (PORT-WAHL "bis neben den SPIELER"): auf der Linie Spieler -> John, so weit vor dem Spieler, wie das RE2-Aufnahme-
  * Rechteck 3400 x 2500 (@0x0120C/0E, achsparallel um die Landestelle, Item_aot_set unten) ihn noch mit RE15_FW_LANDUNG_RAND Abstand
  * zum Rand einschliesst (er hebt ohne Laufen auf), hoechstens die halbe Strecke zu John. Laengs des Wagens (Wurf entlang x) = 1600.
@@ -160,7 +164,7 @@ extern "C" {
 /* Abgang. RE2 ROOM7020 sub12 nach dem Reaktions-Schnitt (selbst gelesen, s3r3):
  *   @0x0193A `40 00 15 23 40 06 60 00` Plc_dest (Ada geht), @0x01942 `0b` Wsleep + @0x01943 `0c` Wsleeping (warten, bis Zeile/Stimme
  *   Xa 1 @0x0190A-0x01922 vorbei ist, Wsleeping @0x80053ac0), @0x01944 `1d 04 01 00` Work_copy + @0x01948 `29 00` Cut_chg = ZURUECK
- *   auf die gemerkte Kamera, @0x0194A Aot_reset, ERST DANACH @0x01950 Work_set(2) + @0x01954 Pos_set `32 00 a0 92 c8 ce 14 ba` =
+ *   auf die gemerkte Kamera, @0x0194A Aot_reset, ERST DANACH @0x01954 Work_set(2) + @0x01958 Pos_set `32 00 a0 92 c8 ce 14 ba` =
  *   Ada nach y -12600 geparkt (ausser Bild). RE2 schneidet also weg, BEVOR die Figur verschwindet - kein Sleep dazwischen, der
  *   Apply-Durchlauf des Schnitts zeigt das alte Bild nicht mehr (kamerahalt_r41.c, @0x80021560).
  *   Runde 2 parkte John an der Wand IM Schnitt 13 (Pruefbericht s3 r2, Rot 1: "verschwindet vor der geschlossenen Tuer").
@@ -209,7 +213,7 @@ extern "C" {
 #define RE15_FW_SIG_GELANDET  0x19u   /* Takt -> Programm: Landung (Set(5,0x0E) @0x019DE) */
 #define RE15_FW_SIG_REAKTION  0x1Bu   /* Programm -> Takt: Spieler blickt zu John (@0x018D4-0x018FA) */
 #define RE15_FW_SIG_ENDE      0x1Du   /* Programm -> Takt: Werfer frei, Form-KI an (@0x0194A-0x019A6) */
-#define RE15_FW_SIG_TUER      0x1Eu   /* Plc_dest-Ankunft bzw. Takt: John ist durch die Tuer (Ada parken @0x01954) */
+#define RE15_FW_SIG_TUER      0x1Eu   /* Plc_dest-Ankunft bzw. Takt: John ist durch die Tuer (Ada parken @0x01958) */
 
 /* Zustand des Werfers (Gegenstand) */
 enum { RE15_FW_W_AUS = 0, RE15_FW_W_HAND, RE15_FW_W_FLUG, RE15_FW_W_LIEGT, RE15_FW_W_GENOMMEN };

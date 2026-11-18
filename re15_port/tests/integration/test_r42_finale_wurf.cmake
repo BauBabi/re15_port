@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die uebrigen Integrationsskripte (Linux-Container CMake 3.28)
 # =============================================================================
-# FINALE 5090/5091: DIE WURFSZENE. Runde 42 Strang finale, Stufe 3 (Plan S5, K-13; include/re15_finale_wurf_r42.h), Runde 3.
+# FINALE 5090/5091: DIE WURFSZENE. Runde 42 Strang finale, Stufe 3 (Plan S5, K-13; include/re15_finale_wurf_r42.h), Runde 4.
 #
 # NUTZERWUNSCH 07.11.2026: "... Das jemand Leon den Raketenwerfer zuwirft ...". NUTZERENTSCHEID 17.11.2026: "Ok, passt für mich. Aber
 # ein Spruch wäre schon gut beim zuwerfen, so etwas wie: Leon, send him to hell, oder Leon, let's finish this oder sowas."
@@ -18,9 +18,10 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die uebrigen Int
 #   Schnitt auf die Kamera des Spielers waehrend des Flugs, sobald der Werfer eine Werferlaenge (1771) von der Hand weg ist; Reaktion 16
 #   Takte nach der Landung (Do/Edwhile + Sleep 15 @0x018C4-D0);
 #   Runde 3: John LAEUFT zur Tuer (Plc_dest Modus 5) und kommt innerhalb von 10..60 Takten an, Tuerton der Tuersequenz (DOOR2A V2,
-#   Eintrag 0); wie RE2 erst der Schnitt zurueck (@0x01948), dann das Parken (@0x01954): John wird NIE in einem Bild geparkt, in dem
+#   Eintrag 0); wie RE2 erst der Schnitt zurueck (@0x01948), dann das Parken (@0x01958): John wird NIE in einem Bild geparkt, in dem
 #   der Schnitt 13 (oder eine Kamera, die ihn sieht) noch gilt - Riegel gegen Rot 1 aus s3 r2 ("verschwindet vor der Tuer");
 #   Aufnahme-AOT Slot 6 Gegenstand 0x12 Anzahl 2 Taken-Bit 137, nach dem Aufheben Zellen 0/1 = 0x12 mit Anzahl 2.
+#   Runde 4: die Form ruht waehrend der ganzen Szene SICHTBAR (keine Zeile "Form gezeichnet 0"; RE2 @0x80026590-9c blendet nicht aus).
 #   debug.log: Schnitte 13 (W) / 13 (Reaktion) / zurueck auf die gemerkte Kamera (Ende), John aus JOHN_49_WURF.EMD mit 26 Clips, der
 #   Werfer in der Hand im Schnitt 13, im Flug im Schnitt 13 und in der Kamera des Spielers, am Boden in der Kamera des Spielers.
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=leon|elza -P test_r42_finale_wurf.cmake
@@ -129,7 +130,7 @@ else()
         string(APPEND _f "\n Ende ${_de} Takte nach Johns Ankunft an der Tuer statt 0..1")
     endif()
     if(_P LESS _E)
-        string(APPEND _f "\n John geparkt T${_P} VOR dem Schnitt zurueck T${_E} (RE2: Cut_chg @0x01948 vor Pos_set @0x01954)")
+        string(APPEND _f "\n John geparkt T${_P} VOR dem Schnitt zurueck T${_E} (RE2: Cut_chg @0x01948 vor Pos_set @0x01958)")
     endif()
     if(NOT _log MATCHES "Wurf: John ausser Bild der Kamera [0-9]+ (nach dem Schnitt zurueck|- jetzt geparkt)")
         string(APPEND _f "\n John nicht ausser Bild geparkt")
@@ -187,6 +188,21 @@ foreach(_zc "1:13" "2:13" "2:${_vorher}" "3:${_vorher}")
         string(APPEND _f "\n Werfer im Zustand ${_z} nicht im Schnitt ${_c} gezeichnet")
     endif()
 endforeach()
+# Runde 4 (Pruefbericht s3 r3, Rot): die Form RUHT waehrend der Szene und bleibt SICHTBAR - RE2 @0x80026590-0x8002659c (+0x10E &
+# 0x8000) ueberspringt nur den Typ-Handler (jalr @0x800265f4), blendet nicht aus. Runde 3 setzte no_draw = 1: die Form verschwand im
+# Bild der Spielerkamera (F406) und stand ab F522 wieder da.
+if(NOT _log MATCHES "Wurf: John-Gier [0-9]+ [(]Peilung zum Spieler[)], Form ruht sichtbar")
+    string(APPEND _f "
+ Form nicht als 'ruht sichtbar' gemeldet (Runde 3: unsichtbar)")
+endif()
+if(NOT _log MATCHES "Wurf: Form gezeichnet 1 bei W[+]")
+    string(APPEND _f "
+ Messzeile 'Form gezeichnet 1' fehlt")
+endif()
+if(_log MATCHES "Wurf: Form gezeichnet 0")
+    string(APPEND _f "
+ Form waehrend der Szene nicht gezeichnet (verschwindet sichtbar, Rot s3 r3)")
+endif()
 if(_log MATCHES "Ausloeser: Abschuss")
     string(APPEND _f "\n Abschuss ausgeloest (ohne Werfer in der Hand darf das nicht sein)")
 endif()

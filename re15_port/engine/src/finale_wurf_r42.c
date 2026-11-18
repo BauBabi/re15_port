@@ -68,14 +68,14 @@ static struct {
     int32_t  lx, lz; int16_t lg;
     int32_t  fx, fz; int16_t fg;
     int16_t  f_motion; uint32_t f_frame; uint8_t f_frac;
-    int      form_versteckt;
+    int      form_gez;                /* Messzeile: zuletzt gemeldeter Zeichen-Zustand der Form (-1 = noch keiner) */
     int      bild0;                   /* 1 = erstes Programmbild gesehen (W) */
     int      flug_schnitt;            /* 1 = waehrend des Flugs auf die Kamera des Spielers geschnitten */
     int      abgang, abgang_t;        /* John geht ab (Takt des Reaktions-Signals) */
     int32_t  jx_alt, jz_alt; int gegangen;
     int      john_weg;
     int      an_tuer;                 /* John ist an der Tuer angekommen (Signal an das Programm, noch NICHT geparkt) */
-    int      parken_offen;            /* RE2 @0x01954: parken, sobald ihn das aktuelle Bild nicht zeigt */
+    int      parken_offen;            /* RE2 @0x01958: parken, sobald ihn das aktuelle Bild nicht zeigt */
     int32_t  start[3];                /* Loslasslage (Schnitt im Flug nach einer Werferlaenge) */
     int      prog_n, item_at;
     unsigned takt, t0;
@@ -299,7 +299,7 @@ static void programm_bauen(void)
     s_w.item_at = n;                                                 /* Aot_reset 5 @0x0194A: Werfer aufhebbar (Item_aot_set, Kopf) */
     PUT(0x50, RE15_FW_AOT_SLOT, 0x09, 0x31, 0x00, 0x00, LE16(0), LE16(0), LE16(RE15_FW_AOT_W), LE16(RE15_FW_AOT_D),
         LE16(RE15_FW_ITEM), LE16(RE15_FW_ANZAHL), LE16(RE15_R42_BIT_WERFER_FINALE), 0xff, 0x00);
-    PUT(OP_SIG(RE15_FW_SIG_ENDE));                                   /* John parken @0x01950-0x01960 + @0x01968-0x019A6 (Takt) */
+    PUT(OP_SIG(RE15_FW_SIG_ENDE));                                   /* John parken @0x01954-0x01967 + @0x01968-0x019A6 (Takt) */
     PUT(OP_SLEEP(RE15_FW_SCHLAF_1));                                 /* @0x019AA */
     PUT(OP_WORK(1, 0), 0x42, 0x00);                                  /* sub18 Work_set + Plc_ret @0x01B54/@0x01B57 */
     PUT(OP_SET(2, 7, 0), OP_SET(1, 27, 0));                          /* @0x01B58 / @0x01B5C */
@@ -347,11 +347,13 @@ int re15_finale_wurf_start(int form_slot)
     for (int slot = SCD_EVENT_SLOT_FIRST; slot <= SCD_EVENT_SLOT_LAST; slot++)
         if (!g_scd.threads[slot].active && scd_thread_start(slot, s_w.prog) == 0) {
             s_w.aktiv = 1; s_w.w = RE15_FW_W_HAND; s_w.t0 = s_w.takt;
-            /* Form ausser Bild (Kopf: RE2 zeigt den Tyrant in keinem Szenenbild) */
-            if (!e->no_draw) { e->no_draw = 1; s_w.form_versteckt = 1; }
+            /* Form RUHT und bleibt SICHTBAR (Kopf "W"): RE2 @0x80026590 lhu 0x10e / @0x80026598 andi 0x8000 / @0x8002659c bne
+             * ueberspringt nur SquareRoot0 + den Typ-Handler (jalr @0x800265f4), blendet nicht aus. Runde 3 setzte hier no_draw = 1 -
+             * die Form verschwand sichtbar in der Kamera des Spielers (Pruefbericht s3 r3, Rot). */
+            s_w.form_gez = -1;
             LOG("Szene startet (Programm Slot %d, %d Bytes), Kamera vorher %d", slot, s_w.prog_n, s_w.cut);
             LOG("Leon (%d,%d) Gier %d gemerkt", s_w.lx, s_w.lz, s_w.lg);
-            LOG("John-Gier %d (Peilung zum Spieler), Form unsichtbar", s_w.john_gier, 0, 0);
+            LOG("John-Gier %d (Peilung zum Spieler), Form ruht sichtbar", s_w.john_gier, 0, 0);
             return 0;
         }
     LOG("kein freier Ereignis-Slot - Szene nicht gestartet", 0, 0, 0);
@@ -493,7 +495,7 @@ static int john_sichtbar(const re15_actor_t *n, int cut)
     return 0;
 }
 
-/* RE2 @0x01954-0x01960: Ada parken (hier: John aus, nicht gezeichnet). */
+/* RE2 @0x01954-0x01967 (Work_set 2, Pos_set @0x01958, Dir_set @0x01960): Ada parken (hier: John aus, nicht gezeichnet). */
 static void john_parken(re15_actor_t *n, const char *warum)
 {
     LOG("John geparkt bei (%d,%d)", n->x, n->z, 0);
@@ -505,7 +507,7 @@ static void john_parken(re15_actor_t *n, const char *warum)
 /* John laeuft zur Tuer (Kopf "Abgang"): Ankunft = Plc_dest-Bit (Lauf-Sub 5 < 300 @0x80051764), die Wand vor der Tuer haelt ihn (kein
  * Fortschritt mehr in Blickrichtung, Wandklemme wie der Spieler) oder der Punkt 620 voraus (`ori 0x26c` @0x80042bd0, FUN_80042bac) liegt
  * im Tuer-AOT (FUN_80042b64). Dann NUR das Signal an das Programm - geparkt wird erst nach dem Schnitt zurueck (RE2 @0x01948 vor
- * @0x01954), in ende(). */
+ * @0x01958), in ende(). */
 static void abgang_takt(void)
 {
     re15_actor_t *n = john();
@@ -549,17 +551,16 @@ static void ende(void)
 {
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     re15_actor_t *n = john();
-    if (n && !s_w.john_weg) {                                          /* Ada parken @0x01954-0x01960, NACH dem Schnitt @0x01948 */
+    if (n && !s_w.john_weg) {                                          /* Ada parken @0x01954-0x01967, NACH dem Schnitt @0x01948 */
         if (john_sichtbar(n, (int)g_scd.cam_id)) {
             s_w.parken_offen = 1;
             LOG("John bleibt an der Tuer: im Bild der Kamera %d nach dem Schnitt", (int)g_scd.cam_id, 0, 0);
         } else {
-            john_parken(n, "Wurf: John ausser Bild der Kamera %d nach dem Schnitt zurueck (RE2 @0x01948 vor @0x01954)");
+            john_parken(n, "Wurf: John ausser Bild der Kamera %d nach dem Schnitt zurueck (RE2 @0x01948 vor @0x01958)");
         }
     }
     if (s_w.form >= 0) {
         re15_actor_t *e = &g_actors[s_w.form];
-        if (s_w.form_versteckt) e->no_draw = 0;
         e->x = (int16_t)s_w.fx; e->z = (int16_t)s_w.fz; e->rot_y = s_w.fg;   /* Member_set2 aus Var 8/9/10 @0x01992-0x019A6 */
     }
     s_w.aktiv = 0;                                                     /* +0x10E &= 0x7FFF @0x01968-0x01976: Form-KI an */
@@ -592,7 +593,15 @@ void re15_finale_wurf_takt(void)
         else if (!john_sichtbar(nj, (int)g_scd.cam_id)) john_parken(nj, "Wurf: John ausser Bild der Kamera %d - jetzt geparkt");
     }
     if (!s_w.aktiv) return;
-    if (s_w.form >= 0 && s_w.form < RE15_ACTOR_MAX) form_ruht(&g_actors[s_w.form]);
+    if (s_w.form >= 0 && s_w.form < RE15_ACTOR_MAX) {
+        re15_actor_t *e = &g_actors[s_w.form];
+        form_ruht(e);
+        const int gez = (e->active && !e->no_draw) ? 1 : 0;              /* Messzeile: jede Aenderung des Zeichen-Zustands */
+        if (gez != s_w.form_gez) {
+            s_w.form_gez = gez;
+            LOG("Form gezeichnet %d bei W+%d, Kamera %d", gez, (int)(s_w.takt - s_w.t0), (int)g_scd.cam_id);
+        }
+    }
     re15_actor_t *n = john();
     if (!s_w.bild0 && n) {
         /* W = erstes Programmbild (sub12 Bild 0): Sce_em_set lief in diesem Bild (scd_vm_tick vor dem Spielzug) */

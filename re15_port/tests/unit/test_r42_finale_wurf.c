@@ -88,10 +88,10 @@ static void t_quelle(void)
               s16(r + 0x0185C) == RE15_FW_ADA_VERSATZ_Z && s16(r + 0x0185E) == RE15_FW_ADA_HAND_RX && s16(r + 0x01862) == RE15_FW_ADA_HAND_RZ,
               "Super_set-Werte (RE2-Beleg Adas Teil 10; Port Teil 11 = Leons Griff)");
         CHECK(RE15_FW_TEIL == 11, "Port-Teil = rechte Hand 11 (Waffenteil)");
-        /* Runde 3, Abgang: RE2 schneidet ZURUECK (@0x01948), BEVOR Ada geparkt wird (@0x01954) - Reihenfolge an den Bytes */
+        /* Runde 3, Abgang: RE2 schneidet ZURUECK (@0x01948), BEVOR Ada geparkt wird (@0x01958) - Reihenfolge an den Bytes */
         CHECK(hex_gleich(r, n, 0x0193A, "40001523 40066000") && hex_gleich(r, n, 0x01942, "0b0c 1d040100 2900") &&
               hex_gleich(r, n, 0x0194A, "46050231 11000200 2800 2e020000 3200a092 c8ce14ba"),
-              "Abgang sub12: Plc_dest @0x0193A, Wsleep @0x01942, Work_copy/Cut_chg @0x01944/48, Aot_reset @0x0194A, Pos_set Parken @0x01954");
+              "Abgang sub12: Plc_dest @0x0193A, Wsleep @0x01942, Work_copy/Cut_chg @0x01944/48, Aot_reset @0x0194A, Work_set @0x01954, Pos_set Parken @0x01958");
         CHECK(s16(r + 0x018B8) == RE15_FW_FLUG_RX && s16(r + 0x018BA) == RE15_FW_FLUG_RY && s16(r + 0x018BC) == RE15_FW_FLUG_RZ,
               "Super_reset @0x018B6");
         CHECK(s16(r + 0x019FC) == RE15_FW_LIEG_RX && s16(r + 0x01A00) == RE15_FW_LIEG_RZ, "Dir_set Landung @0x019FA");
