@@ -197,7 +197,7 @@ int re2fx_register_core(const uint8_t *raw, size_t size)
 /* ---------------------------------------------------------------------------------------------
  * Spawner — FUN_8001cbe8 (aufgeschoben, 0x4000) / FUN_8001bf10 (sofort, 0xA003)
  * ------------------------------------------------------------------------------------------- */
-static int spawn_kern(uint32_t a0, int16_t a1, const uint8_t *mtx, const int16_t *ofs, uint16_t st0)
+static int spawn_kern(uint32_t a0, int16_t a1, const uint8_t *mtx, const int16_t *ofs, uint16_t st0, uint8_t besitzer)
 {
     unsigned bank = a0 >> 24;                          /* `srl t6,a0,24` @0x8001cbec */
     unsigned sub  = (a0 >> 16) & 0xffu;                /* `srl v0,a0,16 / andi t5,v0,0xff` @0x8001cbf4-f8 */
@@ -219,7 +219,8 @@ static int spawn_kern(uint32_t a0, int16_t a1, const uint8_t *mtx, const int16_t
     const uint8_t *bh = esp_at(bk, 12);
     wr16(b, 0x18, st0);                                /* 0x4000 @0x8001cc80-84 / 0xA003 @0x8001bfa8-ac */
     b[0x1A] = 0; b[0x1B] = 0;                          /* @0x8001cc90-94 */
-    wr32(b, 0x1C, (sub << 16) + bank);                 /* `sw v0,28(t0)` @0x8001cc98: +0x1C Bank, +0x1E Sub */
+    wr32(b, 0x1C, (sub << 16) + ((uint32_t)besitzer << 8) + bank);   /* `sw v0,28(t0)` @0x8001cc98: +0x1C Bank, +0x1E Sub;
+                                                       * +0x1D Besitzer nur FUN_8001c8c4 (@0x8001c964-80), sonst 0 */
     wr16(b, 0x22, (uint16_t)a1);                       /* `sh a1,34(t0)` @0x8001cca0 */
     wr32(b, 0x24, 0);                                  /* @0x8001cca4 */
     wr16(b, 0x20, bh[10]);                             /* `lbu v0,10(t1) / sh v0,32(t0)` = Anim[0].Dauer, +0x21 = 0 */
@@ -266,9 +267,45 @@ static int spawn_kern(uint32_t a0, int16_t a1, const uint8_t *mtx, const int16_t
 }
 
 int re2fx_spawn(uint32_t a0, int16_t a1, const uint8_t mtx[32], const int16_t ofs[4])
-{ return spawn_kern(a0, a1, mtx, ofs, 0x4000u); }
+{ return spawn_kern(a0, a1, mtx, ofs, 0x4000u, 0); }
 int re2fx_spawn_sofort(uint32_t a0, int16_t a1, const uint8_t mtx[32], const int16_t ofs[4])
-{ return spawn_kern(a0, a1, mtx, ofs, 0xA003u); }
+{ return spawn_kern(a0, a1, mtx, ofs, 0xA003u, 0); }
+
+/* Runde 42 Strang finale (Plan S2): FUN_8001c8c4 = FUN_8001bf10 mit Besitzer-Marke. Gleicher Ablauf (Pool 96 abwaerts
+ * `addiu t2,zero,96` @0x8001c8c4, Status 0xA003 `ori v0,zero,0xa003 / sh v0,24(t0)` @0x8001c95c-60, Mehrteil @0x8001cac4-cbd8);
+ * einziger Unterschied ist das Packwort: `sll v0,a1,8 / andi v0,v0,0xffff / addu v0,t6,v0 / sll v1,t5,16 / addu / sw v0,28(t0)`
+ * @0x8001c964-80 -> +0x1C Bank, +0x1D = a1 & 0xff (Besitzer), +0x1E Sub; `srl v0,a1,16 / sh v0,34(t0)` @0x8001c988-8c ->
+ * +0x22 = a1 >> 16 (Gier). Die Mehrteil-Plaetze erben +0x1D ueber die 100-Byte-Kopie ab +0x18 (@0x8001cb24-58). */
+int re2fx_spawn_besitzer(uint32_t a0, uint8_t besitzer, int16_t gier, const uint8_t mtx[32], const int16_t ofs[4])
+{ return spawn_kern(a0, gier, mtx, ofs, 0xA003u, besitzer); }
+
+/* FUN_8001cfbc(a0 = Besitzer): alle 96 Plaetze, +0x1D == a0 (`lbu v0,5(v1)` mit v1 = Platz + 0x18 @0x8001cfd0, `bne v0,a0`
+ * @0x8001cfd8) -> +0x01 = 0 (`sb zero,-23(v1)` @0x8001cfe0), +0x00 = 0 (`sb zero,0(a1)` @0x8001cfe4), +0x18 = 0 (`sh zero,0(v1)`
+ * @0x8001cfe8). Gerufen vom Tyrant @0x801038f4 (0x80), @0x801039f8 (0x81), @0x80103aa8 (0x82), @0x80103b74-be8 (0x90..0x9e). */
+void re2fx_loesche_besitzer(uint8_t besitzer)
+{
+    for (int i = 0; i < RE2FX_PLAETZE; i++) {
+        uint8_t *b = s_pool[i].b;
+        if (b[0x1D] != besitzer) continue;
+        b[0x01] = 0; b[0x00] = 0; wr16(b, 0x18, 0);
+    }
+}
+
+/* FUN_8001cefc(a0 = Bank, a1 = Sub, a2 = Matrix): a2 != 0 -> Bank, Sub und +0x6C == a2 (@0x8001cf14-3c), sonst nur Bank und Sub
+ * (@0x8001cf78-90); Treffer -> +0x01, +0x00, +0x18 := 0 (@0x8001cf44-4c / @0x8001cf98-a0). Tyrant: (2,0x0D,0) @0x80103750-68 (die
+ * echte Rakete), (3,0x0A,0) @0x801038ec / @0x801039f0 (Rauch). */
+int re2fx_loesche_bank_sub(uint8_t bank, uint8_t sub, const uint8_t *mtx)
+{
+    int n = 0;                                         /* Port: Zahl der lebenden Plaetze, die geloescht wurden (Messschiene) */
+    for (int i = 0; i < RE2FX_PLAETZE; i++) {
+        uint8_t *b = s_pool[i].b;
+        if (b[0x1C] != bank || b[0x1E] != sub) continue;
+        if (mtx && s_pool[i].mtx_src != mtx) continue;
+        if (rd16(b, 0x18)) n++;
+        b[0x01] = 0; b[0x00] = 0; wr16(b, 0x18, 0);
+    }
+    return n;
+}
 
 /* ---------------------------------------------------------------------------------------------
  * GTE-Hilfen: MVMVA sf=1 (rtv0) = (m·v) >> 12, 32-Bit-MAC (swc2 MAC1..3 = stlvnl, kein Saettigen)
@@ -747,7 +784,7 @@ static void se(uint32_t code, const int32_t pos[3]) { if (re2fx_se_hook) re2fx_s
 static int kind_an_lage(uint32_t a0, const uint8_t *quelle34)
 {
     int16_t ofs[4] = { rds16(quelle34, 0), rds16(quelle34, 2), rds16(quelle34, 4), rds16(quelle34, 6) };
-    return spawn_kern(a0, rds16(cur(), 0x22), re2fx_einheitsmatrix, ofs, 0x4000u);
+    return spawn_kern(a0, rds16(cur(), 0x22), re2fx_einheitsmatrix, ofs, 0x4000u, 0);
 }
 
 /* Op 49 = FUN_800215c8: SAEURE-Aufschlag (Sprungtabelle 0x80010950 = {0x80021678, 0x800217D4,
@@ -818,7 +855,7 @@ static void bodenflamme(int16_t gier_zusatz_art, const uint8_t *m4c)
     if (gier_zusatz_art == 0)      g += r2 % 40;                    /* 0x66666667 >> 4 @0x80021120-164 */
     else if (gier_zusatz_art == 1) g += r2 % 80 + 400;              /* >> 5, `addiu a1,a1,400` @0x800212b8 */
     else                           g += r2 % 80 - 400;              /* `addiu a1,a1,-400` @0x80021410 */
-    int j = spawn_kern(a0, (int16_t)g, m4c, NULL, 0x4000u);         /* a2 = Platz+0x4C, a3 = 0 */
+    int j = spawn_kern(a0, (int16_t)g, m4c, NULL, 0x4000u, 0);         /* a2 = Platz+0x4C, a3 = 0 */
     if (j >= 0 && j < RE2FX_PLAETZE) {                  /* `andi s0,v0,0xff / sltiu v0,s0,0xff` @0x80021174-7c (Port: nur echte Plaetze) */
         uint8_t *c = s_pool[j].b;
         int32_t r3 = (int32_t)rng();
@@ -854,8 +891,8 @@ static void op_48(void)
      * (@0x80021060/@0x8002108c) laufen im Port NICHT (RE1.5-Resolver Art 4). */
     b = cur();
     const uint8_t *m4c = b + 0x4C;                     /* a2 = Platz+0x4C (@0x800210a4-b0) */
-    spawn_kern(0x040C2800u, 0, m4c, NULL, 0x4000u);    /* `lui a0,0x40c / ori 0x2800`, a1 = 0, a3 = 0 @0x80021094-b8 */
-    spawn_kern(0x041D2700u, 0, cur() + 0x4C, NULL, 0x4000u);   /* @0x800210c0-d8 */
+    spawn_kern(0x040C2800u, 0, m4c, NULL, 0x4000u, 0);    /* `lui a0,0x40c / ori 0x2800`, a1 = 0, a3 = 0 @0x80021094-b8 */
+    spawn_kern(0x041D2700u, 0, cur() + 0x4C, NULL, 0x4000u, 0);   /* @0x800210c0-d8 */
     bodenflamme(0, cur() + 0x4C);                      /* @0x800210e0-0x8002122c */
     bodenflamme(1, cur() + 0x4C);                      /* @0x80021230-0x80021384 */
     bodenflamme(2, cur() + 0x4C);                      /* @0x80021388-0x800214dc */
@@ -1110,7 +1147,7 @@ void re2fx_aufschlag(int re2_art, const int32_t q[3], int16_t gier)
     /* Der Platz ist eine RE2-Runde im Aufschlagbild: FUN_8001bf10 mit 0x020C1000 (Bank 2 Skr. 4 =
      * Brand/Saeure-Runde, `lui a0,0x20c / ori a0,a0,0x1000` @0x80044f9c-a0), a1 = Gier (RE2: +0x76
      * `lh a1,118(s1)` @0x80044fa8; Port: RE1.5 +0x2E), a3 = NULL (Q ist schon die Weltlage). */
-    int i = spawn_kern(0x020C1000u, gier, m, NULL, 0xA003u);
+    int i = spawn_kern(0x020C1000u, gier, m, NULL, 0xA003u, 0);
     if (i < 0 || i >= RE2FX_PLAETZE) return;           /* Pool voll -> kein Aufschlag */
     uint8_t *b = s_pool[i].b;
     s_pool[i].mtx_src = NULL;                          /* Matrix liegt im Abbild; ohne 0x800 nie gelesen */
@@ -1151,7 +1188,7 @@ static int applier(const int32_t P[3], int16_t gier, const int16_t box[4], uint3
 static int kind0_an_lage(uint32_t a0, const uint8_t *quelle34)
 {
     int16_t ofs[4] = { rds16(quelle34, 0), rds16(quelle34, 2), rds16(quelle34, 4), rds16(quelle34, 6) };
-    return spawn_kern(a0, 0, re2fx_einheitsmatrix, ofs, 0x4000u);
+    return spawn_kern(a0, 0, re2fx_einheitsmatrix, ofs, 0x4000u, 0);
 }
 
 /* Dispatch Op[step[k] + Art]: `lbu v0,k(v1) / lb v1,27(v1) / addu / sll 2 / lw 0x8009d868 / jalr`

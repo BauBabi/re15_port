@@ -96,6 +96,13 @@ const uint8_t *re2fx_esp_daten(size_t *groesse);
  *  0xFE = voll beim Mehrteil-Spawn (@0x8001ce10), -1 = Bank nicht registriert (Port-Schutz). */
 int re2fx_spawn(uint32_t a0, int16_t a1, const uint8_t mtx[32], const int16_t ofs[4]);
 int re2fx_spawn_sofort(uint32_t a0, int16_t a1, const uint8_t mtx[32], const int16_t ofs[4]);
+/** Runde 42 (Plan S2): FUN_8001c8c4 = sofort lebendig wie FUN_8001bf10, dazu Besitzer-Marke +0x1D (@0x8001c964-80) und Gier
+ *  +0x22 aus a1 >> 16 (@0x8001c988-8c). Rueckgabe wie re2fx_spawn_sofort. */
+int  re2fx_spawn_besitzer(uint32_t a0, uint8_t besitzer, int16_t gier, const uint8_t mtx[32], const int16_t ofs[4]);
+/** FUN_8001cfbc: alle Plaetze mit Besitzer +0x1D == besitzer loeschen (@0x8001cfbc-cff4). */
+void re2fx_loesche_besitzer(uint8_t besitzer);
+/** FUN_8001cefc: alle Plaetze mit Bank/Sub (und bei mtx != NULL derselben Quell-Matrix +0x6C) loeschen (@0x8001cefc-cfb8). */
+int  re2fx_loesche_bank_sub(uint8_t bank, uint8_t sub, const uint8_t *mtx);   /* Rueckgabe: lebende Plaetze geloescht */
 
 /** Die Einheitsmatrix 0x8009DB44 (`00 10 00 00 00 00 00 00 00 10 …`) als 32-Byte-Abbild. */
 extern const uint8_t re2fx_einheitsmatrix[32];
