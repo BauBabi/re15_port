@@ -96,7 +96,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>             /* sqrt: Streckung des RE2-Arms (nur Zeichen-Lage) */
+#include <math.h>             /* sqrt/fabs: Richtung des RE1.5-Arms (Halte-Lage) */
 #include "re15_actor.h"
 #include "re15_ai_flavor.h"      /* re15_ai_re2_for_type / re15_re2_rand / re15_re2z_* Shims  */
 #include "re15_enemy_ai.h"       /* re15_ai_set_state_word / re15_player_victim_force / _end   */
@@ -111,6 +111,8 @@
 #include "re15_esp.h"            /* RE1.5-Raumbank-Blut (Stand-in fuer FUN_8001BF10)             */
 #include "re15_audio.h"          /* re15_audio_core_se (Hook-P0 0x8005BA28)                      */
 #include "re15_scd.h"            /* g_re15_pauseflags / RE15_PAUSE_PLAYER (NB4 Blick)              */
+#include "re15_engine.h"         /* g_engine.frame_count (nur Messschiene RE15_RE2_TRACE) */
+#include "re15_md1.h"            /* re15_pld_part / re15_md1_parse (Leons Koerper fuer die Halte-Lage) */
 #include "re15_enemy_ai_re2_zellenarm.h"
 
 extern void re15_enemy_steer_point(re15_actor_t *e, int32_t tx, int32_t tz, int slew); /* FUN_80015558 */
@@ -145,6 +147,7 @@ static int      s_spawn_count = 0;     /* laufende Spawn-Nummer -> Arm-Wahl/Mast
 static int      s_holder = -1;         /* Slot des Arms, der den Spieler haelt (PL+0x1B4)      */
 static uint8_t  s_hook_phase = 0;      /* PL+0x6 der Spieler-Routine 5                         */
 static uint8_t  s_pin_bild = 0;        /* Nachbesserung 3: B4 P0 hat in DIESEM Bild gepinnt      */
+static int32_t  s_pl_vor[2];           /* Runde 4: Leons Lage vor dem Pin                         */
 
 /* Per-Slot-Arbeitsbytes des Arms, die der Aktor nicht als Feld traegt (Port-Speicher). */
 typedef struct {
@@ -191,7 +194,25 @@ typedef struct {
     int32_t  kx, kz;
     uint8_t  kclip;
     uint16_t kframe;
+    /* Runde 4: der KOERPER laeuft ausserhalb eines Griffs wie das Original (B[1] -> B[2]/B[3], Block KOERPER-ZUSTAND), im
+     * Griff eingefroren (Block GRIFF). Felder tragen die Original-Offsets der Entity bzw. der Parts 2/3. */
+    uint8_t  kmode;          /* K_B1 / K_B2 / K_B3 / K_GRIFF / K_SINKEN                                  */
+    uint8_t  kphase;         /* +0x6                                                                       */
+    uint8_t  k9e, k9f;       /* +0x9E / +0x9F (B[2]-Zaehler; B[3]: +0x9E = y-Zittern als s8)               */
+    int16_t  k9c;            /* +0x9C (B[3]: gemerktes y)                                                  */
+    int16_t  k8c;            /* +0x8C Schrittweite B[2]                                                    */
+    uint16_t k1d0;           /* +0x1D0 B[2]-Runden bis B[3]                                                */
+    int32_t  ky;             /* +0x38 (y der Entity; B[3] zittert +-5)                                     */
+    uint8_t  sk_an[2];       /* Part 2/3 Flag 0x400 (ScaleMatrix @0x8001e9ec)                               */
+    int16_t  sk_y[2];        /* Part 2/3 +0x8A (Skalierung der lokalen y-Achse, Q12)                        */
+    int8_t   sk_d[2];        /* Part 2/3 +0x76 (Zuwachs je Bild)                                           */
+    int16_t  sk_n82, sk_n38; /* Part 2 +0x82 (Wachs-Zaehler) / +0x38 (Schrumpf-Zaehler)                     */
+    uint8_t  g_halten;       /* GRIFF: 1 = Halte-Pose eingefroren                                          */
+    uint8_t  treffer;        /* RE2-Treffer/-Tod gesehen -> Rueckzug sinkt (K_SINKEN)                      */
+    uint16_t g_frame;        /* GRIFF: eigenes Bild in EM1A-Clip 2                                          */
+    int32_t  kontakt_rest;   /* Halten: Abstand der Hand von der Kontaktstelle nach der Flur-Klemme (Mess-Auskunft) */
 } re2arm_t;
+enum { K_B1 = 0, K_B2, K_B3, K_GRIFF, K_SINKEN };
 static re2arm_t s_arm[RE15_ACTOR_MAX];
 
 /* ---- MODELL: RE1.5-EM1A zeichnen, RE2-Verhalten behalten (Runde 42 Strang "original", Stufe 2) ----------------------
@@ -211,9 +232,11 @@ static re2arm_t s_arm[RE15_ACTOR_MAX];
  *   - Bis Runde 41 zeichnete der Port statt dessen das RE2-Modell EM2D (CDEMD0.EMS kind 0x2D, 15 Knochen) — DAS ist
  *     der gemeldete Fehler.
  *
- * WAS BLEIBT (unveraendert, RE2): Anker (x an der Wand, y RE2ARM_1210_Y), Weckruf, A0-Tore 2500/3000, Hand-Tore 900/600,
- * Teleport an die Hand, Halten 150 - Mash, Cooldown 120, Rueckzug 30/Bild, Ende 0x701, Treffer -> 0x501, alle SEs,
- * Koerper-Push, Trefferkasten. Und der TAKT: jede Zustandsdauer, die am Clip-Ende haengt (B0 P3, B3, B5) und jede
+ * WAS BLEIBT (RE2): Anker (x an der Wand, y RE2ARM_1210_Y), Weckruf, A0-Tore 2500/3000, Hand-Tor 900, Halten
+ * 150 - Mash, Cooldown 120, Rueckzug 30/Bild, Ende 0x701, Treffer -> 0x501, alle SEs, Trefferkasten. RUNDE 4 (Vorgabe Punkt 2,
+ * NUTZERWUNSCH, Block KOERPER): die HAND des Gehirns ist die gezeichnete RE1.5-Hand, gegriffen wird nur in Leons
+ * Klemmzylinder 450 (@0x80073e9a) und nur, wenn Leon an der Hand stehen kann (kontakt_moeglich); der Pin stellt Leon an die
+ * RE1.5-Hand (Block HALTE-LAGE), der RE2-Koerper-Push entfaellt mit EM1A. Und der TAKT: jede Zustandsdauer, die am Clip-Ende haengt (B0 P3, B3, B5) und jede
  * Bildabfrage (`< 11` @0x80100770, `>= 5` @0x80100A18, `== 0` @0x80100CB4), laeuft weiter auf den EM2D-Laengen
  * (Paar 1: 20/25/30/15/10/19). Das gezeichnete EM1A-Bild laeuft daneben in seiner EIGENEN Geschwindigkeit: ein Bild
  * je Takt wie im RE1.5-Original (Arm-Aufruf `jal 0x8001f314` @0x8010c6f4, a3 = 0x200 @0x8010c6f8; FUN_8001f3bc zaehlt
@@ -234,8 +257,9 @@ static re2arm_t s_arm[RE15_ACTOR_MAX];
  *   0 -> 0, 1 -> 1   beide Spiele waehlen zwischen genau diesen zwei per rng&1
  *   3 -> 2           Zugriff = Ausfahren
  *   4 -> 3           Rueckzug = Zuruecksinken (RE1.5 nimmt Clip 3 selbst fuer Rueckzug und Tod)
- *   5 -> 1           Halten: RE1.5 hat KEINEN Halte-Clip (der RE1.5-Arm greift nie). Genommen ist die Wiege-Variante
- *                    Clip 1 — naechstliegende RE1.5-Pose, im Bericht gemeldet.
+ *   5 -> 1           Halten: RE1.5 hat KEINEN Halte-Clip (der RE1.5-Arm greift nie). Gezeichnet wird seit Runde 4 NICHT
+ *                    diese Zuordnung, sondern der Koerper (Block KOERPER: Zugriff = Clip 2 Bild fuer Bild, Halten = die
+ *                    Clip-2-Pose des Griffbilds steht, Rueckzug = Clip 3 ganz). Die Zuordnung fuehrt nur noch e->motion.
  *   2 -> 0           wird am Arm nie gesetzt
  *
  * WAS DAS ORIGINAL ZEIGT (GEMESSEN im echten RE1.5: DuckStation, MZD-Disc, Debug-JUMP 0x121 = ROOM1210, Leon; Lauf +
@@ -251,9 +275,10 @@ static re2arm_t s_arm[RE15_ACTOR_MAX];
  *     ⛔ Die Aussage aus Runde 2 "Rumpf und Kopf in keinem einzigen Bild" war FALSCH (Pruefbericht Runde 2 R1).
  *     Speicher passt: s4/s5 auf x -22580, Rumpf T0 y -1969, Kopf T1 (-22672,-2645) (lauf4/p030.sav, teile.py) — nur
  *     ~430 hinter der Zellenseite der Wand (Wand x -22150..-21090).
- *   - Die RE1.5-Arme sind kurz: Handgelenk-Ring lokal y ~1215, Fingerspitzen y bis 1543 (EM1A Mesh 2/3). Der
- *     RE1.5-Arm greift im Original nie (kein Griff im Overlay, Runde 1). Von der Original-Stelle aus reicht er nicht bis
- *     zur RE2-Hand: im Riegel unit_r42_arme_re15_modell muss er dafuer um Faktor 1,00..2,38 gestreckt werden (K5).
+ *   - Die RE1.5-Arme: Handgelenk-Ring lokal y ~1215, Fingerspitzen y bis 1543 (EM1A Mesh 2/3). Der RE1.5-Arm greift im
+ *     Original nie (kein Griff im Overlay, Runde 1). In B[3] laesst das Original die Arme aber WACHSEN (Block KOERPER,
+ *     gemessen lauf4: Part 2 +0x8A bis 5398 = 1,32-fach in den Proben, hoechstens 2,04-fach) - ihre Hand reicht dann in den
+ *     Flur. (Runde 3 streckte den Arm statt dessen selbst zur RE2-Hand - entfernt in Runde 4.)
  *
  * KOERPER-WEG B[1] (STAGE1.BIN, Disc == Mod byte-gleich; selbst disassembliert, re15_disasm.py dis 0x8010c714):
  *   Schritt = FUN_800245d8(yaw_ofs) (x += cos(yaw+ofs) * +0x8C, z -= sin * +0x8C; Katalog FUN_800245d8), danach im Root
@@ -272,27 +297,19 @@ static re2arm_t s_arm[RE15_ACTOR_MAX];
  *   Bildzaehler: +0x95 wird nur in Sub 0 genullt (@0x8010c788), anim_set (0x8001f314, a3 = 0x200) zaehlt +1 je Aufruf
  *   (RE_15_Quellcode_V2/FUN_8001f3bc.c Z. 89-93); gemessen Bild 24 = af 25 (lauf1/proben.txt t 48,62 s).
  *
- * ZEICHNEN (Runde 3; PORT-WAHL, wo nicht anders belegt):
+ * ZEICHNEN (Runde 3, in Runde 4 umgebaut - massgeblich ist der Block KOERPER; PORT-WAHL, wo nicht anders belegt):
  *   - Der KOERPER (Rumpf, Kopf und der zweite Arm) steht dort, wo ihn das Original zeigt: Record-Lage (vor dem
  *     Anker gemerkt) + KOERPER-WEG B[1] ab dem Ausloeser (+0x9 & 0x1F == 1 — derselbe, der auch das RE2-Gehirn weckt),
  *     Blick = Record-Blick, Hoehe = Record-y (bodenbezogenes EM1A). Vor dem Ausloeser wird nichts gezeichnet (PORT-WAHL:
  *     das Original zeichnet ihn 3910 hinter der Wand, im Bild ist das Fenster leer).
- *   - Pose des Koerpers: solange der RE2-Arm sichtbar ist, die Pose des Zeichners (EM1A-Clip aus der CLIP-ZUORDNUNG,
- *     RE2-Takt); sonst die eigene RE1.5-Pose — B[1]-Clips wie oben, danach Clip 0 im Kreis (PORT-WAHL: B[2]/B[3]
- *     waehlen Clip 0/1 per rng @0x8010c9fc und schieben den Zombie bis ~800 zurueck und wieder vor; das ist nicht
- *     uebernommen, der Koerper bleibt an der Ruhestelle).
- *   - Der RE2-ARM (Arm A -> Teil 2, Arm B -> Teil 3), solange RE2 ihn zeigt (0x80101164): er sitzt am Schultergelenk des
- *     Koerpers (Teil-Lage aus der Pose, Eltern 0) und zeigt mit dem Handgelenk-Ring auf die RE2-Hand (Pin-Quelle). Reicht
- *     der RE1.5-Arm nicht so weit, wird er entlang seiner Laengsachse GESTRECKT, bis das Handgelenk auf der RE2-Hand
- *     liegt (Faktor >= 1, nie gestaucht). PORT-WAHL wegen des Zielkonflikts: Die RE2-Reichweite (Hand bis x ~ -20614,
- *     Leon 1251 vom RE2-Ursprung) ist mit der RE1.5-Armlaenge vom Original-Koerper aus nicht erreichbar (s.o.); ein
- *     losgeloester Arm (Runde 2: Schulter-Ende frei im Fenster) oder ein Koerper in der Wand (Runde 1: Hemd unter der
- *     Fensterbank) widersprechen dem RE1.5-Aussehen staerker. Offen beim Nutzer (Bericht Runde 3).
- *   - Ist der RE2-Arm verborgen (vor dem Weckruf, nach dem Rueckzug), haengt er normal am Koerper.
+ *   - Pose des Koerpers: immer die eigene RE1.5-Pose des Koerpers (Weg B[1], Wiegen B[2], Arme wachsen B[3]; im Griff
+ *     Clip 2 / Clip 3), Block KOERPER. Kein Teil wird vom Port gedreht oder gestreckt; die Arme tragen nur die
+ *     Skalierung des Originals (B[3]).
  *   - Kein Schatten: der RE1.5-Typ-0x1A-Code ruft den Schatten 0x8001b064 nie (kein `jal 0x8001b064` in
  *     0x8010c1ec..0x8010d7cc, re15_disasm.py), anders als der RE2-Arm (`jal 0x80016480` @0x801003A0).
  *
- * HAND (Pin-Quelle @0x80100C18-38, Tore @0x801007C4 / @0x801009BC) und damit die REICHWEITE bleiben RE2: mit geladener
+ * HAND (Pin-Quelle @0x80100C18-38, Tore @0x801007C4 / @0x801009BC): seit Runde 4 mit EM1A die RE1.5-Hand (koerper_hand,
+ * arm_hand_pose). Der folgende Stand gilt nur noch fuer Parts/Blut der Logik-Bank: mit geladener
  * EM2D-Logik-Bank rechnen die Parts (0x80029614) auf EM2D, Clip/Bild = RE2-Takt, Hand = EM2D-Handknochen 3 (Arm A) /
  * 10 (Arm B) wie bis Runde 41 (Tabelle @0x80101414, [var*7 + 2] @0x801007DC / @0x801009D4 / @0x80100BEC). Ohne
  * RE2-Archiv (keine Logik-Bank) misst das Gehirn am EM1A-Handgelenk des Arms am RE2-Anker; gezeichnet wird auch dann
@@ -315,6 +332,21 @@ static const int16_t k_b1_schritt[RE2ARM_B1_BILDER] = {
 };
 /* B[1]-Clip je Bild: 0 bis Bild 2 (@0x8010c778), 2 ab Bild 3 (@0x8010c818), 0 ab Bild 34 (@0x8010c880). */
 static int b1_clip(int bild) { return (bild >= 3 && bild < 34) ? 2 : 0; }
+/* RNG des Koerpers = die Disc-Formel FUN_8001af20 (Version_40%/PSX.EXE, selbst gelesen): `lhu a0,0(v0)` @0x8001af28 (s =
+ * *(u16*)0x800AC774), `srl v1,a0,7 / andi v1,0xff` @0x8001af30-34, `addu a0,a0,v1 / andi a0,0xff` @0x8001af38-3c,
+ * `sll v1,v1,8 / or a0,a0,v1 / sw a0` @0x8001af40-48, Rueckgabe a0 & 0xff @0x8001af4c; Startwert 0x1c3 je Raum
+ * (`ori v0,zero,0x1c3` @0x8003162c, `sw v0,-14476(at)` @0x80031634). PORT-WAHL: ein EIGENER Strom fuer die zehn Koerper
+ * (das Original teilt ihn mit allem seit dem Raumstart) - so bleibt jeder andere Wurf im Raum unveraendert; die Werte
+ * sind deshalb nicht die des Originals, die Formel und der Startwert schon. */
+static uint16_t s_rng15 = 0x1c3;
+static int rng15(void)
+{
+    const uint16_t s = s_rng15;
+    const uint16_t v1 = (uint16_t)((s >> 7) & 0xffu);
+    const uint16_t a0 = (uint16_t)((s + v1) & 0xffu);
+    s_rng15 = (uint16_t)((v1 << 8) | a0);
+    return (int)a0;
+}
 #define RE2ARM_KOERPER_RADIUS 300    /* *(0x80120934) = 0x8012091c (@0x8010c3bc), Halbwort +6 @0x80120922 `2c 01`,
                                       * `lhu a1,6(v0)` @0x8010c31c -> FUN_8003b0a4 @0x8010c320 */
 #define RE2ARM_KOERPER_MASKE  4u     /* `ori a2,zero,0x4` @0x8010c318 */
@@ -406,6 +438,10 @@ int re15_re2arm_body_push_player(re15_actor_t *e, re15_actor_t *pl)
                                                               * (re15_body_push_player / re15_g5_body_push_player) */
     const int slot = (int)(e - g_actors);
     if (slot < 0 || slot >= RE15_ACTOR_MAX || s_arm[slot].hidden) return 0;   /* (w|w) & 2 */
+    /* Runde 42 Stufe 2 Runde 4: mit dem RE1.5-Modell gibt es den RE2-Arm (Segment r 800 am RE2-Ursprung) nicht mehr zu sehen;
+     * die Halte-Lage rechnet von der RE1.5-Hand (kontakt_stellen). Der Schub wuerde Leon von dieser Hand wegdruecken
+     * (1251 vom RE2-Ursprung) - PORT-WAHL: kein RE2-Segment-Schub, wenn EM1A gezeichnet wird. */
+    if (re15_re2arm_modell_re15(e)) return 0;
     const int32_t rs = RE2ARM_SEG_R + RE2ARM_PL_R;
     const int32_t dx = pl->x - e->x, dz = pl->z - e->z;
     if ((uint32_t)(dx + rs) > (uint32_t)(rs * 2)) return 0;                   /* Breitphase X */
@@ -584,6 +620,7 @@ static int logik_em2d(const re15_actor_t *e)
 }
 /* Gezeichneter EM1A-Arm dieses RE2-Arms: Arm A (+0x10E Bit 0 = 0) -> Teil 2, Arm B -> Teil 3 (s. ZEICHNEN). */
 static int em1a_arm(const re15_actor_t *e) { return (e->re2z_f10e & 1u) ? 3 : 2; }
+static int koerper_hand(const re15_actor_t *e, const re2arm_t *a, int32_t hand[3], int32_t schulter[3]);   /* s. KOERPER */
 /* Reine Keyframe-Pose der EM2D-Logik-Bank fuer clip/bild -> Welt-Lage von `knochen` (wie re15_enemy_bone_world_pos auf
  * der EM2D-Bank bis Runde 41). 0 = nicht berechenbar. */
 static int logik_knochen_rein(const re15_actor_t *e, int clip, int bild, int knochen, int32_t out[3])
@@ -807,6 +844,9 @@ static int arm_adv(re15_actor_t *e, int slot, int blend)
 static void arm_hand_pose(re15_actor_t *e, int slot, int32_t out[3])
 {
     const int hb = re15_re2arm_hand_bone(e);
+    /* Runde 4 (Vorgabe Punkt 2: "Die Reichweite folgt dem RE1.5-Arm"): mit EM1A ist die Hand des Gehirns die gezeichnete
+     * RE1.5-Hand (Block KOERPER), mit Original-Skalierung - fuer die Tore 900 (A1) / Greifen (A3) und den Pin (B4 P0). */
+    if (re15_re2arm_modell_re15(e) && s_arm[slot].koerper_an && koerper_hand(e, &s_arm[slot], out, NULL)) return;
     if (re15_re2arm_modell_re15(e) && !logik_em2d(e)) {  /* ohne RE2-Archiv: EM1A-Handgelenk (s. HAND) */
         int32_t c[3];
         if (s_arm[slot].pvalid && hb >= 0 && hb < RE15_EMD_MAX_BONES &&
@@ -862,35 +902,191 @@ int re15_re2arm_hand_parts(int slot, int32_t gemischt[3], int32_t rein[3])
     }
     return s_arm[slot].pvalid;
 }
-/* ---- KOERPER + ZEICHEN-LAGE (Runde 42 Stufe 2 Runde 3, Belege im Block MODELL: KOERPER-WEG / ZEICHNEN) ---------------- */
-/* Ein Bild des KOERPER-WEGS B[1] bzw. danach die Ruhe-Pose: Clip/Bild wie anim_set (+1 je Aufruf, Wrap an der Clip-Laenge),
- * dann der Schritt FUN_800245d8 und die Wandklemme FUN_8003b0a4 (Radius 300, Maske 4) wie der Root @0x8010c320. */
+/* ---- KOERPER (Runde 42 Stufe 2, Runde 4; Weg B[1] im Block MODELL) ---------------------------------------------------
+ * NUTZERWUNSCH 18.11.2026, woertlich: "Aber du solltest EIGENTLICH NUR die funktionalität aus Resident Evil 2 übernehmen,
+ * nicht das Modell. Das Modell darf schon noch das aus Resident Evil 1.5 sein...." und 02.11. (Memory
+ * reai-v2-re15-modellaussehen-entscheidend): "Haben wir im Port jetzt Stummel Aermchen oder irgendeinen anderen Quatsch
+ * gemacht ist das falsch." -> Ausserhalb eines Griffs laeuft der Koerper wie das Original, im Griff nur RE1.5-Posen; der
+ * Port streckt, staucht und dreht KEIN Teil selbst (die Streckung aus Runde 3 ist entfernt).
+ *
+ * KOERPER-ZUSTAND (STAGE1.BIN, Disc == Mod im Arm-Code 0x8010c1ec..0x8010d7cc; selbst disassembliert, re15_disasm.py
+ * dis 0x8010c8a0 / 0x8010cad0; B-Tabelle @0x80120984: [2] = 0x8010c938, [3] = 0x8010cb34):
+ *   Ende B[1] (Bild 38, +0x9C alt 0 @0x8010c8c4): +0x5 = (rng&1)+2 @0x8010c8cc-e4, +0x6 = 0 @0x8010c8f4.
+ *   B[2] WIEGEN @0x8010c938:
+ *     P0: +0x95 = 0 @0x8010c98c, weiter in P1.
+ *     P1 @0x8010c990: +0x9F = +0x9E = (rng&3)+1 @0x8010c998-9b0, +0x8C = (rng&0x7f)+50 @0x8010c9b4-c4, +0x6 = 2 @0x8010c9d4,
+ *        Clip 0 @0x8010c9e4, rng&1 -> Clip 1 + Bild 0 @0x8010c9fc-ca24; weiter in P2.
+ *     P2 @0x8010ca28: +0x9E-- (alt 0 -> +0x6 = 3 @0x8010ca54), anim_set, Schritt RUECKWAERTS (a0 = 0x800 @0x8010ca78) um +0x8C.
+ *     P3 @0x8010ca7c: +0x9F-- ; alt 0 -> +0x6 = 1 @0x8010ca9c und +0x1D0-- (alt 0 -> +0x5 = 3 @0x8010cacc, +0x6 = 0
+ *        @0x8010cadc, +0x1D0 = (rng&0x1f)+30 @0x8010cae0-f0); anim_set, Schritt VORWAERTS (a0 = 0 @0x8010cb10).
+ *   B[3] ARME WACHSEN @0x8010cb34:
+ *     P0 @0x8010cb90: +0x6 = 1, Clip = rng&1 @0x8010cba4, Bild 0 @0x8010cbb4, +0x9E = 5 @0x8010cbd4, +0x9C = y @0x8010cbe4-ec;
+ *        Part 2: Flag |= 0x400 @0x8010cc18-20, Skalierung (0x1000,0x1000,0x1000) @0x8010cc08-14, +0x38 = +0x82 =
+ *        N = (rng&0xff)+100 @0x8010cc24-34, +0x76 = (rng&7)+5 @0x8010cc38-40; Part 3: Flag |= 0x400 @0x8010cc68-70,
+ *        Skalierung 0x1000 @0x8010cc5c-64, +0x76 = rng&7 @0x8010cc74-78; weiter in P1.
+ *     P1 @0x8010cc7c: y = +0x9C + (s8)+0x9E @0x8010cc88-98, +0x9E = -+0x9E @0x8010cca8-b4; Part 3 +0x8A += +0x76
+ *        @0x8010cccc-e0; Part 2 +0x8A += +0x76 @0x8010ccf8-d10; Part 2 +0x82-- (alt 0 -> +0x6 = 2 @0x8010cd30); anim_set.
+ *     P2 @0x8010cd34: Part 3 +0x8A -= 2*+0x76 @0x8010cd3c-4c, Part 2 ebenso @0x8010cd64-7c; Part 2 +0x38 < 0 -> +0x6 = 3
+ *        @0x8010cd78-8c; +0x38 -= 2 @0x8010cd90-9c; anim_set.
+ *     P3 @0x8010cdc4: Flag 0x400 an Part 2/3 loeschen @0x8010cdcc-dfc, +0x5 = 2 @0x8010ce0c, +0x6 = 0, +0x1D0 =
+ *        (rng&0x1f)+30 @0x8010ce18-30. Kein anim_set.
+ *   +0x1D0 Startwert (rng&0x1f)+30 im Typ-INIT @0x8010c3e8-3fc. Wandklemme wie B[1] (Radius 300, Maske 4 @0x8010c318-320).
+ *   ZEICHNEN DER SKALIERUNG (EXE FUN_8001e9ec, Decompile RE_15_Quellcode_V2/FUN_8001e9ec.c): Part-Flag 0x400 -> ScaleMatrix(
+ *   Kamera*Part, (+0x88, +0x8A, +0x8C)) direkt vor SetRotMatrix. ScaleMatrix multipliziert Spalte j mit v[j] (Decompile
+ *   ScaleMatrix.c), also die LOKALE y-Achse des Arm-Meshes (laengs des Arms) mit +0x8A/4096.
+ *   GEMESSEN im Original (DuckStation, MZD-Disc, ROOM1210; scratchpad original/s2r2/orig/lauf4 p029..p058, Saetze s4/s5,
+ *   s2r4/skal.py): nach B[1] B[3] mit Clip 1, Part 2 Flag 0x401, +0x76 = 6, +0x8A 4138 -> 5398, +0x82 335 -> 125; Part 3
+ *   +0x76 = 0 (bleibt 4096); y zittert (+0x9E 5 / 251). DAS ORIGINAL STRECKT SEINE ARME ALSO SELBST: bis 4096 + (N+1)*d,
+ *   hoechstens 4096 + 356*12 = 8368 (2,04-fach). Genau das (und nur das) zeichnet der Port.
+ *
+ * GRIFF (NUTZERWUNSCH s.o.; Vorgabe des Orchestrators Runde 4, Punkte 2/3): Das RE2-Gehirn bestimmt Zeit, Greifen, Halten,
+ * Rueckzug, Treffer, Toene, Ende. Der Koerper geht in den GRIFF, sobald das Gehirn ZUGREIFT (0x301): Lage, y und Skalierung
+ * bleiben, wie sie gerade sind ("ein Griff startet aus der aktuellen Lage"), gezeichnet wird EM1A-Clip 2 (Ausfahren) Bild fuer
+ * Bild; ab dem Griff (0x401) steht diese Pose (naechstliegende RE1.5-Pose: RE1.5 hat keinen Halte-Clip, PORT-WAHL). Nach
+ * Zugriff/Halten oder einem Treffer sinkt der Koerper mit Clip 3 ganz zurueck (wie B[4] @0x8010ceac-b0, 54 Bilder) und wiegt
+ * dann wieder ab B[2] P0, Skalierung aus (wie B[3] P3 @0x8010cdc4) - PORT-WAHL fuer den Rueckweg.
+ * Endet ein REACH ohne Zugriff (0x501 aus B1), wiegt der Koerper einfach weiter. */
+#define RE2ARM_HAND_V0   0           /* Hand = Quad-Vertices 0..11 von Mesh 2/3: Fingerspitzen 0..3 (y ~1531), Handgelenk-Ring
+                                      * 4..7 (y ~1215), Handmitte 8..11 (y ~1376) (mesh_verts, Block MODELL)            */
+#define RE2ARM_HAND_N    12
+#define RE2ARM_HAND_KLEMM 450        /* Spieler-Klemmradius: Halbwort @0x80073e9a = 450 (PSX.EXE, `read 0x80073e98`: 0,450,1530,450) */
+#define RE2ARM_PL_SCHULTER_A 9       /* Leons Schultern 9/12 (Leon PL00, bissarm_r37.c k_anker)                             */
+#define RE2ARM_PL_SCHULTER_B 12
+
+static void koerper_anim(const re15_actor_t *e, re2arm_t *a)       /* anim_set: +1 je Aufruf, Wrap an der Clip-Laenge */
+{
+    const int l = em1a_len(e, (int)a->kclip);
+    const int f = (int)a->kframe + 1;
+    a->kframe = (uint16_t)((l > 0 && f >= l) ? 0 : f);
+}
+static void koerper_schritt(re2arm_t *a, int spd, int rueck)       /* FUN_800245d8 + Wandklemme @0x8010c320 */
+{
+    const int yaw = ((int)a->rec_yaw + (rueck ? 0x800 : 0)) & 0xfff;   /* a0 = 0 / 0x800 */
+    int32_t nx = a->kx + (int32_t)(((int32_t)re15_cos_q12(yaw) * spd) >> 12);
+    int32_t nz = a->kz - (int32_t)(((int32_t)re15_sin_q12(yaw) * spd) >> 12);
+    if (g_room_rdt_ok)
+        re15_collision_constrain_enemy(&g_room_rdt, a->kx, a->kz, &nx, &nz, RE2ARM_KOERPER_RADIUS, a->rec_y,
+                                       RE2ARM_KOERPER_MASKE);
+    a->kx = nx; a->kz = nz;
+}
+static void koerper_b2(const re15_actor_t *e, re2arm_t *a)
+{
+    if (a->kphase == 0) { a->kframe = 0; a->kphase = 1; }               /* @0x8010c98c, weiter in P1 */
+    if (a->kphase == 1) {                                                /* @0x8010c990 */
+        const int n = (rng15() & 3) + 1;
+        a->k9f = (uint8_t)n; a->k9e = (uint8_t)n;
+        a->k8c = (int16_t)((rng15() & 0x7f) + 50);
+        a->kphase = 2; a->kclip = 0;
+        if (rng15() & 1) { a->kclip = 1; a->kframe = 0; }                /* @0x8010c9fc-ca24 */
+    }
+    if (a->kphase == 2) {                                                /* @0x8010ca28 */
+        const uint8_t alt = a->k9e; a->k9e = (uint8_t)(alt - 1u);
+        if (alt == 0) a->kphase = 3;
+        koerper_anim(e, a); koerper_schritt(a, a->k8c, 1);
+    } else if (a->kphase == 3) {                                         /* @0x8010ca7c */
+        const uint8_t alt = a->k9f; a->k9f = (uint8_t)(alt - 1u);
+        if (alt == 0) {
+            a->kphase = 1;
+            const uint16_t r = a->k1d0; a->k1d0 = (uint16_t)(r - 1u);
+            if (r == 0) { a->kmode = K_B3; a->kphase = 0; a->k1d0 = (uint16_t)((rng15() & 0x1f) + 30); }
+        }
+        koerper_anim(e, a); koerper_schritt(a, a->k8c, 0);
+    }
+}
+static void koerper_b3(const re15_actor_t *e, re2arm_t *a)
+{
+    if (a->kphase == 0) {                                                /* @0x8010cb90 */
+        a->kphase = 1;
+        a->kclip = (uint8_t)(rng15() & 1); a->kframe = 0;
+        a->k9e = 5; a->k9c = (int16_t)a->ky;
+        a->sk_an[0] = 1; a->sk_y[0] = 0x1000;
+        const int n = (rng15() & 0xff) + 100; a->sk_n38 = (int16_t)n; a->sk_n82 = (int16_t)n;
+        a->sk_d[0] = (int8_t)((rng15() & 7) + 5);
+        a->sk_an[1] = 1; a->sk_y[1] = 0x1000;
+        a->sk_d[1] = (int8_t)(rng15() & 7);
+    }
+    if (a->kphase == 1) {                                                /* @0x8010cc7c */
+        a->ky = (int32_t)a->k9c + (int32_t)(int8_t)a->k9e;
+        a->k9e = (uint8_t)(-(int8_t)a->k9e);
+        a->sk_y[1] = (int16_t)(a->sk_y[1] + a->sk_d[1]);
+        a->sk_y[0] = (int16_t)(a->sk_y[0] + a->sk_d[0]);
+        const uint16_t alt = (uint16_t)a->sk_n82; a->sk_n82 = (int16_t)(alt - 1u);
+        if (alt == 0) a->kphase = 2;
+        koerper_anim(e, a);
+    } else if (a->kphase == 2) {                                         /* @0x8010cd34 */
+        a->sk_y[1] = (int16_t)(a->sk_y[1] - 2 * a->sk_d[1]);
+        a->sk_y[0] = (int16_t)(a->sk_y[0] - 2 * a->sk_d[0]);
+        if (a->sk_n38 < 0) a->kphase = 3;
+        a->sk_n38 = (int16_t)(a->sk_n38 - 2);
+        koerper_anim(e, a);
+    } else if (a->kphase == 3) {                                         /* @0x8010cdc4 */
+        a->sk_an[0] = a->sk_an[1] = 0;
+        a->kmode = K_B2; a->kphase = 0;
+        a->k1d0 = (uint16_t)((rng15() & 0x1f) + 30);
+    }
+}
+/* Ein Bild des Koerpers: Weg B[1] ab dem Ausloeser, danach B[2]/B[3]; Griff-Kopplung an das RE2-Gehirn (Stand nach dessen
+ * letztem Tick, s. GRIFF). */
 static void koerper_tick(re15_actor_t *e, re2arm_t *a)
 {
     if (!re15_re2arm_modell_re15(e)) return;
     if (!a->koerper_an) {                                 /* Ausloeser: A[0] @0x8010c614 -> +0x5 = 1, B[1] im selben Bild */
         a->koerper_an = 1; a->koerper_bild = 0;
-        a->kx = a->rec_x; a->kz = a->rec_z;
+        a->kx = a->rec_x; a->kz = a->rec_z; a->ky = a->rec_y;
         a->kclip = 0; a->kframe = 0;                      /* `sb zero,148` @0x8010c778, `sb zero,149` @0x8010c788 */
+        a->kmode = K_B1;
     }
-    const int bild = (int)a->koerper_bild;
-    const int clip = (bild < RE2ARM_B1_BILDER) ? b1_clip(bild) : 0;   /* danach Clip 0 im Kreis (PORT-WAHL, s. ZEICHNEN) */
-    a->kclip = (uint8_t)clip;                             /* Clipwechsel ohne +0x95-Reset (@0x8010c7ec-818 / @0x8010c874-880) */
-    {   const int l = em1a_len(e, clip);
-        const int f = (int)a->kframe + 1;                 /* anim_set +1 (FUN_8001f3bc Z. 89-93) */
-        a->kframe = (uint16_t)((l > 0 && f >= l) ? 0 : f);
+    const int sub = (e->state == 1) ? (int)e->sub_state_1 : -1;
+    if (sub == 3 && a->kmode != K_GRIFF && a->kmode != K_SINKEN) {       /* Zugriff 0x301: aus der aktuellen Lage */
+        a->kmode = K_GRIFF; a->g_frame = 0; a->g_halten = 0;
+    } else if (sub == 4 && a->kmode == K_GRIFF) {
+        a->g_halten = 1;                                                /* Halten 0x401: Pose steht */
+    } else if ((a->kmode == K_GRIFF && sub != 3 && sub != 4) ||           /* Zugriff/Halten vorbei (0x501/0x601/Treffer) */
+               (sub == 5 && a->treffer && a->kmode != K_SINKEN)) {     /* Treffer beim Wiegen */
+        a->kmode = K_SINKEN; a->kclip = 3; a->kframe = 0; a->treffer = 0;   /* Clip 3 wie B[4] @0x8010ceac-b0 */
+        return;
     }
-    if (bild < RE2ARM_B1_BILDER) {
+    if (getenv("RE15_RE2_TRACE")) {                       /* Messschiene: Koerper-Modus und Arm-Skalierung (Video-Planung) */
+        static uint8_t s_km[RE15_ACTOR_MAX]; static uint16_t s_kt[RE15_ACTOR_MAX];
+        const int sl = arm_slot(e);
+        if (s_km[sl] != a->kmode || ++s_kt[sl] >= 30) {
+            int32_t h[3] = { 0, 0, 0 }; (void)koerper_hand(e, a, h, NULL);
+            FILE *o = re15_re2_trace_out() ? re15_re2_trace_out() : stderr;
+            fprintf(o, "[re15koerper] F%u slot %d modus %d phase %d sk %d/%d an %d/%d hand (%d,%d,%d) leib (%d,%d)\n", (unsigned)g_engine.frame_count, sl,
+                    (int)a->kmode, (int)a->kphase, (int)a->sk_y[0], (int)a->sk_y[1], (int)a->sk_an[0], (int)a->sk_an[1],
+                    h[0], h[1], h[2], a->kx, a->kz);
+            s_km[sl] = a->kmode; s_kt[sl] = 0;
+        }
+    }
+    switch (a->kmode) {
+    case K_B1: {
+        const int bild = (int)a->koerper_bild;
+        a->kclip = (uint8_t)b1_clip(bild);                /* Clipwechsel ohne +0x95-Reset (@0x8010c7ec-818 / @0x8010c874-880) */
+        koerper_anim(e, a);
         const int st = k_b1_schritt[bild];
-        const int spd = st < 0 ? -st : st;
-        const int yaw = ((int)a->rec_yaw + (st < 0 ? 0x800 : 0)) & 0xfff;   /* a0 = 0 / 0x800 */
-        int32_t nx = a->kx + (int32_t)(((int32_t)re15_cos_q12(yaw) * spd) >> 12);
-        int32_t nz = a->kz - (int32_t)(((int32_t)re15_sin_q12(yaw) * spd) >> 12);
-        if (g_room_rdt_ok)
-            re15_collision_constrain_enemy(&g_room_rdt, a->kx, a->kz, &nx, &nz, RE2ARM_KOERPER_RADIUS, a->rec_y,
-                                           RE2ARM_KOERPER_MASKE);
-        a->kx = nx; a->kz = nz;
+        koerper_schritt(a, st < 0 ? -st : st, st < 0);
         a->koerper_bild = (uint16_t)(bild + 1);
+        if (bild == RE2ARM_B1_BILDER - 1) { a->kmode = (rng15() & 1) ? K_B3 : K_B2; a->kphase = 0; }   /* @0x8010c8cc-f4 */
+        break;
+    }
+    case K_B2: koerper_b2(e, a); break;
+    case K_B3: koerper_b3(e, a); break;
+    case K_GRIFF:
+        if (!a->g_halten) {
+            const int l = em1a_len(e, 2);
+            const int f = (int)a->g_frame + 1;
+            a->g_frame = (uint16_t)((l > 0 && f >= l) ? 0 : f);
+        }
+        break;
+    case K_SINKEN: {
+        const int l = em1a_len(e, 3);
+        const int f = (int)a->kframe + 1;
+        if (l > 0 && f >= l) {                            /* Clip 3 zu Ende: Wiegen ab B[2] P0, Skalierung aus */
+            a->kmode = K_B2; a->kphase = 0; a->sk_an[0] = a->sk_an[1] = 0; a->kclip = 0;
+        } else a->kframe = (uint16_t)f;
+        break;
+    }
+    default: break;
     }
 }
 int re15_re2arm_koerper_lage(const re15_actor_t *e, int32_t p[3])
@@ -898,7 +1094,7 @@ int re15_re2arm_koerper_lage(const re15_actor_t *e, int32_t p[3])
     if (!e || !re15_re2arm_owns(e) || !re15_re2arm_modell_re15(e)) return 0;
     const re2arm_t *a = &s_arm[arm_slot(e)];
     if (!a->koerper_an) return 0;
-    if (p) { p[0] = a->kx; p[1] = a->rec_y; p[2] = a->kz; }
+    if (p) { p[0] = a->kx; p[1] = a->ky; p[2] = a->kz; }
     return 1;
 }
 int re15_re2arm_koerper_info(int slot, int *bild, int *clip, int *frame, int32_t rec[3])
@@ -906,42 +1102,45 @@ int re15_re2arm_koerper_info(int slot, int *bild, int *clip, int *frame, int32_t
     if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
     const re2arm_t *a = &s_arm[slot];
     if (bild)  *bild  = a->koerper_an ? (int)a->koerper_bild : -1;
-    if (clip)  *clip  = (int)a->kclip;
-    if (frame) *frame = (int)a->kframe;
+    if (clip)  *clip  = (a->kmode == K_GRIFF) ? 2 : (int)a->kclip;
+    if (frame) *frame = (a->kmode == K_GRIFF) ? (int)a->g_frame : (int)a->kframe;
     if (rec)   { rec[0] = a->rec_x; rec[1] = a->rec_y; rec[2] = a->rec_z; }
     return a->koerper_an;
 }
-/* Eigene RE1.5-Pose des Koerpers (reine Keyframe-Pose von kclip/kframe), 0 = nicht berechenbar. */
+int re15_re2arm_koerper_zustand(int slot, int *mode, int *phase, int sk[2], int an[2], int32_t *ky)
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
+    const re2arm_t *a = &s_arm[slot];
+    if (mode)  *mode = (int)a->kmode;
+    if (phase) *phase = (int)a->kphase;
+    if (sk)    { sk[0] = a->sk_y[0]; sk[1] = a->sk_y[1]; }
+    if (an)    { an[0] = a->sk_an[0]; an[1] = a->sk_an[1]; }
+    if (ky)    *ky = a->ky;
+    return a->koerper_an;
+}
+int re15_re2arm_kontakt_rest(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? (int)s_arm[slot].kontakt_rest : -1; }
+
+/* Gezeichnete RE1.5-Pose des Koerpers (reine Keyframe-Pose), 0 = nicht berechenbar. */
 static int koerper_pose(const re15_actor_t *e, const re2arm_t *a, re15_skel_pose_t *out)
 {
     const re15_enemy_bank_t *b = re15_enemy_find(e->type);
-    if (!b || a->kclip >= b->anim.clip_count) return 0;
-    const int fc = b->anim.clips[a->kclip].frame_count;
+    const int clip = (a->kmode == K_GRIFF) ? 2 : (int)a->kclip;
+    const int bild = (a->kmode == K_GRIFF) ? (int)a->g_frame : (int)a->kframe;
+    if (!b || clip >= b->anim.clip_count) return 0;
+    const int fc = b->anim.clips[clip].frame_count;
     if (fc <= 0) return 0;
-    const int kf = (int)(re15_emd_get_frame_entry(&b->anim, a->kclip, (int)a->kframe % fc) & 0xfffu);
+    const int kf = (int)(re15_emd_get_frame_entry(&b->anim, clip, bild % fc) & 0xfffu);
     void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
     const int rv = re15_skel_compute_pose(&b->skel, kf, out);
     g_anim_pose_actor = save;
     return rv == 0;
 }
-/* Welt-Lage eines EM1A-Teils (s. ZEICHNEN). `poses`/`n` = die Pose des Zeichners (EM1A-Clip aus dem RE2-Takt). Rueckgabe
- * 1 = rot/trans (Weltraum, wie im Zeichner nyaw * Pose + Lage) gesetzt; 0 = nicht dieser Weg (Zeichner rechnet selbst);
- * -1 = Teil nicht zeichnen (Koerper noch nicht da). `streck` (darf NULL sein) = Streckfaktor Q12 des RE2-Arms, sonst 4096. */
-int re15_re2arm_zeichen_teil(const re15_actor_t *e, int teil, const re15_skel_pose_t *poses, int n,
-                             int32_t rot[9], int32_t trans[3], int32_t *streck)
+/* Welt-Matrix eines EM1A-Teils wie der Zeichner (nyaw * Pose, + Lage), Teil 2/3 mit der Original-Skalierung der lokalen
+ * y-Achse (Spalte 1, ScaleMatrix @0x8001e9ec). Rueckgabe Skalierung Q12 (4096 = keine). */
+static int koerper_teil_welt(const re15_actor_t *e, const re2arm_t *a, int teil, int32_t rot[9], int32_t trans[3])
 {
-    if (streck) *streck = 4096;
-    if (!e || !re15_re2arm_owns(e) || !re15_re2arm_modell_re15(e)) return 0;
-    const int slot = arm_slot(e);
-    const re2arm_t *a = &s_arm[slot];
-    if (!a->koerper_an) return -1;
-    static re15_skel_pose_t s_eigen[RE15_EMD_MAX_BONES];
-    const re15_skel_pose_t *P = poses;
-    if (a->hidden || !poses) {                           /* RE2-Arm verborgen: eigene RE1.5-Pose des Koerpers */
-        if (!koerper_pose(e, a, s_eigen)) return -1;
-        P = s_eigen; n = RE2ARM_EM1A_KNOCHEN;
-    }
-    if (teil < 0 || teil >= n || teil >= RE2ARM_EM1A_KNOCHEN) return -1;
+    static re15_skel_pose_t P[RE15_EMD_MAX_BONES];
+    if (teil < 0 || teil >= RE2ARM_EM1A_KNOCHEN || !koerper_pose(e, a, P)) return -1;
     const int32_t fs = re15_sin_q12((int)a->rec_yaw), fc = re15_cos_q12((int)a->rec_yaw);
     const int32_t ny[9] = { fc, 0, fs, 0, 0x1000, 0, -fs, 0, fc };   /* wie der Zeichner (platform/pc/main.c nyaw) */
     for (int r = 0; r < 3; r++) {
@@ -954,46 +1153,189 @@ int re15_re2arm_zeichen_teil(const re15_actor_t *e, int teil, const re15_skel_po
         for (int k = 0; k < 3; k++) t += (int64_t)ny[r*3+k] * (int64_t)P[teil].trans[k];
         trans[r] = (int32_t)(t >> 12);
     }
-    trans[0] += a->kx; trans[1] += a->rec_y; trans[2] += a->kz;
-    if (a->hidden || teil != em1a_arm(e) || !s_arm[slot].pvalid) return 1;
-    /* RE2-ARM: am Schultergelenk (trans) bleiben, Handgelenk-Ring auf die RE2-Hand drehen, bei Bedarf strecken. */
-    int32_t c[3], h[3];
-    if (!em1a_ring(re15_enemy_find(e->type), teil, c)) return 1;
-    arm_hand_pose(&g_actors[slot], slot, h);
-    double u[3], v[3];
-    for (int r = 0; r < 3; r++) {
-        u[r] = (double)(((int64_t)rot[r*3+0] * c[0] + (int64_t)rot[r*3+1] * c[1] + (int64_t)rot[r*3+2] * c[2]) >> 12);
-        v[r] = (double)(h[r] - trans[r]);
+    trans[0] += a->kx; trans[1] += a->ky; trans[2] += a->kz;
+    int sk = 4096;
+    if ((teil == 2 || teil == 3) && a->sk_an[teil - 2]) {
+        sk = (int)a->sk_y[teil - 2];
+        for (int r = 0; r < 3; r++) rot[r*3+1] = (int32_t)(((int64_t)rot[r*3+1] * sk) >> 12);   /* Spalte 1 * +0x8A */
     }
-    const double lu = sqrt(u[0]*u[0] + u[1]*u[1] + u[2]*u[2]), lv = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-    if (lu < 1.0 || lv < 1.0) return 1;
-    double au[3], av[3];
-    for (int r = 0; r < 3; r++) { au[r] = u[r] / lu; av[r] = v[r] / lv; }
-    const double sk = (lv > lu) ? lv / lu : 1.0;          /* nie stauchen */
-    const double kx = au[1]*av[2] - au[2]*av[1], ky = au[2]*av[0] - au[0]*av[2], kz = au[0]*av[1] - au[1]*av[0];
-    const double co = au[0]*av[0] + au[1]*av[1] + au[2]*av[2];
-    double Q[9] = { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
-    if (co > -0.999) {                                    /* Q = I + K + K^2 / (1 + c): dreht au auf av */
-        const double K[9] = { 0, -kz, ky, kz, 0, -kx, -ky, kx, 0 };
-        double K2[9];
-        for (int r = 0; r < 3; r++) for (int cc = 0; cc < 3; cc++) {
-            double s = 0; for (int k = 0; k < 3; k++) s += K[r*3+k] * K[k*3+cc]; K2[r*3+cc] = s;
+    return sk;
+}
+/* Hand des gezeichneten RE1.5-Arms (Mittel der Quad-Vertices 0..11 von Mesh 2/3) in Welt, dazu das Schultergelenk. */
+static int koerper_hand(const re15_actor_t *e, const re2arm_t *a, int32_t hand[3], int32_t schulter[3])
+{
+    const re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    const int teil = em1a_arm(e);
+    if (!b || teil >= b->skel.bone_count) return 0;
+    const int m = b->skel.bone_mesh_index[teil];
+    if (m < 0 || m >= b->md1.mesh_count) return 0;
+    const re15_md1_mesh_t *mm = &b->md1.meshes[m];
+    if (!mm->quad_vertices || mm->quad_vertex_count < RE2ARM_HAND_V0 + RE2ARM_HAND_N) return 0;
+    int32_t R[9], T[3];
+    if (koerper_teil_welt(e, a, teil, R, T) < 0) return 0;
+    int64_t s[3] = { 0, 0, 0 };
+    for (int v = RE2ARM_HAND_V0; v < RE2ARM_HAND_V0 + RE2ARM_HAND_N; v++) {
+        const re15_md1_vertex_t *p = &mm->quad_vertices[v];
+        for (int r = 0; r < 3; r++)
+            s[r] += (((int64_t)R[r*3+0] * p->x + (int64_t)R[r*3+1] * p->y + (int64_t)R[r*3+2] * p->z) >> 12) + T[r];
+    }
+    for (int r = 0; r < 3; r++) hand[r] = (int32_t)(s[r] / RE2ARM_HAND_N);
+    if (schulter) { schulter[0] = T[0]; schulter[1] = T[1]; schulter[2] = T[2]; }
+    return 1;
+}
+int re15_re2arm_hand15(int slot, int32_t hand[3], int32_t schulter[3])
+{
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
+    const re15_actor_t *e = &g_actors[slot];
+    if (!re15_re2arm_owns(e) || !re15_re2arm_modell_re15(e) || !s_arm[slot].koerper_an) return 0;
+    return koerper_hand(e, &s_arm[slot], hand, schulter);
+}
+/* Halbe Breite der EM1A-Hand quer zum Arm (lokal x/z der Vertices 0..11) — Breite des Kontaktbands an Leon. */
+static int hand_halbbreite(const re15_actor_t *e)
+{
+    const re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    const int teil = em1a_arm(e);
+    if (!b || teil >= b->skel.bone_count) return 0;
+    const re15_md1_mesh_t *mm = &b->md1.meshes[b->skel.bone_mesh_index[teil]];
+    int x0 = 1 << 30, x1 = -(1 << 30), z0 = 1 << 30, z1 = -(1 << 30);
+    for (int v = RE2ARM_HAND_V0; v < RE2ARM_HAND_V0 + RE2ARM_HAND_N; v++) {
+        const re15_md1_vertex_t *p = &mm->quad_vertices[v];
+        if (p->x < x0) x0 = p->x; if (p->x > x1) x1 = p->x;
+        if (p->z < z0) z0 = p->z; if (p->z > z1) z1 = p->z;
+    }
+    const int hx = (x1 - x0) / 2, hz = (z1 - z0) / 2;
+    return hx > hz ? hx : hz;
+}
+
+/* ---- HALTE-LAGE: Leon an die RE1.5-Hand (Vorgabe Runde 4, Punkt 2b; NUTZERWUNSCH s. KOERPER) --------------------------
+ * Leons Koerper aus seiner PLD (Datei-Id-Tabelle @0x80073f70 -> PL%02X.PLD, Index work_vars[0x10] wie main.c
+ * pc_sync_player_model; Teil 1 = EMR, Teil 2 = MD1, re15_pld_part) in der Opfer-Pose (Paar 3 der Bank, wie der Zeichner
+ * main.c s_victim_skel). Kontaktstelle = der vorderste Leon-Vertex zur Hand hin (Richtung Schulter -> Hand des Arms) im
+ * Band der Handbreite um die Hoehe der Hand und quer um die naeher liegende Schulter 9/12. Leon wird so gestellt, dass diese
+ * Stelle unter der Hand liegt, und durch seine eigene Wandklemme (re15_collision_constrain, Spieler-Weg) in den Flur
+ * gezwungen; der Rest (Hand -> Kontaktstelle nach der Klemme) ist die Mess-Auskunft kontakt_rest. */
+extern uint8_t *re15_asset_read_file(const char *path, int *out_size);   /* PC-/PSX-Backend, Test-Stub */
+static int s_pl_idx = -1;
+static uint8_t *s_pl_buf = NULL;
+static re15_emd_skeleton_t s_pl_sk;
+static re15_md1_t s_pl_md1;
+static int pl_modell_laden(void)
+{
+    const int idx = (int)(uint8_t)g_scd.work_vars[0x10];
+    if (idx == s_pl_idx) return s_pl_buf != NULL;
+    if (s_pl_buf) { free(s_pl_buf); s_pl_buf = NULL; }
+    s_pl_idx = idx;
+    char p[64];
+    snprintf(p, sizeof p, "shared_assets/PSX/PLD/PL%02X.PLD", (unsigned)idx);
+    int sz = 0;
+    uint8_t *b = re15_asset_read_file(p, &sz);
+    if (!b) return 0;
+    unsigned long o1 = 0, l1 = 0, o2 = 0, l2 = 0;
+    memset(&s_pl_sk, 0, sizeof s_pl_sk); memset(&s_pl_md1, 0, sizeof s_pl_md1);
+    if (!re15_pld_part(b, (long)sz, RE15_PLD_EMR, &o1, &l1) || re15_emd_parse_skeleton(b + o1, (size_t)l1, &s_pl_sk) != 0 ||
+        !re15_pld_part(b, (long)sz, RE15_PLD_MD1, &o2, &l2) || re15_md1_parse(b + o2, (int)l2, &s_pl_md1) != 0) {
+        free(b); return 0;
+    }
+    s_pl_buf = b;
+    return 1;
+}
+/* Kontakt-Lage: wohin Leon (Blick yaw, Opfer-Clip/Bild) muss, damit seine Kontaktstelle unter `hand` liegt. 0 = nicht
+ * berechenbar. */
+static int kontakt_ziel(const re15_actor_t *e, const re15_actor_t *pl, int16_t yaw, int vclip, int vbild,
+                        const int32_t hand[3], const int32_t schulter[3], int32_t ziel[2])
+{
+    if (!pl_modell_laden()) return 0;
+    static re15_emd_skeleton_t vs;
+    static re15_skel_pose_t P[RE15_EMD_MAX_BONES];
+    const re15_enemy_bank_t *vb = re15_enemy_find(0x1Au);
+    int kf = 0;
+    vs = s_pl_sk;
+    if (vb && vb->victim_ok && vb->skel_victim.keyframe_data && vclip >= 0 && vclip < vb->anim_victim.clip_count &&
+        vb->anim_victim.clips[vclip].frame_count > 0) {
+        vs.keyframe_data      = vb->skel_victim.keyframe_data;
+        vs.keyframe_data_size = vb->skel_victim.keyframe_data_size;
+        vs.keyframe_count     = vb->skel_victim.keyframe_count;
+        vs.keyframe_size_bytes = vb->skel_victim.keyframe_size_bytes;
+        kf = (int)(re15_emd_get_frame_entry(&vb->anim_victim, vclip, vbild % vb->anim_victim.clips[vclip].frame_count) & 0xfffu);
+    }
+    void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+    const int rv = re15_skel_compute_pose(&vs, kf, P);
+    g_anim_pose_actor = save;
+    if (rv != 0) return 0;
+    double dx = (double)(hand[0] - schulter[0]), dz = (double)(hand[2] - schulter[2]);
+    const double dl = sqrt(dx * dx + dz * dz);
+    if (dl < 1.0) return 0;
+    dx /= dl; dz /= dl;                                   /* Richtung des Arms in den Flur */
+    const double nx = -dz, nz = dx;                       /* quer */
+    const int hb = hand_halbbreite(e);
+    /* naeher liegende Schulter (quer, relativ zu Leons jetziger Lage) */
+    double sq = 0.0; int sq_ok = 0;
+    {   double best = 1e30;
+        const int sb[2] = { RE2ARM_PL_SCHULTER_A, RE2ARM_PL_SCHULTER_B };
+        const double hq = (hand[0] - pl->x) * nx + (hand[2] - pl->z) * nz;
+        for (int i = 0; i < 2; i++) {
+            if (sb[i] >= s_pl_sk.bone_count) continue;
+            int32_t w[3]; re15_skel_bone_to_world(P[sb[i]].trans, yaw, 0, 0, 0, w);
+            const double q = w[0] * nx + w[2] * nz;
+            if (fabs(q - hq) < best) { best = fabs(q - hq); sq = q; sq_ok = 1; }
         }
-        for (int i = 0; i < 9; i++) Q[i] += K[i] + K2[i] / (1.0 + co);
     }
-    double S[9];                                          /* S = I + (sk - 1) au au^T: nur entlang der Armachse */
-    for (int r = 0; r < 3; r++) for (int cc = 0; cc < 3; cc++)
-        S[r*3+cc] = (r == cc ? 1.0 : 0.0) + (sk - 1.0) * au[r] * au[cc];
-    double QS[9];
-    for (int r = 0; r < 3; r++) for (int cc = 0; cc < 3; cc++) {
-        double s = 0; for (int k = 0; k < 3; k++) s += Q[r*3+k] * S[k*3+cc]; QS[r*3+cc] = s;
+    for (int pass = 0; pass < 2; pass++) {
+        double best = 1e30; int32_t wb[3] = { 0, 0, 0 }; int ok = 0;
+        for (int bi = 0; bi < s_pl_sk.bone_count; bi++) {
+            const int mi = s_pl_sk.bone_mesh_index[bi];
+            if (mi < 0 || mi >= s_pl_md1.mesh_count) continue;
+            const re15_md1_mesh_t *mm = &s_pl_md1.meshes[mi];
+            for (int q = 0; q < 2; q++) {
+                const re15_md1_vertex_t *vv = q ? mm->quad_vertices : mm->tri_vertices;
+                const int nv = q ? mm->quad_vertex_count : mm->tri_vertex_count;
+                for (int i = 0; i < nv; i++) {
+                    int32_t l[3], w[3];
+                    for (int r = 0; r < 3; r++)
+                        l[r] = (int32_t)(((int64_t)P[bi].rot[r*3] * vv[i].x + (int64_t)P[bi].rot[r*3+1] * vv[i].y +
+                                          (int64_t)P[bi].rot[r*3+2] * vv[i].z) >> 12) + P[bi].trans[r];
+                    re15_skel_bone_to_world(l, yaw, 0, pl->y, 0, w);
+                    if (abs(w[1] - hand[1]) > hb) continue;
+                    const double quer = w[0] * nx + w[2] * nz;
+                    if (pass == 0 && (!sq_ok || fabs(quer - sq) > hb)) continue;
+                    const double vorn = w[0] * dx + w[2] * dz;    /* klein = zur Hand hin */
+                    if (vorn < best) { best = vorn; wb[0] = w[0]; wb[2] = w[2]; ok = 1; }
+                }
+            }
+        }
+        if (ok) { ziel[0] = hand[0] - wb[0]; ziel[1] = hand[2] - wb[2]; return 1; }
     }
-    int32_t alt[9]; memcpy(alt, rot, sizeof alt);
-    for (int r = 0; r < 3; r++) for (int cc = 0; cc < 3; cc++) {
-        double s = 0; for (int k = 0; k < 3; k++) s += QS[r*3+k] * (double)alt[k*3+cc];
-        rot[r*3+cc] = (int32_t)(s >= 0 ? s + 0.5 : s - 0.5);
-    }
-    if (streck) *streck = (int32_t)(sk * 4096.0 + 0.5);
+    return 0;
+}
+/* Kontakt-Lage nach Leons Wandklemme (Spieler-Weg, von `alt` aus) nach `aus`; Rueckgabe = Abstand der Ziel- von der
+ * geklemmten Lage (0 = die Hand liegt genau an), -1 = nicht berechenbar. */
+static int kontakt_stellen(const re15_actor_t *e, const re2arm_t *a, const re15_actor_t *pl, int32_t alt_x, int32_t alt_z,
+                           int32_t aus[2])
+{
+    int32_t h[3], s[3], z[2];
+    if (!koerper_hand(e, a, h, s)) return -1;
+    if (!kontakt_ziel(e, pl, pl->rot_y, (int)pl->motion, (int)pl->anim_frame, h, s, z)) return -1;
+    int32_t x = z[0], zz = z[1];
+    if (g_room_rdt_ok) re15_collision_constrain(&g_room_rdt, alt_x, alt_z, &x, &zz);   /* FUN_8003b0a4 @0x80031d70 */
+    const double rx = (double)(x - z[0]), rz = (double)(zz - z[1]);
+    aus[0] = x; aus[1] = zz;
+    return (int)(sqrt(rx * rx + rz * rz) + 0.5);
+}
+
+/* Welt-Lage eines EM1A-Teils (s. KOERPER). `poses`/`n` werden nicht mehr gebraucht (der Koerper fuehrt seine Pose selbst).
+ * Rueckgabe 1 = rot/trans gesetzt; 0 = nicht dieser Weg; -1 = Teil nicht zeichnen (Koerper noch nicht da). `streck` (darf
+ * NULL sein) = Skalierung der lokalen y-Achse Q12 — nur die des Originals (B[3]), sonst 4096. */
+int re15_re2arm_zeichen_teil(const re15_actor_t *e, int teil, const re15_skel_pose_t *poses, int n,
+                             int32_t rot[9], int32_t trans[3], int32_t *streck)
+{
+    (void)poses; (void)n;
+    if (streck) *streck = 4096;
+    if (!e || !re15_re2arm_owns(e) || !re15_re2arm_modell_re15(e)) return 0;
+    const re2arm_t *a = &s_arm[arm_slot(e)];
+    if (!a->koerper_an) return -1;
+    const int sk = koerper_teil_welt(e, a, teil, rot, trans);
+    if (sk < 0) return -1;
+    if (streck) *streck = sk;
     return 1;
 }
 
@@ -1049,6 +1391,7 @@ static void arm_init(re15_actor_t *e, int slot)
     }
     a->rec_x = e->x; a->rec_y = e->y; a->rec_z = e->z;    /* Runde 3: Record-Lage fuer den RE1.5-Koerper (s. MODELL) */
     a->rec_yaw = e->rot_y; a->koerper_an = 0;
+    a->k1d0 = (uint16_t)((rng15() & 0x1f) + 30);         /* Runde 4: +0x1D0 im Typ-INIT @0x8010c3e8-3fc (s. KOERPER) */
     arm_anker_1210(e);                                    /* Port-Bruecke: Ursprung an die Wand (s. Kopf) */
     a->home_yaw = e->rot_y; a->home_x = e->x; a->home_z = e->z;   /* +0x218/+0x21C/+0x220 @0x80100188-194 */
     a->bone_base = (uint8_t)((e->re2z_f10e & 1u) ? 8 : 1);        /* +0x1C1 = 0x80101414[var*7] @0x801001D0/@0x80100288 */
@@ -1162,11 +1505,17 @@ static void arm_B1(re15_actor_t *e, re15_actor_t *pl, int slot)
 }
 
 /* ---- A3 @0x801009A0 / B3 @0x80100A90 (ZUGRIFF 0x301) ----------------------------------------- */
+static int kontakt_moeglich(re15_actor_t *e, int slot, re15_actor_t *pl);   /* s. Hook unten */
 static void arm_A3(re15_actor_t *e, re15_actor_t *pl, int slot)
 {
-    if (!arm_hand_within(e, slot, pl, 600, NULL)) return;       /* FUN_800157D4(…,600) @0x801009BC/@0x801009FC */
+    /* Runde 4 (Vorgabe Punkt 2a): mit EM1A greift die RE1.5-Hand nur, wenn sie die Figur wirklich erreicht - sie liegt im
+     * Klemmzylinder des Spielers (Radius 450 @0x80073e9a, statt RE2 600) UND Leon laesst sich innerhalb seiner Flur-Klemme
+     * so stellen, dass die Hand an ihm liegt (kontakt_moeglich). NUTZERWUNSCH, Wortlaut im Block KOERPER. */
+    const int em1a = re15_re2arm_modell_re15(e) && s_arm[slot].koerper_an;
+    if (!arm_hand_within(e, slot, pl, em1a ? RE2ARM_HAND_KLEMM : 600, NULL)) return;   /* FUN_800157D4(..,600) @0x801009BC */
     if (arm_frame(e) < 5) return;                         /* sltiu 5 @0x80100A18 */
     if (s_cd_cfbf4 != 0) return;                          /* lhu 0x800CFBF4 @0x80100A28-30 */
+    if (em1a && !(pl->re2z_self1d3 & 0x80u) && !re15_player_is_grabbed() && !kontakt_moeglich(e, slot, pl)) return;
     if ((pl->re2z_self1d3 & 0x80u) || re15_player_is_grabbed()) {   /* PL+0x1D3 & 0x80 @0x80100A3C-48
                                                                      * (+ Port-Pin anderer Greifer) */
         re15_ai_set_state_word(e, 0x601u);                /* addiu 1537 @0x80100A4C / sw @0x80100A78 */
@@ -1216,6 +1565,7 @@ static void arm_B4(re15_actor_t *e, re15_actor_t *pl, int slot)
                     (int)s_arm[slot].pose_clip, (unsigned)s_arm[slot].pose_frame, h[0], h[2], rein[0], rein[2],
                     alt[0], alt[2], pl->x, pl->z, (int)pl->rot_y);
         }
+        s_pl_vor[0] = pl->x; s_pl_vor[1] = pl->z;         /* Runde 4: Lage vor dem Pin (Flur-Klemme der Halte-Lage) */
         pl->x = h[0];                                     /* sw v0,0x800CFC30 (PL+0x38) @0x80100C18-20 */
         pl->z = h[2];                                     /* sw v0,0x800CFC38 (PL+0x40) @0x80100C24-38 */
         s_holder = slot;                                  /* 0x800CFDAC = PL+0x1B4 = self @0x80100C2C-30 */
@@ -1293,12 +1643,14 @@ static void arm_B6(re15_actor_t *e, re15_actor_t *pl, int slot)
  * (0x80100F8C bzw. 0x8010101C; die Nullzeilen 2/5/8 waeren jalr 0 = Absturz, also nie gestempelt). */
 static void arm_hurt(re15_actor_t *e)
 {
+    s_arm[arm_slot(e)].treffer = 1;                       /* Runde 4: der RE1.5-Koerper sinkt zurueck (Block KOERPER, GRIFF) */
     re15_ai_set_state_word(e, 0x501u);                    /* sw 1281,4 @0x80100FA0-A4 */
     e->re2z_self1d3 |= 0x80u;                             /* @0x80100FA8-B0 */
     arm_se((re15_re2_rand() & 1u) ? 2 : 3);               /* @0x80100FAC-C8: rng&1 -> 2, sonst 3 */
 }
 static void arm_death(re15_actor_t *e, int slot)
 {
+    s_arm[slot].treffer = 1;                              /* Runde 4: s. arm_hurt */
     /* FUN_8001BF10(0x21000, yaw, part[0x80101414[var*7]]+0x48, {0,0,0}) @0x80101028-8C: RE2-FX
      * (nicht portiert) -> RE1.5-Raumbank-Blut am Bone 1/8 (Stand-in wie enemy_ai_re2_dog.c). */
     {   int32_t p[3];
@@ -1312,6 +1664,38 @@ static void arm_death(re15_actor_t *e, int slot)
     re15_ai_set_state_word(e, 0x501u);                    /* @0x8010109C-A0 */
     e->re2z_self1d3 |= 0x80u;                             /* @0x80101098-AC */
     arm_se((re15_re2_rand() & 1u) ? 2 : 3);               /* @0x801010B0-C4 */
+}
+
+/* Runde 4: liesse sich Leon jetzt so stellen, dass die RE1.5-Hand an ihm liegt? Vorhersage des Hooks P0: Pin an die Hand
+ * (@0x80100C18-38), Blick zum Greifer FUN_80015558(..,2048) @0x801012F8, +2048 wenn FUN_80015910 @0x801012E0; dann die
+ * Halte-Lage fuer JEDES Bild des Opfer-Clips 0 (der Halte-Schleife, Hook P1 @0x8010131C) und Leons Flur-Klemme von seiner
+ * jetzigen Lage aus. Moeglich = in keinem Bild haelt die Klemme Leon weiter als die halbe Handbreite von der Hand weg (die Hand liegt das ganze
+ * Halten an ihm). */
+static int kontakt_moeglich(re15_actor_t *e, int slot, re15_actor_t *pl)
+{
+    int32_t h[3];
+    if (!koerper_hand(e, &s_arm[slot], h, NULL)) return 0;
+    re15_actor_t k = *pl;
+    k.x = h[0]; k.z = h[2];
+    const int same = ((((int)e->rot_y - (int)k.rot_y) + 0x400) & 0xfff) < 0x800;
+    re15_enemy_steer_point(&k, e->x, e->z, 2048);
+    if (same) k.rot_y = (int16_t)(((int)k.rot_y + 2048) & 0xfff);
+    const re15_enemy_bank_t *vb = re15_enemy_find(0x1Au);
+    const int fc = (vb && vb->victim_ok && vb->anim_victim.clip_count > 0) ? vb->anim_victim.clips[0].frame_count : 1;
+    k.motion = 0;
+    const int hb = hand_halbbreite(e);                    /* die Hand liegt an, solange Leons Kontaktstelle hoechstens ihre halbe
+                                                           * Breite (Vertices 0..11) von der Handmitte wegbleibt */
+    /* Halten Bild fuer Bild nachspielen wie der Hook: P0 (Bild 1 nach dem Advance @0x80101328) von der Lage vor dem Pin aus,
+     * dann P1 je Bild von der vorigen Lage aus — zwei Runden der Schleife (die Klemme haengt am Weg). */
+    int32_t alt[2] = { pl->x, pl->z }, neu[2];
+    for (int i = 1; i <= 2 * fc; i++) {
+        k.anim_frame = (uint16_t)(i % fc);
+        const int r = kontakt_stellen(e, &s_arm[slot], &k, alt[0], alt[1], neu);
+        if (r < 0 || r > hb) return 0;
+        alt[0] = neu[0]; alt[1] = neu[1];
+        k.x = neu[0]; k.z = neu[1];                       /* der Hook stellt Leon dorthin (die Schulterwahl haengt an der Lage) */
+    }
+    return 1;
 }
 
 /* ---- SPIELER-HOOK 0x8010121C -> 0x80101258 (Spieler-Routine 5, s. Kopf) ---------------------- */
@@ -1343,9 +1727,19 @@ static void arm_hook(re15_actor_t *e, re15_actor_t *pl)
         re15_enemy_steer_point(pl, e->x, e->z, 2048);     /* FUN_80015558(PL, Greifer.x/z, 2048) @0x801012F8 */
         if (same) pl->rot_y = (int16_t)(((int)pl->rot_y + 2048) & 0xfff);   /* @0x80101304-18 */
         (void)hook_advance(pl);                           /* @0x80101328 */
+        if (re15_re2arm_modell_re15(e))                   /* Runde 4: Halte-Lage an der RE1.5-Hand (Block HALTE-LAGE) */
+        {   int32_t neu[2]; re2arm_t *a = &s_arm[arm_slot(e)];
+            const int r = kontakt_stellen(e, a, pl, s_pl_vor[0], s_pl_vor[1], neu);
+            if (r >= 0) { pl->x = neu[0]; pl->z = neu[1]; a->kontakt_rest = r; } }
         break;
     }
-    case 1: (void)hook_advance(pl); break;                /* @0x8010131C */
+    case 1:                                               /* @0x8010131C */
+        (void)hook_advance(pl);
+        if (re15_re2arm_modell_re15(e))                   /* Runde 4: Hand bleibt an Leon, auch wenn er sich windet */
+        {   int32_t neu[2]; re2arm_t *a = &s_arm[arm_slot(e)];
+            const int r = kontakt_stellen(e, a, pl, pl->x, pl->z, neu);
+            if (r >= 0) { pl->x = neu[0]; pl->z = neu[1]; a->kontakt_rest = r; } }
+        break;
     case 2: {                                             /* @0x80101338 */
         pl->motion = 1; pl->anim_frame = 0; pl->anim_frac = 7; pl->anim_blend_rate = 256;    /* 0x70001 */
         s_hook_phase = 3;                                 /* @0x80101344-48 */
@@ -1375,6 +1769,7 @@ int re15_re2arm_tick(int slot)
         s_room_of_state = g_current_room_id;
         s_spawn_count = 0; s_se_cd = 0; s_holder = -1; s_hook_phase = 0;
         memset(s_arm, 0, sizeof s_arm);
+        s_rng15 = 0x1c3;                                  /* Runde 4: Startwert je Raum @0x8003162c (s. rng15) */
     }
     if (e->state == 0) { arm_init(e, slot); return 1; }   /* Raumlade-Tick FUN_8004A694 (0x8000 ausgeblendet) */
     if (!s_arm[slot].init_done) { arm_init(e, slot); return 1; }

@@ -55,15 +55,21 @@ int  re15_re2arm_modell_re15(const re15_actor_t *e);
 int  re15_re2arm_em1a_clip(int re2_clip);
 /* RE2-Takt des Arms (Logik-Clip/-Bild), Test-/Mess-Auskunft. 1 = Slot gueltig. */
 int  re15_re2arm_takt(int slot, int *re2_clip, int *re2_bild);
-/* Runde 3: Zeichen-Lage des EM1A (Belege am Modul, Block MODELL: WAS DAS ORIGINAL ZEIGT / KOERPER-WEG / ZEICHNEN).
- * Der Koerper (Rumpf, Kopf, zweiter Arm) steht an der RE1.5-Stelle (Record-Lage + B[1]-Weg ab dem Ausloeser), der RE2-Arm
- * sitzt an dessen Schultergelenk und zeigt mit dem Handgelenk auf die RE2-Hand (gestreckt, wenn er zu kurz ist).
- * zeichen_teil: 1 = rot/trans (Welt) gesetzt, 0 = nicht dieser Weg, -1 = Teil nicht zeichnen; streck = Faktor Q12.
- * koerper_lage: 1 = Koerper wird gezeichnet, p = Welt-Lage. koerper_info: Mess-/Test-Auskunft (bild -1 = vor dem Ausloeser). */
+/* Runde 4: Zeichen-Lage des EM1A (Belege am Modul, Block MODELL und Block KOERPER). Der ganze Koerper laeuft wie das
+ * Original (Weg B[1], Wiegen B[2], Arme wachsen B[3] mit der Original-Skalierung), im Griff des RE2-Gehirns eingefroren;
+ * der Port streckt kein Teil selbst. zeichen_teil: 1 = rot/trans (Welt) gesetzt, 0 = nicht dieser Weg, -1 = Teil nicht
+ * zeichnen; streck = Skalierung der lokalen y-Achse Q12 (nur B[3] des Originals, sonst 4096).
+ * koerper_lage: 1 = Koerper wird gezeichnet, p = Welt-Lage. koerper_info: Mess-/Test-Auskunft (bild -1 = vor dem Ausloeser).
+ * koerper_zustand: Modus (0 B1, 1 B2, 2 B3, 3 Griff, 4 Sinken), Phase +0x6, Skalierung/Flag Part 2/3, y.
+ * hand15: Hand des gezeichneten RE1.5-Arms (Mittel der Vertices 0..11) und sein Schultergelenk, Welt.
+ * kontakt_rest: im Halten Abstand der Hand von Leons Kontaktstelle nach der Flur-Klemme (0 = liegt an). */
 int  re15_re2arm_zeichen_teil(const re15_actor_t *e, int teil, const re15_skel_pose_t *poses, int n,
                               int32_t rot[9], int32_t trans[3], int32_t *streck);
 int  re15_re2arm_koerper_lage(const re15_actor_t *e, int32_t p[3]);
 int  re15_re2arm_koerper_info(int slot, int *bild, int *clip, int *frame, int32_t rec[3]);
+int  re15_re2arm_koerper_zustand(int slot, int *mode, int *phase, int sk[2], int an[2], int32_t *ky);
+int  re15_re2arm_hand15(int slot, int32_t hand[3], int32_t schulter[3]);
+int  re15_re2arm_kontakt_rest(int slot);
 /* Runde 35 Spur H, Nachbesserung 3: RE2-Koerper-Push FUN_80034D0C(Arm, Spieler) mit dem Arm-Segment
  * r 800 / Halbhoehe 500 (@0x80100328-64) gegen das Spieler-Segment r 450 / Y -1530 / 1530 — aus dem
  * Spieler-Pass (FUN_800355C4 @0x80026628). 1 = geschoben. */

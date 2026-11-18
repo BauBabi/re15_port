@@ -11299,11 +11299,13 @@ re_title:;
                         nyawed_trans[1] + npc->y,
                         nyawed_trans[2] + npc->z,
                     };
-                    /* Runde 42 Stufe 2 Runde 3: Gitterhaende mit dem RE1.5-Modell EM1A — Koerper an der RE1.5-Stelle, der RE2-Arm
-                     * am Schultergelenk zur RE2-Hand (enemy_ai_re2_zellenarm.c, Block MODELL / ZEICHNEN); 0 fuer alle anderen. */
+                    /* Runde 42 Stufe 2 Runde 4: Gitterhaende mit dem RE1.5-Modell EM1A — der ganze Koerper wie das Original (Weg B[1],
+                     * Wiegen B[2], Arme wachsen B[3]), im RE2-Griff eingefroren (enemy_ai_re2_zellenarm.c, Bloecke MODELL / KOERPER);
+                     * 0 fuer alle anderen. arm_sk = Skalierung der lokalen y-Achse (nur B[3] des Originals). */
+                    int32_t arm_sk = 4096;
                     if (npc->type == 0x1Au) {
                         const int zt = re15_re2arm_zeichen_teil(npc, nbi, npc_poses, npc_skel->bone_count,
-                                                                nyawed_rot, nbone_world_trans, NULL);
+                                                                nyawed_rot, nbone_world_trans, &arm_sk);
                         if (zt < 0) continue;
                     }
                     if (nbi >= npc_bones && !npc_remap)   /* Runde 35 Spur J: Mesh ohne Knochen weltfest, FUN_8001e5b0 (re15_affen.h (2c)) */
@@ -11373,9 +11375,15 @@ re_title:;
                                                          (uint32_t)g_engine.frame_count,
                                                          nyawed_rot, nbone_world_trans);
                     /* CANONICAL per-bone light fold (2026-06-02). */
-                    if (npc_lit)
-                        re15_light_ctx_rotate_for_bone(&lctx_npc_world, nyawed_rot,
-                                                       &lctx_npc);
+                    if (npc_lit) {
+                        /* Runde 42 Stufe 2 Runde 4: die Licht-Matrix nimmt das Original aus der UNGESTRECKTEN Part-Matrix (FUN_8001e9ec:
+                         * MulMatrix0(&DAT_80076d14, m1) / SetLightMatrix VOR dem ScaleMatrix der Zeichen-Matrix) — Spalte 1 zurueck. */
+                        int32_t licht_rot[9];
+                        memcpy(licht_rot, nyawed_rot, sizeof licht_rot);
+                        if (arm_sk != 4096 && arm_sk > 0)
+                            for (int r = 0; r < 3; r++) licht_rot[r*3+1] = (int32_t)(((int64_t)licht_rot[r*3+1] * 4096) / arm_sk);
+                        re15_light_ctx_rotate_for_bone(&lctx_npc_world, licht_rot, &lctx_npc);
+                    }
                     if (npc->type == 0x30u && nbi == 15) {   /* Runde 41 Kralle "synchron": Messhaken gezeichnete Klaue (RE15_BIRKIN_DBG) */
                         extern void re15_bkk_zeichner_melden(const re15_actor_t *e, const int32_t R[9], const int32_t T[3]);
                         re15_bkk_zeichner_melden(npc, nyawed_rot, nbone_world_trans);
