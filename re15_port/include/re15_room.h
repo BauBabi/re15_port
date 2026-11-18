@@ -114,6 +114,17 @@ typedef struct {
      * galt eine 3F-Zeichnung als bekannt, sobald man das Treppenhaus irgendwo betreten
      * hatte. */
     unsigned char etage;
+    /* ACHSENTAUSCH (r42/karte, PORT-ERGAENZUNG): 1 = die Zeichnung liegt um 90 GRAD gegen das
+     * Raum-Koordinatensystem gedreht. Dann rechnet die Zeile Karten-x aus Welt-z und Karten-y aus
+     * Welt-x (sx skaliert weiter Karten-x, sy Karten-y); die Vorzeichen bleiben flip_x/flip_z.
+     * Ausgelieferte Zeilen @0x800768b0 tragen immer 0 (FUN_800473f8 @0x8004741c-0x80047528 liest
+     * x mit sx und z mit sy, feste Vorzeichen). Belegt nur, wo zwei unabhaengige Beobachtungen die
+     * Vierteldrehung waehlen (ROOM3050: Tuer ->3040 auf der NORD-Wand, auf dem Blatt an der Ost-
+     * seite von r5 - Projektion der AUSGELIEFERTEN 3040-Zeile @0x80076A60 und gemaltes Symbol
+     * (187,98) E fuer die zweite Nordtuer; tools/karte_r42_zeilen.py, Abschnitt DREHUNG).
+     * ⛔ KEINE SPIEGELUNG: ohne Tausch gilt flip_x == flip_z, mit Tausch flip_x != flip_z - nur dann
+     * ist die Abbildung eine Drehung (Riegel unit_r42_karte_st23 [E]). */
+    unsigned char tausch;
 } re15_map_zone_t;
 
 /* Die Zeile dieses Ortes auf DIESEM Blatt (0, wenn er dort nicht liegt). Ein Ort, der

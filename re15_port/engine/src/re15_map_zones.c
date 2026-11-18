@@ -565,8 +565,11 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
         }
     }
     if (zn->sx && zn->sy) {
-        int32_t t  = (((int32_t)x + 32000) * 10 * (int32_t)zn->sx) >> 20;
-        int32_t t2 = (((int32_t)z + 32000) * 10 * (int32_t)zn->sy) >> 20;
+        /* r42/karte: ACHSENTAUSCH (re15_room.h, Feld tausch) - Karten-x aus Welt-z, Karten-y aus
+         * Welt-x. Ohne Tausch genau die Formel des Originals. */
+        int32_t wa = zn->tausch ? z : x, wb = zn->tausch ? x : z;
+        int32_t t  = (((int32_t)wa + 32000) * 10 * (int32_t)zn->sx) >> 20;
+        int32_t t2 = (((int32_t)wb + 32000) * 10 * (int32_t)zn->sy) >> 20;
         /* ⛔ SPIEGELUNG AUCH IM ZEILEN-PFAD (Nutzer-Marken 3-6, 2026-09-09):
          * hergeleitete Zeilen gespiegelter Raum-Frames (ROOM1010: sein lokales
          * +z laeuft gegen Karten-oben, bezeugt durch die AUSGELIEFERTE Zeile
@@ -588,6 +591,10 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
     {
         int32_t px = (int32_t)zn->wx0, pz = (int32_t)zn->wz0;
         int32_t fx = x - px, fz = z - pz;
+        if (zn->tausch) {                       /* r42/karte: Achsentausch auch im Rueckfall */
+            int32_t t = fx; fx = fz; fz = t;
+            t = w; w = d; d = t;
+        }
         if (fx < 0) fx = 0; if (fx > w) fx = w;
         if (fz < 0) fz = 0; if (fz > d) fz = d;
         /* Zeichnung gegenueber der Welt gedreht (siehe flip_x/flip_z). */
