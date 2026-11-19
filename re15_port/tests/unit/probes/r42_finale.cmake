@@ -29,8 +29,20 @@ if(TARGET re15_pc)
                      -DTEIL=elza
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_finale_schuss.cmake)
     set_tests_properties(integration_r42_finale_schuss_elza PROPERTIES TIMEOUT 900)
+    # Stufe 5 (include/re15_endvideo_r42.h): mit Platzhalter-Datei MOVIE/ENDE5090.STR / ENDE5091.STR laeuft der Film zwischen Kill
+    # und Abspann (ohne Datei pruefen die beiden Laeufe oben: kein THANK YOU, Film-Zeile erreicht, "FEHLT", direkt Abspann).
+    foreach(_ev_teil leon elza)
+        add_test(NAME integration_r42_finale_endvideo_${_ev_teil}
+                 COMMAND "${CMAKE_COMMAND}"
+                         -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r42_finale_endvideo_${_ev_teil}_wd
+                         -DTEIL=${_ev_teil} -DFILM=1
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_finale_schuss.cmake)
+        set_tests_properties(integration_r42_finale_endvideo_${_ev_teil} PROPERTIES TIMEOUT 900)
+    endforeach()
 endif()
 # Plan S7 (Pruefbericht s1 r1): ohne Bank-9-Bit 129 bleiben sub02 (Abspann-Vorspann) und Tuer 5 (ROOM6040/6041) gesperrt, mit Bit offen.
+# Stufe 5: mit Bit 129 Port-Programm ohne THANK YOU, Abblenden RE2 ROOM4090, Film-Zeile 60 (keine Plattform / Datei fehlt / Film gespielt).
 add_executable(test_r42_finale_abspann ${CMAKE_CURRENT_LIST_DIR}/../test_r42_finale_abspann.c)
 target_link_libraries(test_r42_finale_abspann PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r42_finale_abspann PRIVATE ${CMAKE_SOURCE_DIR}/include)

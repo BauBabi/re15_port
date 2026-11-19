@@ -88,6 +88,7 @@
 #include "re15_annette_r41.h"   /* Runde 41 Spur AN: Annette-Szene ROOM5090 (annette_r41.c) */
 #include "re15_zws_r41.h"      /* Runde 41 ZWS114/ZWS11C: Gorilla-Schrei + Film (ROOM1141 John/Elza, ROOM11C0 Leon/Ada; zws_r41.c) */
 #include "re15_story_r42.h"   /* Runde 42 Strang finale: RE15_R42_BIT_FINALE_ENDE (Abspann-Freigabe) */
+#include "re15_endvideo_r42.h" /* Runde 42 Strang finale Stufe 5: Port-Programm statt sub02 5090/5091 (Endvideo) */
 
 scd_vm_t g_scd;
 
@@ -1281,8 +1282,9 @@ static int op_evt_exec(scd_thread_t *t)
         unsigned gi;
         /* Runde 42 Strang finale (Plan S7, Konzept T-07): die Streichung gilt nur, solange das Finale nicht beendet ist
          * (Bank 9 Bit 129 RE15_R42_BIT_FINALE_ENDE, Setzer finale_r42.c im Kill-Bild = RE2 FUN_80018fb0 @0x80103d7c). Danach laeuft
-         * sub02 wie ausgeliefert: Set(2,7,1) @0x012C2, Set(1,27,1) @0x012C6, Sleep 20 @0x012CA, Message_on 0 @0x012CE,
-         * Sleep 100 @0x012D2, Aot_on(5) @0x012D6 -> ROOM6040/6041 (Tuer-Riegel aot_common.c haengt am selben Bit). */
+         * statt sub02 das Port-Programm der Stufe 5 (unten re15_endvideo_r42_evt_exec): Set(2,7,1) @0x012C2, Set(1,27,1) @0x012C6,
+         * Sleep 20 @0x012CA, OHNE Message_on 0 "THANK YOU" @0x012CE / Sleep 100 @0x012D2, Abblenden + Endvideo-Zeile (RE2 ROOM4090),
+         * Aot_on(5) @0x012D6 -> ROOM6040/6041 (Tuer-Riegel aot_common.c haengt am selben Bit). */
         if (!re15_game_flag_get(RE15_R42_BANK, RE15_R42_BIT_FINALE_ENDE))
         for (gi = 0; gi < sizeof gestrichen / sizeof gestrichen[0]; gi++)
             if (gestrichen[gi].room == (uint16_t)g_current_room_id &&
@@ -1290,6 +1292,10 @@ static int op_evt_exec(scd_thread_t *t)
                 return 1;       /* PC steht bereits hinter dem Opcode */
     }
     const uint8_t *target_pc = s_current_rdt->sub_scd[sub_id];
+    /* Runde 42 Strang finale Stufe 5 (NUTZERWUNSCH 18.11.2026 "das thank you for Playing fliegt vollständig raus, und es kommt ein
+     * richtiges Endvideo"): nach dem Finale (Bit 129) laeuft statt sub02 das Port-Programm ohne Message_on 0 @0x012CE / Sleep 100
+     * @0x012D2, mit Abblenden, Film-Zeile 60 und Aot_on(5) @0x012D6 in der RE2-Form ROOM4090 (include/re15_endvideo_r42.h). */
+    target_pc = re15_endvideo_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
     /* Runde 41 Spur ST80-T: ROOM30C1 sub00 @0x00C02 -> sub03, ROOM6030 sub01 @0x00D70 -> sub02, sub07 @0x010E8 -> sub08
      * (Nutzerentscheide Story-Abgleich; Programme aus Original-Bytes, re15_story80_r41.h). */
     target_pc = re15_story80_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);

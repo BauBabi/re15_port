@@ -151,9 +151,11 @@ static void teil_tabelle(void)
               "ROOM%04X nach dem Film: Einblenden Kanal %d Pegel 0x%04X wie 114, Zeile verbraucht", raeume[k],
               RE15_ZWS_BLENDE_KANAL, (unsigned)g_fade_ch[RE15_ZWS_BLENDE_KANAL].level);
     }
-    g_current_room_id = 0x5090u;
-    re15_zws_r41_install(0x5090u);
-    PRUEF(re15_zws_r41_message_on(zeile) == 0, "ROOM5090: Zeile 60 nicht vom Film-Haken belegt");
+    /* Gegenraum ohne Film: seit Strang finale Stufe 5 traegt ROOM5090 die Endvideo-Zeile 60 (re15_endvideo_r42.h), deshalb der
+     * Bahnsteig ROOM5080 (kein Eintrag in k_filme). */
+    g_current_room_id = 0x5080u;
+    re15_zws_r41_install(0x5080u);
+    PRUEF(re15_zws_r41_message_on(zeile) == 0, "ROOM5080: Zeile 60 nicht vom Film-Haken belegt");
     re15_zws_r41_film_spieler = 0;
 }
 

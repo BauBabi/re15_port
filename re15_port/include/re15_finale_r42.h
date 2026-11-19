@@ -18,7 +18,8 @@
  *   Abschuss (S6)  Ausloeser wie die Tyrant-Wurzel @0x80101904-0x80101a00, Zustand 3 Phasen 0..9 @0x801035c0-0x80103e68, das
  *                  Raumprogramm von sub15 (@0x01A22-0x01A70) als Port-Programm aus Original-Opcodes, Schlusszeile "Game over."
  *                  als Message_on (K-11, VOICE-Option gilt).
- *   Ende (S7/S8)   (5,0x1C) + Bank-9-Bit 129 im Kill-Bild (FUN_80018fb0 @0x80103d7c) -> 5090 sub01 -> sub02 (Abspann-Vorspann)
+ *   Ende (S7/S8)   (5,0x1C) + Bank-9-Bit 129 im Kill-Bild (FUN_80018fb0 @0x80103d7c) -> 5090 sub01 -> statt sub02 das Port-Programm
+ *                  der Stufe 5 (ohne "THANK YOU FOR PLAYING", Abblenden + Endvideo-Zeile wie RE2 ROOM4090, include/re15_endvideo_r42.h)
  *                  -> ROOM6040 Diashow -> Set(0,1,0) @0x00590 -> Titel.
  *
  * Messschiene RE15_FINALE_LOG=1 -> finale.log, Zeilen "[finale] T<takt> F<bild> <ereignis>" (T = Spieltakt dieses Moduls).

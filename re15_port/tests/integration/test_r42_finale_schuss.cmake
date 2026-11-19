@@ -30,7 +30,13 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die uebrigen Int
 #   Abspann-Raum 6041 (5091 Tuer Slot 5 -> Stage-Byte 05 / Raum 04 + Variante). Beide Teile pruefen zusaetzlich mit Ton-Treiber "dummy"
 #   (statt RE15_NOAUDIO): Message_on der Schlusszeile im Bild T+16 mit der Aufnahme synchro/STAGE5/room509x/main02.wav und den Start der
 #   RE2-XA mit Datei und Lesefenster im Einschlagbild.
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> [-DTEIL=leon|elza] -P test_r42_finale_schuss.cmake
+# STUFE 5 (NUTZERWUNSCH 18.11.2026 "das thank you for Playing fliegt vollständig raus, und es kommt ein richtiges Endvideo";
+#   include/re15_endvideo_r42.h): nach dem Kill laeuft statt 5090/5091 sub02 das Port-Programm (RE2-Form ROOM4090). Geprueft:
+#   keine Meldung 0 "THANK YOU FOR PLAYING !!!" ([msgtext] room=509x id=0), das Port-Programm startet, die Film-Zeile 60 kommt nach dem
+#   Kill und vor dem Laden des Abspanns. Ohne FILM fehlt MOVIE/ENDE509x.STR -> "FEHLT", direkt Abspann. Mit -DFILM=1 legt der Lauf eine
+#   Platzhalter-Datei an (Kopie von MOVIE/R114GORI.STR, 367 Bilder) unter <WORKDIR>/cd/MOVIE/ENDE509x.STR und setzt RE15_CD_ROOT
+#   (asset_root_pc.c: env-Wurzel zuerst, Rest faellt auf shared_assets zurueck) -> der Film laeuft an genau dieser Stelle.
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> [-DTEIL=leon|elza] [-DFILM=1] -P test_r42_finale_schuss.cmake
 # =============================================================================
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
     message(FATAL_ERROR "r42_finale_schuss: RE15_PC_EXE fehlt/existiert nicht: '${RE15_PC_EXE}'")
@@ -72,7 +78,18 @@ get_filename_component(_exe_dir "${RE15_PC_EXE}" DIRECTORY)
 set(_exe_kopie "${_exe_dir}/re15_pc_r42finale_${TEIL}_${_lauf_id}.exe")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
-re15_start_spiel(_rv 800
+# Stufe 5: Platzhalter-Endvideo (nur mit -DFILM=1).
+set(_film_env "")
+if(FILM)
+    set(_film_quelle "${CMAKE_CURRENT_LIST_DIR}/../../shared_assets/PSX/MOVIE/R114GORI.STR")
+    if(NOT EXISTS "${_film_quelle}")
+        message(FATAL_ERROR "r42_finale_schuss: Platzhalter-Quelle fehlt: ${_film_quelle}")
+    endif()
+    file(MAKE_DIRECTORY "${WORKDIR}/cd/MOVIE")
+    file(COPY_FILE "${_film_quelle}" "${WORKDIR}/cd/MOVIE/ENDE${_raum}.STR")
+    set(_film_env "RE15_CD_ROOT=${WORKDIR}/cd")
+endif()
+re15_start_spiel(_rv 800 ${_film_env}
     RE15_NO_INTRO=1 SDL_AUDIODRIVER=dummy RE15_SOFTWARE_RENDER=1 RE15_WINDOW_SCALE=1
     RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_figur_env}
     RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=500,-9175,2048,0"
@@ -257,6 +274,46 @@ string(FIND "${_dbg}" "[re2xa] ${_xa_datei} " _px)
 if(_px LESS 0)
     string(APPEND _f "\n Todesschrei nicht gestartet ('[re2xa] ${_xa_datei}' fehlt)")
 endif()
+# Stufe 5: THANK YOU raus, Endvideo-Stelle zwischen Kill und Abspann.
+string(FIND "${_dbg}" "[msgtext] room=${_raum} id=0 " _pty)
+if(NOT _pty LESS 0)
+    string(APPEND _f "\n Meldung 0 'THANK YOU FOR PLAYING !!!' (ROOM${_raum} id 0) gezeigt - NUTZERWUNSCH 18.11.: raus")
+endif()
+string(FIND "${_dbg}" "[endvideo] ROOM${_raum} sub02 -> Port-Programm ohne THANK YOU" _pev)
+string(FIND "${_dbg}" "[ende${_raum}] Film angefordert" _pfa)
+string(FIND "${_dbg}" "PC loaded room${_abspann}" _pab)
+string(FIND "${_log}" "Kill: " _pki)
+if(_pev LESS 0)
+    string(APPEND _f "\n Port-Programm statt sub02 nicht gestartet ('[endvideo] ROOM${_raum} sub02 -> Port-Programm' fehlt)")
+endif()
+if(_pfa LESS 0)
+    string(APPEND _f "\n Film-Zeile des Endvideos nicht erreicht ('[ende${_raum}] Film angefordert' fehlt)")
+elseif(_pab LESS 0 OR _pfa GREATER _pab OR _pev GREATER _pfa)
+    string(APPEND _f "\n Reihenfolge: Port-Programm @${_pev}, Film-Zeile @${_pfa}, Abspann geladen @${_pab} (soll Programm < Film < Abspann)")
+endif()
+if(_pki LESS 0)
+    string(APPEND _f "\n Kill-Zeile fehlt im finale.log")
+endif()
+if(FILM)
+    if(NOT _dbg MATCHES "\\[ende${_raum}\\] F[0-9]+ Film MOVIE/ENDE${_raum}[.]STR: 367 Bilder 320x240")
+        string(APPEND _f "\n Platzhalter MOVIE/ENDE${_raum}.STR nicht gestartet")
+    endif()
+    if(_dbg MATCHES "\\[ende${_raum}\\] Film zu Ende: ([0-9]+) von 367 Bildern")
+        if(CMAKE_MATCH_1 LESS 300)
+            string(APPEND _f "\n Platzhalter nur ${CMAKE_MATCH_1} von 367 Bildern gezeigt")
+        endif()
+    else()
+        string(APPEND _f "\n Platzhalter: 'Film zu Ende' fehlt")
+    endif()
+    string(FIND "${_dbg}" "[ende${_raum}] Film zu Ende:" _pfe)
+    if(_pfe LESS 0 OR _pab LESS 0 OR _pfe GREATER _pab)
+        string(APPEND _f "\n Platzhalter-Film endet nicht vor dem Laden des Abspanns (@${_pfe} / @${_pab})")
+    endif()
+else()
+    if(NOT _dbg MATCHES "\\[ende${_raum}\\] Film MOVIE/ENDE${_raum}[.]STR FEHLT")
+        string(APPEND _f "\n ohne Endvideo-Datei keine Meldung 'Film MOVIE/ENDE${_raum}.STR FEHLT' (Datei im Baum? Stelle nicht erreicht?)")
+    endif()
+endif()
 if(NOT _dbg MATCHES "Set\\(0,1,0\\): INGAME aus -> Titel")
     string(APPEND _f "\n Diashow-Ende Set(0,1,0) nicht gesehen")
 endif()
@@ -277,7 +334,7 @@ endif()
 if(NOT _dbg MATCHES "BOOT_EXIT_AT: boot #2")
     string(APPEND _f "\n Titel nicht erreicht (kein zweiter Spiel-Boot, exit=${_rv})")
 endif()
-message(STATUS "r42_finale_schuss_${TEIL}: T=${_T} U=${_U} exit=${_rv}")
+message(STATUS "r42_finale_schuss_${TEIL}: T=${_T} U=${_U} FILM=${FILM} exit=${_rv}")
 if(_f)
     message(FATAL_ERROR "r42_finale_schuss_${TEIL}:${_f}\n--- finale.log ---\n${_log}")
 endif()
