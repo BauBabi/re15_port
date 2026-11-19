@@ -6,7 +6,8 @@
  * PORT-STORY. Kein Asset-Patch: der Port tauscht nur das Ziel eines Evt_exec, wenn die ersten 16 Bytes des Original-Subs der
  * Signatur gleichen (Form story80_r41.c). Jede neue Zeile hat Text UND Dauer (re15_msg_install_text + re15_msg_install_durations):
  * fehlt synchro/STAGE6/room603x/mainNN.wav, laeuft sie mit der Textdauer wie jede RDT-Zeile ohne Ton (VERTRAG 2.1); NEUAUF-Ids
- * spielen bis zur Neuaufnahme die vorhandene Aufnahme (AUFNAHMELISTE).
+ * (6030 msg 2/3/4/5/21/22, 6031 msg 1/2) bleiben bis zur Neuaufnahme ebenfalls stumm: die vorhandene Datei traegt den alten Satz
+ * und gilt wie keine Datei (Strang namen Stufe 6, re15_altaufnahme_r42.h; vorher spielte sie unter dem neuen Text).
  */
 #include <stdint.h>
 #include <stdio.h>

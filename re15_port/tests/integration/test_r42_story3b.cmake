@@ -9,10 +9,13 @@
 #             (Birkin-Auftritt, Kampf) -> Zeile msg 6 -> 30E0 (EIN Besuch: Ada, Glasbruch, msg 16/17, Marvin tritt ein, msg 9..13, Ende
 #             erst nach Untertitel UND Stimme) -> 3070 (Aufzug mit Ada und Marvin) -> 3080 (Birkins Hand, zwei Stoesse) -> 4000.
 #             Mit Ton (SDL_AUDIODRIVER=dummy): die Aufnahmen synchro/STAGE3/room30E0/main*.wav laufen, msg 16/17 und 3070 msg 6 haben
-#             keine Aufnahme (Untertitel mit Textdauer). main03/10/11/13 sind NEUAUF (VERTRAG 2.3): bis zur Neuaufnahme spielt die
-#             vorhandene Aufnahme unter dem neuen Text weiter, wie 3020 msg 0..2 (Nachbesserung 2, R2-1: keine Stummschaltung). Mit der
-#             echten main13.wav (ca. 270 Bilder) wartet die letzte Marvin-Szene nach der Sleep-Kette (152 Bilder) auf Untertitel UND
-#             Stimme und endet erst danach (R2-3, Befund 15.11.). Vor 3070 msg 6 poltert es viermal im Lager (B3); nach dem Auftritt
+#             keine Aufnahme (Untertitel mit Textdauer). main03/10/11/13 sind NEUAUF (VERTRAG 2.3). Strang namen Stufe 6 (Entscheid
+#             19.11.2026, include/re15_altaufnahme_r42.h; loest Nachbesserung 2 R2-1 ab): eine Datei, die noch die alte Aufnahme ist
+#             (Abdruck des Tags v0.8.30), bleibt stumm, bis die neue da ist - msg 3/10/11 werden je nach Stand der Datei geprueft.
+#             Der Nachweis fuer den Befund 15.11. (R2-3) bleibt streng: der Lauf kommt aus einer Ersatz-Wurzel mit einer ERSETZTEN
+#             main13.wav (gleicher Ton, ca. 270 Bilder, anderer Abdruck - altaufnahme_ersatz_r42.cmake); die letzte Marvin-Szene wartet
+#             nach der Sleep-Kette (152 Bilder) auf Untertitel UND Stimme und endet erst danach.
+#             Vor 3070 msg 6 poltert es viermal im Lager (B3); nach dem Auftritt
 #             kaempft Birkin ohne Szenen-Staerke, der Tod beginnt mit a3 0x200 = Gewicht 3584 (B1).
 # TEIL elza   30E1 -> 3071 (Birkin-Auftritt Sub 10, Kampf, Flucht sub17) -> 30E1 (John und Sherry, Original) -> 3071 (Aufzug) -> 3081
 #             (Hand) -> 4001. Ausser T-04 im Aufzug darf sich nichts aendern: keine Port-Szene in 30E1/3071.
@@ -24,7 +27,8 @@
 # Kampfbild ~297 = F1521; 175 = F1399 liegt im Gang Sub 1 ohne aktiven Haken); danach Tod wie nach einem Treffer; Zusammenbruch, (5,0x1c) @0x8011a6b8,
 # sub01 @0x03496 und alles danach laufen echt) und RE15_R39_MESS_SPIELER_HP=100 (Treffer bis dahin ohne Tod, Muster
 # integration_r41_birkin_pistole). 3010-Zombies wie Stufe STAGE3a (Kill-Bits 7:64..7:70).
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<leon|elza> -P test_r42_story3b.cmake
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<leon|elza> -DRE15_SYNCHRO=<Repo>/synchro
+#               -DRE15_ALT_WERKZEUG=<werkzeug_r42_altaufnahme_ersatz> -P test_r42_story3b.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -37,6 +41,11 @@ if(NOT TEIL)
     set(TEIL leon)
 endif()
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/altaufnahmen_r42.cmake")          # Strang namen Stufe 6: Stand der 15 veralteten Aufnahmen
+include("${CMAKE_CURRENT_LIST_DIR}/altaufnahme_ersatz_r42.cmake")    # Ersatz-Wurzel + re15_altaufnahme_pruefe
+if(NOT RE15_SYNCHRO OR NOT IS_DIRECTORY "${RE15_SYNCHRO}")
+    message(FATAL_ERROR "r42_story3b: RE15_SYNCHRO fehlt/kein Ordner: '${RE15_SYNCHRO}'")
+endif()
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(WORKDIR "${WORKDIR}/lauf_${_lauf_id}_${TEIL}")
@@ -48,7 +57,13 @@ if(_exe_name MATCHES "\\.exe$")
 else()
     set(_exe_kopie "${_exe_dir}/re15_pc_r42s3b_${_lauf_id}")
 endif()
-file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
+if(TEIL STREQUAL "leon")
+    # Strang namen Stufe 6: Leon laeuft aus einer Ersatz-Wurzel mit einer ERSETZTEN main13.wav (R2-3 braucht Marvins Stimme)
+    re15_altaufnahme_ersatzwurzel(_exe_kopie "${RE15_PC_EXE}" "${WORKDIR}/ersatz" "${RE15_ALT_WERKZEUG}" "${RE15_SYNCHRO}"
+        "STAGE3/room30E0/main13.wav")
+else()
+    file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
+endif()
 
 set(_fehler "")
 macro(fail _t)
@@ -241,12 +256,17 @@ ENDE
     pruefe("L8: msg 13 Neutext" "[msgtext] room=30e0 id=13 \"Marvin: There's more of them than I thought...Marvin: If they've come this far, the city's finished.\"")
     pruefe("L7: msg 3 (Stufe STAGE3a)" "[msgtext] room=30e0 id=3 \"Leon: He's back in the lobby. Some dogs got his leg... he can barely walk.\"")
     pruefe("Ton: msg 16 ohne Aufnahme -> Untertitel mit Textdauer" "ROOM30E0 msg 16: keine Aufnahme")
-    # Nachbesserung 2 (R2-1): die vorhandenen Aufnahmen spielen unter dem neuen Text (keine Stummschaltung)
-    pruefe_nicht("R2-1: keine Stummschaltung alter Aufnahmen" "ist noch die alte Aufnahme")
-    foreach(_m 3 10 11 13)
-        pruefe("R2-1: msg ${_m} spielt die Aufnahme" "[voice] Start ROOM30E0 Id ${_m} ")
+    # Strang namen Stufe 6 (loest R2-1 ab): veraltete Aufnahmen unter Neutext bleiben stumm, bis die neue da ist - je nach Stand
+    # der Datei im Baum; msg 13 kommt aus der Ersatz-Wurzel (ersetzte Datei) und spielt; die uebrigen Stimmen des Raums spielen
+    foreach(_m 3 10 11)
+        re15_altaufnahme_pruefe("${RE15_SYNCHRO}" 30E0 ${_m})
     endforeach()
-    pruefe("R2-1: main13.wav geladen" "[voice] clip loaded: main13.wav")
+    pruefe("Stufe 6: msg 13 = ersetzte Datei (Ersatz-Wurzel) spielt" "[voice] Start ROOM30E0 Id 13 ")
+    pruefe_nicht("Stufe 6: msg 13 gilt nicht als alte Aufnahme" "ROOM30E0 msg 13: synchro/STAGE3/room30E0/main13.wav ist noch die alte Aufnahme")
+    pruefe("Stufe 6: main13.wav geladen" "[voice] clip loaded: main13.wav")
+    foreach(_m 9 12)
+        pruefe("Stufe 6: msg ${_m} (nicht in der Liste) spielt weiter" "[voice] Start ROOM30E0 Id ${_m} ")
+    endforeach()
     # Nutzerbefund 15.11. / R2-3 (streng): nach der Sleep-Kette von msg 13 laeuft main13.wav noch; die Szene wartet (> 0 Bilder),
     # das Warten endet erst mit Zeile UND Stimme, das Szenenende (Riegel (2,7) los) kommt danach.
     set(_r_kette "ROOM30E0: Sleep-Kette nach msg 13 durch [(]Bild ([0-9]+) der Szene[)] - Zeile aktiv [01], Stimme 1 [(]Rest ([1-9][0-9]*) Bilder[)]")

@@ -375,10 +375,17 @@ Besonderheiten:
   nach ihrem Plc_ret @0x00F90/@0x00F9A schon waehrend msg 13 los.
 - 3070 msg 6 (Nachbesserung 1, B3): davor poltert es im Lager (Port-Bank 0x3E Satz 0x00, vier Schlaege im Takt ROOM3091 sub07
   @0x01A56..@0x01A9E), Leon dreht den Kopf zur Tuer nach 30E0 (ROOM3070 main00 @0x03322, Mitte (-12400,-19100)).
-- Alte Aufnahmen: 30E0 msg 3/10/11/13 sind NEUAUF. Bis zur Neuaufnahme spielt die vorhandene Aufnahme unter dem neuen Text weiter,
-  wie 3020 msg 0..2 (so in der AUFNAHMELISTE angekuendigt). Eine neue Aufnahme im Ordner spielt sofort. Die Stummschaltung aus
-  Nachbesserung 1 (B4) ist in Nachbesserung 2 (Pruefer R2-1) ganz entfernt. Mit der echten main13.wav wartet die letzte
-  Marvin-Szene nach der Sleep-Kette auf Untertitel UND Stimme (Durchlauf integration_r42_story3b_leon, R2-3).
+- Alte Aufnahmen: 30E0 msg 3/10/11/13 sind NEUAUF. Stand 16.11.2026 (Nachbesserung 2, Pruefer R2-1): bis zur Neuaufnahme
+  spielte die vorhandene Aufnahme unter dem neuen Text weiter, wie 3020 msg 0..2; die Stummschaltung aus Nachbesserung 1 (B4)
+  war ganz entfernt.
+  ABGELOEST am 19.11.2026 (Strang namen Stufe 6, Entscheid des Orchestrators, PORT-WAHL): alle 15 NEUAUF-Zeilen von v0.8.31
+  (3020 msg 0/1/2, 30E0 msg 3/10/11/13, 6030 msg 2/3/4/5/21/22, 6031 msg 1/2) bleiben STUMM, solange im Ordner noch die alte
+  Aufnahme liegt - erkannt am Fingerabdruck des Tags v0.8.30 (Pfad + Groesse + FNV-1a-64, `include/re15_altaufnahme_r42.h`,
+  `tools/r42_namen/altaufnahmen_bauen.py`, Haken `audio_pc.c` re15_voice_load_clip). Die Zeile laeuft mit der Textdauer (2.1),
+  eine neue Aufnahme im Ordner spielt sofort. Grund: in 6030 sprach sonst der falsche Sprecher (Sherrys alte Stimme unter Leons
+  msg 2, Johns alte unter Sherrys msg 22). Die NEUAUF-Zeilen von v0.8.32 sind nicht betroffen (ihr Text ist noch der alte).
+  Der Befund 15.11. bleibt im Durchlauf belegt: integration_r42_story3b_leon laeuft aus einer Ersatz-Wurzel mit einer ersetzten
+  main13.wav (gleicher Ton, anderer Abdruck); die letzte Marvin-Szene wartet nach der Sleep-Kette auf Untertitel UND Stimme (R2-3).
 - OFFEN (R2-2): Uebergang Auftritt -> Kampf in 3070 steht 12 Bilder still (Lunge a3 0x100 @0x80117644 fehlt der Port-Kampf-KI);
   wird im Klauenhieb-Umbau (case 3) auf Zweig r41/birkin_kralle behoben, nicht auf r42/story.
 - T-03/T-04: enemy_ai_common.c re15_birkin_anim_szene (Auftritt 0x80119378 und Szenen-Modus 0x80118d00), NUR STAGE3 (3070, 3080).

@@ -6,8 +6,12 @@
 # Weg je Szenario: Bahnsteig an der Zugtuer -> Wagen (Szene L21 bzw. E6) -> Treppe -> Fuehrerstand (Annette bzw. Sherry: "not enough
 # power", Original) -> zurueck auf den Bahnsteig -> Torschalter -> Wagen (vor dem Zugstart: Tuer nach hinten zu) -> Treppe ->
 # Fuehrerstand (Zugstart: Leon mit Annette, Elza E9 mit Sherry/John) -> Wagen -> Tuer nach hinten -> 5090/5091.
-# Mit Ton (SDL_AUDIODRIVER=dummy): vorhandene Aufnahmen spielen (auch unter Neutext, AUFNAHMELISTE "zuerst"), fehlende -> Untertitel
-# mit der Textdauer ("keine Aufnahme").
+# Mit Ton (SDL_AUDIODRIVER=dummy): vorhandene Aufnahmen spielen, fehlende -> Untertitel mit der Textdauer ("keine Aufnahme").
+# Strang namen Stufe 6 (include/re15_altaufnahme_r42.h): die veralteten Aufnahmen unter Neutext (6030 msg 21/2/3/22/4/5, 6031 msg
+# 1/2, AUFNAHMELISTE "zuerst") bleiben STUMM, solange die Datei im Baum noch den Abdruck des Tags v0.8.30 traegt; eine ersetzte
+# Datei spielt. TEIL leon laeuft dazu aus einer Ersatz-Wurzel (altaufnahme_ersatz_r42.cmake) mit EINER ersetzten Datei
+# (room6030/main02.wav, gleicher Ton, anderer Abdruck): msg 2 spricht, die fuenf anderen bleiben stumm, alle uebrigen Stimmen
+# des Raums spielen (Negativkontrolle).
 # Vorgesetzt (der Wegplan-Bot kann es nicht spielen):
 #   - Ankunft am Bahnsteig: RE15_DEBUG_JUMP 6000/6001 + RE15_PLAYER_POS=1693,-9900,1024,2 = Ziel der Wagentuer zum Bahnsteig
 #     (ROOM6030/6031 main00 @0x00C72: (1693,-3600,-10054), Band 2). RE15_GOTO_ROOM setzte Band 0 -> die Zugtuer (Band 2) nahm die
@@ -19,7 +23,8 @@
 #   - Torschalter: RE15_FIRE_AOT (6000 Slot 5 / 6001 Slot 4, main00 @0x00E66) = derselbe Pfad wie das Hineinlaufen (re15_aot_fire_slot);
 #     die Bahnsteigtreppe zum Schalter geht der Bot nicht (gemessen Lauf e1: haengt bei (18332,-8482)); Antwort "Ja" ueber TIPPE.
 #     Form wie Integration A2 (analysis/befunde_runde41/INT_belege/a2_zug6030/kal6000.txt).
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<leon|elza> -P test_r42_story6.cmake
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<leon|elza> -DRE15_SYNCHRO=<Repo>/synchro
+#               -DRE15_ALT_WERKZEUG=<werkzeug_r42_altaufnahme_ersatz> -P test_r42_story6.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
 if(NOT RE15_PC_EXE OR NOT EXISTS "${RE15_PC_EXE}")
@@ -32,6 +37,11 @@ if(NOT TEIL)
     set(TEIL elza)
 endif()
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/altaufnahmen_r42.cmake")          # Strang namen Stufe 6: Stand der 15 veralteten Aufnahmen
+include("${CMAKE_CURRENT_LIST_DIR}/altaufnahme_ersatz_r42.cmake")    # Ersatz-Wurzel + re15_altaufnahme_pruefe
+if(NOT RE15_SYNCHRO OR NOT IS_DIRECTORY "${RE15_SYNCHRO}")
+    message(FATAL_ERROR "r42_story6: RE15_SYNCHRO fehlt/kein Ordner: '${RE15_SYNCHRO}'")
+endif()
 
 string(RANDOM LENGTH 8 ALPHABET "0123456789abcdef" _lauf_id)
 set(WORKDIR "${WORKDIR}/lauf_${_lauf_id}_${TEIL}")
@@ -43,7 +53,13 @@ if(_exe_name MATCHES "\\.exe$")
 else()
     set(_exe_kopie "${_exe_dir}/re15_pc_r42s6_${_lauf_id}")
 endif()
-file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
+if(TEIL STREQUAL "leon")
+    # Strang namen Stufe 6: Leon laeuft aus einer Ersatz-Wurzel mit EINER ersetzten Aufnahme (room6030/main02.wav)
+    re15_altaufnahme_ersatzwurzel(_exe_kopie "${RE15_PC_EXE}" "${WORKDIR}/ersatz" "${RE15_ALT_WERKZEUG}" "${RE15_SYNCHRO}"
+        "STAGE6/room6030/main02.wav")
+else()
+    file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
+endif()
 
 set(_fehler "")
 macro(fail _t)
@@ -166,9 +182,11 @@ ENDE
     pruefe("E6: msg 13" "[msgtext] room=6031 id=13 \"Elza: ...Then we won't. If that core goes, no one gets out.Elza: Let's get this train moving.\"")
     pruefe_nicht("E6: kein alter Satz 'fighting off monsters'" "fighting off monsters")
     pruefe_nicht("E6: kein alter Satz 'I'll do it!'" "Elza: I'll do it!")
-    # Stimmen: msg 1/2 alte Aufnahme unter Neutext (NEUAUF, AUFNAHMELISTE "zuerst"), 12/13 ohne Aufnahme -> Textdauer
-    pruefe("Ton: msg 1 spielt die vorhandene Aufnahme" "[voice] Start ROOM6031 Id 1 ")
-    pruefe("Ton: msg 2 spielt die vorhandene Aufnahme" "[voice] Start ROOM6031 Id 2 ")
+    # Stimmen: msg 1/2 = veraltete Aufnahme unter Neutext -> stumm bis zur neuen Aufnahme (Strang namen Stufe 6); msg 0 spielt
+    # (Negativkontrolle), 12/13 ohne Aufnahme -> Textdauer
+    re15_altaufnahme_pruefe("${RE15_SYNCHRO}" 6031 1)
+    re15_altaufnahme_pruefe("${RE15_SYNCHRO}" 6031 2)
+    pruefe("Ton: msg 0 (nicht in der Liste) spielt weiter" "[voice] Start ROOM6031 Id 0 ")
     foreach(_m 12 13 14 15 16 17)
         pruefe("Ton: msg ${_m} ohne Aufnahme -> Untertitel mit Textdauer" "ROOM6031 msg ${_m}: keine Aufnahme")
     endforeach()
@@ -236,9 +254,17 @@ ENDE
     pruefe("L21: msg 5" "[msgtext] room=6030 id=5 \"John: Then I'm staying with the kid. And I'll keep an eye on your friend here.\"")
     pruefe_nicht("L21: kein 'fighting the monsters'" "fighting the monsters")
     pruefe_nicht("L21: kein 'catch up'" "catch up")
-    # Stimmen: 21/2/3/22/4/5 = NEUAUF: alte Aufnahmen spielen unter dem neuen Text (AUFNAHMELISTE "zuerst")
-    foreach(_m 21 2 3 22 4 5)
-        pruefe("Ton: msg ${_m} spielt die vorhandene Aufnahme" "[voice] Start ROOM6030 Id ${_m} ")
+    # Stimmen (Strang namen Stufe 6): 21/3/22/4/5 = veraltete Aufnahme unter Neutext -> stumm bis zur neuen Aufnahme; msg 2 kommt
+    # aus der Ersatz-Wurzel (ersetzte Datei, anderer Abdruck) -> spielt; msg 32 hat keine Datei; die uebrigen Stimmen des Wagen-
+    # Gespraechs spielen weiter (Negativkontrolle)
+    foreach(_m 21 3 22 4 5)
+        re15_altaufnahme_pruefe("${RE15_SYNCHRO}" 6030 ${_m})
+    endforeach()
+    pruefe("Ton: msg 2 = ersetzte Datei (Ersatz-Wurzel) spielt" "[voice] Start ROOM6030 Id 2 ")
+    pruefe_nicht("Ton: msg 2 gilt nicht als alte Aufnahme" "ROOM6030 msg 2: synchro/STAGE6/room6030/main02.wav ist noch die alte Aufnahme")
+    pruefe("Ton: msg 32 ohne Aufnahme -> Untertitel mit Textdauer" "ROOM6030 msg 32: keine Aufnahme")
+    foreach(_m 0 1 6 7 23 24 8)
+        pruefe("Ton: msg ${_m} (nicht in der Liste) spielt weiter" "[voice] Start ROOM6030 Id ${_m} ")
     endforeach()
     # Fuehrerstand vor dem Tor (Spur ST80) und Zugstart (Spur AN) unveraendert
     pruefe("Fuehrerstand: Programm sub08 (ST80)" "[story80] ROOM6030 Evt_exec sub08 -> Programm")

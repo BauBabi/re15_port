@@ -50,6 +50,7 @@
 #include "re15_wassersprung_r41.h" /* Runde 41 Spur A: Lage des NPC-Schritts (FUN_80045a64, Entscheid A-E4) */
 #include "re15_xa.h"               /* Runde 41 G5A (M5): re15_xa_decode_sector_mono fuer RE2-VOICE07-Strecken */
 #include "re15_stimme_option.h"    /* Runde 41 Stimmen: Option VOICE ON/OFF (Tor in re15_voice_play, Stopp-Hook) */
+#include "re15_altaufnahme_r42.h"  /* Runde 42 namen Stufe 6: veraltete Aufnahme = wie keine Datei (re15_voice_load_clip) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
@@ -2426,11 +2427,22 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
         snprintf(path, sizeof path, "%s%s.wav", reldir, stamm);
         wav = re15_pc_read_base(path, &wsz);
     }
+    /* Runde 42 namen Stufe 6 (re15_altaufnahme_r42.h): 15 Saetze haben seit der Story v0.8.31 einen neuen Untertitel, die Datei
+     * traegt aber noch die Aufnahme des alten Satzes (3020 main00-02, 30E0 main03/10/11/13, 6030 main02-05/21/22, 6031 main01/02;
+     * in 6030 mit anderem Sprecher). PORT-WAHL (Entscheid 19.11.2026; synchro/ ist Eigenproduktion, kein Original-Verhalten): eine
+     * Datei mit genau dem Fingerabdruck des Tags v0.8.30 (Pfad + Groesse + FNV-1a-64) gilt wie KEINE Datei - die Zeile bleibt stumm
+     * und laeuft mit der Textdauer. Jede andere Datei unter demselben Namen (die neue Aufnahme) spielt. */
+    int alt_stumm = 0;
+    if (wav && re15_altaufnahme_r42_ist(path, wav, (size_t)wsz)) {
+        fprintf(stderr, "[voice] ROOM%04X msg %d: %s ist noch die alte Aufnahme (Stand v0.8.30, Untertitel neu) - Zeile bleibt "
+                        "stumm, bis die neue Aufnahme da ist (Textdauer)\n", (unsigned)room, voice_id, path);
+        free(wav); wav = NULL; wsz = 0; alt_stumm = 1;
+    }
     /* Runde 38 Spur E: Elzas Montage ROOM1241 spricht Leons room1240 (re15_elzaintro_r38.h), nur ohne eigene Datei. */
-    if (!wav && re15_elzaintro_r38_stimme_pfad((unsigned)room, voice_id, stamm, path, sizeof path) &&
+    if (!wav && !alt_stumm && re15_elzaintro_r38_stimme_pfad((unsigned)room, voice_id, stamm, path, sizeof path) &&
         (wav = re15_pc_read_base(path, &wsz)) != NULL)
         fprintf(stderr, "[voice] ROOM%04X msg %d <- %s (Runde 38 Spur E)\n", (unsigned)room, voice_id, path);
-    if (!wav) re15_stimmen_r39_fehlt((unsigned)room, voice_id, path);   /* Runde 39 Spur A: Messschiene "welche Datei fehlt" */
+    if (!wav && !alt_stumm) re15_stimmen_r39_fehlt((unsigned)room, voice_id, path);   /* Runde 39 Spur A: Messschiene "welche Datei fehlt" */
     int rate, ch, bits, dbytes, fmt_tag;
     const uint8_t *data = wav_find_data(wav, wsz, &rate, &ch, &bits, &dbytes, &fmt_tag);
     if (!data || dbytes < 2 || ch < 1) { free(wav); return 0; }
