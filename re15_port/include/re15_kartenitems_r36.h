@@ -17,7 +17,7 @@
  *       @0x8001d324 Raum 0x03), Leon kommt auf dem Abstieg hindurch (1040 Slot 1 -> 1030 @0x010B8, weiter
  *       1030 Slot 0 -> 1050 @0x01C6A); die anderen Stellen 1140 (Leon Nebenweg; Elza erst E16) und 10D0
  *       (Leon L13, Elza Kette G2) liegen spaeter.
- *     Kellerplan ROOM1200/1201 (Leichenhalle, Stelle der Runde 36 unveraendert): Pflicht fuer beide
+ *     Kellerplan ROOM1200/1201 (Leichenhalle; seit Strang kellerplan an der Nordwand, Abschnitt STRANG KELLERPLAN): Pflicht fuer beide
  *       (Minidisc Player 1200 sub00 @0x00932 -> Stimmschloss 1100 -> Blue Keycard -> Kartenleser 10D0 ->
  *       10F0/10F1; Leon L12-L14 -> P5, Elza D1_elza_pflichtweg.md G1..G6); 11D0 ist fuer keinen Pflicht
  *       (Tueren nur 1180/1230 @0x011E2/@0x01206 und 1260 @0x01228; beide verlassen STAGE1 ueber
@@ -105,7 +105,7 @@
  *     Meshs. Leon PLD/PL00.PLD -2513..-3009, Elza PLD/PL04.PLD -2332..-2778 (Boden 0). Zum Vergleich (Hintergrund Kamera 2,
  *     Bildpunkte auf die Wand x 2398 zurueckgerechnet): WANTED-Aushang rechts der Tuer Bild x 128..149 y 78..103 -> z -14260..
  *     -15391, y -1950..-3230 (Mitte -2590); zweiter Aushang y -2147..-3135 (Mitte -2641). Die Plaene 2000/30C1/6000 haengen
- *     2000 ueber dem Boden (unter beiden Hals-Ursprungen), der Kellerplan 1200 bei y -2573.
+ *     2000 ueber dem Boden (unter beiden Hals-Ursprungen), der Kellerplan 1200 bei y -2573 (bis 364bf10a9; jetzt -2658, unten).
  *   ORT: Ostwand x 2398 LINKS neben der Ausgangstuer - das freie Wandstueck zwischen Door_aot_set Slot 0 (@0x01C6A / 1031
  *     @0x01CD8, z bis -11600) und dem Ende der SCA-Zelle 1 (@0x01A1C / @0x01A80, z -9632), Mitte z -10616. Rechts der Tuer
  *     ist auf Augenhoehe kein Platz (Aushaenge ab z -14260, davor Bank/Tischreihe SCA-Zelle 14). Kamera 2 bleibt die
@@ -117,6 +117,33 @@
  *     z >= -10568) haelt den Spieler bei z -11036 an (gemessen), sein Nachrichtensatz Slot 10 (@0x01D56, z -11000..-7839)
  *     wird nicht beruehrt; ueber der Tuer (z <= -11600) gewinnt Slot 0 den Aktions-Scan (kleinster Slot, FUN_80042bac).
  *     Die Notfall-Tafel bleibt in Slot 9 (kein Umzug mehr). Klettersperre unveraendert: Prop-Band = Standort-Band + 1.
+ *
+ * STRANG KELLERPLAN (19.11.2026) - KELLERPLAN DOPPELT SO GROSS UND AUF AUGENHOEHE:
+ *   ENTSCHEID des Orchestrators (keine Nutzerfrage): "doppelt so gross wie bisher und auf Augenhoehe der Figuren wie der
+ *     Revierplan". Bis 364bf10a9 hing der Plan an der Nutzer-Marke mapB2.bmp neben der Vitrine (Ebene x -26330, Mitte
+ *     (-26330,-2573,-15683), s = 0.6896 -> 744 x 496, Kamera 2 nur 17 x 14 Bildpunkte, 177 Pixel) und sein Aufhebe-Rechteck
+ *     (x -26530..-25530 z -16183..-15183) lag im Minidisc-Satz Aot 2 (sub00 @0x0091E, x -27000..-26000 z -17100..-15800) und in
+ *     der Klapper-Flaeche der Disc (main00 @0x007D2, x -26590..-25180 z -17180..-16030, include/re15_leichenhalle_r42.h).
+ *   GROESSE s = 2 x 0.6896 = 1.3792 -> 1490 x 993 (MD1-Ecken z +-745, x +-497; bisher +-372 / +-248).
+ *   WARUM NICHT AN DER ALTEN STELLE: zwischen Vitrine und Kuehlfachreihe ist auf der Ebene x -26330 nur z -16146..-15126 frei
+ *     (Vitrinenkante Bild x 56, Anfang der Kuehlfachreihe Bild x 78 im Hintergrund der Kamera 2, Strahl auf die Ebene) =
+ *     1020 < 1490. Die Suedwand z -14382 traegt die Kuehlfaecher (obj 0/1 @0x007DA/@0x00804), die Ostwand sieht keine Kamera
+ *     von vorn (Kamera 0/1 laengs, Kamera 2 steht an ihr).
+ *   ORT: Nordwand z = -26771 (SCA-Zelle 4 @0x006D4: z -28771 + d 2000, n = +z) WESTLICH der Eingangstuer, Mitte des freien
+ *     Wandstuecks zwischen Door_aot_set Slot 0 (main00 @0x007BA, x -20890..-19200, einzige Tuer, Ziel ROOM11E0) und dem Schrank
+ *     SCA-Zelle 16 (@0x00764, x -28210 + w 2000 = -26210): x = (-20890 + -26210) / 2 = -23550. Beide Figuren betreten die
+ *     Leichenhalle nur durch diese Tuer (ROOM11E0/11E1 Door_aot_set Slot 1 @0x01532 -> Raum 0x20 @0x01549, Ziel (-20154,0,
+ *     -25245), next_cut @0x0154A = 0): Kamera 0 (Blick nach Norden) ist die Ankunftskamera und die Kamera des Rueckwegs vom
+ *     Minidisc-Player (Pflicht, sub00 @0x00932) zur Tuer. Dort 35 x 26 Bildpunkte (Framedump F100: 876 Pixel, Huelle x168..201
+ *     y66..91). Am Plan selbst schaltet die Kamera auf 3 (Kamerazone 0 -> 3), dort x 81..120 y 54..113.
+ *   HOEHE y -2658 = Augenhoehe wie der Revierplan (Mittel der Kopfband-Mitten Leon PL00 -2513..-3009 / Elza PL04 -2332..-2778,
+ *     Riegel unit_r42_lageplaene4_hoehe / unit_r42_kellerplan_hoehe); Boden 0: ROOM11E0/11E1 Slot 1 next_y `00 00` @0x01542.
+ *     Plakat y -3155..-2161 deckt beide Kopfbaender ganz.
+ *   AUFHEBEN: Rechteck x -24050..-23050 z -26971..-25971 (Mitte + 300 n, wie bisher), Slot 40 (unveraendert; RDT-Saetze 0..3,
+ *     Kamerazonen ab 58). Beruehrt weder Tuer Slot 0, noch Aot 1 (@0x00908), noch Aot 2, noch die Klapper-Flaeche. Gemessener
+ *     Halt am echten Weg von der Tuer: (-23262,-26177), Blick Nord (rot 1024) -> Ereignis 28, Frage 30, Meldung 31.
+ *     KLETTERSPERRE unveraendert: Band 0 (Boden 0) -> Prop-Band 1 (Objekt-Test FUN_8002d2c0 @0x8002d364-70 laesst nur
+ *     Objekt-Band == Spieler-Band zu); Klettersonde an 5 Standorten je 0 (unit_r42_kellerplan_druck).
  *
  * NUTZER-VORGABE (AUFTRAG.md Z. 73-77, woertlich): "Extrahiere mir Karte01 oder Karte02 ... Haenge sie
  *   mir beispielhaft an die Stelle von map3F.bmp, und schalte damit die Map fuer Etage 3F frei, wie das
