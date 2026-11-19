@@ -98,9 +98,12 @@ endfunction()
 # RE15_FORCE_CUT, Fenster 0..319 x 0..239): Cut 2 1139 Pixel, Huelle x18..64 y78..103, 1139 von 1139 Palettenfarben; Cut 1
 # 179 Pixel, Huelle x233..247 y101..112 (15 x 12 = 180: ganz sichtbar, der Fernseher am Pfeiler steht weiter rechts);
 # ausserhalb je 0. Fenster = Huelle +-3, Schwelle = rund die Haelfte.
+# STRANG KELLERPLAN (Nordwand westlich der Eingangstuer, Mitte (-23550,-2658,-26771), s = 2 x 0.6896): gemessen 2026-11-19
+# (Lade-Weg F100, RE15_FORCE_CUT 0 = Ankunftskamera, Leon bei (-20000,-26000) an der Tuer): 876 Pixel, Huelle x168..201 y66..91
+# (bisher Cut 2: 177 Pixel, x57..73 y79..92); ausserhalb 0. Fenster = Huelle +-3, Schwelle = die Haelfte.
 set(_faelle
     "1f|1030|-18000|-12000|0|2|89+88+87+42|15|75|67|106|569|452"
-    "b2|1200|-20000|-26000|0|2|77+78|55|77|77|96|88|381"
+    "b2|1200|-20000|-26000|0|0|77+78|165|63|204|94|438|381"
     "1f0|1030|-18000|-12000|0|1|89+88+87+42|230|98|250|115|89|452")
 # Sechster Fall (Nachbesserung 1): ROOM1030 im Cut 0 — die Karte an der Rueckwand zwischen den Aushaengen,
 # gemessen 2026-10-11 (neue exe, Lade-Weg F100): 48 Pixel, Huelle x91..98 y107..112, Mittel (105,107,96),

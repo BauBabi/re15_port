@@ -21,6 +21,11 @@ RUNDE 42 NACHARBEIT (Strang lageplaene_nach):
     NUTZERWUNSCH 18.11. "gut SICHTBAR"; PORT-WAHL s = 2 (RE2-Wandplan karte01 = 1080 x 720; RE2s Polizeiplaene room20B0
     obj 8 / room2130 obj 0 sind KEINE Wandplaene, sondern das gefaltete karte00, MD1 @0x004FDC md5 735097e1, 112 x 538).
 
+STRANG KELLERPLAN (19.11.2026): der Kellerplan ROOM1200/1201 haengt nicht mehr an der Nutzer-Marke neben der Vitrine, sondern
+  direkt gesetzt (PLAENE2) an der Nordwand westlich der Eingangstuer auf Augenhoehe (Mitte y -2658 wie der Revierplan),
+  doppelt so gross (s = 2 x 0.6896). Entscheid des Orchestrators: "doppelt so gross wie bisher und auf Augenhoehe der Figuren
+  wie der Revierplan". Belege: Kopf include/re15_kartenitems_r36.h (STRANG KELLERPLAN).
+
 Erzeugt re15_port/engine/src/gen/kartenitems_r36.inc (KEIN Asset-Patch, shared_assets bleibt
 unangetastet). Dossier: analysis/befunde_runde36/N_kartenitems.md (Abschnitt 3).
 
@@ -67,6 +72,8 @@ VERT_OFF, VERT_N = 0x44, 5
 RE15_R36K_MAX_BLAETTER = 4          # = include/re15_kartenitems_r36.h (Revierplan 1F/2F/3F + Dach)   # MD1: 5 Ecken a 8 Byte (x,y,z,pad s16) ab Datei 0x44
 
 # ---- Kameras: `probe_r34n_e_dokumente kamera <raum>` (VIEW-Zeile: R Q12 zeilenweise, T, H) ------
+# Die 0x1200-Eintraege in CAMS/MARKEN/EBENEN sind seit Strang kellerplan nur noch der Beleg fuer s = 0.6896 (Kellerplan an
+# der Nutzer-Marke mapB2.bmp bis 364bf10a9); die Zeile steht jetzt in PLAENE2 (s = 2 x 0.6896).
 CAMS = {
     0x1030: (3, (-3946, 0, 1099, 89, 4096, 320, -1099, 333, -3946), (4697, 3905, -9501), 208),
     0x1200: (2, (3565, 0, 2020, 64, 4096, -115, -2020, 131, 3565), (26880, 1213, 9135), 208),
@@ -90,9 +97,8 @@ EBENEN = {
 PLAENE = [  # (raum, name, artikel, rahmen, [(blatt, bit, etage)], aot_slot, verdraengt_nach)
     # Revierplan: seit der Nacharbeit NICHT mehr an der Nutzer-Marke map1F.bmp (Cut 3, ~11 x 8 Bildpunkte), sondern
     # direkt gesetzt - Zeile in PLAENE2 (dort steht Ort, Groesse und Begruendung). Die Zeilenfolge bleibt: 1030 zuerst.
-    # Kellerplan: Rahmen RE2 room2130 @0x1B32 "A police B1 map. / Will you take it?" und @0x1D57 "You've taken
-    # the / police B1 map."; Name "police basement map" fuer zwei Kellerebenen = PORT-WAHL (RE2 kennt nur B1).
-    (0x1200, "police basement map", "the", "room2130", [(1, 77, "B2"), (0, 78, "B1")], 40, 0xFF),
+    # Kellerplan: seit Strang kellerplan (19.11.2026) ebenfalls direkt gesetzt - Zeile in PLAENE2 (Nordwand neben der
+    # Eingangstuer, doppelt so gross). PLAENE bleibt fuer Plaene an einer Nutzer-Marke (derzeit keiner).
 ]
 
 # ---- Runde 42 Stufe 2: EIN Plan je Gebiet STAGE2..6 (ohne Forschungszentrum 4020 = r42/rest, ohne Labor 5030 = Original) --
@@ -103,6 +109,7 @@ PLAENE = [  # (raum, name, artikel, rahmen, [(blatt, bit, etage)], aot_slot, ver
 # Variante: 0 = beide Fassungen, 2 = nur Elza (re15_kartenitems_r36.h RE15_R36K_VARIANTE_ELZA).
 VIEWS2 = {
     0x1030: (2, (-1520, 0, -3823, -718, 4027, 285, 3758, 769, -1495), (-13985, 2547, 3264), 208),
+    0x1200: (0, (-3928, 0, 1202, 279, 3978, 914, -1168, 954, -3815), (-13690, 8523, -21707), 231),
     0x2000: (11, (3258, 0, -2484, 531, 4007, 696, 2430, -876, 3187), (-13607, 6361, 18908), 208),
     0x30C0: (1, (3923, 0, 1210, 49, 4085, -160, -1207, 167, 3912), (9505, 2234, 7886), 208),
     0x6000: (0, (1581, 0, 3796, 872, 3988, -364, -3696, 941, 1539), (-2778, 3515, 11446), 208),
@@ -133,6 +140,29 @@ PLAENE2 = [
     dict(raum=0x1030, name="police station map", artikel="a", rahmen="room20B0",
          gruppe=[(2, 89, "1F"), (3, 88, "2F"), (4, 87, "3F"), (5, 42, "Dach")], slot=21, verdr=0xFF,
          variante=0, n=(-1.0, 0.0, 0.0), boden=0, mitte=(2398.0, -2658.0, -10616.0), s=1.5, rect=(2098.0, -11510.0)),
+    # KELLERPLAN (Strang kellerplan, 19.11.2026; Zeile 1 der Tabelle). Name/Rahmen RE2 room2130 @0x1B32 "A police B1 map. /
+    # Will you take it?" und @0x1D57 "You've taken the / police B1 map."; Name "police basement map" fuer zwei Kellerebenen =
+    # PORT-WAHL (RE2 kennt nur B1). Gruppe B2/B1 (Blatt 1/0, Bits 77/78) unveraendert.
+    # ENTSCHEID des Orchestrators (Strang kellerplan): "doppelt so gross wie bisher und auf Augenhoehe der Figuren wie der
+    # Revierplan". GROESSE s = 2 x 0.6896 (bisher massstab_in_marke ROOM1200 Cut 2, Marke x58..74 y80..93 -> 745 x 497,
+    # Stand 364bf10a9) = 1.3792 -> 1490 x 993.
+    # WARUM NICHT MEHR NEBEN DER VITRINE: dort ist auf der Ebene x -26330 nur z -16146..-15126 frei (Vitrinenkante Bild x 56 /
+    # Anfang der Kuehlfachreihe Bild x 78 im Hintergrund von Cut 2, Strahl auf die Ebene) = 1020 breit < 1490.
+    # ORT: Nordwand z = -26771 (SCA-Zelle 4 @0x006D4 z -28771 + 2000, n = +z) WESTLICH der Eingangstuer: freies Wandstueck
+    # zwischen Door_aot_set Slot 0 (@0x007BA x -20890..-19200, einzige Tuer, Ziel ROOM11E0) und dem Schrank SCA-Zelle 16
+    # (@0x00764 x -28210 + 2000 = -26210); Mitte x = (-20890 + -26210) / 2 = -23550. Beide Figuren betreten die Leichenhalle
+    # nur durch diese Tuer (ROOM11E0/11E1 Slot 1 @0x01532: Ziel (-20154,0,-25245), Kamera @0x0154A = 0) - Kamera 0 (Blick nach
+    # Norden) ist die Ankunfts- und Rueckwegkamera; auf dem Weg zum Minidisc-Player (Vitrine) und zurueck zur Tuer ist die Wand
+    # im Bild. Kuehlfaecher (obj 0/1 @0x007DA/@0x00804, z -14382 = Suedwand), Minidisc-Satz Aot 2 (@0x00924) und die
+    # Klapper-Flaeche (Disc main00 @0x007D2) liegen am anderen Ende des Raums.
+    # HOEHE = Augenhoehe wie der Revierplan (Mitte y -2658 = Mittel der Kopfband-Mitten Leon PL00 / Elza PL04, Riegel
+    # unit_r42_lageplaene4_hoehe); Boden 0: ROOM11E0 Slot 1 next_y `00 00` @0x01542. Plakat y -3155..-2161 deckt beide Kopfbaender.
+    # AUFHEBE-RECHTECK x -24050..-23050 z -26971..-25971 (Mitte + 300 n, wie die Marken-Plaene); Slot 40 wie bisher (frei:
+    # RDT-Saetze 0..3, Kamerazonen ab 58). Beruehrt weder Tuer Slot 0 noch Aot 1 (@0x0090E x -27000..-26000) noch Aot 2 noch die
+    # Klapper-Flaeche. Klettersperre unveraendert: Band 0 (Boden 0) -> Prop-Band 1.
+    dict(raum=0x1200, name="police basement map", artikel="the", rahmen="room2130",
+         gruppe=[(1, 77, "B2"), (0, 78, "B1")], slot=40, verdr=0xFF,
+         variante=0, n=(0.0, 0.0, 1.0), boden=0, mitte=(-23550.0, -2658.0, -26771.0), s=2 * 0.6896),
     # Kanalisation: Rahmen RE2 room4040 @0x1B9B "There's a sewer map. / Will you take it?", @0x1BCB "You've taken / the
     # sewer map."; Nordwand des Nordgangs z = -19800 (ROOM2000 SCA-Zelle 7 @0x012A4 x[-19850..7450] z[-19800..-17800],
     # floor 19 = Band 1, n = -z) links neben der Ostleiter (Tuer Slot 0 x 3900..4900), Mitte x 1500: frei von Elzas
@@ -336,7 +366,7 @@ def main():
             v = np.round(e * s).astype(int)
             sk[VERT_OFF + 8 * i:VERT_OFF + 8 * i + 6] = np.array(v, dtype="<i2").tobytes()
         md1s.append(bytes(sk))
-        if p["rahmen"] == "room20B0":
+        if p["rahmen"] in ("room20B0", "room2130"):   # Rahmen "A ... / Will you take it?" (Revier- und Kellerplan)
             texte.append((frage(p["name"]), genommen(p["name"], p["artikel"])))
         else:
             texte.append((frage_4040(p["name"]), genommen_4040(p["name"])))

@@ -10,7 +10,7 @@ Dossier wird fortlaufend geschrieben (Sitzungslimit).
 > | Plan | Raum (Fassung) | Blaetter | Bank-9-Bits | Ort | Groesse |
 > |---|---|---|---|---|---|
 > | Revierplan "police station map" | 1030/1031 | 2 (1F), 3 (2F), 4 (3F), **5 (Dach)** | 89, 88, 87, **42** | Ostwand der Lobby LINKS neben der Ausgangstuer nach 1050 auf Augenhoehe (Mitte y -2658), Kamera 2 (lageplaene_nach2) | 1620 x 1080 |
-> | Kellerplan "police basement map" | 1200/1201 | 1 (B2), 0 (B1) | 77, 78 | Leichenhalle neben der Vitrine (Stelle der Runde 36) | 745 x 497 |
+> | Kellerplan "police basement map" | 1200/1201 | 1 (B2), 0 (B1) | 77, 78 | Leichenhalle, Nordwand westlich der Eingangstuer auf Augenhoehe (Mitte y -2658), Ankunftskamera 0 (Strang kellerplan) | 1490 x 993 |
 > | Kanalisation "sewer map" | 2000/2001 | 6 | 34 | Nordwand links der Ostleiter, Kamera 11 | 1080 x 720 |
 > | Fabrik "factory map" | nur 30C1 (Elza) | 7 | 35 (= Leons Uebergabe 3060) | Nordwand rechts der Treppe, Kamera 1 | 2160 x 1440 (Nacharbeit) |
 > | U-Bahn "subway map" | 6000/6001 | 12 | 37 | Rueckwand des Treppenabsatzes, Kamera 0 | 1080 x 720 |
@@ -842,6 +842,27 @@ fremde Sitzung (ctest + re15_pc_r36r_haken-exe); kein Test flatterte.
   +1); Gegenprobe mit Prop-Band +0: Klettersonde an 5 bzw. 4 von 5 Standorten (unit_r42_lageplaene4_druck rot).
 * Wege: Leon und Elza biegen vor der Tuer nach Norden ab (L0.15), gehen am Tresen entlang bis an die Wand (1930,-11036),
   Kamera 2 schon ab x ~ -2200; Aktion -> Ereignis 28 -> Meldung 31 (`integration_r42_lageplaene3_weg` mit den neuen Wegen).
+
+### 10.6 Kellerplan doppelt so gross, Augenhoehe (Strang `kellerplan`, 19.11.2026)
+
+Entscheid des Orchestrators: "doppelt so gross wie bisher und auf Augenhoehe der Figuren wie der Revierplan".
+Belege vollstaendig im Kopf `include/re15_kartenitems_r36.h` (Abschnitt STRANG KELLERPLAN), Generator-Zeile PLAENE2.
+
+| | bisher (364bf10a9) | neu |
+|---|---|---|
+| Wand | Vitrinenfront x -26330 (Nutzer-Marke mapB2.bmp, Kamera 2) | Nordwand z -26771 (SCA-Zelle 4 @0x006D4) westlich der Eingangstuer |
+| Mitte | (-26330,-2573,-15683) | (-23550,-2658,-26771) = Mitte zwischen Tuer @0x007BA (x -20890) und Schrank SCA 16 @0x00764 (x -26210) |
+| Groesse | s 0.6896 -> 744 x 496 | s 2 x 0.6896 -> 1490 x 993 |
+| im Bild | Kamera 2: 177 Pixel, x57..73 y79..92 | Kamera 0 (Ankunft, ROOM11E0 Slot 1 next_cut @0x0154A = 0): 876 Pixel, x168..201 y66..91 |
+| Aufheben | x -26530..-25530 z -16183..-15183 (im Minidisc-Satz Aot 2 und in der Klapper-Flaeche) | x -24050..-23050 z -26971..-25971, Slot 40 |
+
+* Alte Stelle zu klein: zwischen Vitrine und Kuehlfachreihe nur z -16146..-15126 frei (1020 < 1490).
+* Echter Weg (Eingabeskript von der Tuer, Leon und Elza): Halt (-23262,-26177), Blick Nord, Kamera 3 -> Ereignis 28, Frage 30,
+  Meldung 31; Klettersonde 0 (Prop-Band 1 gegen Spieler-Band 0, FUN_8002d2c0 @0x8002d364-70).
+* Riegel `unit_r42_kellerplan_{hoehe,ort,druck}` (tests/unit/test_r42_kellerplan.c); Gegenprobe auf 364bf10a9 alle drei rot
+  (21 FAIL: Wand/Groesse/Kopfband, Ort/Bild/Zone in Aot 2 und Klapper-Flaeche, kein Ereignis 28 am neuen Halt).
+* Angepasst: `unit_r36_kartenitems` Teil D 1201 (Standort -23262,-26177), `integration_r36_kartenitems_bild` Fall b2 (Kamera 0,
+  Fenster x165..204 y63..94, Schwelle 438).
 
 ### 10.4 Hinweise an andere Straenge
 * **r42/rest (U-11 Laborblatt 8)**: baut seinen Plan als eigenes Modul (ungenutzt_r42.c, Bit 36), nicht in `k_r36k_lage`.

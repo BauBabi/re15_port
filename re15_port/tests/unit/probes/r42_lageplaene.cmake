@@ -92,3 +92,21 @@ foreach(_teil hoehe ort druck)
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r42_lageplaene4_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
+
+# Strang kellerplan: Kellerplan in der Leichenhalle 1200/1201 doppelt so gross (2 x 744 x 496) und auf AUGENHOEHE (Mitte y -2658
+# wie der Revierplan), Nordwand westlich der Eingangstuer (Ankunftskamera 0). Entscheid des Orchestrators "doppelt so gross wie
+# bisher und auf Augenhoehe der Figuren wie der Revierplan". Belege: include/re15_kartenitems_r36.h (STRANG KELLERPLAN).
+#   unit_r42_kellerplan_hoehe / _ort / _druck   (tests/unit/test_r42_kellerplan.c)
+# Gegenprobe: auf 364bf10a9 (Plan neben der Vitrine, 744 x 496, Zone im Minidisc-/Klapper-Rechteck) sind alle drei Teile rot.
+add_executable(test_r42_kellerplan ${CMAKE_CURRENT_LIST_DIR}/../test_r42_kellerplan.c)
+target_link_libraries(test_r42_kellerplan PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_kellerplan PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_kellerplan PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+if(NOT WIN32)
+    target_link_libraries(test_r42_kellerplan PRIVATE m)
+endif()
+foreach(_teil hoehe ort druck)
+    add_test(NAME unit_r42_kellerplan_${_teil} COMMAND test_r42_kellerplan ${_teil}
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(unit_r42_kellerplan_${_teil} PROPERTIES TIMEOUT 300)
+endforeach()

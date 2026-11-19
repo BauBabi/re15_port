@@ -501,7 +501,8 @@ int main(void)
     teil_d(&raeume[0], 1, 1500, -11300);     /* 1030 Leon, vor dem Plan links der Tuer (Slot 21)     */
     teil_d(&raeume[1], 0, 1500, -11300);     /* 1031 Elza, NEIN                                      */
     teil_d(&raeume[1], 1, 1500, -11300);     /* 1031 Elza, JA                                        */
-    teil_d(&raeume[3], 1, -25700, -15683);   /* 1201 Elza, vor der Vitrinenfront (x -26330, SCA 6)   */
+    teil_d(&raeume[3], 1, -23262, -26177);   /* 1201 Elza, vor dem Plan an der Nordwand (Strang kellerplan:
+                                              * gemessener Halt am echten Weg von der Tuer, unit_r42_kellerplan_druck) */
     teil_k();
     teil_s();
     for (int i = 0; i < 4; i++) free(raeume[i].buf);
