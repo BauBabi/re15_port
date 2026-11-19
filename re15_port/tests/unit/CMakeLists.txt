@@ -1430,6 +1430,30 @@ if(TARGET SDL2::SDL2-static)
     set_tests_properties(unit_r42_ton_mischer PROPERTIES TIMEOUT 120)
 endif()
 
+# --- Strang "ton", Stufe 2 (2026-11-19): Schleifen-Geraeusche (Nutzer: "Zum Beispiel beim öffnen des Rolltors im Flur.
+#     Klingt ganz leicht anders."; Messbericht U2: Original 6,52 s Rumpeln, Port 2,29 s). Schleifenpunkt aus den
+#     VAG-Flag-Bytes (psx-spx "SPU ADPCM Samples"), Ende durch Key-On auf derselben Stimme (FUN_800458d4) oder Key-Off beim
+#     Raumwechsel (FUN_800443ec @0x800443f4-0x8004442c). Gegenprobe: audio_pc.c von 71caea668 ohne RE15_TON_S2_HAKEN -> (2) rot.
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_schleife
+        test_r42_ton_schleife.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_schleife PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_schleife PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_schleife PRIVATE
+        RE15_PLATFORM_PC
+        RE15_TON_S1_HAKEN
+        RE15_TON_S2_HAKEN
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_schleife COMMAND test_r42_ton_schleife)
+    set_tests_properties(unit_r42_ton_schleife PROPERTIES TIMEOUT 120)
+endif()
+
 # --- DIAGNOSE (kein ctest): Nutzer-Report "Irons schaut im Original etwas diagonaler".
 #     Misst Irons' (NPC 0x45) Neck-Zustand + die GERENDERTE Kopf-Orientierung in ROOM1150.
 add_executable(probe_irons_neck_1150 probe_irons_neck_1150.c)

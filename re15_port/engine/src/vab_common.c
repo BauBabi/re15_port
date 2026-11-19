@@ -466,3 +466,17 @@ int re15_vag_adpcm_decode(const uint8_t *adpcm_data, size_t adpcm_size,
 
     return (int)pcm_pos;
 }
+
+/* Strang ton Stufe 2 - Kopf in re15_vab.h. Dieselbe Regel stand bisher nur im Musik-Synth (ss_decode_vab,
+ * audit wf_1db9c802 AUD-ADPCM-END-FLAG); jetzt eine Stelle fuer Musik und Geraeusche. */
+int re15_vag_loop_start(const uint8_t *adpcm_data, size_t adpcm_size)
+{
+    if (adpcm_data == NULL) return -1;
+    int loop_start = 0;
+    for (size_t b = 0; b + 16 <= adpcm_size; b += 16) {
+        uint8_t fl = adpcm_data[b + 1];
+        if (fl & 0x04) loop_start = (int)(b / 16) * 28;    /* Loop Start: Adresse merken */
+        if (fl & 0x01) return (fl & 0x02) ? loop_start : -1; /* der Ende-Block entscheidet */
+    }
+    return -1;   /* kein Ende-Block im Umfang: der Dekoder spielt bis zum Ende des Umfangs, keine Schleife */
+}

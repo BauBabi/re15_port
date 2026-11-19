@@ -123,6 +123,9 @@ typedef struct {
                             * alte Sonderfall "0 = Mono" ist weg — ein hart nach links
                             * gelegter Ton (Pan 0 -> rechts 0, @0x80055e7c) spielte sonst
                             * auf beiden Seiten.                                           */
+    const int16_t *loop_pcm; /* Strang ton Stufe 2: Schleife gilt nur, solange pcm == loop_pcm (eine
+                            * Startstelle ohne Schleifen-Angabe kann so keine alte Schleife erben)  */
+    int      loop_start;   /* Probe-Index der Wiederhol-Adresse (re15_vag_loop_start), -1 = einmal  */
 } active_sample_t;
 
 static int16_t *s_decoded_vag    [RE15_VAB_MAX_SAMPLES];
@@ -160,6 +163,7 @@ typedef struct {
     uint32_t step_q16;
     int      vl_q15, vr_q15;
     int      se_id;        /* +0x02, nur Buchhaltung/Debug (@0x80045510)                 */
+    int      loop_start;   /* Strang ton Stufe 2: Schleifenpunkt der Probe, -1 = einmal  */
 } se_pending_t;
 static se_pending_t s_se_pend[RE15_SE_VOICE_COUNT];
 
@@ -198,6 +202,7 @@ static se_pending_t  s_re2se_pend[MIXER_RE2SE_CH_COUNT];
  * (snd0.edt) maps a floor sound_type → VAB tone → VAG (byte-true FUN_80045630). */
 static int16_t *s_foot_decoded    [RE15_VAB_MAX_SAMPLES];
 static int      s_foot_decoded_len[RE15_VAB_MAX_SAMPLES];
+static int        s_foot_loop[RE15_VAB_MAX_SAMPLES];   /* Strang ton Stufe 2: Schleifenpunkt je VAG, -1 = einmal */
 static re15_vab_t s_foot_vab;
 static uint8_t    s_foot_edt[128];
 static int        s_foot_loaded = 0;
@@ -208,6 +213,7 @@ static int        s_foot_loaded = 0;
  * as the footstep bank, so re15_audio_room_se reuses re15_footstep_vag on snd1. */
 static int16_t   *s_se_decoded    [RE15_VAB_MAX_SAMPLES];
 static int        s_se_decoded_len[RE15_VAB_MAX_SAMPLES];
+static int        s_se_loop[RE15_VAB_MAX_SAMPLES];   /* Strang ton Stufe 2: Schleifenpunkt je VAG, -1 = einmal */
 static re15_vab_t s_se_vab;
 static const uint8_t *s_se_edt   = NULL;
 static int        s_se_loaded    = 0;
@@ -222,6 +228,7 @@ static int        s_se_loaded    = 0;
  * See RE15_COMBAT_SE_SUBSYSTEM.md §3. */
 static int16_t   *s_weap_decoded    [RE15_VAB_MAX_SAMPLES];
 static int        s_weap_decoded_len[RE15_VAB_MAX_SAMPLES];
+static int        s_weap_loop[RE15_VAB_MAX_SAMPLES];   /* Strang ton Stufe 2: Schleifenpunkt je VAG, -1 = einmal */
 static re15_vab_t s_weap_vab;
 static uint8_t   *s_weap_edt   = NULL;   /* owns the EDH buffer; the EDT prefix lives at [0..pBAV_off) */
 static int        s_weap_edt_count = 0;  /* EDT record count = pBAV_off/4 (se_id bound) */
@@ -234,6 +241,7 @@ static int        s_weap_id     = -1;
  * devour-collapse SEs (FUN_8010a6f8: record 1 at entry, record 3 = the frame-0x37 blood). */
 static int16_t   *s_core_decoded    [RE15_VAB_MAX_SAMPLES];
 static int        s_core_decoded_len[RE15_VAB_MAX_SAMPLES];
+static int        s_core_loop[RE15_VAB_MAX_SAMPLES];   /* Strang ton Stufe 2: Schleifenpunkt je VAG, -1 = einmal */
 static re15_vab_t s_core_vab;
 static uint8_t   *s_core_edt   = NULL;
 static int        s_core_edt_count = 0;
@@ -469,10 +477,22 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
         if (!s->active || s->pcm == NULL) continue;
         uint32_t step = s->step_q16 ? s->step_q16 : 0x8000u;
 
+        /* Strang ton Stufe 2: Schleifen-Probe (Ende-Block mit Bit 0x02, psx-spx soundprocessingunitspu.md
+         * "SPU ADPCM Samples" Z. 103-141): die Stimme springt nach dem Ende-Block zur Wiederhol-Adresse und
+         * laeuft weiter, bis ein Key-On auf derselben Stimme (Frame-Pumpe FUN_800458d4) oder das Key-Off beim
+         * Raumwechsel (FUN_800443ec: SsUtKeyOffV 0x8005a0d8 fuer SPU 0x10..0x17 @0x800443f4-0x8004442c,
+         * gerufen aus dem Raumlader @0x80039790) sie beendet. */
+        const int schleife = (s->loop_pcm == s->pcm && s->loop_start >= 0 && s->loop_start < s->pcm_len);
+
         for (int f = 0; f < frames; f++) {
             if (s->pos >= s->pcm_len) {
-                s->active = 0;
-                break;
+                if (schleife) {
+                    s->pos = s->loop_start + (s->pos - s->pcm_len);   /* Ueberhang behalten */
+                    if (s->pos >= s->pcm_len) s->pos = s->loop_start;
+                } else {
+                    s->active = 0;
+                    break;
+                }
             }
             /* Stimmen-Lautstaerke (Register * 2, Q15) und danach die Hauptlautstaerke des
              * Tonchips: Register 0x3fff (SsSetMVol(127,127) @0x80043ba8 -> * 129 @0x8005c9c4;
@@ -488,7 +508,7 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
              * sample end produces an audible click ("klopfen" with
              * multiple overlapping voices each ending periodically). */
             int rem = s->pcm_len - s->pos;
-            if (rem < MIXER_TAIL_FADE_SAMPLES) {
+            if (!schleife && rem < MIXER_TAIL_FADE_SAMPLES) {   /* Schleife: kein Ende, kein Abblenden */
                 vl = (vl * rem) / MIXER_TAIL_FADE_SAMPLES;
                 vr = (vr * rem) / MIXER_TAIL_FADE_SAMPLES;
             }
@@ -652,6 +672,7 @@ static int load_footstep_vab_pc(void)
         if (!pcm) continue;
         s_foot_decoded[i]     = pcm;
         s_foot_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+        s_foot_loop[i]        = re15_vag_loop_start(vb + off, sz);   /* Strang ton Stufe 2 */
     }
     memcpy(s_foot_edt, edt, (edt_sz < (int)sizeof s_foot_edt) ? edt_sz : (int)sizeof s_foot_edt);
     s_foot_loaded = 1;
@@ -693,6 +714,7 @@ static int load_room_se_vab_pc(void)
         if (!pcm) continue;
         s_se_decoded[i]     = pcm;
         s_se_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+        s_se_loop[i]        = re15_vag_loop_start(vb + off, sz);     /* Strang ton Stufe 2 */
     }
     s_se_edt    = edt;
     s_se_loaded = 1;
@@ -805,6 +827,11 @@ int re15_audio_se_mess(int reg[2], int lage[2])
     return s_se_mess_reg[0] >= 0;
 }
 
+/* Strang ton Stufe 2: Schleifenpunkte der gerade gespielten Bank (je VAG, re15_vag_loop_start), NULL = die Bank
+ * spielt jede Probe einmal. Gesetzt fuer die RE1.5-Baenke snd0/snd1/CORE/ARMS (se_play_layers_schleife). Die
+ * RE2-Baenke bleiben ohne: ihr Ende (Key-Off-Wege im RE2-Code) ist nicht belegt (Bericht s2_r1, offen). */
+static const int *s_se_schleifen = NULL;
+
 static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
                            int16_t *const *decoded, const int *decoded_len, int se_id)
 {
@@ -864,6 +891,8 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
              * Port: freier Pool-Slot wie bisher (game-weit 112 von 6140 Records). */
             int slot = mixer_alloc_free_slot();
             s_active[slot].pcm        = decoded[vag];
+            s_active[slot].loop_pcm   = decoded[vag];
+            s_active[slot].loop_start = s_se_schleifen ? s_se_schleifen[vag] : -1;   /* Strang ton Stufe 2 */
             s_active[slot].pcm_len    = decoded_len[vag];
             s_active[slot].pos        = 0;
             s_active[slot].subpos     = 0;
@@ -882,6 +911,7 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
         s_se_pend[voice].se_id    = se_id;                     /* @0x80045510               */
         s_se_pend[voice].pcm      = decoded[vag];
         s_se_pend[voice].pcm_len  = decoded_len[vag];
+        s_se_pend[voice].loop_start = s_se_schleifen ? s_se_schleifen[vag] : -1;   /* Strang ton Stufe 2 */
         s_se_pend[voice].step_q16 = (uint32_t)pitch << 4;      /* 0x1000 == 44100 Hz Ausgabe */
         s_se_pend[voice].vl_q15   = vl;
         s_se_pend[voice].vr_q15   = vr;
@@ -924,6 +954,8 @@ static void se_voice_pump(void)
     for (int v = RE15_SE_VOICE_COUNT - 1; v >= 0; v--) {
         if (s_se_pend[v].pending) {
             s_active[v].pcm        = s_se_pend[v].pcm;
+            s_active[v].loop_pcm   = s_se_pend[v].pcm;          /* Strang ton Stufe 2 */
+            s_active[v].loop_start = s_se_pend[v].loop_start;
             s_active[v].pcm_len    = s_se_pend[v].pcm_len;
             s_active[v].pos        = 0;
             s_active[v].subpos     = 0;
@@ -975,7 +1007,9 @@ void re15_audio_room_se(int se_id)
     if (!g_audio.initialized || !s_se_loaded || se_id < 0 || se_id >= 0x19) return;
     /* FUN_800453d0 ruft IMMER FUN_80045a64(DAT_800ac784 + 0x34) @0x800454e0-ec -> Geraeusch mit Lage; der Sender
      * (die gerade laufende Entity) kommt im Port erst in Stufe 6 an -> PORT-WAHL (b): Lage des Spielers. */
+    s_se_schleifen = s_se_loop;      /* Strang ton Stufe 2 */
     se_play_layers_lage(s_se_edt, &s_se_vab, s_se_decoded, s_se_decoded_len, se_id);
+    s_se_schleifen = NULL;
 }
 
 /* Play a room SE from the snd0 bank (byte-true FUN_80045024 bank 2). Same EDT->prog/tone->VAG
@@ -984,7 +1018,9 @@ void re15_audio_room_se_snd0(int se_id)
 {
     if (re15_w11b0_snd0_hook && re15_w11b0_snd0_hook(se_id)) return;   /* Runde 38 Spur C: 11B0 Satz 7 leer -> ROOM1171 */
     if (!g_audio.initialized || !s_foot_loaded || se_id < 0) return;
+    s_se_schleifen = s_foot_loop;    /* Strang ton Stufe 2: hier liegen alle 28 Schleifen-Geraeusche (Bericht s2_r1) */
     se_play_layers(s_foot_edt, &s_foot_vab, s_foot_decoded, s_foot_decoded_len, se_id);
+    s_se_schleifen = NULL;
 }
 
 /* Load + decode the resident WEAPON SE bank (bank1) for `weapon_id` from SOUND/ARMS%02X.EDH + .VB
@@ -1032,6 +1068,7 @@ static int load_weapon_se_vab_pc(int weapon_id)
         if (!pcm) continue;
         s_weap_decoded[i]     = pcm;
         s_weap_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+        s_weap_loop[i]        = re15_vag_loop_start(vb + off, sz);   /* Strang ton Stufe 2 */
     }
     free(vb);                          /* the VAGs are decoded; only the EDH (EDT prefix) is kept */
     s_weap_edt       = edh;
@@ -1094,6 +1131,7 @@ static int load_core_se_vab_pc(int idx)
         if (!pcm) continue;
         s_core_decoded[i]     = pcm;
         s_core_decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+        s_core_loop[i]        = re15_vag_loop_start(vb + off, sz);   /* Strang ton Stufe 2 */
     }
     free(vb);
     s_core_edt       = edh;
@@ -1120,7 +1158,9 @@ void re15_audio_core_se(int se_id)
     if (!g_audio.initialized) return;
     if (!s_core_loaded && load_core_se_vab_pc(0) != 0) return;   /* Default CORE00 (Leon-Ingame) */
     if (se_id < 0 || se_id >= s_core_edt_count) return;
+    s_se_schleifen = s_core_loop;    /* Strang ton Stufe 2 */
     se_play_layers(s_core_edt, &s_core_vab, s_core_decoded, s_core_decoded_len, se_id);
+    s_se_schleifen = NULL;
 }
 
 /* ===== RE2-ERGAENZUNG: die PANEL-KLICK-Bank (RE2 ROOM2130 snd0) ======================
@@ -1445,7 +1485,9 @@ void re15_audio_weapon_se(int se_id)
      * so the original keys VAG2 AND VAG3 simultaneously; every ARMS bank layers record 0. */
     /* Strang ton Stufe 1: ARMS-Rufe tragen im Original das Lage-Bit (0x01xx0001) -> Tastenstaerke aus der Lage
      * (Sender je Ruf: Kopf ueber se_stimme_q15; bis Stufe 6 die Lage des Spielers). */
+    s_se_schleifen = s_weap_loop;    /* Strang ton Stufe 2 */
     se_play_layers_lage(s_weap_edt, &s_weap_vab, s_weap_decoded, s_weap_decoded_len, se_id);
+    s_se_schleifen = NULL;
 }
 
 /* Re-prime bank1 to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c parity) — the weapon-select
@@ -2097,6 +2139,7 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
             /* Kanal ausserhalb des gemessenen 2..7-Fensters: alter freier Pool, kein Gate. */
             int slot = mixer_alloc_free_slot();
             s_active[slot].pcm        = cb->decoded[vag];
+            s_active[slot].loop_pcm   = NULL;                /* Strang ton Stufe 2: einmal */
             s_active[slot].pcm_len    = cb->decoded_len[vag];
             s_active[slot].pos        = 0;
             s_active[slot].subpos     = 0;
@@ -2141,6 +2184,7 @@ static void re2se_voice_pump(void)
         int slot = MIXER_RE2SE_CH_FIRST + c;
         if (s_re2se_pend[c].pending) {
             s_active[slot].pcm        = s_re2se_pend[c].pcm;
+            s_active[slot].loop_pcm   = NULL;                /* Strang ton Stufe 2: einmal */
             s_active[slot].pcm_len    = s_re2se_pend[c].pcm_len;
             s_active[slot].pos        = 0;
             s_active[slot].subpos     = 0;
@@ -2186,6 +2230,7 @@ static void play_sample_pc(int vag_index, int scd_volume)
     SDL_LockAudioDevice(s_audio_dev);
     int slot = mixer_alloc_free_slot();
     s_active[slot].pcm        = s_decoded_vag[vag_index];
+    s_active[slot].loop_pcm   = NULL;                /* Strang ton Stufe 2: einmal */
     s_active[slot].pcm_len    = s_decoded_vag_len[vag_index];
     s_active[slot].pos        = 0;
     s_active[slot].subpos     = 0;
@@ -2865,16 +2910,7 @@ static void ss_decode_vab(ss_seq_t *s, const uint8_t *vb, int vb_sz)
          * VAGs were classified as looping and a held BGM note re-looped a one-shot sample where
          * hardware mutes at the Code-1 END. (The decoder now also STOPS at the END block, so the
          * looper block is never part of the PCM.) */
-        int loop_start = 0, repeats = 0;
-        for (uint32_t b = 0; b + 16 <= sz; b += 16) {
-            uint8_t fl = vb[off + b + 1];
-            if (fl & 0x04) loop_start = (int)(b / 16) * 28;   /* last 0x04 so far */
-            if (fl & 0x01) {                                   /* the END block decides */
-                repeats = (fl & 0x02) ? 1 : 0;
-                break;
-            }
-        }
-        s->vag_loop[i] = repeats ? loop_start : -1;
+        s->vag_loop[i] = re15_vag_loop_start(vb + off, sz);   /* Strang ton Stufe 2: gemeinsame Regel (re15_vab.h) */
     }
 }
 
@@ -4455,6 +4491,7 @@ void re15_audio_footstep(int foot, int sound_type)
     SDL_LockAudioDevice(s_audio_dev);
     int slot = mixer_alloc_free_slot();
     s_active[slot].pcm        = s_foot_decoded[vag];
+    s_active[slot].loop_pcm   = NULL;                /* Strang ton Stufe 2: einmal */
     s_active[slot].pcm_len    = s_foot_decoded_len[vag];
     s_active[slot].pos        = 0;
     s_active[slot].subpos     = 0;
