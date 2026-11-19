@@ -33,10 +33,16 @@
  *       waehrend des Satzes hat dieselbe Spitze wie in (3) - Geraeusche bleiben; (6e) nach dem Satz bleibt die Musik
  *       noch 0x3c Spielbilder unten (Pausen zwischen den Saetzen eines Gespraechs: gemessen 1 bis 40 Bilder) und kommt
  *       dann mit derselben Steigung zurueck (21193 nach 15 Bildern, 32768 nach 37).
+ *   (7) Runde 3 (Pruefung Runde 2, G7) - DIE ZEIT DER ABSENKUNG LAEUFT AUCH OHNE MUSIK: ein gesprochener Satz, waehrend
+ *       keine Musik-Bank geladen ist. Der Faktor folgt trotzdem (13002 nach einem Spielbild) und steht nach Satz,
+ *       Wartezeit 0x3c und Rueckweg wieder auf 32768. Vorher rechnete re15_ss_render_bgm den Faktor nur, solange eine
+ *       Bank geladen war: wurde die Musik waehrend eines Satzes oder in der Wartezeit entladen (Raum ohne Musik),
+ *       blieben Tiefstand und Wartezeit stehen und das naechste Stueck begann 8 dB zu leise.
  *
  * GEGENPROBE: derselbe Quelltext mit dem audio_pc.c von r42/story 71caea668 gebaut (ohne -DRE15_TON_S1_HAKEN, der
  * Messhaken re15_audio_se_mess existiert dort nicht) faellt in (1) bis (5). (6) haengt an den Messhaken der Runde 2;
  * Gegenprobe dafuer: audio_pc.c mit stillgelegter Absenkung (Ziel immer 1,0) -> (6b) bis (6e) fallen.
+ * Gegenprobe fuer (7): audio_pc.c von afb03abea (Runde 2) -> (7a) faellt mit Faktor 32768 (die Zeit stand still).
  */
 #include "re15_audio.h"
 #include "re15_engine.h"
@@ -175,6 +181,28 @@ int main(void)
     long t_vor = 0, t_unter = 0, t_schuss2 = 0;                  /* (6) Musik unter gesprochenen Saetzen */
     enum { N_FENSTER = 40, N_SATZ = 200 };
     int16_t *stille = NULL;
+
+#ifdef RE15_TON_S1_HAKEN
+    /* ---- (7) Satz ohne geladene Musik-Bank: die Zeit der Absenkung laeuft trotzdem ----------------------------- */
+    {   enum { N_KURZ = 5 };
+        static int16_t kurz[N_KURZ * PER_TICK];                  /* stiller "Satz", 5 Spielbilder */
+        const int voll = 0x8000, ziel = (80 * 80 * 0x8000) / (127 * 127);
+        (void)laufen(2);
+        re15_audio_stimme_mess(kurz, N_KURZ * PER_TICK, 1);
+        (void)laufen(1);
+        const int g1 = re15_audio_musik_stimme_q15();
+        CHECK(g1 == ziel,
+              "(7a) gesprochener Satz OHNE geladene Musik: Faktor nach einem Spielbild %d, Soll %d - die Zeit der Absenkung "
+              "laeuft auch ohne Musik-Bank", g1, ziel);
+        (void)laufen(N_KURZ - 1 + 0x3c - 2);                     /* Satzende + Wartezeit bis 2 Bilder vor ihrem Ende */
+        const int gh = re15_audio_musik_stimme_q15();
+        (void)laufen(2 + 37 + 3);                                /* Rest der Wartezeit + Rueckweg (36,2 Spielbilder) */
+        const int ge = re15_audio_musik_stimme_q15();
+        CHECK(gh == ziel && ge == voll,
+              "(7b) ohne Musik: Faktor kurz vor Ende der Wartezeit %d (Soll %d), nach Wartezeit und Rueckweg %d (Soll 32768)",
+              gh, ziel, ge);
+    }
+#endif
 
     /* ---- ROOM1130: Rolltor (snd0 Satz 10 / 11) und Schritt (Satz 29) ------------------------------------------ */
     int n = 0;

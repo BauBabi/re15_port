@@ -9,9 +9,10 @@ cmake_minimum_required(VERSION 3.16)
 #   L  Leon ROOM1100 ECHTER WEG (Panel per RE15_FIRE_AOT=2 -> sub07, msg 1, "Ja", Cursor ON/OFF -> SYSTEM READY/SAY
 #      HELLO, Cursor Mikrofon -> sub02), Nachrichten langsam. MUSS: Aufnahme im Takt von Message_on 4 (rk.log, Lader-Zeile),
 #      im Mitschnitt gefunden (Korrelation >= 0.8, 79..80 Ticks); Piep (auf.log) im Takt des ersten Cut_chg(11) ACCEPTED,
-#      Aufschliessen +15, nur diese zwei Toene, msg 2 ohne zweite Folge; Mitschnitt: Ende der Aufnahme VOR dem Piep, Piep
-#      und Aufnahme mit demselben Takt-Versatz gemischt; Bild Piep-Takt+1 zeigt ACCEPTED (Cut 11), Bild des Piep-Takts noch
-#      leer (Cut 12) - die Anzeige wechselt im selben Bild, in dem der Piep zu hoeren ist; Tuer-Platz 1 frei.
+#      Aufschliessen +15, nur diese zwei Toene, msg 2 ohne zweite Folge; Mitschnitt: Ende der Aufnahme VOR dem Key-On des
+#      Pieps, Piep mit der Lautstaerke des Mischers, Key-On auf einem Tick-Anfang und EINEN Tick frueher gemischt als die
+#      Aufnahme (s. j_mitschnitt); Bild Piep-Takt+1 zeigt ACCEPTED (Cut 11), Bild des Piep-Takts noch leer (Cut 12) - die
+#      Anzeige wechselt im selben Bild, in dem der Piep zu hoeren ist; Tuer-Platz 1 frei.
 #   S  Leon schnell (msg 4 und Wegwerf-Abfrage so schnell wie moeglich): sub02 WARTET an @0x00C96, bis die Aufnahme zu
 #      Ende ist ("frei" ein Bild nach "stimme zu Ende"), Piep 5 Bilder danach; Mitschnitt: Ende vor dem Piep.
 #   E  Elza ROOM1101 (RE15_PSELECT_AUTO_SWITCH): dieselbe Datei aus synchro/STAGE1/room1100, dieselbe Folge.
@@ -133,7 +134,34 @@ function(j_folge _name _raum)
     message(STATUS "r38_rekorder[${_name}]: Aufnahme F${_s}, Piep F${_p} = erstes ACCEPTED, Aufschliessen F${_p15}")
 endfunction()
 
-# Mitschnitt: Aufnahme finden, Ende vor dem Piep, gleicher Takt-Versatz fuer Aufnahme und Piep.
+# Mitschnitt: Aufnahme finden, Ende vor dem Piep, Takt-Versatz von Aufnahme und Piep.
+#
+# Strang ton Stufe 1 Runde 3 (Pruefung Runde 2, R1 und G2) - DREI Aenderungen, jede mit Grund:
+#  (1) Der Piep wird nicht mehr ueber den Bandanteil 1380..1530 Hz > 0,3 je Tick gesucht, sondern als Key-On des Satzes
+#      der Mini-Bank per Kreuzkorrelation (probe_r38_rekorder.c, Kopf ueber piep_bezug_t). Der Bandanteil ist ein
+#      Verhaeltnis zur Musik darunter: im Lauf S (Piep 5 Spielbilder nach dem Ende der Aufnahme) lag er im Key-On-Tick
+#      bei 0,308, seit die Musik unter gesprochenen Saetzen 8 dB zuruecktritt, davor unter 0,3 - der Riegel nannte
+#      Tick 708 statt 709 und wurde rot, obwohl der Piep auf demselben Abtastwert beginnt.
+#  (2) Takt-Versatz: frueher "Aufnahme und Piep gleich". Das stimmte nur, weil das alte Mass den Key-On-Tick des Pieps
+#      nicht sah (weicher Einsatz der Tonprobe: erst der Folgetick lag ueber 0,3). Am Key-On selbst gemessen liegt
+#      der Piep EINEN Tick frueher als die Aufnahme, auf dem Tick-Anfang. Grund im Code:
+#        Piep     re15_rekorder_r38_pc (ACCEPTED) -> re15_aufschliessen_r36_notice -> re15_audio_re2_karte_se ->
+#                 se_play_layers: Satz 1 der Mini-Bank = `00 00 13 01`, byte3 & 0x1f = 1 < 0x10 -> Direkt-Zweig
+#                 (FUN_80045024 "if ((byte3 & 0x1f) < 0x10)": sofortiges SsUtKeyOnV @0x8004522c) - die Stimme ist
+#                 sofort aktiv und steht im naechsten gerenderten Tick ab dessen erstem Abtastwert.
+#        Aufnahme stimme_anfordern (rekorder_r38.c) reiht SCD_AUDIO_VOICE_ON ein; re15_audio_tick (audio_pc.c) leert die
+#                 Warteschlange erst NACH audio_callback, also nachdem der Tick dieses Bilds schon gerendert ist -
+#                 die Aufnahme beginnt einen Tick spaeter.
+#      Gemessen in L, S und E, mit abgesenkter und mit voller Musik (Gegenprobe-exe ohne Absenkung): immer -1.
+#  (3) Die Schwelle der Korrelation war wirkungslos: `if(_k VERSION_LESS 0.8)` vergleicht Versionsnummern, 0.544 gilt
+#      dabei als groesser als 0.8 (544 > 8). Jetzt Zahlenvergleich. Die Schwelle 0,8 heisst: die Aufnahme traegt in
+#      ihrem Fenster mindestens 64 % der Energie des Mitschnitts (alles andere - Musik, Geraeusche - liegt mindestens
+#      2,5 dB darunter). Ohne die Absenkung der Musik (Stand Runde 1) misst der Riegel 0,53 .. 0,61 und faellt.
+#      Nur fuer Gegenproben: -DRE15_REK_KORR_MIN=<wert> setzt die Schwelle herab, damit ein Lauf mit voller Musik bis
+#      zum Piep-Mass kommt (kein ctest-Aufruf setzt das).
+if(NOT DEFINED RE15_REK_KORR_MIN)
+    set(RE15_REK_KORR_MIN 0.8)
+endif()
 function(j_mitschnitt _name _s _p)
     execute_process(COMMAND "${RE15_PROBE}" cap "${_wd}/cap.raw" "${RE15_WAV}"
                     OUTPUT_VARIABLE _o RESULT_VARIABLE _r)
@@ -149,24 +177,38 @@ function(j_mitschnitt _name _s _p)
     set(_ta ${CMAKE_MATCH_1})
     set(_tarest ${CMAKE_MATCH_2})
     set(_te ${CMAKE_MATCH_3})
-    string(REGEX MATCH "PIEP erster Tick ([0-9]+)" _m "${_o}")
+    if(_k LESS ${RE15_REK_KORR_MIN})
+        message(FATAL_ERROR "r38_rekorder[${_name}]: Korrelation ${_k} < ${RE15_REK_KORR_MIN} - die Aufnahme geht im Mitschnitt unter: ${_o}")
+    endif()
+    string(REGEX MATCH "PIEP KEYON Tick ([0-9]+) \\(([+-][0-9]+)\\) Korrelation ([0-9.]+) Verstaerkung ([0-9.]+) = ([0-9.]+) des Solls -> (PEGEL-[A-Z]+)" _m "${_o}")
+    if(NOT _m)
+        message(FATAL_ERROR "r38_rekorder[${_name}]: Piep nicht gefunden: ${_o}")
+    endif()
     set(_tp ${CMAKE_MATCH_1})
-    if(_k VERSION_LESS 0.8)
-        message(FATAL_ERROR "r38_rekorder[${_name}]: Korrelation ${_k} < 0.8 - die Aufnahme ist nicht im Mitschnitt: ${_o}")
+    set(_tprest ${CMAKE_MATCH_2})
+    set(_tpq ${CMAKE_MATCH_5})
+    if(NOT CMAKE_MATCH_6 STREQUAL "PEGEL-OK")
+        message(FATAL_ERROR "r38_rekorder[${_name}]: am besten passenden Versatz liegt nicht der Piep der Mini-Bank (Verstaerkung ${_tpq} des Solls, erlaubt 0.80 .. 1.20): ${_o}")
+    endif()
+    # Key-On auf dem Tick-Anfang; +-30 Abtastwerte = eine Periode des Tons (die Korrelation eines Tons hat Nebengipfel im
+    # Abstand seiner Periode, die Musik darunter kann den hoechsten um eine Periode verschieben).
+    if(_tprest GREATER 30 OR _tprest LESS -30)
+        message(FATAL_ERROR "r38_rekorder[${_name}]: Key-On des Pieps ${_tprest} Abtastwerte neben dem Tick-Anfang (erlaubt +-30): ${_o}")
     endif()
     math(EXPR _len "${_te} - ${_ta} + 1")
     if(_len LESS 79 OR _len GREATER 81 OR NOT _tarest EQUAL 0)
         message(FATAL_ERROR "r38_rekorder[${_name}]: Aufnahme ${_len} Ticks ab +${_tarest} (soll 79..81 ab Tick-Anfang): ${_o}")
     endif()
     if(NOT _tp GREATER _te)
-        message(FATAL_ERROR "r38_rekorder[${_name}]: Piep-Tick ${_tp} nicht NACH dem Ende der Aufnahme (Tick ${_te})")
+        message(FATAL_ERROR "r38_rekorder[${_name}]: Key-On des Pieps (Tick ${_tp}) nicht NACH dem Ende der Aufnahme (Tick ${_te})")
     endif()
     math(EXPR _va "${_ta} - ${_s}")
     math(EXPR _vp "${_tp} - ${_p}")
-    if(NOT _va EQUAL _vp)
-        message(FATAL_ERROR "r38_rekorder[${_name}]: Takt-Versatz Aufnahme ${_va} != Piep ${_vp}")
+    math(EXPR _vp_soll "${_va} - 1")
+    if(NOT _vp EQUAL _vp_soll)
+        message(FATAL_ERROR "r38_rekorder[${_name}]: Takt-Versatz Piep ${_vp}, Soll ${_vp_soll} = Aufnahme ${_va} - 1 (Direkt-Zweig gegen Warteschlange, s. Kopf)")
     endif()
-    message(STATUS "r38_rekorder[${_name}]: Mitschnitt Aufnahme Tick ${_ta}..${_te} (Korrelation ${_k}), Piep ab Tick ${_tp}, Versatz ${_va}")
+    message(STATUS "r38_rekorder[${_name}]: Mitschnitt Aufnahme Tick ${_ta}..${_te} (Korrelation ${_k}), Piep Key-On Tick ${_tp} (${_tprest}), Verstaerkung ${_tpq} des Solls, Versatz Aufnahme ${_va} / Piep ${_vp}")
 endfunction()
 
 function(j_bild _name _ppm _soll)

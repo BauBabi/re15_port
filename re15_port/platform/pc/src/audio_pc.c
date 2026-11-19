@@ -3348,8 +3348,36 @@ void re15_audio_stimme_mess(const int16_t *pcm, int n, int sprache)
     s_xa.sprache = sprache ? 1 : 0;
 }
 
+/* EIN Abtastwert Zeit fuer den Faktor: Wartezeit nachladen bzw. abzaehlen, dann einen Schritt zum Ziel.
+ * Runde 3 (Pruefung Runde 2, G7): die Zeit laeuft auch, wenn gerade KEINE Musik geladen ist (re15_ss_render_bgm kehrte
+ * dann vor dieser Rechnung um). Sonst blieben Tiefstand und Wartezeit eines Satzes stehen, sobald die Musik-Bank
+ * entladen wird (Raumwechsel in einen Raum ohne Musik), und das naechste Stueck begaenne Minuten spaeter 8 dB zu
+ * leise, bis Wartezeit und Rueckweg (zusammen bis 3,2 s) nachgeholt sind. */
+static inline void musik_stimme_schritt(int st_satz, int32_t st_auf, int32_t st_ab)
+{
+    if (st_satz) s_musik_stimme_halt = STIMME_MUSIK_HALT_BILDER * (s_dev_freq / 30);
+    else if (s_musik_stimme_halt > 0) s_musik_stimme_halt--;
+    const int32_t st_ziel = (st_satz || s_musik_stimme_halt > 0) ? STIMME_MUSIK_ZIEL_Q30 : ((int32_t)1 << 30);
+    if (s_musik_stimme_q30 > st_ziel) {
+        s_musik_stimme_q30 -= st_ab;
+        if (s_musik_stimme_q30 < st_ziel) s_musik_stimme_q30 = st_ziel;
+    } else if (s_musik_stimme_q30 < st_ziel) {
+        s_musik_stimme_q30 += st_auf;
+        if (s_musik_stimme_q30 > st_ziel) s_musik_stimme_q30 = st_ziel;
+    }
+}
+
 static void re15_ss_render_bgm(int16_t *out, int frames) {
-    if (!s_ss_main.vab_ok && !s_ss_sub.vab_ok) return;
+    /* Musik unter gesprochenen Saetzen (Kopf ueber STIMME_MUSIK_SEQ_VOL): Ziel und Schritt je Abtastwert.
+     * Aufwaerts 1/0x3c je Spielbild (RATE/30 Abtastwerte), also (1 << 30) / (0x3c * RATE / 30); abwaerts die ganze
+     * Strecke in einem Spielbild. */
+    const int     st_satz    = (s_xa.active && s_xa.pcm && s_xa.sprache) ? 1 : 0;
+    const int32_t st_auf = ((int32_t)1 << 30) / (BGM_FADE_FRAMES * (s_dev_freq / 30));                  /* 1/0x3c je Spielbild */
+    const int32_t st_ab  = (((int32_t)1 << 30) - STIMME_MUSIK_ZIEL_Q30) / (s_dev_freq / 30) + 1;      /* in einem Spielbild  */
+    if (!s_ss_main.vab_ok && !s_ss_sub.vab_ok) {
+        for (int f = 0; f < frames; f++) musik_stimme_schritt(st_satz, st_auf, st_ab);   /* keine Musik: nur die Zeit */
+        return;
+    }
     static int16_t bgm[2048 * 2];
     if (frames > 2048) frames = 2048;
     memset(bgm, 0, (size_t)frames * 2 * sizeof(int16_t));
@@ -3359,28 +3387,13 @@ static void re15_ss_render_bgm(int16_t *out, int frames) {
     ss_mix(&s_ss_r41_sirene, bgm, frames);   /* Runde 41 Spur N, Nachtrag 36 */
     const int fade = s_bgm_fade_vol;   /* Stimmen-Volume-Rampe der Ausblendung */
     static int s_rev_held_l = 0, s_rev_held_r = 0, s_rev_phase = 0;
-    /* Musik unter gesprochenen Saetzen (Kopf ueber STIMME_MUSIK_SEQ_VOL): Ziel und Schritt je Abtastwert.
-     * Aufwaerts 1/0x3c je Spielbild (RATE/30 Abtastwerte), also (1 << 30) / (0x3c * RATE / 30); abwaerts die ganze
-     * Strecke in einem Spielbild. */
-    const int     st_satz    = (s_xa.active && s_xa.pcm && s_xa.sprache) ? 1 : 0;
-    const int32_t st_auf = ((int32_t)1 << 30) / (BGM_FADE_FRAMES * (s_dev_freq / 30));                  /* 1/0x3c je Spielbild */
-    const int32_t st_ab  = (((int32_t)1 << 30) - STIMME_MUSIK_ZIEL_Q30) / (s_dev_freq / 30) + 1;      /* in einem Spielbild  */
     for (int f = 0; f < frames; f++) {
         int dryL = bgm[f*2+0], dryR = bgm[f*2+1];
         if (fade != 0x8000) {          /* == SsUtSetDetVVol auf allen BGM-Stimmen */
             dryL = (dryL * fade) >> 15;
             dryR = (dryR * fade) >> 15;
         }
-        if (st_satz) s_musik_stimme_halt = STIMME_MUSIK_HALT_BILDER * (s_dev_freq / 30);
-        else if (s_musik_stimme_halt > 0) s_musik_stimme_halt--;
-        const int32_t st_ziel = (st_satz || s_musik_stimme_halt > 0) ? STIMME_MUSIK_ZIEL_Q30 : ((int32_t)1 << 30);
-        if (s_musik_stimme_q30 > st_ziel) {
-            s_musik_stimme_q30 -= st_ab;
-            if (s_musik_stimme_q30 < st_ziel) s_musik_stimme_q30 = st_ziel;
-        } else if (s_musik_stimme_q30 < st_ziel) {
-            s_musik_stimme_q30 += st_auf;
-            if (s_musik_stimme_q30 > st_ziel) s_musik_stimme_q30 = st_ziel;
-        }
+        musik_stimme_schritt(st_satz, st_auf, st_ab);
         if (s_rev_phase == 0) ss_spu_reverb(dryL, dryR, &s_rev_held_l, &s_rev_held_r);
         s_rev_phase ^= 1;
         int musL = dryL + s_rev_held_l, musR = dryR + s_rev_held_r;

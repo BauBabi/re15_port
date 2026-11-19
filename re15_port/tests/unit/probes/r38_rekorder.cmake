@@ -22,7 +22,11 @@ endif()
 add_test(NAME unit_r38_rekorder_anker  COMMAND probe_r38_rekorder anker)
 add_test(NAME unit_r38_rekorder_datei  COMMAND probe_r38_rekorder datei)
 add_test(NAME unit_r38_rekorder_ablauf COMMAND probe_r38_rekorder ablauf)
-set_tests_properties(unit_r38_rekorder_anker unit_r38_rekorder_datei unit_r38_rekorder_ablauf PROPERTIES TIMEOUT 300)
+# Strang ton Stufe 1 Runde 3: das Piep-Mass des Werkzeugs cap (Key-On per Kreuzkorrelation mit dem Satz der Mini-Bank)
+# an einem kuenstlichen Mitschnitt - derselbe Tick bei zehn Musikpegeln; Gegenprobe mit dem frueheren Mass im selben Lauf.
+add_test(NAME unit_r38_rekorder_piepmass COMMAND probe_r38_rekorder piepmass)
+set_tests_properties(unit_r38_rekorder_anker unit_r38_rekorder_datei unit_r38_rekorder_ablauf unit_r38_rekorder_piepmass
+                     PROPERTIES TIMEOUT 300)
 
 # integration_r38_rekorder: echte exe (Ton-Mitschnitt, Framedumps, Logs) - tests/integration/test_r38_rekorder.cmake
 #   L Leon ROOM1100 echter Weg (Panel, Ja, ON/OFF, Mikrofon) langsam, S Leon schnell (sub02 wartet), E Elza ROOM1101,
