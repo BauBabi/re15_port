@@ -39,6 +39,13 @@
  *           Zeile kommt; Sleep-Summe im Programm)? msg 4 und msg 32 (Leons zwei Saetze) stehen mindestens so lange wie die
  *           Original-Zeile msg 0 (RDT @0x13BE, zweizeilig, Nachlauf `04 01 01 63` @0x13F5 = 99 Bilder). Gegenprobe rot auf 70d822290
  *           (msg 4 Seite 2 stand ~20 Bilder).
+ *
+ * Stufe 5 (alle Untertitel hoechstens zwei Zeilen je Seite, tools/r42_namen/zweizeilig_s5.py + lesbar_s5.py):
+ *   alle_zeilen     jede Nachricht jedes Raums (STAGE1..6, Leon- und Elza-Raeume) wie im Spiel geladen (RDT + Port-Texte des
+ *                   Raumaufbaus): keine Seite mit mehr als zwei Zeilen. Gegenprobe rot auf 4c53a03e6 (40 Seiten) und 8db089f5d.
+ *   quellen_zeilen  jede Byte-Tabelle in engine/src (.c, gen/.inc) als Nachricht gelesen (Port-Texte, die erst bei einem
+ *                   Ereignis eingesetzt werden; ohne Inventar-Beschreibungen): keine Text-Seite mit mehr als zwei Zeilen.
+ *   seitenwechsel   zusaetzlich 10D0 msg 17/26, 1150 msg 9, 30E1 msg 12 (Seite 2 am Pausenende der Aufnahme).
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -49,6 +56,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <ctype.h>
 
 #ifndef RE15_ASSET_PSX_DIR
 #error RE15_ASSET_PSX_DIR fehlt
@@ -285,6 +293,11 @@ static void teil_seitenwechsel(void)
         { 0x10D0, 18, 64, "main18.wav Pausenende 2.12 s" },
         { 0x10D0, 24, 100, "main24.wav Pausenende 3.34 s" },
         { 0x10D0, 25, 83, "main25.wav Pausenende 2.76 s" },
+        /* Stufe 5 (tools/r42_namen/zweizeilig_s5.py): Mod-Zeilen mit drei Zeilen, Seite 2 an der Sprechpause der Aufnahme */
+        { 0x10D0, 17, 87, "main17.wav Pause 2.40-2.89 s" },
+        { 0x10D0, 26, 98, "main26.wav Pause 2.98-3.28 s" },
+        { 0x1150,  9, 96, "main09.wav Pause 2.45-3.19 s" },
+        { 0x30E1, 12, 61, "main12.wav Pause 1.63-2.04 s (Elza)" },
     };
     for (unsigned k = 0; k < sizeof k_w / sizeof k_w[0]; k++) {
         if (raum_laden(k_w[k].raum) != 0) { PRUEF(0, "ROOM%04X ladbar", k_w[k].raum); continue; }
@@ -461,6 +474,230 @@ static void teil_fortsetzung(void)
     }
 }
 
+
+/* ---- Stufe 5: alle Raeume - keine gezeigte Seite mit mehr als zwei Zeilen ------------------------------------------------------ */
+/* Text einer Seite [a, e) als ASCII mit " / " an jedem Zeilenwechsel (fuer die Ausgabe). */
+static void seite_text(const uint8_t *m, int a, int e, char *out, size_t n)
+{
+    size_t o = 0;
+    for (int i = a; i < e && o + 4 < n; i++) {
+        const uint8_t c = m[i];
+        if (c == 0x04 || c == 0x05 || c == 0x06 || c == 0x09 || c == 0x0A || c == 0x0B) { i++; continue; }
+        if (c == 0x07) continue;
+        if (c == 0x08) { out[o++] = ' '; out[o++] = '/'; out[o++] = ' '; continue; }
+        uint8_t t[2] = { c, 0x01 };
+        char d[8];
+        re15_msg_decode_text(t, 2, d, sizeof d);
+        if (c == 0x00) { out[o++] = ' '; continue; }
+        for (int k = 0; d[k] && o + 1 < n; k++) out[o++] = d[k];
+    }
+    out[o] = 0;
+}
+
+static void teil_alle_zeilen(void)
+{
+    printf("=== alle_zeilen: jede Nachricht jedes Raums (RDT + Port-Texte wie im Spiel geladen) - je Seite hoechstens 2 Zeilen ===\n");
+    int raeume = 0, nachrichten = 0, seiten_n = 0, schlecht = 0;
+    for (unsigned st = 1; st <= 6; st++)
+        for (unsigned rr = 0; rr < 0x40; rr++)
+            for (unsigned v = 0; v < 2; v++) {
+                const unsigned room = (st << 12) | (rr << 4) | v;
+                if (raum_laden(room) != 0 || !s_rdt.messages) continue;
+                raeume++;
+                for (int id = 0; id < 256; id++) {
+                    int len = 0;
+                    const unsigned char *m = re15_msg_get_raw(id, &len);
+                    if (!m || len < 2) continue;
+                    nachrichten++;
+                    int anf[16], end[16];
+                    const int ns = seiten_enden(m, len, anf, end, 16);
+                    for (int s = 0; s < ns; s++) {
+                        int z, mw, px;
+                        seite_messen(m, anf[s], end[s], &z, &mw, &px);
+                        seiten_n++;
+                        if (z <= 2) continue;
+                        schlecht++;
+                        char t[600]; seite_text(m, anf[s], end[s], t, sizeof t);
+                        char wav[700];
+                        snprintf(wav, sizeof wav, "%s/STAGE%u/room%04X/main%02d.wav", RE15_SYNCHRO_DIR, room >> 12, room, id);
+                        const int kl = (m[0] == 0x04 && m[1] == 0x00) ? kopf_laenge(m + 2, len - 2) : 0;
+                        int sl = 0; const uint8_t *sc = NULL; sl = rdt_nachricht(id, &sc);
+                        const int aus_rdt = sc && len <= sl && memcmp(sc, m, (size_t)len) == 0;
+                        printf("        ROOM%04X msg %3d Seite %d/%d: %d Zeilen, %s, Stimme %s, %s  \"%s\"\n", room, id, s + 1, ns, z,
+                               kl ? "mit Namen" : "ohne Namen", datei_da(wav) ? "ja" : "nein", aus_rdt ? "RDT" : "Port-Text", t);
+                    }
+                }
+            }
+    PRUEF(raeume > 100 && nachrichten > 1000, "%d Raeume, %d Nachrichten, %d Seiten gelesen", raeume, nachrichten, seiten_n);
+    PRUEF(schlecht == 0, "%d Seiten mit mehr als 2 Zeilen (RDT-Texte und Port-Texte des Raumaufbaus)", schlecht);
+}
+
+/* ---- Stufe 5 Teil B: Port-Texte, die erst bei einem Ereignis eingesetzt werden (re15_msg_install_text in ~25 Modulen) ----------
+ * Statt jedes Ereignis nachzufahren: jede Byte-Tabelle `{ 0x.., 0x.., ... }` in engine/src/<name>.c und engine/src/gen/<name>.inc
+ * wird wie die Schreibmaschine FUN_80028134 in Nachrichten zerlegt (Ende 01 + Argument bzw. 03; 2-Byte-Codes 02/04/05/06/09/0A/0B;
+ * 07 = 1 Byte; 08 Zeile) und jede Seite mit mehr als zwei Zeilen gemeldet, wenn sie Text ist (nur Glyphen aus msg_common.c
+ * re15_msg_glyph, keine Zeile ueber 40 Glyphen, mindestens 8 Buchstaben und 60 % Buchstaben - sonst sind es Bild- oder
+ * Programmdaten). AUSGENOMMEN: das Inventar
+ * (CHECK-Beschreibungen, eigenes Feld ab y = 0xA0, menu_common.c msg_open(.., 0x13, 0xa0); die Bank DEBUG.BIN @0x800c50de der Mod
+ * hat dort selbst Seiten mit drei Zeilen) = Tabellen mit "desc" im Namen und gen/inv_desc_bank.inc, dazu der Akten-Leser
+ * gen/inv_file_doc.inc (eigene Seiten). */
+#include <dirent.h>
+#ifndef RE15_ENGINE_SRC_DIR
+#error RE15_ENGINE_SRC_DIR fehlt
+#endif
+
+static int glyphe_text(uint8_t c)
+{
+    return c == 0x00 || (c >= 0x0C && c <= 0x57 && c != 0x17) || c == 0x61 || c == 0xF2;
+}
+
+/* Eine Nachricht m[0..n): Seiten mit mehr als zwei Text-Zeilen zaehlen und ausgeben. */
+static int quelle_nachricht(const char *datei, const char *name, const uint8_t *m, int n)
+{
+    int schlecht = 0, zeilen = 0, glyph = 0, lang = 0, text = 1, zeile_len = 0, seite = 1, buchst = 0, zeichen = 0;
+    char t[400];
+    size_t o = 0;
+    for (int i = 0; i <= n; i++) {
+        const int ende = (i == n);
+        const uint8_t c = ende ? 0x02 : m[i];
+        if (c == 0x02 || c == 0x08) {
+            if (glyph) zeilen++;
+            if (zeile_len > 40) lang = 1;
+            glyph = 0; zeile_len = 0;
+            if (c == 0x08) {
+                if (o + 3 < sizeof t) { t[o++] = ' '; t[o++] = '/'; t[o++] = ' '; }
+                continue;
+            }
+            t[o] = 0;
+            /* Text = mindestens 8 Buchstaben und 60 % der Zeichen Buchstaben (Bild-/Programmdaten liegen als Ziffern 0x0C..0x15) */
+            if (zeilen > 2 && text && !lang && buchst >= 8 && buchst * 10 >= zeichen * 6) {
+                schlecht++;
+                printf("        %s %s Seite %d: %d Zeilen  \"%s\"\n", datei, name, seite, zeilen, t);
+            }
+            zeilen = 0; o = 0; lang = 0; text = 1; seite++; buchst = 0; zeichen = 0;
+            i++;                              /* Argument von 02 */
+            continue;
+        }
+        if (c == 0x04 || c == 0x05 || c == 0x06 || c == 0x09 || c == 0x0A || c == 0x0B) { i++; continue; }
+        if (c == 0x07) continue;
+        if (!glyphe_text(c)) { text = 0; continue; }
+        if (c != 0x00) { glyph = 1; zeichen++; if ((c >= 0x1D && c <= 0x36) || (c >= 0x3D && c <= 0x56)) buchst++; }
+        zeile_len++;
+        if (c == 0x00) { if (o + 1 < sizeof t) t[o++] = ' '; continue; }
+        uint8_t q[2] = { c, 0x01 };
+        char d[8];
+        re15_msg_decode_text(q, 2, d, sizeof d);
+        for (int k = 0; d[k] && o + 1 < sizeof t; k++) t[o++] = d[k];
+    }
+    return schlecht;
+}
+
+static int hexwert(char ch)
+{
+    if (ch >= '0' && ch <= '9') return ch - '0';
+    if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+    if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+    return -1;
+}
+
+static int quelle_datei(const char *pfad, const char *datei, int *tabellen, int *nachrichten)
+{
+    size_t n = 0;
+    uint8_t *d = slurp(pfad, &n);
+    if (!d) return 0;
+    int schlecht = 0;
+    static uint8_t b[65536];
+    for (size_t i = 0; i < n; i++) {
+        if (d[i] != '{') continue;
+        size_t j = i + 1;
+        int nb = 0, ok = 1;
+        for (;;) {
+            while (j < n && (d[j] == ' ' || d[j] == '\t' || d[j] == '\r' || d[j] == '\n' || d[j] == ',')) j++;
+            if (j >= n) { ok = 0; break; }
+            if (d[j] == '}') break;
+            if (j + 2 < n && d[j] == '0' && (d[j + 1] == 'x' || d[j + 1] == 'X')) {
+                unsigned v = 0;
+                size_t k = j + 2;
+                int ziff = 0;
+                for (; k < n && ziff < 3; k++, ziff++) {
+                    const int h = hexwert((char)d[k]);
+                    if (h < 0) break;
+                    v = v * 16 + (unsigned)h;
+                }
+                if (ziff < 1 || ziff > 2 || nb >= (int)sizeof b) { ok = 0; break; }
+                b[nb++] = (uint8_t)v;
+                j = k;
+                continue;
+            }
+            ok = 0;
+            break;
+        }
+        if (!ok || nb < 8) continue;
+        /* Name der Tabelle: das Wort vor dem '[' rueckwaerts ab dem '{' */
+        char name[96] = "?";
+        {
+            size_t a = i;
+            while (a > 0 && d[a] != '[' && d[a] != ';' && d[a] != '}' && i - a < 200) a--;
+            if (d[a] == '[') {
+                size_t e = a;
+                while (e > 0 && d[e - 1] == ' ') e--;
+                size_t s = e;
+                while (s > 0 && (isalnum(d[s - 1]) || d[s - 1] == '_')) s--;
+                size_t l = e - s;
+                if (l >= sizeof name) l = sizeof name - 1;
+                memcpy(name, d + s, l);
+                name[l] = 0;
+            }
+        }
+        (*tabellen)++;
+        if (strstr(name, "desc")) { i = j; continue; }   /* Inventar-Beschreibung (eigenes Feld) */
+        int a = 0;
+        for (int k = 0; k < nb;) {
+            const uint8_t c = b[k];
+            if (c == 0x01 || c == 0x03) {
+                (*nachrichten)++;
+                schlecht += quelle_nachricht(datei, name, b + a, k - a);
+                k += (c == 0x01) ? 2 : 1;
+                a = k;
+                continue;
+            }
+            if (c == 0x02 || c == 0x04 || c == 0x05 || c == 0x06 || c == 0x09 || c == 0x0A || c == 0x0B) { k += 2; continue; }
+            k++;
+        }
+        if (a < nb) schlecht += quelle_nachricht(datei, name, b + a, nb - a);
+        i = j;
+    }
+    free(d);
+    return schlecht;
+}
+
+static void teil_quellen_zeilen(void)
+{
+    printf("=== quellen_zeilen: Port-Texte in engine/src (.c, gen/.inc) - je Seite hoechstens 2 Zeilen (ohne Inventar) ===\n");
+    static const char *ordner[2] = { RE15_ENGINE_SRC_DIR, RE15_ENGINE_SRC_DIR "/gen" };
+    int dateien = 0, tabellen = 0, nachrichten = 0, schlecht = 0;
+    for (int o = 0; o < 2; o++) {
+        DIR *dir = opendir(ordner[o]);
+        if (!dir) { PRUEF(0, "Ordner %s lesbar", ordner[o]); continue; }
+        struct dirent *e;
+        while ((e = readdir(dir)) != NULL) {
+            const char *nm = e->d_name;
+            const size_t l = strlen(nm);
+            const int c = l > 2 && !strcmp(nm + l - 2, ".c"), inc = l > 4 && !strcmp(nm + l - 4, ".inc");
+            if (!c && !inc) continue;
+            if (!strcmp(nm, "inv_desc_bank.inc") || !strcmp(nm, "inv_file_doc.inc")) continue;   /* Inventar / Akten-Leser */
+            char pfad[700];
+            snprintf(pfad, sizeof pfad, "%s/%s", ordner[o], nm);
+            dateien++;
+            schlecht += quelle_datei(pfad, nm, &tabellen, &nachrichten);
+        }
+        closedir(dir);
+    }
+    PRUEF(dateien > 300 && tabellen > 500 && nachrichten > 200, "%d Dateien, %d Byte-Tabellen, %d Nachrichten gelesen", dateien,
+          tabellen, nachrichten);
+    PRUEF(schlecht == 0, "%d Seiten mit mehr als 2 Zeilen in Port-Texten", schlecht);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -469,6 +706,8 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "seitenwechsel") || !strcmp(teil, "alle")) teil_seitenwechsel();
     if (!strcmp(teil, "standzeit") || !strcmp(teil, "alle")) teil_standzeit();
     if (!strcmp(teil, "fortsetzung") || !strcmp(teil, "alle")) teil_fortsetzung();
+    if (!strcmp(teil, "alle_zeilen") || !strcmp(teil, "alle")) teil_alle_zeilen();
+    if (!strcmp(teil, "quellen_zeilen") || !strcmp(teil, "alle")) teil_quellen_zeilen();
     printf(g_fail ? "=== FAIL ===\n" : "=== OK ===\n");
     return g_fail;
 }

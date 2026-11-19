@@ -244,10 +244,12 @@ TEXTE = [
     ("2030", 45, "ventile_zurueck", [["The valves turned back", "to their original position."]], False, None,
      "PORT-WAHL (Nachbesserung 4, Nachtrag 13 Folge 4: falsche Reihenfolge -> zurueckgesetzt; Form ROOM11F0 sub17 "
      "@0x016C0..@0x016E4 Schalterbits := 0, RE2 ROOM2130 sub04 @0x017D6/@0x01800 Meldung + Fehlerton)"),
-    ("2030", 46, "warnung", [["WARNING: The water will rise", "in one minute. Please leave", "the room immediately!"]], False, None,
+    ("2030", 46, "warnung", [["WARNING: The water will rise", "in one minute."], ["Please leave the room immediately!"]], False, None,
      "NUTZER-VORGABE Nachtrag 19 (AUFTRAG.md 2026-10-24 19:55) woertlich: \"WARNING: The water will rise in one minute. "
-     "Please leave the room immediately!\" - nur umbrochen: drei Zeilen auf EINER Seite wie ROOM10D0 msg 17 @0x21BD (zwei "
-     "0x08 in einer Seite), jede Zeile <= 286 px = breiteste Original-Zeile (ROOM1070 msg 1, Breiten DEBUG.BIN @0x4416)"),
+     "Please leave the room immediately!\" - nur umbrochen, jede Zeile <= 286 px = breiteste Original-Zeile (ROOM1070 msg 1, "
+     "Breiten DEBUG.BIN @0x4416). Runde 42 namen Stufe 5: hoechstens zwei Zeilen je Seite wie die echte 40%-Disc (Zeilenwechsel "
+     "y = 180 + 16 fest @0x800289a0/@0x800289ac, 0 von 700 Seiten mit drei Zeilen; tools/r42_namen/lesbar_s5.py) - zweiter Satz "
+     "auf Seite 2 nach der Taste `02 00` (Seitenform ROOM2080 msg 0 @0x0CF8)"),
     ("2030", 47, "panel_voll", [["The tank is full."]], False, None, "PORT-WAHL (Spur N, Entwurf A)"),
     ("2030", 48, "treppe_flut", [["I cannot go down the stairs", "because of the water."]], False, None,
      "PORT-WAHL (Nachbesserung 3, Nachtrag 8: unterer Bereich nach dem Strom geflutet und gesperrt), Form der Leiter-Vorgabe Id 40"),

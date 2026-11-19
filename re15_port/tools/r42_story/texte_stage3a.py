@@ -56,7 +56,8 @@ UNTERTITEL = (
     (0x3060, 21, 0x01, 'Leon',   "A keycard... This should open the door in the loading area."),
     (0x3060, 22, 0x07, 'Marvin', "Go on. With this leg, I'd only slow you down."),
     (0x3060, 23, 0x01, 'Leon',   "I'm not leaving you out here."),
-    (0x3060, 24, 0x07, 'Marvin', "I'll make it back to the lobby. I can lock myself in and keep an eye on the front gate."),
+    # Runde 42 namen Stufe 5: '|' = Seitenwechsel (drei Zeilen -> zwei Seiten, tools/r42_namen/lesbar_s5.py PORT_SEITEN)
+    (0x3060, 24, 0x07, 'Marvin', "I'll make it back to the lobby. | I can lock myself in and keep an eye on the front gate."),
     (0x3060, 25, 0x07, 'Marvin', "If Ada turns up, I'll send her your way."),
     (0x3060, 26, 0x01, 'Leon',   "Hang in there. I'll come back for you."),
     (0x3060, 27, 0x07, 'Marvin', "You'd better, rookie."),
@@ -126,8 +127,18 @@ def umbruch(text, erste_breite_vorweg, maxpx):
     return zeilen
 
 
-def untertitel(farbe, name, text, raum):
-    """Untertitel; der Nachlauf N im Schwanz `04 01 01 N` kommt aus den Original-Zeilen desselben Raums (nachlauf_r42.py, H4)."""
+def untertitel(farbe, name, text, raum, mid=None):
+    """Untertitel; der Nachlauf N im Schwanz `04 01 01 N` kommt aus den Original-Zeilen desselben Raums (nachlauf_r42.py, H4).
+    Runde 42 namen Stufe 5: '|' im Text = zweite Seite mit Namenskopf, hoechstens zwei Zeilen je Seite (tools/r42_namen/lesbar_s5.py,
+    N des Seitenwechsels aus lesbar_s5.PORT_SEITEN[(raum, mid)]); die Zeilen der Seite sind dann durch ' / ' getrennt."""
+    if '|' in text:
+        sys.path.insert(0, os.path.join(HIER, '..', 'r42_namen'))
+        import lesbar_s5 as L5
+        n_w, _ = L5.PORT_SEITEN[(raum, mid)]
+        kopf_b = [0x04, 0x00, 0x05, farbe] + kod(name + ':') + [0x05, 0x00]
+        b, zz, bws = L5.text_seiten(text, kod, kopf_b, [], n_w)
+        n, _ = nachlauf_r42.nachlauf(raum, len(zz[-1]))
+        return b + [0x04, 0x01, 0x01, n], [' // '.join(' / '.join(z) for z in zz)], [w for x in bws for w in x]
     kopf = name + ': '
     zeilen = umbruch(text, px(kopf), MAX_PX)
     b = [0x04, 0x00, 0x05, farbe] + kod(name + ':') + [0x05, 0x00, 0x00]
@@ -138,6 +149,23 @@ def untertitel(farbe, name, text, raum):
     bw = [px(kopf) + px(zeilen[0])] + [px(z) for z in zeilen[1:]]
     n, _ = nachlauf_r42.nachlauf(raum, len(zeilen))
     return b + [0x04, 0x01, 0x01, n], zeilen, bw
+
+
+def letzte_seite_zeilen(zeilen):
+    """Zeilenzahl der letzten Seite (Stufe 5: ein Eintrag 'a / b // c / d' bei zwei Seiten) - fuer den Nachlauf-Beleg."""
+    if len(zeilen) == 1 and ' // ' in zeilen[0]:
+        return len(zeilen[0].split(' // ')[-1].split(' / '))
+    return len(zeilen)
+
+
+def seite2_beleg(raum, mid, text):
+    """Kommentar-Zusatz fuer Texte mit Seitenwechsel (Stufe 5)."""
+    if '|' not in text:
+        return ''
+    sys.path.insert(0, os.path.join(HIER, '..', 'r42_namen'))
+    import lesbar_s5 as L5
+    n, beleg = L5.PORT_SEITEN[(raum, mid)]
+    return '; Stufe 5: Seite 2 nach `02 %d`: %s' % (n, beleg)
 
 
 def systemtext(text):
@@ -177,13 +205,15 @@ def main():
            ' * VERTRAG analysis/befunde_runde42/VERTRAG.md 2.3). */']
     tab = []
     for raum, mid, farbe, name, text in UNTERTITEL:
-        b, zeilen, bw = untertitel(farbe, name, text, raum)
+        b, zeilen, bw = untertitel(farbe, name, text, raum, mid)
+        if len(zeilen) > 2:
+            fehler.append('ROOM%04X msg %d: %d Zeilen auf einer Seite > 2 (tools/r42_namen/lesbar_s5.py)' % (raum, mid, len(zeilen)))
         for i, w in enumerate(bw):
             if w > MAX_PX:
                 fehler.append('ROOM%04X msg %d Zeile %d = %d px > %d' % (raum, mid, i + 1, w, MAX_PX))
         n = 'k_s3a_%04x_msg%d' % (raum, mid)
         out += carr(n, b, 'ROOM%04X %d %s: %s  (Zeilen %s px; %s)' % (raum, mid, name, ' / '.join(zeilen), '/'.join(map(str, bw)),
-                                    nachlauf_r42.nachlauf(raum, len(zeilen))[1]))
+                                    nachlauf_r42.nachlauf(raum, letzte_seite_zeilen(zeilen))[1] + seite2_beleg(raum, mid, text)))
         tab.append((raum, mid, n))
     for raum, mid, text in SYSTEM:
         b, zeilen, bw = systemtext(text)

@@ -22,6 +22,10 @@
  * 13 @0x01262; 2000 sub02 4 @0x018C2 / 5 @0x018EC, 7 @0x01926 / 8 @0x0197C).
  * Elza-Raeume 10D1/1151/2001: keine dieser Nachrichten, keine Fortsetzungszeile (geprueft, Kopf des Werkzeugs).
  */
+/* STUFE 5 (2026-11-19): dieselbe Funktion setzt zusaetzlich die 35 RDT-Nachrichten der Mod mit einer Seite von DREI Zeilen ein,
+ * verteilt auf hoechstens zwei Zeilen je Seite (gen/zweizeilig_r42_texte.inc, tools/r42_namen/zweizeilig_s5.py; Belege: 40%-Disc
+ * Zeilenwechsel y = 180 + 16 fest @0x800289a0/@0x800289ac, 0 von 700 Seiten mit drei Zeilen; Letterbox ab y 216 @0x80072f06).
+ * re15_namen_r42_text() liefert auch diese Texte. */
 #ifndef RE15_NAMEN_R42_H
 #define RE15_NAMEN_R42_H
 

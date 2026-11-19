@@ -247,10 +247,11 @@ static const zeile_t k_liste[] = {
     { 0x6030,  5, "John: Then I'm staying with the kid. And I'll keep an eye on your friend here." },
     /* E6 (6031, Elza): msg 0 bleibt (story_r36), 1, 2 Neutext, 12, 13 neu */
     { 0x6031,  0, "Elza: Sherry! Is anyone else here?" },
-    { 0x6031,  1, "Sherry: A policeman brought Marvin down here. Then he went back into the fire." },
+    /* Strang namen Stufe 5: drei Zeilen -> zwei Seiten, jede mit Namenskopf (re15_msg_decode_text haengt Seiten ohne Leerzeichen an) */
+    { 0x6031,  1, "Sherry: A policeman brought Marvin down here.Sherry: Then he went back into the fire." },
     { 0x6031,  2, "Elza: Back? Why?" },
     { 0x6031, 12, "Sherry: He said he had to find someone. He told us not to wait for him." },
-    { 0x6031, 13, "Elza: ...Then we won't. If that core goes, no one gets out. Let's get this train moving." },
+    { 0x6031, 13, "Elza: ...Then we won't. If that core goes, no one gets out.Elza: Let's get this train moving." },   /* namen Stufe 5 */
     /* E9 (6031, Elza): Zugstart */
     { 0x6031, 14, "Sherry: It's moving! Elza, we did it!" },
     { 0x6031, 15, "John: What the hell was that? It came from the back car!" },

@@ -324,6 +324,8 @@ WARTE 150
 AKTION
 WARTE 450
 AKTION
+WARTE 120
+AKTION
 WARTE 30
 FLAG 5 29
 GEHE -1050 6900 100
@@ -356,7 +358,7 @@ _danach("${_dbg}" "Ventil 09 gedreht (Drehung 1/4)" "Ventil 02 gedreht (Drehung 
 _danach("${_dbg}" "Ventil 02 gedreht (Drehung 2/4)" "Ventil 01 gedreht (Drehung 3/4)" v2b "dann 02 (Nordwand)")
 _danach("${_dbg}" "Ventil 01 gedreht (Drehung 3/4)" "Ventil 08 gedreht (Drehung 4/4)" v2b "dann 01")
 _danach("${_dbg}" "Ventil 08 gedreht (Drehung 4/4)" "[ventilkette41] Folge 09 02 01 08 -> RICHTIG: Warnung, Zaehler, Flut" v2b "richtige Folge")
-_danach("${_dbg}" "RICHTIG: Warnung" "[msgtext] room=203${S} id=46 \"WARNING: The water will rise in one minute. Please leave the room immediately!\"" v2b "Warnung 46 im Wortlaut des Nachtrags 19")
+_danach("${_dbg}" "RICHTIG: Warnung" "[msgtext] room=203${S} id=46 \"WARNING: The water will rise in one minute.Please leave the room immediately!\"" v2b "Warnung 46 im Wortlaut des Nachtrags 19")
 _danach("${_dbg}" "id=46" "[ventilkette41] Zaehler laeuft: 1800 Takte" v2b "Zaehler gestartet")
 _flagfolge("${_wp}" v2b 5 29 "1")
 _danach("${_dbg}" "Zaehler laeuft: 1800 Takte" "[aot] DOOR FIRE slot=0 rect=(7350,-200,hw=500,hh=1750) target_cut=11" v2b "Ost-Tuer zu Fuss erreicht")

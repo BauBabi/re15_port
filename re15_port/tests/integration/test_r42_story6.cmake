@@ -160,10 +160,10 @@ ENDE
     pruefe_re("E6: Zeilen 0, 1, 2, 12, 13 in dieser Folge"
         "msgtext] room=6031 id=0 .*msgtext] room=6031 id=1 .*msgtext] room=6031 id=2 .*msgtext] room=6031 id=12 .*msgtext] room=6031 id=13 ")
     pruefe("E6: msg 0 bleibt" "[msgtext] room=6031 id=0 \"Elza: Sherry! Is anyone else here?\"")
-    pruefe("E6: msg 1" "[msgtext] room=6031 id=1 \"Sherry: A policeman brought Marvin down here. Then he went back into the fire.\"")
+    pruefe("E6: msg 1" "[msgtext] room=6031 id=1 \"Sherry: A policeman brought Marvin down here.Sherry: Then he went back into the fire.\"")
     pruefe("E6: msg 2" "[msgtext] room=6031 id=2 \"Elza: Back? Why?\"")
     pruefe("E6: msg 12" "[msgtext] room=6031 id=12 \"Sherry: He said he had to find someone. He told us not to wait for him.\"")
-    pruefe("E6: msg 13" "[msgtext] room=6031 id=13 \"Elza: ...Then we won't. If that core goes, no one gets out. Let's get this train moving.\"")
+    pruefe("E6: msg 13" "[msgtext] room=6031 id=13 \"Elza: ...Then we won't. If that core goes, no one gets out.Elza: Let's get this train moving.\"")
     pruefe_nicht("E6: kein alter Satz 'fighting off monsters'" "fighting off monsters")
     pruefe_nicht("E6: kein alter Satz 'I'll do it!'" "Elza: I'll do it!")
     # Stimmen: msg 1/2 alte Aufnahme unter Neutext (NEUAUF, AUFNAHMELISTE "zuerst"), 12/13 ohne Aufnahme -> Textdauer

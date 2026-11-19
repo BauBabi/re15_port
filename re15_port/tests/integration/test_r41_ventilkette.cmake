@@ -138,6 +138,8 @@ WARTE 150
 AKTION
 WARTE 450
 AKTION
+WARTE 120
+AKTION
 WARTE 30
 ")
 
@@ -168,7 +170,7 @@ _muss("${_dbg}" "[msg] room=2030 id=55" a "Frage 55 (Ventil 09)")
 _muss("${_dbg}" "[ventilkette41] Folge 09 02 01 08 -> RICHTIG: Warnung, Zaehler, Flut" a "richtige Folge nach der vierten Drehung")
 _muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile_flut" a "Ereignis 26 vom C-Takt")
 _muss("${_dbg}" "[msg] room=2030 id=46" a "Warnung 46")
-_muss("${_dbg}" "[msgtext] room=2030 id=46 \"WARNING: The water will rise in one minute. Please leave the room immediately!\"" a "Warnung 46 im Wortlaut des Nachtrags 19")
+_muss("${_dbg}" "[msgtext] room=2030 id=46 \"WARNING: The water will rise in one minute.Please leave the room immediately!\"" a "Warnung 46 im Wortlaut des Nachtrags 19")
 _muss("${_dbg}" "Plc_motion(entity=0, motion=17, flags=0x00)" a "RE2-Dreh-Animation (Clip 17, RE2 ROOM1080 sub08) beim Drehen")
 _muss("${_dbg}" "[ventilkette41] Zaehler laeuft: 1800 Takte, Ost-Tuer -> 20B0, Wasser geparkt" a "Zaehler im Spiel-Takt")
 _muss("${_dbg}" "[ventilkette41] ROOM2030: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)" a "Ost-Tuer umgelenkt")

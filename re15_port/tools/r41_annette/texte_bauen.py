@@ -50,7 +50,8 @@ ZEILEN = (
     (0x6030, 27, 0x02, 'Annette', ["There! The train's moving."], 0x63),
     (0x6030, 28, 0x02, 'Annette', ['What was that?', '...Sherry is back there!'], 0x63),
     (0x6030, 29, 0x01, 'Leon', ["I'll check it out."], 0x63),
-    (0x6030, 30, 0x02, 'Annette', ["No. She's my daughter.", 'Stay here and keep an eye on', 'the controls.'], 0x63),
+    # Runde 42 namen Stufe 5: '|' = Seite 2 mit Namenskopf (hoechstens zwei Zeilen je Seite, tools/r42_namen/lesbar_s5.py PORT_SEITEN)
+    (0x6030, 30, 0x02, 'Annette', ["No. She's my daughter.", '|', 'Stay here and', 'keep an eye on the controls.'], 0x63),
 )
 
 TAB = {' ': 0x00, '!': 0x1A, '?': 0x1B, ':': 0x16, ',': 0x18, "'": 0x3A, '-': 0x3B, '.': 0x57}
@@ -81,27 +82,60 @@ def px(text):
     return sum(WID[glyphe(c)] for c in text)
 
 
-def kodiere(farbe, name, zeilen, halt=0x63):
+def kodiere(farbe, name, zeilen, halt=0x63, wechsel=None):
+    """wechsel = N des Seitenwechsels `04 01 02 N 04 00` vor einem '|' in zeilen (Seite 2 mit demselben Namenskopf, Form Strang
+    namen Stufe 1/4, ROOM3060 msg 7 @0x1244 `04 01 02 3c 04 00`)."""
     assert 0 < halt <= 0xFF
-    b = [0x04, 0x00, 0x05, farbe] + [glyphe(c) for c in name + ':'] + [0x05, 0x00, 0x00]
-    for i, z in enumerate(zeilen):
-        if i:
+    kopf = [0x04, 0x00, 0x05, farbe] + [glyphe(c) for c in name + ':'] + [0x05, 0x00, 0x00]
+    b = list(kopf)
+    neu = True
+    for z in zeilen:
+        if z == '|':
+            assert wechsel and 0 < wechsel <= 0xFF
+            b += [0x04, 0x01, 0x02, wechsel] + kopf
+            neu = True
+            continue
+        if not neu:
             b.append(0x08)
         b += [glyphe(c) for c in z]
+        neu = False
     return b + [0x04, 0x01, 0x01, halt]
+
+
+def seiten_von(zeilen):
+    s, akt = [], []
+    for z in zeilen:
+        if z == '|':
+            s.append(akt)
+            akt = []
+        else:
+            akt.append(z)
+    return s + [akt]
 
 
 def main():
     fehler = []
     out = ['/* Generiert von re15_port/tools/r41_annette/texte_bauen.py - nicht von Hand aendern. */']
     for raum, mid, farbe, name, zeilen, halt in ZEILEN:
-        bw = [px(name + ': ') + px(zeilen[0])] + [px(z) for z in zeilen[1:]]
+        bw, wechsel, zus = [], None, ''
+        for seite in seiten_von(zeilen):
+            bw += [px(name + ': ') + px(seite[0])] + [px(z) for z in seite[1:]]
+            if len(seite) > 2:   # Runde 42 namen Stufe 5: hoechstens zwei Zeilen je Seite (tools/r42_namen/lesbar_s5.py)
+                fehler.append('ROOM%04X msg %d: %d Zeilen auf einer Seite > 2' % (raum, mid, len(seite)))
+            if any(len(z.split(' ')) < 2 for z in seite[1:]):
+                fehler.append('ROOM%04X msg %d: Zeile mit nur einem Wort' % (raum, mid))
+        if '|' in zeilen:
+            sys.path.insert(0, os.path.join(HIER, '..', 'r42_namen'))
+            import lesbar_s5 as L5
+            wechsel, beleg = L5.PORT_SEITEN[(raum, mid)]
+            zus = '; Seite 2 nach `02 %d`: %s' % (wechsel, beleg)
         for i, w in enumerate(bw):
             if w > MAX_PX:
                 fehler.append('ROOM%04X msg %d Zeile %d = %d px > %d' % (raum, mid, i + 1, w, MAX_PX))
-        b = kodiere(farbe, name, zeilen, halt)
-        out.append('/* ROOM%04X %d %s: %s  (Zeilen %s px, Halt %d Bilder) */' % (raum, mid, name, ' / '.join(zeilen),
-                                                                               '/'.join(str(w) for w in bw), halt))
+        b = kodiere(farbe, name, zeilen, halt, wechsel)
+        out.append('/* ROOM%04X %d %s: %s  (Zeilen %s px, Halt %d Bilder%s) */' % (raum, mid, name,
+                                                                                 ' / '.join(zeilen).replace(' / | / ', ' // '),
+                                                                                 '/'.join(str(w) for w in bw), halt, zus))
         out.append('static const uint8_t k_an_%04x_msg%d[%d] = {' % (raum, mid, len(b)))
         for i in range(0, len(b), 16):
             out.append('    ' + ' '.join('0x%02x,' % x for x in b[i:i + 16]))

@@ -54,7 +54,7 @@ UNTERTITEL = (
     (0x2081, 47, 0x06, 'Sherry', "Elza, are you okay? I heard some really loud noises!"),
     (0x2081, 48, 0x01, 'Elza',   "I'm fine, Sherry. Thanks."),
     (0x2081, 49, 0x07, 'John',   "So you're Sherry. Stick close, kid."),
-    (0x2081, 50, 0x07, 'John',   "Elza, go on ahead. I'll wait here and look after Sherry until you've cleared the way."),
+    (0x2081, 50, 0x07, 'John',   "Elza, go on ahead. | I'll wait here and look after Sherry until you've cleared the way."),
     (0x2081, 51, 0x01, 'Elza',   "All right. Sherry, you stay with John."),
 )
 # (Raum, Id, Text) - Systemtexte (VERTRAG 2.3 Art SYS)
@@ -130,8 +130,12 @@ def umbruch(text, erste_breite_vorweg, maxpx):
     return zeilen
 
 
-def untertitel(farbe, name, text, raum):
-    """Untertitel; der Nachlauf N im Schwanz `04 01 01 N` kommt aus den Original-Zeilen desselben Raums (nachlauf_r42.py, H4)."""
+def untertitel(farbe, name, text, raum, mid=None):
+    """Untertitel; der Nachlauf N im Schwanz `04 01 01 N` kommt aus den Original-Zeilen desselben Raums (nachlauf_r42.py, H4).
+    Runde 42 namen Stufe 5: '|' = zweite Seite mit Namenskopf (texte_stage3a.untertitel, tools/r42_namen/lesbar_s5.py)."""
+    if '|' in text:
+        import texte_stage3a as T3
+        return T3.untertitel(farbe, name, text, raum, mid)
     kopf = name + ': '
     zeilen = umbruch(text, px(kopf), MAX_PX)
     b = [0x04, 0x00, 0x05, farbe] + kod(name + ':') + [0x05, 0x00, 0x00]
@@ -142,6 +146,16 @@ def untertitel(farbe, name, text, raum):
     bw = [px(kopf) + px(zeilen[0])] + [px(z) for z in zeilen[1:]]
     n, _ = nachlauf_r42.nachlauf(raum, len(zeilen))
     return b + [0x04, 0x01, 0x01, n], zeilen, bw
+
+
+def T3_letzte(zeilen):
+    import texte_stage3a as T3
+    return T3.letzte_seite_zeilen(zeilen)
+
+
+def T3_beleg(raum, mid, text):
+    import texte_stage3a as T3
+    return T3.seite2_beleg(raum, mid, text)
 
 
 def systemtext(text):
@@ -181,13 +195,15 @@ def main():
            ' * 4.2 E1, 6b; VERTRAG analysis/befunde_runde42/VERTRAG.md 2.3). */']
     tab = []
     for raum, mid, farbe, name, text in UNTERTITEL:
-        b, zeilen, bw = untertitel(farbe, name, text, raum)
+        b, zeilen, bw = untertitel(farbe, name, text, raum, mid)
+        if len(zeilen) > 2:
+            fehler.append('ROOM%04X msg %d: %d Zeilen auf einer Seite > 2 (tools/r42_namen/lesbar_s5.py)' % (raum, mid, len(zeilen)))
         for i, w in enumerate(bw):
             if w > MAX_PX:
                 fehler.append('ROOM%04X msg %d Zeile %d = %d px > %d' % (raum, mid, i + 1, w, MAX_PX))
         n = 'k_s2_%04x_msg%d' % (raum, mid)
         out += carr(n, b, 'ROOM%04X %d %s: %s  (Zeilen %s px; %s)' % (raum, mid, name, ' / '.join(zeilen), '/'.join(map(str, bw)),
-                                    nachlauf_r42.nachlauf(raum, len(zeilen))[1]))
+                                    nachlauf_r42.nachlauf(raum, T3_letzte(zeilen))[1] + T3_beleg(raum, mid, text)))
         tab.append((raum, mid, n))
     for raum, mid, text in SYSTEM:
         b, zeilen, bw = systemtext(text)

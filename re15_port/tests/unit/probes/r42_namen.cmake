@@ -6,17 +6,21 @@
 #   unit_r42_namen_zeilen  Stufe 4: neue/geaenderte Untertitel je Seite <= 2 Zeilen, keine Ein-Wort-Zeile, <= 271 px, mit Namen
 #   unit_r42_namen_seitenwechsel  Stufe 4: Seite 2 zweiseitiger Saetze (6000 48/49/50, 10D0 18/24/25) beim ersten Wort der Aufnahme
 #   unit_r42_namen_standzeit  Stufe 4: 6030 msg 4 und msg 32 stehen im Wagen-Programm so lange wie die Original-Zeile msg 0
+#   unit_r42_namen_alle_zeilen  Stufe 5: jede Nachricht jedes Raums wie im Spiel geladen (RDT + Port-Texte des Raumaufbaus) - je
+#                         Seite hoechstens 2 Zeilen (tools/r42_namen/zweizeilig_s5.py, lesbar_s5.py)
+#   unit_r42_namen_quellen_zeilen  Stufe 5: jede Byte-Tabelle in engine/src (.c, gen/.inc) als Nachricht gelesen - je Seite
+#                         hoechstens 2 Zeilen (Port-Texte, die erst bei einem Ereignis eingesetzt werden; ohne Inventar)
 #   unit_r42_namen_fortsetzung  Stufe 2: Mod-Fortsetzungszeilen 10D0/1150/2000 am Satzende der Aufnahme, jede mit Namen; Elza-
 #                         Raeume 10D1/1151/2001 mitgeprueft (include/re15_namen_r42.h, tools/r42_namen/fortsetzung_bauen.py)
 add_executable(test_r42_namen ${CMAKE_CURRENT_LIST_DIR}/../test_r42_namen.c)
 target_link_libraries(test_r42_namen PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r42_namen PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(test_r42_namen PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
-    RE15_SYNCHRO_DIR="${CMAKE_SOURCE_DIR}/../synchro")
+    RE15_SYNCHRO_DIR="${CMAKE_SOURCE_DIR}/../synchro" RE15_ENGINE_SRC_DIR="${CMAKE_SOURCE_DIR}/engine/src")
 if(NOT WIN32)
     target_link_libraries(test_r42_namen PRIVATE m)
 endif()
-foreach(_teil texte fortsetzung zeilen seitenwechsel standzeit)
+foreach(_teil texte fortsetzung zeilen seitenwechsel standzeit alle_zeilen quellen_zeilen)
     add_test(NAME unit_r42_namen_${_teil} COMMAND test_r42_namen ${_teil} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r42_namen_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()

@@ -46,7 +46,7 @@ import texte_stage3a as T  # noqa: E402
 ZIEL = os.path.join(T.PORT, 'engine', 'src', 'gen', 'story6_r42_texte.inc')
 MAX_LEN = 512   # PC MSG_RAW_LEN (msg_common.c:47)
 PSX_LEN = 128
-MAX_ZEILEN = 3
+MAX_ZEILEN = 2   # Runde 42 namen Stufe 5: hoechstens zwei Zeilen je Seite fuer ALLE Untertitel (tools/r42_namen/lesbar_s5.py)
 NAMEN_S4 = {(0x6030, 4), (0x6030, 32)}   # Runde 42 namen Stufe 4: diese hoechstens 2 Zeilen (tools/r42_namen/lesbar_s4.py)
 SEITE = [0x04, 0x01, 0x02, 0x63, 0x04, 0x00]   # Form ROOM3060 @0x1244 `04 01 02 3c 04 00`, N = 0x63 (ROOM6030 `01 63` @0x13F7, Schwanz ab @0x13F5)
 SCHWANZ = bytes([0x04, 0x01, 0x01, 0x63])
@@ -69,10 +69,11 @@ UNTERTITEL = (
     (0x6030, 32, LEON,   "But we can't wait. When that reactor goes, nobody gets out."),
     (0x6030, 5,  JOHN,   "Then I'm staying with the kid. And I'll keep an eye on your friend here."),
     # E6 (6031 Wagen, Elza): msg 0 bleibt (story_r36), dann 1, 2, 12, 13
-    (0x6031, 1,  SHERRY, "A policeman brought Marvin down here. Then he went back into the fire."),
+    # Runde 42 namen Stufe 5: '|' = Seitenwechsel (drei Zeilen -> zwei Seiten, tools/r42_namen/lesbar_s5.py PORT_SEITEN)
+    (0x6031, 1,  SHERRY, "A policeman brought Marvin down here. | Then he went back into the fire."),
     (0x6031, 2,  ELZA,   "Back? Why?"),
     (0x6031, 12, SHERRY, "He said he had to find someone. He told us not to wait for him."),
-    (0x6031, 13, ELZA,   "...Then we won't. If that core goes, no one gets out. Let's get this train moving."),
+    (0x6031, 13, ELZA,   "...Then we won't. If that core goes, no one gets out. | Let's get this train moving."),
     # E9 (6031 Fuehrerstand, Elza): Zugstart
     (0x6031, 14, SHERRY, "It's moving! Elza, we did it!"),
     (0x6031, 15, JOHN,   "What the hell was that? It came from the back car!"),
@@ -91,8 +92,12 @@ def rdt_msg(raum, mid):
     return d, a, b
 
 
-def untertitel_seiten(farbe, name, text, raum):
-    """Untertitel mit 1..n Seiten ('|'); JEDE Seite mit Sprecherkopf (texte_stage3a.untertitel, Strang namen)."""
+def untertitel_seiten(farbe, name, text, raum, mid=None):
+    """Untertitel mit 1..n Seiten ('|'); JEDE Seite mit Sprecherkopf (texte_stage3a.untertitel, Strang namen).
+    Stufe 5: Seitenwechsel mit N aus tools/r42_namen/lesbar_s5.PORT_SEITEN, hoechstens zwei Zeilen je Seite."""
+    if '|' in text:
+        b, zz, bw = T.untertitel(farbe, name, text, raum, mid)
+        return b, [x.split(' / ') for x in zz[0].split(' // ')], bw
     seiten = text.split('|')
     b, z1, bw = T.untertitel(farbe, name, seiten[0], raum)
     b = b[:-4]                                   # Schwanz erst am Ende (SCHWANZ, Beleg oben)
@@ -117,7 +122,7 @@ def main():
            ' * (ROOM6030 msg 0 @0x13F5, ROOM6031 msg 0 @0x1161). */']
     tab = []
     for raum, mid, (farbe, name), text in UNTERTITEL:
-        b, zeilen, bw = untertitel_seiten(farbe, name, text, raum)
+        b, zeilen, bw = untertitel_seiten(farbe, name, text, raum, mid)
         if len(b) > PSX_LEN:
             print('Hinweis: ROOM%04X msg %d hat %d Byte > %d (PSX MSG_RAW_LEN schneidet ab; PC 512)' % (raum, mid, len(b), PSX_LEN))
         for i, w in enumerate(bw):
@@ -132,8 +137,8 @@ def main():
         if bytes(b[-4:]) != SCHWANZ:
             fehler.append('ROOM%04X msg %d: Schwanz' % (raum, mid))
         n = 'k_s6_%04x_msg%d' % (raum, mid)
-        out += T.carr(n, b, 'ROOM%04X %d %s: %s  (%d B, Zeilen %s px)' % (raum, mid, name, ' // '.join(' / '.join(z) for z in zeilen), len(b),
-                                                                      '/'.join(map(str, bw))))
+        out += T.carr(n, b, 'ROOM%04X %d %s: %s  (%d B, Zeilen %s px%s)' % (raum, mid, name, ' // '.join(' / '.join(z) for z in zeilen), len(b),
+                                                                      '/'.join(map(str, bw)), T.seite2_beleg(raum, mid, text)))
         tab.append((raum, mid, n))
     out.append('typedef struct { uint16_t raum; uint8_t id; const uint8_t *b; uint16_t n; } s6_text_t;')
     out.append('static const s6_text_t k_s6_texte[] = {')
