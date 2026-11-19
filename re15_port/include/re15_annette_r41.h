@@ -86,7 +86,7 @@ int  re15_annette_r41_spawn_weg(uint16_t room_id, uint8_t type);                
 const uint8_t *re15_annette_r41_evt_exec(uint16_t room_id, uint8_t sub_id, const uint8_t *target);  /* scd_vm.c op_evt_exec */
 void re15_annette_r41_install(uint16_t room_id);                                                    /* scd_room_setup.c */
 void re15_annette_r41_tick(void);                                                                   /* enemy_ai_common.c run_all */
-int  re15_annette_r41_besitzt(int slot);                                                            /* enemy_ai_common.c run_all */
+int  re15_annette_r41_besitzt(int slot);                                                            /* enemy_ai_common.c run_all; Annette ab dem Trefferbild (Stufe 8) */
 const char *re15_annette_r41_emd_datei(uint8_t type);                                               /* platform/pc/main.c */
 int  re15_annette_r41_volle_drehung(const void *actor);                                             /* platform/pc/main.c Zeichner */
 /* Nachbesserung 4 (Abnahme 2 N3): 1 = dieser Aktor ist Annettes Leiche (hp -1) und kein Schuss-Kandidat - wie die liegende
