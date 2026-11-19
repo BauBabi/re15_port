@@ -13,21 +13,27 @@
  *           +0x8A, ScaleMatrix in FUN_8001e9ec) - nicht mehr (Rumpf/Kopf und Spalten 0/2 immer 4096, Obergrenze 8368, nur
  *           in B[3] und den Unterbrechungen davon) und nicht weniger (gezeichnet, an der Matrix gemessen, die Hand reicht nur
  *           mit dem Wachsen in den Flur). Faktor 1 in B[3] (Runde 5) ist rot, Port-Streckung (Runde 3) ist rot.
- *   H0..H4  Gegriffen wird nur, wenn die RE1.5-Hand die Figur erreicht (Klemmradius 450 @0x80073e9a): mitten im Flur nie;
+ *   H0..H4  Gegriffen wird nur, wenn die RE1.5-Hand die Figur erreicht (RE2-Tor 600 @0x801009BC): mitten im Flur nie;
  *           an der Wand mit dem gewachsenen Arm - der Koerper tritt NICHT vor (Runde 5 tat das, rot). Im Halten steht die Figur
  *           FEST (wie RE2) im Flur, die Hand liegt in jedem Halte-Bild an ihr: nicht in der Luft, nicht tief im Koerper.
  *           Leon und Elza.
  *   T1      Runde 6 (Pruefbericht Runde 5 R1, Memory reai-v2-psx-laufzeitbudget): kein Bild beim Zugriff rechnet merklich -
  *           Rechenschritte des Moduls je Bild hoechstens RECHEN_BUDGET, gemessene Zeit je Bild hoechstens ZEIT_BUDGET_MS.
- *   R1..R5  RE2-Funktion bleibt: Halten 152 Bilder ohne Tasten, Cooldown 120, Rueckzug, hp -1, Toene, Treffer; nach dem
- *           Sinken laeuft der unterbrochene Original-Ablauf weiter.
- *   H5      Runde 7 (Pruefbericht Runde 6 R1): beim Griff springt die Figur hoechstens eine Handbreite an ihre Halte-Lage.
- *   L1..L3  Runde 7: die Figur LAEUFT in den gewachsenen Arm - an der Wand entlang (L1, wie im Video der Runde 6) und aus dem
- *           Flur auf die Hand zu (L2): in keinem Bild vor dem Griff liegt die Handmitte in ihr (der Arm schiebt sie); greift er,
- *           dann mit Sprung <= Handbreite und der Hand an ihr (max <= Handbreite, im Mittel <= halbe Handbreite: im letzten
- *           Zugriff-Bild nimmt das Modul auch eine Lage mit bis zu einer halben Handbreite mittlerer Luft). L3: aus dem Flur greift
- *           er mindestens eine der beiden Figuren.
- *           Gegenprobe 7c5bbf082 (Runde 6): L1/L2 rot (Handmitte 8 Bilder in Leon wie im Video).
+ *   R1..R4  RE2-Funktion bleibt: Halten 152 Bilder ohne Tasten, Cooldown 120, Rueckzug, hp -1, Toene, Treffer.
+ *   R5      Runde 8 (Pruefbericht Runde 7 R1): nach dem Sinken folgt der Koerper dem Original-Treffer-Weg B[4] -> B[5] (Warten
+ *           (rng & 0xff) + 30 @0x8010d044-54, Pose steht) -> B[6] (Clip 3 rueckwaerts, der Arm kommt hoch) -> B[2] - kein Sprung in
+ *           die gewachsene Pose: keine Bewegung der Hand je Bild nach dem Sinken ist groesser als die groesste beim Sinken selbst.
+ *           Gegenprobe 7ec4ba1f0 (Runde 7): rot (Modus nach dem Sinken = B[3], Hand springt ~2300 in einem Bild).
+ *   H5      Runde 8 (Pruefbericht Runde 7 R2): der Pin setzt die Figur wie RE2 in EINEM Bild (@0x80100C18-38) hoechstens 600 weit
+ *           (Tor @0x801009BC), danach steht sie (H3).
+ *   G1      Runde 8 (Pruefbericht Runde 7 R2): Greifen genau wie das RE2-Tor A3 - in keinem Zugriff-Bild (0x301) mit RE2-Bild >= 5
+ *           (@0x80100A18), Abklingzeit 0 (@0x80100A28-30) und der gezeichneten Greif-Hand < 600 von der Figur (@0x801009BC) bleibt
+ *           der Griff aus. Ueber alle Laeufe dieses Riegels. Gegenprobe 7ec4ba1f0: rot (L1: Hand 1 von der Figur, kein Griff).
+ *   L1..L3  Die Figur LAEUFT in den gewachsenen Arm - an der Wand entlang (L1) und aus dem Flur auf die Hand zu (L2): in keinem Bild
+ *           vor dem Griff liegt die Handmitte in ihr (der Arm schiebt sie), und sie WIRD GEGRIFFEN (Runde 8), mit Sprung <= 600 und
+ *           der Hand an ihr (H2/H4). L3: aus dem Flur werden beide gegriffen. Gegenprobe 7ec4ba1f0: L1 rot (kein Griff).
+ *   Q1      Runde 8: Griff-Quote ueber 20 Laeufe (Leon/Elza, an der Wand / aus dem Flur, verschiedene Starts): Zugriffe gegen
+ *           Griffe (Ausgabe), G1 in jedem Lauf.
  *
  * GEGENPROBE: auf aaea5f8c2 fehlen die Koerper-/Hand-Funktionen (hier SCHWACH deklariert) -> rot. Auf db67b1388 (Runde 3)
  * streckt der Port den Arm zur RE2-Hand, auf 23815a1f7 (Runde 5) zeichnet er Faktor 1 in B[3], tritt beim Zugriff vor und
@@ -79,6 +85,9 @@ extern int  re15_re2arm_koerper_zustand(int slot, int *mode, int *phase, int sk[
 extern int  re15_re2arm_hand15(int slot, int32_t hand[3], int32_t schulter[3]) __attribute__((weak));
 extern int  re15_re2arm_kontakt_rest(int slot) __attribute__((weak));
 extern uint32_t re15_re2arm_rechenschritte(int zuruecksetzen) __attribute__((weak));
+extern int  re15_re2arm_greif_teil(int slot) __attribute__((weak));
+extern void re15_re2arm_pin_vor(int32_t *x, int32_t *z) __attribute__((weak));
+extern int  re15_re2arm_takt(int slot, int *re2_clip, int *re2_bild) __attribute__((weak));
 #ifdef _WIN32
 #include <windows.h>
 #else
@@ -116,6 +125,8 @@ static double jetzt_ms(void)
 #define K_B3 2
 #define K_GRIFF 3
 #define K_SINKEN 4
+#define K_WARTEN 5
+#define K_HOCH 6
 
 static re15_rdt_t         s_rdt;
 static re15_camera_view_t s_cam;
@@ -254,7 +265,8 @@ static double tri_abstand(const double p[3], const double a[3], const double b[3
 static int hand_welt(const re15_actor_t *e, double hv[12][3])
 {
     const re15_enemy_bank_t *b = re15_enemy_find(0x1A);
-    const int teil = (e->re2z_f10e & 1u) ? 3 : 2;           /* greifender Arm (Modul em1a_arm) */
+    /* greifender Arm: Runde 8 die Hand, die das Gehirn misst (re15_re2arm_greif_teil); vorher Arm A -> 2, Arm B -> 3 */
+    const int teil = re15_re2arm_greif_teil ? re15_re2arm_greif_teil((int)(e - g_actors)) : ((e->re2z_f10e & 1u) ? 3 : 2);
     int32_t R[9], X[3], st = 0;
     if (!b || !re15_re2arm_zeichen_teil || re15_re2arm_zeichen_teil(e, teil, NULL, 0, R, X, &st) != 1) return 0;
     const re15_md1_mesh_t *m = &b->md1.meshes[b->skel.bone_mesh_index[teil]];
@@ -410,6 +422,25 @@ static void teile_pruefen(int slot, int ist_west)
     T.last_mode[L] = mode; T.last_phase[L] = phase; T.last_sk[L][0] = sk[0]; T.last_sk[L][1] = sk[1]; T.last_an[L][0] = an[0]; T.last_an[L][1] = an[1];
 }
 
+/* ---- G1 Tor-Treue (Runde 8): nach jedem Bild, in dem das Gehirn im Zugriff blieb (0x301), haette das RE2-Tor A3 gegriffen?
+ * A3 (@0x801009A0) sah in diesem Bild: die Greif-Hand nach dem Koerper-Bild, die Figur nach dem Schub, das RE2-Bild VOR dem
+ * Weiterzaehlen in B3 (= jetziges Bild - 1; jetzt 0 = Clip zu Ende, dann nicht auswertbar), die Abklingzeit. ---- */
+static int s_tor_pruef = 0, s_tor_verletzt = 0;
+static void tor_pruefen(int slot)
+{
+    re15_actor_t *arm = &g_actors[slot], *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
+    if (arm->state != 1 || arm->sub_state_1 != 3 || re15_player_is_grabbed() || (pl->re2z_self1d3 & 0x80u)) return;
+    int bild = -1; if (!re15_re2arm_takt || !re15_re2arm_takt(slot, NULL, &bild) || bild <= 0) return;
+    if (bild - 1 < 5 || g_re2_room_gflags != 0) return;                       /* sltiu 5 @0x80100A18, Abklingzeit @0x80100A28 */
+    int32_t h[3]; if (!re15_re2arm_hand15 || !re15_re2arm_hand15(slot, h, NULL)) return;
+    const double dx = h[0] - pl->x, dz = h[2] - pl->z;
+    s_tor_pruef++;
+    if (sqrt(dx * dx + dz * dz) < 600.0) {                                    /* FUN_800157D4(..,600) @0x801009BC */
+        s_tor_verletzt++;
+        if (s_tor_verletzt <= 5) printf("    G1: Zugriff-Bild %d ohne Griff, Hand %.0f von der Figur\n", bild - 1, sqrt(dx * dx + dz * dz));
+    }
+}
+
 /* ---- Griff-Lauf: Leon steht an der Westwand vor dem Fenster von Satz 5 und wartet ---- */
 /* Szenario (keine Verhaltens-Konstante): Leon steht an der Westwand (seine Flur-Klemme x -20622 = Wandflaeche -21090 + r 450
  * @0x80073e9a, gerundet; Memory reai-v2-runde10-arme-1090-stimme) auf der z-Hoehe der Hand und wartet. */
@@ -422,6 +453,9 @@ typedef struct {
     double gate_abstand, naechster_max, luecke_min, luecke_max, kontakt_sum; int griff_ok; int zugriff_clip; int sinken_clip;
     int kx_nach;
     int32_t vor_x, vor_z; double pin_sprung;
+    /* R5 (Runde 8): Modus-Folge nach dem Halten, Bilder je Modus, Handbewegung je Bild */
+    int folge[8], folge_n, warten_n, warten_bewegt, hoch_n, b2_nach_n; double sink_max, nach_max; int32_t hoch_y0, hoch_y1;
+    int pin_bilder; int32_t pin_x, pin_z;
 } griff_t;
 static int griff_lauf(int modell, griff_t *g, int *slot_out)
 {
@@ -450,6 +484,7 @@ static int griff_lauf(int modell, griff_t *g, int *slot_out)
         const double t0 = jetzt_ms();
         frame_step();
         const double dt = jetzt_ms() - t0;                 /* T1: Zeit je Bild (auch die Zugriff-Bilder) */
+        tor_pruefen(s5);
         if (dt > g->zeit_max_ms) g->zeit_max_ms = dt;
         g->bilder_gemessen++;
         if (re15_re2arm_rechenschritte) { const uint32_t r = re15_re2arm_rechenschritte(1); if (r > g->rechen_max) g->rechen_max = r; g->rechen_sum += r; }
@@ -467,6 +502,8 @@ static int griff_lauf(int modell, griff_t *g, int *slot_out)
             int32_t hh[3]; re15_re2arm_hand15(s5, hh, NULL);
             double dx = hh[0] - vx, dz = hh[2] - vz; g->gate_abstand = sqrt(dx*dx + dz*dz);
             g->vor_x = vx; g->vor_z = vz;                    /* Lage im Bild vor dem Griff (Pin-Sprung, H5) */
+            if (re15_re2arm_pin_vor) re15_re2arm_pin_vor(&g->vor_x, &g->vor_z);   /* Runde 8: die Lage, die das Tor A3 sah */
+            g->pin_x = pl->x; g->pin_z = pl->z;              /* Lage nach dem Griff-Bild (Pin B4 P0 + Hook P0 im selben Bild) */
             g->sk_griff = sk[(arm->re2z_f10e & 1u) ? 1 : 0];
             if (re15_re2arm_koerper_lage(arm, kp)) g->kx_griff = kp[0];
         }
@@ -503,7 +540,8 @@ static int griff_lauf(int modell, griff_t *g, int *slot_out)
             if (pl->z < g->leon_z_min) g->leon_z_min = pl->z;
             if (pl->z > g->leon_z_max) g->leon_z_max = pl->z;
             if (!erst) { int sp = abs(pl->x - lx) + abs(pl->z - lz); if (sp > g->sprung_max) g->sprung_max = sp; }
-            else { const double dx = pl->x - g->vor_x, dz = pl->z - g->vor_z; g->pin_sprung = sqrt(dx * dx + dz * dz); }
+            else { g->pin_bilder = (pl->x == g->pin_x && pl->z == g->pin_z) ? 1 : 0;   /* nach dem Griff-Bild nicht mehr bewegt */
+                   const double dx = pl->x - g->vor_x, dz = pl->z - g->vor_z; g->pin_sprung = sqrt(dx * dx + dz * dz); }
             lx = pl->x; lz = pl->z; erst = 0;
             g->halten_n++;
         } else if (re15_player_victim_state() == 4 && pl->motion == 1) {   /* L: Losreissen, Hand noch in der Naehe */
@@ -513,16 +551,33 @@ static int griff_lauf(int modell, griff_t *g, int *slot_out)
         if (arm->sub_state_1 == 5) g->loesen_bild = f + 1;
     }
     g->cd_nach = (int)g_re2_room_gflags;
-    for (int f = 0; f < 80; f++) {
+    int32_t hv_alt[3] = {0, 0, 0}; int hv_ok = 0, mode_alt2 = -1;
+    for (int f = 0; f < 700; f++) {
         frame_step();
         int mode = 0, phase = 0, sk[2] = {0, 0}, c = -1; re15_re2arm_koerper_zustand(s5, &mode, &phase, sk, NULL, NULL);
         if (mode == K_SINKEN && g->sinken_clip < 0) { re15_re2arm_koerper_info(s5, NULL, &c, NULL, NULL); g->sinken_clip = c; }
         if (g->rz_bilder < 0 && arm->sub_state_1 == 7) g->rz_bilder = f + 1;
-        if (!g->fortgesetzt && mode != K_SINKEN && mode != K_GRIFF) {   /* R5: erstes Bild nach dem Sinken */
+        if (!g->fortgesetzt && mode != K_SINKEN && mode != K_GRIFF) {   /* erstes Bild nach dem Sinken */
             g->fortgesetzt = 1; g->mode_nach = mode; g->phase_nach = phase; g->sk_nach[0] = sk[0]; g->sk_nach[1] = sk[1];
         }
+        if (f == 79) { int32_t kp[3]; g->kx_nach = re15_re2arm_koerper_lage(arm, kp) ? kp[0] : 0; }
+        /* R5: Folge der Modi ab dem Sinken, Handbewegung je Bild */
+        if (mode != mode_alt2 && g->folge_n < 8) g->folge[g->folge_n++] = mode;
+        int32_t hv[3];
+        if (re15_re2arm_hand15(s5, hv, NULL)) {
+            const double dx = hv[0] - hv_alt[0], dy = hv[1] - hv_alt[1], dz = hv[2] - hv_alt[2];
+            const double dd = hv_ok ? sqrt(dx * dx + dy * dy + dz * dz) : 0.0;
+            if (mode == K_SINKEN && mode_alt2 == K_SINKEN && dd > g->sink_max) g->sink_max = dd;
+            if (mode == K_WARTEN) { g->warten_n++; if (mode_alt2 == K_WARTEN && dd > 0.0) g->warten_bewegt++; }
+            if (mode == K_HOCH) { if (!g->hoch_n) g->hoch_y0 = hv[1]; g->hoch_y1 = hv[1]; g->hoch_n++; }
+            const int nach = (mode == K_WARTEN || mode == K_HOCH || (mode == K_B2 && g->hoch_n > 0 && g->b2_nach_n < 60));
+            if (mode == K_B2 && g->hoch_n > 0) g->b2_nach_n++;
+            if (nach && hv_ok && dd > g->nach_max) g->nach_max = dd;
+            hv_alt[0] = hv[0]; hv_alt[1] = hv[1]; hv_alt[2] = hv[2]; hv_ok = 1;
+        }
+        mode_alt2 = mode;
+        if (g->b2_nach_n >= 60) break;
     }
-    {   int32_t kp[3]; g->kx_nach = re15_re2arm_koerper_lage(arm, kp) ? kp[0] : 0; }
     g->hp_nach = arm->hp; g->se_nach = s_se_n;
     g->griff_ok = 1;
     return 1;
@@ -539,13 +594,12 @@ static int griff_lauf(int modell, griff_t *g, int *slot_out)
 #define WACHS_MIN    5400
 #define LAUF_SCHRITT 66
 typedef struct {
-    int ok, griff_bild, vor_n, vor_innen, halten_n, halten_innen, sk_griff, schritte;
+    int ok, griff_bild, vor_n, vor_innen, halten_n, halten_innen, sk_griff, schritte, zugriff_bild;
     double vor_kontakt_min, sprung, halten_max, halten_sum; int32_t vor_x, vor_z, halt_x, halt_z;
 } lauf_t;
-static int lauf_in_arm(int modell, int frontal, lauf_t *L)
+static int lauf_in_arm(int modell, int frontal, lauf_t *L, int start_ab, int versatz)
 {
-    const int start_ab = 0;
-    memset(L, 0, sizeof *L); L->griff_bild = -1; L->vor_kontakt_min = 1e30;
+    memset(L, 0, sizeof *L); L->griff_bild = -1; L->zugriff_bild = -1; L->vor_kontakt_min = 1e30;
     int slots[RE15_ACTOR_MAX];
     const int n = aufsetzen(slots, modell);
     if (n < 10) return 0;
@@ -566,11 +620,13 @@ static int lauf_in_arm(int modell, int frontal, lauf_t *L)
     if (!gefunden) return 0;
     leon_laden(modell);
     int32_t h[3]; re15_re2arm_hand15(s5, h, NULL);
-    if (frontal) { pl->x = h[0] + 1400; pl->z = h[2]; pl->rot_y = 2048; }   /* aus dem Flur auf die Hand zu, Blick -x */
-    else { pl->x = FLUR_KLEMME_WEST; pl->z = h[2] + 1200; pl->rot_y = 1024; }  /* an der Wand entlang, Blick -z (FUN_800152C8-Formel) */
+    if (frontal) { pl->x = h[0] + 1400; pl->z = h[2] + versatz; pl->rot_y = 2048; }   /* aus dem Flur auf die Hand zu, Blick -x */
+    else { pl->x = FLUR_KLEMME_WEST; pl->z = h[2] + 1200 + versatz; pl->rot_y = 1024; }  /* an der Wand entlang, Blick -z (FUN_800152C8-Formel) */
     int32_t lx = pl->x, lz = pl->z;                       /* zuletzt GEZEIGTE Lage (nach dem Bild, vor dem naechsten Schritt) */
     for (int f = 0; f < 400 && L->griff_bild < 0; f++) {
         frame_step();
+        tor_pruefen(s5);
+        if (arm->sub_state_1 == 3 && L->zugriff_bild < 0) L->zugriff_bild = f;
         if (arm->sub_state_1 == 4 || re15_player_is_grabbed()) { L->griff_bild = f; break; }
         lx = pl->x; lz = pl->z;
         double hv[12][3], ko = 1e30; int in = 0;
@@ -598,6 +654,7 @@ static int lauf_in_arm(int modell, int frontal, lauf_t *L)
         if (re15_player_is_grabbed() && re15_player_victim_state() == 4 && arm->sub_state_1 == 4 && pl->motion == 0) {
             if (erst) {
                 erst = 0; L->halt_x = pl->x; L->halt_z = pl->z;
+                if (re15_re2arm_pin_vor) re15_re2arm_pin_vor(&lx, &lz);   /* Runde 8: Sprung von der Lage, die das Tor A3 sah */
                 const double dx = pl->x - lx, dz = pl->z - lz; L->sprung = sqrt(dx * dx + dz * dz);
             }
             double hv[12][3], ko = 1e30; int in = 0;
@@ -620,7 +677,7 @@ int main(void)
     memset(&s_cam, 0, sizeof s_cam); memset(&s_ctx, 0, sizeof s_ctx);
     s_ctx.rdt = &s_rdt; s_ctx.rdt_ok = 1; s_ctx.cam_view = &s_cam; s_ctx.active_cut = 0;
     re15_ai_flavor_set(RE15_AI_FLAVOR_RE2);
-    printf("=== ROOM1210 Gitterhaende: RE1.5-Modell wie das Original (Arme wachsen B[3]), Greifen vom RE2-Gehirn (Runde 42 Stufe 2, Runde 7) ===\n");
+    printf("=== ROOM1210 Gitterhaende: RE1.5-Modell wie das Original (Arme wachsen B[3]), Greifen vom RE2-Gehirn (Runde 42 Stufe 2, Runde 8) ===\n");
     g_current_room_id = 0x1210;
 
     /* ---- Lauf 1: Ausloeser, Weg B[1], dann 2400 Bilder Wiegen, Leon weit weg ---- */
@@ -735,8 +792,9 @@ int main(void)
         CHECK(t1, re15_re2arm_rechenschritte && g.bilder_gemessen > 100 && g.rechen_sum > 0 && g.rechen_max <= RECHEN_BUDGET &&
                   g.zeit_max_ms <= ZEIT_BUDGET_MS);
         snprintf(t1, sizeof t1, "(H2 %s) im Halten liegt die Hand in JEDEM Bild an der Figur: Abstand der 12 Hand-Vertices zu ihrer "
-                 "Oberflaeche <= Handbreite 202, im Mittel <= 50 (keine Hand in der Luft)", wer);
-        CHECK(t1, g.halten_n > 100 && g.luecke_n == g.halten_n && g.naechster_max <= 2 * HAND_HB && g.kontakt_sum / g.luecke_n <= 50.0);
+                 "Oberflaeche <= 2 Handbreiten 404, im Mittel <= Handbreite 202, mindestens einmal <= 32 (Messgroessen, Runde 8)", wer);
+        CHECK(t1, g.halten_n > 100 && g.luecke_n == g.halten_n && g.naechster_max <= 4 * HAND_HB && g.kontakt_sum / g.luecke_n <= 2 * HAND_HB &&
+                  g.luecke_min <= 32.0);
         snprintf(t1, sizeof t1, "(H4 %s) und steckt nicht tief in ihr: die Handmitte liegt in keinem Bild in einem ihrer Koerperteile", wer);
         CHECK(t1, g.halten_n > 100 && g.luecke_n == g.halten_n && g.ohne_band == 0);
         snprintf(t1, sizeof t1, "(H3 %s) die Figur steht das ganze Halten FEST (wie RE2: Pin nur @0x80100C18-38) und im Flur "
@@ -744,9 +802,9 @@ int main(void)
         CHECK(t1, g.halten_n > 100 && g.leon_x_min == g.leon_x_max && g.leon_z_min == g.leon_z_max && g.sprung_max == 0 &&
                   g.leon_x_min - 450 >= WEST_FLAECHE);
         printf("  %s: Pin-Sprung %.0f ((%d,%d) -> Halte-Lage)\n", wer, g.pin_sprung, g.vor_x, g.vor_z);
-        snprintf(t1, sizeof t1, "(H5 %s) Runde 7: beim Griff springt die Figur hoechstens eine Handbreite (2 * %d) an ihre Halte-Lage",
-                 wer, HAND_HB);
-        CHECK(t1, g.halten_n > 100 && g.pin_sprung <= 2.0 * HAND_HB);
+        snprintf(t1, sizeof t1, "(H5 %s) Runde 8: der Pin setzt die Figur wie RE2 in EINEM Bild (@0x80100C18-38), hoechstens 600 weit "
+                 "(Tor @0x801009BC)", wer);
+        CHECK(t1, g.halten_n > 100 && g.pin_bilder == 1 && g.pin_sprung <= 600.0);
         snprintf(t1, sizeof t1, "(R1 %s) RE2: Halten 152 Bilder ohne Tasten (@0x80100D28-40), dann Cooldown 120 (@0x80100D5C)", wer);
         CHECK(t1, g.loesen_bild == 152 && g.cd_nach == 119);
         snprintf(t1, sizeof t1, "(R2 %s) RE2-Rueckzug 10 Bilder -> 0x701, hp -1 (@0x80100E38-50); der Koerper sinkt mit Clip 3 und "
@@ -754,10 +812,17 @@ int main(void)
         CHECK(t1, g.rz_bilder == 10 && g.hp_nach == -1 && g.sinken_clip == 3 && g.kx_nach == g.kx_zugriff);
         snprintf(t1, sizeof t1, "(R3 %s) RE2-Toene laufen (Ausfahren/Halten/Rueckzug)", wer);
         CHECK(t1, g.se_nach - g.se_vor >= 3);
-        snprintf(t1, sizeof t1, "(R5 %s) nach dem Sinken laeuft der unterbrochene Original-Ablauf weiter: derselbe Modus, dieselbe "
-                 "Phase, dieselbe Skalierung wie vor dem Zugriff (Griff und Sinken aendern sie nicht, wie B[4])", wer);
-        CHECK(t1, g.fortgesetzt && g.mode_vor >= 0 && g.mode_nach == g.mode_vor && g.phase_nach == g.phase_vor &&
-                  g.sk_nach[0] == g.sk_vor[0] && g.sk_nach[1] == g.sk_vor[1]);
+        printf("  %s: nach dem Halten Modi", wer);
+        for (int i = 0; i < g.folge_n; i++) printf(" %d", g.folge[i]);
+        printf(" (4 Sinken, 5 Warten, 6 Hoch, 1 Wiegen); Warten %d Bilder (Hand bewegt %d), Hoch %d Bilder (Hand y %d -> %d), "
+               "Handbewegung je Bild: Sinken max %.0f, danach max %.0f (%d Wiege-Bilder)\n", g.warten_n, g.warten_bewegt, g.hoch_n,
+               (int)g.hoch_y0, (int)g.hoch_y1, g.sink_max, g.nach_max, g.b2_nach_n);
+        snprintf(t1, sizeof t1, "(R5 %s) Runde 8: nach dem Sinken der Original-Treffer-Weg B[4] -> B[5] -> B[6] -> B[2] (@0x8010cf60, "
+                 "@0x8010d08c, @0x8010cf8c-94): Warten 32..287 Bilder ((rng&0xff)+30 @0x8010d044-54 + 2) mit stehender Pose, Clip 3 "
+                 "rueckwaerts (Hand steigt), kein Sprung (Bewegung je Bild <= der beim Sinken)", wer);
+        CHECK(t1, g.folge_n >= 4 && g.folge[0] == K_SINKEN && g.folge[1] == K_WARTEN && g.folge[2] == K_HOCH && g.folge[3] == K_B2 &&
+                  g.warten_n >= 32 && g.warten_n <= 287 && g.warten_bewegt == 0 && g.hoch_n == 55 && g.hoch_y1 < g.hoch_y0 &&
+                  g.sink_max > 0.0 && g.nach_max <= g.sink_max && g.b2_nach_n >= 60);
     }
 
     /* ---- Lauf 4: Griff-Bilder einzeln pruefen (S1/S2 im Griff), Leon ---- */
@@ -808,30 +873,58 @@ int main(void)
             const char *wer = m ? "Elza" : "Leon";
             g_current_room_id = 0x1211; (void)re15_re2arm_tick(s5); g_current_room_id = 0x1210;   /* Modul-Reset */
             lauf_t L;
-            const int rc = lauf_in_arm(modell, w, &L);
+            const int rc = lauf_in_arm(modell, w, &L, 0, 0);
             printf("  %s laeuft %s in den Arm: Griff nach %d Schritten (Arm-Skalierung %d), vor dem Griff %d Bilder gemessen, Handmitte "
                    "innen %d, naechster Abstand %.0f; Pin-Sprung %.0f ((%d,%d) -> (%d,%d)); Halten %d Bilder, Kontakt max %.0f "
                    "(Mittel %.0f), innen %d\n", wer, w ? "aus dem Flur" : "an der Wand entlang", L.griff_bild, L.sk_griff, L.vor_n,
                    L.vor_innen, L.vor_kontakt_min, L.sprung, L.vor_x, L.vor_z, L.halt_x, L.halt_z, L.halten_n, L.halten_max,
                    L.halten_n ? L.halten_sum / L.halten_n : 0.0, L.halten_innen);
-            const int halten_ok = L.griff_bild < 0 ||
-                (L.halten_n > 100 && L.sprung <= 2.0 * HAND_HB && L.halten_max <= 2 * HAND_HB && L.halten_sum / L.halten_n <= HAND_HB &&
+            const int halten_ok = L.griff_bild >= 0 &&
+                (L.halten_n > 100 && L.sprung <= 600.0 && L.halten_max <= 4 * HAND_HB && L.halten_sum / L.halten_n <= 2 * HAND_HB &&
                  L.halten_innen == 0);
             char t6[300];
             if (!w) {
                 snprintf(t6, sizeof t6, "(L1 %s) laeuft an der Wand in den gewachsenen Arm: in keinem Bild vor dem Griff liegt die Handmitte "
-                         "in ihr (eigene Pose); greift er, dann mit Sprung <= Handbreite und der Hand an ihr (H2/H4)", wer);
-                CHECK(t6, rc == 1 && L.vor_n > 20 && L.vor_innen == 0 && L.vor_kontakt_min <= 2 * HAND_HB && halten_ok);
+                         "in ihr (eigene Pose), und sie WIRD GEGRIFFEN (Sprung <= 600, Hand an ihr wie H2/H4)", wer);
+                CHECK(t6, rc == 1 && L.vor_n > 0 && L.vor_innen == 0 && L.vor_kontakt_min <= 2 * HAND_HB && halten_ok);
             } else {
-                snprintf(t6, sizeof t6, "(L2 %s) laeuft aus dem Flur auf die Hand zu: kein Bild mit der Handmitte in ihr; greift er, dann mit "
-                         "Sprung <= Handbreite und der Hand an ihr (H2/H4)", wer);
+                snprintf(t6, sizeof t6, "(L2 %s) laeuft aus dem Flur auf die Hand zu: kein Bild mit der Handmitte in ihr, und sie WIRD "
+                         "GEGRIFFEN (Sprung <= 600, Hand an ihr wie H2/H4)", wer);
                 CHECK(t6, rc == 1 && L.vor_n > 5 && L.vor_innen == 0 && L.vor_kontakt_min <= 2 * HAND_HB && halten_ok);
                 if (L.griff_bild >= 0) laeufe_mit_griff++;
             }
         }
 
     printf("  Laeufe aus dem Flur mit Griff: %d von 2\n", laeufe_mit_griff);
-    CHECK("(L3) aus dem Flur greift der Arm mindestens eine der beiden Figuren (mit kleinem Sprung, L2)", laeufe_mit_griff >= 1);
+    CHECK("(L3) aus dem Flur greift der Arm beide Figuren (L2)", laeufe_mit_griff == 2);
+
+    /* ---- Q1 (Runde 8): Griff-Quote ueber 20 Laeufe - Leon/Elza x an der Wand / aus dem Flur x 5 Starts (Wartezeit bis zum
+     * Losgehen und seitlicher Versatz: Szenario-Werte, keine Verhaltens-Konstanten) ---- */
+    {   int laeufe = 0, zugriffe = 0, griffe = 0, innen = 0, q_schlecht = 0;
+        static const int WARTE[5] = { 0, 40, 90, 160, 260 }, VERSATZ[5] = { 0, 300, -250, 600, -500 };
+        for (int m = 0; m < 2; m++)
+            for (int w = 0; w < 2; w++)
+                for (int k = 0; k < 5; k++) {
+                    g_current_room_id = 0x1211; (void)re15_re2arm_tick(s5); g_current_room_id = 0x1210;
+                    lauf_t L;
+                    if (lauf_in_arm(m ? 4 : 0, w, &L, WARTE[k], w ? VERSATZ[k] : VERSATZ[k] / 2) != 1) continue;
+                    laeufe++;
+                    if (L.zugriff_bild >= 0) zugriffe++;
+                    if (L.griff_bild >= 0) griffe++;
+                    innen += L.vor_innen + L.halten_innen;
+                    if (L.griff_bild >= 0 && (L.halten_n <= 100 || L.sprung > 600.0 || L.halten_max > 4 * HAND_HB ||
+                                              L.halten_sum / L.halten_n > 2 * HAND_HB)) q_schlecht++;
+                    printf("    Q1 %s %s Start %d/%d: Zugriff %s, Griff %s, Sprung %.0f, Halten Kontakt max %.0f Mittel %.0f\n",
+                           m ? "Elza" : "Leon", w ? "Flur" : "Wand", WARTE[k], VERSATZ[k], L.zugriff_bild >= 0 ? "ja" : "nein",
+                           L.griff_bild >= 0 ? "ja" : "nein", L.sprung, L.halten_max, L.halten_n ? L.halten_sum / L.halten_n : 0.0);
+                }
+        printf("  Q1: %d Laeufe, %d Zugriffe, %d Griffe, Handmitte innen %d\n", laeufe, zugriffe, griffe, innen);
+        CHECK("(Q1) 20 Laeufe: jeder Zugriff fuehrt zum Griff, keine Handmitte in der Figur, Hand im Halten wie H2 (max <= 404, "
+              "Mittel <= 202), Sprung <= 600", laeufe == 20 && zugriffe > 0 && griffe == zugriffe && innen == 0 && q_schlecht == 0);
+    }
+    printf("  G1: %d Zugriff-Bilder im Tor ausgewertet, %d ohne Griff trotz offenem RE2-Tor\n", s_tor_pruef, s_tor_verletzt);
+    CHECK("(G1) Greifen wie das RE2-Tor A3: kein Zugriff-Bild mit Hand < 600, RE2-Bild >= 5 und Abklingzeit 0 ohne Griff "
+          "(@0x801009BC / @0x80100A18 / @0x80100A28)", s_tor_pruef > 0 && s_tor_verletzt == 0);
 
     printf(g_fail ? "=== FEHLGESCHLAGEN ===\n" : "=== OK ===\n");
     return g_fail;

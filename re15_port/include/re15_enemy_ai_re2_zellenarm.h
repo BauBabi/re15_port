@@ -60,7 +60,8 @@ int  re15_re2arm_takt(int slot, int *re2_clip, int *re2_bild);
  * der Koerper stehen und zeigt Clip 2. zeichen_teil: 1 = rot/trans (Welt) gesetzt, 0 = nicht dieser Weg, -1 = Teil nicht
  * zeichnen; streck = Skalierung der lokalen y-Achse Q12 (nur B[3] des Originals, sonst 4096).
  * koerper_lage: 1 = Koerper wird gezeichnet, p = Welt-Lage. koerper_info: Mess-/Test-Auskunft (bild -1 = vor dem Ausloeser).
- * koerper_zustand: Modus (0 B1, 1 B2, 2 B3, 3 Griff, 4 Sinken), Phase +0x6, Skalierung/Flag Part 2/3, y.
+ * koerper_zustand: Modus (0 B1, 1 B2, 2 B3, 3 Griff, 4 Sinken B[4], 5 Warten B[5], 6 Hoch B[6]), Phase +0x6, Skalierung/Flag
+ * Part 2/3, y. greif_teil (Runde 8): EM1A-Teil (2/3), dessen Hand das RE2-Gehirn gerade misst.
  * hand15: Hand des gezeichneten RE1.5-Arms (Mittel der Vertices 0..11) und sein Schultergelenk, Welt.
  * kontakt_rest: im Halten kleinster Abstand der Hand-Vertices zur Oberflaeche der Figur in diesem Bild, auf Abruf gerechnet
  * (Mess-Auskunft, nicht im Spielablauf); -1 = kein Halten. Die Figur steht das ganze Halten fest (Runde 5).
@@ -71,6 +72,8 @@ int  re15_re2arm_koerper_lage(const re15_actor_t *e, int32_t p[3]);
 int  re15_re2arm_koerper_info(int slot, int *bild, int *clip, int *frame, int32_t rec[3]);
 int  re15_re2arm_koerper_zustand(int slot, int *mode, int *phase, int sk[2], int an[2], int32_t *ky);
 int  re15_re2arm_hand15(int slot, int32_t hand[3], int32_t schulter[3]);
+int  re15_re2arm_greif_teil(int slot);
+void re15_re2arm_pin_vor(int32_t *x, int32_t *z);   /* Runde 8: Lage, die das Tor A3 im Griff-Bild sah */
 int  re15_re2arm_kontakt_rest(int slot);
 uint32_t re15_re2arm_rechenschritte(int zuruecksetzen);
 /* Runde 35 Spur H, Nachbesserung 3: RE2-Koerper-Push FUN_80034D0C(Arm, Spieler) mit dem Arm-Segment
