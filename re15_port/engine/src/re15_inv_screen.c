@@ -855,6 +855,15 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
         }
         if (zn && zpg == (int)g_inv_screen.map_page) {
             int rx, ry, rw, rh;
+            /* r42/karte Stufe 3 Runde 7 (PORT-ERGAENZUNG, include/re15_karte_r42.h): Gang-Zeile fuer den Schraeggang von
+             * ROOM4080/4081 - im Gang setzt sie den Punkt selbst (ohne Klemme), hinter dem Gangende rechnet die Zone der
+             * breiten Diagonale weiter. */
+            {
+                int gang = 0;
+                const re15_map_zone_t *zw = (const re15_map_zone_t *)re15_karte_r42_gang(zn, world_x, world_z, mx, my, &gang);
+                if (gang) return;
+                if (zw) { zn = zw; zrc = zw->rect; }
+            }
             /* Zonen ohne Karten-Rechteck des Originals tragen eine SCHEMA-
              * ZEICHNUNG aus ihrer Kollisions-Box (rect == 255). Ihr Kasten
              * ersetzt das Rechteck; die Projektion darin ist dieselbe. */

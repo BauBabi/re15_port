@@ -2,7 +2,8 @@
  * RIEGEL r42/karte Stufe 3 Runde 4: der Punkt laeuft im Ostarm von 4080 und im Gang von 6000 mit, und sein Ring
  * liegt an keiner Ankunft auf der Nachbarkachel. (Runde 5: [M6] 20A0 als Grundriss mit mitlaufendem Punkt, [M7] 4080 aus
  * 4030 nicht am Uebergang; 20A0 nicht mehr aus [M5] ausgenommen. Runde 6: [M7] zusaetzlich keine Wandlinie und kein Grund im
- * Ring, kein Tuerbalken im 9x9-Feld.)
+ * Ring, kein Tuerbalken im 9x9-Feld. Runde 7: [M8] der ganze Weg durch den Schraeggang 4080/4081 (Gang-Zeile, karte_r42.c);
+ * [M7] "nicht am Uebergang" = kein Ring-Texel auf oder direkt neben einem Tuerbalken.)
  * =============================================================================
  * Nutzer 2026-11-18: "das die [Map] fuer STAGE2-6 genauso sauber funktioniert wir bei STAGE1 ... Inklusive dem - wo
  * befindet sich Leon - Marker."
@@ -242,6 +243,45 @@ static const struct { unsigned dest, von; const char *grund; } s_m4_aus[] = {
     { 0, 0, 0 }
 };
 
+/* [M7]/[M8]: Mass am Ring um (mx,my) auf Blatt 8 fuer den Ort 4080 (r8 + r13). *n = sichtbarer Raumkoerper im 2-px-Rand (9x9 ohne
+ * 5x5), *innen = sichtbarer Raumkoerper im 3x3-Inneren, *aussen = Ring-Texel (5x5 ohne Ecken und Inneres) ausserhalb der Kunst von
+ * r8/r13, *nah = kleinster Chebyshev-Abstand eines Ring-Texels zu einem Tuerbalken des Blatts (99 = keiner in der Naehe).
+ * Marken auch dann, wenn sie nicht gezeichnet werden (strenger). */
+static void ring_mass_4080(int mx, int my, int *n, int *innen, int *aussen, int *nah)
+{
+    int cx = mx - 1, cy = my - 1, dx, dy, k;
+    *n = 0; *innen = 0; *aussen = 0; *nah = 99;
+    for (dy = -4; dy <= 4; dy++) for (dx = -4; dx <= 4; dx++) {
+        int x = cx + dx, y = cy + dy, a8 = kachel_index(8, 8, x, y), a13 = kachel_index(8, 13, x, y), unter = 0;
+        int ring = (dx >= -2 && dx <= 2 && dy >= -2 && dy <= 2), ecke = ((dx == -2 || dx == 2) && (dy == -2 || dy == 2));
+        int koerper = (a8 && a8 != 4) || (a13 && a13 != 4);
+        for (k = 0; k < re15_map_mark_count(); k++) {
+            int mpg, mrc, kx, ky, kind, auf;
+            (void)re15_map_mark_get(k, &mpg, &mrc, &kx, &ky, &kind);
+            if (mpg != 8) continue;
+            auf = kind <= 3 ? ((kind == 0 || kind == 2) ? (y == ky && x >= kx - 2 && x <= kx + 2)
+                                                        : (x == kx && y >= ky - 2 && y <= ky + 2))
+                            : (kind == 5 ? ((x - kx == -2 || x == kx || x - kx == 2) && y >= ky - 2 && y <= ky + 2)
+                                         : ((y - ky == -2 || y == ky || y - ky == 2) && x >= kx - 2 && x <= kx + 2));
+            if (auf) unter = 1;
+            if (ring && !ecke && kind <= 3) {      /* Abstand dieses Ring-Texels zum Balken */
+                int t;
+                for (t = -2; t <= 2; t++) {
+                    int bx = (kind == 0 || kind == 2) ? kx + t : kx, by = (kind == 0 || kind == 2) ? ky : ky + t;
+                    int d = cheb(x, y, bx, by);
+                    if (d < *nah) *nah = d;
+                }
+            }
+        }
+        if (ring) {
+            if (dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1) { if (koerper && !unter) (*innen)++; }
+            else if (!ecke && !(a8 || a13)) (*aussen)++;
+            continue;
+        }
+        if (!unter && koerper) (*n)++;
+    }
+}
+
 int main(void)
 {
     static re15_aot_t sn_a[RE15_AOT_MAX];
@@ -472,49 +512,78 @@ int main(void)
      * 4030", Rot-Mass 0,29 gegen 0,32 in v0.8.30): Ankunft aus 4030 (-3900,2100). Im 2-px-Rand um den Ring (9x9 ohne 5x5) liegen
      * mindestens 18 von 56 Texeln (0,32 = v0.8.30) SICHTBARER Raumkoerper von r8/r13 (Kunst-Index nicht 0 und nicht 4, nicht
      * unter einer Tuer-/Treppenmarke des Blatts).
-     * Stufe 3 Runde 6 (Pruefbericht pruef_s3_r5 ROT 4080_t0: "Die rechte Wandlinie des Schraeggangs laeuft durch das Ringinnere
-     * ... Die rechte Ringspalte x172 liegt bei y116..118 ueber blauem Grund"; Vorschlag der Pruefung: "pruefen, dass im
-     * Ringinneren keine Wand und kein blauer Grund liegt"):
-     *  - die 3x3 Texel im Ring (Ring = TEX.TIM @0x14910 uv 225..229, Ecken leer) sind alle sichtbarer Raumkoerper von r8/r13,
-     *  - keiner der 12 Ring-Texel liegt ausserhalb der Kunst von r8/r13 (kein Grund, keine fremde Kachel; die eigene Wandlinie
-     *    an den Ecken ist im 5 px breiten Schraeggang nicht vermeidbar),
-     *  - nicht am Uebergang zu 4030: kein Texel eines Tuerbalkens des Blatts im 9x9-Feld um den Ring (der Balken 4080<->4030
-     *    liegt bei x165 y111..115). Das fruehere Mass "keine Kunst einer fremden Kachel im 9x9" entfaellt: die Rahmenlinie der
-     *    Kachel r3 (4030) laeuft rechts und unten den ganzen Schraeggang entlang, auch an seinem unteren Ende - sie ist nicht der
-     *    Uebergang (gemessen an DATA/MAP09.PIX, Runde 6).
-     * Auf aaea5f8c2 ROT (176,124), auf e2501f322 ROT (170,117): Wand im Ring, Tuerbalken im Feld, 16/56; auf 02972374c ROT
-     * (171,118): Wand (170,116)/(171,117) im Ring, Tuerbalken im Feld. */
+     * Stufe 3 Runde 6 (Pruefbericht pruef_s3_r5 ROT 4080_t0): die 3x3 Texel im Ring (Ring = TEX.TIM @0x14910 uv 225..229, Ecken
+     * leer) sind alle sichtbarer Raumkoerper von r8/r13, keiner der 12 Ring-Texel liegt ausserhalb der Kunst von r8/r13.
+     * Stufe 3 Runde 7: "nicht am Uebergang zu 4030" heisst jetzt: kein Ring-Texel auf einem Tuerbalken oder direkt daneben
+     * (Chebyshev-Abstand >= 2, mindestens ein Texel dazwischen). Das Mass der Runde 6 ("kein Balken im 9x9-Feld") liess im
+     * Schraeggang nur EINE Lage zu (Ring-Mitte (172,121)), der Punkt koennte dem Gang dann nicht folgen (Vorgabe B, Runde 7).
+     * Der Pruefbericht pruef_s3_r6 nannte als Fehler "Tuerbalken x165 direkt neben dem Ring" (Ring-Mitte (168,115)).
+     * Auf aaea5f8c2 ROT (176,124: Wand im Ring), auf e2501f322 ROT (170,117), auf 02972374c ROT (171,118: Wand im Ring). */
     {
         int16_t mx = 0, my = 0;
-        int s8 = punkt(0x4080, -3900, 2100, &mx, &my), cx = mx - 1, cy = my - 1, dx, dy, n = 0, innen = 0, aussen = 0, balken = 0;
-        int k;
-        for (dy = -4; dy <= 4; dy++) for (dx = -4; dx <= 4; dx++) {
-            int x = cx + dx, y = cy + dy, a8 = kachel_index(8, 8, x, y), a13 = kachel_index(8, 13, x, y), unter = 0;
-            int ring = (dx >= -2 && dx <= 2 && dy >= -2 && dy <= 2), ecke = ((dx == -2 || dx == 2) && (dy == -2 || dy == 2));
-            int koerper = (a8 && a8 != 4) || (a13 && a13 != 4);
-            for (k = 0; k < re15_map_mark_count(); k++) {
-                int mpg, mrc, kx, ky, kind, auf;
-                (void)re15_map_mark_get(k, &mpg, &mrc, &kx, &ky, &kind);   /* Lage auch einer unsichtbaren Marke: strenger */
-                if (mpg != 8) continue;
-                auf = kind <= 3 ? ((kind == 0 || kind == 2) ? (y == ky && x >= kx - 2 && x <= kx + 2)
-                                                            : (x == kx && y >= ky - 2 && y <= ky + 2))
-                                : (kind == 5 ? ((x - kx == -2 || x == kx || x - kx == 2) && y >= ky - 2 && y <= ky + 2)
-                                             : ((y - ky == -2 || y == ky || y - ky == 2) && x >= kx - 2 && x <= kx + 2));
-                if (auf) { unter = 1; if (kind <= 3) balken++; }
-            }
-            if (ring) {
-                if (dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1) { if (koerper && !unter) innen++; }
-                else if (!ecke && !(a8 || a13)) aussen++;
-                continue;
-            }
-            if (!unter && koerper) n++;
-        }
+        int s8 = punkt(0x4080, -3900, 2100, &mx, &my), n = 0, innen = 0, aussen = 0, nah = 0;
+        ring_mass_4080(mx, my, &n, &innen, &aussen, &nah);
         printf("  [M7] 4080 aus 4030 (-3900,2100) -> (%d,%d) Blatt %d: sichtbarer Raum im Rand %d/56, Ring-Inneres Raum %d/9, "
-               "Ring-Texel ausserhalb der Kunst %d, Tuerbalken-Texel im 9x9 %d\n", mx, my, s8, n, innen, aussen, balken);
+               "Ring-Texel ausserhalb der Kunst %d, Abstand Ring-Tuerbalken %d\n", mx, my, s8, n, innen, aussen, nah);
         CHECK("[M7] 4080 aus 4030: mindestens so viel Raum um den Punkt wie v0.8.30 (>= 18/56)", s8 == 8 && n >= 18);
         CHECK("[M7] 4080 aus 4030: keine Wandlinie und kein Grund im Ring (Inneres 9/9 Raum, Ring ganz auf der Kunst)",
               s8 == 8 && innen == 9 && aussen == 0);
-        CHECK("[M7] 4080 aus 4030: nicht am Uebergang zu 4030 (kein Tuerbalken im 9x9-Feld)", s8 == 8 && balken == 0);
+        CHECK("[M7] 4080 aus 4030: nicht am Uebergang zu 4030 (kein Ring-Texel auf oder direkt neben einem Tuerbalken)",
+              s8 == 8 && nah >= 2);
+    }
+
+    /* [M8] Stufe 3 Runde 7 (Orchestrator-Vorgabe B; Pruefbericht pruef_s3_r6 ROT 1: "beim ersten Schritt in den Gang springt der
+     * Punkt 6 Bildpunkte zurueck ... Was ein Riegel pruefen muesste: die Linie (-3900,2100) -> (-1500,-300) in kleinen
+     * Schritten. Je Lage gilt dann das [M7]-Mass ... und kein Rueckwaertssprung gegen die Gehrichtung."): der GANZE Weg durch den
+     * Schraeggang von 4080 (Leon) und 4081 (Elza), von der Tuer zu 4030 bis zum Gangende. Welt: Gang zwischen den Dreiecken
+     * Zelle 6 @ROOM4080.RDT 0x005A4 (Wand x+z = -575) und Zelle 11 @0x005E0 (Wand x+z = -2725), von der Tuer (x-z = -6800) bis
+     * zum Ende der Dreiecke (x-z = 4075). Abgetastet auf drei Laengslinien x+z = -2100 / -1650 / -1300 alle 200 Einheiten von
+     * x-z = -6400 bis 4000; nur Lagen, die die Spieler-Kollision nicht verschiebt (re15_collision_constrain, Band 0).
+     * Je Lage das [M7]-Mass (Rand >= 18/56, Inneres 9/9, Ring ganz auf der Kunst, nicht direkt am Tuerbalken); entlang jeder
+     * Linie kein Rueckwaertssprung (mx+my faellt nie) und kein Sprung ueber 3 px; der Punkt folgt (er steht am Gangende
+     * weiter unten als an der Tuer). Auf 02972374c (Runde 5) und 1713acd21 (Runde 6) ROT. */
+    {
+        static const int32_t linie_w[3] = { -2100, -1650, -1300 };
+        static const unsigned figur[2] = { 0x4080, 0x4081 };
+        int f, li, lagen = 0, schlecht = 0, zurueck = 0, sprung = 0, folgt = 1;
+        for (f = 0; f < 2; f++)
+            for (li = 0; li < 3; li++) {
+                int32_t u;
+                int hat = 0, ax = 0, ay = 0, lx = 0, ly = 0;
+                for (u = -6400; u <= 4000; u += 200) {
+                    int32_t x = (u + linie_w[li]) / 2, z = (linie_w[li] - u) / 2, nx, nz;
+                    int16_t mx = 0, my = 0;
+                    int b = punkt(figur[f], x, z, &mx, &my), n = 0, innen = 0, aussen = 0, nah = 0;
+                    nx = x; nz = z;
+                    re15_collision_ensure_band(0);
+                    re15_collision_constrain(&s_rdt, x, z, &nx, &nz);
+                    if (nx != x || nz != z) continue;            /* nicht begehbar */
+                    lagen++;
+                    ring_mass_4080(mx, my, &n, &innen, &aussen, &nah);
+                    if (b != 8 || n < 18 || innen != 9 || aussen != 0 || nah < 2) {
+                        if (schlecht++ < 6)
+                            printf("    %04X (%d,%d) -> (%d,%d) Blatt %d: Rand %d/56, Inneres %d/9, aussen %d, Balkenabstand %d\n",
+                                   figur[f], x, z, mx, my, b, n, innen, aussen, nah);
+                    }
+                    if (hat) {
+                        if (mx + my < lx + ly) {
+                            if (zurueck++ < 6) printf("    %04X (%d,%d): Rueckwaertssprung (%d,%d) -> (%d,%d)\n", figur[f], x, z, lx, ly, mx, my);
+                        }
+                        if (cheb(lx, ly, mx, my) > 3) {
+                            if (sprung++ < 6) printf("    %04X (%d,%d): Sprung (%d,%d) -> (%d,%d)\n", figur[f], x, z, lx, ly, mx, my);
+                        }
+                    } else { ax = mx; ay = my; }
+                    hat = 1; lx = mx; ly = my;
+                }
+                printf("  [M8] %04X Linie x+z=%d: an der Tuer (%d,%d), am Gangende (%d,%d)\n", figur[f], linie_w[li], ax, ay, lx, ly);
+                if (!hat || lx + ly <= ax + ay) folgt = 0;
+            }
+        printf("  [M8] Schraeggang 4080/4081: %d begehbare Lagen, %d ausserhalb des [M7]-Masses, %d Rueckwaertsspruenge, "
+               "%d Spruenge > 3 px\n", lagen, schlecht, zurueck, sprung);
+        CHECK("[M8] Schraeggang: an jeder Lage Rand >= 18/56, Inneres 9/9, Ring auf der Kunst, nicht am Tuerbalken",
+              lagen >= 60 && schlecht == 0);
+        CHECK("[M8] Schraeggang: kein Rueckwaertssprung und kein Sprung ueber 3 px", lagen >= 60 && zurueck == 0 && sprung == 0);
+        CHECK("[M8] Schraeggang: der Punkt folgt dem Gang (am Gangende weiter unten als an der Tuer)", lagen >= 60 && folgt);
     }
     if (s_roh) free(s_roh);
     printf(g_fail ? "\nFEHLER\n" : "\nOK\n");

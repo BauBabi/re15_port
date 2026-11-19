@@ -53,3 +53,15 @@ target_compile_definitions(test_r42_karte_lauf PRIVATE
     RE15_EXE_PFAD="${CMAKE_SOURCE_DIR}/../info/Re1.5/PSX.EXE")
 add_test(NAME unit_r42_karte_lauf COMMAND test_r42_karte_lauf)
 set_tests_properties(unit_r42_karte_lauf PROPERTIES TIMEOUT 240)
+
+# RIEGEL Stufe 3 Runde 7 (Vorgabe A): Mitlaufen mindestens so glatt wie Runde 5 - Spruenge >= 4 px auf dem begehbaren
+# 500er-Raster je Raum (Messung der Pruefung pruef_s3_r6). Je Stage ein Eintrag, damit ctest -j sie parallel faehrt.
+add_executable(test_r42_karte_glatt test_r42_karte_glatt.c)
+target_link_libraries(test_r42_karte_glatt PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_karte_glatt PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_karte_glatt PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+foreach(_st 2 3 4 5 6)
+    add_test(NAME unit_r42_karte_glatt_s${_st} COMMAND test_r42_karte_glatt ${_st})
+    set_tests_properties(unit_r42_karte_glatt_s${_st} PROPERTIES TIMEOUT 900)
+endforeach()

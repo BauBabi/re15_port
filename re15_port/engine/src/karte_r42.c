@@ -6,6 +6,10 @@
 #include "re15_karte_r42.h"
 #include "re15_map_kunst.h"
 
+/* Messhaken fuer Riegel (unit_r42_karte_glatt): 1 = Punkt ohne die Klemmen und ohne Gang-Zeile, also nur Zeile + Rechteck.
+ * Im Spiel immer 0. */
+int g_re15_karte_r42_roh = 0;
+
 static const re15_map_kunst_idx_t *kachel(unsigned page, unsigned rect)
 {
     int i;
@@ -37,6 +41,7 @@ int re15_karte_r42_kunst_klemmen(unsigned page, unsigned rect, int16_t *mx, int1
     const re15_map_kunst_idx_t *k;
     int i, best = -1, bx = 0, by = 0;
     int cx = *mx - R42_GLYPH_MITTE, cy = *my - R42_GLYPH_MITTE;
+    if (g_re15_karte_r42_roh) return 0;
     if (page < 6 || page > 12) return 0;          /* nur STAGE2-6 (re15_karte_r42.h) */
     k = kachel(page, rect);
     if (!k || k->anzahl == 0) return 0;
@@ -194,45 +199,14 @@ static int rand_sichtbar(unsigned page, const unsigned char *k, int nk, int cx, 
     return n;
 }
 
-/* ---- Stufe 3 Runde 6 (Pruefbericht pruef_s3_r5 ROT 4080_t0/4081_t0: "Die rechte Wandlinie des Schraeggangs laeuft durch das
- * Ringinnere ... Die rechte Ringspalte x172 liegt bei y116..118 ueber blauem Grund ausserhalb des Raums"; Vorgabe 2(c) "kein
- * Punkt auf einer Wandlinie oder am Uebergang zu 4030") --------------------------------------------------------------------
- * SAUBERER RING: die 3x3 Texel im Ring (TEX.TIM @0x14910, Ring uv 225..229, Inneres 226..228) liegen alle auf SICHTBAREM
- * Raumkoerper des Orts (keine Wandlinie, kein Grund, keine Tuer-/Treppenmarke), und keiner der 12 Ring-Texel liegt ausserhalb
- * der Kunst des Orts (eigene Wandlinie erlaubt - in einem 5 px breiten Schraeggang beruehrt jeder Ring die Waende an den
- * Ecken). PORT-WAHL (Anzeige, keine Spielkonstante).
- * Die Klemme zieht einen sauberen Ring (mit Rand >= 30 %, dem Ausloesemass) jedem unsauberen vor und sucht ihn bis 7 px weit;
- * unsaubere Lagen weiter nur bis 4 px, sonst gilt die Reihenfolge von Runde 4/5 unveraendert. 7 = kleinste Suchweite, mit der
- * 4080 aus 4030 einen sauberen Ring erreicht, dessen 9x9-Feld den Tuerbalken 4080<->4030 (x165 y111..115) nicht enthaelt:
- * Punkt (173,122), Ring-Mitte (172,121) am unteren Ende des Schraeggangs auf seiner Mittellinie, Rand 20/56 = 0,36 (v0.8.30
- * 0,32). Gemessen (unit_r42_karte_lauf [M7], je eigener Bau): Weite 5 und 6 -> Punkt (170,119), sauber, Rand 18/56, aber 2
- * Texel des Tuerbalkens im Feld; Weite 7 und 8 -> (173,122), und an allen 397 Ankuenften dieselben Lagen. Kunst: DATA/MAP09.PIX
- * (Blatt 8, r8 + r13), Abzuege L4080_t0/E4081_t0 (Stufe 3 Runde 6).
- * Wirkung ueber alle 397 Tuer-Ankuenfte STAGE1-6 (unit_r42_karte_lauf mit R42_DUMP, vorher/nachher): 4080/4081 aus 4030
- * (171,118) -> (173,122); 4040/4041 aus 4050 (109,121) -> (108,121), 1 px, Ring jetzt ganz auf 4040 (Abzug L4040_t2 Rot-Mass
- * 0,61 -> 0,68); 4070/4071 aus 4040 auf Blatt 11 (Lage y = 0, nicht die echte Ankunft y -21600 auf Blatt 8) (165,158) ->
- * (166,163), Ring-Inneres frei von den Treppenstrichen. Sonst keine. */
-#define R42_SAUBER_WEIT 7
-static int ring_sauber(unsigned page, const unsigned char *k, int nk, int cx, int cy)
-{
-    int dx, dy;
-    for (dy = -R42_RING_HALB; dy <= R42_RING_HALB; dy++)
-        for (dx = -R42_RING_HALB; dx <= R42_RING_HALB; dx++) {
-            int x = cx + dx, y = cy + dy, innen = (dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1);
-            if ((dx == -R42_RING_HALB || dx == R42_RING_HALB) && (dy == -R42_RING_HALB || dy == R42_RING_HALB)) continue; /* Ecken: kein Ring-Texel */
-            if (marke_deckt(x, y)) return 0;
-            if (innen ? !im_ort(page, k, nk, x, y, 1) : !im_ort(page, k, nk, x, y, 0)) return 0;
-        }
-    return 1;
-}
-
 int re15_karte_r42_ring_klemmen(const void *zone, unsigned page, unsigned rect, int16_t *mx, int16_t *my)
 {
     const re15_map_zone_t *zn = (const re15_map_zone_t *)zone;
     unsigned char k[8];
-    int nk, cx, cy, f0, n0, v0, s0, dx, dy, bf = 0, bn = 0, bd = 0, bs = 0, bx = 0, by = 0, hat = 0;
+    int nk, cx, cy, f0, n0, v0, dx, dy, bf = 0, bn = 0, bd = 0, bx = 0, by = 0, hat = 0;
     const int rand_n = (2 * R42_RING_HALB + 5) * (2 * R42_RING_HALB + 5) - (2 * R42_RING_HALB + 1) * (2 * R42_RING_HALB + 1);
     const int weit = R42_RING_HALB + 2;
+    if (g_re15_karte_r42_roh) return 0;
     if (page < 6 || page > 12) return 0;
     nk = ort_kacheln(zn, page, rect, k, (int)sizeof k);
     cx = *mx - R42_GLYPH_MITTE; cy = *my - R42_GLYPH_MITTE;
@@ -244,30 +218,108 @@ int re15_karte_r42_ring_klemmen(const void *zone, unsigned page, unsigned rect, 
     if (f0 == 0 && n0 * 10 >= rand_n * 3) return 0;
     marken_sammeln(page);
     v0 = rand_sichtbar(page, k, nk, cx, cy);
-    /* Reihenfolge: wenig fremde Texel im Ring, dann sauberer Ring (Runde 6, siehe ring_sauber), dann sichtbarer Rand >= Haelfte,
-     * dann kurzer Weg (sonst mehr Rand). Runde 5 gemessen an 4080_t0 (Ankunft aus 4030, Rohlage (167,114)): Suchweite 3
-     * erreichte hoechstens 0,29 sichtbar, Suchweite 4 -> (171,118), 0,36 - aber mit der Wandlinie im Ring (pruef_s3_r5 ROT);
-     * Runde 6 -> (173,122), sauber, 0,36. */
-    s0 = ring_sauber(page, k, nk, cx, cy) && v0 * 10 >= rand_n * 3;
-    for (dy = -R42_SAUBER_WEIT; dy <= R42_SAUBER_WEIT; dy++)
-        for (dx = -R42_SAUBER_WEIT; dx <= R42_SAUBER_WEIT; dx++) {
-            int n, f, d, h, bh, s, weg = (dx < 0 ? -dx : dx) > (dy < 0 ? -dy : dy) ? (dx < 0 ? -dx : dx) : (dy < 0 ? -dy : dy);
+    /* Reihenfolge: wenig fremde Texel im Ring, sichtbarer Rand >= Haelfte, dann kurzer Weg (sonst mehr Rand). Gemessen an 4080_t0 (Ankunft aus 4030, Rohlage (167,114)): Suchweite 3 erreicht
+     * hoechstens 0,29 sichtbar (dieselbe Lage wie Runde 4), Suchweite 4 -> (171,118), im Abzug 0,36 (v0.8.30: 0,32). */
+    for (dy = -weit; dy <= weit; dy++)
+        for (dx = -weit; dx <= weit; dx++) {
+            int n, f, d, h, bh;
             if (!im_ort(page, k, nk, cx + dx, cy + dy, 1)) continue;   /* Mitte bleibt auf dem Raumkoerper des eigenen ORTS */
             (void)ring_zaehlen(page, k, nk, cx + dx, cy + dy, &f);
             n = rand_sichtbar(page, k, nk, cx + dx, cy + dy);
-            s = ring_sauber(page, k, nk, cx + dx, cy + dy) && n * 10 >= rand_n * 3;
-            if (weg > weit && !s) continue;                            /* ueber 4 px hinaus nur ein sauberer Ring */
             d = dx * dx + dy * dy;
             h = (n * 2 >= rand_n); bh = (bn * 2 >= rand_n);
             if (!hat || f < bf ||
-                (f == bf && (s > bs ||
-                 (s == bs && (h > bh ||
-                 (h == bh && (h ? (d < bd || (d == bd && n > bn)) : (n > bn || (n == bn && d < bd))))))))) {
-                hat = 1; bf = f; bn = n; bd = d; bs = s; bx = cx + dx; by = cy + dy;
+                (f == bf && (h > bh ||
+                 (h == bh && (h ? (d < bd || (d == bd && n > bn)) : (n > bn || (n == bn && d < bd))))))) {
+                hat = 1; bf = f; bn = n; bd = d; bx = cx + dx; by = cy + dy;
             }
         }
-    if (!hat || bf > f0 || (bf == f0 && (bs < s0 || (bs == s0 && bn <= v0)))) return 0;
+    if (!hat || bf > f0 || (bf == f0 && bn <= v0)) return 0;
     *mx = (int16_t)(bx + R42_GLYPH_MITTE);
     *my = (int16_t)(by + R42_GLYPH_MITTE);
     return 1;
+}
+
+/* ---- r42/karte Stufe 3 Runde 7 ----------------------------------------------------------------------------------------------
+ * (A) Die allgemeine Klemme der Runde 6 ("sauberer Ring", Suchweite 7) ist ZURUECKGENOMMEN (Orchestrator-Vorgabe ab Runde 7,
+ *     Punkt A; Pruefbericht pruef_s3_r6 ROT 2: Spruenge >= 4 px auf dem begehbaren 500er-Raster R5 406 -> R6 646, u. a.
+ *     2050/2051, 20B0/20B1, 11A0, 2030, 3050, 50D0, 6000). re15_karte_r42_ring_klemmen ist wieder der Stand von Runde 5
+ *     (02972374c). Riegel: unit_r42_karte_glatt_s2..s6 (Spruenge je Raum nicht mehr als in Runde 5).
+ * (B) GANG-ZEILE fuer den Schraeggang von ROOM4080/4081 (Zone 1 = Kachel r13, Blatt 8, DATA/MAP09.PIX). PORT-ERGAENZUNG
+ *     (die Zeile des Raums @0x800768b0 + 8*(65+8) = @0x80076AF8 ist der Stub {0,0,1,1}), Formel des Originals FUN_800473f8
+ *     @0x8004741c-0x80047528, ohne Klemme. Pruefbericht pruef_s3_r6 ROT 1: "beim ersten Schritt in den Gang springt der Punkt
+ *     6 Bildpunkte zurueck ... steht er wieder auf der Wandlinie, ueber blauem Grund, direkt am Uebergang zu 4030".
+ *     Welt (ROOM4080.RDT, Kollisionszellen 12 B ab 0x0055C):
+ *       Zelle 6 @0x005A4 = 6c20 6c20 6ae6 ebf6 04: Dreieck Typ 4 (-6550,-2325) 8300x8300 -> Wand x+z = -575
+ *       Zelle 11 @0x005E0 = 6c20 6c20 37e2 b8f2 07: Dreieck Typ 7 (-7625,-3400) 8300x8300 -> Wand x+z = -2725
+ *       (re15_collision.c: Typ 7 fest fuer (z-Z)*W < (X+W-x)*D). Der Gang liegt genau unter 45 Grad (Hypotenusen quadratischer
+ *       Zellen), seine Mitte ist x+z = -1650. Er beginnt an der Tuer nach 4030 (Slot 0, Mitte (-4250,2550), x-z = -6800) und
+ *       endet, wo beide Dreiecke enden (Ecken (1750,-2325) und (675,-3400), x-z = 4075).
+ *     Kunst (Blatt 8, r13 'd' Index != 0/4): Gang-Inneres je Zeile y bei x = y+49..y+53 (Wandlinien x-y = 48 und 54, Mitte
+ *       x-y = 51), Spitze an der Tuer (166,112), Ende (172,123); dahinter die Nahtlinie x+y = 296..297 (Rahmenlinie von r3 und
+ *       Wandlinien r13/r8), ab x+y = 298 die breite Diagonale r8.
+ *     Zeile: Mitte x+z = -1650 -> Punkt mx-my = 51 (Gangmitte); Tuer (x-z = -6800) -> Punkt mx+my = 279, Gangende (x-z = 4075)
+ *       -> mx+my = 297. Daraus sx = sy = round(18 * 2^20 / 10875) = 1736 (gleich in x und z: sonst kippt die Mittellinie des
+ *       Gangs gegen die gemalte), ox = 119, oy = 171. Zum Vergleich die Zeile des Raums (Zone 0, aus den Waenden): 1833/1905.
+ *     HALTESTELLEN (gemessen an DATA/MAP09.PIX, Messhilfe scratchpad karte/s3r7/mitte.py): der Ring (5x5 ohne Ecken, TEX.TIM
+ *       @0x14910 uv 225..229) ist so breit wie der Gang. Sein Inneres (3x3) liegt nur auf der Mittellinie ganz auf dem Raum
+ *       (Ring-Mitten (167,116) .. (172,121)); die Spitze an der Tuer ist zu schmal. Rand (9x9 ohne 5x5, sichtbarer Raum von
+ *       r8/r13 ohne Tuerbalken) auf der Mittellinie: (167,116) 15, (168,117) 17, (169,118) 18, (170,119) 17, (171,120) 15,
+ *       (172,121) 20 von 56. Das Mass der Pruefung verlangt mindestens 18/56 = 0,32 (v0.8.30, Abzug der Ankunft). Es bleiben
+ *       ZWEI Lagen: Ring-Mitte (169,118) und (172,121), Punkt (170,119) und (173,122). Der Punkt nimmt die Haltestelle, die
+ *       der Gang-Zeile am naechsten liegt (gemessen entlang mx+my; bei Gleichstand die zur Tuer). Ein Rueckwaertssprung ist
+ *       damit ausgeschlossen: mx+my der Zeile waechst mit x-z, die Haltestellen auch.
+ *     HINTER DEM GANGENDE (Ring-Mitte auf oder hinter der Naht, Punkt mx+my >= 298) rechnet der Punkt mit der Zone der breiten
+ *       Diagonale (Zone 0, r8, Zeile aus den Waenden) samt der Klemmen von Runde 4/5 - dort wie bisher.
+ *     PORT-WAHL (Anzeige, keine Spielkonstante). Grenzen (offen benannt im Bericht s3 r7): die beiden Haltestellen liegen
+ *     drei Bildpunkte auseinander; Ring-Mitte (169,118) hat den Tuerbalken 4080<->4030 (x165 y111..115) 2 Texel weit im 9x9-Feld,
+ *     der Ring selbst beruehrt ihn nicht. */
+typedef struct {
+    unsigned short room;
+    unsigned char idx, weiter_idx;      /* Zone des Gangs, Zone hinter dem Gangende */
+    short ox, oy;
+    unsigned short sx, sy;              /* Formel FUN_800473f8 @0x8004741c-0x80047528 */
+    short naht;                         /* Punkt mx+my, ab dem der Ring auf/hinter der Naht liegt */
+    unsigned char n;
+    short halt[2][2];                   /* Haltestellen (Punkt, nicht Ring-Mitte) */
+} r42_gang_t;
+
+static const r42_gang_t s_r42_gang[] = {
+    { 0x4080, 1, 0, 119, 171, 1736, 1736, 298, 2, { { 170, 119 }, { 173, 122 } } },
+    { 0x4081, 1, 0, 119, 171, 1736, 1736, 298, 2, { { 170, 119 }, { 173, 122 } } },
+};
+
+const void *re15_karte_r42_gang(const void *zone, int32_t wx, int32_t wz, int16_t *mx, int16_t *my, int *fertig)
+{
+    const re15_map_zone_t *zn = (const re15_map_zone_t *)zone;
+    int i, j;
+    *fertig = 0;
+    if (!zn || zn->etage || g_re15_karte_r42_roh) return 0;
+    for (i = 0; i < (int)(sizeof s_r42_gang / sizeof s_r42_gang[0]); i++) {
+        const r42_gang_t *g = &s_r42_gang[i];
+        int32_t t, t2, px, py, s, beste = 0, bd = 0;
+        if (g->room != zn->room || g->idx != zn->idx) continue;
+        t  = ((wx + 32000) * 10 * (int32_t)g->sx) >> 20;
+        t2 = ((wz + 32000) * 10 * (int32_t)g->sy) >> 20;
+        px = (t + 5) / 10 + g->ox;
+        py = -((t2 + 5) / 10) + g->oy;
+        s = px + py;
+        if (s >= g->naht) {                       /* hinter dem Gangende: breite Diagonale */
+            for (j = 0; j < re15_map_zone_count(); j++) {
+                const re15_map_zone_t *z = re15_map_zone_by_index(j);
+                if (z && z->room == zn->room && z->idx == g->weiter_idx && !z->etage && z->page == zn->page) return z;
+            }
+            return 0;
+        }
+        for (j = 0; j < g->n; j++) {
+            int32_t d = s - (g->halt[j][0] + g->halt[j][1]);
+            if (d < 0) d = -d;
+            if (j == 0 || d < bd) { bd = d; beste = j; }
+        }
+        *mx = g->halt[beste][0];
+        *my = g->halt[beste][1];
+        *fertig = 1;
+        return 0;
+    }
+    return 0;
 }
