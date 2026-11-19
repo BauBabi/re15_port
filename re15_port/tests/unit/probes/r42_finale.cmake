@@ -51,6 +51,16 @@ if(NOT WIN32)
 endif()
 add_test(NAME unit_r42_finale_abspann COMMAND test_r42_finale_abspann)
 set_tests_properties(unit_r42_finale_abspann PROPERTIES TIMEOUT 120)
+# Stufe 7 (NUTZERWUNSCH 18.11.2026, include/re15_endvideo_r42.h "STUFE 7"): Abspann-Diashow 6040/6041 ohne die Tafel "Thank you for
+# playing this reconstruction" (Cut 1 @0x0053A), uebrige Cuts in Original-Reihenfolge und -Standzeit, Diashow 3202 Bilder.
+add_executable(test_r42_abspann_tafel ${CMAKE_CURRENT_LIST_DIR}/../test_r42_abspann_tafel.c)
+target_link_libraries(test_r42_abspann_tafel PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_abspann_tafel PRIVATE ${CMAKE_SOURCE_DIR}/include)
+if(NOT WIN32)
+    target_link_libraries(test_r42_abspann_tafel PRIVATE m)
+endif()
+add_test(NAME unit_r42_abspann_tafel COMMAND test_r42_abspann_tafel)
+set_tests_properties(unit_r42_abspann_tafel PROPERTIES TIMEOUT 120)
 # Plan S1 (Pruefbericht s1 r2 R2): R702.ESP, R702_xx.TIM, Raumtonbank R702.EDT/.VH/.VB und R702_XA03_LEON.XAS bytegleich mit ROOM7020.RDT
 # bzw. VOICE07.XAS (tests/unit/test_r42_finale_assets.c). Gegenprobe ueber RE15_R42F_RE2=<anderer RE2-Ordner>.
 add_executable(test_r42_finale_assets ${CMAKE_CURRENT_LIST_DIR}/../test_r42_finale_assets.c)

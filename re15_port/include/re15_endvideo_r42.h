@@ -70,6 +70,29 @@
  *   Id 60: ROOM5090 belegt 0, 1 (RDT), 2 (Schlusszeile), 3 (Zuruf), 40..43 (Annette); ROOM5091 0, 1, 2, 3 -> 60 ist frei (dieselbe Id
  *     wie der Zugfilm in 6030/6031).
  *
+ * STUFE 7 - ABSPANN-DIASHOW OHNE DIE TAFEL "THANK YOU FOR PLAYING THIS RECONSTRUCTION" (NUTZERWUNSCH 18.11.2026, wie oben: "das thank
+ * you for Playing fliegt vollständig raus"; Entscheid im Strang: genau diese eine Tafel faellt aus der Diashow, alle uebrigen bleiben
+ * in Reihenfolge und Standzeit, die BSS-Datei bleibt unveraendert).
+ *   Original (Mod-Baum, ROOM6040.RDT = ROOM6041.RDT an dieser Stelle, selbst gelesen mit xxd und tools/scd_dump_room.py; beide RDT und
+ *   ROOM604.BSS byte-gleich mit info/Re1.5): sub00 @0x00522 `04 ff 18 02` startet sub02 @0x0052A..@0x00597:
+ *     @0x0052A `54 00 01 00 00 00` MAIN an          @0x00530 `22 02 07 01` Set(2,7,1)
+ *     @0x00534 `29 00` Cut 0 (schwarz)              @0x00536 `09 0a c8 00` Sleep 200
+ *     @0x0053A `29 01` Cut 1 = TAFEL 1              @0x0053C/@0x00540/@0x00544 `09 0a fa 00` 3 x Sleep 250 = 750 Bilder
+ *     @0x00548 `29 02` ... @0x00570 `29 06`         je 2 x Sleep 250 = 500 Bilder
+ *     @0x0057A `29 07`, @0x00580 `29 08`            je 1 x Sleep 250 = 250 Bilder
+ *     @0x00586 `54 00 02 00 00 00` MAIN aus, @0x0058C `09 0a 02 00` Sleep 2, @0x00590 `22 00 01 00` Set(0,1,0) -> Titel, @0x00594 Evt_end
+ *   Bild je Cut: Cut n = ROOM604.BSS[n * 0x10000], 0x10000 Bytes (Schnittregel platform/pc/src/bg_pc.c, gemessen ueber 1688 Schnitte;
+ *   ROOM604.BSS = 589824 B = 9 x 0x10000 = nCut 9 im RDT-Kopf). Inhalt gemessen an Bildern der Diashow (Strang-Scratchpad s7r1/tafeln):
+ *     Cut 1 "Thank you for playing this reconstruction of Resident Evil 1.5. ... It is also missing certain monsters, such as the
+ *           alligators in the Sewers and the later forms of G-Birkin as originally designed. ..." - im Port ueberholt (Alligator-Kampf
+ *           2090, spaetere Birkin-Formen) und der Dank, den der Nutzer streicht.
+ *     Cut 2..6 Danksagungen und Namen, Cut 7 "Finally, a message to our old friend ResidentEvilForever ...", Cut 8 "Thank you everyone!
+ *           (MartinBiohazard) / Biohazard 2 copyright (c) 1998 Capcom Ltd., all rights reserved." - bleiben.
+ *   Port: re15_endvideo_r42_evt_exec liefert in 6040/6041 fuer sub02 (nur bei den 110 Original-Bytes) g_re15_ev_dia_programm = das
+ *   Original ohne die 14 Bytes @0x0053A..@0x00547. Die Diashow dauert damit 3952 - 750 = 3202 Bilder (Summe der Sleeps). Keine neue
+ *   Zahl. Die Version_40%-Disc hat diese Diashow nicht (dort ist ROOM6040 ein Spielraum, nCut 7, main00 @0x0052E Door_aot_set) -
+ *   die Tafeln sind Inhalt der Mod.
+ *
  * DAS ENDVIDEO SELBST: noch nicht gebaut (Ablauf scratchpad zws_ende/BEDARF_Ende.md). Dateien je Figur (PORT-WAHL Name, 8.3 wie die
  * uebrigen Filme): MOVIE/ENDE5090.STR (Leon) und MOVIE/ENDE5091.STR (Elza), Format wie R600ZUG.STR (tools/r41_zws114/film_bauen.py
  * --quelle <mp4> --ziel <STR>). Solange die Datei fehlt, geht es nach dem Abblenden direkt in den Abspann.
@@ -103,8 +126,20 @@ extern const uint8_t g_re15_ev_sub02_original[RE15_EV_SUB02_LAENGE];
 extern const uint8_t g_re15_ev_programm[];
 extern const unsigned g_re15_ev_programm_laenge;
 
+/* Stufe 7: Abspann-Diashow 6040/6041 sub02 (Kopf "STUFE 7"). */
+#define RE15_EV_DIA_LEON          0x6040u
+#define RE15_EV_DIA_ELZA          0x6041u
+#define RE15_EV_DIA_SUB02         0x0052Au  /* Datei-Offset sub02 in beiden RDT                                   */
+#define RE15_EV_DIA_LAENGE        110       /* @0x0052A..@0x00597                                                   */
+#define RE15_EV_DIA_TAFEL1        0x0053Au  /* Cut_chg 1                                                            */
+#define RE15_EV_DIA_TAFEL1_LAENGE 14        /* @0x0053A..@0x00547: `29 01` + 3 x `09 0a fa 00`                      */
+extern const uint8_t g_re15_ev_dia_original[RE15_EV_DIA_LAENGE];
+extern const uint8_t g_re15_ev_dia_programm[RE15_EV_DIA_LAENGE - RE15_EV_DIA_TAFEL1_LAENGE];
+extern unsigned g_re15_ev_dia_starts;   /* Pruefhaken */
+
 /* HAKEN op_evt_exec (scd_vm.c, hinter der Streichliste): in 5090/5091 sub02 bei gesetztem Bit 129 das Port-Programm statt des
- * Original-sub02, sonst pc unveraendert. Das Original-sub02 muss die 24 Bytes oben tragen (anderer Stand -> Original). */
+ * Original-sub02, sonst pc unveraendert. Das Original-sub02 muss die 24 Bytes oben tragen (anderer Stand -> Original).
+ * Stufe 7: in 6040/6041 sub02 immer die Diashow ohne Tafel 1 (das Original-sub02 muss die 110 Bytes tragen). */
 const uint8_t *re15_endvideo_r42_evt_exec(uint16_t room_id, uint8_t sub, const uint8_t *pc);
 extern unsigned g_re15_ev_starts;   /* Pruefhaken: so oft wurde das Port-Programm gestartet */
 

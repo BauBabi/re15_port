@@ -50,9 +50,59 @@ const unsigned g_re15_ev_programm_laenge = (unsigned)sizeof g_re15_ev_programm;
 
 unsigned g_re15_ev_starts = 0;
 
+/* Stufe 7: Abspann-Diashow ROOM6040/6041 sub02, Original @0x0052A..@0x00597 (110 Bytes, beide Raeume gleich, xxd). */
+const uint8_t g_re15_ev_dia_original[RE15_EV_DIA_LAENGE] = {
+    0x54, 0x00, 0x01, 0x00, 0x00, 0x00,   0x22, 0x02, 0x07, 0x01,   0x29, 0x00,   0x09, 0x0a, 0xc8, 0x00,   /* @0x0052A..@0x00539 */
+    0x29, 0x01,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,                 /* @0x0053A..@0x00547 */
+    0x29, 0x02,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,                                           /* @0x00548 */
+    0x29, 0x03,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,                                           /* @0x00552 */
+    0x29, 0x04,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,                                           /* @0x0055C */
+    0x29, 0x05,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,                                           /* @0x00566 */
+    0x29, 0x06,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,                                           /* @0x00570 */
+    0x29, 0x07,   0x09, 0x0a, 0xfa, 0x00,                                                                     /* @0x0057A */
+    0x29, 0x08,   0x09, 0x0a, 0xfa, 0x00,                                                                     /* @0x00580 */
+    0x54, 0x00, 0x02, 0x00, 0x00, 0x00,   0x09, 0x0a, 0x02, 0x00,   0x22, 0x00, 0x01, 0x00,   0x01, 0x00 };  /* @0x00586..@0x00597 */
+
+/* Die Diashow ohne Tafel 1: das Original-sub02 ohne die 14 Bytes @0x0053A..@0x00547 (Cut_chg 1 + 3 x Sleep 250). Alle uebrigen
+ * Befehle in Original-Reihenfolge und mit Original-Werten (NUTZERWUNSCH 18.11.2026, Kopf re15_endvideo_r42.h "STUFE 7"). */
+const uint8_t g_re15_ev_dia_programm[RE15_EV_DIA_LAENGE - RE15_EV_DIA_TAFEL1_LAENGE] = {
+    0x54, 0x00, 0x01, 0x00, 0x00, 0x00,   /* MAIN an        @0x0052A                                   */
+    0x22, 0x02, 0x07, 0x01,               /* Set(2,7,1)     @0x00530                                   */
+    0x29, 0x00,   0x09, 0x0a, 0xc8, 0x00, /* Cut 0 (schwarz), Sleep 200   @0x00534 / @0x00536          */
+    /* [Cut_chg 1 @0x0053A + Sleep 250 @0x0053C/@0x00540/@0x00544 entfallen: Tafel "Thank you for playing this reconstruction"] */
+    0x29, 0x02,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,   /* Cut 2, 500 Bilder   @0x00548..@0x00551 */
+    0x29, 0x03,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,   /* Cut 3, 500 Bilder   @0x00552..@0x0055B */
+    0x29, 0x04,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,   /* Cut 4, 500 Bilder   @0x0055C..@0x00565 */
+    0x29, 0x05,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,   /* Cut 5, 500 Bilder   @0x00566..@0x0056F */
+    0x29, 0x06,   0x09, 0x0a, 0xfa, 0x00,   0x09, 0x0a, 0xfa, 0x00,   /* Cut 6, 500 Bilder   @0x00570..@0x00579 */
+    0x29, 0x07,   0x09, 0x0a, 0xfa, 0x00,                             /* Cut 7, 250 Bilder   @0x0057A..@0x0057F */
+    0x29, 0x08,   0x09, 0x0a, 0xfa, 0x00,                             /* Cut 8, 250 Bilder   @0x00580..@0x00585 */
+    0x54, 0x00, 0x02, 0x00, 0x00, 0x00,   /* MAIN aus       @0x00586                                   */
+    0x09, 0x0a, 0x02, 0x00,               /* Sleep 2        @0x0058C                                   */
+    0x22, 0x00, 0x01, 0x00,               /* Set(0,1,0) = INGAME aus -> Titel   @0x00590                */
+    0x01, 0x00 };                         /* Evt_end        @0x00594                                   */
+
+unsigned g_re15_ev_dia_starts = 0;
+
 const uint8_t *re15_endvideo_r42_evt_exec(uint16_t room_id, uint8_t sub, const uint8_t *pc)
 {
     if (sub != RE15_EV_SUB || !pc) return pc;
+    /* Stufe 7: Abspann-Diashow ohne die Tafel "Thank you for playing this reconstruction" (sub00 @0x00522 `04 ff 18 02`). Ohne
+     * Bedingung an Bit 129: die Tafel soll nie erscheinen (der Raum ist ohnehin nur nach dem Finale erreichbar, aot_common.c). */
+    if (room_id == RE15_EV_DIA_LEON || room_id == RE15_EV_DIA_ELZA) {
+        if (memcmp(pc, g_re15_ev_dia_original, RE15_EV_DIA_LAENGE) != 0) {
+#ifdef RE15_PLATFORM_PC
+            fprintf(stderr, "[abspann] ROOM%04X sub02 weicht vom Original ab -> Original-sub02 laeuft\n", (unsigned)room_id);
+#endif
+            return pc;
+        }
+        g_re15_ev_dia_starts++;
+#ifdef RE15_PLATFORM_PC
+        fprintf(stderr, "[abspann] ROOM%04X sub02 -> Diashow ohne Tafel 1 (Cut_chg 1 @0x0053A + 3 x Sleep 250 entfallen), "
+                        "Cut 0,2..8 wie im Original\n", (unsigned)room_id);
+#endif
+        return g_re15_ev_dia_programm;
+    }
     if (room_id != RE15_EV_RAUM_LEON && room_id != RE15_EV_RAUM_ELZA) return pc;
     if (!re15_game_flag_get(RE15_R42_BANK, RE15_R42_BIT_FINALE_ENDE)) return pc;
     if (memcmp(pc, g_re15_ev_sub02_original, RE15_EV_SUB02_LAENGE) != 0) {

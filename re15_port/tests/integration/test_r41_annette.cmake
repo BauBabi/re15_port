@@ -9,8 +9,12 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: ohne diese Zeile gelten im Li
 #              nachgeladen) -> Schnitt weg/liegt/Schrei -> Kampfstart sub04; Toene 0/1/2 der Mini-Bank; danach die Riesenform
 #              freigegeben (grid 0x13 = sub04 Member_set @0x0130A), Annette bleibt liegen (hp -1).
 #   leon_ohne_zug (3,89)=1, (9,133)=0: die Frau im Kittel wird in 5090 verworfen (erst nach dem Zugstart), keine Szene.
+#              Strang finale Stufe 6 (Nutzer 18.11. "darf sie in der Animation nicht noch mal aufstehen. Sondern mit den Schlag direkt
+#              liegen bleiben."): Messschiene RE15_POSE_LOG (gezeichnete Pose mit Ueberblendung, Welt-y je Knochen) - ab dem Trefferbild
+#              werden Becken (Knochen 0) und Kopf/Oberkoerper (Knochen 8) nie wieder hoeher und die Lage (x,z) bleibt dieselbe.
 #   leon_leiche (3,89)=1, (9,133)=1, (3,42)=1 (Nachbesserung 3, M8): Wiedereintritt nach der Szene, Annette liegt als Leiche
-#              (NB4: RE2-Liegeclip 0x18 = Clip 24 Bild 0, Lage (4856,-22748) Gier 1170, hp -1, Blut-Kittel), keine zweite Szene.
+#              (NB4: RE2-Liegeclip 0x18 = Clip 24 Bild 0; Stufe 6: Lage S (3700,-22500) Gier 1695, wo sie fiel; hp -1, Blut-Kittel),
+#              keine zweite Szene.
 #   elza       5091 mit (3,89)=1, (9,133)=1: keine Frau im Kittel auf der Disc, keine Szene.
 #   zug6030    Fuehrerstand 6030 (Debug-Sprung = Eintritt Cut 0 @0x8001d818 -> sub00 Case 0 -> sub07) mit (3,89)=1, (4,23)=1:
 #              Zugstart-Szene statt sub05 (sub07 @0x01132), Toene Zug an (3) vor Krach (0), Annette geht ab und ist versteckt
@@ -57,7 +61,7 @@ function(ein_lauf _name _raum _flag _pos _exit)
         RE15_TITLE_SHOT=title.bmp RE15_TITLE_SHOT_AF=2 ${_extra}
         RE15_DEBUG_JUMP=${_raum}@250 "RE15_PLAYER_POS=${_pos}"
         RE15_INPUT_SCRIPT_BASIS=spiel RE15_INPUT_SCRIPT_START=100 "RE15_INPUT_SCRIPT=A0.1,W1,U8.5,W40"
-        RE15_SPAWN_DIAG=1 RE15_STATE_LOG=state.log
+        RE15_SPAWN_DIAG=1 RE15_STATE_LOG=state.log RE15_POSE_LOG=pose.txt
         "RE15_EXIT_AT=${_exit}#${_raum}"
         "${_exe_kopie}")
     set(_g "")
@@ -87,6 +91,58 @@ function(ein_lauf _name _raum _flag _pos _exit)
         endforeach()
         if(NOT _dbg MATCHES "Ersatzmodell RE2/ANNETTE_4D_BLUT.EMD")
             string(APPEND _g "\n ${_name}: Blut-Textur (ANNETTE_4D_BLUT.EMD) nach dem Treffer nicht geladen")
+        endif()
+        # Strang finale Stufe 6: ab dem Trefferbild nie wieder hoeher, kein Lagesprung (gezeichnete Pose, RE15_POSE_LOG)
+        string(REGEX MATCH "\\[annette\\] F([0-9]+) Treffer:" _m "${_dbg}")
+        set(_f_treffer "${CMAKE_MATCH_1}")
+        if(NOT _f_treffer OR NOT EXISTS "${WORKDIR}/pose.txt")
+            string(APPEND _g "\n ${_name}: Trefferbild oder pose.txt fehlt")
+        else()
+            file(STRINGS "${WORKDIR}/pose.txt" _pz REGEX " t4D .* Y:")
+            set(_n 0)
+            set(_hoch "")
+            set(_sprung "")
+            foreach(_z IN LISTS _pz)
+                if(NOT _z MATCHES "^F([0-9]+) .* x(-?[0-9]+) z(-?[0-9]+) ry")
+                    continue()
+                endif()
+                set(_fr "${CMAKE_MATCH_1}")
+                set(_x "${CMAKE_MATCH_2}")
+                set(_zz "${CMAKE_MATCH_3}")
+                if(_fr LESS _f_treffer)
+                    continue()
+                endif()
+                string(REGEX MATCH "Y:[-0-9,]+" _y "${_z}")
+                string(REPLACE "Y:" "" _y "${_y}")
+                string(REPLACE "," ";" _y "${_y}")
+                list(GET _y 0 _y0)
+                list(GET _y 8 _y8)
+                if(_n GREATER 0)
+                    math(EXPR _d0 "${_v0} - (${_y0})")
+                    math(EXPR _d8 "${_v8} - (${_y8})")
+                    if((_d0 GREATER 2 OR _d8 GREATER 2) AND NOT _hoch)
+                        set(_hoch "F${_fr}: Becken ${_v0} -> ${_y0}, Kopf ${_v8} -> ${_y8}")
+                    endif()
+                    if((NOT _x EQUAL _vx OR NOT _zz EQUAL _vz) AND NOT _sprung)
+                        set(_sprung "F${_fr}: (${_vx},${_vz}) -> (${_x},${_zz})")
+                    endif()
+                endif()
+                set(_v0 "${_y0}")
+                set(_v8 "${_y8}")
+                set(_vx "${_x}")
+                set(_vz "${_zz}")
+                math(EXPR _n "${_n} + 1")
+            endforeach()
+            message(STATUS "r41_annette ${_name}: Sturz ab F${_f_treffer}: ${_n} gezeichnete Bilder, hoeher '${_hoch}', Lagesprung '${_sprung}'")
+            if(_n LESS 60)
+                string(APPEND _g "\n ${_name}: nur ${_n} gezeichnete Annette-Bilder ab dem Treffer F${_f_treffer}")
+            endif()
+            if(_hoch)
+                string(APPEND _g "\n ${_name}: Annette richtet sich nach dem Treffer wieder auf (${_hoch})")
+            endif()
+            if(_sprung)
+                string(APPEND _g "\n ${_name}: Annette springt nach dem Treffer an eine andere Lage (${_sprung})")
+            endif()
         endif()
         file(STRINGS "${WORKDIR}/state.log" _form REGEX " t=30 st=[0-9]+ ss1=[0-9]+ ss2=[0-9]+ ss3=[0-9]+ g=13 ")
         list(LENGTH _form _nf)
@@ -118,8 +174,8 @@ function(ein_lauf _name _raum _flag _pos _exit)
             string(APPEND _g "\n ${_name}: keine Leiche im state.log")
         else()
             list(GET _frau -1 _letzte)
-            if(NOT _letzte MATCHES "mo=24 af=0 " OR NOT _letzte MATCHES "hp=-1" OR NOT _letzte MATCHES "@\\(4856,-22748,r1170\\)")
-                string(APPEND _g "\n ${_name}: Leiche nicht RE2-liegend (NB4: Clip 24 Bild 0 bei (4856,-22748) Gier 1170, hp -1): ${_letzte}")
+            if(NOT _letzte MATCHES "mo=24 af=0 " OR NOT _letzte MATCHES "hp=-1" OR NOT _letzte MATCHES "@\\(3700,-22500,r1695\\)")
+                string(APPEND _g "\n ${_name}: Leiche nicht RE2-liegend (Stufe 6: Clip 24 Bild 0 bei S (3700,-22500) Gier 1695, hp -1): ${_letzte}")
             endif()
         endif()
     elseif(_name STREQUAL "zug6030")

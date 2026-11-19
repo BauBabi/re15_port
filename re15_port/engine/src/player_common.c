@@ -29,6 +29,7 @@
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_scd.h"        /* g_scd.player_mode (BL-round input gate) */
 #include "re15_enemy_ai.h"
+#include "re15_annette_r41.h" /* re15_annette_r41_besitzt: die 5090-Szene fuehrt Annettes Bildzaehler selbst (Stufe 6) */
 #include "re15_esp.h"       /* re15_esp_fx_spawn — the weapon-7 speedloader drop */   /* RE15_AI_STATE_CORPSE — corpse-hold in re15_actors_anim_advance */
 
 /* Locomotion speeds = the RE1.5 per-direction speed bytes (FUN_80041BE4 mode
@@ -1518,6 +1519,13 @@ void re15_actors_anim_advance(void)
         if (!a->active) continue;
         if (a->state == RE15_AI_STATE_CORPSE) continue;   /* +0x4==7: corpse holds its fallen pose */
         if (re15_type_self_advances_anim(a->type)) continue;  /* self-advancing tick owns +0x95 (dog/maggot/crow/…) */
+        /* Runde 42 Strang finale Stufe 6 (Nutzer 18.11. "darf sie in der Animation nicht noch mal aufstehen"): die 5090-Szene
+         * fuehrt Annettes Bildzaehler selbst (annette_r41.c vor() = re15_birkin_anim, ein Schritt je Takt). Im Original ist
+         * anim_set der EINZIGE Stepper eines Wesens (`lbu v0,0x95(v1)` / `addiu v0,v0,0x1` / `sb v0,0x95(v1)` @0x8001f610-1c,
+         * aufgerufen nur vom Besitzer); die Szene setzt sie beim Hieb auf state 0, und dieser Durchlauf schob sie dann ein
+         * zweites Mal vor (gemessen s6r1 alt1: Clip 6 F1924..F1930 je Bild +2, danach +1 je Bild ueber den Halt bei Bild 12
+         * hinaus bis Bild 39 = das Aufstehen) und zog die Ueberblendung +0x8f doppelt ab. */
+        if (re15_annette_r41_besitzt(i)) continue;
         /* NPC-family actors in the state-4 executor advance +0x95 via the executor's own sub-VM
          * (re15_npc_sub_motion / re15_npc_anim = the byte-true anim_set path). The original has NO
          * separate global advancer for a state-4 actor — anim_set is the sole stepper — so the generic

@@ -147,8 +147,9 @@ endif()
 if(NOT _pl_min GREATER 0)
     string(APPEND _f "\n Spieler-HP ${_pl_min} bis zum Kill")
 endif()
-if(NOT _frau MATCHES "mo=24 af=0 " OR NOT _frau MATCHES "hp=-1$" OR NOT _frau MATCHES "@\\(4856,-22748,r1170\\)")
-    string(APPEND _f "\n Annette am Ende nicht als Leiche (Clip 24 Bild 0, (4856,-22748) Gier 1170, hp -1): ${_frau}")
+# Strang finale Stufe 6: die Leiche liegt, wo der Hieb sie traf (Ankunft an S, in diesem Lauf (3773,-22529)), Gier 1695
+if(NOT _frau MATCHES "mo=24 af=0 " OR NOT _frau MATCHES "hp=-1$" OR NOT _frau MATCHES "@\\(3773,-22529,r1695\\)")
+    string(APPEND _f "\n Annette am Ende nicht als Leiche (Clip 24 Bild 0, (3773,-22529) Gier 1695, hp -1): ${_frau}")
 endif()
 message(STATUS "r41_annette_g5 (Finale): Kampfstart F${_bild_kampf}, Form ${_hp_vor_kampf}, Abschuss F${_abschuss}, Kill F${_kill}, "
                "Spieler-HP min ${_pl_min}, Leiche ${_frau}, exit ${_rv}")

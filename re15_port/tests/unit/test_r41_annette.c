@@ -37,6 +37,7 @@
 #include "re15_room.h"
 #include "re15_birkin_formen.h"
 #include "re15_annette_r41.h"
+#include "re15_player.h"        /* re15_actors_anim_advance (Stufe 6: wie game_step vor run_all) */
 #include "re15_zws_r41.h"
 #include "re15_esp.h"
 #include "re2_ems.h"
@@ -96,18 +97,17 @@ static int slot_vom_typ(uint8_t t)
     return -1;
 }
 
-/* NB4 N2: Liegepose wie RE2 ROOM6141 (@0x01162 Pos_set y 900, @0x0116A Dir_set 3300, @0x01172 Plc_motion Clip 0x18), Lage =
- * Stand S (3700,-22500) + RE2-Versatz 1215 weg / 245 quer von L (-1378,-23395) = (4854,-22047), dann 700 nach Sueden
- * (Wandfreiheit Regal SCA #28) = (4854,-22747). Gier = Peilung L -> (4854,-22047) + (3300 - Peilung RE2 William -> Liegestelle);
- * mit den Python-Winkeln des Werkzeugs n4/leiche_lage.py 1170 (Toleranz 24 fuer die BIOS-Arkustangens-Tabelle). */
-static void leiche_pruefen(const re15_actor_t *a, const char *wo)
+/* NB4 N2: Liegepose wie RE2 ROOM6141 (@0x01162 Pos_set y 900, @0x01172 Plc_motion Clip 0x18): y 900, ungekippt, Clip 24 Bild 0. */
+/* Strang finale Stufe 6: die Leiche liegt, wo sie fiel (Szene: Lage beim Hieb = Ankunft an S; Wiedereintritt: S (3700,-22500)),
+ * Gier = Peilung S -> L (re15_atan2_q12: 1935) + AN_LIEGEN_DREH -240 = 1695 (annette_r41.c). Bis Stufe 5: (4854,-22747) Gier 1170. */
+static void leiche_pruefen(const re15_actor_t *a, const char *wo, int sx, int sz)
 {
     fprintf(stderr, "%s: Leiche (%d,%d,%d) Gier %d rot_x %d rot_z %d Clip %d/%d hp %d\n", wo, (int)a->x, (int)a->y, (int)a->z,
             a->rot_y, a->rot_x, a->rot_z, a->motion, (int)a->anim_frame, a->hp);
-    CHECK(abs((int)a->x - 4854) <= 2 && abs((int)a->z - (-22747)) <= 2, "%s: Leiche bei (%d,%d) statt (4854,-22747)", wo,
-          (int)a->x, (int)a->z);
-    const int dg = (((int)a->rot_y - 1170) + 2048 + 4096) % 4096 - 2048;
-    CHECK(abs(dg) <= 24, "%s: Leiche Gier %d statt ~1170 (RE2-Lage relativ zu William)", wo, a->rot_y);
+    CHECK((int)a->x == sx && (int)a->z == sz, "%s: Leiche bei (%d,%d) statt (%d,%d) (Stufe 6: wo sie fiel)", wo, (int)a->x,
+          (int)a->z, sx, sz);
+    const int dg = (((int)a->rot_y - 1695) + 2048 + 4096) % 4096 - 2048;
+    CHECK(abs(dg) <= 2, "%s: Leiche Gier %d statt 1695 (Peilung S -> L + AN_LIEGEN_DREH)", wo, a->rot_y);
     CHECK(a->y == 900 && a->rot_x == 0 && a->rot_z == 0 && a->motion == 24 && a->anim_frame == 0 && a->hp == -1,
           "%s: Leiche nicht RE2-liegend (y %d rot %d/%d Clip %d/%d hp %d; Soll y 900, ungekippt, Clip 24 Bild 0, hp -1)", wo,
           (int)a->y, a->rot_x, a->rot_z, a->motion, (int)a->anim_frame, a->hp);
@@ -138,13 +138,13 @@ static void test_bedingungen(void)
             CHECK(g_actors[s].x == 600 && g_actors[s].z == -25300, "5090 Lage (%d,%d) statt Spawn @0x0122A (600,-25300)",
                   (int)g_actors[s].x, (int)g_actors[s].z);
         if (s > 0 && k5090[i].f42) {
-            /* Leiche: erster Takt legt sie an die Lage aus @0x01162 (Stand S (3700,-22500), 1215 von L weg, 245 quer) */
+            /* Leiche: erster Takt legt sie an den Haltepunkt S (3700,-22500), wo die Szene sie fallen liess (Stufe 6) */
             re15_annette_r41_reset();
             re15_annette_r41_tick();
             const re15_actor_t *a = &g_actors[s];
             fprintf(stderr, "Wiedereintritt: Leiche (%d,%d,%d) Gier %d rot_z %d Clip %d/%d hp %d Phase %d\n", (int)a->x, (int)a->y,
                     (int)a->z, a->rot_y, a->rot_z, a->motion, (int)a->anim_frame, a->hp, re15_annette_r41_phase());
-            leiche_pruefen(a, "Wiedereintritt");
+            leiche_pruefen(a, "Wiedereintritt", 3700, -22500);
             CHECK(re15_annette_r41_phase() == RE15_AN_RUHE, "Wiedereintritt: Phase %d statt RUHE", re15_annette_r41_phase());
             CHECK(re15_annette_r41_besitzt(s), "Leiche: Besitz");
             CHECK(re15_annette_r41_kein_ziel(a) && a->hp == -1, "Leiche beim Wiedereintritt ist Schuss-Kandidat (hp %d)", a->hp);
@@ -474,12 +474,30 @@ static void test_szene(void)
     int sturz_y0 = 1, sturz_bilder = -1, treffer_bild = -1, treffer_clip = -1;
     int32_t treffer_abstand = -1, steh_x = 0, steh_z = 0;
     int frau_clip_treffer = -1;
+    /* Stufe 6 (Nutzer 18.11.: "darf sie in der Animation nicht noch mal aufstehen"): ab dem Trefferbild Becken (Knochen 0) und
+     * Kopf/Oberkoerper (Knochen 8) nie wieder hoeher, Lage nie wieder anders (kein Lagesprung) - bis zum Kampfstart */
+    int32_t fall_y0 = 0, fall_y8 = 0, fall_x = 0, fall_z = 0;
+    int fall_n = 0, fall_hoch = 0, fall_hoch_f = -1, fall_hoch_dy = 0, fall_sprung = 0, fall_sprung_f = -1, fall_sprung_d = 0;
     int kampf = 0;
     int blut_erst = -1, blut_letzt = -1, blut_n = 0, wolke_weg = -1, wolke_max = 0, lage_ok = 0, lage_n = 0, pool_max = 0;
     for (f = 0; f < 3000; f++) {
         re15_game_flag_set(5, 0x20, 1);                  /* Plc_dest-Ankunft (Spieler-Laufmaschine, hier nicht im Takt) */
         scd_vm_tick();
+        re15_actors_anim_advance();                      /* Stufe 6: wie game_step (game_step_common.c) vor run_all */
         re15_enemy_ai_run_all(0);
+        if (re15_annette_r41_phase() >= RE15_AN_REAKTION) {   /* Stufe 6: ab dem Trefferbild (Phase REAKTION) */
+            int32_t k0[3], k8[3];
+            const re15_actor_t *a = &g_actors[as];
+            re15_enemy_bone_world_pos(a, 0, k0);
+            re15_enemy_bone_world_pos(a, 8, k8);
+            if (fall_n > 0) {
+                const int dy = (int)((fall_y0 - k0[1]) > (fall_y8 - k8[1]) ? (fall_y0 - k0[1]) : (fall_y8 - k8[1]));   /* > 0 = hoeher */
+                if (dy > 2 && !fall_hoch) { fall_hoch = 1; fall_hoch_f = f; fall_hoch_dy = dy; }
+                const int d = abs((int)(a->x - fall_x)) + abs((int)(a->z - fall_z));
+                if (d > 0 && !fall_sprung) { fall_sprung = 1; fall_sprung_f = f; fall_sprung_d = d; }
+            }
+            fall_y0 = k0[1]; fall_y8 = k8[1]; fall_x = a->x; fall_z = a->z; fall_n++;
+        }
         if (re15_annette_r41_blut() != blut_n) {
             blut_n = re15_annette_r41_blut();
             if (blut_erst < 0) {
@@ -595,9 +613,18 @@ static void test_szene(void)
     CHECK(re15_annette_r41_ton(RE15_AN_SE_KRACH) == 1 && re15_annette_r41_ton(RE15_AN_SE_STURZ) == 1 &&
           re15_annette_r41_ton(RE15_AN_SE_BRUELL) == 1, "Toene Krach/Sturz/Bruellen nicht je einmal");
     CHECK(re15_annette_r41_schrei() == 1, "Schrei (Stimme 41 ohne Text) %d mal", re15_annette_r41_schrei());
-    (void)steh_x; (void)steh_z;   /* NB4: die Liegestelle ist fest (RE2 @0x01162 setzt absolute Werte), nicht vom Stand abhaengig */
+    /* Stufe 6: zu Boden und liegen bleiben - kein Aufrichten (Knochen 0/8 nie wieder hoeher), kein Lagesprung (Lage bleibt die vom
+     * Hieb, steh_x/steh_z), am Ende RE2-Liegepose; Gegenprobe: vor Stufe 6 lief Clip 6 ueber Bild 6 hinaus (Kopf wieder hoeher) und
+     * der Schnitt weg setzte sie 1105 weiter (4856,-22748) */
+    fprintf(stderr, "Sturz: %d Bilder ab dem Treffer, hoeher ab F%d um %d, Lagesprung ab F%d um %d\n", fall_n, fall_hoch_f, fall_hoch_dy,
+            fall_sprung_f, fall_sprung_d);
+    CHECK(fall_n > 40, "Sturz: nur %d Bilder ab dem Treffer gemessen", fall_n);
+    CHECK(!fall_hoch, "Annette richtet sich nach dem Treffer wieder auf: Knochen 0/8 ab F%d um %d hoeher (Nutzer 18.11.)", fall_hoch_f,
+          fall_hoch_dy);
+    CHECK(!fall_sprung, "Annette springt nach dem Treffer an eine andere Lage: ab F%d um %d (Stufe 6: kein Lagesprung)", fall_sprung_f,
+          fall_sprung_d);
     CHECK(re15_game_flag_get(3, 42), "(3,42) nach dem Kampfstart nicht gesetzt (sub01 @0x0129A)");
-    leiche_pruefen(&g_actors[as], "nach der Szene");
+    leiche_pruefen(&g_actors[as], "nach der Szene", (int)steh_x, (int)steh_z);
     /* NB6: ab dem Szenenstart und als Leiche RE2-Segment (FUN_80034D0C @0x80034dac/@0x80034e5c, Claire-RAM lauf3 e01..e30) */
     CHECK(kasten_ist(&g_actors[as], 350, 1350), "nach der Szene: Leichen-Kasten r %d h %d Versatz %d statt RE2 350/1350/-1350",
           (int)g_actors[as].hit_radius_min, (int)g_actors[as].hit_height, (int)g_actors[as].hit_offset_y);
