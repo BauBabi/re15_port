@@ -22,8 +22,21 @@
  *       Rotor": -22,3 dBFS (Messbericht Abschnitt 3); Port alt -31,0 dBFS. Der Port legt bis Stufe 3 noch Hall auf den
  *       Rotor (+1,0 dB) und zeichnet bis Stufe 5 ohne die Gauss-Glaettung des Tonchips -> Band -24,3 .. -19,8 dBFS.
  *
+ *   (6) Runde 2 - MUSIK UNTER GESPROCHENEN SAETZEN (PORT-WAHL nach dem NUTZERWUNSCH 18.10.2026 "er Port kann die Stimme
+ *       ruhig lauter anheben das es passt"; Herleitung im Kopf ueber STIMME_MUSIK_SEQ_VOL in audio_pc.c): solange ein
+ *       gesprochener Satz auf dem Sprachkanal laeuft, wird die Musik-Summe gerechnet, als stuende die Sequenz-Lautstaerke
+ *       auf 80 statt 127 -> (80/127)^2 = 13002/32768 = -8,03 dB (Sequenz-Lautstaerke vor dem Quadrat, SpuVmKeyOnNow
+ *       @0x80055e08-64 / @0x80055fe8); abwaerts in einem Spielbild, aufwaerts 1/0x3c des vollen Pegels je Spielbild
+ *       (FUN_800449f4(0x3c)).
+ *       Geprueft: (6a) ein Geraeusch auf dem Sprachkanal laesst die Musik stehen; (6b) nach einem Spielbild steht der
+ *       Faktor auf 13002 und bleibt dort; (6c) der Rotor liegt im Mitschnitt 8,03 dB (+-1,0) tiefer; (6d) ein Schuss
+ *       waehrend des Satzes hat dieselbe Spitze wie in (3) - Geraeusche bleiben; (6e) nach dem Satz bleibt die Musik
+ *       noch 0x3c Spielbilder unten (Pausen zwischen den Saetzen eines Gespraechs: gemessen 1 bis 40 Bilder) und kommt
+ *       dann mit derselben Steigung zurueck (21193 nach 15 Bildern, 32768 nach 37).
+ *
  * GEGENPROBE: derselbe Quelltext mit dem audio_pc.c von r42/story 71caea668 gebaut (ohne -DRE15_TON_S1_HAKEN, der
- * Messhaken re15_audio_se_mess existiert dort nicht) faellt in (1) bis (5).
+ * Messhaken re15_audio_se_mess existiert dort nicht) faellt in (1) bis (5). (6) haengt an den Messhaken der Runde 2;
+ * Gegenprobe dafuer: audio_pc.c mit stillgelegter Absenkung (Ziel immer 1,0) -> (6b) bis (6e) fallen.
  */
 #include "re15_audio.h"
 #include "re15_engine.h"
@@ -159,6 +172,9 @@ int main(void)
     int p_rumpeln = -1, p_stopp = -1, p_schritt = -1, p_schuss = -1;
     long t_rumpeln = 0, t_stopp = 0, t_schritt = 0, t_schuss = 0, t_rotor = 0;
     enum { N_RUMPELN = 75, N_STOPP = 60, N_SCHRITT = 40, N_SCHUSS = 30, N_ROTOR = 300 };
+    long t_vor = 0, t_unter = 0, t_schuss2 = 0;                  /* (6) Musik unter gesprochenen Saetzen */
+    enum { N_FENSTER = 40, N_SATZ = 200 };
+    int16_t *stille = NULL;
 
     /* ---- ROOM1130: Rolltor (snd0 Satz 10 / 11) und Schritt (Satz 29) ------------------------------------------ */
     int n = 0;
@@ -208,6 +224,47 @@ int main(void)
     re15_audio_seq_ctl(1, 1);                                    /* Sce_bgm_control(1,1) @0x80044e00-48 */
     (void)laufen(60);                                            /* Einschwingen (Anstieg der Huellkurve) */
     t_rotor = laufen(N_ROTOR);
+#ifdef RE15_TON_S1_HAKEN
+    /* ---- (6) Musik unter gesprochenen Saetzen: der Rotor laeuft weiter, der "Satz" ist eine stille Probe ------- */
+    stille = (int16_t *)calloc((size_t)N_SATZ * PER_TICK, sizeof(int16_t));
+    if (stille) {
+        const int voll = 0x8000, ziel = (80 * 80 * 0x8000) / (127 * 127);                 /* 13002 */
+        CHECK(ziel == 13002 && re15_audio_musik_stimme_q15() == voll,
+              "(6) Ausgangslage: Faktor %d (Soll 32768), Ziel %d (Soll 13002)", re15_audio_musik_stimme_q15(), ziel);
+        re15_audio_stimme_mess(stille, 20 * PER_TICK, 0);        /* (6a) Geraeusch auf dem Sprachkanal */
+        (void)laufen(10);
+        CHECK(re15_audio_musik_stimme_q15() == voll,
+              "(6a) Geraeusch auf dem Sprachkanal (kein gesprochener Satz): Faktor %d, Soll 32768 - die Musik bleibt stehen",
+              re15_audio_musik_stimme_q15());
+        (void)laufen(12);
+        t_vor = laufen(N_FENSTER);                               /* Bezug: Rotor ohne Satz */
+        re15_audio_stimme_mess(stille, N_SATZ * PER_TICK, 1);    /* (6b) gesprochener Satz, 200 Spielbilder */
+        (void)laufen(1);
+        const int g1 = re15_audio_musik_stimme_q15();
+        (void)laufen(59);
+        const int g60 = re15_audio_musik_stimme_q15();
+        CHECK(g1 == ziel && g60 == ziel,
+              "(6b) unter dem Satz: Faktor nach 1 / 60 Spielbildern %d / %d, Soll 13002 / 13002 (abwaerts in einem Spielbild "
+              "auf (80/127)^2)", g1, g60);
+        t_unter = laufen(N_FENSTER);                             /* (6c) Rotor unter dem Satz */
+        re15_audio_seq_ctl(1, 2);                                /* Rotor aus: der Schuss soll allein im Fenster stehen */
+        (void)laufen(45);                                        /* Hall-Rest des Rotors */
+        CHECK(re15_audio_musik_stimme_q15() == ziel, "(6d) Faktor vor dem Schuss %d, Soll 13002", re15_audio_musik_stimme_q15());
+        re15_audio_weapon_se(0);  t_schuss2 = laufen(N_SCHUSS);  /* (6d) Geraeusch waehrend des Satzes */
+        (void)laufen(N_SATZ - (60 + N_FENSTER + 45 + N_SCHUSS)); /* bis zum Ende des Satzes */
+        CHECK(re15_audio_musik_stimme_q15() == ziel, "(6e) Faktor am Satzende %d, Soll 13002", re15_audio_musik_stimme_q15());
+        (void)laufen(58);                                        /* Wartezeit 0x3c Spielbilder: die Musik bleibt unten */
+        CHECK(re15_audio_musik_stimme_q15() == ziel, "(6e) Faktor 58 Spielbilder nach dem Satzende %d, Soll 13002 (Wartezeit 0x3c)",
+              re15_audio_musik_stimme_q15());
+        (void)laufen(2);
+        (void)laufen(15);
+        const int r15 = re15_audio_musik_stimme_q15();
+        (void)laufen(22);
+        const int r37 = re15_audio_musik_stimme_q15();
+        CHECK(abs(r15 - 21193) <= 2 && r37 == voll,
+              "(6e) nach Satz und Wartezeit: Faktor nach 15 / 37 Spielbildern %d / %d, Soll 21193 / 32768 (dieselbe Steigung zurueck)", r15, r37);
+    }
+#endif
     re15_audio_shutdown();                                       /* schliesst den Mitschnitt */
 
     {   FILE *f = fopen(s_cap, "rb");
@@ -258,7 +315,25 @@ int main(void)
               "(5) Rotor SUB_15: %.2f dBFS, Soll -24,3 .. -19,8 (Original-Aufnahme -22,3; Stimmen-Register 6500/6500 nach SpuVmKeyOnNow, "
               "Hauptlautstaerke 0x3fff statt SS_BASE_MVOL 0x1a00)", db);
     }
-    free(rdt); free(rdt2); free(s_pcm);
+#ifdef RE15_TON_S1_HAKEN
+    if (stille) {
+        const mess_t a = messen(t_vor, N_FENSTER), b = messen(t_unter, N_FENSTER);
+        const double db = 20.0 * log10((b.rms > 0.0 ? b.rms : 1e-9) / (a.rms > 0.0 ? a.rms : 1e-9));
+        printf("  (6c) Rotor unter einem gesprochenen Satz: RMS %.1f gegen %.1f ohne Satz = %.2f dB (Soll -8,03)\n", b.rms, a.rms, db);
+        CHECK(a.rms > 500.0 && db > -9.03 && db < -7.03,
+              "(6c) Musik unter einem gesprochenen Satz: %.2f dB gegen den Pegel davor (RMS %.1f / %.1f), Soll -8,03 +- 1,0 = "
+              "(80/127)^2, Sequenz-Lautstaerke 80 vor dem Quadrat", db, b.rms, a.rms);
+        if (rdt2 && p_schuss > 0) {
+            const mess_t m = messen(t_schuss2, N_SCHUSS);
+            const int s3 = soll_spitze(p_schuss, (4343 + 5306) / 2, 2);
+            printf("  (6d) Schuss waehrend des Satzes: Mitschnitt L/R %d/%d, Soll %d wie in (3)\n", m.pk_l, m.pk_r, s3);
+            CHECK(m.pk_l * 100 >= s3 * 97 && m.pk_l * 100 <= s3 * 103 && m.pk_r * 100 >= s3 * 97 && m.pk_r * 100 <= s3 * 103,
+                  "(6d) Geraeusch waehrend eines gesprochenen Satzes: Spitze %d/%d, Soll %d +- 3 %% (wie ohne Satz - nur die Musik "
+                  "tritt zurueck; der Rest ist der Hall-Auslauf des abgeschalteten Rotors)", m.pk_l, m.pk_r, s3);
+        }
+    }
+#endif
+    free(rdt); free(rdt2); free(s_pcm); free(stille);
     remove(s_cap);
 
     if (fails == 0) { printf("test_r42_ton_mischer: OK (%d Pruefungen)\n", checks); return 0; }

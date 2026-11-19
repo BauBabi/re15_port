@@ -264,6 +264,7 @@ typedef struct {
     uint16_t         cd_vol_l;     /* mirrors CD_VOL_L (CD_initvol = 0x3FFF)   */
     uint16_t         cd_vol_r;     /* mirrors CD_VOL_R                         */
     int              active;       /* mirrors a CdlReadS in progress           */
+    int              sprache;      /* 1 = gesprochener Satz (Musik tritt zurueck, s. STIMME_MUSIK_SEQ_VOL) */
 } re15_xa_stream_t;
 static re15_xa_stream_t s_xa;      /* the single streaming voice channel       */
 
@@ -2336,6 +2337,7 @@ static void re15_xa_read_s(const int16_t *pcm, int pcm_len)
     s_xa.pos     = 0;
     s_xa.subpos  = 0;
     s_xa.active  = (pcm && pcm_len > 0) ? 1 : 0;
+    s_xa.sprache = 0;              /* der Aufrufer re15_voice_play setzt ihn fuer gesprochene Saetze */
     SDL_UnlockAudioDevice(s_audio_dev);
 }
 
@@ -2714,6 +2716,9 @@ static void re15_voice_play(uint16_t room, int voice_id)
       if (getenv("RE15_SE_DEBUG")) fprintf(stderr, "[voice] Start ROOM%04X Id %d CD_VOL %u capTick %ld\n", (unsigned)room, voice_id,
                                          (unsigned)s_xa.cd_vol_l, s_cap_ticks); }   /* Messschiene (Riegel r39_johnruf1041 pegel) */
     re15_xa_read_s(s_voice_clip[voice_id].pcm, s_voice_clip[voice_id].len);
+    /* Strang ton Stufe 1 Runde 2: nur gesprochene Saetze nehmen die Musik zurueck (Kopf ueber STIMME_MUSIK_SEQ_VOL);
+     * Geraeusche und Laute auf dem Sprachkanal (Tuerton, Hilferufe aus der Ferne, Schrei, Stoehnen) nicht. */
+    s_xa.sprache = re15_stimme_option_ist_geraeusch((unsigned)room, voice_id) ? 0 : 1;
 }
 /* Runde 38 Spur F: Johns Hilferuf ROOM1141 als Sprachzeile ohne Text (synchro main42.wav, dining_r38_pc.c). */
 void re15_audio_stimme(uint16_t room, int voice_id) { re15_voice_play(room, voice_id); }
@@ -3288,6 +3293,61 @@ static int s_bgm_fade_state = 0;          /* DAT_800b5218 */
 static int s_bgm_fade_n     = 0;          /* DAT_800b5360 */
 static int s_bgm_fade_vol   = 0x8000;     /* Skalar-Ersatz der 16 Stimmen-Volumes, 1.0 = 0x8000 */
 
+/* ── Strang ton Stufe 1 Runde 2: MUSIK TRITT UNTER GESPROCHENEN SAETZEN ZURUECK (PORT-WAHL, kein Originalverhalten) ──
+ *
+ * NUTZERWUNSCH 18.10.2026 (AUFTRAG.md Runde 39 Nachtrag 2, woertlich): "er Port kann die Stimme ruhig lauter anheben
+ * das es passt." Der Riegel integration_r39_stimmen_1150 haelt das fest (Irons' Zeilen: Stimme/Rest >= 0,45, kein
+ * Abtastwert am Anschlag; abgenommener Stand 0,98 / 0,59 / 0,57, Dossier analysis/befunde_runde39/A_stimmen.md §9.4).
+ *
+ * WARUM JETZT: seit Stufe 1 laeuft die Musik mit dem Pegel des Originals (SpuVmKeyOnNow @0x80055d10 mit Quadrat,
+ * Hauptlautstaerke 0x3fff) und damit 3,5 bis 10 dB lauter als an dem Tag, an dem der Nutzer das Verhaeltnis abnahm
+ * (gemessen: MAIN32 +9,0, MAIN17 +9,9, MAIN28 im Vorspann +3,5 bis +6,6, MAIN1E in ROOM1150 +4,8 bis +9,2 dB). Die
+ * Sprachaufnahmen (synchro/, Aufnahmen des Nutzers - im Original gibt es keine Sprache) sind gleich geblieben:
+ * ROOM1150 fiel auf 0,38 / 0,34 / 0,22, der Erzaehler im Vorspann lag 3 bis 9 dB unter der Musik (Pruefung Runde 1,
+ * R1). Die Stimme weiter anheben geht nicht: die Aufnahmen stehen an der Spitzenbegrenzung C = 21759
+ * (re15_stimmen_pegel_r39.h), ein Faktor 2,5 (8 dB) liefe ueber 16 Bit.
+ *
+ * WAS: solange ein gesprochener Satz laeuft, wird die Musik-Summe (MAIN, SUB, SUB2, Sirene - alles, was durch
+ * re15_ss_render_bgm geht; Geraeusche NICHT) so gerechnet, als stuende die Sequenz-Lautstaerke auf
+ * STIMME_MUSIK_SEQ_VOL statt auf 127. Die Sequenz-Lautstaerke geht in SpuVmKeyOnNow VOR dem Quadrat ein
+ * (`lhu 116(v1)` / `lhu 118(v1)` / 127 @0x80055e08-64, Quadrat @0x80055fe8 / @0x80056008): Faktor
+ * (80/127)^2 = 0,3968 = -8,03 dB.
+ *   Wert 80: gemessen brauchte die leiseste Irons-Zeile (main20, Stimme 1115 gegen Rest 4964, vor Stufe 1 Rest 1945)
+ *   20*log10(4964/1945) = 8,14 dB, um wieder auf dem abgenommenen Verhaeltnis 0,57 zu stehen. Auf der 127er-Skala
+ *   liegen 79 (-8,25 dB) und 80 (-8,03 dB) gleich nah daran (81 -> -7,81 dB); genommen ist 80, weil es zugleich ein Wert
+ *   ist, den RE2 selbst vor gesprochenen Saetzen an die Musik schreibt (info/re2leon PL0 room7040 sub06 @0x017C
+ *   `51 00 00 01 50 40` und @0x0182 `51 00 00 02 50 40` vor Xa_on @0x01A8; Zensus: 140 RE2-Skripte mit Xa_on, 8 davon
+ *   stellen die Musik-Lautstaerke selbst ein, Werte 0x33 .. 0x80; der Handler FUN_8005b6f0
+ *   schreibt Wert - 1 in die Programm-Lautstaerke der Musikbank). RE2 macht das je Szene im Skript; der Port hat fuer
+ *   seine Sprachszenen keine solchen Skriptzeilen und nimmt deshalb einen Wert fuer alle.
+ *   Tempo abwaerts: in EINEM Spielbild (RATE/30 Abtastwerte = 33 ms, die kleinste Zeiteinheit der Spiellogik) - kuerzer
+ *   waere ein Sprung in der Wellenform (Knacken), laenger verdeckt den Satzanfang: mit der 36-Bilder-Rampe der ersten
+ *   Fassung lag der erste Satz der Ankunft ROOM1170 (3,0 s lang, nach 566 Spielbildern Pause) noch 4,2 dB unter Rotor
+ *   und Musik, die folgenden Saetze 1 bis 8 dB darueber (Messung scratchpad ton/s1r2/intro_mess2.py).
+ *   Tempo aufwaerts: 1/0x3c des vollen Pegels je Spielbild - die Steigung der Musik-Ausblende des Originals
+ *   (FUN_800443ec -> FUN_800449f4(0x3c), BGM_FADE_FRAMES oben). Von 0,3968 auf 1,0 sind das 36,2 Spielbilder (1,2 s).
+ *   Wartezeit: nach dem Ende eines Satzes bleibt die Musik noch STIMME_MUSIK_HALT_BILDER Spielbilder unten, damit sie
+ *   zwischen den Saetzen EINES Gespraechs nicht auf- und abschwillt. Gemessen an den Startzeilen "[voice] Start ...
+ *   capTick" und den Satzlaengen: im Vorspann ROOM1240 liegen zwischen zwei Saetzen 2 bis 33 Spielbilder, in der
+ *   Ankunft ROOM1170 1 bis 40, zwischen zwei Gespraechen dort 241 und 271. Jeder Wert von 41 bis 240 trennt das; genommen
+ *   ist 0x3c = 60 (dieselbe Zahl wie die Blende, kein eigener Beleg - PORT-WAHL).
+ * NICHT betroffen: Geraeusche, die Sprachaufnahmen selbst, Geraeusche/Laute auf dem Sprachkanal
+ * (re15_stimme_option_ist_geraeusch), die RE2-Strecken re15_audio_re2_xa (ihre Szene stellt die Musik nach dem
+ * RE2-Skript selbst ein), der Film-Ton, Option VOICE OFF (dann laeuft kein Satz, also auch keine Absenkung). */
+#define STIMME_MUSIK_SEQ_VOL  80                                   /* PORT-WAHL, Herleitung s. Kopf */
+#define STIMME_MUSIK_ZIEL_Q30 ((int32_t)((((int64_t)STIMME_MUSIK_SEQ_VOL * STIMME_MUSIK_SEQ_VOL) << 30) / (127 * 127)))
+#define STIMME_MUSIK_HALT_BILDER 0x3c                              /* PORT-WAHL, Messung s. Kopf (41 .. 240 trennt) */
+static int32_t s_musik_stimme_q30 = (int32_t)1 << 30;              /* laufender Faktor, 1,0 = 1 << 30 */
+static int32_t s_musik_stimme_halt = 0;                            /* Rest der Wartezeit in Abtastwerten */
+int re15_audio_musik_stimme_q15(void) { return (int)(s_musik_stimme_q30 >> 15); }   /* Messhaken (kein Spielpfad) */
+/* Messhaken (kein Spielpfad): eine fertige Mono-Probe auf den Sprachkanal legen, sprache = 1 wie ein gesprochener Satz. */
+void re15_audio_stimme_mess(const int16_t *pcm, int n, int sprache)
+{
+    if (!g_audio.initialized) return;
+    re15_xa_read_s(pcm, n);
+    s_xa.sprache = sprache ? 1 : 0;
+}
+
 static void re15_ss_render_bgm(int16_t *out, int frames) {
     if (!s_ss_main.vab_ok && !s_ss_sub.vab_ok) return;
     static int16_t bgm[2048 * 2];
@@ -3299,16 +3359,42 @@ static void re15_ss_render_bgm(int16_t *out, int frames) {
     ss_mix(&s_ss_r41_sirene, bgm, frames);   /* Runde 41 Spur N, Nachtrag 36 */
     const int fade = s_bgm_fade_vol;   /* Stimmen-Volume-Rampe der Ausblendung */
     static int s_rev_held_l = 0, s_rev_held_r = 0, s_rev_phase = 0;
+    /* Musik unter gesprochenen Saetzen (Kopf ueber STIMME_MUSIK_SEQ_VOL): Ziel und Schritt je Abtastwert.
+     * Aufwaerts 1/0x3c je Spielbild (RATE/30 Abtastwerte), also (1 << 30) / (0x3c * RATE / 30); abwaerts die ganze
+     * Strecke in einem Spielbild. */
+    const int     st_satz    = (s_xa.active && s_xa.pcm && s_xa.sprache) ? 1 : 0;
+    const int32_t st_auf = ((int32_t)1 << 30) / (BGM_FADE_FRAMES * (s_dev_freq / 30));                  /* 1/0x3c je Spielbild */
+    const int32_t st_ab  = (((int32_t)1 << 30) - STIMME_MUSIK_ZIEL_Q30) / (s_dev_freq / 30) + 1;      /* in einem Spielbild  */
     for (int f = 0; f < frames; f++) {
         int dryL = bgm[f*2+0], dryR = bgm[f*2+1];
         if (fade != 0x8000) {          /* == SsUtSetDetVVol auf allen BGM-Stimmen */
             dryL = (dryL * fade) >> 15;
             dryR = (dryR * fade) >> 15;
         }
+        if (st_satz) s_musik_stimme_halt = STIMME_MUSIK_HALT_BILDER * (s_dev_freq / 30);
+        else if (s_musik_stimme_halt > 0) s_musik_stimme_halt--;
+        const int32_t st_ziel = (st_satz || s_musik_stimme_halt > 0) ? STIMME_MUSIK_ZIEL_Q30 : ((int32_t)1 << 30);
+        if (s_musik_stimme_q30 > st_ziel) {
+            s_musik_stimme_q30 -= st_ab;
+            if (s_musik_stimme_q30 < st_ziel) s_musik_stimme_q30 = st_ziel;
+        } else if (s_musik_stimme_q30 < st_ziel) {
+            s_musik_stimme_q30 += st_auf;
+            if (s_musik_stimme_q30 > st_ziel) s_musik_stimme_q30 = st_ziel;
+        }
         if (s_rev_phase == 0) ss_spu_reverb(dryL, dryR, &s_rev_held_l, &s_rev_held_r);
         s_rev_phase ^= 1;
-        int L = (int)out[f*2+0] + dryL + s_rev_held_l;
-        int R = (int)out[f*2+1] + dryR + s_rev_held_r;
+        int musL = dryL + s_rev_held_l, musR = dryR + s_rev_held_r;
+        /* Der Faktor wirkt auf die fertige Musik-Summe SAMT ihrem Hall (nicht auf den Hall-Eingang): im Dauerzustand
+         * dasselbe, aber der Hall-Zustand bleibt von der Absenkung unberuehrt - sobald der Faktor wieder auf 1,0 steht,
+         * ist der Ton bitgleich mit einem Lauf ohne Sprache (Riegel integration_stimmen_r41_szene [4]), und beim
+         * Absenken klingt kein Hall der vollen Musik unter dem Satzanfang nach. */
+        if (s_musik_stimme_q30 != ((int32_t)1 << 30)) {
+            const int g = (int)(s_musik_stimme_q30 >> 15);   /* Q15 */
+            musL = (musL * g) >> 15;
+            musR = (musR * g) >> 15;
+        }
+        int L = (int)out[f*2+0] + musL;
+        int R = (int)out[f*2+1] + musR;
         if (L >  32767) L =  32767; else if (L < -32768) L = -32768;
         if (R >  32767) R =  32767; else if (R < -32768) R = -32768;
         out[f*2+0] = (int16_t)L; out[f*2+1] = (int16_t)R;

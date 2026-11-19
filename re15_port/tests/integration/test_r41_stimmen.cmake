@@ -17,9 +17,11 @@
 #       Mitschnitt ON gegen OFF verschieden (die Stimmen), OFF nicht stumm (Musik und Geraeusche bleiben).
 #   (4) Umschalten mitten in der ersten Aufnahme (Messhaken RE15_VOICE_AUS_NACH=30, derselbe Schalter wie im Menue):
 #       die Aufnahme endet ("laufende Aufnahme ROOM1240 msg 0 endet"), im Bild danach laeuft keine Stimme und die
-#       Nachricht 0 ist noch offen; danach keine weitere Aufnahme, stimme.log zeilengleich mit OFF; der Mitschnitt ist ab
-#       dem Bild nach dem Umschalten bitgleich mit OFF und bis zum Umschalt-Bild bitgleich mit ON (die Aufnahme lief
-#       vorher mindestens 30 Bilder).
+#       Nachricht 0 ist noch offen; danach keine weitere Aufnahme, stimme.log zeilengleich mit OFF; der Mitschnitt ist
+#       bis zum Umschalt-Bild bitgleich mit ON (die Aufnahme lief vorher mindestens 30 Bilder) und spaetestens 0x3c + 37
+#       Spielbilder nach dem Umschalten wieder bitgleich mit OFF (bis Strang ton Stufe 1 Runde 2: ab dem Bild nach dem
+#       Umschalten; seither tritt die Musik unter einem gesprochenen Satz zurueck und kommt nach Wartezeit 0x3c mit
+#       1/0x3c je Spielbild wieder - audio_pc.c STIMME_MUSIK_SEQ_VOL).
 #   (5) Irons' Tod ROOM1150 (Spielstand probe_r35_cut1150_karte + CONTINUE in 1130, Tuer; Weg integration_r39_stimmen_1150),
 #       deterministischer Ton: dort sind Aufnahmen LAENGER als ihre Bilder, ON wartet an mindestens einer Zeile auf das
 #       Ende der Aufnahme. OFF: keine Aufnahme, an keiner Zeile gewartet, jede Zeile oeffnet genau um die bis dahin bei ON
@@ -241,8 +243,15 @@ elseif(TEIL STREQUAL "szene")
         string(REGEX MATCH "erste_abweichung=(-?[0-9]+)" _m "${_c1}")
         set(_start ${CMAKE_MATCH_1})
         message(STATUS "stimmen_r41[4]: Umschalten capTick ${_tick}; UM/OFF verschieden ${_start}..${_letzte}; UM/ON erste Abweichung ${_erste} (= Umschalt-Bild)")
-        if(NOT _letzte EQUAL _tick)
-            set(_fehler "${_fehler}\n[4] Ton nach dem Umschalten nicht bitgleich mit OFF (letzte Abweichung ${_letzte}, Umschalt-Bild ${_tick})")
+        # Strang ton Stufe 1 Runde 2 (2026-11-19): solange ein gesprochener Satz laeuft, tritt die Musik zurueck (audio_pc.c
+        # STIMME_MUSIK_SEQ_VOL, NUTZERWUNSCH 18.10. "er Port kann die Stimme ruhig lauter anheben das es passt"); nach dem
+        # Ende des Satzes - hier: nach dem Umschalten - bleibt sie 0x3c Spielbilder unten und kommt mit 1/0x3c je Spielbild
+        # zurueck (36,2 Spielbilder von (80/127)^2 auf 1,0). Bis dahin weicht der Lauf von OFF ab (dort lief nie ein Satz),
+        # danach ist er wieder bitgleich: letzte Abweichung spaetestens Umschalt-Bild + 0x3c + 37 (gemessen: Umschalt-Bild
+        # 454, letzte Abweichung 550; vorher: letzte Abweichung = Umschalt-Bild).
+        math(EXPR _spaetestens "${_tick} + 60 + 37")
+        if(_letzte LESS _tick OR _letzte GREATER _spaetestens)
+            set(_fehler "${_fehler}\n[4] Ton nach dem Umschalten nicht bitgleich mit OFF (letzte Abweichung ${_letzte}, Umschalt-Bild ${_tick}, spaetestens ${_spaetestens} = Umschalt-Bild + Wartezeit 0x3c + Rueckweg 37)")
         endif()
         math(EXPR _min_start "${_tick} - 30")
         if(_start LESS 0 OR _start GREATER ${_min_start} OR NOT _erste EQUAL _tick)
