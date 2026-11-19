@@ -32,8 +32,10 @@ extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, i
                                     const int *decoded_len, int satz);   /* audio_pc.c */
 /* Strang ton Stufe 1: der Rolladen kommt aus ROOM1131 snd0 (RE1.5-Bank, Gesetz mit Quadrat @0x80055d10), das
  * Klopfen aus RE2 ROOM1060 (RE2-Gesetz ohne Quadrat @0x80083a38). */
-extern void re15_audio_se_play_bank_re15(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
-                                         const int *decoded_len, int satz);   /* audio_pc.c */
+/* Strang ton Stufe 2 Runde 2: der Rolladen-Satz 0x0A spielt VAG 4 = die Rolltor-SCHLEIFE (ROOM1131 snd0, Block 127
+ * Flags 0x06 / Block 369 Flags 0x03, psx-spx "SPU ADPCM Samples" Z. 103-141) -> Wiedergabe mit Schleifenpunkten. */
+extern void re15_audio_se_play_bank_re15_schleife(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
+                                                  const int *decoded_len, const int *schleifen, int satz);   /* audio_pc.c */
 
 typedef struct {
     int        state;                         /* 0 ungeprueft, 1 geladen, -1 fehlt */
@@ -42,6 +44,7 @@ typedef struct {
     int        edt_count;
     int16_t   *decoded[RE15_VAB_MAX_SAMPLES];
     int        decoded_len[RE15_VAB_MAX_SAMPLES];
+    int        schleife[RE15_VAB_MAX_SAMPLES];   /* Strang ton Stufe 2 Runde 2: re15_vag_loop_start je VAG, -1 = einmal */
 } bank_t;
 
 static bank_t s_bank[3];
@@ -49,6 +52,7 @@ static unsigned s_gespielt[3];
 
 static void vags_dekodieren(bank_t *b, const uint8_t *vb, uint32_t vb_size)
 {
+    for (int i = 0; i < RE15_VAB_MAX_SAMPLES; i++) b->schleife[i] = -1;
     for (int i = 0; i < b->vab.vag_count && i < RE15_VAB_MAX_SAMPLES; i++) {
         uint32_t off = b->vab.samples[i].offset, sz = b->vab.samples[i].size;
         if (sz == 0 || off + sz > vb_size) continue;
@@ -57,6 +61,7 @@ static void vags_dekodieren(bank_t *b, const uint8_t *vb, uint32_t vb_size)
         if (!pcm) continue;
         b->decoded[i]     = pcm;
         b->decoded_len[i] = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
+        b->schleife[i]    = re15_vag_loop_start(vb + off, sz);   /* Strang ton Stufe 2 Runde 2 */
     }
 }
 
@@ -125,7 +130,9 @@ static void spielen(int bank, int satz)
         fprintf(stderr, "[se] Se_on bank=0x%02X id=%d -> Runde 38 Spur F (%s) F%u tick=%ld\n", bank, satz,
                 k == 0 ? "ROOM1131-snd0 Rolladen" : "RE2 ROOM1060 Klopfen",
                 (unsigned)g_engine.frame_count, re15_audio_cap_tick());
-    if (k == 0) re15_audio_se_play_bank_re15(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
+    /* Strang ton Stufe 2 Runde 2 (Pruefung s2_r1 R1): Satz 0x0A rumpelt bis zum Stopp-Satz 0x0B auf derselben Stimme
+     * (Programm +0x90, ROOM1131 sub02 @0x00AB2) bzw. bis zum Raumwechsel (re15_audio_raum_entladen, FUN_800443ec). */
+    if (k == 0) re15_audio_se_play_bank_re15_schleife(b->edt, &b->vab, b->decoded, b->decoded_len, b->schleife, satz);
     else        re15_audio_se_play_bank(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
 }
 

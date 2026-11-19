@@ -1328,12 +1328,26 @@ void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t 
     se_play_layers_re2(edt, vab, decoded, decoded_len, satz);
 }
 
-/* Dasselbe fuer eine RE1.5-Bank (Gesetz SpuVmKeyOnNow @0x80055d10 mit Quadrat), Zweig ohne Lage. */
+/* Dasselbe fuer eine RE1.5-Bank (Gesetz SpuVmKeyOnNow @0x80055d10 mit Quadrat), Zweig ohne Lage.
+ * Strang ton Stufe 2 Runde 2: `schleifen` = Schleifenpunkt je VAG (re15_vag_loop_start, -1 = einmal), NULL = jede
+ * Probe einmal. Die Hardware-Regel (psx-spx soundprocessingunitspu.md "SPU ADPCM Samples" Z. 103-141: Ende-Block mit
+ * Bit 0x02 springt zur Wiederhol-Adresse) gilt fuer jede Bank; noetig ist sie, wo eine Port-Bank eine Schleifen-Probe
+ * traegt: Port-Bank 0x3B = ROOM1131 snd0 (Satz 0x0A -> Ton 7 -> VAG 4, Rolladen 1140/1141, dining_r38_pc.c).
+ * Zensus der uebrigen Sonder-Baenke aus dem RE1.5-Baum (Bericht s2_r2, wege_zensus.py): ROOM1171 snd0 (werkstatt11b0),
+ * ROOM11C0 snd1 (zws_r41), ROOM3070 snd1 (Birkin-Ruf/Rohr), ARMS0F/10/11 (arms_zusatz) - keine Schleifen-Probe. */
+void re15_audio_se_play_bank_re15_schleife(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
+                                           const int *decoded_len, const int *schleifen, int satz)
+{
+    if (!g_audio.initialized || !edt || !vab) return;
+    s_se_schleifen = schleifen;
+    se_play_layers(edt, vab, decoded, decoded_len, satz);
+    s_se_schleifen = NULL;
+}
+
 void re15_audio_se_play_bank_re15(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
                                   const int *decoded_len, int satz)
 {
-    if (!g_audio.initialized || !edt || !vab) return;
-    se_play_layers(edt, vab, decoded, decoded_len, satz);
+    re15_audio_se_play_bank_re15_schleife(edt, vab, decoded, decoded_len, NULL, satz);
 }
 
 /* ===== Runde 36 Spur J: die SCHLOSS-Bank (RE2 ROOM1010 snd0, Robert Kendo im Gun Shop) ===============

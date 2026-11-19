@@ -24,6 +24,13 @@
  *       For 0x46 + For 0x14 = 90 Spielbilder (ROOM11A0.RDT @0x1322 / @0x132C, Se_on @0x1312 / @0x133A).
  *       Fuer (5)/(6): kein Fenster ohne Ton bis zum Stopp (vorher Stille ab dem Probe-Ende), danach nach 1,5 s still.
  *
+ *   (7) Runde 2 (Pruefung s2_r1 R1): der Rolladen im Speisesaal ROOM1140/1141 spielt dieselbe Rolltor-Schleife ueber die
+ *       Port-Bank 0x3B (= ROOM1131 snd0, dining_r38_pc.c; Satz 0x0A @0x1478 `00 00 76 16` -> Prog 0 Ton 7 Prio 6 Stimme 6
+ *       -> VAG 4; Stopp Satz 0x0B @0x147C `00 00 87 16` -> Ton 8 Prio 7 Stimme 6). Ablauf wie Programm ROLL1140
+ *       (gen/dining_r38_programme.inc): Se_on 0x0C, Sleep 15, Se_on 0x0A, Sleep 15 + For 20 + For 10x10 + For 3 + For 3
+ *       = 141 Spielbilder, Se_on 0x0B. Zwischen 2,4 s und 4,6 s nach 0x0A kein Fenster unter -40 dBFS (vorher: Stille ab
+ *       2,29 s), 1,17..1,5 s nach 0x0B still.
+ *
  * GEGENPROBE: derselbe Quelltext ohne -DRE15_TON_S2_HAKEN mit dem audio_pc.c von 71caea668 gebaut faellt in (2)
  * (Stille ab 2,29 s). (1) gibt es dort nicht (re15_vag_loop_start fehlt).
  */
@@ -119,6 +126,13 @@ static int spitze(long takt)
     return pk;
 }
 
+/* (7) dining_r38_pc.c wird mitgelinkt; diese beiden Symbole kommen sonst aus render_pc.c / dining_r39_pc.c. */
+void re15_render_pc_request_readback(const char *path) { (void)path; }
+void re15_pc_dining_r39_init(void) { }
+extern void re15_pc_dining_r38_init(void);
+extern unsigned re15_pc_dining_r38_gespielt(int k);
+extern void (*re15_dining_r38_se_hook)(int bank, int satz);
+
 int main(void)
 {
     static char capenv[1024];
@@ -162,6 +176,15 @@ int main(void)
     raum_laden("STAGE1/ROOM11A0.RDT");
     re15_audio_room_se_snd0(10); const long t_11a0 = laufen(90);
     re15_audio_room_se_snd0(11); const long t_11a0s = laufen(N_STOPP);
+    /* (7) Speisesaal: Port-Bank 0x3B */
+    raum_laden("STAGE1/ROOM1140.RDT");
+    re15_pc_dining_r38_init();
+    long t_roll = -1, t_rolls = -1;
+    if (re15_dining_r38_se_hook) {
+        re15_dining_r38_se_hook(0x3B, 0x0C); (void)laufen(15);
+        re15_dining_r38_se_hook(0x3B, 0x0A); t_roll = laufen(141);
+        re15_dining_r38_se_hook(0x3B, 0x0B); t_rolls = laufen(N_STOPP);
+    }
     re15_audio_shutdown();
 
     {   FILE *f = fopen(s_cap, "rb");
@@ -213,6 +236,25 @@ int main(void)
             CHECK(still == 0, "%s: %d stille Spielbilder vor dem Stopp (erstes %d) - die Schleife laeuft nicht", f[i].was, still, erst);
             CHECK(laut == 0, "%s: nach dem Stopp-Ton weiter Ton (%d Fenster) - die Schleife haengt", f[i].was, laut);
         }
+    }
+
+    /* (7) */
+    CHECK(t_roll >= 0 && re15_pc_dining_r38_gespielt(0) == 3, "(7) Port-Bank 0x3B nicht gespielt (Haken %s, gespielt %u)",
+          re15_dining_r38_se_hook ? "da" : "fehlt", re15_pc_dining_r38_gespielt(0));
+    if (t_roll >= 0) {
+        int schwach = 0, min_pk = 99999; long min_t = -1, laut = 0;
+        for (long k = 72; k < 138; k++) {                   /* 2,4 s .. 4,6 s nach Satz 0x0A */
+            const int p = spitze(t_roll + k);
+            if (p < min_pk) { min_pk = p; min_t = k; }
+            if (p < 328) schwach++;
+        }
+        for (long k = 35; k < N_STOPP; k++) if (spitze(t_rolls + k) != 0) laut++;
+        printf("  (7) Speisesaal Port-Bank 0x3B Satz 0x0A 2,4..4,6 s: kleinste Spitze %d (Bild %ld), Fenster unter -40 dBFS: %d von 66;"
+               " nach Satz 0x0B 1,17..1,5 s mit Ton: %ld\n", min_pk, min_t, schwach, laut);
+        CHECK(schwach == 0, "(7) Rolladen 1140/1141 (Port-Bank 0x3B = ROOM1131 snd0 Satz 0x0A, VAG 4) verstummt nach der Probe "
+              "(%d von 66 Fenstern zwischen 2,4 und 4,6 s unter -40 dBFS, kleinste Spitze %d): keine Schleife auf diesem Weg", schwach, min_pk);
+        CHECK(laut == 0, "(7) Satz 0x0B (Stimme 6, Prio 7) beendet die Rolladen-Schleife nicht (%ld Fenster mit Ton)", laut);
+        CHECK(spitze(t_rolls + 5) > 328, "(7) Stopp-Ton 0x0B selbst nicht hoerbar (Spitze %d)", spitze(t_rolls + 5));
     }
 
     free(s_pcm);

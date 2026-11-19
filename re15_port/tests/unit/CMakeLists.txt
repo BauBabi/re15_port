@@ -1434,10 +1434,12 @@ endif()
 #     Klingt ganz leicht anders."; Messbericht U2: Original 6,52 s Rumpeln, Port 2,29 s). Schleifenpunkt aus den
 #     VAG-Flag-Bytes (psx-spx "SPU ADPCM Samples"), Ende durch Key-On auf derselben Stimme (FUN_800458d4) oder Key-Off beim
 #     Raumwechsel (FUN_800443ec @0x800443f4-0x8004442c). Gegenprobe: audio_pc.c von 71caea668 ohne RE15_TON_S2_HAKEN -> (2) rot.
+#     Runde 2: (7) Speisesaal 1140/1141 ueber Port-Bank 0x3B (dining_r38_pc.c mitgelinkt); Gegenprobe Stand 85f530937 -> (7) rot.
 if(TARGET SDL2::SDL2-static)
     add_executable(test_r42_ton_schleife
         test_r42_ton_schleife.c
         ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/dining_r38_pc.c
         ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
     target_link_libraries(test_r42_ton_schleife PRIVATE re15_engine SDL2::SDL2-static)
     target_include_directories(test_r42_ton_schleife PRIVATE
