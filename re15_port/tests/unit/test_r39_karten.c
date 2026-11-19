@@ -670,11 +670,21 @@ static int kammer_soll(int seite, int x, int y)
     return 1;
 }
 
+/* r42/karte Stufe 3 Runde 4 - NUTZERWUNSCH 18.11.2026 woertlich: "selbstverständlich sollen alle Räume auch eIn stück karte
+ * mit navigationspunkt haben." ROOM10B0 (Original: Stub-Zeile @0x80076908, keine Kachel) bekommt auf Blatt 2 einen Grundriss
+ * aus der Kollision (re15_map_zones.h synth 14, Kasten x214..291 y160..196) - die Vorlage map1F_correct.png ist aelter
+ * und kennt ihn nicht. Im Kasten gilt deshalb nicht die Vorlage; geprueft wird, dass er GEZEICHNET ist (Koerper + Wand,
+ * keine Tuer/Treppe). Das Stueck selbst sichert unit_r42_karte_lauf [M5]. */
+static int neu_10b0(int seite, int x, int y)
+{
+    return seite == 2 && x >= 214 && x <= 291 && y >= 160 && y <= 196;
+}
+
 static int teil_sollbild(int argc, char **argv)
 {
     FILE *f;
     unsigned char hdr[54], *px;
-    int w, h, x, y, seite, i, k, diff = 0, gez = 0, gepr = 0, kgepr = 0, kdiff = 0;
+    int w, h, x, y, seite, i, k, diff = 0, gez = 0, gepr = 0, kgepr = 0, kdiff = 0, n10b0 = 0, n10b0_falsch = 0;
     long off;
     const unsigned short *rle = NULL;
     int nrle = 0;
@@ -714,6 +724,11 @@ static int teil_sollbild(int argc, char **argv)
                 }
                 continue;
             }
+            if (neu_10b0(seite, x, y)) {   /* r42/karte Stufe 3 Runde 4: Grundriss 10B0 statt Vorlage */
+                if (ist == 1 || ist == 2) n10b0++;
+                if (ist == 4 || ist == 5) n10b0_falsch++;
+                continue;
+            }
             if (ist == 7 || s == 7) continue;
             for (a = 0; a < (int)(sizeof k_abw / sizeof k_abw[0]); a++)
                 if (k_abw[a].seite == seite && x >= k_abw[a].x0 && x <= k_abw[a].x1 && y >= k_abw[a].y0 &&
@@ -745,6 +760,11 @@ static int teil_sollbild(int argc, char **argv)
         printf("   Abweichung von der Vorlage (Nachbesserung 2, N1): ROOM1210 Suedwest-Kammer x186..201 y113..129 - %d von %d "
                "Pixeln wie die Zeichnung aus der SCA\n", kgepr - kdiff, kgepr);
         diff += kdiff;
+    }
+    if (seite == 2) {
+        printf("   Abweichung von der Vorlage (r42/karte S3R4, NUTZERWUNSCH 18.11.): Grundriss ROOM10B0 x214..291 y160..196 - "
+               "%d Koerper/Wand-Pixel, %d Tuer/Treppe\n", n10b0, n10b0_falsch);
+        if (n10b0 < 200 || n10b0_falsch) diff++;
     }
     printf("Blatt %d (%s): %d Kartenpixel verglichen, %d Abweichungen gegen das Soll der Nutzer-Vorlage\n", seite, argv[2],
            gepr, diff);

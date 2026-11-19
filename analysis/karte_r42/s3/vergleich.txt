@@ -1,0 +1,62 @@
+2000 vorher (154, 178) rot=1888  um=0.68  | nachher (154, 178) rot=1888  um=0.68  
+2010 vorher (102, 126) rot=1892  um=0.93  | nachher (78, 138)  rot=755   um=1.0   
+2020 vorher None       rot=0     um=None  | nachher (157, 108) rot=1056  um=0.93  BESSER
+2030 vorher (147, 167) rot=1899  um=0.32  | nachher (180, 135) rot=1197  um=0.93  
+2040 vorher (93, 155)  rot=768   um=0.25  | nachher (177, 85)  rot=1331  um=0.68  BESSER
+2050 vorher (69, 160)  rot=766   um=0.25  | nachher (110, 81)  rot=1168  um=0.93  BESSER
+2060 vorher (133, 180) rot=1894  um=0.89  | nachher (204, 120) rot=990   um=1.0   
+2070 vorher (135, 167) rot=1908  um=0.32  | nachher (136, 140) rot=435   um=0.68  
+2080 vorher (138, 153) rot=1908  um=0.0   | nachher (217, 155) rot=846   um=0.84  BESSER
+2090 vorher (177, 152) rot=1215  um=0.93  | nachher (257, 154) rot=1699  um=1.0   
+20A0 vorher None       rot=0     um=None  | nachher (285, 145) rot=59    um=0.55  BESSER
+3010 vorher (153, 116) rot=3537  um=1.0   | nachher (153, 116) rot=3537  um=1.0   
+3020 vorher (189, 185) rot=1546  um=1.0   | nachher (191, 178) rot=1546  um=1.0   
+3030 vorher (208, 116) rot=1786  um=1.0   | nachher (208, 116) rot=125   um=0.52  
+3040 vorher (199, 54)  rot=3071  um=1.0   | nachher (199, 54)  rot=3071  um=1.0   
+3050 vorher (194, 136) rot=1355  um=0.75  | nachher (174, 52)  rot=3111  um=1.0   
+3060 vorher (208, 108) rot=125   um=0.3   | nachher (183, 108) rot=1791  um=0.68  
+3070 vorher (69, 169)  rot=37    um=0.25  | nachher (110, 169) rot=2370  um=1.0   BESSER
+3090 vorher (228, 141) rot=595   um=0.68  | nachher (221, 141) rot=671   um=0.84  
+30A0 vorher (251, 155) rot=684   um=0.05  | nachher (240, 143) rot=595   um=1.0   BESSER
+30B0 vorher (234, 176) rot=684   um=0.11  | nachher (234, 177) rot=619   um=0.88  BESSER
+30C0 vorher (202, 151) rot=1342  um=1.0   | nachher (191, 144) rot=1341  um=1.0   
+30D0 vorher (191, 168) rot=1540  um=1.0   | nachher (191, 161) rot=1349  um=0.46  
+30E0 vorher (112, 189) rot=2381  um=0.0   | nachher (112, 189) rot=239   um=1.0   BESSER
+4000 vorher (161, 76)  rot=705   um=0.93  | nachher (161, 76)  rot=696   um=0.93  
+4010 vorher (154, 61)  rot=262   um=0.82  | nachher (154, 61)  rot=262   um=0.82  
+4020 vorher (137, 73)  rot=90    um=0.5   | nachher (137, 73)  rot=90    um=0.5   
+4030 vorher (162, 108) rot=75    um=0.64  | nachher (162, 108) rot=75    um=0.64  
+4040 vorher (148, 115) rot=43    um=0.14  | nachher (112, 110) rot=856   um=0.39  BESSER
+4050 vorher (131, 80)  rot=81    um=0.25  | nachher (118, 110) rot=278   um=1.0   BESSER
+4070 vorher (170, 163) rot=122   um=0.52  | nachher (166, 160) rot=130   um=0.57  
+4080 vorher (205, 145) rot=595   um=0.66  | nachher (195, 144) rot=594   um=0.64  
+4090 vorher (208, 119) rot=381   um=1.0   | nachher (208, 119) rot=381   um=1.0   
+40A0 vorher (215, 154) rot=668   um=1.0   | nachher (215, 154) rot=672   um=1.0   
+40B0 vorher (182, 166) rot=568   um=0.34  | nachher (179, 172) rot=555   um=0.89  
+5000 vorher (163, 86)  rot=688   um=1.0   | nachher (153, 99)  rot=688   um=0.68  
+5010 vorher (173, 92)  rot=267   um=0.86  | nachher (173, 92)  rot=270   um=0.91  
+5020 vorher (194, 94)  rot=0     um=0.0   | nachher (158, 58)  rot=899   um=0.86  BESSER
+5030 vorher (140, 125) rot=893   um=0.68  | nachher (140, 125) rot=893   um=0.68  
+5040 vorher (110, 117) rot=373   um=0.32  | nachher (125, 124) rot=692   um=0.68  
+5050 vorher (98, 106)  rot=700   um=0.0   | nachher (99, 108)  rot=365   um=1.0   BESSER
+5060 vorher (102, 140) rot=1497  um=1.0   | nachher (102, 140) rot=1497  um=1.0   
+5070 vorher None       rot=0     um=None  | nachher (184, 123) rot=868   um=0.68  BESSER
+5080 vorher (242, 94)  rot=435   um=1.0   | nachher (117, 146) rot=1049  um=1.0   
+5090 vorher (202, 98)  rot=0     um=0.0   | nachher (202, 98)  rot=0     um=0.0   
+50A0 vorher (157, 178) rot=138   um=0.18  | nachher (157, 153) rot=855   um=0.61  BESSER
+50B0 vorher (193, 152) rot=779   um=1.0   | nachher (189, 151) rot=774   um=1.0   
+50C0 vorher (156, 86)  rot=442   um=0.68  | nachher (156, 86)  rot=442   um=0.68  
+50D0 vorher (176, 153) rot=702   um=0.46  | nachher (143, 114) rot=1708  um=1.0   
+50E0 vorher (189, 114) rot=1578  um=0.86  | nachher (190, 123) rot=1581  um=0.61  
+50F0 vorher (193, 103) rot=1588  um=0.39  | nachher (190, 103) rot=1581  um=0.61  
+5100 vorher (128, 127) rot=1708  um=1.0   | nachher (156, 158) rot=694   um=0.55  
+5110 vorher (140, 126) rot=896   um=0.61  | nachher (140, 126) rot=896   um=0.61  
+5120 vorher (110, 117) rot=373   um=0.32  | nachher (125, 124) rot=692   um=0.68  
+5130 vorher None       rot=0     um=None  | nachher (184, 123) rot=868   um=0.68  BESSER
+5140 vorher (157, 178) rot=138   um=0.18  | nachher (157, 153) rot=855   um=0.61  BESSER
+6000 vorher (262, 113) rot=134   um=0.25  | nachher (219, 78)  rot=2835  um=0.0   
+6010 vorher (238, 113) rot=539   um=0.5   | nachher (173, 106) rot=2111  um=0.5   
+6020 vorher (112, 146) rot=1049  um=1.0   | nachher (240, 151) rot=435   um=1.0   
+6030 vorher (262, 118) rot=136   um=0.46  | nachher (262, 118) rot=136   um=0.46  
+3000 vorher (88, 115)  rot=1444  um=1.0   | nachher (88, 115)  rot=1444  um=1.0   
+{'vorher Punkt auf rotem Raum': 42, 'nachher Punkt auf rotem Raum': 59, 'vorher Raum rot': 55, 'nachher Raum rot': 60, 'vorher kein Punkt': 4, 'nachher kein Punkt': 0, 'Punkt verschoben': 42, 'ohne Abzug': 3} Raeume 64

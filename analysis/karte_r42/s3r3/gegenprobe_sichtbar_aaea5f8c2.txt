@@ -1,0 +1,12 @@
+  [L] 18 Faelle (Zugteile 5090, Teile 1110): 5090-Teil0(nach 5070: 0 px rot auf anderem Stueck, gezeichnet 766/1145) 5090-Teil1(nach 5070: 0 px rot auf anderem Stueck, gezeichnet 244/1145) 5090-Teil2(nach 5070: 0 px rot auf anderem Stueck, gezeichnet 452/1145) 5090-Teil3(nach 5070: 0 px rot auf anderem Stueck, gezeichnet 316/1145) 5090-Teil4(nach 5070: 0 px rot auf anderem Stueck, gezeichnet 307/1145) 5090-Teil0(nach 5130: 0 px rot auf anderem Stueck, gezeichnet 766/1145) 5090-Teil1(nach 5130: 0 px rot auf anderem Stueck, gezeichnet 244/1145) 5090-Teil2(nach 5130: 0 px rot auf anderem Stueck, 
+  PASS: [K] im Zug 5090 bleibt sein Teil rot und liegt ueber dem gruenen T-Gang
+  PASS: [L] genug Teil-Faelle gemessen
+  FAIL: [L] ein aktueller Teil liegt auf keinem anders gefaerbten Stueck seines Rechtecks (STP-Rot bleibt rot)
+  192 Zonen geprueft (davon 68 auf Blatt 8-12)
+  [I] Marker nicht auf Rot (weniger als die Haelfte der Punkte): 5020.z0(B9 r7 0/81) 5021.z0(B9 r7 0/81)
+  [J] eigenes Rechteck nicht ganz rot (< 90 % der gemalten Texel): 5020.z0(B9 r7 0/1145) 5021.z0(B9 r7 0/1145)
+  PASS: genug Zonen geprueft (alle Blaetter)
+  FAIL: [I] in jeder Zone steht der Marker auf dem rot gezeichneten Raum
+  FAIL: [J] das Rechteck des aktuellen Raums ist ganz gezeichnet
+
+FEHLER

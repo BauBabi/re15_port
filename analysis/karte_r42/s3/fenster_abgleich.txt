@@ -1,0 +1,5 @@
+FL2030_0: gleich (<=8 je Kanal): 0.9998 bei Versatz (0,0), abweichend 52 px
+FL30A0_0: gleich (<=8 je Kanal): 0.9998 bei Versatz (0,0), abweichend 52 px
+FL4080_0: gleich (<=8 je Kanal): 0.9998 bei Versatz (0,0), abweichend 52 px
+FL6010_0: gleich (<=8 je Kanal): 0.9998 bei Versatz (0,0), abweichend 52 px
+FL1050_0: gleich (<=8 je Kanal): 1.0000 bei Versatz (0,0), abweichend 0 px

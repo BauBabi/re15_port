@@ -159,9 +159,23 @@ static const re15_map_zone_t s_map_zones[] = {
      * Blatt 2 haelt fuer ihn eine ZWOELFTE, tabellenlose Kachel bereit (uv(32,88), Schirm
      * (94,125)); nutzbar wird sie erst, wenn Blatt 2 - wie Blatt 3 heute - eine eigene
      * Ersatz-Seitentabelle in s_map_rectfix bekommt. Bis dahin bleiben Marker und
-     * Besucht-Bit von 10B0 unveraendert, nur die (falsche) Faerbung entfaellt. */
-    { 0x10B0, -25040, -21700,  19888,   9088,  2, 255, 0,  11,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x10B1, -25040, -21700,  19888,   9088,  2, 255, 0,  11,     0,     0,     0,     0, 0, 0,   0, 0 },
+     * Besucht-Bit von 10B0 unveraendert, nur die (falsche) Faerbung entfaellt.
+     * (Ueberholt durch r42/karte Stufe 3 Runde 4, s. unten: Schema-Zeichnung mit eigener Zeile.) */
+    /* r42/karte Stufe 3 Runde 4 - NUTZERWUNSCH 18.11.2026 woertlich:
+     *   "selbstverständlich sollen alle Räume auch eIn stück karte mit navigationspunkt haben."
+     * ROOM10B0 hat im Auslieferungsstand KEINE Zeile (@0x80076908 = Stub {0,0,1,1}, 00 00 00 00 01 00 01 00) und keine
+     * gemalte Kachel; die SEITE ist byte-true Blatt 2 (FUN_8004b568: Raumindex 11 -> Kette 0..11, Schwanz @0x8004b680-684
+     * `ori v0,zero,0x2`). PORT-ERGAENZUNG "Grundriss aus der Kollision" (synth 14): vier Zellen aus der begehbaren Flaeche
+     * je Band (Flut ueber die SCA-Zellen des RDT, Raster 200, Messhilfe scratchpad karte/s3r4b/neu_schema.py): Band 0 = L
+     * (Westarm x -22000..-19800, z -6400..6800 zur Tuer nach 1260 @ROOM10B0.RDT 0x016F2; Suedarm z -9200..-6400 bis
+     * x -2800), Band 1 = Rampe x -2800..3000 z -13400..-4600, Band 5 = Gang x 1000..19800 z -7600..-4800 zur Tuer nach
+     * 1170 (0x016D2, floor 5). Zeile fuer FUN_800473f8 (@0x8004741c-0x80047528) mit EINEM Massstab sx = sy = 1900 (nicht
+     * spiegelnd, Norden oben); gewaehlt, damit der Grundriss in die freie Flaeche passt
+     * (rechts unter der gemalten 1F-Etage: Kunst MAP03 endet dort bei x209 fuer y>=90, rechter Pfeil y120..136; Kartenfeld
+     * des Originals x39..293 / y44..206, Riegel unit_map_synth) - PORT-WAHL, keine Spielkonstante. Westkante x -22800 -> 214,
+     * Nordkante z 6800 -> 160 (7 px Abstand zur gemalten 1F-Kachel darueber, x206..221 bis y153). Kein Nachbar liegt auf Blatt 2 (1170 Blatt 4/5, 1260 ohne Seite) -> keine Tuermarke. */
+    { 0x10B0, -25040, -21700,  19888,   9088,  2, 255, 0,  11,   197,   230,  1900,  1900, 0, 0,  14, 0 },
+    { 0x10B1, -25040, -21700,  19888,   9088,  2, 255, 0,  11,   197,   230,  1900,  1900, 0, 0,  14, 0 },
     /* ROOM1090, untere Ebene (Hinterhof mit dem verunglueckten Polizeitransporter).
      * Heimatblatt ist KEINE Wahl: der Stage-1-Karteninit FUN_8004b568 schickt Raumindex
      * (0x1090>>4)&0xFF = 9 ueber die Kette 0..11, deren Schwanz @0x8004b680 `j 0x8004b888`
@@ -426,133 +440,297 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1220, -17075, -26750, -11311, -21375,  1,   8, 4, 105,   177,   140,  2496,  2250, 0, 0,   0, 0 },
     { 0x1221, -17075, -26750, -11311, -21375,  1,   8, 4, 105,   177,   140,  2496,  2250, 0, 0,   0, 0 },
     { 0x1250, -21850, -25300,  15700,   9750,  1,   0, 0,  36,     0,     0,     0,     0, 0, 0,   0, 0 },
+    /* r42/karte Stufe 3 Runde 4 - NUTZERWUNSCH 18.11.2026 (Wortlaut bei ROOM10B0). ROOM1260 bekommt im Auslieferungsstand
+     * GAR KEINE Seite: FUN_8004b568 prueft `sltiu v0,v1,0x26` @0x8004b574, Raumindex 0x26 faellt durch (jr @0x8004b898,
+     * kein Schreiben von 260e). PORT-ERGAENZUNG "Grundriss aus der Kollision" (synth 15) auf Blatt 0 (B1): dort liegen
+     * die Nachbarn 11B0 und 11D0, deren Leitern in 1260 enden (Tueren 1260->11B0 Trigger (27650,9450) und ->11D0
+     * (21850,-8050); Leitern = Etagenwechsel, keine Wand an Wand). Kasten x200..239 y174..205 unter dem 11C0-Ring, rechts
+     * neben 11D0 (das B1-Schema endet dort bei y171 bzw. x148; Kartenfeld des Originals x39..293 / y44..206). Die Kollision
+     * von 1260 ist eine offene Halle mit einzelnen Wandzuegen (die Flut ueber die Zellen fuellt die ganze Huelle), darum
+     * EIN Kasten = Huelle der SCA-Zellen x -25150..30400, z -23250..20350. Zeile fuer FUN_800473f8 mit sx = sy = 745
+     * (Norden oben, nicht spiegelnd), damit die Halle in die freie Flaeche passt (PORT-WAHL, keine Spielkonstante).
+     * Die Zeile des Index 0x26 @0x800769E0 ist die von ROOM2000 (STAGE2-Basis 38 + 0) und gehoert nicht zu 1260. */
+    { 0x1260, -25150, -23250,  30400,  20350,  0, 255, 0, 122,   195,   211,   745,   745, 0, 0,  15, 0, 0 },
+    { 0x1261, -25150, -23250,  30400,  20350,  0, 255, 0, 122,   195,   211,   745,   745, 0, 0,  15, 0, 0 },
     { 0x1251, -21850, -25300,  15700,   9750,  1,   0, 0,  36,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x2000, -29000, -29000,   7450,  12800,  6,   0, 0,  37,    80,   196,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2001, -29000, -29000,   7450,  12800,  6,   0, 0,  37,    80,   196,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2010,  -7300,  -9550,   7400,   7100,  6,   0, 0,  38,    31,   191,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2011,  -7300,  -9550,   7400,   7100,  6,   0, 0,  38,    31,   191,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2030, -11000, -12350,  10000,  19900,  6,   0, 0,  39,    75,   238,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2031, -11000, -12350,  10000,  19900,  6,   0, 0,  39,    75,   238,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2040, -21500, -22400,  25750,   4350,  6,   1, 0,  40,   192,   223,  2607,  2308, 1, 0,   0, 0 },
-    { 0x2041, -21500, -22400,  25750,   4350,  6,   1, 0,  40,   192,   223,  2607,  2308, 1, 0,   0, 0 },
-    { 0x2050,  -9550, -15000,  11900,   9150,  6,   1, 0,  41,    -1,   186,  2340,  2308, 1, 1,   0, 0 },
-    { 0x2051,  -9550, -15000,  11900,   9150,  6,   1, 0,  41,    -1,   186,  2340,  2308, 1, 1,   0, 0 },
-    { 0x2060,  -7600, -10300,  10400,   7350,  6,   0, 0,  42,   205,    79,  1966,  3069, 1, 1,   0, 0 },
-    { 0x2061,  -7600, -10300,  10400,   7350,  6,   0, 0,  42,   205,    79,  1966,  3069, 1, 1,   0, 0 },
-    { 0x2070, -20450,  -9200,   6500,  -3600,  6,   0, 0,  43,    79,   224,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2071, -20450,  -9200,   6500,  -3600,  6,   0, 0,  43,    79,   224,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2070, -20450,   3650,   7200,   9100,  6,   0, 1,  44,    79,   224,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2071, -20450,   3650,   7200,   9100,  6,   0, 1,  44,    79,   224,  2340,  2308, 0, 0,   0, 0 },
+    /* ==== r42/karte (v0.8.31), Blatt 6 = STAGE2 (Kanalisation), MAP07.PIX =========================
+     * Nutzer 2026-11-18: "das die [Map] fuer STAGE2-6 genauso sauber funktioniert wie bei STAGE1 ...
+     * Inklusive dem - wo befindet sich Leon - Marker." und 2026-11-15 Punkt 5 "Karten STAGE2 fehlen".
+     * ZUORDNUNG (Rechtecke @0x800764D4, 12 B je Eintrag): ROOM2000 = r0 ueber seine AUSGELIEFERTE Zeile
+     * @0x800769E0 (80,196,2340,2308) - Tueren ->2010 (91,131) an r1, ->2070 (107,139) an r3, ->2050 (91,103)
+     * an r2. ROOM2070 Zone 0 = r3 im SELBEN RAHMEN wie ROOM2000 (Trigger 2000->2070 (-19800,-6200), Spawn in
+     * 2070 (-18650,-6450)). Uebrige nach Nachbarschaft und Groesse: 2010 r1, 2020 r4, 2030 r6, 2040 r5,
+     * 2050 r2, 2060 r7, 2080 r8 (Schacht + Querstueck), 2090 r9; 20A0 r10 = PORT-WAHL (das Original setzt
+     * Blatt 0xD @0x8004b9b4, CD-Datei-Id @0x80074c66 = 0: keine Kunst).
+     * ZEILE (PORT-ERGAENZUNG, Original-Slots sind Stubs {0,0,1,1}): tools/karte_r42_zeilen.py - Bbox der
+     * Kollision mittig in die gemalte Flaeche, Massstab je Kartenachse hoechstens der des Blatts (2340/2308
+     * aus @0x800769E0). r42 Runde 2 (Pruefbericht R1): NUR DREHUNGEN, keine Spiegel - die ausgelieferten
+     * Zeilen haben feste Vorzeichen (FUN_800473f8 @0x8004741c-0x80047528), ein Raum kann gegen das Blatt
+     * nur gedreht liegen. Je Raum mindestens zwei Stimmen aus Tueren (Weltseite aus Trigger-Form + Ankunfts-
+     * Yaw; Kartenseite aus gemaltem Symbol / ausgelieferter Nachbar-Zeile / Nachbar-Rechteck), keine dagegen:
+     * 2010/2020/2030/2040/2050/2060 und 2070 Zone 1 R180 (1,1); 2080, 2090 R0; 20A0 R90ccw (Tausch, 1,0) mit
+     * nur EINER Tuer aufs Blatt - als PORT-WAHL benannt. Runde 1 hatte 2070 Zone 1 (1,0) und 20A0 (0,1):
+     * Spiegel, verworfen. OFFEN: 2070 Zone 2 und der Suedteil von ROOM2040 (Treppe Aot_set sce 13 bei
+     * (-1350,-16100)) haben keine gemalte Kachel. ROOM20B0 ist von keiner Tuer erreichbar. */
+    { 0x2000, -29000, -29000,   7450,  12800,  6,   0, 0,  37,    80,   196,  2340,  2308, 0, 0,   0, 0, 0 },
+    { 0x2001, -29000, -29000,   7450,  12800,  6,   0, 0,  37,    80,   196,  2340,  2308, 0, 0,   0, 0, 0 },
+    { 0x2010,  -7300,  -9550,   7400,   7100,  6,   1, 0,  38,   132,    80,  1783,  2078, 1, 1,   0, 0, 0 },
+    { 0x2011,  -7300,  -9550,   7400,   7100,  6,   1, 0,  38,   132,    80,  1783,  2078, 1, 1,   0, 0, 0 },
+    { 0x2020, -23000,  -5850,  15100,   5300,  6,   4, 0, 113,   214,    60,  2119,  1599, 1, 1,   0, 0, 0 },
+    { 0x2021, -23000,  -5850,  15100,   5300,  6,   4, 0, 113,   214,    60,  2119,  1599, 1, 1,   0, 0, 0 },
+    { 0x2030, -11000, -12350,  10000,  19900,  6,   6, 0,  39,   232,    89,  1698,  1496, 1, 1,   0, 0, 0 },
+    { 0x2031, -11000, -12350,  10000,  19900,  6,   6, 0,  39,   232,    89,  1698,  1496, 1, 1,   0, 0, 0 },
+    { 0x2040, -21500,  -8300,  25750,   4350,  6,   5, 0,  40,   248,    44,  2153,  1409, 1, 1,   0, 0, 0 },
+    { 0x2041, -21500,  -8300,  25750,   4350,  6,   5, 0,  40,   248,    44,  2153,  1409, 1, 1,   0, 0, 0 },
+    { 0x2050,  -9550, -15000,  11900,   9150,  6,   2, 0,  41,   172,    24,  1955,  2041, 1, 1,   0, 0, 0 },
+    { 0x2051,  -9550, -15000,  11900,   9150,  6,   2, 0,  41,   172,    24,  1955,  2041, 1, 1,   0, 0, 0 },
+    { 0x2060,  -7600, -10300,  10400,   7350,  6,   7, 0,  42,   266,    48,  1689,  2198, 1, 1,   0, 0, 0 },
+    { 0x2061,  -7600, -10300,  10400,   7350,  6,   7, 0,  42,   266,    48,  1689,  2198, 1, 1,   0, 0, 0 },
+    { 0x2070, -20450,  -9200,   6500,  -3600,  6,   3, 0,  43,    80,   196,  2340,  2308, 0, 0,   0, 0, 0 },
+    { 0x2071, -20450,  -9200,   6500,  -3600,  6,   3, 0,  43,    80,   196,  2340,  2308, 0, 0,   0, 0, 0 },
+    { 0x2070, -20450,   3650,   7200,   9100,  6,   3, 1,  44,   188,    78,  2162,  1732, 1, 1,   0, 0, 0 },
+    { 0x2071, -20450,   3650,   7200,   9100,  6,   3, 1,  44,   188,    78,  2162,  1732, 1, 1,   0, 0, 0 },
+    /* 2070 Zone 2 (Gang 2040 <-> 11A0, Tuer 11A0 inert sce 0): KEINE gemalte Kachel - unveraendert auf r3 ohne
+     * Zeile (Bbox-Streckung), OFFEN. */
     { 0x2070, -20400, -22000,   6450, -16450,  6,   3, 2,  45,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x2071, -20400, -22000,   6450, -16450,  6,   3, 2,  45,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x2080, -17650, -28900,  -5700,  -4750,  6,   0, 0,  46,   111,   187,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2081, -17650, -28900,  -5700,  -4750,  6,   0, 0,  46,   111,   187,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2080, -24900, -18950, -21450, -14400,  6,   0, 1,  47,   111,   187,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2081, -24900, -18950, -21450, -14400,  6,   0, 1,  47,   111,   187,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2090, -10900, -29000,   9200,  -3400,  6,   6, 0,  48,   110,   187,  2340,  2308, 0, 0,   0, 0 },
-    { 0x2091, -10900, -29000,   9200,  -3400,  6,   6, 0,  48,   110,   187,  2340,  2308, 0, 0,   0, 0 },
-    { 0x3000, -28622, -28370,  -3349, -11414,  7,   0, 0,  49,    71,   148,  2256,  2257, 0, 0,   0, 0 },
-    { 0x3001, -28622, -28370,  -3349, -11414,  7,   0, 0,  49,    71,   148,  2256,  2257, 0, 0,   0, 0 },
-    { 0x3010, -28640, -22836,  -4448,  16720,  7,   1, 0,  50,   113,   224,  2208,  2737, 0, 0,   0, 0 },
-    { 0x3011, -28640, -22836,  -4448,  16720,  7,   1, 0,  50,   113,   224,  2208,  2737, 0, 0,   0, 0 },
-    { 0x3020, -27200, -30618,  -5300, -11418,  7,   2, 0,  51,   156,   213,  2208,  2737, 0, 0,   0, 0 },
-    { 0x3021, -27200, -30618,  -5300, -11418,  7,   2, 0,  51,   156,   213,  2208,  2737, 0, 0,   0, 0 },
-    { 0x3030, -27902, -27848, -23060, -15104,  7,   6, 0,  52,   196,   138,  1956,  2144, 0, 0,   0, 0 },
-    { 0x3031, -27902, -27848, -23060, -15104,  7,   6, 0,  52,   196,   138,  1956,  2144, 0, 0,   0, 0 },
-    { 0x3040, -27900, -28900,  -4000,   1000,  7,   4, 0,  53,   183,   115,  2240,  2240, 0, 0,   0, 0 },
-    { 0x3041, -27900, -28900,  -4000,   1000,  7,   4, 0,  53,   183,   115,  2240,  2240, 0, 0,   0, 0 },
-    { 0x3050, -28175, -25268,   2000,   3950,  7,  12, 0,  54,   206,   195,  1591,  2240, 1, 0,   0, 0 },
-    { 0x3051, -28175, -25268,   2000,   3950,  7,  12, 0,  54,   206,   195,  1591,  2240, 1, 0,   0, 0 },
-    { 0x3060, -31556, -30382,  13400, -13430,  7,   3, 0,  55,   157,   147,  2496,  3984, 0, 0,   0, 0 },
-    { 0x3061, -31556, -30382,  13400, -13430,  7,   3, 0,  55,   157,   147,  2496,  3984, 0, 0,   0, 0 },
-    { 0x3070, -31755, -22340,  -1700,   2080,  7,   8, 0,  56,    64,   209,  2152,  2344, 0, 0,   0, 0 },
-    { 0x3071, -31755, -22340,  -1700,   2080,  7,   8, 0,  56,    64,   209,  2152,  2344, 0, 0,   0, 0 },
-    { 0x3080, -29100, -28360, -20000, -21910,  7,   8, 0,  57,    56,   179,  2048,  2048, 0, 0,   0, 0 },
-    { 0x3081, -29100, -28360, -20000, -21910,  7,   8, 0,  57,    56,   179,  2048,  2048, 0, 0,   0, 0 },
-    { 0x3090, -29800, -28700,  -9700,   3900,  7,  10, 0,  58,   207,   206,  2064,  2337, 0, 0,   0, 0 },
-    { 0x3091, -29800, -28700,  -9700,   3900,  7,  10, 0,  58,   207,   206,  2064,  2337, 0, 0,   0, 0 },
-    { 0x30A0, -29443,   7463, -15068,  21933,  7,   9, 0,  59,   233,   253,  2064,  2337, 0, 0,   0, 0 },
-    { 0x30A1, -29443,   7463, -15068,  21933,  7,   9, 0,  59,   233,   253,  2064,  2337, 0, 0,   0, 0 },
-    { 0x30B0, -25850, -29050,  -9650, -12200,  7,   9, 0,  60,   206,   206,  2064,  2337, 0, 0,   0, 0 },
-    { 0x30B1, -25850, -29050,  -9650, -12200,  7,   9, 0,  60,   206,   206,  2064,  2337, 0, 0,   0, 0 },
-    { 0x30C0, -27200, -14300,  -5275,   1600,  7,  12, 0,  61,   178,   208,  1560,  2337, 0, 0,   0, 0 },
-    { 0x30C1, -27200, -14300,  -5275,   1600,  7,  12, 0,  61,   178,   208,  1560,  2337, 0, 0,   0, 0 },
-    { 0x30D0, -27200, -30618,  -5300,   1650,  7,   2, 0,  62,   154,   213,  2497,  2716, 0, 0,   0, 0 },
-    { 0x30D1, -27200, -30618,  -5300,   1650,  7,   2, 0,  62,   154,   213,  2497,  2716, 0, 0,   0, 0 },
-    { 0x30E0,   1775,    250,  29450,  17300,  7,   3, 0,  63,    93,   207,  2056,  2432, 0, 0,   0, 0 },
-    { 0x30E1,   1775,    250,  29450,  17300,  7,   3, 0,  63,    93,   207,  2056,  2432, 0, 0,   0, 0 },
-    { 0x30E0, -29328, -28900, -17460, -17881,  7,   7, 1,  64,    93,   207,  2056,  2432, 0, 0,   0, 0 },
-    { 0x30E1, -29328, -28900, -17460, -17881,  7,   7, 1,  64,    93,   207,  2056,  2432, 0, 0,   0, 0 },
-    { 0x4000, -29720, -28478,   1492,   -380,  8,   0, 0,  65,   131,   112,  1760,  1760, 0, 0,   0, 0 },
-    { 0x4001, -29720, -28478,   1492,   -380,  8,   0, 0,  65,   131,   112,  1760,  1760, 0, 0,   0, 0 },
-    { 0x4010, -28100, -28766, -17048, -13790,  8,   1, 0,  66,   140,    76,  1536,  1617, 0, 0,   0, 0 },
-    { 0x4011, -28100, -28766, -17048, -13790,  8,   1, 0,  66,   140,    76,  1536,  1617, 0, 0,   0, 0 },
-    { 0x4020, -28200, -28400, -18450, -18600,  8,   2, 0,  67,   122,    87,  1760,  1760, 0, 0,   0, 0 },
-    { 0x4021, -28200, -28400, -18450, -18600,  8,   2, 0,  67,   122,    87,  1760,  1760, 0, 0,   0, 0 },
-    { 0x4030, -27416, -27956, -18884, -17948,  8,   3, 0,  68,   150,   121,  1281,  1288, 0, 0,   0, 0 },
-    { 0x4031, -27416, -27956, -18884, -17948,  8,   3, 0,  68,   150,   121,  1281,  1288, 0, 0,   0, 0 },
-    { 0x4040, -31900, -28922,   9525,  20258,  8,  12, 0,  69,   116,   164,  1281,  1288, 0, 0,   0, 0 },
-    { 0x4041, -31900, -28922,   9525,  20258,  8,  12, 0,  69,   116,   164,  1281,  1288, 0, 0,   0, 0 },
-    { 0x4050, -19650, -28900,  16350,  22050,  8,   2, 0,  70,    97,   129,  1281,  1288, 0, 0,   0, 0 },
-    { 0x4051, -19650, -28900,  16350,  22050,  8,   2, 0,  70,    97,   129,  1281,  1288, 0, 0,   0, 0 },
-    { 0x4070, -14950, -28550,  -2100, -15750,  8,   7, 0,  71,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x4071, -14950, -28550,  -2100, -15750,  8,   7, 0,  71,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x4080,  -7625, -30610,  29380,   5975,  8,   8, 0,  72,   125,   170,  1793,  1589, 0, 0,   0, 0 },
-    { 0x4081,  -7625, -30610,  29380,   5975,  8,   8, 0,  72,   125,   170,  1793,  1589, 0, 0,   0, 0 },
-    { 0x4090, -28908, -29132, -12708, -12252,  8,   9, 0,  73,   191,   143,  1540,  1844, 0, 0,   0, 0 },
-    { 0x4091, -28908, -29132, -12708, -12252,  8,   9, 0,  73,   191,   143,  1540,  1844, 0, 0,   0, 0 },
-    { 0x40A0, -30100, -30701,  -8562, -11690,  8,  10, 0,  74,   197,   180,  1793,  1712, 0, 0,   0, 0 },
-    { 0x40A1, -30100, -30701,  -8562, -11690,  8,  10, 0,  74,   197,   180,  1793,  1712, 0, 0,   0, 0 },
-    { 0x40B0, -28410, -28131,  -6259,  -8041,  8,  11, 0,  75,   159,   186,  1793,  1589, 0, 0,   0, 0 },
-    { 0x40B1, -28410, -28131,  -6259,  -8041,  8,  11, 0,  75,   159,   186,  1793,  1589, 0, 0,   0, 0 },
-    { 0x5000, -22050, -17600,   1400,   9100,  9,   0, 0,  76,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x5001, -22050, -17600,   1400,   9100,  9,   0, 0,  76,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x5010, -27500, -27300, -17300, -14100,  9,   1, 0,  77,   159,   115,  1537,  1801, 0, 0,   0, 0 },
-    { 0x5011, -27500, -27300, -17300, -14100,  9,   1, 0,  77,   159,   115,  1537,  1801, 0, 0,   0, 0 },
-    { 0x5020, -16433, -27525,   8450, -10821,  9,   7, 0,  78,   153,   114,  2086,  1710, 0, 0,   0, 0 },
-    { 0x5021, -16433, -27525,   8450, -10821,  9,   7, 0,  78,   153,   114,  2086,  1710, 0, 0,   0, 0 },
-    { 0x5030, -29828, -30968,   -404,   -110,  9,   3, 0,  79,   125,   153,  1792,  1792, 0, 0,   0, 0 },
-    { 0x5031, -29828, -30968,   -404,   -110,  9,   3, 0,  79,   125,   153,  1792,  1792, 0, 0,   0, 0 },
-    { 0x5040, -31880, -31466,   7504,   5020,  9,   5, 0,  80,    74,   152,  1793,  1729, 0, 0,   0, 0 },
-    { 0x5041, -31880, -31466,   7504,   5020,  9,   5, 0,  80,    74,   152,  1793,  1729, 0, 0,   0, 0 },
-    { 0x5050, -28732, -28150, -11662, -14710,  9,   4, 0,  81,    78,   123,  1793,  1729, 0, 0,   0, 0 },
-    { 0x5051, -28732, -28150, -11662, -14710,  9,   4, 0,  81,    78,   123,  1793,  1729, 0, 0,   0, 0 },
-    { 0x5060, -30350, -29324,   4768,  -5168,  9,   6, 0,  82,    86,   173,  1857,  1665, 0, 0,   0, 0 },
-    { 0x5061, -30350, -29324,   4768,  -5168,  9,   6, 0,  82,    86,   173,  1857,  1665, 0, 0,   0, 0 },
-    { 0x5080, -28966, -28814,  -6841,  -6654,  9,   9, 0,  83,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x5081, -28966, -28814,  -6841,  -6654,  9,   9, 0,  83,     0,     0,     0,     0, 0, 0,   0, 0 },
+    { 0x2080, -17650, -28900,  -5700,  -4750,  6,   8, 0,  46,   212,   185,  1141,  2084, 0, 0,   0, 0, 0 },
+    { 0x2081, -17650, -28900,  -5700,  -4750,  6,   8, 0,  46,   212,   185,  1141,  2084, 0, 0,   0, 0, 0 },
+    { 0x2080, -24900, -18950, -21450, -14400,  6,   8, 1,  47,   190,   178,  2340,  1613, 0, 0,   0, 0, 0 },
+    { 0x2081, -24900, -18950, -21450, -14400,  6,   8, 1,  47,   190,   178,  2340,  1613, 0, 0,   0, 0, 0 },
+    { 0x2090, -10900, -29000,   9200,  -3400,  6,   9, 0,  48,   202,   184,  1930,  2007, 0, 0,   0, 0, 0 },
+    { 0x2091, -10900, -29000,   9200,  -3400,  6,   9, 0,  48,   202,   184,  1930,  2007, 0, 0,   0, 0, 0 },
+    /* r42/karte Stufe 3 Runde 4 - NUTZERWUNSCH 18.11.2026 (Wortlaut bei ROOM10B0). ROOM20B0 ist derselbe Ort wie ROOM2000
+     * (Variante, Regel "Varianten-Raeume" wie 5030/5110): vier der fuenf Tueren liegen auf DERSELBEN Weltkoordinate
+     * (->1260 (4400,-19700) und (-27100,-24200), ->2010 (-27100,-2650), ->2050 (-27100,10300); ROOM20B0 slot 0/1/2/4 =
+     * ROOM2000 slot 0/1/2/4), die Kollisionshuelle ist bis auf x1 7950/7450 gleich. Der Auslieferungsstand gibt dem Raum
+     * Seite 0xd (FUN_8004b8a0, Raum 10-11 -> 0xd @0x8004b9b4, CD-Datei 0) und den Stub @0x80076A38 (Index 38+11).
+     * PORT-ERGAENZUNG: dieselbe Kachel und die AUSGELIEFERTE Zeile von ROOM2000 @0x800769E0 (50 00 c4 00 24 09 04 09). */
+    { 0x20B0, -29000, -29000,   7950,  12800,  6,   0, 0,  37,    80,   196,  2340,  2308, 0, 0,   0, 0, 0 },
+    { 0x20B1, -29000, -29000,   7950,  12800,  6,   0, 0,  37,    80,   196,  2340,  2308, 0, 0,   0, 0, 0 },
+    /* r42/karte Stufe 3 Runde 5 - NUTZERWUNSCH 18.11.2026 woertlich: "selbstverständlich sollen alle Räume auch eIn stück
+     * karte mit navigationspunkt haben." (Pruefbericht pruef_s3_r4 ROT: 20A0 aus dem Zensus ausgenommen, der Punkt wanderte auf
+     * der gemalten Kachel r10 (11x9 px) auf 2 s Weg 1 px). ROOM20A0 hat im Auslieferungsstand KEINE Kunst auf diesem Blatt:
+     * Seite 0xD (FUN_8004b8a0, @0x8004b9b4 `ori v1,zero,0xd`), CD-Datei-Id @0x80074c66 = 0, Zeile @0x80076A30 (Index 38+10) =
+     * Stub {0,0,1,1}. r10 war schon eine PORT-WAHL (Runde 1). Jetzt PORT-ERGAENZUNG "Grundriss aus der Kollision" (synth 17)
+     * in der freien Flaeche ueber 2090 (r9): Blatt 6 ist dort von x228..273 / y40..103 frei (gemessen am Abzug L20A0_t0),
+     * Kasten x235..268 / y51..89 (Huelle der Zellen) neben r5 (Bbox bis x233) und r7 (bis x229), ueber r9 (ab y130), links vom Kompass (ab x272).
+     * Zellen = Kamera-Bereiche des Raums (RVD ct 0, @ROOM20A0.RDT 0x002A0 Sued x -5500..29000 z -29000..-20500, 0x003A4 Ost
+     * x 19500..29000 z -29000..2000, 0x00534/0x0055C Mitte x 5500..18500 z -23500..-8500, 0x00598 West x 500..9500 z
+     * -24000..7000) an den Aussenwaenden der SCA geschnitten: West x -3600 (Zelle @0x009B8 -5600+2000), Sued z -26900
+     * (@0x0097C -28900+2000), Ost x 27000 (@0x00A78), Nord-Ost z 50 (@0x00958); der Westgang reicht bis zur Kamera-Kante z 7000
+     * (@0x00598), denn die Nordkappe @0x00A6C (z 5000..7000) ist Band 2 und die Figur steht an der Tuer nach 2090 bei z 5468
+     * (Abzug L20A0_t2, Spiel-Log),
+     * Trennwand Mitte/Ost x 18550..20550 (@0x00994). Tueren: ->2090 (4950,5000) am Nordende des Westgangs, ->11A0 (25800,50)
+     * am Nordende des Ostarms, Leiter (Selbst-Tuer) (16500,-21050) an der Mitte. Zeile fuer FUN_800473f8 (@0x8004741c-
+     * 0x80047528) R180 (flip_x, flip_z - eine Drehung, kein Spiegel; Regel der Runde 2), damit die Tuer nach 2090 nach UNTEN
+     * zu r9 zeigt (Tuergraph); EIN Massstab sx = sy = 1121 = 37 px auf die 34600 Einheiten der Huelle (x -5600..29000),
+     * ox 299 / oy 47 setzen die Huelle auf x234..271 / y50..89 - PORT-WAHL, keine Spielkonstante. Die gemalte Kachel r10
+     * bleibt als ZWEITE Zeile desselben Orts (gleiche Zeile, gleicher zid, Regel "ein Ort auf zwei Kacheln" re15_map_zones.c
+     * rect_state_impl): sie leuchtet mit, bekommt aber nie den Punkt - die Zonenwahl nimmt bei gleicher Box die erste Zeile. */
+    { 0x20A0,  -5600, -28900,  29000,   7000,  6, 255, 0, 114,   299,    47,  1121,  1121, 1, 1,  17, 0, 0 },
+    { 0x20A1,  -5600, -28900,  29000,   7000,  6, 255, 0, 114,   299,    47,  1121,  1121, 1, 1,  17, 0, 0 },
+    { 0x20A0,  -5600, -28900,  29000,   7000,  6,  10, 1, 114,   299,    47,  1121,  1121, 1, 1,   0, 0, 0 },
+    { 0x20A1,  -5600, -28900,  29000,   7000,  6,  10, 1, 114,   299,    47,  1121,  1121, 1, 1,   0, 0, 0 },
+    /* ==== r42/karte (v0.8.31), Blatt 7 = STAGE3, MAP08.PIX ========================================
+     * ZUORDNUNG aus den AUSGELIEFERTEN Zeilen (@0x800768B0 + 8*(50+Raum)): sie projizieren die Tueren
+     * auf die gemalten Symbole - 3010->3060 (167,115) / 3060->3010 (169,111) auf r6-West (170,115),
+     * 3060->3090 (226,127) / 3090->3060 (221,131) auf r6-Sued (220,126), 3030 an beide Enden von r3,
+     * 3090 ->30A0 (244,155) / ->30B0 (222,189), 3070->30E0 (104,180) und 30E0->3010 (119,186) an r13.
+     * Daraus: 3030 r3, 3060 r6, 3070 r7, 3090 r9, 30A0 r10, 30B0 r11, 30E0 Zone 1 r13, 3050 r5.
+     * ROOM30D0 = 3020 + 30C0 in einem RDT -> zwei Zonen (zid 51 wie 3020 / 61 wie 30C0, Regel v0.3.96).
+     * r42 Runde 2 (Pruefbericht R1/R4): NUR DREHUNGEN mit je zwei Stimmen (wie Blatt 6). 3020/30B0/30C0/30D0
+     * R0. ROOM3050 R90cw (TAUSCH, 0,1): beide Tueren liegen auf seiner NORDwand (Trigger 2190x620 /
+     * 2140x520, Ankunfts-Yaw 1024), auf dem Blatt an der OSTseite von r5 - die ausgelieferte 3040-Zeile
+     * @0x80076A60 legt 3040->3050 auf (194,57) neben das gemalte (194,54) W, und die zweite Nordtuer (->30E0,
+     * Ostende) trifft das gemalte (187,98) E am Suedende der Ostwand. ROOM30A0 R90ccw (TAUSCH, 1,0): Tuer
+     * auf seiner Westwand, auf dem Blatt die Suedwand von r10 - ausgelieferte 3090-Zeile (244,155) mit
+     * waagerechtem Gegen-Trigger 1510x570 und gemaltes (242,158) N. Runde 1 hatte 3050/30A0 (1,0) = Spiegel,
+     * im Spiel nachgemessen seitenverkehrt (30A0: x -25500 -> (241,150), x -18000 -> (229,150)).
+     * ROOM30E0 Zone 0 = L-Gang 3050 -> 3030: die AUSGELIEFERTE 30E0-Zeile @0x80076AB0 gilt fuer Zone 1
+     * (deren Tueren auf r13); fuer Zone 0 legt sie die Tueren auf (163,122)/(170,128), 30 bzw. 38 px neben
+     * die Gegenstuecke (gemaltes (187,98) E an r5, ausgelieferte 3030-Projektion (208,106)). Gemalt ist der
+     * Gang als Suedband von r4 (y93..103 zwischen Innenlinie y92 und Suedwand y104): PORT-ERGAENZUNG R0,
+     * Zeile aus dem waagerechten Gangteil (x1775..29450, z250..9150) in dieses Band. Folge: r4 leuchtet
+     * auch fuer 30E0 Zone 0 (geteilt mit ROOM3040). 3080 auf r8 (8x9 gemalt, Original-Zeile @0x80076A80). */
+    { 0x3000, -28622, -28370,  -3349, -11414,  7,   0, 0,  49,    71,   148,  2256,  2257, 0, 0,   0, 0, 0 },
+    { 0x3001, -28622, -28370,  -3349, -11414,  7,   0, 0,  49,    71,   148,  2256,  2257, 0, 0,   0, 0, 0 },
+    { 0x3010, -28640, -22836,  -4448,  16720,  7,   1, 0,  50,   113,   224,  2208,  2737, 0, 0,   0, 0, 0 },
+    { 0x3011, -28640, -22836,  -4448,  16720,  7,   1, 0,  50,   113,   224,  2208,  2737, 0, 0,   0, 0, 0 },
+    { 0x3020, -27200, -30618,  -5300, -11418,  7,   2, 0,  51,   159,   198,  2152,  1911, 0, 0,   0, 0, 0 },
+    { 0x3021, -27200, -30618,  -5300, -11418,  7,   2, 0,  51,   159,   198,  2152,  1911, 0, 0,   0, 0, 0 },
+    { 0x3030, -27902, -27848, -23060, -15104,  7,   3, 0,  52,   196,   138,  1956,  2144, 0, 0,   0, 0, 0 },
+    { 0x3031, -27902, -27848, -23060, -15104,  7,   3, 0,  52,   196,   138,  1956,  2144, 0, 0,   0, 0, 0 },
+    { 0x3040, -27900, -28900,  -4000,   1000,  7,   4, 0,  53,   183,   115,  2240,  2240, 0, 0,   0, 0, 0 },
+    { 0x3041, -27900, -28900,  -4000,   1000,  7,   4, 0,  53,   183,   115,  2240,  2240, 0, 0,   0, 0, 0 },
+    { 0x3050, -28175, -25268,   2000,   3950,  7,   5, 0,  54,   121,    36,  2010,  2085, 0, 1,   0, 0, 1 },
+    { 0x3051, -28175, -25268,   2000,   3950,  7,   5, 0,  54,   121,    36,  2010,  2085, 0, 1,   0, 0, 1 },
+    { 0x3060, -31556, -30382,  13400, -13430,  7,   6, 0,  55,   157,   147,  2496,  3984, 0, 0,   0, 0, 0 },
+    { 0x3061, -31556, -30382,  13400, -13430,  7,   6, 0,  55,   157,   147,  2496,  3984, 0, 0,   0, 0, 0 },
+    { 0x3070, -31755, -22340,  -1700,   2080,  7,   7, 0,  56,    64,   209,  2152,  2344, 0, 0,   0, 0, 0 },
+    { 0x3071, -31755, -22340,  -1700,   2080,  7,   7, 0,  56,    64,   209,  2152,  2344, 0, 0,   0, 0, 0 },
+    { 0x3080, -29100, -28360, -20000, -21910,  7,   8, 0,  57,    56,   179,  2048,  2048, 0, 0,   0, 0, 0 },
+    { 0x3081, -29100, -28360, -20000, -21910,  7,   8, 0,  57,    56,   179,  2048,  2048, 0, 0,   0, 0, 0 },
+    { 0x3090, -29800, -28700,  -9700,   3900,  7,   9, 0,  58,   207,   206,  2064,  2337, 0, 0,   0, 0, 0 },
+    { 0x3091, -29800, -28700,  -9700,   3900,  7,   9, 0,  58,   207,   206,  2064,  2337, 0, 0,   0, 0, 0 },
+    { 0x30A0, -29443,   7463, -15068,  21933,  7,  10, 0,  59,   310,   166,  1667,  2337, 1, 0,   0, 0, 1 },
+    { 0x30A1, -29443,   7463, -15068,  21933,  7,  10, 0,  59,   310,   166,  1667,  2337, 1, 0,   0, 0, 1 },
+    { 0x30B0, -25850, -29050,  -9650, -12200,  7,  11, 0,  60,   210,   200,  1748,  1805, 0, 0,   0, 0, 0 },
+    { 0x30B1, -25850, -29050,  -9650, -12200,  7,  11, 0,  60,   210,   200,  1748,  1805, 0, 0,   0, 0, 0 },
+    { 0x30C0, -27200, -14300,  -5275,   1600,  7,  12, 0,  61,   159,   196,  2152,  2110, 0, 0,   0, 0, 0 },
+    { 0x30C1, -27200, -14300,  -5275,   1600,  7,  12, 0,  61,   159,   196,  2152,  2110, 0, 0,   0, 0, 0 },
+    { 0x30D0, -27200, -30618,  -5300, -11418,  7,   2, 0,  51,   159,   198,  2152,  1911, 0, 0,   0, 0, 0 },
+    { 0x30D1, -27200, -30618,  -5300, -11418,  7,   2, 0,  51,   159,   198,  2152,  1911, 0, 0,   0, 0, 0 },
+    { 0x30D0, -27200, -14300,  -5275,   1650,  7,  12, 1,  61,   159,   196,  2152,  2104, 0, 0,   0, 0, 0 },
+    { 0x30D1, -27200, -14300,  -5275,   1650,  7,  12, 1,  61,   159,   196,  2152,  2104, 0, 0,   0, 0, 0 },
+    { 0x30E0, -29328, -28900, -17460, -17881,  7,  13, 1,  64,    93,   207,  2056,  2432, 0, 0,   0, 0, 0 },
+    { 0x30E1, -29328, -28900, -17460, -17881,  7,  13, 1,  64,    93,   207,  2056,  2432, 0, 0,   0, 0, 0 },
+    { 0x30E0,   1775,    250,  29450,  17300,  7,   4, 0,  63,   128,   139,  2008,  1178, 0, 0,   0, 0, 0 },
+    { 0x30E1,   1775,    250,  29450,  17300,  7,   4, 0,  63,   128,   139,  2008,  1178, 0, 0,   0, 0, 0 },
+    /* r42/karte Stufe 2 (STAGE4-6): tools/karte_r42_zeilen.py 8|9|10|11|12 - Rechteck je Raum aus der
+     * AUSGELIEFERTEN Zeile (@0x800768b0 + 8*Slot, FUN_800473f8 @0x8004741c-0x80047528) bzw. der Tuer-
+     * Identitaet; Drehung belegt (Werkzeug Abschnitt DREHUNG), PORT-WAHL dort benannt. 5090/5091 unveraendert
+     * (U-12 in r42/rest). Belege: analysis/karte_r42/BESTAND_s2_r1.md. */
+    { 0x4000, -29720, -28478,   1492,   -380,  8,   0, 0,  65,   131,   112,  1760,  1760, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076AB8 */
+    { 0x4001, -29720, -28478,   1492,   -380,  8,   0, 0,  65,   131,   112,  1760,  1760, 0, 0,   0, 0, 0 },
+    { 0x4010, -28100, -28766, -17048, -13790,  8,   1, 0,  66,   140,    76,  1536,  1617, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076AC0 */
+    { 0x4011, -28100, -28766, -17048, -13790,  8,   1, 0,  66,   140,    76,  1536,  1617, 0, 0,   0, 0, 0 },
+    { 0x4020, -28200, -28400, -18450, -18600,  8,   2, 0,  67,   122,    87,  1760,  1760, 0, 0,   0, 0, 0 },   /* Fahrstuhlkabine; Bestand (unveraendert) */
+    { 0x4021, -28200, -28400, -18450, -18600,  8,   2, 0,  67,   122,    87,  1760,  1760, 0, 0,   0, 0, 0 },
+    { 0x4030, -27416, -27956, -18884, -17948,  8,   3, 0,  68,   150,   121,  1281,  1288, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076AD0 */
+    { 0x4031, -27416, -27956, -18884, -17948,  8,   3, 0,  68,   150,   121,  1281,  1288, 0, 0,   0, 0, 0 },
+    { 0x4040, -31900, -28922,   9525,  20258,  8,   4, 0,  69,   102,   180,  1392,  1599, 0, 0,   0, 0, 0 },   /* Ring links (r4); hergeleitet R0 */
+    { 0x4041, -31900, -28922,   9525,  20258,  8,   4, 0,  69,   102,   180,  1392,  1599, 0, 0,   0, 0, 0 },
+    { 0x4040,   -400,   3400,   9525,  13300,  8,  12, 1, 119,   102,   180,  1392,  1599, 0, 0,   0, 0, 0 },   /* Ring links, Diagonale an 4030 (r12); selber Rahmen wie ROOM4040 Zone 0 */
+    { 0x4041,   -400,   3400,   9525,  13300,  8,  12, 1, 119,   102,   180,  1392,  1599, 0, 0,   0, 0, 0 },
+    { 0x4050,  -3000, -13600,  12650,  -5450,  8,   5, 0,  70,   127,   163,  1540,  1474, 1, 0,   0, 0, 1 },   /* Labyrinth Verteiler A (r5); hergeleitet R90ccw */
+    { 0x4051,  -3000, -13600,  12650,  -5450,  8,   5, 0,  70,   127,   163,  1540,  1474, 1, 0,   0, 0, 1 },
+    { 0x4050, -19500, -29000,  -3850, -20500,  8,   6, 1, 118,   107,    82,  1540,  1474, 0, 1,   0, 0, 1 },   /* Labyrinth Verteiler B (r6); hergeleitet R90cw */
+    { 0x4051, -19500, -29000,  -3850, -20500,  8,   6, 1, 118,   107,    82,  1540,  1474, 0, 1,   0, 0, 1 },
+    /* r42/karte Stufe 3 Runde 4 - NUTZERWUNSCH 18.11.2026 (Wortlaut bei ROOM10B0). Das LABYRINTH ROOM4050 hat acht Kammern
+     * (begehbar = RVD-Kamerazone und keine feste SCA-Zelle, Zusammenhangskomponenten, Messhilfe s3r4b/kammern.py); nur die
+     * beiden Verteiler (Zone 0 = r5, Zone 1 = r6) sind gemalt. Die sechs uebrigen Kammern erreicht man ueber die Selbst-Tueren
+     * des Raums (z.B. slot 3 @ROOM4050 Trigger (-1000,-9450) -> Spawn (-15850,11650)); dort klemmte der Punkt bisher am Rand
+     * von r5/r6 und lief nicht mit. PORT-ERGAENZUNG "Grundriss aus der Kollision" (synth 16): EIN Ort "Kammern" mit sechs
+     * Zellen = Huellen der Kammern (x/z): K1 -17600..-6200/10600..20000, K2 200..10800/-2000..7200, K3 -17400..-5800/
+     * -3600..5600, K4 -16600..-6600/-17800..-8400, K5 -1200..4000/-26800..-17000, K6 9000..14200/-26800..-17000.
+     * Zeile fuer FUN_800473f8 (@0x8004741c-0x80047528) Norden oben, nicht spiegelnd, Massstab sx = sy = 1540 wie die
+     * Verteiler-Zeilen; Lage links unter r5/r6 im Kartenfeld des Originals (x39..86, y130..198) - PORT-WAHL. Der Kasten
+     * deckt die Verteiler mit ab; dort gewinnen deren kleinere Kaesten (Zonenwahl kleinste Box +-ZONE_SLACK). */
+    { 0x4050, -17600, -26800,  14200,  20000,  8, 255, 2, 124,    18,   206,  1540,  1540, 0, 0,  16, 0, 0 },
+    { 0x4051, -17600, -26800,  14200,  20000,  8, 255, 2, 124,    18,   206,  1540,  1540, 0, 0,  16, 0, 0 },
+    { 0x4070, -14950, -28550,  -2100, -15750,  8,   7, 0,  71,   121,   179,  1306,  1311, 0, 0,   0, 0, 0 },   /* Treppenhaus (Band 12); hergeleitet R0 */
+    { 0x4071, -14950, -28550,  -2100, -15750,  8,   7, 0,  71,   121,   179,  1306,  1311, 0, 0,   0, 0, 0 },
+    /* r42/karte Stufe 3 Runde 4 (Pruefbericht pruef_s3_r3 ROT: 4080_w1 "Punkt laeuft im Ostarm nicht mit", 4080_t3 "halb auf
+     * der Wandlinie"). ROOM4080 hat keine ausgelieferte Zeile (@0x800768b0 + 8*(65+8) = @0x80076AF8 ist der Stub {0,0,1,1});
+     * PORT-ERGAENZUNG wie ROOM1060/10A0 (Runde 39): Zeile fuer die Formel FUN_800473f8 (@0x8004741c-0x80047528) aus den
+     * WANDFLAECHEN des Raums auf die GEMALTEN Linien von Blatt 8 (DATA/MAP09.PIX, Kachel r8 + Nachbarlinien r9/r11):
+     *   x  2000 = Ostkante Zelle 3 @ROOM4080.RDT 0x00580 (Fuss, Westwand)   -> Linie x177 (r11 Index 4, y159..167)
+     *   x 25457 = Westkante Zelle 1 @0x00568 (Ostarm, Ostwand)              -> Linie x218 (r8 Index 4, y124..135)
+     *   z -3430 = Suedkante Zelle 0 @0x0055C (Ostarm, Nordwand)             -> Linie y124 (r9/r8 Index 4, x210..218)
+     *   z -27103 = Nordkante Zelle 2 @0x00574 (-29318+2215, Fuss, Suedwand) -> Linie y167 (r11 Index 4, x177..189)
+     * -> sx = round(41*2^20/23457) = 1833, sy = round(43*2^20/23673) = 1905, ox 118, oy 176 (Rest 0 an allen vier Waenden;
+     * tools/karte_r42_zeilen.py Quelle "wand"). Die alte Zeile (127,169,1540,1605) kam aus der Bbox der Kollisionszellen;
+     * die grossen Wandzellen (Zelle 10 @0x005D4 reicht bis x 29380) machten den Massstab 16 % zu klein - der ganze Ostarm
+     * lag links neben dem gemalten Arm, die Klemme hielt den Punkt fest (Abzug L4080_w1: 2989 Einheiten, 0 px).
+     * GEGENPROBEN (nicht im Fit): die vier Tueren des Raums landen auf der Kunst - ->4090 (21300,-5400) -> (211,128), gemaltes
+     * Symbol (207,128) an der Arm-Westlinie x210; ->40B0 (1950,-25200) -> (177,164), gemaltes Symbol (175,163); ->40A0
+     * (16650,-18600) -> (203,152) an der Ostlinie der unteren Diagonale vor 40A0 (r10 ab x206); ->4030 (-4250,2550) ->
+     * (167,113) an der Spitze von r13 - die AUSGELIEFERTE 4030-Zeile @0x80076AD0 setzt die Gegenseite (Abzug L4030_t2) auf
+     * (164,113). Begehbare Rasterpunkte (200er) auf dem Raumkoerper r8|r13: 59 % -> 87 %, <= 1 px daneben 76 % -> 99,6 %.
+     * Der Ostarm traegt damit KEINE eigene Zone: seine eigenen Waende (x 21396 Ostkante Zelle 5 @0x00598 -> 211, gemalt 210;
+     * x 25457 -> 218; z -3430 -> 124; z -8460 Unterkante Zelle 5 -> 133, gemalt 134) ergeben dieselbe Zeile auf 1 px.
+     * Zone 1 (r13, schmaler Gang an 4030): Kasten = begehbare Flaeche des schmalen Gangs (x -4700..1100, z -2800..3000,
+     * bis zu den kleinen Rauten Zelle 18/19 @0x00634/0x00640) statt des Kamerabereichs (-9338..5232); sonst nahm die
+     * kleinste Box (+ ZONE_SLACK 1500) auch den Anfang der breiten Diagonale (Lage 3100,-4907 nach 2 s aus 4030). */
+    { 0x4080,  -7625, -30610,  29380,   5975,  8,   8, 0,  72,   118,   176,  1833,  1905, 0, 0,   0, 0, 0 },   /* Ring rechts (r8); Zeile aus den Waenden */
+    { 0x4081,  -7625, -30610,  29380,   5975,  8,   8, 0,  72,   118,   176,  1833,  1905, 0, 0,   0, 0, 0 },
+    { 0x4080,  -4700,  -2800,   1100,   3000,  8,  13, 1, 120,   118,   176,  1833,  1905, 0, 0,   0, 0, 0 },   /* Ring rechts, Diagonale an 4030 (r13); selber Rahmen wie ROOM4080 Zone 0 */
+    { 0x4081,  -4700,  -2800,   1100,   3000,  8,  13, 1, 120,   118,   176,  1833,  1905, 0, 0,   0, 0, 0 },
+    /* r42/karte Stufe 3 Runde 4 - OSTARM von ROOM4080 als EIGENE Zone mit EIGENER Zeile (Orchestrator-Vorgabe 2(a),
+     * Pruefbericht pruef_s3_r3 ROT 4080_w1). PORT-ERGAENZUNG wie Zone 0 (Stub @0x80076AF8): Zeile fuer FUN_800473f8
+     * (@0x8004741c-0x80047528) aus den Waenden DES ARMS auf die gemalten Armlinien von r8 (DATA/MAP09.PIX):
+     *   x 21396 = Ostkante Zelle 5 @ROOM4080.RDT 0x00598 -> Linie x210;  x 25457 = Westkante Zelle 1 @0x00568 -> x218;
+     *   z -3430 = Suedkante Zelle 0 @0x0055C -> y124;               z -8460 = Unterkante Zelle 5 @0x00598 -> y134.
+     * sx = round(8*2^20/4061) = 2066, sy = round(10*2^20/5030) = 2085, ox 105, oy 181 (alle vier Waende auf 0 px).
+     * Gleicher zid wie Zone 0 (72: dieselbe Kachel r8, dieselben Tuermarken ->4090). Kasten = Armwaende je um ZONE_SLACK
+     * (1500, re15_map_zones.c) nach innen, damit die Zonenwahl (kleinste Box +-1500) genau an den Armwaenden umschaltet. */
+    { 0x4080,  22896,  -6960,  23957,  -4930,  8,   8, 2,  72,   105,   181,  2066,  2085, 0, 0,   0, 0, 0 },
+    { 0x4081,  22896,  -6960,  23957,  -4930,  8,   8, 2,  72,   105,   181,  2066,  2085, 0, 0,   0, 0, 0 },
+    { 0x4090, -28908, -29132, -12708, -12252,  8,   9, 0,  73,   191,   143,  1540,  1844, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076B00 */
+    { 0x4091, -28908, -29132, -12708, -12252,  8,   9, 0,  73,   191,   143,  1540,  1844, 0, 0,   0, 0, 0 },
+    { 0x40A0, -30100, -30701,  -8562, -11690,  8,  10, 0,  74,   197,   180,  1793,  1712, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076B08 */
+    { 0x40A1, -30100, -30701,  -8562, -11690,  8,  10, 0,  74,   197,   180,  1793,  1712, 0, 0,   0, 0, 0 },
+    { 0x40B0, -28410, -28131,  -6259,  -8041,  8,  11, 0,  75,   160,   188,  1467,  1305, 0, 0,   0, 0, 0 },   /* ; hergeleitet R0 */
+    { 0x40B1, -28410, -28131,  -6259,  -8041,  8,  11, 0,  75,   160,   188,  1467,  1305, 0, 0,   0, 0, 0 },
+    { 0x5000, -22050, -17600,   1400,   9100,  9,   0, 0,  76,   110,    56,  1492,  1520, 0, 1,   0, 0, 1 },   /* Kreuz r0; hergeleitet R90cw */
+    { 0x5001, -22050, -17600,   1400,   9100,  9,   0, 0,  76,   110,    56,  1492,  1520, 0, 1,   0, 0, 1 },
+    { 0x5010, -27500, -27300, -17300, -14100,  9,   1, 0,  77,   159,   115,  1537,  1801, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076B20 */
+    { 0x5011, -27500, -27300, -17300, -14100,  9,   1, 0,  77,   159,   115,  1537,  1801, 0, 0,   0, 0, 0 },
+    { 0x5020, -16433, -27525,   8450, -10821,  9,   2, 0,  78,   126,    77,  1601,  1632, 0, 0,   0, 0, 0 },   /* ; hergeleitet R0 */
+    { 0x5021, -16433, -27525,   8450, -10821,  9,   2, 0,  78,   126,    77,  1601,  1632, 0, 0,   0, 0, 0 },
+    { 0x5030, -29828, -30968,   -404,   -110,  9,   3, 0,  79,   125,   153,  1792,  1792, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076B30 */
+    { 0x5031, -29828, -30968,   -404,   -110,  9,   3, 0,  79,   125,   153,  1792,  1792, 0, 0,   0, 0, 0 },
+    { 0x5040, -31880, -31466,   7504,   5020,  9,   4, 0,  80,    74,   152,  1793,  1729, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076B38 */
+    { 0x5041, -31880, -31466,   7504,   5020,  9,   4, 0,  80,    74,   152,  1793,  1729, 0, 0,   0, 0, 0 },
+    { 0x5050, -28732, -28150, -11662, -14710,  9,   5, 0,  81,    86,   125,  1167,  1716, 0, 0,   0, 0, 0 },   /* Kammer in r4; hergeleitet R0 */
+    { 0x5051, -28732, -28150, -11662, -14710,  9,   5, 0,  81,    86,   125,  1167,  1716, 0, 0,   0, 0, 0 },
+    { 0x5060, -30350, -29324,   4768,  -5168,  9,   6, 0,  82,    86,   173,  1857,  1665, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076B48 */
+    { 0x5061, -30350, -29324,   4768,  -5168,  9,   6, 0,  82,    86,   173,  1857,  1665, 0, 0,   0, 0, 0 },
+    { 0x5070, -32318, -28450,   4352,  16907,  9,   7, 0, 115,   226,    80,  1516,  1711, 1, 1,   0, 0, 0 },   /* T-Gang r7; hergeleitet R180 */
+    { 0x5071, -32318, -28450,   4352,  16907,  9,   7, 0, 115,   226,    80,  1516,  1711, 1, 1,   0, 0, 0 },
+    { 0x5080, -28966, -28814,  -6841,  -6654, 12,   6, 0,  83,    88,   172,  2133,  1940, 0, 0,   0, 0, 0 },   /* Raum an 6010 (r6) - PORT-WAHL Blatt 12; hergeleitet R0 */
+    { 0x5081, -28966, -28814,  -6841,  -6654, 12,   6, 0,  83,    88,   172,  2133,  1940, 0, 0,   0, 0, 0 },
     { 0x5090,  -5683, -29765,  30592,  11636,  9,   7, 0,  84,     0,     0,     0,     0, 0, 0,   0, 0 },
     { 0x5091,  -5683, -29765,  30592,  11636,  9,   7, 0,  84,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x50A0, -28500, -28700,   -700,   7010,  9,  14, 0,  85,   124,   204,  1696,  1681, 0, 0,   0, 0 },
-    { 0x50A1, -28500, -28700,   -700,   7010,  9,  14, 0,  85,   124,   204,  1696,  1681, 0, 0,   0, 0 },
-    { 0x50B0, -23800, -30328,  -7564,  -2448,  9,  11, 0,  86,   167,   177,  1696,  1681, 0, 0,   0, 0 },
-    { 0x50B1, -23800, -30328,  -7564,  -2448,  9,  11, 0,  86,   167,   177,  1696,  1681, 0, 0,   0, 0 },
-    { 0x50C0, -27992, -27848,  -2864,  -6770, 10,   0, 0,  87,   114,   122,  1700,  1648, 0, 0,   0, 0 },
-    { 0x50C1, -27992, -27848,  -2864,  -6770, 10,   0, 0,  87,   114,   122,  1700,  1648, 0, 0,   0, 0 },
-    { 0x50D0, -30650, -32000,   4068,   2426, 10,   1, 0,  88,   113,   160,  1700,  1648, 0, 0,   0, 0 },
-    { 0x50D1, -30650, -32000,   4068,   2426, 10,   1, 0,  88,   113,   160,  1700,  1648, 0, 0,   0, 0 },
-    { 0x50E0, -32000, -32000,  12880,   2955, 10,   2, 0,  89,   153,   142,  1700,  1648, 0, 0,   0, 0 },
-    { 0x50E1, -32000, -32000,  12880,   2955, 10,   2, 0,  89,   153,   142,  1700,  1648, 0, 0,   0, 0 },
-    { 0x50F0, -31200, -29405,   7535,  -2945, 11,   2, 0,  90,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x50F1, -31200, -29405,   7535,  -2945, 11,   2, 0,  90,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x5100, -28230, -28100,  -6800,   1800, 11,   1, 0,  91,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x5101, -28230, -28100,  -6800,   1800, 11,   1, 0,  91,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x5110, -29164, -28328,    -64,  -1480,  9,   3, 0,  92,   125,   154,  1792,  1792, 0, 0,   0, 0 },
-    { 0x5111, -29164, -28328,    -64,  -1480,  9,   3, 0,  92,   125,   154,  1792,  1792, 0, 0,   0, 0 },
-    { 0x5120, -29378, -31088,   6496,   4840,  9,   5, 0,  93,    74,   152,  1793,  1729, 0, 0,   0, 0 },
-    { 0x5121, -29378, -31088,   6496,   4840,  9,   5, 0,  93,    74,   152,  1793,  1729, 0, 0,   0, 0 },
-    { 0x5140, -28500, -28700,  16700,   7010,  9,  14, 0,  94,   124,   204,  1696,  1681, 0, 0,   0, 0 },
-    { 0x5141, -28500, -28700,  16700,   7010,  9,  14, 0,  94,   124,   204,  1696,  1681, 0, 0,   0, 0 },
-    { 0x6000,  -7867, -25284,  22283,   6701, 12,   7, 0,  95,   202,   158,  2161,  2304, 0, 0,   0, 0 },
-    { 0x6001,  -7867, -25284,  22283,   6701, 12,   7, 0,  95,   202,   158,  2161,  2304, 0, 0,   0, 0 },
-    { 0x6010, -32012, -32020,   1518,   4435, 12,   4, 0,  96,   203,   157,  2161,  2247, 0, 0,   0, 0 },
-    { 0x6011, -32012, -32020,   1518,   4435, 12,   4, 0,  96,   203,   157,  2161,  2247, 0, 0,   0, 0 },
-    { 0x6020, -13050,   -750,   4500,  15450, 12,   6, 0,  97,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x6021, -13050,   -750,   4500,  15450, 12,   6, 0,  97,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x6020, -13050, -19750,   4500,  -3550, 12,   5, 1,  98,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x6021, -13050, -19750,   4500,  -3550, 12,   5, 1,  98,     0,     0,     0,     0, 0, 0,   0, 0 },
-    { 0x6030, -29061, -28706,    678, -17910, 12,   7, 0,  99,   243,   137,  2161,  2304, 0, 0,   0, 0 },
-    { 0x6031, -29061, -28706,    678, -17910, 12,   7, 0,  99,   243,   137,  2161,  2304, 0, 0,   0, 0 },
+    { 0x50A0, -28500, -28700,   -700,   7010,  9,  10, 0,  85,   124,   204,  1696,  1681, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076B68 */
+    { 0x50A1, -28500, -28700,   -700,   7010,  9,  10, 0,  85,   124,   204,  1696,  1681, 0, 0,   0, 0, 0 },
+    { 0x50B0, -23800, -30328,  -7564,  -2448,  9,  11, 0,  86,   164,   170,  1615,  1279, 0, 0,   0, 0, 0 },   /* ; hergeleitet R0 */
+    { 0x50B1, -23800, -30328,  -7564,  -2448,  9,  11, 0,  86,   164,   170,  1615,  1279, 0, 0,   0, 0, 0 },
+    { 0x50C0, -27992, -27848,  -2864,  -6770, 10,   0, 0,  87,   114,   122,  1700,  1648, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076B78 */
+    { 0x50C1, -27992, -27848,  -2864,  -6770, 10,   0, 0,  87,   114,   122,  1700,  1648, 0, 0,   0, 0, 0 },
+    { 0x50D0, -30650, -32000,   4068,   2426, 10,   1, 0,  88,   118,   158,  1269,  1310, 0, 0,   0, 0, 0 },   /* Oberes Stockwerk (Band 3); hergeleitet R0 */
+    { 0x50D1, -30650, -32000,   4068,   2426, 10,   1, 0,  88,   118,   158,  1269,  1310, 0, 0,   0, 0, 0 },
+    { 0x50E0, -32000, -32000,  12880,   2955, 10,   2, 0,  89,   162,   142,  1332,  1140, 0, 0,   0, 0, 0 },   /* ; hergeleitet R0 */
+    { 0x50E1, -32000, -32000,  12880,   2955, 10,   2, 0,  89,   162,   142,  1332,  1140, 0, 0,   0, 0, 0 },
+    { 0x50F0, -31200, -29405,   7535,  -2945, 11,   2, 0,  90,   160,   126,  1543,  1506, 0, 0,   0, 0, 0 },   /* ; hergeleitet R0 */
+    { 0x50F1, -31200, -29405,   7535,  -2945, 11,   2, 0,  90,   160,   126,  1543,  1506, 0, 0,   0, 0, 0 },
+    { 0x5100, -28230, -28100,  -6800,   1800, 11,   0, 0,  91,   144,   184,  1700,  1700, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076B98 */
+    { 0x5101, -28230, -28100,  -6800,   1800, 11,   0, 0,  91,   144,   184,  1700,  1700, 0, 0,   0, 0, 0 },
+    { 0x5110, -29164, -28328,    -64,  -1480,  9,   3, 0,  92,   125,   154,  1792,  1792, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076BA0 */
+    { 0x5111, -29164, -28328,    -64,  -1480,  9,   3, 0,  92,   125,   154,  1792,  1792, 0, 0,   0, 0, 0 },
+    { 0x5120, -29378, -31088,   6496,   4840,  9,   4, 0,  93,    74,   152,  1793,  1729, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076BA8 */
+    { 0x5121, -29378, -31088,   6496,   4840,  9,   4, 0,  93,    74,   152,  1793,  1729, 0, 0,   0, 0, 0 },
+    { 0x5130, -32318, -28450,   4352,  16907,  9,   7, 0, 116,   226,    80,  1516,  1711, 1, 1,   0, 0, 0 },   /* T-Gang r7 (Variante von 5070); hergeleitet R180 */
+    { 0x5131, -32318, -28450,   4352,  16907,  9,   7, 0, 116,   226,    80,  1516,  1711, 1, 1,   0, 0, 0 },
+    { 0x5140, -28500, -28700,  16700,   7010,  9,  10, 0,  94,   124,   204,  1696,  1681, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076BB8 */
+    { 0x5141, -28500, -28700,  16700,   7010,  9,  10, 0,  94,   124,   204,  1696,  1681, 0, 0,   0, 0, 0 },
+    { 0x5140,   -500, -17700,  19702,  -9100,  9,  12, 1, 117,   124,   204,  1696,  1681, 0, 0,   0, 0, 0 },   /* Ostgang (nur 5140) = r12; ausgeliefert @0x80076BB8 */
+    { 0x5141,   -500, -17700,  19702,  -9100,  9,  12, 1, 117,   124,   204,  1696,  1681, 0, 0,   0, 0, 0 },
+    { 0x6000,  -7867, -25284,  22283,   6701, 12,   5, 0,  95,   138,   150,  2161,  2304, 0, 0,   0, 0, 0 },   /* Bahnsteig Ost (r5); hergeleitet R0 */
+    { 0x6001,  -7867, -25284,  22283,   6701, 12,   5, 0,  95,   138,   150,  2161,  2304, 0, 0,   0, 0, 0 },
+    /* r42/karte Stufe 3 Runde 4 - PORT-ERGAENZUNG "Grundriss aus der Kollision" (wie ROOM1210-Kammer, Runde 39 Spur G NB2):
+     * der GANG NACH 50B0 ist auf Blatt 12 nicht gemalt (Pruefbericht pruef_s3_r3 ROT: 6000_t0/w0 "Punkt auf der Wandlinie
+     * (212,86), laeuft nach 2766 Einheiten nicht mit"). Er liegt noerdlich des Blocks Zelle 12 @ROOM6000.RDT 0x007EC
+     * (x -7862..12578, z -5674..-1634; auf r5 die ungefuellten Kaesten x212..230 y84..97). Mit DERSELBEN Zeile wie der
+     * Bahnsteig (Zone 0, Formel FUN_800473f8 @0x8004741c-0x80047528) fallen seine Waende auf: West x 2025 (Ostkante Zelle 17
+     * @0x00828) -> 208, Ost x 15903 (Westkante Zelle 13 @0x007F8) -> 237, Nische x 8113 (Westkante Zelle 9 @0x007C8) -> 221,
+     * Nord z 3336 (Suedkante Zelle 16 @0x0081C) -> 72, z 1736 (Suedkante Zelle 9) -> 76, Sued z -1634 (Nordkante Zelle 12)
+     * -> 83 (die gemalte Nordlinie von r5 y84 ist dieselbe Wand - die Unterkante der Zelle entfaellt dort, karte_r39.c
+     * s_kanten). Zwei Zellen (s_map_synth_cells 22/23). Begehbar gemessen (Flut, Raster 100): x 2100..15900, z -1600..3300.
+     * Kasten: Sued z -134 = Blocknordwand -1634 + ZONE_SLACK 1500 (re15_map_zones.c), damit die Zonenwahl (kleinste Box
+     * +-1500) genau an der Wand umschaltet und der Bahnsteig darunter Zone 0 bleibt. Zelle 22 @0x00864 (Tuerrahmen
+     * x 1893..3433, z 2396..3450, 2x2 px) ist nicht ausgespart. */
+    { 0x6000,   2025,   -134,  15903,   3336, 12, 255, 1, 121,   138,   150,  2161,  2304, 0, 0,  13, 0, 0 },   /* Gang nach 50B0 (Schema); Zeile wie Zone 0 */
+    { 0x6001,   2025,   -134,  15903,   3336, 12, 255, 1, 121,   138,   150,  2161,  2304, 0, 0,  13, 0, 0 },
+    { 0x6010, -32012, -32020,   1518,   4435, 12,   0, 0,  96,   140,   150,  2074,  1927, 0, 0,   0, 0, 0 },   /* Bahnsteig West mit Treppen (r0); hergeleitet R0 */
+    { 0x6011, -32012, -32020,   1518,   4435, 12,   0, 0,  96,   140,   150,  2074,  1927, 0, 0,   0, 0, 0 },
+    { 0x6020, -13050,   -750,   4500,  15450,  9,   8, 0,  97,   178,   114,  1618,  1494, 0, 1,   0, 0, 1 },   /* Achteck Sued (r8) - PORT-WAHL Blatt 9; hergeleitet R90cw */
+    { 0x6021, -13050,   -750,   4500,  15450,  9,   8, 0,  97,   178,   114,  1618,  1494, 0, 1,   0, 0, 1 },
+    { 0x6020, -13050, -19750,   4500,  -3550,  9,   9, 1,  98,   208,    50,  1618,  1494, 0, 1,   0, 0, 1 },   /* Achteck Nord (r9) - PORT-WAHL Blatt 9; hergeleitet R90cw */
+    { 0x6021, -13050, -19750,   4500,  -3550,  9,   9, 1,  98,   208,    50,  1618,  1494, 0, 1,   0, 0, 1 },
+    { 0x6030, -29061, -28706,    678, -17910, 12,   7, 0,  99,   243,   137,  2161,  2304, 0, 0,   0, 0, 0 },   /* ; ausgeliefert @0x80076BD8 */
+    { 0x6031, -29061, -28706,    678, -17910, 12,   7, 0,  99,   243,   137,  2161,  2304, 0, 0,   0, 0, 0 },
     /* Runde 39 Spur G, Nachbesserung 1 (M4): Gast-Zeilen der Treppenhaeuser wie ihre Hauptzeilen aus den Waenden.
      * 1060 2F (Blatt 3 rect 1 = s_map_rectfix, MAP04.PIX uv(168,16) an (118,134)): x 26900 -> 118, 19800 -> 135,
      *   z 18200 -> 134, 26950 -> 155; Treppen (25150,22000) -> (122,144), (21400,22850) -> (131,146) in den Kaesten
@@ -612,12 +790,12 @@ static const re15_map_zone_t s_map_zones[] = {
     { 0x1171, -28900, -28841,  -8784, -17070,  4,   3, 1,  24,   140,   122,  2597,  2511, 0, 0,   0, 1 },
     /* Runde 36 Spur M: die beiden 11A0-Gast-Zeilen (Blatt 6 rect 2, etage 1) sind ENTFALLEN -
      * Blatt 6 rect 2 ist jetzt die HAUPTzeile von ROOM11A0 (s.o. bei ROOM1190). */
-    { 0x4070, -14950, -28550,  -2100, -15750, 11,   3, 0,  71,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x4071, -14950, -28550,  -2100, -15750, 11,   3, 0,  71,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x4070, -14950, -28550,  -2100, -15750,  9,   1, 0,  71,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x4071, -14950, -28550,  -2100, -15750,  9,   1, 0,  71,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x50D0, -30650, -32000,   4068,   2426, 11,   0, 0,  88,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x50D1, -30650, -32000,   4068,   2426, 11,   0, 0,  88,     0,     0,     0,     0, 0, 0,   0, 1 },
+    { 0x4070, -14950, -28550,  -2100, -15750, 11,   3, 0,  71,   137,   173,  1306,  1311, 0, 0,   0, 1, 0 },   /* Treppenhaus (Band 0); hergeleitet R0 */
+    { 0x4071, -14950, -28550,  -2100, -15750, 11,   3, 0,  71,   137,   173,  1306,  1311, 0, 0,   0, 1, 0 },
+    { 0x4070, -14950, -28550,  -2100, -15750,  9,  14, 0,  71,   117,   194,  1306,  1311, 0, 0,   0, 1, 0 },   /* Treppenhaus (Band 8); hergeleitet R0 */
+    { 0x4071, -14950, -28550,  -2100, -15750,  9,  14, 0,  71,   117,   194,  1306,  1311, 0, 0,   0, 1, 0 },
+    { 0x50D0, -30650, -32000,   4068,   2426, 11,   1, 0,  88,   118,   138,  1269,  1310, 0, 0,   0, 1, 0 },   /* Unteres Stockwerk (Band 0); hergeleitet R0 */
+    { 0x50D1, -30650, -32000,   4068,   2426, 11,   1, 0,  88,   118,   138,  1269,  1310, 0, 0,   0, 1, 0 },
     /* Runde 35 Spur G: dieselbe Kabine auf 2F (Ersatzrect Blatt 3 Nr. 4 = (109,134) wie 1F)
      * und 3F (Blatt 4 rect 0 (127,137), gemalte Waende x127/x136 y137/y146, MAP05.PIX @0x1454).
      * Abbildung wie die 1F-Zeile oben: RE2-Massstab 2330 (FUN_8006e120 @0x8006e1dc), Versatz
@@ -634,10 +812,10 @@ static const re15_map_zone_t s_map_zones[] = {
      * @0x00E7C / @0x00E90); die gemalte r6 (153,114,16,24) entfaellt, die Etagenzeile Band 4 zeigt auf rect 255. */
     { 0x10A0,  17850,  15550,  29100,  28300,  0, 255, 0,  10,     0,     0,     0,     0, 0, 0,  10, 1 },
     { 0x10A1,  17850,  15550,  29100,  28300,  0, 255, 0,  10,     0,     0,     0,     0, 0, 0,  10, 1 },
-    { 0x4020, -28200, -28400, -18450, -18600,  9,  13, 0,  67,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x4021, -28200, -28400, -18450, -18600,  9,  13, 0,  67,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x4020, -28200, -28400, -18450, -18600, 10,   3, 0,  67,     0,     0,     0,     0, 0, 0,   0, 1 },
-    { 0x4021, -28200, -28400, -18450, -18600, 10,   3, 0,  67,     0,     0,     0,     0, 0, 0,   0, 1 },
+    { 0x4020, -28200, -28400, -18450, -18600,  9,  13, 0,  67,     0,     0,     0,     0, 0, 0,   0, 1, 0 },   /* Fahrstuhlkabine; Bestand (unveraendert) */
+    { 0x4021, -28200, -28400, -18450, -18600,  9,  13, 0,  67,     0,     0,     0,     0, 0, 0,   0, 1, 0 },
+    { 0x4020, -28200, -28400, -18450, -18600, 10,   3, 0,  67,     0,     0,     0,     0, 0, 0,   0, 1, 0 },   /* Fahrstuhlkabine; Bestand (unveraendert) */
+    { 0x4021, -28200, -28400, -18450, -18600, 10,   3, 0,  67,     0,     0,     0,     0, 0, 0,   0, 1, 0 },
 };
 
 /* MARKEN in Karten-Pixeln. kind = TUER mit WANDSEITE 0=Nord 1=Ost
@@ -837,127 +1015,121 @@ static const re15_map_mark_t s_map_marks[] = {
     {  4,  6,  164,  110, 0,  20,  24, 1 },
     {  5,  0,  156,   97, 5,  24, 255, 0 },
     {  5,  1,  174,  101, 0,  23,  24, 1 },
-    {  6,  0,   90,  179, 3,  37, 255, 0 },
-    {  6,  0,   91,  131, 1,  37,  38, 1 },
-    {  6,  0,  107,  139, 1,  37,  43, 1 },
-    {  6,  0,  129,  153, 1,  39,  47, 0 },
-    {  6,  0,  129,  184, 1,  39,  42, 1 },
-    {  6,  0,  137,  185, 5,  39, 255, 0 },
-    {  6,  0,  139,  153, 5,  46, 255, 0 },
-    {  6,  0,  163,  168, 3,  39,  43, 1 },
-    {  6,  0,  163,  169, 1,  37, 255, 0 },
-    {  6,  0,  163,  173, 1,  46, 255, 0 },
-    {  6,  1,   66,  157, 0,  40,  41, 1 },
-    {  6,  1,   90,  125, 2,  41,  37, 1 },
-    {  6,  1,   90,  147, 1,  40,  42, 1 },
-    {  6,  1,   96,  163, 3,  40,  40, 0 },
-    {  6,  1,   96,  163, 4,  40, 255, 0 },
     {  6,  2,  110,   71, 0,  27, 255, 0 },
     {  6,  2,  115,  100, 2,  27, 255, 0 },
     {  6,  2,  123,  100, 2,  27, 255, 0 },
     {  6,  2,  130,   95, 1,  27, 255, 0 },
-    {  6,  3,  107,  140, 3,  45, 255, 0 },
-    {  6,  3,  164,  140, 1,  45, 255, 0 },
-    {  6,  6,  193,  156, 1,  48, 255, 0 },
     /* ⛔ GESTRICHEN (Runde 30, Schritt 3a): (6, 255, 166, 104, 2, 0, 39) und
      * (6, 255, 185, 110, 2, 0) - die Tueren von ROOM2020 (ROOM2020.RDT @0x00866 /
      * @0x0082A). ROOM2020 fuehrt keine Zonenzeile, die Marken trugen die
      * Rueckfall-Nummer 0 = ROOM1000/z0 und standen damit im Stand des Nutzers auf
      * Blatt 6, von dessen Raeumen er keinen betreten hatte (seine 20 Besucht-Bits
      * nennen nur Raeume der Blaetter 0..5). */
-    {  7,  0,  128,  117, 1,  49,  50, 1 },
-    {  7,  1,  121,  192, 3,  50,  64, 0 },
-    {  7,  1,  135,  188, 4,  50, 255, 0 },
-    {  7,  1,  167,  115, 1,  50, 255, 0 },
-    {  7,  1,  167,  187, 1,  50,  51, 1 },
-    {  7,  2,  189,  160, 5,  62, 255, 0 },
-    {  7,  2,  202,  160, 0,  62, 255, 0 },
-    {  7,  2,  215,  160, 1,  62, 255, 0 },
-    {  7,  3,  204,  111, 3,  55, 255, 0 },
-    {  7,  3,  204,  128, 3,  63,  54, 1 },
-    {  7,  3,  207,  104, 0,  55,  53, 1 },
-    {  7,  3,  207,  128, 2,  55, 255, 0 },
-    {  7,  4,  191,   57, 3,  53, 255, 0 },
-    {  7,  4,  203,   75, 5,  53, 255, 0 },
-    {  7,  4,  231,   76, 5,  53, 255, 0 },
-    {  7,  6,  206,  106, 2,  52,  63, 1 },
-    {  7,  6,  208,  128, 2,  52,  61, 1 },
-    {  7,  8,   72,  164, 1,  56, 255, 0 },
-    {  7,  8,   73,  175, 0,  56,  64, 1 },
-    {  7,  9,  224,  175, 1,  60,  58, 0 },
-    {  7, 10,  224,  128, 0,  58, 255, 0 },
-    {  7, 10,  224,  137, 3,  58, 255, 0 },
-    {  7, 10,  244,  155, 2,  58,  59, 1 },
-    {  7, 12,  194,  128, 0,  54, 255, 0 },
-    {  7, 12,  200,  136, 5,  61, 255, 0 },
-    {  7, 12,  215,  137, 1,  61, 255, 0 },
-    {  8,  0,  138,   72, 3,  65, 255, 0 },
-    {  8,  0,  156,   64, 1,  65,  66, 1 },
-    {  8,  0,  160,   89, 2,  65,  68, 1 },
-    {  8,  0,  179,   60, 0,  65, 255, 0 },
-    {  8,  2,  128,   73, 1,  70,  70, 1 },
-    {  8,  2,  132,   77, 0,  70,  70, 1 },
-    {  8,  2,  132,   79, 0,  70, 255, 0 },
-    {  8,  2,  138,   73, 3,  70,  70, 1 },
-    {  8,  3,  144,  121, 2,  68, 255, 0 },
-    {  8,  3,  152,  128, 2,  68, 255, 0 },
-    {  8,  7,  142,  164, 3,  71, 255, 0 },
-    {  8,  7,  153,  176, 5,  71, 255, 0 },
-    {  8,  8,  172,  125, 2,  72, 255, 0 },
-    {  8,  8,  208,  150, 1,  72,  74, 1 },
-    {  8,  9,  209,  128, 3,  73,  72, 1 },
-    {  8, 11,  177,  163, 1,  75,  72, 1 },
-    {  8, 12,  147,  124, 1,  69, 255, 0 },
-    {  8, 12,  149,  116, 3,  69, 255, 0 },
-    {  8, 12,  156,  113, 1,  69, 255, 0 },
-    {  9,  0,  130,   87, 3,  76, 255, 0 },
-    {  9,  0,  153,  104, 2,  76, 255, 0 },
-    {  9,  0,  168,   86, 1,  76, 255, 0 },
-    {  9,  1,  168,   87, 3,  71, 255, 0 },
-    {  9,  1,  168,   92, 3,  77,  76, 1 },
-    {  9,  1,  175,  100, 5,  71, 255, 0 },
-    {  9,  1,  176,   89, 5,  71, 255, 0 },
-    {  9,  3,  134,  121, 3,  79, 255, 0 },
-    {  9,  3,  152,  104, 0,  79,  76, 1 },
-    {  9,  3,  156,  143, 2,  79, 255, 0 },
-    {  9,  3,  173,  125, 1,  79, 255, 0 },
-    {  9,  4,   90,  120, 2,  81, 255, 0 },
-    {  9,  5,   90,  100, 1,  80,  81, 1 },
-    {  9,  5,   90,  119, 3,  80, 255, 0 },
-    {  9,  6,   95,  141, 3,  82, 255, 0 },
+    /* r42/karte Runde 2: Marken Blatt 6/7 aus tools/karte_r42_zeilen.py. TUER: je Durchgang EINE Marke.
+     * Hat das Original die Tuer GEMALT (analysis/kartensymbole/symbolkatalog.csv, Symbol an der Grenze der
+     * beiden Rechtecke), sitzt die Marke auf dessen Wandlinie wie in STAGE1 (W x-1 / O x+w / N y-1 / S y+h,
+     * gemessen an Blatt 1/2/4) - sonst stuenden zwei Tuerzeichen auf dem Blatt (Pruefbericht R4: 3040<->3060
+     * lag 17 px neben dem gemalten (220,107)). Ohne gemaltes Symbol: Mitte der beiden Projektionen, auf die
+     * gemeinsame Kante geklemmt. Traeger = der Ort, dessen Rechteck das Symbol malt.
+     * TREPPE: SCD-Zonen Aot_set Typ 12/13 (sce 12 = X, 13 = Z; Handler LAB_80043500 / LAB_800435cc), Enden
+     * gepaart (gleiche Achse und Stufenzahl, Bandabstand = count), Weltmitte mit der Zeile der Zone
+     * projiziert; Sprossen quer zur Laufrichtung auf dem Blatt (Tausch dreht sie). Runde 1 hatte die
+     * Treppen geloescht - darunter die beiden von ROOM3040 aus seiner AUSGELIEFERTEN Zeile @0x80076A60
+     * (Pruefbericht R3); hier wieder: (203,75) und (231,76). Die vier Marken von ROOM11A0 (zid 27) bleiben. */
+    {  6,  1,   90,  131, 1,  38,  37, 1 },   /* 2010.0<->2000.0, Luecke 4 px, gemaltes Symbol (88,131) E r1 */
+    {  6,  0,  107,  141, 1,  37,  43, 1 },   /* 2000.0<->2070.0, Luecke 1 px, gemaltes Symbol (105,141) E r0 */
+    {  6,  0,   93,  100, 0,  37,  41, 1 },   /* 2000.0<->2050.0, Luecke 6 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  6,  2,  125,  100, 2,  41, 113, 1 },   /* 2050.0<->2020.0, Luecke 8 px, gemaltes Symbol (125,98) S r2 */
+    {  6,  6,  182,  117, 0,  39, 113, 1 },   /* 2030.0<->2020.0, Luecke 6 px, gemaltes Symbol (182,120) N r6 */
+    {  6,  6,  166,  137, 3,  39,  43, 1 },   /* 2030.0<->2070.0, Luecke 6 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  6,  6,  200,  149, 1,  39,  47, 1 },   /* 2030.0<->2080.1, Luecke 15 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  6,  7,  198,  126, 3,  42,  39, 1 },   /* 2060.0<->2030.0, Luecke 8 px, gemaltes Symbol (201,126) W r7 */
+    {  6,  5,  130,   77, 3,  40,  41, 1 },   /* 2040.0<->2050.0, Luecke 6 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  6,  5,  211,   94, 2,  40,  42, 1 },   /* 2040.0<->2060.0, Luecke 8 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  6,  8,  240,  172, 1,  46,  48, 1 },   /* 2080.0<->2090.0, Luecke 8 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  6,  9,  277,  150, 1,  48, 114, 1 },   /* 2090.0<->20A0.0, Luecke 8 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  6,  0,  161,  169, 1,  37, 255, 0 },   /* 2000.0->1260 (anderes Blatt), Luecke 0 px, eigene Projektion */
+    {  6,  0,   91,  179, 3,  37, 255, 0 },   /* 2000.0->1260 (anderes Blatt), Luecke 0 px, eigene Projektion */
+    {  6,  6,  187,  124, 5,  39, 255, 0 },   /* ROOM2030 Treppe (-4200,-7700) Aot_set sce 12 einzeln */
+    /* ROOM2040 Treppe (-1350,-16100) Aot_set sce 13: ausserhalb jeder Zone und des Rechtecks - OFFEN */
+    {  6,  8,  226,  155, 5,  46, 255, 0 },   /* ROOM2080 Treppe (-19550,-16700) Aot_set sce 12 einzeln */
+    {  7,  1,  128,  114, 3,  50,  49, 1 },   /* 3010.0<->3000.0, Luecke 7 px, gemaltes Symbol (131,114) W r1 */
+    {  7,  6,  167,  115, 3,  55,  50, 1 },   /* 3060.0<->3010.0, Luecke 4 px, gemaltes Symbol (170,115) W r6 */
+    {  7,  2,  167,  174, 3,  51,  50, 1 },   /* 3020.0<->3010.0, Luecke 7 px, gemaltes Symbol (170,174) W r2 */
+    {  7,  1,  121,  188, 3,  50,  64, 1 },   /* 3010.0<->30E0.1, Luecke 6 px, gemaltes Symbol (124,188) W r1 */
+    {  7,  3,  208,  104, 0,  52,  63, 1 },   /* 3030.0<->30E0.0, Luecke 5 px, gemaltes Symbol (208,107) N r3 */
+    {  7,  3,  208,  128, 2,  52,  61, 1 },   /* 3030.0<->30C0.0, Luecke 8 px, gemaltes Symbol (208,126) S r3 */
+    {  7,  6,  220,  104, 0,  55,  53, 1 },   /* 3060.0<->3040.0, Luecke 16 px, gemaltes Symbol (220,107) N r6 */
+    {  7,  4,  191,   54, 3,  53,  54, 1 },   /* 3040.0<->3050.0, Luecke 7 px, gemaltes Symbol (194,54) W r4 */
+    {  7,  5,  190,   98, 1,  54,  63, 0 },   /* 3050.0<->30E0.0, Luecke 10 px, gemaltes Symbol (187,98) E r5 */
+    {  7,  6,  220,  128, 2,  55,  58, 1 },   /* 3060.0<->3090.0, Luecke 5 px, gemaltes Symbol (220,126) S r6 */
+    {  7,  7,  104,  180, 2,  56,  64, 1 },   /* 3070.0<->30E0.1, Luecke 2 px, gemaltes Symbol (104,177) S r7 */
+    {  7,  9,  215,  132, 3,  58,  61, 1 },   /* 3090.0<->30C0.0, Luecke 5 px, gemaltes Symbol (218,132) W r9 */
+    {  7,  9,  242,  155, 0,  58,  59, 1 },   /* 3090.0<->30A0.0, Luecke 4 px, gemaltes Symbol (242,158) N r9 */
+    {  7,  9,  220,  191, 1,  58,  60, 1 },   /* 3090.0<->30B0.0, Luecke 2 px, gemaltes Symbol (218,191) E r9 */
+    {  7,  1,  135,  188, 4,  50, 255, 0 },   /* ROOM3010 Treppe (-21520,-18070) Aot_set sce 13 einzeln */
+    {  7,  4,  203,   75, 5,  53, 255, 0 },   /* ROOM3040 Treppe (-22725,-13200) Aot_set sce 12 Paar gemittelt */
+    {  7,  4,  231,   76, 5,  53, 255, 0 },   /* ROOM3040 Treppe (-9588,-13575) Aot_set sce 12 Paar gemittelt */
+    {  7, 12,  189,  131, 5,  61, 255, 0 },   /* ROOM30C0 Treppe (-17500,300) Aot_set sce 12 Paar gemittelt */
+    /* r42/karte Stufe 2: Tuer- und Treppenmarken Blatt 8-12 aus tools/karte_r42_zeilen.py (Marke auf
+     * der Wandlinie des GEMALTEN Symbols, sonst Mitte der Projektionen). zid 84 (5090) unveraendert: U-12. */
+    {  8,  0,  140,   73, 3,  65,  67, 1 },   /* 4000.0<->4020.0, Luecke 0 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  8,  0,  156,   64, 3,  65,  66, 1 },   /* 4000.0<->4010.0, Luecke 1 px, gemaltes Symbol (159,64) W r0 */
+    {  8,  0,  161,   89, 2,  65,  68, 1 },   /* 4000.0<->4030.0, Luecke 3 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  8,  4,  143,  163, 1,  69,  71, 1 },   /* 4040.0<->4070.0, Luecke 6 px, gemaltes Symbol (141,163) E r4 */
+    {  8, 12,  154,  114, 1, 119,  68, 1 },   /* 4040.1<->4030.0, Luecke 10 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  8,  5,  102,  104, 1,  70,  69, 1 },   /* 4050.0<->4040.0, Luecke 12 px, gemaltes Symbol (100,104) E r5 */
+    {  8,  6,  110,  119, 3, 118,  69, 1 },   /* 4050.1<->4040.0, Luecke 4 px, gemaltes Symbol (113,119) W r6 */
+    {  8, 13,  165,  113, 3, 120,  68, 1 },   /* 4080.1<->4030.0, Luecke 3 px, Mitte der Projektionen (kein gemaltes Symbol); Stufe 3 Runde 4: 4080-Zeile aus den Waenden */
+    {  8, 11,  177,  163, 1,  75,  72, 1 },   /* 40B0.0<->4080.0, Luecke 3 px, gemaltes Symbol (175,163) E r11 */
+    {  8,  8,  205,  151, 1,  72,  74, 1 },   /* 4080.0<->40A0.0, Luecke 5 px, Mitte der Projektionen (kein gemaltes Symbol); Stufe 3 Runde 4 */
+    {  8,  9,  209,  128, 1,  73,  72, 1 },   /* 4090.0<->4080.0, Luecke 2 px, gemaltes Symbol (207,128) E r9 */
+    {  8,  0,  179,   65, 0,  65, 255, 0 },   /* 4000.0->3070 (anderes Blatt), Luecke 0 px, eigene Projektion */
+    {  9, 10,  138,  177, 1,  85,  71, 1 },   /* 50A0.0<->4070.0, Luecke 2 px, gemaltes Symbol (135,177) E r10 */
+    {  9,  0,  153,  104, 2,  76,  79, 1 },   /* 5000.0<->5030.0, Luecke 3 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  9,  0,  153,  104, 2,  76,  92, 1 },   /* 5000.0<->5110.0, Luecke 4 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  9,  0,  168,   87, 1,  76,  77, 1 },   /* 5000.0<->5010.0, Luecke 5 px, gemaltes Symbol (165,87) E r0 */
+    {  9,  0,  153,   70, 0,  76,  78, 1 },   /* 5000.0<->5020.0, Luecke 5 px, gemaltes Symbol (153,73) N r0 */
+    {  9,  3,  134,  124, 3,  79,  80, 1 },   /* 5030.0<->5040.0, Luecke 2 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  9,  3,  173,  124, 1,  79, 115, 1 },   /* 5030.0<->5070.0, Luecke 4 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  9,  3,  155,  143, 2,  79,  85, 1 },   /* 5030.0<->50A0.0, Luecke 2 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  9,  4,   95,  137, 1,  80,  82, 1 },   /* 5040.0<->5060.0, Luecke 4 px, gemaltes Symbol (91,137) E r4 */
+    {  9,  4,   90,  101, 1,  80,  81, 1 },   /* 5040.0<->5050.0, Luecke 4 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  9,  7,  226,  155, 1, 115,  97, 1 },   /* 5070.0<->6020.0, Luecke 7 px, gemaltes Symbol (223,155) E r7 */
+    {  9,  7,  226,   91, 1, 115,  98, 1 },   /* 5070.0<->6020.1, Luecke 8 px, gemaltes Symbol (223,91) E r7 */
+    {  9, 12,  195,  168, 0, 117,  86, 1 },   /* 5140.1<->50B0.0, Luecke 5 px, gemaltes Symbol (195,171) N r12 */
+    {  9,  3,  134,  125, 3,  92,  93, 1 },   /* 5110.0<->5120.0, Luecke 2 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  9,  3,  173,  124, 1,  92, 116, 1 },   /* 5110.0<->5130.0, Luecke 4 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  9,  3,  155,  143, 2,  92,  94, 1 },   /* 5110.0<->5140.0, Luecke 2 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    {  9,  7,  226,  155, 1, 116,  97, 1 },   /* 5130.0<->6020.0, Luecke 7 px, gemaltes Symbol (223,155) E r7 */
+    {  9,  7,  226,   91, 1, 116,  98, 1 },   /* 5130.0<->6020.1, Luecke 8 px, gemaltes Symbol (223,91) E r7 */
+    {  9, 11,  182,  138, 0,  86, 255, 0 },   /* 50B0.0->6000 (anderes Blatt), Luecke 0 px, eigene Projektion */
+    { 10,  1,  124,  114, 0,  88,  87, 1 },   /* 50D0.0<->50C0.0, Luecke 7 px, gemaltes Symbol (124,117) N r1 */
+    { 10,  1,  162,  123, 1,  88,  89, 1 },   /* 50D0.0<->50E0.0, Luecke 15 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    { 11,  0,  158,  157, 1,  91,  71, 1 },   /* 5100.0<->4070.0, Luecke 3 px, gemaltes Symbol (156,157) E r0 */
+    { 11,  1,  162,  115, 1,  88,  90, 1 },   /* 50D0.0<->50F0.0, Luecke 16 px, Mitte der Projektionen (kein gemaltes Symbol) */
+    { 11,  1,  162,  133, 1,  88,  91, 1 },   /* 50D0.0<->5100.0, Luecke 11 px, gemaltes Symbol (160,133) E r1 */
+    { 12,  6,  140,  132, 1,  83,  96, 1 },   /* 5080.0<->6010.0, Luecke 15 px, gemaltes Symbol (137,132) E r6 */
+    { 12,  0,  194,  103, 1,  96,  95, 1 },   /* 6010.0<->6000.0, Luecke 8 px, gemaltes Symbol (191,103) E r0 */
+    { 12,  0,  194,  133, 1,  96,  95, 1 },   /* 6010.0<->6000.0, Luecke 4 px, gemaltes Symbol (191,133) E r0 */
+    { 12,  5,  265,  111, 1,  95,  99, 1 },   /* 6000.0<->6030.0, Luecke 64 px, AUSGELIEFERTE 6030-Zeile @0x80076BD8 am gemalten Sprossenband (271,107) */
+    /* r42/karte Stufe 3 Runde 4: die Tuer nach 50B0 liegt im Gang (Schema-Zeichnung, zid 121) - Trigger (2000..3600,
+     * 2200..3300) @ROOM6000 Door_aot_set slot 0, Mitte x 2800 -> 210, an der Nordwand z 3336 -> y72 (kind 0 = Nord). */
+    { 12, 255, 210,   72, 0, 121, 255, 0 },   /* 6000.1->50B0 (anderes Blatt), eigene Projektion */
+    { 12,  7,  253,  118, 3,  99, 255, 0 },   /* 6030.0->5090 (anderes Blatt), Luecke 0 px, eigene Projektion */
+    {  8,  7,  150,  170, 5,  71, 255, 0 },   /* ROOM4070 Treppe (-8800,-24950) Aot_set sce 12 Paar gemittelt */
+    {  9, 14,  147,  178, 5,  71, 255, 0 },   /* ROOM4070 Treppe (-8200,-19300) Aot_set sce 12 Paar gemittelt */
+    {  9, 14,  146,  185, 5,  71, 255, 0 },   /* ROOM4070 Treppe (-8800,-24950) Aot_set sce 12 Paar gemittelt */
+    {  9,  2,  154,   55, 4,  78, 255, 0 },   /* ROOM5020 Treppe (-13538,-17838) Aot_set sce 13 Paar gemittelt */
+    { 11,  3,  167,  157, 5,  71, 255, 0 },   /* ROOM4070 Treppe (-8200,-19300) Aot_set sce 12 Paar gemittelt */
+    { 12,  0,  160,  100, 5,  96, 255, 0 },   /* ROOM6010 Treppe (-22078,-4638) Aot_set sce 12 Paar gemittelt */
+    { 12,  0,  160,  136, 5,  96, 255, 0 },   /* ROOM6010 Treppe (-22078,-24288) Aot_set sce 12 Paar gemittelt */
+    { 12,  0,  167,  105, 4,  96, 255, 0 },   /* ROOM6010 Treppe (-18462,-7430) Aot_set sce 13 Paar gemittelt */
+    { 12,  0,  167,  130, 4,  96, 255, 0 },   /* ROOM6010 Treppe (-18487,-20853) Aot_set sce 13 Paar gemittelt */
+    { 12,  7,  265,  118, 5,  99, 255, 0 },   /* ROOM6030 Treppe (-11870,-23160) Aot_set sce 12 einzeln */
     {  9,  7,  180,   98, 1,  84,  84, 0 },
     {  9,  7,  180,  123, 1,  84,  84, 1 },
-    {  9,  7,  190,   91, 4,  78, 255, 0 },
-    {  9,  7,  192,  119, 0,  78, 255, 0 },
     {  9,  7,  221,   98, 1,  84, 255, 0 },
-    {  9,  9,  251,   90, 1,  83, 255, 0 },
-    {  9, 11,  186,  134, 0,  86, 255, 0 },
-    {  9, 11,  196,  168, 2,  86, 255, 0 },
-    {  9, 14,  138,  179, 3,  85, 255, 0 },
-    {  9, 14,  154,  174, 0,  94, 255, 0 },
-    { 10,  0,  124,  114, 2,  87,  88, 1 },
-    { 10,  0,  152,   85, 3,  87, 255, 0 },
-    { 10,  1,  162,  115, 1,  88,  89, 1 },
-    { 11,  0,  162,  133, 3,  88,  91, 1 },
-    { 11,  0,  183,  157, 1,  88, 255, 0 },
-    { 11,  1,  120,  126, 3,  91, 255, 0 },
-    { 11,  2,  162,  115, 3,  90, 255, 0 },
-    { 11,  3,  158,  158, 3,  71, 255, 0 },
-    { 11,  3,  169,  170, 5,  71, 255, 0 },
-    { 11,  3,  170,  159, 5,  71, 255, 0 },
-    { 12,  4,  213,  132, 3,  96, 255, 0 },
-    { 12,  4,  223,  109, 5,  96, 255, 0 },
-    { 12,  4,  223,  132, 5,  96, 255, 0 },
-    { 12,  4,  231,  109, 4,  96, 255, 0 },
-    { 12,  4,  231,  132, 4,  96, 255, 0 },
-    { 12,  4,  251,  110, 1,  96,  95, 1 },
-    { 12,  4,  257,  132, 1,  96,  95, 0 },
-    { 12,  5,  235,  126, 0,  98, 255, 0 },
-    { 12,  6,  117,  167, 2,  97, 255, 0 },
-    { 12,  7,  250,  118, 3,  99, 255, 0 },
-    { 12,  7,  256,  110, 2,  95,  99, 1 },
-    { 12,  7,  262,  117, 3,  99,  99, 1 },
-    { 12,  7,  265,  118, 5,  99, 255, 0 },
     /* Runde 36 Spur M (Nutzer: "Im Treppenhaus 10A0 auf Etage B1 fehlen die Treppen
      * eingezeichnet"). GEMESSEN: 1F (Blatt 2 rect 6) und B2 (Blatt 1 rect 9) tragen je ZWEI
      * Treppenmarken, B1 (Blatt 0 rect 6, Runde 35 Spur G als Gast-Zeile Band 4 von Hand
@@ -1095,12 +1267,12 @@ static const re15_map_floor_t s_map_floors[] = {
     { 0x4021, 0,  0, 10,  3 },
     { 0x4070, 0,  0, 11,  3 },
     { 0x4071, 0,  0, 11,  3 },
-    { 0x4070, 0,  8,  9,  1 },
-    { 0x4071, 0,  8,  9,  1 },
+    { 0x4070, 0,  8,  9, 14 },
+    { 0x4071, 0,  8,  9, 14 },
     { 0x4070, 0, 12,  8,  7 },
     { 0x4071, 0, 12,  8,  7 },
-    { 0x50D0, 0,  0, 11,  0 },
-    { 0x50D1, 0,  0, 11,  0 },
+    { 0x50D0, 0,  0, 11,  1 },
+    { 0x50D1, 0,  0, 11,  1 },
     { 0x50D0, 0,  3, 10,  1 },
     { 0x50D1, 0,  3, 10,  1 },
     /* Runde 35 Spur G: ROOM10A0 B1-Absatz (Ankunft y -7200 aus 1180/1230 -> Band 4). AM ENDE
@@ -1155,6 +1327,13 @@ static const re15_map_synth_t s_map_synth[] = {
      * gezeichnetem r3 (karte_r39.c s_kanten), der Durchgang y117..119 (@0x01BC8 endet z -20746 -> py116, @0x01C40 beginnt
      * z -22520 -> py120) oeffnet r3 (karte_r39.c s_korr). Keine Doppelwand: jede Linie liegt auf der gemalten. */
     { 186, 112,  15,  18, 21, 1,   0, 0,   0, 0,    0,   0 },  /* synth 12: ROOM1210 Suedwest-Kammer (Zone 1) */
+    /* r42/karte Stufe 3 Runde 4: ROOM6000 Gang nach 50B0 (Zone 1, Blatt 12) - keine Affine, Zeile der Zone (s. s_map_zones). */
+    { 208,  72,  30,  12, 22, 2,   0, 0,   0, 0,    0,   0 },  /* synth 13: ROOM6000 Gang nach 50B0 */
+    /* r42/karte Stufe 3 Runde 4 - NUTZERWUNSCH (s. ROOM10B0/ROOM1260 in s_map_zones): keine Affine, Zeile der Zone. */
+    { 214, 160,  78,  37, 24, 4,   0, 0,   0, 0,    0,   0 },  /* synth 14: ROOM10B0 (Blatt 2) */
+    { 200, 174,  40,  32, 28, 1,   0, 0,   0, 0,    0,   0 },  /* synth 15: ROOM1260 (Blatt 0) */
+    {  39, 130,  48,  69, 29, 6,   0, 0,   0, 0,    0,   0 },  /* synth 16: ROOM4050 Labyrinth-Kammern (Blatt 8) */
+    { 235,  51,  34,  39, 35, 4,   0, 0,   0, 0,    0,   0 },  /* synth 17: ROOM20A0 (Blatt 6), Stufe 3 Runde 5 */
 };
 typedef struct { short x, y, w, h; } re15_map_synth_cell_t;
 static const re15_map_synth_cell_t s_map_synth_cells[] = {
@@ -1171,6 +1350,15 @@ static const re15_map_synth_cell_t s_map_synth_cells[] = {
     { 141, 153,  18,  16 },                                                     /* 10A0 B1 (10) */
     { 138, 180,  12,   9 },                                                     /* 11D0 Kammer (11) */
     { 186, 112,  15,  18 },                                                     /* ROOM1210 Kammer (12), Index 21 */
+    { 208,  76,  30,   8 }, { 208,  72,  14,   4 },                             /* ROOM6000 Gang (13): Hauptgang, Nische */
+    { 214, 160,   6,  24 }, { 214, 184,  38,   6 }, { 252, 180,  40,   7 }, { 252, 187,   9,  10 },   /* ROOM10B0 (14): Westarm,
+                                       * Suedarm, Gang Band 5, Rampe Band 1 - Zeile (197,230,1900,1900) auf die Flut je Band */
+    { 200, 174,  40,  32 },                                                     /* ROOM1260 (15): Huelle der SCA-Zellen */
+    {  39, 130,  18,  14 }, {  65, 148,  17,  15 }, {  39, 151,  18,  14 }, {  41, 171,  15,  15 },   /* ROOM4050 Kammern (16): K1-K4, */
+    {  63, 184,   9,  15 }, {  78, 184,   9,  15 },                                                    /* K5, K6 - Zeile (18,206,1540,1540) */
+    { 235,  51,  34,   8 }, { 235,  59,   8,  22 }, { 244,  59,  11,  13 }, { 255,  59,   8,  31 },   /* ROOM20A0 (17): Sued,
+                                       * Ost, Mitte, West (Gang nach 2090) - Zeile (299,47,1121,1121) R180, s. s_map_zones;
+                                       * Zellen um (-1,-1) gegen die Projektion: die sichtbare Ring-Mitte ist (mx-1,my-1) */
 };
 /* ACHTUNG - ERSATZ-SEITENTABELLE. Das Original fuehrt fuer Blatt 3 (2F)
  * die Tabelle von Blatt 2 (1F): verschiedene Adressen (@0x8007636C /

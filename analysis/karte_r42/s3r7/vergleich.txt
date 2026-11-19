@@ -1,0 +1,12 @@
+Urteile Runde 5: {'ok': 619, 'NEBEN DEM ROTEN RAUM': 11, 'KEIN ABZUG': 12, 'RAUM NICHT ROT': 3}
+Urteile Runde 7: {'ok': 619, 'NEBEN DEM ROTEN RAUM': 11, 'KEIN ABZUG': 12, 'RAUM NICHT ROT': 3}
+Gleiche 144 Leon-Lagen STAGE2-6
+  v0.8.30  {'NEBEN DEM ROTEN RAUM': 47, 'ok': 85, 'KEIN PUNKT': 6, 'RAUM NICHT ROT': 5, 'KEIN ABZUG': 1}
+  Runde 5  {'NEBEN DEM ROTEN RAUM': 2, 'ok': 140, 'RAUM NICHT ROT': 1, 'KEIN ABZUG': 1}
+  Runde 7  {'NEBEN DEM ROTEN RAUM': 2, 'ok': 140, 'RAUM NICHT ROT': 1, 'KEIN ABZUG': 1}
+besser als v0.8.30: 55  schlechter: []
+Pixelvergleich gegen Runde 6: gleich 629, anders 4: E4041_t2 E4081_t0 L4040_t2 L4080_t0
+  E4041_t2 [109, 121] 0.61 ok -> [109, 121] 0.61 ok
+  E4081_t0 [171, 118] 0.36 ok -> [170, 119] 0.32 ok
+  L4040_t2 [109, 121] 0.61 ok -> [109, 121] 0.61 ok
+  L4080_t0 [171, 118] 0.36 ok -> [170, 119] 0.32 ok

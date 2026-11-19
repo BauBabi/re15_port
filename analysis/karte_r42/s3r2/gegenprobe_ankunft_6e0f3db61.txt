@@ -1,0 +1,11 @@
+  399 Ankunftslagen (Tuer-Datensaetze aller Raeume STAGE1-6, Leon und Elza)
+  [C] ein Ort auf zwei Kacheln: 0/12 Paare beide rot, nicht: 4040.z0->r12 4041.z0->r12 4040.z1->r4 4041.z1->r4 4080.z0->r13 4081.z0->r13 4080.z1->r8 4081.z1->r8 5140.z0->r12 5141.z0->r12 5140.z1->r10 5141.z1->r10
+  FAIL: [C] gleiche Zeile, gleiches Blatt: beide Kacheln des Raums sind aktuell (4040/4080/5140, Leon+Elza)
+  [A] hergeleitete Zeile, Blatt 6-12: 106/124 Ankunftslagen auf der eigenen gemalten Kachel
+      daneben: 11A0<-3000(B6 r2 109,62) 11A1<-3001(B6 r2 109,62) 4040<-4030(B8 r12 148,117) 4041<-4031(B8 r12 148,117) 4040<-4050(B8 r4 113,121) 4041<-4051(B8 r4 113,121) 4040<-4070(B8 r4 138,160) 4041<-4071(B8 r4 138,160) 4080<-4090(B8 r8 206,128) 4081<-4091(B8 r8 206,128) 4080<-40B0(B8 r8 178,159) 4081<-40B1(B8 r8 178,159) 5000<-5010(B9 r0 164,89) 5001<-5011(B9 r0 164,89) 6000<-50B0(B12 r5 215,76) 6001<-50B1(B12 r5 215,76) 50E0<-50D0(B10 r2 170,123) 50E1<-50D1(B10 r2 170,123)
+  [B] ausgelieferte Zeile (byte-true, nur gemeldet): 93/109 auf der Kachel
+      daneben: 2000<-1260(B6 r0 161,171) 2001<-1261(B6 r0 161,171) 2000<-2050(B6 r0 94,104) 2001<-2051(B6 r0 94,104) 3090<-30A0(B7 r9 243,156) 3091<-30A1(B7 r9 243,156) 3090<-30B0(B7 r9 221,188) 3091<-30B1(B7 r9 221,188) 3030<-30C0(B7 r3 208,125) 3031<-30C1(B7 r3 208,125) 5100<-4070(B11 r0 158,159) 5101<-4071(B11 r0 158,159) 40A0<-4080(B8 r10 209,151) 40A1<-4081(B8 r10 209,151) 5140<-50B0(B9 r12 200,172) 5141<-50B1(B9 r12 200,172)
+  PASS: genug Ankunftslagen auf Blatt 6-12 geprueft
+  FAIL: [A] jede Ankunft (hergeleitete Zeile, STAGE2-6) steht auf der eigenen gemalten Kachel
+
+FEHLER

@@ -240,6 +240,10 @@ static const struct { unsigned short room; unsigned char idx; } s_zone_zusatzbit
     { 0x1220, 2 }, { 0x1220, 3 }, { 0x1220, 4 },
     { 0x1180, 2 }, { 0x1180, 3 }, { 0x1180, 4 },
     { 0x1230, 2 }, { 0x1230, 3 }, { 0x1230, 4 },
+    /* r42/karte Stufe 3 Runde 4: ROOM4080 Ostarm (Zone 2, eigene Zeile, re15_map_zones.h) (Bit 251) */
+    { 0x4080, 2 },
+    /* r42/karte Stufe 3 Runde 4: ROOM4050 Labyrinth-Kammern (Zone 2, Schema synth 16) (Bit 252) */
+    { 0x4050, 2 },
 };
 #define ZONE_ZUSATZ_BASIS 240
 #define ZONE_ZUSATZ_N ((int)(sizeof s_zone_zusatzbit / sizeof s_zone_zusatzbit[0]))
@@ -565,8 +569,11 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
         }
     }
     if (zn->sx && zn->sy) {
-        int32_t t  = (((int32_t)x + 32000) * 10 * (int32_t)zn->sx) >> 20;
-        int32_t t2 = (((int32_t)z + 32000) * 10 * (int32_t)zn->sy) >> 20;
+        /* r42/karte: ACHSENTAUSCH (re15_room.h, Feld tausch) - Karten-x aus Welt-z, Karten-y aus
+         * Welt-x. Ohne Tausch genau die Formel des Originals. */
+        int32_t wa = zn->tausch ? z : x, wb = zn->tausch ? x : z;
+        int32_t t  = (((int32_t)wa + 32000) * 10 * (int32_t)zn->sx) >> 20;
+        int32_t t2 = (((int32_t)wb + 32000) * 10 * (int32_t)zn->sy) >> 20;
         /* ⛔ SPIEGELUNG AUCH IM ZEILEN-PFAD (Nutzer-Marken 3-6, 2026-09-09):
          * hergeleitete Zeilen gespiegelter Raum-Frames (ROOM1010: sein lokales
          * +z laeuft gegen Karten-oben, bezeugt durch die AUSGELIEFERTE Zeile
@@ -588,6 +595,10 @@ int re15_map_zone_marker(const re15_map_zone_t *zn, int32_t x, int32_t z,
     {
         int32_t px = (int32_t)zn->wx0, pz = (int32_t)zn->wz0;
         int32_t fx = x - px, fz = z - pz;
+        if (zn->tausch) {                       /* r42/karte: Achsentausch auch im Rueckfall */
+            int32_t t = fx; fx = fz; fz = t;
+            t = w; w = d; d = t;
+        }
         if (fx < 0) fx = 0; if (fx > w) fx = w;
         if (fz < 0) fz = 0; if (fz > d) fz = d;
         /* Zeichnung gegenueber der Welt gedreht (siehe flip_x/flip_z). */
@@ -614,7 +625,38 @@ int re15_map_player_band(void);
 static int s_ohne_aktuell = 0;
 void re15_map_ohne_aktuell(int an) { s_ohne_aktuell = an ? 1 : 0; }
 
+/* ⛔ r42/karte Stufe 2 Runde 2: FREMDE ZONEN AUF EINEM RECHTECK MIT TEILBEREICHEN.
+ * Pruefbericht pruef_s2_r1 ROT 1: im T-Gang 5070/5130 (Blatt 9 r7) zeigte die Karte KEINEN Raum,
+ * nur Punkt und Tuerstriche. Das Rechteck traegt Teilbereiche des Zugs 5090 (zid 84, s_map_teile);
+ * der Zeichner malte ein solches Rechteck NUR ueber die Teile, und deren Zustand haengt am zid 84.
+ * Jede ANDERE Zone auf demselben Rechteck (5070 zid 115, 5130 zid 116; auf aaea5f8c2 5020) blieb
+ * unsichtbar, auch als aktueller Raum. Die Teilbereiche sind eine PORT-ERGAENZUNG (Nutzer 2026-09-07,
+ * fehler/howto4.png) - das Original zeichnet je Rechteck zwei SPRTs ohne Zustand (FUN_80046fd8,
+ * Schleife @0x800472fc-0x800473e0). Regel jetzt: die Teile gelten nur fuer IHREN zid; fremde Zonen
+ * desselben Rechtecks faerben das GANZE Rechteck (re15_map_rect_state_fremd), und ein Teil zeigt
+ * den staerkeren der beiden Zustaende. Blatt 3 r5 (ROOM1110) traegt nur zid 17 -> unveraendert. */
+static int teil_zid(unsigned page, unsigned rect_idx, unsigned char zid)
+{
+    int k;
+    for (k = 0; k < (int)(sizeof s_map_teile / sizeof s_map_teile[0]); k++)
+        if (s_map_teile[k].page == page && s_map_teile[k].rect == rect_idx && s_map_teile[k].zid == zid)
+            return 1;
+    return 0;
+}
+
+static int rect_state_impl(unsigned page, unsigned rect_idx, int nur_fremd);
+
 int re15_map_rect_state(unsigned page, unsigned rect_idx)
+{
+    return rect_state_impl(page, rect_idx, 0);
+}
+
+int re15_map_rect_state_fremd(unsigned page, unsigned rect_idx)
+{
+    return rect_state_impl(page, rect_idx, 1);
+}
+
+static int rect_state_impl(unsigned page, unsigned rect_idx, int nur_fremd)
 {
     extern unsigned g_current_room_id;
     int state = RE15_MAP_RECT_UNMAPPED;
@@ -640,6 +682,7 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
          * KEINER eigenen Zone; ohne diesen Zweig blieb es "unbekannt" und wurde
          * dauerhaft grau gemalt, statt den Zustand seiner Zone zu erben. */
         int eigen, etage_hier = 0, etage_besucht = 0, j;
+        if (nur_fremd && teil_zid(page, rect_idx, zn->zid)) continue;   /* r42: s.o. teil_zid */
         hat_etage = re15_map_floor_lookup(zn->room, zn->idx,
                                           re15_map_player_band(), &fp, &fr);
         eigen = (zn->page == page && zn->rect == rect_idx);
@@ -667,6 +710,16 @@ int re15_map_rect_state(unsigned page, unsigned rect_idx)
                 return RE15_MAP_RECT_CURRENT;
             }
         }
+        /* r42/karte Stufe 3 Runde 2 (PORT-WAHL, include/re15_karte_r42.h): auf Blatt 6..12 sind Zonen DESSELBEN Raums
+         * mit DERSELBEN Zeile auf demselben Blatt EIN Ort, den der Kuenstler auf zwei Kacheln gemalt hat (4040 r4+r12,
+         * 4080 r8+r13, 5140 r10+r12) - steht die Figur in einer, ist auch die andere aktuell. Vorher war in 4080 aus
+         * 4030 kommend nur der schmale Diagonalstreifen r13 rot (Pruefbericht s3 r1). Nicht fuer Etagen-/Gast-Zeilen. */
+        if (cur && page >= 6 && page <= 12 && eigen && zn->room == cur->room && zn->idx != cur->idx &&
+            !zn->etage && !cur->etage && !hat_etage && zn->page == cur->page &&
+            zn->ox == cur->ox && zn->oy == cur->oy && zn->sx == cur->sx && zn->sy == cur->sy &&
+            zn->flip_x == cur->flip_x && zn->flip_z == cur->flip_z && zn->tausch == cur->tausch &&
+            (zn->sx | zn->sy) != 0)
+            return RE15_MAP_RECT_CURRENT;
         /* ⛔ EINE GAST-ZEILE HAENGT AM ETAGEN-BIT, NICHT AM ZONEN-BIT.
          * Nutzer 2026-09-12: "der kleine Raum ganz hinten wird schon gezeichnet,
          * obwohl ich da noch gar nicht drin war." Das Zonen-Bit ist EIN Bit je
@@ -793,7 +846,17 @@ static int teil_zustand(const re15_map_teil_t *t)
                 return RE15_MAP_RECT_CURRENT;
         }
     }
-    return besucht ? RE15_MAP_RECT_VISITED : RE15_MAP_RECT_UNVISITED;
+    {   /* r42/karte Stufe 2 Runde 2: eine fremde Zone desselben Rechtecks (T-Gang 5070/5130 auf den
+         * 5090-Teilen von Blatt 9 r7) faerbt auch jeden Teil - der staerkere Zustand gilt (s. teil_zid). */
+        int fs = re15_map_rect_state_fremd(t->page, t->rect);
+        int eigen_zu = besucht ? RE15_MAP_RECT_VISITED : RE15_MAP_RECT_UNVISITED;
+        return fs > eigen_zu ? fs : eigen_zu;
+    }
+}
+
+int re15_map_teil_hat_zid(unsigned page, unsigned rect_idx, unsigned char zid)
+{
+    return teil_zid(page, rect_idx, zid);
 }
 
 int re15_map_teil_count(unsigned page, unsigned rect_idx)

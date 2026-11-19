@@ -1,0 +1,111 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r42_karte/re15_port/build
+      Start 1525: unit_r42_karte_sichtbar
+      Start 1093: unit_r39_karten_tueren
+      Start  388: unit_map_speichern_laden
+      Start 1526: unit_r42_karte_ankunft
+      Start 1524: unit_r42_karte_st456
+      Start 1523: unit_r42_karte_st23
+ 1/53 Test #1523: unit_r42_karte_st23 ..............   Passed    1.17 sec
+      Start 1089: unit_r39_karten_b1
+ 2/53 Test #1524: unit_r42_karte_st456 .............   Passed    1.31 sec
+      Start  387: unit_r30_karte_nutzerstand
+ 3/53 Test #1526: unit_r42_karte_ankunft ...........   Passed    2.00 sec
+      Start  121: unit_map_durchgang
+ 4/53 Test #1089: unit_r39_karten_b1 ...............   Passed    0.93 sec
+      Start  287: unit_map_tuerachse
+ 5/53 Test  #387: unit_r30_karte_nutzerstand .......   Passed    0.90 sec
+      Start  422: unit_r33_karte_markierung
+ 6/53 Test  #121: unit_map_durchgang ...............   Passed    0.90 sec
+      Start  636: unit_r36_kartenbits
+ 7/53 Test  #287: unit_map_tuerachse ...............   Passed    0.87 sec
+      Start 1092: unit_r39_karten_marker
+ 8/53 Test  #422: unit_r33_karte_markierung ........   Passed    0.79 sec
+      Start 1090: unit_r39_karten_teil
+ 9/53 Test  #388: unit_map_speichern_laden .........   Passed    3.22 sec
+      Start  572: unit_r35_karte_r1230
+10/53 Test  #636: unit_r36_kartenbits ..............   Passed    0.36 sec
+      Start  637: unit_r36_kartenitems
+11/53 Test #1090: unit_r39_karten_teil .............   Passed    0.38 sec
+      Start  630: unit_r36_karte_r1190
+12/53 Test  #637: unit_r36_kartenitems .............   Passed    0.15 sec
+      Start  570: unit_r35_karte_fahrstuhl
+13/53 Test  #572: unit_r35_karte_r1230 .............   Passed    0.26 sec
+      Start 1091: unit_r39_karten_treppen
+14/53 Test #1092: unit_r39_karten_marker ...........   Passed    0.51 sec
+      Start 1088: unit_r39_karten_1090
+15/53 Test  #570: unit_r35_karte_fahrstuhl .........   Passed    0.10 sec
+      Start  633: unit_r36_karte_fahrstuhl
+16/53 Test  #630: unit_r36_karte_r1190 .............   Passed    0.13 sec
+      Start  634: unit_r36_karte_kabine
+17/53 Test  #634: unit_r36_karte_kabine ............   Passed    0.04 sec
+      Start  306: unit_map_1090
+18/53 Test  #633: unit_r36_karte_fahrstuhl .........   Passed    0.06 sec
+      Start  573: unit_r35_karte_r1210
+19/53 Test #1091: unit_r39_karten_treppen ..........   Passed    0.12 sec
+      Start  629: unit_r36_karte_marker11d0
+20/53 Test #1088: unit_r39_karten_1090 .............   Passed    0.10 sec
+      Start  571: unit_r35_karte_b2
+21/53 Test  #573: unit_r35_karte_r1210 .............   Passed    0.04 sec
+      Start  628: unit_r36_karte_treppe
+22/53 Test  #571: unit_r35_karte_b2 ................   Passed    0.04 sec
+      Start 1334: unit_r41_kleinkram_b_karte_pin
+23/53 Test  #306: unit_map_1090 ....................   Passed    0.09 sec
+24/53 Test  #629: unit_r36_karte_marker11d0 ........   Passed    0.07 sec
+      Start  123: unit_map_etagenzeile
+      Start  125: unit_map_teilbereich
+25/53 Test  #628: unit_r36_karte_treppe ............   Passed    0.06 sec
+      Start  127: unit_map_zone_bits
+26/53 Test  #123: unit_map_etagenzeile .............   Passed    0.04 sec
+      Start  316: unit_karte_besitz
+27/53 Test #1334: unit_r41_kleinkram_b_karte_pin ...   Passed    0.07 sec
+      Start  131: unit_pad_remap
+28/53 Test  #127: unit_map_zone_bits ...............   Passed    0.04 sec
+      Start  286: unit_map_marke_auf_kunst
+29/53 Test  #125: unit_map_teilbereich .............   Passed    0.07 sec
+      Start  632: unit_r36_karte_teile1110
+30/53 Test  #131: unit_pad_remap ...................   Passed    0.06 sec
+      Start  117: unit_map_re2_system
+31/53 Test  #286: unit_map_marke_auf_kunst .........   Passed    0.06 sec
+32/53 Test  #316: unit_karte_besitz ................   Passed    0.09 sec
+      Start  284: unit_map_marke_haengt_an
+      Start  942: unit_r38_tagebuch_karte
+33/53 Test  #632: unit_r36_karte_teile1110 .........   Passed    0.08 sec
+      Start  126: unit_map_synth
+34/53 Test  #117: unit_map_re2_system ..............   Passed    0.06 sec
+      Start  421: unit_r33_karte_etage
+35/53 Test  #942: unit_r38_tagebuch_karte ..........   Passed    0.04 sec
+36/53 Test  #284: unit_map_marke_haengt_an .........   Passed    0.05 sec
+      Start  119: unit_map_mark_band
+      Start  122: unit_map_marker_innen
+37/53 Test  #126: unit_map_synth ...................   Passed    0.05 sec
+38/53 Test  #421: unit_r33_karte_etage .............   Passed    0.04 sec
+      Start  124: unit_map_innenwand
+      Start 1571: unit_r42_story3a_karte3010
+39/53 Test  #119: unit_map_mark_band ...............   Passed    0.05 sec
+      Start  514: unit_r35_cut10f0_karte
+40/53 Test  #122: unit_map_marker_innen ............   Passed    0.06 sec
+41/53 Test  #124: unit_map_innenwand ...............   Passed    0.04 sec
+      Start  288: unit_map_etagen_rect
+      Start  120: unit_map_orient
+42/53 Test #1571: unit_r42_story3a_karte3010 .......   Passed    0.06 sec
+43/53 Test  #514: unit_r35_cut10f0_karte ...........   Passed    0.04 sec
+      Start  386: unit_map_marke_zid
+      Start  423: unit_r33_karte_speicher
+44/53 Test  #288: unit_map_etagen_rect .............   Passed    0.05 sec
+      Start  631: unit_r36_karte_tuer11c0
+45/53 Test  #120: unit_map_orient ..................   Passed    0.05 sec
+46/53 Test  #386: unit_map_marke_zid ...............   Passed    0.03 sec
+      Start  294: unit_map_eingemessen
+      Start  118: unit_map_floor_visited
+47/53 Test  #423: unit_r33_karte_speicher ..........   Passed    0.04 sec
+      Start 1530: unit_r42_klein_karte
+48/53 Test  #631: unit_r36_karte_tuer11c0 ..........   Passed    0.05 sec
+49/53 Test  #294: unit_map_eingemessen .............   Passed    0.04 sec
+50/53 Test  #118: unit_map_floor_visited ...........   Passed    0.03 sec
+51/53 Test #1530: unit_r42_klein_karte .............   Passed    0.02 sec
+52/53 Test #1093: unit_r39_karten_tueren ...........   Passed    7.95 sec
+53/53 Test #1525: unit_r42_karte_sichtbar ..........   Passed   40.20 sec
+
+100% tests passed, 0 tests failed out of 53
+
+Total Test time (real) =  40.34 sec

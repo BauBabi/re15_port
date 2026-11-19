@@ -43,6 +43,7 @@
 #include "re15_karte_fahrstuhl.h" /* Runde 35 Spur G: Klemmfenster der Fahrstuhlkabine */
 #include "re15_karte_r39.h"      /* Runde 39 Spur G: Kachel-Korrekturen nach den Nutzer-Vorlagen */
 #include "re15_karte_r41.h"   /* Runde 41 Spur E: Tuer-Zug auf die Zone der Ankunft (karte_r41.c) */
+#include "re15_karte_r42.h"   /* r42/karte Stufe 3 Runde 2: Marker auf die gemalte Kachel (karte_r42.c) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Name + CHECK-Text der Ids 0x42/0x45 */
 #include "re15_feuerloescher_r37.h" /* Runde 37 Spur I: "Empty Fire Extinguisher" (Nachtrag 4c) */
 #include "re15_dining_r38.h"     /* Runde 38 Spur F: Name + CHECK-Text der Id 0x43 (Dining Room Key) */
@@ -336,6 +337,22 @@ static int karten_zeile(unsigned slot, int *ox, int *oy, int *sx, int *sz)
         return 1;
     }
     return 0;
+}
+
+/* r42/karte Stufe 3 Runde 2: rechnet die Zone mit der AUSGELIEFERTEN Zeile ihres Raums? Dann gilt sie byte-true
+ * (Auftrag: "Wo es eine echte Massstabszeile gibt, gilt sie") und der Marker wird NICHT auf die Kunst geklemmt.
+ * Zeilenindex = Stage-Basis + Raumnummer, Basen 0/38/50/65/77/98 wie der Seiten-Setzer FUN_8004b568
+ * (Memory reai-v2-karte-massstabstabelle; dieselbe Tabelle in probe_r42_karte_bestand.c s_basis). */
+static int zone_echte_zeile(const re15_map_zone_t *zn)
+{
+    static const unsigned char basis[6] = { 0, 38, 50, 65, 77, 98 };
+    unsigned st = ((unsigned)zn->room >> 12) & 0xFu;
+    uint32_t row;
+    if (st < 1 || st > 6) return 0;
+    row = 0x800768B0u + ((unsigned)basis[st - 1] + (((unsigned)zn->room >> 4) & 0xFFu)) * 8u;
+    if (mu16(row + 4u) <= 1 || mu16(row + 6u) <= 1) return 0;
+    return zn->ox == (short)(int16_t)mu16(row) && zn->oy == (short)mu16(row + 2u) &&
+           zn->sx == mu16(row + 4u) && zn->sy == mu16(row + 6u) && !zn->flip_x && !zn->flip_z && !zn->tausch;
 }
 
 /* Die Original-Projektion FUN_800473f8 @0x8004741c-0x80047528 mit einer gegebenen
@@ -792,6 +809,15 @@ static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
             if (g > 256) g = 256;
             if (!re15_map_mark_get(beste, &mpg, &mrc, &smx, &smy, &kind)) return;
             re15_karte_r39_tuer_lage(&g_inv_screen, (unsigned)mpg, kind, &smx, &smy);   /* Runde 39 Spur G */
+            {   /* r42/karte Stufe 3 Runde 5 (PORT-WAHL): eine Marke, die nicht am eigenen Grundriss liegt, zieht nicht. ROOM20A0
+                 * ist seit Runde 5 ein Grundriss UEBER 2090 (synth 17), seine Tuer nach 2090 traegt aber weiter die Marke
+                 * (277,150) an der gemalten Kachel r10 - der Zug holte den Punkt im Westgang 60 px aus dem Raum. Toleranz
+                 * 2 px = die Marke sitzt auf der Wandlinie, die Zellen enthalten die Linie (s_map_synth_cells). Gemessen an
+                 * allen Tuer-Ankuenften STAGE1-6 (unit_r42_karte_lauf R42_DUMP): sonst aendert sich keine Lage. */
+                int bx0, by0, bw0, bh0;
+                if (re15_map_zone_synth(zn, &bx0, &by0, &bw0, &bh0, 0, 0) &&
+                    (smx < bx0 - 2 || smx > bx0 + bw0 + 1 || smy < by0 - 2 || smy > by0 + bh0 + 1)) continue;
+            }
             *mx = (int16_t)(*mx + ((smx - *mx) * g) / 256);
             *my = (int16_t)(*my + ((smy - *my) * g) / 256);
         }
@@ -831,6 +857,15 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
         }
         if (zn && zpg == (int)g_inv_screen.map_page) {
             int rx, ry, rw, rh;
+            /* r42/karte Stufe 3 Runde 7 (PORT-ERGAENZUNG, include/re15_karte_r42.h): Gang-Zeile fuer den Schraeggang von
+             * ROOM4080/4081 - im Gang setzt sie den Punkt selbst (ohne Klemme), hinter dem Gangende rechnet die Zone der
+             * breiten Diagonale weiter. */
+            {
+                int gang = 0;
+                const re15_map_zone_t *zw = (const re15_map_zone_t *)re15_karte_r42_gang(zn, world_x, world_z, mx, my, &gang);
+                if (gang) return;
+                if (zw) { zn = zw; zrc = zw->rect; }
+            }
             /* Zonen ohne Karten-Rechteck des Originals tragen eine SCHEMA-
              * ZEICHNUNG aus ihrer Kollisions-Box (rect == 255). Ihr Kasten
              * ersetzt das Rechteck; die Projektion darin ist dieselbe. */
@@ -893,6 +928,16 @@ void re15_inv_map_marker(int32_t world_x, int32_t world_z, uint8_t room_slot,
                 if (*mx > hi_x) *mx = (int16_t)hi_x;
                 if (*my < lo_y) *my = (int16_t)lo_y;
                 if (*my > hi_y) *my = (int16_t)hi_y;
+                /* r42/karte Stufe 3 Runde 2 (PORT-WAHL, include/re15_karte_r42.h): auf Blatt 6..12 vom Rechteck
+                 * weiter auf die GEMALTE Kachel - die Bbox ist nicht die Kunst (6000 Gang nach 50B0, 4040/4050/4080
+                 * Ankunft an der Tuer). Zonen mit eigenen Teilbereichen (Zug 5090) und Zonen mit der
+                 * AUSGELIEFERTEN Zeile (byte-true, zone_echte_zeile) bleiben unberuehrt. */
+                if (zrc != 255 && !zone_echte_zeile(zn) &&
+                    !re15_map_teil_hat_zid((unsigned)zpg, (unsigned)zrc, zn->zid)) {
+                    (void)re15_karte_r42_kunst_klemmen((unsigned)zpg, (unsigned)zrc, mx, my);
+                    /* r42/karte Stufe 3 Runde 4 (PORT-WAHL, include/re15_karte_r42.h): der 5x5-Ring ganz auf den Ort */
+                    (void)re15_karte_r42_ring_klemmen(zn, (unsigned)zpg, (unsigned)zrc, mx, my);
+                }
                 tuer_anziehen(zn, world_x, world_z, (int)g_inv_screen.map_page, mx, my);
                 /* ⛔ NACH DEM ZUG NICHT NOCHMAL KLEMMEN - gemessen und verworfen
                  * (2026-09-03). Naheliegend, weil das Tuersymbol auf der WAND zwischen
@@ -2793,6 +2838,12 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                              rx, ry, rw, rh, ru, rv, cr, cg, cb, 1);
                     } else {
                         int k2;
+                        /* r42/karte Stufe 2 Runde 2 (Pruefbericht pruef_s2_r1 ROT 1): eine FREMDE Zone auf
+                         * diesem Rechteck (T-Gang 5070/5130 auf den 5090-Teilen von Blatt 9 r7) faerbt das
+                         * GANZE Rechteck - sonst blieb der aktuelle Raum leer, nur Punkt und Tuerstriche.
+                         * Die Teile malen dann nur noch, wo ihr eigener Zustand STAERKER ist, und liegen
+                         * oben: sie werden zuerst eingetragen (Op-Liste von hinten gerastert). */
+                        int fs = re15_map_rect_state_fremd((unsigned)st->map_page, (unsigned)i);
                         for (k2 = 0; k2 < nteil; k2++) {
                             int tx, ty, tw, th, ts;
                             int tr = 128, tg = 128, tb = 128;   /* neutral, s.u. */
@@ -2825,6 +2876,7 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                             } else if (durchgang_r != 1) {
                                 continue;
                             }
+                            if (fs >= RE15_MAP_RECT_UNVISITED && ts <= fs) continue;   /* r42: Grund malt es */
                             /* Besitz-Gatter wie beim ganzen Rechteck (RE2
                              * @0x8006E744 / @0x8006E66C). */
                             if (ts == RE15_MAP_RECT_UNVISITED &&
@@ -2851,6 +2903,58 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                                  tx, ty, tw, th,
                                  ru + (tx - rx), rv + (ty - ry),
                                  tr, tg, tb, 1);
+                        }
+                        /* r42: der GRUND der fremden Zone - ganzes Rechteck, gleiche Gatter wie ohne Teile
+                         * (Durchgang 0 nur fuer aktuell, unbesucht nur mit Kartenbesitz RE2 @0x8006E744). */
+                        if (fs >= RE15_MAP_RECT_UNVISITED &&
+                            (fs == RE15_MAP_RECT_CURRENT) == (durchgang_r == 0) &&
+                            (fs != RE15_MAP_RECT_UNVISITED || re15_map_owned_page((unsigned)st->map_page))) {
+                            int clut_grund = (fs == RE15_MAP_RECT_CURRENT) ? RE15_INV_CLUT_MAP_AKTUELL
+                                           : (fs == RE15_MAP_RECT_VISITED) ? RE15_INV_CLUT_MAP_BESUCHT
+                                           : RE15_INV_CLUT_MAP_UNBESUCHT;
+                            /* r42/karte Stufe 3 Runde 3 (Pruefbericht pruef_s3_r2 ROT 1): der Grund spart die
+                             * Flaechen der Teile AUS, die ueber ihm gemalt werden. Die Aktuell-Zeile 502 traegt
+                             * 680808 MIT STP (RE2 `addiu s5,s5,1` @0x8006E648, s.o.) - ein halbtransparenter
+                             * roter Zugteil auf gruenem Grund wurde braun (56,32,24) statt (48,8,48) wie auf
+                             * aaea5f8c2 und wie die Teile von ROOM1110. Ohne Ueberlappung liegt jeder Teil wie
+                             * vorher direkt auf dem Blatt; keine neue Zahl, nur die Teil-Ausschnitte. */
+                            int sx0[32], sy0[32], sx1[32], sy1[32], ns = 1, k3;
+                            sx0[0] = rx; sy0[0] = ry; sx1[0] = rx + rw; sy1[0] = ry + rh;
+                            for (k3 = 0; k3 < nteil; k3++) {
+                                int tx, ty, tw, th, ts, a, nn;
+                                if (!re15_map_teil_get((unsigned)st->map_page, (unsigned)i, k3,
+                                                       &tx, &ty, &tw, &th, &ts)) continue;
+                                if (ts <= fs) continue;                         /* Grund malt ihn */
+                                if (ts == RE15_MAP_RECT_UNVISITED &&
+                                    !re15_map_owned_page((unsigned)st->map_page)) continue;   /* nicht gemalt */
+                                nn = ns;
+                                for (a = 0; a < ns; a++) {
+                                    int ax0 = sx0[a], ay0 = sy0[a], ax1 = sx1[a], ay1 = sy1[a];
+                                    int bx0 = tx > ax0 ? tx : ax0, by0 = ty > ay0 ? ty : ay0;
+                                    int bx1 = tx + tw < ax1 ? tx + tw : ax1, by1 = ty + th < ay1 ? ty + th : ay1;
+                                    if (bx0 >= bx1 || by0 >= by1) continue;     /* kein Schnitt */
+                                    if (nn + 4 > 32) break;                     /* (bei 5 Teilen nie erreicht, [L]) */
+                                    sx0[a] = sx1[a] = 0;                        /* Stueck a entfaellt ... */
+                                    if (ay0 < by0) { sx0[nn] = ax0; sy0[nn] = ay0; sx1[nn] = ax1; sy1[nn] = by0; nn++; }
+                                    if (by1 < ay1) { sx0[nn] = ax0; sy0[nn] = by1; sx1[nn] = ax1; sy1[nn] = ay1; nn++; }
+                                    if (ax0 < bx0) { sx0[nn] = ax0; sy0[nn] = by0; sx1[nn] = bx0; sy1[nn] = by1; nn++; }
+                                    if (bx1 < ax1) { sx0[nn] = bx1; sy0[nn] = by0; sx1[nn] = ax1; sy1[nn] = by1; nn++; }
+                                }
+                                ns = 0;                                         /* ... und zerfaellt in <= 4 */
+                                for (a = 0; a < nn; a++)                        /* entfallene Stuecke streichen */
+                                    if (sx1[a] > sx0[a]) { sx0[ns] = sx0[a]; sy0[ns] = sy0[a];
+                                                           sx1[ns] = sx1[a]; sy1[ns] = sy1[a]; ns++; }
+                            }
+                            for (k3 = 0; k3 < ns; k3++) {
+                                int gw = sx1[k3] - sx0[k3], gh = sy1[k3] - sy0[k3];
+                                if (gw <= 0 || gh <= 0) continue;
+                                if (!re15_karte_r39_kachel(st, e.ops, &e.n, e.max, st->map_page, i, clut_grund,
+                                        sx0[k3], sy0[k3], gw, gh, ru + (sx0[k3] - rx), rv + (sy0[k3] - ry),
+                                        128, 128, 128))
+                                sprt(&e, RE15_INV_PAGE_MAP4, clut_grund,
+                                     sx0[k3], sy0[k3], gw, gh, ru + (sx0[k3] - rx), rv + (sy0[k3] - ry),
+                                     128, 128, 128, 1);
+                            }
                         }
                     }
                 }
@@ -2935,6 +3039,16 @@ static int build_status(const re15_inv_screen_t *st, re15_inv_op_t *ops, int max
                     if (cur2 && cur2->room == zg->room && cur2->idx == zg->idx &&
                         (!zg->etage || re15_map_zone_etage_besucht(zg)) &&
                         re15_karte_r39_etage_hier(zg, st->map_page))   /* Runde 39 Spur G */
+                        rs2 = RE15_MAP_RECT_CURRENT;
+                    /* r42/karte Stufe 3 Runde 4 (PORT-WAHL wie rect_state_impl, re15_map_zones.c): auf Blatt 6..12 ist
+                     * eine Schema-Zeichnung DESSELBEN Raums mit DERSELBEN Zeile derselbe Ort wie die gemalte Kachel
+                     * (ROOM6000: Gang nach 50B0 als Grundriss neben r5) - steht die Figur auf dem Bahnsteig, ist auch
+                     * der Gang rot. Nicht fuer Etagen-/Gast-Zeilen; STAGE1 (Blatt 0-5) unveraendert. */
+                    if (cur2 && st->map_page >= 6 && st->map_page <= 12 && cur2->room == zg->room &&
+                        cur2->idx != zg->idx && !zg->etage && !cur2->etage && cur2->page == zg->page &&
+                        cur2->ox == zg->ox && cur2->oy == zg->oy && cur2->sx == zg->sx && cur2->sy == zg->sy &&
+                        cur2->flip_x == zg->flip_x && cur2->flip_z == zg->flip_z && cur2->tausch == zg->tausch &&
+                        (zg->sx | zg->sy) != 0)
                         rs2 = RE15_MAP_RECT_CURRENT;
                 }
                 /* ⛔ ROT GEHOERT DEM RAUM, NICHT DER EINZELNEN ZEICHNUNG.

@@ -541,7 +541,7 @@ int main(void)
         static re15_inv_op_t ops3[1024];
         static re15_aot_t sn3_a[RE15_AOT_MAX];
         static re15_aot_door_params_t sn3_d[RE15_AOT_MAX];
-        int tueren = 0, sichtbar = 0;
+        int tueren = 0, sichtbar = 0, warps = 0;
         int identitaet = 0, rueckfall = 0, zufall = 0, ohne_marke = 0;
         for (st = 1; st <= 6; st++) {
             for (r = 0; r < 0x400; r += 0x10) {
@@ -572,6 +572,16 @@ int main(void)
                      * Betroffen sind 13 Records, u.a. ROOM3060 -> ROOM3020 (33 px) und
                      * das Paar ROOM1170 <-> ROOM1240 (der Eintritts-Warp). */
                     if (a->half_w == 0 && a->half_h == 0) continue;
+                    /* r42/karte Stufe 2: WARPS IM SELBEN RAUM verbinden keine zwei Orte der Karte
+                     * (ROOM4050-Labyrinth: Zellen-Warps, 6030/5090 Zug-Abschnitte). Bis Stufe 1 zaehlten
+                     * die 4050-Warps als "Symbol sichtbar", weil 4050 auf der 16-px-Fahrstuhlkachel r2 lag
+                     * und der Marker dort STAND (5/38 Lagen) - Zufallstreffer neben den vier 70<->70-
+                     * Marken. Sie werden getrennt gezaehlt (warps), nicht als Tuer. */
+                    {
+                        unsigned ziel_w = (((unsigned)sn3_d[k].dest_stage + 1u) << 12)
+                                        | ((unsigned)sn3_d[k].dest_room << 4) | (rid & 0x000Fu);
+                        if (ziel_w == rid) { warps++; continue; }
+                    }
                     band = (int)sn3_d[k].band;
                     if (!betrete(rid, a->x, a->z, band)) continue;
                     re15_map_visited_mark(rid);
@@ -656,8 +666,8 @@ int main(void)
                 }
             }
         }
-        printf("  [Symbole] %d Tueren, %d mit SICHTBAREM Symbol im Bild\n",
-               tueren, sichtbar);
+        printf("  [Symbole] %d Tueren, %d mit SICHTBAREM Symbol im Bild (%d Warps im selben Raum ausgelassen)\n",
+               tueren, sichtbar, warps);
         printf("  [Symbole] Identitaet %d | Rueckfall %d | Zufall %d | ohne Marke %d\n",
                identitaet, rueckfall, zufall, ohne_marke);
         CHECK("es wurden genug Tueren geprueft", tueren >= 130);
@@ -692,8 +702,12 @@ int main(void)
      * teilen sich EIN gemaltes Rechteck (dann kann nur eines rot sein), und die
      * heuristisch zugeordneten Zonen treffen ihr Rechteck ungenauer als die
      * zeilen-basierten. Restarbeit, kein Freibrief - die Schranke haelt 6 von 7. */
-    CHECK("mindestens 6 von 7 betretenen Raeumen sind sichtbar rot",
-          geprueft > 0 && (geprueft - rot_fehlt) * 7 >= geprueft * 6);
+    /* ⛔ r42/karte Stufe 2 Runde 2: JEDER betretene Raum ist sichtbar rot. Die Quote 6 von 7 liess
+     * "ROT FEHLT: ROOM5070/5130" (T-Gang auf den 5090-Teilen von Blatt 9 r7) gruen durchgehen - der
+     * Pruefbericht pruef_s2_r1 ROT 1 fand es im Abzug, nicht im Test. Gemessen nach der Abhilfe
+     * (re15_map_rect_state_fremd): 98 von 98. Gegenprobe: cf95284eb 2 fehlen, aaea5f8c2 ROOM5020. */
+    CHECK("jeder betretene Raum ist sichtbar rot",
+          geprueft > 0 && rot_fehlt == 0);
     CHECK("der Spieler-Marker liegt im Rechteck seines Raums",
           marker_ges > 0 && marker_drin + 1 >= marker_ges);
     CHECK("der Spieler-Marker landet NIE im Rechteck eines anderen Raums",
