@@ -6,6 +6,7 @@
  */
 #include "re15_birkin_formen.h"
 #include "re15_finale_r42.h"     /* Runde 42: Kamera gehoert ab dem Abschuss dem Finale */
+#include "re15_finale_wurf_r42.h" /* Stufe 4 Runde 2: Kamera gehoert waehrend der Wurfszene der Szene */
 #include "re15_actor.h"
 #include "re15_enemy.h"
 #include "re15_damage.h"        /* re15_enemy_apply_hitbox, re15_enemy_bone_world_pos */
@@ -735,6 +736,7 @@ static int s_kam_auftritt = 0, s_kam_wache = 0, s_kam_wache_halt = 0;   /* Nachb
 static void bf_nahsicht_wache(void);
 static void bf_kamera(int cut);
 static void bf_kamera_setzen(int cut);
+static const char *s_bf_kam_quelle = "?";   /* Messschiene RE15_KAMERAHALT_LOG: Quelle des naechsten Kamerawechsels */
 static void bf_kamera_frei(void);
 
 /* Riegel der Hangar-Szene (Form s. Kopf "Spur H"). */
@@ -1909,7 +1911,7 @@ void re15_bf_raumtick(void)
           if (raum != g_current_room_id) {
               const char *c = getenv("RE15_BIRKIN_CUT");
               raum = g_current_room_id; t = 0;
-              if (c) bf_kamera_setzen(atoi(c));          /* Zonen bleiben an wie nach dem echten Kampfstart */
+              if (c) { s_bf_kam_quelle = "RE15_BIRKIN_CUT"; bf_kamera_setzen(atoi(c)); }   /* Zonen bleiben an wie nach dem echten Kampfstart */
           }
           if (++t == at || (t == 2 * at && s_bf_mutiert))
               for (int i = 1; i < RE15_ACTOR_MAX; i++)
@@ -1952,9 +1954,22 @@ void re15_bf_raumtick(void)
         if (h >= BF_H_ENDE) bf_hangar_beenden(); }
 }
 
+/* Messschiene RE15_KAMERAHALT_LOG (kein Verhalten, Strang finale s4 r2): jeder Kamerawechsel dieses Moduls mit Quelle. */
+static int bf_kam_log(void)
+{
+    static int s = -1;
+    if (s < 0) { const char *e = getenv("RE15_KAMERAHALT_LOG"); s = (e && *e) ? 1 : 0; }
+    return s;
+}
+
 static void bf_kamera_setzen(int cut)
 {
-    if ((int)g_scd.work_vars[0x0A] != cut || g_scd.cam_id != cut) { g_scd.cam_id = (uint8_t)cut; g_scd.cam_change_pending = 1; }
+    if ((int)g_scd.work_vars[0x0A] != cut || g_scd.cam_id != cut) {
+        if (bf_kam_log())
+            fprintf(stderr, "[bf-kamera] F%u %s: wv0A=%d cam=%d -> %d (Spieler x %d)\n", (unsigned)g_engine.frame_count,
+                    s_bf_kam_quelle, (int)g_scd.work_vars[0x0A], (int)g_scd.cam_id, cut, (int)g_actors[RE15_ACTOR_SLOT_PLAYER].x);
+        g_scd.cam_id = (uint8_t)cut; g_scd.cam_change_pending = 1;
+    }
 }
 
 /* Szenen-Kamera. ⛔ Abnahme 1 M9: ROOM5090 sub04 laesst die Zonen an (Cut_auto 01 @0x134C). Stand der Spieler in einer Zone,
@@ -2017,20 +2032,28 @@ static void bf_nahsicht_wache(void)
      * Zonen aus @0x801036bc-d4 und schneidet selbst, @0x801036d8/@0x801037dc/@0x801038fc/@0x80103a00). Gemessen (finale.log Runde 3,
      * debug.log [walk] F420 cut=13): die Wache schaltete den "Game over"-Schnitt 12 und W2-Schnitt 14 auf ihre Gegenkamera 13. */
     if (re15_finale_r42_phase() != RE15_FI_AUS) { s_kam_wache = 0; s_kam_wache_halt = 0; return; }
+    /* Stufe 4 Runde 2 (Pruefbericht s4 r1, R1): auch waehrend der Wurfszene gehoert die Kamera der Szene. Ihr Programm schneidet per
+     * Cut_chg (RE2 ROOM7020 sub12 @0x0184E / @0x018FC / @0x01948; RE1.5-Handler LAB_800402a0 setzt Bit 0x100 @0x800402d4, der
+     * Hauptloop ueberspringt dann den Zonen-Scan @0x8001cce0-e4) - im Original aendert waehrend der Szene nichts sonst den Schnitt.
+     * Die Wache ist eine PORT-WAHL ohne Gegenstueck im Original und kennt dieses Bit nicht (sie setzt es selbst). Gemessen
+     * (s4r2/lauf/orig_mess, Elza 5091, Messschiene RE15_KAMERAHALT_LOG): F2124 Cut_chg(13), im selben Bild "Wache: Form-Mitte x 10864,
+     * Spieler x 16904, angezeigt 13 -> Gegenkamera 12"; F2221 (Reaktion) ebenso - John war nie im Bild. Leon stand bei x 8796 vor dem
+     * Auge von Cut 13 (x 11050), dort greift die Achsenregel nicht. Nach der Szene (Cut_auto 1 @0x01B60) gilt die Wache wieder. */
+    if (re15_finale_wurf_aktiv()) { s_kam_wache = 0; s_kam_wache_halt = 0; return; }
     const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     int s = (re15_bf_bahnsteig_aktiv() && !re15_bb_pose_aktiv()) ? bf_riesenform_slot() : -1;
     const re15_actor_t *e = s >= 0 ? &g_actors[s] : NULL;
     /* (a) Auftritt in Cut 11 */
     if (e && e->state == 1 && e->sub_state_1 == 0 /* BB_AUFTRITT */ && e->motion == 10 /* BB_C_DROHEN */
         && e->anim_frame < BF_AUFTRITT_KAM_BIS) {
-        bf_kamera(0x0B);
+        s_bf_kam_quelle = "Auftritt"; bf_kamera(0x0B);
         s_kam_auftritt = 1;
         return;
     }
-    if (s_kam_auftritt) { s_kam_auftritt = 0; bf_kamera_zurueck(); }
+    if (s_kam_auftritt) { s_kam_auftritt = 0; s_bf_kam_quelle = "Auftritt Ende"; bf_kamera_zurueck(); }
     /* (b) Gegenkamera, wenn die Form zwischen Auge und Spieler die Sicht fuellt (Achsenregel, Stand 2e3713c74, s. oben) */
     if (!e || e->state != 1) {
-        if (s_kam_wache) { s_kam_wache = 0; bf_kamera_zurueck(); }
+        if (s_kam_wache) { s_kam_wache = 0; s_bf_kam_quelle = "Wache aus"; bf_kamera_zurueck(); }
         return;
     }
     {
@@ -2053,10 +2076,15 @@ static void bf_nahsicht_wache(void)
                     ziel = k_gang_kam[k ^ 1].cut;
             }
         }
-        if (ziel >= 0) { bf_kamera(ziel); s_kam_wache = ziel + 1; s_kam_wache_halt = 30; return; }
+        if (ziel >= 0) {
+            if (bf_kam_log() && ziel != (int)g_scd.cam_id)
+                fprintf(stderr, "[bf-kamera] F%u Wache: Form-Mitte x %d, Spieler x %d, angezeigt %d -> Gegenkamera %d\n",
+                        (unsigned)g_engine.frame_count, (int)mitte, (int)pl->x, cur, ziel);
+            s_bf_kam_quelle = "Wache"; bf_kamera(ziel); s_kam_wache = ziel + 1; s_kam_wache_halt = 30; return;
+        }
         if (s_kam_wache) {
-            if (s_kam_wache_halt > 0) { s_kam_wache_halt--; bf_kamera(s_kam_wache - 1); return; }
-            s_kam_wache = 0; bf_kamera_zurueck();
+            if (s_kam_wache_halt > 0) { s_kam_wache_halt--; s_bf_kam_quelle = "Wache halten"; bf_kamera(s_kam_wache - 1); return; }
+            s_kam_wache = 0; s_bf_kam_quelle = "Wache zurueck"; bf_kamera_zurueck();
         }
     }
 }

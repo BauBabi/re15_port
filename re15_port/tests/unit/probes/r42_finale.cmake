@@ -68,4 +68,12 @@ if(TARGET re15_pc)
                          -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_finale_wurf.cmake)
         set_tests_properties(integration_r42_finale_wurf_${_fw_teil} PROPERTIES TIMEOUT 600)
     endforeach()
+    # Stufe 4 Runde 2 (Pruefbericht s4 r1, R1): die Wurfszene haelt Kamera 13, auch wenn Elza am Kamera-Uebergang 12/13 steht
+    # (Nahsicht-Wache der Riesenform schaltete im Bild W auf ihre Gegenkamera 12; tests/integration/test_r42_finale_wurf_kamera.cmake).
+    add_test(NAME integration_r42_finale_wurf_kamera_elza
+             COMMAND "${CMAKE_COMMAND}"
+                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r42_finale_wurf_kamera_wd
+                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_finale_wurf_kamera.cmake)
+    set_tests_properties(integration_r42_finale_wurf_kamera_elza PROPERTIES TIMEOUT 1500)
 endif()
