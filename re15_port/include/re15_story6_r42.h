@@ -18,9 +18,10 @@
  * Original: nach dem Tor ((3,89), ROOM6001 sub02 @0x00F26 `22 03 59 01`) setzt sub07 Sherry nicht mehr ans Pult (@0x00F1A Ck(3,89)=0)
  * und ruft @0x00F54 nur die Licht-Schleife sub05; niemand startet den Zug [Konzept B31]. Port: ROOM6031 sub07 @0x00F54 `04 ff 18 05`
  * -> k_s6_6031_zug, einmalig ueber (9,130), nur im Fuehrerstand (Cut 0: sub00 @0x00D2A Case 0 -> Gosub sub07). Ablauf nach Leons
- * Zugstart (annette_r41.c k_zug_seg): Sherry am Pult (Satz sub07 @0x00F1E), Pult-Gesten (sub08 @0x00FC8), Zug-an-Ton, Pultlicht
- * (sub08 @0x00FDC..@0x00FEC ohne Cut 5), Cut 1 + Licht-Schleife = Fahrt (@0x01020, @0x00F54), msg 14, Krachen, alle drehen sich zur
- * Wagentuer, msg 15 (John), 16 (Sherry), 17 (Elza). John steht im Fuehrerstand (Satz sub06 @0x00E56 Slot 1, Lage PORT-STORY, Werkzeug
+ * Zugstart (annette_r41.c k_zug_seg): Sherry am Pult (Satz sub07 @0x00F1E), Pult-Gesten (sub08 @0x00FC8), Pultlicht
+ * (sub08 @0x00FDC..@0x00FEC ohne Cut 5), Zugfilm R600ZUG.STR (Port-Zeile 60, re15_zws_r41.h "Zugfilm Raum 600"; der Film traegt den
+ * Zug-an-Ton, Runde 42 Strang finale), Cut 1 + Licht-Schleife = Fahrt (@0x01020, @0x00F54), msg 14, Krachen + WARNING (sub08
+ * @0x00FF0..@0x0100B, Vorschlag A7), Cut 1, alle drehen sich zur Wagentuer, msg 15 (John), 16 (Sherry), 17 (Elza). John steht im Fuehrerstand (Satz sub06 @0x00E56 Slot 1, Lage PORT-STORY, Werkzeug
  * tools/r42_story/szenen_stage6.py). Danach wie heute: Wagen nach (3,89) = sub06 (msg 11, Licht-Schleife, Tuer nach 5091 offen).
  * "Ruck": wie bei Leon = Zug-an-Ton + Pultlicht + Licht-Schleife.
  *

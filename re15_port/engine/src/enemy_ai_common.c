@@ -21,6 +21,7 @@
 #include "re15_birkin_klaue_r41.h"
 #include "re15_fussanker_r41.h"   /* Runde 41 Spur J: Glied-Anker FUN_800369f8 */
 #include "re15_annette_r41.h"     /* Runde 41 Spur AN: Annette-Szene 5090 */
+#include "re15_finale_r42.h"      /* Runde 42 Strang finale: Tyrant-Wurzel, Abschuss 5090 */
 #include "re15_ai_flavor.h"
 #include "re15_enemy_ai_re2_zellenarm.h"   /* RE2-Zellenarm (Typ 0x2D) fuer die 0x1A-Gitterhaende */
 #include "re15_enemy.h"    /* re15_enemy_find — the loaded model bank (death-clip framecount) */
@@ -63,7 +64,7 @@
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
 #include "re15_bissarm_r37.h" /* Runde 37 Spur J: Wandklemme im Griff = ein Durchgang je Bild */
 #include "re15_heliport1171_r38.h" /* Runde 38 Spur I: Ereignis-Kraehe ROOM1171 (Rueckgriff, Wurf) */
-#include "re15_birkin_formen.h" /* Beta-Birkin-Formen: Hangar-Szene, Morph 5090 -> G5 */
+#include "re15_birkin_formen.h" /* Beta-Birkin-Formen: Hangar-Szene, Riesenform 5080/5090 */
 #include "re15_spiderman_r38.h" /* Runde 38 Spur T: Typ 0x2B Schacht-Austritt + Griffe mit Anker */
 #include "re15_szenenschutz_r38.h" /* Runde 38 Spur B: kein Angriff, solange die Szene den Spieler haelt */
 #include "re15_npckante_r38.h" /* Runde 38 Spur M: NPC-Kanten (Sonde FUN_8002d7d8, Subs 0x12/0x16/0x17/0x18) */
@@ -4563,19 +4564,10 @@ void re15_body_push_player(void)
         if (pl_locked && e->state == 1 && e->type != 0x27u &&   /* Runde 35 Spur J (8): Gorilla-Sub 3..6 = Jagd/Wahl/Biss/Heavy OHNE Bit 0x1000 (@0x8002af14) */
             e->sub_state_1 >= 3 && e->sub_state_1 <= 6) continue;
         if (pl_locked && re15_affen_griff_paar(e)) continue;   /* Runde 35 Spur J (6e): Gorilla-Bit 0x1000 @0x8011ac34-38 / @0x8011ad8c-94 */
-        /* G5-ENDBOSS (Typ 0x36): RE2 gibt ihm KEINEN +0x78-Zylinder, sondern ZWEI
-         * Kollisionssegmente (+0x1E8 = 2 @0x80100530, r 6000 @0x80100540 und r 1300
-         * @0x8010055c) und schiebt den Spieler ueber FUN_80034D0C statt FUN_8002AEC4
-         * heraus (Spieler-Tick @0x80026628 -> FUN_800355C4 -> @0x80035630). Der
-         * 1000er-Kasten aus re15_enemy_apply_hitbox (RE1.5-EM036-Box @0x8011ee64) bleibt
-         * der SCHADENS-Kasten; als Koerper ist er viel zu klein — der Spieler lief 3 m
-         * weit in die sichtbare Masse hinein (Nutzer-Befund "Birkin ist nicht solid",
-         * gemessen in probe_r17_birkin_1zu1 A). Belege im Modulkopf von
-         * enemy_ai_boss_g5.c. */
-        if (e->type == 0x36u) {
-            extern int re15_g5_body_push_player(re15_actor_t *pl);
-            re15_g5_body_push_player(pl); continue;
-        }
+        /* Typ 0x36 (Runde 42 Strang finale, Plan S10): bis v0.8.30 lief hier der Koerperschub des Endkampf-Moduls (RE2-EM36,
+         * zwei Segmente, nur in 5090/5091 aktiv). Ausserhalb von 5090/5091 lieferte es keine Segmente und schob nicht - der einzige
+         * verbleibende 0x36 (ROOM3080 @0x007D4) bekommt darum unveraendert keinen Koerperschub. */
+        if (e->type == 0x36u) continue;
         /* Riesenform (Bahnsteig-Form K3): drei Segmente am Gerippe statt des 0x30-Zylinders, Nachbesserung 1 M7
          * (birkin_bahnsteig.c re15_bb_koerper_schub, PORT-WAHL nach dem G4-Muster FUN_80034d0c). */
         if (re15_bb_bank_da(e)) { re15_bb_koerper_schub(e, pl, 0); continue; }
@@ -12485,7 +12477,7 @@ static void re15_birkin_ai_tick(int slot)
          * Regel ist seit der Schranke in re15_birkin_root UNERREICHBAR — sie verlangt grid ==
          * 0x33, und 0x33 & 0x20 laesst die Wurzel vorher aussteigen (@0x80116a88 / @0x80116274).
          * Schon davor erreichte kein ausgelieferter Raum sie: 0x36 in ROOM5090/5091 laeuft ueber
-         * das G5-Modul (run_all-Zweig davor), und der einzige andere 0x36-Spawn (ROOM3080 @0x007D4)
+         * bis v0.8.30 das Endkampf-Modul (seit Runde 42 entfernt), und der einzige andere 0x36-Spawn (ROOM3080 @0x007D4)
          * traegt grid 0x24. Sie bleibt stehen (nicht entfernt), bis das jemand entscheidet. */
         if (e->grid_id == 0x33 &&
             ((e->x == -14700 && e->z == -23350) ||
@@ -13052,8 +13044,8 @@ static void re15_birkin_ai_tick(int slot)
             e->sub_state_3 = e->birkin_saved_ph3;
             break;
         }
-        /* PORT-ERGAENZUNG 5090/5091 (Nutzer 2026-10-30, re15_birkin_formen.h): kein Kollaps - Birkin wird
-         * per Rueckstoss-Szene aus dem Zug geschossen und kehrt als G5 zurueck. */
+        /* PORT-ERGAENZUNG 5090/5091 (re15_birkin_formen.h, re15_finale_r42.h): kein Kollaps - die Form stirbt nur durch den
+         * Abschuss des Finales. */
         if (e->sub_state_3 == 0 && re15_bf_bahnsteig_aktiv()) {
             if (re15_bf_mutation_offen()) {             /* toedlicher Treffer vor der Mutation: erst mutieren */
                 /* Riegel wie der Revive-Zweig oben (+0x1de = 9 @0x8011a458, +0x93 &= 0xfe @0x8011a54c-50): der tragende
@@ -13063,7 +13055,16 @@ static void re15_birkin_ai_tick(int slot)
                 e->state = 1; e->sub_state_1 = 6; e->sub_state_2 = 0; e->sub_state_3 = 0;   /* wie sw 0x601 @0x80116684 */
                 break;
             }
-            re15_bf_rueckstoss_start(slot); break;
+            /* Runde 42 Strang finale (Plan S4): keine Rueckstoss-Szene, kein G5 - HP-Untergrenze wie der Tyrant
+             * (`slti 0x2710` / `sh 0x2710,0x156(s0)` @0x80101ac8-dc), weiter wie der Revive-Zweig oben (resume +0x1d8 @0x8011a568). */
+            e->hp = RE15_FI_HP_UNTEN;
+            e->birkin_hurt_cd = 9;
+            e->hit_react = (uint8_t)(e->hit_react & ~1u);
+            e->state = e->birkin_saved_state;
+            e->sub_state_1 = e->birkin_saved_sub;
+            e->sub_state_2 = e->birkin_saved_ph2;
+            e->sub_state_3 = e->birkin_saved_ph3;
+            break;
         }
         /* real death down-machine 0x8011a5d8 — 7-phase morph tail on +0x7 (sub_state_3) */
         switch (e->sub_state_3) {
@@ -13108,12 +13109,9 @@ static void re15_birkin_ai_tick(int slot)
              * die acht Raeume, die es abfragen (3070/3071, 5080/5081, 5090/5091,
              * 50E0/50F1), sahen den Birkin-Tod nie. Es gibt game-weit genau
              * DIESEN einen Produzenten. */
-            /* PORT-ERGAENZUNG (Beta-Birkin-Formen, re15_birkin_formen.h): in 5090/5091 ist das NICHT der
-             * letzte Tod - wo das Original in Phase 3 auf den nie gesetzten Raum-Morph wartet, geht die
-             * Bahnsteig-Form in den G5 ueber (seit der Rueckstoss-Szene schon beim Todeseintritt, s. oben);
-             * der Fortschritts-Schalter faellt erst mit dessen Tod
-             * (enemy_ai_boss_g5.c). Der Hangar-Birkin (50A0/50A1) ist ein Zusatzgegner und darf den
-             * Birkin-Fortschritt der Original-Raeume nicht setzen. */
+            /* PORT-ERGAENZUNG (Beta-Birkin-Formen, re15_birkin_formen.h): in 5090/5091 kommt diese Phase nicht vor (Todeseintritt
+             * oben, die Form stirbt nur durch den Abschuss, finale_r42.c setzt (5,0x1C) im Kill-Bild). Der Hangar-Birkin (50A0/50A1)
+             * ist ein Zusatzgegner und darf den Birkin-Fortschritt der Original-Raeume nicht setzen. */
             if (!re15_bf_hangar_aktiv())
                 re15_game_flag_set(5, 0x1c, 1);        /* @0x8011a6b8 (STAGE3) / @0x8011aecc (STAGE5) */
             e->sub_state_3 = ((e->grid_id & 0xf) == 2) ? 4 : 3;       /* grid&0xf==2 -> skip the wait @0x8011a6d8 */
@@ -13152,7 +13150,7 @@ static void re15_birkin_ai_tick(int slot)
     }
 
     /* ============================ ROOT post-dispatch (0x801164d4) ============================ */
-    /* PORT-ERGAENZUNG 5090/5091 (Nutzer 2026-10-30 "Original -> Bahnsteig-Form -> G5"): der Endkampf-Spawn traegt
+    /* PORT-ERGAENZUNG 5090/5091 (Nutzer 2026-10-30, seit Runde 42 ohne die zweite Form): der Endkampf-Spawn traegt
      * grid 0x33/0x13 (Form-2-Bit, sperrt die Mutation); bis zur ersten Mutation gilt er hier als Form 1.
      * ⛔ Abnahme 1 M3: "bis zur ersten Mutation" heisst bis zu ihrem START. Das Original-Tor schliesst in Phase 0
      * (`ori v0,v0,0x10` / `sb v0,9(v1)` @0x80118050-54), der offene Merker erst am Clip-Ende (@0x8011888c): HP < 100 im
@@ -15593,10 +15591,8 @@ static void re15_birkin_root(int s)
  * Damit laeuft der INIT (Zustand 1 @0x801166f8; Nibble 3 -> +0x95=0x10 @0x80116880, Sub 9
  * @0x80116890 - STAGE3; im Labor laeuft STAGE5: `95 00 82 a0` @0x80117094, `05 00 50 a0` @0x801170a4) schon im
  * Spawn-Bild, und der eingefrorene Birkin steht danach in Sub 9.
- * UMFANG: nur die Birkin-Wurzel. Der G5 in ROOM5090/5091 laeuft ueber das RE2-Modul
- * enemy_ai_boss_g5.c, das seinen eigenen Konstruktor hat (Ctor @0x8010076C) und scharf wird, sobald
- * grid == 0x13 ist — ein Aufruf mit geloeschtem Bit wuerde ihn beim Spawn schaerfen. Fuer die
- * uebrigen Typen ist der Spawn-Aufruf nicht verdrahtet (OFFEN, Dossier 9). */
+ * UMFANG: die Birkin-Wurzel (0x30/0x36), Gorilla 0x27 und Affe 0x29 (Runde 42: das Endkampf-Modul fuer 0x36 in 5090/5091 ist
+ * entfernt, 0x36 kommt dort nicht mehr vor). Fuer die uebrigen Typen ist der Spawn-Aufruf nicht verdrahtet (OFFEN, Dossier 9). */
 /* Runde 38 Spur S: Rumpf der Affen-Wurzel 0x80110b00 hinter den Toren — Zustand (`jalr` @0x80110b68), Selbst-Schub
  * aec4(&Spieler, Affe) @0x80110b88, Schub b498/b544, Wandklemme FUN_8003b0a4 @0x80110ba0-cc. Aus run_all (jedes Bild)
  * und aus dem Spawn-Aufruf (@0x8004259c): Original o1 ROOM3040 klemmt Affe A schon beim Spawn (z -6150 -> -6082). */
@@ -15615,12 +15611,6 @@ void re15_enemy_spawn_root(int slot)
     re15_actor_t *e = &g_actors[slot];
     if (!e->active) return;
     if (e->type != 0x30 && e->type != 0x36 && e->type != 0x27 && e->type != 0x29) return;   /* Runde 35 Spur J: 0x27 Spawn-Wurzel; Runde 38 Spur S: 0x29 (Original o11/o1: INIT im Spawn-Bild) */
-    if (e->type == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) {   /* G5-Modul */
-        /* Runde 35 Spur C: +0x4 = 0 @0x800421e0 -> RE2-Ctor @0x801003CC (HP 600 @0x801003fc) */
-        extern void re15_g5_boss_spawn(int slot);
-        re15_g5_boss_spawn(slot);
-        return;
-    }
     uint8_t s4 = (uint8_t)(e->grid_id & 0x20);          /* @0x800425a0 andi s4,v1,0x20 */
     e->grid_id = (uint8_t)(e->grid_id & 0xdf);          /* @0x8004256c andi / @0x80042570 sb */
     if (e->type == 0x27) re15_maggot_ai_tick(slot);     /* Runde 35 Spur J: Gorilla-INIT im Spawn-Bild (re15_affen.h (4f)) */
@@ -15651,6 +15641,7 @@ void re15_enemy_ai_run_all(int combat_active)
         re15_szenenschutz_gegner(s);        /* Runde 38 Spur B: Sicht je Gegner (re15_szenenschutz_r38.h) */
         if (re15_bf_szene_besitzt(s)) continue;   /* von der Hangar-Szene gefuehrt (birkin_formen.c) */
         if (re15_annette_r41_besitzt(s)) continue;   /* Runde 41 Spur AN: von der 5090-Szene gefuehrt (annette_r41.c) */
+        if (re15_finale_r42_besitzt(s)) continue;    /* Runde 42 Strang finale: Form im Abschuss (RE2 Zustand 3, finale_r42.c) */
         /* EM-STATUS KILL PERSISTENCE (FUN_80109554 @0x801096fc / FUN_80106edc @0x8010716c setzen
          * flag[entity+0x1C6] am Todes-Commit): ist ein Gegner CORPSE (state 7), wird sein
          * em-Status-Kill-Flag gesetzt, damit ein Wieder-Betreten des Raums ihn NICHT respawnt
@@ -15861,13 +15852,6 @@ void re15_enemy_ai_run_all(int combat_active)
             re15_affen_zeichen_merk(e);   /* Runde 38 Spur S: Zeichenstand des Vorbilds (Record+0x40, Zeichen-Schleife @0x8001d108) */
             if (!(e->grid_id & RE15_AI_GRID_SKIP))   /* Runde 38 Spur S: Tor +0x9 & 0x20 `lbu v0,9(v1)`/`andi v0,v0,0x20`/`bne v0,zero,0x80110bd0` @0x80110b34-40 (Freigabe per Member_set(12,0x41), z.B. ROOM4040 @0x011D6) */
                 re15_affen3_wurzel_rumpf(s, e);   /* Runde 38 Spur S: Zustand, aec4 @0x80110b88, Schub, Wandklemme JEDES Bild @0x80110ba0-cc */
-        }
-        else if (t == 0x36 && (g_current_room_id & 0xFFFEu) == 0x5090u) {
-            /* ENDKAMPF-G5 (Runde 6, birkin-g5-ki.md): eigenes byte-true Modul
-             * enemy_ai_boss_g5.c ersetzt fuer ROOM5090/5091 die geteilte
-             * 0x30-Wurzel + BKMAP-Naeherung; ROOM3070/0x30 bleibt unangetastet. */
-            extern void re15_g5_boss_tick(int slot);
-            re15_g5_boss_tick(s);
         }
         else if (t == 0x30 || t == 0x36) {   /* G-BIRKIN boss (type 0x30 form-1 EM030 / type 0x36 form-5 EM036).
                                  * STAGE3 registers BOTH 0x30 and 0x36 to the SAME root 0x80116230, which has ZERO

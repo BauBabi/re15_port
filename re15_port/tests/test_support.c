@@ -103,7 +103,7 @@ void re15_audio_re2_panel_se(int se_id) { g_test_panel_se_last = se_id; g_test_p
 /* Runde 35 Spur L: die Knall-Tonbank der 1150-Montage (irons_tod_1150.c) nutzt dieselben Spione
  * re15_audio_re2_tuer_laden / re15_audio_re2_tuer_se wie Spur K (oben) — Integration: L-Kopie entfernt. */
 void re15_audio_prime_weapon(int weapon_id) { (void)weapon_id; }
-/* Runde 41 G5A (M5): Spion der RE2-XA-Aufrufe (unit_r41_g5auftritt prueft Bild, Datei und Lesefenster). */
+/* Spion der RE2-XA-Aufrufe (Runde 41 eingefuehrt; seit Runde 42 Finale-Todesschrei Xa 0x03, unit_r42_finale). */
 int g_test_re2xa_count = 0, g_test_re2xa_stop_count = 0, g_test_re2xa_lese = -1;
 const char *g_test_re2xa_datei = "";
 int re15_audio_re2_xa(const char *datei, int lesesektoren)

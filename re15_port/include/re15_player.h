@@ -87,6 +87,7 @@ void re15_actors_anim_advance(void);
  * byte-true gate for the discharge (the original fires only in state 5, never mid-raise). Returns
  * 0 while raising or not aiming. */
 int re15_player_aim_ready(void);
+int re15_player_werfer_zielt(void);   /* Runde 42 finale: Zielen wie RE2 Bank 1 Bit 0x40000 (player_common.c) */
 
 /* Phase 4.4.5.2 debug helper: bump g_game.player_motion by `delta`
  * (typically +1 or -1), wrapped to [0, clip_count). Used to find which

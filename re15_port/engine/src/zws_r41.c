@@ -6,6 +6,9 @@
  *   11C  ROOM11C0 Leon und Ada: RDT-Anker in Original-sub02, Schrei vor Sleep 20 @0x01920 (dann "What!?" @0x01928), Film vor
  *        Sce_bgm_control @0x01982 (nach dem Umdrehen zum Anhaenger, vor dem Musikstart), danach der Auftritt in Kamera 12
  *        @0x01988..@0x01A5B unsichtbar vorgespult bis Cut_chg 5 @0x01A5C, dort Einblenden und msg 5
+ *   zug600/zug601  ROOM6030 Leon / ROOM6031 Elza: Zugfilm (Runde 42 Strang finale) an der Port-Zeile 60 im Zugstart-Programm
+ *   ende5090/ende5091  ROOM5090 Leon / ROOM5091 Elza: Endvideo (Runde 42 Strang finale Stufe 5) an der Port-Zeile 60 im Port-Programm
+ *        statt sub02 (include/re15_endvideo_r42.h); Datei fehlt -> Zeile laeuft durch, Abspann folgt
  * Herleitung, Ablauf und Belege: include/re15_zws_r41.h.
  */
 #include "re15_zws_r41.h"
@@ -51,6 +54,29 @@ static const re15_zws_film_t k_filme[] = {
         { -1, RE15_ZWS11C_ANKER_FILM,   { 0x54, 0x00, 0x01, 0x00, 0x00, 0x00 }, 6 },   /* sub02 Sce_bgm_control MAIN Play */
         { -1, RE15_ZWS11C_ANKER_SICHT,  { 0x29, 0x05 }, 2 },                           /* sub02 Cut_chg 5 vor msg 5 */
         RE15_ZWS_SCHREI_SATZ, RE15_ZWS11C_FILM, RE15_ZWS11C_FILM_BILDER },
+    /* Runde 42 Strang finale Stufe 2: Zugfilm im Zugstart, ohne Schrei und ohne Vorspulen (re15_zws_r41.h "Zugfilm Raum 600") */
+    {   "zug600", RE15_ZUG600_RAUM_LEON,
+        { -1, 0, { 0 }, 0 },                                         /* kein Schrei */
+        { RE15_ZUG600_MSG_FILM, 0, { 0 }, 0 },                       /* k_zug_seg z_film: nach dem Pultlicht, vor Cut 1 + msg 27 */
+        { -1, 0, { 0 }, 0 },
+        -1, RE15_ZUG600_FILM, RE15_ZUG600_FILM_BILDER },
+    {   "zug601", RE15_ZUG600_RAUM_ELZA,
+        { -1, 0, { 0 }, 0 },
+        { RE15_ZUG600_MSG_FILM, 0, { 0 }, 0 },                       /* k_s6_6031_zug: nach dem Pultlicht, vor Cut 1 + msg 14 */
+        { -1, 0, { 0 }, 0 },
+        -1, RE15_ZUG600_FILM, RE15_ZUG600_FILM_BILDER },
+    /* Runde 42 Strang finale Stufe 5: Endvideo nach dem Finale, Port-Programm statt sub02 (include/re15_endvideo_r42.h), ohne Schrei
+     * und ohne Vorspulen; Blende im Skript nach RE2 ROOM4090 (@0x027F4 / @0x02812 / @0x0281C) */
+    {   "ende5090", RE15_ENDE_RAUM_LEON,
+        { -1, 0, { 0 }, 0 },
+        { RE15_ENDE_MSG_FILM, 0, { 0 }, 0 },                         /* k_ende: nach dem Abblenden, vor Aot_on(5) @0x012D6 */
+        { -1, 0, { 0 }, 0 },
+        -1, RE15_ENDE_FILM_LEON, RE15_ENDE_FILM_BILDER, RE15_ZWS_BLENDART_SKRIPT },
+    {   "ende5091", RE15_ENDE_RAUM_ELZA,
+        { -1, 0, { 0 }, 0 },
+        { RE15_ENDE_MSG_FILM, 0, { 0 }, 0 },                         /* k_ende: nach dem Abblenden, vor Aot_on(5) @0x012BA */
+        { -1, 0, { 0 }, 0 },
+        -1, RE15_ENDE_FILM_ELZA, RE15_ENDE_FILM_BILDER, RE15_ZWS_BLENDART_SKRIPT },
 };
 #define ZWS_ANZAHL ((int)(sizeof k_filme / sizeof k_filme[0]))
 
@@ -192,6 +218,10 @@ void re15_zws_r41_film_gespielt(void)
         meldung(s_aktiv, "Film zu Ende: Auftritt unsichtbar vorspulen bis Datei-Offset", (int)s_aktiv->sichtbar.off, 0);
         return;
     }
+    if (s_aktiv && s_aktiv->blende == RE15_ZWS_BLENDART_SKRIPT) {   /* Endvideo: Sce_fade_adjust im Skript (RE2 ROOM4090 @0x0281C) */
+        meldung(s_aktiv, "Film zu Ende: Blende macht das Skript (RE2 ROOM4090 @0x0281C)", 0, 0);
+        return;
+    }
     einblenden("Film zu Ende: Einblenden wie RE2 ROOM1080 sub14 (Kanal, Pegel)");
 }
 
@@ -258,7 +288,8 @@ static int film(const re15_zws_film_t *f)
     }
     if (s_film == RE15_ZWS_FILM_OFFEN) return 2;
     s_film = RE15_ZWS_FILM_AUS;                /* gespielt: weiter mit der Fortsetzung */
-    meldung(f, f->film.msg >= 0 ? "Film zu Ende -> msg 7" : "Film zu Ende -> Original-Opcode am Anker", 0, 0);
+    meldung(f, f->film.msg < 0 ? "Film zu Ende -> Original-Opcode am Anker"
+               : f->raum == RE15_ZWS114_RAUM ? "Film zu Ende -> msg 7" : "Film zu Ende -> weiter nach der Port-Zeile", 0, 0);
     return 1;
 }
 

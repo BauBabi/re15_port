@@ -36,6 +36,10 @@
 
 /* ---- Block A (v0.8.31): Finale --------------------------------------------------------------------------------------- */
 #define RE15_R42_BIT_FINALE_ENDE      129  /* T-07: Finale beendet -> Abspann frei (eigenes Kennzeichen, Konzept Abschnitt 5)     */
+/* Strang finale Stufe 3 (Plan S5/D3): Taken-Bit des geworfenen Raketenwerfers (Item_aot_set pc[18], RE2 Flag 0x28 @0x01216).
+ * zensus_r42.py 2026-11-18: frei in Original/Port/Disc ("danach noch frei ... 137, 139, ..."); 23..51 sind voll (r42/gegenstaende
+ * 40..51, Hangar 38/39), 170 nimmt r42/gegenstaende. 5090 und 5091 teilen das Bit (getrennte Spielstaende, VERTRAG 1.2 Regel). */
+#define RE15_R42_BIT_WERFER_FINALE    137  /* L22/E-20 K-13: Raketenwerfer aus der Wurfszene 5090/5091 aufgehoben                 */
 
 /* ---- Block C, Texte (v0.8.31) ---------------------------------------------------------------------------------------- */
 #define RE15_R42_BIT_ZUG_ELZA         130  /* E9: Zugstart 6031 (Sherry startet) gesehen; Leons Gegenstueck = RE15_AN_ZUG_BIT 133 */

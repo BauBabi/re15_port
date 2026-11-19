@@ -37,6 +37,7 @@
 #include "re15_room.h"
 #include "re15_birkin_formen.h"
 #include "re15_annette_r41.h"
+#include "re15_zws_r41.h"
 #include "re15_esp.h"
 #include "re2_ems.h"
 
@@ -254,16 +255,27 @@ static void test_programm_zug(void)
     if (!p) return;
     CHECK(p[0] == 0x22 && p[1] == RE15_AN_ZUG_BANK && p[2] == RE15_AN_ZUG_BIT && p[3] == 1, "Zugstart setzt (9,133) nicht zuerst");
     /* NB2 Punkt 3: der Port setzt keine Musik. Der Wechsel beim Tor ist Original (ROOM6030 sub06 @0x01092 / sub07 @0x0112C
-     * `54 00 01 00 00 00` hinter Ck(3,89)=1 @0x0108E / @0x01128) - in keinem der drei Port-Programme steht Sce_bgm_control. */
+     * `54 00 01 00 00 00` hinter Ck(3,89)=1 @0x0108E / @0x01128) - in keinem der drei Port-Programme steht ein Musikwechsel
+     * (nur Anhalten/Weiter um den Zugfilm, Strang finale Stufe 2 Runde 2). */
     {
-        int lp = 0, lt = 0, bgm = 0;
+        int lp = 0, lt = 0, bgm = 0, f = -1;
+        for (int i = 0; i < len;) {   /* Zugfilm-Zeile `2b 3c 00 00` im Zugstart */
+            const int l = scd_opcode_size_at(p + i);
+            if (l <= 0) break;
+            if (p[i] == 0x2b && p[i + 1] == 60) f = i;
+            i += l;
+        }
         const uint8_t *prog[3] = { p, re15_annette_r41_programm(&lp), re15_annette_r41_programm_tuer(&lt) };
         const int plen[3] = { len, lp, lt };
         for (int k = 0; k < 3; k++)
             for (int i = 0; prog[k] && i < plen[k];) {
                 const int l = scd_opcode_size_at(prog[k] + i);
                 if (l <= 0) break;
-                if (prog[k][i] == 0x54) bgm++;
+                /* Strang finale Stufe 2 Runde 2: einzige Ausnahme sind MAIN anhalten (Op 4) vor und weiter (Op 3) nach der Zugfilm-Zeile 60
+                 * im Zugstart, nur Slot 0 (kein Musikwechsel; RE2 ROOM1080 sub14 @0x02524/@0x02536; Riegel unit_r42_zug_musik) */
+                const int op = prog[k][i + 2];
+                const int um_film = k == 0 && f >= 6 && prog[k][i + 1] == 0 && ((i == f - 6 && op == 4) || (i == f + 4 && op == 3));
+                if (prog[k][i] == 0x54 && !um_film) bgm++;
                 i += l;
             }
         CHECK(bgm == 0, "Port-Programm setzt Musik (%d x Sce_bgm_control 0x54)", bgm);
@@ -275,7 +287,8 @@ static void test_programm_zug(void)
     for (int i = 0; i < len;) {
         const int l = scd_opcode_size_at(p + i);
         if (l <= 0 || i + l > len) { CHECK(0, "Zugstart: Opcode 0x%02X @%d ohne Laenge", p[i], i); break; }
-        if (p[i] == 0x2b && nm < 8) ms[nm++] = p[i + 1];
+        /* Strang finale Stufe 2: die Zugfilm-Zeile 60 (RE15_ZUG600_MSG_FILM) zeigt keinen Text - Riegel unit_r42_zug_leon */
+        if (p[i] == 0x2b && p[i + 1] != RE15_ZUG600_MSG_FILM && nm < 8) ms[nm++] = p[i + 1];
         if (p[i] == 0x04 && p[i + 3] == 5) fahrt++;
         if (p[i] == 0x44 && p[i + 2] == 0x4d) em++;
         if (p[i] == 0x01) ende = (i + l == len);
@@ -647,6 +660,7 @@ static void test_zugstart(void)
     int ende = -1, ton_an = -1, ton_krach = -1, f, cut_vorher = -1, cut_vor_weg = -1, cut_weg = -1;
     int tuer_auf = -1, tuer_zu = -1, tuer_n = 0, leon_ziel = 0, f_weg = -1;   /* NB4 N4 */
     { scd_audio_event_t ev; while (scd_audio_queue_pop(&ev)) {} }
+    const unsigned filme0 = g_re15_zws_filme;
     for (f = 0; f < 3000; f++) {
         re15_game_flag_set(5, 0x20, 1);                  /* Plc_dest-Ankunft Leon */
         scd_vm_tick();
@@ -662,14 +676,16 @@ static void test_zugstart(void)
         }
         if (as > 0 && cut_weg < 0 && g_actors[as].z == 8646) { cut_weg = (int)g_scd.work_vars[0x0A]; cut_vor_weg = cut_vorher; f_weg = f; }
         cut_vorher = (int)g_scd.work_vars[0x0A];
-        if (ton_an < 0 && re15_annette_r41_ton(RE15_AN_SE_ZUG_AN)) ton_an = f;
+        if (ton_an < 0 && g_re15_zws_filme != filme0) ton_an = f;   /* Strang finale Stufe 2: Zugfilm-Zeile statt Zug-an-Ton */
         if (ton_krach < 0 && re15_annette_r41_ton(RE15_AN_SE_KRACH)) ton_krach = f;
         if (f > 30 && !re15_game_flag_get(2, 7) && !re15_game_flag_get(1, 27)) { ende = f; break; }
     }
-    fprintf(stderr, "Zugstart: Ton an F%d, Krach F%d, Ende F%d, Annette (%d,%d,%d)\n", ton_an, ton_krach, ende,
+    fprintf(stderr, "Zugstart: Zugfilm F%d, Krach F%d, Ende F%d, Annette (%d,%d,%d)\n", ton_an, ton_krach, ende,
             as > 0 ? (int)g_actors[as].x : 0, as > 0 ? (int)g_actors[as].y : 0, as > 0 ? (int)g_actors[as].z : 0);
     CHECK(ende > 0, "Zugstart endet nicht (Sperren (2,7)/(1,27) bleiben)");
-    CHECK(ton_an >= 0 && ton_krach > ton_an, "Toene: Zug an F%d, Krach F%d", ton_an, ton_krach);
+    CHECK(ton_an >= 0 && ton_krach > ton_an && re15_annette_r41_ton(RE15_AN_SE_ZUG_AN) == 0,
+          "Zugfilm-Zeile F%d vor dem Krach F%d, kein Zug-an-Ton (%d; der Film traegt ihn)", ton_an, ton_krach,
+          re15_annette_r41_ton(RE15_AN_SE_ZUG_AN));
     if (as > 0) CHECK(g_actors[as].z == 8646 && g_actors[as].x == -10507, "Annette nach dem Abgang nicht versteckt (6000 @0x0100A)");
     /* NB3 M2: Abgang in Cut 0 (Tuer im Bild), versteckt im selben Bild wie der Schnitt auf Cut 1 (Auge in der Tuer) */
     CHECK(cut_vor_weg == 0 && cut_weg == 1, "Abgang: vor dem Verstecken Cut %d (statt 0), beim Verstecken Cut %d (statt 1)",
@@ -732,8 +748,10 @@ static void test_schuss(void)
         if (i != s && g_actors[i].active) g_actors[i].active = 0;
     re15_actor_t *f = &g_actors[g];
     memset(f, 0, sizeof *f);
-    f->active = 1; f->type = 0x36; f->hp = 345; f->x = 1800; f->y = 0; f->z = -23400; f->rot_y = 3;
-    re15_enemy_apply_hitbox(f, 0x36u);
+    /* Runde 42 Strang finale (Plan S10): Ziel hinter der Leiche ist die Form 0x30 (der G5 0x36 ist entfernt; 0x36 ist byte-true
+     * waffenimmun, Null-Zeile @0x8006e0d0). Lage und Gate-Frage bleiben dieselben. */
+    f->active = 1; f->type = 0x30; f->hp = 345; f->x = 1800; f->y = 0; f->z = -23400; f->rot_y = 3;
+    re15_enemy_apply_hitbox(f, 0x30u);
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->x = 14378; pl->y = 0; pl->z = -23510; pl->rot_y = 2049;
     const re15_actor_t a0 = *a, f0 = *f;

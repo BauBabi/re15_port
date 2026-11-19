@@ -177,6 +177,42 @@
 #define RE15_ZWS11C_FILM         "MOVIE/R11CGORI.STR"
 #define RE15_ZWS11C_FILM_BILDER  362      /* Quelle: 362 Bilder bei 30/s (Riegel prueft die Datei) */
 
+/* ---- Zugfilm Raum 600 (Runde 42 Strang finale, Stufe 2): Zugstart ROOM6030 (Leon, annette_r41.c k_zug_seg) und ROOM6031 (Elza,
+ * gen/story6_r42_szenen.inc k_s6_6031_zug). NUTZER (2026-11-17 zur Fassung v2 mit Raumdeko): "Ja, die Zugfahrt ist grosse
+ * Klasse!"; Einbau nach dem Fahrpult, vor "There! The train's moving." (Leon) bzw. "It's moving! Elza, we did it!" (Elza), ein
+ * Film fuer beide. Kein Schrei, kein Anker: nur die Port-Zeile `2b 3c 00 00` im Zugstart-Programm (Form der Pult-Zeile ROOM6030
+ * sub08 @0x01200 `2b 0e 00 00` bzw. ROOM6031 sub08 @0x00FC4 `2b 06 00 00`, die beide Programme auslassen), danach dasselbe
+ * Einblenden wie 114 (RE2 ROOM1080 sub14, unten). Id 60: ROOM6030 belegt 0..20, 21..26, 27..30, 31, 40; ROOM6031 0..11, 12..17
+ * (VERTRAG Runde 42 Abschnitt 2.2/2.3). Ton: der Film traegt das Hochfahren selbst (ROOM7020 snd0 Satz 0x0C bei Film-Bild 18),
+ * deshalb spielen die Programme den Port-Satz ANNETTE_SE 3 nicht mehr (annette_r41.c z_film). Datei: tools/r41_zws114/
+ * film_bauen.py --film 600 aus Cutscenes/Rooms/600_601/Nachbau_Blender/Zugfilm_v2_Raumdeko/Raum600_Zug_Ton.mp4 (unveraendert,
+ * md5 dc3e25e8...), 405 Bilder bei 30/s. */
+#define RE15_ZUG600_RAUM_LEON    0x6030u
+#define RE15_ZUG600_RAUM_ELZA    0x6031u
+#define RE15_ZUG600_MSG_FILM     60
+#define RE15_ZUG600_FILM         "MOVIE/R600ZUG.STR"
+#define RE15_ZUG600_FILM_BILDER  405      /* Quelle: 405 Bilder bei 30/s (film_bau: 405 Bilder, 254 Ton-Sektoren) */
+
+/* ---- Endvideo (Runde 42 Strang finale, Stufe 5; include/re15_endvideo_r42.h): NUTZERWUNSCH 18.11.2026 "das thank you for Playing
+ * fliegt vollständig raus, und es kommt ein richtiges Endvideo". Port-Zeile `2b 3c 00 00` im Port-Programm statt sub02 von
+ * ROOM5090/5091 (endvideo_r42.c), zwischen Abblenden und Aot_on(5) - an der Stelle von RE2 ROOM4090 Movie_on @0x02818. Der Film ist
+ * noch nicht gebaut: fehlt die Datei, laeuft die Zeile sofort durch (re15_zws_r41_film_fehlt) und der Abspann folgt. Die Blende
+ * macht das Skript (RE15_ZWS_BLENDART_SKRIPT). Dateinamen PORT-WAHL (8.3 wie R600ZUG.STR), Bildzahl steht erst mit der Datei fest. */
+#define RE15_ENDE_RAUM_LEON      0x5090u
+#define RE15_ENDE_RAUM_ELZA      0x5091u
+#define RE15_ENDE_MSG_FILM       60
+#define RE15_ENDE_FILM_LEON      "MOVIE/ENDE5090.STR"
+#define RE15_ENDE_FILM_ELZA      "MOVIE/ENDE5091.STR"
+#define RE15_ENDE_FILM_BILDER    0        /* 0 = noch keine Datei; die Plattform liest die Zahl aus dem STR */
+
+/* Blende nach dem Film (Tabellenspalte blende): */
+#define RE15_ZWS_BLENDART_1080   0        /* C-Einblenden 15 Bilder wie RE2 ROOM1080 sub14 (Film mitten in einer Szene)         */
+#define RE15_ZWS_BLENDART_SKRIPT 2        /* das Skript blendet selbst (RE2 ROOM4090: Abblenden davor, Sce_fade_adjust danach).
+                                           * Wert 2, weil der Strang r42/birkinfilm dieselbe Spalte `blende` mit 1 =
+                                           * RE15_ZWS_BLENDART_4090 (Blende in C an der Film-Zeile) belegt: beim Zusammenfuehren
+                                           * bleiben beide Arten getrennt. Das Endvideo blendet im Skript, weil das Abblenden
+                                           * auch ohne Film-Datei laufen muss (dann direkt Abspann). */
+
 /* Einblenden nach dem Film = RE2 ROOM1080 sub14 @0x0252A `53 02 02 07 00 f8` (Sce_fade_set, Handler LAB_80057ef0). */
 #define RE15_ZWS_BLENDE_KANAL 2        /* pc[1] @0x0252B (`lbu s0,1(s2)` @0x80057f18)                          */
 #define RE15_ZWS_BLENDE_ABR   2        /* pc[2] @0x0252C: B - F subtraktiv (@0x80057f38 -> FUN_8002c1a0 abr<<5)  */
@@ -233,7 +269,7 @@ typedef struct {
     int                schrei_satz;  /* ROOM11C0 snd1 Satz */
     const char        *film_datei;   /* relativ zur Asset-Wurzel */
     int                film_bilder;
-    int                blende;       /* RE15_ZWS_BLENDART_1080 (0) / _4090 (Runde 42 birkinfilm) */
+    int                blende;       /* RE15_ZWS_BLENDART_1080 (0, Vorgabe) / _4090 (1, Runde 42 birkinfilm) / _SKRIPT (2, Runde 42 finale Endvideo) */
     int                bild_y;       /* Bildlage: Zeilen Rand oben, wenn der Film niedriger als 240 ist (R409: 40) */
 } re15_zws_film_t;
 

@@ -892,6 +892,6 @@ void re15_audio_se_pumpe(void) { }
 int  re15_audio_re2_tuer_laden(const uint8_t *ton, int groesse) { (void)ton; (void)groesse; return 0; }
 void re15_audio_re2_tuer_se(int se) { (void)se; }
 int  re15_audio_se_stimme_aktiv(int v) { (void)v; return 0; }
-/* Runde 41 G5A (M5): RE2-XA der G5-Szene - PSX-Folge-Stub (die Szenen-Schnitte 16/17 laufen ohnehin nur auf dem PC, M12). */
+/* RE2-XA (Runde 41; seit Runde 42 Todesschrei des Finales) - PSX-Folge-Stub (die Szenen-Schnitte 16/17 laufen ohnehin nur auf dem PC, M12). */
 int  re15_audio_re2_xa(const char *datei, int lesesektoren) { (void)datei; (void)lesesektoren; return 0; }
 void re15_audio_re2_xa_stop(void) { }

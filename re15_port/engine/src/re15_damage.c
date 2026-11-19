@@ -38,6 +38,7 @@
 #include "re15_treffer_r39.h" /* re15_treffer_r39_zielhilfe_verdeckt — RE2 FUN_80042144 @0x800422a8 (Runde 39 D) */
 #include "re15_spiderman_r38.h" /* Runde 38 Spur T: Spiderman im Schacht kein Ziel (@0x8003710c / @0x80111C14-20) */
 #include "re15_spinnen_r38.h"  /* Runde 38 Integration: Schachtspinne ohne Band (@0x800120e4-ec), Latch im Schacht */
+#include "re15_finale_r42.h"   /* Runde 42 finale: Gate 2 der Riesenform (Tyrant +0x1D3 & 0x80) */
 #include "re15_birkin_formen.h" /* Runde 41 Spur WS: re15_bf_granate_form + RE15_BB_FORM_HP (Riesenform-Praedikat der Rakete) */
 
 /* Runde 34 B3/B4 — der RE2-GL-Applier-Stempel (Definition am Dateiende, s. re15_re2_gl_apply). */
@@ -772,15 +773,9 @@ static const uint16_t *re15_enemy_dmg_row(const re15_actor_t *e)
         case 0x2b: return s_wpn_dmg_tyrant;
         case 0x30: return s_wpn_dmg_birkin;
         case 0x36:
-            /* Byte-true ist 0x36 WAFFENIMMUN (Null-Zeile @0x8006e0d0 - Endformen
-             * sterben im Original nicht durch Beschuss). Im ENDKAMPF ROOM5090/5091
-             * ist 0x36 aber unser umgetypter Kampf-Birkin (Nutzer-Design: der
-             * finale Birkin ERSETZT dort den 0x30 und muss besiegbar sein wie
-             * der Kampf, den er ersetzt) - er erbt darum die 0x30-Zeile
-             * (@0x8006e0d0 + 0x30*0x58; "birkin 30"). Ueberall sonst bleibt
-             * 0x36 byte-true immun (ROOM3080). PORT-BRUECKE, als solche markiert. */
-            if (g_current_room_id == 0x5090u || g_current_room_id == 0x5091u)
-                return s_wpn_dmg_birkin;
+            /* Byte-true ist 0x36 WAFFENIMMUN (Null-Zeile @0x8006e0d0 - Endformen sterben im Original nicht durch Beschuss),
+             * so in ROOM3080. Die Ausnahme fuer den umgetypten Endkampf-Birkin in 5090/5091 ist mit dem G5 entfallen (Runde 42,
+             * Plan S10: 0x36 kommt dort nicht mehr vor). */
             return s_wpn_dmg_immune;
         case 0x26: case 0x2d: return s_wpn_dmg_immune;   /* all-zero rows = weapon-immune */
         default:   return s_player_wpn_dmg_zombie;                  /* fallback (unrouted combat types) */
@@ -3366,17 +3361,6 @@ static int re15_enemy_take_damage_at(re15_actor_t *e, uint8_t attack_type, const
         if (r16 && (gl->zeile == 16u || gl->zeile == 17u) && gl->k < 3u)
             dmg = (int16_t)((r16[(gl->zeile - 16u) * 2u] >> (10u * gl->k)) & 0x3FFu);
     }
-    /* ⛔ RUNDE 34 B9 / BAUPLAN E16 — G5 im Endkampf (ROOM5090/5091, RE2-Modul em36, RE2-HP 600
-     * @0x801003fc) bekommt fuer die Granaten die RE2-Records, Klammer 0: Zeile 9 = 80
-     * (w0 0x05014050 @0x800A5F7C), Zeile 11 = 70 (0x00A11846 @0x800A5FA4), Zeile 10 = 70
-     * (0x00511846 @0x800A5F90); Zeiger *(0x800A6A88 + 0x36*4) = 0x800A5EDC. Art 3 = Saeure =
-     * RE2-Zeile 11, Art 4 = Brand = Zeile 10 (Item-Namen RE1.5 0x0A "Acid" / 0x0B "Incendiary",
-     * RE2 Zeile 10 = Brand / 11 = Saeure — Bosse-GP §12). */
-    /* ⛔ RUNDE 41 SPUR WS: nur noch Art 3/4. Die Handgranate (Art 2) nimmt am G5 D_G (re15_granate_schaden); die frueheren 80
-     * (Zeile 9 = RE2-Granatwerfer) hat Spur GR fuer die Zombies schon verworfen, Lesung (G) verlangt einen Wert ohne Sonderfall. */
-    if (e->type == 0x36u && (g_current_room_id == 0x5090u || g_current_room_id == 0x5091u) &&
-        type >= 3u && type <= 4u)
-        dmg = 70;                                                  /* Z11 @0x800A5FA4 / Z10 @0x800A5F90, K0 */
     /* Runde 42 U9: Riesenform ausserhalb 5090/5091 = RE2-G4, Klammer 0 (Block re15_riesenform_g4). Werfer-/Applier-Treffer
      * tragen ihre RE2-Zeile (gl->zeile), sonst Art -> RE1.5-Waffe DAT_8006f430[Art] -> RE2-Zeile. Art 2 (Handgranate) bleibt D_G. */
     if (type >= 3u && type <= 9u && re15_riesenform_g4(e)) {
@@ -3883,11 +3867,6 @@ int re15_resolve_attack(const re15_attack_box_t *atk, uint8_t attack_type,
          * PORT-ZUORDNUNG: der Typbereich 0x40..0x4D ist die NPC-Familie des Ports
          * (re15_npc_ai_tick, enemy_ai_common.c); nur HP < 0 schliesst aus (RE2 Gate 3). */
         if (e->type >= 0x40u && e->type <= 0x4Du && e->hp < 0) continue;
-        /* Dieselbe Regel fuer den G5-TENTAKEL 0x37 (RE2-Modul em37, Port enemy_ai_tentakel_g5.c):
-         * Ctor HP -1 `addiu v0,zero,-1` / `sh v0,342(s1)` @0x80100530/34 -> vom RE2-Applier nie
-         * getroffen (Gate 3 @0x80047148-50). Er traegt im Port keinen Kasten, faende ueber die
-         * Spawn-Voreinstellung (s. re15_hitbox_test) aber einen. */
-        if (e->type == 0x37u && e->hp < 0) continue;
         if (re15_hitbox_test(e, atk))                          /* FUN_8002b5d0 @80012db4 */
             collected[ncol++] = i;                             /* local_78[] @80012dc8 */
     }
@@ -4348,10 +4327,6 @@ static const uint32_t s_re2gl_rec_spider[6]   = {   /* 0x25 UND 0x26 -> 0x800A4B
     0x0140f03cu, 0x078f1fb4u,     /* Z9  @0x800A4C30   60/60/20 */
     0x00520882u, 0x078f1f68u,     /* Z10 @0x800A4C44  130/130/5 */
     0x00a0f05au, 0x078f1f68u };   /* Z11 @0x800A4C58   90/60/10 */
-static const uint32_t s_re2gl_rec_g5[6]       = {   /* 0x36 G5 -> 0x800A5EDC (Runde 34 B9) */
-    0x05014050u, 0x078f1e0au,     /* Z9  @0x800A5F7C   80/80/80 */
-    0x00511846u, 0x078f1e0au,     /* Z10 @0x800A5F90   70/70/5  */
-    0x00a11846u, 0x078f1e0au };   /* Z11 @0x800A5FA4   70/70/10 */
 static const uint32_t s_re2gl_rec_arm[6]      = {   /* RE2 0x2D (Port 0x1A) -> 0x800A5180 */
     0x0140f03cu, 0x078f1e0au,     /* Z9  @0x800A5220   60/60/20 */
     0x00a0f03cu, 0x078f1e0au,     /* Z10 @0x800A5234   60/60/10 */
@@ -4483,20 +4458,6 @@ static int re2_gl_typ(const re15_actor_t *e, re2_gl_typ_t *t)
     case 0x1A:
         if (!re15_re2arm_owns(e)) return 0;
         t->r1ee = 800; t->b98 = 0; t->h9e = 500; t->rec = s_re2gl_rec_arm;
-        break;
-    case 0x36:
-        /* RUNDE 34 B9 — der Endkampf-G5 (ROOM5090/5091) laeuft im RE2-Modul enemy_ai_boss_g5.c
-         * (Dispatch enemy_ai_common.c: `t == 0x36 && (room & 0xFFFE) == 0x5090`, in beiden
-         * Flavors). em36-Ctor, selbst disassembliert (CDEMD0_EM36_ai1.BIN aus re2_ems_cut.py):
-         *   +0x1EE 5700   `addiu v0,zero,5700` @0x80100578 / `sh v0,494(s0)` @0x8010058c
-         *   +0x94 -2000   `addiu v0,zero,-2000` @0x80100534 / `sh v0,148(s0)` @0x80100538
-         *   +0x96 0       `sh zero,150(s0)` @0x8010057c
-         *   +0x98 -1500   `addiu v1,zero,-1500` @0x80100470 / `sh v1,152(s0)` @0x80100520
-         *   +0x9E 1500    `addiu t0,zero,1500` @0x80100448 / `sh t0,158(s0)` @0x80100580
-         *   Wort0 |= 0x0C000000 (`lui v1,0xc00` / `or` @0x801005a0-ac) -> KEIN Kopf-Bit. */
-        if ((g_current_room_id & 0xFFFEu) != 0x5090u) return 0;
-        t->r1ee = 5700; t->o94 = -2000; t->o96 = 0; t->b98 = -1500; t->h9e = 1500;
-        t->rec = s_re2gl_rec_g5;
         break;
     default:
         return 0;
@@ -4687,6 +4648,11 @@ int re15_re2_gl_apply(const int32_t p[3], int16_t gier, const int16_t box_in[4],
         if (!e->active) continue;                                      /* Gate 1 @0x8004712c-30 */
         const int re2 = re2_gl_typ(e, &t);
         if (re2 && e->re2z_self1d3 != 0u) continue;                    /* Gate 2 @0x80047138-40 */
+        /* Runde 42 Strang finale: Gate 2 fuer die Riesenform in 5090/5091 wie beim RE2-Super-Tyrant - dessen Wurzel setzt +0x1D3 Bit 0x80,
+         * solange der Spieler den Raketenwerfer fuehrt (`lhu v1,-0x2fa(v1)` 0x800cfd06 / `addiu v0,zero,0x11` / `bne` / `ori 0x80`
+         * @0x801018d4-0x80101900, sonst `andi 0x7f`), und Phase 0 des Abschusses noch einmal (`ori v0,v0,0x80 / sb v0,0x1d3(s2)`
+         * @0x8010361c-24): keine Rakete trifft ihn, er stirbt nur durch den Abschuss (finale_r42.c). */
+        if (re15_finale_r42_kein_ziel(e)) continue;
         /* ⛔ RUNDE 34 NACHBESSERUNG (mess_sb 3.1 / 3.2) — Gate 2 AUCH fuer RE1.5-KI-Kandidaten.
          * RE2 (info/re2leon/PSX.EXE, selbst nachgelesen): `lbu v0,467(s0)` @0x80047138 /
          * `bne v0,zero,0x8004740c` @0x80047140 — ein gesperrter Kandidat wird VOR jedem Schreiben

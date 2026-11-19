@@ -51,6 +51,7 @@ AN_ELZA = 0x20         # Plc_dest-Ankunftsbit Spieler (Form sub08 @0x00F72 `40 0
 AN_NPC = 0x21          # Plc_dest-Ankunftsbit NPC (Form sub08 @0x00F82 `40 00 09 21`)
 BIT_ZUG_ELZA = 130     # RE15_R42_BIT_ZUG_ELZA (Vertrag 1.2)
 MSG = {"E6a": 12, "E6b": 13, "E9a": 14, "E9b": 15, "E9c": 16, "E9d": 17}
+FILM_MSG = 60          # RE15_ZUG600_MSG_FILM (include/re15_zws_r41.h): Port-Zeile ohne Text, Zugfilm; nicht in den Soll-Folgen
 
 # ---- PORT-STORY-Lagen (E9) -------------------------------------------------------------------------------------------------
 # Elza steht am Eintritt der Tuer Slot 1 (main00 @0x00C52 Ziel `df f0 .. 41 a4` = (-3873,-23487)); Sherry am Pult (sub07 @0x00F1E
@@ -167,16 +168,31 @@ P_ZUG = [
     WORK_SHERRY,
     orig(0x0FC2, 0x0FC4, "Cut 3 Pult (sub08 @0x00FC2)"),
     orig(0x0FC8, 0x0FDC, "Sherry am Pult: Plc_motion 0, Sleep 50, Plc_motion 0, Plc_flg 0x80, Sleep 50 (sub08 @0x00FC8.., ohne msg 6)"),
-    port([0x22, 0x05, SIG_ZUG_AN, 0x01], "Set(5,0x10)=1 Signal Zug-an-Ton (ANNETTE_SE Satz 3; Form annette_r41.c z_sig_an)"),
+    # Runde 42 Strang finale Stufe 2: kein Zug-an-Signal mehr (Set(5,0x10)) - der Zugfilm traegt das Hochfahren selbst (ROOM7020
+    # snd0 Satz 0x0C bei Film-Bild 18 = ANNETTE_SE Satz 3), wie Leons z_film in annette_r41.c.
     orig(0x0FDC, 0x0FE6, "Pultlicht: Set(1,28,1), Cut 4, Sleep 15 (sub08 @0x00FDC..)"),
     orig(0x0FE8, 0x0FEC, "Sleep 15 (@0x00FE8; Cut 5 @0x00FE6 = rotes WARNING des gescheiterten Starts entfaellt wie bei Leon)"),
     orig(0x0FEC, 0x0FF0, "Set(1,28,0) (@0x00FEC)"),
+    # Musik unter dem Zugfilm (Stufe 2 Runde 2, wie Leons z_musik_halt/z_musik_weiter in annette_r41.c): die laufende Spur MAIN vor
+    # dem Film anhalten, danach weiter = RE2 ROOM1080 sub14 @0x02524 (Op 4) / @0x02536 (Op 3), ROOM4090 @0x02804/@0x0282B;
+    # RE1.5-Handler FUN_80044da4 Fall 4 SsSeqPause @0x80044efc, Fall 3 SsSeqReplay @0x80044ec4. Nur Slot 0: bei (3,89)=1 spielt
+    # 6031 nur MAIN (sub06 @0x00EB4 Ck(3,89)=1 -> @0x00EB8, sub07 @0x00F4A -> @0x00F4E); SUB (Slot 1) nur im (3,89)=0-Zweig
+    # @0x00E86 -> @0x00E8A / @0x00F3A -> @0x00F3E, ein Op 3 darauf wuerde ihn einschalten.
+    op(RAUM, 0x0EB8, [0x54, 0x00, 0x01, 0x00, 0x00, 0x00], [0x54, 0x00, 0x04, 0x00, 0x00, 0x00],
+       "Sce_bgm_control MAIN (Slot 0) anhalten (Form sub06 @0x00EB8, Op 4 = SsSeqPause @0x80044efc)"),
+    msg_on(FILM_MSG, RAUM, 0x0FC4, 6, "Zugfilm R600ZUG.STR (Port-Zeile ohne Text, Form der Pult-Zeile msg 6 @0x00FC4, die das Programm "
+                                       "auslaesst; Haken re15_zws_r41_message_on Tabelle zug601) - nach dem Pultlicht, vor Cut 1"),
+    op(RAUM, 0x0EB8, [0x54, 0x00, 0x01, 0x00, 0x00, 0x00], [0x54, 0x00, 0x03, 0x00, 0x00, 0x00],
+       "Sce_bgm_control MAIN (Slot 0) weiter (Form sub06 @0x00EB8, Op 3 = SsSeqReplay @0x80044ec4)"),
     orig(0x1020, 0x1026, "Cut 1, Sleep 60 (sub08 @0x01020)"),
     orig(0x0F54, 0x0F58, "Evt_exec sub05 Licht-Schleife = Fahrt (sub07 @0x00F54, Zweig Ck(3,89)=1)"),
     orig(0x0F82, 0x0F96, "Sherry dreht sich zu Elza: Plc_dest 9 Bit 0x21 auf (-3873,-23487) + warten (sub08 @0x00F82..@0x00F96)"),
     msg_on(MSG["E9a"], RAUM, 0x0F96, 5, "msg 14 Sherry (Form msg 5 @0x00F96)"),
     orig(0x0F9A, 0x0FAE, "Sherry-Gesten 1/1 wie nach msg 5 (@0x00F9A..)"),
     port([0x22, 0x05, SIG_KRACH, 0x01], "Set(5,0x11)=1 Signal Krachen aus dem hinteren Wagen (ANNETTE_SE Satz 0; Form z_sig_krach)"),
+    orig(0x0FF0, 0x100C, "WARNING beim Krachen (Vorschlag A7): Set(1,29,1), For 3 { Cut 4, Sleep 15, Cut 5 (rotes WARNING), Sleep 15 }, "
+                         "Set(1,29,0) = gescheiterter Start sub08 @0x00FF0..@0x0100B unveraendert, wie Leons z_warnung"),
+    orig(0x1020, 0x1022, "Cut 1 zurueck (sub08 @0x01020)"),
     port([0x09, 0x0A, 0x19, 0x00], "Sleep 25 (Form @0x00F7A; Zahl RE2 Claire ROOM6141 sub02 @0x0104C `0a 19 00`, wie z_schlaf25)"),
     WORK_ELZA, drehen(AN_ELZA, TUER, "Elza zur Wagentuer"), warte(AN_ELZA, "Elza"),
     WORK_SHERRY, drehen(AN_NPC, TUER, "Sherry zur Wagentuer"), warte(AN_NPC, "Sherry"),
@@ -274,7 +290,9 @@ def main():
          ""]
     for name, sub, segs, folge, was in PROGRAMME:
         prog, zeilen, msgs, listing, so, sig = bauen(sub, segs)
-        ist = [m for _, m in msgs]
+        ist = [m for _, m in msgs if m != FILM_MSG]   # die Film-Zeile zeigt keinen Text (re15_zws_r41_message_on)
+        if sum(1 for _, m in msgs if m == FILM_MSG) != (1 if name == "k_s6_6031_zug" else 0):
+            raise SystemExit("%s: Zugfilm-Zeile %d nicht genau einmal im Zugstart" % (name, FILM_MSG))
         if ist != folge:
             raise SystemExit("%s: Message_on-Folge %s != Soll %s" % (name, ist, folge))
         print("== %s (%s): %d B, Folge %s" % (name, was, len(prog), ist))

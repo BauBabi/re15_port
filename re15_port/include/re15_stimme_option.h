@@ -18,7 +18,7 @@
  *       Stoehnen main16.5 (1011 Id 24, r36);
  *     - der Tuerton door_sound.wav in ROOM1141 (Sprach-Id 59, re15_dining_r39.h RE15_R39J_TUERTON_ID, Nutzer-Nachtrag 17
  *       Punkt 5): er laeuft nur technisch ueber den Sprachkanal, ist aber ein Geraeusch -> re15_stimme_option_spielt;
- *     - RE2-XA der G5-Szene (R704_XA0B/0C.XAS, re15_audio_re2_xa) = Birkin-Laute (G5_auftritt.md M5), kein Dialog;
+ *     - RE2-XA (re15_audio_re2_xa; seit Runde 42 der Todesschrei des Finales R702_XA03) = Laute, kein Dialog;
  *     - SE-Baenke (auch RE2-Gegnerlaute, Leons Schmerzlaute, der Titel-Ansager CORE11 SE 0), BGM, Ambience;
  *     - Film-Ton (STR/FMV): Sprache und Musik liegen dort in EINER Spur, sie laesst sich nicht trennen.
  *

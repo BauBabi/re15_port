@@ -19,7 +19,7 @@
 #   gator   ROOM2090 (Gator-Boss, Modul enemy_ai_boss_gator.c), RE15_FORCE_EXPLOSION=2@<bild>:<slot> am Alligator:
 #           HP faellt um 251 (Runde 41 Spur WS: D_G = 250 @0x801008C8 + 1; vorher GR-Boss-Regel 250, davor 1000
 #           @0x8006f41c), Zustand 2 im Explosionsbild, exe laeuft bis EXIT_AT (kein Haenger), RE15_FORCE_EXPLOSION "Treffer=1".
-#   birkin  ROOM5090 (G5 EM36, Modul enemy_ai_boss_g5.c), ARMIERT ueber RE15_DEBUG_SUB=4@255 (sub04 = Kampfstart:
+#   birkin  (entfernt in Runde 42 mit dem G5) ROOM5090 (G5 EM36), ARMIERT ueber RE15_DEBUG_SUB=4@255 (sub04 = Kampfstart:
 #           grid 0x33 -> 0x13, Lage (-9000,-23400); Vorspann bis ~Bild 346, danach kriecht er), RE15_FORCE_EXPLOSION
 #           im Bild 400 am kriechenden Boss: (a) vor dem Treffer armiert (g=13), (b) HP faellt um 251 (Spur WS D_G;
 #           vorher E16 80 @0x800A5F7C), (c) REAKTION: 40 Bilder spaeter laeuft sein Clip weiter (af anders) und er hat sich
@@ -417,46 +417,9 @@ function(r35_gegner_g _zeile _slot _p)
     endif()
 endfunction()
 
-r35_laeuft(birkin _an)
-if(_an)
-    # G5 EM36 in ROOM5090: HP 600 (@0x801003fc), Granate = D_G 251 (Spur WS; vorher RE2-Record Zeile 9 K0 = 80 @0x800A5F7C).
-    # ARMIERT: sub04 (Kampfstart) ueber RE15_DEBUG_SUB=4@255 -> grid 0x13, Vorspann bis ~Bild 346, danach kriecht
-    # der Boss (gemessen nb1/birkin_c: F380 x -8808, F400 x -7373). Explosion im Bild 400.
-    # RE15_ENDKAMPF_NUR_G5=1: dieser Lauf pinnt den G5; seit "Vierbein, dann G5" spawnt 5090 sonst zuerst den 0x30.
-    set(_dir "${_wurzel}/birkin")
-    r35_exe(birkin "${_dir}" 300 ${_env_basis} RE15_ENDKAMPF_NUR_G5=1
-        RE15_DEBUG_JUMP=5090@250 RE15_DEBUG_SUB=4@255 "RE15_FORCE_EXPLOSION=2@400:2" "RE15_EXIT_AT=460#5090")
-    r35_zustand("${_dir}/state.log")
-    r35_gegner("${_Z_399}" 2 _V)
-    r35_gegner("${_Z_400}" 2 _X)
-    r35_gegner("${_Z_440}" 2 _N)
-    r35_gegner_g("${_Z_399}" 2 _VG)
-    r35_gegner_g("${_Z_400}" 2 _XG)
-    r35_gegner_g("${_Z_440}" 2 _NG)
-    if("${_V_HP}" STREQUAL "" OR "${_X_HP}" STREQUAL "" OR "${_N_HP}" STREQUAL "")
-        r35_fehler(birkin "Boss-Slot 2 fehlt im Zustandslog (Bild 399/400/440)")
-    endif()
-    if(NOT "${_X_T}" STREQUAL "36" OR NOT "${_VG_G}" STREQUAL "13")
-        r35_fehler(birkin "Slot 2: Typ ${_X_T} grid ${_VG_G} im Bild 399 (soll 36 / 13 = ARMIERT ueber sub04; 33 = geparkt)")
-    endif()
-    math(EXPR _hp_soll "${_V_HP} - 251")
-    if(NOT _X_HP EQUAL _hp_soll OR NOT _N_HP EQUAL _hp_soll)
-        r35_fehler(birkin "HP ${_V_HP} -> ${_X_HP} im Bild 400, ${_N_HP} im Bild 440 (soll ${_hp_soll}: Schaden D_G 251 = 250 @0x801008C8 + 1, genau einmal)")
-    endif()
-    math(EXPR _dx "${_N_X} - ${_X_X}")
-    math(EXPR _dz "${_N_Z} - ${_X_Z}")
-    if(_dx LESS 0)
-        math(EXPR _dx "0 - ${_dx}")
-    endif()
-    if(_dz LESS 0)
-        math(EXPR _dz "0 - ${_dz}")
-    endif()
-    math(EXPR _d "${_dx} + ${_dz}")
-    if(NOT _d GREATER 200 OR "${_NG_AF}" STREQUAL "${_XG_AF}")
-        r35_fehler(birkin "Reaktion: 40 Bilder nach dem Treffer Weg ${_d} (soll > 200), af ${_XG_AF} -> ${_NG_AF} (soll anders) — Boss haengt")
-    endif()
-    message(STATUS "${_tag} [birkin]: ok — 36 Slot 2 armiert (g=${_VG_G}): HP ${_V_HP} -> ${_X_HP}, danach Weg ${_d}, af ${_XG_AF} -> ${_NG_AF}, exe bis EXIT_AT")
-endif()
+# Lauf "birkin" (ROOM5090, G5 EM36): mit dem G5 in Runde 42 entfernt (Strang finale, Plan S10, NUTZERWUNSCH 07.11.2026 "die Form
+# Birkin G5 aus dem Finale wieder entfernst"). Die Riesenform 0x30 in 5090 nimmt keinen Granatenschaden unter die Untergrenze
+# (re15_finale_r42.h), integration_r42_finale_schuss deckt 5090 ab.
 
 # ---------------------------------------------------------------------------------------------------
 # Laeufe "duenn_a" / "duenn_b" — ROOM1220, duenne Zellenfront x[-21825..-21550], HOCH, zwei Wurfphasen

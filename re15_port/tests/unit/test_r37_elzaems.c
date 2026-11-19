@@ -360,7 +360,7 @@ static void teil_raeume(void)
     raum(0x10C0, 0x21, RE15_EMS_ARCHIV_LEON, "Leon-Gegenprobe Kraehen (Nutzer-Stand _9.bak: Opfer-Bank == CDEMD0)");
     {   static const uint8_t f242[1][2] = { { 4, 242 } };   /* Ck(4,242) @0x00B4A -> Sce_em_set @0x00B54/@0x00B68 */
         raum_ex(0x1141, 0x27, RE15_EMS_ARCHIV_ELZA, "0x27 mit Ck(4,242); Nutzer-Stand _7.bak: Opfer-Bank == CDEMD1", f242, 1, 0); }
-    raum(0x5091, 0x36, RE15_EMS_ARCHIV_ELZA, "0x30 -> 0x36 (RE2-EM36, NUTZER-VORGABE) - kein Set(1,0,v) in 5091, Bit = Figur");
+    raum(0x5091, 0x30, RE15_EMS_ARCHIV_ELZA, "0x30 bleibt 0x30 (Runde 42: G5/RE2-EM36 entfernt, Riesenform) - kein Set(1,0,v) in 5091, Bit = Figur");
     /* Leon ROOM1170: Elliot spawnt erst in sub15 nach dem Montage-Gate (unit_r37_roy_leon1170 / integration_r37_roy_leon1170
      * pruefen ihn mit Bank und Zeichenweg) — hier nur die Weiche nach dem Raum-Init. */
     if (raum_init(0x1170, 0, NULL, 0) == 0)

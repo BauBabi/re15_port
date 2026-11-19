@@ -98,10 +98,9 @@ static const fall_t FAELLE[] = {
        -9950, -18200, 2048, 0, -26900, -18050, {{0,0,0},{0,0,0}}, 0, 9, 1, NULL },
     { "STAGE5/ROOM5081.RDT", 0x5081, 0x00742, 0x30, 0x33, 0x00836, 0x13,  1,
        -9950, -18200, 2048, 0, -26900, -18050, {{0,0,0},{0,0,0}}, 0, 9, 1, NULL },
-    { "STAGE5/ROOM5090.RDT", 0x5090, 0x0124A, 0x30, 0x33, 0x0130A, 0x13, -2,
-       25600, -23350, 1024, 14, 0, 0,          {{0,0,0},{0,0,0}}, 0, 0, 1, NULL },
-    { "STAGE5/ROOM5091.RDT", 0x5091, 0x01232, 0x30, 0x33, 0x012EE, 0x13, -2,
-       25600, -23350, 1024, 14, 0, 0,          {{0,0,0},{0,0,0}}, 0, 0, 1, NULL },
+    /* ROOM5090/5091 (@0x0124A / @0x01232): bis v0.8.30 pinnte dieser Fall den G5 ("scharf bei x -9000 @0x801011d0"). Seit Runde 42
+     * (Strang finale, Plan S10) bleibt der Spawn 0x30 und wird zur Riesenform mit eigener Steuerung (birkin_bahnsteig.c, Annette-Szene,
+     * Finale); deren Ablauf pruefen unit_birkin_bahnsteig, unit_birkin_szenen, unit_r41_annette und integration_r41_form_wagenweg*. */
     { "STAGE5/ROOM50E0.RDT", 0x50E0, 0x00ACE, 0x30, 0x33, 0x00BEE, 0x13,  1,
       -25450, -14700, 0, 0,    -13050, -16450, {{0,0,0},{0,0,0}}, 0, 9, 1, NULL },
     { "STAGE5/ROOM50E0.RDT", 0x50E0, 0x00AEE, 0x30, 0x10, 0,       0,    -1,
@@ -153,19 +152,6 @@ static int load_re15_bank(uint8_t typ)
     eb->buf = NULL; eb->ok = 1;
     return 1;
 }
-static int load_g5_bank(void)
-{
-    size_t n = 0;
-    uint8_t *ems = slurp(RE15_ASSET_PSX_DIR "/../RE2/CDEMD0.EMS", &n);
-    if (!ems) return 0;
-    re15_enemy_bank_t *eb = re15_enemy_find(0x36);
-    if (!eb) eb = re15_enemy_alloc(0x36);
-    if (!eb) { free(ems); return 0; }
-    if (re2_ems_load_bank(ems, n, 0x36, eb, NULL) != 0) { free(ems); return 0; }
-    eb->buf = NULL; eb->ok = 1;
-    return 1;
-}
-
 static int s_cine_was_active = 0;
 static uint16_t s_pad = 0;
 /* Ein Bild wie der echte Hauptlauf (derselbe Rahmen wie probe_r30_n_room5080/probe_5090_birkin).
@@ -231,7 +217,7 @@ static void bereite_raum(const fall_t *f)
     g_room_rdt = s_rdt; g_room_rdt_ok = 1;
     g_current_room_id = f->raum; g_room_change.pending = 0;
     for (int i = 0; i < f->nfl; i++) re15_game_flag_set(f->fl[i].bank, f->fl[i].bit, f->fl[i].val);
-    if ((f->raum & 0xFFFEu) == 0x5090u) load_g5_bank(); else load_re15_bank(f->typ);
+    load_re15_bank(f->typ);   /* Runde 42 (Plan S10): kein G5 mehr in 5090/5091, der Spawn bleibt 0x30 */
 
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     pl->active = 1; pl->type = 0; pl->hp = 100; pl->hit_react = 0;
@@ -296,7 +282,7 @@ static void lauf(const fall_t *f, int nach_n, erg_t *r)
     finde_birkin();              /* falls sub00 schon im Reenter gespawnt hat */
 
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
-    int g5 = (f->raum & 0xFFFEu) == 0x5090u;
+    int g5 = 0;   /* Runde 42 (Plan S10): G5 entfernt */
     int frost = (f->grid & 0x20) != 0;
     int vor_n = frost ? 300 : 0;
     int bild = 0;
@@ -433,7 +419,7 @@ int main(int argc, char **argv)
             }
         }
         erg_t r; lauf(f, nach_n, &r);
-        int g5 = (f->raum & 0xFFFEu) == 0x5090u;
+        int g5 = 0;   /* Runde 42 (Plan S10): G5 entfernt */
         int frost = (f->grid & 0x20) != 0;
         printf("   Spawn: Slot %d Zustand nach dem SCD-Tick des Spawns st=%d sub=%d +0x95=0x%02x grid=0x%02x\n",
                s_bslot, s_spawn_state, s_spawn_sub, (unsigned)s_spawn_frame95, (unsigned)s_spawn_grid);

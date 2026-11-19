@@ -114,12 +114,6 @@ extern re15_enemy_bank_t g_enemy[RE15_ENEMY_MAX];
 void re15_emd_morph_apply(const re15_morph_ctrl_t *c, const int16_t *w,
                           re15_md1_vertex_t *out);
 
-/* Gemorphte Vertices des G5-Blobs fuer den Zeichner (NULL = kein Morph fuer dieses
- * Mesh/diesen Frame). Muster: re15_re2z_gore_part_burst. */
-const re15_md1_vertex_t *re15_g5_morph_verts(uint8_t type, int mesh_index);
-/* Diagnose (Sonde RE15_G5_MORPH_SONDE in main.c, Riegel test_r41_g5auftritt): die vier Morph-Gewichte, Morph-Puffer gueltig/Mesh,
- * Intro-Kopplung bereit (Ctor-Basis gelesen). Rueckgabe 1 = Boss aktiv. Nur Messung. */
-int re15_g5_morph_zustand(int32_t w[4], int *gueltig, int *mesh, int *w1_ok);
 
 /* Loaded bank for `type`, or NULL. (type 0 = none.) */
 re15_enemy_bank_t *re15_enemy_find(uint8_t type);

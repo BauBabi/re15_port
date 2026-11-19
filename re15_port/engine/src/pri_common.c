@@ -173,7 +173,8 @@ uint32_t re15_pri_msk_section_offset(const uint8_t *blob, size_t size, int cut_i
     return off;
 }
 
-/* RE2-FORM des sprite.pri-Abschnitts (Runde 41 G5-Auftritt: RE2 room7040 Schnitt 9 als Szenen-Schnitt 16, re15_g5auftritt_r41.h).
+/* RE2-FORM des sprite.pri-Abschnitts (Runde 41, erster Nutzer war ein RE2-Szenenschnitt aus room7040; seit Runde 42 ohne Nutzer im
+ * Spiel, Leser bleibt fuer RE2-Schnitte).
  * Gruppenkopf, Ankeraddition und Zaehlkopf sind dieselben wie in RE1.5; anders ist allein das Groessenfeld u16 @+6 der Maske.
  * RE2 FUN_80049b1c, selbst gelesen:
  *   80049c10  lhu  v1,-0x2(a2)        Groessenfeld
@@ -181,7 +182,7 @@ uint32_t re15_pri_msk_section_offset(const uint8_t *blob, size_t size, int cut_i
  *   80049c20  lhu  a1,0x2(a2) / 80049c24 lhu v1,0x0(a2) / 80049c28 addiu a2,a2,0xc   == 0: Rechteck, Breite/Hoehe folgen, 12 Byte
  *   80049c3c  sll  v0,v1,0x10 / 80049c40 or a1,v0,v1 / 80049c44 addiu a2,a2,0x8    Quadrat: Seite = das ganze Feld, 8 Byte
  * RE1.5 FUN_800392d4 dagegen: Rechteck nur bei (Feld & 0xF000) == 0, Quadratseite (Feld >> 12) * 8 (re15_pri_parse_section oben).
- * Die RE2-Daten mit der RE1.5-Regel gelesen ergaben 30 statt 32 Masken (Riegel test_r41_g5auftritt). */
+ * Die RE2-Daten (room7040 Schnitt 9) mit der RE1.5-Regel gelesen ergaben 30 statt 32 Masken. */
 int re15_pri_parse_section_re2(const uint8_t *data, size_t data_size,
                                uint32_t offset, re15_pri_cut_t *out)
 {

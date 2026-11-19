@@ -2,13 +2,16 @@
 # -*- coding: utf-8 -*-
 """Runde 41, Zwischensequenzen: die Gorilla-Filme des Nutzers als STR fuer den Port (include/re15_zws_r41.h).
 
-  python re15_port/tools/r41_zws114/film_bauen.py [--film 114|11C] [--quelle <mp4>] [--ziel <STR>] [--budget <Sektoren>]
+  python re15_port/tools/r41_zws114/film_bauen.py [--film 114|11C|600] [--quelle <mp4>] [--ziel <STR>] [--budget <Sektoren>]
 
 FILME (--film, Vorgabe 114; Tabelle FILME unten). Die Quelle wird unveraendert gelesen, nie geschrieben:
   114  Cutscenes/Rooms/114/Nachbau_Blender/Raum114_Gorillas_v3_Ton.mp4 (Raum 114, ROOM1141 John und Elza; 640x480,
        30 Bilder/s, 367 Bilder = 12,233 s, AAC-Ton 44,1 kHz Stereo) -> MOVIE/R114GORI.STR (+ R114GORI.TXT Herkunft)
   11C  Cutscenes/Rooms/11C/Nachbau_Blender/Raum11C_Gorillas_v9_Ton.mp4 (Raum 11C, ROOM11C0 Leon und Ada; 640x480,
        30 Bilder/s, 362 Bilder = 12,067 s, AAC-Ton 44,1 kHz Stereo) -> MOVIE/R11CGORI.STR (+ R11CGORI.TXT Herkunft)
+  600  Cutscenes/Rooms/600_601/Nachbau_Blender/Zugfilm_v2_Raumdeko/Raum600_Zug_Ton.mp4 (Zugfilm v2 mit Raumdeko, vom Nutzer
+       abgenommen 2026-11-17 "Ja, die Zugfahrt ist grosse Klasse!"; 640x480, 30 Bilder/s, 405 Bilder = 13,5 s, AAC-Ton)
+       -> MOVIE/R600ZUG.STR (+ R600ZUG.TXT Herkunft), gespielt im Zugstart ROOM6030 (Leon) und ROOM6031 (Elza)
 
 FORMAT = das der einzigen Film-Datei des Spiels, MOVIE/CAPCOM.STR, damit der Port den Film mit seinen vorhandenen
 Dekodern abspielt (engine/src/re15_str.c Demux, bss_vlc.c/bss_mdec.c MDEC, re15_xa.c CD-XA; Vertrag in
@@ -59,6 +62,8 @@ FILME = {
                 ziel="R114GORI.STR", titel="Zwischensequenz Raum 114, ROOM1141 John und Elza"),
     "11C": dict(quelle=("Cutscenes", "Rooms", "11C", "Nachbau_Blender", "Raum11C_Gorillas_v9_Ton.mp4"),
                 ziel="R11CGORI.STR", titel="Zwischensequenz Raum 11C, ROOM11C0 Leon und Ada"),
+    "600": dict(quelle=("Cutscenes", "Rooms", "600_601", "Nachbau_Blender", "Zugfilm_v2_Raumdeko", "Raum600_Zug_Ton.mp4"),
+                ziel="R600ZUG.STR", titel="Zugfilm Raum 600, Zugstart ROOM6030 Leon und ROOM6031 Elza"),
 }
 
 

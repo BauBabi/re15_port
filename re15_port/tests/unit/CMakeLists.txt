@@ -3555,28 +3555,6 @@ target_compile_definitions(test_re2_gore_decoder PRIVATE
 add_test(NAME unit_re2_gore_decoder COMMAND test_re2_gore_decoder)
 set_tests_properties(unit_re2_gore_decoder PROPERTIES TIMEOUT 60)
 
-# --- G5-ENDKAMPF-SMOKE (Runde 6, birkin-g5-ki.md): Park, Intro-Choreo mit
-#     Root-Motion, Tentakel-Zug, Blob-Biss, Todes-Absink-Rampe. ---
-# --- G5-MORPH-PIN (Runde 7, g5-morph.md): dir[0]-Format, Basis-Restore und die
-#     drei integergenauen Regressionsanker der Segment-Kette. ---
-# --- TENTAKEL-SMOKE (Runde 7, em037-tentakel.md): Spawn, Blob-Anker, Austritt,
-#     Kommando/+0x228-Maske und der 15er-Peitschenschaden. ---
-add_executable(probe_g5_tentakel probe_g5_tentakel.c)
-target_link_libraries(probe_g5_tentakel PRIVATE re15_engine re15_test_support)
-target_include_directories(probe_g5_tentakel PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_compile_definitions(probe_g5_tentakel PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
-add_test(NAME unit_g5_tentakel COMMAND probe_g5_tentakel)
-set_tests_properties(unit_g5_tentakel PROPERTIES TIMEOUT 120)
-
-add_executable(test_g5_morph test_g5_morph.c)
-target_link_libraries(test_g5_morph PRIVATE re15_engine re15_test_support)
-target_include_directories(test_g5_morph PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_compile_definitions(test_g5_morph PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
-add_test(NAME unit_g5_morph COMMAND test_g5_morph)
-set_tests_properties(unit_g5_morph PROPERTIES TIMEOUT 60)
-
 add_executable(probe_5090_birkin_verify probe_5090_birkin_verify.c)
 target_link_libraries(probe_5090_birkin_verify PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_5090_birkin_verify PRIVATE ${CMAKE_SOURCE_DIR}/include)
@@ -3588,14 +3566,6 @@ target_link_libraries(probe_5090_birkin PRIVATE re15_engine re15_test_support)
 target_include_directories(probe_5090_birkin PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_compile_definitions(probe_5090_birkin PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
-
-add_executable(probe_g5_boss probe_g5_boss.c)
-target_link_libraries(probe_g5_boss PRIVATE re15_engine re15_test_support)
-target_include_directories(probe_g5_boss PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_compile_definitions(probe_g5_boss PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
-add_test(NAME unit_g5_boss COMMAND probe_g5_boss)
-set_tests_properties(unit_g5_boss PROPERTIES TIMEOUT 120)
 
 add_executable(probe_gator_fress probe_gator_fress.c)
 target_link_libraries(probe_gator_fress PRIVATE re15_engine re15_test_support)
@@ -4117,13 +4087,9 @@ target_include_directories(test_r41_birkin_wand PRIVATE ${CMAKE_SOURCE_DIR}/incl
 target_compile_definitions(test_r41_birkin_wand PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_r41_birkin_wand_rein COMMAND test_r41_birkin_wand rein)
-add_test(NAME unit_r41_birkin_wand_g5 COMMAND test_r41_birkin_wand g5)
 add_test(NAME unit_r41_birkin_wand_griff COMMAND test_r41_birkin_wand griff)
-add_test(NAME unit_r41_birkin_wand_g5saat COMMAND test_r41_birkin_wand g5saat)   # Nachbesserung G5 3: 200 Saaten je Raum
 set_tests_properties(unit_r41_birkin_wand_rein PROPERTIES TIMEOUT 30)
-set_tests_properties(unit_r41_birkin_wand_g5 PROPERTIES TIMEOUT 240 ENVIRONMENT "RE15_ENDKAMPF_NUR_G5=1")
 set_tests_properties(unit_r41_birkin_wand_griff PROPERTIES TIMEOUT 360)
-set_tests_properties(unit_r41_birkin_wand_g5saat PROPERTIES TIMEOUT 1200 ENVIRONMENT "RE15_ENDKAMPF_NUR_G5=1")
 
 # --- Runde 41 Form, Nachbesserung 2 (Zusatzpunkt): START waehrend des Riesenform-Griffs -> kein Schirm im Griff, kein Einfrieren ---
 add_executable(test_n2_griff_start test_n2_griff_start.c)
@@ -4142,15 +4108,6 @@ target_compile_definitions(test_birkin_szenen PRIVATE
     RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
 add_test(NAME unit_birkin_szenen COMMAND test_birkin_szenen)
 set_tests_properties(unit_birkin_szenen PROPERTIES TIMEOUT 60)
-# --- Runde 41 G5-Auftritt: RE2 room7040 sub06 ab der Armierung (Schnitt 9 -> 10 -> 5 -> 6), Daten + Ablauf 5090/5091 ---
-add_executable(test_r41_g5auftritt test_r41_g5auftritt.c)
-target_link_libraries(test_r41_g5auftritt PRIVATE re15_engine re15_test_support m)
-target_include_directories(test_r41_g5auftritt PRIVATE ${CMAKE_SOURCE_DIR}/include)
-target_compile_definitions(test_r41_g5auftritt PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
-add_test(NAME unit_r41_g5auftritt COMMAND test_r41_g5auftritt)
-set_tests_properties(unit_r41_g5auftritt PROPERTIES TIMEOUT 120)
-
 # --- Runde 41 Spur SF N1.9: Feder-Kette des Schwanzes der Sichel-Form (PORT-WAHL, re15_schwanz_r41.h).
 add_executable(test_schwanz_r41 test_schwanz_r41.c)
 target_link_libraries(test_schwanz_r41 PRIVATE re15_engine re15_test_support m)
@@ -4160,15 +4117,8 @@ target_compile_definitions(test_schwanz_r41 PRIVATE
 add_test(NAME unit_schwanz_r41 COMMAND test_schwanz_r41)
 set_tests_properties(unit_schwanz_r41 PROPERTIES TIMEOUT 30)
 if(TARGET re15_pc)
-    # Abnahme 1 Spur R: Pistole, Dauerbeschuss, EM30 -> Mutation -> Form -> G5, Leon und Elza, kein Messhaken.
-    add_test(NAME integration_r41_birkin_pistole
-             COMMAND "${CMAKE_COMMAND}"
-                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_birkin_pistole_wd
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_birkin_pistole.cmake)
-    # Runde 41 Spur GR NB3: zwei Laeufe zu je hoechstens 600 s (Form 1 600 HP, Riesenform 1000 HP; Endbild 6500 seit der Integration GR + G5A).
-    # G5-Auftritt NB2: 2 Laeufe a 5400 Bilder (900 s); Integration Runde 41: GR-Limit 1300 s, beide Spuren laufen zusammen.
-    set_tests_properties(integration_r41_birkin_pistole PROPERTIES TIMEOUT 1300)
+    # Runde 42 Strang finale (Plan S10): integration_r41_birkin_pistole ("die Pistole besiegt Form und G5") ist mit dem G5 entfernt;
+    # Ersatz: integration_r42_finale_schuss, integration_r41_annette_g5, integration_r41_form_wagenweg*.
     # Form Nachbesserung 3 (AN-Abnahme 2 N1): ECHTER Wagenweg A -> B -> C - integration_r41_form_wagenweg samt Elza- und
     # Zurueckweichen-Teilen und Kamera-Pruefung (Nachbesserung 4) jetzt in probes/r41_form_kamera.cmake.
     # Spur SF: Hangar-/Labor-Birkin EM30_HANGAR mit Schwanzkette in 50A0 und 50E0 geladen und mit 23 Teilen gezeichnet.
@@ -4223,21 +4173,8 @@ if(TARGET re15_pc)
                      -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_form_dreiecke_wd
                      -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_form_dreiecke.cmake)
     set_tests_properties(integration_r41_form_dreiecke PROPERTIES TIMEOUT 900)
-    # Abnahme 3 Spur R (N1, N2): G5 und Arme druecken den Spieler nicht in die Wand, die Eingabe wirkt.
-    add_test(NAME integration_r41_g5_westen
-             COMMAND "${CMAKE_COMMAND}"
-                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_g5_westen_wd
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_g5_westen.cmake)
-    set_tests_properties(integration_r41_g5_westen PROPERTIES TIMEOUT 1500)   # Abnahme G5 1 M11: 3 Laeufe a 3540 Bilder
-    # Abnahme 2 Spur R: G5 frisst den Spieler, YOU DIED, Titel, Leon und Elza, kein Messhaken.
-    add_test(NAME integration_r41_g5_tod
-             COMMAND "${CMAKE_COMMAND}"
-                     -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
-                     -DWORKDIR=${CMAKE_BINARY_DIR}/tests/integration/r41_g5_tod_wd
-                     -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r41_g5_tod.cmake)
-    # Integration Runde 41 (GR-HP): Rueckstoss und G5-Szene liegen ~1400 Bilder spaeter, Laeufe je 600 s -> 1300 s.
-    set_tests_properties(integration_r41_g5_tod PROPERTIES TIMEOUT 1300)
+    # Runde 42 Strang finale (Plan S10): integration_r41_g5_westen und integration_r41_g5_tod (Rakete -> Rueckstoss -> G5) sind mit dem
+    # G5 entfernt; Ersatz: integration_r42_finale_schuss.
 endif()
 
 # --- ZOMBIE-GORE je Waffe (zombiegore_r15.c) + RE1.5-Teilschicht (teile_r15.c) ---
@@ -4272,17 +4209,6 @@ target_link_libraries(test_raumlicht PRIVATE re15_engine re15_test_support m)
 target_include_directories(test_raumlicht PRIVATE ${CMAKE_SOURCE_DIR}/include)
 add_test(NAME unit_raumlicht COMMAND test_raumlicht)
 set_tests_properties(unit_raumlicht PROPERTIES TIMEOUT 30)
-
-# --- G5-SOFORT-PFAD weiter gepinnt (2026-10-30): seit "Bahnsteig-Form, dann G5" spawnt ROOM5090/5091 zuerst den
-#     0x30 (birkin_formen.c). Diese Tests pinnen das G5-Modul selbst bzw. den alten Spawn 0x30 -> 0x36 und
-#     laufen deshalb mit RE15_ENDKAMPF_NUR_G5=1; den neuen Ablauf deckt unit_birkin_szenen ab.
-foreach(_g5alt probe_p2_birkin_g5 probe_p3_birkin_rest unit_r30_birkin_frost
-               unit_r35_zgirl_wiedereintritt unit_r37_elzaems_raeume
-               unit_r17_birkin_1zu1_pin unit_r18_birkin_restluecken_pin unit_r20_birkin_push_pin)
-    if(TEST ${_g5alt})
-        set_property(TEST ${_g5alt} APPEND PROPERTY ENVIRONMENT "RE15_ENDKAMPF_NUR_G5=1")
-    endif()
-endforeach()
 
 # 80%-Gore im RE2-Gehirn: Zerfetzen (Schrot-Krit, Zelle 66FC) + Spawn-Varianten-Umordnung (Gestaltung 2026-10-30)
 add_executable(test_re2_gore80 test_re2_gore80.c)

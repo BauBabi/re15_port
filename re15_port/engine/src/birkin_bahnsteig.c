@@ -46,6 +46,7 @@
 #include "re15_audio.h"         /* re15_audio_room_se */
 #include "re15_esp.h"           /* re15_esp_fx_spawn_ex = FUN_8001bf10-Packung */
 #include "re15_engine.h"        /* g_engine.frame_count: Messzeile "Sherry-Ruf weggelassen" */
+#include "re15_finale_r42.h"     /* Runde 42 Strang finale: Tyrant-Wurzel in 5090/5091 */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -828,6 +829,9 @@ void re15_bb_tick(int slot)
          * Runde 41 Spur GR NB3 (Nutzerentscheid F2): RE15_BB_FORM_HP = 1000 = der erreichbare G4-Zweig `addiu v0,zero,1000`
          * @0x80100678 / `sh v0,342(s1)` @0x8010067c (Beleg re15_birkin_formen.h); vorher Port-Mass 150 (0x96 @0x80118094). */
         e->hp = RE15_BB_FORM_HP;
+        /* Runde 42 Strang finale (Plan D1/S4): in 5090/5091 traegt die Form die HP des RE2-Super-Tyrant 20000 + 200 (Ctor
+         * @0x80101b78-0x80101be0, re15_finale_r42.h RE15_FI_HP_START); am Bahnsteig 5080/5081 bleibt RE15_BB_FORM_HP. */
+        e->hp = (int16_t)re15_finale_r42_start_hp(e->hp);
         /* Abnahme 1 M1: der Schuss laeuft VOR der KI (game_step_common.c), ein Treffer im Tauschbild steht also schon in
          * Zustand 2 oder 3. Der Auftritt ist dann der gesicherte Zustand (+0x1fc), den der Handler fortsetzt @0x80107180-8c;
          * wer ihn ueberschrieb, verlor case 2 und damit das einzige Armieren des Riegel-Zaehlers (+0x93 Bit 0 blieb stehen). */
@@ -898,8 +902,21 @@ void re15_bb_tick(int slot)
         }
         break;
     }
-    case 3:                                            /* Port: statt Clip 17 @0x80107b3c die Rueckstoss-Szene */
-        if (re15_bf_bahnsteig_aktiv()) { re15_bf_rueckstoss_start(slot); return; }
+    case 3:                                            /* Port: statt Clip 17 @0x80107b3c (Todes-Clip des G4) */
+        /* Runde 42 Strang finale (Plan S4, NUTZERWUNSCH 07.11. "die Form Birkin G5 aus dem Finale wieder entfernst"): in 5090/5091
+         * keine Rueckstoss-Szene und kein G5 mehr. Die Form stirbt nur durch den Abschuss (finale_r42.c); der Tyrant haelt seine HP
+         * je Bild bei 10000 (`slti 0x2710` / `sh 0x2710,0x156(s0)` @0x80101ac8-dc) und kennt keinen Zustand 3 durch Schaden. Ein
+         * Treffer macht hoechstens 301 (Rakete, re15_rakete_schaden), von 10000 aus also nie hp < 0; dieser Zweig ist Schutz. */
+        if (re15_bf_bahnsteig_aktiv()) {
+            e->hp = RE15_FI_HP_UNTEN;
+            e->state = s_bb.gesichert ? s_bb.s_state : 1;
+            e->sub_state_1 = s_bb.gesichert ? s_bb.s_sub : (uint8_t)BB_GEHEN;
+            e->sub_state_2 = s_bb.gesichert ? s_bb.s_ph2 : 0;
+            e->sub_state_3 = s_bb.gesichert ? s_bb.s_ph3 : 0;
+            e->birkin_hurt_cd = 9;
+            e->hit_react = (uint8_t)(e->hit_react & ~1u);
+            break;
+        }
         if (re15_bf_flucht_raum() || (s_bb.gesichert && (s_bb.s_sub == BB_FLUCHT || s_bb.s_sub == BB_WEG))) {
             /* Stufe 3: 5080/5081 endet mit der Flucht (bb_flucht); Riegel wie im Todeszweig des 0x30 (+0x1de = 9
              * @0x8011a458, +0x93 &= 0xfe @0x8011a54c-50), sonst bliebe Bit 0 des tragenden Treffers stehen */
@@ -943,6 +960,9 @@ void re15_bb_tick(int slot)
         if (e->sub_state_1 == BB_GEHEN || e->sub_state_1 == BB_WEICHEN || e->sub_state_1 == BB_FLUCHT)   /* M6: Schub dieses Ticks */
             s_bb.vor_tempo = abs(s_bb.tempo) + abs(s_bb.quer);
     }
+    /* Runde 42 Strang finale (Plan S4): Wurzel-Takt nach dem Zustand wie der Tyrant (+0x1DA @0x80101a10/@0x80101db0, +0x1D8 und
+     * Untergrenze @0x80101ab0-dc, Uhr sub10, Wurf-Ausloeser sub11). Gehzustand = BB_GEHEN (Clip 5 @0x801028dc der G4-Vorlage). */
+    re15_finale_r42_form_takt(slot, e->state == 1 && e->sub_state_1 == BB_GEHEN, dist);
     s_bb.s_state = e->state; s_bb.s_sub = e->sub_state_1;   /* +0x1fc Sicherung */
     s_bb.s_ph2 = e->sub_state_2; s_bb.s_ph3 = e->sub_state_3;
     s_bb.gesichert = 1;

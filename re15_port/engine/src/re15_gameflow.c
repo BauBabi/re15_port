@@ -104,3 +104,8 @@ void re15_gameflow_to_title(void)
     g_gameflow.mode = RE15_MODE_TITLE;
     { extern void re15_discard_reset(void); re15_discard_reset(); }
 }
+
+/* Runde 42 Strang finale (Plan S8, Kopf re15_gameflow.h): Anfrage "INGAME aus" aus Set(0,1,0). */
+static int s_ingame_aus = 0;
+void re15_gameflow_ingame_aus(void) { s_ingame_aus = 1; }
+int  re15_gameflow_ingame_aus_faellig(void) { const int r = s_ingame_aus; s_ingame_aus = 0; return r; }

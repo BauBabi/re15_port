@@ -82,13 +82,13 @@ extern void *g_anim_pose_actor;
  * RotMatrix-Aufbau der lokalen Part-Matrix gerufen (nach Tween/Crossfade/Neck) und darf ay/az
  * um einen Zuschlag aendern — das Gegenstueck zu RE2s "Winkel addieren, Matrix bauen"
  * (EM036 @0x80100344-354, EM037 FUN_80104C30 @0x80104c30 nach den +0x6C-Schreibern).
- * Installiert von re15_g5_boss_tick (engine/src/enemy_ai_boss_g5.c); NULL = aus. */
+ * Erster Nutzer war der Endkampf bis v0.8.30; heute Alligator-Hals (kanister2080_r41.c) und Gator-Szene. NULL = aus. */
 extern void (*g_anim_bone_angle_hook)(const void *actor, int bone, int16_t *ay, int16_t *az);
 /* QUERY-Modus (g_anim_pose_actor == NULL): wer den Haken trotzdem auf einen Aktor beziehen
  * will (Tentakel-Kollision/Spitzensonde aus dem Engine-Tick), setzt hier den Aktor und
  * danach wieder NULL. Kein Crossfade-Zugriff, nur Identitaet fuer den Haken. */
 extern void *g_anim_query_actor;
-/* Gehaltene RE2-Pose (G5/Arme, re15_g5_skin.c re15_g5_pose_haken): ersetzt Wurzel (bone -1) bzw. Winkel; NULL = aus. */
+/* Gehaltene RE2-Pose: ersetzt Wurzel (bone -1) bzw. Winkel; NULL = aus (erster Nutzer bis v0.8.30 der Endkampf). */
 extern int (*g_anim_pose_override)(const void *actor, int bone, int16_t w[3], int32_t r[3]);
 /* Runde 38 Spur D (Zopf, re15_zopf_r38.h): wenn gesetzt, schreibt re15_skel_compute_pose je Knochen die fertige
  * LOKALE Rotation (nach Nacken/Haken, vor der Verkettung) hierher; [RE15_EMD_MAX_BONES][9]. NULL = aus. */

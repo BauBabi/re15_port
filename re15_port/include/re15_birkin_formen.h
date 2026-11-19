@@ -30,9 +30,8 @@
  *     @0x0083E), G4-Ablaeufe (re15_bb_tick); bei HP <= 0 Flucht (Clip 11) statt Tod, danach Flag (5,0x1c) wie der
  *     Birkin-Tod @0x8011aecc (STAGE5), damit sub01 @0x0078A weiterlaeuft.
  *   ZUG (5090/5091): die Riesenform ab der Raumladung (Spawn sub00 @0x0124A, Kampfstart sub04 Pos_set @0x12FE /
- *     Member_set(0x0c,0x13) @0x130A), G4-Ablaeufe (re15_bb_tick). Wo das Original nach dem Tod in Phase 3 auf den Raum-Morph wartet
- *     (grid&0xf==2, @0x8011a6c0 — in 5090 nie gesetzt), wechselt der Port in den RE2-G5 (Typ 0x36,
- *     enemy_ai_boss_g5.c). RE15_ENDKAMPF_NUR_G5=1 stellt den alten Ablauf her (0x30 -> 0x36 schon beim Spawn).
+ *     Member_set(0x0c,0x13) @0x130A), G4-Ablaeufe (re15_bb_tick). Seit Runde 42 (NUTZERWUNSCH 07.11.2026, re15_finale_r42.h)
+ *     stirbt sie nur durch den Abschuss des Finales (RE2-Super-Tyrant); der fruehere Uebergang in eine zweite Form ist entfernt.
  */
 #ifndef RE15_BIRKIN_FORMEN_H
 #define RE15_BIRKIN_FORMEN_H
@@ -47,7 +46,7 @@ const char *re15_bf_emd_datei(uint8_t type);
 /* 1 = die Bank von `type` ist die Bahnsteig-Form (RE2-Format, Lader platform/pc/main.c). */
 int  re15_bf_bahnsteig_bank_faellig(uint8_t type);
 
-int  re15_bf_bahnsteig_aktiv(void);      /* ROOM5090/5091 und nicht RE15_ENDKAMPF_NUR_G5 */
+int  re15_bf_bahnsteig_aktiv(void);      /* ROOM5090/5091 */
 int  re15_bf_riesenform_raum(void);      /* 5080/5081 und re15_bf_bahnsteig_aktiv: der 0x30 traegt die Riesenform (Stufe 3) */
 int  re15_bf_flucht_raum(void);          /* 5080/5081: der Kampf endet mit der Flucht (Clip 11), nicht mit dem Tod */
 int  re15_bf_hangar_aktiv(void);         /* ROOM50A0/50A1 und nicht RE15_KEIN_HANGAR_BIRKIN */
@@ -102,15 +101,6 @@ void re15_bf_modell_hook(void (*fn)(uint8_t type));
  * naechste Zeile per Regex ^#define RE15_BB_FORM_HP [0-9]+) nehmen den Wert von hier. */
 #define RE15_BB_FORM_HP 1000
 void re15_bf_granate_form(const re15_actor_t *e, int *form_hp, int *ende);
-
-/* Birkin (0x30) in 5090 nach Todesphase 2 an den G5 uebergeben (Typwechsel 0x30 -> 0x36). */
-void re15_bf_morph_zu_g5(int slot);
-
-/* Rueckstoss-Szene 5090 (Bahnsteig-Form -> G5): Start beim Todeseintritt des 0x30; re15_bf_pad ersetzt waehrend
- * des Beschusses die Spieler-Eingabe (Zielen + Feuern, keine Richtung) und liefert die Quadrat-Flanke. */
-void     re15_bf_rueckstoss_start(int slot);
-int      re15_bf_rueckstoss_phase(void);   /* 0 = aus, 1 = Beschuss, 3 = Sturz aus dem Wagen, 2 = hinter dem Zug */
-uint16_t re15_bf_pad(uint16_t pad, uint16_t *pressed);
 
 /* Kameraschnitt zur Spielerlage in ROOM5090/5091 (Baender der RVD-Zonen, s. birkin_formen.c). */
 int      re15_bf_schnitt_aus_lage(int32_t x);

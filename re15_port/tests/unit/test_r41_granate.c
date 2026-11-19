@@ -534,7 +534,6 @@ static void abschnitt_boss(void)
         { "Birkin 0x30 waehrend der Mutation (3071)",    0x3071, 0x30, 0x01, BF_MUTATION,  0 },
         { "Birkin 0x30 nach der Mutation 3071",          0x3071, 0x30, 0x01, BF_NACH_MUT,  0 },
         { "Riesenform 5090 (Form-Eintritt, Stufe 3)",     0x5090, 0x30, 0x13, BF_BAHNSTEIG, 0 },
-        { "G5 0x36 5090",                                0x5090, 0x36, 0x13, BF_G5,        0 },
         { "Gator-Boss 0x23 2090 (bis zur Schwaeche)",    0x2090, 0x23, 0x00, BF_GATOR,    -2 },
     };
     /* Soll je Fall: Form-HP, Raketenschaden, Granaten bis zum Formende, Raketen bis zum Formende (999 = nie). */
@@ -547,11 +546,11 @@ static void abschnitt_boss(void)
         { 300,   200, 2, 2 },
         { 300,   200, 2, 2 },
         { 300,   200, 1, 2 },     /* Form 1 bis hp < 100 (`slti 100` @0x8011667c x 1): 49 / 100, -100 */
-        { 1000,  301, 4, 4 },     /* Stufe 3: 5091 (Elza) = Riesenform wie 5080/5090 */
+        { 20200, 301, 999, 999 }, /* Runde 42 Strang finale: 5091 = Finale-Form, Tyrant-HP 20000 + 200 (@0x80101b78-0x80101be0),
+                                   * Untergrenze 10000 (@0x80101ac8-dc) -> stirbt nur durch den Abschuss (re15_finale_r42.h) */
         { 150,   200, 999, 999 }, /* waehrend der Mutation: ein toedlicher Treffer setzt 50 (Revive @0x8011a530 x 1) */
         { 150,   200, 1, 1 },     /* nach der Mutation 0x96 @0x80118094 x 1: -101 / -50 */
-        { 1000,  301, 4, 4 },     /* G4-Ctor @0x80100678; G4 @0x800A5D24: 749, 498, 247, -4 / 699, 398, 97, -204 */
-        { 600,   200, 3, 4 },     /* G5-Ctor @0x801003fc; G5 @0x800A601C: 349, 98, -153 / 400, 200, 0, -200 */
+        { 20200, 301, 999, 999 }, /* Runde 42 Strang finale: 5090 wie 5091 (Tyrant-HP, Untergrenze 10000); der G5 (600) ist entfernt */
         { 25240, 110, 1, 3 },     /* H3: 25000 + 240 (@0x801045ec, Bit 0x40 @0x8002b4ac); Schwaeche < 25000 @0x80101ec4:
                                    * 24989 / 25130, 25020, 24910 */
     };
@@ -584,7 +583,7 @@ static void abschnitt_boss(void)
         PRUEF(110 + (int)i, r == soll[i].d_rak && nr == soll[i].n_rak,
               "%s: Rakete %d (soll %d = RE2 Zeile 17 K0), %d Raketen bis zum Formende (soll %d)", f->name, r, soll[i].d_rak,
               nr, soll[i].n_rak);
-        if (f->art == BF_BAHNSTEIG)
+        if (f->art == BF_BAHNSTEIG && (f->raum & 0xFFFEu) == 0x5080u)   /* 5090/5091: Finale-HP (Zeilen oben) */
             PRUEF(130, fr[0] == 699 && fr[1] == 398 && fr[2] == 97 && fr[3] == -204,
                   "Riesenform: HP nach jeder Rakete %d, %d, %d, %d (soll 699, 398, 97, -204; nach 3 Raketen lebt sie mit 97)",
                   fr[0], fr[1], fr[2], fr[3]);

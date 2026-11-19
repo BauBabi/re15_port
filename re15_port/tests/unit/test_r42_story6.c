@@ -49,6 +49,7 @@
 #include "re15_story_r42.h"
 #include "re15_story6_r42.h"
 #include "re15_annette_r41.h"   /* Runde 42 rest Stufe 4: Leons Zugstart 6030 (RE15_AN_ZUG_*) */
+#include "re15_zws_r41.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -511,12 +512,13 @@ static void teil_zug6031(void)
     int pn = 0, fn = 0;
     const uint8_t *prog = re15_story6_r42_programm(RE15_S6_P_ZUG, &pn);
     const uint8_t *folge = re15_story6_r42_folge(RE15_S6_P_ZUG, &fn);
-    /* Toene: Zug-an (Zaehler [3]) vor msg 14 und vor dem Krachen ([4]), das Krachen vor msg 15 */
+    /* Zugfilm-Zeile (g_re15_zws_filme; vorher Zug-an-Ton Zaehler [3]) vor msg 14 und vor dem Krachen ([4]), das Krachen vor msg 15 */
+    const unsigned filme0 = g_re15_zws_filme;
     int bild_an = -1, bild_krach = -1, start = -1, ende = -1, sherry = 0, john = 0;
     int32_t jx = 0, jz = 0;
     for (int f = 0; f < 9000; f++) {
         frame();
-        if (bild_an < 0 && g_re15_s6_zaehler[RE15_S6_P_N]) bild_an = s_bild;
+        if (bild_an < 0 && g_re15_zws_filme != filme0) bild_an = s_bild;   /* Strang finale Stufe 2: Zugfilm-Zeile statt Zug-an-Ton */
         if (bild_krach < 0 && g_re15_s6_zaehler[RE15_S6_P_N + 1]) bild_krach = s_bild;
         if (aktor_typ(0x4B)) sherry = 1;
         if (aktor_typ(0x49) && !john) { john = 1; jx = aktor_typ(0x49)->x; jz = aktor_typ(0x49)->z; }
@@ -536,8 +538,9 @@ static void teil_zug6031(void)
     PRUEF(stimme_ok, "Stimmen-Ids = Message-Ids (%d)", s_stimme_n);
     PRUEF(g_re15_s6_zaehler[RE15_S6_P_ZUG] == 1, "sub07 @0x00F54 -> Zugstart genau einmal (%u)", g_re15_s6_zaehler[RE15_S6_P_ZUG]);
     PRUEF(re15_game_flag_get(RE15_R42_BANK, RE15_R42_BIT_ZUG_ELZA), "(9,130)=1 nach dem Zugstart");
-    PRUEF(bild_an > 0 && s_prot_n >= 1 && bild_an < s_prot_bild[0], "Zug-an-Ton (Bild %d) vor msg 14 'It's moving!' (Bild %d)",
-          bild_an, s_prot_n ? s_prot_bild[0] : -1);
+    PRUEF(bild_an > 0 && s_prot_n >= 1 && bild_an < s_prot_bild[0] && g_re15_s6_zaehler[RE15_S6_P_N] == 0,
+          "Zugfilm-Zeile (Bild %d) vor msg 14 'It's moving!' (Bild %d), kein Zug-an-Ton (%u; der Film traegt ihn)",
+          bild_an, s_prot_n ? s_prot_bild[0] : -1, g_re15_s6_zaehler[RE15_S6_P_N]);
     PRUEF(bild_krach > bild_an && s_prot_n >= 2 && bild_krach > s_prot_bild[0] && bild_krach < s_prot_bild[1],
           "Krachen (Bild %d) nach msg 14 und vor msg 15 (Bild %d)", bild_krach, s_prot_n >= 2 ? s_prot_bild[1] : -1);
     PRUEF(sherry && john && jx == -2900 && jz == -23800, "Sherry (0x4B) am Pult und John (0x49) im Fuehrerstand bei (%d,%d)", jx, jz);

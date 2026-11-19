@@ -185,6 +185,11 @@ void re15_game_flag_set(uint8_t zone, uint8_t idx, int value)
     /* Runde 37 Spur N: Zone 1 Bit 0 = DAT_800aca3c Bit 31 = das Elza-Bit, das FUN_80022300 per `bltz`
      * @0x80022334 liest (Bank-Tabelle @0x80074664[1]); vier Raumskripte klammern damit einen Birkin-Spawn. */
     if (zone == 1 && idx == 0) { extern void re15_elzabit_skript_set(int); re15_elzabit_skript_set(value); }
+    /* Runde 42 Strang finale (Plan S8): Zone 0 Bit 1 = INGAME (0x40000000 von DAT_800aca38, Zeigertabelle @0x80074664[0]). Einziger
+     * Schreiber im Spiel: ROOM6040/6041 sub02 @0x00590 `22 00 01 00` am Ende der Abspann-Diashow (Zensus oben: Zone 0 2x). Loeschen
+     * heisst im Original "zurueck zum Titel" (@0x8001ca2c-cbf4 / @0x80015838); der Port hat kein Wort-Modell fuer 0x800aca38 und
+     * gibt die Kante als Anfrage an die Plattform (re15_gameflow_ingame_aus). */
+    if (zone == 0 && idx == 1 && !value) { extern void re15_gameflow_ingame_aus(void); re15_gameflow_ingame_aus(); }
     /* Der ECHTE Schreibvorgang des Originals (siehe Block oben): Zone 2, Wort 0. */
     if (zone == 2 && word == 0) {
         if (value) g_re15_pauseflags |= mask;    /* @0x8003fe6c `or`      */

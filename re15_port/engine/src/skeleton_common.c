@@ -165,7 +165,7 @@ void *g_anim_pose_actor = NULL;
 void (*g_anim_bone_angle_hook)(const void *actor, int bone, int16_t *ay, int16_t *az) = NULL;
 /* Aktor-Identitaet fuer den Haken im QUERY-Modus (g_anim_pose_actor == NULL); s. Header. */
 void *g_anim_query_actor = NULL;
-/* Gehaltene RE2-Pose (Nachbesserung G5 2, re15_g5_skin.c): 1 = Winkel (bone >= 0) bzw. Wurzel (bone -1) ersetzt. */
+/* Gehaltene RE2-Pose (erster Nutzer bis v0.8.30 der G5): 1 = Winkel (bone >= 0) bzw. Wurzel (bone -1) ersetzt. */
 int (*g_anim_pose_override)(const void *actor, int bone, int16_t w[3], int32_t r[3]) = NULL;
 /* Runde 38 Spur D (Zopf): Fangpuffer der lokalen Knochen-Rotationen, NULL = aus. */
 int32_t (*g_skel_lokal_rot)[9] = NULL;
@@ -330,7 +330,7 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
      * toward the prior rendered root. rt_* = the rendered (possibly blended) root. */
     int32_t rt_x = kf_px, rt_y = kf_py, rt_z = kf_pz;
     /* GEHALTENE RE2-POSE (G5 EM036 / Arme EM037, Nachbesserung G5 2): RE2 mischt nur im Anim-Schritt FUN_80029614 und haelt
-     * Winkel und Wurzel bis zum naechsten Schritt (re15_g5_skin.c). Dann gibt es hier weder Keyframe noch Crossfade - der
+     * Winkel und Wurzel bis zum naechsten Schritt. Dann gibt es hier weder Keyframe noch Crossfade - der
      * Crossfade je Zeichnung wuerde in Takten ohne Schritt (Speer sub9 ph3..ph7) gegen das rohe Bild laufen. */
     const void *ovr_actor = bact ? (const void *)bact : (const void *)g_anim_query_actor;
     int ovr = 0;
@@ -669,7 +669,7 @@ int re15_skel_compute_pose(const re15_emd_skeleton_t *skel,
          * Kopf-Tracking auf part1+0x6A (@0x80100344-354, EM036) und die Einrollwinkel der
          * Tentakel auf part+0x6C je Part (sub9 ph5/7 @0x801023d4-2658, sub11 ph5/7
          * @0x80102e70-3170, EM037). Der Haken ist NUR fuer die Typen 0x36/0x37 belegt
-         * (re15_g5_bone_angle_hook prueft den Typ) und sonst ein No-Op. */
+         * (die Haken pruefen den Typ) und sonst ein No-Op. */
         if (g_anim_bone_angle_hook && (bact || g_anim_query_actor))
             g_anim_bone_angle_hook(bact ? (const void *)bact : g_anim_query_actor, b, &ay, &az);
 

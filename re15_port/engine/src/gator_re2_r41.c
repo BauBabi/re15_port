@@ -32,6 +32,7 @@
  * und Dash/Intro haben kein Bahn-Gate mehr; die frueheren PORT-WAHLEN "kein yaw += 0x400" / "nur bei freier
  * Bahn" sind ueberholt, Abnahme 1 M4. Nachbesserung 2: Intro-Startlage = Pos_set-Zwilling, s. Intro.)
  */
+#include "re2_buehne.h"        /* Runde 42 Plan S3: VSync + Schuetteln (gemeinsam mit dem Finale) */
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -105,7 +106,6 @@ static gr2_t s_g[RE15_ACTOR_MAX];
 
 /* global (EXE-Zustand): 0x800cfbd8 Bits 4/8, 0x800dfd6b */
 static uint32_t s_cfbd8;
-static uint8_t  s_schuettel_idx;
 void (*re15_gr2_raum_se_hook)(int satz) = NULL;
 
 /* Kanister (ein Objekt je Raum, obj[1] @0x800d051c) */
@@ -162,7 +162,7 @@ void re15_gr2_zonen_quelle(int (*zone_fn)(int32_t z)) { s_zone_fn = zone_fn; }
  * jal VSync` @0x8002b990-98); im Spiel 2 (`li v0,0x2 / sb v0,0x800dfc1a` @0x8003b9a8-b0 = 30 Bilder/s), R1 P0 setzt 4
  * (`addiu v0,zero,4 / lui at,0x800e / sb v0,-998(at)` @0x8010235c-64 = 15 Bilder/s, Zeitlupe der Explosion), R1 P3
  * wieder 2 (`addiu v0,zero,2` @0x80102668, `sb v0,-998(at)` @0x8010267c). */
-static uint8_t s_vsync = 2;
+/* Runde 42 (Plan S3): der Wert selbst liegt im gemeinsamen Baustein re2_buehne.c (re2b_vsync / re2b_vsync_setzen). */
 /* Nachtrag 4: Kamera-Programme (Definitionen vor dem Takt) */
 static void gr2_kam_reset(void);
 static int  gr2_kam_schnitt(int programm, int blick, const re15_actor_t *e, const re15_actor_t *opfer);
@@ -356,7 +356,7 @@ void re15_gr2_reset(int slot, re15_gr2_se_fn se)
     s_g[slot].letzter_clip = 0;
     s_g[slot].fin_cut = -1;                                 /* Nachbesserung 5: keine Finisher-Buehne */
     s_cfbd8 = 0;                                            /* Raumstart: keine Schuettel-Bits */
-    s_vsync = 2;                                            /* Raumstart: Spieltakt VSync(2) @0x8003b9a8-b0 */
+    re2b_vsync_setzen(RE2B_VSYNC_SPIEL);                    /* Raumstart: Spieltakt VSync(2) @0x8003b9a8-b0 */
     gr2_kam_reset();                                        /* Nachtrag 4: keine offene Kamera-Sperre (Raum neu geladen) */
     re15_gr2_kanister_env();
 }
@@ -399,28 +399,11 @@ static void gr2_ereignis_takt(gr2_t *g)
     }
 }
 
-/* Bildschirm-Schuetteln FUN_8002aa28 / FUN_8002aa6c. */
-static const uint8_t k_schuettel1[32] = {   /* @0x8009daf4 */
-    0x00,0x01, 0x00,0x00, 0x00,0x00, 0x00,0x01, 0x01,0x01, 0x00,0x00, 0x00,0x01, 0x00,0x00,
-    0x00,0x00, 0x00,0x00, 0x00,0x01, 0x00,0x01, 0x00,0x00, 0x00,0x00, 0x01,0x01, 0x00,0x00 };
-static const uint8_t k_schuettel2[32] = {   /* @0x8009db14 */
-    0x00,0x02, 0x00,0x00, 0x00,0x02, 0x00,0x03, 0x01,0x00, 0x00,0x01, 0x00,0x02, 0x00,0x00,
-    0x00,0x02, 0x00,0x00, 0x02,0x01, 0x00,0x02, 0x00,0x02, 0x00,0x00, 0x01,0x01, 0x00,0x02 };
-static int s_schuettel_dx, s_schuettel_dy;   /* fuer dieses Bild (im Takt berechnet) */
-static int s_schuettel_modus;
-
-static void gr2_schuettel_takt(void)
-{
-    int modus = (s_cfbd8 & 8u) ? 1 : (s_cfbd8 & 4u) ? 2 : 0;   /* @0x8002aa34-50 */
-    s_schuettel_modus = modus;
-    if (!modus) { s_schuettel_dx = s_schuettel_dy = 0; return; }
-    s_schuettel_idx = (uint8_t)((s_schuettel_idx + 1) & 0xf);  /* @0x8002aa90-a4 */
-    const uint8_t *t = (modus == 1) ? k_schuettel1 : k_schuettel2;
-    s_schuettel_dx = t[s_schuettel_idx * 2];                   /* bVar1 */
-    s_schuettel_dy = t[s_schuettel_idx * 2 + 1];               /* uVar2 */
-}
-void re15_gr2_schuettel_offset(int *dx, int *dy) { if (dx) *dx = s_schuettel_dx; if (dy) *dy = s_schuettel_dy; }
-int  re15_gr2_schuettel_modus(void) { return s_schuettel_modus; }
+/* Bildschirm-Schuetteln FUN_8002aa28 / FUN_8002aa6c: seit Runde 42 (Strang finale, Plan S3) im gemeinsamen Baustein re2_buehne.c
+ * (Tabellen @0x8009daf4 / @0x8009db14 und Takt unveraendert dorthin verschoben); hier nur noch die Bits des Alligators. */
+static void gr2_schuettel_takt(void) { re2b_schuettel_takt(s_cfbd8); }
+void re15_gr2_schuettel_offset(int *dx, int *dy) { re2b_schuettel_offset(dx, dy); }
+int  re15_gr2_schuettel_modus(void) { return re2b_schuettel_modus(); }
 uint8_t re15_gr2_ereignis(int slot) { return (slot >= 0 && slot < RE15_ACTOR_MAX) ? s_g[slot].ereignis : 0; }
 
 /* ---- Putz: Runde 41 Spur P (Nachbesserung 1, M4, Nachtrag 35 Punkt 2 "kam immer noch nicht so runter wie in RE2") --------------
@@ -1261,7 +1244,7 @@ void re15_gr2_kamera_finisher(int slot, const re15_actor_t *gator, const re15_ac
     gr2_kam_schnitt(GR2_KAM_FRESSEN, RE15_GR2_BLICK_FINISHER, gator, NULL);   /* @0x80100fbc-ff4, kein Ende */
     s_wahl_ohne_laufend = 0;
 }
-int re15_gr2_vsync(void) { return s_vsync; }
+int re15_gr2_vsync(void) { return re2b_vsync(); }
 
 int re15_gr2_kamera_folge(int max, int *cut, int *blick, int *clip, int *bild)
 {
@@ -2041,7 +2024,7 @@ void re15_gr2_r1_start(int slot, re15_actor_t *e)
     re15_rumble_small(8, 3);                                /* FUN_8003947c(8,3) @0x80102328-30 */
     re15_rumble_ramp(50, 255, 0, 0);                        /* FUN_800395b8(50,255,0,0) @0x80102334-44 */
     gr2_kiefer_platzen(e); g->kiefer_rot = 1;               /* FUN_80104318(em, Part 7) @0x80102354-58 */
-    s_vsync = 4;                                            /* `addiu v0,zero,4 / sb v0,0x800dfc1a` @0x8010235c-64 */
+    re2b_vsync_setzen(4);                                   /* `addiu v0,zero,4 / sb v0,0x800dfc1a` @0x8010235c-64 */
     re15_gr2_log("R1 VSync 4 (Zeitlupe) F%u", (unsigned)g_engine.frame_count);
     g->fontaene = 1;                                        /* Callback +0x234 = FUN_80103eb4 @0x80102368 */
     /* Spritzring @0x80102374 -> 0x8010338c: 6 Effekte an der Kanister-Matrix */
@@ -2139,7 +2122,7 @@ int re15_gr2_r1_tick(int slot, re15_actor_t *e)
         /* Runde 41 Spur P (Nachbesserung 1, M2): P3 `ori v0,v0,0x4000 / sh v0,270(s1)` @0x8010265c-64 = +0x10E Bit 0x4000 nimmt die Leiche aus Zielhilfe und Schussproben
          * (FUN_8003db38 / FUN_800410cc: `(+0x10E & 0xc000) == 0`); im Port traegt das die Trefferbox (hit_radius_min <= 0, wie das Untertauchen, s. gb_untertauchen). */
         e->hit_radius_min = 0; e->hit_radius_max = 0;
-        s_vsync = 2;                                        /* `addiu v0,zero,2` @0x80102668, `sb` @0x8010267c */
+        re2b_vsync_setzen(RE2B_VSYNC_SPIEL);                /* `addiu v0,zero,2` @0x80102668, `sb` @0x8010267c */
         re15_gr2_log("R1 VSync 2 F%u", (unsigned)g_engine.frame_count);
         if (s_kam.aktiv && s_kam.programm == GR2_KAM_R1) gr2_kam_frei(e);   /* P3 `&= ~0x100` @0x80102688-94 */
     }
