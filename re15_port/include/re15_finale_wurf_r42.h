@@ -34,8 +34,9 @@
  *   W+31  Sleep 1 @0x0187C + Sleep 30 @0x01892, Plc_motion WURF (@0x018AA)
  *   Los   Clip-Bild 22 des Wurfs (RE1.5 @0x800336fc statt Sleep 20 @0x018AE): Loslassen (Super_reset @0x018B6, Flug sub13 @0x018BE),
  *         Zuruf = Message_on (PORT-WAHL "beim Loslassen", RE2 Xa_on 0 @0x01888)
- *   Flug  je Bild Lage += v, v += a bis y >= -800 (@0x019CE-0x019D8), Schnitt auf die Kamera des Spielers, sobald der Werfer eine
- *         Werferlaenge von der Hand weg ist (Runde 3); Landung: Set(5,0x0E), Se_on Raumbank 0x0E, Lage + Drehung fest (@0x019DE-0x01A02)
+ *   Flug  je Bild Lage += v, v += a bis y >= -800 (@0x019CE-0x019D8); Flugkamera nach Kopf "Flugkamera" (Stufe 4 Runde 3): zeigt der
+ *         Schnitt 13 Landestelle und Spieler, bleibt er (RE2); sonst Schnitt auf die Kamera des Spielers (bzw. eine Lauf-Kamera von
+ *         Wagen C), sobald der Werfer eine Werferlaenge von der Hand weg ist (Runde 3); Landung: Set(5,0x0E), Se_on Raumbank 0x0E, Lage + Drehung fest (@0x019DE-0x01A02)
  *   ...   Landung abwarten (Do..Edwhile @0x018C4-0x018CC), Sleep 15 @0x018D0, Reaktion: Spieler blickt zu John (Dir_set @0x018E0),
  *         Cut_chg 11 @0x018FC -> Schnitt 13, Sleep 1 @0x018FE, John laeuft zur Tuer (Plc_dest Modus 5 @0x0193A), an der Tuer Tuerton,
  *         Cut zurueck @0x01944/@0x01948, Aot_reset 5 @0x0194A (Werfer aufhebbar), DANACH John geparkt (@0x01958; nur ausser Bild,
@@ -156,6 +157,29 @@ extern "C" {
 #define RE15_FW_FLUG_BILDER    28
 #define RE15_FW_FLUG_MAX      120   /* Notbremse der Schleife (kein Boden erreicht) - RE2 kennt keine */
 #define RE15_FW_LANDUNG_RAND   100    /* Abstand des Spielers zum Rand des Aufnahme-Rechtecks */
+/* Flugkamera (Stufe 4 Runde 3, Pruefbericht s4 r2 Rot R1: bei Elza x 16904 lag die Landestelle x 18490 unter dem Auge der Spieler-
+ * kamera 12 (x 18526) - nach dem Flugschnitt war der Werfer weder im Flug noch bei der Landung im Bild). Welche Kamera Flug und
+ * Landung zeigt, haengt jetzt an der Lage, nicht an einer festen Wahl:
+ *   1. RE2 ZUERST: RE2 schneidet waehrend Flug und Landung NICHT - zwischen Cut_chg 7 `29 07` @0x0184E und Cut_chg 11 `29 0b` @0x018FC
+ *      steht in sub12 kein Byte 0x29 (0x01850-0x018FB), in sub13 + Landung (0x019B2-0x01A05) ebenfalls keins (selbst gelesen,
+ *      ROOM7020.RDT). Der Wurf-Schnitt 13 bleibt also stehen, wenn er Landestelle UND Spieler zeigt (Elza an x 16904: 28/28 Flugbilder
+ *      im Schnitt 13, finale.log s4r2/rec/elza).
+ *   2. PORT-WAHL Runde 3 (unveraendert): sonst Schnitt auf die Kamera des Spielers nach einer Werferlaenge, wenn sie beides zeigt
+ *      (Leon an x 8150 steht HINTER dem Auge von Schnitt 13, x 11050).
+ *   3. PORT-WAHL Runde 3 erweitert: sonst die erste Lauf-Kamera von Wagen C, die beides zeigt. Lauf-Kameras = Ziele echter RVD-
+ *      Wechsel von Wagen C (ROOM5090/5091 bytegleich): 11->12 @0x00490, 12->11 @0x004B8, 12->13 @0x004CC, 13->14 @0x00508 (Kamera 15
+ *      hat nur ihren Anker @0x00544 = SCD-Kamera, nicht dabei). Gebraucht z. B. an x 14000 mit Kamera 13: dort zeigt weder 13 noch
+ *      die Kamera des Spielers die Fuesse (unit_r42_finale_wurf t_flugkamera).
+ *   "Zeigt" = der Bodenpunkt liegt im Bild 320x240 (Projektion wie der Renderer, re15_camera_build_view): Landestelle (x, 0, z) = die
+ *   Lage nach der Landung (@0x019DE-0x01A02, y 0) und die Fuesse des Spielers (seine Lage). Zeigt keine Kamera beides, gilt in derselben
+ *   Reihenfolge die erste, die die Landestelle zeigt (gemessen nur am Bankrand x 14000..14500, z <= -24800: dort sieht keine Kamera die
+ *   Fuesse UND die Landestelle). Zeigt gar keine die Landestelle: Rueckfall Kamera des Spielers, Messzeile "zeigt Landestelle NICHT".
+ *   Der Riegel (unit_r42_finale_wurf t_flugkamera) tastet den freien Boden von Wagen C (SCA-Zellen 5091 ausgespart) fuer jede
+ *   Lauf-Kamera als Kamera des Spielers ab und verlangt die Landestelle stets im Bild. Keine neue Zahl: Kandidaten aus RE2 bzw. den
+ *   RVD-Bytes, Massstab = Bildrand des Renderers. */
+#define RE15_FW_LAUFKAMERA_11  11     /* RVD 5090/5091 @0x004B8 `01 ff 0c 0b` (12->11) */
+#define RE15_FW_LAUFKAMERA_12  12     /* RVD @0x00490 `01 ff 0b 0c` (11->12), @0x004F4 (13->12) */
+#define RE15_FW_LAUFKAMERA_14  14     /* RVD @0x00508 `01 ff 0d 0e` (13->14) */
 #define RE15_FW_SE_LANDUNG   0x0E   /* Se_on `36 02 0e 00 ..` @0x019E2 -> Raumbank R702 Satz 0x0E (re15_finale_r42.h) */
 /* Reaktion: RE2 stellt Leon auf (-18600,0,-21700) Gier 0xF8F8 & 0xFFF = 0x8F8 (@0x018D8/@0x018E0) = Peilung Leon -> Ada - 2
  * (u_wurf.py: 4094) und stellt die Lage am Ende zurueck (@0x0197A-0x0198E). PORT-WAHL: der Spieler bleibt stehen (der Werfer liegt
@@ -249,6 +273,10 @@ int32_t re15_finale_wurf_vy(int32_t y0);
 /* Landestelle neben dem Spieler (Kopf "Landestelle"): ab Spieler (px,pz) in Richtung (jx,jz), Spieler im Aufnahme-Rechteck, hoechstens die
  * halbe Strecke. */
 void re15_finale_wurf_landestelle(int32_t px, int32_t pz, int32_t jx, int32_t jz, int32_t *lx, int32_t *lz);
+/* Flugkamera (Kopf "Flugkamera"): Kamera, die Flug und Landung zeigt - zuerst der Wurf-Schnitt 13 (RE2, kein Schnitt im Flug), dann
+ * die Kamera des Spielers `cut_spieler`, dann die Lauf-Kameras von Wagen C. Landestelle (lx, 0, lz), Spieler (px, py, pz); braucht
+ * g_room_rdt. *sicht = 2: Landestelle und Spieler im Bild, 1: nur die Landestelle, 0: keine (Rueckgabe dann cut_spieler). */
+int  re15_finale_wurf_flugkamera(int cut_spieler, int32_t lx, int32_t lz, int32_t px, int32_t py, int32_t pz, int *sicht);
 /* Luecken im Inventar schliessen (FUN_8004dadc so oft, bis keine Luecke vor einem belegten Platz liegt). Rueckgabe = Schuebe. */
 int  re15_finale_wurf_luecken_schliessen(void);
 

@@ -70,7 +70,8 @@ static struct {
     int16_t  f_motion; uint32_t f_frame; uint8_t f_frac;
     int      form_gez;                /* Messzeile: zuletzt gemeldeter Zeichen-Zustand der Form (-1 = noch keiner) */
     int      bild0;                   /* 1 = erstes Programmbild gesehen (W) */
-    int      flug_schnitt;            /* 1 = waehrend des Flugs auf die Kamera des Spielers geschnitten */
+    int      flug_schnitt;            /* 1 = waehrend des Flugs auf die Flugkamera geschnitten */
+    int      flug_cut;                /* Kamera, die Flug und Landung zeigt (Kopf "Flugkamera"; = RE15_FW_CUT_WURF: kein Schnitt) */
     int      abgang, abgang_t;        /* John geht ab (Takt des Reaktions-Signals) */
     int32_t  jx_alt, jz_alt; int gegangen;
     int      john_weg;
@@ -271,6 +272,22 @@ void re15_finale_wurf_landestelle(int32_t px, int32_t pz, int32_t jx, int32_t jz
     *lz = d ? pz + (int32_t)((int64_t)dz * k / d) : pz;
 }
 
+/* Flugkamera (Kopf "Flugkamera", Stufe 4 Runde 3): erst der Wurf-Schnitt (RE2 schneidet im Flug nicht, kein 0x29 zwischen @0x0184E und
+ * @0x018FC), dann die Kamera des Spielers (PORT-WAHL Runde 3), dann die Lauf-Kameras von Wagen C (RVD @0x00490/@0x004B8/@0x00508). */
+int re15_finale_wurf_flugkamera(int cut_spieler, int32_t lx, int32_t lz, int32_t px, int32_t py, int32_t pz, int *sicht)
+{
+    const int kand[] = { RE15_FW_CUT_WURF, cut_spieler, RE15_FW_LAUFKAMERA_11, RE15_FW_LAUFKAMERA_12, RE15_FW_LAUFKAMERA_14 };
+    const unsigned nk = sizeof kand / sizeof kand[0];
+    for (int stufe = 2; stufe >= 1; stufe--)                         /* 2 = Landestelle + Spieler, 1 = nur Landestelle */
+        for (unsigned i = 0; i < nk; i++)
+            if (im_bild(kand[i], lx, 0, lz, NULL, NULL) && (stufe == 1 || im_bild(kand[i], px, py, pz, NULL, NULL))) {
+                if (sicht) *sicht = stufe;
+                return kand[i];
+            }
+    if (sicht) *sicht = 0;
+    return cut_spieler;
+}
+
 /* ---- Programm (RE2 sub12 in RE1.5-Opcodes) ------------------------------------------------------------------------------ */
 #define PUT(...) do { const uint8_t _b[] = { __VA_ARGS__ }; \
     if (n + (int)sizeof _b <= (int)sizeof s_w.prog) { memcpy(s_w.prog + n, _b, sizeof _b); n += (int)sizeof _b; } } while (0)
@@ -341,7 +358,7 @@ int re15_finale_wurf_start(int form_slot)
     s_w.fx = e->x;  s_w.fz = e->z;  s_w.fg = e->rot_y;
     s_w.f_motion = e->motion; s_w.f_frame = e->anim_frame; s_w.f_frac = e->anim_frac;
     s_w.z_an = s_w.z_aus = -1;
-    s_w.bild0 = 0; s_w.flug_schnitt = 0; s_w.abgang = 0; s_w.john_weg = 0; s_w.an_tuer = 0; s_w.parken_offen = 0;
+    s_w.bild0 = 0; s_w.flug_schnitt = 0; s_w.flug_cut = s_w.cut; s_w.abgang = 0; s_w.john_weg = 0; s_w.an_tuer = 0; s_w.parken_offen = 0;
     static const uint8_t sigs[] = { RE15_FW_SIG_WURF, RE15_FW_SIG_GELANDET, RE15_FW_SIG_REAKTION, RE15_FW_SIG_ENDE, RE15_FW_SIG_TUER };
     for (unsigned i = 0; i < sizeof sigs; i++) sig_setzen(sigs[i], 0);
     programm_bauen();
@@ -401,6 +418,15 @@ static void loslassen(void)
     memcpy(s_w.pos, p0, sizeof s_w.pos);                             /* Super_reset @0x018B6: Weltlage der Hand */
     memcpy(s_w.start, p0, sizeof s_w.start);
     re15_finale_wurf_startwerte(s_w.pos, s_w.ziel_x, s_w.ziel_z, s_w.v, s_w.a, &s_w.flug_gier);
+    {
+        int sicht = 0;
+        s_w.flug_cut = re15_finale_wurf_flugkamera(s_w.cut, s_w.ziel_x, s_w.ziel_z, pl->x, pl->y, pl->z, &sicht);
+        if (sicht == 2)      LOG("Flugkamera %d: zeigt Landestelle und Spieler, Kamera des Spielers %d", s_w.flug_cut, s_w.cut, 0);
+        else if (sicht == 1) LOG("Flugkamera %d: zeigt Landestelle (Spieler-Fuesse nicht), Kamera des Spielers %d", s_w.flug_cut, s_w.cut, 0);
+        else                 LOG("Flugkamera %d: zeigt Landestelle NICHT - Rueckfall, Kamera des Spielers %d", s_w.flug_cut, s_w.cut, 0);
+        if (s_w.flug_cut == RE15_FW_CUT_WURF)
+            LOG("Flugkamera %d: kein Schnitt im Flug (RE2: kein Cut_chg zwischen @0x0184E und @0x018FC)", s_w.flug_cut, 0, 0);
+    }
     s_w.flug_n = 0;
     s_w.w = RE15_FW_W_FLUG;
     sig_setzen(RE15_FW_SIG_WURF, 1);
@@ -426,9 +452,11 @@ static void flug_takt(void)
         int u = 0, v = 0, u2 = 0, v2 = 0;
         const int i13 = im_bild(RE15_FW_CUT_WURF, s_w.pos[0], s_w.pos[1], s_w.pos[2], &u, &v);
         const int ic = im_bild(s_w.cut, s_w.pos[0], s_w.pos[1], s_w.pos[2], &u2, &v2);
+        const int ik = im_bild(s_w.flug_cut, s_w.pos[0], s_w.pos[1], s_w.pos[2], NULL, NULL);
         LOG("Flug %d: Lage (%d,%d)", s_w.flug_n, s_w.pos[0], s_w.pos[2]);
         LOG("Flug %d: y %d, Schnitt 13 Bild-y/1000 %d", s_w.flug_n, s_w.pos[1], i13 ? v : -9999);
         LOG("Flug %d: im Bild Schnitt 13 %d, Kamera des Spielers %d", s_w.flug_n, i13, ic);
+        LOG("Flug %d: im Bild der Flugkamera %d: %d", s_w.flug_n, s_w.flug_cut, ik);
         (void)u; (void)u2; (void)v2;
         /* PORT-WAHL (Kopf "Ablauf", Runde 3): Schnitt auf die Kamera des Spielers, sobald der Werfer eine Werferlaenge (PL00W12-Rohr,
          * RE15_FW_W12_LAENGE) von der Loslasslage weg ist - er hat Johns Hand sichtbar verlassen. Runde 2 schnitt erst, als er im Bild
@@ -437,11 +465,12 @@ static void flug_takt(void)
          * dabei mit. */
         const int64_t ddx = s_w.pos[0] - s_w.start[0], ddy = s_w.pos[1] - s_w.start[1], ddz = s_w.pos[2] - s_w.start[2];
         const int32_t weg = (int32_t)re15_squareroot0((uint32_t)(ddx * ddx + ddy * ddy + ddz * ddz));
-        if (!s_w.flug_schnitt && s_w.cut != RE15_FW_CUT_WURF && weg >= RE15_FW_W12_LAENGE) {
+        if (!s_w.flug_schnitt && s_w.flug_cut != RE15_FW_CUT_WURF && weg >= RE15_FW_W12_LAENGE) {
             s_w.flug_schnitt = 1;
-            kamera(s_w.cut);
-            LOG("Schnitt auf die Kamera des Spielers %d im Flugbild %d", s_w.cut, s_w.flug_n, 0);
-            LOG("Schnitt: Werfer %d von der Loslasslage (Werferlaenge %d), im Bild des Spielers %d", weg, RE15_FW_W12_LAENGE, ic);
+            kamera(s_w.flug_cut);
+            if (s_w.flug_cut == s_w.cut) LOG("Schnitt auf die Kamera des Spielers %d im Flugbild %d", s_w.flug_cut, s_w.flug_n, 0);
+            else LOG("Schnitt auf die Lauf-Kamera %d im Flugbild %d (Kamera des Spielers %d)", s_w.flug_cut, s_w.flug_n, s_w.cut);
+            LOG("Schnitt: Werfer %d von der Loslasslage (Werferlaenge %d), im Bild der Flugkamera %d", weg, RE15_FW_W12_LAENGE, ik);
         }
     }
     if (weiter && s_w.flug_n < RE15_FW_FLUG_MAX) return;
@@ -451,9 +480,9 @@ static void flug_takt(void)
     item_lage_setzen(s_w.pos[0], s_w.pos[2]);
     re15_finale_r42_se(RE15_FW_SE_LANDUNG);
     sig_setzen(RE15_FW_SIG_GELANDET, 1);
-    if (!s_w.flug_schnitt && s_w.cut != RE15_FW_CUT_WURF) {
-        s_w.flug_schnitt = 1; kamera(s_w.cut);
-        LOG("Schnitt auf die Kamera des Spielers %d bei der Landung", s_w.cut, 0, 0);
+    if (!s_w.flug_schnitt && s_w.flug_cut != RE15_FW_CUT_WURF) {
+        s_w.flug_schnitt = 1; kamera(s_w.flug_cut);
+        LOG("Schnitt auf die Flugkamera %d bei der Landung", s_w.flug_cut, 0, 0);
     }
     {
         const re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -461,10 +490,10 @@ static void flug_takt(void)
         LOG("Landung nach %d Flugbildern bei (%d,%d)", s_w.flug_n, s_w.pos[0], s_w.pos[2]);
         LOG("Landung: Abstand zum Spieler %d", (int)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz)), 0, 0);
         int u = 0, v = 0;
-        const int ib = im_bild(s_w.cut, s_w.pos[0], -100, s_w.pos[2], &u, &v);
-        LOG("Landung im Bild der Kamera %d: %d, Bild-x/1000 %d", s_w.cut, ib, u);
+        const int ib = im_bild(s_w.flug_cut, s_w.pos[0], -100, s_w.pos[2], &u, &v);
+        LOG("Landung im Bild der Kamera %d: %d, Bild-x/1000 %d", s_w.flug_cut, ib, u);
         LOG("Landung: Bild-y/1000 %d; Spieler Bild-x/1000 folgt", v, 0, 0);
-        if (im_bild(s_w.cut, pl->x, -100, pl->z, &u, &v)) LOG("Landung: Spieler Fuesse Bild-x/1000 %d Bild-y/1000 %d", u, v, 0);
+        if (im_bild(s_w.flug_cut, pl->x, -100, pl->z, &u, &v)) LOG("Landung: Spieler Fuesse Bild-x/1000 %d Bild-y/1000 %d", u, v, 0);
         for (int i = 0; i < RE15_ESP_FX_MAX; i++) {                   /* Messzeile: Effekte (Flammen) um die Landestelle */
             const re15_esp_fx_t *fx = re15_esp_fx_get(i);
             if (!fx) continue;

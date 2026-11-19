@@ -19,6 +19,14 @@ cmake_minimum_required(VERSION 3.16)   # cmake -P: Policies wie die uebrigen Int
 #   - jedes Bild von W (Cut_chg(13)) bis vor den Flugschnitt auf die Kamera des Spielers zeigt Kamera 13 (cam=13);
 #   - jedes Bild von der Reaktion (Cut_chg(13)) bis vor das Szenenende zeigt Kamera 13;
 #   - keine Zeile "[bf-kamera] ... Wache" zwischen Szenenstart und Szenenende.
+# Stufe 4 Runde 3 (Pruefbericht s4 r2, Rot R1): an dieser Stelle lag die Landestelle (18490) unter dem Auge der Kamera 12 (18526) -
+# nach dem Flugschnitt auf 12 war der Werfer weder im Flug noch bei der Landung im Bild ("Kamera des Spielers 0", "Landung im Bild der
+# Kamera 12: 0"). Kopf "Flugkamera" (include/re15_finale_wurf_r42.h): der Wurf-Schnitt 13 zeigt hier Landestelle und Elza, also bleibt
+# er wie in RE2 (kein Cut_chg zwischen @0x0184E und @0x018FC). Zusaetzlich geprueft:
+#   - finale.log "Flugkamera 13: zeigt Landestelle und Spieler" und "kein Schnitt im Flug", KEIN Flugschnitt;
+#   - Kamera 13 in JEDEM Bild von W bis zur Reaktion (auch Flug und Landung) und von der Reaktion bis vor das Szenenende;
+#   - der Werfer in jedem der 28 Flugbilder im Bild der Flugkamera ("Flug n: im Bild der Flugkamera 13: 1") und "Landung im Bild der
+#     Kamera 13: 1".
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -P test_r42_finale_wurf_kamera.cmake
 #         nur auswerten (vorhandener Lauf-Ordner mit finale.log/debug.log): cmake -DAUSWERTEN=<lauf-ordner> -P ...
 # =============================================================================
@@ -94,13 +102,33 @@ function(bild_von _muster _var)
 endfunction()
 bild_von("Wurf: Szene startet" _S)
 bild_von("Wurf: Bild 0: John erscheint" _W)
-bild_von("Wurf: Schnitt auf die Kamera des Spielers" _SK)
+bild_von("Wurf: Schnitt auf die (Kamera des Spielers|Lauf-Kamera|Flugkamera)" _SK)
 bild_von("Wurf: Reaktion" _R)
 bild_von("Wurf: Ende" _E)
 set(_f "")
-if(NOT _S OR NOT _W OR NOT _SK OR NOT _R OR NOT _E)
-    message(FATAL_ERROR "r42_finale_wurf_kamera: Szene unvollstaendig - Start '${_S}' / Bild 0 '${_W}' / Flugschnitt '${_SK}' / "
+if(NOT _S OR NOT _W OR NOT _R OR NOT _E)
+    message(FATAL_ERROR "r42_finale_wurf_kamera: Szene unvollstaendig - Start '${_S}' / Bild 0 '${_W}' / "
                         "Reaktion '${_R}' / Ende '${_E}' (exit=${_rv}, ${WORKDIR})\n${_log}")
+endif()
+# Stufe 4 Runde 3: Flugkamera 13, kein Flugschnitt, Werfer im Flug und bei der Landung im Bild
+if(_SK)
+    string(APPEND _f "\n Flugschnitt in F${_SK} - an x ~16900 zeigt die Kamera des Spielers die Landestelle nicht (R1 s4 r2)")
+    set(_bis_a "${_SK}")
+else()
+    set(_bis_a "${_R}")
+endif()
+if(NOT _log MATCHES "Wurf: Flugkamera 13: zeigt Landestelle und Spieler" OR NOT _log MATCHES "Wurf: Flugkamera 13: kein Schnitt im Flug")
+    string(APPEND _f "\n Flugkamera nicht 13 mit Landestelle und Spieler (Kopf 'Flugkamera')")
+endif()
+string(REGEX MATCHALL "Wurf: Flug [0-9]+: im Bild der Flugkamera [0-9]+: [01]" _fl "${_log}")
+list(LENGTH _fl _nfl)
+string(REGEX MATCHALL "Wurf: Flug [0-9]+: im Bild der Flugkamera 13: 1" _fl1 "${_log}")
+list(LENGTH _fl1 _nfl1)
+if(NOT _nfl EQUAL 28 OR NOT _nfl1 EQUAL 28)
+    string(APPEND _f "\n Werfer in ${_nfl1} von ${_nfl} Flugbildern im Bild der Flugkamera 13 (soll 28 von 28)")
+endif()
+if(NOT _log MATCHES "Wurf: Landung im Bild der Kamera 13: 1")
+    string(APPEND _f "\n Landung nicht im Bild der Kamera 13 ('Landung im Bild der Kamera 13: 1' fehlt)")
 endif()
 # Vorbedingung: Spieler am Uebergang 12/13
 if(NOT _log MATCHES "Wurf: Leon [(](-?[0-9]+),(-?[0-9]+)[)] Gier")
@@ -122,11 +150,11 @@ foreach(_z IN LISTS _dbg)
     if(_z MATCHES "^\\[kamerahalt\\] F([0-9]+) raum=5091 [^\n]* cam=([0-9]+) ")
         set(_fr "${CMAKE_MATCH_1}")
         set(_cam "${CMAKE_MATCH_2}")
-        if(_fr GREATER _W AND _fr LESS _SK)
+        if(_fr GREATER _W AND _fr LESS _bis_a)
             if(_cam EQUAL 13)
                 math(EXPR _n13a "${_n13a} + 1")
             else()
-                string(APPEND _f "\n Bild F${_fr} (Wurf, vor dem Flugschnitt F${_SK}) zeigt Kamera ${_cam} statt 13")
+                string(APPEND _f "\n Bild F${_fr} (Wurf, Flug, Landung - vor F${_bis_a}) zeigt Kamera ${_cam} statt 13")
             endif()
         endif()
         if(_fr GREATER _R AND _fr LESS _E)
@@ -148,15 +176,15 @@ foreach(_z IN LISTS _dbg)
         endif()
     endif()
 endforeach()
-math(EXPR _soll_a "${_SK} - ${_W} - 1")
+math(EXPR _soll_a "${_bis_a} - ${_W} - 1")
 math(EXPR _soll_b "${_E} - ${_R} - 1")
 if(NOT _n13a EQUAL _soll_a OR NOT _n13b EQUAL _soll_b)
-    string(APPEND _f "\n Kamera 13 in ${_n13a}/${_soll_a} Bildern (W..Flugschnitt) und ${_n13b}/${_soll_b} Bildern (Reaktion..Ende)")
+    string(APPEND _f "\n Kamera 13 in ${_n13a}/${_soll_a} Bildern (W..F${_bis_a}) und ${_n13b}/${_soll_b} Bildern (Reaktion..Ende)")
 endif()
 if(_f)
     string(REPLACE ";" "\n" _dbg_txt "${_dbg}")
-    message(FATAL_ERROR "r42_finale_wurf_kamera: FEHLER (Spieler x ${_px}, W F${_W}, Flugschnitt F${_SK}, Reaktion F${_R}, Ende F${_E})${_f}\n"
+    message(FATAL_ERROR "r42_finale_wurf_kamera: FEHLER (Spieler x ${_px}, W F${_W}, Flugschnitt '${_SK}', Reaktion F${_R}, Ende F${_E})${_f}\n"
                         "--- finale.log ---\n${_log}")
 endif()
-message(STATUS "r42_finale_wurf_kamera: OK (Spieler x ${_px}; Kamera 13 in ${_n13a} Bildern W F${_W}..F${_SK} und ${_n13b} Bildern "
-               "Reaktion F${_R}..Ende F${_E}; keine Wache in der Szene)")
+message(STATUS "r42_finale_wurf_kamera: OK (Spieler x ${_px}; Kamera 13 in ${_n13a} Bildern W F${_W}..F${_bis_a} und ${_n13b} Bildern "
+               "Reaktion F${_R}..Ende F${_E}; Werfer in 28/28 Flugbildern und bei der Landung im Bild von 13; keine Wache in der Szene)")

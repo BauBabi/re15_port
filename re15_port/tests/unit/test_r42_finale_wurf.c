@@ -20,6 +20,11 @@
  *             ihre Keyframes bytegleich mit dem 0x49-Block; Werfer = PL00W12.PLW dir[2] Waffenband (38 Dreiecke, v >= 224, u 72..127,
  *             Rohr y -744..1027 = RE15_FW_W12_LAENGE), dir[3] 8 bpp 56x32, bei PL04W12 bytegleich (Runde 3).
  *   ersatz    John-Ersatzmodell nur fuer 0x49 in 5090/5091.
+ *   flugkamera (Stufe 4 Runde 3, Pruefbericht s4 r2 Rot R1) Kopf "Flugkamera": an Elzas Kampfstelle (16904,-23764) mit Spieler-
+ *             kamera 12 liegt die Landestelle NICHT in 12 (der Fehler) - gewaehlt wird der Wurf-Schnitt 13, der Landestelle und Spieler
+ *             zeigt (RE2: kein Schnitt im Flug); an Leons Stelle (8150,-23550) bleibt es bei 12. Abtastung des freien Bodens von
+ *             Wagen C (ROOM5090 und 5091, SCA-Zellen ausgespart) mit jeder Lauf-Kamera 11..14 als Kamera des Spielers: die gewaehlte
+ *             Kamera zeigt die Landestelle IMMER.
  */
 #include <stdint.h>
 #include <stdio.h>
@@ -35,6 +40,8 @@
 #include "re15_story_r42.h"
 #include "re15_finale_wurf_r42.h"
 #include "re15_math.h"
+#include "re15_rdt.h"
+#include "re15_room.h"
 
 #define RE15_XSTR_(x) #x
 #define RE15_XSTR(x)  RE15_XSTR_(x)
@@ -342,6 +349,60 @@ static void t_ersatz(void)
     g_current_room_id = 0;
 }
 
+/* Abtastung Kopf "Flugkamera". Wagen C innen = zwischen den Wand-Zellen der SCA (ROOM5090/5091: x -1443 / 25492, z -26884 / -19870,
+ * tools/r42_finale/u3_schnitte.py im_wagen); frei = in keiner SCA-Zelle des Raums (Baenke, Vorraum-Waende, Ecken). Raster 100. */
+static int sca_frei(const re15_rdt_t *r, int32_t x, int32_t z)
+{
+    for (int i = 0; i < r->sca_count; i++) {
+        const re15_sca_entry_t *e = &r->sca[i];
+        if (x >= e->x && x < e->x + (int32_t)e->width && z >= e->z && z < e->z + (int32_t)e->density) return 0;
+    }
+    return 1;
+}
+static void t_flugkamera(void)
+{
+    static const char *const raeume[] = { RE15_XSTR(RE15_ASSETS_PATH) "/STAGE5/ROOM5090.RDT", RE15_XSTR(RE15_ASSETS_PATH) "/STAGE5/ROOM5091.RDT" };
+    for (unsigned ri = 0; ri < 2; ri++) {
+        size_t n = 0;
+        uint8_t *d = slurp(raeume[ri], &n);
+        CHECK(d != NULL, "%s fehlt", raeume[ri]);
+        if (!d) continue;
+        memset(&g_room_rdt, 0, sizeof g_room_rdt);
+        if (re15_rdt_parse(d, n, &g_room_rdt) != 0) { CHECK(0, "%s: RDT-Parse", raeume[ri]); free(d); continue; }
+        g_room_rdt_ok = 1;
+        int sicht = -1, lx = 0, lz = 0;
+        /* R1: Elza (Video-Lauf s4r2/rec/elza finale.log "Leon (16904,-23764)", "Kamera vorher 12", Ziel (18503,-23721)) */
+        re15_finale_wurf_landestelle(16904, -23764, RE15_FW_JOHN_X, RE15_FW_JOHN_Z, &lx, &lz);
+        int c = re15_finale_wurf_flugkamera(12, lx, lz, 16904, 0, -23764, &sicht);
+        CHECK(lx == 18503 && lz == -23721, "Elza-Landestelle (%d,%d) statt (18503,-23721) wie im Video-Lauf", lx, lz);
+        CHECK(c == RE15_FW_CUT_WURF && sicht == 2, "Elza x 16904: Flugkamera %d (sicht %d) statt 13 mit Landestelle und Spieler", c, sicht);
+        {   int s12 = -1;   /* die alte Wahl (Kamera des Spielers 12) zeigt die Landestelle nicht: nur Kandidat 12 wuerde sonst greifen */
+            const int c12 = re15_finale_wurf_flugkamera(12, lx, lz, 16904, 0, -23764, &s12);
+            CHECK(c12 != 12, "Elza: Kamera 12 als Flugkamera gewaehlt"); }
+        /* Leon (Riegel-Lauf integration_r42_finale_wurf "Leon (8150,-23550)", Kamera 12): unveraendert Schnitt auf 12 */
+        re15_finale_wurf_landestelle(8150, -23550, RE15_FW_JOHN_X, RE15_FW_JOHN_Z, &lx, &lz);
+        c = re15_finale_wurf_flugkamera(12, lx, lz, 8150, 0, -23550, &sicht);
+        CHECK(c == 12 && sicht == 2, "Leon x 8150: Flugkamera %d (sicht %d) statt 12", c, sicht);
+        int punkte = 0, nur_landung = 0, ohne = 0, je_kam[16] = { 0 };
+        for (int32_t x = -1400; x < 25492; x += 100)
+            for (int32_t z = -26800; z < -19870; z += 100) {
+                if (!sca_frei(&g_room_rdt, x, z)) continue;
+                re15_finale_wurf_landestelle(x, z, RE15_FW_JOHN_X, RE15_FW_JOHN_Z, &lx, &lz);
+                for (int k = 11; k <= 14; k++) {
+                    punkte++;
+                    c = re15_finale_wurf_flugkamera(k, lx, lz, x, 0, z, &sicht);
+                    if (sicht == 0) { if (ohne++ < 10) CHECK(0, "Raum %u: Spieler (%d,%d) Kamera %d - Landestelle (%d,%d) in keiner Kamera", ri, x, z, k, lx, lz); }
+                    else { if (sicht == 1) nur_landung++; if (c >= 0 && c < 16) je_kam[c]++; }
+                }
+            }
+        CHECK(punkte > 40000 && ohne == 0, "Raum %u: %d Faelle, %d ohne sichtbare Landestelle", ri, punkte, ohne);
+        printf("flugkamera: %s %d Faelle (Lage x Kamera des Spielers), Landestelle immer im Bild; davon %d ohne Spieler-Fuesse; "
+               "gewaehlt 11:%d 12:%d 13:%d 14:%d\n", ri ? "5091" : "5090", punkte, nur_landung, je_kam[11], je_kam[12], je_kam[13], je_kam[14]);
+        g_room_rdt_ok = 0;
+        free(d);   /* g_room_rdt zeigt in d - nach der Abtastung nicht mehr benutzt */
+    }
+}
+
 int main(void)
 {
     t_quelle();
@@ -350,6 +411,7 @@ int main(void)
     t_luecken();
     t_modelle();
     t_ersatz();
+    t_flugkamera();
     if (fails) { fprintf(stderr, "test_r42_finale_wurf: %d Fehler\n", fails); return 1; }
     printf("test_r42_finale_wurf: OK\n");
     return 0;
