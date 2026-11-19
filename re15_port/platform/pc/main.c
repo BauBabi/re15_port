@@ -1299,7 +1299,8 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
         fprintf(stderr, "[enemy] RE2 EM0%02X nicht ladbar -> RE1.5-Modell\n", type);
     }
 
-    /* ROOM1210-GITTERHAENDE IM RE2-FLAVOR (Runde 16 / Phase 2, arme-1210-re2.md 4.2): das
+    /* BIS RUNDE 41 (abgeloest durch den naechsten Block): ROOM1210-GITTERHAENDE IM RE2-FLAVOR (Runde 16 /
+     * Phase 2, arme-1210-re2.md 4.2): das
      * RE2-Modell EM2D (CDEMD0.EMS kind 0x2D: TOC @0x8009ADF4, Sektoren 0x9B0/0x9B3 KI,
      * 0x9B6 TIM 128x256, 0x9C7 EMD 0x6020 B; 15 Bones = 2 Arme x 7, Paar 1 = 6 Clips,
      * Paar 3 = 2 Opfer-Clips fuer Leon) REIN, ohne Hybrid — wie Birkin EM36 oben. Die
@@ -1309,20 +1310,35 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
      * fuehrt Leon ohnehin im Victim-Modus 4 direkt (enemy_ai_re2_zellenarm.c arm_hook).
      * Typ 0x1A kommt game-weit nur in ROOM1210/1211 vor (RDT-Zensus, enemy_ai_common.c),
      * das Tor haengt deshalb allein am Flavor. Ohne RE2-Archiv: RE1.5-EM01A wie bisher. */
+    /* RUNDE 42 STRANG "original" STUFE 2 (NUTZERWUNSCH 18.11.2026: "...du solltest EIGENTLICH NUR die
+     * funktionalitaet aus Resident Evil 2 uebernehmen, nicht das Modell. Das Modell darf schon noch das aus
+     * Resident Evil 1.5 sein"): EM2D wird nur noch als LOGIK-Bank geladen (RE2-Takt = Cliplaengen Paar 1, Leons
+     * Opfer-Clips = Paar 3) — in eine eigene Bank ausserhalb der Registry, ohne TIM-Upload. Gezeichnet wird das
+     * RE1.5-Modell EM1A ueber den normalen RE1.5-Weg darunter (TOC @0x80072f38 / @0x80073178, Eintrag 0x1A);
+     * am Ende meldet re15_re2arm_modell_einrichten beide Banken beim Gehirn an. Belege: enemy_ai_re2_zellenarm.c
+     * Block MODELL. */
+    static re15_enemy_bank_t s_arm_em2d_logik;         /* gross (Frames-Tabellen) -> statisch */
+    int arm_logik_ok = 0;
     if (type == 0x1Au && allow_re2 && re15_ai_re2_for_type(0x1Au)) {
-        if (pc_enemy_load_re2_kind(type, 0x2D, eb)) {
+        size_t ems_sz = 0;
+        const uint8_t *ems = pc_re2_cdemd(&ems_sz);
+        re15_tim_t tim_logik = {0};
+        memset(&s_arm_em2d_logik, 0, sizeof s_arm_em2d_logik);
+        if (ems && re2_ems_load_bank(ems, ems_sz, 0x2D, &s_arm_em2d_logik, &tim_logik) == 0) {
+            s_arm_em2d_logik.buf = NULL;               /* aliast das residente EMS */
+            arm_logik_ok = 1;
             /* ENEMSE-Bank 42, zweite Haelfte (Paar-Zeile {0x05,0x11} @0x800A7400 = Datei
              * 0x97C54; em-Id 0x11 aus den ROOM2050-Records +7 -> +0x1FA @0x80057274-80).
              * Der Hook ruft bank_fn vor jedem se_fn (Mehrbank-Cache in audio_pc.c kommt
              * von anderer Hand). */
             re15_re2arm_audio_hook(re15_audio_re2_enemy_se, re15_audio_re2_enemy_bank);
-            fprintf(stderr, "[enemy] ROOM1210-Arme: RE2 EM2D (kind 0x2D) geladen, %d Bones, "
-                            "%d Clips, Opferbank %d Clips\n",
-                    eb->skel.bone_count, eb->anim.clip_count,
-                    eb->victim_ok ? eb->anim_victim.clip_count : 0);
-            return;                                    /* REIN, kein Hybrid */
+            fprintf(stderr, "[enemy] ROOM1210-Arme: RE2 EM2D (kind 0x2D) als Logik-Bank (Takt %d Clips, "
+                            "Opferbank %d Clips), gezeichnet wird RE1.5-EM1A\n",
+                    s_arm_em2d_logik.anim.clip_count,
+                    s_arm_em2d_logik.victim_ok ? s_arm_em2d_logik.anim_victim.clip_count : 0);
+        } else {
+            fprintf(stderr, "[enemy] RE2 EM2D nicht ladbar -> Takt auf den EM1A-Laengen, ohne RE2-Opferbank\n");
         }
-        fprintf(stderr, "[enemy] RE2 EM2D nicht ladbar -> RE1.5-EM01A fuer die Gitterhaende\n");
     }
 
     /* RE2-Flavor-Zweig (WELLE A) — VOR dem RE1.5-Zweig, nur wenn ein RE2-Brain den Typ
@@ -1488,6 +1504,13 @@ static void pc_enemy_load_ex(uint8_t type, int allow_re2)
     eb->ok = 1;
     fprintf(stderr, "[enemy] EM%02X loaded: %d meshes, %d bones, %d clips -> slot %d\n",
             type, eb->md1.mesh_count, eb->skel.bone_count, eb->anim.clip_count, eb->pc_tex_slot);
+    /* Runde 42 Stufe 2: Gitterhaende im RE2-Flavor = EM1A zeichnen, RE2-Gehirn behalten (Block oben). */
+    if (type == 0x1Au && allow_re2 && re15_ai_re2_for_type(0x1Au)) {
+        re15_re2arm_modell_einrichten(eb, arm_logik_ok ? &s_arm_em2d_logik : NULL);
+        fprintf(stderr, "[enemy] ROOM1210-Arme: RE1.5-EM1A gezeichnet (%d Knochen, %d Clips), Opferbank %d Clips, "
+                        "RE2-Takt %s\n", eb->skel.bone_count, eb->anim.clip_count,
+                eb->victim_ok ? eb->anim_victim.clip_count : 0, arm_logik_ok ? "EM2D" : "EM1A");
+    }
 }
 
 /* Default: der RE2-Zweig darf greifen (unveraendertes Verhalten fuer alle Typen ausser 0x26,
@@ -10364,7 +10387,10 @@ re_title:;
                  * Original an part[0]+0x5C, @0x80100378-A4, und ein verborgener Arm hat
                  * keinen sichtbaren Part). Das generische no_draw darunter laesst den
                  * Schatten stehen (Feuer-Emitter 0x26), deshalb der eigene Ausstieg HIER. */
-                if (npc->type == 0x1Au && npc->no_draw && re15_re2arm_owns(npc)) continue;
+                /* Runde 42 Stufe 2 Runde 3: mit dem RE1.5-Modell EM1A steht ab dem Ausloeser der RE1.5-Koerper sichtbar hinter dem
+                 * Gitter, auch wenn der RE2-Arm verborgen ist (enemy_ai_re2_zellenarm.c, Block MODELL / ZEICHNEN). */
+                const int arm_koerper = (npc->type == 0x1Au) ? re15_re2arm_koerper_lage(npc, NULL) : 0;
+                if (npc->type == 0x1Au && npc->no_draw && re15_re2arm_owns(npc) && !arm_koerper) continue;
                 if (re15_gr2_pc_untergetaucht(npc, npc_region_culled)) continue;   /* Runde 41 Spur B (Entscheid B9): Boss-Alligator vor dem Durchbruch untergetaucht wie RE2 (Sce_em_set y=+3000 @RDT 0x25A0) - Mesh UND Schatten aus */
                 /* Runde 41 Spur G2-RE2 (aus r41/gatorfix NB7): Alligator mit dem Kanister - im Tauchgang der Notloesung untergetaucht Mesh aus, beim Ab-/Auftauchen
                  * Schnitt an der Wasserlinie, immer Schnitt an den Bloecken Plattform/Rampe unter dem Deck (gator_re2_pc.c re15_gr2_pc_wl_poly) */
@@ -10379,7 +10405,9 @@ re_title:;
                  * Typ-Code des Overlays (`jal 0x8001b064`, z.B. Feuer-Emitter 0x26 @0x80116740; STAGE2.BIN: 8 Stellen
                  * 0x80100500/0x8010a9a4/0x8010c550/0x80110b50/0x80115870/0x80115e40/0x80116404/0x801169cc). Der
                  * EM024-Code 0x8010ee9c..0x80110a00 (Flut 20B0/20B1) ruft ihn NIE -> kein Schatten fuer Typ 0x24. */
-                if (!npc_region_culled && npc->type != 0x24u) {
+                /* Typ 0x1A mit dem RE1.5-Modell EM1A: kein Schatten — der RE1.5-Typ-0x1A-Code ruft 0x8001b064 nie (kein
+                 * `jal 0x8001b064` in 0x8010c1ec..0x8010d7cc; enemy_ai_re2_zellenarm.c, Block MODELL / ZEICHNEN). */
+                if (!npc_region_culled && npc->type != 0x24u && !(npc->type == 0x1Au && re15_re2arm_modell_re15(npc))) {
                     /* byte-true actor-yaw shadow matrix = RotMatrixY(npc->rot_y) via the trig LUT. */
                     int32_t nyaw[9];
                     re15_camera_yaw_matrix_angle(npc->rot_y, nyaw);
@@ -11065,6 +11093,7 @@ re_title:;
                         npc_pos_w[1] += (int32_t)(((int64_t)nyaw[3] * t0[0] + (int64_t)nyaw[4] * t0[1] + (int64_t)nyaw[5] * t0[2]) >> 12);
                         npc_pos_w[2] += (int32_t)(((int64_t)nyaw[6] * t0[0] + (int64_t)nyaw[7] * t0[1] + (int64_t)nyaw[8] * t0[2]) >> 12);
                     }
+                    (void)re15_re2arm_koerper_lage(npc, npc_pos_w);   /* Runde 42 Stufe 2 Runde 3: Licht am RE1.5-Koerper */
                     re15_light_setup_actor(
                         &g_re15_room_lights.cuts[g_re15_active_cut],
                         npc_pos_w, NULL, &lctx_npc_world);
@@ -11087,7 +11116,7 @@ re_title:;
                  * Die Maske sitzt hier, NACH Schatten und Lichtkontext: im Original haengen
                  * Schatten (@0x80116740) und Kollision (@0x80116368) an eigenen Aufrufen und
                  * bleiben unberuehrt. */
-                if (npc->no_draw) continue;
+                if (npc->no_draw && !arm_koerper) continue;   /* Runde 42 Stufe 2 Runde 3: RE1.5-Koerper s.o. */
 
                 int npc_bones = npc_skel->bone_count;
                 /* Ohne Remap ist Mesh-Index == Bone-Index (emd_common.c:190), also darf die
@@ -11360,6 +11389,15 @@ re_title:;
                         nyawed_trans[1] + npc->y,
                         nyawed_trans[2] + npc->z,
                     };
+                    /* Runde 42 Stufe 2 Runde 6: Gitterhaende mit dem RE1.5-Modell EM1A — der ganze Koerper wie das Original (Weg B[1],
+                     * Wiegen B[2], Arme wachsen B[3]), im RE2-Griff Clip 2 an seiner Stelle (enemy_ai_re2_zellenarm.c, Bloecke MODELL /
+                     * KOERPER); 0 fuer alle anderen. arm_sk = Skalierung der lokalen y-Achse (nur die des Originals, B[3], sonst 4096). */
+                    int32_t arm_sk = 4096;
+                    if (npc->type == 0x1Au) {
+                        const int zt = re15_re2arm_zeichen_teil(npc, nbi, npc_poses, npc_skel->bone_count,
+                                                                nyawed_rot, nbone_world_trans, &arm_sk);
+                        if (zt < 0) continue;
+                    }
                     if (nbi >= npc_bones && !npc_remap)   /* Runde 35 Spur J: Mesh ohne Knochen weltfest, FUN_8001e5b0 (re15_affen.h (2c)) */
                         (void)re15_affen_teil_weltfest(npc->type, npc_skel, nbi, nyawed_rot, nbone_world_trans);
                     /* MESS-SCHIENE Teil 2 (RE15_BIRKIN_DBG -> birkin_dbg.log): die
@@ -11458,9 +11496,15 @@ re_title:;
                         }
                     }
                     /* CANONICAL per-bone light fold (2026-06-02). */
-                    if (npc_lit)
-                        re15_light_ctx_rotate_for_bone(&lctx_npc_world, nyawed_rot,
-                                                       &lctx_npc);
+                    if (npc_lit) {
+                        /* Runde 42 Stufe 2 Runde 4: die Licht-Matrix nimmt das Original aus der UNGESTRECKTEN Part-Matrix (FUN_8001e9ec:
+                         * MulMatrix0(&DAT_80076d14, m1) / SetLightMatrix VOR dem ScaleMatrix der Zeichen-Matrix) — Spalte 1 zurueck. */
+                        int32_t licht_rot[9];
+                        memcpy(licht_rot, nyawed_rot, sizeof licht_rot);
+                        if (arm_sk != 4096 && arm_sk > 0)
+                            for (int r = 0; r < 3; r++) licht_rot[r*3+1] = (int32_t)(((int64_t)licht_rot[r*3+1] * 4096) / arm_sk);
+                        re15_light_ctx_rotate_for_bone(&lctx_npc_world, licht_rot, &lctx_npc);
+                    }
                     if (npc->type == 0x30u && nbi == 15) {   /* Runde 41 Kralle "synchron": Messhaken gezeichnete Klaue (RE15_BIRKIN_DBG) */
                         extern void re15_bkk_zeichner_melden(const re15_actor_t *e, const int32_t R[9], const int32_t T[3]);
                         re15_bkk_zeichner_melden(npc, nyawed_rot, nbone_world_trans);

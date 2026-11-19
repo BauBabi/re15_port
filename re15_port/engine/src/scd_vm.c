@@ -797,6 +797,7 @@ void scd_vm_tick(void)
     if (!s_vm_room_init) { extern void re15_gegenstaende_r42_tick(void); re15_gegenstaende_r42_tick(); }   /* Runde 42 Gegenstaende: 1050 Leiche wie 1051 sub01 @0x00CB2; Fundstellen mit Text 1071/3010/3011/5021 nach der Aufnahme */
     if (!s_vm_room_init) { extern void re15_story6_r42_tick(void); re15_story6_r42_tick(); }   /* Runde 42 Story STAGE6: Toene Zugstart 6031 */
     if (!s_vm_room_init) { extern void re15_ungenutzt_r42_tick(void); re15_ungenutzt_r42_tick(); }   /* Runde 42 rest Stufe 3: Signal FREI der neuen 3091-Zeilen (U-01) */
+    if (!s_vm_room_init) { extern void re15_leichenhalle_r42_tick(void); re15_leichenhalle_r42_tick(); }   /* Runde 42 Strang original: Ausloeser Kuehlfach 1200/1201 (Disc main00 @0x007D2, re15_leichenhalle_r42.h) */
     g_scd.examine_poll_pending = 0;   /* Port-Konstrukt, vom Per-Frame-Reseed abgeloest */
 
 
@@ -1269,6 +1270,13 @@ static int op_evt_exec(scd_thread_t *t)
         t->pc += 4;
         return SCD_R_CONTINUE;   /* wie der Opcode selbst nach dem Start (`return 1` unten) */
     }
+    /* Runde 42 Strang original: Mod-sub03 @0x00A0C ruft sub02 (Kuehlfach auf) - ausgelassen, wenn der Disc-Ablauf das Fach
+     * schon geoeffnet hat (re15_leichenhalle_r42.h). Weiter wie nach dem Start. */
+    { extern int re15_leichenhalle_r42_evt_exec_gestrichen(uint16_t, const uint8_t *, const re15_rdt_t *);
+      if (re15_leichenhalle_r42_evt_exec_gestrichen((uint16_t)g_current_room_id, t->pc, s_current_rdt)) {
+          t->pc += 4;
+          return SCD_R_CONTINUE;
+      } }
     t->pc += 4;                 /* advance BEFORE spawn (byte-true @0x8003f2b8) */
 
     if (!s_current_rdt) return 1;
@@ -3905,6 +3913,11 @@ static uint8_t re15_enemy_spawn_action(uint8_t type, uint8_t behavior)
 
 static int op_sce_em_set(scd_thread_t *t)
 {
+    /* Runde 42 Strang original (Stufe 1 Runde 2): Leichenhalle 1200/1201 nach dem Disc-Ablauf ohne Minidisc — der Mod-Else-Satz
+     * wird durch einen 20-B-Ersatz gelesen (re15_leichenhalle_r42.h "WIEDERBETRETEN"); danach weiter hinter dem Dateisatz. */
+    { extern const uint8_t *re15_leichenhalle_r42_em_ersatz(uint16_t, const uint8_t *, const re15_rdt_t *);
+      const uint8_t *ers = re15_leichenhalle_r42_em_ersatz((uint16_t)g_current_room_id, t->pc, s_current_rdt);
+      if (ers) { const uint8_t *orig = t->pc; t->pc = ers; const int r = op_sce_em_set(t); t->pc = orig + 20; return r; } }
     uint8_t  slot     = t->pc[1];
     uint8_t  type     = t->pc[2];
     uint8_t  behavior = t->pc[3];

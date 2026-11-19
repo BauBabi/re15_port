@@ -13,6 +13,8 @@
 
 #include <stdint.h>
 #include "re15_actor.h"
+#include "re15_enemy.h"     /* re15_enemy_bank_t (Runde 42 Stufe 2: Modell-Anmeldung) */
+#include "re15_skeleton.h"  /* re15_skel_pose_t (Runde 42 Stufe 2 Runde 2: Zeichen-Lage) */
 
 /* 1 = dieser Aktor gehoert dem RE2-Zellenarm-Gehirn (Typ 0x1A UND RE2-Flavor fuer 0x1A). */
 int  re15_re2arm_owns(const re15_actor_t *e);
@@ -28,7 +30,8 @@ void re15_re2arm_audio_hook(void (*se_fn)(int se_id, int flag2000), void (*bank_
 /* Zeichner-Seite: Bitmaske der Parts (Bone-Index), die NICHT gezeichnet werden — die sieben
  * Bones des inaktiven Arms (INIT `sw zero,0(part)` @0x80100240 / @0x801002F8). Der ganze
  * Aktor ist ausserdem ueber e->no_draw verborgen, solange Entity-Bit 2 gesetzt ist
- * (0x80101164 mit a2 = 0). */
+ * (0x80101164 mit a2 = 0). Mit dem RE1.5-Modell EM1A (Runde 42 Stufe 2, Runde 3): 0 = alle vier Teile (im Original
+ * stehen die Zombies sichtbar hinter dem Gitter; die Maske 0x0003 aus Runde 2 beruhte auf einer falschen Aussage). */
 uint16_t re15_re2arm_part_hide_mask(const re15_actor_t *e);
 
 /* Mess-/Test-Auskunft: Heimat (+0x218 Yaw, +0x21C x, +0x220 z) und der globale Griff-
@@ -38,7 +41,41 @@ int  re15_re2arm_holder_slot(void);      /* -1 = kein Arm haelt den Spieler */
 /* Runde 35 Spur H, Nachbesserung 2: Hand der GEMISCHTEN Parts (+0x14E-Ueberblendung wie 0x80029614,
  * = Pin-Quelle @0x80100C18-38) und die reine Keyframe-Hand derselben Parts-Pose; 1 = Parts gueltig. */
 int  re15_re2arm_hand_parts(int slot, int32_t gemischt[3], int32_t rein[3]);
-int  re15_re2arm_hand_bone(const re15_actor_t *e);   /* 3 (Arm A) oder 10 (Arm B) */
+int  re15_re2arm_hand_bone(const re15_actor_t *e);   /* EM2D: 3 (Arm A) / 10 (Arm B); EM1A: 2 / 3 */
+
+/* Runde 42 Strang "original" Stufe 2 (NUTZERWUNSCH 18.11.2026: "...du solltest EIGENTLICH NUR die funktionalitaet aus
+ * Resident Evil 2 übernehmen, nicht das Modell. Das Modell darf schon noch das aus Resident Evil 1.5 sein"):
+ * Der Lader (platform/pc/main.c) laedt fuer Typ 0x1A das RE1.5-Modell EM1A als Zeichen-Bank und meldet es hier an.
+ * `em2d_logik` ist die RE2-Bank EM2D (CDEMD0.EMS kind 0x2D), nur noch als Takt (Cliplaengen Paar 1) und als Quelle
+ * fuer Leons Opfer-Clips (Paar 3); NULL = ohne RE2-Archiv (Takt dann auf den EM1A-Laengen). Belege am Modul. */
+void re15_re2arm_modell_einrichten(re15_enemy_bank_t *anzeige, const re15_enemy_bank_t *em2d_logik);
+/* 1 = dieser Arm zeichnet das RE1.5-Modell EM1A (4 Knochen), 0 = RE2-EM2D (15 Knochen). */
+int  re15_re2arm_modell_re15(const re15_actor_t *e);
+/* RE2-Clip (0..5, CDEMD0_EM2D_ai1.BIN) -> EM1A-Clip (0..3); -1 ausserhalb. */
+int  re15_re2arm_em1a_clip(int re2_clip);
+/* RE2-Takt des Arms (Logik-Clip/-Bild), Test-/Mess-Auskunft. 1 = Slot gueltig. */
+int  re15_re2arm_takt(int slot, int *re2_clip, int *re2_bild);
+/* Runde 4: Zeichen-Lage des EM1A (Belege am Modul, Block MODELL und Block KOERPER). Der ganze Koerper laeuft wie das
+ * Original (Weg B[1], Wiegen B[2], Arme wachsen B[3] mit der Original-Skalierung, Runde 6). Im Griff des RE2-Gehirns bleibt
+ * der Koerper stehen und zeigt Clip 2. zeichen_teil: 1 = rot/trans (Welt) gesetzt, 0 = nicht dieser Weg, -1 = Teil nicht
+ * zeichnen; streck = Skalierung der lokalen y-Achse Q12 (nur B[3] des Originals, sonst 4096).
+ * koerper_lage: 1 = Koerper wird gezeichnet, p = Welt-Lage. koerper_info: Mess-/Test-Auskunft (bild -1 = vor dem Ausloeser).
+ * koerper_zustand: Modus (0 B1, 1 B2, 2 B3, 3 Griff, 4 Sinken B[4], 5 Warten B[5], 6 Hoch B[6]), Phase +0x6, Skalierung/Flag
+ * Part 2/3, y. greif_teil (Runde 8): EM1A-Teil (2/3), dessen Hand das RE2-Gehirn gerade misst.
+ * hand15: Hand des gezeichneten RE1.5-Arms (Mittel der Vertices 0..11) und sein Schultergelenk, Welt.
+ * kontakt_rest: im Halten kleinster Abstand der Hand-Vertices zur Oberflaeche der Figur in diesem Bild, auf Abruf gerechnet
+ * (Mess-Auskunft, nicht im Spielablauf); -1 = kein Halten. Die Figur steht das ganze Halten fest (Runde 5).
+ * rechenschritte: Vertex-Besuche der Halte-Rechnung seit dem letzten Abholen (Runde 6, Laufzeit-Riegel). */
+int  re15_re2arm_zeichen_teil(const re15_actor_t *e, int teil, const re15_skel_pose_t *poses, int n,
+                              int32_t rot[9], int32_t trans[3], int32_t *streck);
+int  re15_re2arm_koerper_lage(const re15_actor_t *e, int32_t p[3]);
+int  re15_re2arm_koerper_info(int slot, int *bild, int *clip, int *frame, int32_t rec[3]);
+int  re15_re2arm_koerper_zustand(int slot, int *mode, int *phase, int sk[2], int an[2], int32_t *ky);
+int  re15_re2arm_hand15(int slot, int32_t hand[3], int32_t schulter[3]);
+int  re15_re2arm_greif_teil(int slot);
+void re15_re2arm_pin_vor(int32_t *x, int32_t *z);   /* Runde 8: Lage, die das Tor A3 im Griff-Bild sah */
+int  re15_re2arm_kontakt_rest(int slot);
+uint32_t re15_re2arm_rechenschritte(int zuruecksetzen);
 /* Runde 35 Spur H, Nachbesserung 3: RE2-Koerper-Push FUN_80034D0C(Arm, Spieler) mit dem Arm-Segment
  * r 800 / Halbhoehe 500 (@0x80100328-64) gegen das Spieler-Segment r 450 / Y -1530 / 1530 — aus dem
  * Spieler-Pass (FUN_800355C4 @0x80026628). 1 = geschoben. */

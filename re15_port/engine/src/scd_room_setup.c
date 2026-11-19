@@ -537,6 +537,7 @@ void scd_room_reenter(const re15_rdt_t *rdt, int32_t player_x, int32_t player_z,
     { extern void re15_story3a_r42_install(uint16_t); re15_story3a_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 Story STAGE3a: Texte 3020/3060, Schuesse 3020, Kartentuer 3010 (re15_story3a_r42.h) */
     { extern void re15_story3b_r42_install(uint16_t); re15_story3b_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 Story STAGE3b: 30E0 ein Besuch, 3070-Zeile (re15_story3b_r42.h) */
     { extern void re15_hintergruende_r42_install(uint16_t); re15_hintergruende_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 rest Stufe 2: 10F0/10F1 Plaetze 2/3/6 -> Ereignis 31/30, 1010/1011 Karte -> Ereignis-Platz 11 (re15_hintergruende_r42.h); NACH inhalt_r35 */
+    { extern void re15_leichenhalle_r42_install(uint16_t); re15_leichenhalle_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 Strang original: Leichenhalle 1200/1201 Kuehlfach klappert, Zombie kriecht heraus wie Version_40% (re15_leichenhalle_r42.h) */
     { extern void re15_gegenstaende_r42_install(uint16_t); re15_gegenstaende_r42_install((uint16_t)g_current_room_id); }   /* Runde 42 Gegenstaende (K-10): Fundstellen, Python 2040, Leiche 1050, Pult-Texte 2030 (re15_gegenstaende_r42.h); als LETZTER Installer (freie Slots von oben) */
     /* Der frueher hier stehende EINMAL-Start von sub01 (Slot 2) entfaellt: sub01 wird jetzt byte-true
      * in JEDEM Gameplay-Frame in Slot 1 neu geseedet (scd_vm_tick, FUN_8003f038 @0x8003f064-84).
