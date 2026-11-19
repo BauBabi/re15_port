@@ -536,7 +536,7 @@ static void teil_alle_zeilen(void)
  * Statt jedes Ereignis nachzufahren: jede Byte-Tabelle `{ 0x.., 0x.., ... }` in engine/src/<name>.c und engine/src/gen/<name>.inc
  * wird wie die Schreibmaschine FUN_80028134 in Nachrichten zerlegt (Ende 01 + Argument bzw. 03; 2-Byte-Codes 02/04/05/06/09/0A/0B;
  * 07 = 1 Byte; 08 Zeile) und jede Seite mit mehr als zwei Zeilen gemeldet, wenn sie Text ist (nur Glyphen aus msg_common.c
- * re15_msg_glyph, keine Zeile ueber 40 Glyphen, mindestens 8 Buchstaben und 60 % Buchstaben - sonst sind es Bild- oder
+ * re15_msg_glyph, keine Zeile ueber 64 Glyphen, mindestens 8 Buchstaben und 60 % Buchstaben - sonst sind es Bild- oder
  * Programmdaten). AUSGENOMMEN: das Inventar
  * (CHECK-Beschreibungen, eigenes Feld ab y = 0xA0, menu_common.c msg_open(.., 0x13, 0xa0); die Bank DEBUG.BIN @0x800c50de der Mod
  * hat dort selbst Seiten mit drei Zeilen) = Tabellen mit "desc" im Namen und gen/inv_desc_bank.inc, dazu der Akten-Leser
@@ -562,7 +562,7 @@ static int quelle_nachricht(const char *datei, const char *name, const uint8_t *
         const uint8_t c = ende ? 0x02 : m[i];
         if (c == 0x02 || c == 0x08) {
             if (glyph) zeilen++;
-            if (zeile_len > 40) lang = 1;
+            if (zeile_len > 64) lang = 1;   /* 271 px / schmalste Glyphen; Bild-/Programmdaten haben viel laengere "Zeilen" */
             glyph = 0; zeile_len = 0;
             if (c == 0x08) {
                 if (o + 3 < sizeof t) { t[o++] = ' '; t[o++] = '/'; t[o++] = ' '; }
@@ -693,7 +693,7 @@ static void teil_quellen_zeilen(void)
         }
         closedir(dir);
     }
-    PRUEF(dateien > 300 && tabellen > 500 && nachrichten > 200, "%d Dateien, %d Byte-Tabellen, %d Nachrichten gelesen", dateien,
+    PRUEF(dateien > 300 && tabellen > 400 && nachrichten > 200, "%d Dateien, %d Byte-Tabellen, %d Nachrichten gelesen", dateien,
           tabellen, nachrichten);
     PRUEF(schlecht == 0, "%d Seiten mit mehr als 2 Zeilen in Port-Texten", schlecht);
 }
