@@ -41,6 +41,9 @@
 #include "re15_zws_r41.h"
 #include "re15_esp.h"
 #include "re2_ems.h"
+#include "re15_skeleton.h"          /* Stufe 8: re15_skel_compute_pose, g_anim_pose_actor */
+#include "re15_anim_select.h"       /* Stufe 8: re15_compute_actor_kf */
+#include "re15_wassersprung_r41.h"  /* Stufe 8: re15_wassersprung_r41_npc_bank (die Bank, aus der der Zeichner posiert) */
 
 static int fails = 0;
 #define CHECK(cond, ...) do { if (!(cond)) { fprintf(stderr, "FAIL: " __VA_ARGS__); \
@@ -194,9 +197,15 @@ static void test_programm(void)
           "Programmende: Evt_exec sub04 + Evt_end");
     /* Opcode-Gang: Schnitte, Sleeps, Message_on in der Reihenfolge der RE2-Szene (ROOM6141 sub02 @0x01024..) */
     int cuts[16], nc = 0, sl[32], ns = 0, ms[8], nm = 0, sturz = -1, ende = 0;
+    int motion_n = 0, motion_ok = 0;                     /* Stufe 8: Plc_motion wie RE2 ROOM6141 sub02 @0x01138 `3f 02 02 44` */
     for (int i = 0; i < n;) {
         const int len = scd_opcode_size_at(p + i);
         if (len <= 0 || i + len > n) { CHECK(0, "Programm: Opcode 0x%02X @%d ohne Laenge", p[i], i); break; }
+        if (p[i] == 0x3f) {
+            motion_n++;
+            motion_ok = len == 4 && p[i + 1] == 0x02 && p[i + 2] == 0x02 && p[i + 3] == 0x44 && i + 8 <= n &&
+                        p[i + 4] == 0x22 && p[i + 5] == 5 && p[i + 6] == RE15_AN_SIG_SCHLAG && p[i + 7] == 1;
+        }
         if (p[i] == 0x29 && nc < 16) cuts[nc++] = p[i + 1];
         if (p[i] == 0x09 && ns < 32) sl[ns++] = p[i + 2] | p[i + 3] << 8;
         if (p[i] == 0x2b && nm < 8) ms[nm++] = p[i + 1];
@@ -205,6 +214,8 @@ static void test_programm(void)
         i += len;
     }
     CHECK(ende, "Programm endet nicht genau mit Evt_end");
+    CHECK(motion_n == 1 && motion_ok, "Programm: Plc_motion `3f 02 02 44` (RE2 @0x01138) nicht genau einmal direkt vor dem Hieb-Signal "
+          "(%d Plc_motion)", motion_n);
     static const int k_cuts[] = { 15, 11, 13 };    /* RE2 Cut 2, 0x0A (NB3: auch 0x0B und der Hieb in Cut 11), 6 */
     CHECK(nc == 3 && memcmp(cuts, k_cuts, sizeof k_cuts) == 0, "Schnittfolge (%d Schnitte) nicht 15/11/13", nc);
     /* RE2-Sleeps @0x0104C 25, @0x01072 36, @0x01076 1, @0x010FE 30, @0x01110 60, @0x01116 1, @0x0114C 1 als PAL-Spielbilder
@@ -398,6 +409,9 @@ static void bank_aus(uint8_t type, const uint8_t *b, size_t len)
     re15_enemy_bank_t *eb = re15_enemy_find(type);
     if (!eb) eb = re15_enemy_alloc(type);
     if (!eb || re15_emd_parse_container(b, len, &eb->md1, &eb->skel, &eb->anim, NULL) != 0) { fails++; return; }
+    /* Stufe 8: das zweite Clip-Paar (dir[3]/dir[4] = +0x174/+0x170, Lader @0x800224b8/c8) wie platform/pc/main.c - die Executor-
+     * Subs {2,4,5,6,9} posieren daraus (re15_actor_uses_own_bank). */
+    eb->own_ok = (re15_emd_parse_own_bank(b, len, &eb->skel_own, &eb->anim_own) == 0);
     eb->ok = 1; eb->buf = NULL;
 }
 
@@ -418,6 +432,29 @@ static int form_bank(void)
 }
 
 static int cut_jetzt(void) { return (int)g_scd.work_vars[0x0A]; }
+
+/* Stufe 8: Welthoehe des tiefsten Knochens und des Beckens (Knochen 0) der Pose, die der Zeichner aus dem Zustand des Aktors
+ * macht (Bank nach der EINEN Regel re15_actor_uses_own_bank/_loco_bank, Bild re15_compute_actor_kf; ohne Ueberblendung -
+ * Plc_motion mit Flag 0x40 hat keine). y waechst nach unten: groesser = tiefer. */
+static int annette_hoehen(const re15_actor_t *a, int32_t *tief, int32_t *becken)
+{
+    const void *skv = NULL;
+    const re15_emd_animation_t *an = (const re15_emd_animation_t *)re15_wassersprung_r41_npc_bank(a, &skv);
+    const re15_emd_skeleton_t *sk = (const re15_emd_skeleton_t *)skv;
+    if (!an || !sk || (int)a->motion >= an->clip_count) return 0;
+    const int kf = re15_compute_actor_kf(an, sk, a, -1, a->anim_frame);
+    re15_skel_pose_t poses[RE15_EMD_MAX_BONES];
+    void *save = g_anim_pose_actor;
+    g_anim_pose_actor = NULL;                            /* Abfrage: die Ueberblendung des Aktors nicht anfassen */
+    const int rv = re15_skel_compute_pose(sk, kf, poses);
+    g_anim_pose_actor = save;
+    if (rv != 0) return 0;
+    int32_t t = -1000000;
+    for (int b = 0; b < sk->bone_count; b++)
+        if (a->y + poses[b].trans[1] > t) t = a->y + poses[b].trans[1];
+    *tief = t; *becken = a->y + poses[0].trans[1];
+    return 1;
+}
 
 static uint32_t rd32le(const uint8_t *p) { return (uint32_t)p[0] | (uint32_t)p[1] << 8 | (uint32_t)p[2] << 16 | (uint32_t)p[3] << 24; }
 
@@ -479,6 +516,11 @@ static void test_szene(void)
     int32_t fall_y0 = 0, fall_y8 = 0, fall_x = 0, fall_z = 0;
     int fall_n = 0, fall_hoch = 0, fall_hoch_f = -1, fall_hoch_dy = 0, fall_sprung = 0, fall_sprung_f = -1, fall_sprung_d = 0;
     int kampf = 0;
+    /* Stufe 8 (Nutzer 19.11.: "Beim zurückweichen fliegt Anette irgendwie komisch in der Luft."): vom Hieb-Signal bis zum Treffer
+     * steht sie (RE2 @0x01138 Plc_motion(2,2,0x44) = Stand-Schleife des zweiten Clip-Paars, Executor-Sub 2 @0x80050f00) */
+    int32_t stand_tief = 0, stand_becken = 0, hieb_tief_ab = 0, hieb_becken_hoch = 0;
+    int stand_n = 0, hieb_n = 0, hieb_sub_falsch = 0, hieb_bild_falsch = 0, hieb_starr = 0, hieb_lage = 0, hieb_bild_vor = -1,
+        hieb_ohne_pose = 0, hieb_blende = 0;
     int blut_erst = -1, blut_letzt = -1, blut_n = 0, wolke_weg = -1, wolke_max = 0, lage_ok = 0, lage_n = 0, pool_max = 0;
     for (f = 0; f < 3000; f++) {
         re15_game_flag_set(5, 0x20, 1);                  /* Plc_dest-Ankunft (Spieler-Laufmaschine, hier nicht im Takt) */
@@ -535,6 +577,29 @@ static void test_szene(void)
         if (ph == RE15_AN_STURZ && sturz_y0 > 0) sturz_y0 = (int)g_actors[fs].y;
         if (ph == RE15_AN_DROHEN && sturz_bilder < 0) sturz_bilder = f - ph_bild[RE15_AN_STURZ];
         if (ph == RE15_AN_HIEB && vorher != RE15_AN_HIEB) { steh_x = g_actors[as].x; steh_z = g_actors[as].z; }
+        {   /* Stufe 8: Standhoehe = letzter Takt vor dem Hieb-Signal (sie steht seit der Ankunft an S); danach je Takt bis zum Treffer */
+            const re15_actor_t *a = &g_actors[as];
+            int32_t tief = 0, becken = 0;
+            if (ph == RE15_AN_DROHEN) {
+                if (annette_hoehen(a, &tief, &becken)) { stand_tief = tief; stand_becken = becken; stand_n++; }
+            } else if (ph == RE15_AN_HIEB) {
+                if (a->state != 4 || a->sub_state_1 != 2 || a->motion != 2) hieb_sub_falsch++;
+                if ((int)a->anim_frame != hieb_n) hieb_bild_falsch++;          /* Bild 0 im Signalbild, dann je Takt + 1 */
+                if ((int)a->anim_frame == hieb_bild_vor) hieb_starr++;         /* eingefrorene Pose */
+                if (a->anim_frac != 0) hieb_blende++;                          /* Flag 0x40: ohne Ueberblendung */
+                hieb_bild_vor = (int)a->anim_frame;
+                if (a->x != steh_x || a->z != steh_z) hieb_lage++;
+                if (!annette_hoehen(a, &tief, &becken)) hieb_ohne_pose++;
+                else {
+                    const int32_t d = tief > stand_tief ? tief - stand_tief : stand_tief - tief;
+                    if (d > hieb_tief_ab) hieb_tief_ab = d;
+                    if (stand_becken - becken > hieb_becken_hoch) hieb_becken_hoch = stand_becken - becken;   /* > 0 = hoeher */
+                }
+                hieb_n++;
+            } else if (ph == RE15_AN_REAKTION && vorher == RE15_AN_HIEB) {
+                if (a->x != steh_x || a->z != steh_z) hieb_lage++;             /* kein Lagesprung beim Uebergang in den Sturz */
+            }
+        }
         if (ph == RE15_AN_REAKTION && treffer_bild < 0) {
             int32_t h[3];
             frau_clip_treffer = g_actors[as].motion;
@@ -613,6 +678,26 @@ static void test_szene(void)
     CHECK(re15_annette_r41_ton(RE15_AN_SE_KRACH) == 1 && re15_annette_r41_ton(RE15_AN_SE_STURZ) == 1 &&
           re15_annette_r41_ton(RE15_AN_SE_BRUELL) == 1, "Toene Krach/Sturz/Bruellen nicht je einmal");
     CHECK(re15_annette_r41_schrei() == 1, "Schrei (Stimme 41 ohne Text) %d mal", re15_annette_r41_schrei());
+    /* Stufe 8: vom Hieb-Signal bis zum Treffer steht mindestens ein Fuss auf Standhoehe (tiefster Knochen hoechstens 30 neben der
+     * Standhoehe), das Becken hebt sich um hoechstens 30, kein Bild steht zweimal, die Lage bleibt. Standhoehe gemessen im Fenster
+     * (s6r1/lauf/neu2 pose.txt F1878..F1881): tiefster Knochen -101/-102, Becken -1695. Gegenprobe: vor Stufe 8 lief ab dem Signal
+     * Clip 4 der Aktionsbank (Flugphase des Sprungs @0x80052d0c): tiefster Knochen -182..-273, Becken -1800, ab Bild 19 starr. */
+    fprintf(stderr, "Ausholen: Standhoehe tiefster Knochen %d Becken %d (%d Takte), %d Takte vom Signal bis zum Treffer: tiefster Knochen "
+            "weicht hoechstens %d ab, Becken hoechstens %d hoeher, Sub falsch %d, Bild falsch %d, starr %d, Blende %d, Lage %d, ohne Pose %d\n",
+            (int)stand_tief, (int)stand_becken, stand_n, hieb_n, (int)hieb_tief_ab, (int)hieb_becken_hoch, hieb_sub_falsch,
+            hieb_bild_falsch, hieb_starr, hieb_blende, hieb_lage, hieb_ohne_pose);
+    CHECK(stand_n > 100 && abs((int)stand_tief - (-101)) <= 2 && abs((int)stand_becken - (-1695)) <= 2,
+          "Standhoehe vor dem Hieb: tiefster Knochen %d, Becken %d statt -101 / -1695 (%d Takte)", (int)stand_tief, (int)stand_becken, stand_n);
+    CHECK(hieb_n == 42 && hieb_ohne_pose == 0, "Ausholen: %d Takte gemessen statt 42 (ohne Pose %d)", hieb_n, hieb_ohne_pose);
+    CHECK(hieb_sub_falsch == 0, "Ausholen: Annette in %d von %d Takten nicht im Executor-Sub 2 mit Clip 2 (RE2 @0x01138 `3f 02 02 44`, "
+          "@0x80050f00)", hieb_sub_falsch, hieb_n);
+    CHECK(hieb_tief_ab <= 30, "Ausholen: kein Fuss auf Standhoehe - tiefster Knochen bis %d neben der Standhoehe %d (Nutzer 19.11.: "
+          "fliegt in der Luft)", (int)hieb_tief_ab, (int)stand_tief);
+    CHECK(hieb_becken_hoch <= 30, "Ausholen: Becken hebt sich um %d (Standhoehe %d)", (int)hieb_becken_hoch, (int)stand_becken);
+    CHECK(hieb_starr == 0 && hieb_bild_falsch == 0, "Ausholen: Bildfolge nicht 0, 1, 2, ... (starr %d, falsch %d von %d Takten)", hieb_starr,
+          hieb_bild_falsch, hieb_n);
+    CHECK(hieb_blende == 0, "Ausholen: Ueberblendung in %d Takten (Flag 0x40 = keine, @0x80050f6c-78)", hieb_blende);
+    CHECK(hieb_lage == 0, "Ausholen/Treffer: Lage in %d Takten nicht (%d,%d)", hieb_lage, (int)steh_x, (int)steh_z);
     /* Stufe 6: zu Boden und liegen bleiben - kein Aufrichten (Knochen 0/8 nie wieder hoeher), kein Lagesprung (Lage bleibt die vom
      * Hieb, steh_x/steh_z), am Ende RE2-Liegepose; Gegenprobe: vor Stufe 6 lief Clip 6 ueber Bild 6 hinaus (Kopf wieder hoeher) und
      * der Schnitt weg setzte sie 1105 weiter (4856,-22748) */

@@ -108,12 +108,39 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
 #define AN_HAND_LINKS        13
 #define AN_TON_BIT   0x08000000u    /* Bild-Ton: Bit 27, Id = Wort >> 28 (FUN_80016028, birkin_bahnsteig.c bb_bild_ton) */
 #define AN_TON_BANK          24     /* G4-Bank, wie bb_se */
-/* Clips der Frau (0x4D-Bank, 24 Clips, Kontaktblatt AN_belege). RE2 laesst Annette waehrend des Hiebs Clip 0x02 ihrer
- * Bank spielen (`3f 02 02 44` @0x01138, Savestates e20..e22 M02 Bild 6/26/46 synchron zu Birkins M07). Naechster
- * 0x4D-Clip: 4 = Zurueckweichen mit erhobenen Armen (PORT-WAHL, an Ort und Stelle) - bis zum Trefferbild.
+/* Clips der Frau (0x4D-Bank, 24 Clips, Kontaktblatt AN_belege).
+ * Strang finale Stufe 8 (Nutzer 19.11.2026 woertlich: "Beim zurückweichen fliegt Anette irgendwie komisch in der Luft."):
+ * bis Stufe 7 spielte sie vom Hieb-Signal bis zum Trefferbild Clip 4 ihrer Aktionsbank ("Zurueckweichen mit erhobenen Armen",
+ * eine Deutung des Kontaktblatts). Gemessen (Pose-Log s6r1/lauf/neu2, F1882..F1923): Becken -1695 -> -1800, tiefster Knochen
+ * -101 -> -205..-253 (beide Fuesse 100..150 ueber der Standhoehe), ab F1901 Bild 19 eingefroren = 22 Bilder in der Luft.
+ * Was Clip 4 im Original ist: die FLUGPHASE des Hinunterspringens. RE1.5 PSX.EXE, Executor-Sub 0x17/0x18 (Tabelle
+ * @0x80076ca0[23] = [24] = 0x80052c14, Phasen +0x6 ueber @0x8001131c): Phase 0 Clip 3 (`ori v0,zero,0x3` @0x80052c6c /
+ * `sb v0,148(v1)` @0x80052c70, Absprung bis Bild 13 @0x80052cc0), Phase 2 **Clip 4** (`ori v0,zero,0x4` @0x80052d08 /
+ * `sb v0,148(v1)` @0x80052d0c, ohne Ueberblendung `sb zero,143(v0)` @0x80052d2c) mit Vorschub 0x320 (@0x80052d48/50) und
+ * y += 500 (@0x80052d60-6c), Phase 3 je Bild y += 90 + 50 * Zaehler (@0x80052e28-5c) bis 800 ueber dem Boden (@0x80052e88-a4),
+ * Phase 4 Clip 5 = Landung (`sb v1,148(v0)` @0x80052ec4, y = Boden @0x80052ef4-fc). Der Clip selbst hat keine Wurzelbewegung
+ * (ANNETTE_4D.EMD Paar 1 Clip 4, 20 Bilder, Wurzel (0,-1800,0), v 0): den Fall rechnet der Code; ohne ihn haengt sie in der Luft.
+ * Was RE2 an dieser Stelle zeigt: Claire ROOM6141 MAIN sub02 @0x01138 `3f 02 02 44` = Plc_motion(Modus 2, Clip 2, Flags 0x44).
+ * Claire-EXE SLES_109.72: Handler @0x80052ef0 (+4 = (Byte1 << 8) | 4 @0x80052f10-18, Clip `sb a1,0x14c(v1)` @0x80052f1c, Flags
+ * `sh a2,0x1cc(v1)` @0x80052f20); Routine 4 = 0x800a03a0[4] = 0x80061470 verteilt nach +5 ueber 0x800a0d78 (@0x80061530-4c):
+ * [0] 0x800615b8 = +0x190/+0x194 (Raum-RBJ, gesetzt @0x80018868/78), [2] 0x80061600 = `lw a1,0x180(a0)` @0x80061608 /
+ * `lw a2,0x184(a0)` @0x8006160c = das ZWEITE Clip-Paar ihres eigenen EMD (Lader dir[3] -> +0x184 @0x8001a740-4c, dir[4] ->
+ * +0x180 @0x8001a750-5c). NICHT Clip 2 des Raum-RBJ: der hat 1 Bild (RBJ @0x2E70, EDD @0xA1D4), der RAM-Bildzaehler lief aber
+ * 6 / 26 / 46 (Savestates lauf3 e20..e22 `r04020100 M02/..`, AN_belege/re2_claire/ram_reihe_voll.md, synchron zu Birkins M07
+ * 5/25/45). EM049 Paar 2 Clip 2 (RE2/CDEMD0.EMS Sektor 4665, EDD @EMD+0x36F4, EMR @EMD+0x3A60, Keyframes 50..74) = 50 Bilder
+ * STEHEN: Wurzel (0,-1722,0), Fuesse am Boden, Arme haengen - ihre Stand-Schleife. Flags: 0x40 = ohne Ueberblendung (`andi
+ * v0,v0,0x40` @0x800621e4 -> `sb zero,0x14e(s0)` @0x800621f0), 0x04 = Schleife (`andi v0,v0,4` @0x80062228 -> +6 = 1 @0x80062238).
+ * RE2 zeigt Annette in diesem Schnitt (0x0A) nicht; sie steht einfach, bis der Schnitt weg ist.
+ * BAU: derselbe Befehl im Programm (k_prog, OP_MOTION(2, 2, 0x44)). Der RE1.5-Executor fuehrt ihn bytegleich aus: Handler
+ * @0x80041b90 (+4 = 4 @0x80041bb0, +5 = Byte1 @0x80041bc4, Clip @0x80041ba8), Sub 2 = 0x80076ca0[2] = 0x80050f00 nimmt
+ * `lw a0,368(v0)` @0x80050f88 / `lw a1,372(v0)` @0x80050f90 = +0x170/+0x174 = ebenfalls das zweite Clip-Paar des eigenen EMD
+ * (Lader dir[3] -> +0x174 @0x800224ac-b8, dir[4] -> +0x170 @0x800224bc-c8), Flags 0x40 @0x80050f6c-78, 0x04 @0x80051004-10.
+ * Clip 2 dieses Paars ist bei der 0x4D wie bei RE2 die Stand-Schleife (52 Bilder, Wurzel -1695; dieselbe, in der sie seit der
+ * Ankunft an S steht: state 4 Sub 6 Phase 3, Clip 2 `sb v0,148(v1)` @0x800518c8). PORT-WAHL nur in einem Punkt: es laufen die Keyframes der RE1.5-Frau
+ * (Regel "RE2 = nur Funktion, Modell bleibt RE1.5"), nicht die 25 RE2-Keyframes - als Clip 25 angehaengt hoeben die das Becken um
+ * 27 (-1722 gegen -1695, gemessen scratchpad finale/s8r1/variante_a). Die Szene uebernimmt sie deshalb erst im Trefferbild.
  * Nachbesserung 3 (Abnahme 1 M4: nach dem Treffer stand sie 1 s aufrecht mit erhobenen Armen in Cut 11): im Trefferbild
  * sackt sie mit Clip 6 sofort zusammen (Bild 0-12, ab Bild 12 am Boden, gehalten); RE2 zeigt sie in diesem Moment nicht. */
-#define AN_FA_REAKTION        4
 #define AN_FA_STURZ           6     /* faellt zu Boden (Bild 6 = Tiefpunkt, danach richtet sie sich wieder auf) */
 /* Strang finale Stufe 6 (Nutzer 18.11.2026 woertlich: "Wenn Anette am Ende von den 4 beinigen Birkin nieder geschlagen wird darf
  * sie in der Animation nicht noch mal aufstehen. Sondern mit den Schlag direkt liegen bleiben."). Gemessen (s6r1 alt1, Pose-Log):
@@ -203,6 +230,7 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
  *   Ankunfts-Poll `11 00 08 00 02 00 12 04 21 05 bb 00`   ROOM5090 sub04 @0x01328..@0x01330 / ROOM6030 @0x0128A
  *   Sleep `09 0a nn nn`             ROOM5090 sub04 @0x0133E
  *   Message_on `2b id 00 00`        ROOM6030 sub02 @0x00DC2 (Maske 0 = Untertitel)
+ *   Plc_motion `3f mm cc ff`        ROOM1021 sub02 @0x020C6 `3f 02 06 00` (Modus 2 = eigenes zweites Clip-Paar, @0x80050f00)
  *   Evt_exec `04 ff 18 ss`          ROOM5090 sub01 @0x01296
  * Bildzahlen = RE2-Skript (ROOM6141 sub02), XA-Laengen aus der Claire-STAGE6.BIN-Tabelle @0x4D4 (Laenge in
  * Kanalsektoren * 4032 / 37800 s, je 30 Bilder/s): Xa 0x30 11 Sektoren = 1,173 s = 35 Bilder; Xa 0x31 37 = 3,947 s =
@@ -222,6 +250,7 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
 #define OP_WARTE(bit)    0x11, 0x00, 0x08, 0x00, 0x02, 0x00, 0x12, 0x04, 0x21, 0x05, (bit), 0x00
 #define OP_SLEEP(n)      0x09, 0x0a, LE16(n)
 #define OP_MSG(id)       0x2b, (id), 0x00, 0x00
+#define OP_MOTION(m,c,f) 0x3f, (m), (c), (f)          /* Plc_motion, Form mit Modus 2: ROOM1021 sub02 @0x020C6 `3f 02 06 00` */
 #define OP_KAMPF         0x04, 0xff, 0x18, RE15_AN_SUB_KAMPF
 #define OP_END           0x01, 0x00
 
@@ -255,8 +284,11 @@ static const uint8_t k_prog[] = {
     OP_SLEEP(PAL(1)),                           /* RE2 @0x01116 `0a 01 00` */
     OP_MSG(RE15_AN_MSG_SATZ),                   /* "W-William! You're alive!" RE2 Xa 0x31 @0x0111A */
     OP_SLEEP(118),                              /* RE2 Sleep 30 @0x01132 + Wsleep @0x01136 bis Xa-Ende (37 Sektoren) */
-    OP_SET(5, RE15_AN_SIG_SCHLAG, 1),           /* RE2 @0x01138 Annette Clip 2, @0x01142 Member_set 0x17=2 (Hieb); RE2 Cut 0x0A
-                                                 * @0x0113C = Port Cut 11, steht schon */
+    OP_MOTION(2, 2, 0x44),                      /* RE2 @0x01138 `3f 02 02 44`: Annette (Work steht seit OP_WORK(2,0) oben) spielt
+                                                 * ihre Stand-Schleife, Clip 2 des zweiten Paars, ohne Ueberblendung, Schleife
+                                                 * (Stufe 8, Herleitung bei AN_FA_STURZ) */
+    OP_SET(5, RE15_AN_SIG_SCHLAG, 1),           /* RE2 @0x01142 Member_set 0x17=2 (Hieb); RE2 Cut 0x0A @0x0113C = Port Cut 11,
+                                                 * steht schon */
     /* RE2 @0x01146 `0a 2d 00` = 45 Spielbilder; gemessen Schnitt 0x0A -> Schnitt 6 = 69,77 -> 72,23 s (mit Ladezeit). Port:
      * Vorlauf + Ausholen bis zum Trefferbild + RE2-Rest nach dem Treffer (AN_HIEB_*, oben) = 13 + 28 + 34 = 75 Bilder = 2,5 s. */
     OP_SLEEP(AN_HIEB_VORLAUF + AN_HIEB_TREFFER * AN_HIEB_TAKT + AN_HIEB_NACH),
@@ -811,7 +843,9 @@ const uint8_t *re15_annette_r41_evt_exec(uint16_t room_id, uint8_t sub_id, const
 int re15_annette_r41_besitzt(int slot)
 {
     if (s_an.phase == RE15_AN_AUS || slot < 0) return 0;
-    if (slot == s_an.frau) return s_an.phase >= RE15_AN_HIEB;   /* vorher geht sie ueber Plc_dest (Sub-VM); RUHE = Leiche */
+    /* Stufe 8: bis zum Trefferbild fuehrt sie der Executor (Plc_dest, dann Plc_motion @0x01138 = Sub 2 @0x80050f00, der einzige
+     * Stepper @0x80050f94); die Szene uebernimmt sie in treffer(). RUHE = Leiche. */
+    if (slot == s_an.frau) return s_an.phase >= RE15_AN_REAKTION;
     return slot == s_an.form && s_an.phase < RE15_AN_FREI;
 }
 
@@ -889,6 +923,9 @@ static void treffer(re15_actor_t *f, re15_actor_t *a)
 {
     s_an.blut_skala = blut_skala(f);
     s_an.blut_rest = AN_BLUT_BILDER;                     /* @0x80104D10-14 (Blut ab diesem Bild, blut_bild im Takt) */
+    /* Stufe 8: erst hier uebernimmt der Takt (bis hierher Executor-Sub 2, Stand-Schleife); die Flags 0x44 des Plc_motion gehen
+     * mit dem Executor (vor Stufe 8 standen sie auf 0: Plc_dest `sh zero,452(a1)` @0x80041c4c). */
+    a->state = 0; a->sub_state_1 = 0; a->sub_state_2 = 0; a->walk_active = 0; a->anim_flags = 0;
     clip(a, AN_FA_STURZ);                                /* NB3 M4: sackt sofort zusammen (Clip 6 bis zum Bodenbild 6, Stufe 6) */
     s_an.wg0 = a->rot_y; s_an.wt = 0;                    /* Stufe 6: Sturz ab hier (sturz_schritt, AN_STURZ_BILDER) */
     a->hp = -1;                                          /* NPC-Familie: unverwundbar, kein Treffer-Kandidat (re15_damage.c) */
@@ -1035,9 +1072,9 @@ void re15_annette_r41_tick(void)
         else vor(f, 0);
         if (re15_game_flag_get(5, RE15_AN_SIG_SCHLAG)) {
             re15_game_flag_set(5, RE15_AN_SIG_SCHLAG, 0);
-            a->state = 0; a->sub_state_1 = 0; a->sub_state_2 = 0; a->walk_active = 0;   /* Takt uebernimmt (Plc_dest fertig) */
+            /* Stufe 8: Annette bleibt beim Executor (Plc_motion @0x01138 im selben Skriptbild: state 4 Sub 2, Stand-Schleife ab
+             * Bild 0); vorher uebernahm der Takt hier und setzte Clip 4 = die Flugphase des Sprungs (@0x80052d0c). */
             a->rot_y = blick(a, f->x, f->z);
-            clip(a, AN_FA_REAKTION);
             {   /* NB3: Vorstoss AN_VORSTOSS auf Annette zu (RE2 e20..e22); die Gier des Hiebs gilt fuer die Lage danach */
                 int32_t ux = a->x - f->x, uz = a->z - f->z;
                 int32_t l = (int32_t)re15_squareroot0((uint32_t)(ux * ux + uz * uz)); if (l < 1) l = 1;
@@ -1053,7 +1090,7 @@ void re15_annette_r41_tick(void)
         }
         break;
     case RE15_AN_HIEB:
-        vor(a, 1);
+        /* Stufe 8: kein vor(a) - Annettes Bildzaehler fuehrt bis zum Treffer der Executor (re15_npc_sub_motion, Schleife) */
         if (s_an.t <= AN_HIEB_VORLAUF) {                 /* Vorlauf: die Form steht noch (RE2 69,77 -> 70,22 s) */
             if (f->motion == AN_FC_DROHEN) { if (vor(f, 1)) clip(f, AN_FC_STEHEN); } else vor(f, 0);
             if (s_an.t == AN_HIEB_VORLAUF) { clip(f, AN_FC_HIEB); protokoll("Ausholen (RE2 70,22 s)"); }
