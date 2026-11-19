@@ -54,6 +54,17 @@
  *                   kein gezeigtes Fenster mit mehr als 2 Zeilen oder ueber den Bildrand. Gegenprobe rot auf 7d7f4d1c6 (Vorspann).
  *   ohne_stimme     zweiseitige Zeilen der RDT-Skripte ohne Stimme (VOICE OFF): jede Seite sichtbar, keine von der naechsten Zeile
  *                   abgeschnitten (Pflicht 30E1 14, 5011 3, 11B0 5, 11B0 8, 4010 8). Gegenprobe rot auf 7d7f4d1c6.
+ *
+ * Stufe 6 (veraltete Aufnahmen bleiben stumm, include/re15_altaufnahme_r42.h, tools/r42_namen/altaufnahmen_bauen.py):
+ *   altaufnahme     Tabelle der 15 alten Aufnahmen gegen den Bestand synchro/ (Liste beim Configure): (1) genau die 15 Saetze
+ *                   3020 0/1/2, 30E0 3/10/11/13, 6030 2/3/4/5/21/22, 6031 1/2; (2) ihr Untertitel im Spiel ist NICHT mehr der
+ *                   RDT-Satz (bei den Port-Zeilen 6030 21/22 ein Story-Text) - der Text ist neu; (3) jede dieser Dateien, die
+ *                   noch den Fingerabdruck des Tags v0.8.30 traegt, gilt als "alt", eine ersetzte nicht; (4) NEGATIVKONTROLLE:
+ *                   keine andere Datei des ganzen Bestands gilt als alt, und keine andere Datei hat denselben Inhalt
+ *                   (Spiegelraum-Kopie); (5) ein geaendertes Byte, ein Byte mehr oder weniger, derselbe Inhalt unter anderem
+ *                   Namen -> nicht alt; Gross/Klein und Rueckstrich im Pfad egal; (6) keine Umleitung (stimmen_r39, elza_r36,
+ *                   Rekorder r38, Hilferufe r39, Elza-Montage r38) fuehrt auf diese Saetze oder von ihnen weg.
+ *                   Der ECHTE Lader wird in probe_r42_namen_altlader.c gemessen (unit_r42_namen_altlader, _altlader_ersatz).
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -937,6 +948,184 @@ static void teil_ohne_stimme(void)
     PRUEF(schlecht == 0, "%d zweiseitige Zeilen verlieren ohne Stimme eine Seite oder werden von der naechsten Zeile abgeschnitten", schlecht);
 }
 
+/* ---- Stufe 6: veraltete Aufnahmen (alter Satz unter neuem Untertitel) -------------------------------------------------------- */
+#include "re15_altaufnahme_r42.h"
+#include "re15_stimmen_r39.h"
+#include "re15_elza_r36.h"
+#include "re15_elzaintro_r38.h"
+#include "re15_rekorder_r38.h"
+extern void re15_dining_r39_stamm(unsigned, int, char *, size_t);
+extern void re15_johnruf_r39_stimme(unsigned, int, char *, size_t, char *, size_t);
+
+#ifndef RE15_R42_ALT_BESTAND
+#error RE15_R42_ALT_BESTAND fehlt
+#endif
+
+static void teil_altaufnahme(void)
+{
+    printf("=== altaufnahme: 15 veraltete Aufnahmen gelten wie fehlende Dateien, keine andere Datei ist betroffen ===\n");
+    static const struct { unsigned raum; int nr; } soll[15] = {
+        { 0x3020, 0 }, { 0x3020, 1 }, { 0x3020, 2 },
+        { 0x30E0, 3 }, { 0x30E0, 10 }, { 0x30E0, 11 }, { 0x30E0, 13 },
+        { 0x6030, 2 }, { 0x6030, 3 }, { 0x6030, 4 }, { 0x6030, 5 }, { 0x6030, 21 }, { 0x6030, 22 },
+        { 0x6031, 1 }, { 0x6031, 2 },
+    };
+    /* (1) Tabelle = genau die 15 Saetze, Pfad nach der Ablage-Regel */
+    const int n = re15_altaufnahme_r42_anzahl();
+    PRUEF(n == 15, "Tabelle: %d Eintraege (Soll 15)", n);
+    int tab_ok = 0;
+    for (int i = 0; i < 15 && i < n; i++) {
+        const re15_altaufnahme_r42_t *e = re15_altaufnahme_r42_eintrag(i);
+        char regel[80];
+        snprintf(regel, sizeof regel, "synchro/stage%u/room%04x/main%02d.wav", soll[i].raum >> 12, soll[i].raum, soll[i].nr);
+        if (e && e->raum == soll[i].raum && e->datei == soll[i].nr && !strcmp(e->pfad, regel) && e->groesse > 44) tab_ok++;
+        else printf("        Eintrag %d: ROOM%04X main%02d \"%s\" passt nicht zum Soll ROOM%04X main%02d\n", i, e ? e->raum : 0,
+                    e ? e->datei : -1, e ? e->pfad : "?", soll[i].raum, soll[i].nr);
+    }
+    PRUEF(tab_ok == 15, "Tabelle: %d von 15 Eintraegen = Soll-Satz mit Regelpfad synchro/STAGEn/roomXXXX/mainNN.wav", tab_ok);
+
+    /* (2) der Untertitel im Spiel ist neu: nicht mehr der RDT-Satz; Port-Zeilen 6030 21/22 = Story-Text mit Namenskopf */
+    int neu_text = 0;
+    for (int i = 0; i < 15; i++) {
+        if (raum_laden(soll[i].raum) != 0) { PRUEF(0, "ROOM%04X ladbar", soll[i].raum); continue; }
+        int len = 0;
+        const unsigned char *m = re15_msg_get_raw(soll[i].nr, &len);
+        char jetzt[512] = "", rdt[512] = "";
+        if (m && len > 0) re15_msg_decode_text(m, (size_t)len, jetzt, sizeof jetzt);
+        const uint8_t *r = NULL;
+        const int rl = rdt_nachricht(soll[i].nr, &r);
+        if (rl > 0) re15_msg_decode_text(r, (size_t)rl, rdt, sizeof rdt);
+        const int ok = jetzt[0] && strchr(jetzt, ':') && (rl <= 0 || strcmp(jetzt, rdt) != 0);
+        printf("        ROOM%04X msg %2d  jetzt \"%s\"\n                         %s \"%s\"%s\n", soll[i].raum, soll[i].nr, jetzt,
+               rl > 0 ? "RDT  " : "RDT   (keine: Port-Zeile)", rdt, ok ? "" : "   <- NICHT NEU");
+        neu_text += ok;
+    }
+    PRUEF(neu_text == 15, "Untertitel im Spiel sind neu (nicht der RDT-Satz der Aufnahme): %d von 15", neu_text);
+
+    /* (3)+(4) ganzer Bestand: alt gilt nur fuer die 15 Pfade mit dem Abdruck des Tags; keine andere Datei, kein Doppel */
+    FILE *lf = fopen(RE15_R42_ALT_BESTAND, "r");
+    PRUEF(lf != NULL, "Bestandsliste lesbar (%s)", RE15_R42_ALT_BESTAND);
+    if (!lf) return;
+    int dateien = 0, alt_noch = 0, alt_ersetzt = 0, fremd_alt = 0, doppel = 0, gesehen[15] = { 0 }, unlesbar = 0;
+    uint8_t *muster = NULL; size_t muster_n = 0; char muster_pfad[200] = "";
+    char zeile[700];
+    while (fgets(zeile, sizeof zeile, lf)) {
+        size_t zl = strlen(zeile);
+        while (zl && (zeile[zl - 1] == '\n' || zeile[zl - 1] == '\r')) zeile[--zl] = 0;
+        if (!zl) continue;
+        char voll[1200];
+        snprintf(voll, sizeof voll, "%s/%s", RE15_SYNCHRO_DIR, zeile);          /* Liste relativ zu synchro/ */
+        char rel[760], klein[760];
+        snprintf(rel, sizeof rel, "synchro/%s", zeile);
+        size_t q = 0;
+        for (; rel[q] && q + 1 < sizeof klein; q++) klein[q] = (char)tolower((unsigned char)rel[q]);
+        klein[q] = 0;
+        size_t bn = 0;
+        uint8_t *b = slurp(voll, &bn);
+        if (!b) { unlesbar++; continue; }
+        dateien++;
+        const int ist = re15_altaufnahme_r42_ist(rel, b, bn);
+        const uint64_t h = re15_altaufnahme_r42_summe(b, bn);
+        int k = -1;
+        for (int i = 0; i < n; i++) {
+            const re15_altaufnahme_r42_t *e = re15_altaufnahme_r42_eintrag(i);
+            if (!strcmp(klein, e->pfad)) k = i;
+            else if (e->groesse == bn && e->fnv == h) { doppel++; printf("        DOPPEL: %s hat den Inhalt von %s\n", rel, e->pfad); }
+        }
+        if (k < 0) {
+            if (ist) { fremd_alt++; printf("        FREMD: %s gilt als alt\n", rel); }
+        } else {
+            const re15_altaufnahme_r42_t *e = re15_altaufnahme_r42_eintrag(k);
+            gesehen[k] = 1;
+            const int abdruck = (e->groesse == bn && e->fnv == h);
+            if (abdruck != ist) { fremd_alt++; printf("        WIDERSPRUCH: %s Abdruck %d, gilt als alt %d\n", rel, abdruck, ist); }
+            if (ist) {
+                alt_noch++;
+                if (!muster) { muster = b; muster_n = bn; snprintf(muster_pfad, sizeof muster_pfad, "%s", rel); b = NULL; }
+            } else {
+                alt_ersetzt++;
+                printf("        ERSETZT: %s (%u Byte) traegt nicht mehr den Abdruck des Tags -> spielt\n", rel, (unsigned)bn);
+            }
+        }
+        free(b);
+    }
+    fclose(lf);
+    int da = 0;
+    for (int i = 0; i < 15; i++) da += gesehen[i];
+    printf("    Bestand: %d Dateien gelesen (%d unlesbar); von den 15: %d noch alt (stumm), %d ersetzt (spielen), %d fehlen\n", dateien,
+           unlesbar, alt_noch, alt_ersetzt, 15 - da);
+    PRUEF(dateien >= 400 && unlesbar == 0, "Bestand synchro/ gelesen: %d Dateien", dateien);
+    PRUEF(fremd_alt == 0, "NEGATIVKONTROLLE: keine der uebrigen %d Dateien gilt als alt (%d Verstoesse)", dateien - da, fremd_alt);
+    PRUEF(doppel == 0, "keine andere Datei traegt den Inhalt einer der 15 alten Aufnahmen (Spiegelraum-Kopien: %d)", doppel);
+    PRUEF(alt_noch + alt_ersetzt == da, "jede vorhandene der 15 Dateien ist entweder alt (Abdruck) oder ersetzt: %d + %d = %d", alt_noch,
+          alt_ersetzt, da);
+
+    /* (5) Abdruck ist scharf: ein Byte anders / mehr / weniger, anderer Name -> nicht alt; Schreibweise des Pfads egal */
+    if (muster) {
+        uint8_t *k = (uint8_t *)malloc(muster_n + 1);
+        memcpy(k, muster, muster_n); k[muster_n] = 0;
+        PRUEF(re15_altaufnahme_r42_ist(muster_pfad, k, muster_n) == 1, "%s unveraendert: alt", muster_pfad);
+        k[muster_n - 1] ^= 1;
+        PRUEF(re15_altaufnahme_r42_ist(muster_pfad, k, muster_n) == 0, "letztes Byte um 1 Bit geaendert: NICHT alt -> spielt");
+        k[muster_n - 1] ^= 1; k[44] ^= 0x80;
+        PRUEF(re15_altaufnahme_r42_ist(muster_pfad, k, muster_n) == 0, "Byte 44 geaendert: NICHT alt");
+        k[44] ^= 0x80;
+        PRUEF(re15_altaufnahme_r42_ist(muster_pfad, k, muster_n + 1) == 0, "ein Byte angehaengt: NICHT alt");
+        PRUEF(re15_altaufnahme_r42_ist(muster_pfad, k, muster_n - 1) == 0, "ein Byte kuerzer: NICHT alt");
+        PRUEF(re15_altaufnahme_r42_ist("synchro/STAGE6/room6030/main06.wav", k, muster_n) == 0,
+              "derselbe Inhalt unter anderem Namen (room6030/main06.wav): NICHT alt");
+        PRUEF(re15_altaufnahme_r42_ist("synchro/unused/main00.wav", k, muster_n) == 0, "derselbe Inhalt in synchro/unused: NICHT alt");
+        char gross[200], rueck[200]; size_t q = 0;
+        for (; muster_pfad[q]; q++) {
+            gross[q] = (char)toupper((unsigned char)muster_pfad[q]);
+            rueck[q] = muster_pfad[q] == '/' ? '\\' : muster_pfad[q];
+        }
+        gross[q] = 0; rueck[q] = 0;
+        PRUEF(re15_altaufnahme_r42_ist(gross, k, muster_n) == 1 && re15_altaufnahme_r42_ist(rueck, k, muster_n) == 1,
+              "Pfad gross geschrieben / mit Rueckstrich: weiter alt (audio_pc.c probiert room30E0 und room30e0)");
+        PRUEF(re15_altaufnahme_r42_ist(NULL, k, muster_n) == 0 && re15_altaufnahme_r42_ist(muster_pfad, NULL, 0) == 0,
+              "leere Eingaben: nicht alt");
+        free(k); free(muster);
+    } else {
+        printf("    (alle 15 Dateien sind schon ersetzt - der Abdruck-Teil (5) hat kein Muster mehr und entfaellt)\n");
+    }
+
+    /* (6) keine Umleitung fuehrt auf diese Saetze oder von ihnen weg */
+    int uml = 0;
+    for (int i = 0; i < 15; i++) {
+        const unsigned room = soll[i].raum; const int id = soll[i].nr;
+        char dir[64], stamm[24], dir0[64], stamm0[24];
+        snprintf(dir, sizeof dir, "synchro/STAGE%u/room%04X/", room >> 12, room); snprintf(stamm, sizeof stamm, "main%02d", id);
+        snprintf(dir0, sizeof dir0, "%s", dir); snprintf(stamm0, sizeof stamm0, "%s", stamm);
+        if (re15_elza_stimme_datei(room, id)) uml++;
+        if (re15_stimmen_r39_stamm(room, id, stamm, sizeof stamm) != 0) uml++;
+        re15_rekorder_r38_stimme(room, id, dir, sizeof dir, stamm, sizeof stamm);
+        re15_dining_r39_stamm(room, id, stamm, sizeof stamm);
+        re15_johnruf_r39_stimme(room, id, dir, sizeof dir, stamm, sizeof stamm);
+        if (strcmp(dir, dir0) || strcmp(stamm, stamm0)) uml++;
+        if (re15_elzaintro_r38_stimme_raum(room, id) != room) uml++;
+    }
+    for (int i = 0; i < re15_stimmen_r39_anzahl(); i++) {
+        const unsigned r = re15_stimmen_r39_eintrag(i)->raum;
+        if (r == 0x3020 || r == 0x30E0 || r == 0x6030 || r == 0x6031) uml++;
+    }
+    /* fremde Raeume, die per Raum-Umleitung in einen der vier Ordner lesen koennten (Elza-Montage r38, Hilferufe r39) */
+    for (unsigned room = 0x1000; room <= 0x6FFF; room++) {
+        if ((room & 0xF) > 1) continue;
+        for (int id = 0; id < 64; id++) {
+            const unsigned q = re15_elzaintro_r38_stimme_raum(room, id);
+            if (q != room && (q == 0x3020 || q == 0x30E0 || q == 0x6030 || q == 0x6031)) uml++;
+            char dir[64], stamm[24];
+            snprintf(dir, sizeof dir, "synchro/STAGE%u/room%04X/", room >> 12, room); snprintf(stamm, sizeof stamm, "main%02d", id);
+            re15_rekorder_r38_stimme(room, id, dir, sizeof dir, stamm, sizeof stamm);
+            re15_johnruf_r39_stimme(room, id, dir, sizeof dir, stamm, sizeof stamm);
+            if (room != 0x3020 && room != 0x30E0 && room != 0x6030 && room != 0x6031 &&
+                (strstr(dir, "room3020") || strstr(dir, "room30E0") || strstr(dir, "room6030") || strstr(dir, "room6031"))) uml++;
+        }
+    }
+    PRUEF(uml == 0, "keine Umleitung (stimmen_r39, elza_r36, Rekorder r38, Hilferufe r39, Elza-Montage r38) beruehrt die 15 Saetze (%d)", uml);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -949,6 +1138,7 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "quellen_zeilen") || !strcmp(teil, "alle")) teil_quellen_zeilen();
     if (!strcmp(teil, "darstellung") || !strcmp(teil, "alle")) teil_darstellung();
     if (!strcmp(teil, "ohne_stimme") || !strcmp(teil, "alle")) teil_ohne_stimme();
+    if (!strcmp(teil, "altaufnahme") || !strcmp(teil, "alle")) teil_altaufnahme();
     printf(g_fail ? "=== FAIL ===\n" : "=== OK ===\n");
     return g_fail;
 }

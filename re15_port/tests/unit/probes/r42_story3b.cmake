@@ -28,7 +28,9 @@ if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_stor
     foreach(_teil leon elza)
         add_test(NAME integration_r42_story3b_${_teil}
                  COMMAND ${CMAKE_COMMAND} -DRE15_PC_EXE=$<TARGET_FILE:re15_pc> -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/r42_story3b_${_teil}
-                         -DTEIL=${_teil} -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_story3b.cmake)
+                         -DTEIL=${_teil} -DRE15_SYNCHRO=${CMAKE_SOURCE_DIR}/../synchro
+                         -DRE15_ALT_WERKZEUG=$<TARGET_FILE:werkzeug_r42_altaufnahme_ersatz>
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_story3b.cmake)
         set_tests_properties(integration_r42_story3b_${_teil} PROPERTIES TIMEOUT 2600)
     endforeach()
 endif()
