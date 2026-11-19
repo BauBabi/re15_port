@@ -1398,6 +1398,38 @@ if(TARGET SDL2::SDL2-static)
     set_tests_properties(unit_rotor_bgm_pin PROPERTIES TIMEOUT 120)
 endif()
 
+# --- Strang "ton", Stufe 1 (2026-11-19): Lautstaerke-Gesetz der libsnd (Nutzer: "Bei der PC Version klingen die
+#     Sounds irgendwie dumpfer/anders als in der PSX Version"; Messbericht U1). SpuVmKeyOnNow @0x80055d10-0x80056070:
+#     Produkt Tastenstaerke * Bank * Programm * Ton, drei Pan-Stufen, QUADRAT / 0x3fff; RE2 _SsVmKeyOnNow @0x80083760
+#     ohne Quadrat fuer Geraeusche (@0x80083a38). unit_r42_ton_gesetz rechnet mit den Bankdaten gegen die im laufenden
+#     Original gemessenen SPU-Register; unit_r42_ton_mischer misst die Spitzen am echten audio_pc.c
+#     (RE15_AUDIO_CAP_SYNC). Gegenprobe: der Mischer-Riegel mit dem audio_pc.c von 71caea668 faellt in allen 5 Punkten.
+add_executable(test_r42_ton_gesetz test_r42_ton_gesetz.c)
+target_link_libraries(test_r42_ton_gesetz PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_ton_gesetz PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_ton_gesetz PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r42_ton_gesetz COMMAND test_r42_ton_gesetz)
+set_tests_properties(unit_r42_ton_gesetz PROPERTIES TIMEOUT 30)
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_mischer
+        test_r42_ton_mischer.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_mischer PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_mischer PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_mischer PRIVATE
+        RE15_PLATFORM_PC
+        RE15_TON_S1_HAKEN
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_mischer COMMAND test_r42_ton_mischer)
+    set_tests_properties(unit_r42_ton_mischer PROPERTIES TIMEOUT 120)
+endif()
+
 # --- DIAGNOSE (kein ctest): Nutzer-Report "Irons schaut im Original etwas diagonaler".
 #     Misst Irons' (NPC 0x45) Neck-Zustand + die GERENDERTE Kopf-Orientierung in ROOM1150.
 add_executable(probe_irons_neck_1150 probe_irons_neck_1150.c)

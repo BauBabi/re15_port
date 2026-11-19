@@ -30,6 +30,10 @@
 extern long re15_audio_cap_tick(void);   /* audio_pc.c (Runde 38 Spur F): Mitschnitt-Takt */
 extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
                                     const int *decoded_len, int satz);   /* audio_pc.c */
+/* Strang ton Stufe 1: der Rolladen kommt aus ROOM1131 snd0 (RE1.5-Bank, Gesetz mit Quadrat @0x80055d10), das
+ * Klopfen aus RE2 ROOM1060 (RE2-Gesetz ohne Quadrat @0x80083a38). */
+extern void re15_audio_se_play_bank_re15(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
+                                         const int *decoded_len, int satz);   /* audio_pc.c */
 
 typedef struct {
     int        state;                         /* 0 ungeprueft, 1 geladen, -1 fehlt */
@@ -121,7 +125,8 @@ static void spielen(int bank, int satz)
         fprintf(stderr, "[se] Se_on bank=0x%02X id=%d -> Runde 38 Spur F (%s) F%u tick=%ld\n", bank, satz,
                 k == 0 ? "ROOM1131-snd0 Rolladen" : "RE2 ROOM1060 Klopfen",
                 (unsigned)g_engine.frame_count, re15_audio_cap_tick());
-    re15_audio_se_play_bank(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
+    if (k == 0) re15_audio_se_play_bank_re15(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
+    else        re15_audio_se_play_bank(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
 }
 
 unsigned re15_pc_dining_r38_gespielt(int k) { return (k >= 0 && k < 3) ? s_gespielt[k] : 0u; }

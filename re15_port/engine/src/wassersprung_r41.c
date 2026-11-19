@@ -465,23 +465,15 @@ int re15_wassersprung_r41_lage_nehmen(int lage[2])
     return 1;
 }
 
-int re15_wassersprung_r41_lage_pegel(int *vol, const int lage[2], int diag)
+/* Strang ton Stufe 1 (2026-11-19): die Rechnung selbst steht jetzt in svm_vol_common.c (re15_svm_utkeyon_split =
+ * SsUtKeyOnV @0x80059e08-bc, re15_svm_keyon_reg = SpuVmKeyOnNow @0x80055d10-0x80056070). Die fruehere Fassung hier
+ * rechnete Tastenpegel und Pan LINEAR auf einen fertigen Port-Pegel; im Original stehen Tastenstaerke und Pan VOR dem
+ * Quadrat (`mult a2,a2` @0x80055fe8 / `mult a1,a1` @0x80056008). Diese Funktion merkt nur noch die Messwerte. */
+void re15_wassersprung_r41_lage_pegel(const int lage[2], int l_q15, int r_q15, int diag)
 {
-    const int voll = lage[0], volr = lage[1];
-    int pegel, pan;                                         /* SsUtKeyOnV @0x80059d3c: DAT_800b5318 / DAT_800b5319 */
-    if (voll == volr)     { pegel = voll; pan = RE15_WASSERSPRUNG_R41_LAGE_MITTE; }   /* @0x80059e08-20            */
-    else if (volr < voll) { pegel = voll; pan = (volr << 6) / voll; }                 /* @0x80059e2c-6c            */
-    else                  { pegel = volr; pan = 0x7f - (voll << 6) / volr; }          /* @0x80059e78-bc            */
-    const int v = *vol * pegel / 0x7f;                      /* SpuVmKeyOnNow: Tastenpegel * Master * Prog * Ton @0x80055d24-80;
-                                                             * *vol ist der Port-Pegel des Tons bei Tastenpegel 0x7f */
-    int l = v, r = v;
-    if (pan < RE15_WASSERSPRUNG_R41_LAGE_MITTE) r = v * pan / RE15_WASSERSPRUNG_R41_PAN_TEILER;          /* @0x80055f58-88 */
-    else                                        l = v * (0x7f - pan) / RE15_WASSERSPRUNG_R41_PAN_TEILER; /* @0x80055f8c-... */
-    if (diag) fprintf(stderr, "[foot] NPC-Lage voll=%d volr=%d -> Pegel %d Pan %d -> L=%d R=%d (Q15, Ton %d)\n",
-                      voll, volr, pegel, pan, l, r, *vol);
-    s_mess.letzter_pegel[0] = l; s_mess.letzter_pegel[1] = r;
-    *vol = l;
-    return r > 0 ? r : 1;                                   /* 0 hiesse im Mischer "Mono" (audio_pc.c vol_r_q15) */
+    if (diag) fprintf(stderr, "[foot] NPC-Lage voll=%d volr=%d -> L=%d R=%d (Q15 = SPU-Register * 2)\n",
+                      lage[0], lage[1], l_q15, r_q15);
+    s_mess.letzter_pegel[0] = l_q15; s_mess.letzter_pegel[1] = r_q15;
 }
 
 int re15_wassersprung_r41_npc_schritt(re15_actor_t *e, int a0, int fuss, const void *rdt_v)

@@ -39,8 +39,9 @@ extern unsigned g_current_room_id;
 extern void   re15_render_pc_show_fmv(const uint32_t *rgba, int w, int h);   /* render_pc.c */
 extern void   re15_render_pc_hide_fmv(void);
 extern void   re15_audio_tick(void);
-extern void   re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
-                                      const int *decoded_len, int satz);     /* audio_pc.c */
+/* Strang ton Stufe 1: ROOM11C0 snd0/snd1 ist eine RE1.5-Bank -> Gesetz mit Quadrat (SpuVmKeyOnNow @0x80055d10) */
+extern void   re15_audio_se_play_bank_re15(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
+                                           const int *decoded_len, int satz);   /* audio_pc.c */
 extern void   re15_fmv_audio_start(const int16_t *src, int src_frames, int src_rate, int cd_vol);
 extern void   re15_fmv_audio_stop(void);
 extern double re15_fmv_audio_time(void);
@@ -90,7 +91,7 @@ static int schrei(int satz)
     const int b = RE15_ZWS_SCHREI_BANK;
     const int takte = re15_zws_r41_satz_takte(s_rdt.snd_edt[b], s_rdt.snd_vh[b], s_rdt.snd_vh_size[b], s_rdt.snd_vb[b],
                                               s_rdt.snd_vb_size[b], satz);
-    re15_audio_se_play_bank(s_rdt.snd_edt[b], &s_vab, s_dec, s_dec_len, satz);
+    re15_audio_se_play_bank_re15(s_rdt.snd_edt[b], &s_vab, s_dec, s_dec_len, satz);
     fprintf(stderr, "[%s] F%u Schrei ROOM11C0 snd%d Satz %d -> %d Takte\n", kennung(), (unsigned)g_engine.frame_count, b,
             satz, takte);
     return takte;

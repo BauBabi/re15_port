@@ -33,6 +33,7 @@
 #include "re15_inventory.h"
 #include "re15_emd.h"
 #include "re15_ems.h"
+#include "re15_svm_vol.h"   /* Strang ton Stufe 1: Lautstaerke-Gesetz (Block (3) der Lage-Pruefung) */
 #include "re15_esp.h"
 #include "re15_skeleton.h"
 #include "re15_anim_select.h"
@@ -1052,20 +1053,27 @@ static int teil_lage(void)
     rv = re15_wassersprung_r41_lage(&fake, pa, lage, &ab);
     CHECK(rv == 0, "Cut 5 bei 1 Kamerasatz -> keine Lage (%d)", rv);
     g_scd.work_vars[0x0A] = 0;
-    /* (3) Pegel (Port-Q15 des Tons bei Tastenpegel 0x7f = 8192): SsUtKeyOnV volr > voll -> Pegel volr, Pan 0x7f - (voll<<6)/volr
-     *     (@0x80059e78-bc) = 127 - 5312/101 = 75 -> links * (0x7f - 75) / 63 (@0x80055f8c), rechts voll. 8192*101/127 = 6514 -> L 5376 R 6514. */
-    int vol = 8192; const int l1[2] = { 83, 101 };
-    int r = re15_wassersprung_r41_lage_pegel(&vol, l1, 0);
-    CHECK(vol == 5376 && r == 6514, "Pegel voll/volr 83/101 -> L/R %d/%d (5376/6514)", vol, r);
-    vol = 8192; const int l2[2] = { 101, 83 };
-    r = re15_wassersprung_r41_lage_pegel(&vol, l2, 0);
-    CHECK(vol == 6514 && r == 5376, "Pegel voll/volr 101/83 (Pan (83<<6)/101 = 52 @0x80059e30-6c) -> L/R %d/%d (6514/5376)", vol, r);
-    vol = 8192; const int l3[2] = { 103, 103 };
-    r = re15_wassersprung_r41_lage_pegel(&vol, l3, 0);
-    CHECK(vol == 6643 && r == 6643, "Pegel 103/103 (Pan 0x40 @0x80059e10) -> L/R %d/%d (6643/6643)", vol, r);
-    vol = 8192; const int l4[2] = { 74, 74 };
-    r = re15_wassersprung_r41_lage_pegel(&vol, l4, 0);
-    CHECK(vol == 4773 && r == 4773, "Pegel 74/74 (weiter weg) -> L/R %d/%d (4773/4773, leiser als 6643)", vol, r);
+    /* (3) Pegel. ANGEPASST im Strang ton Stufe 1 (2026-11-19): bis dahin pinnte dieser Block die lineare Rechnung der Runde 41
+     *     (Port-Pegel 8192 * Tastenpegel / 127, Pan linear: 5376/6514, 6514/5376, 6643/6643, 4773/4773). Das Original setzt
+     *     Tastenstaerke UND Pan vor das QUADRAT (SpuVmKeyOnNow `mult a2,a2` @0x80055fe8 / `mult a1,a1` @0x80056008, / 0x3fff);
+     *     gemessen an den SPU-Registern des laufenden Originals (z. B. Vormerk-Satz 99/62 mit Ton-vol 127 -> 9955/4012).
+     *     Neue Sollwerte = SPU-Register eines Tons mit Bank/Programm/Ton 127 (re15_svm_utkeyon_split + re15_svm_keyon_reg):
+     *     83/101: Staerke 101, Pan 0x7f - (83<<6)/101 = 75 (@0x80059e78-bc) -> links * (0x7f - 75) / 63 (@0x80055f8c) -> 7059/10361. */
+    {   re15_svm_vol_t in; memset(&in, 0, sizeof in);
+        in.vab_mvol = in.prog_mvol = in.tone_vol = 127; in.prog_pan = in.tone_pan = 0x40;
+        int rl, rr;
+        re15_svm_utkeyon_split(83, 101, &in.key, &in.key_pan); re15_svm_keyon_reg(&in, &rl, &rr);
+        CHECK(in.key == 101 && in.key_pan == 75 && rl == 7059 && rr == 10361, "Pegel voll/volr 83/101 -> Staerke %d Pan %d Register %d/%d (101, 75, 7059/10361)", in.key, in.key_pan, rl, rr);
+        re15_svm_utkeyon_split(101, 83, &in.key, &in.key_pan); re15_svm_keyon_reg(&in, &rl, &rr);
+        CHECK(in.key == 101 && in.key_pan == 52 && rl == 10361 && rr == 7059, "Pegel voll/volr 101/83 (Pan (83<<6)/101 = 52 @0x80059e30-6c) -> %d/%d Register %d/%d (10361/7059)", in.key, in.key_pan, rl, rr);
+        re15_svm_utkeyon_split(103, 103, &in.key, &in.key_pan); re15_svm_keyon_reg(&in, &rl, &rr);
+        CHECK(in.key == 103 && in.key_pan == 0x40 && rl == 10776 && rr == 10776, "Pegel 103/103 (Pan 0x40 @0x80059e10) -> Register %d/%d (10776/10776)", rl, rr);
+        re15_svm_utkeyon_split(74, 74, &in.key, &in.key_pan); re15_svm_keyon_reg(&in, &rl, &rr);
+        CHECK(rl == 5562 && rr == 5562, "Pegel 74/74 (weiter weg) -> Register %d/%d (5562/5562, leiser als 10776)", rl, rr);
+        const int lm[2] = { 83, 101 };
+        re15_wassersprung_r41_lage_pegel(lm, 2 * 7059, 2 * 10361, 0);
+        CHECK(re15_wassersprung_r41_mess()->letzter_pegel[0] == 14118 && re15_wassersprung_r41_mess()->letzter_pegel[1] == 20722,
+              "Messwert des NPC-Schritts: %d/%d (14118/20722 = Register * 2)", re15_wassersprung_r41_mess()->letzter_pegel[0], re15_wassersprung_r41_mess()->letzter_pegel[1]); }
     /* (4) Im Raum: NPC-Schritt in ROOM2000 traegt die Lage (Messzeile) und gibt sie NICHT an einen spaeteren Schritt weiter */
     if (!raum("STAGE2/ROOM2000.RDT", 0x2000u, 4350, -1800, -20500, 0, 0)) { s_fails++; return 0; }
     re15_actor_t *e = &g_actors[3];

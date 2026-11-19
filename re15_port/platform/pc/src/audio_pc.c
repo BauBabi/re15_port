@@ -50,6 +50,7 @@
 #include "re15_wassersprung_r41.h" /* Runde 41 Spur A: Lage des NPC-Schritts (FUN_80045a64, Entscheid A-E4) */
 #include "re15_xa.h"               /* re15_xa_decode_sector_mono fuer RE2-VOICE07-Strecken (Finale Xa 0x03) */
 #include "re15_stimme_option.h"    /* Runde 41 Stimmen: Option VOICE ON/OFF (Tor in re15_voice_play, Stopp-Hook) */
+#include "re15_svm_vol.h"          /* Strang ton Stufe 1: Lautstaerke-Gesetz der libsnd (SpuVmKeyOnNow @0x80055d10) */
 
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);
 
@@ -114,13 +115,14 @@ typedef struct {
                             * @0x8004522c). 0 = Altverhalten 0x8000 (= konstant -12 HT). */
     uint32_t pos_frac;     /* Q16-Restakkumulator des Cursors                            */
     int      active;       /* 1 = playing, 0 = free slot                 */
-    int      volume_q15;   /* per-voice LEFT volume in 0..0x4000 (Q15)   */
-    int      vol_r_q15;    /* per-voice RIGHT volume (Q15). Tone-Pan tone[+3]: die
-                            * SPU-Voice-Maschine liest vol UND pan aus den Tone-Attributen
-                            * selbst (SsUtKeyOnV.c: DAT_800b5321/22 = tone[+2]/[+3]) —
-                            * pan 0 = hart links, 0x40 = Mitte (beide voll), 0x7f = hart
-                            * rechts. Lineares LIBSND-vm-Modell; das CORE11-Announcer-
-                            * Paar (pan 0/127) ist damit exakt. */
+    int      volume_q15;   /* Lautstaerke LINKS als Q15 = SPU-Register * 2 (0..0x7ffe):
+                            * RE15_SPU_REG_Q15, psx-spx soundprocessingunitspu.md Z. 364
+                            * "Voice volume/2". Das Register rechnet se_stimme_reg nach
+                            * SpuVmKeyOnNow @0x80055d10 (re15_svm_vol.h).                  */
+    int      vol_r_q15;    /* Lautstaerke RECHTS, dieselbe Einheit. Strang ton Stufe 1: der
+                            * alte Sonderfall "0 = Mono" ist weg — ein hart nach links
+                            * gelegter Ton (Pan 0 -> rechts 0, @0x80055e7c) spielte sonst
+                            * auf beiden Seiten.                                           */
 } active_sample_t;
 
 static int16_t *s_decoded_vag    [RE15_VAB_MAX_SAMPLES];
@@ -323,7 +325,11 @@ typedef struct {
     int             loop_start;     /* sample index to wrap to, or -1 = one-shot */
     uint32_t        phase;          /* Q16 resample cursor */
     uint32_t        step;           /* Q16 step per output frame (= pitch<<4) */
-    int             vol_l, vol_r;   /* Q15 */
+    int             vol_l, vol_r;   /* Q15 = SPU-Register * 2 (SpuVmKeyOnNow @0x80055d10, re15_svm_vol.h) */
+    /* Strang ton Stufe 1: was libsnd je Stimme merkt und SpuVmSetVol @0x8005926c wieder liest:
+     * Anschlag DAT_8008f84c (`sh` aus SpuVmKeyOn), Programm DAT_8008f856, Ton DAT_8008f858, Bank DAT_8008f85a. */
+    uint8_t         vel, prog, tone;
+    const re15_vab_t *vab;
     int             env_level;      /* current PSX-SPU ADSR level 0..0x7fff */
     int             env_phase;      /* 0=attack 1=decay 2=sustain 3=release */
     int             env_count;      /* output samples until the next envelope step */
@@ -356,7 +362,10 @@ typedef struct ss_seq_s {
     int            playing;
     int            loop;
     uint8_t        prog[SS_CHANNELS];
-    int            cvol[SS_CHANNELS];      /* CC7 channel volume 0..127     */
+    int            cvol[SS_CHANNELS];      /* CC7 channel volume 0..127 (Sequenz+0x4e+2*Kanal) */
+    int            cpan[SS_CHANNELS];      /* CC10 Kanal-Pan 0..127 (Sequenz+0x17+Kanal) = Tasten-Pan der Note
+                                            * (_SsNoteOn reicht ihn an SpuVmKeyOn, `sb s7,0x800b5319` @0x80058550) */
+    int            seq_vol_l, seq_vol_r;   /* SsSeqSetVol: Sequenz+0x74 / +0x76 (SpuVmSetSeqVol), 0..127 */
     int            bend_deflect[SS_CHANNELS]; /* pitch-bend MSB-64 (byte-true _SsSetPitchBend
                                             * @0x8005ef04 reads ONE 7-bit byte; the per-voice
                                             * pbmin/pbmax scale it — wf_1db9c802 PBMINMAX) */
@@ -395,7 +404,16 @@ static int      s_ss_rate = 44100;
  *   vol@0x800b52b0 (MAIN) = 127, vol@0x800b52b8 (SUB SEQ0) = 127, vol@0x800b52c0 (SUB SEQ#2) = 127,
  *   handles @0x800b52ae/b6/be = 0/1/2 (all three sequences OPEN during the cinematic).
  * i.e. the SUB layer is NOT quieter than MAIN and carries no positional scaling. */
-#define SS_BASE_MVOL 0x1a00                   /* port-side Q15 master, shared by MAIN/SUB/SUB2 */
+/* Strang ton Stufe 1 (2026-11-19, Messbericht U1): bis hierher stand an dieser Stelle der pauschale Port-Wert 0x1a00
+ * (= 0,203, -13,8 dB) und die Stimmen rechneten linear. Jetzt:
+ *   - die Stimmen-Lautstaerke kommt je Note aus SpuVmKeyOnNow (ss_stimme_vol unten), darin die Sequenz-Lautstaerke
+ *     SS_SEQ_VOL = 127 (die drei Slot-Halbworte oben, gemessen 127; SpuVmSetSeqVol legt sie nach Sequenz+0x74/+0x76,
+ *     SpuVmKeyOnNow teilt durch 127 @0x80055e08-64);
+ *   - die Ebene traegt nur noch die Hauptlautstaerke des Tonchips: Register 0x3fff = SsSetMVol(127,127)
+ *     (FUN_80043a34 `sh v1,DAT_800b5274` @0x80043a7c, `jal SsSetMVol` @0x80043ba8, * 129 @0x8005c9c4-c8; im laufenden
+ *     Original gemessen 0x3fff/0x3fff) = Q15 0x7ffe (psx-spx soundprocessingunitspu.md Z. 357-364). 0 = Slot stumm. */
+#define SS_SEQ_VOL   0x7f                     /* `lh a1,DAT_800b52b8` @0x80044960 -> SsSeqSetVol @0x80044970; gemessen 127 */
+#define SS_BASE_MVOL RE15_SPU_MVOL_Q15        /* 0x7ffe, shared by MAIN/SUB/SUB2 */
 static int      s_ss_sub_base_mvol = SS_BASE_MVOL;  /* == MAIN base (orig: both SetVol 127) */
 
 /* (RE1.5 SE pan + distance-attenuation tables moved to the SHARED rotor_common.c,
@@ -455,9 +473,14 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
                 s->active = 0;
                 break;
             }
-            int vr_q15 = s->vol_r_q15 ? s->vol_r_q15 : s->volume_q15;   /* 0 = legacy mono */
+            /* Stimmen-Lautstaerke (Register * 2, Q15) und danach die Hauptlautstaerke des
+             * Tonchips: Register 0x3fff (SsSetMVol(127,127) @0x80043ba8 -> * 129 @0x8005c9c4;
+             * im laufenden Original gemessen) = Q15 0x7ffe. Sie ersetzt das fruehere pauschale
+             * ">> 1" (Messbericht U1). psx-spx Z. 357-364. */
             int32_t vl = ((int32_t)s->pcm[s->pos] * s->volume_q15) >> 15;
-            int32_t vr = ((int32_t)s->pcm[s->pos] * vr_q15) >> 15;
+            int32_t vr = ((int32_t)s->pcm[s->pos] * s->vol_r_q15) >> 15;
+            vl = (vl * RE15_SPU_MVOL_Q15) >> 15;
+            vr = (vr * RE15_SPU_MVOL_Q15) >> 15;
 
             /* Tail fade-out: ramp the last MIXER_TAIL_FADE_SAMPLES PCM
              * samples to zero. Otherwise the abrupt amplitude drop at
@@ -711,10 +734,75 @@ static int load_room_se_vab_pc(void)
  *     - zum Schluss beidseitig ATT_LUT@0x800747a8[u] abziehen (@0x80045cf0-d1c)
  *   Der Port kann das HIER nicht auswerten: er hat kein Gegenstueck zu DAT_800ac784 (die
  *   gerade tickende Entity), und die Aufrufer sind re15_audio_room_se(id) ohne Emitter.
- *   Bis der Emitter durchgereicht ist, bleibt die Tone-eigene vol/pan (tone[+2]/[+3]) als
- *   Ersatz stehen — das ist eine LAUTSTAERKE-/RICHTUNGS-Abweichung, keine Klang-Identitaet. */
-/* 1 = der naechste se_play_layers rechnet den Pegel nach RE2 (Tuersequenz, s. dort). */
+ *   STAND Strang ton Stufe 1 (2026-11-19): die Rechnung FUN_80045a64 selbst liegt seit Runde 41 im
+ *   Port (re15_wassersprung_r41_lage) und wird jetzt mit der Lage des SPIELERS gerufen, solange der
+ *   echte Sender fehlt; die Seiten bleiben bis Stufe 6 gleich (Kopf ueber se_stimme_q15 unten). */
+/* ===== Strang ton Stufe 1 (2026-11-19): LAUTSTAERKE JE STIMME NACH libsnd ===========================
+ * Messbericht U1: der Port rechnete `(Ton-vol * 0x4000 / 127) >> 1` (linear, pauschal -12 dB). Das Original rechnet in
+ * SpuVmKeyOnNow @0x80055d10-0x80056070 das Produkt Tastenstaerke * Bank * Programm * Ton, drei Pan-Stufen und setzt es
+ * ins Quadrat (`mult a2,a2` @0x80055fe8 / `mult a1,a1` @0x80056008, / 0x3fff). Herleitung + Messung: re15_svm_vol.h.
+ *
+ * s_se_pegel_re2 != 0: die Bank ist eine RE2-Bank -> RE2-Gesetz (_SsVmKeyOnNow @0x80083760: Geraeusche OHNE Quadrat,
+ *   `beq v1,v0,0x80083a98` @0x80083a38). Gesetzt von jedem Einstieg, der eine RE2-Bank spielt (se_play_layers_re2).
+ * s_se_sender: woher die Tastenstaerke kommt.
+ *   SE_SENDER_KEIN    = Geraeusch OHNE Lage: FUN_80045024 `(param_1 & 0xff) == 0` -> voll = volr = Ton-vol
+ *                       (`lbu 0x2(s1)` @0x800451dc ff.). Gemessen: Rolltor-Rumpeln 16383/16383, Klick (vol 110) 9219/9219.
+ *   SE_SENDER_SPIELER = Geraeusch MIT Lage: voll/volr aus FUN_80045a64 (Entfernung/Richtung zur Kamera), hier mit der
+ *                       Lage des Spielers (re15_svm_lage_spieler = FUN_80045a64(&DAT_800aca88)). Alle ARMS-Rufe der EXE
+ *                       tragen das Lage-Bit (0x01xx0001); der Sender ist je Ruf verschieden:
+ *                         - der Spieler selbst: 0x1080001 mit `addiu a1,..=>DAT_800aca88` @0x800123d4, ebenso die Rufe
+ *                           0x0101/0x0103..0001 der Spieler-Zustaende (@0x8003338c .. @0x800367a8),
+ *                         - die Lage im Angriffs-Arbeitssatz: der Schuss 0x1000001 (FUN_80017654: `lw v1,0x800b52c4`,
+ *                           `lh v0,40(v1)` / 42 / 44 -> `addiu a1,sp,16`, `jal 0x80045024` @0x80017684),
+ *                         - die schreitende/laufende Entity: FUN_80045630 (Schritte) und FUN_800453d0 (Raum-Geraeusche)
+ *                           mit DAT_800ac784 + 0x34.
+ *                       Gemessen im Original: Schritt-Saetze 93/103 (ROOM1130 Cut 9 Spieler -1614/0/17282 und ROOM1140
+ *                       Cut 0 Spieler -5118/0/-15817) = genau die Spielerlage; Schuss 106/95 bei Spielerlage 92/102.
+ * PORT-WAHL bis Stufe 6 ("Lage der Geraeusche", Messbericht U6), ausdruecklich KEIN Originalverhalten:
+ *   (a) SE_LAGE_SEITEN == 0: die Seiten (links/rechts) bleiben gleich; beide bekommen den Mittelwert der zwei
+ *       berechneten Register -> die SUMME links + rechts ist die der Rechnung, die Richtung fehlt noch.
+ *   (b) Rufe mit Lage, deren Sender der Port noch nicht durchreicht (Schuss: Angriffs-Arbeitssatz; Raum-Geraeusche
+ *       der Gegner: die laufende Entity), nehmen ersatzweise die Lage des Spielers. Gemessen am Schuss: Summe
+ *       4824 statt 5211 (-0,67 dB).
+ *   (c) ohne Raum/Kamera (kein RDT) gibt es keine Lage -> Zweig ohne Lage. */
+enum { SE_SENDER_KEIN = 0, SE_SENDER_SPIELER = 1 };
+#define SE_LAGE_SEITEN 0            /* PORT-WAHL (a): 0 bis Stufe 6 */
 static int s_se_pegel_re2 = 0;
+static int s_se_sender    = SE_SENDER_KEIN;
+
+/* SPU-Lautstaerke-Register eines Bank-Tons -> Q15 links/rechts fuer den Mischer.
+ * lage == NULL: Zweig ohne Lage (Tastenstaerke = Ton-vol, Pan Mitte). seiten == 0: PORT-WAHL (a). */
+static void se_stimme_q15(const re15_vab_t *vab, int tone_idx, const int *lage, int seiten, int re2,
+                          int *vl_q15, int *vr_q15, int *reg_out)
+{
+    const re15_vab_tone_t *t = &vab->tones[tone_idx];
+    const int prog = (tone_idx / RE15_VAB_TONES_PER_PROGRAM) & (RE15_VAB_PROGRAM_COUNT - 1);
+    re15_svm_vol_t in;
+    memset(&in, 0, sizeof in);
+    in.vab_mvol  = vab->master_volume;                     /* VabHdr+0x18 `lbu v1,24(v0)` @0x80055d1c */
+    in.prog_mvol = vab->prog_mvol[prog];                   /* ProgAtr+1   -> DAT_800b531e @0x80059ed4-dc */
+    in.prog_pan  = vab->prog_mpan[prog];                   /* ProgAtr+4   -> DAT_800b531f @0x80059ee0-e8 */
+    in.tone_vol  = t->vol;                                 /* VagAtr+2    -> DAT_800b5321 */
+    in.tone_pan  = t->pan;                                 /* VagAtr+3    -> DAT_800b5322 */
+    in.mono      = s_audio_mono ? 1 : 0;                   /* DAT_800b2678 == 1 @0x80055fc0-c8 */
+    if (lage) re15_svm_utkeyon_split(lage[0], lage[1], &in.key, &in.key_pan);   /* SsUtKeyOnV @0x80059e08-bc */
+    else    { in.key = t->vol; in.key_pan = RE15_SVM_PAN_MITTE; }               /* FUN_80045024 @0x800451dc */
+    int rl, rr;
+    if (re2) re15_svm_keyon_reg_re2(&in, &rl, &rr);
+    else     re15_svm_keyon_reg(&in, &rl, &rr);
+    if (reg_out) { reg_out[0] = rl; reg_out[1] = rr; }
+    if (lage && !seiten) { *vl_q15 = *vr_q15 = rl + rr; }  /* Mittelwert der Register * 2 = Summe (PORT-WAHL a) */
+    else { *vl_q15 = RE15_SPU_REG_Q15(rl); *vr_q15 = RE15_SPU_REG_Q15(rr); }
+}
+
+/* Messhaken fuer Riegel (kein Spielpfad): Register des zuletzt vorbereiteten Geraeusch-Tons und die Lage dazu. */
+static int s_se_mess_reg[2] = { -1, -1 }, s_se_mess_lage[2] = { -1, -1 };
+int re15_audio_se_mess(int reg[2], int lage[2])
+{
+    if (reg)  { reg[0]  = s_se_mess_reg[0];  reg[1]  = s_se_mess_reg[1]; }
+    if (lage) { lage[0] = s_se_mess_lage[0]; lage[1] = s_se_mess_lage[1]; }
+    return s_se_mess_reg[0] >= 0;
+}
 
 static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
                            int16_t *const *decoded, const int *decoded_len, int se_id)
@@ -738,40 +826,36 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
         return;
     }
 
+    /* Lage EINMAL je Ruf (FUN_80045a64 laeuft vor der Schicht-Schleife: @0x800451cc / @0x800454e8; alle Schichten
+     * tragen dieselben DAT_800b2824/26 @0x80045544-54, @0x800455bc-c4). */
+    int lage[2] = { 0, 0 };
+    const int mit_lage = (s_se_sender == SE_SENDER_SPIELER && !s_se_pegel_re2) ? re15_svm_lage_spieler(lage) : 0;
+
     SDL_LockAudioDevice(s_audio_dev);
     for (int k = 0; k < n; k++) {
         int vag = vags[k];
         if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !decoded[vag]) continue;
         const re15_vab_tone_t *t = &vab->tones[tones[k]];
-        int vol = ((t->vol ? t->vol : 100) * 0x4000 / 127) >> 1;   /* tone[+2]; >>1 = Mixer-Headroom */
-        if (s_se_pegel_re2) {
-            /* ⛔ RE2-Pegelgesetz (nur Tuersequenz, analysis/tor_1170/08_re_ton.md 2.3/2.5):
-             * _SsVmKeyOnNow 0x80083760: VH-Master * 0x3FFF (@0x8008376c lbu 24 / @0x80083778
-             * sll 14, subu) / 0x3F01 (@0x80083788), dann * Programm-mvol (@0x800837b0) *
-             * Ton-vol (@0x800837c4) / 0x3F01 (@0x800837cc); Tastenpegel voll = Ton-vol
-             * (SsUtKeyOnV @0x8008039c, M = 100 laut 2.5). Probe: Ton 0 -> 10157, Ton 1 -> 11198.
-             * Port-Einheit wie oben: (V * 0x4000 / 0x3FFF) >> 1. */
-            int prog = tones[k] / 16;
-            long v1 = ((long)t->vol * vab->master_volume * 0x3FFF) / 0x3F01;
-            long v  = (v1 * vab->prog_mvol[prog & 127] * t->vol) / 0x3F01;
-            vol = (int)((v * 0x4000 / 0x3FFF) >> 1);
-        }
-        /* Tone-Pan tone[+3] (title_fade_voice.md §2.3): die Voice-Maschine liest vol+pan aus den
-         * Tone-Attributen (SsUtKeyOnV.c DAT_800b5321/22 = tone[+2]/[+3]); pan 0 = hart L,
-         * 0x40 = Mitte (beide voll), 0x7f = hart R — das CORE11-Announcer-Paar ist tone1 pan 0 /
-         * tone2 pan 127 (EDH-Bytes @0x40+0x820, byte-geparst). Lineares vm-Modell. */
-        int pan = t->pan;
-        int vl = vol, vr = vol;
-        if (pan < 0x40)      vr = vol * pan / 0x40;
-        else if (pan > 0x40) vl = vol * (0x7f - pan) / 0x3f;
+        /* Strang ton Stufe 1: Lautstaerke + Pan nach SpuVmKeyOnNow (Kopf ueber se_stimme_q15). Die RE2-Baenke
+         * (Tuersequenz: analysis/tor_1170/08_re_ton.md 2.3/2.5, Probe Ton 0 -> Register 10157, Ton 1 -> 11198)
+         * laufen ueber dasselbe Produkt ohne Quadrat. Ton-Pan 0 = hart links, 0x7f = hart rechts (CORE11-Ansager-Paar
+         * Ton 1 Pan 0 / Ton 2 Pan 127). Ton-vol 0 bleibt 0 (das Original spielt den Ton stumm; der fruehere Ersatzwert
+         * 100 war eine Port-Annahme ohne Beleg). */
+        int vl, vr, reg[2];
+        se_stimme_q15(vab, tones[k], mit_lage ? lage : NULL, SE_LAGE_SEITEN, s_se_pegel_re2, &vl, &vr, reg);
+        s_se_mess_reg[0] = reg[0]; s_se_mess_reg[1] = reg[1];
+        s_se_mess_lage[0] = mit_lage ? lage[0] : -1; s_se_mess_lage[1] = mit_lage ? lage[1] : -1;
         uint16_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift,
                                               t->center_note, t->pitch_shift);
         if (se_dbg)
             fprintf(stderr, "[se] Stimme: se=%d layer=%d vag=%d note=%u fine=%u center=%u "
-                            "vol=%u pitch=0x%03x (%d Hz) -> SE-Stimme %d (SPU %d)\n",
+                            "vol=%u pitch=0x%03x (%d Hz) -> SE-Stimme %d (SPU %d) | Register %d/%d "
+                            "(%s%s) Lage %d/%d\n",
                     se_id, k, vag, t->min_note, t->pitch_shift, t->center_note,
                     t->vol, pitch, (int)((44100u * pitch) >> 12),
-                    rec.voice + k, RE15_SE_SPU_VOICE_BASE + rec.voice + k);
+                    rec.voice + k, RE15_SE_SPU_VOICE_BASE + rec.voice + k, reg[0], reg[1],
+                    s_se_pegel_re2 ? "RE2 linear" : "Quadrat", mit_lage ? ", Sender Spieler" : "",
+                    mit_lage ? lage[0] : -1, mit_lage ? lage[1] : -1);
 
         if (rec.voice < 0) {
             /* Direkt-Zweig FUN_80045024 "if ((byte3 & 0x1f) < 0x10)": sofortiges SsUtKeyOnV
@@ -802,6 +886,28 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
         s_se_pend[voice].vr_q15   = vr;
     }
     SDL_UnlockAudioDevice(s_audio_dev);
+}
+
+/* Strang ton Stufe 1: eine RE2-Bank spielen (RE2-Gesetz, Kopf ueber se_stimme_q15). Tastenstaerke = Ton-vol: RE2
+ * FUN_8005bd6c legt die Ton-Lautstaerke in den Vormerk-Satz (`*(ushort *)(&DAT_800d4f26 + ..) = *(byte *)(.. + 2)`),
+ * die Pumpe FUN_8005c5e4 nimmt sie unveraendert, solange das Lage-Feld 0 ist (`if (psVar6[3] == 0)`), mal
+ * DAT_800e8768 / 100 mit DAT_800e8768 = 100 (FUN_8002b48c). */
+static void se_play_layers_re2(const uint8_t *edt, const re15_vab_t *vab,
+                               int16_t *const *decoded, const int *decoded_len, int se_id)
+{
+    const int alt = s_se_pegel_re2;
+    s_se_pegel_re2 = 1;
+    se_play_layers(edt, vab, decoded, decoded_len, se_id);
+    s_se_pegel_re2 = alt;
+}
+
+/* Strang ton Stufe 1: ein RE1.5-Geraeusch MIT Lage spielen (Sender Spieler, s. Kopf ueber se_stimme_q15). */
+static void se_play_layers_lage(const uint8_t *edt, const re15_vab_t *vab,
+                                int16_t *const *decoded, const int *decoded_len, int se_id)
+{
+    s_se_sender = SE_SENDER_SPIELER;
+    se_play_layers(edt, vab, decoded, decoded_len, se_id);
+    s_se_sender = SE_SENDER_KEIN;
 }
 
 /* Frame-Pumpe — byte-true FUN_800458d4 (gerufen @0x80021488):
@@ -866,7 +972,9 @@ static void se_voice_pump(void)
 void re15_audio_room_se(int se_id)
 {
     if (!g_audio.initialized || !s_se_loaded || se_id < 0 || se_id >= 0x19) return;
-    se_play_layers(s_se_edt, &s_se_vab, s_se_decoded, s_se_decoded_len, se_id);
+    /* FUN_800453d0 ruft IMMER FUN_80045a64(DAT_800ac784 + 0x34) @0x800454e0-ec -> Geraeusch mit Lage; der Sender
+     * (die gerade laufende Entity) kommt im Port erst in Stufe 6 an -> PORT-WAHL (b): Lage des Spielers. */
+    se_play_layers_lage(s_se_edt, &s_se_vab, s_se_decoded, s_se_decoded_len, se_id);
 }
 
 /* Play a room SE from the snd0 bank (byte-true FUN_80045024 bank 2). Same EDT->prog/tone->VAG
@@ -1065,7 +1173,7 @@ void re15_audio_re2_panel_se(int se_id)
     if (!g_audio.initialized) return;
     if (load_re2_panel_se_pc() != 0) return;
     if (se_id < 0 || se_id >= s_panel_edt_count) return;
-    se_play_layers(s_panel_edt, &s_panel_vab, s_panel_decoded, s_panel_decoded_len, se_id);
+    se_play_layers_re2(s_panel_edt, &s_panel_vab, s_panel_decoded, s_panel_decoded_len, se_id);
 }
 
 /* ===== NUTZERWUNSCH 2026-11-16: Birkins Sherry-Ruf in der Hangar-Szene (re15_bf_ruf_hook) ==================
@@ -1118,7 +1226,7 @@ void re15_audio_birkin_ruf(void)
 {
     if (!g_audio.initialized) return;
     if (load_birkin_ruf_pc() != 0) return;
-    se_play_layers(s_bruf_edt, &s_bruf_vab, s_bruf_decoded, s_bruf_decoded_len, RE15_BIRKIN_RUF_SATZ);
+    se_play_layers_lage(s_bruf_edt, &s_bruf_vab, s_bruf_decoded, s_bruf_decoded_len, RE15_BIRKIN_RUF_SATZ);   /* FUN_800453d0(10): mit Lage */
 }
 
 /* ===== Runde 35 Spur M: die GLASBRUCH-Bank (RE2 ROOM1090 snd0) ========================
@@ -1164,13 +1272,24 @@ void re15_audio_re2_glas_se(int satz)
     if (!g_audio.initialized) return;
     if (re15_audio_re2_glas_laden() != 0) return;
     if (satz < 0 || satz >= s_glas_edt_count) return;
-    se_play_layers(s_glas_edt, &s_glas_vab, s_glas_decoded, s_glas_decoded_len, satz);
+    se_play_layers_re2(s_glas_edt, &s_glas_vab, s_glas_decoded, s_glas_decoded_len, satz);
 }
 
 /* Runde 36 Spur L: Mini-Bank-Saetze aus einer ANDEREN Datei (elza_se_pc.c, shared_assets/RE2/ELZASE.VBS) ueber
- * DIESELBE Stimmen-/Prioritaets-Maschine spielen (se_play_layers = FUN_800453d0/FUN_80045024-Nachbau). */
+ * DIESELBE Stimmen-/Prioritaets-Maschine spielen (se_play_layers = FUN_800453d0/FUN_80045024-Nachbau).
+ * Strang ton Stufe 1: dieser Einstieg ist der fuer RE2-BAENKE (shared_assets/RE2/...) und rechnet die Lautstaerke nach
+ * dem RE2-Gesetz (Geraeusche ohne Quadrat, _SsVmKeyOnNow @0x80083a38). Eine Bank aus dem RE1.5-Baum
+ * (ROOMxxxx.RDT snd0/snd1) gehoert an re15_audio_se_play_bank_re15. */
 void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
                              const int *decoded_len, int satz)
+{
+    if (!g_audio.initialized || !edt || !vab) return;
+    se_play_layers_re2(edt, vab, decoded, decoded_len, satz);
+}
+
+/* Dasselbe fuer eine RE1.5-Bank (Gesetz SpuVmKeyOnNow @0x80055d10 mit Quadrat), Zweig ohne Lage. */
+void re15_audio_se_play_bank_re15(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
+                                  const int *decoded_len, int satz)
 {
     if (!g_audio.initialized || !edt || !vab) return;
     se_play_layers(edt, vab, decoded, decoded_len, satz);
@@ -1223,7 +1342,7 @@ static void re2_schloss_se(int satz)
     if (getenv("RE15_SE_DEBUG"))
         fprintf(stderr, "[se] Se_on bank=0x%02X id=%d -> RE2-Schlossbank SCHLOSS1010 (Runde 36 Spur J)\n",
                 RE15_SZL_SE_BANK, satz);
-    se_play_layers(s_schloss_edt, &s_schloss_vab, s_schloss_decoded, s_schloss_decoded_len, satz);
+    se_play_layers_re2(s_schloss_edt, &s_schloss_vab, s_schloss_decoded, s_schloss_decoded_len, satz);
 }
 
 /* Play a WEAPON SE by id (byte-true FUN_80045024 bank1 core, PC path). The equipped weapon's ARMS
@@ -1316,14 +1435,16 @@ void re15_audio_weapon_se(int se_id)
                 if (wl) fprintf(wl, "    SE  rohr F%u arms_rec=%d -> %s snd1 satz=%d (geladen=%d)\n",
                                 (unsigned)g_engine.frame_count, se_id, RE15_PIPE_R41_ROHR_RDT, rohr, st); }
             if (g_audio.initialized && st == 1)
-                se_play_layers(s_rohr_edt, &s_rohr_vab, s_rohr_decoded, s_rohr_decoded_len, se_id);
+                se_play_layers_lage(s_rohr_edt, &s_rohr_vab, s_rohr_decoded, s_rohr_decoded_len, se_id);
             return;
         }
     }
     if (!g_audio.initialized || !s_weap_loaded || se_id < 0 || se_id >= s_weap_edt_count) return;
     /* LAYERED (byte-true): ARMS record 0 (the gunshot) = 00 00 13 30 -> byte3 0x30 = 1 extra tone,
      * so the original keys VAG2 AND VAG3 simultaneously; every ARMS bank layers record 0. */
-    se_play_layers(s_weap_edt, &s_weap_vab, s_weap_decoded, s_weap_decoded_len, se_id);
+    /* Strang ton Stufe 1: ARMS-Rufe tragen im Original das Lage-Bit (0x01xx0001) -> Tastenstaerke aus der Lage
+     * (Sender je Ruf: Kopf ueber se_stimme_q15; bis Stufe 6 die Lage des Spielers). */
+    se_play_layers_lage(s_weap_edt, &s_weap_vab, s_weap_decoded, s_weap_decoded_len, se_id);
 }
 
 /* Re-prime bank1 to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c parity) — the weapon-select
@@ -1403,7 +1524,7 @@ void re15_audio_arms_zusatz_se(int arms_id, int satz)
     if (!g_audio.initialized) return;
     arms_zusatz_t *b = arms_zusatz_laden(arms_id);
     if (!b || satz < 0 || satz >= b->edt_count) return;
-    se_play_layers(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
+    se_play_layers_lage(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
 }
 
 /* ===== Runde 35 Spur B — RE2-ARMS-Baenke (Beta -> Retail, "Sound ist RE2") ==================
@@ -1468,7 +1589,7 @@ void re15_audio_re2_arms_se(int arms_id, int satz)
     if (!g_audio.initialized) return;
     arms_zusatz_t *b = re2_arms_laden(arms_id);
     if (!b || satz < 0 || satz >= b->edt_count) return;
-    se_play_layers(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
+    se_play_layers_re2(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
 }
 
 /* ===== 5. Bank-Slot: RE2-Flavor ENEMSE (WELLE A, PORT-OPTION) ====================
@@ -1611,7 +1732,7 @@ void re15_audio_re2_elevator_se(int se_id)
 {
     if (!g_audio.initialized) return;
     if (!load_re2_elev_se_pc()) return;
-    se_play_layers(s_elev_edt, &s_elev_vab, s_elev_decoded, s_elev_decoded_len, se_id);
+    se_play_layers_re2(s_elev_edt, &s_elev_vab, s_elev_decoded, s_elev_decoded_len, se_id);
 }
 
 /* ===== 5b. Bank-Slot: RE2-KARTENHINWEIS (HINTSE.VBS) =========================
@@ -1683,7 +1804,7 @@ void re15_audio_re2_hint_se(int se_id)
 {
     if (!g_audio.initialized) return;
     if (!load_re2_hint_se_pc()) return;
-    se_play_layers(s_hint_edt, &s_hint_vab, s_hint_decoded, s_hint_decoded_len, se_id);
+    se_play_layers_re2(s_hint_edt, &s_hint_vab, s_hint_decoded, s_hint_decoded_len, se_id);
 }
 
 /* ===== 5c. Bank-Slot: RE2-"TUER VERSCHLOSSEN" (TUERSE.VBS) ==================
@@ -1757,7 +1878,7 @@ void re15_audio_re2_door_se(int se_id)
 {
     if (!g_audio.initialized) return;
     if (!load_re2_door_se_pc()) return;
-    se_play_layers(s_door_edt, &s_door_vab, s_door_decoded, s_door_decoded_len, se_id);
+    se_play_layers_re2(s_door_edt, &s_door_vab, s_door_decoded, s_door_decoded_len, se_id);
 }
 
 /* ENEMSE.VBS lokalisieren (Nutzer-Entscheidung: shared_assets/RE2/; env-Override). */
@@ -1961,10 +2082,13 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
         const re15_vab_tone_t *t = &cb->vab.tones[tone_idx];
         int vag = (int)t->vag_index - 1;               /* VH-vag_index ist 1-basiert */
         if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !cb->decoded[vag]) continue;
-        int vol = ((t->vol ? t->vol : 100) * 0x4000 / 127) >> 1;   /* wie se_play_layers */
-        int pan = t->pan, vl = vol, vr = vol;
-        if (pan < 0x40)      vr = vol * pan / 0x40;
-        else if (pan > 0x40) vl = vol * (0x7f - pan) / 0x3f;
+        /* Strang ton Stufe 1: RE2-Gesetz (_SsVmKeyOnNow @0x80083760, Geraeusch ohne Quadrat @0x80083a38). Gegnerlaute
+         * tragen in RE2 eine Lage (FUN_8005c970, gerufen aus der Pumpe FUN_8005c5e4, wenn das Lage-Feld != 0 ist); deren
+         * Rechnung beginnt bei `DAT_800d7598 = 0x7f; DAT_800d759a = 0x7f` und zieht die Entfernung ab. Der Sender kommt im
+         * Port erst in Stufe 6 an -> PORT-WAHL bis dahin: der Anfangswert 0x7f/0x7f (kein Entfernungsabzug, Mitte). */
+        static const int re2_lage_anfang[2] = { RE15_SVM_VOLL, RE15_SVM_VOLL };
+        int vl, vr;
+        se_stimme_q15(&cb->vab, tone_idx, re2_lage_anfang, 1, 1, &vl, &vr, NULL);
         uint16_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift,
                                               t->center_note, t->pitch_shift);
         int chan = se.chan + k;                        /* `addiu s1,s1,1` @0x8005bf3c */
@@ -2067,7 +2191,7 @@ static void play_sample_pc(int vag_index, int scd_volume)
     s_active[slot].step_q16   = 0;   /* Legacy-Pfad ohne Tone-Kontext -> 0x8000 (Altverhalten) */
     s_active[slot].pos_frac   = 0;
     s_active[slot].volume_q15 = vol;
-    s_active[slot].vol_r_q15  = 0;   /* legacy mono (Slot-Reuse: kein Pan-Rest) */
+    s_active[slot].vol_r_q15  = vol; /* beide Seiten (Bring-up-Pfad ohne Bank: TEST.VH liegt nicht vor, der Pfad ist tot) */
     s_active[slot].active     = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
 }
@@ -2821,6 +2945,53 @@ static int ss_bend_q16(int deflect, int pbmin, int pbmax)
     return (int)(pow(2.0, semis / 12.0) * 65536.0 + 0.5);
 }
 
+/* Strang ton Stufe 1: Lautstaerke einer Sequenz-Stimme = SPU-Register nach SpuVmKeyOnNow @0x80055d10 (re15_svm_vol.h).
+ *   Tastenstaerke = Anschlag * Kanal-Lautstaerke / 127   (SpuVmKeyOn @0x800584f0-0x80058534)
+ *   Tasten-Pan    = Kanal-Pan                             (`sb s7,0x800b5319` @0x80058550)
+ *   Sequenz L/R   = SsSeqSetVol-Werte                     (@0x80055e08-64)
+ * ton_pan = der Ton-Pan, den der RUFER liest (Key-On: der Ton selbst; SpuVmSetVol: s. ss_set_vol). */
+static void ss_stimme_vol(const ss_seq_t *s, ss_voice_t *v, int kanal_vol, int kanal_pan, int ton_pan)
+{
+    const re15_vab_t *vab = v->vab;
+    re15_svm_vol_t in;
+    memset(&in, 0, sizeof in);
+    in.key       = re15_svm_seq_key(v->vel, kanal_vol);
+    in.key_pan   = kanal_pan;
+    in.vab_mvol  = vab->master_volume;
+    in.prog_mvol = vab->prog_mvol[v->prog & (RE15_VAB_PROGRAM_COUNT - 1)];
+    in.prog_pan  = vab->prog_mpan[v->prog & (RE15_VAB_PROGRAM_COUNT - 1)];
+    in.tone_vol  = vab->tones[(int)v->prog * RE15_VAB_TONES_PER_PROGRAM + v->tone].vol;
+    in.tone_pan  = ton_pan;
+    in.ist_seq   = 1;
+    in.seq_l     = s->seq_vol_l;
+    in.seq_r     = s->seq_vol_r;
+    in.mono      = s_audio_mono ? 1 : 0;
+    int rl, rr;
+    re15_svm_keyon_reg(&in, &rl, &rr);       /* RE2-Musik (SUB_34 u. a.) rechnet gleich: Quadrat fuer Sequenz-Stimmen @0x80083a40/50 */
+    v->vol_l = RE15_SPU_REG_Q15(rl);
+    v->vol_r = RE15_SPU_REG_Q15(rr);
+}
+
+/* Strang ton Stufe 1: SpuVmSetVol @0x8005926c — Controller 7 (Kanal-Lautstaerke) und 10 (Kanal-Pan) rechnen die
+ * KLINGENDEN Stimmen neu (_SsSetControlChange Fall 7 / Fall 10 rufen SpuVmSetVol VOR dem Ablegen des Werts).
+ * Getroffen wird jede Stimme derselben Sequenz mit demselben Programm und derselben Bank (@0x80059358-94: DAT_8008f852,
+ * DAT_8008f856, DAT_8008f85a), nicht nur die des Kanals. Die Rechnung ist die von SpuVmKeyOnNow mit dem gemerkten
+ * Anschlag (`lh v1,0x8008f84c` @0x800593ec) — mit EINER Eigenheit, die im laufenden Original zu messen ist: der Ton-Pan
+ * wird OHNE Programm-Versatz gelesen (`sll a1,a1,5 / addu a1,a1,a2 / lbu a1,3(a1)` @0x80059504-0c, a1 = Ton-Nummer), also
+ * aus dem gleichnamigen Ton des ERSTEN Programms. Gemessen (MAIN17, ROOM1130): Programm 2 Ton 0 (Pan 0) steht nach einem
+ * Controller 7 auf 2372/2372 statt 2372/0, Ton 1 (Pan 127) auf 4723/0 statt 0/4723 — Ton 0/1 des Programms 0 haben
+ * Pan 64/0. Zensus: Controller 7 trifft in MAIN17, MAIN1C und MAIN1F 954-mal eine klingende Note, Controller 10 nie. */
+static void ss_set_vol(ss_seq_t *s, int chan, int kanal_vol, int kanal_pan)
+{
+    const ss_seq_t *src = s->tone_src ? s->tone_src : s;
+    if (s->bank[chan] == 5 && src != &s_ss_main && s_ss_main.vab_ok) src = &s_ss_main;   /* wie ss_note_on */
+    for (int i = 0; i < SS_MAX_VOICES; i++) {
+        ss_voice_t *v = &s->voice[i];
+        if (!v->active || !v->vab || v->prog != s->prog[chan] || v->vab != &src->vab) continue;
+        ss_stimme_vol(s, v, kanal_vol, kanal_pan, v->vab->tones[v->tone].pan);            /* Ton-Pan des Programms 0 */
+    }
+}
+
 static void ss_note_on(ss_seq_t *s, int chan, int note, int vel)
 {
     /* TONE SOURCE: CC0 bank select rebinds the lookup to the MAIN bank (byte-true
@@ -2850,15 +3021,15 @@ static void ss_note_on(ss_seq_t *s, int chan, int note, int vel)
         v->step = (uint32_t)pitch << 4;             /* Q16: pitch 0x1000 = 1.0 */
         /* volume chain incl. the RUNTIME-writable program mvol + VAB master vol (the 0x54
          * Sce_bgm_control payload writes these — FUN_80044da4; note-ons re-read them.
-         * wf_1db9c802 SEQCTL-VOLPAN). */
-        int vol = (int)t->vol * vel / 127;
-        vol = vol * s->cvol[chan] / 127;
-        vol = vol * (int)src->vab.prog_mvol[s->prog[chan]] / 127;
-        vol = vol * (int)src->vab.master_volume / 127;
-        int q15 = vol * 0x7fff / 127;
-        int pan = t->pan; if (pan < 0) pan = 64; if (pan > 127) pan = 127;
-        if (pan >= 56 && pan <= 72) { v->vol_l = q15; v->vol_r = q15; }
-        else { v->vol_l = q15 * (127 - pan) / 127; v->vol_r = q15 * pan / 127; }
+         * wf_1db9c802 SEQCTL-VOLPAN).
+         * Strang ton Stufe 1: nach SpuVmKeyOn/SpuVmKeyOnNow (ss_stimme_vol). Vorher linear mit dem Port-eigenen
+         * Pan-Fenster 56..72 = Mitte; gemessen am Original z. B. MAIN17 Programm 0 Ton 0, Anschlag 115, Kanal 90:
+         * Register 480/480, Rotor SUB_15: 6500/6500. */
+        v->vel  = (uint8_t)vel;
+        v->prog = s->prog[chan];
+        v->tone = (uint8_t)(t - &src->vab.tones[(int)s->prog[chan] * RE15_VAB_TONES_PER_PROGRAM]);
+        v->vab  = &src->vab;
+        ss_stimme_vol(s, v, s->cvol[chan], s->cpan[chan], t->pan);
         v->adsr1 = t->adsr1; v->adsr2 = t->adsr2;   /* real SPU ADSR from the VAB tone */
         v->env_level = 0; v->env_phase = 0; v->env_count = 0;   /* start in attack */
         v->pbmin = t->pbmin; v->pbmax = t->pbmax;
@@ -2916,7 +3087,13 @@ static void ss_fire_event(ss_seq_t *s) {
         int d1 = s->seq[s->cursor++];
         int d2 = s->seq[s->cursor++];
         if (typ == 0xB0) {
-            if (d1 == 7)  s->cvol[ch] = d2;           /* CC7 channel volume */
+            if (d1 == 7) {                            /* CC7 channel volume: _SsSetControlChange Fall 7 */
+                ss_set_vol(s, ch, d2, s->cpan[ch]);   /* SpuVmSetVol(.., vol = Wert, pan = Sequenz+0x17+Kanal) */
+                s->cvol[ch] = d2;                     /* `*(ushort *)(uVar4 * 2 + iVar6 + 0x4e) = bVar1` */
+            } else if (d1 == 10) {                    /* CC10 Kanal-Pan: Fall 10 (Zensus: 465 Ereignisse, 259 != 64) */
+                ss_set_vol(s, ch, s->cvol[ch], d2);   /* SpuVmSetVol(.., vol = Sequenz+0x4e, pan = Wert) */
+                s->cpan[ch] = d2;                     /* `*(byte *)(iVar6 + uVar4 + 0x17) = bVar1` */
+            }
             else if (d1 == 0) s->bank[ch] = (uint8_t)d2;  /* CC0 bank select (-> seq+0x4c) */
             else if (d1 == 99) {                      /* Sony NRPN loop markers (_SsContNrpn2) */
                 if (d2 == 0x14) {                     /* LOOP START: save the post-event cursor */
@@ -3164,10 +3341,14 @@ static void re15_ss_play(ss_seq_t *s, int loop) {
     SDL_LockAudioDevice(s_audio_dev);
     ss_all_voices_off(s);
     for (int i = 0; i < SS_CHANNELS; i++) {
-        s->prog[i] = 0; s->cvol[i] = 100;
+        s->prog[i] = 0;
+        s->cvol[i] = 0x7f;                            /* _SsInitSoundSeq `sh a2,0x4e(a0)` @0x8005d2a4, a2 = 0x7f @0x8005d220
+                                                       * (vorher Port-Wert 100; 224 Noten in 30 Kanaelen haben kein CC7 davor) */
+        s->cpan[i] = 0x40;                            /* `sb t0,0x17(v0)` @0x8005d2a0, t0 = 0x40 @0x8005d214 */
         s->bend_deflect[i] = 0;                       /* bend MSB-64, per-voice scaled */
         s->bank[i] = (uint8_t)s->vab_id;              /* CC0 default = the own bank id */
     }
+    s->seq_vol_l = s->seq_vol_r = SS_SEQ_VOL;         /* SsSeqSetVol mit dem Slot-Halbwort (127) */
     s->loop_cursor = -1; s->loop_armed = 0; s->loop_count = 0x7f; s->skip_next_dt = 0;
     s->cursor = SS_SEQ_HDR; s->rstatus = 0; s->accum = 0;
     s->pending_dt = ss_vlq(s);
@@ -3340,7 +3521,7 @@ static int re15_bgm_load_track(ss_seq_t *s, const char *name, int slot) {
     }
 
     int rc = re15_ss_load(s, blob + vh_off, (int)vh_span, blob + vb_off, vbs, blob, (int)seq1_len);
-    if (rc == 0) { s->mvol = 0x1a00; s->mvol_l = 0x1a00; s->mvol_r = 0x1a00; }
+    if (rc == 0) { s->mvol = SS_BASE_MVOL; s->mvol_l = SS_BASE_MVOL; s->mvol_r = SS_BASE_MVOL; }
     else fprintf(stderr, "[bgm] %s%02X.BGM: ss_load fehlgeschlagen\n", name, slot);
     free(blob);   /* VAGs dekodiert + SEQ kopiert */
     return rc;
@@ -3353,10 +3534,14 @@ static void ss_start(ss_seq_t *s, int loop) {
     if ((!s->vab_ok && !s->tone_src) || !s->seq) { s->playing = 0; return; }
     ss_all_voices_off(s);
     for (int i = 0; i < SS_CHANNELS; i++) {
-        s->prog[i] = 0; s->cvol[i] = 100;
+        s->prog[i] = 0;
+        s->cvol[i] = 0x7f;                            /* _SsInitSoundSeq `sh a2,0x4e(a0)` @0x8005d2a4, a2 = 0x7f @0x8005d220
+                                                       * (vorher Port-Wert 100; 224 Noten in 30 Kanaelen haben kein CC7 davor) */
+        s->cpan[i] = 0x40;                            /* `sb t0,0x17(v0)` @0x8005d2a0, t0 = 0x40 @0x8005d214 */
         s->bend_deflect[i] = 0;
         s->bank[i] = (uint8_t)s->vab_id;
     }
+    s->seq_vol_l = s->seq_vol_r = SS_SEQ_VOL;         /* SsSeqSetVol mit dem Slot-Halbwort (127) */
     s->loop_cursor = -1; s->loop_armed = 0; s->loop_count = 0x7f; s->skip_next_dt = 0;
     s->cursor = SS_SEQ_HDR; s->rstatus = 0; s->accum = 0;
     s->pending_dt = ss_vlq(s);
@@ -3543,7 +3728,7 @@ static int re15_bgm_load_main(uint8_t main_b) {
     if (s_bgm_slot_status[0] == 1)                       /* Skript-Status op1/op3 (FUN_80044da4
                                                           * case 1: SsSeqSetVol+SsSeqPlay) ueber-
                                                           * lebt den aufgeschobenen Load */
-        s_ss_main.mvol = s_ss_main.mvol_l = s_ss_main.mvol_r = 0x1a00;
+        s_ss_main.mvol = s_ss_main.mvol_l = s_ss_main.mvol_r = SS_BASE_MVOL;
     re15_bgm_vabw_apply(0, &s_ss_main.vab);              /* Skript-VAB-Writes re-applizieren */
     return 0;
 }
@@ -3561,7 +3746,7 @@ static int re15_bgm_load_sub(uint8_t sub_b) {
     ss_start(&s_ss_sub, 1);
     if (((sub_b >> 6) & 1) != 0) s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = 0;
     if (s_bgm_slot_status[1] == 1)                       /* gelatchter Skript-Status, s.o. */
-        s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = (int16_t)s_ss_sub_base_mvol;
+        s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = s_ss_sub_base_mvol;
     re15_bgm_vabw_apply(1, &s_ss_sub.vab);               /* Skript-VAB-Writes re-applizieren
                                                           * (SEQ2 teilt die SUB-VAB via tone_src) */
 
@@ -3901,7 +4086,7 @@ static void ss_seq_ctl_ex(int slot, int op, int part, int vol, int pan)
     ss_seq_t *s = (slot == 0) ? &s_ss_main : (slot == 1) ? &s_ss_sub
                 : (slot == 2) ? &s_ss_sub2 : NULL;
     if (!s) return;
-    int base = (slot >= 1) ? s_ss_sub_base_mvol : 0x1a00; /* MAIN inits to 0x1a00 */
+    int base = (slot >= 1) ? s_ss_sub_base_mvol : SS_BASE_MVOL; /* alle Slots: Hauptlautstaerke 0x3fff (Q15 0x7ffe) */
     /* Gegatet 2026-08-27: das hier feuert bei JEDEM Skript-BGM-Op im laufenden Spiel und lief
      * ungebremst nach stderr — auch im ausgelieferten Build. Die uebrigen Traces dieser Datei
      * sind Lade-Einmalmeldungen; diese war die einzige im Spielverlauf. Gleiches Muster wie
@@ -4117,15 +4302,17 @@ void re15_audio_tick(void)
  * while Leon walks, sound_type=29 concrete on the ROOM1170 floor). */
 /* Player FOOTSTEP SE (byte-true FUN_80045630): floor sound_type → EDT → snd0
  * tone → VAG → activate a mixer voice. `foot` (7=left/4=right) resolves to the
- * same VAG for ROOM1170 (the original only differs the SE voice slot). Volume =
- * the tone's recorded vol (the original further scales by camera-distance
- * attenuation; the player is at the camera → ≈max). */
+ * same VAG for ROOM1170 (the original only differs the SE voice slot). Lautstaerke seit
+ * Strang ton Stufe 1: SpuVmKeyOnNow mit der Tastenstaerke aus der Lage (FUN_80045a64, s. unten);
+ * die fruehere Annahme "Spieler steht an der Kamera -> etwa voll" war falsch (gemessen 93/103). */
 void re15_audio_footstep(int foot, int sound_type)
 {
     (void)foot;
     static int diag = -1;
     if (diag < 0) diag = getenv("RE15_FOOT_DEBUG") ? 1 : 0;
-    int lage[2], mit_lage = re15_wassersprung_r41_lage_nehmen(lage);   /* Runde 41 Spur A: NPC-Schritt FUN_80045a64 @0x80045830 */
+    int lage[2] = { 0, 0 };
+    const int npc_lage = re15_wassersprung_r41_lage_nehmen(lage);   /* Runde 41 Spur A: NPC-Schritt FUN_80045a64 @0x80045830 */
+    int mit_lage = npc_lage;
     if (!s_foot_loaded) {
         if (diag) fprintf(stderr, "[foot] SE unterdrueckt: Bank snd0 nicht geladen\n");
         return;
@@ -4145,21 +4332,26 @@ void re15_audio_footstep(int foot, int sound_type)
     int st   = sound_type & 0x7f;
     int prog = s_foot_edt[st * 4 + 1] & 0x7f;
     int tone = s_foot_edt[st * 4 + 2] >> 4;
-    int tvol = 0;
-    uint32_t step = 0;
-    if (prog < RE15_VAB_PROGRAM_COUNT && tone < RE15_VAB_TONES_PER_PROGRAM) {
-        const re15_vab_tone_t *t = &s_foot_vab.tones[prog * RE15_VAB_TONES_PER_PROGRAM + tone];
-        tvol = t->vol;
-        /* Tone-Pitch auch fuer Footsteps (derselbe SsUtKeyOnV-Pfad @0x8004522c; Dossier D1 —
-         * bisher klangen nur Tones mit note ~ center-12 zufaellig richtig). */
-        step = (uint32_t)re15_vab_note2pitch2(t->min_note, t->pitch_shift,
-                                              t->center_note, t->pitch_shift) << 4;
-    }
-    if (!tvol) tvol = 100;
-    int vol = (tvol * 0x4000 / 127) >> 1;
-    if (vol > 0x4000) vol = 0x4000;
-    if (vol < 0) vol = 0;
-    int vol_r = mit_lage ? re15_wassersprung_r41_lage_pegel(&vol, lage, diag) : 0;   /* Runde 41 Spur A: SsUtKeyOnV/SpuVmKeyOnNow */
+    const int tone_idx = prog * RE15_VAB_TONES_PER_PROGRAM + tone;
+    const re15_vab_tone_t *t = &s_foot_vab.tones[tone_idx];
+    /* Tone-Pitch auch fuer Footsteps (derselbe SsUtKeyOnV-Pfad @0x8004522c; Dossier D1 —
+     * bisher klangen nur Tones mit note ~ center-12 zufaellig richtig). */
+    uint32_t step = (uint32_t)re15_vab_note2pitch2(t->min_note, t->pitch_shift,
+                                                   t->center_note, t->pitch_shift) << 4;
+    /* Strang ton Stufe 1: FUN_80045630 nimmt die Tastenstaerke IMMER aus der Lage der schreitenden Entity
+     * (`jal 0x80045a64` mit DAT_800ac784 + 0x34 @0x8004582c-30; DAT_800b2824/26 -> Vormerk-Satz +0xe/+0x10), die
+     * Ton-Lautstaerke geht nur einmal ein. Gemessen im Original (ROOM1130, Cut 9, Spieler -1614/0/17282):
+     * Vormerk-Saetze voll/volr 93/103 und 93/104. Spieler-Schritt: Lage des Spielers, Seiten nach PORT-WAHL (a)
+     * (Kopf ueber se_stimme_q15); NPC-Schritt: Lage und Seiten wie seit Runde 41 Spur A. Ohne Kamera/Raum: Zweig
+     * ohne Lage. Der fruehere Ersatzwert "Ton-vol 0 -> 100" entfaellt (ohne Beleg). */
+    if (!npc_lage) mit_lage = re15_svm_lage_spieler(lage);
+    int vol, vol_r, reg[2];
+    se_stimme_q15(&s_foot_vab, tone_idx, mit_lage ? lage : NULL, npc_lage ? 1 : SE_LAGE_SEITEN, 0, &vol, &vol_r, reg);
+    s_se_mess_reg[0] = reg[0]; s_se_mess_reg[1] = reg[1];
+    s_se_mess_lage[0] = mit_lage ? lage[0] : -1; s_se_mess_lage[1] = mit_lage ? lage[1] : -1;
+    if (npc_lage) re15_wassersprung_r41_lage_pegel(lage, vol, vol_r, diag);   /* Runde 41 Spur A: Messzeile */
+    else if (diag) fprintf(stderr, "[foot] Spieler-Lage %s voll=%d volr=%d -> Register %d/%d -> L=%d R=%d (Q15)\n",
+                           mit_lage ? "da" : "FEHLT", mit_lage ? lage[0] : -1, mit_lage ? lage[1] : -1, reg[0], reg[1], vol, vol_r);
 
     SDL_LockAudioDevice(s_audio_dev);
     int slot = mixer_alloc_free_slot();
@@ -4170,7 +4362,7 @@ void re15_audio_footstep(int foot, int sound_type)
     s_active[slot].step_q16   = step;
     s_active[slot].pos_frac   = 0;
     s_active[slot].volume_q15 = vol;
-    s_active[slot].vol_r_q15  = vol_r;   /* 0 = legacy mono (Slot-Reuse: kein Pan-Rest); Runde 41 Spur A: NPC-Schritt L/R */
+    s_active[slot].vol_r_q15  = vol_r;   /* Runde 41 Spur A: NPC-Schritt L/R; Strang ton Stufe 1: immer beide Seiten */
     s_active[slot].active     = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
 }
@@ -4568,7 +4760,7 @@ void re15_audio_re2_karte_se(int se_id)
 {
     if (!g_audio.initialized) return;
     if (!load_re2_karte_se_pc()) return;
-    se_play_layers(s_karte_edt, &s_karte_vab, s_karte_decoded, s_karte_decoded_len, se_id);
+    se_play_layers_re2(s_karte_edt, &s_karte_vab, s_karte_decoded, s_karte_decoded_len, se_id);
 }
 
 /* Runde 41 Spur C, C-E4 (Nachbesserung 6, Abnahme 5 Mangel 1; include/re15_ventilkette_r41.h "Alarm", Dossier §0g B6-2):
