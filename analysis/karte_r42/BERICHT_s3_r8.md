@@ -156,7 +156,7 @@ Auf den drei Längslinien der Prüfung (Sweep, Gang x-z -6800..4075, je 109 Lage
 
 `git merge-tree --write-tree` von r42/karte (d0b4096d3) gegen die Spitzen: **kein Konflikt** mit story 9cf52876f,
 rest 3e1a14809, gegenstaende 5515f2601, finale 35965debe, gore b8b879d54, lageplaene c35ab51a5, original 115ec88e6,
-birkinfilm b5bb0edd0, namen 6f1a719f0, hangar_aussen fe5436f55, kellerplan 2a2d45a1a.
+birkinfilm b5bb0edd0, namen 7d7f4d1c6, hangar_aussen fe5436f55, kellerplan 2a2d45a1a, probe_merge 9cf52876f (= story).
 
 - Diese Runde ändert nur `karte_r42.c` (Funktion `re15_karte_r42_gang`) und `test_r42_karte_lauf.c`. Beide gibt es nur
   auf r42/karte.
