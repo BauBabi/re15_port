@@ -4549,9 +4549,11 @@ void re15_body_push_player(void)
                                                                * @0x8010a680) */
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
+        /* Runde 35 Spur H NB3: RE2-Gitterarm schiebt mit SEINEM Segment r 800 (FUN_80034D0C, Beleg im Modul; verborgen = kein
+         * Schub, dort geprueft). Runde 42 (r42/original Stufe 2 Runde 7): VOR der Trefferkasten-Pruefung, weil der RE1.5-Koerper
+         * auch zu sehen ist, wenn der RE2-Arm verborgen ist (Kasten 0) - der Schub des gezeichneten Arms prueft das selbst. */
+        if (e->active && re15_re2arm_owns(e)) { re15_re2arm_body_push_player(e, pl); continue; }
         if (!e->active || e->hit_radius_min == 0) continue;
-        /* Runde 35 Spur H NB3: RE2-Gitterarm schiebt mit SEINEM Segment r 800 (FUN_80034D0C, Beleg im Modul) */
-        if (re15_re2arm_owns(e)) { re15_re2arm_body_push_player(e, pl); continue; }
         if (e->state == (uint8_t)RE15_AI_STATE_CORPSE) continue;
         if (e->type == 0x23u && re15_gator_boss_ohne_koerper(e)) continue;   /* Runde 41 Spur P (Nachbesserung 1, M2): RE2 R1 P0 +0 |= 2 @0x801022f8-fc -> FUN_80034d0c-Gate */
         /* GRABBING-PAIR EXEMPTION = an AND of BOTH freeze bits (byte-true FUN_8002aec4 @0x8002af14:

@@ -211,6 +211,8 @@ typedef struct {
     uint8_t  treffer;        /* RE2-Treffer/-Tod gesehen -> Rueckzug sinkt (K_SINKEN)                      */
     uint16_t g_frame;        /* GRIFF: eigenes Bild in EM1A-Clip 2                                          */
     int32_t  halte_x, halte_z;   /* Runde 5: feste Halte-Lage der Figur (einmal beim Pin bestimmt)           */
+    uint8_t  q_ok;               /* Runde 7: Halte-Lage, die das Tor A3 in diesem Bild bestimmt hat (Pin nimmt sie) */
+    int32_t  q_x, q_z, q_sprung;
     /* Runde 6: Zustand des Koerpers, den ein Griff/Treffer unterbrochen hat (Block GRIFF: danach geht es dort weiter) */
     uint8_t  u_mode, u_phase, u_clip;
     uint16_t u_frame;
@@ -441,16 +443,23 @@ static void arm_anker_1210(re15_actor_t *e)
 #define RE2ARM_PL_R     450    /* @0x8003bdc0-c4 */
 #define RE2ARM_PL_Y   (-1530)  /* @0x8003bde0-e4 */
 #define RE2ARM_PL_H    1530    /* @0x8003bde8-ec */
+static int arm_schiebt(const re15_actor_t *e, re15_actor_t *pl);   /* Block HALTE-LAGE */
 int re15_re2arm_body_push_player(re15_actor_t *e, re15_actor_t *pl)
 {
     if (!e || !pl || !pl->active || pl->hp < 0) return 0;   /* hp < 0: Port-Konvention aller Schub-Paesse
                                                               * (re15_body_push_player / re15_g5_body_push_player) */
     const int slot = (int)(e - g_actors);
-    if (slot < 0 || slot >= RE15_ACTOR_MAX || s_arm[slot].hidden) return 0;   /* (w|w) & 2 */
-    /* Runde 42 Stufe 2 Runde 4: mit dem RE1.5-Modell gibt es den RE2-Arm (Segment r 800 am RE2-Ursprung) nicht mehr zu sehen;
-     * die Halte-Lage rechnet von der RE1.5-Hand (tab_halte). Der Schub wuerde Leon von dieser Hand wegdruecken
-     * (1251 vom RE2-Ursprung) - PORT-WAHL: kein RE2-Segment-Schub, wenn EM1A gezeichnet wird. */
-    if (re15_re2arm_modell_re15(e)) return 0;
+    if (slot < 0 || slot >= RE15_ACTOR_MAX) return 0;
+    /* Runde 42 Stufe 2 Runde 4: mit dem RE1.5-Modell gibt es den RE2-Arm (Segment r 800 am RE2-Ursprung) nicht mehr zu sehen -
+     * kein RE2-Segment-Schub (er wuerde die Figur 1251 vom RE2-Ursprung halten, weg von der RE1.5-Hand). Runde 7 (Pruefbericht
+     * Runde 6 R1: die Figur lief in den gewachsenen Arm, die Hand steckte 8 Bilder in ihr): PORT-WAHL - statt des RE2-Segments
+     * ist der GEZEICHNETE RE1.5-Arm das Hindernis (arm_schiebt, Block HALTE-LAGE), solange der Koerper zu sehen ist und die
+     * Figur nicht gehalten wird. Dieselbe Aufgabe wie das RE2-Segment: kein Arm steckt in der Figur, ohne zu greifen. */
+    if (re15_re2arm_modell_re15(e)) {
+        if (!s_arm[slot].koerper_an || re15_player_is_grabbed() || (pl->re2z_self1d3 & 0x80u)) return 0;
+        return arm_schiebt(e, pl);
+    }
+    if (s_arm[slot].hidden) return 0;                                         /* (w|w) & 2 */
     const int32_t rs = RE2ARM_SEG_R + RE2ARM_PL_R;
     const int32_t dx = pl->x - e->x, dz = pl->z - e->z;
     if ((uint32_t)(dx + rs) > (uint32_t)(rs * 2)) return 0;                   /* Breitphase X */
@@ -970,9 +979,6 @@ int re15_re2arm_hand_parts(int slot, int32_t gemischt[3], int32_t rein[3])
 #define RE2ARM_HAND_V0   0           /* Hand = Quad-Vertices 0..11 von Mesh 2/3: Fingerspitzen 0..3 (y ~1531), Handgelenk-Ring
                                       * 4..7 (y ~1215), Handmitte 8..11 (y ~1376) (mesh_verts, Block MODELL)            */
 #define RE2ARM_HAND_N    12
-#define RE2ARM_HAND_KLEMM 450        /* Spieler-Klemmradius: Halbwort @0x80073e9a = 450 (PSX.EXE, `read 0x80073e98`: 0,450,1530,450) */
-#define RE2ARM_PL_SCHULTER_A 9       /* Leons Schultern 9/12 (Leon PL00, bissarm_r37.c k_anker)                             */
-#define RE2ARM_PL_SCHULTER_B 12
 
 static void koerper_anim(const re15_actor_t *e, re2arm_t *a)       /* anim_set: +1 je Aufruf, Wrap an der Clip-Laenge */
 {
@@ -1246,7 +1252,7 @@ static int hand_halbbreite(const re15_actor_t *e)
 /* ---- HALTE-LAGE: Leon an die RE1.5-Hand (Vorgabe Runde 4, Punkt 2b; NUTZERWUNSCH s. KOERPER) --------------------------
  * Leons Koerper aus seiner PLD (Datei-Id-Tabelle @0x80073f70 -> PL%02X.PLD, Index work_vars[0x10] wie main.c
  * pc_sync_player_model; Teil 1 = EMR, Teil 2 = MD1, re15_pld_part) in der Opfer-Pose (Paar 3 der Bank, wie der Zeichner
- * main.c s_victim_skel). Runde 5/6: Leon wird beim Pin EINMAL an die Hand gestellt und steht dann fest (s. tab_halte). */
+ * main.c s_victim_skel). Runde 5/6: Leon wird beim Pin EINMAL an die Hand gestellt und steht dann fest (s. halte_loesen). */
 extern uint8_t *re15_asset_read_file(const char *path, int *out_size);   /* PC-/PSX-Backend, Test-Stub */
 static int s_pl_idx = -1;
 static uint8_t *s_pl_buf = NULL;
@@ -1277,28 +1283,44 @@ static int pl_modell_laden(void)
  * einmal beim Pin @0x80100C18-38, der Hook P1 @0x8010131C bewegt sie nicht. Die feste Lage wird EINMAL bestimmt, so dass die
  * RE1.5-Hand ueber die ganze Halte-Schleife (Opfer-Clip 0) an der Oberflaeche der Figur bleibt (NUTZERWUNSCH s. KOERPER;
  * Vorgabe Punkt 2: "die Hand liegt sichtbar an ihr (Schulter oder Arm), keine Finger tief im Koerper").
- * RUNDE 6 (Pruefbericht Runde 5 R1: das Spiel stand bei jedem Zugriff ~1,3 s, weil halte_lage() zweimal je Zugriff 17x17 Lagen
- * x 19 Opfer-Bilder x 12 Hand-Punkte gegen alle Dreiecke der Figur rechnete; Memory reai-v2-psx-laufzeitbudget "Die Laufzeit
- * schlaegt nach, sie rechnet nicht"): die Rohsuche ist entfernt. Statt dessen
- *   FIGUR-TABELLE (tab_bauen, EINMAL je Figur beim Raumladen aus arm_init): die Vertex-Lagen der Figur in jedem Bild der
- *     Halte-Schleife (Opfer-Clip 0), figur-lokal (Blick 0, Lage 0), dazu Schulter 9/12 gemittelt.
- *   HALTE-LAGE (tab_halte, beim Zugriff): eine einzige Lage in geschlossener Form - quer: die naeher liegende Schulter unter
- *     die Handmitte; laengs (Richtung Schultergelenk -> Hand des Zombies): je Bild die Vorderseite der Figur (kleinste
- *     Laengs-Lage der Tabellen-Vertices im Band der Handbreite um die Handmitte, quer und in der Hoehe), die Figur so weit vor,
- *     dass die vorderste Fingerspitze die Vorderseite im naechsten Bild gerade beruehrt; dann Leons eigene Wandklemme
- *     (FUN_8003b0a4 @0x80031d70). Kosten: zweimal Bilder x Vertices (Vorderseite, dann luft; Rechenschritte-Zaehler, Riegel
- *     T1), keine Dreiecke, keine Suche ueber Lagen.
+ * RUNDE 6 (Pruefbericht Runde 5 R1: das Spiel stand bei jedem Zugriff ~1,3 s): keine Rohsuche mehr, eine Figur-Tabelle beim
+ * Raumladen. RUNDE 7 (Pruefbericht Runde 6 R1: die Figur lief an der Wand in den gewachsenen Arm, die Hand steckte 8 Bilder in
+ * ihr, weil das Tor den Griff ablehnte; danach sprang sie 421 / ~570 an die Hand). Jetzt:
+ *   PROFILE (profil_bauen, EINMAL je Figur beim Raumladen aus arm_init): die Figur in jedem Bild der Halte-Schleife (Opfer-Clip 0,
+ *     PROF_HALTEN) und in ihrer eigenen Pose (Keyframe 0 ihrer PLD-EMR, PROF_EIGEN), figur-lokal (Blick 0, Lage 0); jede Flaeche
+ *     wird abgetastet (Raster RE2ARM_PROF_RASTER), je Koerperteil und Hoehenband (RE2ARM_PROF_BH) die Bandmitte und je Sektor
+ *     (RE2ARM_PROF_NA) der groesste Radius um sie. Dazu die Tabelle (Vertices je Bild) und die Dreiecke (fuer luft).
+ *   ARM ALS HINDERNIS (arm_schiebt, PORT-WAHL nach dem RE2-Arm-Segment FUN_80034D0C, s. re15_re2arm_body_push_player): solange
+ *     der RE1.5-Koerper zu sehen ist und die Figur nicht gehalten wird, schiebt der gezeichnete Arm (beide Arme, alle Vertices) die
+ *     Figur in ihrer eigenen Pose so wenig wie moeglich aus sich heraus (32 Richtungen, nach ihrer Flur-Klemme FUN_8003b0a4
+ *     @0x80031d70) - im Spieler-Pass und nach jedem Koerper-Bild. Kein Armpunkt steckt in der Figur, ohne dass sie gegriffen ist.
+ *   HALTE-LAGE (halte_loesen, im Tor A3 jedes Zugriff-Bilds): mit dem Blick, den der Hook P0 ihr geben wird, je Richtung um die
+ *     Hand der kleinste Abstand, bei dem der ganze Arm ausserhalb des Halte-Profils liegt; Lage, Klemme, Sprung von der jetzigen
+ *     Lage. Vom kleinsten Sprung an (hoechstens RE2ARM_HALTE_PRUEF Lagen) die erste, an der die Hand in jedem Bild an der Figur
+ *     liegt (luft). Gegriffen wird nur, wenn es eine solche Lage mit Sprung <= Handbreite gibt (kontakt_moeglich); der Pin nimmt
+ *     genau diese Lage (Hook P0). Sonst greift der Arm nicht und schiebt nur (RE2-Rueckzug nach dem Zugriff wie bisher).
  * MASSE (Mess-/Pruefgroessen, keine Original-Konstanten):
- *   luft    = an der gestellten Lage (nach der Klemme) je Bild der Schleife der kleinste 3D-Abstand der 12 Hand-Vertices zu den
- *             Tabellen-Vertices der Figur; luft = der groesste davon ueber die Schleife (in welchem Bild die Hand am weitesten
- *             weg ist). Gerechnet werden nur Vertices im Kasten der Hand plus Grenze (ganzzahlig, eine Wurzel je Bild).
- *   innen   = die Handmitte (Mittel der Vertices 8..11) laege nach der Klemme hinter der Vorderseite, oder die Klemme schiebt
- *             die Figur quer um mehr als die halbe Handbreite weg.
- *   Grenze  = Handbreite (2 * hand_halbbreite, aus den Vertices 0..11: 2 * 101): Griff nur mit luft <= Grenze und nicht innen.
- *   kontakt = (nur Mess-Auskunft re15_re2arm_kontakt_rest fuer Riegel und Messschiene, NICHT im Spielablauf) kleinster Abstand
- *             der 12 Hand-Vertices zu den Dreiecken der Figur (Quads als (v0,v1,v2)+(v1,v3,v2)) - 0 = die Hand beruehrt sie. */
+ *   luft    = an der Halte-Lage je Bild der Schleife der kleinste 3D-Abstand der 12 Hand-Vertices zu den Dreiecken der Figur;
+ *             Griff nur mit luft <= Handbreite in jedem Bild und im Mittel <= halbe Handbreite.
+ *   Sprung  = Abstand Halte-Lage -> Lage vor dem Pin; Griff nur mit Sprung <= Handbreite. RE2 setzt die Figur auf die Hand
+ *             (@0x80100C18-38), also bis 600 weit (Tor @0x801009BC) - der Port begrenzt das auf eine Handbreite (PORT-WAHL).
+ *   Handbreite = 2 * hand_halbbreite (aus den Vertices 0..11: 2 * 101).
+ *   kontakt = (nur Mess-Auskunft re15_re2arm_kontakt_rest, NICHT im Spielablauf) kleinster Abstand der 12 Hand-Vertices zu den
+ *             Dreiecken der Figur im jetzigen Bild. */
 #define RE2ARM_FIG_DREI 1536         /* Puffer: Leon-Dreiecke je Bild (PL00/PL04 haben weniger, gezaehlt in figur_dreiecke)  */
+#define RE2ARM_PROF_Y0  (-3264)      /* Profil: Hoehenbaender ab y -3264 (Figur-lokal; PL00/PL04 reichen -3009..+59)        */
+#define RE2ARM_PROF_BH  6            /* Bandhoehe 64 (Schiebung)                                                            */
+#define RE2ARM_PROF_NB  54           /* 54 Baender: -3264..+192                                                             */
+#define RE2ARM_PROF_NA  64           /* 64 Sektoren je 64/4096                                                              */
+#define RE2ARM_PROF_SEKTOR 6         /* Winkel 0..4095 >> 6 = Sektor                                                        */
+#define RE2ARM_PROF_TEILE 16         /* Koerperteile der Figur (PL00/PL04: 15)                                             */
 #define RE2ARM_HALT_BILDER 64        /* Puffer: Bilder des Opfer-Clips 0 (Bank Paar 3: 19)                                 */
+#define RE2ARM_PROF_RASTER 32       /* Abtastraster der Flaechen (hoechstens 16 Schritte je Kante)                           */
+#define RE2ARM_ARM_PUNKTE 160        /* Puffer: Vertices eines EM1A-Arm-Meshes                                              */
+#define RE2ARM_HALTE_NT 32           /* Richtungen um die Hand, je 128/4096                                                 */
+#define RE2ARM_HALTE_RMAX 1536       /* weitester Abstand Handmitte -> Figur-Mitte, der versucht wird                       */
+#define RE2ARM_HALTE_RSTEP 32
+#define RE2ARM_HALTE_PRUEF 4
 typedef struct { float p[3][3]; float c[3]; float r; uint8_t teil; } halte_drei_t;
 static halte_drei_t s_fd[RE2ARM_FIG_DREI];
 static double pt_tri(const double p[3], const float A[3], const float B[3], const float C[3])
@@ -1450,182 +1472,428 @@ static void halte_mass(int n, const double hv[RE2ARM_HAND_N][3], int32_t px, int
     for (int t = 0; t < RE15_EMD_MAX_BONES; t++) if (schnitt[0][t] + schnitt[1][t] + schnitt[2][t] >= 2) in = 1;
     *kontakt = best; *innen = in;
 }
-/* ---- Runde 6: FIGUR-TABELLE + HALTE-LAGE in geschlossener Form (s.o.) ---- */
-static uint32_t s_rechen = 0;            /* Rechenschritte (Vertex-Besuche) seit dem letzten Abholen - Messgroesse Riegel T1 */
+/* ---- Runde 7: FIGUR-TABELLE + PROFILE, HALTE-LAGE mit dem kleinsten Sprung, ARM ALS HINDERNIS (Block HALTE-LAGE) ---- */
+static uint32_t s_rechen = 0;            /* Rechenschritte seit dem letzten Abholen - Messgroesse Riegel T1 */
 uint32_t re15_re2arm_rechenschritte(int zuruecksetzen)
 {
     const uint32_t r = s_rechen;
     if (zuruecksetzen) s_rechen = 0;
     return r;
 }
-static int16_t (*s_tab)[3] = NULL;       /* [bild * s_tab_nv + v]: figur-lokal (Blick 0, Lage 0)                               */
+static int16_t (*s_tab)[3] = NULL;       /* [bild * s_tab_nv + v]: figur-lokal (Blick 0, Lage 0), Halte-Schleife */
 static int s_tab_nv = 0, s_tab_fc = 0, s_tab_idx = -2, s_tab_opfer = -1;
-static int32_t s_tab_sch[2][3];          /* Schulter 9/12, gemittelt ueber die Schleife                                         */
-static int tab_bauen(void)
+static uint16_t (*s_tf)[3] = NULL;       /* Dreiecke der Figur als Indizes in eine Tabellen-Zeile (Quads als (v0,v1,v2)+(v1,v3,v2)) */
+static int s_tf_n = 0;
+/* PROFILE je Satz (PROF_HALTEN = Opfer-Clip 0 ueber alle Bilder, PROF_EIGEN = die eigene Pose der Figur), Koerperteil und
+ * Hoehenband: Bandmitte und groesster Radius / 4 je Sektor um sie (0 = leer). Bau in zwei Durchgaengen (Mitten, dann Radien). */
+enum { PROF_HALTEN = 0, PROF_EIGEN = 1, PROF_SAETZE = 2 };
+static uint8_t  s_pp_r[PROF_SAETZE][RE2ARM_PROF_TEILE][RE2ARM_PROF_NB][RE2ARM_PROF_NA];
+static int16_t  s_pp_c[PROF_SAETZE][RE2ARM_PROF_TEILE][RE2ARM_PROF_NB][2];
+static uint16_t s_pp_maske[PROF_SAETZE][RE2ARM_PROF_NB];
+static int32_t  s_pp_rmax[PROF_SAETZE];
+static int32_t  s_pp_sum[RE2ARM_PROF_TEILE][RE2ARM_PROF_NB][3];   /* nur beim Bau: Summe x, z, Anzahl */
+static int s_pp_satz = 0, s_pp_durchgang = 0, s_pp_teil = 0;
+static void prof_punkt(int32_t x, int32_t y, int32_t z)
+{
+    const int b = (y - RE2ARM_PROF_Y0) >> RE2ARM_PROF_BH;
+    if (b < 0 || b >= RE2ARM_PROF_NB || s_pp_teil < 0 || s_pp_teil >= RE2ARM_PROF_TEILE) return;
+    if (s_pp_durchgang == 0) {
+        int32_t *q = s_pp_sum[s_pp_teil][b];
+        q[0] += x; q[1] += z; q[2]++;
+        const int32_t r0 = (int32_t)re15_squareroot0((uint32_t)((int64_t)x * x + (int64_t)z * z)) + 1;
+        if (r0 > s_pp_rmax[s_pp_satz]) s_pp_rmax[s_pp_satz] = r0;
+        return;
+    }
+    const int32_t dx = x - s_pp_c[s_pp_satz][s_pp_teil][b][0], dz = z - s_pp_c[s_pp_satz][s_pp_teil][b][1];
+    const int s = (re15_ratan2(dz, dx) & 0xfff) >> RE2ARM_PROF_SEKTOR;
+    const uint32_t r = (re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz)) + 1u + 3u) / 4u;   /* aufrunden */
+    uint8_t *q = &s_pp_r[s_pp_satz][s_pp_teil][b][s];
+    const uint8_t v = (uint8_t)(r < 1u ? 1u : r > 255u ? 255u : r);
+    if (v > *q) *q = v;
+}
+static void prof_drei(const int32_t A[3], const int32_t B[3], const int32_t C[3])
+{   /* Dreieck abtasten: Raster mit hoechstens RE2ARM_PROF_RASTER Einheiten Abstand (laengste Achsen-Kante, 1..16 Schritte) */
+    int32_t m = 0;
+    for (int r = 0; r < 3; r++) {
+        const int32_t e1 = abs(B[r] - A[r]), e2 = abs(C[r] - A[r]), e3 = abs(C[r] - B[r]);
+        if (e1 > m) m = e1;
+        if (e2 > m) m = e2;
+        if (e3 > m) m = e3;
+    }
+    int n = (int)((m + RE2ARM_PROF_RASTER - 1) / RE2ARM_PROF_RASTER);
+    if (n < 1) n = 1;
+    if (n > 16) n = 16;
+    for (int i = 0; i <= n; i++)
+        for (int j = 0; i + j <= n; j++) {
+            int32_t p[3];
+            for (int r = 0; r < 3; r++) p[r] = A[r] + ((B[r] - A[r]) * i) / n + ((C[r] - A[r]) * j) / n;
+            prof_punkt(p[0], p[1], p[2]);
+        }
+}
+/* Ein Profil-Satz: fc Bilder (Pose je Bild aus sk/kf_fn), bei PROF_HALTEN zugleich die Tabelle (s_tab). */
+static int prof_satz_bauen(int satz, const re15_emd_skeleton_t *sk, const re15_emd_animation_t *an, int fc, int nv)
+{
+    static re15_emd_skeleton_t vs;
+    static re15_skel_pose_t P[RE15_EMD_MAX_BONES];
+    static int32_t L[2][2048][3];
+    s_pp_satz = satz;
+    memset(s_pp_r[satz], 0, sizeof s_pp_r[satz]); memset(s_pp_c[satz], 0, sizeof s_pp_c[satz]);
+    memset(s_pp_maske[satz], 0, sizeof s_pp_maske[satz]); memset(s_pp_sum, 0, sizeof s_pp_sum); s_pp_rmax[satz] = 0;
+    for (s_pp_durchgang = 0; s_pp_durchgang < 2; s_pp_durchgang++) {
+        for (int g = 0; g < fc; g++) {
+            vs = *sk;
+            const int kf = an ? (int)(re15_emd_get_frame_entry(an, 0, g) & 0xfffu) : 0;
+            void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
+            const int rv = re15_skel_compute_pose(&vs, kf, P);
+            g_anim_pose_actor = save;
+            if (rv != 0) return 0;
+            int k = g * nv;
+            for (int bi = 0; bi < s_pl_sk.bone_count; bi++) {
+                const int mi = s_pl_sk.bone_mesh_index[bi];
+                if (mi < 0 || mi >= s_pl_md1.mesh_count) continue;
+                const re15_md1_mesh_t *mm = &s_pl_md1.meshes[mi];
+                int nq[2];
+                s_pp_teil = bi;
+                for (int q = 0; q < 2; q++) {
+                    const re15_md1_vertex_t *vv = q ? mm->quad_vertices : mm->tri_vertices;
+                    const int n = q ? mm->quad_vertex_count : mm->tri_vertex_count;
+                    nq[q] = n < 2048 ? n : 2048;
+                    for (int i = 0; i < n; i++, k++)
+                        for (int r = 0; r < 3; r++) {
+                            const int32_t l = (int32_t)(((int64_t)P[bi].rot[r*3] * vv[i].x + (int64_t)P[bi].rot[r*3+1] * vv[i].y +
+                                                         (int64_t)P[bi].rot[r*3+2] * vv[i].z) >> 12) + P[bi].trans[r];
+                            if (i < 2048) L[q][i][r] = l;
+                            if (satz == PROF_HALTEN && s_tab) s_tab[k][r] = (int16_t)(l < -32768 ? -32768 : l > 32767 ? 32767 : l);
+                        }
+                }
+                for (int f = 0; f < mm->triangle_count; f++) {
+                    const re15_md1_triangle_t *T = &mm->triangles[f];
+                    if (T->v0 >= nq[0] || T->v1 >= nq[0] || T->v2 >= nq[0]) continue;
+                    prof_drei(L[0][T->v0], L[0][T->v1], L[0][T->v2]);
+                }
+                for (int f = 0; f < mm->quad_count; f++) {          /* Quad: (v0,v1,v2) + (v1,v3,v2) wie der PSX-Zeichner */
+                    const re15_md1_quad_t *Q = &mm->quads[f];
+                    if (Q->v0 >= nq[1] || Q->v1 >= nq[1] || Q->v2 >= nq[1] || Q->v3 >= nq[1]) continue;
+                    prof_drei(L[1][Q->v0], L[1][Q->v1], L[1][Q->v2]);
+                    prof_drei(L[1][Q->v1], L[1][Q->v3], L[1][Q->v2]);
+                }
+            }
+        }
+        if (s_pp_durchgang == 0)                          /* Bandmitten aus dem ersten Durchgang */
+            for (int t = 0; t < RE2ARM_PROF_TEILE; t++)
+                for (int b = 0; b < RE2ARM_PROF_NB; b++) {
+                    const int32_t *q = s_pp_sum[t][b];
+                    if (q[2] <= 0) continue;
+                    s_pp_c[satz][t][b][0] = (int16_t)(q[0] / q[2]); s_pp_c[satz][t][b][1] = (int16_t)(q[1] / q[2]);
+                    s_pp_maske[satz][b] |= (uint16_t)(1u << t);
+                }
+    }
+    for (int t = 0; t < RE2ARM_PROF_TEILE; t++)           /* leere Sektoren zwischen belegten Nachbarn schliessen (Abtastluecke) */
+        for (int b = 0; b < RE2ARM_PROF_NB; b++) {
+            if (!(s_pp_maske[satz][b] & (1u << t))) continue;
+            uint8_t z[RE2ARM_PROF_NA];
+            memcpy(z, s_pp_r[satz][t][b], sizeof z);
+            for (int s = 0; s < RE2ARM_PROF_NA; s++) {
+                if (z[s]) continue;
+                const uint8_t l = z[(s + RE2ARM_PROF_NA - 1) % RE2ARM_PROF_NA], r = z[(s + 1) % RE2ARM_PROF_NA];
+                if (l && r) s_pp_r[satz][t][b][s] = l < r ? l : r;
+            }
+        }
+    return 1;
+}
+/* FIGUR-TABELLE, Dreiecke und PROFILE einmal je Figur (beim Raumladen aus arm_init). */
+static int profil_bauen(void)
 {
     if (!pl_modell_laden()) return 0;
     const re15_enemy_bank_t *vb = re15_enemy_find(0x1Au);
     const int opfer = (vb && vb->victim_ok && vb->skel_victim.keyframe_data && vb->anim_victim.clip_count > 0 &&
                        vb->anim_victim.clips[0].frame_count > 0) ? 1 : 0;
     if (s_tab && s_tab_idx == s_pl_idx && s_tab_opfer == opfer) return 1;
-    free(s_tab); s_tab = NULL; s_tab_nv = 0; s_tab_fc = 0;
-    int nv = 0;
+    free(s_tab); s_tab = NULL; s_tab_nv = 0; s_tab_fc = 0; s_tab_idx = -2;
+    int nv = 0, nf = 0;
     for (int bi = 0; bi < s_pl_sk.bone_count; bi++) {
         const int mi = s_pl_sk.bone_mesh_index[bi];
         if (mi < 0 || mi >= s_pl_md1.mesh_count) continue;
         nv += s_pl_md1.meshes[mi].tri_vertex_count + s_pl_md1.meshes[mi].quad_vertex_count;
+        nf += s_pl_md1.meshes[mi].triangle_count + 2 * s_pl_md1.meshes[mi].quad_count;
     }
     int fc = opfer ? vb->anim_victim.clips[0].frame_count : 1;
     if (fc > RE2ARM_HALT_BILDER) fc = RE2ARM_HALT_BILDER;
-    if (nv <= 0) return 0;
+    if (nv <= 0 || nv > 65535) return 0;
     s_tab = (int16_t (*)[3])malloc((size_t)fc * (size_t)nv * sizeof *s_tab);
-    if (!s_tab) return 0;
-    static re15_emd_skeleton_t vs;
-    static re15_skel_pose_t P[RE15_EMD_MAX_BONES];
-    int64_t sch[2][3] = { { 0, 0, 0 }, { 0, 0, 0 } };
-    for (int g = 0; g < fc; g++) {
-        int kf = 0;
-        vs = s_pl_sk;
-        if (opfer) {
-            vs.keyframe_data      = vb->skel_victim.keyframe_data;
-            vs.keyframe_data_size = vb->skel_victim.keyframe_data_size;
-            vs.keyframe_count     = vb->skel_victim.keyframe_count;
-            vs.keyframe_size_bytes = vb->skel_victim.keyframe_size_bytes;
-            kf = (int)(re15_emd_get_frame_entry(&vb->anim_victim, 0, g) & 0xfffu);
-        }
-        void *save = g_anim_pose_actor; g_anim_pose_actor = NULL;
-        const int rv = re15_skel_compute_pose(&vs, kf, P);
-        g_anim_pose_actor = save;
-        if (rv != 0) { free(s_tab); s_tab = NULL; return 0; }
-        const int sb[2] = { RE2ARM_PL_SCHULTER_A, RE2ARM_PL_SCHULTER_B };
-        for (int i = 0; i < 2; i++)
-            if (sb[i] < s_pl_sk.bone_count) for (int r = 0; r < 3; r++) sch[i][r] += P[sb[i]].trans[r];
-        int k = g * nv;
+    free(s_tf); s_tf = (uint16_t (*)[3])malloc((size_t)(nf > 0 ? nf : 1) * sizeof *s_tf); s_tf_n = 0;
+    if (!s_tab || !s_tf) { free(s_tab); s_tab = NULL; return 0; }
+    {   int k0 = 0;
         for (int bi = 0; bi < s_pl_sk.bone_count; bi++) {
             const int mi = s_pl_sk.bone_mesh_index[bi];
             if (mi < 0 || mi >= s_pl_md1.mesh_count) continue;
             const re15_md1_mesh_t *mm = &s_pl_md1.meshes[mi];
-            for (int q = 0; q < 2; q++) {
-                const re15_md1_vertex_t *vv = q ? mm->quad_vertices : mm->tri_vertices;
-                const int n = q ? mm->quad_vertex_count : mm->tri_vertex_count;
-                for (int i = 0; i < n; i++, k++) {
-                    for (int r = 0; r < 3; r++) {
-                        const int32_t l = (int32_t)(((int64_t)P[bi].rot[r*3] * vv[i].x + (int64_t)P[bi].rot[r*3+1] * vv[i].y +
-                                                     (int64_t)P[bi].rot[r*3+2] * vv[i].z) >> 12) + P[bi].trans[r];
-                        s_tab[k][r] = (int16_t)(l < -32768 ? -32768 : l > 32767 ? 32767 : l);
-                    }
-                }
+            const int kt = k0, kq = k0 + mm->tri_vertex_count, tn = mm->tri_vertex_count, qn = mm->quad_vertex_count;
+            for (int f = 0; f < mm->triangle_count; f++) {
+                const re15_md1_triangle_t *T = &mm->triangles[f];
+                if (T->v0 >= tn || T->v1 >= tn || T->v2 >= tn) continue;
+                s_tf[s_tf_n][0] = (uint16_t)(kt + T->v0); s_tf[s_tf_n][1] = (uint16_t)(kt + T->v1); s_tf[s_tf_n][2] = (uint16_t)(kt + T->v2);
+                s_tf_n++;
             }
+            for (int f = 0; f < mm->quad_count; f++) {
+                const re15_md1_quad_t *Q = &mm->quads[f];
+                if (Q->v0 >= qn || Q->v1 >= qn || Q->v2 >= qn || Q->v3 >= qn) continue;
+                s_tf[s_tf_n][0] = (uint16_t)(kq + Q->v0); s_tf[s_tf_n][1] = (uint16_t)(kq + Q->v1); s_tf[s_tf_n][2] = (uint16_t)(kq + Q->v2); s_tf_n++;
+                s_tf[s_tf_n][0] = (uint16_t)(kq + Q->v1); s_tf[s_tf_n][1] = (uint16_t)(kq + Q->v3); s_tf[s_tf_n][2] = (uint16_t)(kq + Q->v2); s_tf_n++;
+            }
+            k0 += tn + qn;
         }
-        s_rechen += (uint32_t)nv;
     }
-    for (int i = 0; i < 2; i++) for (int r = 0; r < 3; r++) s_tab_sch[i][r] = (int32_t)(sch[i][r] / fc);
+    re15_emd_skeleton_t sk = s_pl_sk;
+    if (opfer) {
+        sk.keyframe_data      = vb->skel_victim.keyframe_data;
+        sk.keyframe_data_size = vb->skel_victim.keyframe_data_size;
+        sk.keyframe_count     = vb->skel_victim.keyframe_count;
+        sk.keyframe_size_bytes = vb->skel_victim.keyframe_size_bytes;
+    }
+    if (!prof_satz_bauen(PROF_HALTEN, &sk, opfer ? &vb->anim_victim : NULL, fc, nv) ||
+        !prof_satz_bauen(PROF_EIGEN, &s_pl_sk, NULL, 1, nv)) { free(s_tab); s_tab = NULL; return 0; }
     s_tab_nv = nv; s_tab_fc = fc; s_tab_idx = s_pl_idx; s_tab_opfer = opfer;
-    if (getenv("RE15_RE2_TRACE")) {                       /* Messschiene: wann die Tabelle entsteht (Raumladen, nicht Zugriff) */
+    if (getenv("RE15_RE2_TRACE")) {                       /* Messschiene: wann Tabelle und Profile entstehen (Raumladen, nicht Zugriff) */
         FILE *o = re15_re2_trace_out() ? re15_re2_trace_out() : stderr;
-        fprintf(o, "[re15halt] F%u Figur-Tabelle PL%02X: %d Bilder x %d Vertices (Opfer-Pose %d)\n", (unsigned)g_engine.frame_count,
-                (unsigned)s_pl_idx, fc, nv, opfer);
+        fprintf(o, "[re15halt] F%u Figur-Tabelle PL%02X: %d Bilder x %d Vertices, %d Dreiecke, Profile %d Baender x %d Sektoren "
+                   "(Opfer-Pose %d)\n", (unsigned)g_engine.frame_count, (unsigned)s_pl_idx, fc, nv, s_tf_n, RE2ARM_PROF_NB,
+                RE2ARM_PROF_NA, opfer);
     }
     return 1;
 }
-/* Feste Halte-Lage aus der Tabelle (s.o.): Figur mit Blick yaw und Hoehe py, Schulterwahl nach der jetzigen Lage (cur_x, cur_z),
- * Klemme von (alt_x, alt_z) aus. aus = Lage nach der Klemme; luft/innen s. MASSE. Rueckgabe 1 = berechenbar. */
-static int tab_halte(const re15_actor_t *e, const re2arm_t *a, int16_t yaw, int32_t py, int32_t cur_x, int32_t cur_z,
-                     int32_t alt_x, int32_t alt_z, int32_t aus[2], int32_t *luft, int *innen)
+/* Abstand eines figur-lokalen Punkts (x, y ueber dem Boden der Figur, z) vor dem Profil `satz`: > 0 = draussen, <= 0 = drin;
+ * INT32_MAX = in dieser Hoehe/Richtung ist nichts von der Figur. */
+static int32_t prof_marge(int satz, int32_t x, int32_t y, int32_t z)
 {
-    if (!tab_bauen()) return 0;
-    double hd[RE2ARM_HAND_N][3]; int32_t h[3], s[3];
-    if (!hand_punkte(e, a, hd, h, s)) return 0;
-    const int hb = hand_halbbreite(e);
-    const int32_t dx = h[0] - s[0], dz = h[2] - s[2];
-    const int32_t dl = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz));
-    if (dl < 1 || hb <= 0) return 0;
-    const int32_t ux = (int32_t)(((int64_t)dx * 4096) / dl), uz = (int32_t)(((int64_t)dz * 4096) / dl);   /* laengs (Q12) */
-    const int32_t nx = -uz, nz = ux;                                                                    /* quer         */
-#define TAB_AL(x, z) ((int32_t)((((int64_t)(x) * ux) + ((int64_t)(z) * uz)) >> 12))
-#define TAB_LA(x, z) ((int32_t)((((int64_t)(x) * nx) + ((int64_t)(z) * nz)) >> 12))
-    int32_t H = INT32_MIN, m[3] = { 0, 0, 0 };
-    for (int v = 0; v < RE2ARM_HAND_N; v++) {
-        const int32_t al = TAB_AL((int32_t)hd[v][0], (int32_t)hd[v][2]);
-        if (al > H) H = al;                                                  /* vorderste Fingerspitze */
-        if (v >= 8) for (int r = 0; r < 3; r++) m[r] += (int32_t)hd[v][r];
+    if ((int64_t)x * x + (int64_t)z * z > (int64_t)s_pp_rmax[satz] * s_pp_rmax[satz]) return INT32_MAX;   /* weiter als jedes Teil */
+    const int b = (y - RE2ARM_PROF_Y0) >> RE2ARM_PROF_BH;
+    if (b < 0 || b >= RE2ARM_PROF_NB || !s_pp_maske[satz][b]) return INT32_MAX;
+    int32_t m = INT32_MAX;
+    for (int t = 0; t < RE2ARM_PROF_TEILE; t++) {
+        if (!(s_pp_maske[satz][b] & (1u << t))) continue;
+        const int32_t dx = x - s_pp_c[satz][t][b][0], dz = z - s_pp_c[satz][t][b][1];
+        if (dx > 1024 || dx < -1024 || dz > 1024 || dz < -1024) continue;   /* Radius hoechstens 255 * 4 */
+        s_rechen++;
+        const int32_t R = 4 * (int32_t)s_pp_r[satz][t][b][(re15_ratan2(dz, dx) & 0xfff) >> RE2ARM_PROF_SEKTOR];
+        if (!R) continue;
+        const int32_t mm = (int32_t)re15_squareroot0((uint32_t)((int64_t)dx * dx + (int64_t)dz * dz)) - R;
+        if (mm < m) m = mm;
     }
-    for (int r = 0; r < 3; r++) m[r] /= 4;                                    /* Handmitte (Vertices 8..11) */
-    const int32_t m_al = TAB_AL(m[0], m[2]), m_la = TAB_LA(m[0], m[2]);
-    const int32_t cs = re15_cos_q12((int)yaw), sn = re15_sin_q12((int)yaw);   /* wie re15_skel_bone_to_world */
-    /* quer: die naeher liegende Schulter unter die Handmitte */
-    const int32_t cur_la = TAB_LA(cur_x, cur_z);
-    int32_t o_la = m_la, best = INT32_MAX;
-    for (int i = 0; i < 2; i++) {
-        const int32_t wx = (int32_t)(((int64_t)cs * s_tab_sch[i][0] + (int64_t)sn * s_tab_sch[i][2]) >> 12);
-        const int32_t wz = (int32_t)((-(int64_t)sn * s_tab_sch[i][0] + (int64_t)cs * s_tab_sch[i][2]) >> 12);
-        const int32_t kand = m_la - TAB_LA(wx, wz);
-        const int32_t d = abs(kand - cur_la);
-        if (d < best) { best = d; o_la = kand; }
+    return m;
+}
+/* Alle Punkte eines gezeichneten RE1.5-Arms (Teil 2/3: erst die Quad-Vertices - davon 0..11 = die Hand -, dann die
+ * Dreieck-Vertices) in Welt, dazu die Handmitte (Mittel der Quad-Vertices 8..11). Rueckgabe Anzahl (0 = nicht berechenbar). */
+static int arm_punkte(const re15_actor_t *e, const re2arm_t *a, int teil, int32_t (*w)[3], int32_t hc[3])
+{
+    const re15_enemy_bank_t *b = re15_enemy_find(e->type);
+    if (!b || teil >= b->skel.bone_count) return 0;
+    const int mi = b->skel.bone_mesh_index[teil];
+    if (mi < 0 || mi >= b->md1.mesh_count) return 0;
+    const re15_md1_mesh_t *mm = &b->md1.meshes[mi];
+    if (!mm->quad_vertices || mm->quad_vertex_count < RE2ARM_HAND_V0 + RE2ARM_HAND_N) return 0;
+    int32_t R[9], T[3];
+    if (koerper_teil_welt(e, a, teil, R, T) < 0) return 0;
+    int n = 0;
+    for (int q = 1; q >= 0; q--) {
+        const re15_md1_vertex_t *vv = q ? mm->quad_vertices : mm->tri_vertices;
+        const int nv = q ? mm->quad_vertex_count : mm->tri_vertex_count;
+        for (int i = 0; vv && i < nv && n < RE2ARM_ARM_PUNKTE; i++, n++)
+            for (int r = 0; r < 3; r++)
+                w[n][r] = (int32_t)((((int64_t)R[r*3] * vv[i].x + (int64_t)R[r*3+1] * vv[i].y + (int64_t)R[r*3+2] * vv[i].z) >> 12) + T[r]);
     }
-    /* laengs: Vorderseite je Bild im Band (erst halbe, sonst ganze Handbreite) */
-    int32_t fmin = 0; int ok = 0;
-    for (int band = hb; band <= 2 * hb && !ok; band += hb) {
-        ok = 1; fmin = INT32_MAX;
-        for (int g = 0; g < s_tab_fc && ok; g++) {
-            int32_t f = INT32_MAX;
-            const int16_t (*t)[3] = (const int16_t (*)[3])&s_tab[g * s_tab_nv];
-            for (int v = 0; v < s_tab_nv; v++) {
-                if (abs(py + t[v][1] - m[1]) > band) continue;
-                const int32_t wx = (int32_t)(((int64_t)cs * t[v][0] + (int64_t)sn * t[v][2]) >> 12);
-                const int32_t wz = (int32_t)((-(int64_t)sn * t[v][0] + (int64_t)cs * t[v][2]) >> 12);
-                if (abs(o_la + TAB_LA(wx, wz) - m_la) > band) continue;
-                const int32_t al = TAB_AL(wx, wz);
-                if (al < f) f = al;
-            }
-            s_rechen += (uint32_t)s_tab_nv;
-            if (f == INT32_MAX) ok = 0;
-            else if (f < fmin) fmin = f;
+    for (int r = 0; r < 3; r++) hc[r] = (w[8][r] + w[9][r] + w[10][r] + w[11][r]) / 4;
+    return n;
+}
+/* Sind mit dem Versatz (ox, oz) alle Armpunkte d ausserhalb des Profils `satz`? mh = kleinste Marge der 12 Hand-Punkte. */
+static int arm_draussen(int satz, int n, const int32_t (*d)[3], int32_t ox, int32_t oz, int32_t *mh)
+{
+    int32_t m_hand = INT32_MAX;
+    for (int v = 0; v < n; v++) {
+        const int32_t m = prof_marge(satz, d[v][0] + ox, d[v][1], d[v][2] + oz);
+        if (m < 0) return 0;
+        if (v < RE2ARM_HAND_N && m < m_hand) m_hand = m;
+    }
+    if (mh) *mh = m_hand;
+    return 1;
+}
+/* Kleinster Abstand r in Richtung (ex, ez), ab dem alle Armpunkte draussen sind (Raster RSTEP, dann 5 Halbierungen);
+ * -1 = bis RMAX keiner. */
+static int32_t arm_frei_ab(int satz, int n, const int32_t (*d)[3], int32_t ex, int32_t ez, int32_t *mh)
+{
+    int32_t r_in = -1, r_aus = -1;
+    for (int32_t r = 0; r <= RE2ARM_HALTE_RMAX; r += RE2ARM_HALTE_RSTEP) {
+        if (arm_draussen(satz, n, d, (int32_t)(((int64_t)r * ex) >> 12), (int32_t)(((int64_t)r * ez) >> 12), mh)) { r_aus = r; break; }
+        r_in = r;
+    }
+    if (r_aus < 0 || r_in < 0) return r_aus;
+    for (int k = 0; k < 5; k++) {
+        const int32_t r = (r_in + r_aus) / 2;
+        int32_t m2 = INT32_MAX;
+        if (arm_draussen(satz, n, d, (int32_t)(((int64_t)r * ex) >> 12), (int32_t)(((int64_t)r * ez) >> 12), &m2)) {
+            r_aus = r; if (mh) *mh = m2;
+        } else r_in = r;
+    }
+    return r_aus;
+}
+/* luft (s. MASSE): je Bild der Schleife der kleinste 3D-Abstand der 12 Hand-Punkte (figur-lokal hl) zu den Dreiecken der Figur
+ * (nur Dreiecke, deren Kasten den Kasten der Hand plus 2 * hb beruehrt); *lmax = der groesste ueber die Schleife, Rueckgabe =
+ * Summe (oder -1, wenn in einem Bild kein Dreieck so nahe liegt). */
+static int32_t halte_luft(const int32_t hl[RE2ARM_HAND_N][3], int32_t hb, int32_t *lmax)
+{
+    int32_t lo[3] = { INT32_MAX, INT32_MAX, INT32_MAX }, hi[3] = { INT32_MIN, INT32_MIN, INT32_MIN };
+    double hp[RE2ARM_HAND_N][3];
+    for (int v = 0; v < RE2ARM_HAND_N; v++)
+        for (int r = 0; r < 3; r++) {
+            if (hl[v][r] < lo[r]) lo[r] = hl[v][r];
+            if (hl[v][r] > hi[r]) hi[r] = hl[v][r];
+            hp[v][r] = (double)hl[v][r];
         }
-    }
-    if (!ok) return 0;
-    const int32_t t_al = H - fmin;                                         /* Fingerspitze an der naechsten Vorderseite */
-    const int32_t ix = (int32_t)((((int64_t)t_al * ux) + ((int64_t)o_la * nx)) >> 12);
-    const int32_t iz = (int32_t)((((int64_t)t_al * uz) + ((int64_t)o_la * nz)) >> 12);
-    int32_t x = ix, z = iz;
-    if (g_room_rdt_ok) re15_collision_constrain(&g_room_rdt, alt_x, alt_z, &x, &z);   /* FUN_8003b0a4 @0x80031d70 */
-    const int32_t s_al = TAB_AL(x - ix, z - iz), s_la = TAB_LA(x - ix, z - iz);
-#undef TAB_AL
-#undef TAB_LA
-    aus[0] = x; aus[1] = z;
-    /* naechster Abstand Hand -> Figur je Bild in 3D (12 Hand-Vertices gegen die Tabellen-Vertices an der gestellten Lage; nur
-     * Vertices im Kasten der Hand plus Grenze, ganzzahlig, eine Wurzel je Bild) - der groesste ueber die Schleife ist luft */
-    int32_t hx0 = INT32_MAX, hx1 = INT32_MIN, hy0 = INT32_MAX, hy1 = INT32_MIN, hz0 = INT32_MAX, hz1 = INT32_MIN;
-    for (int v = 0; v < RE2ARM_HAND_N; v++) {
-        const int32_t px = (int32_t)hd[v][0], py2 = (int32_t)hd[v][1], pz = (int32_t)hd[v][2];
-        if (px < hx0) hx0 = px; if (px > hx1) hx1 = px; if (py2 < hy0) hy0 = py2; if (py2 > hy1) hy1 = py2;
-        if (pz < hz0) hz0 = pz; if (pz > hz1) hz1 = pz;
-    }
     const int32_t R = 2 * hb;
-    int32_t kmax = 0;
+    for (int r = 0; r < 3; r++) { lo[r] -= R; hi[r] += R; }
+    int32_t sum = 0; *lmax = 0;
     for (int g = 0; g < s_tab_fc; g++) {
-        int64_t best = INT64_MAX;
+        double best = 1e30;
         const int16_t (*t)[3] = (const int16_t (*)[3])&s_tab[g * s_tab_nv];
-        for (int v = 0; v < s_tab_nv; v++) {
-            const int32_t vy = py + t[v][1];
-            if (vy < hy0 - R || vy > hy1 + R) continue;
-            const int32_t vx = x + (int32_t)(((int64_t)cs * t[v][0] + (int64_t)sn * t[v][2]) >> 12);
-            if (vx < hx0 - R || vx > hx1 + R) continue;
-            const int32_t vz = z + (int32_t)((-(int64_t)sn * t[v][0] + (int64_t)cs * t[v][2]) >> 12);
-            if (vz < hz0 - R || vz > hz1 + R) continue;
-            for (int h = 0; h < RE2ARM_HAND_N; h++) {
-                const int64_t ex = vx - (int32_t)hd[h][0], ey = vy - (int32_t)hd[h][1], ez = vz - (int32_t)hd[h][2];
-                const int64_t d2 = ex * ex + ey * ey + ez * ez;
-                if (d2 < best) best = d2;
+        for (int f = 0; f < s_tf_n; f++) {
+            const int16_t *A = t[s_tf[f][0]], *B = t[s_tf[f][1]], *C = t[s_tf[f][2]];
+            int aus = 0;
+            for (int r = 0; r < 3 && !aus; r++) {
+                const int32_t mn = A[r] < B[r] ? (A[r] < C[r] ? A[r] : C[r]) : (B[r] < C[r] ? B[r] : C[r]);
+                const int32_t mx = A[r] > B[r] ? (A[r] > C[r] ? A[r] : C[r]) : (B[r] > C[r] ? B[r] : C[r]);
+                if (mx < lo[r] || mn > hi[r]) aus = 1;
+            }
+            if (aus) continue;
+            s_rechen++;
+            const float fa[3] = { A[0], A[1], A[2] }, fb[3] = { B[0], B[1], B[2] }, fcc[3] = { C[0], C[1], C[2] };
+            for (int v = 0; v < RE2ARM_HAND_N; v++) {
+                const double dd = pt_tri(hp[v], fa, fb, fcc);
+                if (dd < best) best = dd;
             }
         }
-        s_rechen += (uint32_t)s_tab_nv;
-        if (best == INT64_MAX || best > (int64_t)R * R) { kmax = INT32_MAX; break; }
-        const int32_t d = (int32_t)re15_squareroot0((uint32_t)best);
-        if (d > kmax) kmax = d;
+        if (best > (double)R) return -1;
+        const int32_t dd = (int32_t)(best + 0.5);
+        if (dd > *lmax) *lmax = dd;
+        sum += dd;
     }
-    if (luft) *luft = kmax;
-    if (innen) *innen = (s_al < -(H - m_al)) || abs(s_la) > hb;
+    return sum;
+}
+typedef struct { int ok; int32_t x, z, sprung, luft_max, luft_mittel; int richtung, kandidaten; } halte_t;
+/* HALTE-LAGE (s. Block HALTE-LAGE): die Lage der Figur (Blick yaw, Boden py) mit dem kleinsten Sprung von (px, pz) - hoechstens
+ * sprung_max -, an der der ganze gezeichnete Arm ausserhalb des Halte-Profils liegt und die Hand in jedem Bild der Schleife an der
+ * Figur (luft), nach der Flur-Klemme der Figur (FUN_8003b0a4 @0x80031d70). Rueckgabe 1 = gefunden. */
+static int halte_loesen(const re15_actor_t *e, const re2arm_t *a, int16_t yaw, int32_t py, int32_t px, int32_t pz,
+                        int32_t sprung_max, halte_t *o)
+{
+    memset(o, 0, sizeof *o); o->sprung = INT32_MAX;
+    if (!profil_bauen()) return 0;
+    static int32_t w[RE2ARM_ARM_PUNKTE][3], d[RE2ARM_ARM_PUNKTE][3];
+    int32_t hc[3];
+    const int n = arm_punkte(e, a, em1a_arm(e), w, hc);
+    if (n < RE2ARM_HAND_N) return 0;
+    const int32_t hb = hand_halbbreite(e);
+    const int32_t cs = re15_cos_q12((int)yaw), sn = re15_sin_q12((int)yaw);   /* wie re15_skel_bone_to_world */
+    for (int v = 0; v < n; v++) {                        /* figur-lokal relativ zur Handmitte: Rot(-yaw) (w - hc) */
+        const int32_t dx = w[v][0] - hc[0], dz = w[v][2] - hc[2];
+        d[v][0] = (int32_t)(((int64_t)cs * dx - (int64_t)sn * dz) >> 12);
+        d[v][1] = w[v][1] - py;
+        d[v][2] = (int32_t)(((int64_t)sn * dx + (int64_t)cs * dz) >> 12);
+    }
+    /* 1. je Richtung: der kleinste Abstand, bei dem der ganze Arm draussen ist; Lage, Klemme, Sprung (nach Sprung sortiert) */
+    int32_t k_sp[RE2ARM_HALTE_NT], k_ox[RE2ARM_HALTE_NT], k_oz[RE2ARM_HALTE_NT], k_x[RE2ARM_HALTE_NT], k_z[RE2ARM_HALTE_NT];
+    int k_th[RE2ARM_HALTE_NT], nk = 0;
+    for (int t = 0; t < RE2ARM_HALTE_NT; t++) {
+        const int th = t * (4096 / RE2ARM_HALTE_NT);
+        const int32_t ex = re15_cos_q12(th), ez = re15_sin_q12(th);
+        const int32_t r = arm_frei_ab(PROF_HALTEN, n, (const int32_t (*)[3])d, ex, ez, NULL);
+        if (r < 0) continue;
+        int32_t ox = (int32_t)(((int64_t)r * ex) >> 12), oz = (int32_t)(((int64_t)r * ez) >> 12);
+        const int32_t qx = hc[0] - (int32_t)(((int64_t)cs * ox + (int64_t)sn * oz) >> 12);
+        const int32_t qz = hc[2] - (int32_t)((-(int64_t)sn * ox + (int64_t)cs * oz) >> 12);
+        int32_t cx = qx, cz = qz;
+        if (g_room_rdt_ok) re15_collision_constrain(&g_room_rdt, px, pz, &cx, &cz);   /* FUN_8003b0a4 @0x80031d70 */
+        if (cx != qx || cz != qz) {                      /* geklemmt: an der wirklichen Lage nachpruefen */
+            const int32_t ux = hc[0] - cx, uz = hc[2] - cz;
+            ox = (int32_t)(((int64_t)cs * ux - (int64_t)sn * uz) >> 12);
+            oz = (int32_t)(((int64_t)sn * ux + (int64_t)cs * uz) >> 12);
+            if (!arm_draussen(PROF_HALTEN, n, (const int32_t (*)[3])d, ox, oz, NULL)) continue;
+        }
+        const int32_t sx = cx - px, sz = cz - pz;
+        const int32_t sp = (int32_t)re15_squareroot0((uint32_t)((int64_t)sx * sx + (int64_t)sz * sz));
+        if (sp > sprung_max) continue;
+        int i = nk++;
+        while (i > 0 && k_sp[i - 1] > sp) {
+            k_sp[i] = k_sp[i - 1]; k_ox[i] = k_ox[i - 1]; k_oz[i] = k_oz[i - 1]; k_x[i] = k_x[i - 1]; k_z[i] = k_z[i - 1];
+            k_th[i] = k_th[i - 1]; i--;
+        }
+        k_sp[i] = sp; k_ox[i] = ox; k_oz[i] = oz; k_x[i] = cx; k_z[i] = cz; k_th[i] = th;
+    }
+    o->kandidaten = nk;
+    /* 2. vom kleinsten Sprung an (hoechstens RE2ARM_HALTE_PRUEF Lagen) die erste, an der die Hand in jedem Bild der Schleife an
+     *    der Figur liegt: luft hoechstens eine Handbreite, im Mittel hoechstens eine halbe (MASSE) */
+    int32_t mit[RE2ARM_HALTE_PRUEF], mx[RE2ARM_HALTE_PRUEF];
+    for (int i = 0; i < nk && i < RE2ARM_HALTE_PRUEF; i++) {
+        int32_t hl[RE2ARM_HAND_N][3], lmax = 0;
+        for (int v = 0; v < RE2ARM_HAND_N; v++) { hl[v][0] = d[v][0] + k_ox[i]; hl[v][1] = d[v][1]; hl[v][2] = d[v][2] + k_oz[i]; }
+        const int32_t sum = halte_luft((const int32_t (*)[3])hl, hb, &lmax);
+        mx[i] = lmax; mit[i] = (sum < 0 || lmax > 2 * hb) ? INT32_MAX : sum / s_tab_fc;
+    }
+    for (int i = 0; i < nk && i < RE2ARM_HALTE_PRUEF; i++) {
+        if (mit[i] > hb / 2) continue;
+        o->ok = 1; o->x = k_x[i]; o->z = k_z[i]; o->sprung = k_sp[i]; o->richtung = k_th[i];
+        o->luft_max = mx[i]; o->luft_mittel = mit[i];
+        break;
+    }
+    return o->ok;
+}
+/* ARM ALS HINDERNIS (Runde 7, Pruefbericht Runde 6 R1; PORT-WAHL nach RE2 FUN_80034D0C, s. re15_re2arm_body_push_player): die
+ * Figur in ihrer eigenen Pose (Profil PROF_EIGEN, Blick pl->rot_y) wird so wenig wie moeglich aus beiden gezeichneten Armen
+ * geschoben, damit kein Armpunkt in ihr liegt. Rueckgabe 1 = geschoben. */
+static int arm_schiebt(const re15_actor_t *e, re15_actor_t *pl)
+{
+    if (!profil_bauen()) return 0;
+    const re2arm_t *a = &s_arm[arm_slot(e)];
+    static int32_t w[2 * RE2ARM_ARM_PUNKTE][3], d[2 * RE2ARM_ARM_PUNKTE][3];
+    int32_t hc[3];
+    int n = 0;
+    for (int teil = 2; teil <= 3; teil++) n += arm_punkte(e, a, teil, w + n, hc);
+    if (n <= 0) return 0;
+    const int32_t cs = re15_cos_q12((int)pl->rot_y), sn = re15_sin_q12((int)pl->rot_y);
+    int nah = 0;
+    for (int v = 0; v < n; v++) {                        /* figur-lokal relativ zur jetzigen Lage */
+        const int32_t dx = w[v][0] - pl->x, dz = w[v][2] - pl->z;
+        d[v][0] = (int32_t)(((int64_t)cs * dx - (int64_t)sn * dz) >> 12);
+        d[v][1] = w[v][1] - pl->y;
+        d[v][2] = (int32_t)(((int64_t)sn * dx + (int64_t)cs * dz) >> 12);
+        if ((int64_t)d[v][0] * d[v][0] + (int64_t)d[v][2] * d[v][2] <= (int64_t)s_pp_rmax[PROF_EIGEN] * s_pp_rmax[PROF_EIGEN]) nah = 1;
+    }
+    if (!nah || arm_draussen(PROF_EIGEN, n, (const int32_t (*)[3])d, 0, 0, NULL)) return 0;
+    int32_t best = INT32_MAX, nx = pl->x, nz = pl->z;
+    for (int t = 0; t < RE2ARM_HALTE_NT; t++) {          /* die Figur um r gegen Richtung th verschieben = die Armpunkte um +r */
+        const int th = t * (4096 / RE2ARM_HALTE_NT);
+        const int32_t ex = re15_cos_q12(th), ez = re15_sin_q12(th);
+        const int32_t r = arm_frei_ab(PROF_EIGEN, n, (const int32_t (*)[3])d, ex, ez, NULL);
+        if (r < 0 || r >= best) continue;
+        const int32_t ox = (int32_t)(((int64_t)r * ex) >> 12), oz = (int32_t)(((int64_t)r * ez) >> 12);
+        int32_t qx = pl->x - (int32_t)(((int64_t)cs * ox + (int64_t)sn * oz) >> 12);
+        int32_t qz = pl->z - (int32_t)((-(int64_t)sn * ox + (int64_t)cs * oz) >> 12);
+        const int32_t ux = qx, uz = qz;
+        if (g_room_rdt_ok) re15_collision_constrain(&g_room_rdt, pl->x, pl->z, &qx, &qz);   /* FUN_8003b0a4 @0x80031d70 */
+        if (qx != ux || qz != uz) {                      /* geklemmt: an der wirklichen Lage nachpruefen */
+            const int32_t vx = pl->x - qx, vz = pl->z - qz;
+            const int32_t px2 = (int32_t)(((int64_t)cs * vx - (int64_t)sn * vz) >> 12);
+            const int32_t pz2 = (int32_t)(((int64_t)sn * vx + (int64_t)cs * vz) >> 12);
+            if (!arm_draussen(PROF_EIGEN, n, (const int32_t (*)[3])d, px2, pz2, NULL)) continue;
+        }
+        best = r; nx = qx; nz = qz;
+    }
+    if (best == INT32_MAX) return 0;
+    if (getenv("RE15_RE2_TRACE")) {
+        FILE *o = re15_re2_trace_out() ? re15_re2_trace_out() : stderr;
+        fprintf(o, "[re15halt] F%u slot %d Hindernis: Figur (%d,%d) -> (%d,%d), Schub %d\n", (unsigned)g_engine.frame_count,
+                arm_slot(e), pl->x, pl->z, nx, nz, best);
+    }
+    pl->x = nx; pl->z = nz;
     return 1;
 }
 /* kontakt / innen im jetzigen Bild - NUR Mess-Auskunft (re15_re2arm_kontakt_rest, Riegel/Messschiene), nie im Spielablauf. */
@@ -1719,7 +1987,7 @@ static void arm_init(re15_actor_t *e, int slot)
     a->rec_x = e->x; a->rec_y = e->y; a->rec_z = e->z;    /* Runde 3: Record-Lage fuer den RE1.5-Koerper (s. MODELL) */
     a->rec_yaw = e->rot_y; a->koerper_an = 0;
     a->k1d0 = (uint16_t)((rng15() & 0x1f) + 30);         /* Runde 4: +0x1D0 im Typ-INIT @0x8010c3e8-3fc (s. KOERPER) */
-    if (re15_re2arm_modell_re15(e)) (void)tab_bauen();   /* Runde 6: Figur-Tabelle beim Raumladen, nicht beim Zugriff (HALTE-LAGE) */
+    if (re15_re2arm_modell_re15(e)) (void)profil_bauen();   /* Runde 6/7: Figur-Profil beim Raumladen, nicht beim Zugriff (HALTE-LAGE) */
     arm_anker_1210(e);                                    /* Port-Bruecke: Ursprung an die Wand (s. Kopf) */
     a->home_yaw = e->rot_y; a->home_x = e->x; a->home_z = e->z;   /* +0x218/+0x21C/+0x220 @0x80100188-194 */
     a->bone_base = (uint8_t)((e->re2z_f10e & 1u) ? 8 : 1);        /* +0x1C1 = 0x80101414[var*7] @0x801001D0/@0x80100288 */
@@ -1836,11 +2104,11 @@ static void arm_B1(re15_actor_t *e, re15_actor_t *pl, int slot)
 static int kontakt_moeglich(re15_actor_t *e, int slot, re15_actor_t *pl);   /* s. Hook unten */
 static void arm_A3(re15_actor_t *e, re15_actor_t *pl, int slot)
 {
-    /* Runde 4 (Vorgabe Punkt 2a): mit EM1A greift die RE1.5-Hand nur, wenn sie die Figur wirklich erreicht - sie liegt im
-     * Klemmzylinder des Spielers (Radius 450 @0x80073e9a, statt RE2 600) UND Leon laesst sich innerhalb seiner Flur-Klemme
-     * so stellen, dass die Hand an ihm liegt (kontakt_moeglich). NUTZERWUNSCH, Wortlaut im Block KOERPER. */
+    /* Runde 4..7 (Vorgabe Punkt 2): mit EM1A greift die RE1.5-Hand nur, wenn sie die Figur wirklich erreicht - RE2-Tor 600
+     * (@0x801009BC; bis Runde 6 der Klemmradius 450 @0x80073e9a, den die Hand an der geschobenen Figur kaum unterschreitet) UND es
+     * gibt eine Halte-Lage mit der Hand an der Figur und Sprung <= Handbreite (kontakt_moeglich, Block HALTE-LAGE). */
     const int em1a = re15_re2arm_modell_re15(e) && s_arm[slot].koerper_an;
-    if (!arm_hand_within(e, slot, pl, em1a ? RE2ARM_HAND_KLEMM : 600, NULL)) return;   /* FUN_800157D4(..,600) @0x801009BC */
+    if (!arm_hand_within(e, slot, pl, 600, NULL)) return;   /* FUN_800157D4(..,600) @0x801009BC */
     if (arm_frame(e) < 5) return;                         /* sltiu 5 @0x80100A18 */
     if (s_cd_cfbf4 != 0) return;                          /* lhu 0x800CFBF4 @0x80100A28-30 */
     if (em1a && !(pl->re2z_self1d3 & 0x80u) && !re15_player_is_grabbed() && !kontakt_moeglich(e, slot, pl)) return;
@@ -1994,29 +2262,33 @@ static void arm_death(re15_actor_t *e, int slot)
     arm_se((re15_re2_rand() & 1u) ? 2 : 3);               /* @0x801010B0-C4 */
 }
 
-/* Runde 4/5/6: liesse sich die Figur jetzt so stellen, dass die RE1.5-Hand das ganze Halten an ihr liegt? Vorhersage von Pin und
- * Hook P0: der Pin stellt die Figur auf die Hand (@0x80100C18-38), dann Blick zum Greifer FUN_80015558(..,2048) @0x801012F8,
- * +2048 wenn FUN_80015910 @0x801012E0; dann die FESTE Halte-Lage aus der Figur-Tabelle (tab_halte) nach ihrer Flur-Klemme von
- * der jetzigen Lage aus (Block HALTE-LAGE). Moeglich = luft <= Handbreite und nicht innen (MASSE; Vorgabe Punkt 2). Runde 6:
- * kostet Bilder x Vertices (keine Dreiecke, keine Suche), Riegel T1. */
+/* Runde 4..7: darf die RE1.5-Hand jetzt greifen? Vorhersage von Pin und Hook P0: der Pin stellt die Figur auf die Hand
+ * (@0x80100C18-38), dann Blick zum Greifer FUN_80015558(..,2048) @0x801012F8, +2048 wenn FUN_80015910 @0x801012E0. Mit diesem
+ * Blick die Halte-Lage mit dem kleinsten Sprung (halte_loesen, Block HALTE-LAGE). Runde 7 (Pruefbericht Runde 6 R1): gegriffen
+ * wird, sobald dieser Sprung hoechstens eine Handbreite ist - also sobald die gezeichnete Hand die Figur erreicht, nicht erst,
+ * wenn sie schon durch sie hindurch ist. Das Ergebnis merkt sich der Arm fuer den Pin im selben Bild (q_*). */
 static int kontakt_moeglich(re15_actor_t *e, int slot, re15_actor_t *pl)
 {
     int32_t h[3];
-    if (!koerper_hand(e, &s_arm[slot], h, NULL)) return 0;
+    re2arm_t *a = &s_arm[slot];
+    a->q_ok = 0;
+    if (!koerper_hand(e, a, h, NULL)) return 0;
     re15_actor_t k = *pl;
     k.x = h[0]; k.z = h[2];                               /* Pin @0x80100C18-38 vor dem Hook P0 */
     const int same = ((((int)e->rot_y - (int)k.rot_y) + 0x400) & 0xfff) < 0x800;
     re15_enemy_steer_point(&k, e->x, e->z, 2048);
     if (same) k.rot_y = (int16_t)(((int)k.rot_y + 2048) & 0xfff);
-    int32_t aus[2] = { 0, 0 }, luft = 0; int innen = 1;
-    const int ok = tab_halte(e, &s_arm[slot], k.rot_y, pl->y, pl->x, pl->z, pl->x, pl->z, aus, &luft, &innen);
-    const int hb = 2 * hand_halbbreite(e);               /* Grenze = Handbreite (Block HALTE-LAGE, MASSE) */
+    halte_t q;
+    const int ok = halte_loesen(e, a, k.rot_y, pl->y, pl->x, pl->z, 2 * hand_halbbreite(e), &q);
     if (getenv("RE15_RE2_TRACE")) {
         FILE *o = re15_re2_trace_out() ? re15_re2_trace_out() : stderr;
-        fprintf(o, "[re15halt] F%u slot %d Pruefung: ok %d luft %d innen %d (Grenze %d) Lage (%d,%d) Figur (%d,%d)\n",
-                (unsigned)g_engine.frame_count, slot, ok, (int)luft, innen, hb, aus[0], aus[1], pl->x, pl->z);
+        fprintf(o, "[re15halt] F%u slot %d Pruefung: ok %d Sprung %d (hoechstens %d, Kandidaten %d) Luft max %d Mittel %d Richtung %d "
+                   "Lage (%d,%d) Figur (%d,%d) Blick %d\n", (unsigned)g_engine.frame_count, slot, ok, ok ? (int)q.sprung : -1, 2 * hand_halbbreite(e),
+                q.kandidaten, (int)q.luft_max, (int)q.luft_mittel, q.richtung, q.x, q.z, pl->x, pl->z, (int)k.rot_y);
     }
-    return ok && luft <= hb && !innen;
+    if (!ok) return 0;
+    a->q_ok = 1; a->q_x = q.x; a->q_z = q.z; a->q_sprung = q.sprung;
+    return 1;
 }
 
 /* ---- SPIELER-HOOK 0x8010121C -> 0x80101258 (Spieler-Routine 5, s. Kopf) ---------------------- */
@@ -2048,11 +2320,11 @@ static void arm_hook(re15_actor_t *e, re15_actor_t *pl)
         re15_enemy_steer_point(pl, e->x, e->z, 2048);     /* FUN_80015558(PL, Greifer.x/z, 2048) @0x801012F8 */
         if (same) pl->rot_y = (int16_t)(((int)pl->rot_y + 2048) & 0xfff);   /* @0x80101304-18 */
         (void)hook_advance(pl);                           /* @0x80101328 */
-        if (re15_re2arm_modell_re15(e))                   /* Runde 5/6: FESTE Halte-Lage an der RE1.5-Hand (Block HALTE-LAGE) */
-        {   int32_t neu[2], luft = 0; int innen = 0; re2arm_t *a = &s_arm[arm_slot(e)];
-            if (tab_halte(e, a, pl->rot_y, pl->y, s_pl_vor[0], s_pl_vor[1], s_pl_vor[0], s_pl_vor[1], neu, &luft, &innen)) {
-                pl->x = neu[0]; pl->z = neu[1];
-            }
+        if (re15_re2arm_modell_re15(e))                   /* Runde 5..7: FESTE Halte-Lage an der RE1.5-Hand (Block HALTE-LAGE), */
+        {   re2arm_t *a = &s_arm[arm_slot(e)];             /* im selben Bild vom Tor A3 bestimmt (kontakt_moeglich)             */
+            if (a->q_ok) { pl->x = a->q_x; pl->z = a->q_z; }
+            else { pl->x = s_pl_vor[0]; pl->z = s_pl_vor[1]; }   /* ohne Halte-Lage: die Figur bleibt, wo sie war */
+            a->q_ok = 0;
             a->halte_x = pl->x; a->halte_z = pl->z; }
         break;
     }
@@ -2106,6 +2378,11 @@ int re15_re2arm_tick(int slot)
      * Member_set(12,1) @0x1EDA -> `sb a2,9(a0)` @0x800411F8). */
     if ((e->grid_id & 0x1Fu) != 1u) return 1;
     koerper_tick(e, &s_arm[slot]);                        /* Runde 3: RE1.5-Koerper B[1] ab dem Ausloeser (s. MODELL) */
+    /* Runde 7: der Spieler-Pass (re15_body_push_player) laeuft VOR diesem Tick; aendert der Koerper hier seine Pose (Wachsen,
+     * Ende des Sinkens), schiebt der gezeichnete Arm die Figur im selben Bild (Block HALTE-LAGE, arm_schiebt) */
+    if (re15_re2arm_modell_re15(e) && s_arm[slot].koerper_an && pl->active && pl->hp >= 0 && !re15_player_is_grabbed() &&
+        !(pl->re2z_self1d3 & 0x80u))
+        (void)arm_schiebt(e, pl);
 
     /* +0x1F0 = SquareRoot0(dx^2 + dz^2) @0x800265A4-E0 (32-bit-Deltas). */
     {   int32_t dx = e->x - pl->x, dz = e->z - pl->z;
