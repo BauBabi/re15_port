@@ -38,6 +38,7 @@ Bis zur Neuaufnahme spielt das Spiel die alte Datei (falls vorhanden) unter dem 
 | `STAGE6/room6030/main03.wav` | John | She's trying to keep the outside clear so we can escape. | neu (alte Aufnahme beginnt mit „Yeah!“) |
 | `STAGE6/room6030/main22.wav` | John | She said she'd catch up with us. | neu |
 | `STAGE6/room6030/main04.wav` | Leon | Why aren't you out there? | bleibt |
+| `STAGE6/room6030/main32.wav` | Leon | But we can't wait. When that reactor goes, nobody gets out. | neu (Runde 42 namen Stufe 4: eigener Untertitel nach msg 4; bis zur Aufnahme stumm) |
 | `STAGE6/room6030/main05.wav` | John | She told me to stay with the kid... and look after your friend here. | neu |
 | `STAGE6/room6030/main06.wav` | Leon | Where's Annette? | bleibt |
 | `STAGE6/room6030/main07.wav` | John | The woman in the lab coat? Up front, trying to start the train. | neu |

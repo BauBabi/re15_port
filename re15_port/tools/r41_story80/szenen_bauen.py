@@ -125,6 +125,12 @@ P_6030_WAGEN = [
     orig(0x0E84, 0x0E88, "Sleep 100 wie nach msg 2 (@0x00E84; Sherry hat in sub02 keinen Gestenblock)"),
     # Zeile 7 (msg 4 Leon, antwortet Sherry) und Zeile 8 (msg 5 John): Leon blickt vor msg 5 zu John
     orig(0x0EC6, 0x0EEA, "Zeile 7: msg 4 Leon + Gesten 1/1/7 (@0x00EC6.., Original)"),
+    # Runde 42 namen Stufe 4: Leons zweiter Satz als eigene Nachricht 32 (vorher Seite 2 von msg 4, stand nur ~20 Bilder bis msg 5).
+    # Form msg 4 @0x00EC6 `2b 04 00 00`, danach dieselben Leon-Gesten 1/1/7 (@0x00ECA..@0x00EEA: Sleep 50+50+20 = 120 Bilder) - so steht
+    # msg 32 ihren Nachlauf `04 01 01 63` (99 Bilder, ROOM6030 @0x13F5) ganz aus wie jede Original-Zeile des Raums; zwischen dem Ende
+    # von msg 4 und msg 32 liegen ~20 Bilder ohne Text (wie zwischen allen Zeilen von sub02).
+    msg_on(32, 0x0EC6, 4, "Zeile 7b: msg 32 Leon (Form msg 4 @0x00EC6), Runde 42 namen Stufe 4"),
+    orig(0x0ECA, 0x0EEA, "Leon-Gesten 1/1/7 wie nach msg 4 (Work_set 1 @0x00ECA..)"),
     LEON_SIEHT_JOHN,
     orig(0x0EEA, 0x0F22, "Zeile 8: msg 5 John + Gesten 3/3/1/1/7 (@0x00EEA.., Original)"),
     # Zeilen 9..10 (Original-Folge msg 6..7)
@@ -151,7 +157,7 @@ P_6030_WAGEN = [
     orig(0x0FA2, 0x0FE8, "Schluss wie Original: Blicke zurueck (John, Sherry, Leon), Sperren auf, Cut 12, Cut_auto, "
                          "Plc_ret, Evt_end @0x00FE6"),
 ]
-FOLGE_6030_WAGEN = [0, 1, 21, 2, 3, 22, 4, 5, 6, 7, 23, 24, 8]
+FOLGE_6030_WAGEN = [0, 1, 21, 2, 3, 22, 4, 32, 5, 6, 7, 23, 24, 8]
 
 # ------------------------------------------------------------------------------------------------------------------
 # ROOM6030 sub08 (Leon): Fuehrerstand, a..d vor "Certainly." (msg 13).

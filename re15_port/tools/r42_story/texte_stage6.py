@@ -24,11 +24,16 @@ Zwei Seiten ('|' im Text, nur 6030 msg 4: der Nutzersatz braucht vier Zeilen): F
 ROOM3060 msg 7 @0x120C, Seitenwechsel @0x1244 `04 01 02 3c 04 00` = Seite zu Ende, Seitenwartezeit N Bilder OHNE Taste
 (msg_common.c Typewriter: `02 N`, N > 0 -> message_fsm 2 mit Timer). N = der Nachlauf der Zeilen desselben Raums (ROOM6030 msg 0:
 Schwanz `04 01 01 63` beginnt @0x13F5, `01 63` @0x13F7, 0x63 = 99 Bilder @0x13F8) statt 0x3C aus 3060.
-Runde 42 Strang namen, Stufe 1: JEDE Seite traegt den Sprecherkopf `05 <Farbe> <Sprecher>: 05 00 00` (Form der ersten Seite,
+Runde 42 Strang namen, Stufe 4 (ersetzt die zwei Seiten von 6030 msg 4): Seite 2 stand nur ~20 Bilder (0,7 s), weil das Wagen-Programm
+nach msg 4 nur die 120 Bilder der Leon-Gesten wartet (ROOM6030 sub02 @0x00ECE..@0x00EE6 Sleep 50+50+20) und msg 5 die Zeile dann ersetzt;
+Seite 1 + `02 63` brauchten davon schon 100. Jetzt zwei Nachrichten: msg 4 = Satz 1, msg 32 = Satz 2 (Id frei: VERTRAG 2.3 6030 RDT 0..20,
+Port 21..31, 40; keine Datei synchro/STAGE6/room6030/main32.wav -> stumm, kein Stimmen-Riegel). Jede steht wie die Original-Zeilen des
+Raums: `04 00` sofort, Nachlauf `04 01 01 63` = 99 Bilder (ROOM6030 @0x13F5), im Skript 120 Bilder bis zur naechsten Zeile.
+(Historisch, Stufe 1: JEDE Seite traegt den Sprecherkopf `05 <Farbe> <Sprecher>: 05 00 00` (Form der ersten Seite,
 ROOM6030 msg 0 @0x13BE `05 01`), direkt hinter dem `04 00` des Seitenwechsels. ROOM3060 msg 7 (Sherry, ohne Stimme) hat auf Seite 2
 keinen Kopf; hier spricht Leon beide Saetze. NUTZER 18.11.2026: "Du hast bei den uebernommenen Saetzen aus Resident Evil 2 nicht den
 Namen in den Dialog mit davor geschrieben wie bei den rest auch...." (Memory reai-v2-sprechername-vor-satz: jeder gesprochene Satz
-traegt den Namen, Systemtexte nicht). Seitenwechsel und Stimme bleiben wie bisher (eine Nachricht, `02 63`).
+traegt den Namen, Systemtexte nicht). Seitenwechsel und Stimme bleiben wie bisher (eine Nachricht, `02 63`).)
 """
 import os
 import struct
@@ -42,6 +47,7 @@ ZIEL = os.path.join(T.PORT, 'engine', 'src', 'gen', 'story6_r42_texte.inc')
 MAX_LEN = 512   # PC MSG_RAW_LEN (msg_common.c:47)
 PSX_LEN = 128
 MAX_ZEILEN = 3
+NAMEN_S4 = {(0x6030, 4), (0x6030, 32)}   # Runde 42 namen Stufe 4: diese hoechstens 2 Zeilen (tools/r42_namen/lesbar_s4.py)
 SEITE = [0x04, 0x01, 0x02, 0x63, 0x04, 0x00]   # Form ROOM3060 @0x1244 `04 01 02 3c 04 00`, N = 0x63 (ROOM6030 `01 63` @0x13F7, Schwanz ab @0x13F5)
 SCHWANZ = bytes([0x04, 0x01, 0x01, 0x63])
 # (Raum, Id) der Original-Zeilen, deren Schwanz belegt wird (Datei-Offset des Schwanzes oben im Kopf)
@@ -57,8 +63,10 @@ UNTERTITEL = (
     (0x6030, 2,  LEON,   "Where is she now?"),
     (0x6030, 3,  JOHN,   "We got split up in the fire. One second she was right behind us..."),
     (0x6030, 22, SHERRY, "Elza's still out there...!"),
-    (0x6030, 4,  LEON,   "If she's as tough as you say, she'll find another way out.|"
-                         "But we can't wait. When that reactor goes, nobody gets out."),
+    (0x6030, 4,  LEON,   "If she's as tough as you say, she'll find another way out."),
+    # Runde 42 namen Stufe 4: der zweite Satz von msg 4 ist eine EIGENE Nachricht 32 (Wagen-Programm r41_story80: msg 4 + Leon-Gesten,
+    # msg 32 + Leon-Gesten wie nach msg 4 @0x00ECA..@0x00EEA = 120 Bilder, dann msg 5) statt Seite 2 mit 0,7 s Standzeit.
+    (0x6030, 32, LEON,   "But we can't wait. When that reactor goes, nobody gets out."),
     (0x6030, 5,  JOHN,   "Then I'm staying with the kid. And I'll keep an eye on your friend here."),
     # E6 (6031 Wagen, Elza): msg 0 bleibt (story_r36), dann 1, 2, 12, 13
     (0x6031, 1,  SHERRY, "A policeman brought Marvin down here. Then he went back into the fire."),
@@ -117,6 +125,8 @@ def main():
                 fehler.append('ROOM%04X msg %d Zeile %d = %d px > %d' % (raum, mid, i + 1, w, T.MAX_PX))
         if len(b) > MAX_LEN:
             fehler.append('ROOM%04X msg %d: %d Byte > %d (PC MSG_RAW_LEN)' % (raum, mid, len(b), MAX_LEN))
+        if (raum, mid) in NAMEN_S4 and (max(len(z) for z in zeilen) > 2 or any(len(x.split(' ')) < 2 for z in zeilen for x in z)):
+            fehler.append('ROOM%04X msg %d: mehr als 2 Zeilen oder eine Zeile mit nur einem Wort (lesbar_s4.py)' % (raum, mid))
         if max(len(z) for z in zeilen) > MAX_ZEILEN:
             fehler.append('ROOM%04X msg %d: %d Zeilen > %d' % (raum, mid, len(zeilen), MAX_ZEILEN))
         if bytes(b[-4:]) != SCHWANZ:

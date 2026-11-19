@@ -35,8 +35,9 @@
  * PSX-Fassung sind eine PORT-WAHL (RAM, s. oben). Die PC-Kapazitaet war 192/160 - ebenfalls Port-Wahl - und schnitt ROOM2040/2041
  * msg 0 ab (Aushang "Notice of damage door", 411 Byte bis zum 0x01, RDT-Datei-Offset 0x175C; die Schreibmaschine endete nach
  * 192 Byte mitten im Satz). PC jetzt 512: laengste Nachricht aller ausgelieferten RDTs 411 Byte (Zensus test_r42_rest msglaenge),
- * laengster Port-Text 149 Byte (ROOM6030 msg 4, Strang namen). Riegel: unit_r42_rest_msglaenge / _schreibmaschine. Die PSX-Fassung schneidet
- * ROOM2040 msg 0 und ROOM6030 msg 4 weiter ab (OFFEN, PSX-Bau ist nicht ausgeliefert). */
+ * Port-Texte des Strangs namen <= 127 Byte (ROOM6000 msg 49; seit Stufe 4 ist ROOM6030 msg 4 wieder eine Seite, 74 Byte, ihr zweiter
+ * Satz = msg 32). Riegel: unit_r42_rest_msglaenge / _schreibmaschine. Die PSX-Fassung schneidet ROOM2040 msg 0 weiter ab (OFFEN,
+ * PSX-Bau ist nicht ausgeliefert). */
 #ifdef PSN00BSDK
 #define MSG_TABLE_N    32
 #define MSG_TEXT_LEN   128

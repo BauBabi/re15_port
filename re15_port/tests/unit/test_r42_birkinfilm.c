@@ -438,10 +438,15 @@ static void teil_programm(void)
         int n = 0;
         const uint8_t *t = re15_birkinfilm_r42_text((uint8_t)id, &n);
         const long seite = t ? finde(t, n, (const uint8_t *)"\x04\x01\x02", 3, 0) : -1;
-        PRUEF(t && n > kn && !memcmp(t, kopf, (size_t)kn) && seite < 0 && t[n - 4] == 0x04 && t[n - 3] == 0x01 &&
+        /* Strang namen Stufe 4: Satz 2 (48/49/50) = zwei Seiten, Seite 2 hinter `04 01 02 N 04 00` mit demselben Kopf
+         * (tools/r42_namen/lesbar_s4.py: hoechstens 2 Zeilen; Zeile 3 laege auf dem Letterbox-Balken @0x80072f06) */
+        const int seite_ok = (k & 1) ? (seite > 0 && seite + 4 + kn <= n && !memcmp(t + seite + 4, kopf, (size_t)kn)
+                                        && finde(t, n, (const uint8_t *)"\x04\x01\x02", 3, seite + 1) < 0)
+                                     : (seite < 0);
+        PRUEF(t && n > kn && !memcmp(t, kopf, (size_t)kn) && seite_ok && t[n - 4] == 0x04 && t[n - 3] == 0x01 &&
               t[n - 2] == 0x01 && t[n - 1] == 0x63 && n <= 128,
-              "msg %d (%s): eine Seite, beginnt mit \"Annette:\" wie ROOM6000 msg 1, Schwanz 04 01 01 63, %d B <= 128 (PSX)",
-              id, (k & 1) ? "Satz 2" : "Satz 1", n);
+              "msg %d (%s): %s, beginnt mit \"Annette:\" wie ROOM6000 msg 1, Schwanz 04 01 01 63, %d B <= 128 (PSX)",
+              id, (k & 1) ? "Satz 2" : "Satz 1", (k & 1) ? "zwei Seiten, jede mit Kopf" : "eine Seite", n);
     }
     PRUEF(!re15_birkinfilm_r42_stimme(RE15_BF_RAUM, RE15_BF_MSG_XA09_S2, NULL) &&
           !re15_birkinfilm_r42_stimme(RE15_BF_RAUM, RE15_BF_MSG_XA11_S2, NULL) &&
@@ -590,7 +595,7 @@ static void teil_ablauf(void)
         printf("    Annette-Seiten:");
         for (int i = 0; i < L.n_s; i++) { printf(" %d@%ld%s", L.sp_id[i], L.sp_bild[i], L.sp_kopf[i] ? "" : "(OHNE NAMEN)"); mit += L.sp_kopf[i]; }
         printf("\n");
-        PRUEF(L.n_s == 6 && mit == L.n_s,
+        PRUEF(L.n_s == 9 && mit == L.n_s,   /* Stufe 4: 40, 48 (2 Seiten), 41, 49 (2), 42, 50 (2) = 9 */
               "jede gezeigte Annette-Seite beginnt mit \"Annette:\" (Seiten %d, mit Namen %d; Strang namen, Nutzer 18.11.)", L.n_s, mit);
     }
     PRUEF(s_n_stimmen == 3 && s_stimmen[0] == 40 && s_stimmen[1] == 41 && s_stimmen[2] == 42,

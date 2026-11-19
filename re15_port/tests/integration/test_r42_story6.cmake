@@ -225,13 +225,14 @@ ENDE
     file(READ "${WORKDIR}/debug.log" _dbg)
     # L21 Wagen-Szene
     pruefe("L21: Wagen-Programm" "[story80] ROOM6030 Evt_exec sub02 -> Programm")
-    pruefe_re("L21: Zeilen 0, 1, 21, 2, 3, 22, 4, 5, 6, 7, 23, 24, 8 in dieser Folge"
-        "room=6030 id=0 .*room=6030 id=1 .*room=6030 id=21 .*room=6030 id=2 .*room=6030 id=3 .*room=6030 id=22 .*room=6030 id=4 .*room=6030 id=5 .*room=6030 id=6 .*room=6030 id=7 .*room=6030 id=23 .*room=6030 id=24 .*room=6030 id=8 ")
+    pruefe_re("L21: Zeilen 0, 1, 21, 2, 3, 22, 4, 32, 5, 6, 7, 23, 24, 8 in dieser Folge (32: Strang namen Stufe 4)"
+        "room=6030 id=0 .*room=6030 id=1 .*room=6030 id=21 .*room=6030 id=2 .*room=6030 id=3 .*room=6030 id=22 .*room=6030 id=4 .*room=6030 id=32 .*room=6030 id=5 .*room=6030 id=6 .*room=6030 id=7 .*room=6030 id=23 .*room=6030 id=24 .*room=6030 id=8 ")
     pruefe("L21: msg 21" "[msgtext] room=6030 id=21 \"John: Name's John. This is Sherry. We came down here with a girl named Elza.\"")
     pruefe("L21: msg 2 (Leon)" "[msgtext] room=6030 id=2 \"Leon: Where is she now?\"")
     pruefe("L21: msg 3" "[msgtext] room=6030 id=3 \"John: We got split up in the fire. One second she was right behind us...\"")
     pruefe("L21: msg 22 (Sherry)" "[msgtext] room=6030 id=22 \"Sherry: Elza's still out there...!\"")
-    pruefe("L21: msg 4 (zwei Seiten)" "[msgtext] room=6030 id=4 \"Leon: If she's as tough as you say, she'll find another way out.Leon: But we can't wait. When that reactor goes, nobody gets out.\"")
+    pruefe("L21: msg 4 (Satz 1)" "[msgtext] room=6030 id=4 \"Leon: If she's as tough as you say, she'll find another way out.\"")
+    pruefe("L21: msg 32 (Satz 2, eigene Nachricht - Strang namen Stufe 4)" "[msgtext] room=6030 id=32 \"Leon: But we can't wait. When that reactor goes, nobody gets out.\"")
     pruefe("L21: msg 5" "[msgtext] room=6030 id=5 \"John: Then I'm staying with the kid. And I'll keep an eye on your friend here.\"")
     pruefe_nicht("L21: kein 'fighting the monsters'" "fighting the monsters")
     pruefe_nicht("L21: kein 'catch up'" "catch up")

@@ -25,6 +25,9 @@
  *   @0x027E2) - Sleep 2 (@0x027E4) - Sleep 60 (@0x027F0) - MAIN anhalten (@0x02804) - Film-Zeile 44 (zws_r41.c, Blendenart
  *   RE15_ZWS_BLENDART_4090) - Sleep 63 (@0x02820) - MAIN weiter (@0x0282B) - msg 42 (Xa 0x14) - Sleep 81 - msg 50 - Geste -
  *   Original msg 3. Vorlage RE2 Leon-Disc ROOM4090 sub02.
+ *   STRANG NAMEN Stufe 4: Satz 2 (48/49/50) hat ZWEI Seiten, jede mit "Annette:" - mit dem Namen braucht er drei Zeilen, Zeile 3
+ *   (y 212) laege auf dem Letterbox-Balken ab y 216 (FUN_80021a0c, Tabelle @0x80072ecc); Seite 2 beim ersten Wort der RE2-Stimme
+ *   (`02 90`/`02 57`/`02 71`, tools/r42_namen/lesbar_s4.py, tools/r42_birkinfilm/szene_bauen.py SEITE2).
  *   STRANG NAMEN (Runde 42): je Satz eine Nachricht wie RE2 - Satz 1 = msg 40/41/42 mit der RE2-Stimme, Satz 2 = msg 48/49/50
  *   nach dem RE2-Sleep (41 @0x02722, 81 @0x027D8, 81 @0x02850), beide mit "Annette:". Vorher zwei Seiten einer Nachricht, Seite 2
  *   ohne Namen (Nutzer 18.11.: "nicht den Namen in den Dialog mit davor geschrieben wie bei den rest auch").

@@ -87,13 +87,16 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 PORT = os.path.normpath(os.path.join(HIER, '..', '..'))
 sys.path.insert(0, os.path.join(PORT, 'tools', 'r42_story'))
 import texte_stage3a as T  # noqa: E402
+import nachlauf_r42  # noqa: E402  (Schwanz `04 01 01 N` der Original-Zeilen von ROOM6000)
+sys.path.insert(0, os.path.join(PORT, 'tools', 'r42_namen'))
+import lesbar_s4 as LS  # noqa: E402  (Runde 42 namen Stufe 4: hoechstens 2 Zeilen, Seitenwechsel beim Wort der Stimme)
 
 ZIEL = os.path.join(PORT, 'engine', 'src', 'gen', 'birkinfilm_r42.inc')
 RDT = os.path.join(PORT, 'shared_assets', 'PSX', 'STAGE6', 'ROOM6000.RDT')
 SUB06 = (0x0106A, 0x011A6)
 ANKER = 0x01156
 GESTEN = (0x01142, 0x01156)
-MAX_ZEILEN = 3
+MAX_ZEILEN = LS.MAX_ZEILEN   # Stufe 4: hoechstens 2 Zeilen je Seite (Belege lesbar_s4.py: 40%-Disc @0x800289a0, Letterbox @0x80072f06)
 PSX_LEN = 128   # PSX MSG_RAW_LEN (msg_common.c): je Satz eine Nachricht passt hinein
 SCHWANZ = [0x04, 0x01, 0x01, 0x63]
 
@@ -126,6 +129,45 @@ RE2_BELEG = (
     ((0x027CE, '2b0014000000'), (0x027D4, '59001100'), (0x027D8, '090a5100'), (0x027DC, '2b0015000000')),
     ((0x02846, '2b0017000000'), (0x0284C, '59001400'), (0x02850, '090a5100'), (0x02854, '2b0018000000')),
 )
+
+
+# Runde 42 Strang namen, Stufe 4: Satz 2 braucht mit "Annette:" drei Zeilen; Zeile 3 (y 212) laege auf dem Letterbox-Balken ab y 216
+# (lesbar_s4.py). Darum ZWEI SEITEN je Satz 2, jede mit "Annette:"; Seite 2 erscheint, wenn die RE2-Stimme ihr erstes Wort beginnt.
+# (Id, Woerter auf Seite 1, erstes Wort von Seite 2, Einsatz t in s ab Beginn der Aufnahme, Beleg). Trennstelle nach lesbar_s4.py:
+# keine Sprechpause >= 120 ms innerhalb von Satz 2 (namen/s4/pausen.py: Xa 0x09 Pausen 1.24-1.65 / 5.59-5.86, Xa 0x11 1.86-2.82,
+# Xa 0x14 3.23-3.57 - die erste bzw. einzige liegt zwischen Satz 1 und Satz 2; die Pause 5.59-5.86 in Xa 0x09 vor "William Birkin."
+# ergaebe eine erste Seite mit drei Zeilen) -> Wortgrenze, an der die kuerzere Seite am laengsten steht (namen/s4/teilung.py).
+SEITE2 = {
+    MSG_XA09_S2: (9, "of", 4.38, 'Whisper medium.en xa_09.wav "of"[4.38-4.64] (namen/s4/asr_xa.txt)'),
+    MSG_XA11_S2: (10, "to", 4.60, 'Whisper medium.en xa_11.wav "to"[4.60-4.78]'),
+    MSG_XA14_S2: (5, "prior", 5.08, 'Whisper medium.en xa_14.wav "prior"[5.08-5.42]'),
+}
+
+
+def satz_seiten(mid, text, s_bilder):
+    """Satz 2 als zwei Seiten EINER Nachricht (lesbar_s4.py): `04 00 KOPF <Seite 1> 04 01 02 N 04 00 KOPF <Seite 2> 04 01 01 63`."""
+    farbe, name = ANNETTE
+    k, wort, t, _ = SEITE2[mid]
+    w = text.split(' ')
+    assert w[k] == wort, (mid, w[k], wort)
+    kopf = [0x04, 0x00, 0x05, farbe] + T.kod(name + ':') + [0x05, 0x00, 0x00]
+    vorweg = T.px(name + ': ')
+    n = LS.seitenwartezeit(t, s_bilder)
+    b, zz, bw = [], [], []
+    for si, teil in enumerate((w[:k], w[k:])):
+        z = LS.zeilen(teil, vorweg)
+        assert z, 'msg %d Seite %d passt nicht in %d Zeilen' % (mid, si + 1, LS.MAX_ZEILEN)
+        b += (kopf if si == 0 else [0x04, 0x01, 0x02, n] + kopf)
+        for i, zeile in enumerate(z):
+            if i:
+                b.append(0x08)
+            b += T.kod(zeile)
+        zz.append(z)
+        bw.append([vorweg + T.px(z[0])] + [T.px(x) for x in z[1:]])
+    schwanz, _ = nachlauf_r42.nachlauf(0x6000, max(len(z) for z in zz))
+    b += [0x04, 0x01, 0x01, schwanz]
+    assert b[-4:] == SCHWANZ, b[-4:]
+    return b, zz, bw, n
 
 
 def satz(text):
@@ -292,17 +334,26 @@ def main():
     for mid1, t1, mid2, t2, n, beleg in UNTERTITEL:
         for mid, text, was in ((mid1, t1, 'Satz 1, mit der RE2-Stimme'),
                                (mid2, t2, 'Satz 2 nach Sleep %d = %s; Stimme laeuft weiter' % (n, beleg))):
-            b, zeilen, bw = satz(text)
-            for i, w in enumerate(bw):
-                if w > T.MAX_PX:
-                    fehler.append('msg %d Zeile %d = %d px > %d' % (mid, i + 1, w, T.MAX_PX))
-            if len(zeilen) > MAX_ZEILEN:
-                fehler.append('msg %d: mehr als %d Zeilen' % (mid, MAX_ZEILEN))
+            if mid in SEITE2:
+                b, seiten, bws, nw = satz_seiten(mid, text, n)
+                was += '; Seite 2 nach `02 %d` (0x%02X) beim Wort "%s" t=%.2f s: %s' % (nw, nw, SEITE2[mid][1], SEITE2[mid][2],
+                                                                                     SEITE2[mid][3])
+            else:
+                b, zeilen, bw = satz(text)
+                seiten, bws = [zeilen], [bw]
+            for si, (zeilen, bw) in enumerate(zip(seiten, bws)):
+                for i, w in enumerate(bw):
+                    if w > T.MAX_PX:
+                        fehler.append('msg %d Seite %d Zeile %d = %d px > %d' % (mid, si + 1, i + 1, w, T.MAX_PX))
+                if len(zeilen) > MAX_ZEILEN:
+                    fehler.append('msg %d Seite %d: mehr als %d Zeilen' % (mid, si + 1, MAX_ZEILEN))
+                if any(len(z.split(' ')) < 2 for z in zeilen):
+                    fehler.append('msg %d Seite %d: Zeile mit nur einem Wort' % (mid, si + 1))
             if len(b) > PSX_LEN:
                 fehler.append('msg %d: %d Byte > %d (PSX MSG_RAW_LEN, msg_common.c)' % (mid, len(b), PSX_LEN))
             nm = 'k_bf_6000_msg%d' % mid
             out += T.carr(nm, b, 'ROOM6000 %d Annette: %s  (%s; %d B, Zeilen %s px)' % (
-                mid, ' / '.join(zeilen), was, len(b), '/'.join(map(str, bw))))
+                mid, ' // '.join(' / '.join(z) for z in seiten), was, len(b), ' // '.join('/'.join(map(str, bw)) for bw in bws)))
             tab.append((mid, nm))
     d5 = open(RDT5011, 'rb').read()
     sub5, prog5, ein5, n_vor5 = programm5011(d5)
