@@ -43,6 +43,9 @@
  *   @0x02820 `09 0a 3f 00`        Sleep 63; @0x02824 / @0x0282B SUB / MAIN weiter (Fall 3 SsSeqReplay)
  * Die zweite RE2-Form (ROOM1080 sub14 @0x0252A, Commit bddc94eec, re15_zws_r41.h "UEBERBLENDUNG WIE RE2") ist der Film MITTEN in
  * einer laufenden Szene: harter Schnitt hinein, 15 Bilder Einblenden. Das Endvideo beendet die Szene -> Form ROOM4090.
+ * Querbezug: der Strang r42/birkinfilm (nicht in diesem Zweig) baut dieselbe ROOM4090-Form fuer den Film "Birkins Mutation" in C an
+ * der Film-Zeile (RE15_ZWS_BLENDART_4090 = 1, Zaehlung dort: Abblende F0..F63, Film in F64 - gleich der Messung hier). Das Endvideo
+ * blendet stattdessen im Skript (RE15_ZWS_BLENDART_SKRIPT = 2), weil das Abblenden auch ohne Film-Datei laufen muss.
  *
  * UMSETZUNG IN RE1.5-OPCODES (gleiche Wirkung, Belege der RE1.5-Seite in include/re15_fade.h und annette_r41.c "Musik unter dem Zugfilm"):
  *   Sce_fade_set = 0x56 Konfiguration (Handler @0x80042a58 -> FUN_800217b0, Ebene 7 `ori a3,7` @0x80042a70) + 0x57 Start
@@ -56,7 +59,7 @@
  *     also nur MAIN. Kein "weiter" danach: der Raum wird verlassen, die Diashow startet MAIN selbst (6040 sub02 @0x0052A `54 00 01`).
  *   Movie_on = Port-Zeile `2b 3c 00 00` (Message_on 60 ohne Text) -> Haken re15_zws_r41_message_on, Tabellenzeilen "ende5090" /
  *     "ende5091" in engine/src/zws_r41.c: Datei da -> spielen (Skript parkt), Datei fehlt / keine Plattform -> sofort weiter.
- *     Die Tabellenzeile traegt RE15_ZWS_BLENDE_SKRIPT: das C-Einblenden der Form ROOM1080 entfaellt, die Blende macht das Skript.
+ *     Die Tabellenzeile traegt RE15_ZWS_BLENDART_SKRIPT: das C-Einblenden der Form ROOM1080 entfaellt, die Blende macht das Skript.
  *   Evt_next = 0x02 (scd_vm.c op_evt_next), Sleep = `09 0a <n16>`.
  *   Id 60: ROOM5090 belegt 0, 1 (RDT), 2 (Schlusszeile), 3 (Zuruf), 40..43 (Annette); ROOM5091 0, 1, 2, 3 -> 60 ist frei (dieselbe Id
  *     wie der Zugfilm in 6030/6031).

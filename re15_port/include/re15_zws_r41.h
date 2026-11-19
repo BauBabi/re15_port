@@ -194,7 +194,7 @@
  * fliegt vollständig raus, und es kommt ein richtiges Endvideo". Port-Zeile `2b 3c 00 00` im Port-Programm statt sub02 von
  * ROOM5090/5091 (endvideo_r42.c), zwischen Abblenden und Aot_on(5) - an der Stelle von RE2 ROOM4090 Movie_on @0x02818. Der Film ist
  * noch nicht gebaut: fehlt die Datei, laeuft die Zeile sofort durch (re15_zws_r41_film_fehlt) und der Abspann folgt. Die Blende
- * macht das Skript (RE15_ZWS_BLENDE_SKRIPT). Dateinamen PORT-WAHL (8.3 wie R600ZUG.STR), Bildzahl steht erst mit der Datei fest. */
+ * macht das Skript (RE15_ZWS_BLENDART_SKRIPT). Dateinamen PORT-WAHL (8.3 wie R600ZUG.STR), Bildzahl steht erst mit der Datei fest. */
 #define RE15_ENDE_RAUM_LEON      0x5090u
 #define RE15_ENDE_RAUM_ELZA      0x5091u
 #define RE15_ENDE_MSG_FILM       60
@@ -203,8 +203,12 @@
 #define RE15_ENDE_FILM_BILDER    0        /* 0 = noch keine Datei; die Plattform liest die Zahl aus dem STR */
 
 /* Blende nach dem Film (Tabellenspalte blende): */
-#define RE15_ZWS_BLENDE_RE2_1080 0        /* C-Einblenden 15 Bilder wie RE2 ROOM1080 sub14 (Film mitten in einer Szene)         */
-#define RE15_ZWS_BLENDE_SKRIPT   1        /* das Skript blendet selbst (RE2 ROOM4090: Abblenden davor, Sce_fade_adjust danach) */
+#define RE15_ZWS_BLENDART_1080   0        /* C-Einblenden 15 Bilder wie RE2 ROOM1080 sub14 (Film mitten in einer Szene)         */
+#define RE15_ZWS_BLENDART_SKRIPT 2        /* das Skript blendet selbst (RE2 ROOM4090: Abblenden davor, Sce_fade_adjust danach).
+                                           * Wert 2, weil der Strang r42/birkinfilm dieselbe Spalte `blende` mit 1 =
+                                           * RE15_ZWS_BLENDART_4090 (Blende in C an der Film-Zeile) belegt: beim Zusammenfuehren
+                                           * bleiben beide Arten getrennt. Das Endvideo blendet im Skript, weil das Abblenden
+                                           * auch ohne Film-Datei laufen muss (dann direkt Abspann). */
 
 /* Einblenden nach dem Film = RE2 ROOM1080 sub14 @0x0252A `53 02 02 07 00 f8` (Sce_fade_set, Handler LAB_80057ef0). */
 #define RE15_ZWS_BLENDE_KANAL 2        /* pc[1] @0x0252B (`lbu s0,1(s2)` @0x80057f18)                          */
@@ -233,7 +237,7 @@ typedef struct {
     int                schrei_satz;  /* ROOM11C0 snd1 Satz */
     const char        *film_datei;   /* relativ zur Asset-Wurzel */
     int                film_bilder;
-    int                blende;       /* RE15_ZWS_BLENDE_RE2_1080 (0, Vorgabe) / RE15_ZWS_BLENDE_SKRIPT */
+    int                blende;       /* RE15_ZWS_BLENDART_1080 (0, Vorgabe) / RE15_ZWS_BLENDART_SKRIPT (2) */
 } re15_zws_film_t;
 
 /* Tabelle (Riegel/Plattform). */

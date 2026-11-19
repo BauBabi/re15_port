@@ -56,12 +56,12 @@ static const re15_zws_film_t k_filme[] = {
         { -1, 0, { 0 }, 0 },
         { RE15_ENDE_MSG_FILM, 0, { 0 }, 0 },                         /* k_ende: nach dem Abblenden, vor Aot_on(5) @0x012D6 */
         { -1, 0, { 0 }, 0 },
-        -1, RE15_ENDE_FILM_LEON, RE15_ENDE_FILM_BILDER, RE15_ZWS_BLENDE_SKRIPT },
+        -1, RE15_ENDE_FILM_LEON, RE15_ENDE_FILM_BILDER, RE15_ZWS_BLENDART_SKRIPT },
     {   "ende5091", RE15_ENDE_RAUM_ELZA,
         { -1, 0, { 0 }, 0 },
         { RE15_ENDE_MSG_FILM, 0, { 0 }, 0 },                         /* k_ende: nach dem Abblenden, vor Aot_on(5) @0x012BA */
         { -1, 0, { 0 }, 0 },
-        -1, RE15_ENDE_FILM_ELZA, RE15_ENDE_FILM_BILDER, RE15_ZWS_BLENDE_SKRIPT },
+        -1, RE15_ENDE_FILM_ELZA, RE15_ENDE_FILM_BILDER, RE15_ZWS_BLENDART_SKRIPT },
 };
 #define ZWS_ANZAHL ((int)(sizeof k_filme / sizeof k_filme[0]))
 
@@ -185,7 +185,7 @@ void re15_zws_r41_film_gespielt(void)
         meldung(s_aktiv, "Film zu Ende: Auftritt unsichtbar vorspulen bis Datei-Offset", (int)s_aktiv->sichtbar.off, 0);
         return;
     }
-    if (s_aktiv && s_aktiv->blende == RE15_ZWS_BLENDE_SKRIPT) {   /* Endvideo: Sce_fade_adjust im Skript (RE2 ROOM4090 @0x0281C) */
+    if (s_aktiv && s_aktiv->blende == RE15_ZWS_BLENDART_SKRIPT) {   /* Endvideo: Sce_fade_adjust im Skript (RE2 ROOM4090 @0x0281C) */
         meldung(s_aktiv, "Film zu Ende: Blende macht das Skript (RE2 ROOM4090 @0x0281C)", 0, 0);
         return;
     }
