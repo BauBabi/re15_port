@@ -21,6 +21,19 @@
  * zum Abdruck. Umleitungen und Spiegelraeume (stimmen_r39.c 1050/1150/11B0/1171, elza_r36.c 1011, Rekorder r38 1100/1101,
  * Hilferufe r39 1141/1041/1131, Elza-Montage r38 1241 <- 1240) fuehren nicht auf diese 15 Dateien (Riegel
  * unit_r42_namen_altaufnahme).
+ *
+ * STUFE 7 (Nachtrag 19.11.2026, Entscheid des Orchestrators, PORT-WAHL; Pruefbefund Stufe 6 gelb 2): "Stumm bleibt nur, was einen
+ * ANDEREN Satz spricht; eine Aufnahme, die den neuen Satz woertlich oder bis auf ein Wort spricht, spielt." Zwei der 15 Aufnahmen
+ * fallen darunter und stehen NICHT mehr in der Tabelle - sie spielen wie jede andere Datei:
+ *   3020 main02  gesprochen "Leon, give me a hand."  Untertitel "Marvin: Leon, give me a hand!" (geaendert wurde nur der Text
+ *                "an hand" -> "a hand"; die Aufnahme sagt "a hand")
+ *   6030 main21  gesprochen "... We made it down here with a girl named Elza."  Untertitel "... We came down here ..." (ein Wort
+ *                des Untertitels wird nicht gesprochen; der Satz bleibt auf der Liste der Neuaufnahmen)
+ * Die Tabelle hat damit 13 Eintraege: 3020 main00/01; 30E0 main03/10/11/13; 6030 main02/03/04/05/22; 6031 main01/02. Abgehoert
+ * am 19.11.2026 (Spracherkenner, drei Modelle gleich); die Regel ist in tools/r42_namen/altaufnahmen_bauen.py messbar gefasst
+ * (hoechstens 1 Wort des Untertitels nicht gesprochen, hoechstens 2 gesprochene Woerter nicht im Untertitel) und wird vom Riegel
+ * unit_r42_namen_altaufnahme an allen 15 Saetzen gegen den Untertitel des geladenen Raums geprueft. Bei den 13 stummen fehlen
+ * mindestens 2 Woerter des Untertitels in der Aufnahme (6031 main02: 2 von 2, 3020 main00: 3 von 5, sonst >= 4).
  */
 #ifndef RE15_ALTAUFNAHME_R42_H
 #define RE15_ALTAUFNAHME_R42_H

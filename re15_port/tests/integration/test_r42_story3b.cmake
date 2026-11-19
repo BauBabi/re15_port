@@ -41,7 +41,7 @@ if(NOT TEIL)
     set(TEIL leon)
 endif()
 include("${CMAKE_CURRENT_LIST_DIR}/spiel_lauf.cmake")
-include("${CMAKE_CURRENT_LIST_DIR}/altaufnahmen_r42.cmake")          # Strang namen Stufe 6: Stand der 15 veralteten Aufnahmen
+include("${CMAKE_CURRENT_LIST_DIR}/altaufnahmen_r42.cmake")          # Strang namen Stufe 6/7: Stand der 13 veralteten Aufnahmen
 include("${CMAKE_CURRENT_LIST_DIR}/altaufnahme_ersatz_r42.cmake")    # Ersatz-Wurzel + re15_altaufnahme_pruefe
 if(NOT RE15_SYNCHRO OR NOT IS_DIRECTORY "${RE15_SYNCHRO}")
     message(FATAL_ERROR "r42_story3b: RE15_SYNCHRO fehlt/kein Ordner: '${RE15_SYNCHRO}'")

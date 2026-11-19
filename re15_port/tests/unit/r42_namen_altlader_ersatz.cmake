@@ -6,7 +6,8 @@
 #   3020 main00  = alte Aufnahme, letztes Bit gekippt (gleiche Groesse)                      -> spielt
 #   30E0 main13  = alte Aufnahme + leerer RIFF-Abschnitt                                     -> spielt
 #   6030 main22  = eine ANDERE Aufnahme unter diesem Namen (Kopie von room6030/main27.wav)   -> spielt
-# Die elf uebrigen Saetze der Liste bleiben stumm, alle anderen Dateien der vier Ordner spielen.
+# Die neun uebrigen Saetze der Liste (13, Stufe 7) bleiben stumm, alle anderen Dateien der vier Ordner spielen - auch 3020 main02
+# und 6030 main21 (fast woertlich, nicht in der Liste).
 cmake_minimum_required(VERSION 3.21)
 foreach(_v PROBE WERKZEUG SYNCHRO WURZEL)
     if(NOT ${_v})

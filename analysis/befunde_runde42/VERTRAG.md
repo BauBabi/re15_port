@@ -387,6 +387,16 @@ Besonderheiten:
   msg 2, Johns alte unter Sherrys msg 22). Die NEUAUF-Zeilen von v0.8.32 sind nicht betroffen (ihr Text ist noch der alte).
   Der Befund 15.11. bleibt im Durchlauf belegt: integration_r42_story3b_leon laeuft aus einer Ersatz-Wurzel mit einer ersetzten
   main13.wav (gleicher Ton, anderer Abdruck); die letzte Marvin-Szene wartet nach der Sleep-Kette auf Untertitel UND Stimme (R2-3).
+  NACHTRAG 19.11.2026 (Strang namen Stufe 7, Entscheid des Orchestrators, PORT-WAHL): "Stumm bleibt nur, was einen ANDEREN Satz
+  spricht; eine Aufnahme, die den neuen Satz woertlich oder bis auf ein Wort spricht, spielt." Zwei der 15 spielen deshalb wieder
+  und stehen nicht mehr in der Tabelle (15 -> 13): 3020 msg 2 (Aufnahme "Leon, give me a hand.", Untertitel "Leon, give me a
+  hand!") und 6030 msg 21 (Aufnahme "... We made it down here ...", Untertitel "... We came down here ..."; bleibt NEUAUF).
+  Stumm bleiben 13: 3020 msg 0/1, 30E0 msg 3/10/11/13, 6030 msg 2/3/4/5/22, 6031 msg 1/2. Regel messbar in
+  `tools/r42_namen/altaufnahmen_bauen.py` (hoechstens 1 Wort des Untertitels nicht gesprochen, hoechstens 2 gesprochene Woerter
+  nicht im Untertitel; abgehoert mit dem Spracherkenner am 19.11.2026), Riegel `unit_r42_namen_altaufnahme` (Regel an allen 15),
+  `unit_r42_namen_altlader` (die zwei spielen) und `integration_r42_namen_6030_bestand` / `_3020_bestand` (Durchlaeufe mit
+  unveraendertem Bestand, am Tonmitschnitt gemessen: 6030 msg 21 und 3020 msg 2 spielen an ihrem Untertitel, 6030 msg 2/3/22/4/5
+  und 3020 msg 0/1 sind nicht zu hoeren).
 - OFFEN (R2-2): Uebergang Auftritt -> Kampf in 3070 steht 12 Bilder still (Lunge a3 0x100 @0x80117644 fehlt der Port-Kampf-KI);
   wird im Klauenhieb-Umbau (case 3) auf Zweig r41/birkin_kralle behoben, nicht auf r42/story.
 - T-03/T-04: enemy_ai_common.c re15_birkin_anim_szene (Auftritt 0x80119378 und Szenen-Modus 0x80118d00), NUR STAGE3 (3070, 3080).

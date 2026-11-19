@@ -29,7 +29,7 @@ function(re15_altaufnahme_ersatzwurzel _out _exe _wurzel _werkzeug _synchro)
     set(${_out} "${_wurzel}/${_name}" PARENT_SCOPE)
 endfunction()
 
-# re15_altaufnahme_pruefe(<synchro> <Raum 4 Hex> <Nummer>): Zeile einer der 15 Saetze im debug.log des Laufs pruefen, je nach Stand
+# re15_altaufnahme_pruefe(<synchro> <Raum 4 Hex> <Nummer>): Zeile einer der 13 Saetze im debug.log des Laufs pruefen, je nach Stand
 # der Datei im Baum (tests/integration/altaufnahmen_r42.cmake re15_altaufnahme_stand):
 #   ALT   -> der Lader meldet "ist noch die alte Aufnahme", KEINE Stimme startet (stumm, Textdauer)
 #   NEU   -> die neue Aufnahme des Nutzers spielt

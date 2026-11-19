@@ -56,15 +56,24 @@
  *                   abgeschnitten (Pflicht 30E1 14, 5011 3, 11B0 5, 11B0 8, 4010 8). Gegenprobe rot auf 7d7f4d1c6.
  *
  * Stufe 6 (veraltete Aufnahmen bleiben stumm, include/re15_altaufnahme_r42.h, tools/r42_namen/altaufnahmen_bauen.py):
- *   altaufnahme     Tabelle der 15 alten Aufnahmen gegen den Bestand synchro/ (Liste beim Configure): (1) genau die 15 Saetze
- *                   3020 0/1/2, 30E0 3/10/11/13, 6030 2/3/4/5/21/22, 6031 1/2; (2) ihr Untertitel im Spiel ist NICHT mehr der
- *                   RDT-Satz (bei den Port-Zeilen 6030 21/22 ein Story-Text) - der Text ist neu; (3) jede dieser Dateien, die
+ *   altaufnahme     Tabelle der 13 alten Aufnahmen gegen den Bestand synchro/ (Liste beim Configure): (1) genau die 13 Saetze
+ *                   3020 0/1, 30E0 3/10/11/13, 6030 2/3/4/5/22, 6031 1/2; (2) ihr Untertitel im Spiel ist NICHT mehr der
+ *                   RDT-Satz (bei der Port-Zeile 6030 22 ein Story-Text) - der Text ist neu; (3) jede dieser Dateien, die
  *                   noch den Fingerabdruck des Tags v0.8.30 traegt, gilt als "alt", eine ersetzte nicht; (4) NEGATIVKONTROLLE:
  *                   keine andere Datei des ganzen Bestands gilt als alt, und keine andere Datei hat denselben Inhalt
  *                   (Spiegelraum-Kopie); (5) ein geaendertes Byte, ein Byte mehr oder weniger, derselbe Inhalt unter anderem
  *                   Namen -> nicht alt; Gross/Klein und Rueckstrich im Pfad egal; (6) keine Umleitung (stimmen_r39, elza_r36,
  *                   Rekorder r38, Hilferufe r39, Elza-Montage r38) fuehrt auf diese Saetze oder von ihnen weg.
  *                   Der ECHTE Lader wird in probe_r42_namen_altlader.c gemessen (unit_r42_namen_altlader, _altlader_ersatz).
+ *                   Stufe 7 (Nachtrag 19.11.2026, Entscheid des Orchestrators, PORT-WAHL: "stumm bleibt nur, was einen ANDEREN
+ *                   Satz spricht; eine Aufnahme, die den neuen Satz woertlich oder bis auf ein Wort spricht, spielt"):
+ *                   (7) REGEL an allen 15 Saetzen mit neuem Untertitel (tests/unit/gen_r42_namen_altsaetze.inc: abgehoerter
+ *                   Wortlaut der Aufnahme, Spracherkenner 19.11.2026): der Untertitel wird aus dem GELADENEN Raum gelesen und
+ *                   Wort fuer Wort mit der Aufnahme verglichen (laengste gemeinsame Wortfolge, hier selbst gerechnet). In der
+ *                   Tabelle steht ein Satz genau dann, wenn mehr als 1 Wort des Untertitels nicht gesprochen wird oder die
+ *                   Aufnahme mehr als 2 Woerter sagt, die nicht im Untertitel stehen. (8) 3020 main02 ("Leon, give me a
+ *                   hand.") und 6030 main21 ("... We made it down here ...") stehen NICHT in der Tabelle: die Datei mit dem
+ *                   Abdruck des Tags gilt nicht als alt -> spielt. Gegenprobe rot auf e9ddc6b7a (dort 15 Eintraege).
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -961,20 +970,60 @@ extern void re15_johnruf_r39_stimme(unsigned, int, char *, size_t, char *, size_
 #error RE15_R42_ALT_BESTAND fehlt
 #endif
 
+/* Stufe 7: alle 15 Saetze mit neuem Untertitel (erzeugt, tools/r42_namen/altaufnahmen_bauen.py) */
+#define RE15_ALTSATZ_ZEILEN 1
+static const struct { unsigned raum; int nr; int stumm; uint32_t groesse; uint64_t fnv; const char *gehoert; const char *neu; }
+k_altsatz[] = {
+#include "gen_r42_namen_altsaetze.inc"
+};
+#define ALTSATZ_N ((int)(sizeof k_altsatz / sizeof k_altsatz[0]))
+
+/* Woerter eines Satzes: klein, Buchstaben/Ziffern, Apostroph im Wort; ein Wort direkt vor ':' ist der Sprechername und zaehlt nicht
+ * (Namenskopf jeder Seite, re15_msg_decode_text haengt die Seiten aneinander). */
+static int satz_woerter(const char *t, char w[][24], int max)
+{
+    int n = 0;
+    for (const char *p = t; *p && n < max;) {
+        if (!isalnum((unsigned char)*p)) { p++; continue; }
+        int k = 0;
+        while (isalnum((unsigned char)*p) || (*p == '\'' && isalnum((unsigned char)p[1]) && k > 0)) {
+            if (k < 23) w[n][k++] = (char)tolower((unsigned char)*p);
+            p++;
+        }
+        w[n][k] = 0;
+        if (*p == ':') continue;          /* Sprechername */
+        n++;
+    }
+    return n;
+}
+/* laengste gemeinsame Wortfolge */
+static int wort_lcs(char a[][24], int na, char u[][24], int nu)
+{
+    static int d[65][65];
+    memset(d, 0, sizeof d);
+    for (int i = 0; i < na; i++)
+        for (int j = 0; j < nu; j++)
+            d[i + 1][j + 1] = !strcmp(a[i], u[j]) ? d[i][j] + 1 : (d[i][j + 1] > d[i + 1][j] ? d[i][j + 1] : d[i + 1][j]);
+    return d[na][nu];
+}
+
+#define N_STUMM 13
 static void teil_altaufnahme(void)
 {
-    printf("=== altaufnahme: 15 veraltete Aufnahmen gelten wie fehlende Dateien, keine andere Datei ist betroffen ===\n");
-    static const struct { unsigned raum; int nr; } soll[15] = {
-        { 0x3020, 0 }, { 0x3020, 1 }, { 0x3020, 2 },
+    printf("=== altaufnahme: 13 veraltete Aufnahmen (anderer Satz) gelten wie fehlende Dateien, keine andere Datei ist betroffen ===\n");
+    static const struct { unsigned raum; int nr; } soll[N_STUMM] = {
+        { 0x3020, 0 }, { 0x3020, 1 },
         { 0x30E0, 3 }, { 0x30E0, 10 }, { 0x30E0, 11 }, { 0x30E0, 13 },
-        { 0x6030, 2 }, { 0x6030, 3 }, { 0x6030, 4 }, { 0x6030, 5 }, { 0x6030, 21 }, { 0x6030, 22 },
+        { 0x6030, 2 }, { 0x6030, 3 }, { 0x6030, 4 }, { 0x6030, 5 }, { 0x6030, 22 },
         { 0x6031, 1 }, { 0x6031, 2 },
     };
-    /* (1) Tabelle = genau die 15 Saetze, Pfad nach der Ablage-Regel */
+    /* Stufe 7: fast woertlich -> NICHT in der Tabelle, spielt (Entscheid 19.11.2026) */
+    static const struct { unsigned raum; int nr; } spielt[2] = { { 0x3020, 2 }, { 0x6030, 21 } };
+    /* (1) Tabelle = genau die 13 Saetze, Pfad nach der Ablage-Regel */
     const int n = re15_altaufnahme_r42_anzahl();
-    PRUEF(n == 15, "Tabelle: %d Eintraege (Soll 15)", n);
+    PRUEF(n == N_STUMM, "Tabelle: %d Eintraege (Soll %d)", n, N_STUMM);
     int tab_ok = 0;
-    for (int i = 0; i < 15 && i < n; i++) {
+    for (int i = 0; i < N_STUMM && i < n; i++) {
         const re15_altaufnahme_r42_t *e = re15_altaufnahme_r42_eintrag(i);
         char regel[80];
         snprintf(regel, sizeof regel, "synchro/stage%u/room%04x/main%02d.wav", soll[i].raum >> 12, soll[i].raum, soll[i].nr);
@@ -982,31 +1031,75 @@ static void teil_altaufnahme(void)
         else printf("        Eintrag %d: ROOM%04X main%02d \"%s\" passt nicht zum Soll ROOM%04X main%02d\n", i, e ? e->raum : 0,
                     e ? e->datei : -1, e ? e->pfad : "?", soll[i].raum, soll[i].nr);
     }
-    PRUEF(tab_ok == 15, "Tabelle: %d von 15 Eintraegen = Soll-Satz mit Regelpfad synchro/STAGEn/roomXXXX/mainNN.wav", tab_ok);
+    PRUEF(tab_ok == N_STUMM, "Tabelle: %d von %d Eintraegen = Soll-Satz mit Regelpfad synchro/STAGEn/roomXXXX/mainNN.wav", tab_ok, N_STUMM);
+    int spielt_frei = 0;
+    for (int k = 0; k < 2; k++) {
+        int drin = 0;
+        for (int i = 0; i < n; i++) {
+            const re15_altaufnahme_r42_t *e = re15_altaufnahme_r42_eintrag(i);
+            if (e->raum == spielt[k].raum && e->datei == spielt[k].nr) drin = 1;
+        }
+        spielt_frei += !drin;
+    }
+    PRUEF(spielt_frei == 2, "Stufe 7: 3020 main02 und 6030 main21 (fast woertlich) stehen NICHT in der Tabelle (%d von 2)", spielt_frei);
 
-    /* (2) der Untertitel im Spiel ist neu: nicht mehr der RDT-Satz; Port-Zeilen 6030 21/22 = Story-Text mit Namenskopf */
-    int neu_text = 0;
-    for (int i = 0; i < 15; i++) {
-        if (raum_laden(soll[i].raum) != 0) { PRUEF(0, "ROOM%04X ladbar", soll[i].raum); continue; }
+    /* (2) der Untertitel im Spiel ist neu: nicht mehr der RDT-Satz; Port-Zeilen 6030 21/22 = Story-Text mit Namenskopf.
+     * (7) Stufe 7, REGEL: Untertitel aus dem geladenen Raum Wort fuer Wort gegen die Aufnahme (gehoert). In der Tabelle <=> die
+     *     Aufnahme spricht einen ANDEREN Satz: mehr als RE15_ALTSATZ_UNTERTITEL_FREMD Woerter des Untertitels nicht gesprochen
+     *     oder mehr als RE15_ALTSATZ_AUFNAHME_FREMD gesprochene Woerter nicht im Untertitel. */
+    PRUEF(ALTSATZ_N == 15, "Satzliste: %d Saetze mit neuem Untertitel (Soll 15 = %d stumm + 2 fast woertlich)", ALTSATZ_N, N_STUMM);
+    int neu_text = 0, wortlaut_ok = 0, regel_ok = 0, n_stumm = 0, n_spielt = 0;
+    for (int i = 0; i < ALTSATZ_N; i++) {
+        const unsigned raum = k_altsatz[i].raum; const int id = k_altsatz[i].nr;
+        if (raum_laden(raum) != 0) { PRUEF(0, "ROOM%04X ladbar", raum); continue; }
         int len = 0;
-        const unsigned char *m = re15_msg_get_raw(soll[i].nr, &len);
+        const unsigned char *m = re15_msg_get_raw(id, &len);
         char jetzt[512] = "", rdt[512] = "";
         if (m && len > 0) re15_msg_decode_text(m, (size_t)len, jetzt, sizeof jetzt);
         const uint8_t *r = NULL;
-        const int rl = rdt_nachricht(soll[i].nr, &r);
+        const int rl = rdt_nachricht(id, &r);
         if (rl > 0) re15_msg_decode_text(r, (size_t)rl, rdt, sizeof rdt);
         const int ok = jetzt[0] && strchr(jetzt, ':') && (rl <= 0 || strcmp(jetzt, rdt) != 0);
-        printf("        ROOM%04X msg %2d  jetzt \"%s\"\n                         %s \"%s\"%s\n", soll[i].raum, soll[i].nr, jetzt,
-               rl > 0 ? "RDT  " : "RDT   (keine: Port-Zeile)", rdt, ok ? "" : "   <- NICHT NEU");
         neu_text += ok;
+        /* Wortlaut: Untertitel im Spiel == "neu" der Satzliste (ohne Sprechernamen) */
+        static char wu[64][24], wn[64][24], wa[64][24];
+        const int nu = satz_woerter(jetzt, wu, 64), nn = satz_woerter(k_altsatz[i].neu, wn, 64);
+        const int na = satz_woerter(k_altsatz[i].gehoert, wa, 64);
+        int gleich = nu == nn;
+        for (int q = 0; gleich && q < nu; q++) gleich = !strcmp(wu[q], wn[q]);
+        wortlaut_ok += gleich;
+        const int l = wort_lcs(wa, na, wu, nu);
+        const int u_fremd = nu - l, a_fremd = na - l;
+        const int fast = u_fremd <= RE15_ALTSATZ_UNTERTITEL_FREMD && a_fremd <= RE15_ALTSATZ_AUFNAHME_FREMD;
+        int in_tab = 0;
+        for (int q = 0; q < n; q++) {
+            const re15_altaufnahme_r42_t *e = re15_altaufnahme_r42_eintrag(q);
+            if (e->raum == raum && e->datei == id) in_tab = 1;
+        }
+        const int rok = (in_tab == !fast) && (in_tab == k_altsatz[i].stumm);
+        regel_ok += rok;
+        n_stumm += in_tab; n_spielt += !in_tab;
+        printf("        ROOM%04X msg %2d  jetzt   \"%s\"\n                         %s \"%s\"%s\n"
+               "                         gehoert \"%s\"\n"
+               "                         -> %d von %d Woertern des Untertitels nicht gesprochen, %d von %d gesprochenen nicht im "
+               "Untertitel: %s, %s%s%s\n", raum, id, jetzt,
+               rl > 0 ? "RDT    " : "RDT     (keine: Port-Zeile)", rdt, ok ? "" : "   <- NICHT NEU", k_altsatz[i].gehoert,
+               u_fremd, nu, a_fremd, na, fast ? "FAST WOERTLICH" : "anderer Satz", in_tab ? "in der Tabelle (stumm)" : "nicht in der Tabelle (spielt)",
+               rok ? "" : "   <- REGEL VERLETZT", gleich ? "" : "   <- Satzliste weicht vom Untertitel ab");
     }
     PRUEF(neu_text == 15, "Untertitel im Spiel sind neu (nicht der RDT-Satz der Aufnahme): %d von 15", neu_text);
+    PRUEF(wortlaut_ok == 15, "Satzliste des Werkzeugs = Untertitel im geladenen Raum, Wort fuer Wort: %d von 15", wortlaut_ok);
+    PRUEF(regel_ok == 15, "REGEL Stufe 7: stumm nur, was einen ANDEREN Satz spricht (hoechstens %d Untertitelwort nicht gesprochen und "
+          "hoechstens %d gesprochene Woerter nicht im Untertitel -> spielt): %d von 15 richtig eingeordnet", RE15_ALTSATZ_UNTERTITEL_FREMD,
+          RE15_ALTSATZ_AUFNAHME_FREMD, regel_ok);
+    PRUEF(n_stumm == N_STUMM && n_spielt == 2, "von den 15 Saetzen: %d stumm (Soll %d), %d spielen (Soll 2)", n_stumm, N_STUMM, n_spielt);
 
-    /* (3)+(4) ganzer Bestand: alt gilt nur fuer die 15 Pfade mit dem Abdruck des Tags; keine andere Datei, kein Doppel */
+    /* (3)+(4) ganzer Bestand: alt gilt nur fuer die 13 Pfade mit dem Abdruck des Tags; keine andere Datei, kein Doppel */
     FILE *lf = fopen(RE15_R42_ALT_BESTAND, "r");
     PRUEF(lf != NULL, "Bestandsliste lesbar (%s)", RE15_R42_ALT_BESTAND);
     if (!lf) return;
-    int dateien = 0, alt_noch = 0, alt_ersetzt = 0, fremd_alt = 0, doppel = 0, gesehen[15] = { 0 }, unlesbar = 0;
+    int dateien = 0, alt_noch = 0, alt_ersetzt = 0, fremd_alt = 0, doppel = 0, gesehen[N_STUMM] = { 0 }, unlesbar = 0;
+    int fastw_da = 0, fastw_abdruck = 0, fastw_alt = 0;    /* Stufe 7: 3020 main02 / 6030 main21 */
     uint8_t *muster = NULL; size_t muster_n = 0; char muster_pfad[200] = "";
     char zeile[700];
     while (fgets(zeile, sizeof zeile, lf)) {
@@ -1034,6 +1127,16 @@ static void teil_altaufnahme(void)
         }
         if (k < 0) {
             if (ist) { fremd_alt++; printf("        FREMD: %s gilt als alt\n", rel); }
+            /* Stufe 7: die zwei fast woertlichen Aufnahmen - Datei mit dem Abdruck des Tags gilt NICHT als alt */
+            for (int q = 0; q < ALTSATZ_N; q++) {
+                char regel[80];
+                snprintf(regel, sizeof regel, "synchro/stage%u/room%04x/main%02d.wav", k_altsatz[q].raum >> 12, k_altsatz[q].raum, k_altsatz[q].nr);
+                if (k_altsatz[q].stumm || strcmp(klein, regel)) continue;
+                const int abdruck = (k_altsatz[q].groesse == bn && k_altsatz[q].fnv == h);
+                fastw_da++; fastw_abdruck += abdruck; fastw_alt += ist;
+                printf("        FAST WOERTLICH: %s (%u Byte, %s) gilt als alt: %d -> %s\n", rel, (unsigned)bn,
+                       abdruck ? "Abdruck des Tags v0.8.30" : "ersetzt", ist, ist ? "STUMM" : "spielt");
+            }
         } else {
             const re15_altaufnahme_r42_t *e = re15_altaufnahme_r42_eintrag(k);
             gesehen[k] = 1;
@@ -1051,13 +1154,15 @@ static void teil_altaufnahme(void)
     }
     fclose(lf);
     int da = 0;
-    for (int i = 0; i < 15; i++) da += gesehen[i];
-    printf("    Bestand: %d Dateien gelesen (%d unlesbar); von den 15: %d noch alt (stumm), %d ersetzt (spielen), %d fehlen\n", dateien,
-           unlesbar, alt_noch, alt_ersetzt, 15 - da);
+    for (int i = 0; i < N_STUMM; i++) da += gesehen[i];
+    printf("    Bestand: %d Dateien gelesen (%d unlesbar); von den %d: %d noch alt (stumm), %d ersetzt (spielen), %d fehlen\n", dateien,
+           unlesbar, N_STUMM, alt_noch, alt_ersetzt, N_STUMM - da);
+    PRUEF(fastw_alt == 0, "Stufe 7: 3020 main02 / 6030 main21 gelten NICHT als alt -> spielen (%d von %d vorhandenen gelten als alt; "
+          "%d tragen noch den Abdruck des Tags)", fastw_alt, fastw_da, fastw_abdruck);
     PRUEF(dateien >= 400 && unlesbar == 0, "Bestand synchro/ gelesen: %d Dateien", dateien);
     PRUEF(fremd_alt == 0, "NEGATIVKONTROLLE: keine der uebrigen %d Dateien gilt als alt (%d Verstoesse)", dateien - da, fremd_alt);
-    PRUEF(doppel == 0, "keine andere Datei traegt den Inhalt einer der 15 alten Aufnahmen (Spiegelraum-Kopien: %d)", doppel);
-    PRUEF(alt_noch + alt_ersetzt == da, "jede vorhandene der 15 Dateien ist entweder alt (Abdruck) oder ersetzt: %d + %d = %d", alt_noch,
+    PRUEF(doppel == 0, "keine andere Datei traegt den Inhalt einer der 13 alten Aufnahmen (Spiegelraum-Kopien: %d)", doppel);
+    PRUEF(alt_noch + alt_ersetzt == da, "jede vorhandene der 13 Dateien ist entweder alt (Abdruck) oder ersetzt: %d + %d = %d", alt_noch,
           alt_ersetzt, da);
 
     /* (5) Abdruck ist scharf: ein Byte anders / mehr / weniger, anderer Name -> nicht alt; Schreibweise des Pfads egal */
@@ -1087,13 +1192,13 @@ static void teil_altaufnahme(void)
               "leere Eingaben: nicht alt");
         free(k); free(muster);
     } else {
-        printf("    (alle 15 Dateien sind schon ersetzt - der Abdruck-Teil (5) hat kein Muster mehr und entfaellt)\n");
+        printf("    (alle 13 Dateien sind schon ersetzt - der Abdruck-Teil (5) hat kein Muster mehr und entfaellt)\n");
     }
 
     /* (6) keine Umleitung fuehrt auf diese Saetze oder von ihnen weg */
     int uml = 0;
-    for (int i = 0; i < 15; i++) {
-        const unsigned room = soll[i].raum; const int id = soll[i].nr;
+    for (int i = 0; i < ALTSATZ_N; i++) {      /* alle 15 Saetze, auch die zwei fast woertlichen */
+        const unsigned room = k_altsatz[i].raum; const int id = k_altsatz[i].nr;
         char dir[64], stamm[24], dir0[64], stamm0[24];
         snprintf(dir, sizeof dir, "synchro/STAGE%u/room%04X/", room >> 12, room); snprintf(stamm, sizeof stamm, "main%02d", id);
         snprintf(dir0, sizeof dir0, "%s", dir); snprintf(stamm0, sizeof stamm0, "%s", stamm);
