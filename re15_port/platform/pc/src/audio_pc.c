@@ -2428,10 +2428,12 @@ static int re15_voice_load_clip(uint16_t room, int voice_id)
         wav = re15_pc_read_base(path, &wsz);
     }
     /* Runde 42 namen Stufe 6 (re15_altaufnahme_r42.h): 15 Saetze haben seit der Story v0.8.31 einen neuen Untertitel, die Datei
-     * traegt aber noch die Aufnahme des alten Satzes (3020 main00-02, 30E0 main03/10/11/13, 6030 main02-05/21/22, 6031 main01/02;
-     * in 6030 mit anderem Sprecher). PORT-WAHL (Entscheid 19.11.2026; synchro/ ist Eigenproduktion, kein Original-Verhalten): eine
-     * Datei mit genau dem Fingerabdruck des Tags v0.8.30 (Pfad + Groesse + FNV-1a-64) gilt wie KEINE Datei - die Zeile bleibt stumm
-     * und laeuft mit der Textdauer. Jede andere Datei unter demselben Namen (die neue Aufnahme) spielt. */
+     * traegt aber noch die Aufnahme des alten Satzes. 13 davon sprechen einen ANDEREN Satz (3020 main00/01, 30E0 main03/10/11/13,
+     * 6030 main02-05/22, 6031 main01/02; in 6030 mit anderem Sprecher) und stehen in der Tabelle; 3020 main02 und 6030 main21
+     * sprechen den neuen Satz woertlich bzw. bis auf ein Wort und spielen (Stufe 7, Entscheid 19.11.2026).
+     * PORT-WAHL (Entscheid 19.11.2026; synchro/ ist Eigenproduktion, kein Original-Verhalten): eine Datei aus der Tabelle mit genau
+     * dem Fingerabdruck des Tags v0.8.30 (Pfad + Groesse + FNV-1a-64) gilt wie KEINE Datei - die Zeile bleibt stumm und laeuft mit
+     * der Textdauer. Jede andere Datei unter demselben Namen (die neue Aufnahme) spielt. */
     int alt_stumm = 0;
     if (wav && re15_altaufnahme_r42_ist(path, wav, (size_t)wsz)) {
         fprintf(stderr, "[voice] ROOM%04X msg %d: %s ist noch die alte Aufnahme (Stand v0.8.30, Untertitel neu) - Zeile bleibt "

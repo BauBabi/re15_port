@@ -33,11 +33,20 @@ set_tests_properties(unit_r42_namen_ohne_stimme PROPERTIES ENVIRONMENT "RE15_VOI
 
 # Stufe 6 (2026-11-19): veraltete Aufnahmen bleiben stumm, bis die neue Aufnahme da ist (include/re15_altaufnahme_r42.h,
 # tools/r42_namen/altaufnahmen_bauen.py -> engine/src/gen/altaufnahme_r42_tabelle.inc, Haken audio_pc.c re15_voice_load_clip).
-#   unit_r42_namen_altaufnahme        Tabelle der 15 Saetze gegen den ganzen Bestand synchro/ (Liste beim Configure): nur diese 15
+#   unit_r42_namen_altaufnahme        Tabelle der 13 Saetze gegen den ganzen Bestand synchro/ (Liste beim Configure): nur diese 13
 #                                     Pfade mit dem Abdruck des Tags v0.8.30 gelten als alt, keine andere Datei, kein Doppel;
 #                                     Untertitel neu; ein geaendertes Byte -> nicht alt; keine Umleitung beruehrt die Saetze
-#   unit_r42_namen_altlader           ECHTER Lader (audio_pc.c) + RE15_AUDIO_CAP_SYNC: die 15 Zeilen stumm (Mitschnitt exakt 0),
+#   unit_r42_namen_altlader           ECHTER Lader (audio_pc.c) + RE15_AUDIO_CAP_SYNC: die 13 Zeilen stumm (Mitschnitt exakt 0),
 #                                     alle anderen Dateien in 3020/30E0/6030/6031 spielen (korr >= 0,9)
+# Stufe 7 (Nachtrag 2026-11-19, Entscheid des Orchestrators, PORT-WAHL): "stumm bleibt nur, was einen ANDEREN Satz spricht; eine
+# Aufnahme, die den neuen Satz woertlich oder bis auf ein Wort spricht, spielt." 3020 main02 und 6030 main21 stehen nicht mehr in
+# der Tabelle (15 -> 13). unit_r42_namen_altaufnahme prueft die Regel an allen 15 Saetzen (Untertitel aus dem geladenen Raum gegen
+# den abgehoerten Wortlaut, tests/unit/gen_r42_namen_altsaetze.inc), unit_r42_namen_altlader misst, dass die zwei spielen.
+#   integration_r42_namen_6030_bestand  Durchlauf im echten Spiel mit UNVERAENDERTEM Bestand (Leon, Wagen-Gespraech 6030), am
+#                                     Tonmitschnitt gemessen (tests/unit/werkzeug_r42_tonmess.c): msg 21 spielt an ihrem
+#                                     Untertitel, msg 2/3/22/4/5 sind nirgends zu hoeren, die uebrigen Stimmen spielen
+#   integration_r42_namen_3020_bestand  dasselbe fuer die Fensterszene 3020 (Leon 3000 -> 3010 -> 3020): msg 2 spielt an ihrem
+#                                     Untertitel, msg 0/1 sind nirgends zu hoeren, die Stimmen aus 3000 spielen
 #   unit_r42_namen_altlader_ersatz    derselbe Lader aus einer Ersatz-Wurzel (Kopie der Probe + eigenes synchro/ mit vier ersetzten
 #                                     Dateien, tests/unit/r42_namen_altlader_ersatz.cmake): ersetzte Dateien spielen, der Rest stumm
 file(GLOB_RECURSE _r42_alt_bestand LIST_DIRECTORIES false RELATIVE "${CMAKE_SOURCE_DIR}/../synchro" "${CMAKE_SOURCE_DIR}/../synchro/*.wav")
@@ -50,6 +59,22 @@ set_tests_properties(unit_r42_namen_altaufnahme PROPERTIES TIMEOUT 300)
 
 # Testwerkzeug: "ersetzte" Aufnahme aus einer vorhandenen bauen (auch fuer integration_r42_story3b_leon / _story6_leon)
 add_executable(werkzeug_r42_altaufnahme_ersatz ${CMAKE_CURRENT_LIST_DIR}/../werkzeug_r42_altaufnahme_ersatz.c)
+
+# Stufe 7 - Testwerkzeug: steckt eine Aufnahme im Tonmitschnitt eines Laufs? + Durchlauf 6030 mit unveraendertem Bestand
+add_executable(werkzeug_r42_tonmess ${CMAKE_CURRENT_LIST_DIR}/../werkzeug_r42_tonmess.c)
+if(NOT WIN32)
+    target_link_libraries(werkzeug_r42_tonmess PRIVATE m)
+endif()
+if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_namen_bestand.cmake)
+    foreach(_teil 6030 3020)
+        add_test(NAME integration_r42_namen_${_teil}_bestand
+                 COMMAND ${CMAKE_COMMAND} -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
+                         -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/r42_namen_${_teil}_bestand -DTEIL=${_teil}
+                         -DRE15_SYNCHRO=${CMAKE_SOURCE_DIR}/../synchro -DRE15_TONMESS=$<TARGET_FILE:werkzeug_r42_tonmess>
+                         -P ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_namen_bestand.cmake)
+        set_tests_properties(integration_r42_namen_${_teil}_bestand PROPERTIES TIMEOUT 2000)
+    endforeach()
+endif()
 
 if(TARGET SDL2::SDL2-static)
     add_executable(probe_r42_namen_altlader

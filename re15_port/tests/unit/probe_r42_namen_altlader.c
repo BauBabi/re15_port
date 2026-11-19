@@ -3,19 +3,24 @@
  * "Runde 42 namen Stufe 6"), RE15_AUDIO_CAP_SYNC ohne SDL-Geraet (Muster probe_r39_stimmen_lader.c).
  *
  * PORT-WAHL (include/re15_altaufnahme_r42.h): 15 Saetze haben seit der Story v0.8.31 einen neuen Untertitel, ihre Datei
- * synchro/STAGEn/roomXXXX/mainNN.wav traegt noch die Aufnahme des alten Satzes. Eine Datei mit genau dem Fingerabdruck des Tags
- * v0.8.30 gilt wie KEINE Datei: die Zeile bleibt stumm. Jede andere Datei unter demselben Namen spielt.
+ * synchro/STAGEn/roomXXXX/mainNN.wav traegt noch die Aufnahme des alten Satzes. 13 davon sprechen einen ANDEREN Satz: eine Datei
+ * mit genau dem Fingerabdruck des Tags v0.8.30 gilt wie KEINE Datei, die Zeile bleibt stumm. Jede andere Datei unter demselben
+ * Namen spielt. Stufe 7 (Entscheid 19.11.2026): 3020 main02 und 6030 main21 sprechen den neuen Satz woertlich bzw. bis auf ein
+ * Wort - sie stehen nicht in der Tabelle und SPIELEN, auch mit dem Abdruck des Tags (Teil C).
  *
  * Gemessen wird am Mitschnitt des Mischers (44100 Hz, je Bild 1470 Abtastwerte):
- *   A  jede der 15 Dateien, die noch den Abdruck traegt (Groesse + FNV-1a-64, hier SELBST gerechnet): re15_audio_stimme(Raum,
+ *   A  jede der 13 Dateien, die noch den Abdruck traegt (Groesse + FNV-1a-64, hier SELBST gerechnet): re15_audio_stimme(Raum,
  *      Nummer) -> Mitschnitt ueber die ganze Laenge der Aufnahme + 10 Bilder exakt 0, der Sprachkanal meldet "laeuft nicht".
- *      Traegt eine der 15 den Abdruck nicht mehr (der Nutzer hat sie ersetzt), muss sie SPIELEN (korr >= 0,9).
+ *      Traegt eine der 13 den Abdruck nicht mehr (der Nutzer hat sie ersetzt), muss sie SPIELEN (korr >= 0,9).
  *   B  NEGATIVKONTROLLE: jede andere Datei main00..main63 in denselben vier Ordnern (3020, 30E0, 6030, 6031) spielt weiter
  *      (normierte Kreuzkorrelation Datei gegen Mitschnitt >= 0,9, Sprachkanal "laeuft").
+ *   C  Stufe 7: 3020 main02 und 6030 main21 (fast woertlich, tests/unit/gen_r42_namen_altsaetze.inc) SPIELEN - gemessen wird, ob
+ *      die Datei noch den Abdruck des Tags traegt (dann ist es die alte Aufnahme, die spielt) oder ersetzt ist.
  * Aufruf `ersatz <Wurzel>`: die Probe liegt als Kopie in <Wurzel>, daneben <Wurzel>/synchro/... mit ERSETZTEN Dateien (der
  * Basis-Wurzelsucher asset_root_pc.c nimmt das exe-Verzeichnis zuerst; synchro/ im Repo wird nicht angefasst). Dann gilt A fuer
  * die Datei, die der Lader wirklich liest: ersetzte Dateien spielen, die uebrigen der 15 bleiben stumm.
  * Gegenprobe: rot auf dem Stand vor Stufe 6 (audio_pc.c ohne den Haken) - die alten Aufnahmen spielen dort (Teil A).
+ * Gegenprobe Stufe 7: rot auf e9ddc6b7a (Tabelle mit 15 Eintraegen) - 3020 main02 und 6030 main21 sind dort stumm (Teil C).
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
 #define _DEFAULT_SOURCE 1
@@ -66,10 +71,13 @@ extern int g_re15_voice_laeuft;                               /* scd_vm.c, je Bi
 #define T 1470
 
 static int s_fail = 0, s_pass = 0;
+/* Die Nummer wird genau EINMAL ausgewertet (Aufruf mit nr++): vorher zaehlte ein FAIL sie doppelt weiter, "erste Verletzung"
+ * nannte dann eine verschobene Nummer (Pruefbericht Stufe 6, Kosmetik). */
 #define CHECK(nr, cond, ...) do {                                                  \
-        if (cond) { s_pass++; printf("  PASS %2d: ", nr); printf(__VA_ARGS__); printf("\n"); } \
-        else { printf("  FAIL %2d: ", nr); printf(__VA_ARGS__); printf("\n");      \
-               if (!s_fail) s_fail = nr; } } while (0)
+        const int check_nr_ = (nr);                                                \
+        if (cond) { s_pass++; printf("  PASS %2d: ", check_nr_); printf(__VA_ARGS__); printf("\n"); } \
+        else { printf("  FAIL %2d: ", check_nr_); printf(__VA_ARGS__); printf("\n"); \
+               if (!s_fail) s_fail = check_nr_; } } while (0)
 
 static int s_bild = 0;
 static void ticks(int n) { for (int i = 0; i < n; i++) { re15_audio_tick(); s_bild++; } }
@@ -159,8 +167,18 @@ static uint64_t fnv64(const uint8_t *b, long n)
     return h;
 }
 
+/* Stufe 7: alle 15 Saetze mit neuem Untertitel (erzeugt, tools/r42_namen/altaufnahmen_bauen.py); stumm 0 = fast woertlich */
+#define RE15_ALTSATZ_ZEILEN 1
+static const struct { unsigned raum; int nr; int stumm; uint32_t groesse; uint64_t fnv; const char *gehoert; const char *neu; }
+k_altsatz[] = {
+#include "gen_r42_namen_altsaetze.inc"
+};
+#define ALTSATZ_N ((int)(sizeof k_altsatz / sizeof k_altsatz[0]))
+#define N_STUMM 13   /* Soll: 15 Saetze - 2 fast woertliche (3020 main02, 6030 main21) */
+
 typedef struct {
     unsigned raum; int nr; int in_tabelle; int alt;   /* alt = Datei, die der Lader liest, traegt den Abdruck des Tags */
+    int fastw, fastw_abdruck;                         /* Stufe 7: fast woertlicher Satz; Datei traegt noch den Abdruck des Tags */
     int ersetzt_lokal;                                /* Datei kommt aus <Wurzel>/synchro (Aufruf ersatz)             */
     int bild, bilder, laeuft;
     double *x; long xn;
@@ -209,6 +227,11 @@ int main(int argc, char **argv)
                 const re15_altaufnahme_r42_t *e = re15_altaufnahme_r42_eintrag(k);
                 l->alt = ((long)e->groesse == sz && e->fnv == fnv64(b, sz));
             }
+            for (int q = 0; q < ALTSATZ_N; q++)
+                if (!k_altsatz[q].stumm && k_altsatz[q].raum == raeume[r] && k_altsatz[q].nr == nr) {
+                    l->fastw = 1;
+                    l->fastw_abdruck = ((long)k_altsatz[q].groesse == sz && k_altsatz[q].fnv == fnv64(b, sz));
+                }
             l->x = pcm(b, sz, &l->xn);
             free(b);
             l->bilder = l->x ? (int)((l->xn + T - 1) / T) : 300;
@@ -224,7 +247,7 @@ int main(int argc, char **argv)
     if (!cap_lesen()) { printf("FEHLER: Mitschnitt %s nicht lesbar\n", CAP_DATEI); return 1; }
     printf("Mitschnitt: %ld Takte, %d Dateien angefordert%s%s\n", s_cap_n / T, nl, ersatz ? ", Ersatz-Wurzel " : "", ersatz ? ersatz : "");
 
-    int nr = 1, n_alt = 0, n_neu = 0, n_andere = 0, n_lokal = 0;
+    int nr = 1, n_alt = 0, n_neu = 0, n_andere = 0, n_lokal = 0, n_fastw = 0, n_fastw_spielt = 0;
     for (int i = 0; i < nl; i++) {
         lauf_t *l = &L[i];
         if (l->in_tabelle && l->alt) {
@@ -240,6 +263,14 @@ int main(int argc, char **argv)
             CHECK(nr++, c >= 0.9 && l->laeuft == 1,
                   "A  ROOM%04X msg %2d: main%02d.wav ist ERSETZT (%s, anderer Abdruck) -> SPIELT (korr %.3f, Sprachkanal laeuft %d)",
                   l->raum, l->nr, l->nr, l->ersetzt_lokal ? "Ersatz-Wurzel" : "Bestand", c, l->laeuft);
+        } else if (l->fastw) {
+            n_fastw++;
+            const double c = l->x ? korr(l->x, l->xn, l->bild) : -9;
+            n_fastw_spielt += (c >= 0.9 && l->laeuft == 1);
+            CHECK(nr++, c >= 0.9 && l->laeuft == 1,
+                  "C  ROOM%04X msg %2d: main%02d.wav spricht den neuen Untertitel fast woertlich (%s) -> SPIELT (korr %.3f, "
+                  "Sprachkanal laeuft %d)", l->raum, l->nr, l->nr,
+                  l->fastw_abdruck ? "alte Aufnahme, Abdruck des Tags" : "ersetzt", c, l->laeuft);
         } else {
             n_andere++;
             const double c = l->x ? korr(l->x, l->xn, l->bild) : -9;
@@ -249,9 +280,13 @@ int main(int argc, char **argv)
         }
         free(l->x);
     }
-    printf("  von den 15: %d stumm (alte Aufnahme), %d spielen (ersetzt, davon %d aus der Ersatz-Wurzel); %d andere Dateien spielen\n",
-           n_alt, n_neu, n_lokal, n_andere);
-    CHECK(nr++, n_alt + n_neu == 15, "alle 15 Saetze der Liste gemessen (%d stumm + %d ersetzt)", n_alt, n_neu);
+    printf("  von den %d: %d stumm (alte Aufnahme), %d spielen (ersetzt, davon %d aus der Ersatz-Wurzel); fast woertlich: %d von %d "
+           "spielen; %d andere Dateien spielen\n", N_STUMM, n_alt, n_neu, n_lokal, n_fastw_spielt, n_fastw, n_andere);
+    CHECK(nr++, re15_altaufnahme_r42_anzahl() == N_STUMM && n_alt + n_neu == N_STUMM,
+          "alle %d Saetze der Liste gemessen (%d stumm + %d ersetzt; Tabelle %d Eintraege)", N_STUMM, n_alt, n_neu,
+          re15_altaufnahme_r42_anzahl());
+    CHECK(nr++, n_fastw == 2 && n_fastw_spielt == 2,
+          "Stufe 7: 3020 main02 und 6030 main21 (fast woertlich) gemessen und beide SPIELEN (%d von %d)", n_fastw_spielt, n_fastw);
     CHECK(nr++, n_andere >= 30, "Negativkontrolle: %d andere Dateien in 3020/30E0/6030/6031 gemessen", n_andere);
     if (ersatz) {
         int soll = argc > 3 ? atoi(argv[3]) : 1;
