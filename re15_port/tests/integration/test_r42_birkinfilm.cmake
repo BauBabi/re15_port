@@ -4,7 +4,8 @@
 # platform/pc/src/zws_r41_pc.c. PORT-STORY (ORCHESTRATOR-ENTSCHEID 18.11.).
 #
 #   leon  ROOM6000 (Bahnsteig, Annette): RE15_DEBUG_JUMP=6000 mit (3,100)=0 (Szene noch nicht gesehen; sub00 @0x00F40).
-#         Erwartet: Umleitung sub06 -> Programm, Zeilen 0, 1, 2, 40, 41, 42, 3 in dieser Folge, RE2-Stimmen 40/41/42
+#         Erwartet: Umleitung sub06 -> Programm, Zeilen 0, 1, 2, 40, 48, 41, 49, 42, 50, 3 in dieser Folge (Strang namen: je
+#         Satz eine Nachricht wie RE2 ROOM4090, jede mit "Annette:"), RE2-Stimmen nur 40/41/42
 #         (R409_XA09/11/14.XAS), Abblende (RE2 ROOM4090 @0x027F4) nach der Warte-Zeile 43, Film zwischen 41 und 42, Einblende
 #         (@0x0281C), Szene laeuft danach weiter (msg 3).
 #   elza  ROOM5011 (Monitorraum, John und Sherry): Ankunft wie nach ROOM5021 sub02 - (4,237)=1 (@0x01356) und (3,58)=1 (@0x0135A);
@@ -111,9 +112,20 @@ if(TEIL STREQUAL "leon")
     endif()
     file(READ "${WORKDIR}/debug.log" _dbg)
     pruefe("Sprung nach 6000" "[debug-menu] AUTO-JUMP -> ROOM6000")
-    pruefe("Umleitung sub06 -> Programm" "[birkinfilm] F250 ROOM6000 Evt_exec sub06 -> Programm (420 B)")
-    pruefe_re("Zeilen 0, 1, 2, 40, 41, 42, 3 in dieser Folge"
-        "msgtext\\] room=6000 id=0 .*msgtext\\] room=6000 id=1 .*msgtext\\] room=6000 id=2 .*msgtext\\] room=6000 id=40 .*msgtext\\] room=6000 id=41 .*msgtext\\] room=6000 id=42 .*msgtext\\] room=6000 id=3 ")
+    pruefe("Umleitung sub06 -> Programm" "[birkinfilm] F250 ROOM6000 Evt_exec sub06 -> Programm (444 B)")
+    pruefe_re("Zeilen 0, 1, 2, 40, 48, 41, 49, 42, 50, 3 in dieser Folge"
+        "msgtext\\] room=6000 id=0 .*msgtext\\] room=6000 id=1 .*msgtext\\] room=6000 id=2 .*msgtext\\] room=6000 id=40 .*msgtext\\] room=6000 id=48 .*msgtext\\] room=6000 id=41 .*msgtext\\] room=6000 id=49 .*msgtext\\] room=6000 id=42 .*msgtext\\] room=6000 id=50 .*msgtext\\] room=6000 id=3 ")
+    # Strang namen: jeder Satz mit "Annette:" (Wortlaut im Protokoll RE15_MSG_LOG), Satz 2 ohne eigene Stimme
+    pruefe("msg 40 mit Namen" "[msgtext] room=6000 id=40 \"Annette: Annette Birkin.\"")
+    pruefe("msg 48 mit Namen" "[msgtext] room=6000 id=48 \"Annette: My husband is the man")
+    pruefe("msg 41 mit Namen" "[msgtext] room=6000 id=41 \"Annette: And it's all Umbrella's fault.\"")
+    pruefe("msg 49 mit Namen" "[msgtext] room=6000 id=49 \"Annette: None of this would have")
+    pruefe("msg 42 mit Namen" "[msgtext] room=6000 id=42 \"Annette: As a result of his")
+    pruefe("msg 50 mit Namen" "[msgtext] room=6000 id=50 \"Annette: William should have lost")
+    foreach(_m 48 49 50)
+        pruefe("Satz 2 msg ${_m} am Riegel vorbei" "ROOM6000 msg ${_m}: Satz 2 unter der laufenden RE2-Stimme")
+        pruefe_nicht("Satz 2 msg ${_m} ohne eigene Stimme" "[voice] ROOM6000 msg ${_m} <-")
+    endforeach()
     pruefe_nicht("keine Zeile 43/44 mit Text" "room=6000 id=43 \"")
     pruefe_nicht("keine Zeile 44 mit Text" "room=6000 id=44 \"")
     foreach(_m 40 41 42)

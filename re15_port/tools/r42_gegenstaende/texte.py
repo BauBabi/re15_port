@@ -53,7 +53,8 @@ FUND = (
     ('k_g42_fund_5021', 'ROOM5021 Spalt unter den Kisten (Brand-Kapsel)', "Something is lying by the gap under the crates. It's a capsule."),
 )
 # 2030/2031 Pult ohne Mutter (V-03, an das Panel der Bruecke angepasst: Ventil 13 entfaellt seit Nachtrag 37)
-OHNE = 'A control panel for the bridge. Its valve handle spins freely. The nut that held it in place is gone.'
+# Runde 42 namen Stufe 5: '|' = Seite 2 nach der Taste (hoechstens zwei Zeilen je Seite, tools/r42_namen/lesbar_s5.py)
+OHNE = 'A control panel for the bridge. Its valve handle spins freely. | The nut that held it in place is gone.'
 FRAGE = ('Will you use the ', 'Nut', '?')
 DANACH = ("You've fastened the valve handle / with the ", 'Nut', '.')   # ' / ' = Zeilenwechsel 08
 
@@ -100,15 +101,21 @@ def main():
         out += t2.carr(name, t2.kod(text) + [0x07], 'Item 0x%02X Name: %s  (%d px)' % (item, text, t2.px(text)))
     for name, wo, text in FUND:
         b, zeilen, bw = t2.systemtext(text)
+        if len(zeilen) > 2:
+            fehler.append('%s: %d Zeilen > 2 (tools/r42_namen/lesbar_s5.py)' % (wo, len(zeilen)))
         for i, w in enumerate(bw):
             if w > t2.MAX_PX:
                 fehler.append('%s Zeile %d = %d px' % (wo, i + 1, w))
         out += t2.carr(name, b, '%s: %s  (Zeilen %s px)' % (wo, ' / '.join(zeilen), '/'.join(map(str, bw))))
-    b, zeilen, bw = t2.systemtext(OHNE)
+    sys.path.insert(0, os.path.join(HIER, '..', 'r42_namen'))
+    import lesbar_s5 as L5
+    b, zz, bws = L5.text_seiten(OHNE, t2.kod, [0x04, 0x02], [0x01, 0x00], None)
+    zeilen, bw = [' // '.join(' / '.join(z) for z in zz)], [w for x in bws for w in x]
     for i, w in enumerate(bw):
         if w > t2.MAX_PX:
             fehler.append('Pult ohne Mutter Zeile %d = %d px' % (i + 1, w))
-    out += t2.carr('k_g42_msg_ohne', b, 'ROOM2030/2031 Pult ohne Mutter: %s  (Zeilen %s px)' % (' / '.join(zeilen), '/'.join(map(str, bw))))
+    out += t2.carr('k_g42_msg_ohne', b, 'ROOM2030/2031 Pult ohne Mutter: %s  (Zeilen %s px; Stufe 5 namen: %s)' % (
+        ' / '.join(zeilen), '/'.join(map(str, bw)), L5.SYSTEM_BELEG))
     b, w = hervor(*FRAGE, True)
     if w > t2.MAX_PX:
         fehler.append('Frage %d px' % w)

@@ -456,8 +456,10 @@ static void fall_a(void)
     PRUEFE(text_ist(0x2000, 40, "I cannot climb up the ladder because of the water pressure."), "Text 2000/40");
     PRUEFE(text_ist(0x20B1, 40, "I cannot climb up the ladder because of the water pressure."), "Text 20B1/40 (= 2000)");
     PRUEFE(text_ist(0x2030, 43, "The pressure gauge reads 80. Lower the bridge?"), "Text 2030/43");
-    PRUEFE(text_ist(0x2030, 46, "WARNING: The water will rise in one minute. Please leave the room immediately!") &&
-           text_ist(0x2031, 46, "WARNING: The water will rise in one minute. Please leave the room immediately!"),
+    /* r42 namen Stufe 5: zweiter Satz auf Seite 2 (`02 00`, hoechstens zwei Zeilen je Seite); re15_msg_decode_text haengt Seiten ohne
+     * Leerzeichen an */
+    PRUEFE(text_ist(0x2030, 46, "WARNING: The water will rise in one minute.Please leave the room immediately!") &&
+           text_ist(0x2031, 46, "WARNING: The water will rise in one minute.Please leave the room immediately!"),
            "Text 2030/2031 46 = Wortlaut Nachtrag 19");
     PRUEFE(text_ist(0x2050, 42, "Power supply OK."), "Text 2050/42 = 11F0 msg 2");
     PRUEFE(text_ist(0x2050, 41, "Will you push them?"), "Text 2050/41 = 11F0 msg 1");

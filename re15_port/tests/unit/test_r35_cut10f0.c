@@ -249,7 +249,9 @@ static void teil_texte(void)
 {
     static const struct { int id; const char *soll; } k[] = {
         {  6, "Leon: Hey - how did you came in here?" },
-        {  7, "Woman: Did you really think there was only one staff card for the Communication Room?" },
+        /* Runde 42 namen Stufe 5 R2 (tools/r42_namen/porttexte_s5r2.py): zwei Seiten, jede mit "Woman:"; re15_msg_decode_text haengt
+         * die Seiten ohne Leerzeichen aneinander. Wortlaut der Nutzervorgabe unveraendert. */
+        {  7, "Woman: Did you really think there was only one staff cardWoman: for the Communication Room?" },
         {  8, "Woman: Anyway... the communication system is completely destroyed." },
         {  9, "Woman: We won't reach anyone with it anymore..." },
         { 10, "Marvin: Leon! You already made it!" },

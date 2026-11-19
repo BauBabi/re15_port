@@ -142,6 +142,8 @@ WARTE 150
 AKTION
 WARTE 450
 AKTION
+WARTE 120
+AKTION
 WARTE 30
 GEHE -1050 6900 100
 GEHE -1050 6000
@@ -173,7 +175,7 @@ function(_alarm_takte _text _raum _name _an _aus)
         _fehler("[${_name}]: Alarm an/aus fehlt im Log (an '${_m1}', aus '${_m2}')")
     endif()
     string(FIND "${_text}" "RE2-Alarm SUB_25 an (ROOM${_raum}" _p_an)
-    string(FIND "${_text}" "[msgtext] room=${_raum} id=46 \"WARNING: The water will rise in one minute. Please leave the room immediately!\"" _p_46)
+    string(FIND "${_text}" "[msgtext] room=${_raum} id=46 \"WARNING: The water will rise in one minute.Please leave the room immediately!\"" _p_46)
     string(FIND "${_text}" "FLUT: Wasser steigt" _p_flut)
     string(FIND "${_text}" "RE2-Alarm SUB_25 aus (Flut/Tod)" _p_aus)
     if(_p_46 LESS 0 OR _p_flut LESS 0 OR NOT _p_an LESS _p_flut OR NOT _p_flut LESS _p_aus)

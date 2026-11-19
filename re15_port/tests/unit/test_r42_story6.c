@@ -6,7 +6,8 @@
  *
  * Teile (Aufruf: test_r42_story6 <teil>):
  *   texte      6030 msg 21/2/3/22/4/5 und 6031 msg 1/2/12..17 nach dem Raumaufbau: Wortlaut, Sprecherkopf/Farbe, Dauer, <= 3 Zeilen je
- *              Seite, <= 271 px; 6030 msg 4 zwei Seiten (Form ROOM3060 msg 7 @0x1244); 6031 msg 0 bleibt die story_r36-Fassung
+ *              Seite, <= 271 px; 6030 msg 4 + 32 je eine Seite (Strang namen Stufe 4; vorher msg 4 zwei Seiten, Form ROOM3060 msg 7
+ *              @0x1244); 6031 msg 0 bleibt die story_r36-Fassung
  *   wagen6030  Leon: Wagen-Programm k_s80_6030_sub02, Folge 0,1,21,2,3,22,4,5,6,7,23,24,8 mit den neuen Saetzen; Stimmen-Ids = Ids
  *   wagen6031  Elza: sub02 -> k_s6_6031_wagen, Folge 0,1,2,12,13, Stimmen-Ids = Ids, danach Cut 9, Sperren frei, (3,22)=1
  *   vorher6031 Elza Fuehrerstand vor dem Tor ((3,89)=0): Original (sub08 bzw. nichts), kein Zugstart; Wagen: Original (msg 4)
@@ -240,15 +241,18 @@ static const zeile_t k_liste[] = {
     { 0x6030,  2, "Leon: Where is she now?" },
     { 0x6030,  3, "John: We got split up in the fire. One second she was right behind us..." },
     { 0x6030, 22, "Sherry: Elza's still out there...!" },
-    /* zwei Seiten: re15_msg_decode_text haengt die Seiten ohne Leerzeichen an (wie ROOM3060 msg 7 "side!Just") */
-    { 0x6030,  4, "Leon: If she's as tough as you say, she'll find another way out.But we can't wait. When that reactor goes, nobody gets out." },
+    /* Strang namen Stufe 4: Leons zwei Saetze sind zwei Nachrichten (4 und 32), jede mit "Leon:" - vorher zwei Seiten von msg 4,
+     * Seite 2 stand nur ~20 Bilder (Wagen-Programm tools/r41_story80/szenen_bauen.py) */
+    { 0x6030,  4, "Leon: If she's as tough as you say, she'll find another way out." },
+    { 0x6030, 32, "Leon: But we can't wait. When that reactor goes, nobody gets out." },   /* Strang namen Stufe 4 */
     { 0x6030,  5, "John: Then I'm staying with the kid. And I'll keep an eye on your friend here." },
     /* E6 (6031, Elza): msg 0 bleibt (story_r36), 1, 2 Neutext, 12, 13 neu */
     { 0x6031,  0, "Elza: Sherry! Is anyone else here?" },
-    { 0x6031,  1, "Sherry: A policeman brought Marvin down here. Then he went back into the fire." },
+    /* Strang namen Stufe 5: drei Zeilen -> zwei Seiten, jede mit Namenskopf (re15_msg_decode_text haengt Seiten ohne Leerzeichen an) */
+    { 0x6031,  1, "Sherry: A policeman brought Marvin down here.Sherry: Then he went back into the fire." },
     { 0x6031,  2, "Elza: Back? Why?" },
     { 0x6031, 12, "Sherry: He said he had to find someone. He told us not to wait for him." },
-    { 0x6031, 13, "Elza: ...Then we won't. If that core goes, no one gets out. Let's get this train moving." },
+    { 0x6031, 13, "Elza: ...Then we won't. If that core goes, no one gets out.Elza: Let's get this train moving." },   /* namen Stufe 5 */
     /* E9 (6031, Elza): Zugstart */
     { 0x6031, 14, "Sherry: It's moving! Elza, we did it!" },
     { 0x6031, 15, "John: What the hell was that? It came from the back car!" },
@@ -308,8 +312,9 @@ static void teil_texte(void)
                   len >= 4 && memcmp(raw + len - 4, k_schwanz, 4) == 0,
                   "ROOM%04X msg %2d (%d B, %d Seite(n), %d Zeilen je Seite, max %d px, Dauer %d, Schwanz 04 01 01 63): \"%s\"",
                   k_liste[i].raum, k_liste[i].id, len, sn, z, px, dauer, t ? t : "(fehlt)");
-            if (k_liste[i].raum == 0x6030 && k_liste[i].id == 4)
-                PRUEF(sn == 2, "ROOM6030 msg 4 hat zwei Seiten (Seitenwechsel `04 01 02 63 04 00`, Form ROOM3060 @0x1244)");
+            if (k_liste[i].raum == 0x6030 && (k_liste[i].id == 4 || k_liste[i].id == 32))   /* Strang namen Stufe 4 */
+                PRUEF(sn == 1 && z <= 2, "ROOM6030 msg %d: eine Seite, hoechstens 2 Zeilen (Leons Saetze als zwei Nachrichten 4/32)",
+                      k_liste[i].id);
             /* Sprecher: Farbe im Kopf `04 00 05 <Farbe>` (Leon/Elza 01, Sherry 06, John 07) */
             const int soll = !strncmp(k_liste[i].text, "Sherry", 6) ? 6 : !strncmp(k_liste[i].text, "John", 4) ? 7 : 1;
             PRUEF(raw && len > 4 && raw[2] == 0x05 && raw[3] == soll, "ROOM%04X msg %2d Farbe %d (soll %d)", k_liste[i].raum,
@@ -388,8 +393,8 @@ static void teil_wagen6030(void)
     int pn = 0, fn = 0;
     const uint8_t *prog = re15_story80_programm(RE15_S80_P_WAGEN, &pn);
     const uint8_t *folge = re15_story80_folge(RE15_S80_P_WAGEN, &fn);
-    static const uint8_t k_soll[] = { 0, 1, 21, 2, 3, 22, 4, 5, 6, 7, 23, 24, 8 };
-    PRUEF(fn == (int)sizeof k_soll && !memcmp(folge, k_soll, sizeof k_soll), "Soll-Folge des Wagen-Programms unveraendert (13 Zeilen)");
+    static const uint8_t k_soll[] = { 0, 1, 21, 2, 3, 22, 4, 32, 5, 6, 7, 23, 24, 8 };   /* 32: Strang namen Stufe 4 */
+    PRUEF(fn == (int)sizeof k_soll && !memcmp(folge, k_soll, sizeof k_soll), "Soll-Folge des Wagen-Programms (14 Zeilen, msg 32 nach msg 4)");
     szene_pruefen(prog, pn, folge, fn, 0x6030, 12000);
     int alt = 0;
     for (int i = 0; i < s_prot_n; i++)

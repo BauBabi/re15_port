@@ -299,7 +299,7 @@ static void test_programm_zug(void)
     CHECK(fahrt == 1 && em == 1 && ende, "Zugstart: Licht-Schleife %d, Sce_em_set 0x4D %d, Ende %d", fahrt, em, ende);
     static const struct { int id; const char *t; } soll[] = {
         { 27, "Annette: There! The train's moving." }, { 28, "Annette: What was that? ...Sherry is back there!" },
-        { 29, "Leon: I'll check it out." }, { 30, "Annette: No. She's my daughter. Stay here and keep an eye on the controls." } };
+        { 29, "Leon: I'll check it out." }, { 30, "Annette: No. She's my daughter.Annette: Stay here and keep an eye on the controls." } };   /* r42 namen Stufe 5: zwei Seiten */
     for (unsigned k = 0; k < sizeof soll / sizeof soll[0]; k++) {
         int l = 0; char txt[256] = { 0 };
         const uint8_t *m = re15_annette_r41_meldung_raum(0x6030u, soll[k].id, &l);

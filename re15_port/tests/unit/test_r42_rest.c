@@ -11,7 +11,7 @@
  *            Schreibmaschine FUN_80028134 liest bis zum 0x01. Der Port kopiert (s_msg_raw, msg_common.c) - mit der
  *            alten PC-Kapazitaet 192 endete ROOM2040/2041 msg 0 (Aushang "Notice of damage door", 411 Byte bis zum 0x01,
  *            RDT-Datei-Offset 0x175C) nach 192 Byte: die Schreibmaschine lief in "Ende der Bytes" (fsm 6) statt ans 0x01.
- *            Teil 2 faehrt die Schreibmaschine selbst: ROOM2040 msg 0 und ROOM6030 msg 4 (Port-Text, 139 Byte) laufen
+ *            Teil 2 faehrt die Schreibmaschine selbst: ROOM2040 msg 0 und ROOM6000 msg 49 (Port-Text, 127 Byte, zwei Seiten) laufen
  *            mit der Aktionstaste Seite fuer Seite bis an ihr 0x01 (fsm 4 = Warten nach dem Ende).
  */
 #include "re15_rdt.h"
@@ -169,7 +169,9 @@ static void teil_schreibmaschine(void)
 {
     printf("=== schreibmaschine: lange Texte laufen bis an ihr 0x01 ===\n");
     schreibmaschine(0x2040, 0, 411);   /* Aushang, RDT 0x175C..0x18F6: 0x01 bei +409, Argument +410 -> 411 */
-    schreibmaschine(0x6030, 4, 139);   /* Port-Text (gen/story6_r42_texte.inc k_s6_6030_msg4[139]) */
+    /* Strang namen Stufe 4: 6030 msg 4 ist jetzt 74 B (Satz 2 = msg 32); laengster zweiseitiger Port-Text = 6000 msg 49 (127 B,
+     * gen/birkinfilm_r42.inc k_bf_6000_msg49, Seitenwechsel `02 57`). */
+    schreibmaschine(0x6000, 49, 127);
 }
 
 int main(int argc, char **argv)

@@ -28,8 +28,8 @@ ZIEL = os.path.join(T.PORT, 'engine', 'src', 'gen', 'story3b_r42_texte.inc')
 UNTERTITEL = (
     # L8 (RDT-Texte @0x133A / @0x1381 / @0x13FD werden ersetzt; sub03 Message_on 10/11/13 @0x00ED6/@0x00EFE/@0x00F5A)
     (0x30E0, 10, 0x01, 'Leon',   "That's a bite... They got you?"),
-    (0x30E0, 11, 0x07, 'Marvin', "The lobby's gone...! They smashed through the front glass and got inside!"),
-    (0x30E0, 13, 0x07, 'Marvin', "There's more of them than I thought... If they've come this far, the city's finished."),
+    (0x30E0, 11, 0x07, 'Marvin', "The lobby's gone...! | They smashed through the front glass and got inside!"),
+    (0x30E0, 13, 0x07, 'Marvin', "There's more of them than I thought... | If they've come this far, the city's finished."),
     # L8 neu: nach dem Glasbruch (RDT 0..15 belegt)
     (0x30E0, 16, 0x01, 'Leon',   "That came from the lobby... Marvin!"),
     # L10 optional: Uebergang Ada -> Marvin
@@ -45,13 +45,15 @@ def main():
            ' * F-08, VERTRAG analysis/befunde_runde42/VERTRAG.md 2.3). */']
     tab = []
     for raum, mid, farbe, name, text in UNTERTITEL:
-        b, zeilen, bw = T.untertitel(farbe, name, text, raum)
+        b, zeilen, bw = T.untertitel(farbe, name, text, raum, mid)   # '|' = Seitenwechsel (Runde 42 namen Stufe 5, lesbar_s5.py)
+        if len(zeilen) > 2:
+            fehler.append('ROOM%04X msg %d: %d Zeilen auf einer Seite > 2 (tools/r42_namen/lesbar_s5.py)' % (raum, mid, len(zeilen)))
         for i, w in enumerate(bw):
             if w > T.MAX_PX:
                 fehler.append('ROOM%04X msg %d Zeile %d = %d px > %d' % (raum, mid, i + 1, w, T.MAX_PX))
         n = 'k_s3b_%04x_msg%d' % (raum, mid)
         out += T.carr(n, b, 'ROOM%04X %d %s: %s  (Zeilen %s px; %s)' % (raum, mid, name, ' / '.join(zeilen), '/'.join(map(str, bw)),
-                                    T.nachlauf_r42.nachlauf(raum, len(zeilen))[1]))
+                                    T.nachlauf_r42.nachlauf(raum, T.letzte_seite_zeilen(zeilen))[1] + T.seite2_beleg(raum, mid, text)))
         tab.append((raum, mid, n))
     out.append('typedef struct { uint16_t raum; uint8_t id; const uint8_t *b; uint16_t n; } s3b_text_t;')
     out.append('static const s3b_text_t k_s3b_texte[] = {')

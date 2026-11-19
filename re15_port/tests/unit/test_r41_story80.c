@@ -294,12 +294,13 @@ static const zeile_t k_liste[] = {
     { 0x6030,  0, "Leon: Hang on, Marvin. We're getting out of here." },
     { 0x6030,  1, "Leon: Who are you two?" },
     /* Runde 42 Story STAGE6 (Konzept L21, VERTRAG 2.3): 21/2/3/22/4/5 neu (tools/r42_story/texte_stage6.py); Sprecherwechsel
-     * msg 2 Sherry -> Leon, msg 22 John -> Sherry; msg 4 hat zwei Seiten (Form ROOM3060 msg 7 @0x1244, Seiten ohne Leerzeichen). */
+     * msg 2 Sherry -> Leon, msg 22 John -> Sherry; msg 4 + 32 = Leons zwei Saetze (Strang namen Stufe 4; vorher zwei Seiten von msg 4). */
     { 0x6030, 21, "John: Name's John. This is Sherry. We came down here with a girl named Elza." },
     { 0x6030,  2, "Leon: Where is she now?" },
     { 0x6030,  3, "John: We got split up in the fire. One second she was right behind us..." },
     { 0x6030, 22, "Sherry: Elza's still out there...!" },
-    { 0x6030,  4, "Leon: If she's as tough as you say, she'll find another way out.But we can't wait. When that reactor goes, nobody gets out." },
+    { 0x6030,  4, "Leon: If she's as tough as you say, she'll find another way out." },
+    { 0x6030, 32, "Leon: But we can't wait. When that reactor goes, nobody gets out." },   /* Strang namen Stufe 4: eigene Nachricht statt Seite 2 */
     { 0x6030,  5, "John: Then I'm staying with the kid. And I'll keep an eye on your friend here." },
     { 0x6030,  6, "Leon: Where's Annette?" },
     { 0x6030,  7, "John: The woman in the lab coat? Up front, trying to start the train." },
@@ -360,8 +361,8 @@ static void teil_texte(void)
             int len = 0, z = 0;
             const unsigned char *raw = re15_msg_get_raw(k_liste[i].id, &len);
             const int px = raw ? max_zeilenbreite(raw, len, &z) : -1;
-            /* Runde 42 STAGE6: 6030 msg 4 (Nutzersatz, zwei Seiten) hat 139 B - PC MSG_RAW_LEN 192, PSX 128 schneidet ab (gemeldet) */
-            const int maxlen = (k_liste[i].raum == 0x6030 && k_liste[i].id == 4) ? 192 : 128;
+            /* Runde 42 namen Stufe 4: 6030 msg 4 ist wieder eine Nachricht (74 B), ihr zweiter Satz = msg 32 (75 B) -> alle <= 128 (PSX) */
+            const int maxlen = 128;
             PRUEF(t && strcmp(t, k_liste[i].text) == 0 && raw && len <= maxlen && px > 0 && px <= 271 && z <= 3,
                   "ROOM%04X msg %2d (%d B, %d Zeilen, max %d px <= 271): \"%s\"", k_liste[i].raum, k_liste[i].id, len, z,
                   px, t ? t : "(fehlt)");
@@ -570,7 +571,7 @@ static void teil_reihenfolge6030(void)
     printf("   ganzer Weg (%d Zeilen):", s_weg_n);
     for (int i = 0; i < s_weg_n; i++) printf(" %d", s_weg_ids[i]);
     printf("\n");
-    PRUEF(!doppelt && s_weg_n == 9 + 13 + 2, "jede Zeile hoechstens einmal (%d Zeilen, doppelt: %d)", s_weg_n,
+    PRUEF(!doppelt && s_weg_n == 9 + 14 + 2, "jede Zeile hoechstens einmal (%d Zeilen, doppelt: %d)", s_weg_n,   /* Wagen 14: msg 32 (Strang namen Stufe 4) */
           doppelt - 1);
 }
 
@@ -660,7 +661,7 @@ static void teil_torweg6030(void)
     int doppelt = 0;
     for (int i = 0; i < s_weg_n; i++)
         for (int k = i + 1; k < s_weg_n; k++) if (s_weg_ids[i] == s_weg_ids[k]) doppelt = s_weg_ids[i] + 1;
-    PRUEF(!doppelt && s_weg_n == 9 + 13 + 2 + 4, "jede Zeile hoechstens einmal (%d Zeilen, doppelt: %d)", s_weg_n, doppelt - 1);
+    PRUEF(!doppelt && s_weg_n == 9 + 14 + 2 + 4, "jede Zeile hoechstens einmal (%d Zeilen, doppelt: %d)", s_weg_n, doppelt - 1);   /* Wagen 14 (msg 32) */
     PRUEF(weg_pos(25) >= 0 && weg_pos(40) >= 0 && weg_pos(28) > weg_pos(25) && weg_pos(25) > weg_pos(40) &&
           weg_pos(27) > weg_pos(25),
           "Annette erfaehrt von Sherry (40 @%d, 25 @%d) vor dem Zugstart (27 @%d, 28 '...Sherry is back there!' @%d)",

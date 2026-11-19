@@ -8,8 +8,11 @@
  *   datei     MOVIE/R409BIRK.STR = R409.STR ohne die Sektoren [11630, 13460) (Bilder 2327..2692), Rest bytegleich; 3927 Bilder
  *             320x160 mit den Port-Dekodern; Schnitt zwischen Weissblende (Bild 2325 hell) und Kanal; CD-XA-Ton = Filmlaenge
  *   xa        R409_XA09/11/14.XAS = die Kanal-Sektoren der Lesefenster aus VOICE04.XAS (STAGE4.BIN @0x384), Konstanten
- *   programm  Programm = sub06 bytegleich + Einschub vor @0x01156 (Folge der Zeilen, RE2-Sleeps, Musik), Texte 40..42 (2 Seiten)
- *   ablauf    ROOM6000 am VM: msg 0, 1, 2, 40, 41, 42, 3 in dieser Folge; Film genau einmal zwischen 41 und 42, erst nach dem
+ *   programm  Programm = sub06 bytegleich + Einschub vor @0x01156 (Folge der Zeilen, RE2-Sleeps, Musik), Texte 40..42 + 48..50
+ *             (Strang namen: je Satz eine Nachricht wie RE2 ROOM4090, jede mit dem Namenskopf "Annette:" der RDT-Zeile msg 1)
+ *   ablauf    ROOM6000 am VM: msg 0, 1, 2, 40, 48, 41, 49, 42, 50, 3 in dieser Folge; Satz 2 (48/49/50) 41/81/81 Bilder nach Satz 1
+ *             (RE2 Sleep @0x02722/@0x027D8/@0x02850) ohne eigene Stimme; jede gezeigte Annette-Seite beginnt mit "Annette:"
+ *             (Strang namen, Gegenprobe rot auf 8db089f5d: Seite 2 von 40/41/42 ohne Namen); Film genau einmal zwischen 41 und 42, erst nach dem
  *             Ende von Stimme 41 + Sleep 2 + Sleep 60 + 64 Abblendbildern; Blende vor dem Film 0, 4 ... 252 (64 Bilder) + 252,
  *             nach dem Film 255, 251 ... 3 (64 Bilder), dann Halt; MAIN Op 4 vor, Op 3 nach (Sleep 63); msg 42 nach Sleep 63
  *   einmal    zweites Betreten mit (3,100)=1: keine Umleitung, kein Film
@@ -399,30 +402,55 @@ static void teil_programm(void)
     static const uint8_t m40[] = { 0x2b, 40, 0, 0 }, m41[] = { 0x2b, 41, 0, 0 }, m42[] = { 0x2b, 42, 0, 0 },
                          m43[] = { 0x2b, 43, 0, 0 }, m44[] = { 0x2b, 44, 0, 0 }, s2[] = { 0x09, 0x0a, 0x02, 0x00 },
                          s60[] = { 0x09, 0x0a, 0x3c, 0x00 }, s63[] = { 0x09, 0x0a, 0x3f, 0x00 },
+                         s41[] = { 0x09, 0x0a, 0x29, 0x00 }, s81[] = { 0x09, 0x0a, 0x51, 0x00 },
+                         m48[] = { 0x2b, RE15_BF_MSG_XA09_S2, 0, 0 }, m49[] = { 0x2b, RE15_BF_MSG_XA11_S2, 0, 0 },
+                         m50[] = { 0x2b, RE15_BF_MSG_XA14_S2, 0, 0 },
                          halt[] = { 0x54, 0, 4, 0, 0, 0 }, weiter[] = { 0x54, 0, 3, 0, 0, 0 }, m3[] = { 0x2b, 3, 0, 0 };
     const uint8_t *g = r + 0x01142;
     const long i40 = finde(p, np, m40, 4, vor), i41 = finde(p, np, m41, 4, vor), i43 = finde(p, np, m43, 4, vor),
-               i44 = finde(p, np, m44, 4, vor), i42 = finde(p, np, m42, 4, vor), i3 = finde(p, np, m3, 4, vor);
-    PRUEF(i40 == vor && !memcmp(p + i40 + 4, g, 20) && i41 == i40 + 24 && !memcmp(p + i41 + 4, g, 20) && i43 == i41 + 24 &&
+               i44 = finde(p, np, m44, 4, vor), i42 = finde(p, np, m42, 4, vor), i3 = finde(p, np, m3, 4, vor),
+               i48 = finde(p, np, m48, 4, vor), i49 = finde(p, np, m49, 4, vor), i50 = finde(p, np, m50, 4, vor);
+    /* Strang namen: Satz 1 - RE2-Sleep - Satz 2 - Geste (RE2 ROOM4090 @0x02718/@0x02722/@0x02726, @0x027CE/@0x027D8/@0x027DC,
+     * @0x02846/@0x02850/@0x02854) */
+    PRUEF(i40 == vor && !memcmp(p + i40 + 4, s41, 4) && i48 == i40 + 8 && !memcmp(p + i48 + 4, g, 20) && i41 == i48 + 24 &&
+          !memcmp(p + i41 + 4, s81, 4) && i49 == i41 + 8 && !memcmp(p + i49 + 4, g, 20) && i43 == i49 + 24 &&
           !memcmp(p + i43 + 4, s2, 4) && !memcmp(p + i43 + 8, s60, 4) && !memcmp(p + i43 + 12, halt, 6) && i44 == i43 + 18 &&
-          !memcmp(p + i44 + 4, s63, 4) && !memcmp(p + i44 + 8, weiter, 6) && i42 == i44 + 14 && !memcmp(p + i42 + 4, g, 20) &&
-          i3 == i42 + 24 && i3 == vor + ein,
-          "Einschub: msg 40 + Geste, msg 41 + Geste, Warte-Zeile 43, Sleep 2 (@0x027E4), Sleep 60 (@0x027F0), MAIN Op 4, Film 44, "
-          "Sleep 63 (@0x02820), MAIN Op 3, msg 42 + Geste, dann msg 3 @0x01156");
+          !memcmp(p + i44 + 4, s63, 4) && !memcmp(p + i44 + 8, weiter, 6) && i42 == i44 + 14 && !memcmp(p + i42 + 4, s81, 4) &&
+          i50 == i42 + 8 && !memcmp(p + i50 + 4, g, 20) && i3 == i50 + 24 && i3 == vor + ein,
+          "Einschub: msg 40, Sleep 41 (@0x02722), msg 48 + Geste, msg 41, Sleep 81 (@0x027D8), msg 49 + Geste, Warte-Zeile 43, "
+          "Sleep 2 (@0x027E4), Sleep 60 (@0x027F0), MAIN Op 4, Film 44, Sleep 63 (@0x02820), MAIN Op 3, msg 42, Sleep 81 (@0x02850), "
+          "msg 50 + Geste, dann msg 3 @0x01156");
     int n54 = 0;
     for (long i = vor; i < vor + ein; i++) if (p[i] == 0x54 && (i == i43 + 12 || i == i44 + 8)) n54++;
     PRUEF(n54 == 2, "Musik nur Slot 0 (Op 4 / Op 3), Lautstaerke/Pan 0");
-    for (int id = 40; id <= 42; id++) {
+    /* Namenskopf aus der RDT selbst: ROOM6000 msg 1 "Annette: Where's Ada?" (@0x01287) = `04 00 05 02 <Annette:> 05 00` */
+    const uint32_t mb = rd32(r + 0x3C);
+    const uint16_t o1 = rd16(r + mb + 2);
+    const uint8_t *kopf = r + mb + o1;
+    long kn = 0;
+    while (kn + 1 < 24 && !(kopf[kn] == 0x05 && kopf[kn + 1] == 0x00 && kn > 2)) kn++;
+    kn += 2;
+    PRUEF(mb + o1 == 0x01287 && kopf[0] == 0x04 && kopf[1] == 0x00 && kopf[2] == 0x05 && kopf[3] == 0x02 && kn == 14,
+          "Namenskopf aus ROOM6000 msg 1 @0x01287: %ld B (04 00 05 02 \"Annette:\" 05 00)", kn);
+    static const int ids[6] = { 40, RE15_BF_MSG_XA09_S2, 41, RE15_BF_MSG_XA11_S2, 42, RE15_BF_MSG_XA14_S2 };
+    for (int k = 0; k < 6; k++) {
+        const int id = ids[k];
         int n = 0;
         const uint8_t *t = re15_birkinfilm_r42_text((uint8_t)id, &n);
         const long seite = t ? finde(t, n, (const uint8_t *)"\x04\x01\x02", 3, 0) : -1;
-        const int soll = id == 40 ? 41 : 81;
-        PRUEF(t && n > 10 && t[0] == 0x04 && t[1] == 0x00 && t[2] == 0x05 && t[3] == 0x02 && seite > 0 && t[seite + 3] == soll &&
-              t[seite + 4] == 0x04 && t[seite + 5] == 0x00 && t[n - 4] == 0x04 && t[n - 3] == 0x01 && t[n - 2] == 0x01 &&
-              t[n - 1] == 0x63 && n <= 192,
-              "msg %d: Untertitel Annette (Farbe 02), zwei Seiten, Wechsel nach %d Bildern (RE2-Sleep), Schwanz 04 01 01 63, %d B",
-              id, soll, n);
+        /* Strang namen Stufe 4: Satz 2 (48/49/50) = zwei Seiten, Seite 2 hinter `04 01 02 N 04 00` mit demselben Kopf
+         * (tools/r42_namen/lesbar_s4.py: hoechstens 2 Zeilen; Zeile 3 laege auf dem Letterbox-Balken @0x80072f06) */
+        const int seite_ok = (k & 1) ? (seite > 0 && seite + 4 + kn <= n && !memcmp(t + seite + 4, kopf, (size_t)kn)
+                                        && finde(t, n, (const uint8_t *)"\x04\x01\x02", 3, seite + 1) < 0)
+                                     : (seite < 0);
+        PRUEF(t && n > kn && !memcmp(t, kopf, (size_t)kn) && seite_ok && t[n - 4] == 0x04 && t[n - 3] == 0x01 &&
+              t[n - 2] == 0x01 && t[n - 1] == 0x63 && n <= 128,
+              "msg %d (%s): %s, beginnt mit \"Annette:\" wie ROOM6000 msg 1, Schwanz 04 01 01 63, %d B <= 128 (PSX)",
+              id, (k & 1) ? "Satz 2" : "Satz 1", (k & 1) ? "zwei Seiten, jede mit Kopf" : "eine Seite", n);
     }
+    PRUEF(!re15_birkinfilm_r42_stimme(RE15_BF_RAUM, RE15_BF_MSG_XA09_S2, NULL) &&
+          !re15_birkinfilm_r42_stimme(RE15_BF_RAUM, RE15_BF_MSG_XA11_S2, NULL) &&
+          !re15_birkinfilm_r42_stimme(RE15_BF_RAUM, RE15_BF_MSG_XA14_S2, NULL), "Satz 2 (48/49/50) ohne eigene Stimme");
     /* Haken: Umleitung nur fuer ROOM6000 sub06 mit passender Signatur */
     const uint8_t *orig = r + 0x0106A;
     PRUEF(re15_birkinfilm_r42_evt_exec(0x6000, 6, orig) == p, "Evt_exec sub06 in ROOM6000 -> Programm");
@@ -455,7 +483,13 @@ typedef struct {
     int  vor[80], n_vor;       /* Blendwerte der Bilder vor dem Film (ab dem ersten gezeichneten) */
     int  nach[80], n_nach;     /* Blendwerte der Bilder nach dem Film */
     int  msg42_im_film;
+    /* Strang namen: jede neu gezeigte Seite (Nachricht, Seitenanfang) ab msg 40 bis vor msg 3 */
+    int  sp_id[32]; long sp_bild[32]; int sp_kopf[32]; int n_s;
 } lauf_t;
+
+static uint8_t s_kopf[24];   /* Namenskopf "Annette:" aus der RDT-Zeile msg 1 (ohne `04 00`) */
+static int     s_kopf_n = 0;
+static int     s_seiten_an = 0;   /* 1 = Seiten mitschreiben (6000) */
 
 static int s_folge_msg = 42;   /* die Zeile nach dem Film: 6000 msg 42, 5011 msg 4 */
 static void lauf(lauf_t *L, int bilder)
@@ -482,6 +516,24 @@ static void lauf(lauf_t *L, int bilder)
         if (L->b_film_an < 0 && (v >= 0 || L->n_vor > 0) && L->n_vor < 80) L->vor[L->n_vor++] = v;
         if (L->b_film_aus >= 0 && L->n_nach < 80) L->nach[L->n_nach++] = v;
         if (L->b_film_aus < 0 && L->b_film_an >= 0 && g_scd.message_active && g_scd.message_id == s_folge_msg) L->msg42_im_film = 1;
+        /* Seiten: neue (Nachricht, Seitenanfang) mit sichtbarem Fenster [page, parse) */
+        {   static int s_last_id = -1, s_last_page = -1;
+            if (f == 0) { s_last_id = -1; s_last_page = -1; }
+            const int id = (int)g_scd.message_id, pg = (int)g_scd.message_page;
+            if (s_seiten_an && g_scd.message_active && g_scd.message_fsm_active && g_scd.message_parse > g_scd.message_page &&
+                (id != s_last_id || pg != s_last_page)) {
+                s_last_id = id; s_last_page = pg;
+                const int annette = (id >= 40 && id <= 42) || (id >= 48 && id <= 50);
+                if (annette && L->n_s < 32) {
+                    int rl = 0;
+                    const unsigned char *raw = re15_msg_get_raw(id, &rl);
+                    int k = 0;
+                    if (raw && pg + 2 + s_kopf_n <= rl && raw[pg] == 0x04 && raw[pg + 1] == 0x00 &&
+                        !memcmp(raw + pg + 2, s_kopf, (size_t)s_kopf_n)) k = 1;
+                    L->sp_id[L->n_s] = id; L->sp_bild[L->n_s] = s_bild; L->sp_kopf[L->n_s] = k; L->n_s++;
+                }
+            }
+        }
     }
 }
 
@@ -497,8 +549,23 @@ static void teil_ablauf(void)
     /* Ankunft am Bahnsteig wie Leon aus 5080 (Tuer-Ziel; Lage aus re15_room_spawns.h ROOM6000 (7186,-9289)) */
     if (room_boot(0x6000, 7186, -9289, 0, 0) != 0) return;
     PRUEF(g_re15_bf_umleitungen == 1, "sub00 @0x00F58 Evt_exec sub06 -> Programm (%u Umleitung)", g_re15_bf_umleitungen);
+    {   /* Namenskopf aus der RDT-Zeile msg 1 (@0x01287 "Annette: Where's Ada?"): `05 02 <Annette:> 05 00` */
+        int rl = 0;
+        const unsigned char *k = re15_msg_get_raw(1, &rl);
+        s_kopf_n = 0;
+        if (k && rl > 4) {
+            int e = 2;
+            while (e + 1 < rl && e < 22 && !(k[e] == 0x05 && k[e + 1] == 0x00 && e > 2)) e++;
+            s_kopf_n = e + 2 - 2;
+            memcpy(s_kopf, k + 2, (size_t)s_kopf_n);
+        }
+        PRUEF(s_kopf_n == 12 && s_kopf[0] == 0x05 && s_kopf[1] == 0x02, "Namenskopf aus msg 1: %d B (05 02 \"Annette:\" 05 00)",
+              s_kopf_n);
+    }
     lauf_t L;
+    s_seiten_an = 1;
     lauf(&L, 9000);
+    s_seiten_an = 0;
     printf("    Nachrichten:"); for (int i = 0; i < L.n_msg; i++) printf(" %d@%ld", L.msgs[i], L.b_msg[i]); printf("\n");
     printf("    Film an Bild %ld, aus %ld (%d mal); Stimmen:", L.b_film_an, L.b_film_aus, L.filme);
     for (int i = 0; i < s_n_stimmen; i++) printf(" %d", s_stimmen[i]);
@@ -507,11 +574,32 @@ static void teil_ablauf(void)
     printf("\n    Blende nach dem Film (%d):", L.n_nach); for (int i = 0; i < L.n_nach && i < 70; i++) printf(" %d", L.nach[i]);
     printf("\n");
     const int i0 = idx(&L, 0), i1 = idx(&L, 1), i2 = idx(&L, 2), i40 = idx(&L, 40), i41 = idx(&L, 41), i42 = idx(&L, 42),
-              i3 = idx(&L, 3);
-    PRUEF(i0 >= 0 && i1 == i0 + 1 && i2 == i1 + 1 && i40 == i2 + 1 && i41 == i40 + 1 && i42 == i41 + 1 && i3 == i42 + 1,
-          "Zeilenfolge 0, 1, 2 (\"I see...\"), 40, 41, 42, 3 (\"Come on...\") ohne Zwischenzeile (43/44 ohne Text)");
+              i3 = idx(&L, 3), i48 = idx(&L, RE15_BF_MSG_XA09_S2), i49 = idx(&L, RE15_BF_MSG_XA11_S2),
+              i50 = idx(&L, RE15_BF_MSG_XA14_S2);
+    PRUEF(i0 >= 0 && i1 == i0 + 1 && i2 == i1 + 1 && i40 == i2 + 1 && i48 == i40 + 1 && i41 == i48 + 1 && i49 == i41 + 1 &&
+          i42 == i49 + 1 && i50 == i42 + 1 && i3 == i50 + 1,
+          "Zeilenfolge 0, 1, 2 (\"I see...\"), 40, 48, 41, 49, 42, 50, 3 (\"Come on...\") ohne Zwischenzeile (43/44 ohne Text)");
+    /* Strang namen: Satz 2 nach dem RE2-Sleep (41 @0x02722, 81 @0x027D8, 81 @0x02850), waehrend die Stimme weiterspricht */
+    {   const long d48 = (i40 >= 0 && i48 >= 0) ? L.b_msg[i48] - L.b_msg[i40] : -1,
+                   d49 = (i41 >= 0 && i49 >= 0) ? L.b_msg[i49] - L.b_msg[i41] : -1,
+                   d50 = (i42 >= 0 && i50 >= 0) ? L.b_msg[i50] - L.b_msg[i42] : -1;
+        PRUEF(d48 >= 41 && d48 <= 42 && d49 >= 81 && d49 <= 82 && d50 >= 81 && d50 <= 82,
+              "Satz 2 nach dem RE2-Sleep: msg 48 %ld Bilder nach 40 (Sleep 41 @0x02722), 49 %ld nach 41 (Sleep 81 @0x027D8), "
+              "50 %ld nach 42 (Sleep 81 @0x02850)", d48, d49, d50);
+        const long st40 = (RE15_BF_XA09_LESE + 4) / 5, st41 = (RE15_BF_XA11_LESE + 4) / 5, st42 = (RE15_BF_XA14_LESE + 4) / 5;
+        PRUEF(d48 < st40 && d49 < st41 && d50 < st42,
+              "Satz 2 erscheint, waehrend die Stimme spricht (Stimme %ld/%ld/%ld Bilder) - der Stimmen-Riegel haelt ihn nicht auf",
+              st40, st41, st42);
+    }
+    {   int mit = 0;
+        printf("    Annette-Seiten:");
+        for (int i = 0; i < L.n_s; i++) { printf(" %d@%ld%s", L.sp_id[i], L.sp_bild[i], L.sp_kopf[i] ? "" : "(OHNE NAMEN)"); mit += L.sp_kopf[i]; }
+        printf("\n");
+        PRUEF(L.n_s == 9 && mit == L.n_s,   /* Stufe 4: 40, 48 (2 Seiten), 41, 49 (2), 42, 50 (2) = 9 */
+              "jede gezeigte Annette-Seite beginnt mit \"Annette:\" (Seiten %d, mit Namen %d; Strang namen, Nutzer 18.11.)", L.n_s, mit);
+    }
     PRUEF(s_n_stimmen == 3 && s_stimmen[0] == 40 && s_stimmen[1] == 41 && s_stimmen[2] == 42,
-          "RE2-Stimmen ueber den Sprachkanal: msg 40, 41, 42 (Xa 0x09, 0x11, 0x14)");
+          "RE2-Stimmen ueber den Sprachkanal: msg 40, 41, 42 (Xa 0x09, 0x11, 0x14), keine fuer Satz 2");
     PRUEF(L.filme == 1 && L.b_film_an > 0 && i41 >= 0 && i42 >= 0 && L.b_film_an > L.b_msg[i41] && L.b_film_an < L.b_msg[i42],
           "Film genau einmal, zwischen msg 41 (Bild %ld) und msg 42 (Bild %ld): Bild %ld", i41 >= 0 ? L.b_msg[i41] : -1L,
           i42 >= 0 ? L.b_msg[i42] : -1L, L.b_film_an);

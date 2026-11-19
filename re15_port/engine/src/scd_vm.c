@@ -1689,6 +1689,7 @@ static void msg_show(scd_thread_t *t)
         if (d > 0) dur = d;
     }
     g_scd.message_display_frames = (uint16_t)dur;
+    re15_msg_volltext_start();   /* Runde 42 namen Stufe 5 R2: Seite fuer Seite wie die Schreibmaschine (msg_common.c) */
 }
 
 /* Show a .msg line by index directly (no SCD thread) — used by EXAMINE/MESSAGE AOTs
@@ -1970,10 +1971,19 @@ static int op_message_on(scd_thread_t *t)
      * englische Sprachausgabe, synchro/ ist eigene Produktion. Die Sleep-Werte des Skripts
      * bleiben unangetastet; gewartet wird nur, wo eine Aufnahme laenger ist als das
      * Original ihr Zeit gibt. Wo sie hineinpasst, aendert sich am Timing NICHTS. */
+    /* Runde 42 Strang namen: Satz 2 einer RE2-Rahmenzeile (6000 msg 48/49/50) gehoert zur laufenden Stimme - VOR dem Riegel
+     * oeffnen (RE2 ROOM4090 @0x02722 Sleep 41 zwischen msg 0x0A und 0x0B unter einem Xa_on; re15_birkinfilm_r42.h). */
+    { extern int re15_birkinfilm_r42_folgeseite(const uint8_t *pc, uint32_t pause_mask);
+      if (re15_birkinfilm_r42_folgeseite(t->pc, pause_mask)) { t->pc += 4; return 1; } }
     {   extern int g_re15_voice_laeuft, g_re15_voice_restbilder;
         enum { RE15_VOICE_NOTBREMSE = 300 };   /* 10 s > laengste Aufnahme (242,5 Bilder) */
         if (g_re15_voice_laeuft && g_re15_voice_restbilder > 0
             && t->voice_wait < RE15_VOICE_NOTBREMSE) { t->voice_wait++; return 2; }
+        /* Runde 42 namen Stufe 5 R2: ohne Stimme laeuft eine zweiseitige Zeile bis zu ihrem eigenen Ende (Original bricht eine
+         * laufende Nachricht nie ab, FUN_80027e68 @0x80027e74-8c; Herleitung msg_common.c re15_msg_seiten_halten). Deckel 600 Bilder
+         * = Notbremse gegen einen haengenden Zustand (laengste gemessene mehrseitige Zeile: ROOM1240 msg 4, endet nach 343 Bildern,
+         * unit_r42_namen_ohne_stimme). */
+        if (re15_msg_seiten_halten() && t->voice_wait < 600) { t->voice_wait++; return 2; }
         /* Messschiene (GUI-exe: stderr tot) - schreibt bei JEDEM Message_on, nicht nur
          * wenn gewartet wurde. Ein Riegel, der gar nicht anspringt, hinterliesse sonst
          * eine leere Datei, und daraus laesst sich nichts schliessen. So steht je Zeile

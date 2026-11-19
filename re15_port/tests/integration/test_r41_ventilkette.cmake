@@ -138,6 +138,8 @@ WARTE 150
 AKTION
 WARTE 450
 AKTION
+WARTE 120
+AKTION
 WARTE 30
 ")
 
@@ -153,8 +155,8 @@ re15_start_spiel(_rva 600
     "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125"
     "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_WEGPLAN_LOG=wegplan.txt
     RE15_MSG_LOG=1
-    "RE15_FIRE_AOT=0@4896#2030"
-    "RE15_FRAMEDUMP=4636-4876/120:${WORKDIR}/f_"
+    "RE15_FIRE_AOT=0@5016#2030"
+    "RE15_FRAMEDUMP=4636-4996/120:${WORKDIR}/f_"
     "RE15_EXIT_AT=60#20B0"
     "${RE15_PC_EXE}")
 if(NOT EXISTS "${WORKDIR}/debug.log")
@@ -168,7 +170,7 @@ _muss("${_dbg}" "[msg] room=2030 id=55" a "Frage 55 (Ventil 09)")
 _muss("${_dbg}" "[ventilkette41] Folge 09 02 01 08 -> RICHTIG: Warnung, Zaehler, Flut" a "richtige Folge nach der vierten Drehung")
 _muss("${_dbg}" "[ventilkette41] ROOM2030 Ereignis 26 -> Port-Programm 2030_ventile_flut" a "Ereignis 26 vom C-Takt")
 _muss("${_dbg}" "[msg] room=2030 id=46" a "Warnung 46")
-_muss("${_dbg}" "[msgtext] room=2030 id=46 \"WARNING: The water will rise in one minute. Please leave the room immediately!\"" a "Warnung 46 im Wortlaut des Nachtrags 19")
+_muss("${_dbg}" "[msgtext] room=2030 id=46 \"WARNING: The water will rise in one minute.Please leave the room immediately!\"" a "Warnung 46 im Wortlaut des Nachtrags 19")
 _muss("${_dbg}" "Plc_motion(entity=0, motion=17, flags=0x00)" a "RE2-Dreh-Animation (Clip 17, RE2 ROOM1080 sub08) beim Drehen")
 _muss("${_dbg}" "[ventilkette41] Zaehler laeuft: 1800 Takte, Ost-Tuer -> 20B0, Wasser geparkt" a "Zaehler im Spiel-Takt")
 _muss("${_dbg}" "[ventilkette41] ROOM2030: Tuer Slot 0 -> ROOM20B0 Cut 11 (Zaehler laeuft)" a "Ost-Tuer umgelenkt")
@@ -222,12 +224,16 @@ function(_cd_soll _bild _out)
     endif()
     set(${_out} " 0^${_sek}=${_z}${_e}" PARENT_SCOPE)
 endfunction()
+# Runde 42 namen Stufe 5: die Warnung 46 hat zwei Seiten (`02 00`, hoechstens zwei Zeilen je Seite) - der Plan drueckt einmal mehr
+# (WARTE 120 + AKTION), der Countdown beginnt 120 Bilder spaeter (gemessen F4803 statt ~F4683). Darum Framedumps und Ost-Tuer
+# +120: F4636 und F4756 (Warnung offen) ohne Countdown, F4876/F4996 mit; Tuer F5016 statt F4896.
 _re2cd(4636 "")
-_cd_soll(4756 _t1)
-_cd_soll(4876 _t2)
-_re2cd(4756 "${_t1}")
-_re2cd(4876 "${_t2}")
-message(STATUS "r41_ventilkette[a]: RE2-Countdown erstes Bild F${_cd_f0}, F4756 \"${_t1}\", F4876 \"${_t2}\" (Bildvergleich RE2-Zeichner <-> Port gleich)")
+_re2cd(4756 "")
+_cd_soll(4876 _t1)
+_cd_soll(4996 _t2)
+_re2cd(4876 "${_t1}")
+_re2cd(4996 "${_t2}")
+message(STATUS "r41_ventilkette[a]: RE2-Countdown erstes Bild F${_cd_f0}, F4876 \"${_t1}\", F4996 \"${_t2}\" (Bildvergleich RE2-Zeichner <-> Port gleich)")
 
 # ---- B: 2000 Leiter = Sperrtext, kein Raumwechsel ------------------------------------------------------------
 set(WORKDIR "${_basis}_b")
@@ -431,7 +437,7 @@ re15_start_spiel(_rve 720
     "RE15_SET_FLAG=7:155,7:156,7:157,9:101,9:102,3:108,9:125"
     "RE15_WEGPLAN=${WORKDIR}/plan.txt" RE15_WEGPLAN_LOG=wegplan.txt
     RE15_MSG_LOG=1
-    "RE15_EXIT_AT=6647#2030"
+    "RE15_EXIT_AT=6767#2030"   # Runde 42 namen Stufe 5: Warnung mit zwei Seiten -> Zaehler/Flut/Tod 120 Bilder spaeter (6647 -> 6767)
     "${RE15_PC_EXE}")
 if(NOT EXISTS "${WORKDIR}/debug.log")
     message(FATAL_ERROR "r41_ventilkette[e]: kein debug.log (exit=${_rve}, ${WORKDIR})")

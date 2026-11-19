@@ -24,6 +24,7 @@
 
 #include "re15_story_r36.h"
 #include "re15_story6_r42.h"   /* Runde 42 STAGE6: 6030/6031-Zeilen der Stufe (L21/E6/E9) liegen nach story_r36 */
+#include "re15_namen_r42.h"    /* Runde 42 namen: neu umbrochene/geteilte RDT-Zeilen (re15_namen_r42_text) */
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
@@ -391,6 +392,7 @@ static int teil_texte(void)
         for (int k = 0; k < nmsg; k++) {
             if (zeile(t->raum, k)) continue;
             if (re15_story6_r42_text(t->raum, (uint8_t)k, NULL)) continue;   /* Runde 42 STAGE6: Neutext der Stufe (eigener Riegel) */
+            if (re15_namen_r42_text(t->raum, (uint8_t)k, NULL)) continue;    /* Runde 42 namen: neu umbrochen/geteilt (test_r42_namen) */
             int ok0 = blk[k * 2] | (blk[k * 2 + 1] << 8);
             int ok1 = (k + 1 < nmsg) ? (blk[(k + 1) * 2] | (blk[(k + 1) * 2 + 1] << 8)) : bs;
             if (ok1 <= ok0) ok1 = bs;

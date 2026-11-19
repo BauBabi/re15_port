@@ -19,9 +19,13 @@ einmal je Spielstand, ohne neues Bit.
 
 PROGRAMM = sub06 [@0x0106A, @0x01156) + EINSCHUB + sub06 [@0x01156, @0x011A6) (Original-Opcodes, sub06 sonst bytegleich).
 EINSCHUB (Vorlage RE2 Leon-Disc ROOM4090 sub02, selbst disassembliert; Zeilenform = msg 3 @0x01156, Gesten = @0x01142):
-  2b 28 00 00  msg 40 Annette (Xa 0x09)          RE2 @0x02718 msg 0x0A + @0x0271E Xa_on 0x09 + Sleep 41 + msg 0x0B + Wsleep
+  2b 28 00 00  msg 40 Annette Satz 1 (Xa 0x09)   RE2 @0x02718 `2b 00 0a 00 00 00` msg 0x0A + @0x0271E `59 00 09 00` Xa_on 0x09
+  09 0a 29 00  Sleep 41                          RE2 @0x02722 `09 0a 29 00`
+  2b 30 00 00  msg 48 Annette Satz 2             RE2 @0x02726 `2b 00 0b 00 00 00` msg 0x0B (+ @0x0272C `0b 0c` Wsleep)
   <Gesten @0x01142..@0x01155>                    PORT-WAHL: Annettes Sprechgeste nach msg 2 in derselben Szene
-  2b 29 00 00  msg 41 Annette (Xa 0x11)          RE2 @0x027CE msg 0x14 + @0x027D4 Xa_on 0x11 + Sleep 81 + msg 0x15
+  2b 29 00 00  msg 41 Annette Satz 1 (Xa 0x11)   RE2 @0x027CE `2b 00 14 00 00 00` msg 0x14 + @0x027D4 `59 00 11 00` Xa_on 0x11
+  09 0a 51 00  Sleep 81                          RE2 @0x027D8 `09 0a 51 00`
+  2b 31 00 00  msg 49 Annette Satz 2             RE2 @0x027DC `2b 00 15 00 00 00` msg 0x15
   <Gesten>
   2b 2b 00 00  Warte-Zeile 43 (kein Text)        RE2 @0x027E2 `0b 0c` Wsleep/Wsleeping: bis die Stimme zu Ende ist
   09 0a 02 00  Sleep 2                           RE2 @0x027E4 `09 0a 02 00`
@@ -32,20 +36,32 @@ EINSCHUB (Vorlage RE2 Leon-Disc ROOM4090 sub02, selbst disassembliert; Zeilenfor
                                                  (engine/src/zws_r41.c, Blendenart RE15_ZWS_BLENDART_4090)
   09 0a 3f 00  Sleep 63                          RE2 @0x02820 `09 0a 3f 00` (die Einblende laeuft)
   54 00 03 00 00 00  MAIN weiter                 RE2 @0x0282B `51 00 03 01 33 41` (Op 3 = SsSeqReplay)
-  2b 2a 00 00  msg 42 Annette (Xa 0x14)          RE2 @0x02846 msg 0x17 + @0x0284C Xa_on 0x14 + Sleep 81 + msg 0x18
+  2b 2a 00 00  msg 42 Annette Satz 1 (Xa 0x14)   RE2 @0x02846 `2b 00 17 00 00 00` msg 0x17 + @0x0284C `59 00 14 00` Xa_on 0x14
+  09 0a 51 00  Sleep 81                          RE2 @0x02850 `09 0a 51 00`
+  2b 32 00 00  msg 50 Annette Satz 2             RE2 @0x02854 `2b 00 18 00 00 00` msg 0x18 (+ @0x0285A `0b 0c` Wsleep)
   <Gesten>
   -> Original @0x01156 msg 3 "Come on. ..." (der Stimmen-Riegel scd_vm.c laesst Xa 0x14 ausreden)
+Sleep-Form `09 0a NN 00` = RE1.5 (ROOM6000 sub06 @0x01146 `09 0a 32 00`) und RE2 (@0x02722) gleich.
 RE2 pausiert dort SUB (@0x027FA) und MAIN (@0x02804); in ROOM6000 laeuft nur MAIN (main00 @0x00D52 Slot 0) -> nur Slot 0
 (r42/finale hat gemessen: Op 3 auf einem stillen Slot schaltet ihn ein).
 
 TEXTE (Untertitel; RE2-US zeigt zu diesen Saetzen keinen Text, ROOM4090 Block 2 @0x3FB0 msg 0..32 leer): Wortlaut = gesprochene
-RE2-Saetze (Abschrift Whisper medium.en, scratchpad zws_birkin/voice04_asr.txt). Zwei Seiten wie RE2-JP (dort zwei Nachrichten je
-Satz): Seitenwechsel nach N Bildern = RE2-Sleep zwischen den beiden Nachrichten (40: Sleep 41 @0x02722; 41: Sleep 81 @0x027D8;
-42: Sleep 81 @0x02850), Form des Seitenwechsels ROOM3060 msg 7 @0x1244 `04 01 02 3c 04 00` (N ersetzt). Farbe Annette 02
-(ROOM6000 msg 0 `05 02`), Schwanz `04 01 01 63` = Nachlauf der Original-Untertitel von ROOM6000 (tools/r42_story/nachlauf_r42.py).
+RE2-Saetze (Abschrift Whisper medium.en, scratchpad zws_birkin/voice04_asr.txt). JE SATZ EINE NACHRICHT wie RE2 (Runde 42 Strang
+namen, Stufe 1): RE2 hat je Rahmenzeile zwei Nachrichten (0x0A/0x0B, 0x14/0x15, 0x17/0x18) mit Sleep 41/81 dazwischen und EINEM
+Xa_on davor (Adressen oben) - die Stimme laeuft ueber beide Saetze. Der Port zeigt Satz 1 als msg 40/41/42 (mit der RE2-Stimme)
+und Satz 2 als msg 48/49/50 (ohne eigene Stimme, die laufende spricht weiter); beide tragen den Namenskopf "Annette:".
+NUTZER 18.11.2026: "Du hast bei den uebernommenen Saetzen aus Resident Evil 2 nicht den Namen in den Dialog mit davor geschrieben
+wie bei den rest auch...." / "Ich meinte bei Anette." (Memory reai-v2-sprechername-vor-satz: jeder gesprochene Satz traegt den
+Namen.) Vorher (Strang birkinfilm) waren es zwei Seiten EINER Nachricht (`04 01 02 N 04 00`, Form ROOM3060 @0x1244), Seite 2 ohne
+Namen. Die Satz-2-Nachrichten 48/49/50 laufen am Stimmen-Riegel vorbei (birkinfilm_r42.c re15_birkinfilm_r42_folgeseite): sie
+gehoeren zur laufenden RE2-Stimme; ohne diese Ausnahme wartete Satz 2 auf das Ende der Stimme, die ihn spricht.
+Farbe Annette 02 (ROOM6000 msg 0 @0x01240 `04 00 05 02`), Schwanz `04 01 01 63` = Nachlauf der Original-Untertitel von ROOM6000
+(tools/r42_story/nachlauf_r42.py).
 STIMMEN: shared_assets/RE2/R409_XA09/11/14.XAS (tools/r42_birkinfilm/xa_schneiden.py), Zuordnung (Raum, Id) ->
 Datei in engine/src/birkinfilm_r42.c, gespielt ueber den Sprachkanal (platform/pc/src/audio_pc.c re15_voice_load_clip).
 Ids 40..44: ROOM6000 RDT 0..7, Port 0/3 (story_r36 Neutext), 30/31 (r42/lageplaene Lageplan) -> 40..44 frei, < 64 (VOICE_MAX_MSG).
+Ids 48..50 (Strang namen): ebenso frei (das Werkzeug prueft: RDT-Nachrichtenzahl 8, kein Message_on 48..50 im SCD von ROOM6000);
+45..47 bleiben frei, damit 46/47 nicht mit Elzas Warte-/Film-Zeile in ROOM5011 verwechselt werden.
 
 STUFE 2 - ELZA ROOM5011 (ORCHESTRATOR-ENTSCHEID 18.11.: Film zwischen msg 3 @0x00640 "John. I read some files ... terrifying
 things." und msg 4 @0x00690 "She's been infected by what they were working on here."; keine neuen Saetze).
@@ -71,17 +87,21 @@ HIER = os.path.dirname(os.path.abspath(__file__))
 PORT = os.path.normpath(os.path.join(HIER, '..', '..'))
 sys.path.insert(0, os.path.join(PORT, 'tools', 'r42_story'))
 import texte_stage3a as T  # noqa: E402
+import nachlauf_r42  # noqa: E402  (Schwanz `04 01 01 N` der Original-Zeilen von ROOM6000)
+sys.path.insert(0, os.path.join(PORT, 'tools', 'r42_namen'))
+import lesbar_s4 as LS  # noqa: E402  (Runde 42 namen Stufe 4: hoechstens 2 Zeilen, Seitenwechsel beim Wort der Stimme)
 
 ZIEL = os.path.join(PORT, 'engine', 'src', 'gen', 'birkinfilm_r42.inc')
 RDT = os.path.join(PORT, 'shared_assets', 'PSX', 'STAGE6', 'ROOM6000.RDT')
 SUB06 = (0x0106A, 0x011A6)
 ANKER = 0x01156
 GESTEN = (0x01142, 0x01156)
-MAX_ZEILEN = 3
-MAX_LEN = 192
+MAX_ZEILEN = LS.MAX_ZEILEN   # Stufe 4: hoechstens 2 Zeilen je Seite (Belege lesbar_s4.py: 40%-Disc @0x800289a0, Letterbox @0x80072f06)
+PSX_LEN = 128   # PSX MSG_RAW_LEN (msg_common.c): je Satz eine Nachricht passt hinein
 SCHWANZ = [0x04, 0x01, 0x01, 0x63]
 
 MSG_XA09, MSG_XA11, MSG_XA14, MSG_WARTEN, MSG_FILM = 40, 41, 42, 43, 44
+MSG_XA09_S2, MSG_XA11_S2, MSG_XA14_S2 = 48, 49, 50   # Satz 2 (RE2 msg 0x0B / 0x15 / 0x18)
 
 RDT5011 = os.path.join(PORT, 'shared_assets', 'PSX', 'STAGE5', 'ROOM5011.RDT')
 SUB02_5011 = (0x0055A, 0x0093A)
@@ -90,31 +110,100 @@ MSG5011_WARTEN, MSG5011_FILM = 46, 47
 # Ablauf-Opcodes mit Sprungweite: Ifel_ck, Else_ck, Endif, For, Next, While, Ewhile, Do, Edwhile, Switch, Case, Default, Eswitch, Goto (scd_dump_room.NAMES)
 SPRUENGE = {0x06, 0x07, 0x08, 0x0D, 0x0E, 0x0F, 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17}
 ANNETTE = (0x02, 'Annette')
-# (Id, Seite 1, Seite 2, Seitenwechsel N, Beleg N)
+# (Id Satz 1, Satz 1, Id Satz 2, Satz 2, RE2-Sleep dazwischen, Beleg) - je Satz eine Nachricht wie RE2
 UNTERTITEL = (
-    (MSG_XA09, "Annette Birkin.", "My husband is the man responsible for the creation of the T-virus. William Birkin.",
-     41, "RE2 ROOM4090 @0x02722 Sleep 41 zwischen msg 0x0A und 0x0B"),
+    (MSG_XA09, "Annette Birkin.",
+     MSG_XA09_S2, "My husband is the man responsible for the creation of the T-virus. William Birkin.",
+     41, "RE2 ROOM4090 @0x02722 Sleep 41 zwischen msg 0x0A @0x02718 und 0x0B @0x02726"),
     (MSG_XA11, "And it's all Umbrella's fault.",
-     "None of this would have happened if they hadn't tried to steal his research away from him.",
-     81, "RE2 ROOM4090 @0x027D8 Sleep 81 zwischen msg 0x14 und 0x15"),
+     MSG_XA11_S2, "None of this would have happened if they hadn't tried to steal his research away from him.",
+     81, "RE2 ROOM4090 @0x027D8 Sleep 81 zwischen msg 0x14 @0x027CE und 0x15 @0x027DC"),
     (MSG_XA14, "As a result of his virus-induced transmutation,",
-     "William should have lost any prior memories he had as a human by now.",
-     81, "RE2 ROOM4090 @0x02850 Sleep 81 zwischen msg 0x17 und 0x18"),
+     MSG_XA14_S2, "William should have lost any prior memories he had as a human by now.",
+     81, "RE2 ROOM4090 @0x02850 Sleep 81 zwischen msg 0x17 @0x02846 und 0x18 @0x02854"),
+)
+RE2_4090 = os.path.normpath(os.path.join(PORT, '..', 'info', 're2leon', 'PL0', 'RDT', 'ROOM4090.RDT'))
+# RE2 ROOM4090 sub02 je Rahmenzeile: Satz 1, Xa_on, Sleep, Satz 2 (Adresse, Bytes) - das Werkzeug prueft sie, wenn info/ da ist
+RE2_BELEG = (
+    ((0x02718, '2b000a000000'), (0x0271E, '59000900'), (0x02722, '090a2900'), (0x02726, '2b000b000000')),
+    ((0x027CE, '2b0014000000'), (0x027D4, '59001100'), (0x027D8, '090a5100'), (0x027DC, '2b0015000000')),
+    ((0x02846, '2b0017000000'), (0x0284C, '59001400'), (0x02850, '090a5100'), (0x02854, '2b0018000000')),
 )
 
 
-def seiten(text1, text2, n):
+# Runde 42 Strang namen, Stufe 4: Satz 2 braucht mit "Annette:" drei Zeilen; Zeile 3 (y 212) laege auf dem Letterbox-Balken ab y 216
+# (lesbar_s4.py). Darum ZWEI SEITEN je Satz 2, jede mit "Annette:"; Seite 2 erscheint, wenn die RE2-Stimme ihr erstes Wort beginnt.
+# (Id, Woerter auf Seite 1, erstes Wort von Seite 2, Einsatz t in s ab Beginn der Aufnahme, Beleg). Trennstelle nach lesbar_s4.py:
+# keine Sprechpause >= 120 ms innerhalb von Satz 2 (namen/s4/pausen.py: Xa 0x09 Pausen 1.24-1.65 / 5.59-5.86, Xa 0x11 1.86-2.82,
+# Xa 0x14 3.23-3.57 - die erste bzw. einzige liegt zwischen Satz 1 und Satz 2; die Pause 5.59-5.86 in Xa 0x09 vor "William Birkin."
+# ergaebe eine erste Seite mit drei Zeilen) -> Wortgrenze, an der die kuerzere Seite am laengsten steht (namen/s4/teilung.py).
+SEITE2 = {
+    MSG_XA09_S2: (9, "of", 4.38, 'Whisper medium.en xa_09.wav "of"[4.38-4.64] (namen/s4/asr_xa.txt)'),
+    MSG_XA11_S2: (10, "to", 4.60, 'Whisper medium.en xa_11.wav "to"[4.60-4.78]'),
+    MSG_XA14_S2: (5, "prior", 5.08, 'Whisper medium.en xa_14.wav "prior"[5.08-5.42]'),
+}
+
+
+def satz_seiten(mid, text, s_bilder):
+    """Satz 2 als zwei Seiten EINER Nachricht (lesbar_s4.py): `04 00 KOPF <Seite 1> 04 01 02 N 04 00 KOPF <Seite 2> 04 01 01 63`."""
     farbe, name = ANNETTE
-    b, z1, bw = T.untertitel(farbe, name, text1, 0x6000)
+    k, wort, t, _ = SEITE2[mid]
+    w = text.split(' ')
+    assert w[k] == wort, (mid, w[k], wort)
+    kopf = [0x04, 0x00, 0x05, farbe] + T.kod(name + ':') + [0x05, 0x00, 0x00]
+    vorweg = T.px(name + ': ')
+    n = LS.seitenwartezeit(t, s_bilder)
+    b, zz, bw = [], [], []
+    for si, teil in enumerate((w[:k], w[k:])):
+        z = LS.zeilen(teil, vorweg)
+        assert z, 'msg %d Seite %d passt nicht in %d Zeilen' % (mid, si + 1, LS.MAX_ZEILEN)
+        b += (kopf if si == 0 else [0x04, 0x01, 0x02, n] + kopf)
+        for i, zeile in enumerate(z):
+            if i:
+                b.append(0x08)
+            b += T.kod(zeile)
+        zz.append(z)
+        bw.append([vorweg + T.px(z[0])] + [T.px(x) for x in z[1:]])
+    schwanz, _ = nachlauf_r42.nachlauf(0x6000, max(len(z) for z in zz))
+    b += [0x04, 0x01, 0x01, schwanz]
     assert b[-4:] == SCHWANZ, b[-4:]
-    b = b[:-4] + [0x04, 0x01, 0x02, n, 0x04, 0x00]          # Form ROOM3060 @0x1244, N = RE2-Sleep
-    z2 = T.umbruch(text2, 0, T.MAX_PX)
-    for i, z in enumerate(z2):
-        if i:
-            b.append(0x08)
-        b += T.kod(z)
-    bw += [T.px(z) for z in z2]
-    return b + SCHWANZ, [z1, z2], bw
+    return b, zz, bw, n
+
+
+def satz(text):
+    """Ein Satz = eine Nachricht mit Namenskopf (texte_stage3a.untertitel), Schwanz `04 01 01 63`."""
+    farbe, name = ANNETTE
+    b, z, bw = T.untertitel(farbe, name, text, 0x6000)
+    assert b[-4:] == SCHWANZ, b[-4:]
+    return b, z, bw
+
+
+def re2_pruefen():
+    if not os.path.exists(RE2_4090):
+        print('Hinweis: %s fehlt - RE2-Belege nicht nachgeprueft' % RE2_4090)
+        return
+    r = open(RE2_4090, 'rb').read()
+    for zeile, u in zip(RE2_BELEG, UNTERTITEL):
+        for adr, hx in zeile:
+            assert r[adr:adr + len(hx) // 2].hex() == hx, 'RE2 ROOM4090 @0x%05X: %s statt %s' % (adr, r[adr:adr + 6].hex(), hx)
+        assert r[zeile[2][0] + 2] == u[4], 'Sleep @0x%05X' % zeile[2][0]
+
+
+def ids_frei(d):
+    """ROOM6000: RDT-Nachrichtenzahl und Message_on-Ids im SCD (Satz-2-Ids 48..50 frei)."""
+    ms = int.from_bytes(d[0x3C:0x40], 'little')
+    n = int.from_bytes(d[ms:ms + 2], 'little') // 2
+    assert n == 8, 'ROOM6000 hat %d RDT-Nachrichten (erwartet 8)' % n
+    L = rdt_walk()
+    msgs = set()
+    for (tag, idx), ops in L.regionen(d).items():
+        for pc, op, sz in ops:
+            if op == 0x2b:
+                msgs.add(d[pc + 1])
+    for u in UNTERTITEL:
+        for mid in (u[0], u[2]):
+            assert mid >= n and mid not in msgs, 'msg %d nicht frei (SCD %s)' % (mid, sorted(msgs))
+    print('ROOM6000: %d RDT-Nachrichten, Message_on-Ids im SCD %s -> 40..42/48..50 frei' % (n, sorted(msgs)))
 
 
 def programm(d):
@@ -128,9 +217,13 @@ def programm(d):
     assert d[ANKER:ANKER + 4] == bytes([0x2b, 0x03, 0x00, 0x00]), "msg 3 @0x01156"
     assert d[e - 2:e] == bytes([0x01, 0x00]), "Evt_end am Ende von sub06"
     ein = [
-        (bytes([0x2b, MSG_XA09, 0, 0]), 'msg 40 Annette (Xa 0x09, RE2 @0x0271E)'),
+        (bytes([0x2b, MSG_XA09, 0, 0]), 'msg 40 Annette Satz 1 (RE2 msg 0x0A @0x02718, Xa 0x09 @0x0271E)'),
+        (bytes([0x09, 0x0a, 41, 0x00]), 'Sleep 41 = RE2 @0x02722'),
+        (bytes([0x2b, MSG_XA09_S2, 0, 0]), 'msg 48 Annette Satz 2 (RE2 msg 0x0B @0x02726, Stimme laeuft weiter)'),
         (g, 'Gesten = @0x01142..@0x01155 (PORT-WAHL)'),
-        (bytes([0x2b, MSG_XA11, 0, 0]), 'msg 41 Annette (Xa 0x11, RE2 @0x027D4)'),
+        (bytes([0x2b, MSG_XA11, 0, 0]), 'msg 41 Annette Satz 1 (RE2 msg 0x14 @0x027CE, Xa 0x11 @0x027D4)'),
+        (bytes([0x09, 0x0a, 81, 0x00]), 'Sleep 81 = RE2 @0x027D8'),
+        (bytes([0x2b, MSG_XA11_S2, 0, 0]), 'msg 49 Annette Satz 2 (RE2 msg 0x15 @0x027DC)'),
         (g, 'Gesten = @0x01142..@0x01155'),
         (bytes([0x2b, MSG_WARTEN, 0, 0]), 'Warte-Zeile 43 = RE2 Wsleep @0x027E2 `0b 0c`'),
         (bytes([0x09, 0x0a, 0x02, 0x00]), 'Sleep 2 = RE2 @0x027E4'),
@@ -139,7 +232,9 @@ def programm(d):
         (bytes([0x2b, MSG_FILM, 0, 0]), 'Film-Zeile 44: Abblende 64 / Film / Einblende 64 = RE2 @0x027F4..@0x0281C'),
         (bytes([0x09, 0x0a, 0x3f, 0x00]), 'Sleep 63 = RE2 @0x02820'),
         (bytes([0x54, 0x00, 0x03, 0x00, 0x00, 0x00]), 'MAIN weiter = RE2 @0x0282B (Op 3)'),
-        (bytes([0x2b, MSG_XA14, 0, 0]), 'msg 42 Annette (Xa 0x14, RE2 @0x0284C)'),
+        (bytes([0x2b, MSG_XA14, 0, 0]), 'msg 42 Annette Satz 1 (RE2 msg 0x17 @0x02846, Xa 0x14 @0x0284C)'),
+        (bytes([0x09, 0x0a, 81, 0x00]), 'Sleep 81 = RE2 @0x02850'),
+        (bytes([0x2b, MSG_XA14_S2, 0, 0]), 'msg 50 Annette Satz 2 (RE2 msg 0x18 @0x02854)'),
         (g, 'Gesten = @0x01142..@0x01155'),
     ]
     vor = d[a:ANKER]
@@ -221,6 +316,8 @@ def main():
         return
     d = open(RDT, 'rb').read()
     fehler = []
+    re2_pruefen()
+    ids_frei(d)
     sub, prog, ein, n_vor = programm(d)
     out = ['/* Generiert von re15_port/tools/r42_birkinfilm/szene_bauen.py - nicht von Hand aendern. Herleitung im Kopf des',
            ' * Werkzeugs und in include/re15_birkinfilm_r42.h (Runde 42 Strang birkinfilm, ROOM6000 sub06 + RE2-Film R409). */']
@@ -234,21 +331,30 @@ def main():
     out += T.carr('k_bf_6000_prog', list(prog),
                   'Programm = sub06 [@0x0106A,@0x01156) + Einschub + sub06 [@0x01156,@0x011A6) (%d B)' % len(prog))
     tab = []
-    for mid, t1, t2, n, beleg in UNTERTITEL:
-        b, zeilen, bw = seiten(t1, t2, n)
-        for i, w in enumerate(bw):
-            if w > T.MAX_PX:
-                fehler.append('msg %d Zeile %d = %d px > %d' % (mid, i + 1, w, T.MAX_PX))
-        if max(len(z) for z in zeilen) > MAX_ZEILEN:
-            fehler.append('msg %d: mehr als %d Zeilen je Seite' % (mid, MAX_ZEILEN))
-        if len(b) > MAX_LEN:
-            fehler.append('msg %d: %d Byte > %d' % (mid, len(b), MAX_LEN))
-        if len(b) > 128:
-            print('Hinweis: ROOM6000 msg %d hat %d Byte > 128 (PSX MSG_RAW_LEN schneidet ab; PC 192)' % (mid, len(b)))
-        nm = 'k_bf_6000_msg%d' % mid
-        out += T.carr(nm, b, 'ROOM6000 %d Annette: %s  (Seitenwechsel nach %d Bildern = %s; %d B, Zeilen %s px)' % (
-            mid, ' // '.join(' / '.join(z) for z in zeilen), n, beleg, len(b), '/'.join(map(str, bw))))
-        tab.append((mid, nm))
+    for mid1, t1, mid2, t2, n, beleg in UNTERTITEL:
+        for mid, text, was in ((mid1, t1, 'Satz 1, mit der RE2-Stimme'),
+                               (mid2, t2, 'Satz 2 nach Sleep %d = %s; Stimme laeuft weiter' % (n, beleg))):
+            if mid in SEITE2:
+                b, seiten, bws, nw = satz_seiten(mid, text, n)
+                was += '; Seite 2 nach `02 %d` (0x%02X) beim Wort "%s" t=%.2f s: %s' % (nw, nw, SEITE2[mid][1], SEITE2[mid][2],
+                                                                                     SEITE2[mid][3])
+            else:
+                b, zeilen, bw = satz(text)
+                seiten, bws = [zeilen], [bw]
+            for si, (zeilen, bw) in enumerate(zip(seiten, bws)):
+                for i, w in enumerate(bw):
+                    if w > T.MAX_PX:
+                        fehler.append('msg %d Seite %d Zeile %d = %d px > %d' % (mid, si + 1, i + 1, w, T.MAX_PX))
+                if len(zeilen) > MAX_ZEILEN:
+                    fehler.append('msg %d Seite %d: mehr als %d Zeilen' % (mid, si + 1, MAX_ZEILEN))
+                if any(len(z.split(' ')) < 2 for z in zeilen):
+                    fehler.append('msg %d Seite %d: Zeile mit nur einem Wort' % (mid, si + 1))
+            if len(b) > PSX_LEN:
+                fehler.append('msg %d: %d Byte > %d (PSX MSG_RAW_LEN, msg_common.c)' % (mid, len(b), PSX_LEN))
+            nm = 'k_bf_6000_msg%d' % mid
+            out += T.carr(nm, b, 'ROOM6000 %d Annette: %s  (%s; %d B, Zeilen %s px)' % (
+                mid, ' // '.join(' / '.join(z) for z in seiten), was, len(b), ' // '.join('/'.join(map(str, bw)) for bw in bws)))
+            tab.append((mid, nm))
     d5 = open(RDT5011, 'rb').read()
     sub5, prog5, ein5, n_vor5 = programm5011(d5)
     out += T.carr('k_bf_5011_sub02', list(sub5), 'ROOM5011 sub02 [@0x0055A, @0x0093A) bytegleich = Signatur (%d B)' % len(sub5))

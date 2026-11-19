@@ -117,7 +117,7 @@ Regeln zu den Bits:
 | 2070/2071 | 0 | 40 | re15_ventilkette_r41.h:267 |
 | 2000/2001 | 0..11 / 0..14 | 40 | re15_ventilkette_r41.h:236 |
 | 30C1 | 0..10 | 21..26 vorsorglich (VERTRAG R41 1.2 ST80; Programm nutzt nur 1..5) | re15_story80_r41.h |
-| 6030 | 0..20 | 21..26 ST80, 27..30 AN, 31, 40 | gen/story_r36_texte.inc; re15_annette_r41.h:62-65; re15_story80_r41.h:51-52 |
+| 6030 | 0..20 | 21..26 ST80, 27..30 AN, 31, 32 (Strang namen Stufe 4: Leons zweiter Satz nach msg 4), 40 | gen/story_r36_texte.inc; re15_annette_r41.h:62-65; re15_story80_r41.h:51-52 |
 | 4010 / 5011 | 0..43 / 0..45 | keine (43/45 Speicherpunkt und 42/44 Itembox sind RDT-Ids) | re15_savepoint.c:51/53; re15_itembox.c:68-69 |
 | alle uebrigen der Tabelle 2.3 | siehe zensus_r42.txt | keine | grep der Installationsstellen (re15_msg_install_text in 28 Dateien, story_r36, Programm-Bytes 0x2b) |
 

@@ -17,13 +17,23 @@ msg 3 @0x1498, msg 4 @0x14C1; ROOM6031 msg 0 @0x1161, msg 1 @0x11AF, msg 2 @0x11
 Farben aus den ausgelieferten Zeilen: Leon 01 (ROOM6030 msg 0 @0x13BE `05 01`), Elza 01 (ROOM6031 msg 0 @0x1148 `05 01`),
 Sherry 06 (ROOM6030 msg 2 @0x1416 / ROOM6031 msg 1 @0x1165 `05 06`), John 07 (ROOM6030 msg 3 @0x144E `05 07`; ROOM6031 hat
 keine John-Zeile).
-Laenge: hoechstens 192 Byte (PC MSG_RAW_LEN, msg_common.c:37); ueber 128 Byte (PSX MSG_RAW_LEN, msg_common.c:33) wird
-gemeldet (PSX schneidet ab). Hoechstens 3 Zeilen je Seite (28 Original-Dialoge haben drei Zeilen, z. B. ROOM10D0 msg 17;
+Laenge: hoechstens 512 Byte (PC MSG_RAW_LEN, msg_common.c:47, Runde 42 rest a); ueber 128 Byte (PSX MSG_RAW_LEN,
+msg_common.c:43) wird gemeldet (PSX schneidet ab). Hoechstens 3 Zeilen je Seite (28 Original-Dialoge haben drei Zeilen, z. B. ROOM10D0 msg 17;
 texte_bauen.py), Zeilenbreite <= 271 px.
 Zwei Seiten ('|' im Text, nur 6030 msg 4: der Nutzersatz braucht vier Zeilen): Form des einzigen zweiseitigen Original-Untertitels
 ROOM3060 msg 7 @0x120C, Seitenwechsel @0x1244 `04 01 02 3c 04 00` = Seite zu Ende, Seitenwartezeit N Bilder OHNE Taste
-(msg_common.c Typewriter: `02 N`, N > 0 -> message_fsm 2 mit Timer), neue Seite ohne Sprecherkopf. N = der Nachlauf der
-Zeilen desselben Raums (ROOM6030 `01 63` @0x13F5, 0x63 = 99 Bilder) statt 0x3C aus 3060.
+(msg_common.c Typewriter: `02 N`, N > 0 -> message_fsm 2 mit Timer). N = der Nachlauf der Zeilen desselben Raums (ROOM6030 msg 0:
+Schwanz `04 01 01 63` beginnt @0x13F5, `01 63` @0x13F7, 0x63 = 99 Bilder @0x13F8) statt 0x3C aus 3060.
+Runde 42 Strang namen, Stufe 4 (ersetzt die zwei Seiten von 6030 msg 4): Seite 2 stand nur ~20 Bilder (0,7 s), weil das Wagen-Programm
+nach msg 4 nur die 120 Bilder der Leon-Gesten wartet (ROOM6030 sub02 @0x00ECE..@0x00EE6 Sleep 50+50+20) und msg 5 die Zeile dann ersetzt;
+Seite 1 + `02 63` brauchten davon schon 100. Jetzt zwei Nachrichten: msg 4 = Satz 1, msg 32 = Satz 2 (Id frei: VERTRAG 2.3 6030 RDT 0..20,
+Port 21..31, 40; keine Datei synchro/STAGE6/room6030/main32.wav -> stumm, kein Stimmen-Riegel). Jede steht wie die Original-Zeilen des
+Raums: `04 00` sofort, Nachlauf `04 01 01 63` = 99 Bilder (ROOM6030 @0x13F5), im Skript 120 Bilder bis zur naechsten Zeile.
+(Historisch, Stufe 1: JEDE Seite traegt den Sprecherkopf `05 <Farbe> <Sprecher>: 05 00 00` (Form der ersten Seite,
+ROOM6030 msg 0 @0x13BE `05 01`), direkt hinter dem `04 00` des Seitenwechsels. ROOM3060 msg 7 (Sherry, ohne Stimme) hat auf Seite 2
+keinen Kopf; hier spricht Leon beide Saetze. NUTZER 18.11.2026: "Du hast bei den uebernommenen Saetzen aus Resident Evil 2 nicht den
+Namen in den Dialog mit davor geschrieben wie bei den rest auch...." (Memory reai-v2-sprechername-vor-satz: jeder gesprochene Satz
+traegt den Namen, Systemtexte nicht). Seitenwechsel und Stimme bleiben wie bisher (eine Nachricht, `02 63`).)
 """
 import os
 import struct
@@ -34,10 +44,11 @@ sys.path.insert(0, HIER)
 import texte_stage3a as T  # noqa: E402
 
 ZIEL = os.path.join(T.PORT, 'engine', 'src', 'gen', 'story6_r42_texte.inc')
-MAX_LEN = 192
+MAX_LEN = 512   # PC MSG_RAW_LEN (msg_common.c:47)
 PSX_LEN = 128
-MAX_ZEILEN = 3
-SEITE = [0x04, 0x01, 0x02, 0x63, 0x04, 0x00]   # Form ROOM3060 @0x1244 `04 01 02 3c 04 00`, N = 0x63 (ROOM6030 @0x13F5 `01 63`)
+MAX_ZEILEN = 2   # Runde 42 namen Stufe 5: hoechstens zwei Zeilen je Seite fuer ALLE Untertitel (tools/r42_namen/lesbar_s5.py)
+NAMEN_S4 = {(0x6030, 4), (0x6030, 32)}   # Runde 42 namen Stufe 4: diese hoechstens 2 Zeilen (tools/r42_namen/lesbar_s4.py)
+SEITE = [0x04, 0x01, 0x02, 0x63, 0x04, 0x00]   # Form ROOM3060 @0x1244 `04 01 02 3c 04 00`, N = 0x63 (ROOM6030 `01 63` @0x13F7, Schwanz ab @0x13F5)
 SCHWANZ = bytes([0x04, 0x01, 0x01, 0x63])
 # (Raum, Id) der Original-Zeilen, deren Schwanz belegt wird (Datei-Offset des Schwanzes oben im Kopf)
 SCHWANZ_BELEG = ((0x6030, 0, 0x13F5), (0x6030, 3, 0x1498), (0x6030, 4, 0x14C1),
@@ -52,14 +63,17 @@ UNTERTITEL = (
     (0x6030, 2,  LEON,   "Where is she now?"),
     (0x6030, 3,  JOHN,   "We got split up in the fire. One second she was right behind us..."),
     (0x6030, 22, SHERRY, "Elza's still out there...!"),
-    (0x6030, 4,  LEON,   "If she's as tough as you say, she'll find another way out.|"
-                         "But we can't wait. When that reactor goes, nobody gets out."),
+    (0x6030, 4,  LEON,   "If she's as tough as you say, she'll find another way out."),
+    # Runde 42 namen Stufe 4: der zweite Satz von msg 4 ist eine EIGENE Nachricht 32 (Wagen-Programm r41_story80: msg 4 + Leon-Gesten,
+    # msg 32 + Leon-Gesten wie nach msg 4 @0x00ECA..@0x00EEA = 120 Bilder, dann msg 5) statt Seite 2 mit 0,7 s Standzeit.
+    (0x6030, 32, LEON,   "But we can't wait. When that reactor goes, nobody gets out."),
     (0x6030, 5,  JOHN,   "Then I'm staying with the kid. And I'll keep an eye on your friend here."),
     # E6 (6031 Wagen, Elza): msg 0 bleibt (story_r36), dann 1, 2, 12, 13
-    (0x6031, 1,  SHERRY, "A policeman brought Marvin down here. Then he went back into the fire."),
+    # Runde 42 namen Stufe 5: '|' = Seitenwechsel (drei Zeilen -> zwei Seiten, tools/r42_namen/lesbar_s5.py PORT_SEITEN)
+    (0x6031, 1,  SHERRY, "A policeman brought Marvin down here. | Then he went back into the fire."),
     (0x6031, 2,  ELZA,   "Back? Why?"),
     (0x6031, 12, SHERRY, "He said he had to find someone. He told us not to wait for him."),
-    (0x6031, 13, ELZA,   "...Then we won't. If that core goes, no one gets out. Let's get this train moving."),
+    (0x6031, 13, ELZA,   "...Then we won't. If that core goes, no one gets out. | Let's get this train moving."),
     # E9 (6031 Fuehrerstand, Elza): Zugstart
     (0x6031, 14, SHERRY, "It's moving! Elza, we did it!"),
     (0x6031, 15, JOHN,   "What the hell was that? It came from the back car!"),
@@ -78,20 +92,21 @@ def rdt_msg(raum, mid):
     return d, a, b
 
 
-def untertitel_seiten(farbe, name, text, raum):
-    """Untertitel mit 1..n Seiten ('|'); Seite 1 mit Sprecherkopf (texte_stage3a.untertitel), weitere ohne Kopf."""
+def untertitel_seiten(farbe, name, text, raum, mid=None):
+    """Untertitel mit 1..n Seiten ('|'); JEDE Seite mit Sprecherkopf (texte_stage3a.untertitel, Strang namen).
+    Stufe 5: Seitenwechsel mit N aus tools/r42_namen/lesbar_s5.PORT_SEITEN, hoechstens zwei Zeilen je Seite."""
+    if '|' in text:
+        b, zz, bw = T.untertitel(farbe, name, text, raum, mid)
+        return b, [x.split(' / ') for x in zz[0].split(' // ')], bw
     seiten = text.split('|')
     b, z1, bw = T.untertitel(farbe, name, seiten[0], raum)
     b = b[:-4]                                   # Schwanz erst am Ende (SCHWANZ, Beleg oben)
     zeilen = [z1]
     for s in seiten[1:]:
-        z = T.umbruch(s, 0, T.MAX_PX)
-        b += SEITE
-        for i, zz in enumerate(z):
-            if i:
-                b.append(0x08)
-            b += T.kod(zz)
-        bw += [T.px(zz) for zz in z]
+        bs, z, bws = T.untertitel(farbe, name, s, raum)
+        assert bs[:2] == [0x04, 0x00] and SEITE[-2:] == [0x04, 0x00]
+        b += SEITE + bs[2:-4]                    # `04 00` des Seitenwechsels, dann `05 <Farbe> <Sprecher>: 05 00 00 <Text>`
+        bw += bws
         zeilen.append(z)
     return b + list(SCHWANZ), zeilen, bw
 
@@ -107,21 +122,23 @@ def main():
            ' * (ROOM6030 msg 0 @0x13F5, ROOM6031 msg 0 @0x1161). */']
     tab = []
     for raum, mid, (farbe, name), text in UNTERTITEL:
-        b, zeilen, bw = untertitel_seiten(farbe, name, text, raum)
+        b, zeilen, bw = untertitel_seiten(farbe, name, text, raum, mid)
         if len(b) > PSX_LEN:
-            print('Hinweis: ROOM%04X msg %d hat %d Byte > %d (PSX MSG_RAW_LEN schneidet ab; PC 192)' % (raum, mid, len(b), PSX_LEN))
+            print('Hinweis: ROOM%04X msg %d hat %d Byte > %d (PSX MSG_RAW_LEN schneidet ab; PC 512)' % (raum, mid, len(b), PSX_LEN))
         for i, w in enumerate(bw):
             if w > T.MAX_PX:
                 fehler.append('ROOM%04X msg %d Zeile %d = %d px > %d' % (raum, mid, i + 1, w, T.MAX_PX))
         if len(b) > MAX_LEN:
-            fehler.append('ROOM%04X msg %d: %d Byte > %d (PSX MSG_RAW_LEN)' % (raum, mid, len(b), MAX_LEN))
+            fehler.append('ROOM%04X msg %d: %d Byte > %d (PC MSG_RAW_LEN)' % (raum, mid, len(b), MAX_LEN))
+        if (raum, mid) in NAMEN_S4 and (max(len(z) for z in zeilen) > 2 or any(len(x.split(' ')) < 2 for z in zeilen for x in z)):
+            fehler.append('ROOM%04X msg %d: mehr als 2 Zeilen oder eine Zeile mit nur einem Wort (lesbar_s4.py)' % (raum, mid))
         if max(len(z) for z in zeilen) > MAX_ZEILEN:
             fehler.append('ROOM%04X msg %d: %d Zeilen > %d' % (raum, mid, len(zeilen), MAX_ZEILEN))
         if bytes(b[-4:]) != SCHWANZ:
             fehler.append('ROOM%04X msg %d: Schwanz' % (raum, mid))
         n = 'k_s6_%04x_msg%d' % (raum, mid)
-        out += T.carr(n, b, 'ROOM%04X %d %s: %s  (%d B, Zeilen %s px)' % (raum, mid, name, ' // '.join(' / '.join(z) for z in zeilen), len(b),
-                                                                      '/'.join(map(str, bw))))
+        out += T.carr(n, b, 'ROOM%04X %d %s: %s  (%d B, Zeilen %s px%s)' % (raum, mid, name, ' // '.join(' / '.join(z) for z in zeilen), len(b),
+                                                                      '/'.join(map(str, bw)), T.seite2_beleg(raum, mid, text)))
         tab.append((raum, mid, n))
     out.append('typedef struct { uint16_t raum; uint8_t id; const uint8_t *b; uint16_t n; } s6_text_t;')
     out.append('static const s6_text_t k_s6_texte[] = {')
