@@ -86,14 +86,10 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
 #define AN_STURZ_HALT        1
 #define AN_STURZ_V          400
 #define AN_STURZ_N           14
-/* Liegen: RE2 @0x01162 setzt Annette von ihrem Standort (-11097,-15001) auf (-12300,-15300) (Savestate e23), William stand
- * bei (-6600,-14800) (e07). In Williams Blickrichtung zerlegt (Einheit e = (A - W) / |A - W|, quer q = (-e.z, e.x)):
- * 1215 von William weg, +245 quer. Port: dieselbe Zerlegung an der Landestelle L (wie RE2 e07: Lage VOR dem Vorstoss) ->
- * (4854,-22048), 348 vor dem Regal SCA #28 (z -21700). Nachbesserung 4: Pose RE2-Liegeclip, Gier wie RE2, 700 nach Sueden
- * (AN_FA_LIEGEN .. AN_LIEGEN_SUED unten) -> Leiche (4856,-22748).
- * Nachbesserung 3: NB1/NB2 nahmen die Achsenwerte 1203/-299 als Laengs-/Querwert (Seite gespiegelt). */
-#define AN_LIEGEN_WEG      1215
-#define AN_LIEGEN_SEIT      245
+/* Liegen: bis Stufe 6 (Strang finale) lag die Leiche an der in RE2-Zerlegung abgeleiteten Stelle (RE2 @0x01162 setzt Annette
+ * 1215 weg von William und 245 quer, NB3/NB4: Port (4856,-22748) Gier 1170, 700 nach Sueden wegen Regal SCA #28). Stufe 6 legt
+ * sie dorthin, wo sie faellt (AN_LIEGEN_DREH unten): die alte Stelle liegt in Cut 11 ganz unter dem Kinobalken (Netz Bild-y
+ * 216..266 von 24..216, scratchpad finale/s6r1/scan_lage.py) - mit Wegstoss dorthin verschwand sie im Entwurf neu1 aus dem Bild. */
 /* Hieb-Takt (Nachbesserung 3, Abnahme 1 M7 "Ausholen bis Treffer Port 0,5 s, RE2 1,3 s"), RE2-Aufnahme Lauf 1
  * (re2_claire/zeitachse.md Abschnitt 2, Bildleiste re2c_12b_hieb_dicht.jpg): Schnitt 0x0A + Member_set 0x17=2 @0x0113C/@0x01142
  * bei 69,77 s, Birkin steht noch bei 70,05 s, erstes Ausholbild 70,22 s, Blut (Trefferbild) ab 71,09 s, Schnitt 6 bei 72,23 s.
@@ -118,8 +114,34 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
  * Nachbesserung 3 (Abnahme 1 M4: nach dem Treffer stand sie 1 s aufrecht mit erhobenen Armen in Cut 11): im Trefferbild
  * sackt sie mit Clip 6 sofort zusammen (Bild 0-12, ab Bild 12 am Boden, gehalten); RE2 zeigt sie in diesem Moment nicht. */
 #define AN_FA_REAKTION        4
-#define AN_FA_STURZ           6     /* faellt zu Boden (Bild 12 = am Boden) */
-#define AN_FA_STURZ_BODEN    12
+#define AN_FA_STURZ           6     /* faellt zu Boden (Bild 6 = Tiefpunkt, danach richtet sie sich wieder auf) */
+/* Strang finale Stufe 6 (Nutzer 18.11.2026 woertlich: "Wenn Anette am Ende von den 4 beinigen Birkin nieder geschlagen wird darf
+ * sie in der Animation nicht noch mal aufstehen. Sondern mit den Schlag direkt liegen bleiben."). Gemessen (s6r1 alt1, Pose-Log):
+ * Clip 6 lief ueber den Halt bei Bild 12 hinaus bis Bild 39 (der globale Advancer schob sie zusaetzlich vor, player_common.c), Kopf
+ * (Knochen 8) F1930 -1003 -> F1957 -1410 = sie stand auf; danach Sprung an die Liegestelle (1105 weiter) beim Schnitt F1958.
+ * Clip 6 ist "Sturz UND Aufstehen" (RE2/ANNETTE_4D.EMD = RE1.5 0x4D, Clips 0..23 bytegleich, CDEMD0.EMS 0x4D Keyframes 176..225
+ * gleich): Wurzel-py je Bild (Bildliste @0x330.., Keyframes @0x3E5C + 80 * i, py = Wort +2) -1357 -1278 -1083 -835 -595 -427
+ * **-387** (Bild 6, Keyframe 182 @0x403C, py @0x403E `7d fe`) -429 -464 .. -450 (Bild 12) .. -665 (Bild 31) .. -1720 (Bild 49);
+ * Kopf ab Bild 6 (-878) wieder hoeher (Bild 12 -1004, Bild 30 -1163, Bild 49 -2343). Bild 6 ist der Tiefpunkt -> Bodenbild.
+ * Ab dort geht sie in die RE2-Liegepose (Clip 24 Bild 0, s. AN_FA_LIEGEN) ueber, mit der Original-Ueberblendung einer Clip-
+ * Umschaltung: +0x94 = Clip, +0x95 = 0, +0x8f = 7 (`ori v0,zero,0x6` / `sb v0,0x94(v1)` @0x80050018-1c, `sb zero,0x95(v0)`
+ * @0x8005002c, `ori v0,zero,0x7` / `sb v0,0x8f(v1)` @0x80050038-3c); FUN_8001f3bc mischt mit Gewicht +0x8f * Rate
+ * (`lbu s0,0x8f(v1)` @0x8001f408, `mult v0,a3` @0x8001f474) und zieht danach 1 ab (`addiu v0,v0,-0x1` / `sb v0,0x8f(v1)`
+ * @0x8001f5b0-b4) -> 7 gemischte Bilder. */
+#define AN_FA_STURZ_BODEN     6     /* Bild 6 = Tiefpunkt (Keyframe 182, py @0x403E = -387) */
+#define AN_UEBERBLEND         7     /* +0x8f-Saat @0x80050038 `ori v0,zero,0x7` */
+/* Liegestelle und -gier (PORT-WAHL nach NUTZERWUNSCH oben: "mit den Schlag direkt liegen bleiben", kein sichtbarer Lagesprung).
+ * Sie bleibt, wo der Hieb sie trifft (kein Pos_set mehr; RE2 setzt die Lage @0x01162, waehrend die Kamera weg ist, und zeigt den
+ * Sturz nicht). Clip 24 liegt mit den Fuessen nach vorn (Modell +x: Fuss 7 bei +1589, Kopf/Knochen 8 bei -615, Keyframe 358
+ * @0x773C), Clip 6 faellt nach hinten (Bild 6: Knie vorn, Oberkoerper hinten) - mit der Gier des Trefferbilds (Blick auf die
+ * Form, S -> L 1934) ist das dieselbe Richtung, die Fuesse laegen dann aber 35..79 vor dem Bodenfeuer main00 (2400,-22600).
+ * AN_LIEGEN_DREH = kleinste Drehung im 16er-Raster ab der Blickrichtung S -> L, bei der das Netz der Liegepose >= 100 von jeder
+ * soliden SCA-Zelle und >= 403 (= Abstand der abgenommenen NB4-Liegestelle) von jedem Bodenfeuer liegt (scratchpad finale/s6r1/
+ * scan3.py: an S -240 -> Gier 1694, Wand 288, Feuer 418, in Cut 11 1744 von 1950 Netzpixeln im Kinoband; an der Trefferlage
+ * (3773,-22529) Wand 317, Feuer 440). Die Drehung laeuft gleichmaessig ueber die Sturzbilder und die Ueberblendung
+ * (AN_STURZ_BILDER), der Rest der Lage bleibt. Beim Wiedereintritt liegt sie an S mit derselben Gier. */
+#define AN_LIEGEN_DREH     (-240)
+#define AN_STURZ_BILDER     (AN_FA_STURZ_BODEN + AN_UEBERBLEND)
 /* Nachbesserung 4 (Abnahme 2 N2 "Leiche wirkt sitzend, Knie hoch, Kopf aufrecht"): liegen wie RE2 statt Clip 6 Bild 12 um
  * 60 Grad gekippt. RE2 Claire ROOM6141 MAIN sub02, waehrend die Kamera weg ist: Pos_set @0x01162 `32 00 f4 cf 84 03 3c c4` =
  * (-12300, 900, -15300), Dir_set @0x0116A `33 00 00 00 e4 0c` = 3300, Plc_motion @0x01172 `3f 00 18 04` = Clip 0x18 des
@@ -134,16 +156,6 @@ int re15_bb_bank_da(const re15_actor_t *e);       /* birkin_bahnsteig.c: 0x30 tr
  * PORT-WAHL: Halten statt Schleife. */
 #define AN_FA_LIEGEN         24
 #define AN_LIEGEN_Y         900     /* @0x01162 `84 03` */
-#define AN_RE2_W_X        (-6600)   /* William vor dem Vorstoss (RAM e07, wie AN_LIEGEN_WEG) */
-#define AN_RE2_W_Z       (-14800)
-#define AN_RE2_LIEGT_X   (-12300)   /* @0x01162 `f4 cf` */
-#define AN_RE2_LIEGT_Z   (-15300)   /* @0x01162 `3c c4` */
-#define AN_RE2_LIEGT_D     3300     /* @0x0116A `e4 0c` */
-/* Wandfreiheit (PORT-WAHL, gemessen mit dem Netz der RE2-Liegepose an der Port-Lage, Werkzeug AN_belege/werkzeug/n4/
- * leiche_lage.py): an der RE2-Lage (4854,-22047) mit der RE2-Gier ragen Kopf und Schulter bis z -21043 in das Regal SCA #28
- * (x 4050..20225, z -21700..-19700, 294 Netzpunkte darin). Keine Drehung am selben Ort ist frei. Kleinste Verschiebung im
- * 50er-Raster ohne Netzpunkt in einer soliden SCA-Zelle: 700 nach Sueden (-z), Abstand zum Regal dann 43. */
-#define AN_LIEGEN_SUED      700
 /* Blut (Nachbesserung 2): der Emitter der RE2-Szene selbst. Claire-Disc SLES-10972, Birkin-Overlay (Typ 0x33, im RAM
  * @0x80100000, Savestate e22 aus analysis/befunde_runde41/AN_belege/re2_claire/), Routinen-Tabelle @0x80106584: [2] =
  * FUN_80104C24 (Member_set 0x17=2 @0x01142 -> Routine 2 @0x80104BE4-F8). Dort, NACH dem Bildvorschub @0x80104C9C-A8:
@@ -249,7 +261,8 @@ static const uint8_t k_prog[] = {
      * Vorlauf + Ausholen bis zum Trefferbild + RE2-Rest nach dem Treffer (AN_HIEB_*, oben) = 13 + 28 + 34 = 75 Bilder = 2,5 s. */
     OP_SLEEP(AN_HIEB_VORLAUF + AN_HIEB_TREFFER * AN_HIEB_TAKT + AN_HIEB_NACH),
     OP_CUT(13), OP_SLEEP(PAL(1)),               /* RE2 Cut 6 @0x0114A (weg von der Tat), @0x0114C `0a 01 00` */
-    OP_SET(5, RE15_AN_SIG_LIEGT, 1),            /* RE2 Xa 0x32 @0x01150 (Schrei, nur Ton) + Pos_set liegend @0x01162 */
+    OP_SET(5, RE15_AN_SIG_LIEGT, 1),            /* RE2 Xa 0x32 @0x01150 (Schrei, nur Ton) + Pos_set liegend @0x01162 (Stufe 6:
+                                                 * sie liegt schon, wo sie fiel - der Takt setzt nur noch Gier/Pose fest) */
     OP_SLEEP(42),                               /* RE2 Wsleep @0x01184 bis Xa-Ende (13 Sektoren) */
     OP_MSG(RE15_AN_MSG_LEON),                   /* "Leon: Annette!" (PORT-WAHL, RE2 gibt hier die Steuerung zurueck) */
     OP_SLEEP(60),
@@ -467,7 +480,9 @@ static struct {
     unsigned raum;
     int32_t vx0, vz0, vx1, vz1;   /* Vorstoss beim Hieb: Wurzel vorher / nachher (AN_VORSTOSS) */
     int blut_skala;               /* Skala der Blutzeilen (AN_BLUT_RE2_*), im Trefferbild bestimmt */
-} s_an = { RE15_AN_AUS, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, { 0 }, 0, 0, 0, 0, 0, 0, AN_BLUT_SKALA };
+    int16_t wg0;                  /* Stufe 6: Gier im Trefferbild */
+    int wt;                       /* Stufe 6: Takte seit dem Treffer (Sturz), -1 = kein Sturz im Bild */
+} s_an = { RE15_AN_AUS, 0, -1, -1, 0, 0, 0, 0, 0, 0, 0, { 0 }, 0, 0, 0, 0, 0, 0, AN_BLUT_SKALA, 0, -1 };
 
 static void (*s_modell_fn)(uint8_t) = 0;
 static void (*s_se_fn)(int, int) = 0;
@@ -500,6 +515,7 @@ void re15_annette_r41_reset(void)
     s_an.luft = 0; s_an.blut = 0; s_an.blut_plaetze = 0; s_an.blut_rest = 0; s_an.blut_textur = 0; s_an.treffer = 0;
     s_an.zug = 0; memset(s_an.toene, 0, sizeof s_an.toene); s_an.schrei = 0;
     s_an.vx0 = s_an.vz0 = s_an.vx1 = s_an.vz1 = 0; s_an.blut_skala = AN_BLUT_SKALA;
+    s_an.wg0 = 0; s_an.wt = -1;
 }
 
 int re15_annette_r41_phase(void) { return s_an.phase; }
@@ -873,7 +889,8 @@ static void treffer(re15_actor_t *f, re15_actor_t *a)
 {
     s_an.blut_skala = blut_skala(f);
     s_an.blut_rest = AN_BLUT_BILDER;                     /* @0x80104D10-14 (Blut ab diesem Bild, blut_bild im Takt) */
-    clip(a, AN_FA_STURZ);                                /* NB3 M4: sackt sofort zusammen (Clip 6, ab Bild 12 am Boden) */
+    clip(a, AN_FA_STURZ);                                /* NB3 M4: sackt sofort zusammen (Clip 6 bis zum Bodenbild 6, Stufe 6) */
+    s_an.wg0 = a->rot_y; s_an.wt = 0;                    /* Stufe 6: Sturz ab hier (sturz_schritt, AN_STURZ_BILDER) */
     a->hp = -1;                                          /* NPC-Familie: unverwundbar, kein Treffer-Kandidat (re15_damage.c) */
     s_an.blut_textur = 1;
     if (s_modell_fn) s_modell_fn(RE15_AN_TYP);           /* Kittel mit Blut (ANNETTE_4D_BLUT.EMD = RE2 EM049-Textur) */
@@ -887,22 +904,11 @@ static int peilung(int32_t x0, int32_t z0, int32_t x1, int32_t z1)
     return ((int)re15_atan2_q12(z1 - z0, x1 - x0) - 0x400) & 0x0fff;
 }
 
-/* RE2 @0x01162: Pos_set liegend, waehrend die Kamera weg ist - eine FESTE Lage (RE2 setzt absolute Werte), im Port aus dem
- * Haltepunkt S abgeleitet. Bezug ist die Landestelle L (RE2 e07: William vor dem Vorstoss); e = (S - L) / |S - L|, quer
- * q = (-e.z, e.x): 1215 weg, +245 quer. Gier wie RE2 relativ zur Peilung William -> Liegestelle: RE2 3300 - Peilung((-6600,
- * -14800) -> (-12300,-15300)); im Port dazu die Peilung L -> Liegestelle. Danach AN_LIEGEN_SUED (Wandfreiheit, oben). */
-static void liegen_lage(int32_t *x, int32_t *z, int16_t *gier)
+/* Stufe 6: Gier der Liegenden = Blick vom Haltepunkt S auf die Landestelle L (die Gier im Trefferbild, blick() beim Hieb-Signal)
+ * plus AN_LIEGEN_DREH (oben). Fest, damit Szene und Wiedereintritt dieselbe Gier haben. */
+static int16_t liegen_gier(void)
 {
-    const int32_t sx = AN_S_X, sz = AN_S_Z;
-    int32_t ux = sx - AN_L_X, uz = sz - AN_L_Z;
-    int32_t l = (int32_t)re15_squareroot0((uint32_t)(ux * ux + uz * uz)); if (l < 1) l = 1;   /* BIOS-Wurzel (re15_math.h) */
-    const int64_t ex = (int64_t)ux * 4096 / l, ez = (int64_t)uz * 4096 / l;      /* weg von der Form, Q12 */
-    const int32_t px = sx + (int32_t)((ex * AN_LIEGEN_WEG - ez * AN_LIEGEN_SEIT) / 4096);
-    const int32_t pz = sz + (int32_t)((ez * AN_LIEGEN_WEG + ex * AN_LIEGEN_SEIT) / 4096);
-    const int rel = (AN_RE2_LIEGT_D - peilung(AN_RE2_W_X, AN_RE2_W_Z, AN_RE2_LIEGT_X, AN_RE2_LIEGT_Z)) & 0x0fff;
-    *gier = (int16_t)((peilung(AN_L_X, AN_L_Z, px, pz) + rel) & 0x0fff);
-    *x = px;
-    *z = pz - AN_LIEGEN_SUED;
+    return (int16_t)((peilung(AN_S_X, AN_S_Z, AN_L_X, AN_L_Z) + AN_LIEGEN_DREH) & 0x0fff);
 }
 
 /* Liegepose halten: RE2-Clip 0x18 (Clip 24) Bild 0, y +900, ungekippt. Lage und Gier bleiben. */
@@ -914,16 +920,49 @@ static void leiche_halten(re15_actor_t *a)
     a->y = AN_LIEGEN_Y;
 }
 
+/* Liegen ohne Sturz im Bild (Schnitt weg vor dem Trefferbild, RE2-Fall @0x01162 bei weggeschnittener Kamera): an Ort und Stelle,
+ * Gier liegen_gier(). Die Lage bleibt (Stufe 6: kein Pos_set mehr). */
 static void liegen(re15_actor_t *a)
 {
-    int32_t x, z; int16_t g;
-    liegen_lage(&x, &z, &g);
-    a->x = x; a->z = z; a->rot_y = g;
+    a->rot_y = liegen_gier();
     leiche_halten(a);
 }
 
-/* NB3 M8: Wiedereintritt nach der Szene - die 0x4D (sub00 @0x0122A) liegt als Leiche an der Lage aus @0x01162 (RE2 MAIN sub00
- * @0x00D16 setzt dieselbe Lage und denselben Clip 0x18 wie der Pos_set/Plc_motion der Szene). */
+/* Stufe 6: ein Takt des Sturzes nach dem Treffer (Kopf von AN_FA_STURZ_BODEN). Clip 6 laeuft bis zum Bodenbild (ein Bild je
+ * Takt, die Szene ist der einzige Stepper, player_common.c), das Bodenbild steht einen Takt; dann Clip 24 Bild 0 (RE2-Liegepose,
+ * Plc_motion @0x01172 `3f 00 18 04`) mit der Original-Ueberblendung +0x8f = 7 (@0x80050038). RE2 legt sie dazu auf y 900
+ * (@0x01162 `84 03`); damit die gezeichnete Wurzel dabei nicht springt, wird die gemerkte Wurzel der Ueberblendung (prev_root,
+ * Modellraum, skeleton_common.c) um denselben Betrag zurueckgenommen (PORT-WAHL: Welt-y = Aktor-y + Wurzel bleibt stetig).
+ * Danach haelt sie Bild 0 und die Ueberblendung laeuft aus (je Takt 1 ab wie @0x8001f5b0-b4). Gier: gleichmaessig auf dem kurzen
+ * Bogen von der Gier im Trefferbild zu liegen_gier() ueber AN_STURZ_BILDER Takte; die Lage bleibt. */
+static void sturz_schritt(re15_actor_t *a)
+{
+    if (s_an.wt < 0) return;
+    if (a->motion == AN_FA_STURZ) {
+        if ((int)a->anim_frame < AN_FA_STURZ_BODEN) vor(a, 0);
+        else {
+            a->motion = AN_FA_LIEGEN; a->anim_frame = 0; a->anim_frac = AN_UEBERBLEND;
+            a->anim_flags &= (uint16_t)~0x80u;
+            a->rot_x = 0; a->rot_z = 0;
+            a->prev_root[1] -= (AN_LIEGEN_Y - a->y);
+            a->y = AN_LIEGEN_Y;
+            protokoll("Bodenbild, Liegepose (Clip 24, Ueberblendung 7)");
+        }
+    } else if (a->motion == AN_FA_LIEGEN) {
+        a->anim_frame = 0;
+        if (a->anim_frac > 0) a->anim_frac--;            /* @0x8001f5b0-b4: je gezeichnetem Bild 1 ab */
+    }
+    if (s_an.wt < AN_STURZ_BILDER) {
+        s_an.wt++;
+        const int dg = ((((int)liegen_gier() - (int)s_an.wg0) + 2048) & 0x0fff) - 2048;
+        a->rot_y = (int16_t)(((int)s_an.wg0 + dg * s_an.wt / AN_STURZ_BILDER) & 0x0fff);
+        if (s_an.wt == AN_STURZ_BILDER) protokoll("Sturz fertig, liegt");
+    }
+}
+
+/* NB3 M8: Wiedereintritt nach der Szene - die 0x4D (sub00 @0x0122A) liegt als Leiche dort, wo die Szene sie hingelegt hat (RE2
+ * MAIN sub00 @0x00D16 setzt dieselbe Lage und denselben Clip 0x18 wie der Pos_set/Plc_motion der Szene; Stufe 6: an S mit
+ * liegen_gier(), die Szene laesst sie an der Trefferlage = Ankunft an S liegen). */
 static void ruhe_setzen(void)
 {
     const int as = slot_vom_typ(RE15_AN_TYP);
@@ -932,6 +971,7 @@ static void ruhe_setzen(void)
     a->state = 0; a->sub_state_1 = 0; a->sub_state_2 = 0; a->walk_active = 0;
     a->hp = -1;                                          /* wie nach dem Treffer: kein Treffer-Kandidat (re15_annette_r41_kein_ziel) */
     re2_segment(a);                                      /* NB6: Leiche = RE2-Segment (Claire-RAM lauf3 e23..e30) */
+    a->x = AN_S_X; a->z = AN_S_Z;                        /* Stufe 6: wo sie gefallen ist - Haltepunkt S (AN_LIEGEN_DREH) */
     liegen(a);
     s_an.frau = as; s_an.form = -1; s_an.blut_textur = 1;
     s_an.phase = RE15_AN_RUHE;
@@ -1035,12 +1075,12 @@ void re15_annette_r41_tick(void)
         }
         break;
     case RE15_AN_REAKTION:
-        if (a->motion == AN_FA_STURZ) { if ((int)a->anim_frame < AN_FA_STURZ_BODEN) vor(a, 0); }   /* NB3 M4: zusammensacken */
+        if (s_an.wt >= 0) sturz_schritt(a);              /* Stufe 6: zu Boden und liegen bleiben (AN_FA_STURZ_BODEN) */
         else vor(a, 1);
         if (f->motion == AN_FC_HIEB) { if (vor(f, 1)) clip(f, AN_FC_STEHEN); } else vor(f, 0);
         if (re15_game_flag_get(5, RE15_AN_SIG_LIEGT)) {
             re15_game_flag_set(5, RE15_AN_SIG_LIEGT, 0);
-            liegen(a);
+            liegen(a);                                   /* Stufe 6: an Ort und Stelle (nach dem Sturz schon so) */
             s_an.schrei++;
             if (s_stimme_fn) s_stimme_fn(RE15_AN_RAUM, RE15_AN_MSG_SCHREI);   /* nur Ton, kein Untertitel (Nutzer F9) */
             s_an.phase = RE15_AN_LEICHE; s_an.t = 0;

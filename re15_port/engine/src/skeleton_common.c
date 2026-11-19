@@ -223,10 +223,15 @@ static void re15_pose_messzeile(const re15_actor_t *a, int kf, int wp, const re1
         for (int i = 0; i < 9; i++) h = (h ^ (uint32_t)poses[b].rot[i]) * 16777619u;
     }
     extern unsigned g_current_room_id;
-    fprintf(lg, "F%u R%04X s%d t%02X m%d af%d kf%d fr%d ra%d wp%d x%d z%d ry%d h%08X b%d(%d,%d,%d)\n", (unsigned)g_engine.frame_count,
+    fprintf(lg, "F%u R%04X s%d t%02X m%d af%d kf%d fr%d ra%d wp%d x%d z%d ry%d h%08X b%d(%d,%d,%d)", (unsigned)g_engine.frame_count,
             g_current_room_id, (int)(a - g_actors), (unsigned)a->type, (int)a->motion, (int)a->anim_frame, kf, (int)a->anim_frac,
             (int)a->anim_blend_rate, wp, (int)a->x, (int)a->z, (int)a->rot_y, (unsigned)h, fb, (int)poses[fb].trans[0],
             (int)poses[fb].trans[1], (int)poses[fb].trans[2]);
+    /* Strang finale Stufe 6 (Messschiene, kein Verhalten): Welthoehe jedes Knochens (Aktor-y + Modell-y, kleiner = hoeher) -
+     * fuer "Annette richtet sich nach dem Hieb nicht wieder auf" (Kopf/Rumpf steigen nach der Bodenpose nie wieder an). */
+    fprintf(lg, " ay%d Y", (int)a->y);
+    for (int b = 0; b < n; b++) fprintf(lg, "%c%d", b ? ',' : ':', (int)(a->y + poses[b].trans[1]));
+    fputc('\n', lg);
     fflush(lg);
 }
 
