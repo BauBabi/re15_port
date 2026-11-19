@@ -263,6 +263,17 @@ int main(void)
             const re15_map_zone_t *zn = &s_map_zones[i];
             aufnahme_t vor, nach; diff_t d;
             if (zn->etage || (zn->room & 1)) continue;
+            {   /* r42/karte Stufe 3 Runde 5: eine ZWEITE Zeile mit derselben Weltbox und demselben zid wie eine fruehere Zeile
+                 * des Raums ist kein eigener Ort, sondern dessen zweite Zeichnung (ROOM20A0: Grundriss synth 17 + gemalte
+                 * Kachel r10, re15_map_zones.h) - die Zonenwahl nimmt bei gleicher Box immer die erste, ein Punkt "in" der
+                 * zweiten ist also nie treffbar. Ihr Zustand haengt am selben zid (Zonen-Bit), den die erste Zeile prueft. */
+                int q, zweit = 0;
+                for (q = 0; q < i; q++)
+                    if (s_map_zones[q].room == zn->room && s_map_zones[q].zid == zn->zid && !s_map_zones[q].etage &&
+                        s_map_zones[q].wx0 == zn->wx0 && s_map_zones[q].wx1 == zn->wx1 &&
+                        s_map_zones[q].wz0 == zn->wz0 && s_map_zones[q].wz1 == zn->wz1) zweit = 1;
+                if (zweit) continue;
+            }
             orte++;
             re15_map_visited_reset();
             if (begehe_zeile(i) < 0) { ohne_punkt++; continue; }

@@ -807,6 +807,15 @@ static void tuer_anziehen(const re15_map_zone_t *zn, int32_t wx, int32_t wz,
             if (g > 256) g = 256;
             if (!re15_map_mark_get(beste, &mpg, &mrc, &smx, &smy, &kind)) return;
             re15_karte_r39_tuer_lage(&g_inv_screen, (unsigned)mpg, kind, &smx, &smy);   /* Runde 39 Spur G */
+            {   /* r42/karte Stufe 3 Runde 5 (PORT-WAHL): eine Marke, die nicht am eigenen Grundriss liegt, zieht nicht. ROOM20A0
+                 * ist seit Runde 5 ein Grundriss UEBER 2090 (synth 17), seine Tuer nach 2090 traegt aber weiter die Marke
+                 * (277,150) an der gemalten Kachel r10 - der Zug holte den Punkt im Westgang 60 px aus dem Raum. Toleranz
+                 * 2 px = die Marke sitzt auf der Wandlinie, die Zellen enthalten die Linie (s_map_synth_cells). Gemessen an
+                 * allen Tuer-Ankuenften STAGE1-6 (unit_r42_karte_lauf R42_DUMP): sonst aendert sich keine Lage. */
+                int bx0, by0, bw0, bh0;
+                if (re15_map_zone_synth(zn, &bx0, &by0, &bw0, &bh0, 0, 0) &&
+                    (smx < bx0 - 2 || smx > bx0 + bw0 + 1 || smy < by0 - 2 || smy > by0 + bh0 + 1)) continue;
+            }
             *mx = (int16_t)(*mx + ((smx - *mx) * g) / 256);
             *my = (int16_t)(*my + ((smy - *my) * g) / 256);
         }

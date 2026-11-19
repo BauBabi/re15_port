@@ -132,46 +132,103 @@ static int rand_zaehlen(unsigned page, const unsigned char *k, int nk, int cx, i
     return n;
 }
 
+/* ---- Stufe 3 Runde 5 (Pruefbericht pruef_s3_r4 ROT 4080_t0: "Der Punkt steht an der Spitze der Diagonale direkt an der
+ * Kachel von 4030", Rot-Mass 0,29 gegen 0,32 in v0.8.30) -------------------------------------------------------------------
+ * Das Ziel der Klemme wird jetzt am SICHTBAREN Raumkoerper gemessen: Texel, die eine Tuer- oder Treppenmarke dieses Blatts
+ * uebermalt, sind auf dem Schirm kein Raum (re15_inv_screen.c, Tuer kind 0..3 = 5x1/1x5-Balken um (mx,my), Treppe kind 4/5
+ * = drei 5-px-Sprossen im Abstand 2). Bisher zaehlte die Klemme sie mit und hielt (170,117) fuer die beste Lage - auf dem
+ * Schirm liegt dort der Tuerbalken 4080<->4030 (Marke (165,113) kind 3, x165 y111..115) im Rand. PORT-WAHL (Anzeige, keine
+ * Spielkonstante). Ausgeloest wird die Klemme wie bisher (Ring auf fremder Kachel oder Rand der Kunst < 30 %); nur das Mass
+ * des Ziels (sichtbar) und die Suchweite (halbe Ringbreite + 2 = 4 px) aendern sich. Gemessen ueber alle 397 Tuer-Ankuenfte
+ * STAGE1-6 (unit_r42_karte_lauf mit R42_DUMP, vorher/nachher): es wandert NUR 4080/4081 aus 4030, (170,117) ->
+ * (171,118); dort liegt im 9x9-Feld um den Ring keine Kunst einer fremden Kachel und kein Tuerbalken. Ein zusaetzlicher
+ * Vorrang "9x9-Feld frei von fremder Kunst" wurde gemessen und verworfen: er zog auch 4080 aus 4090 (213,129) -> (215,129)
+ * und 4040 aus 4050 um 2 px und brach das Mitlaufen im Ostarm (Riegel [M1]). */
+/* Die gezeichneten Marken des Blatts werden je Aufruf EINMAL gesammelt (re15_map_mark_get prueft die Sichtbarkeit ueber den
+ * Zonen-Zustand und ist teuer; je Texel aufgerufen machte es integration_map_raum_live 14 s -> 304 s langsam). */
+#define R42_MARKEN_MAX 96
+typedef struct { short x, y; unsigned char kind; } r42_marke_t;
+static r42_marke_t s_marken[R42_MARKEN_MAX];
+static int s_marken_n;
+
+static void marken_sammeln(unsigned page)
+{
+    int k, n = re15_map_mark_count();
+    s_marken_n = 0;
+    for (k = 0; k < n && s_marken_n < R42_MARKEN_MAX; k++) {
+        int mpg, mrc, mx, my, kind;
+        if (!re15_map_mark_get(k, &mpg, &mrc, &mx, &my, &kind)) continue;   /* nur gezeichnete Marken */
+        if ((unsigned)mpg != page) continue;
+        s_marken[s_marken_n].x = (short)mx; s_marken[s_marken_n].y = (short)my;
+        s_marken[s_marken_n].kind = (unsigned char)kind; s_marken_n++;
+    }
+}
+
+static int marke_deckt(int x, int y)
+{
+    int k;
+    for (k = 0; k < s_marken_n; k++) {
+        int mx = s_marken[k].x, my = s_marken[k].y, kind = s_marken[k].kind;
+        if (kind <= 3) {
+            int laengs_x = (kind == 0 || kind == 2);
+            if (laengs_x ? (y == my && x >= mx - 2 && x <= mx + 2) : (x == mx && y >= my - 2 && y <= my + 2)) return 1;
+        } else {
+            int row;
+            for (row = -2; row <= 2; row += 2) {
+                if (kind == 5 ? (x == mx + row && y >= my - 2 && y <= my + 2) : (y == my + row && x >= mx - 2 && x <= mx + 2))
+                    return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+static int rand_sichtbar(unsigned page, const unsigned char *k, int nk, int cx, int cy)
+{
+    int dx, dy, n = 0, r = R42_RING_HALB + 2;
+    for (dy = -r; dy <= r; dy++)
+        for (dx = -r; dx <= r; dx++) {
+            if (dx >= -R42_RING_HALB && dx <= R42_RING_HALB && dy >= -R42_RING_HALB && dy <= R42_RING_HALB) continue;
+            if (im_ort(page, k, nk, cx + dx, cy + dy, 1) && !marke_deckt(cx + dx, cy + dy)) n++;
+        }
+    return n;
+}
+
 int re15_karte_r42_ring_klemmen(const void *zone, unsigned page, unsigned rect, int16_t *mx, int16_t *my)
 {
     const re15_map_zone_t *zn = (const re15_map_zone_t *)zone;
     unsigned char k[8];
-    int nk, cx, cy, f0, n0, dx, dy, bf = 0, bn = 0, bd = 0, bx = 0, by = 0, hat = 0;
+    int nk, cx, cy, f0, n0, v0, dx, dy, bf = 0, bn = 0, bd = 0, bx = 0, by = 0, hat = 0;
     const int rand_n = (2 * R42_RING_HALB + 5) * (2 * R42_RING_HALB + 5) - (2 * R42_RING_HALB + 1) * (2 * R42_RING_HALB + 1);
+    const int weit = R42_RING_HALB + 2;
     if (page < 6 || page > 12) return 0;
     nk = ort_kacheln(zn, page, rect, k, (int)sizeof k);
     cx = *mx - R42_GLYPH_MITTE; cy = *my - R42_GLYPH_MITTE;
     (void)ring_zaehlen(page, k, nk, cx, cy, &f0);
     n0 = rand_zaehlen(page, k, nk, cx, cy);
-    /* Stufe 3 Runde 4, Nachbesserung (Pruefbericht pruef_s3_r3 ROT 4070_t0/4080_t0, Mass "Rot um den Punkt"): auch
-     * wenn der Ring keine fremde Kachel beruehrt, aber im 2-px-RAND um ihn (56 Texel) WENIGER ALS 30 % auf dem
-     * Raumkoerper des eigenen Orts liegen (Treppengitter r7 von 4070, Spitze der Diagonale r13 von 4080), wandert die
-     * Mitte um hoechstens die halbe Ringbreite zur NAECHSTEN Lage, deren Rand zur Haelfte Raumkoerper ist (gibt es keine:
-     * zur Lage mit dem meisten Raumkoerper). PORT-WAHL (Anzeige, keine Spielkonstante); 30 % ist das Mass der Pruefung
-     * ("Rot um den Punkt", pruef_s3_r1 eigen.py, Grenze 0.3), die Haelfte das Ziel, weil auf dem Schirm Treppen- und
-     * Tuerstriche den Rand weiter schmaelern (gemessen: 30 % in der Kunst = 0,25 im Abzug L4070_t0). Ausgeloest wird nur
-     * unter 30 %: eine Klemme, die jeden Punkt auf die beste Lage zoege, setzte ihn in schmalen Kacheln auf die Mittellinie,
-     * und er liefe quer nicht mehr mit (Riegel unit_r42_karte_st456 [C], gemessen 4040 Zone 1 8/19, 4070 21/49).
-     * Reihenfolge: wenig fremde Texel im Ring, Rand >= Haelfte, kurzer Weg, mehr Rand. */
+    /* Ausloeser unveraendert seit Runde 4 (pruef_s3_r3 ROT 4070_t0/4080_t0): Ring auf fremder Kachel oder < 30 % Raumkoerper
+     * der Kunst im 2-px-Rand (Mass der Pruefung "Rot um den Punkt", Grenze 0.3). Eine Klemme, die jeden Punkt verschoebe,
+     * setzte ihn in schmalen Kacheln auf die Mittellinie (Riegel unit_r42_karte_st456 [C], gemessen Runde 4). */
     if (f0 == 0 && n0 * 10 >= rand_n * 3) return 0;
-    /* Suchweite = halbe Ringbreite + 1. Gemessen an der Spitze der Diagonale r13 (4080_t0, Rand im Abzug): Suchweite 2 ->
-     * 0,27, 3 -> 0,29, 4 -> 0,29 (dieselbe Lage (170,117) = Maximum des Raumkoerpers in der Kunst); 4070_t0: 2 -> 0,38,
-     * 3 -> 0,57. PORT-WAHL. */
-    for (dy = -(R42_RING_HALB + 1); dy <= R42_RING_HALB + 1; dy++)
-        for (dx = -(R42_RING_HALB + 1); dx <= R42_RING_HALB + 1; dx++) {
-            int n, f, d;
+    marken_sammeln(page);
+    v0 = rand_sichtbar(page, k, nk, cx, cy);
+    /* Reihenfolge: wenig fremde Texel im Ring, sichtbarer Rand >= Haelfte, dann kurzer Weg (sonst mehr Rand). Gemessen an 4080_t0 (Ankunft aus 4030, Rohlage (167,114)): Suchweite 3 erreicht
+     * hoechstens 0,29 sichtbar (dieselbe Lage wie Runde 4), Suchweite 4 -> (171,118), im Abzug 0,36 (v0.8.30: 0,32). */
+    for (dy = -weit; dy <= weit; dy++)
+        for (dx = -weit; dx <= weit; dx++) {
+            int n, f, d, h, bh;
             if (!im_ort(page, k, nk, cx + dx, cy + dy, 1)) continue;   /* Mitte bleibt auf dem Raumkoerper des eigenen ORTS */
             (void)ring_zaehlen(page, k, nk, cx + dx, cy + dy, &f);
-            n = rand_zaehlen(page, k, nk, cx + dx, cy + dy);
+            n = rand_sichtbar(page, k, nk, cx + dx, cy + dy);
             d = dx * dx + dy * dy;
+            h = (n * 2 >= rand_n); bh = (bn * 2 >= rand_n);
             if (!hat || f < bf ||
-                (f == bf && ((n * 2 >= rand_n) > (bn * 2 >= rand_n) ||
-                             ((n * 2 >= rand_n) == (bn * 2 >= rand_n) &&
-                              ((n * 2 >= rand_n) ? (d < bd || (d == bd && n > bn)) : (n > bn || (n == bn && d < bd))))))) {
+                (f == bf && (h > bh ||
+                 (h == bh && (h ? (d < bd || (d == bd && n > bn)) : (n > bn || (n == bn && d < bd))))))) {
                 hat = 1; bf = f; bn = n; bd = d; bx = cx + dx; by = cy + dy;
             }
         }
-    if (!hat || bf > f0 || (bf == f0 && bn <= n0)) return 0;
+    if (!hat || bf > f0 || (bf == f0 && bn <= v0)) return 0;
     *mx = (int16_t)(bx + R42_GLYPH_MITTE);
     *my = (int16_t)(by + R42_GLYPH_MITTE);
     return 1;

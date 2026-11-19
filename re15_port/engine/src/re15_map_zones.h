@@ -508,8 +508,30 @@ static const re15_map_zone_t s_map_zones[] = {
      * PORT-ERGAENZUNG: dieselbe Kachel und die AUSGELIEFERTE Zeile von ROOM2000 @0x800769E0 (50 00 c4 00 24 09 04 09). */
     { 0x20B0, -29000, -29000,   7950,  12800,  6,   0, 0,  37,    80,   196,  2340,  2308, 0, 0,   0, 0, 0 },
     { 0x20B1, -29000, -29000,   7950,  12800,  6,   0, 0,  37,    80,   196,  2340,  2308, 0, 0,   0, 0, 0 },
-    { 0x20A0,  -5600, -28900,  29000,   7000,  6,  10, 0, 114,   288,   156,   292,   273, 1, 0,   0, 0, 1 },
-    { 0x20A1,  -5600, -28900,  29000,   7000,  6,  10, 0, 114,   288,   156,   292,   273, 1, 0,   0, 0, 1 },
+    /* r42/karte Stufe 3 Runde 5 - NUTZERWUNSCH 18.11.2026 woertlich: "selbstverständlich sollen alle Räume auch eIn stück
+     * karte mit navigationspunkt haben." (Pruefbericht pruef_s3_r4 ROT: 20A0 aus dem Zensus ausgenommen, der Punkt wanderte auf
+     * der gemalten Kachel r10 (11x9 px) auf 2 s Weg 1 px). ROOM20A0 hat im Auslieferungsstand KEINE Kunst auf diesem Blatt:
+     * Seite 0xD (FUN_8004b8a0, @0x8004b9b4 `ori v1,zero,0xd`), CD-Datei-Id @0x80074c66 = 0, Zeile @0x80076A30 (Index 38+10) =
+     * Stub {0,0,1,1}. r10 war schon eine PORT-WAHL (Runde 1). Jetzt PORT-ERGAENZUNG "Grundriss aus der Kollision" (synth 17)
+     * in der freien Flaeche ueber 2090 (r9): Blatt 6 ist dort von x228..273 / y40..103 frei (gemessen am Abzug L20A0_t0),
+     * Kasten x235..268 / y51..89 (Huelle der Zellen) neben r5 (Bbox bis x233) und r7 (bis x229), ueber r9 (ab y130), links vom Kompass (ab x272).
+     * Zellen = Kamera-Bereiche des Raums (RVD ct 0, @ROOM20A0.RDT 0x002A0 Sued x -5500..29000 z -29000..-20500, 0x003A4 Ost
+     * x 19500..29000 z -29000..2000, 0x00534/0x0055C Mitte x 5500..18500 z -23500..-8500, 0x00598 West x 500..9500 z
+     * -24000..7000) an den Aussenwaenden der SCA geschnitten: West x -3600 (Zelle @0x009B8 -5600+2000), Sued z -26900
+     * (@0x0097C -28900+2000), Ost x 27000 (@0x00A78), Nord-Ost z 50 (@0x00958); der Westgang reicht bis zur Kamera-Kante z 7000
+     * (@0x00598), denn die Nordkappe @0x00A6C (z 5000..7000) ist Band 2 und die Figur steht an der Tuer nach 2090 bei z 5468
+     * (Abzug L20A0_t2, Spiel-Log),
+     * Trennwand Mitte/Ost x 18550..20550 (@0x00994). Tueren: ->2090 (4950,5000) am Nordende des Westgangs, ->11A0 (25800,50)
+     * am Nordende des Ostarms, Leiter (Selbst-Tuer) (16500,-21050) an der Mitte. Zeile fuer FUN_800473f8 (@0x8004741c-
+     * 0x80047528) R180 (flip_x, flip_z - eine Drehung, kein Spiegel; Regel der Runde 2), damit die Tuer nach 2090 nach UNTEN
+     * zu r9 zeigt (Tuergraph); EIN Massstab sx = sy = 1121 = 37 px auf die 34600 Einheiten der Huelle (x -5600..29000),
+     * ox 299 / oy 47 setzen die Huelle auf x234..271 / y50..89 - PORT-WAHL, keine Spielkonstante. Die gemalte Kachel r10
+     * bleibt als ZWEITE Zeile desselben Orts (gleiche Zeile, gleicher zid, Regel "ein Ort auf zwei Kacheln" re15_map_zones.c
+     * rect_state_impl): sie leuchtet mit, bekommt aber nie den Punkt - die Zonenwahl nimmt bei gleicher Box die erste Zeile. */
+    { 0x20A0,  -5600, -28900,  29000,   7000,  6, 255, 0, 114,   299,    47,  1121,  1121, 1, 1,  17, 0, 0 },
+    { 0x20A1,  -5600, -28900,  29000,   7000,  6, 255, 0, 114,   299,    47,  1121,  1121, 1, 1,  17, 0, 0 },
+    { 0x20A0,  -5600, -28900,  29000,   7000,  6,  10, 1, 114,   299,    47,  1121,  1121, 1, 1,   0, 0, 0 },
+    { 0x20A1,  -5600, -28900,  29000,   7000,  6,  10, 1, 114,   299,    47,  1121,  1121, 1, 1,   0, 0, 0 },
     /* ==== r42/karte (v0.8.31), Blatt 7 = STAGE3, MAP08.PIX ========================================
      * ZUORDNUNG aus den AUSGELIEFERTEN Zeilen (@0x800768B0 + 8*(50+Raum)): sie projizieren die Tueren
      * auf die gemalten Symbole - 3010->3060 (167,115) / 3060->3010 (169,111) auf r6-West (170,115),
@@ -1311,6 +1333,7 @@ static const re15_map_synth_t s_map_synth[] = {
     { 214, 160,  78,  37, 24, 4,   0, 0,   0, 0,    0,   0 },  /* synth 14: ROOM10B0 (Blatt 2) */
     { 200, 174,  40,  32, 28, 1,   0, 0,   0, 0,    0,   0 },  /* synth 15: ROOM1260 (Blatt 0) */
     {  39, 130,  48,  69, 29, 6,   0, 0,   0, 0,    0,   0 },  /* synth 16: ROOM4050 Labyrinth-Kammern (Blatt 8) */
+    { 235,  51,  34,  39, 35, 4,   0, 0,   0, 0,    0,   0 },  /* synth 17: ROOM20A0 (Blatt 6), Stufe 3 Runde 5 */
 };
 typedef struct { short x, y, w, h; } re15_map_synth_cell_t;
 static const re15_map_synth_cell_t s_map_synth_cells[] = {
@@ -1333,6 +1356,9 @@ static const re15_map_synth_cell_t s_map_synth_cells[] = {
     { 200, 174,  40,  32 },                                                     /* ROOM1260 (15): Huelle der SCA-Zellen */
     {  39, 130,  18,  14 }, {  65, 148,  17,  15 }, {  39, 151,  18,  14 }, {  41, 171,  15,  15 },   /* ROOM4050 Kammern (16): K1-K4, */
     {  63, 184,   9,  15 }, {  78, 184,   9,  15 },                                                    /* K5, K6 - Zeile (18,206,1540,1540) */
+    { 235,  51,  34,   8 }, { 235,  59,   8,  22 }, { 244,  59,  11,  13 }, { 255,  59,   8,  31 },   /* ROOM20A0 (17): Sued,
+                                       * Ost, Mitte, West (Gang nach 2090) - Zeile (299,47,1121,1121) R180, s. s_map_zones;
+                                       * Zellen um (-1,-1) gegen die Projektion: die sichtbare Ring-Mitte ist (mx-1,my-1) */
 };
 /* ACHTUNG - ERSATZ-SEITENTABELLE. Das Original fuehrt fuer Blatt 3 (2F)
  * die Tabelle von Blatt 2 (1F): verschiedene Adressen (@0x8007636C /

@@ -1,6 +1,7 @@
 /* =============================================================================
  * RIEGEL r42/karte Stufe 3 Runde 4: der Punkt laeuft im Ostarm von 4080 und im Gang von 6000 mit, und sein Ring
- * liegt an keiner Ankunft auf der Nachbarkachel.
+ * liegt an keiner Ankunft auf der Nachbarkachel. (Runde 5: [M6] 20A0 als Grundriss mit mitlaufendem Punkt, [M7] 4080 aus
+ * 4030 nicht am Uebergang; 20A0 nicht mehr aus [M5] ausgenommen.)
  * =============================================================================
  * Nutzer 2026-11-18: "das die [Map] fuer STAGE2-6 genauso sauber funktioniert wir bei STAGE1 ... Inklusive dem - wo
  * befindet sich Leon - Marker."
@@ -297,7 +298,7 @@ int main(void)
     }
 
     /* [M4] Ring an jeder Ankunft */
-    for (st = 2; st <= 6; st++) for (r = 0; r < 0x40; r++) for (v = 0; v < 2; v++) {
+    for (st = getenv("R42_DUMP") ? 1u : 2u; st <= 6; st++) for (r = 0; r < 0x40; r++) for (v = 0; v < 2; v++) {
         unsigned rid = (st << 12) | (r << 4) | v;
         int k;
         if (!betrete(rid, 0, 0)) continue;
@@ -323,6 +324,7 @@ int main(void)
         int16_t mx = 0, my = 0;
         if (rid == 0x5090 || rid == 0x5091) continue;                 /* U-12 (r42/rest) */
         seite = punkt(rid, s_ank[i].x, s_ank[i].z, &mx, &my);
+        if (getenv("R42_DUMP")) printf("    DUMP %04X<-%04X B%d (%d,%d)\n", rid, s_ank[i].von, seite, mx, my);   /* Messhilfe vorher/nachher */
         if (seite < 6 || seite > 12) continue;
         zn = re15_map_zone_current();
         zb = re15_map_zone_fuer(zn->room, zn->idx, (unsigned)seite);
@@ -354,14 +356,12 @@ int main(void)
      * 1260 und 20B0 ohne Zone). */
     {
         static const struct { unsigned room; const char *grund; } s_m5_aus[] = {
-            { 0x1240, "reine Szene: nDoor 0, sub00 Evt_exec sub 2 ohne Bedingung @ROOM1240.RDT 0x00544, sub02 Set 2:7=1 @0x0055A ... Aot_on 0 @0x00618 (Tuer -> 1170)" },
+            { 0x1240, "reine Szene: nDoor 0, sub00 Evt_exec sub 2 ohne Bedingung @ROOM1240.RDT 0x00544, sub02 Set 2:7=1 @0x00562 (Pruefbericht pruef_s3_r4: @0x0055A ist Set 3:139=1) ... Aot_on 0 @0x00618 (Tuer -> 1170)" },
             { 0x1241, "dito ROOM1241" },
             { 0x6040, "Abspann: sub00 Evt_exec sub 2 ohne Bedingung @ROOM6040.RDT 0x00522, sub02 Set 2:7=1 @0x00530, keine Tuer" },
             { 0x6041, "dito ROOM6041 (bytegleich mit ROOM6040)" },
             { 0x5090, "Zug: Lagen ausserhalb der 5 Teil-Weltboxen ohne Rot, Stand v0.8.30, gehoert zu U-12 (Orchestrator-Vorgabe Punkt 3: gelb)" },
             { 0x5091, "dito ROOM5091" },
-            { 0x20A0, "gemalte Kachel r10 nur 11x9 px (MAP07.PIX, Seitentabelle Blatt 6): der 5x5-Punkt hat 6x4 Mitten, ueber den ganzen Raum wandert er ~5 px - zu wenig fuer +-4000 (offen, gelb)" },
-            { 0x20A1, "dito ROOM20A1" },
             { 0, 0 }
         };
         int m5_n = 0, m5_ok = 0, m5_aus = 0, k2;
@@ -432,6 +432,68 @@ int main(void)
                m5_n, m5_aus, m5_ok, l5[0] ? l5 : " keine");
         CHECK("[M5] Zensus: genug Raeume geprueft (STAGE1-6, Leon und Elza)", m5_n >= 180);
         CHECK("[M5] jeder Raum zeigt ein Stueck Karte mit rotem Raum und mitlaufendem Punkt", m5_ok == m5_n);
+    }
+
+    /* [M6] Stufe 3 Runde 5 (Pruefbericht pruef_s3_r4 ROT: 20A0 aus [M5] ausgenommen, 1 px auf 2 s Weg): ROOM20A0 ist ein
+     * Grundriss (synth 17, re15_map_zones.h). An den Lagen des Kartenlaufs (Spiel-Log, analysis/karte_r42 s3r4 Abzuege
+     * L20A0_t0/w0 und L20A0_t1/w1) liegt der Punkt in einer Zelle des Grundrisses, unter ihm ist die Aktuell-Fuellung, die
+     * gemalte Kachel r10 leuchtet mit (derselbe Ort), und auf beiden 2-s-Wegen wandert er >= 2 px. Am Tuer-Trigger nach 2090
+     * (4950,5000) bleibt er im Grundriss (die Marke (277,150) liegt an r10, der Zug darf ihn nicht dorthin holen).
+     * Auf aaea5f8c2 und 7dc3f1841 ROT (Punkt auf r10, keine Schema-Zone). */
+    {
+        static const int32_t lage[5][2] = { { 16500, -20000 }, { 16500, -17568 }, { 7168, -16250 }, { 18082, -16250 },
+                                            { 4950, 5000 } };
+        int16_t px[5], py[5];
+        int j, alle = 1, k, blatt6 = 1;
+        for (j = 0; j < 5; j++) {
+            const re15_map_zone_t *z;
+            int s6 = punkt(0x20A0, lage[j][0], lage[j][1], &px[j], &py[j]), drin = 0, sx, sy, sw, sh, erste = 0, nz = 0, rot, r10;
+            z = re15_map_zone_current();
+            if (z && re15_map_zone_synth(z, &sx, &sy, &sw, &sh, &erste, &nz))
+                for (k = 0; k < nz; k++) {
+                    int cx, cy, cw, ch;
+                    if (!re15_map_synth_cell(erste + k, &cx, &cy, &cw, &ch)) continue;
+                    if (px[j] - 1 >= cx && px[j] - 1 < cx + cw && py[j] - 1 >= cy && py[j] - 1 < cy + ch) drin = 1;
+                }
+            rot = (s6 == 6) ? aktuell_unter(px[j] - 1, py[j] - 1) : 0;
+            r10 = (s6 == 6) ? aktuell_unter_art(285, 148, 0) : 0;
+            printf("  [M6] 20A0 (%d,%d) -> (%d,%d) Blatt %d, in Zelle %d, rot %d, r10 mit %d\n",
+                   (int)lage[j][0], (int)lage[j][1], px[j], py[j], s6, drin, rot, r10);
+            if (s6 != 6) blatt6 = 0;
+            if (s6 != 6 || !drin || !rot || !r10) alle = 0;
+        }
+        CHECK("[M6] 20A0: Punkt im Grundriss, rot unterlegt, Kachel r10 leuchtet mit (auch am Tuer-Trigger nach 2090)", alle);
+        CHECK("[M6] 20A0: der Punkt laeuft auf beiden 2-s-Wegen mit (>= 2 px)",
+              blatt6 && cheb(px[0], py[0], px[1], py[1]) >= 2 && cheb(px[2], py[2], px[3], py[3]) >= 2);
+    }
+
+    /* [M7] Stufe 3 Runde 5 (Pruefbericht pruef_s3_r4 ROT 4080_t0: "an der Spitze der Diagonale direkt an der Kachel von
+     * 4030", Rot-Mass 0,29 gegen 0,32 in v0.8.30): Ankunft aus 4030 (-3900,2100). Im 2-px-Rand um den Ring (9x9 ohne 5x5) liegen
+     * mindestens 18 von 56 Texeln (0,32 = v0.8.30) SICHTBARER Raumkoerper von r8/r13 (Kunst-Index nicht 0 und nicht 4, nicht
+     * unter einer Tuer-/Treppenmarke des Blatts), und im ganzen 9x9-Feld liegt KEIN Texel einer anderen Kachel (nicht am
+     * Uebergang zu 4030). Auf aaea5f8c2 ROT (176,124): r3-Linie im Feld; auf 7dc3f1841 ROT (170,117): 16 von 56. */
+    {
+        int16_t mx = 0, my = 0;
+        int s8 = punkt(0x4080, -3900, 2100, &mx, &my), cx = mx - 1, cy = my - 1, dx, dy, n = 0, f = 0, k, rr;
+        for (dy = -4; dy <= 4; dy++) for (dx = -4; dx <= 4; dx++) {
+            int x = cx + dx, y = cy + dy, a8 = kachel_index(8, 8, x, y), a13 = kachel_index(8, 13, x, y), unter = 0;
+            for (rr = 0; rr < 16; rr++) if (rr != 8 && rr != 13 && kachel_index(8, rr, x, y)) { f++; break; }
+            if (dx >= -2 && dx <= 2 && dy >= -2 && dy <= 2) continue;
+            for (k = 0; k < re15_map_mark_count(); k++) {
+                int mpg, mrc, kx, ky, kind;
+                (void)re15_map_mark_get(k, &mpg, &mrc, &kx, &ky, &kind);   /* Lage auch einer unsichtbaren Marke: strenger */
+                if (mpg != 8) continue;
+                if (kind <= 3 ? ((kind == 0 || kind == 2) ? (y == ky && x >= kx - 2 && x <= kx + 2)
+                                                          : (x == kx && y >= ky - 2 && y <= ky + 2))
+                              : (kind == 5 ? ((x - kx == -2 || x == kx || x - kx == 2) && y >= ky - 2 && y <= ky + 2)
+                                           : ((y - ky == -2 || y == ky || y - ky == 2) && x >= kx - 2 && x <= kx + 2))) unter = 1;
+            }
+            if (!unter && ((a8 && a8 != 4) || (a13 && a13 != 4))) n++;
+        }
+        printf("  [M7] 4080 aus 4030 (-3900,2100) -> (%d,%d) Blatt %d: sichtbarer Raum im Rand %d/56, fremde Kunst im 9x9 %d\n",
+               mx, my, s8, n, f);
+        CHECK("[M7] 4080 aus 4030: mindestens so viel Raum um den Punkt wie v0.8.30 (>= 18/56) und nicht am Uebergang zu 4030",
+              s8 == 8 && n >= 18 && f == 0);
     }
     if (s_roh) free(s_roh);
     printf(g_fail ? "\nFEHLER\n" : "\nOK\n");
