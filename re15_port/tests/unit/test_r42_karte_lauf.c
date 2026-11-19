@@ -3,7 +3,8 @@
  * liegt an keiner Ankunft auf der Nachbarkachel. (Runde 5: [M6] 20A0 als Grundriss mit mitlaufendem Punkt, [M7] 4080 aus
  * 4030 nicht am Uebergang; 20A0 nicht mehr aus [M5] ausgenommen. Runde 6: [M7] zusaetzlich keine Wandlinie und kein Grund im
  * Ring, kein Tuerbalken im 9x9-Feld. Runde 7: [M8] der ganze Weg durch den Schraeggang 4080/4081 (Gang-Zeile, karte_r42.c);
- * [M7] "nicht am Uebergang" = kein Ring-Texel auf oder direkt neben einem Tuerbalken.)
+ * [M7] "nicht am Uebergang" = kein Ring-Texel auf oder direkt neben einem Tuerbalken. Runde 8: [M9] wo v0.8.30 im Gang sauber
+ * war, mindestens so viel Rot wie v0.8.30.)
  * =============================================================================
  * Nutzer 2026-11-18: "das die [Map] fuer STAGE2-6 genauso sauber funktioniert wir bei STAGE1 ... Inklusive dem - wo
  * befindet sich Leon - Marker."
@@ -584,6 +585,43 @@ int main(void)
               lagen >= 60 && schlecht == 0);
         CHECK("[M8] Schraeggang: kein Rueckwaertssprung und kein Sprung ueber 3 px", lagen >= 60 && zurueck == 0 && sprung == 0);
         CHECK("[M8] Schraeggang: der Punkt folgt dem Gang (am Gangende weiter unten als an der Tuer)", lagen >= 60 && folgt);
+    }
+
+    /* [M9] Stufe 3 Runde 8 (Pruefbericht pruef_s3_r7 ROT: "Vorgabe B verlangt auch, dass das Rot-Mass an jeder Stelle
+     * mindestens so gut ist wie in v0.8.30 ... v0.8.30 kam auf mehr Rot, weil sein Punkt gar nicht im Gang stand"; dazu
+     * "Zwischen x-z -1200 und +600 war der Ring von v0.8.30 sauber"). Gemessen in v0.8.30 (FB_SHOT der Pruefung, Abzuege
+     * L_c-600/L_c0 in pruef_s3_r7/schuss_v030, Punkt (178,124): Rot 0,34 = 19/56, Ring-Inneres 8/8 rot) und im Sweep der
+     * Pruefung (pruef_s3_r7/sweep/lin_v030_4080_*.txt: v0.8.30 zeigt (178,124) auf der Laengslinie x+z = -1300 bei x-z
+     * -1200..-200, auf -1650 bei -900..200, auf -2100 bei -400..600). Das sind die EINZIGEN Lagen im Gang, an denen v0.8.30 einen
+     * sauberen Ring mit mehr als 18/56 Rot hatte (alle anderen roeteren v0.8.30-Lagen: Inneres 3/8..7/8 = Wandlinie im Ring).
+     * Je begehbare Lage dort (alle 100 Einheiten, Leon und Elza): Rand des neuen Rings >= 19/56 und weiter das [M7]-Mass.
+     * Auf bd889c799 (Runde 7: Punkt (170,119), 18/56) und aaea5f8c2 ROT. */
+    {
+        static const struct { int32_t linie, von, bis; } v030_sauber[3] = {
+            { -1300, -1200, -200 }, { -1650, -900, 200 }, { -2100, -400, 600 } };
+        static const unsigned figur[2] = { 0x4080, 0x4081 };
+        int f, li, lagen = 0, schlecht = 0;
+        for (f = 0; f < 2; f++)
+            for (li = 0; li < 3; li++) {
+                int32_t u;
+                for (u = v030_sauber[li].von; u <= v030_sauber[li].bis; u += 100) {
+                    int32_t x = (u + v030_sauber[li].linie) / 2, z = (v030_sauber[li].linie - u) / 2, nx = x, nz = z;
+                    int16_t mx = 0, my = 0;
+                    int b = punkt(figur[f], x, z, &mx, &my), n = 0, innen = 0, aussen = 0, nah = 0;
+                    re15_collision_ensure_band(0);
+                    re15_collision_constrain(&s_rdt, x, z, &nx, &nz);
+                    if (nx != x || nz != z) continue;            /* nicht begehbar */
+                    lagen++;
+                    ring_mass_4080(mx, my, &n, &innen, &aussen, &nah);
+                    if (b != 8 || n < 19 || innen != 9 || aussen != 0 || nah < 2) {
+                        if (schlecht++ < 6)
+                            printf("    [M9] %04X (%d,%d) x-z %d -> (%d,%d) Blatt %d: Rand %d/56 (v0.8.30 19/56), Inneres %d/9, aussen %d, Balkenabstand %d\n",
+                                   figur[f], x, z, u, mx, my, b, n, innen, aussen, nah);
+                    }
+                }
+            }
+        printf("  [M9] Schraeggang, Lagen mit sauberem v0.8.30-Ring: %d begehbar, %d unter v0.8.30\n", lagen, schlecht);
+        CHECK("[M9] Schraeggang: wo v0.8.30 sauber war, mindestens so viel Rot wie v0.8.30 (19/56)", lagen >= 30 && schlecht == 0);
     }
     if (s_roh) free(s_roh);
     printf(g_fail ? "\nFEHLER\n" : "\nOK\n");

@@ -273,20 +273,32 @@ int re15_karte_r42_ring_klemmen(const void *zone, unsigned page, unsigned rect, 
  *       Diagonale (Zone 0, r8, Zeile aus den Waenden) samt der Klemmen von Runde 4/5 - dort wie bisher.
  *     PORT-WAHL (Anzeige, keine Spielkonstante). Grenzen (offen benannt im Bericht s3 r7): die beiden Haltestellen liegen
  *     drei Bildpunkte auseinander; Ring-Mitte (169,118) hat den Tuerbalken 4080<->4030 (x165 y111..115) 2 Texel weit im 9x9-Feld,
- *     der Ring selbst beruehrt ihn nicht. */
+ *     der Ring selbst beruehrt ihn nicht.
+ * (C) Stufe 3 Runde 8 - WECHSEL DER HALTESTELLE IN DER GANGMITTE (Pruefbericht pruef_s3_r7 ROT: "Auf gut der Haelfte des Gangs
+ *     ist v0.8.30 roeter: 0,34 bis 0,50 gegen 0,32 bzw. 0,36"; GELB: "Von der Tuer bis x-z ~1400 (drei Viertel des Gangs) steht
+ *     der Punkt still"). Bisher nahm der Punkt die naechste Haltestelle; weil die erste Haltestelle (mx+my = 289) schon 10 vor
+ *     der Tuer (279) liegt, wechselte er erst bei mx+my = 293, nach drei Vierteln des Wegs. Jetzt teilt der Gang sich in ZWEI
+ *     GLEICHE HAELFTEN: Tuer mx+my = 279 (x-z = -6800), Gangende 297 (x-z = 4075), Mitte 288 (x-z ~ -1360). Erste Haelfte
+ *     Haltestelle (170,119), zweite (173,122). Groesste Abweichung Zeile -> Punkt bleibt 10 (an der Tuer, wie bisher); in der
+ *     zweiten Haelfte hoechstens 7 statt 2. Gemessen (v0.8.30-Abzuege der Pruefung, pruef_s3_r7 gang_vgl.txt + sweep
+ *     lin_v030_4080_*.txt): v0.8.30 hatte nur mit Punkt (178,124) einen sauberen Ring (Inneres 8/8 rot) bei mehr Rot als 0,32
+ *     (0,34 = 19/56), und zwar genau ab mx+my = 288 (x-z -1200 .. 600 je nach Laengslinie). Dort steht der neue Punkt jetzt auf
+ *     (173,122) mit 20/56 = 0,36. Wo v0.8.30 danach noch roeter ist (0,39 .. 0,50), lag sein Ring auf einer Wandlinie
+ *     (Inneres 3/8 .. 7/8) und 6 bis 10 Bildpunkte vor der Figur in der breiten Diagonale. Riegel [M9] in unit_r42_karte_lauf. */
 typedef struct {
     unsigned short room;
     unsigned char idx, weiter_idx;      /* Zone des Gangs, Zone hinter dem Gangende */
     short ox, oy;
     unsigned short sx, sy;              /* Formel FUN_800473f8 @0x8004741c-0x80047528 */
     short naht;                         /* Punkt mx+my, ab dem der Ring auf/hinter der Naht liegt */
+    short tuer, ende;                   /* Zeile mx+my an der Tuer (x-z = -6800) und am Gangende (x-z = 4075), Runde 8 */
     unsigned char n;
     short halt[2][2];                   /* Haltestellen (Punkt, nicht Ring-Mitte) */
 } r42_gang_t;
 
 static const r42_gang_t s_r42_gang[] = {
-    { 0x4080, 1, 0, 119, 171, 1736, 1736, 298, 2, { { 170, 119 }, { 173, 122 } } },
-    { 0x4081, 1, 0, 119, 171, 1736, 1736, 298, 2, { { 170, 119 }, { 173, 122 } } },
+    { 0x4080, 1, 0, 119, 171, 1736, 1736, 298, 279, 297, 2, { { 170, 119 }, { 173, 122 } } },
+    { 0x4081, 1, 0, 119, 171, 1736, 1736, 298, 279, 297, 2, { { 170, 119 }, { 173, 122 } } },
 };
 
 const void *re15_karte_r42_gang(const void *zone, int32_t wx, int32_t wz, int16_t *mx, int16_t *my, int *fertig)
@@ -297,7 +309,7 @@ const void *re15_karte_r42_gang(const void *zone, int32_t wx, int32_t wz, int16_
     if (!zn || zn->etage || g_re15_karte_r42_roh) return 0;
     for (i = 0; i < (int)(sizeof s_r42_gang / sizeof s_r42_gang[0]); i++) {
         const r42_gang_t *g = &s_r42_gang[i];
-        int32_t t, t2, px, py, s, beste = 0, bd = 0;
+        int32_t t, t2, px, py, s, beste = 0;
         if (g->room != zn->room || g->idx != zn->idx) continue;
         t  = ((wx + 32000) * 10 * (int32_t)g->sx) >> 20;
         t2 = ((wz + 32000) * 10 * (int32_t)g->sy) >> 20;
@@ -311,11 +323,10 @@ const void *re15_karte_r42_gang(const void *zone, int32_t wx, int32_t wz, int16_
             }
             return 0;
         }
-        for (j = 0; j < g->n; j++) {
-            int32_t d = s - (g->halt[j][0] + g->halt[j][1]);
-            if (d < 0) d = -d;
-            if (j == 0 || d < bd) { bd = d; beste = j; }
-        }
+        /* Runde 8 (C): gleiche Teilstuecke des Gangs je Haltestelle (n = 2: Wechsel in der Mitte mx+my = 288) */
+        beste = (int)(((s - g->tuer) * g->n) / (g->ende - g->tuer));
+        if (s < g->tuer) beste = 0;
+        if (beste > g->n - 1) beste = g->n - 1;
         *mx = g->halt[beste][0];
         *my = g->halt[beste][1];
         *fertig = 1;
