@@ -99,7 +99,10 @@ if(TEIL MATCHES "^schublade")
     endif()
     # Vor Tuer 0 (Rechteck z -10300..-8800): Spieler (-25100,-8300) Blick 0x400 = -z, Vorwaertspunkt 620 davor liegt im Satz.
     karte(${_r0} -25100 -8300 1024)
-    lauf(600 ${_basis} "RE15_PAD_AT=60:A" "RE15_FIRE_AOT=13@200#${_r1}" "RE15_EXIT_AT=400#${_r1}")
+    # Querbezug Runde 42 gegenstaende (Rohr V-04, re15_gegenstaende_r42.c): solange das Rohr nicht genommen ist, traegt Slot 13 am
+    # Schrank zuerst die Rohr-Aufnahme (debug.log "[gegenstaende42] ROOM11F0 Slot 13: Item 0x02 x1 Bit (9,44)"); erst danach oeffnet
+    # derselbe Platz den Schrank (sub19). Dieser Riegel misst den Schubladen-Ton und setzt deshalb "Rohr schon genommen" (9,44) voraus (beim Start und nach dem Laden des Spielstands, Bild 40 in ROOM11E0/11E1).
+    lauf(600 ${_basis} "RE15_PAD_AT=60:A" "RE15_SET_FLAG=9:44" "RE15_SET_FLAG_AT=9:44@40" "RE15_FIRE_AOT=13@200#${_r1}" "RE15_EXIT_AT=400#${_r1}")
     pruefe_tuer(${_r1})
     anker_bilder(${_r1} 017B6 _a)
     list(LENGTH _a _na)
