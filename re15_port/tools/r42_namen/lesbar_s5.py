@@ -21,8 +21,11 @@ TRENNSTELLE und N (gemessen, Werkzeuge im Strang-Ordner namen/s5):
   1. mit Stimme: an einer Sprechpause der Aufnahme (pausen5.py: >= 120 ms unter max(-40 dB, Grundrauschen + 8 dB); die -40-dB-Regel
      aus Stufe 4 bleibt fuer leise Aufnahmen gleich), die Wortgrenze aus Whisper medium.en auf dem Stueck vor der Pausenmitte
      (asr_pausen.py); unter den passenden Pausen die, an der die kuerzere Seite am laengsten steht; N = round(30 * Pausenende).
-  2. mit Stimme, keine passende Pause: Wortgrenze hinter einem Satzzeichen, sonst die, an der die kuerzere Seite am laengsten steht
-     (Whisper-Wortanfang des ersten Worts von Seite 2); N = round(30 * t).
+  2. mit Stimme, keine passende Pause: Wortgrenze hinter einem Satzzeichen, sonst an einer Satzteilgrenze (vor "and"/"in"/"for"/
+     einer Apposition; PORT-WAHL Lesbarkeit - seit Runde 2, vorher "die, an der die kuerzere Seite am laengsten steht", Pruefbericht
+     s5_r1 G2), t = Whisper-Wortanfang des ersten Worts von Seite 2; N = round(30 * t).
+  Passt der Text an keiner Pause in zwei Seiten (ROOM1240/1241 msg 4), dann drei Seiten an zwei gemessenen Pausen; Seite k+1 steht
+     N_k + 1 Bilder nach Seite k, also N_2 = round(30 * t_2) - N_1 - 1 (Seite 3 beim Ende der zweiten Pause).
   3. ohne Stimme: Seite 1 steht so lange wie die Original-Untertitel desselben Raums (nachlauf_r42.nachlauf(raum, 2)); Trennung hinter
      einem Satzzeichen, sonst die ausgeglichenste.
 """
@@ -65,9 +68,11 @@ def zeilen(woerter, vorweg, mit_name):
 
 
 def seiten(ws, k, vorweg, mit_name):
+    """k = Woerter auf Seite 1 (int), mehrere Seiten: Tupel der Schnittstellen (Runde 2, ROOM1240/1241 msg 4 an zwei Pausen)."""
     if k is None:
         return [zeilen(ws, vorweg, mit_name)]
-    return [zeilen(ws[:k], vorweg, mit_name), zeilen(ws[k:], vorweg, mit_name)]
+    ks = [0] + (list(k) if isinstance(k, (tuple, list)) else [k]) + [len(ws)]
+    return [zeilen(ws[a:b], vorweg, mit_name) for a, b in zip(ks, ks[1:])]
 
 
 def _rev(g):
@@ -90,9 +95,10 @@ def bauen(kopf, seiten_, schwanz, n, leer=LEER):
     mit_name = len(kopf) > 2
     vorweg = (_breite(kopf[4:-2]) + T.WID[leer]) if mit_name else 0
     b, zz, bw = [], [], []
+    ns = list(n) if isinstance(n, (tuple, list)) else [n] * max(1, len(seiten_) - 1)   # je Seitenwechsel ein N (Runde 2)
     for si, zs in enumerate(seiten_):
         if si:
-            b += [0x02, 0x00] if system else [0x04, 0x01, 0x02, n]
+            b += [0x02, 0x00] if system else [0x04, 0x01, 0x02, ns[si - 1]]
         if si == 0 or not system:
             b += list(kopf) + ([leer] if mit_name else [])
         for zi, z in enumerate(zs):
@@ -101,7 +107,7 @@ def bauen(kopf, seiten_, schwanz, n, leer=LEER):
             b += _zeile(z)
         zz.append([' '.join(''.join(_rev(g) for g in w) for w in z) for z in zs])
         bw.append([(vorweg if zi == 0 else 0) + _breite(_zeile(z)) for zi, z in enumerate(zs)])
-    assert 1 <= n <= 255 or system or len(seiten_) == 1, n
+    assert all(1 <= x <= 255 for x in ns) or system or len(seiten_) == 1, ns
     return b + list(schwanz), zz, bw
 
 

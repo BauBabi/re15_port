@@ -118,6 +118,15 @@ void re15_msg_clear_room_block(void);
  * one place. */
 int re15_msg_tick(const unsigned char **out_raw, int *out_len, int *out_msg_id);
 
+/* Runde 42 Strang namen, Stufe 5 Runde 2 (Herleitung in msg_common.c ueber re15_msg_volltext_start):
+ *   re15_msg_volltext_start  Seiten der Full-Text-Darstellung (ROOM1170/1240, msg_show) auf Seite 1 stellen; Seite k+1 steht
+ *                            N + 1 Bilder nach Seite k (`02 N`), wie in der Schreibmaschine.
+ *   re15_msg_seiten_halten   1 = das naechste Message_on wartet: die laufende Nachricht hat einen zeitgesteuerten Seitenwechsel
+ *                            (`02 N`, N > 0) und ihre letzte Seite lief NICHT unter einer Stimme - sie laeuft bis zu ihrem
+ *                            eigenen Ende (das Original bricht eine laufende Nachricht nie ab, FUN_80027e68 @0x80027e74-8c). */
+void re15_msg_volltext_start(void);
+int  re15_msg_seiten_halten(void);
+
 /* UNTERTITEL-NACHHALL (msg-FSM Zustand 7, Nutzer-Entscheidung 2026-09-20) sofort beenden.
  * Der Nachhall ist der EINZIGE Zustand, in dem Text steht, obwohl der Freeze schon geloest
  * ist. RE2 hat diesen Zustand nicht: @0x800307e8 `andi v0,v0,0x7f` (Belegt-Bit weg) und

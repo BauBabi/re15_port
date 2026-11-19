@@ -19,7 +19,9 @@ TABELLE (Raum, Id, RDT-Datei-Offset, Woerter auf Seite 1 bzw. None = nur neu umb
   Art 'pause'  Stimme, Seite 2 am Pausenende t der Aufnahme synchro/STAGEn/roomXXXX/mainNN.wav (namen/s5/pausen5.py), die Woerter vor
                der Pause aus Whisper medium.en auf dem Stueck [0, Pausenmitte] (namen/s5/asr_pausen.txt, im Beleg "VOR: ...");
                N = round(30 t) (lesbar_s4.seitenwartezeit, S = 0: die Aufnahme gehoert zu dieser Nachricht, audio_pc.c main%02d).
-  Art 'wort'   Stimme ohne passende Pause: t = Whisper-Wortanfang des ersten Worts von Seite 2 (namen/s5/asr.txt).
+  Art 'wort'   Stimme ohne passende Pause: Trennung an einer Satzteilgrenze (Satzzeichen, sonst vor "and"/"in"/einer Apposition -
+               PORT-WAHL Lesbarkeit, seit Runde 2 statt "kuerzere Seite steht am laengsten"), t = Whisper-Wortanfang des ersten
+               Worts von Seite 2 (namen/s5/asr.txt).
   Art 'ohne'   keine Aufnahme: Seite 1 steht so lange wie die Original-Untertitel desselben Raums (nachlauf_r42.nachlauf(raum, 2)).
   Art 'system' Systemtext `04 02 .. 01 00`: Seite 2 nach der Aktionstaste `02 00` (Form der 16 Speicherstellen-Texte, z. B.
                re15_savepoint.c "`04 02` Satz1 `02 00` Satz2"; FUN_80028134 Zustand 1 = warten auf die Taste, msg_common.c).
@@ -53,16 +55,22 @@ FAELLE = (
                                             'anymore." (Pause 2.00-2.48 nach "right?": Seite 2 passt nicht in zwei Zeilen)'),
     (0x11B0, 8, 0x01AD7, 10, 3.54, 'pause', 'Pause 2.94-3.54, VOR: "We don\'t really have any other option than to try."'),
     (0x1211, 5, 0x0246E, 5, 2.67, 'pause', 'Pause 2.55-2.67, VOR: "Listen, we\'re in serious trouble."'),
-    (0x1240, 0, 0x00638, 8, 2.70, 'wort', 'keine sichere Pause (Musikbett), Whisper "an"[2.70]'),
-    (0x1240, 2, 0x006EB, 6, 2.60, 'wort', 'keine Pause, Whisper "international"[2.60]'),
-    (0x1240, 3, 0x00742, 6, 3.34, 'wort', 'keine sichere Pause (Musikbett), Whisper "Unit"[3.34]'),
-    (0x1240, 4, 0x0079E, 9, 3.24, 'wort', 'keine sichere Pause (Musikbett), Whisper "of"[3.24]'),
-    (0x1241, 0, 0x0063C, 8, 2.70, 'wort', 'wie ROOM1240 msg 0 (room1241/main00.wav bytegleich room1240/main00.wav)'),
-    (0x1241, 2, 0x006EF, 6, 2.60, 'wort', 'wie ROOM1240 msg 2 (Aufnahme bytegleich)'),
-    (0x1241, 3, 0x00746, 6, 3.34, 'wort', 'wie ROOM1240 msg 3 (Aufnahme bytegleich)'),
-    (0x1241, 4, 0x007A2, 9, 3.24, 'wort', 'wie ROOM1240 msg 4 (Aufnahme bytegleich)'),
+    # Runde 2 (Pruefbericht s5_r1 R4/G1): die Vorspann-Aufnahmen haben echte Pausen (RMS 20 ms: main03 3.54-3.86 bei -31..-60 dB,
+    # main00 3.88-4.04 bis -57 dB); die alte Begruendung der Runde 1 ("Musikbett") war falsch. Geteilt wird an der gemessenen Pause.
+    (0x1240, 0, 0x00638, 11, 4.05, 'pause', 'Pause 3.90-4.05 nach "suburb" (Whisper "suburb"[3.28-3.84] "called"[3.84])'),
+    (0x1240, 2, 0x006EB, 8, 4.14, 'wort', 'keine Pause >= 120 ms (pausen5: keine; RMS 20 ms nur Pegelloecher 2.52-2.54, 3.32-3.36, '
+                                        '3.66-3.70, 4.28-4.30); Satzteilgrenze vor der Apposition "Umbrella", Whisper "Umbrella"[4.14]'),
+    (0x1240, 3, 0x00742, 7, 3.87, 'pause', 'Pause 3.60-3.87 nach "Unit" (Whisper "Unit"[3.34-3.56] "immediately"[3.56])'),
+    (0x1240, 4, 0x0079E, (5, 14), (2.32, 5.59), 'pause', 'Pausen 1.90-2.32 nach "closed," (Whisper "closed,"[1.14-2.26] "thanks"'
+                                         '[2.26]) und 5.41-5.59 nach "Redfield" (RMS 20 ms 5.40-5.58 bei -34..-58 dB, "and"[5.34-5.72]); '
+                                         'an nur einer der beiden passt der Rest nicht in zwei Zeilen -> drei Seiten'),
+    (0x1241, 0, 0x0063C, 11, 4.05, 'pause', 'wie ROOM1240 msg 0 (room1241/main00.wav bytegleich room1240/main00.wav)'),
+    (0x1241, 2, 0x006EF, 8, 4.14, 'wort', 'wie ROOM1240 msg 2 (Aufnahme bytegleich)'),
+    (0x1241, 3, 0x00746, 7, 3.87, 'pause', 'wie ROOM1240 msg 3 (Aufnahme bytegleich)'),
+    (0x1241, 4, 0x007A2, (5, 14), (2.32, 5.59), 'pause', 'wie ROOM1240 msg 4 (Aufnahme bytegleich)'),
     (0x3000, 3, 0x018DE, 2, 1.73, 'pause', 'Pause 1.45-1.73, VOR: "Oh, man."'),
-    (0x3070, 2, 0x039FF, 6, 2.36, 'wort', 'Pause 0.99-1.53 nach "Underground." passt nicht (Seite 2 drei Zeilen); Whisper "off"[2.36]'),
+    (0x3070, 2, 0x039FF, 9, 3.24, 'wort', 'Pause 0.99-1.53 nach "Underground." passt nicht (Seite 2 drei Zeilen), sonst keine Pause; '
+                                        'Satzteilgrenze vor "and", Whisper "and"[3.24] (Runde 2, G2: vorher "better // off")'),
     (0x3091, 16, 0x021BB, 4, 2.69, 'pause', 'Pause 2.43-2.69, VOR: "Sherry, huh? I\'m John."'),
     (0x3091, 18, 0x02256, 7, 3.07, 'pause', 'Pause 2.95-3.07, VOR: "Well, of course. She saved my life!"'),
     (0x30E0, 5, 0x01206, 6, 1.89, 'pause', 'Pause 1.58-1.89, VOR: "And what happened in that tunnel?"'),
@@ -71,7 +79,8 @@ FAELLE = (
     (0x30E1, 14, 0x01282, 8, 3.60, 'pause', 'Pause 3.25-3.60, VOR: "Anyway, there are too many walking corpses outside."'),
     (0x4010, 8, 0x01167, 10, 3.50, 'pause', 'Pause 3.06-3.50, VOR: "It\'s a virus that makes people turn into those things."'),
     (0x4010, 10, 0x01208, 5, 2.00, 'pause', 'Pause 1.70-2.00, VOR: "The vaccine itself isn\'t here."'),
-    (0x4010, 20, 0x013D6, 9, 2.56, 'wort', 'keine Pause, Whisper "center\'s"[2.56]'),
+    (0x4010, 20, 0x013D6, 6, 1.82, 'wort', 'keine Pause (Schwelle -24 dB); Satzteilgrenze vor "in this research center\'s", '
+                                         'Whisper "in"[1.82] (Runde 2, G2: vorher "research // center\'s")'),
     (0x4010, 21, 0x01442, 11, 2.48, 'pause', 'Pause 2.28-2.48, VOR: "As long as you can start up the program for it."'),
     (0x5011, 3, 0x00F19, 9, 4.10, 'pause', 'Pause 3.82-4.10, VOR: "John, I read some files in this research center."'),
     (0x5060, 5, 0x033F7, 6, None, 'system', 'Systemtext, Trennung am Satzende "building."'),
@@ -117,7 +126,13 @@ def main():
             fehler.append('ROOM%04X msg %d hat nur %d Zeilen' % (raum, mid, len(alt)))
         name = F.wort_str(kopf[4:-3]) if len(kopf) > 2 else ''
         vorweg = (F.breite(kopf[4:-2]) + T.WID[F.LEER]) if name else 0
-        if art == 'pause' or art == 'wort':
+        if (art == 'pause' or art == 'wort') and isinstance(t, tuple):
+            # drei Seiten (Runde 2): Seite 2 bei t[0], Seite 3 bei t[1]; N_2 = round(30 t_2) - N_1 - 1 (lesbar_s5.py, Regel 2)
+            n1 = LS.seitenwartezeit(t[0], 0)
+            n = (n1, LS.seitenwartezeit(t[1], n1 + 1))
+            wie = 'Pausenenden t=%.2f / %.2f s (%s %s): %s' % (t[0], t[1], S % (('%X' % raum)[0], '%04X' % raum, mid),
+                                                               'Whisper medium.en', beleg)
+        elif art == 'pause' or art == 'wort':
             n = LS.seitenwartezeit(t, 0)
             wie = '%s t=%.2f s (%s %s): %s' % ('Pausenende' if art == 'pause' else 'Wortanfang', t,
                                               S % (('%X' % raum)[0], '%04X' % raum, mid),
@@ -140,8 +155,11 @@ def main():
                 fehler.append('ROOM%04X msg %d Seite %d: %d Zeilen, %d px' % (raum, mid, si + 1, len(zs), max(ww)))
         nn = 'k_zz_%04x_msg%d' % (raum, mid)
         hinweis = '' if len(b) <= L5.PSX_LEN else '; PSX: %d B > %d (MSG_RAW_LEN, PSX-Bau nicht ausgeliefert)' % (len(b), L5.PSX_LEN)
-        art_t = {'pause': 'zwei Seiten, Seite 2 nach `02 %d`' % n, 'wort': 'zwei Seiten, Seite 2 nach `02 %d`' % n,
-                 'ohne': 'zwei Seiten, Seite 2 nach `02 %d`' % n, 'system': 'zwei Seiten, Seite 2 nach der Taste `02 00`'}[art]
+        if isinstance(n, tuple):
+            art_t = 'drei Seiten, Seite 2 nach `02 %d`, Seite 3 nach `02 %d`' % n
+        else:
+            art_t = {'pause': 'zwei Seiten, Seite 2 nach `02 %d`' % n, 'wort': 'zwei Seiten, Seite 2 nach `02 %d`' % n,
+                     'ohne': 'zwei Seiten, Seite 2 nach `02 %d`' % n, 'system': 'zwei Seiten, Seite 2 nach der Taste `02 00`'}[art]
         out += T.carr(nn, b, 'ROOM%04X %d %s%s  (%d B, Zeilen %s px; RDT @0x%05X, Schwanz `%s` aus dem RDT; %s: %s%s)' % (
             raum, mid, (name + ': ') if name else ('System: ' if kopf == [0x04, 0x02] else 'Erzaehler: '),
             ' // '.join(' / '.join(z) for z in zeilen), len(b), ' // '.join('/'.join(map(str, w)) for w in bw), off,

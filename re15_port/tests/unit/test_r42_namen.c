@@ -46,6 +46,14 @@
  *   quellen_zeilen  jede Byte-Tabelle in engine/src (.c, gen/.inc) als Nachricht gelesen (Port-Texte, die erst bei einem
  *                   Ereignis eingesetzt werden; ohne Inventar-Beschreibungen): keine Text-Seite mit mehr als zwei Zeilen.
  *   seitenwechsel   zusaetzlich 10D0 msg 17/26, 1150 msg 9, 30E1 msg 12 (Seite 2 am Pausenende der Aufnahme).
+ *
+ * Stufe 5 Runde 2 (Pruefbericht namen/pruef_s5_r1/PRUEFUNG.md R1-R4):
+ *   quellen_zeilen  liest jetzt auch Tabellen mit Kommentar hinter `{` (cut_10f0.c, irons_tod_1150.c waren unsichtbar).
+ *                   Gegenprobe rot auf 7d7f4d1c6 (10F0 msg 7/16, 1150 msg 23/27).
+ *   darstellung     jede Nachricht jedes Raums ueber Message_on GEZEIGT (echte VM; Full-Text-Raeume 1170/1240/1241 wie im Spiel):
+ *                   kein gezeigtes Fenster mit mehr als 2 Zeilen oder ueber den Bildrand. Gegenprobe rot auf 7d7f4d1c6 (Vorspann).
+ *   ohne_stimme     zweiseitige Zeilen der RDT-Skripte ohne Stimme (VOICE OFF): jede Seite sichtbar, keine von der naechsten Zeile
+ *                   abgeschnitten (Pflicht 30E1 14, 5011 3, 11B0 5, 11B0 8, 4010 8). Gegenprobe rot auf 7d7f4d1c6.
  */
 #include "re15_rdt.h"
 #include "re15_scd.h"
@@ -613,6 +621,15 @@ static int quelle_datei(const char *pfad, const char *datei, int *tabellen, int 
         int nb = 0, ok = 1;
         for (;;) {
             while (j < n && (d[j] == ' ' || d[j] == '\t' || d[j] == '\r' || d[j] == '\n' || d[j] == ',')) j++;
+            /* Runde 2 (Pruefbericht s5_r1 R2): Kommentare in der Tabelle ueberspringen - `{   /* Woman: ... * /` (cut_10f0.c,
+             * irons_tod_1150.c) liess die ganze Tabelle aus */
+            if (j + 1 < n && d[j] == '/' && d[j + 1] == '*') {
+                size_t e = j + 2;
+                while (e + 1 < n && !(d[e] == '*' && d[e + 1] == '/')) e++;
+                j = e + 2;
+                continue;
+            }
+            if (j + 1 < n && d[j] == '/' && d[j + 1] == '/') { while (j < n && d[j] != '\n') j++; continue; }
             if (j >= n) { ok = 0; break; }
             if (d[j] == '}') break;
             if (j + 2 < n && d[j] == '0' && (d[j + 1] == 'x' || d[j + 1] == 'X')) {
@@ -698,6 +715,228 @@ static void teil_quellen_zeilen(void)
     PRUEF(schlecht == 0, "%d Seiten mit mehr als 2 Zeilen in Port-Texten", schlecht);
 }
 
+/* ---- Stufe 5 Runde 2 (Pruefbericht s5_r1 R1/R3): Seiten so zaehlen, wie der Raum sie DARSTELLT; ohne Stimme geht keine Seite verloren
+ * Beide Teile fahren die echte VM: ein Mini-Skript `2b <id> <Maske>` (+ Sleeps) laeuft im Faden 1, je Bild erst re15_msg_tick (die
+ * Darstellung, die platform/pc/main.c ~6233 zeichnet), dann scd_vm_tick (~8213). Damit entscheidet op_message_on selbst ueber
+ * Full-Text (ROOM1170/1240/1241, re15_room_full_text) oder Schreibmaschine - genau der Weg, den Runde 1 nicht mitgezaehlt hat. */
+static uint8_t s_prog[64];
+
+typedef struct { int zeilen_y[8]; int nz; int max_px; } r2_mass_t;
+
+static void r2_glyph(int penx, int peny, unsigned char g, int attr, void *ctx)
+{
+    r2_mass_t *m = (r2_mass_t *)ctx;
+    (void)attr;
+    int k;
+    for (k = 0; k < m->nz; k++) if (m->zeilen_y[k] == peny) break;
+    if (k == m->nz && m->nz < 8) m->zeilen_y[m->nz++] = peny;
+    const int rechts = penx + re15_font_width[g] - 34;   /* Stift-x 0x22 @0x80027eec */
+    if (rechts > m->max_px) m->max_px = rechts;
+}
+static int r2_breite(unsigned char g, void *ctx) { (void)ctx; return re15_font_width[g]; }
+
+static int r2_lebt(void)
+{
+    return g_scd.message_fsm_active ? (int)g_scd.message_active
+                                    : (g_scd.message_display_frames > 0 || g_scd.message_nachhall > 0);
+}
+
+static void r2_ruhe(void)
+{
+    g_scd.message_active = 0; g_scd.message_fsm_active = 0; g_scd.message_display_frames = 0; g_scd.message_nachhall = 0;
+    g_scd.message_query = 0; g_scd.message_select = 0;
+}
+
+static void teil_darstellung(void)
+{
+    printf("=== darstellung: jede Nachricht jedes Raums ueber Message_on gezeigt (Full-Text oder Schreibmaschine wie im Raum) - je\n"
+           "    gezeigtem Fenster hoechstens 2 Zeilen, keine Zeile ueber den Bildrand (34 + Breite <= 320) ===\n");
+    int raeume = 0, nachrichten = 0, fenster = 0, schlecht = 0, volltext = 0;
+    for (unsigned st = 1; st <= 6; st++)
+        for (unsigned rr = 0; rr < 0x40; rr++)
+            for (unsigned v = 0; v < 2; v++) {
+                const unsigned room = (st << 12) | (rr << 4) | v;
+                if (raum_laden(room) != 0 || !s_rdt.messages) continue;
+                scd_vm_init(); re15_aot_init();
+                raum_laden(room);
+                raeume++;
+                const int ft = re15_room_full_text(room);
+                for (int id = 0; id < 256; id++) {
+                    int len = 0;
+                    const unsigned char *m = re15_msg_get_raw(id, &len);
+                    if (!m || len < 2) continue;
+                    nachrichten++;
+                    if (ft) volltext++;
+                    r2_ruhe();
+                    const uint8_t prog[6] = { 0x2B, (uint8_t)id, 0x00, 0x00, 0x01, 0x00 };
+                    memcpy(s_prog, prog, sizeof prog);
+                    if (scd_thread_start(1, s_prog) != 0) { PRUEF(0, "ROOM%04X msg %d: Faden frei", room, id); continue; }
+                    int max_z = 0, max_px = 0, n_f = 0;
+                    for (int bild = 1; bild < 4000; bild++) {
+                        g_scd_pad_held = 0;
+                        g_scd_pad_edge = (g_scd.message_fsm_active && (g_scd.message_fsm == 1 || g_scd.message_fsm == 4
+                                          || g_scd.message_select)) ? 0x4000 : 0;   /* Taste an Seiten-/End-/Frage-Warten */
+                        const unsigned char *r = NULL; int l = 0, mi = 0;
+                        if (re15_msg_tick(&r, &l, &mi) && r && l > 0 && mi == id) {
+                            r2_mass_t ms; memset(&ms, 0, sizeof ms);
+                            re15_msg_layout(34, 180, r, l, r2_glyph, r2_breite, &ms);
+                            if (ms.nz > max_z) max_z = ms.nz;
+                            if (ms.max_px > max_px) max_px = ms.max_px;
+                            n_f++;
+                        }
+                        scd_vm_tick();
+                        if (bild > 2 && !g_scd.threads[1].active && !r2_lebt()) break;
+                    }
+                    g_scd.threads[1].active = 0;
+                    g_scd_pad_edge = 0;
+                    fenster += n_f;
+                    if (max_z <= 2 && 34 + max_px <= 320) continue;
+                    schlecht++;
+                    char txt[600]; re15_msg_decode_text(m, (size_t)len, txt, sizeof txt);
+                    printf("        ROOM%04X msg %3d (%s): %d Zeilen, breiteste %d px  \"%.110s\"\n", room, id,
+                           ft ? "Full-Text" : "Schreibmaschine", max_z, max_px, txt);
+                }
+            }
+    PRUEF(raeume > 100 && nachrichten > 1000 && volltext > 10, "%d Raeume, %d Nachrichten (%d im Full-Text-Raum), %d gezeigte Fenster",
+          raeume, nachrichten, volltext, fenster);
+    PRUEF(schlecht == 0, "%d Nachrichten mit einem gezeigten Fenster von mehr als 2 Zeilen oder ueber den Bildrand", schlecht);
+}
+
+/* ohne_stimme: jede Message_on X der RDT-Skripte (main + subs), deren Nachricht (wie im Spiel geladen) einen zeitgesteuerten
+ * Seitenwechsel `02 N` (N > 0) hat und deren naechstes Message_on Y im selben Skript ohne Verzweigung erreicht wird: Mini-Skript
+ * `2b X` + Sleep-Summe + `2b Y` ohne Stimme (g_re15_voice_laeuft = 0 wie bei VOICE OFF; ctest setzt dazu RE15_VOICE=0). Jede Seite
+ * von X muss erscheinen, und X muss von selbst enden (Schwanz `01 N`), bevor Y kommt - Y darf X nicht abschneiden.
+ * Pflichtfaelle aus dem Pruefbericht s5_r1 R3: 30E1 msg 14 (Elza), 5011 msg 3 (Elza), 11B0 msg 5 (dazu 11B0 msg 8, 4010 msg 8). */
+static int r2_verzweigt(uint8_t op)
+{
+    return (op >= 0x01 && op <= 0x08) || op == 0x0B || op == 0x0C || (op >= 0x0D && op <= 0x1C) || op == 0x21 || op == 0x23;
+}
+
+static int r2_nachlauf(const unsigned char *m, int len)
+{
+    for (int i = len - 2; i >= 0; i--) if (m[i] == 0x01) return m[i + 1];
+    return 0;
+}
+
+static int r2_zeitseiten(const unsigned char *m, int len, int *seiten_n)
+{
+    int ja = 0, k = 1;
+    for (int i = 0; i < len; ) {
+        const unsigned char b = m[i];
+        if (b == 0x01 || b == 0x03) break;
+        if (b == 0x02) { if (i + 1 < len && m[i + 1] == 0) return 0; ja = 1; k++; i += 2; continue; }
+        if (b == 0x04 || b == 0x05 || b == 0x06 || b == 0x09 || b == 0x0A || b == 0x0B) { i += 2; continue; }
+        i++;
+    }
+    *seiten_n = k;
+    return ja;
+}
+
+static void teil_ohne_stimme(void)
+{
+    extern int g_re15_voice_laeuft, g_re15_voice_restbilder;
+    printf("=== ohne_stimme (RE15_VOICE=%s): zweiseitige Zeilen der RDT-Skripte - keine Seite geht verloren ===\n",
+           getenv("RE15_VOICE") ? getenv("RE15_VOICE") : "-");
+    static const struct { unsigned raum; int id; } pflicht[] = {
+        { 0x30E1, 14 }, { 0x5011, 3 }, { 0x11B0, 5 }, { 0x11B0, 8 }, { 0x4010, 8 } };
+    int pflicht_ok[5] = { 0 };
+    int faelle = 0, schlecht = 0, unbekannt = 0, verzoegert = 0;
+    for (unsigned st = 1; st <= 6; st++)
+        for (unsigned rr = 0; rr < 0x40; rr++)
+            for (unsigned v = 0; v < 2; v++) {
+                const unsigned room = (st << 12) | (rr << 4) | v;
+                if (raum_laden(room) != 0 || !s_rdt.messages) continue;
+                scd_vm_init(); re15_aot_init();
+                raum_laden(room);
+                const uint8_t *skripte[1 + RE15_RDT_MAX_SUB_SCD];
+                int ns = 0;
+                if (s_rdt.main_scd) skripte[ns++] = s_rdt.main_scd;
+                for (int k = 0; k < s_rdt.sub_scd_count && k < RE15_RDT_MAX_SUB_SCD; k++) if (s_rdt.sub_scd[k]) skripte[ns++] = s_rdt.sub_scd[k];
+                for (int k = 0; k < ns; k++) {
+                    const uint8_t *p = skripte[k];
+                    const int grenze = (int)(s_raw + s_rawsz - p) - 8;
+                    for (int pc = 0; pc < 0x4000 && pc < grenze;) {
+                        const int sz = scd_opcode_size_at(p + pc);
+                        if (sz <= 0 || p[pc] == 0x01) break;
+                        if (p[pc] != 0x2B) { pc += sz; continue; }
+                        const int x = p[pc + 1];
+                        int len = 0, sn = 1;
+                        const unsigned char *m = re15_msg_get_raw(x, &len);
+                        if (!m || !r2_zeitseiten(m, len, &sn)) { pc += sz; continue; }
+                        /* bis zum naechsten Message_on: Sleeps summieren, an Verzweigungen aufgeben */
+                        int q = pc + sz, schlaf = 0, y = -1;
+                        while (q < 0x4000 && q < grenze) {
+                            const int s2 = scd_opcode_size_at(p + q);
+                            if (s2 <= 0 || r2_verzweigt(p[q])) break;
+                            if (p[q] == 0x2B) { y = q; break; }
+                            if (p[q] == 0x09) schlaf += p[q + 2] | (p[q + 3] << 8);
+                            q += s2;
+                        }
+                        const unsigned file_off = (unsigned)(p + pc - s_raw);
+                        if (y < 0) {
+                            unbekannt++;
+                            printf("        (ROOM%04X msg %d @0x%05X: naechstes Message_on nicht ohne Verzweigung erreichbar - nicht gezaehlt)\n",
+                                   room, x, file_off);
+                            pc += sz; continue;
+                        }
+                        int o = 0;
+                        memcpy(s_prog + o, p + pc, 4); o += 4;
+                        for (int rest = schlaf; rest > 0; ) {
+                            const int c = rest > 0x7fff ? 0x7fff : rest;
+                            s_prog[o++] = 0x09; s_prog[o++] = 0x0A; s_prog[o++] = (uint8_t)c; s_prog[o++] = (uint8_t)(c >> 8);
+                            rest -= c;
+                        }
+                        memcpy(s_prog + o, p + y, 4); o += 4;
+                        s_prog[o++] = 0x01; s_prog[o++] = 0x00;
+                        r2_ruhe();
+                        g_re15_voice_laeuft = 0; g_re15_voice_restbilder = 0;
+                        scd_thread_start(1, s_prog);
+                        int seite_sicht[16] = { 0 }, y_bild = -1, abgeschnitten = 0;
+                        const int yid = p[y + 1];
+                        for (int bild = 1; bild < 3000; bild++) {
+                            g_scd_pad_edge = 0; g_scd_pad_held = 0;
+                            const unsigned char *r = NULL; int l = 0, mi = 0;
+                            if (re15_msg_tick(&r, &l, &mi) && r && l > 0 && mi == x) {
+                                int si = 0;   /* Seite = Zahl der `02` vor dem Fensteranfang */
+                                for (int i = 0; i < (int)(r - m) && i < len; ) {
+                                    const unsigned char b = m[i];
+                                    if (b == 0x02) { si++; i += 2; continue; }
+                                    if (b == 0x04 || b == 0x05 || b == 0x06 || b == 0x09 || b == 0x0A || b == 0x0B) { i += 2; continue; }
+                                    i++;
+                                }
+                                if (si < 16) seite_sicht[si]++;
+                            }
+                            const int x_lebt = (g_scd.message_id == x) && r2_lebt();
+                            scd_vm_tick();
+                            if (yid != x && g_scd.message_id == yid && r2_lebt()) { y_bild = bild; abgeschnitten = x_lebt; break; }
+                            if (yid == x && !g_scd.threads[1].active) { y_bild = bild; break; }
+                            if (!g_scd.threads[1].active) break;
+                        }
+                        g_scd.threads[1].active = 0;
+                        const int letzte = (sn - 1 < 16) ? seite_sicht[sn - 1] : 0;
+                        const int nl = r2_nachlauf(m, len);
+                        int alle = 1;
+                        for (int s = 0; s < sn && s < 16; s++) if (seite_sicht[s] <= 0) alle = 0;
+                        const int ok = alle && !abgeschnitten;   /* jede Seite gesehen, X endete selbst, bevor Y kam */
+                        faelle++;
+                        if (!ok) schlecht++;
+                        if (y_bild > schlaf + 2) verzoegert++;
+                        for (int k2 = 0; k2 < 5; k2++) if (pflicht[k2].raum == room && pflicht[k2].id == x) pflicht_ok[k2] = ok ? 1 : -1;
+                        printf("    %s ROOM%04X msg %3d @0x%05X: %d Seiten, Seite 1 %3d / letzte %3d Bilder (Nachlauf %3d)%s, naechste Zeile "
+                               "msg %d nach %3d Bildern (Sleep-Summe %d)\n", ok ? "ok  " : "FAIL", room, x, file_off, sn, seite_sicht[0], letzte,
+                               nl, abgeschnitten ? " ABGESCHNITTEN" : "", yid, y_bild, schlaf);
+                        pc += sz;
+                    }
+                }
+            }
+    PRUEF(faelle >= 20, "%d zweiseitige Zeilen mit Nachfolger ohne Verzweigung gemessen (%d andere nicht gezaehlt), %d davon warten jetzt "
+          "laenger als die Sleep-Summe", faelle, unbekannt, verzoegert);
+    for (int k = 0; k < 5; k++)
+        PRUEF(pflicht_ok[k] == 1, "Pflichtfall ROOM%04X msg %d: jede Seite sichtbar, Zeile endet selbst vor der naechsten (%s)", pflicht[k].raum, pflicht[k].id,
+              pflicht_ok[k] == 0 ? "NICHT GEFUNDEN" : (pflicht_ok[k] > 0 ? "ja" : "NEIN"));
+    PRUEF(schlecht == 0, "%d zweiseitige Zeilen verlieren ohne Stimme eine Seite oder werden von der naechsten Zeile abgeschnitten", schlecht);
+}
+
 int main(int argc, char **argv)
 {
     const char *teil = argc > 1 ? argv[1] : "alle";
@@ -708,6 +947,8 @@ int main(int argc, char **argv)
     if (!strcmp(teil, "fortsetzung") || !strcmp(teil, "alle")) teil_fortsetzung();
     if (!strcmp(teil, "alle_zeilen") || !strcmp(teil, "alle")) teil_alle_zeilen();
     if (!strcmp(teil, "quellen_zeilen") || !strcmp(teil, "alle")) teil_quellen_zeilen();
+    if (!strcmp(teil, "darstellung") || !strcmp(teil, "alle")) teil_darstellung();
+    if (!strcmp(teil, "ohne_stimme") || !strcmp(teil, "alle")) teil_ohne_stimme();
     printf(g_fail ? "=== FAIL ===\n" : "=== OK ===\n");
     return g_fail;
 }

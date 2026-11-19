@@ -379,6 +379,9 @@ void re15_msg_load_room_block(const uint8_t *block, int block_size)
  * the typing, then 0x03 → YES/NO. The render draws only the revealed window [message_page,
  * message_parse). `blocking` = the SCD thread parks until the FSM resolves (choice / yes-no);
  * non-blocking examine lines (re15_scd_show_message) display in parallel. */
+/* Runde 42 namen Stufe 5 R2: 1 = die letzte Seite der laufenden Nachricht stand unter einer laufenden Stimme (re15_msg_seiten_halten). */
+static int s_seite_stimme;
+
 void re15_dialog_open_mask(int msg_id, int blocking, uint32_t pause_mask)
 {
     /* GLOBALER TEXT-FREEZE (byte-true FUN_80027e68 @0x80027eb4-ed0): die Maske stammt
@@ -419,6 +422,7 @@ void re15_dialog_open_mask(int msg_id, int blocking, uint32_t pause_mask)
     g_scd.message_query       = blocking ? 1 : 0;
     g_scd.message_nachhall    = 0;     /* Nutzer-Nachhall gehoert der VORIGEN Zeile (s. re15_scd.h) */
     g_scd.message_display_frames = 2;  /* keep the box alive while the FSM owns the lifetime */
+    s_seite_stimme = 0;                /* Runde 42 namen Stufe 5 R2: neue Nachricht, re15_msg_seiten_halten */
     re15_story_r36_text_offen(msg_id); /* Runde 36 Spur P: Messhaken RE15_MSG_LOG (Wortlaut), re15_story_r36.h */
 }
 
@@ -681,6 +685,89 @@ void re15_msg_nachhall_beenden(void)
  * divergence that silently killed sub14's last line main16). The single shared
  * lifetime here guarantees PSX and PC behave identically; the caller only does the
  * platform glyph draw with the returned raw body. */
+/* ---- Runde 42 Strang namen, Stufe 5 Runde 2: Seiten in der Full-Text-Darstellung + keine Seite geht verloren ---------------
+ *
+ * (1) FULL-TEXT (ROOM1170/1240/1241, scd_vm.c re15_room_full_text -> msg_show): der Zweig zeigte den GANZEN Rohtext auf einmal,
+ *     und re15_msg_layout ueberspringt `02 N`/`04 xx` ohne Zeilenwechsel - Stufe 5 hat die Vorspann-Texte aber auf zwei Seiten
+ *     verteilt (`... 04 01 02 N 04 00 ...`, tools/r42_namen/zweizeilig_s5.py). Folge (Pruefbericht s5_r1 R1, gdigrab): Woerter
+ *     klebten ("ofan"), Zeilen liefen aus dem Bild, drei Zeilen. Jetzt zeigt auch dieser Zweig eine Seite nach der anderen, mit
+ *     derselben Zeitregel wie die Schreibmaschine FUN_80028134: `02 N` = N Bilder warten ohne Taste (Zustand 3), Seite k+1 steht
+ *     N + 1 Bilder nach Seite k (unit_r42_namen_seitenwechsel misst das fuer die Schreibmaschine). Fenster = [message_page,
+ *     message_parse) wie FUN_80028868 [DAT_800b8528, DAT_800b852c); die Felder sind im Full-Text-Zweig sonst unbenutzt
+ *     (message_fsm_active = 0). PORT-WAHL (Darstellung): die Full-Text-Darstellung selbst ist [FL-observed] (scd_vm.c
+ *     re15_room_full_text), ihr Seitenwechsel folgt der Schreibmaschine.
+ * (2) KEINE SEITE GEHT VERLOREN: der einzige Aufschub vor dem naechsten Message_on war der Stimmen-Riegel (scd_vm.c
+ *     op_message_on). Bei VOICE OFF (oder ohne Aufnahme) kommt die naechste Zeile nach der Sleep-Summe des Skripts - bei 30E1
+ *     msg 14 nach 100 Bildern, Seite 2 erst nach 109 (Pruefbericht s5_r1 R3). ORIGINAL: eine laufende Nachricht wird NIE von der
+ *     naechsten abgebrochen - FUN_80027e68 @0x80027e74 `lbu v0,0(v1)` (DAT_800b8520) / @0x80027e7c `andi v0,v0,0x80` /
+ *     @0x80027e80 `beq v0,zero` / @0x80027e88 `j 0x800280ac` / @0x80027e8c `li v0,-1`: ist das Belegt-Bit gesetzt, wird das
+ *     neue Oeffnen verworfen; Message_on @0x8004050c/@0x80040510 schiebt den Zeiger trotzdem weiter und @0x80040520 gibt 1
+ *     zurueck. PORT-WAHL: der Port VERWIRFT die neue Zeile nicht (sonst ginge sie verloren), sondern laesst sie WARTEN, bis die
+ *     laufende Nachricht mit zeitgesteuertem Seitenwechsel ihr eigenes Ende erreicht (Schwanz `01 N` aus den Daten). Das gilt
+ *     nur, wenn ihre letzte Seite NICHT unter einer laufenden Stimme stand - mit Stimme bleibt alles wie bisher (der
+ *     Stimmen-Riegel haelt die Zeile, bis die Aufnahme fertig ist; Videos s5_r1). Systemtexte mit `02 00` (Taste) und
+ *     einseitige Nachrichten sind nicht betroffen. */
+
+/* Ende der Seite ab `ab`: Index des naechsten `02` (Seitenwechsel), sonst des `01`/`03` bzw. len; *n = Argument des `02`, -1 ohne.
+ * Steuercodes wie re15_msg_layout / FUN_80028868 (2-Byte 02/04/05/06/09/0A/0B, 07 = 1 Byte). */
+static int msg_seitenende(const unsigned char *m, int len, int ab, int *n)
+{
+    *n = -1;
+    for (int i = ab; i < len; ) {
+        const unsigned char b = m[i];
+        if (b == 0x01 || b == 0x03) return i;
+        if (b == 0x02) { *n = (i + 1 < len) ? (int)m[i + 1] : 0; return i; }
+        if (b == 0x04 || b == 0x05 || b == 0x06 || b == 0x09 || b == 0x0A || b == 0x0B) { i += 2; continue; }
+        i += 1;
+    }
+    return len;
+}
+
+/* Zeitgesteuerter Seitenwechsel: mindestens ein `02 N` mit N > 0 und keins mit N = 0 (Taste). */
+static int msg_zeitseiten(const unsigned char *m, int len)
+{
+    int ja = 0, n = -1;
+    for (int a = 0; m && a < len; ) {
+        const int e = msg_seitenende(m, len, a, &n);
+        if (n < 0) break;
+        if (n == 0) return 0;
+        ja = 1;
+        a = e + 2;
+    }
+    return ja;
+}
+
+void re15_msg_volltext_start(void)
+{
+    int len = 0, n = -1;
+    const unsigned char *m = re15_msg_get_raw((int)g_scd.message_id, &len);
+    g_scd.message_page  = 0;
+    g_scd.message_parse = (uint16_t)(m ? msg_seitenende(m, len, 0, &n) : 0);
+    g_scd.message_timer = (uint16_t)((n > 0) ? n + 1 : 0);   /* `02 N`: Seite 2 N + 1 Bilder nach Seite 1 */
+    s_seite_stimme = 0;
+}
+
+/* Je Bild: steht die letzte Seite unter einer laufenden Stimme? (Nachricht offen, keine weitere `02`-Seite, Stimme laeuft) */
+static void msg_seite_stimme_merken(const unsigned char *m, int len)
+{
+    extern int g_re15_voice_laeuft;
+    int n = -1;
+    if (!m || !g_re15_voice_laeuft) return;
+    if (g_scd.message_fsm_active && g_scd.message_parse <= g_scd.message_page) return;   /* Seite noch nicht aufgedeckt */
+    msg_seitenende(m, len, (int)g_scd.message_page, &n);
+    if (n < 0) s_seite_stimme = 1;
+}
+
+int re15_msg_seiten_halten(void)
+{
+    int len = 0;
+    const int lebt = g_scd.message_fsm_active ? (g_scd.message_active && g_scd.message_fsm != 7)
+                                              : (g_scd.message_display_frames > 0);
+    if (!lebt || g_scd.message_query || s_seite_stimme) return 0;
+    const unsigned char *m = re15_msg_get_raw((int)g_scd.message_id, &len);
+    return msg_zeitseiten(m, len);
+}
+
 int re15_msg_tick(const unsigned char **out_raw, int *out_len, int *out_msg_id)
 {
     if (out_raw)    *out_raw    = 0;
@@ -703,6 +790,7 @@ int re15_msg_tick(const unsigned char **out_raw, int *out_len, int *out_msg_id)
         if (start > end) start = end;
         if (out_raw) *out_raw = raw + start;
         if (out_len) *out_len = end - start;
+        msg_seite_stimme_merken(raw, rlen);   /* Runde 42 namen Stufe 5 R2: re15_msg_seiten_halten */
         return 1;
     }
 
@@ -720,14 +808,32 @@ int re15_msg_tick(const unsigned char **out_raw, int *out_len, int *out_msg_id)
         }
         int nlen = 0;
         const unsigned char *nraw = re15_msg_get_raw((int)g_scd.message_id, &nlen);
-        if (out_raw) *out_raw = nraw;
-        if (out_len) *out_len = nlen;
+        /* Runde 42 namen Stufe 5 R2: auch im Nachhall nur die laufende (letzte) Seite, nicht den ganzen Rohtext */
+        int na = (int)g_scd.message_page, ne = (int)g_scd.message_parse;
+        if (ne > nlen) ne = nlen;
+        if (na > ne) na = ne;
+        if (out_raw) *out_raw = nraw ? nraw + na : nraw;
+        if (out_len) *out_len = ne - na;
         return 1;
     }
     int rlen = 0;
     const unsigned char *raw = re15_msg_get_raw((int)g_scd.message_id, &rlen);
-    if (out_raw)    *out_raw = raw;
-    if (out_len)    *out_len = rlen;
+    /* Runde 42 namen Stufe 5 R2 (Herleitung ueber re15_msg_volltext_start): nur die laufende Seite [message_page, message_parse) */
+    {
+        int a = (int)g_scd.message_page, e = (int)g_scd.message_parse;
+        if (e > rlen) e = rlen;
+        if (a > e) a = e;
+        if (out_raw) *out_raw = raw ? raw + a : raw;
+        if (out_len) *out_len = e - a;
+        msg_seite_stimme_merken(raw, rlen);
+        /* `02 N`: nach N + 1 Bildern die naechste Seite (FUN_80028134 Zustand 3 ohne Taste) */
+        if (raw && g_scd.message_timer > 0 && --g_scd.message_timer == 0 && e + 1 < rlen && raw[e] == 0x02) {
+            int n = -1;
+            g_scd.message_page  = (uint16_t)(e + 2);
+            g_scd.message_parse = (uint16_t)msg_seitenende(raw, rlen, e + 2, &n);
+            g_scd.message_timer = (uint16_t)((n > 0) ? n + 1 : 0);
+        }
+    }
     /* Decrement AFTER latching the body so the message is shown on its final tick
      * too (matches the original count-then-clear order). */
     g_scd.message_display_frames--;

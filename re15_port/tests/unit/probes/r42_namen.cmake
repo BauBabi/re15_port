@@ -10,6 +10,10 @@
 #                         Seite hoechstens 2 Zeilen (tools/r42_namen/zweizeilig_s5.py, lesbar_s5.py)
 #   unit_r42_namen_quellen_zeilen  Stufe 5: jede Byte-Tabelle in engine/src (.c, gen/.inc) als Nachricht gelesen - je Seite
 #                         hoechstens 2 Zeilen (Port-Texte, die erst bei einem Ereignis eingesetzt werden; ohne Inventar)
+#   unit_r42_namen_darstellung  Stufe 5 Runde 2: jede Nachricht jedes Raums ueber Message_on GEZEIGT (Full-Text-Raeume 1170/1240/1241
+#                         eingeschlossen) - je gezeigtem Fenster hoechstens 2 Zeilen, keine Zeile ueber den Bildrand
+#   unit_r42_namen_ohne_stimme  Stufe 5 Runde 2: zweiseitige Zeilen der RDT-Skripte ohne Stimme (VOICE OFF) - jede Seite sichtbar,
+#                         die letzte mindestens so lange wie ihr Nachlauf (Pflicht 30E1 14, 5011 3, 11B0 5)
 #   unit_r42_namen_fortsetzung  Stufe 2: Mod-Fortsetzungszeilen 10D0/1150/2000 am Satzende der Aufnahme, jede mit Namen; Elza-
 #                         Raeume 10D1/1151/2001 mitgeprueft (include/re15_namen_r42.h, tools/r42_namen/fortsetzung_bauen.py)
 add_executable(test_r42_namen ${CMAKE_CURRENT_LIST_DIR}/../test_r42_namen.c)
@@ -20,7 +24,9 @@ target_compile_definitions(test_r42_namen PRIVATE RE15_ASSET_PSX_DIR="${CMAKE_SO
 if(NOT WIN32)
     target_link_libraries(test_r42_namen PRIVATE m)
 endif()
-foreach(_teil texte fortsetzung zeilen seitenwechsel standzeit alle_zeilen quellen_zeilen)
+foreach(_teil texte fortsetzung zeilen seitenwechsel standzeit alle_zeilen quellen_zeilen darstellung ohne_stimme)
     add_test(NAME unit_r42_namen_${_teil} COMMAND test_r42_namen ${_teil} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
     set_tests_properties(unit_r42_namen_${_teil} PROPERTIES TIMEOUT 300)
 endforeach()
+# Runde 2: ohne_stimme laeuft wie VOICE OFF (die Engine-Variable g_re15_voice_laeuft bleibt 0; RE15_VOICE=0 dokumentiert den Fall)
+set_tests_properties(unit_r42_namen_ohne_stimme PROPERTIES ENVIRONMENT "RE15_VOICE=0")
