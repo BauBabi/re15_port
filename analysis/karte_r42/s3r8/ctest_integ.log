@@ -1,0 +1,49 @@
+Test project C:/workspace/git/reAi_v2/.claude/worktrees/r42_karte/re15_port/build
+      Start 1378: integration_r41_masken36_teile_b1
+      Start 1381: integration_r41_masken36_teile_c2
+      Start 1380: integration_r41_masken36_teile_c1
+ 1/22 Test #1380: integration_r41_masken36_teile_c1 .......   Passed  638.82 sec
+      Start 1382: integration_r41_masken36_teile_c3
+ 2/22 Test #1381: integration_r41_masken36_teile_c2 .......   Passed  655.72 sec
+      Start 1379: integration_r41_masken36_teile_b2
+ 3/22 Test #1378: integration_r41_masken36_teile_b1 .......   Passed  708.65 sec
+      Start 1376: integration_r41_masken36_teile_a1
+ 4/22 Test #1382: integration_r41_masken36_teile_c3 .......   Passed  591.08 sec
+      Start 1383: integration_r41_masken36_teile_d1
+ 5/22 Test #1379: integration_r41_masken36_teile_b2 .......   Passed  575.20 sec
+      Start 1377: integration_r41_masken36_teile_a2
+ 6/22 Test #1376: integration_r41_masken36_teile_a1 .......   Passed  569.46 sec
+      Start 1384: integration_r41_masken36_teile_d2
+ 7/22 Test #1377: integration_r41_masken36_teile_a2 .......   Passed  562.31 sec
+      Start  635: integration_r36_karte
+ 8/22 Test #1383: integration_r41_masken36_teile_d1 .......   Passed  563.33 sec
+      Start  638: integration_r36_kartenitems_bild
+ 9/22 Test #1384: integration_r41_masken36_teile_d2 .......   Passed  629.62 sec
+      Start  575: integration_r35_karte_fahrstuhl
+10/22 Test  #635: integration_r36_karte ...................   Passed  285.19 sec
+      Start 1540: integration_r42_klein_glyphe_karte
+11/22 Test  #575: integration_r35_karte_fahrstuhl .........   Passed  244.68 sec
+      Start  574: integration_r35_karte
+12/22 Test #1540: integration_r42_klein_glyphe_karte ......   Passed  107.18 sec
+      Start 1094: integration_r39_karten
+13/22 Test  #574: integration_r35_karte ...................   Passed  107.07 sec
+      Start  986: integration_r39_elza_karte
+14/22 Test  #986: integration_r39_elza_karte ..............   Passed   58.55 sec
+      Start 1338: integration_r41_kleinkram_b_karte
+15/22 Test #1338: integration_r41_kleinkram_b_karte .......   Passed   31.37 sec
+      Start 1324: integration_r41_keyitems_karte_aktion
+16/22 Test #1094: integration_r39_karten ..................   Passed  187.59 sec
+      Start 1323: integration_r41_keyitems_karte
+17/22 Test #1324: integration_r41_keyitems_karte_aktion ...   Passed   26.15 sec
+      Start  945: integration_r38_tagebuch_karte
+18/22 Test #1323: integration_r41_keyitems_karte ..........   Passed   24.83 sec
+      Start 1640: integration_map_uebergang
+19/22 Test #1640: integration_map_uebergang ...............   Passed    1.16 sec
+      Start 1641: integration_map_raum_live
+20/22 Test  #945: integration_r38_tagebuch_karte ..........   Passed   27.56 sec
+21/22 Test  #638: integration_r36_kartenitems_bild ........   Passed  611.91 sec
+22/22 Test #1641: integration_map_raum_live ...............   Passed   12.33 sec
+
+100% tests passed, 0 tests failed out of 22
+
+Total Test time (real) = 2411.60 sec

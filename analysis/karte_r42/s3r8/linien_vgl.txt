@@ -1,0 +1,7 @@
+Linie  Stand  Lagen  v030-sauber&roeter  v030-roeter(Wandlinie)  unbekannt
+-1300 R7 109 11 41 13
+-1300 R8 109 0 41 13
+-1650 R7 109 12 38 12
+-1650 R8 109 0 38 12
+-2100 R7 109 11 36 10
+-2100 R8 109 0 36 10
