@@ -1,0 +1,15 @@
+Gleiche 144 Leon-Lagen STAGE2-6
+  v0.8.30  {'NEBEN DEM ROTEN RAUM': 47, 'ok': 85, 'KEIN PUNKT': 6, 'RAUM NICHT ROT': 5, 'KEIN ABZUG': 1}
+  Runde 4  {'NEBEN DEM ROTEN RAUM': 3, 'ok': 139, 'RAUM NICHT ROT': 1, 'KEIN ABZUG': 1}
+  Runde 5  {'NEBEN DEM ROTEN RAUM': 2, 'ok': 140, 'RAUM NICHT ROT': 1, 'KEIN ABZUG': 1}
+besser als v0.8.30: 55  schlechter: []
+Runde4 -> Runde5 geaendert:
+   E20A1_t0 [285, 144] 0.43 ok -> [247, 60] 0.77 ok
+  neu E20A1_w0 [247, 62] 0.7 ok
+   E4081_t0 [170, 117] 0.29 NEBEN DEM ROTEN RAUM -> [171, 118] 0.36 ok
+   L20A0_t0 [285, 144] 0.43 ok -> [247, 60] 0.77 ok
+   L20A0_t1 [284, 146] 0.7 ok -> [257, 64] 1.0 ok
+  neu L20A0_t2 [259, 87] 0.3 ok
+   L20A0_w0 [284, 144] 0.55 ok -> [247, 62] 0.7 ok
+   L20A0_w1 [284, 144] 0.55 ok -> [245, 64] 0.79 ok
+   L4080_t0 [170, 117] 0.29 NEBEN DEM ROTEN RAUM -> [171, 118] 0.36 ok
