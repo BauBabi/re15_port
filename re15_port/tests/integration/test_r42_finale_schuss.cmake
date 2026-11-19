@@ -317,15 +317,31 @@ endif()
 if(NOT _dbg MATCHES "Set\\(0,1,0\\): INGAME aus -> Titel")
     string(APPEND _f "\n Diashow-Ende Set(0,1,0) nicht gesehen")
 endif()
-# S8 (Plan): die Diashow ROOM6040 dauert die Summe ihrer Sleeps, 3952 Bilder (@0x00534-0x00586, Dossier C 1.2); der Bildzaehler
-# beginnt mit dem Raum neu, Set(0,1,0) @0x00590 faellt deshalb im Bild 3952 + Vorlauf des Raumstarts (gemessen 5: F3957).
+# S8 (Plan): die Diashow ROOM6040 dauert die Summe ihrer Sleeps, im Original 3952 Bilder (@0x00534-0x00586, Dossier C 1.2); der
+# Bildzaehler beginnt mit dem Raum neu, Set(0,1,0) @0x00590 faellt deshalb im Bild Summe + Vorlauf des Raumstarts (gemessen 5).
+# Stufe 7 (NUTZERWUNSCH 18.11.2026, include/re15_endvideo_r42.h "STUFE 7"): ohne Tafel 1 (Cut_chg 1 @0x0053A + 3 x Sleep 250) sind es
+# 3952 - 750 = 3202 Bilder. Zwischen dem Start des Port-Programms und "INGAME aus" darf kein Cut_chg(1) stehen (scd_vm.c op_cut_chg).
+string(FIND "${_dbg}" "[abspann] ROOM${_abspann} sub02 -> Diashow ohne Tafel 1" _pdia)
+string(FIND "${_dbg}" "Set(0,1,0): INGAME aus -> Titel" _pdia_ende)
+if(_pdia LESS 0)
+    string(APPEND _f "\n Diashow ohne Tafel 1 nicht gestartet ('[abspann] ROOM${_abspann} sub02 -> Diashow ohne Tafel 1' fehlt)")
+elseif(_pdia_ende GREATER _pdia)
+    math(EXPR _dia_len "${_pdia_ende} - ${_pdia}")
+    string(SUBSTRING "${_dbg}" ${_pdia} ${_dia_len} _dia_log)
+    if(_dia_log MATCHES "Cut_chg\\(1\\)")
+        string(APPEND _f "\n Diashow ${_abspann}: Cut_chg(1) = Tafel 'Thank you for playing this reconstruction' kommt noch")
+    endif()
+    if(NOT _dia_log MATCHES "Cut_chg\\(2\\)" OR NOT _dia_log MATCHES "Cut_chg\\(8\\)")
+        string(APPEND _f "\n Diashow ${_abspann}: Cut_chg(2)/Cut_chg(8) fehlen im Log zwischen Programmstart und INGAME aus")
+    endif()
+endif()
 if(_dbg MATCHES "\\[finale\\] F([0-9]+) ROOM${_abspann} Set\\(0,1,0\\)")
-    math(EXPR _dia "${CMAKE_MATCH_1} - 3952")
+    math(EXPR _dia "${CMAKE_MATCH_1} - 3202")
     if(_dia LESS 0 OR _dia GREATER 8)
-        string(APPEND _f "\n Diashow-Ende im Bild ${CMAKE_MATCH_1}, erwartet 3952 + 0..8 (Summe der Sleeps @0x00534-0x00586)")
+        string(APPEND _f "\n Diashow-Ende im Bild ${CMAKE_MATCH_1}, erwartet 3202 + 0..8 (Summe der Sleeps ohne Tafel 1)")
     endif()
 else()   # Runde 3 (Pruefbericht s1 r2, gelb): ohne die Zeile ist die Dauer nicht geprueft -> rot
-    string(APPEND _f "\n Messzeile '[finale] F<n> ROOM${_abspann} Set(0,1,0)' fehlt - Diashow-Dauer 3952 nicht pruefbar")
+    string(APPEND _f "\n Messzeile '[finale] F<n> ROOM${_abspann} Set(0,1,0)' fehlt - Diashow-Dauer 3202 nicht pruefbar")
 endif()
 # S8: das neue Spiel nach dem Titel traegt weder das Finale-Bit 129 noch den Raketenwerfer (main.c memset g_inv/g_game).
 if(NOT _dbg MATCHES "\\[flow\\] boot #2: Raum [0-9A-F]+, Bit 129 0, Raketenwerfer im Inventar 0")

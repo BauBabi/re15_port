@@ -1295,6 +1295,8 @@ static int op_evt_exec(scd_thread_t *t)
     /* Runde 42 Strang finale Stufe 5 (NUTZERWUNSCH 18.11.2026 "das thank you for Playing fliegt vollständig raus, und es kommt ein
      * richtiges Endvideo"): nach dem Finale (Bit 129) laeuft statt sub02 das Port-Programm ohne Message_on 0 @0x012CE / Sleep 100
      * @0x012D2, mit Abblenden, Film-Zeile 60 und Aot_on(5) @0x012D6 in der RE2-Form ROOM4090 (include/re15_endvideo_r42.h). */
+    /* Stufe 7 (derselbe Haken): ROOM6040/6041 sub02 = Abspann-Diashow ohne die Tafel "Thank you for playing this reconstruction"
+     * (Cut_chg 1 @0x0053A + 3 x Sleep 250 entfallen, uebrige Cuts wie im Original). */
     target_pc = re15_endvideo_r42_evt_exec((uint16_t)g_current_room_id, sub_id, target_pc);
     /* Runde 41 Spur ST80-T: ROOM30C1 sub00 @0x00C02 -> sub03, ROOM6030 sub01 @0x00D70 -> sub02, sub07 @0x010E8 -> sub08
      * (Nutzerentscheide Story-Abgleich; Programme aus Original-Bytes, re15_story80_r41.h). */
