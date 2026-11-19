@@ -53,6 +53,9 @@ int re15_karte_r42_kunst_gemalt(unsigned page, unsigned rect, int x, int y);
  * Nachbesserung (Pruefbericht pruef_s3_r3 ROT 4070_t0/4080_t0): ausgeloest wird ausserdem, wenn im 2-px-RAND um den Ring
  * (9x9 ohne 5x5) weniger als 30 % Raumkoerper des Orts liegen (Mass der Pruefung); Ziel ist dann die naechste Lage mit
  * mindestens der Haelfte, Suchweite halbe Ringbreite + 1 (Belege und Messwerte in karte_r42.c). PORT-WAHL.
+ * Stufe 3 Runde 6 (Pruefbericht pruef_s3_r5 ROT 4080_t0: Wandlinie im Ringinneren, Ring teils ueber blauem Grund): vor dem
+ * Rand-Mass zaehlt ein SAUBERER Ring (3x3 im Ring sichtbarer Raumkoerper, kein Ring-Texel ausserhalb der Kunst des Orts, Rand
+ * >= 30 %), gesucht bis 7 px; Herleitung, Messwerte und die Wirkung auf alle 397 Ankuenfte in karte_r42.c. PORT-WAHL.
  * Daten: re15_map_kunst.h s_map_kunst_alles (tools/gen_map_kunst.py, Index != 0). */
 int re15_karte_r42_ring_klemmen(const void *zone, unsigned page, unsigned rect, int16_t *mx, int16_t *my);
 

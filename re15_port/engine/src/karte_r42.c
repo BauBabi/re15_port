@@ -194,11 +194,43 @@ static int rand_sichtbar(unsigned page, const unsigned char *k, int nk, int cx, 
     return n;
 }
 
+/* ---- Stufe 3 Runde 6 (Pruefbericht pruef_s3_r5 ROT 4080_t0/4081_t0: "Die rechte Wandlinie des Schraeggangs laeuft durch das
+ * Ringinnere ... Die rechte Ringspalte x172 liegt bei y116..118 ueber blauem Grund ausserhalb des Raums"; Vorgabe 2(c) "kein
+ * Punkt auf einer Wandlinie oder am Uebergang zu 4030") --------------------------------------------------------------------
+ * SAUBERER RING: die 3x3 Texel im Ring (TEX.TIM @0x14910, Ring uv 225..229, Inneres 226..228) liegen alle auf SICHTBAREM
+ * Raumkoerper des Orts (keine Wandlinie, kein Grund, keine Tuer-/Treppenmarke), und keiner der 12 Ring-Texel liegt ausserhalb
+ * der Kunst des Orts (eigene Wandlinie erlaubt - in einem 5 px breiten Schraeggang beruehrt jeder Ring die Waende an den
+ * Ecken). PORT-WAHL (Anzeige, keine Spielkonstante).
+ * Die Klemme zieht einen sauberen Ring (mit Rand >= 30 %, dem Ausloesemass) jedem unsauberen vor und sucht ihn bis 7 px weit;
+ * unsaubere Lagen weiter nur bis 4 px, sonst gilt die Reihenfolge von Runde 4/5 unveraendert. 7 = kleinste Suchweite, mit der
+ * 4080 aus 4030 einen sauberen Ring erreicht, dessen 9x9-Feld den Tuerbalken 4080<->4030 (x165 y111..115) nicht enthaelt:
+ * Punkt (173,122), Ring-Mitte (172,121) am unteren Ende des Schraeggangs auf seiner Mittellinie, Rand 20/56 = 0,36 (v0.8.30
+ * 0,32). Gemessen (unit_r42_karte_lauf [M7], je eigener Bau): Weite 5 und 6 -> Punkt (170,119), sauber, Rand 18/56, aber 2
+ * Texel des Tuerbalkens im Feld; Weite 7 und 8 -> (173,122), und an allen 397 Ankuenften dieselben Lagen. Kunst: DATA/MAP09.PIX
+ * (Blatt 8, r8 + r13), Abzuege L4080_t0/E4081_t0 (Stufe 3 Runde 6).
+ * Wirkung ueber alle 397 Tuer-Ankuenfte STAGE1-6 (unit_r42_karte_lauf mit R42_DUMP, vorher/nachher): 4080/4081 aus 4030
+ * (171,118) -> (173,122); 4040/4041 aus 4050 (109,121) -> (108,121), 1 px, Ring jetzt ganz auf 4040 (Abzug L4040_t2 Rot-Mass
+ * 0,61 -> 0,68); 4070/4071 aus 4040 auf Blatt 11 (Lage y = 0, nicht die echte Ankunft y -21600 auf Blatt 8) (165,158) ->
+ * (166,163), Ring-Inneres frei von den Treppenstrichen. Sonst keine. */
+#define R42_SAUBER_WEIT 7
+static int ring_sauber(unsigned page, const unsigned char *k, int nk, int cx, int cy)
+{
+    int dx, dy;
+    for (dy = -R42_RING_HALB; dy <= R42_RING_HALB; dy++)
+        for (dx = -R42_RING_HALB; dx <= R42_RING_HALB; dx++) {
+            int x = cx + dx, y = cy + dy, innen = (dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1);
+            if ((dx == -R42_RING_HALB || dx == R42_RING_HALB) && (dy == -R42_RING_HALB || dy == R42_RING_HALB)) continue; /* Ecken: kein Ring-Texel */
+            if (marke_deckt(x, y)) return 0;
+            if (innen ? !im_ort(page, k, nk, x, y, 1) : !im_ort(page, k, nk, x, y, 0)) return 0;
+        }
+    return 1;
+}
+
 int re15_karte_r42_ring_klemmen(const void *zone, unsigned page, unsigned rect, int16_t *mx, int16_t *my)
 {
     const re15_map_zone_t *zn = (const re15_map_zone_t *)zone;
     unsigned char k[8];
-    int nk, cx, cy, f0, n0, v0, dx, dy, bf = 0, bn = 0, bd = 0, bx = 0, by = 0, hat = 0;
+    int nk, cx, cy, f0, n0, v0, s0, dx, dy, bf = 0, bn = 0, bd = 0, bs = 0, bx = 0, by = 0, hat = 0;
     const int rand_n = (2 * R42_RING_HALB + 5) * (2 * R42_RING_HALB + 5) - (2 * R42_RING_HALB + 1) * (2 * R42_RING_HALB + 1);
     const int weit = R42_RING_HALB + 2;
     if (page < 6 || page > 12) return 0;
@@ -212,23 +244,29 @@ int re15_karte_r42_ring_klemmen(const void *zone, unsigned page, unsigned rect, 
     if (f0 == 0 && n0 * 10 >= rand_n * 3) return 0;
     marken_sammeln(page);
     v0 = rand_sichtbar(page, k, nk, cx, cy);
-    /* Reihenfolge: wenig fremde Texel im Ring, sichtbarer Rand >= Haelfte, dann kurzer Weg (sonst mehr Rand). Gemessen an 4080_t0 (Ankunft aus 4030, Rohlage (167,114)): Suchweite 3 erreicht
-     * hoechstens 0,29 sichtbar (dieselbe Lage wie Runde 4), Suchweite 4 -> (171,118), im Abzug 0,36 (v0.8.30: 0,32). */
-    for (dy = -weit; dy <= weit; dy++)
-        for (dx = -weit; dx <= weit; dx++) {
-            int n, f, d, h, bh;
+    /* Reihenfolge: wenig fremde Texel im Ring, dann sauberer Ring (Runde 6, siehe ring_sauber), dann sichtbarer Rand >= Haelfte,
+     * dann kurzer Weg (sonst mehr Rand). Runde 5 gemessen an 4080_t0 (Ankunft aus 4030, Rohlage (167,114)): Suchweite 3
+     * erreichte hoechstens 0,29 sichtbar, Suchweite 4 -> (171,118), 0,36 - aber mit der Wandlinie im Ring (pruef_s3_r5 ROT);
+     * Runde 6 -> (173,122), sauber, 0,36. */
+    s0 = ring_sauber(page, k, nk, cx, cy) && v0 * 10 >= rand_n * 3;
+    for (dy = -R42_SAUBER_WEIT; dy <= R42_SAUBER_WEIT; dy++)
+        for (dx = -R42_SAUBER_WEIT; dx <= R42_SAUBER_WEIT; dx++) {
+            int n, f, d, h, bh, s, weg = (dx < 0 ? -dx : dx) > (dy < 0 ? -dy : dy) ? (dx < 0 ? -dx : dx) : (dy < 0 ? -dy : dy);
             if (!im_ort(page, k, nk, cx + dx, cy + dy, 1)) continue;   /* Mitte bleibt auf dem Raumkoerper des eigenen ORTS */
             (void)ring_zaehlen(page, k, nk, cx + dx, cy + dy, &f);
             n = rand_sichtbar(page, k, nk, cx + dx, cy + dy);
+            s = ring_sauber(page, k, nk, cx + dx, cy + dy) && n * 10 >= rand_n * 3;
+            if (weg > weit && !s) continue;                            /* ueber 4 px hinaus nur ein sauberer Ring */
             d = dx * dx + dy * dy;
             h = (n * 2 >= rand_n); bh = (bn * 2 >= rand_n);
             if (!hat || f < bf ||
-                (f == bf && (h > bh ||
-                 (h == bh && (h ? (d < bd || (d == bd && n > bn)) : (n > bn || (n == bn && d < bd))))))) {
-                hat = 1; bf = f; bn = n; bd = d; bx = cx + dx; by = cy + dy;
+                (f == bf && (s > bs ||
+                 (s == bs && (h > bh ||
+                 (h == bh && (h ? (d < bd || (d == bd && n > bn)) : (n > bn || (n == bn && d < bd))))))))) {
+                hat = 1; bf = f; bn = n; bd = d; bs = s; bx = cx + dx; by = cy + dy;
             }
         }
-    if (!hat || bf > f0 || (bf == f0 && bn <= v0)) return 0;
+    if (!hat || bf > f0 || (bf == f0 && (bs < s0 || (bs == s0 && bn <= v0)))) return 0;
     *mx = (int16_t)(bx + R42_GLYPH_MITTE);
     *my = (int16_t)(by + R42_GLYPH_MITTE);
     return 1;

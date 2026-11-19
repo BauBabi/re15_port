@@ -1,7 +1,8 @@
 /* =============================================================================
  * RIEGEL r42/karte Stufe 3 Runde 4: der Punkt laeuft im Ostarm von 4080 und im Gang von 6000 mit, und sein Ring
  * liegt an keiner Ankunft auf der Nachbarkachel. (Runde 5: [M6] 20A0 als Grundriss mit mitlaufendem Punkt, [M7] 4080 aus
- * 4030 nicht am Uebergang; 20A0 nicht mehr aus [M5] ausgenommen.)
+ * 4030 nicht am Uebergang; 20A0 nicht mehr aus [M5] ausgenommen. Runde 6: [M7] zusaetzlich keine Wandlinie und kein Grund im
+ * Ring, kein Tuerbalken im 9x9-Feld.)
  * =============================================================================
  * Nutzer 2026-11-18: "das die [Map] fuer STAGE2-6 genauso sauber funktioniert wir bei STAGE1 ... Inklusive dem - wo
  * befindet sich Leon - Marker."
@@ -470,30 +471,50 @@ int main(void)
     /* [M7] Stufe 3 Runde 5 (Pruefbericht pruef_s3_r4 ROT 4080_t0: "an der Spitze der Diagonale direkt an der Kachel von
      * 4030", Rot-Mass 0,29 gegen 0,32 in v0.8.30): Ankunft aus 4030 (-3900,2100). Im 2-px-Rand um den Ring (9x9 ohne 5x5) liegen
      * mindestens 18 von 56 Texeln (0,32 = v0.8.30) SICHTBARER Raumkoerper von r8/r13 (Kunst-Index nicht 0 und nicht 4, nicht
-     * unter einer Tuer-/Treppenmarke des Blatts), und im ganzen 9x9-Feld liegt KEIN Texel einer anderen Kachel (nicht am
-     * Uebergang zu 4030). Auf aaea5f8c2 ROT (176,124): r3-Linie im Feld; auf 7dc3f1841 ROT (170,117): 16 von 56. */
+     * unter einer Tuer-/Treppenmarke des Blatts).
+     * Stufe 3 Runde 6 (Pruefbericht pruef_s3_r5 ROT 4080_t0: "Die rechte Wandlinie des Schraeggangs laeuft durch das Ringinnere
+     * ... Die rechte Ringspalte x172 liegt bei y116..118 ueber blauem Grund"; Vorschlag der Pruefung: "pruefen, dass im
+     * Ringinneren keine Wand und kein blauer Grund liegt"):
+     *  - die 3x3 Texel im Ring (Ring = TEX.TIM @0x14910 uv 225..229, Ecken leer) sind alle sichtbarer Raumkoerper von r8/r13,
+     *  - keiner der 12 Ring-Texel liegt ausserhalb der Kunst von r8/r13 (kein Grund, keine fremde Kachel; die eigene Wandlinie
+     *    an den Ecken ist im 5 px breiten Schraeggang nicht vermeidbar),
+     *  - nicht am Uebergang zu 4030: kein Texel eines Tuerbalkens des Blatts im 9x9-Feld um den Ring (der Balken 4080<->4030
+     *    liegt bei x165 y111..115). Das fruehere Mass "keine Kunst einer fremden Kachel im 9x9" entfaellt: die Rahmenlinie der
+     *    Kachel r3 (4030) laeuft rechts und unten den ganzen Schraeggang entlang, auch an seinem unteren Ende - sie ist nicht der
+     *    Uebergang (gemessen an DATA/MAP09.PIX, Runde 6).
+     * Auf aaea5f8c2 ROT (176,124), auf e2501f322 ROT (170,117): Wand im Ring, Tuerbalken im Feld, 16/56; auf 02972374c ROT
+     * (171,118): Wand (170,116)/(171,117) im Ring, Tuerbalken im Feld. */
     {
         int16_t mx = 0, my = 0;
-        int s8 = punkt(0x4080, -3900, 2100, &mx, &my), cx = mx - 1, cy = my - 1, dx, dy, n = 0, f = 0, k, rr;
+        int s8 = punkt(0x4080, -3900, 2100, &mx, &my), cx = mx - 1, cy = my - 1, dx, dy, n = 0, innen = 0, aussen = 0, balken = 0;
+        int k;
         for (dy = -4; dy <= 4; dy++) for (dx = -4; dx <= 4; dx++) {
             int x = cx + dx, y = cy + dy, a8 = kachel_index(8, 8, x, y), a13 = kachel_index(8, 13, x, y), unter = 0;
-            for (rr = 0; rr < 16; rr++) if (rr != 8 && rr != 13 && kachel_index(8, rr, x, y)) { f++; break; }
-            if (dx >= -2 && dx <= 2 && dy >= -2 && dy <= 2) continue;
+            int ring = (dx >= -2 && dx <= 2 && dy >= -2 && dy <= 2), ecke = ((dx == -2 || dx == 2) && (dy == -2 || dy == 2));
+            int koerper = (a8 && a8 != 4) || (a13 && a13 != 4);
             for (k = 0; k < re15_map_mark_count(); k++) {
-                int mpg, mrc, kx, ky, kind;
+                int mpg, mrc, kx, ky, kind, auf;
                 (void)re15_map_mark_get(k, &mpg, &mrc, &kx, &ky, &kind);   /* Lage auch einer unsichtbaren Marke: strenger */
                 if (mpg != 8) continue;
-                if (kind <= 3 ? ((kind == 0 || kind == 2) ? (y == ky && x >= kx - 2 && x <= kx + 2)
-                                                          : (x == kx && y >= ky - 2 && y <= ky + 2))
-                              : (kind == 5 ? ((x - kx == -2 || x == kx || x - kx == 2) && y >= ky - 2 && y <= ky + 2)
-                                           : ((y - ky == -2 || y == ky || y - ky == 2) && x >= kx - 2 && x <= kx + 2))) unter = 1;
+                auf = kind <= 3 ? ((kind == 0 || kind == 2) ? (y == ky && x >= kx - 2 && x <= kx + 2)
+                                                            : (x == kx && y >= ky - 2 && y <= ky + 2))
+                                : (kind == 5 ? ((x - kx == -2 || x == kx || x - kx == 2) && y >= ky - 2 && y <= ky + 2)
+                                             : ((y - ky == -2 || y == ky || y - ky == 2) && x >= kx - 2 && x <= kx + 2));
+                if (auf) { unter = 1; if (kind <= 3) balken++; }
             }
-            if (!unter && ((a8 && a8 != 4) || (a13 && a13 != 4))) n++;
+            if (ring) {
+                if (dx >= -1 && dx <= 1 && dy >= -1 && dy <= 1) { if (koerper && !unter) innen++; }
+                else if (!ecke && !(a8 || a13)) aussen++;
+                continue;
+            }
+            if (!unter && koerper) n++;
         }
-        printf("  [M7] 4080 aus 4030 (-3900,2100) -> (%d,%d) Blatt %d: sichtbarer Raum im Rand %d/56, fremde Kunst im 9x9 %d\n",
-               mx, my, s8, n, f);
-        CHECK("[M7] 4080 aus 4030: mindestens so viel Raum um den Punkt wie v0.8.30 (>= 18/56) und nicht am Uebergang zu 4030",
-              s8 == 8 && n >= 18 && f == 0);
+        printf("  [M7] 4080 aus 4030 (-3900,2100) -> (%d,%d) Blatt %d: sichtbarer Raum im Rand %d/56, Ring-Inneres Raum %d/9, "
+               "Ring-Texel ausserhalb der Kunst %d, Tuerbalken-Texel im 9x9 %d\n", mx, my, s8, n, innen, aussen, balken);
+        CHECK("[M7] 4080 aus 4030: mindestens so viel Raum um den Punkt wie v0.8.30 (>= 18/56)", s8 == 8 && n >= 18);
+        CHECK("[M7] 4080 aus 4030: keine Wandlinie und kein Grund im Ring (Inneres 9/9 Raum, Ring ganz auf der Kunst)",
+              s8 == 8 && innen == 9 && aussen == 0);
+        CHECK("[M7] 4080 aus 4030: nicht am Uebergang zu 4030 (kein Tuerbalken im 9x9-Feld)", s8 == 8 && balken == 0);
     }
     if (s_roh) free(s_roh);
     printf(g_fail ? "\nFEHLER\n" : "\nOK\n");
