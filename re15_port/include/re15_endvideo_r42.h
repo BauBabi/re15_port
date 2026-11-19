@@ -18,7 +18,8 @@
  *
  * WAS DER PORT DARAUS MACHT (Port-Programm k_ende in engine/src/endvideo_r42.c, gestartet statt sub02, sobald das Finale beendet
  * ist = Bank 9 Bit 129 RE15_R42_BIT_FINALE_ENDE; ohne das Bit bleibt sub02 gestrichen wie bisher, scd_vm.c op_evt_exec):
- *   Set(2,7,1), Set(1,27,1), Sleep 20                    Original-Bytes @0x012C2..@0x012CD (Leon) / @0x012A6..@0x012B1 (Elza)
+ *   Set(2,7,1), Set(1,27,1), Sleep 20                    Original-Bytes @0x012C2..@0x012CD (Leon) / @0x012A6..@0x012B1 (Elza);
+ *                                                        davor MAIN anhalten (RE2 @0x02804, Lage PORT-WAHL "MUSIK" unten)
  *   [Message_on 0 und Sleep 100 entfallen]                NUTZERWUNSCH 18.11. (oben)
  *   Abblenden, Musik anhalten, Film, Einblenden          RE2-Form eines Films am Ende einer Szene, ROOM4090 (unten)
  *   Aot_on(5), Evt_end                                   Original-Bytes @0x012D6 / @0x012BA -> Diashow 6040/6041, Titel wie bisher
@@ -57,6 +58,11 @@
  *   MAIN anhalten = 0x54 Fall 4 SsSeqPause @0x80044efc, in der Form der Raumzeile 5090 sub01 @0x012B4 / 5091 @0x01298
  *     `54 00 01 00 00 00` mit Op 4 (wie Strang finale Stufe 2 im Zugfilm). SUB laeuft hier nicht mehr (sub01 @0x012AE stoppt ihn),
  *     also nur MAIN. Kein "weiter" danach: der Raum wird verlassen, die Diashow startet MAIN selbst (6040 sub02 @0x0052A `54 00 01`).
+ *   MUSIK, PORT-WAHL der Lage: RE2 haelt MAIN ein Bild nach dem Abblend-Start an (@0x02800 Sleep 1, @0x02804). Hier steht das
+ *     Anhalten schon vor Sleep 20 @0x012CA, im ersten Takt von sub02. Grund, gemessen (Strang-Scratchpad s5r1, Video Leon mit
+ *     RE2-Lage): sub01 @0x012B4 startet MAIN im Kill-Bild neu (die Mod liess die Raummusik unter "THANK YOU" laufen); mit der
+ *     RE2-Lage klang sie 21 Bilder = 0,7 s an (-35..-30 dB) und brach dann ab. Mit dem Anhalten im selben Takt wie der Start
+ *     (sub01 Slot 1 vor sub02 Slot 10 im selben VM-Takt) ist nach dem Todesschrei Stille, wie in RE2 waehrend der Abblende.
  *   Movie_on = Port-Zeile `2b 3c 00 00` (Message_on 60 ohne Text) -> Haken re15_zws_r41_message_on, Tabellenzeilen "ende5090" /
  *     "ende5091" in engine/src/zws_r41.c: Datei da -> spielen (Skript parkt), Datei fehlt / keine Plattform -> sofort weiter.
  *     Die Tabellenzeile traegt RE15_ZWS_BLENDART_SKRIPT: das C-Einblenden der Form ROOM1080 entfaellt, die Blende macht das Skript.

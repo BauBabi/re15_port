@@ -24,14 +24,16 @@ const uint8_t g_re15_ev_programm[] = {
     /* Original sub02 bis vor die Meldung */
     0x22, 0x02, 0x07, 0x01,                               /* Set(2,7,1)  Pad-Sperre   5090 @0x012C2 / 5091 @0x012A6 */
     0x22, 0x01, 0x1b, 0x01,                               /* Set(1,27,1) Kinobalken   @0x012C6 / @0x012AA          */
+    0x54, 0x00, 0x04, 0x00, 0x00, 0x00,                   /* MAIN anhalten: RE2 @0x02804 Fall 4; Form 5090 @0x012B4.
+                                                           * PORT-WAHL Lage: schon hier statt nach Sleep 20 + Sleep 1
+                                                           * (Kopf re15_endvideo_r42.h "MUSIK")                      */
     0x09, 0x0a, 0x14, 0x00,                               /* Sleep 20                 @0x012CA / @0x012AE          */
     /* Message_on 0 "THANK YOU FOR PLAYING !!!" (@0x012CE / @0x012B2) und Sleep 100 (@0x012D2 / @0x012B6) entfallen
      * (NUTZERWUNSCH 18.11.2026). An ihrer Stelle die RE2-Form ROOM4090 (Kopf re15_endvideo_r42.h): */
     0x56, RE15_EV_BLENDE_KANAL, RE15_EV_BLENDE_ABR, RE15_EV_BLENDE_RGB,
           LO(RE15_EV_ABBLENDEN), HI(RE15_EV_ABBLENDEN),  /* Abblenden: RE2 @0x027F4 `53 02 02 07 00 02`            */
     0x57, RE15_EV_BLENDE_KANAL, 0x00, 0x00,               /* Start, Pegel 0 (Schritt > 0, @0x80021710-20)          */
-    0x09, 0x0a, RE15_EV_SCHLAF_1, 0x00,                   /* Sleep 1: RE2 @0x02800                                 */
-    0x54, 0x00, 0x04, 0x00, 0x00, 0x00,                   /* MAIN anhalten: RE2 @0x02804 Fall 4; Form 5090 @0x012B4 */
+    0x09, 0x0a, RE15_EV_SCHLAF_1, 0x00,                   /* Sleep 1: RE2 @0x02800 (MAIN ist schon angehalten)     */
     0x09, 0x0a, RE15_EV_SCHLAF_2, 0x00,                   /* Sleep 62: RE2 @0x0280A                                */
     0x02,                                                 /* Evt_next: RE2 @0x02810                                */
     0x56, RE15_EV_BLENDE_KANAL, RE15_EV_BLENDE_ABR, RE15_EV_BLENDE_RGB,
