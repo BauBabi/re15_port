@@ -24,7 +24,9 @@
  *   H5      Runde 7 (Pruefbericht Runde 6 R1): beim Griff springt die Figur hoechstens eine Handbreite an ihre Halte-Lage.
  *   L1..L3  Runde 7: die Figur LAEUFT in den gewachsenen Arm - an der Wand entlang (L1, wie im Video der Runde 6) und aus dem
  *           Flur auf die Hand zu (L2): in keinem Bild vor dem Griff liegt die Handmitte in ihr (der Arm schiebt sie); greift er,
- *           dann mit Sprung <= Handbreite und der Hand an ihr. L3: aus dem Flur greift er mindestens eine der beiden Figuren.
+ *           dann mit Sprung <= Handbreite und der Hand an ihr (max <= Handbreite, im Mittel <= halbe Handbreite: im letzten
+ *           Zugriff-Bild nimmt das Modul auch eine Lage mit bis zu einer halben Handbreite mittlerer Luft). L3: aus dem Flur greift
+ *           er mindestens eine der beiden Figuren.
  *           Gegenprobe 7c5bbf082 (Runde 6): L1/L2 rot (Handmitte 8 Bilder in Leon wie im Video).
  *
  * GEGENPROBE: auf aaea5f8c2 fehlen die Koerper-/Hand-Funktionen (hier SCHWACH deklariert) -> rot. Auf db67b1388 (Runde 3)
@@ -566,11 +568,11 @@ static int lauf_in_arm(int modell, int frontal, lauf_t *L)
     int32_t h[3]; re15_re2arm_hand15(s5, h, NULL);
     if (frontal) { pl->x = h[0] + 1400; pl->z = h[2]; pl->rot_y = 2048; }   /* aus dem Flur auf die Hand zu, Blick -x */
     else { pl->x = FLUR_KLEMME_WEST; pl->z = h[2] + 1200; pl->rot_y = 1024; }  /* an der Wand entlang, Blick -z (FUN_800152C8-Formel) */
-    int32_t lx = pl->x, lz = pl->z;
+    int32_t lx = pl->x, lz = pl->z;                       /* zuletzt GEZEIGTE Lage (nach dem Bild, vor dem naechsten Schritt) */
     for (int f = 0; f < 400 && L->griff_bild < 0; f++) {
-        lx = pl->x; lz = pl->z;
         frame_step();
         if (arm->sub_state_1 == 4 || re15_player_is_grabbed()) { L->griff_bild = f; break; }
+        lx = pl->x; lz = pl->z;
         double hv[12][3], ko = 1e30; int in = 0;
         /* Koerper vor dem Griff: die EIGENE Pose der Figur (Keyframe 0 ihrer PLD-EMR, nicht die Opfer-Pose mit den ausgebreiteten
          * Armen) im jetzigen Blick - Naeherung des Tests fuer die Laufpose, gekennzeichnet */
@@ -813,7 +815,7 @@ int main(void)
                    L.vor_innen, L.vor_kontakt_min, L.sprung, L.vor_x, L.vor_z, L.halt_x, L.halt_z, L.halten_n, L.halten_max,
                    L.halten_n ? L.halten_sum / L.halten_n : 0.0, L.halten_innen);
             const int halten_ok = L.griff_bild < 0 ||
-                (L.halten_n > 100 && L.sprung <= 2.0 * HAND_HB && L.halten_max <= 2 * HAND_HB && L.halten_sum / L.halten_n <= 50.0 &&
+                (L.halten_n > 100 && L.sprung <= 2.0 * HAND_HB && L.halten_max <= 2 * HAND_HB && L.halten_sum / L.halten_n <= HAND_HB &&
                  L.halten_innen == 0);
             char t6[300];
             if (!w) {

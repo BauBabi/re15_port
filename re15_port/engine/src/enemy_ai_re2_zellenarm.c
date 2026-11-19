@@ -1783,7 +1783,7 @@ typedef struct { int ok; int32_t x, z, sprung, luft_max, luft_mittel; int richtu
  * sprung_max -, an der der ganze gezeichnete Arm ausserhalb des Halte-Profils liegt und die Hand in jedem Bild der Schleife an der
  * Figur (luft), nach der Flur-Klemme der Figur (FUN_8003b0a4 @0x80031d70). Rueckgabe 1 = gefunden. */
 static int halte_loesen(const re15_actor_t *e, const re2arm_t *a, int16_t yaw, int32_t py, int32_t px, int32_t pz,
-                        int32_t sprung_max, halte_t *o)
+                        int32_t sprung_max, int32_t mittel_max, halte_t *o)
 {
     memset(o, 0, sizeof *o); o->sprung = INT32_MAX;
     if (!profil_bauen()) return 0;
@@ -1830,7 +1830,7 @@ static int halte_loesen(const re15_actor_t *e, const re2arm_t *a, int16_t yaw, i
     }
     o->kandidaten = nk;
     /* 2. vom kleinsten Sprung an (hoechstens RE2ARM_HALTE_PRUEF Lagen) die erste, an der die Hand in jedem Bild der Schleife an
-     *    der Figur liegt: luft hoechstens eine Handbreite, im Mittel hoechstens eine halbe (MASSE) */
+     *    der Figur liegt: luft hoechstens eine Handbreite, im Mittel hoechstens mittel_max (MASSE) */
     int32_t mit[RE2ARM_HALTE_PRUEF], mx[RE2ARM_HALTE_PRUEF];
     for (int i = 0; i < nk && i < RE2ARM_HALTE_PRUEF; i++) {
         int32_t hl[RE2ARM_HAND_N][3], lmax = 0;
@@ -1839,7 +1839,7 @@ static int halte_loesen(const re15_actor_t *e, const re2arm_t *a, int16_t yaw, i
         mx[i] = lmax; mit[i] = (sum < 0 || lmax > 2 * hb) ? INT32_MAX : sum / s_tab_fc;
     }
     for (int i = 0; i < nk && i < RE2ARM_HALTE_PRUEF; i++) {
-        if (mit[i] > hb / 2) continue;
+        if (mit[i] > mittel_max) continue;
         o->ok = 1; o->x = k_x[i]; o->z = k_z[i]; o->sprung = k_sp[i]; o->richtung = k_th[i];
         o->luft_max = mx[i]; o->luft_mittel = mit[i];
         break;
@@ -2279,7 +2279,11 @@ static int kontakt_moeglich(re15_actor_t *e, int slot, re15_actor_t *pl)
     re15_enemy_steer_point(&k, e->x, e->z, 2048);
     if (same) k.rot_y = (int16_t)(((int)k.rot_y + 2048) & 0xfff);
     halte_t q;
-    const int ok = halte_loesen(e, a, k.rot_y, pl->y, pl->x, pl->z, 2 * hand_halbbreite(e), &q);
+    /* luft im Mittel hoechstens eine halbe Handbreite; im LETZTEN Bild, in dem das Tor A3 noch greifen kann (B3 zaehlt danach
+     * `done` @0x80100B24-3C, dann 0x501), hoechstens eine ganze (PORT-WAHL: lieber eine etwas lockere Hand als kein Griff) */
+    const int letzte = (arm_frame(e) + 1 >= logik_len(e, (int)a->logik_clip));
+    const int32_t hb = hand_halbbreite(e);
+    const int ok = halte_loesen(e, a, k.rot_y, pl->y, pl->x, pl->z, 2 * hb, letzte ? hb : hb / 2, &q);
     if (getenv("RE15_RE2_TRACE")) {
         FILE *o = re15_re2_trace_out() ? re15_re2_trace_out() : stderr;
         fprintf(o, "[re15halt] F%u slot %d Pruefung: ok %d Sprung %d (hoechstens %d, Kandidaten %d) Luft max %d Mittel %d Richtung %d "
