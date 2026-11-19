@@ -25,6 +25,10 @@
 #       Ende der Aufnahme. OFF: keine Aufnahme, an keiner Zeile gewartet, jede Zeile oeffnet genau um die bis dahin bei ON
 #       gewarteten Bilder frueher (Bild_ON - Bild_OFF = Summe der Wartebilder bis zu dieser Zeile) = Textdauer, als gaebe
 #       es keine Aufnahme; die Szene laeuft bis Bild 1250.
+#       Runde 42 namen Stufe 5 R2: ROOM1150 msg 23 und 27 haben zwei Seiten (tools/r42_namen/porttexte_s5r2.py). Ohne Stimme
+#       wartet die naechste Zeile (msg 24, msg 28), bis die zweiseitige Zeile von selbst endet (msg_common.c
+#       re15_msg_seiten_halten; Original FUN_80027e68 @0x80027e74-8c bricht eine laufende Nachricht nie ab). Dort muss OFF
+#       warten, sonst nirgends; Bild_ON - Bild_OFF = Summe der ON-Wartebilder - Summe der OFF-Wartebilder.
 #
 # Aufruf: cmake -DRE15_PC_EXE=<exe> -DRE15_TOOL=<test_r41_optionen> -DRE15_TOOL2=<test_r41_stimmen>
 #               -DRE15_KARTE_1150=<probe_r35_cut1150_karte> -DWORKDIR=<dir> -DTEIL=menue|szene -P test_r41_stimmen.cmake
@@ -290,6 +294,7 @@ elseif(TEIL STREQUAL "szene")
     else()
         set(_summe 0)
         set(_gewartet_on 0)
+        set(_halt_off 24 28)   # Runde 42 namen Stufe 5 R2: die Zeilen hinter den zweiseitigen msg 23/27 (s. Kopf (5))
         math(EXPR _letzte "${_n_on} - 1")
         foreach(_i RANGE 0 ${_letzte})
             list(GET _zeilen_irons_on ${_i} _zon)
@@ -307,13 +312,21 @@ elseif(TEIL STREQUAL "szene")
                 set(_fehler "${_fehler}\n[5] stimme.log-Zeile unlesbar: ON '${_zon}' / OFF '${_zoff}'")
                 break()
             endif()
-            math(EXPR _summe "${_summe} + ${_won}")
+            math(EXPR _summe "${_summe} + ${_won} - ${_woff}")
+            # Runde 42 namen Stufe 5 R2: OFF wartet nur (und muss) hinter den zweiseitigen msg 23/27 (s. Kopf (5))
+            list(FIND _halt_off "${_mon}" _darf_halten)
+            set(_woff_ok 0)
+            if(_darf_halten LESS 0 AND _woff EQUAL 0)
+                set(_woff_ok 1)
+            elseif(_darf_halten GREATER -1 AND _woff GREATER 0)
+                set(_woff_ok 1)
+            endif()
             if(_won GREATER 0)
                 math(EXPR _gewartet_on "${_gewartet_on} + 1")
             endif()
             math(EXPR _diff "${_bon} - ${_boff}")
             message(STATUS "stimmen_r41[5]: msg ${_mon}: ON Bild ${_bon} (${_won} gewartet), OFF Bild ${_boff} (${_woff} gewartet, Kanal ${_loff}), Abstand ${_diff} = Summe ${_summe}")
-            if(NOT _mon EQUAL _moff OR NOT _woff EQUAL 0 OR NOT _loff EQUAL 0 OR NOT _diff EQUAL _summe)
+            if(NOT _mon EQUAL _moff OR NOT _woff_ok OR NOT _loff EQUAL 0 OR NOT _diff EQUAL _summe)
                 set(_fehler "${_fehler}\n[5] ROOM1150 msg ${_mon}/${_moff}: OFF Bild ${_boff} (gewartet ${_woff}, Kanal ${_loff}), ON Bild ${_bon} - Abstand ${_diff} statt Summe der Wartebilder ${_summe}")
             endif()
         endforeach()
