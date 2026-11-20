@@ -1499,6 +1499,28 @@ if(TARGET SDL2::SDL2-static)
     set_tests_properties(unit_r42_ton_hall PROPERTIES TIMEOUT 120)
 endif()
 
+# --- Strang "ton", Stufe 6 (2026-11-20): Lage der Geraeusche (Messbericht U6). FUN_80045a64 mit dem Sender des Originals
+#     (FUN_800453d0: laufende Entity DAT_800ac784+0x34 @0x800454e0-ec; FUN_80045024: param_2 @0x800451c0-cc, Schuss =
+#     Weltlage des Effekt-Platzes @0x80017664-84), links/rechts getrennt. Original-Savestate ROOM1140: Entity 4 -> 102/65 ->
+#     Register 10567/4259. Gegenprobe: audio_pc.c von bf6827892 -> 6 von 8 rot ((1)(2) Mischer, (3), (4) Knall, (5)).
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_lage
+        test_r42_ton_lage.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_lage PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_lage PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_lage PRIVATE
+        RE15_PLATFORM_PC
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_lage COMMAND test_r42_ton_lage)
+    set_tests_properties(unit_r42_ton_lage PROPERTIES TIMEOUT 120)
+endif()
+
 # --- Strang "ton", Stufe 5 (2026-11-20): Pitch-Zaehler + 4-Punkt-Gauss der SPU fuer Geraeusch- und Musik-Stimmen
 #     (psx-spx soundprocessingunitspu.md "Pitch Counter" / "4-Point Gaussian Interpolation"; Messbericht U5). Der Riegel
 #     liest die Gauss-Tabelle selbst aus der Hardware-Beschreibung und rechnet Rolltor-Rumpeln/-Stopp Wert fuer Wert nach.

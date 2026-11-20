@@ -20,6 +20,7 @@
 #include "re15_granate_r36.h"   /* Runde 36 Spur D: Platzvergabe des Wurfkoerpers bei vollem Pool */
 #include "re15_esp_brocken.h" /* Runde 35 Spur D: Routinen B 36/37 (esp_brocken.c) */
 #include "re15_spinnen_r38.h"  /* Runde 38 Spur R: Routinen A 24/25 (Gift, spinnen_r38.c) */
+#include "re15_svm_vol.h"     /* Strang ton Stufe 6: param_2 des Schusses (re15_svm_sender_lage) */
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>        /* getenv — RE15_GRANATE_LOG (Diagnose, kein Verhalten) */
@@ -866,7 +867,14 @@ static void esp_fx_dispatch(re15_esp_fx_t *f)
         }
         case 9: {   /* @0x80017654 (self-verified): the positional BANG — FUN_80045024(0x01000001,
                      * &world_pos) + noise latch 0x800b5358 := 1 + advance UNCONDITIONAL. */
-            if (re15_esp_bang_hook) re15_esp_bang_hook();
+            /* Strang ton Stufe 6: param_2 = die s16-Weltlage DIESES Platzes (`lh v0,40(v1)` / `lh v0,42(v1)` /
+             * `lh v0,44(v1)` @0x80017664-7c -> sp+16..24, `addiu a1,sp,16` @0x80017680, `jal 0x80045024` @0x80017684).
+             * Routine A laeuft im ersten Durchgang VOR der Weltlage dieses Ticks (`jalr v0` @0x80019e9c, Weltlage erst
+             * @0x8001a118-2a4) -> wpos ist die des Vor-Ticks, wie hier (Durchgang 2 = esp_fx_weltlage). */
+            {   const int32_t wp[3] = { f->wpos[0], f->wpos[1], f->wpos[2] };
+                re15_svm_sender_lage(wp);
+                if (re15_esp_bang_hook) re15_esp_bang_hook();
+                re15_svm_sender_lage(NULL); }
             /* Runde 34 A7: der Latch 0x800b5358 ist ein EIN-BILD-LICHT, kein Laerm (Wurf-Dossier
              * §6, Gegenpruefung K): nach dem SE `jal 0x80045024` @0x80017684 setzt Routine 9
              *   8001768c  ori  v0,zero,0x1
@@ -1229,7 +1237,13 @@ static void esp_fx_dispatch_b(re15_esp_fx_t *f)
     f->drift_x = (int16_t)(f->drift_x / 2);
     f->drift_z = (int16_t)(f->drift_z / 2);
     f->drift_y = (int16_t)(-(f->drift_y / 3));
-    if (re15_esp_shell_clink_hook) re15_esp_shell_clink_hook();   /* SE 0x01020001 (platform) */
+    /* Strang ton Stufe 6: param_2 = Weltlage des Platzes (`lh v0,40/42/44(v1)` -> sp+16..24 @0x800177b4-d8,
+     * `addiu a1,sp,16` @0x80017830 im Verzoegerungsplatz von `jal 0x80045024` @0x8001782c). OFFEN: room_coll
+     * @0x8001c6e8 bekommt denselben Punkt (a0 = sp+16 @0x800177a8) und darf ihn vorher aendern - nicht nachgebildet. */
+    {   const int32_t wp[3] = { f->wpos[0], f->wpos[1], f->wpos[2] };
+        re15_svm_sender_lage(wp);
+        if (re15_esp_shell_clink_hook) re15_esp_shell_clink_hook();   /* SE 0x01020001 (platform) */
+        re15_svm_sender_lage(NULL); }
 }
 
 /* Platform SE hook for the shell clink (FUN_80045024(0x01020001) = ARMS bank record 2; the

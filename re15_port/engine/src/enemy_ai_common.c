@@ -59,6 +59,7 @@
 #include "re15_spinnen_r38.h" /* Runde 38 Spur R: Schacht-Ausstieg + Gift der Stage-2-Spinne */
 #include "re15_spinnenanim_r41.h"  /* Runde 41 Spur L: Zeichnen der Adultspinne */
 #include "re15_spinnenlache_r41.h" /* Runde 41 Spur S, Nachbesserung 2: Lache der Spinnenleiche */
+#include "re15_svm_vol.h"   /* Strang ton Stufe 6: Sender der Raum-Geraeusche (DAT_800ac784) */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: Phase-4-Wundstempel der Opfer-FSM (@0x8010a4e8) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
@@ -15638,6 +15639,9 @@ void re15_enemy_ai_run_all(int combat_active)
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
+        /* Strang ton Stufe 6: DAT_800ac784 = die laufende Entity (FUN_8001a50c `sw v0,0(s2)` @0x8001a5ac, Handler
+         * `jalr v0` @0x8001a588) -> Raum-Geraeusche (FUN_800453d0) dieses Handlers tragen ihre Lage (re15_svm_vol.h). */
+        re15_svm_sender_entity(e);
         re15_szenenschutz_gegner(s);        /* Runde 38 Spur B: Sicht je Gegner (re15_szenenschutz_r38.h) */
         if (re15_bf_szene_besitzt(s)) continue;   /* von der Hangar-Szene gefuehrt (birkin_formen.c) */
         if (re15_annette_r41_besitzt(s)) continue;   /* Runde 41 Spur AN: von der 5090-Szene gefuehrt (annette_r41.c) */
@@ -16016,6 +16020,9 @@ void re15_enemy_ai_run_all(int combat_active)
          * inert (its only real code is the shared cutscene model-draw aux, which the port's renderer already
          * covers). */
     }
+    /* Strang ton Stufe 6: nach der Schleife wieder der Spieler (Hauptlauf: `jal 0x8001a50c` @0x8001ce04, dann der
+     * Spieler-FSM `jal 0x80031c44` @0x8001ce0c mit `sw s0=>DAT_800aca54` @0x80031c6c). */
+    re15_svm_sender_entity(NULL);
     re15_szenenschutz_durchlauf_ende();     /* Runde 38 Spur B */
     re15_schuss_r36_nachfuehren_alle();  /* Runde 36 Spur C N3: Blut-Spawns dieses Bilds um Schub+Klemme nachfuehren */
 }

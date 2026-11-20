@@ -15,10 +15,12 @@
  *   (2) Rolltor-Stopp   ROOM1130 snd0 Satz 11: 10268/10268      (alt: Q15 7288 -> -9,0 dB)
  *   (3) Pistolenschuss  ARMS03 Satz 0, zwei Schichten (ROOM1140, Cut 0, Spieler -5541/0/-16024). Original: Lage 106/95
  *       -> 5731/4691 je Schicht; der Sender ist dort NICHT der Spieler, sondern die Lage im Angriffs-Arbeitssatz
- *       (`lw v1,0x800b52c4` / `lh v0,40(v1)` .. @0x80017654-88). Port bis Stufe 6 (PORT-WAHL: Lage des Spielers 92/102,
- *       Summe): 4343/5306 -> 4824/4824, das sind -0,67 dB gegen die Original-Summe 5211      (alt: Q15 5805 -> -5,1 dB)
+ *       (`lw v1,0x800b52c4` / `lh v0,40(v1)` .. @0x80017654-88). Dieser Riegel ruft re15_audio_weapon_se(0) DIREKT, also
+ *       ohne param_2 = ein Spieler-Ruf (Lage des Spielers 92/102 -> 4343/5306, seit Stufe 6 links/rechts getrennt; bis
+ *       Stufe 5 beide 4824). Den Sender des Originals (Effekt-Platz der ESP-Routine 9) prueft unit_r42_ton_lage (4).
+ *       Gegen das Original hier nur die Summe links + rechts (-0,67 dB)                     (alt: Q15 5805 -> -5,1 dB)
  *   (4) Schritt ROOM1130 snd0 Satz 29 (Ton 1, vol 80), Lage 93/103 (Cut 9, Spieler -1614/0/17282):
- *       Original 3498/4275; Port bis Stufe 6: 3886/3886                                 (alt: Q15 5160 -> -3,6 dB)
+ *       Original 3498/4275; seit Stufe 6 auch am Mischer getrennt (bis Stufe 5: 3886/3886)  (alt: Q15 5160 -> -3,6 dB)
  *   (5) Rotor SUB_15 (ROOM1170, nur der SUB-Slot aufgedreht): Stimmen-Register 6500/6500. Original-Aufnahme "nur
  *       Rotor": -22,3 dBFS (Messbericht Abschnitt 3); Port alt -31,0 dBFS. Der Port legt bis Stufe 3 noch Hall auf den
  *       Rotor (+1,0 dB) und zeichnet bis Stufe 5 ohne die Gauss-Glaettung des Tonchips -> Band -24,3 .. -19,8 dBFS.
@@ -334,24 +336,25 @@ int main(void)
         CHECK(p_stopp > 1000 && nah(m.pk_l, s2) && nah(m.pk_r, s2),
               "(2) Rolltor-Stopp ROOM1130 snd0 Satz 11 (Ton-vol 113): Spitze %d/%d, Soll %d = Probe %d * Register 10268", m.pk_l, m.pk_r, s2, p_stopp);
         m = messen(t_schritt, N_SCHRITT);
-        const int s4 = soll_spitze(p_schritt, (3498 + 4275) / 2, 1);
-        printf("  (4) Schritt:         Probe %d, Mitschnitt L/R %d/%d, Soll %d (Register 3886 = Mittel aus 3498/4275)\n", p_schritt, m.pk_l, m.pk_r, s4);
-        CHECK(p_schritt > 1000 && nah(m.pk_l, s4) && nah(m.pk_r, s4),
+        const int s4l = soll_spitze(p_schritt, 3498, 1), s4r = soll_spitze(p_schritt, 4275, 1);   /* Strang ton Stufe 6: getrennt */
+        printf("  (4) Schritt:         Probe %d, Mitschnitt L/R %d/%d, Soll %d/%d (Register 3498/4275)\n", p_schritt, m.pk_l, m.pk_r, s4l, s4r);
+        CHECK(p_schritt > 1000 && nah(m.pk_l, s4l) && nah(m.pk_r, s4r),
               "(4) Schritt ROOM1130 Satz 29 (Ton-vol 80), Lage 93/103 (Cut 9, Spieler -1614/0/17282; im Original gemessen): Spitze %d/%d, "
-              "Soll %d = Probe %d * (3498 + 4275) / 2", m.pk_l, m.pk_r, s4, p_schritt);
+              "Soll %d/%d = Probe %d * 3498 / 4275", m.pk_l, m.pk_r, s4l, s4r, p_schritt);
     }
     if (rdt2 && p_schuss > 0) {
         mess_t m = messen(t_schuss, N_SCHUSS);
-        const int s3 = soll_spitze(p_schuss, (4343 + 5306) / 2, 2);
-        const int s3o = soll_spitze(p_schuss, (5731 + 4691) / 2, 2);
-        printf("  (3) Pistolenschuss:  Probe %d, Mitschnitt L/R %d/%d, Soll %d (2 Schichten, Register 4824 = Mittel aus 4343/5306; "
-               "Original-Summe 5211 -> %d, Port %.2f dB dazu)\n", p_schuss, m.pk_l, m.pk_r, s3, s3o, 20.0 * log10((double)(m.pk_l > 0 ? m.pk_l : 1) / (double)s3o));
-        CHECK(p_schuss > 1000 && nah(m.pk_l, s3) && nah(m.pk_r, s3),
-              "(3) Pistolenschuss ARMS03 Satz 0 (ROOM1140 Cut 0, Spieler -5541/0/-16024, Lage des Spielers 92/102): Spitze %d/%d, Soll %d = "
-              "2 Schichten * Probe %d * (4343 + 5306) / 2", m.pk_l, m.pk_r, s3, p_schuss);
-        CHECK(m.pk_l * 100 >= s3o * 90 && m.pk_l * 100 <= s3o * 110,
-              "(3) Pistolenschuss gegen das Original: Spitze %d, Summe des Originals %d (5731/4691 je Schicht, gemessen) - Soll innerhalb 10 %%",
-              m.pk_l, s3o);
+        const int s3l = soll_spitze(p_schuss, 4343, 2), s3r = soll_spitze(p_schuss, 5306, 2);   /* Strang ton Stufe 6: getrennt */
+        const int s3o = soll_spitze(p_schuss, 5731, 2) + soll_spitze(p_schuss, 4691, 2);
+        printf("  (3) Pistolenschuss:  Probe %d, Mitschnitt L/R %d/%d, Soll %d/%d (2 Schichten, Register 4343/5306 = Spieler-Ruf; "
+               "Original-Summe L+R -> %d, Port %.2f dB dazu)\n", p_schuss, m.pk_l, m.pk_r, s3l, s3r, s3o,
+               20.0 * log10((double)(m.pk_l + m.pk_r > 0 ? m.pk_l + m.pk_r : 1) / (double)s3o));
+        CHECK(p_schuss > 1000 && nah(m.pk_l, s3l) && nah(m.pk_r, s3r),
+              "(3) Pistolenschuss ARMS03 Satz 0 (ROOM1140 Cut 0, Spieler -5541/0/-16024, Spieler-Ruf: Lage 92/102): Spitze %d/%d, Soll %d/%d = "
+              "2 Schichten * Probe %d * 4343 / 5306", m.pk_l, m.pk_r, s3l, s3r, p_schuss);
+        CHECK((m.pk_l + m.pk_r) * 100 >= s3o * 90 && (m.pk_l + m.pk_r) * 100 <= s3o * 110,
+              "(3) Pistolenschuss gegen das Original: Summe L+R %d, Summe des Originals %d (5731/4691 je Schicht, gemessen) - Soll innerhalb 10 %%",
+              m.pk_l + m.pk_r, s3o);
     }
     {   mess_t m = messen(t_rotor, N_ROTOR);
         const double db = 20.0 * log10((m.rms > 0.0 ? m.rms : 1e-9) / 32768.0);
@@ -370,11 +373,11 @@ int main(void)
               "(80/127)^2, Sequenz-Lautstaerke 80 vor dem Quadrat", db, b.rms, a.rms);
         if (rdt2 && p_schuss > 0) {
             const mess_t m = messen(t_schuss2, N_SCHUSS);
-            const int s3 = soll_spitze(p_schuss, (4343 + 5306) / 2, 2);
-            printf("  (6d) Schuss waehrend des Satzes: Mitschnitt L/R %d/%d, Soll %d wie in (3)\n", m.pk_l, m.pk_r, s3);
-            CHECK(m.pk_l * 100 >= s3 * 97 && m.pk_l * 100 <= s3 * 103 && m.pk_r * 100 >= s3 * 97 && m.pk_r * 100 <= s3 * 103,
-                  "(6d) Geraeusch waehrend eines gesprochenen Satzes: Spitze %d/%d, Soll %d +- 3 %% (wie ohne Satz - nur die Musik "
-                  "tritt zurueck; der Rest ist der Hall-Auslauf des abgeschalteten Rotors)", m.pk_l, m.pk_r, s3);
+            const int s3l = soll_spitze(p_schuss, 4343, 2), s3r = soll_spitze(p_schuss, 5306, 2);   /* Stufe 6: getrennt */
+            printf("  (6d) Schuss waehrend des Satzes: Mitschnitt L/R %d/%d, Soll %d/%d wie in (3)\n", m.pk_l, m.pk_r, s3l, s3r);
+            CHECK(m.pk_l * 100 >= s3l * 97 && m.pk_l * 100 <= s3l * 103 && m.pk_r * 100 >= s3r * 97 && m.pk_r * 100 <= s3r * 103,
+                  "(6d) Geraeusch waehrend eines gesprochenen Satzes: Spitze %d/%d, Soll %d/%d +- 3 %% (wie ohne Satz - nur die Musik "
+                  "tritt zurueck; der Rest ist der Hall-Auslauf des abgeschalteten Rotors)", m.pk_l, m.pk_r, s3l, s3r);
         }
     }
 #endif

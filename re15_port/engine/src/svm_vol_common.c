@@ -82,3 +82,36 @@ int re15_svm_lage_spieler(int lage[2])
     const int32_t pos[3] = { g_actors[0].x, g_actors[0].y, g_actors[0].z };
     return re15_wassersprung_r41_lage(&g_room_rdt, pos, lage, 0);
 }
+
+/* Strang ton Stufe 6: Sender (Kopf in re15_svm_vol.h). s_entity = DAT_800ac784 (NULL = Spieler, wie nach
+ * `sw s0=>DAT_800aca54` @0x80031c6c); s_param = *param_2 von FUN_80045024 (gilt fuer genau die Rufe, um die der
+ * Aufrufer ihn setzt und wieder loescht). */
+static const re15_actor_t *s_entity = NULL;
+static int     s_param_da = 0;
+static int32_t s_param[3];
+
+void re15_svm_sender_entity(const void *entity) { s_entity = (const re15_actor_t *)entity; }
+
+void re15_svm_sender_lage(const int32_t *pos)
+{
+    s_param_da = pos != NULL;
+    if (pos) { s_param[0] = pos[0]; s_param[1] = pos[1]; s_param[2] = pos[2]; }
+}
+
+int re15_svm_lage_entity(int lage[2])
+{
+    if (!s_entity) return re15_svm_lage_spieler(lage);
+    if (!g_room_rdt_ok) return 0;
+    const int32_t pos[3] = { s_entity->x, s_entity->y, s_entity->z };      /* Entity+0x34/+0x38/+0x3c */
+    return re15_wassersprung_r41_lage(&g_room_rdt, pos, lage, 0);
+}
+
+int re15_svm_lage_param(int lage[2])
+{
+    if (!s_param_da) return re15_svm_lage_spieler(lage);                    /* Spieler-Rufe: &DAT_800aca88 */
+    if (!g_room_rdt_ok) return 0;
+    return re15_wassersprung_r41_lage(&g_room_rdt, s_param, lage, 0);
+}
+
+int re15_svm_sender_entity_slot(void) { return s_entity ? (int)(s_entity - g_actors) : -1; }
+int re15_svm_sender_lage_gesetzt(void) { return s_param_da; }

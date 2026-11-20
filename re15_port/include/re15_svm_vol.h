@@ -112,4 +112,30 @@ int re15_svm_seq_key(int anschlag, int kanal_vol);
  * (DAT_800b2824), lage[1] = volr (DAT_800b2826). 0 ohne Raum/Kamera (dann gibt es keine Lage). */
 int re15_svm_lage_spieler(int lage[2]);
 
+/* ===== Strang ton Stufe 6 (2026-11-20): der SENDER eines Geraeuschs mit Lage (Messbericht U6) ======================
+ * FUN_80045a64 rechnet die Lage immer aus EINER Weltposition. Woher sie kommt, haengt am Ruf:
+ *   (a) FUN_800453d0 (Raum-Geraeusch, snd1) und FUN_80045630 (Schritt): DAT_800ac784 + 0x34 = die Entity, deren Code
+ *       GERADE laeuft (`lw v0,-0x387c(v0)=>DAT_800ac784` @0x800453d4, FUN_80045a64-Ruf @0x800454e0-ec bzw. @0x8004582c-30).
+ *       DAT_800ac784 setzt die Entitaeten-Schleife FUN_8001a50c je Entity (Start `sw v0,0(v1)` @0x8001a540, je Runde
+ *       `addiu v0,v0,500` / `sw v0,0(s2)` @0x8001a5a8-ac, Handler `jalr v0` @0x8001a588) und der Spieler-FSM
+ *       FUN_80031c44 auf den Spieler (`sw s0=>DAT_800aca54` @0x80031c6c). Hauptlauf: Schleife `jal 0x8001a50c`
+ *       @0x8001ce04, danach Spieler `jal 0x80031c44` @0x8001ce0c -> ausserhalb der Gegner-Schleife ist es der Spieler.
+ *       GEMESSEN (Original-Savestate ROOM1140 Cut 0, scratchpad ton/s6/ss_lage_reg.py): DAT_800b2824/26 = 102/65 =
+ *       FUN_80045a64 der Entity 4 (Typ 0x11, 200/0/-19600), SE-Stimme 20 (Raum-Satz, Tone 4) Register 10567/4259;
+ *       die Lage des Spielers waere 93/103.
+ *   (b) FUN_80045024 (Bank-Geraeusch, ARMS/CORE) mit Lage-Bit: param_2 = Zeiger auf die Weltposition (@0x800451c0-cc).
+ *       Spieler-Rufe: &DAT_800aca88 (= Spieler+0x34, z. B. `addiu a1,..` @0x800123d4); der Schuss (ESP-Routine 9,
+ *       FUN_80017654): die s16-Weltlage des Effekt-Platzes (`lh v0,40/42/44(v1)` @0x80017664-7c, `addiu a1,sp,16`
+ *       @0x80017680, `jal 0x80045024` @0x80017684).
+ * Port: (a) re15_svm_sender_entity(e) setzt die laufende Entity (NULL = Spieler), (b) re15_svm_sender_lage(pos) setzt
+ * param_2 fuer den naechsten Bank-Ruf (NULL = Spieler-Ruf). `entity` ist ein const re15_actor_t * (re15_actor.h). */
+void re15_svm_sender_entity(const void *entity);
+void re15_svm_sender_lage(const int32_t *pos);
+/* Lage fuer (a) bzw. (b); 0 ohne Raum/Kamera (dann Zweig ohne Lage). */
+int  re15_svm_lage_entity(int lage[2]);
+int  re15_svm_lage_param(int lage[2]);
+/* Messhaken: Slot der gesetzten Entity (-1 = Spieler/keine), 1 wenn ein param_2 gesetzt ist. */
+int  re15_svm_sender_entity_slot(void);
+int  re15_svm_sender_lage_gesetzt(void);
+
 #endif /* RE15_SVM_VOL_H */

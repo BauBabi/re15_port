@@ -745,7 +745,7 @@ static int load_room_se_vab_pc(void)
  *   (@0x8004522c; note = lbu 0x6(s1) @0x800451fc, fine = lbu 0x5(s1) @0x80045210)
  *   -> note2pitch2 (fine + tone[+5] werden ADDIERT) -> SpuVmKeyOnNow.
  *
- * OFFEN, mit Adresse (KEIN Platzhalter, sondern eine benannte, nicht portierbare Stelle):
+ * LAGE (seit Strang ton Stufe 6 portiert, vorher hier als offen benannt):
  *   LAUTSTAERKE/PANNING des Raum-SE-Pfades ist im Original POSITIONAL und haengt an der
  *   SENDENDEN Entity: FUN_800453d0 ruft UNBEDINGT FUN_80045a64(*(0x800ac784) + 0x34)
  *   (@0x800454e0-ec) und uebernimmt deren Ergebnis DAT_800b2824/26 als voll/volr
@@ -758,11 +758,9 @@ static int load_room_se_vab_pc(void)
  *     - sonst: eine Seite 0x89, die andere PAN_LUT@0x80074728[idx] (@0x80045c88-94),
  *       idx = (ang & 0x3ff)>>3 bzw. 0x89-idx (@0x80045c50-7c)
  *     - zum Schluss beidseitig ATT_LUT@0x800747a8[u] abziehen (@0x80045cf0-d1c)
- *   Der Port kann das HIER nicht auswerten: er hat kein Gegenstueck zu DAT_800ac784 (die
- *   gerade tickende Entity), und die Aufrufer sind re15_audio_room_se(id) ohne Emitter.
- *   STAND Strang ton Stufe 1 (2026-11-19): die Rechnung FUN_80045a64 selbst liegt seit Runde 41 im
- *   Port (re15_wassersprung_r41_lage) und wird jetzt mit der Lage des SPIELERS gerufen, solange der
- *   echte Sender fehlt; die Seiten bleiben bis Stufe 6 gleich (Kopf ueber se_stimme_q15 unten). */
+ *   STAND Strang ton Stufe 6 (2026-11-20): die Rechnung FUN_80045a64 liegt seit Runde 41 im Port
+ *   (re15_wassersprung_r41_lage); der Sender ist jetzt die laufende Entity (Gegenstueck zu DAT_800ac784:
+ *   re15_svm_sender_entity in re15_enemy_ai_run_all), Seiten links/rechts getrennt (Kopf ueber se_stimme_q15). */
 /* ===== Strang ton Stufe 1 (2026-11-19): LAUTSTAERKE JE STIMME NACH libsnd ===========================
  * Messbericht U1: der Port rechnete `(Ton-vol * 0x4000 / 127) >> 1` (linear, pauschal -12 dB). Das Original rechnet in
  * SpuVmKeyOnNow @0x80055d10-0x80056070 das Produkt Tastenstaerke * Bank * Programm * Ton, drei Pan-Stufen und setzt es
@@ -773,8 +771,10 @@ static int load_room_se_vab_pc(void)
  * s_se_sender: woher die Tastenstaerke kommt.
  *   SE_SENDER_KEIN    = Geraeusch OHNE Lage: FUN_80045024 `(param_1 & 0xff) == 0` -> voll = volr = Ton-vol
  *                       (`lbu 0x2(s1)` @0x800451dc ff.). Gemessen: Rolltor-Rumpeln 16383/16383, Klick (vol 110) 9219/9219.
- *   SE_SENDER_SPIELER = Geraeusch MIT Lage: voll/volr aus FUN_80045a64 (Entfernung/Richtung zur Kamera), hier mit der
- *                       Lage des Spielers (re15_svm_lage_spieler = FUN_80045a64(&DAT_800aca88)). Alle ARMS-Rufe der EXE
+ *   SE_SENDER_ENTITY  = FUN_800453d0 (Raum-Geraeusch): voll/volr aus FUN_80045a64(DAT_800ac784 + 0x34) @0x800454e0-ec =
+ *                       die laufende Entity (re15_svm_lage_entity; ausserhalb der Gegner-Schleife der Spieler).
+ *   SE_SENDER_PARAM   = FUN_80045024 mit Lage-Bit: voll/volr aus FUN_80045a64(param_2) @0x800451c0-cc
+ *                       (re15_svm_lage_param; ohne gesetztes param_2 = Spieler-Ruf &DAT_800aca88). Alle ARMS-Rufe der EXE
  *                       tragen das Lage-Bit (0x01xx0001); der Sender ist je Ruf verschieden:
  *                         - der Spieler selbst: 0x1080001 mit `addiu a1,..=>DAT_800aca88` @0x800123d4, ebenso die Rufe
  *                           0x0101/0x0103..0001 der Spieler-Zustaende (@0x8003338c .. @0x800367a8),
@@ -784,21 +784,26 @@ static int load_room_se_vab_pc(void)
  *                           mit DAT_800ac784 + 0x34.
  *                       Gemessen im Original: Schritt-Saetze 93/103 (ROOM1130 Cut 9 Spieler -1614/0/17282 und ROOM1140
  *                       Cut 0 Spieler -5118/0/-15817) = genau die Spielerlage; Schuss 106/95 bei Spielerlage 92/102.
- * PORT-WAHL bis Stufe 6 ("Lage der Geraeusche", Messbericht U6), ausdruecklich KEIN Originalverhalten:
- *   (a) SE_LAGE_SEITEN == 0: die Seiten (links/rechts) bleiben gleich; beide bekommen den Mittelwert der zwei
- *       berechneten Register -> die SUMME links + rechts ist die der Rechnung, die Richtung fehlt noch.
- *   (b) Rufe mit Lage, deren Sender der Port noch nicht durchreicht (Schuss: Angriffs-Arbeitssatz; Raum-Geraeusche
- *       der Gegner: die laufende Entity), nehmen ersatzweise die Lage des Spielers. Gemessen am Schuss: Summe
- *       4824 statt 5211 (-0,67 dB).
- *   (c) ohne Raum/Kamera (kein RDT) gibt es keine Lage -> Zweig ohne Lage. */
-enum { SE_SENDER_KEIN = 0, SE_SENDER_SPIELER = 1 };
-#define SE_LAGE_SEITEN 0            /* PORT-WAHL (a): 0 bis Stufe 6 */
+ * Strang ton Stufe 6 (Messbericht U6): die PORT-WAHLEN (a) "Seiten gleich, Mittelwert" und (b) "Sender = Spieler" der
+ * Stufe 1 sind entfernt. Jetzt:
+ *   - links/rechts getrennt: Register links aus voll = DAT_800b2824, rechts aus volr = DAT_800b2826 (SsUtKeyOnV
+ *     @0x80059e08-bc -> SpuVmKeyOnNow `sh a2` @0x80056058 links / `sh a1` @0x80056070 rechts). Gemessen im Original:
+ *     Schritt Lage 93/103 -> 3498/4275, Fresslaut Entity 4 Lage 102/65 -> 10567/4259 (links lauter, wie voll > volr).
+ *   - der Sender ist der des Originals: param_2 (Schuss: Weltlage des Effekt-Platzes, re15_esp.c Routine 9; Patronen-
+ *     huelse Routine B 12; ESP-Routinen 29/31 und Spinnen-Gift ueber re15_pc_esp_se) bzw. die laufende Entity
+ *     (re15_enemy_ai_run_all). Spieler-Rufe (Messer, Nachladen, Klick, Ziehen) = &DAT_800aca88 = Spieler.
+ *   - Option Mono: SpuVmKeyOnNow setzt beide Seiten auf die groessere (@0x80055fd0-e4, in.mono) - unveraendert.
+ *   (c) wie bisher: ohne Raum/Kamera (kein RDT) gibt es keine Lage -> Zweig ohne Lage.
+ * OFFEN (Stufe 6, nicht geraten): Bank-Rufe ausserhalb ESP/ARMS mit Lage-Bit, deren param_2 der Port nicht kennt
+ * (SCD Se_on, CORE-/snd0-Rufe), laufen weiter ohne Lage; Raum-Geraeusche aus Port-Modulen, die ausserhalb der
+ * Gegner-Schleife ticken, nehmen den Spieler (Liste im Bericht s6_r1). */
+enum { SE_SENDER_KEIN = 0, SE_SENDER_ENTITY = 1, SE_SENDER_PARAM = 2 };
 static int s_se_pegel_re2 = 0;
 static int s_se_sender    = SE_SENDER_KEIN;
 
 /* SPU-Lautstaerke-Register eines Bank-Tons -> Q15 links/rechts fuer den Mischer.
- * lage == NULL: Zweig ohne Lage (Tastenstaerke = Ton-vol, Pan Mitte). seiten == 0: PORT-WAHL (a). */
-static void se_stimme_q15(const re15_vab_t *vab, int tone_idx, const int *lage, int seiten, int re2,
+ * lage == NULL: Zweig ohne Lage (Tastenstaerke = Ton-vol, Pan Mitte); sonst lage[0] = voll, lage[1] = volr. */
+static void se_stimme_q15(const re15_vab_t *vab, int tone_idx, const int *lage, int re2,
                           int *vl_q15, int *vr_q15, int *reg_out)
 {
     const re15_vab_tone_t *t = &vab->tones[tone_idx];
@@ -817,8 +822,8 @@ static void se_stimme_q15(const re15_vab_t *vab, int tone_idx, const int *lage, 
     if (re2) re15_svm_keyon_reg_re2(&in, &rl, &rr);
     else     re15_svm_keyon_reg(&in, &rl, &rr);
     if (reg_out) { reg_out[0] = rl; reg_out[1] = rr; }
-    if (lage && !seiten) { *vl_q15 = *vr_q15 = rl + rr; }  /* Mittelwert der Register * 2 = Summe (PORT-WAHL a) */
-    else { *vl_q15 = RE15_SPU_REG_Q15(rl); *vr_q15 = RE15_SPU_REG_Q15(rr); }
+    *vl_q15 = RE15_SPU_REG_Q15(rl);                        /* links  = `sh a2` @0x80056058 */
+    *vr_q15 = RE15_SPU_REG_Q15(rr);                        /* rechts = `sh a1` @0x80056070 */
 }
 
 /* Messhaken fuer Riegel (kein Spielpfad): Register des zuletzt vorbereiteten Geraeusch-Tons und die Lage dazu. */
@@ -860,7 +865,15 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
     /* Lage EINMAL je Ruf (FUN_80045a64 laeuft vor der Schicht-Schleife: @0x800451cc / @0x800454e8; alle Schichten
      * tragen dieselben DAT_800b2824/26 @0x80045544-54, @0x800455bc-c4). */
     int lage[2] = { 0, 0 };
-    const int mit_lage = (s_se_sender == SE_SENDER_SPIELER && !s_se_pegel_re2) ? re15_svm_lage_spieler(lage) : 0;
+    int mit_lage = 0;
+    if (!s_se_pegel_re2) {
+        /* Strang ton Stufe 6: ein gesetztes param_2 heisst "Ruf von FUN_80045024 mit Lage-Bit" (ESP-Routinen, Schuss) und
+         * gilt fuer jede Bank (FUN_80045024 waehlt die Lage vor der Bank-Weiche, @0x800451c0-cc); sonst der Sender des
+         * Einstiegs (Raum-Geraeusch: laufende Entity; ARMS: Spieler-Ruf). */
+        if (re15_svm_sender_lage_gesetzt())       mit_lage = re15_svm_lage_param(lage);
+        else if (s_se_sender == SE_SENDER_ENTITY) mit_lage = re15_svm_lage_entity(lage);
+        else if (s_se_sender == SE_SENDER_PARAM)  mit_lage = re15_svm_lage_param(lage);
+    }
 
     SDL_LockAudioDevice(s_audio_dev);
     for (int k = 0; k < n; k++) {
@@ -873,7 +886,7 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
          * Ton 1 Pan 0 / Ton 2 Pan 127). Ton-vol 0 bleibt 0 (das Original spielt den Ton stumm; der fruehere Ersatzwert
          * 100 war eine Port-Annahme ohne Beleg). */
         int vl, vr, reg[2];
-        se_stimme_q15(vab, tones[k], mit_lage ? lage : NULL, SE_LAGE_SEITEN, s_se_pegel_re2, &vl, &vr, reg);
+        se_stimme_q15(vab, tones[k], mit_lage ? lage : NULL, s_se_pegel_re2, &vl, &vr, reg);
         s_se_mess_reg[0] = reg[0]; s_se_mess_reg[1] = reg[1];
         s_se_mess_lage[0] = mit_lage ? lage[0] : -1; s_se_mess_lage[1] = mit_lage ? lage[1] : -1;
         uint16_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift,
@@ -885,7 +898,9 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
                     se_id, k, vag, t->min_note, t->pitch_shift, t->center_note,
                     t->vol, pitch, (int)((44100u * pitch) >> 12),
                     rec.voice + k, RE15_SE_SPU_VOICE_BASE + rec.voice + k, reg[0], reg[1],
-                    s_se_pegel_re2 ? "RE2 linear" : "Quadrat", mit_lage ? ", Sender Spieler" : "",
+                    s_se_pegel_re2 ? "RE2 linear" : "Quadrat",
+                    !mit_lage ? "" : re15_svm_sender_lage_gesetzt() ? ", Sender param_2"
+                    : (s_se_sender == SE_SENDER_ENTITY && re15_svm_sender_entity_slot() > 0) ? ", Sender Entity" : ", Sender Spieler",
                     mit_lage ? lage[0] : -1, mit_lage ? lage[1] : -1);
 
         if (rec.voice < 0) {
@@ -934,11 +949,12 @@ static void se_play_layers_re2(const uint8_t *edt, const re15_vab_t *vab,
     s_se_pegel_re2 = alt;
 }
 
-/* Strang ton Stufe 1: ein RE1.5-Geraeusch MIT Lage spielen (Sender Spieler, s. Kopf ueber se_stimme_q15). */
+/* Strang ton Stufe 1/6: ein RE1.5-Geraeusch MIT Lage spielen; `sender` = SE_SENDER_ENTITY (FUN_800453d0) oder
+ * SE_SENDER_PARAM (FUN_80045024), s. Kopf ueber se_stimme_q15. */
 static void se_play_layers_lage(const uint8_t *edt, const re15_vab_t *vab,
-                                int16_t *const *decoded, const int *decoded_len, int se_id)
+                                int16_t *const *decoded, const int *decoded_len, int se_id, int sender)
 {
-    s_se_sender = SE_SENDER_SPIELER;
+    s_se_sender = sender;
     se_play_layers(edt, vab, decoded, decoded_len, se_id);
     s_se_sender = SE_SENDER_KEIN;
 }
@@ -1006,10 +1022,10 @@ static void se_voice_pump(void)
 void re15_audio_room_se(int se_id)
 {
     if (!g_audio.initialized || !s_se_loaded || se_id < 0 || se_id >= 0x19) return;
-    /* FUN_800453d0 ruft IMMER FUN_80045a64(DAT_800ac784 + 0x34) @0x800454e0-ec -> Geraeusch mit Lage; der Sender
-     * (die gerade laufende Entity) kommt im Port erst in Stufe 6 an -> PORT-WAHL (b): Lage des Spielers. */
+    /* FUN_800453d0 ruft IMMER FUN_80045a64(DAT_800ac784 + 0x34) @0x800454e0-ec -> Geraeusch mit Lage; Sender = die
+     * gerade laufende Entity (Strang ton Stufe 6: re15_svm_sender_entity, gesetzt in re15_enemy_ai_run_all). */
     s_se_schleifen = s_se_loop;      /* Strang ton Stufe 2 */
-    se_play_layers_lage(s_se_edt, &s_se_vab, s_se_decoded, s_se_decoded_len, se_id);
+    se_play_layers_lage(s_se_edt, &s_se_vab, s_se_decoded, s_se_decoded_len, se_id, SE_SENDER_ENTITY);
     s_se_schleifen = NULL;
 }
 
@@ -1268,7 +1284,8 @@ void re15_audio_birkin_ruf(void)
 {
     if (!g_audio.initialized) return;
     if (load_birkin_ruf_pc() != 0) return;
-    se_play_layers_lage(s_bruf_edt, &s_bruf_vab, s_bruf_decoded, s_bruf_decoded_len, RE15_BIRKIN_RUF_SATZ);   /* FUN_800453d0(10): mit Lage */
+    se_play_layers_lage(s_bruf_edt, &s_bruf_vab, s_bruf_decoded, s_bruf_decoded_len, RE15_BIRKIN_RUF_SATZ,
+                        SE_SENDER_ENTITY);   /* FUN_800453d0(10): mit Lage der laufenden Entity */
 }
 
 /* ===== Runde 35 Spur M: die GLASBRUCH-Bank (RE2 ROOM1090 snd0) ========================
@@ -1491,17 +1508,17 @@ void re15_audio_weapon_se(int se_id)
                 if (wl) fprintf(wl, "    SE  rohr F%u arms_rec=%d -> %s snd1 satz=%d (geladen=%d)\n",
                                 (unsigned)g_engine.frame_count, se_id, RE15_PIPE_R41_ROHR_RDT, rohr, st); }
             if (g_audio.initialized && st == 1)
-                se_play_layers_lage(s_rohr_edt, &s_rohr_vab, s_rohr_decoded, s_rohr_decoded_len, se_id);
+                se_play_layers_lage(s_rohr_edt, &s_rohr_vab, s_rohr_decoded, s_rohr_decoded_len, se_id, SE_SENDER_PARAM);
             return;
         }
     }
     if (!g_audio.initialized || !s_weap_loaded || se_id < 0 || se_id >= s_weap_edt_count) return;
     /* LAYERED (byte-true): ARMS record 0 (the gunshot) = 00 00 13 30 -> byte3 0x30 = 1 extra tone,
      * so the original keys VAG2 AND VAG3 simultaneously; every ARMS bank layers record 0. */
-    /* Strang ton Stufe 1: ARMS-Rufe tragen im Original das Lage-Bit (0x01xx0001) -> Tastenstaerke aus der Lage
-     * (Sender je Ruf: Kopf ueber se_stimme_q15; bis Stufe 6 die Lage des Spielers). */
+    /* Strang ton Stufe 1/6: ARMS-Rufe tragen im Original das Lage-Bit (0x01xx0001) -> Tastenstaerke aus der Lage von
+     * param_2 (Schuss: Effekt-Platz, gesetzt von re15_esp.c Routine 9; Spieler-Rufe: der Spieler). */
     s_se_schleifen = s_weap_loop;    /* Strang ton Stufe 2 */
-    se_play_layers_lage(s_weap_edt, &s_weap_vab, s_weap_decoded, s_weap_decoded_len, se_id);
+    se_play_layers_lage(s_weap_edt, &s_weap_vab, s_weap_decoded, s_weap_decoded_len, se_id, SE_SENDER_PARAM);
     s_se_schleifen = NULL;
 }
 
@@ -1582,7 +1599,7 @@ void re15_audio_arms_zusatz_se(int arms_id, int satz)
     if (!g_audio.initialized) return;
     arms_zusatz_t *b = arms_zusatz_laden(arms_id);
     if (!b || satz < 0 || satz >= b->edt_count) return;
-    se_play_layers_lage(b->edt, &b->vab, b->decoded, b->decoded_len, satz);
+    se_play_layers_lage(b->edt, &b->vab, b->decoded, b->decoded_len, satz, SE_SENDER_PARAM);
 }
 
 /* ===== Runde 35 Spur B — RE2-ARMS-Baenke (Beta -> Retail, "Sound ist RE2") ==================
@@ -2142,11 +2159,15 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
         if (vag < 0 || vag >= RE15_VAB_MAX_SAMPLES || !cb->decoded[vag]) continue;
         /* Strang ton Stufe 1: RE2-Gesetz (_SsVmKeyOnNow @0x80083760, Geraeusch ohne Quadrat @0x80083a38). Gegnerlaute
          * tragen in RE2 eine Lage (FUN_8005c970, gerufen aus der Pumpe FUN_8005c5e4, wenn das Lage-Feld != 0 ist); deren
-         * Rechnung beginnt bei `DAT_800d7598 = 0x7f; DAT_800d759a = 0x7f` und zieht die Entfernung ab. Der Sender kommt im
-         * Port erst in Stufe 6 an -> PORT-WAHL bis dahin: der Anfangswert 0x7f/0x7f (kein Entfernungsabzug, Mitte). */
+         * Rechnung beginnt bei `DAT_800d7598 = 0x7f; DAT_800d759a = 0x7f` und zieht die Entfernung ab.
+         * Strang ton Stufe 6: NICHT umgestellt. Die RE2-Rechnung ist eine ANDERE als FUN_80045a64 (RE2_Quellcode_V2/
+         * FUN_8005c970.c: Grundwert 0x7f statt 0x89, Y-Term |dy| statt Kamera.y - |dy|, Abzug nur solange groesser, eigene
+         * Tabellen DAT_800a7fb0 / UNK_800a8030) und ist noch nicht an den Bytes geprueft; der Sender (Lage-Feld des
+         * Vormerk-Satzes, Pumpe FUN_8005c5e4) ebenso. -> PORT-WAHL bleibt: der Anfangswert 0x7f/0x7f (Mitte, kein
+         * Entfernungsabzug), offen im Bericht s6_r1. */
         static const int re2_lage_anfang[2] = { RE15_SVM_VOLL, RE15_SVM_VOLL };
         int vl, vr;
-        se_stimme_q15(&cb->vab, tone_idx, re2_lage_anfang, 1, 1, &vl, &vr, NULL);
+        se_stimme_q15(&cb->vab, tone_idx, re2_lage_anfang, 1, &vl, &vr, NULL);
         uint16_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift,
                                               t->center_note, t->pitch_shift);
         int chan = se.chan + k;                        /* `addiu s1,s1,1` @0x8005bf3c */
@@ -4660,12 +4681,13 @@ void re15_audio_footstep(int foot, int sound_type)
     /* Strang ton Stufe 1: FUN_80045630 nimmt die Tastenstaerke IMMER aus der Lage der schreitenden Entity
      * (`jal 0x80045a64` mit DAT_800ac784 + 0x34 @0x8004582c-30; DAT_800b2824/26 -> Vormerk-Satz +0xe/+0x10), die
      * Ton-Lautstaerke geht nur einmal ein. Gemessen im Original (ROOM1130, Cut 9, Spieler -1614/0/17282):
-     * Vormerk-Saetze voll/volr 93/103 und 93/104. Spieler-Schritt: Lage des Spielers, Seiten nach PORT-WAHL (a)
-     * (Kopf ueber se_stimme_q15); NPC-Schritt: Lage und Seiten wie seit Runde 41 Spur A. Ohne Kamera/Raum: Zweig
+     * Vormerk-Saetze voll/volr 93/103 und 93/104. Spieler-Schritt: Lage des Spielers (der Spieler-FSM setzt
+     * DAT_800ac784 = Spieler, `sw s0=>DAT_800aca54` @0x80031c6c), Seiten getrennt seit Strang ton Stufe 6;
+     * NPC-Schritt: Lage und Seiten wie seit Runde 41 Spur A. Ohne Kamera/Raum: Zweig
      * ohne Lage. Der fruehere Ersatzwert "Ton-vol 0 -> 100" entfaellt (ohne Beleg). */
     if (!npc_lage) mit_lage = re15_svm_lage_spieler(lage);
     int vol, vol_r, reg[2];
-    se_stimme_q15(&s_foot_vab, tone_idx, mit_lage ? lage : NULL, npc_lage ? 1 : SE_LAGE_SEITEN, 0, &vol, &vol_r, reg);
+    se_stimme_q15(&s_foot_vab, tone_idx, mit_lage ? lage : NULL, 0, &vol, &vol_r, reg);   /* Stufe 6: Seiten getrennt */
     s_se_mess_reg[0] = reg[0]; s_se_mess_reg[1] = reg[1];
     s_se_mess_lage[0] = mit_lage ? lage[0] : -1; s_se_mess_lage[1] = mit_lage ? lage[1] : -1;
     if (npc_lage) re15_wassersprung_r41_lage_pegel(lage, vol, vol_r, diag);   /* Runde 41 Spur A: Messzeile */
