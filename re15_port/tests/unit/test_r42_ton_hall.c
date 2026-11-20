@@ -9,7 +9,7 @@
  *
  * Der Riegel linkt das echte audio_pc.c und rendert deterministisch (RE15_AUDIO_CAP_SYNC, wie test_r42_ton_mischer):
  *   (1) ROOM1170, nur der Rotor (SUB-Slot, Sce_bgm_control(1,1) @0x80044e00-48), 150 Spieltakte, dann Sce_bgm_control(1,2):
- *       nach dem Ausklang der Huellkurve (ab Takt 60 nach dem Abschalten, seit Stufe 4) ist JEDER Abtastwert 0 (keine Hall-Fahne). Vorher lief der Hall des Rotors noch
+ *       nach dem Ausklang der Huellkurve (ab Takt 36 = 1,2 s nach dem Abschalten, seit Stufe 4 Runde 2) ist JEDER Abtastwert 0 (keine Hall-Fahne). Vorher lief der Hall des Rotors noch
  *       ~0,4 s nach (Messbericht U3/U4).
  *   (2) [RE15_TON_S3_HAKEN] ROOM1170, nur MAIN32, 300 Spieltakte: das Hall-Bit jeder klingenden Stimme ist gleich Bit 2 des
  *       Bytes VH-Ton+1 aus der Datei SOUND/MAIN32.BGM (Tontabelle = VH + 0x20 + 0x800, 32 Byte je Ton, psx-spx/libsnd
@@ -144,10 +144,12 @@ int main(void)
     printf("  (1) Rotor an:  Spitze %d, RMS %.1f\n", pk, rms);
     CHECK(rms > 300.0, "(1) Rotor klingt nicht (RMS %.1f) - Messung ungueltig", rms);
     /* Stufe 4 (U4): Sce_bgm_control(1,2) ist jetzt SsSeqStop @0x80044e64 = Key-Off -> der Rotor klingt nach seiner Huellkurve
-     * aus (ADSR2 0xdced, exponentiell Shift 13, ~1,2 s bis -24 dB; test_r42_ton_seqstop). Der Hall-Riegel misst deshalb
-     * NACH dem Ausklang: ab Takt 60 (2,0 s) muss jeder Abtastwert 0 sein - eine Hall-Fahne liefe dort noch weiter. */
-    messen(t_rotor_nach + 60, N_ROTOR_NACH - 60, &pk, &rms);
-    printf("  (1) Rotor aus: Spitze %d, RMS %.2f in den Takten 60..%d nach dem Abschalten (Soll 0: Rotor-Tone ohne Hall-Bit)\n",
+     * aus (ADSR2 0xdced, exponentiell Shift 13; psx-spx-Rechnung mit aufgerundetem Betrag: hoechstens 1,01 s ab Pegel 0x7fff,
+     * gemessen 0,986 s; test_r42_ton_seqstop). Der Hall-Riegel misst deshalb NACH dem Ausklang: ab Takt 36 (1,2 s; Stufe 4
+     * Runde 2, vorher Takt 60, solange der Ausklang 1,33 s dauerte) muss jeder Abtastwert 0 sein - eine Hall-Fahne liefe dort
+     * noch weiter. */
+    messen(t_rotor_nach + 36, N_ROTOR_NACH - 36, &pk, &rms);
+    printf("  (1) Rotor aus: Spitze %d, RMS %.2f in den Takten 36..%d nach dem Abschalten (Soll 0: Rotor-Tone ohne Hall-Bit)\n",
            pk, rms, N_ROTOR_NACH - 1);
     CHECK(pk == 0, "(1) Rotor SUB_15: nach dem Abschalten noch Spitze %d / RMS %.2f - Hall-Fahne, obwohl kein Rotor-Ton das Hall-Bit "
           "traegt (SpuVmKeyOnNow @0x80056124 `andi v0,v0,0x4`)", pk, rms);

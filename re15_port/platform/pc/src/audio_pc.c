@@ -2954,8 +2954,11 @@ static int ss_env_update(ss_voice_t *v) {
         case 1:  /* decay — exp fall to the sustain level */
             shift = (v->adsr1 >> 4) & 0xf;  mag = 8; mode = 1; inc = 0; break;
         case 2:  /* sustain — hold / SusDir-driven drift */
-            shift = (v->adsr2 >> 8) & 0x1f; mag = 8 - ((v->adsr2 >> 6) & 3);
+            /* Strang ton Stufe 4 Runde 2: Schrittweite nach psx-spx soundprocessingunitspu.md "Envelope Operation":
+             * AdsrStep = 7 - StepValue; bei Abnahme NOT -> -8+StepValue. Zunahme also 7-st (vorher 8-st). */
+            shift = (v->adsr2 >> 8) & 0x1f;
             mode = (v->adsr2 >> 15) & 1; inc = ((v->adsr2 >> 14) & 1) ? 0 : 1;
+            mag = (inc ? 7 : 8) - ((v->adsr2 >> 6) & 3);
             if (shift == 0) { v->env_count = 0x7fffffff; return v->env_level; } /* static hold */
             break;
         default: /* release — fall to 0 */
@@ -2965,7 +2968,13 @@ static int ss_env_update(ss_voice_t *v) {
     int cycles = 1 << (shift > 11 ? shift - 11 : 0);
     int step   = mag << (shift < 11 ? 11 - shift : 0);
     if (mode && inc && v->env_level > 0x6000) cycles <<= 2;       /* exp attack slows near top */
-    if (mode && !inc) step = (int)(((int64_t)step * v->env_level) >> 15); /* exp decay/release */
+    /* exp decay/sustain-down/release: psx-spx soundprocessingunitspu.md "Envelope Operation":
+     * AdsrStep ist bei Abnahme NEGATIV (NOT(7-StepValue) = -8..-5) und wird dann mit AdsrStep*AdsrLevel/8000h skaliert.
+     * Die Hardware schiebt den negativen Wert arithmetisch (wie DuckStation, dessen Aufnahmen das Original sind, und das
+     * Referenzmodell ton_dumpf/skripte/spu_ref.py `stp = (stp * env) >> 15` mit stp = -8, Treffer 0,99994): das rundet
+     * gegen minus unendlich, der BETRAG also nach OBEN. Vorher rundete der Port den Betrag ab (Pegel 4096..8191 -> 1 statt 2):
+     * der Rotor (ADSR2 0xdced, Release exp. Shift 13) klang 1,33 s statt ~1,0 s aus. Strang ton Stufe 4 Runde 2. */
+    if (mode && !inc) step = (int)(((int64_t)step * v->env_level + 0x7fff) >> 15);
     if (step < 1) step = 1;
 
     v->env_level += inc ? step : -step;
@@ -3777,7 +3786,9 @@ static void ss_seq_reset_state(ss_seq_t *s) {
         s->bend_deflect[i] = 0;
         s->bank[i] = (uint8_t)s->vab_id;
     }
-    s->seq_vol_l = s->seq_vol_r = SS_SEQ_VOL;         /* SsSeqSetVol mit dem Slot-Halbwort (127) */
+    /* Die Sequenz-Lautstaerke (+0x74/+0x76, SpuVmSetSeqVol `sh a1,0x74(v1)` @0x80058d60 / `sh a2,0x76(v1)` @0x80058d74)
+     * setzt nur ss_start; _SsSndStop schreibt sie NICHT (es setzt +0x78/+0x7a = 0x7f @0x800603bc-c4, im libsnd-Bereich
+     * 0x8005xxxx-0x8006xxxx nur geschrieben, nie per lh gelesen; im Port ohne Gegenstueck). Strang ton Stufe 4 Runde 2. */
     s->loop_cursor = -1; s->loop_armed = 0; s->loop_count = 0x7f; s->skip_next_dt = 0;
     s->cursor = SS_SEQ_HDR; s->rstatus = 0; s->accum = 0;
     if (s->seq_len > 12) {                            /* Tempo aus dem pQES-Kopf (Bytes 10..12, wie re15_ss_load) */
@@ -3791,6 +3802,7 @@ static void ss_start(ss_seq_t *s, int loop) {
     if ((!s->vab_ok && !s->tone_src) || !s->seq) { s->playing = 0; return; }
     ss_all_voices_off(s);
     ss_seq_reset_state(s);
+    s->seq_vol_l = s->seq_vol_r = SS_SEQ_VOL;         /* SsSeqSetVol mit dem Slot-Halbwort (127) */
     s->loop = loop; s->playing = 1;
 }
 
@@ -3802,7 +3814,9 @@ static void ss_start(ss_seq_t *s, int loop) {
  *     geloescht (DAT_8008ff84 `and` @0x80059088) -> die Noten gehen in den AUSKLANG ihrer eigenen Huellkurve (ADSR-Release,
  *     psx-spx soundprocessingunitspu.md "Key Off ... Release"), sie werden NICHT abgeschnitten;
  *   - Lesezeiger und Kanalzustand auf den Anfang (ss_seq_reset_state).
- * Die Lautstaerke der Ebene bleibt stehen (_SsSndStop schreibt +0x74/+0x76 nicht), damit der Ausklang hoerbar ist. */
+ * Die Lautstaerke der Ebene (mvol und Sequenz-Lautstaerke +0x74/+0x76) bleibt stehen (_SsSndStop schreibt +0x74/+0x76
+ * nicht, nur +0x78/+0x7a @0x800603bc-c4), damit der Ausklang hoerbar ist. Wie schnell er ausklingt, bestimmt allein die
+ * Huellkurve (ss_env_update; Rotor ADSR2 0xdced = Release exponentiell Shift 13). */
 static void ss_seq_stop(ss_seq_t *s) {
     s->playing = 0;
     ss_all_voices_release(s);
@@ -4385,7 +4399,8 @@ static void ss_seq_ctl_ex(int slot, int op, int part, int vol, int pan)
             s->mvol = s->mvol_l = s->mvol_r = base;
             if (s->seq && (s->vab_ok || s->tone_src)) s->playing = 1;
             break;
-        case 3:   /* SsSeqReplay → audible (restart-from-top; mute-toggle ok for drone) */
+        case 3:   /* SsSeqSetVol @0x80044eac + SsSeqReplay @0x80044ec4 (-> _SsSndSetReplayMode, `jal` @0x8005acfc): setzt eine
+                   * angehaltene Sequenz FORT, spult nicht zurueck (frueherer Kommentar "restart-from-top" war falsch). */
             s->mvol = s->mvol_l = s->mvol_r = base;
             if (s->seq && (s->vab_ok || s->tone_src)) s->playing = 1;   /* Stufe 4: eine nach dem Laden angehaltene Sequenz
                                                                          * (s.o.) laeuft mit SsSeqReplay weiter (FUN_800444b0) */
