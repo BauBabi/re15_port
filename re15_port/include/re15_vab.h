@@ -45,6 +45,7 @@ typedef struct {
 /* BO-round 2026-05-29: per-tone attributes from the 32-byte VH tone entry.
  * Source of canonical pitch + ADSR (replaces audio_psx.c's 22050/dummy hacks). */
 typedef struct {
+    uint8_t  mode;         /* +1  VagAtr.mode; Bit 2 = Hall an (SpuVmKeyOnNow @0x8005611c `lbu` / @0x80056124 `andi 0x4`) */
     uint8_t  vol;          /* +2  tone volume 0..127 (SsUtGetVagAtr.c; +1 is `mode`) */
     uint8_t  pan;          /* +3  tone pan 0..127 (64=center)   */
     uint8_t  center_note;  /* +4  MIDI note of the recorded pitch */

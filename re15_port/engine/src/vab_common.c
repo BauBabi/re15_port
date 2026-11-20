@@ -130,6 +130,7 @@ int re15_vab_parse(const uint8_t *vh_data, size_t vh_size, re15_vab_t *out)
             int off = tone_base + p * tone_segment_size + t * RE15_VAB_TONE_ENTRY_SIZE;
             if ((size_t)(off + RE15_VAB_TONE_ENTRY_SIZE) > vh_size) break;
             re15_vab_tone_t *tn = &out->tones[p * RE15_VAB_TONES_PER_PROGRAM + t];
+            tn->mode        = vh_data[off + 1];   /* VagAtr.mode, Bit 2 = Hall (Strang ton Stufe 3) */
             tn->vol         = vh_data[off + 2];   /* +1 is `mode`; vol is +2 (SsUtGetVagAtr.c) */
             tn->pan         = vh_data[off + 3];
             tn->center_note = vh_data[off + 4];

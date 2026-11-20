@@ -348,6 +348,10 @@ typedef struct {
                                      * scales the bend PER VOICE by these; 0 = pitch pinned.
                                      * [audit wf_1db9c802 BGM-PITCHBEND-PBMINMAX] */
     int             bend_q16;       /* per-voice bend multiplier (Q16, 0x10000 = none) */
+    uint8_t         hall;           /* Strang ton Stufe 3: Hall-Sendung dieser Stimme (SPU-Register EON-Bit), gesetzt beim
+                                     * Anschlag aus tone.mode & 4: SpuVmKeyOnNow @0x8005611c `lbu v0,DAT_800b5328` (Tone-mode),
+                                     * @0x80056124 `andi v0,v0,0x4`, @0x80056128 `beq` -> Bit setzen @0x80056140-54 (`or`/`sh`
+                                     * DAT_8008ff8c/90) bzw. loeschen @0x80056160-8c (`and`/`nor`). RE2 identisch @0x80083b54-c4. */
 } ss_voice_t;
 
 /* One independent SsSeq instance = one VAB soundfont + one SEQ being played.
@@ -444,7 +448,7 @@ typedef struct {
 } amb_voice_t;
 static amb_voice_t s_amb;
 
-static void ss_mix(ss_seq_t *s, int16_t *out, int frames);  /* one layer → out (additive) */
+static void ss_mix(ss_seq_t *s, int16_t *out, int32_t *hall, int frames);  /* one layer → out (+ Hall-Eingang, additive) */
 static void re15_ss_render_bgm(int16_t *out, int frames);   /* both layers + reverb → out */
 static void re15_amb_mix(int16_t *out, int frames);         /* looping rotor ambience → out */
 static void re15_bgm_play_room(int stage, int room); /* load+play MAIN+SUB layers */
@@ -3089,6 +3093,7 @@ static void ss_note_on(ss_seq_t *s, int chan, int note, int vel)
         v->env_level = 0; v->env_phase = 0; v->env_count = 0;   /* start in attack */
         v->pbmin = t->pbmin; v->pbmax = t->pbmax;
         v->bend_q16 = ss_bend_q16(s->bend_deflect[chan], t->pbmin, t->pbmax);
+        v->hall = (t->mode & 4) ? 1 : 0;           /* SpuVmKeyOnNow @0x80056124 `andi v0,v0,0x4` (Kopf ss_voice_t.hall) */
         v->chan = (uint8_t)chan; v->note = (uint8_t)note; v->active = 1;
     }
 }
@@ -3202,7 +3207,7 @@ static void ss_advance(ss_seq_t *s, int frames) {
     }
 }
 
-static void ss_mix(ss_seq_t *s, int16_t *out, int frames) {
+static void ss_mix(ss_seq_t *s, int16_t *out, int32_t *hall, int frames) {
     /* ⛔ NUTZER-REPORT "Feuer Sound in 1090 fehlt" (2026-08-28, zum zweiten Mal gemeldet).
      * Hier stand `if (!s->vab_ok) return;` — und das hat die SEQ#2-Ebene GAME-WEIT
      * stillgelegt. `vab_ok` sagt nur, ob DIESE Instanz eine EIGENE VAB geparst hat; eine
@@ -3263,8 +3268,14 @@ static void ss_mix(ss_seq_t *s, int16_t *out, int frames) {
             /* per-layer L/R master (rotor pan via re15_audio_rotor_update; =mvol for MAIN). */
             int32_t sl = (smp * s->mvol_l) >> 15;
             int32_t sr = (smp * s->mvol_r) >> 15;
-            int32_t L = (int32_t)out[f*2+0] + ((sl * v->vol_l) >> 15);
-            int32_t R = (int32_t)out[f*2+1] + ((sr * v->vol_r) >> 15);
+            const int32_t vl = (sl * v->vol_l) >> 15, vr = (sr * v->vol_r) >> 15;
+            /* Strang ton Stufe 3: Stimmen mit EON-Bit gehen ZUSAETZLICH in den Hall-Eingang (psx-spx "SPU Reverb Formula":
+             * "Lin = vLIN * LeftInput ;from any channels that have Reverb enabled"; "In Reverb mode, the voice seems to
+             * output BOTH normal (immediately) AND via Reverb (delayed)"). Trockene Stimmen (z. B. Rotor SUB_15, mode 0)
+             * erreichen den Hall nie. */
+            if (hall && v->hall) { hall[f*2+0] += vl; hall[f*2+1] += vr; }
+            int32_t L = (int32_t)out[f*2+0] + vl;
+            int32_t R = (int32_t)out[f*2+1] + vr;
             if (L >  32767) L =  32767; else if (L < -32768) L = -32768;
             if (R >  32767) R =  32767; else if (R < -32768) R = -32768;
             out[f*2+0] = (int16_t)L; out[f*2+1] = (int16_t)R;
@@ -3292,7 +3303,14 @@ enum { mLSAME=0x0904, mRSAME=0x076b, mLCOMB1=0x0824, mRCOMB1=0x065f, mLCOMB2=0x0
        dRDIFF=0x0265, mLAPF1=0x0264, mRAPF1=0x01b2, mLAPF2=0x0100, mRAPF2=0x0080 };
 static int16_t s_rev_buf[REV_NSAMP];
 static int     s_rev_addr;          /* byte write head, wraps [0,REV_AREA) */
-static int     s_rev_vlout = 0x4000, s_rev_vrout = 0x4000;  /* reverb output vol = SsUtSetReverbDepth(0x40)→0x40<<8 */
+/* Strang ton Stufe 3: Hall-Tiefe vLOUT/vROUT = 0x4080 (vorher 0x4000 = 0x40<<8, unbelegt).
+ * FUN_80043a34 @0x80043a38 `ori v0,zero,0x40` / @0x80043a50 `sh v0,DAT_800b3f96` / @0x80043a58 `sh v0,DAT_800b3f94`;
+ * FUN_800438c8 @0x8004392c `jal SsUtSetReverbDepth(DAT_800b3f94, DAT_800b3f96)`; SsUtSetReverbDepth @0x8005be74:
+ * `sll a2,a0,0xf` / `subu a2,a2,a0` (d*0x7fff) @0x8005be84-88, `mult a2,0x81020409` + `mfhi` + `sra 6` (= /127)
+ * @0x8005be8c-c8 -> 0x40*0x7fff/127 = 16512 = 0x4080, `sh` DAT_800b21fc/fe @0x8005bed4/@0x8005bef0, dann
+ * SpuSetReverbModeParam @0x8005bef4. Gemessen im Original (Live-Savestate ROOM1170): vLOUT = vROUT = 0x4080. */
+#define REV_DEPTH 0x4080
+static int     s_rev_vlout = REV_DEPTH, s_rev_vrout = REV_DEPTH;
 
 static inline int rv_i(int reg)        { int b=(s_rev_addr+reg*8)%REV_AREA; return b>>1; }
 static inline int rv_im1(int reg)      { int b=(s_rev_addr+reg*8-2+REV_AREA)%REV_AREA; return b>>1; }
@@ -3310,13 +3328,53 @@ static void ss_spu_reverb(int Lin0, int Rin0, int *outL, int *outR) {
     s_rev_buf[rv_i(mRDIFF)] = rv_sat((((Rin + (RB(dLDIFF)*(int16_t)vWALL>>15) - RBm1(mRDIFF)) * (int16_t)vIIR)>>15) + RBm1(mRDIFF));
     int Lo = ((int16_t)vCOMB1*RB(mLCOMB1) + (int16_t)vCOMB2*RB(mLCOMB2) + (int16_t)vCOMB3*RB(mLCOMB3) + (int16_t)vCOMB4*RB(mLCOMB4)) >> 15;
     int Ro = ((int16_t)vCOMB1*RB(mRCOMB1) + (int16_t)vCOMB2*RB(mRCOMB2) + (int16_t)vCOMB3*RB(mRCOMB3) + (int16_t)vCOMB4*RB(mRCOMB4)) >> 15;
-    Lo = Lo - ((int16_t)vAPF1*RB(mLAPF1-dAPF1)>>15); s_rev_buf[rv_i(mLAPF1)] = rv_sat(Lo); Lo = (Lo*(int16_t)vAPF1>>15) + RB(mLAPF1-dAPF1);
-    Ro = Ro - ((int16_t)vAPF1*RB(mRAPF1-dAPF1)>>15); s_rev_buf[rv_i(mRAPF1)] = rv_sat(Ro); Ro = (Ro*(int16_t)vAPF1>>15) + RB(mRAPF1-dAPF1);
-    Lo = Lo - ((int16_t)vAPF2*RB(mLAPF2-dAPF2)>>15); s_rev_buf[rv_i(mLAPF2)] = rv_sat(Lo); Lo = (Lo*(int16_t)vAPF2>>15) + RB(mLAPF2-dAPF2);
-    Ro = Ro - ((int16_t)vAPF2*RB(mRAPF2-dAPF2)>>15); s_rev_buf[rv_i(mRAPF2)] = rv_sat(Ro); Ro = (Ro*(int16_t)vAPF2>>15) + RB(mRAPF2-dAPF2);
-    *outL = (Lo * s_rev_vlout) >> 15;
-    *outR = (Ro * s_rev_vrout) >> 15;
+    /* Strang ton Stufe 3: Allpass-Zwischenwerte gesaettigt wie im Referenzmodell (spu_ref.py, trifft das Original zu
+     * 0,99994; psx-spx: "The values written to memory are saturated to -8000h..+7FFFh"); vorher lief der ungesaettigte
+     * Wert weiter. */
+    Lo = rv_sat(Lo - ((int16_t)vAPF1*RB(mLAPF1-dAPF1)>>15)); s_rev_buf[rv_i(mLAPF1)] = (int16_t)Lo; Lo = rv_sat((Lo*(int16_t)vAPF1>>15) + RB(mLAPF1-dAPF1));
+    Ro = rv_sat(Ro - ((int16_t)vAPF1*RB(mRAPF1-dAPF1)>>15)); s_rev_buf[rv_i(mRAPF1)] = (int16_t)Ro; Ro = rv_sat((Ro*(int16_t)vAPF1>>15) + RB(mRAPF1-dAPF1));
+    Lo = rv_sat(Lo - ((int16_t)vAPF2*RB(mLAPF2-dAPF2)>>15)); s_rev_buf[rv_i(mLAPF2)] = (int16_t)Lo; Lo = rv_sat((Lo*(int16_t)vAPF2>>15) + RB(mLAPF2-dAPF2));
+    Ro = rv_sat(Ro - ((int16_t)vAPF2*RB(mRAPF2-dAPF2)>>15)); s_rev_buf[rv_i(mRAPF2)] = (int16_t)Ro; Ro = rv_sat((Ro*(int16_t)vAPF2>>15) + RB(mRAPF2-dAPF2));
+    *outL = Lo;                                       /* Kern-Ausgang; vLOUT/vROUT nach der Aufwaertstastung */
+    *outR = Ro;
     s_rev_addr = (s_rev_addr + 2) % REV_AREA;        /* advance ring 1 sample/tick */
+}
+
+/* Strang ton Stufe 3: Ab- und Aufwaertstastung 44100 <-> 22050 Hz mit dem 39-Abgriff-FIR
+ * (psx-spx soundprocessingunitspu.md "Reverb Buffer Resampling": "Input and output to/from the reverb unit is resampled
+ * using a 39-tap FIR filter with the following coefficients"). Vorher: Hall-Eingang jede zweite Probe ohne Tiefpass
+ * abgegriffen, Ausgang fuer zwei Proben gehalten (Messbericht U3). Rechnung wie das Referenzmodell spu_ref.py
+ * spu_reverb: Abwaerts = FIR ueber den 44100-Eingang, genommen an jeder ungeraden Probe; Aufwaerts = Kern-Ausgang an den
+ * ungeraden Proben, dazwischen 0, FIR mit doppelter Verstaerkung (>>14 statt >>15). */
+static const int16_t k_rev_fir[39] = {
+    -0x0001, 0x0000, 0x0002, 0x0000, -0x000A, 0x0000, 0x0023, 0x0000,
+    -0x0067, 0x0000, 0x010A, 0x0000, -0x0268, 0x0000, 0x0534, 0x0000,
+    -0x0B90, 0x0000, 0x2806, 0x4000, 0x2806, 0x0000, -0x0B90, 0x0000,
+     0x0534, 0x0000, -0x0268, 0x0000, 0x010A, 0x0000, -0x0067, 0x0000,
+     0x0023, 0x0000, -0x000A, 0x0000, 0x0002, 0x0000, -0x0001 };
+static int16_t s_rev_in_l[39], s_rev_in_r[39];      /* letzte 39 Hall-Eingangsproben (44100), Index = Alter */
+static int16_t s_rev_up_l[39], s_rev_up_r[39];      /* letzte 39 Proben des 0-gefuellten Kern-Ausgangs (44100) */
+static int     s_rev_ph;                             /* 0/1: ungerade Probe = Kern-Takt (22050) */
+
+static int rev_fir(const int16_t *h, int shift)
+{
+    int64_t acc = 0;
+    for (int k = 0; k < 39; k++) acc += (int64_t)k_rev_fir[k] * h[k];
+    return rv_sat((int)(acc >> shift));
+}
+
+/* Eine 44100-Probe: Hall-Eingang hin, Hall-Ausgang (nach vLOUT/vROUT) zurueck. */
+static void ss_spu_reverb44(int inL, int inR, int *outL, int *outR)
+{
+    memmove(s_rev_in_l + 1, s_rev_in_l, 38 * sizeof(int16_t)); s_rev_in_l[0] = rv_sat(inL);
+    memmove(s_rev_in_r + 1, s_rev_in_r, 38 * sizeof(int16_t)); s_rev_in_r[0] = rv_sat(inR);
+    int coreL = 0, coreR = 0;
+    if (s_rev_ph) ss_spu_reverb(rev_fir(s_rev_in_l, 15), rev_fir(s_rev_in_r, 15), &coreL, &coreR);
+    s_rev_ph ^= 1;
+    memmove(s_rev_up_l + 1, s_rev_up_l, 38 * sizeof(int16_t)); s_rev_up_l[0] = (int16_t)coreL;
+    memmove(s_rev_up_r + 1, s_rev_up_r, 38 * sizeof(int16_t)); s_rev_up_r[0] = (int16_t)coreR;
+    *outL = (rev_fir(s_rev_up_l, 14) * s_rev_vlout) >> 15;
+    *outR = (rev_fir(s_rev_up_r, 14) * s_rev_vrout) >> 15;
 }
 
 /* Render both BGM layers (+ SPU reverb) additively into `out` (44100). The
@@ -3390,6 +3448,22 @@ static int s_bgm_fade_vol   = 0x8000;     /* Skalar-Ersatz der 16 Stimmen-Volume
 static int32_t s_musik_stimme_q30 = (int32_t)1 << 30;              /* laufender Faktor, 1,0 = 1 << 30 */
 static int32_t s_musik_stimme_halt = 0;                            /* Rest der Wartezeit in Abtastwerten */
 int re15_audio_musik_stimme_q15(void) { return (int)(s_musik_stimme_q30 >> 15); }   /* Messhaken (kein Spielpfad) */
+#ifdef RE15_TON_S3_HAKEN
+/* Strang ton Stufe 3, Messhaken (nur Riegel test_r42_ton_hall): aktive Stimmen eines Slots mit Programm, Ton und
+ * Hall-Bit; der Riegel vergleicht das Bit mit dem Byte VH-Ton+1 aus der Datei. */
+int re15_audio_hall_stimmen(int slot, int *prog, int *tone, int *hall, int max)
+{
+    ss_seq_t *s = (slot == 0) ? &s_ss_main : (slot == 1) ? &s_ss_sub : (slot == 2) ? &s_ss_sub2 : NULL;
+    int n = 0;
+    if (!s) return 0;
+    for (int i = 0; i < SS_MAX_VOICES && n < max; i++) {
+        const ss_voice_t *v = &s->voice[i];
+        if (!v->active || !v->vab) continue;
+        prog[n] = v->prog; tone[n] = v->tone; hall[n] = v->hall; n++;
+    }
+    return n;
+}
+#endif
 /* Messhaken (kein Spielpfad): eine fertige Mono-Probe auf den Sprachkanal legen, sprache = 1 wie ein gesprochener Satz. */
 void re15_audio_stimme_mess(const int16_t *pcm, int n, int sprache)
 {
@@ -3429,24 +3503,35 @@ static void re15_ss_render_bgm(int16_t *out, int frames) {
         return;
     }
     static int16_t bgm[2048 * 2];
+    static int32_t hall[2048 * 2];     /* Strang ton Stufe 3: Hall-Eingang = Summe NUR der Stimmen mit EON-Bit */
     if (frames > 2048) frames = 2048;
     memset(bgm, 0, (size_t)frames * 2 * sizeof(int16_t));
-    ss_mix(&s_ss_main, bgm, frames);
-    ss_mix(&s_ss_sub,  bgm, frames);
-    ss_mix(&s_ss_sub2, bgm, frames);   /* the SUB bank's SECOND sequence (SCD slot 2) */
-    ss_mix(&s_ss_r41_sirene, bgm, frames);   /* Runde 41 Spur N, Nachtrag 36 */
+    memset(hall, 0, (size_t)frames * 2 * sizeof(int32_t));
+    ss_mix(&s_ss_main, bgm, hall, frames);
+    ss_mix(&s_ss_sub,  bgm, hall, frames);
+    ss_mix(&s_ss_sub2, bgm, hall, frames);   /* the SUB bank's SECOND sequence (SCD slot 2) */
+    ss_mix(&s_ss_r41_sirene, bgm, hall, frames);   /* Runde 41 Spur N, Nachtrag 36 */
     const int fade = s_bgm_fade_vol;   /* Stimmen-Volume-Rampe der Ausblendung */
-    static int s_rev_held_l = 0, s_rev_held_r = 0, s_rev_phase = 0;
     for (int f = 0; f < frames; f++) {
         int dryL = bgm[f*2+0], dryR = bgm[f*2+1];
-        if (fade != 0x8000) {          /* == SsUtSetDetVVol auf allen BGM-Stimmen */
+        int hinL = hall[f*2+0], hinR = hall[f*2+1];
+        if (fade != 0x8000) {          /* == SsUtSetDetVVol auf allen BGM-Stimmen (trocken UND Hall-Sendung) */
             dryL = (dryL * fade) >> 15;
             dryR = (dryR * fade) >> 15;
+            hinL = (int)(((int64_t)hinL * fade) >> 15);
+            hinR = (int)(((int64_t)hinR * fade) >> 15);
         }
         musik_stimme_schritt(st_satz, st_auf, st_ab);
-        if (s_rev_phase == 0) ss_spu_reverb(dryL, dryR, &s_rev_held_l, &s_rev_held_r);
-        s_rev_phase ^= 1;
-        int musL = dryL + s_rev_held_l, musR = dryR + s_rev_held_r;
+        /* Strang ton Stufe 3: Hall je Stimme (Kopf ss_voice_t.hall) statt auf der ganzen Musik-Summe; Abtastung mit dem
+         * 39-Abgriff-FIR (ss_spu_reverb44). */
+        int houtL, houtR;
+        ss_spu_reverb44(hinL, hinR, &houtL, &houtR);
+        /* Messhaken (kein Spielpfad): RE15_HALL_DUMP=<datei> schreibt je Abtastwert Hall-Eingang L/R und Hall-Ausgang L/R
+         * (int32) - fuer den Vergleich mit dem Referenzmodell spu_ref.py spu_reverb (Strang ton Stufe 3). */
+        { static FILE *s_hd = NULL; static int s_hd_init = 0;
+          if (!s_hd_init) { const char *e = getenv("RE15_HALL_DUMP"); s_hd_init = 1; if (e && *e) s_hd = fopen(e, "wb"); }
+          if (s_hd) { const int32_t q[4] = { hinL, hinR, houtL, houtR }; fwrite(q, sizeof q, 1, s_hd); } }
+        int musL = dryL + houtL, musR = dryR + houtR;
         /* Der Faktor wirkt auf die fertige Musik-Summe SAMT ihrem Hall (nicht auf den Hall-Eingang): im Dauerzustand
          * dasselbe, aber der Hall-Zustand bleibt von der Absenkung unberuehrt - sobald der Faktor wieder auf 1,0 steht,
          * ist der Ton bitgleich mit einem Lauf ohne Sprache (Riegel integration_stimmen_r41_szene [4]), und beim

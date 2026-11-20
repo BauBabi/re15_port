@@ -1456,6 +1456,28 @@ if(TARGET SDL2::SDL2-static)
     set_tests_properties(unit_r42_ton_schleife PROPERTIES TIMEOUT 120)
 endif()
 
+# --- Strang "ton", Stufe 3 (2026-11-20): Hall je Musik-Stimme nach tone.mode & 4 (SpuVmKeyOnNow @0x80056124 `andi 0x4`),
+#     Tiefe 0x4080 (SsUtSetReverbDepth @0x8005be74), 39-Abgriff-FIR (psx-spx "Reverb Buffer Resampling"). Messbericht U3.
+#     Gegenprobe: audio_pc.c von 71caea668 ohne RE15_TON_S3_HAKEN -> (1) rot (Hall-Fahne des Rotors).
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_hall
+        test_r42_ton_hall.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_hall PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_hall PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_hall PRIVATE
+        RE15_PLATFORM_PC
+        RE15_TON_S3_HAKEN
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_hall COMMAND test_r42_ton_hall)
+    set_tests_properties(unit_r42_ton_hall PROPERTIES TIMEOUT 120)
+endif()
+
 # --- DIAGNOSE (kein ctest): Nutzer-Report "Irons schaut im Original etwas diagonaler".
 #     Misst Irons' (NPC 0x45) Neck-Zustand + die GERENDERTE Kopf-Orientierung in ROOM1150.
 add_executable(probe_irons_neck_1150 probe_irons_neck_1150.c)
