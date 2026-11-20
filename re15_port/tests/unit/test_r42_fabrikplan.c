@@ -443,6 +443,12 @@ static void teil_marvin(void)
     PRUEF(haengt_in(0x30C0) == 1, "ROOM30C0 (Marvin): der Fabrikplan haengt (Prop obj %d + Zone Ereignis %d)", RE15_R36K_OBJ,
           RE15_R36K_EREIGNIS);
     PRUEF(nehmen_in(0x30C0) == 1, "ROOM30C0: Aktionsdruck vor der Wand -> Frage -> Ja -> \"You've taken the factory map.\"");
+    {   /* sofort weg wie RE2 room20B0 Work_set(Objekt) @0x037F2 + Pos_set(20000,20000,20000) @0x037F6 (kartenitems_r36.c k_programm) */
+        int weg = 1;
+        for (int k = 0; k < (int)g_scd.prop_count; k++)
+            if (g_scd.props[k].active && g_scd.props[k].obj_id == RE15_R36K_OBJ && g_scd.props[k].x != 20000) weg = 0;
+        PRUEF(weg, "ROOM30C0: das Plakat ist im selben Raumbesuch weg (Pos_set 20000 wie RE2 @0x037F6)");
+    }
     PRUEF(bit9(BIT139) && !bit9(BIT35), "Marvins Bit %d = 1, Leons Bit %d = 0 (der Plan gehoert zu Marvins Seite)", BIT139, BIT35);
     PRUEF(re15_map_owned_page(BLATT7) && re15_map_blatt_waehlbar(BLATT7), "Marvins Karte: Blatt %d im Besitz und waehlbar", BLATT7);
     PRUEF(haengt_in(0x30C0) == 0, "ROOM30C0 danach: der Plan haengt nicht mehr");
