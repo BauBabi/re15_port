@@ -90,7 +90,11 @@ static const re15_actor_t *s_entity = NULL;
 static int     s_param_da = 0;
 static int32_t s_param[3];
 
-void re15_svm_sender_entity(const void *entity) { s_entity = (const re15_actor_t *)entity; }
+void re15_svm_sender_entity(const void *entity)
+{
+    s_entity = (const re15_actor_t *)entity;
+    if (re15_svm_sender_haken) re15_svm_sender_haken(s_entity ? (int)(s_entity - g_actors) : -1);
+}
 
 void re15_svm_sender_lage(const int32_t *pos)
 {
@@ -115,3 +119,45 @@ int re15_svm_lage_param(int lage[2])
 
 int re15_svm_sender_entity_slot(void) { return s_entity ? (int)(s_entity - g_actors) : -1; }
 int re15_svm_sender_lage_gesetzt(void) { return s_param_da; }
+
+/* ===== Strang ton Stufe 6 Runde 2: Messhaken des Senders und die uebrigen Wege mit Lage-Bit (Kopf in re15_svm_vol.h) ===== */
+void (*re15_svm_sender_haken)(int slot) = NULL;
+
+extern void re15_audio_core_se(int se_id);   /* re15_audio.h; hier nur der eine Ruf, damit der Kopf schlank bleibt */
+
+void re15_svm_core_se_spieler(int se_id)
+{
+    /* FUN_80045024(0x04<<24 | id<<16 | 1, &DAT_800aca88): param_2 = die Lage des Spielers (+0x34/+0x38/+0x3c). */
+    const int32_t p[3] = { g_actors[0].x, g_actors[0].y, g_actors[0].z };
+    const int alt_da = s_param_da;
+    int32_t alt[3] = { s_param[0], s_param[1], s_param[2] };
+    re15_svm_sender_lage(p);
+    re15_audio_core_se(se_id);
+    if (alt_da) re15_svm_sender_lage(alt); else re15_svm_sender_lage(NULL);
+}
+
+int re15_svm_se_on_param(int flags, int ursprung, int pool, int16_t vx, int16_t vy, int16_t vz, int32_t pos[3])
+{
+    (void)pool;
+    if ((flags & 0xff) == 0) return 0;                                      /* `(param_1 & 0xff) == 0` @0x800451c0 */
+    uint32_t o[3];
+    if (ursprung == 0) { o[0] = o[1] = o[2] = 0u; }                         /* @0x80041678-84 */
+    else if (ursprung == 1) {                                               /* 0x800aca54 + 0x34 @0x80041688-8c / @0x800416e0-e8 */
+        o[0] = (uint32_t)g_actors[0].x; o[1] = (uint32_t)g_actors[0].y; o[2] = (uint32_t)g_actors[0].z;
+    } else return 0;   /* 2/3 (Gegner-/Objekt-Pool): mit Lage-Bit auf der Disc 0-mal (Zensus ton/s6r2/zensus_seon.txt) */
+    /* `lhu` (null-erweitert) + `addu` + `sw` @0x800416ec-0x8004171c: der Versatz geht als 0..65535 ein, nicht als s16. */
+    pos[0] = (int32_t)(o[0] + (uint32_t)(uint16_t)vx);
+    pos[1] = (int32_t)(o[1] + (uint32_t)(uint16_t)vy);
+    pos[2] = (int32_t)(o[2] + (uint32_t)(uint16_t)vz);
+    return 1;
+}
+
+extern void re15_audio_room_se(int se_id);   /* FUN_800453d0-Pfad (Plattform bzw. Test-Stub tests/test_support.c) */
+
+void re15_svm_raum_se_von(int slot, int se_id)
+{
+    const re15_actor_t *alt = s_entity;
+    if (slot >= 0 && slot < RE15_ACTOR_MAX && g_actors[slot].active) re15_svm_sender_entity(&g_actors[slot]);
+    re15_audio_room_se(se_id);
+    re15_svm_sender_entity(alt);
+}

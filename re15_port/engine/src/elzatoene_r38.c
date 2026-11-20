@@ -7,6 +7,7 @@
 #include "re15_elzatoene_r38.h"
 #include "re15_elza_r36.h"          /* re15_elza_se_hook, RE15_ELZA_TON_SCHUSS (Mini-Bank ELZASE.VBS) */
 #include "re15_scd.h"
+#include "re15_svm_vol.h"          /* Strang ton Stufe 6 Runde 2: Sender des Raum-Geraeuschs (re15_svm_raum_se_von) */
 #include "re15_engine.h"            /* g_engine.frame_count — nur fuer das Datei-Log */
 #include <stdio.h>
 #include <stdlib.h>
@@ -100,7 +101,10 @@ static void ausfuehren(int aktion, unsigned off)
         if (re15_elza_se_hook) re15_elza_se_hook(RE15_ELZA_TON_SCHUSS);
         break;
     case RE15_ELZATOENE_AKT_ROY_STOEHNEN:
-        re15_audio_room_se(RE15_ELZATOENE_ROY_STOEHN_SE);   /* @0x80102298 `ori a0,zero,0x4` + @0x8010229c jal 0x800453d0 */
+        /* @0x80102298 `ori a0,zero,0x4` + @0x8010229c jal 0x800453d0. Strang ton Stufe 6 Runde 2: FUN_801021f8 (Zustand des
+         * Zombie-Handlers, Zeiger @0x8011f898 / @0x801202b0) liest DAT_800ac784 (Decompilat STAGE1_full/FUN_801021f8.c) ->
+         * Sender = Roy. Port: Arbeitsziel des SCD-Fadens, Work_set(2,1) `2e 02 01` @0x020AE direkt vor dem Anker = Slot 2. */
+        re15_svm_raum_se_von((int)g_scd.work_slot, RE15_ELZATOENE_ROY_STOEHN_SE);
         break;
     default: return;
     }

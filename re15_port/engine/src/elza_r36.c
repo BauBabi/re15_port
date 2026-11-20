@@ -9,6 +9,7 @@
 #include "re15_msg.h"
 #include "re15_scd.h"
 #include "re15_engine.h"           /* g_engine.frame_count — nur fuer das Datei-Log */
+#include "re15_svm_vol.h"          /* Strang ton Stufe 6 Runde 2: Sender des Raum-Geraeuschs (re15_svm_raum_se_von) */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -112,7 +113,7 @@ static const anker_t k_anker[] = {
 static const unsigned char *s_anker_pc[ANKER_N];
 static int                  s_anker_idx[ANKER_N];
 
-typedef struct { uint8_t aktion; uint8_t rest; uint16_t anker; } offen_t;
+typedef struct { uint8_t aktion; uint8_t rest; uint16_t anker; int8_t sender; } offen_t;   /* sender: Strang ton Stufe 6 Runde 2 */
 static offen_t s_offen[8];
 static int     s_offen_n = 0;
 
@@ -155,7 +156,9 @@ void re15_elza_r36_raum_scan(const unsigned char *raw, int raw_size, unsigned ro
         logf_("[elza] ROOM%04X: %u Anker armiert %u %u", room_id, (unsigned)g_re15_elza_anker_n, 0, 0);
 }
 
-static void aktion_ausfuehren(int aktion, unsigned anker_off)
+/* sender = Arbeitsziel des SCD-Fadens beim ANKER (g_scd.work_slot), nicht beim verzoegerten Ausfuehren: dazwischen laufen
+ * andere Faeden mit eigenem Work_set (Strang ton Stufe 6 Runde 2). */
+static void aktion_ausfuehren(int aktion, unsigned anker_off, int sender)
 {
     switch (aktion) {
     case RE15_ELZA_AKT_AUF:
@@ -165,7 +168,12 @@ static void aktion_ausfuehren(int aktion, unsigned anker_off)
         if (re15_elza_se_hook) re15_elza_se_hook(RE15_ELZA_TON_SCHUSS);
         break;
     case RE15_ELZA_AKT_ROY_TOD:
-        re15_audio_room_se(RE15_ELZA_ROY_SE);       /* @0x80106da8 `ori a0,zero,0x5` / @0x80106dac jal 0x800453d0 */
+        /* @0x80106da8 `ori a0,zero,0x5` / @0x80106dac jal 0x800453d0. Strang ton Stufe 6 Runde 2: FUN_80106c18 ist ein Zustand
+         * des Zombie-Handlers (Zeiger in den STAGE1-Zustandstafeln, z. B. @0x8011fecc) und liest DAT_800ac784 (Decompilat
+         * RE_15_Quellcode_Overlays/STAGE1_full/FUN_80106c18.c) -> Sender = die Entity, deren Code laeuft = Roy. Port: das
+         * Arbeitsziel des SCD-Fadens beim Anker (Verzug 1, s. offen_t.sender); unmittelbar vor diesem Anker steht Work_set(2,1) `2e 02 01` @0x020DA (ROOM1021.RDT)
+         * = Gegner 1 = Slot 2 (scd_work_bind, slot = idx + 1). */
+        re15_svm_raum_se_von(sender, RE15_ELZA_ROY_SE);
         break;
     case RE15_ELZA_AKT_STOEHNEN: {
         /* Wie der Klartext-Zweig von op_message_on (scd_vm.c): Text unter der Port-Id ablegen, Stimme
@@ -195,11 +203,12 @@ void re15_elza_r36_pc(const unsigned char *pc)
     for (int k = 0; k < g_re15_elza_anker_n; k++) {
         if (s_anker_pc[k] != pc) continue;
         const anker_t *a = &k_anker[s_anker_idx[k]];
-        if (a->verzug == 0) { aktion_ausfuehren(a->aktion, a->off); return; }
+        if (a->verzug == 0) { aktion_ausfuehren(a->aktion, a->off, (int)g_scd.work_slot); return; }
         if (s_offen_n < (int)(sizeof s_offen / sizeof s_offen[0])) {
             s_offen[s_offen_n].aktion = a->aktion;
             s_offen[s_offen_n].rest   = a->verzug;
             s_offen[s_offen_n].anker  = (uint16_t)a->off;
+            s_offen[s_offen_n].sender = g_scd.work_slot;
             s_offen_n++;
         }
         return;
@@ -213,7 +222,7 @@ void re15_elza_r36_tick(void)
     for (int i = 0; i < s_offen_n; i++) {
         offen_t o = s_offen[i];
         if (o.rest > 0) o.rest--;
-        if (o.rest == 0) aktion_ausfuehren(o.aktion, o.anker);
+        if (o.rest == 0) aktion_ausfuehren(o.aktion, o.anker, (int)o.sender);
         else s_offen[n++] = o;
     }
     s_offen_n = n;

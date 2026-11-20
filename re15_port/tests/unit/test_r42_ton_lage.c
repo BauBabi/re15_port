@@ -26,6 +26,16 @@
  *   (5) Vorrang: ein gesetztes param_2 gilt auch fuer ein Raum-Geraeusch (FUN_80045024 Bank 3 aus den ESP-Routinen) vor
  *       der laufenden Entity.
  *
+ * Runde 2 (Pruefbericht pruef_s6_r1, gelb: die uebrigen Wege mit Lage-Bit; Zensus re15_svm_vol.h (c)-(e)):
+ *   (6) re15_enemy_ai_run_all setzt den Sender je laufender Entity und danach wieder den Spieler (FUN_8001a50c `sw v0,0(s2)`
+ *       @0x8001a5ac je Entity, Spieler-FSM `sw s0` @0x80031c6c danach) - gemessen am Messhaken re15_svm_sender_haken.
+ *   (7) Roys Anker ROOM1021 (elza_r36.c @0x020DE, elzatoene_r38.c @0x020B2): Sender = Roy (Work_set(2,1) davor, Slot 2),
+ *       nicht der Spieler - FUN_80106c18 / FUN_801021f8 lesen DAT_800ac784.
+ *   (8) SCD Se_on mit Lage-Bit ROOM3091 sub07 @0x01A62 `36 02 0d 01 00 00 46 a0 00 00 dc 05`: param_2 = 0 + Versatz NULL-
+ *       ERWEITERT (`lhu` @0x800416ec ff.) = 41030/0/1500 (nicht -24506/0/1500); ein Se_on ohne Lage-Bit bleibt ohne Lage.
+ *   (9) CORE-Ruf eines Spieler-Zustands (re15_player_stagger_cmd2 Clip 8 -> 0x04010001 @0x80035e80, a1 = 0x800aca5a + 46):
+ *       Lage des Spielers, auch wenn gerade eine Entity laeuft; ein Menue-Ton 0x0405 (kein Lage-Bit) bleibt ohne Lage.
+ *
  * GEGENPROBE (scratchpad ton/s6/gegen/gegen.sh): derselbe Quelltext mit dem audio_pc.c von bf6827892 (Stufe 5) faellt in
  * (1) Register und Mischer, (2) Mischer, (3), (4) Knall und (5) - 6 von 8 rot; gruen bleiben nur der Spieler-Ruf (4) und die
  * Register des Schritts (2), die Stufe 1 schon hatte. Auf r42/story 71caea668 / aaea5f8c2 gibt es re15_svm_vol.h nicht
@@ -42,6 +52,9 @@
 #include "re15_esp.h"
 #include "re15_svm_vol.h"
 #include "re15_wassersprung_r41.h"
+#include "re15_elza_r36.h"
+#include "re15_elzatoene_r38.h"
+#include "re15_enemy_ai.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -158,6 +171,16 @@ static void bang_messen(void)
     (void)re15_audio_se_mess(reg, s_bang_lage);
 }
 
+/* (6): Folge der gesetzten Sender waehrend re15_enemy_ai_run_all. */
+static int s_haken_folge[16], s_haken_n = 0;
+static void haken_merken(int slot) { if (s_haken_n < 16) s_haken_folge[s_haken_n++] = slot; }
+
+static int lage_von(int32_t x, int32_t y, int32_t z, int l[2])
+{
+    const int32_t p[3] = { x, y, z };
+    return re15_wassersprung_r41_lage(&g_room_rdt, p, l, 0);
+}
+
 int main(void)
 {
     static char capenv[1024];
@@ -272,6 +295,117 @@ int main(void)
               "(2) Schritt ROOM1130 Cut 9 Spieler -1614/0/17282: Lage %d/%d (93/103), Register %d/%d (3498/4275, Original)",
               lage[0], lage[1], reg[0], reg[1]);
     }
+
+    /* ---- (6) re15_enemy_ai_run_all: Sender je Entity, danach der Spieler ------------------------------------------ */
+    if (rdt) {
+        for (int i = 1; i < RE15_ACTOR_MAX; i++) g_actors[i].active = 0;
+        memset(&g_actors[2], 0, sizeof g_actors[2]); memset(&g_actors[5], 0, sizeof g_actors[5]);
+        g_actors[2].active = 1; g_actors[2].type = 0x22; g_actors[2].x = -1000; g_actors[2].z = 16000;   /* 0x22 = Stub-Typ ohne */
+        g_actors[5].active = 1; g_actors[5].type = 0x22; g_actors[5].x = -2000; g_actors[5].z = 18000;   /* Handler (run_all)    */
+        re15_svm_sender_haken = haken_merken;
+        s_haken_n = 0;
+        re15_enemy_ai_run_all(0);
+        re15_svm_sender_haken = NULL;
+        CHECK(s_haken_n == 3 && s_haken_folge[0] == 2 && s_haken_folge[1] == 5
+              && s_haken_folge[2] == -1 && re15_svm_sender_entity_slot() == -1,
+              "(6) run_all mit Entities in Slot 2 und 5: Sender-Folge %d Eintraege [%d, %d, %d], Soll [2, 5, -1 = Spieler] "
+              "(FUN_8001a50c @0x8001a5ac je Entity, danach Spieler-FSM @0x80031c6c)", s_haken_n,
+              s_haken_n > 0 ? s_haken_folge[0] : 99, s_haken_n > 1 ? s_haken_folge[1] : 99, s_haken_n > 2 ? s_haken_folge[2] : 99);
+        g_actors[2].active = 0; g_actors[5].active = 0;
+    }
+
+    /* ---- (7) Roys Anker ROOM1021: Sender = Roy (Arbeitsziel Slot 2) ------------------------------------------------- */
+    int n3 = 0;
+    uint8_t *rdt3 = raum_laden("STAGE1/ROOM1021.RDT", 0, -4274, 0, -6590, &n3);
+    if (rdt3) {
+        memset(&g_actors[2], 0, sizeof g_actors[2]);
+        g_actors[2].active = 1; g_actors[2].type = 0x10; g_actors[2].x = -9000; g_actors[2].y = 0; g_actors[2].z = -2000;
+        int lr[2] = { -1, -1 }, lsp[2] = { -1, -1 }, reg[2], lage[2];
+        (void)lage_von(g_actors[2].x, g_actors[2].y, g_actors[2].z, lr);
+        (void)re15_svm_lage_spieler(lsp);
+        g_scd.work_slot = 2;                                       /* Work_set(2,1) `2e 02 01` @0x020DA bzw. @0x020AE */
+        re15_elza_r36_raum_scan(rdt3, n3, RE15_ELZA_RAUM_1021);
+        re15_elzatoene_r38_raum_scan(rdt3, n3, RE15_ELZATOENE_RAUM_1021);
+        (void)laufen(30);
+        re15_elza_r36_pc(rdt3 + 0x020DE);                          /* Roys Tod: snd1 SE 5, Verzug 1 (Anker-Tafel elza_r36.c) */
+        g_scd.work_slot = -1;                                      /* ein anderer Faden aendert das Arbeitsziel vor dem Ausfuehren */
+        re15_elza_r36_tick();                                      /* naechster VM-Takt: die verzoegerte Aktion */
+        (void)laufen(1);
+        int da = re15_audio_se_mess(reg, lage);
+        CHECK(g_re15_elza_anker_n > 0 && da && lage[0] == lr[0] && lage[1] == lr[1] && !(lr[0] == lsp[0] && lr[1] == lsp[1])
+              && re15_svm_sender_entity_slot() == -1,
+              "(7) Roys Tod ROOM1021 @0x020DE: Lage %d/%d, Soll Roy (Slot 2, -9000/0/-2000) %d/%d, Spieler waere %d/%d; "
+              "danach wieder Spieler-Sender %d", lage[0], lage[1], lr[0], lr[1], lsp[0], lsp[1], re15_svm_sender_entity_slot());
+        (void)laufen(60);
+        g_scd.work_slot = 2;                                       /* Work_set(2,1) @0x020AE direkt vor dem Anker */
+        re15_elzatoene_r38_pc(rdt3 + 0x020B2);                     /* Roys Stoehnen: snd1 SE 4 */
+        (void)laufen(1);
+        da = re15_audio_se_mess(reg, lage);
+        CHECK(g_re15_elzatoene_anker_n > 0 && da && lage[0] == lr[0] && lage[1] == lr[1],
+              "(7) Roys Stoehnen ROOM1021 @0x020B2: Lage %d/%d, Soll Roy %d/%d (Spieler %d/%d)", lage[0], lage[1], lr[0], lr[1],
+              lsp[0], lsp[1]);
+        g_actors[2].active = 0;
+        g_scd.work_slot = -1;
+    }
+
+    /* ---- (8) SCD Se_on mit Lage-Bit ROOM3091 -------------------------------------------------------------------- */
+    int n4 = 0;
+    uint8_t *rdt4 = raum_laden("STAGE3/ROOM3091.RDT", 0, -24000, 0, -6000, &n4);
+    if (rdt4) {
+        static const uint8_t op[12] = { 0x36, 0x02, 0x0d, 0x01, 0x00, 0x00, 0x46, 0xa0, 0x00, 0x00, 0xdc, 0x05 };
+        CHECK(n4 > 0x01A62 + 12 && memcmp(rdt4 + 0x01A62, op, 12) == 0, "(8) ROOM3091 @0x01A62 traegt den Se_on mit Lage-Bit");
+        int lu[2] = { -1, -1 }, ls16[2] = { -1, -1 }, lsp[2] = { -1, -1 }, reg[2], lage[2];
+        (void)lage_von(41030, 0, 1500, lu);                        /* 0xa046 null-erweitert */
+        (void)lage_von(-24506, 0, 1500, ls16);                     /* 0xa046 als s16 - so rechnet das Original NICHT */
+        (void)re15_svm_lage_spieler(lsp);
+        (void)laufen(30);
+        scd_audio_event_t ev;
+        memset(&ev, 0, sizeof ev);
+        ev.kind = (uint8_t)SCD_AUDIO_SE_ON; ev.bank = op[1]; ev.sample_id = op[2];
+        ev.raw_w0 = (uint16_t)((op[3] << 8) | op[4]); ev.raw_w1 = op[5];   /* wie op_se_on (scd_vm.c) */
+        ev.pos_x = (int16_t)(op[6] | (op[7] << 8)); ev.pos_y = (int16_t)(op[8] | (op[9] << 8)); ev.pos_z = (int16_t)(op[10] | (op[11] << 8));
+        scd_audio_queue_push(&ev);
+        (void)laufen(1);
+        int da = re15_audio_se_mess(reg, lage);
+        CHECK(da && lage[0] == lu[0] && lage[1] == lu[1] && !re15_svm_sender_lage_gesetzt(),
+              "(8) Se_on Flags 1 Ursprung 0 Versatz a046/0000/05dc: Lage %d/%d, Soll FUN_80045a64(41030/0/1500) = %d/%d "
+              "(als s16 -24506 waere es %d/%d, Spieler %d/%d), Register %d/%d", lage[0], lage[1], lu[0], lu[1], ls16[0], ls16[1],
+              lsp[0], lsp[1], reg[0], reg[1]);
+        (void)laufen(60);
+        ev.raw_w0 = 0;                                             /* derselbe Se_on OHNE Lage-Bit */
+        scd_audio_queue_push(&ev);
+        (void)laufen(1);
+        da = re15_audio_se_mess(reg, lage);
+        CHECK(da && lage[0] == -1 && lage[1] == -1,
+              "(8) Se_on ohne Lage-Bit: ohne Lage (Messhaken %d/%d = -1/-1), Register %d/%d", lage[0], lage[1], reg[0], reg[1]);
+    }
+
+    /* ---- (9) CORE-Ruf eines Spieler-Zustands: Lage des Spielers --------------------------------------------------- */
+    {   uint8_t *rdt5 = raum_laden("STAGE1/ROOM1140.RDT", 0, -5118, 0, -15817, NULL);
+        if (rdt5) {
+            memset(&g_actors[4], 0, sizeof g_actors[4]);
+            g_actors[4].active = 1; g_actors[4].type = 0x11; g_actors[4].x = 200; g_actors[4].y = 0; g_actors[4].z = -19600;
+            int lsp[2] = { -1, -1 }, le[2] = { -1, -1 }, reg[2], lage[2];
+            (void)re15_svm_lage_spieler(lsp);
+            (void)lage_von(200, 0, -19600, le);
+            (void)laufen(60);
+            re15_svm_sender_entity(&g_actors[4]);                 /* eine Entity laeuft gerade (Port-Kontext des Opfer-Einstiegs) */
+            re15_player_stagger_cmd2(0x08);                        /* 0x04010001 @0x80035e80, a1 = &DAT_800aca88 */
+            re15_svm_sender_entity(NULL);
+            (void)laufen(1);
+            int da = re15_audio_se_mess(reg, lage);
+            CHECK(da && lage[0] == lsp[0] && lage[1] == lsp[1] && !(le[0] == lsp[0] && le[1] == lsp[1]) && !re15_svm_sender_lage_gesetzt(),
+                  "(9) CORE 1 aus re15_player_stagger_cmd2 (0x04010001 @0x80035e80): Lage %d/%d = Spieler %d/%d (Entity 4 waere %d/%d), "
+                  "Register %d/%d", lage[0], lage[1], lsp[0], lsp[1], le[0], le[1], reg[0], reg[1]);
+            (void)laufen(60);
+            re15_audio_core_se(5);                                 /* Menue 0x04050000, a1 = 0 @0x8004a664: kein Lage-Bit */
+            (void)laufen(1);
+            da = re15_audio_se_mess(reg, lage);
+            CHECK(da && lage[0] == -1 && lage[1] == -1, "(9) Menue-Ton CORE 5 ohne Lage-Bit: Messhaken %d/%d = -1/-1", lage[0], lage[1]);
+            g_actors[4].active = 0;
+            free(rdt5);
+        }
+    }
     re15_audio_shutdown();
 
     {   FILE *f = fopen(s_cap, "rb");
@@ -294,7 +428,7 @@ int main(void)
               "(2) Schritt am Mischer: Spitze L/R %d/%d, Soll %d/%d = Probe %d * Register 3498 / 4275 (bis Stufe 5: beide %d)",
               pl, pr, sl, sr, p_schritt, soll_spitze(p_schritt, (3498 + 4275) / 2));
     }
-    free(rdt); free(rdt2); free(s_pcm);
+    free(rdt); free(rdt2); free(rdt3); free(rdt4); free(s_pcm);
     remove(s_cap);
     printf("%s: %d von %d Pruefungen\n", fails ? "ROT" : "GRUEN", checks - fails, checks);
     return fails ? 1 : 0;

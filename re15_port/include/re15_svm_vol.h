@@ -137,5 +137,43 @@ int  re15_svm_lage_param(int lage[2]);
 /* Messhaken: Slot der gesetzten Entity (-1 = Spieler/keine), 1 wenn ein param_2 gesetzt ist. */
 int  re15_svm_sender_entity_slot(void);
 int  re15_svm_sender_lage_gesetzt(void);
+/* Messhaken (kein Spielpfad, NULL im Spiel): wird bei jedem re15_svm_sender_entity mit dem Slot gerufen (-1 = Spieler). */
+extern void (*re15_svm_sender_haken)(int slot);
+
+/* ===== Strang ton Stufe 6 Runde 2 (2026-11-20): die uebrigen Geraeusch-Wege mit Lage-Bit ===========================
+ * Zensus aller Rufe `jal 0x80045024` in PSX.EXE und STAGE1-6.BIN (scratchpad ton/s6r2/zensus_45024.py): 103 Rufe; das
+ * Lage-Bit ist das niedrige Byte von param_1 (`(param_1 & 0xff) != 0` -> FUN_80045a64(param_2) @0x800451c0-cc).
+ *
+ * (c) CORE-Rufe der SPIELER-Zustaende und der Opfer-Maschinen: param_1 = 0x04ss0001, param_2 = der Spieler. Zwei Formen:
+ *     - EXE-Spielerzustaende: a1 = 0x800aca5a + 46 = &DAT_800aca88 (z. B. `lui a2,0x800b / addiu a2,a2,-13734` @0x8003671c-20,
+ *       `addiu a1,a2,46` @0x800367ac, a0 0x04030000|1 @0x80036744/64; ebenso @0x80035c00, @0x80035d38, @0x80035e80,
+ *       @0x80036004, @0x80036184, @0x80036274, @0x80036340, @0x800364f0), STAGE5-Birkin-Opfer @0x8011b0cc/b254/b264/
+ *       b4b8/b4e0/b788 dieselbe Form (a1 = 0x800aca5a + 46 bzw. 0x800acae3 - 91).
+ *     - Opfer-Maschinen in den Overlays: a1 = DAT_800ac784 + 0x34 (`lw a1,-14460(a1)` / `addiu a1,a1,52`), und DAT_800ac784
+ *       ist dort der SPIELER: sie laufen im Spieler-FSM FUN_80031c44 (`addiu s0,v0,720` / `sw s0,0(v0)` @0x80031c64-6c ->
+ *       DAT_800ac784 = 0x800aca54), Befehl 5/6 ueber die Tafeln 0x80073f90[5] = 0x80036834 (jalr *(0x800ac758 + Typ*4)
+ *       @0x80036884-a8) und [6] = 0x800368c0 (jalr *(0x800ac858 + Typ*4) @0x80036910-34). GEMESSEN im Original-Savestate
+ *       (ton/s6r2/opfer_tab.py, h_schuss1140/pre.sav): Befehl 5 Zombie 0x8010a28c, Hund 0x80111944, Gorilla 0x8011c118;
+ *       Befehl 6 Zombie 0x8010a6b8, Hund 0x80111cb0, Gorilla 0x8011c3d4; deren Unter-Tafeln (Index DAT_800aca59)
+ *       0x801201a8 -> 0x8010a2cc (Ruf @0x8010a3e4), 0x801201d8 -> 0x8010a6f8 (Rufe @0x8010a7b8, @0x8010a864),
+ *       0x801210f0 -> 0x80111cf0 (Ruf @0x80111df4), 0x80121580 -> 0x8011c414 (Ruf @0x8011c4b8). STAGE3 0x80115d70 (Rufe
+ *       @0x80115de4, @0x80115f1c) haengt am gleichen Verteiler-Muster (`lbu v0,-13735(v0)` = DAT_800aca59, Tafel 0x8011ee44,
+ *       `jalr v0` @0x80115d30-58).
+ *     re15_svm_core_se_spieler(id) = FUN_80045024(0x04<<24 | id<<16 | 1, &DAT_800aca88). Die Menue-/Item-Toene 0x0404..0x0406
+ *     tragen kein Lage-Bit (`lui a0,0x404` ohne `ori`, a1 = 0 @0x8004a47c-0x8004a664) und bleiben re15_audio_core_se.
+ * (d) SCD Se_on (0x36, Handler @0x80041624): param_1 = (Bank<<24)|(Id<<16)|Flags (`sll v1,a3,24` / `srl a0,a0,8` /
+ *     `or` @0x80041718-34, Flags = pc[3]), param_2 = sp+16 (`addiu a1,sp,16` @0x80041710) = Ursprung + Versatz, der
+ *     Versatz mit `lhu` (NULL-ERWEITERT, @0x800416ec / @0x800416fc / @0x8004170c) und `addu` auf den Ursprung, als 32-Bit-
+ *     Wort gespeichert (`sw` @0x800416f8 / @0x80041708 / @0x8004171c), und FUN_80045a64 liest `lw` (@0x80045aa4 ff.).
+ *     Ursprung nach pc[4] (Tafel 0x80010d9c): 0 -> 0/0/0 (@0x80041678-84), 1 -> Spieler 0x800aca54 + 0x34 (@0x80041688-8c,
+ *     @0x800416e0-e8), 2 -> Gegner-Pool 0x800acc2c + Index*500, 3 -> Objekt-Pool 0x800b3f98 + Index*0x94 (@0x80041698-dc).
+ *     Zensus aller 284 Se_on der Disc (ton/s6r2/zensus_seon.py): Flags != 0 nur 5-mal, alle in ROOM3091, alle Ursprung 0.
+ *     re15_svm_se_on_param liefert param_2 fuer Ursprung 0 und 1; 1 wenn das Lage-Bit gesetzt und der Ursprung gebaut ist. */
+void re15_svm_core_se_spieler(int se_id);
+int  re15_svm_se_on_param(int flags, int ursprung, int pool, int16_t vx, int16_t vy, int16_t vz, int32_t pos[3]);
+/* (e) Raum-Geraeusch FUN_800453d0 eines Port-Ankers, der im Original im Code einer Entity laeuft (Sender = DAT_800ac784 + 0x34
+ *     = diese Entity, @0x800453d4 / @0x800454e0-ec): Sender fuer den einen Ruf auf g_actors[slot] (gueltig und aktiv, sonst
+ *     bleibt der laufende Sender), danach der vorige Sender. Nutzer: Roys Anker ROOM1021 (elza_r36.c, elzatoene_r38.c). */
+void re15_svm_raum_se_von(int slot, int se_id);
 
 #endif /* RE15_SVM_VOL_H */

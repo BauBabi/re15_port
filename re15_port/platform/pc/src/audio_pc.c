@@ -794,9 +794,12 @@ static int load_room_se_vab_pc(void)
  *     (re15_enemy_ai_run_all). Spieler-Rufe (Messer, Nachladen, Klick, Ziehen) = &DAT_800aca88 = Spieler.
  *   - Option Mono: SpuVmKeyOnNow setzt beide Seiten auf die groessere (@0x80055fd0-e4, in.mono) - unveraendert.
  *   (c) wie bisher: ohne Raum/Kamera (kein RDT) gibt es keine Lage -> Zweig ohne Lage.
- * OFFEN (Stufe 6, nicht geraten): Bank-Rufe ausserhalb ESP/ARMS mit Lage-Bit, deren param_2 der Port nicht kennt
- * (SCD Se_on, CORE-/snd0-Rufe), laufen weiter ohne Lage; Raum-Geraeusche aus Port-Modulen, die ausserhalb der
- * Gegner-Schleife ticken, nehmen den Spieler (Liste im Bericht s6_r1). */
+ * Stufe 6 Runde 2 (Zensus aller 103 Rufe `jal 0x80045024`, re15_svm_vol.h (c)-(e)): SCD Se_on mit Lage-Bit (nur ROOM3091,
+ * Ursprung 0) bekommt param_2 = Ursprung + null-erweiterter Versatz (Handler @0x80041624); die CORE-Rufe der Spieler-Zustaende
+ * und der Opfer-Maschinen nehmen den Spieler (re15_svm_core_se_spieler); Roys Anker ROOM1021 nehmen Roy (re15_svm_raum_se_von).
+ * Die snd0-Rufe des Ports (0x02060000 @0x8002c97c, 0x02070000 @0x80035a18 / @0x80052acc, 0x02080000 @0x8002c70c) und die
+ * Menue-/Item-Toene 0x0404..0x0406 (@0x8004a47c-0x8004a664) tragen KEIN Lage-Bit und bleiben ohne Lage.
+ * OFFEN (nicht geraten): die RE2-Wege (re2se, RE2-Opfer-/Gator-Code: RE2-Rechnung FUN_8005c970 nicht belegt). */
 enum { SE_SENDER_KEIN = 0, SE_SENDER_ENTITY = 1, SE_SENDER_PARAM = 2 };
 static int s_se_pegel_re2 = 0;
 static int s_se_sender    = SE_SENDER_KEIN;
@@ -4602,12 +4605,21 @@ void re15_audio_tick(void)
                  * @0x80045140, NO -1). Route to the matching resident/room bank; a bank the port has
                  * not loaded is skipped exactly as the original skips DAT_800b21ec[bank] == -1. (Was:
                  * ignore the bank and play (sample_id-1) from a bring-up TEST VAB — a divergence.) */
-                switch (re15_audio_se_bank_kind(evt.bank)) {
-                    case RE15_SE_BANK_WEAPON: re15_audio_weapon_se(evt.sample_id);   break;
-                    case RE15_SE_BANK_SND0:   re15_audio_room_se_snd0(evt.sample_id);break;
-                    case RE15_SE_BANK_SND1:   re15_audio_room_se(evt.sample_id);     break;
-                    case RE15_SE_BANK_CORE:   re15_audio_core_se(evt.sample_id);     break;
-                    case RE15_SE_BANK_SKIP:   default: break;   /* bank 0/>=6 not resident -> skip */
+                /* Strang ton Stufe 6 Runde 2: Lage-Bit des Se_on (Flags = pc[3]) -> param_2 = Ursprung + Versatz des Handlers
+                 * @0x80041624 (re15_svm_vol.h (d)); FUN_80045024 waehlt dann die Lage aus param_2 (@0x800451c0-cc), fuer jede
+                 * Bank vor der Bank-Weiche. Ohne Lage-Bit wie bisher (Tastenstaerke = Ton-vol, @0x800451dc). */
+                {   int32_t se_on_pos[3];
+                    const int se_on_lage = re15_svm_se_on_param((int)(evt.raw_w0 >> 8), (int)(evt.raw_w0 & 0xff),
+                                                                (int)evt.raw_w1, evt.pos_x, evt.pos_y, evt.pos_z, se_on_pos);
+                    if (se_on_lage) re15_svm_sender_lage(se_on_pos);
+                    switch (re15_audio_se_bank_kind(evt.bank)) {
+                        case RE15_SE_BANK_WEAPON: re15_audio_weapon_se(evt.sample_id);   break;
+                        case RE15_SE_BANK_SND0:   re15_audio_room_se_snd0(evt.sample_id);break;
+                        case RE15_SE_BANK_SND1:   re15_audio_room_se(evt.sample_id);     break;
+                        case RE15_SE_BANK_CORE:   re15_audio_core_se(evt.sample_id);     break;
+                        case RE15_SE_BANK_SKIP:   default: break;   /* bank 0/>=6 not resident -> skip */
+                    }
+                    if (se_on_lage) re15_svm_sender_lage(NULL);
                 }
                 break;
             case SCD_AUDIO_VOICE_ON:

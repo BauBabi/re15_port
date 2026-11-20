@@ -1029,7 +1029,13 @@ static void re15_player_victim_latch_ex(const re15_actor_t *zombie, re15_actor_t
     if (zombie->type != 0x21 && zombie->type != 0x20 &&
         (g_player_victim == 0 || g_player_victim == 3)) {
         int re2 = re15_ai_re2_for_type(zombie->type) && re15_re2z_owns_type(zombie->type);
-        re15_audio_core_se(re15_victim_grab_core_se(re2, (int)g_player_victim_variant));
+        /* Strang ton Stufe 6 Runde 2: RE1.5-Opfer-P0 FUN_8010a2cc ruft FUN_80045024(0x04000001, DAT_800ac784 + 0x34)
+         * @0x8010a3e4 im Spieler-FSM (DAT_800ac784 = Spieler, re15_svm_vol.h (c)) -> Lage des Spielers, auch wenn der Port
+         * diesen Einstieg im Griff des Zombies (also mit dessen Sender) erreicht. Der RE2-Zweig bleibt ohne Lage (RE2-Rechnung
+         * FUN_8005c970 nicht belegt, Bericht s6_r1 Offen 1). */
+        const int grunt = re15_victim_grab_core_se(re2, (int)g_player_victim_variant);
+        if (!re2) re15_svm_core_se_spieler(grunt);
+        else      re15_audio_core_se(grunt);
     }
     if (g_player_victim == 0 || g_player_victim == 3) { /* enter (or re-enter from the release finish) */
         g_player_victim = 1;
@@ -1356,7 +1362,7 @@ static void re15_victim_death_groan(void)
 {
     if (s_victim_groan_done) return;
     s_victim_groan_done = 1;
-    re15_audio_core_se(3);                /* Se_on(0x04030001) @0x8010a864 / @0x80111df4 */
+    re15_svm_core_se_spieler(3);                /* Se_on(0x04030001) @0x8010a864 / @0x80111df4 */
 }
 
 /* The zombie's THROW-OFF [4] starts the player's release finish in lockstep (byte-true: the grab's
@@ -1425,7 +1431,7 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
          * 0x29/0x3a/0x4f (re15_player_victim_tick). */
         player->anim_frac = 0;
     } else {
-        re15_audio_core_se(1);                          /* collapse-entry SE: Se_on(0x4010001) = CORE
+        re15_svm_core_se_spieler(1);                          /* collapse-entry SE: Se_on(0x4010001) = CORE
                                                          * bank4 record 1 (FUN_8010a6f8 init) */
         /* Devour-ENTRY-Blut (FUN_8010a6f8: a0=0x1500 @0x8010a770, Anker Spieler-Bone 8
          * @0x8010a7a0/a4 = +0x5A0; bite_blood_fx.md D4a, CONFIRMED). */
