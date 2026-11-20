@@ -40,6 +40,7 @@
 #include "re15_scd.h"
 #ifdef RE15_TON_S5_HAKEN
 #include "re15_spu_gauss.h"
+#include "re15_spu_adsr.h"   /* Strang ton Stufe 7: Huellkurve der Geraeusch-Stimmen */
 #endif
 #define SDL_MAIN_HANDLED                 /* eigenes main(), SDL nur fuer die Uhr (SDL_GetPerformanceCounter) */
 #include <SDL.h>
@@ -213,7 +214,12 @@ static vgl_t vergleich(long takt0, const int16_t *pcm, int n, int loop, uint32_t
     int32_t *alt = (int32_t *)calloc((size_t)n_aus, sizeof(int32_t));
     ref_t r; ref_start(&r, pcm, n, loop, pitch);
     long n_an = n_aus;
-    for (long k = 0; k < n_aus; k++) { int an; const int32_t g = ref_wert(&r, &an); if (!an && n_an == n_aus) n_an = k; soll[k] = an ? stimme(g, reg_q15) : 0; }
+    /* Strang ton Stufe 7: seit der Mischer die Huellkurve rechnet (re15_spu_adsr.h), gehoert sie in die Formel. Beide Rolltor-
+     * Toene (ROOM1130 snd0 Ton 7 / 8) tragen ADSR 0x80ff/0x1fc0 (VagAtr+0x10/+0x12; im Original-RAM @0x80123794 / @0x801237b4
+     * gelesen, ton/s7/adsr_patch_ort.py): Anstieg in 4 Proben, dann Halten bei 32767 -> Probe * 32767 >> 15. */
+    re15_spu_adsr_t hk; re15_spu_adsr_start(&hk, 0x80ff, 0x1fc0);
+    for (long k = 0; k < n_aus; k++) { int an; int32_t g = ref_wert(&r, &an); if (!an && n_an == n_aus) n_an = k;
+        g = (g * re15_spu_adsr_takt(&hk)) >> 15; soll[k] = an ? stimme(g, reg_q15) : 0; }
     /* alte Port-Rechnung "naechster Wert" (Messbericht U5; Port bis 1731b889c): pcm[pos], pos += Q16-Schritt pitch << 4 */
     {   uint32_t fr = 0; long pos = 0;
         for (long k = 0; k < n_aus; k++) {
