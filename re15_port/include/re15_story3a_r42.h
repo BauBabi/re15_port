@@ -6,7 +6,8 @@
  * Nutzer am 08.11. freigegeben): Abschnitt 5 T-01/T-02 (Figurwechsel nach RE2), 3.2 L4-L7, Zeitleiste L-05..L-10, Entscheide
  * F-04 (Leon kaempft gegen die Hunde, Marvin kommt danach aus der Tuer), F-05 (Keycard UND Fabrikplan), F-06 (alle Funde, die
  * eigene Pistole behaelt Marvin). Bits und Nachrichten-Ids NUR aus dem VERTRAG analysis/befunde_runde42/VERTRAG.md
- * (re15_story_r42.h): Bit 123 (Schuesse gehoert), 124 (Uebergabe), 35 (Fabrikplan); ROOM3020 msg 0..2 (Neutext), 7..9;
+ * (re15_story_r42.h): Bit 123 (Schuesse gehoert), 124 (Uebergabe), 35 (Fabrikplan), 139 (Marvin traegt den Fabrikplan, Strang
+ * fabrikplan K-16: 17/18 nur damit, Kopf re15_kartenitems_r36.h STRANG FABRIKPLAN); ROOM3020 msg 0..2 (Neutext), 7..9;
  * ROOM3060 msg 11..27. NUR Leons Fassung (Raum exakt 3020/3060/3010, Figur Leon); Elzas 3021/3061/3011 bleiben unveraendert.
  *
  * ---- T-01/T-02: FIGURWECHSEL NACH RE2 (Vorbild FUN_80068f9c, ghidra_re2_Leon.txt:202702ff, Aufruf @0x80049fd0 aus
@@ -211,7 +212,7 @@ void re15_story3a_r42_texte(uint16_t room_id);       /* msg_common.c re15_msg_lo
 const uint8_t *re15_story3a_r42_ereignis(uint16_t room_id, uint8_t event_id);                 /* scd_vm.c scd_event_fire */
 const uint8_t *re15_story3a_r42_evt_exec(uint16_t room_id, uint8_t sub, const uint8_t *pc);   /* scd_vm.c op_evt_exec    */
 void re15_story3a_r42_tick(void);                    /* scd_vm.c scd_vm_tick (Gameplay-Lauf)                                      */
-int  re15_story3a_r42_blatt(unsigned page);          /* re15_map_owned.c: Fabrik-Blatt nach der Uebergabe                        */
+int  re15_story3a_r42_blatt(unsigned page);          /* re15_map_owned.c: Fabrik-Blatt (Leon Bit 35; Marvin spielt + Bit 139)     */
 void re15_story3a_r42_neues_spiel(void);             /* Neues Spiel: kein Tausch                                                  */
 void re15_story3a_r42_export(uint8_t out[RE15_S3A_SPEICHER_BYTES]);
 void re15_story3a_r42_import(const uint8_t in[RE15_S3A_SPEICHER_BYTES]);   /* nach dem Laden; setzt work_vars[0x10] bei Marvin */

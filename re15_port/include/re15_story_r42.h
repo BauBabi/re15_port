@@ -16,7 +16,8 @@
  *     53..84, 87..89, 93..97, 100..103, 106..107, 110..117, 125, 128, 133, 134, 236, 238, 243.
  *   Offene r41-Zweige (git diff HEAD...<zweig>, 2026-11-14): nur r41/moosgang 126/127; form/sichel_szene/sichel_v8/
  *     integration/master ohne neue Bank-9-Bits.
- *   -> frei in allen drei: 118..124, 129..132, 23..51 (Auszug). Die Zuteilung unten nimmt NUR daraus.
+ *   -> frei in allen drei: 118..124, 129..132, 23..51 (Auszug). Die Zuteilung unten nimmt NUR daraus (spaeter: 137 Strang finale,
+ *      139 Strang fabrikplan, je mit eigenem Zensus).
  *   Jedes Bit hier steht in tests/unit/test_r36_kartenbits.c k_port[] (Ausnahme Lageplan-Bits: die gehoeren beim Bau in
  *   k_r36k_lage, sonst meldet teil_p "doppelt").
  */
@@ -65,7 +66,14 @@
 #define RE15_R42_BIT_ENZYM            17
 /* Lageplaene (6b, F-18/F-25 nach Empfehlung): beim Bau in k_r36k_lage (kartenitems_r36) eintragen, NICHT in k_port[]. */
 #define RE15_R42_BIT_PLAN_KANAL       34   /* Wandplan 2000/2001                                                                   */
-#define RE15_R42_BIT_PLAN_FABRIK      35   /* Leon: Uebergabe 3060 (L6, schon v0.8.31); Elza: Wandplan 30C1 (v0.8.32)             */
+#define RE15_R42_BIT_PLAN_FABRIK      35   /* Leons Besitz: Uebergabe 3060 (L6) oder selbst genommen in 30C0; Elza: Wandplan 30C1  */
+/* Strang fabrikplan (20.11.2026, Konzept K-16): NUTZERWUNSCH woertlich "Im Story Zweig - room 3060 übergibt Marvin ein plan of the
+ * plant. Das macht natürlich nur sinn wenn er ihn auch wirklich irgendwo aufnimmt...". Marvin nimmt den Wandplan in 30C0 (Zeile 30C0/
+ * Leon in k_r36k_lage, begleit_bit) - das gehoert zu MARVINS Seite, nicht zu Leons Besitz (Bit 35): Marvins Karte zeigt Blatt 7,
+ * Leons erst nach der Uebergabe 3060 (story3a_r42.c geben setzt 35 und loescht dieses Bit). PORT-WAHL aus dem Zensus
+ * (zensus_r42.py 20.11.2026): frei im Original (Mod-Baum, bank9_zensus.py original), im Port (bank9_zensus.py port), auf der 40-%-Disc
+ * und in keinem der 232 Zweige des Repos (git grep "#define RE15_*BIT* 139" je Zweig: kein Treffer). */
+#define RE15_R42_BIT_PLAN_MARVIN      139  /* Marvin traegt den Fabrikplan (aus 30C0, noch nicht uebergeben)                       */
 #define RE15_R42_BIT_PLAN_FORSCHUNG   36   /* Wandplan 4010/4011                                                                   */
 #define RE15_R42_BIT_PLAN_UBAHN       37   /* Wandplan 6010/6011 (oder 6000/6001, misst der Bau; Ids dort ebenfalls frei)         */
 

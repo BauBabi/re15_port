@@ -125,8 +125,17 @@ RAUM 30C0
 WARTE 60
 ")
 # Marvins ganzer Weg 30C0 -> 3090 -> 30A0 -> 3090 -> 30C0 -> 3030 -> 30E0 -> 3050 -> 3040 (NB1 B3, Kopf oben).
+# Strang fabrikplan (20.11.2026, K-16): auf dem ersten Gang zur Osttuer nimmt Marvin den Wandplan (Plakatmitte x -7600 an der Nordwand
+# z 1100, SCA-Zelle 1 @0x007F8; Zone Slot 20 x -8100..-7100 z 300..1300): Blick 3072 (+z), Aktion, Frage per Quadrat (Ja vorbelegt)
+# bis Marvins Bit (9,139) steht, dann die Meldung "You've taken the factory map." schliessen.
 set(_weg_marvin "GEHE -8750 -6800 250
 GEHE -7550 -1250 250
+GEHE -7600 450 150
+BLICK 3072
+WARTE 10
+AKTION
+TIPPE 9 139 300 1
+TIPPE 9 255 90 1
 GEHE -6350 -350 150
 BLICK 0
 WARTE 10
@@ -595,6 +604,9 @@ if(TEIL STREQUAL "kette")
     else()
         ok("B8: Systemtexte per Taste bestaetigt")
     endif()
+    pruefe("K-16: Marvin nimmt den Fabrikplan in 30C0 (nur sein Bit 139)" "ROOM30C0 Ereignis 28 -> Port-Programm Karte Blatt 7 (Marvin nimmt den Plan")
+    pruefe("K-16: Meldung You've taken the factory map. in 30C0" "room=30c0 id=31 ")
+    pruefe("K-16: Wiedersehen mit Plan (Zeilen 17/18)" "Fabrikplan von Marvin (Zeilen 17/18)")
     pruefe("L6/F-05: Fabrikplan uebergeben (Bit 35)" "Fabrikplan uebergeben -> Bit 35 = 1 (Kartenblatt 7)")
     pruefe("L5 Punkt 6: Marvin geht durch die orange Tuer" "geht durch die orange Tuer")
     pruefe("Bit 124" "Wiedersehen fertig nach")

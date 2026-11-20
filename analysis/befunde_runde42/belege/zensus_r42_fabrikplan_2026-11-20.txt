@@ -1,0 +1,289 @@
+# Strang fabrikplan, 20.11.2026: Lauf von tools/r42_story/zensus_r42.py nach dem Eintrag Bit 139 (RE15_R42_BIT_PLAN_MARVIN).
+# Alle Bits OK (B1..B5), Bit 139 frei in Original/Port/Disc. ALLE 63 Fehler sind N6 ("Datei liegt schon"): der Nutzer nimmt die
+# Stimmen gerade auf (synchro/STAGE3/.., STAGE6/..) - kein Bit-/Id-Konflikt. Der Stand vor der Aufnahme steht in zensus_r42.txt.
+
+== Runde 42 Story: Zuteilung Nachrichten-Ids und Bank-9-Bits (zensus_r42.py) ==
+   Baum C:\workspace\git\reAi_v2\.claude\worktrees\r42_lageplaene; synchro auch im Hauptbaum C:\workspace\git\reAi_v2; Disc C:\workspace\git\reAi_v2\Version_40%\PSX
+
+-- RDT-Nachrichten je Raum (Mod-Baum shared_assets/PSX, Block @RDT+0x3C, n = off[0]/2) --
+  ROOM11A0  RDT 0..2   (Block @0x013E8)  Port belegt: -
+  ROOM11A1  RDT 0..2   (Block @0x013FC)  Port belegt: -
+  ROOM2000  RDT 0..11  (Block @0x01BC0)  Port belegt: 40 (re15_ventilkette_r41.h:236 (Spur C))
+  ROOM2001  RDT 0..14  (Block @0x01DEC)  Port belegt: 40 (re15_ventilkette_r41.h:236 (Spur C))
+  ROOM2040  RDT 0..5   (Block @0x01750)  Port belegt: -
+  ROOM2041  RDT 0..5   (Block @0x01750)  Port belegt: -
+  ROOM2070  RDT 0..0   (Block @0x00D04)  Port belegt: 40 (re15_ventilkette_r41.h:267 (Spur C))
+  ROOM2071  RDT 0..0   (Block @0x00D04)  Port belegt: 40 (re15_ventilkette_r41.h:267 (Spur C))
+  ROOM2080  RDT 0..1   (Block @0x00CF4)  Port belegt: 42 (kanister2080_r41.c:1190 (Spur G, Kanister-Ruf))
+  ROOM2081  RDT 0..1   (Block @0x00CF4)  Port belegt: 42 (kanister2080_r41.c:1190 (Spur G, Kanister-Ruf))
+  ROOM2090  RDT 0..-   (Block @0x00000)  Port belegt: 42 (re15_gatorszene_r41.h:139), 43 (re15_gatorszene_r41.h:140), 44 (VERTRAG R41 1.2 Spur F 42-46), 45 (VERTRAG R41 1.2 Spur F 42-46), 46 (VERTRAG R41 1.2 Spur F 42-46)
+  ROOM2091  RDT 0..-   (Block @0x00000)  Port belegt: 42 (re15_gatorszene_r41.h:139), 43 (re15_gatorszene_r41.h:140), 44 (VERTRAG R41 1.2 Spur F 42-46), 45 (VERTRAG R41 1.2 Spur F 42-46), 46 (VERTRAG R41 1.2 Spur F 42-46)
+  ROOM3020  RDT 0..6   (Block @0x00E0C)  Port belegt: -
+  ROOM3060  RDT 0..10  (Block @0x010F0)  Port belegt: -
+  ROOM3070  RDT 0..5   (Block @0x03980)  Port belegt: -
+  ROOM30C1  RDT 0..10  (Block @0x00EA0)  Port belegt: 21 (VERTRAG R41 1.2 ST80 30C1/6030 21-26 (vorsorglich)), 22 (VERTRAG R41 1.2 ST80 30C1/6030 21-26 (vorsorglich)), 23 (VERTRAG R41 1.2 ST80 30C1/6030 21-26 (vorsorglich)), 24 (VERTRAG R41 1.2 ST80 30C1/6030 21-26 (vorsorglich)), 25 (VERTRAG R41 1.2 ST80 30C1/6030 21-26 (vorsorglich)), 26 (VERTRAG R41 1.2 ST80 30C1/6030 21-26 (vorsorglich))
+  ROOM30E0  RDT 0..15  (Block @0x010C8)  Port belegt: -
+  ROOM4010  RDT 0..43  (Block @0x00FB8)  Port belegt: -
+  ROOM4011  RDT 0..7   (Block @0x00658)  Port belegt: -
+  ROOM4030  RDT 0..4   (Block @0x00724)  Port belegt: -
+  ROOM4031  RDT 0..8   (Block @0x008D0)  Port belegt: -
+  ROOM4080  RDT 0..0   (Block @0x00F00)  Port belegt: -
+  ROOM4081  RDT 0..0   (Block @0x00F00)  Port belegt: -
+  ROOM4090  RDT 0..7   (Block @0x00B7C)  Port belegt: -
+  ROOM4091  RDT 0..7   (Block @0x00B7C)  Port belegt: -
+  ROOM5011  RDT 0..45  (Block @0x00E4C)  Port belegt: -
+  ROOM5021  RDT 0..1   (Block @0x01420)  Port belegt: -
+  ROOM5050  RDT 0..7   (Block @0x00938)  Port belegt: -
+  ROOM5051  RDT 0..7   (Block @0x00938)  Port belegt: -
+  ROOM5060  RDT 0..14  (Block @0x03284)  Port belegt: -
+  ROOM5061  RDT 0..14  (Block @0x03284)  Port belegt: -
+  ROOM5090  RDT 0..1   (Block @0x0135C)  Port belegt: 40 (re15_annette_r41.h:53-56 Spur AN), 41 (re15_annette_r41.h:53-56 Spur AN), 42 (re15_annette_r41.h:53-56 Spur AN), 43 (re15_annette_r41.h:53-56 Spur AN)
+  ROOM5091  RDT 0..1   (Block @0x01340)  Port belegt: -
+  ROOM50A0  RDT 0..3   (Block @0x019CC)  Port belegt: -
+  ROOM50A1  RDT 0..3   (Block @0x019CC)  Port belegt: -
+  ROOM50B0  RDT 0..18  (Block @0x00B60)  Port belegt: -
+  ROOM50E0  RDT 0..-   (Block @0x00000)  Port belegt: -
+  ROOM50F1  RDT 0..-   (Block @0x00000)  Port belegt: -
+  ROOM5140  RDT 0..0   (Block @0x01C48)  Port belegt: -
+  ROOM5141  RDT 0..0   (Block @0x01C48)  Port belegt: -
+  ROOM6010  RDT 0..0   (Block @0x010C4)  Port belegt: -
+  ROOM6011  RDT 0..0   (Block @0x010C4)  Port belegt: -
+  ROOM6020  RDT 0..0   (Block @0x00BDC)  Port belegt: -
+  ROOM6021  RDT 0..0   (Block @0x00BDC)  Port belegt: -
+  ROOM6030  RDT 0..20  (Block @0x01394)  Port belegt: 21 (gen/story_r36_texte.inc ST80 21-26), 22 (gen/story_r36_texte.inc ST80 21-26), 23 (gen/story_r36_texte.inc ST80 21-26), 24 (gen/story_r36_texte.inc ST80 21-26), 25 (gen/story_r36_texte.inc ST80 21-26), 26 (gen/story_r36_texte.inc ST80 21-26), 27 (re15_annette_r41.h:62-65 Spur AN), 28 (re15_annette_r41.h:62-65 Spur AN), 29 (re15_annette_r41.h:62-65 Spur AN), 30 (re15_annette_r41.h:62-65 Spur AN), 31 (re15_story80_r41.h:51), 40 (re15_story80_r41.h:52)
+  ROOM6031  RDT 0..11  (Block @0x01130)  Port belegt: -
+
+-- Zeilen --
+  B v0.8.31 ROOM2080 43 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE2\room2080\main43.wav Thanks, Marvin. I thought I was gonna end up as dinner.
+  B v0.8.31 ROOM2080 44 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE2\room2080\main44.wav What brought you here, anyway?
+  B v0.8.31 ROOM2080 45 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE2\room2080\main45.wav Hard to miss. The whole place was shaking.
+  B v0.8.31 ROOM2080 46 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE2\room2080\main46.wav Yeah... right. Thanks again.
+  B v0.8.31 ROOM2080 47 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE2\room2080\main47.wav Go on ahead, Leon. I'll wait here and watch your back.
+  B v0.8.31 ROOM2080 48 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE2\room2080\main48.wav And I'll keep an eye out for that little girl.
+  B v0.8.31 ROOM2080 52 SYS    System    OK Next to the computer... there's a keyhole.
+  B v0.8.31 ROOM2080 53 SYS    System    OK The gate is locked. It needs a key.
+  B v0.8.31 ROOM2080 54 SYS    System    OK Leon used the key.
+  B v0.8.31 ROOM2081 43 NEU    Elza      FEHLER N6 Datei liegt schon: synchro\STAGE2\room2081\main43.wav Thanks, John. I thought I was gonna end up as dinner.
+  B v0.8.31 ROOM2081 44 NEU    Elza      FEHLER N6 Datei liegt schon: synchro\STAGE2\room2081\main44.wav What brought you here, anyway?
+  B v0.8.31 ROOM2081 45 NEU    John      FEHLER N6 Datei liegt schon: synchro\STAGE2\room2081\main45.wav Hard to miss. The whole place was shaking.
+  B v0.8.31 ROOM2081 46 NEU    Elza      FEHLER N6 Datei liegt schon: synchro\STAGE2\room2081\main46.wav Well... thanks again.
+  B v0.8.31 ROOM2081 47 NEU    Sherry    FEHLER N6 Datei liegt schon: synchro\STAGE2\room2081\main47.wav Elza, are you okay? I heard some really loud noises!
+  B v0.8.31 ROOM2081 48 NEU    Elza      FEHLER N6 Datei liegt schon: synchro\STAGE2\room2081\main48.wav I'm fine, Sherry. Thanks.
+  B v0.8.31 ROOM2081 49 NEU    John      FEHLER N6 Datei liegt schon: synchro\STAGE2\room2081\main49.wav So you're Sherry. Stick close, kid.
+  B v0.8.31 ROOM2081 50 NEU    John      FEHLER N6 Datei liegt schon: synchro\STAGE2\room2081\main50.wav Elza, go on ahead. I'll wait here and look after Sherry unti
+  B v0.8.31 ROOM2081 51 NEU    Elza      FEHLER N6 Datei liegt schon: synchro\STAGE2\room2081\main51.wav All right. Sherry, you stay with John.
+  B v0.8.31 ROOM2081 52 SYS    System    OK Next to the computer... there's a keyhole.
+  B v0.8.31 ROOM2081 53 SYS    System    OK The gate is locked. It needs a key.
+  B v0.8.31 ROOM2081 54 SYS    System    OK Elza used the key.
+  B v0.8.31 ROOM2090 47 SYS    System    OK There's something else lying next to it...
+  B v0.8.31 ROOM2091 47 SYS    System    OK There's something else lying next to it...
+  B v0.8.31 ROOM11A0  3 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A0\main03.wav Leon, wait up!
+  B v0.8.31 ROOM11A0  4 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A0\main04.wav No sign of the girl back there. And nothing's following us.
+  B v0.8.31 ROOM11A0  5 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A0\main05.wav Good. Let's get out of here.
+  B v0.8.31 ROOM11A0  6 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A0\main06.wav I'll go up first. Stay close.
+  B v0.8.31 ROOM11A0 11 SYS    System    OK Leon unlocked the door.
+  B v0.8.31 ROOM11A1  3 NEU    Sherry    FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A1\main03.wav Elza! Wait for us!
+  B v0.8.31 ROOM11A1  4 NEU    John      FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A1\main04.wav It's clear back there. Nothing's following us.
+  B v0.8.31 ROOM11A1  5 NEU    Elza      FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A1\main05.wav Good. Let's get out of here.
+  B v0.8.31 ROOM11A1  6 NEU    Elza      FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A1\main06.wav Sherry, wait. I think this is yours.
+  B v0.8.31 ROOM11A1  7 NEU    Sherry    FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A1\main07.wav My watch! I must have dropped it in the water...
+  B v0.8.31 ROOM11A1  8 NEU    Elza      FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A1\main08.wav The current carried it all the way down to that alligator.
+  B v0.8.31 ROOM11A1  9 NEU    Elza      FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A1\main09.wav Hold on to it. Your mom was right. It IS good luck.
+  B v0.8.31 ROOM11A1 10 NEU    John      FEHLER N6 Datei liegt schon: synchro\STAGE1\room11A1\main10.wav I'll go up first. Sherry, you're right behind me.
+  B v0.8.31 ROOM11A1 11 SYS    System    OK Elza unlocked the door.
+  B v0.8.31 ROOM2070  1 SYS    System    OK It's locked from the other side.
+  B v0.8.31 ROOM2071  1 SYS    System    OK It's locked from the other side.
+  B v0.8.31 ROOM2040  6 SYS    System    OK Leon unlocked the door.
+  B v0.8.31 ROOM2041  6 SYS    System    OK Elza unlocked the door.
+  B v0.8.31 ROOM3020  0 NEUAUF Leon      OK (alte Aufnahme liegt) Damn it! It won't budge.
+  B v0.8.31 ROOM3020  1 NEUAUF Marvin    OK (alte Aufnahme liegt) There's an open window up there. We could get in that way.
+  B v0.8.31 ROOM3020  2 NEUAUF Marvin    OK (alte Aufnahme liegt) Leon, give me a hand!
+  B v0.8.31 ROOM3020  7 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE3\room3020\main07.wav Wait here. I'll find a way to open this from the inside.
+  B v0.8.31 ROOM3020  8 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE3\room3020\main08.wav Watch yourself, Marvin.
+  B v0.8.31 ROOM3020  9 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE3\room3020\main09.wav Gunshots...? Marvin!
+  B v0.8.31 ROOM3060 11 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main11.wav Damn it...!
+  B v0.8.31 ROOM3060 12 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main12.wav Leon... Over here.
+  B v0.8.31 ROOM3060 13 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main13.wav Marvin! What happened?
+  B v0.8.31 ROOM3060 14 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main14.wav Dogs. One of them got my leg.
+  B v0.8.31 ROOM3060 15 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main15.wav I couldn't get that door open for you. But I found this.
+  B v0.8.31 ROOM3060 16 SYS    System    OK You've received the Green Keycard.
+  B v0.8.31 ROOM3060 17 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main17.wav And this. A floor plan of the plant.
+  B v0.8.31 ROOM3060 18 SYS    System    OK You've received the factory map.
+  B v0.8.31 ROOM3060 19 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main19.wav Found this, too. You'll get more use out of it than me.
+  B v0.8.31 ROOM3060 20 SYS    System    OK You've received the Super Redhawk.
+  B v0.8.31 ROOM3060 21 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main21.wav A keycard... This should open the door in the loading area.
+  B v0.8.31 ROOM3060 22 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main22.wav Go on. With this leg, I'd only slow you down.
+  B v0.8.31 ROOM3060 23 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main23.wav I'm not leaving you out here.
+  B v0.8.31 ROOM3060 24 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main24.wav I'll make it back to the lobby. I can lock myself in and kee
+  B v0.8.31 ROOM3060 25 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main25.wav If Ada turns up, I'll send her your way.
+  B v0.8.31 ROOM3060 26 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main26.wav Hang in there. I'll come back for you.
+  B v0.8.31 ROOM3060 27 NEU    Marvin    FEHLER N6 Datei liegt schon: synchro\STAGE3\room3060\main27.wav You'd better, rookie.
+  B v0.8.31 ROOM3070  6 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE3\room3070\main06.wav That came from the storage room... Ada?
+  B v0.8.31 ROOM30E0  3 NEUAUF Leon      OK (alte Aufnahme liegt) He's back in the lobby. Some dogs got his leg... he can bare
+  B v0.8.31 ROOM30E0 16 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE3\room30E0\main16.wav That came from the lobby... Marvin!
+  B v0.8.31 ROOM30E0 10 NEUAUF Leon      OK (alte Aufnahme liegt) That's a bite... They got you?
+  B v0.8.31 ROOM30E0 11 NEUAUF Marvin    OK (alte Aufnahme liegt) The lobby's gone...! They smashed through the front glass an
+  B v0.8.31 ROOM30E0 13 NEUAUF Marvin    OK (alte Aufnahme liegt) There's more of them than I thought... If they've come this 
+  B v0.8.31 ROOM30E0 17 NEU    Ada       FEHLER N6 Datei liegt schon: synchro\STAGE3\room30E0\main17.wav Someone's coming.
+  C v0.8.31 ROOM6030 21 NEUAUF John      OK (alte Aufnahme liegt) Name's John. This is Sherry. We came down here with a girl n
+  C v0.8.31 ROOM6030  2 NEUAUF Leon      OK (alte Aufnahme liegt) Where is she now?
+  C v0.8.31 ROOM6030  3 NEUAUF John      OK (alte Aufnahme liegt) We got split up in the fire. One second she was right behind
+  C v0.8.31 ROOM6030 22 NEUAUF Sherry    OK (alte Aufnahme liegt) Elza's still out there...!
+  C v0.8.31 ROOM6030  4 NEUAUF Leon      OK (alte Aufnahme liegt) If she's as tough as you say, she'll find another way out. B
+  C v0.8.31 ROOM6030  5 NEUAUF John      OK (alte Aufnahme liegt) Then I'm staying with the kid. And I'll keep an eye on your 
+  C v0.8.31 ROOM6031  1 NEUAUF Sherry    OK (alte Aufnahme liegt) A policeman brought Marvin down here. Then he went back into
+  C v0.8.31 ROOM6031  2 NEUAUF Elza      OK (alte Aufnahme liegt) Back? Why?
+  C v0.8.31 ROOM6031 12 NEU    Sherry    FEHLER N6 Datei liegt schon: synchro\STAGE6\room6031\main12.wav He said he had to find someone. He told us not to wait for h
+  C v0.8.31 ROOM6031 13 NEU    Elza      FEHLER N6 Datei liegt schon: synchro\STAGE6\room6031\main13.wav ...Then we won't. If that core goes, no one gets out. Let's 
+  C v0.8.31 ROOM6031 14 NEU    Sherry    FEHLER N6 Datei liegt schon: synchro\STAGE6\room6031\main14.wav It's moving! Elza, we did it!
+  C v0.8.31 ROOM6031 15 NEU    John      FEHLER N6 Datei liegt schon: synchro\STAGE6\room6031\main15.wav What the hell was that? It came from the back car!
+  C v0.8.31 ROOM6031 16 NEU    Sherry    FEHLER N6 Datei liegt schon: synchro\STAGE6\room6031\main16.wav It's that monster... it followed us!
+  C v0.8.31 ROOM6031 17 NEU    Elza      FEHLER N6 Datei liegt schon: synchro\STAGE6\room6031\main17.wav John, stay with Sherry and Marvin. Don't open that door for 
+  C v0.8.32 ROOM4010 44 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE4\room4010\main44.wav Marvin, I've got the vaccine. Hang on... this should help.
+  C v0.8.32 ROOM4010 45 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE4\room4010\main45.wav That announcement... what's happening?
+  C v0.8.32 ROOM4010 46 NEU    Ada       OK Something's gone wrong with the reactor. If it blows, the vi
+  C v0.8.32 ROOM4010 35 NEUAUF Ada       OK (alte Aufnahme liegt) Hurry to the shelter! I'll bring Marvin.
+  C v0.8.32 ROOM4010 47 SYS    System    OK The monitors are on. Most of the security cameras show nothi
+  C v0.8.32 ROOM4010 48 SYS    System    OK There's a map on the wall. Will you take it?
+  C v0.8.32 ROOM4010 49 SYS    System    OK You've taken the research center map.
+  C v0.8.32 ROOM4011 30 SYS    System    OK There's a map on the wall. Will you take it?
+  C v0.8.32 ROOM4011 31 SYS    System    OK You've taken the research center map.
+  C v0.8.32 ROOM5060 15 NEU    Durchsage OK Warning. The reactor safety system has been disabled.
+  C v0.8.32 ROOM5060 16 NEU    Durchsage OK Core overload in progress. Biohazard containment can no long
+  C v0.8.32 ROOM5060 17 NEU    Durchsage OK All personnel, proceed to the emergency shelters immediately
+  C v0.8.32 ROOM5060 18 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE5\room5060\main18.wav The core...? Marvin... I have to get this to him. Now!
+  C v0.8.32 ROOM5060 19 SYS    System    OK Current Biohazard Level: CRITICAL. The display is flashing r
+  C v0.8.32 ROOM5060 20 SYS    System    OK A vaccine synthesis machine. A sample of the virus must go i
+  C v0.8.32 ROOM5060 21 SYS    System    OK Will you set the T-Virus sample in the machine?
+  C v0.8.32 ROOM5061 15 NEU    Durchsage OK Warning. The reactor safety system has been disabled.
+  C v0.8.32 ROOM5061 16 NEU    Durchsage OK Core overload in progress. Biohazard containment can no long
+  C v0.8.32 ROOM5061 17 NEU    Durchsage OK All personnel, proceed to the emergency shelters immediately
+  C v0.8.32 ROOM5061 18 NEU    Elza      OK The core...? I have to get this to Sherry. Now!
+  C v0.8.32 ROOM5061 19 SYS    System    OK Current Biohazard Level: CRITICAL. The display is flashing r
+  C v0.8.32 ROOM5061 20 SYS    System    OK A vaccine synthesis machine. A sample of the virus must go i
+  C v0.8.32 ROOM5061 21 SYS    System    OK Will you set the G-Virus sample in the machine?
+  C v0.8.32 ROOM5011 46 NEU    Elza      OK Here, Sherry... this will help.
+  C v0.8.32 ROOM5011 30 NEUAUF Elza      OK (alte Aufnahme liegt) And the fire's already spreading. I had to run through it to
+  C v0.8.32 ROOM5021  2 NEU    Elza      OK ...If Sherry's been exposed to this...
+  C v0.8.32 ROOM50E0  0 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE5\room50E0\main00.wav What the hell is that thing...?
+  C v0.8.32 ROOM50E0  1 SYS    System    OK The power control console for the lower levels. Someone is s
+  C v0.8.32 ROOM50E0  2 SYS    System    OK There's an ID card clipped to the body. Will you take it?
+  C v0.8.32 ROOM50E0  3 SYS    System    OK You've taken the Research Center ID Card.
+  C v0.8.32 ROOM50E0  4 SYS    System    OK The console is wrecked. Sparks are still spitting from the p
+  C v0.8.32 ROOM50F1  0 NEU    Elza      OK What the hell is that thing...?
+  C v0.8.32 ROOM50F1  1 SYS    System    OK The power control console for the lower levels. Someone is s
+  C v0.8.32 ROOM50F1  2 SYS    System    OK There's an ID card clipped to the body. Will you take it?
+  C v0.8.32 ROOM50F1  3 SYS    System    OK You've taken the Research Center ID Card.
+  C v0.8.32 ROOM50F1  4 SYS    System    OK The console is wrecked. Sparks are still spitting from the p
+  C v0.8.32 ROOM4030  9 SYS    System    OK The breaker hums to life. Power has been restored to the lab
+  C v0.8.32 ROOM4030  2 UMTEXT System    OK The fuses are all connected. The elevator should be running 
+  C v0.8.32 ROOM4031  9 SYS    System    OK The breaker hums to life. Power has been restored to the lab
+  C v0.8.32 ROOM4031  2 UMTEXT System    OK The fuses are all connected. The elevator should be running 
+  C v0.8.32 ROOM4090  8 SYS    System    OK An ultra low temperature freezer. It's dead. There's no powe
+  C v0.8.32 ROOM4090  9 SYS    System    OK Will you use the Enzyme?
+  C v0.8.32 ROOM4090 10 SYS    System    OK You've set the Enzyme in the freezer.
+  C v0.8.32 ROOM4090 11 SYS    System    OK Will you use the Research Center ID Card?
+  C v0.8.32 ROOM4090 12 SYS    System    OK The keypanel accepted the ID card. The display reads: "ENTER
+  C v0.8.32 ROOM4090 13 SYS    System    OK "SAMPLE TRANSFER READY."
+  C v0.8.32 ROOM4090 14 SYS    System    OK The robotic arm lifts a sealed case out of the freezer...
+  C v0.8.32 ROOM4090 15 SYS    System    OK You've taken the T-Virus.
+  C v0.8.32 ROOM4091  8 SYS    System    OK An ultra low temperature freezer. It's dead. There's no powe
+  C v0.8.32 ROOM4091  9 SYS    System    OK Will you use the Enzyme?
+  C v0.8.32 ROOM4091 10 SYS    System    OK You've set the Enzyme in the freezer.
+  C v0.8.32 ROOM4091 11 SYS    System    OK Will you use the Research Center ID Card?
+  C v0.8.32 ROOM4091 12 SYS    System    OK The keypanel accepted the ID card. The display reads: "ENTER
+  C v0.8.32 ROOM4091 13 SYS    System    OK "SAMPLE TRANSFER READY."
+  C v0.8.32 ROOM4091 14 SYS    System    OK The robotic arm lifts a sealed case out of the freezer...
+  C v0.8.32 ROOM4091 15 SYS    System    OK You've taken the G-Virus.
+  C v0.8.32 ROOM4090 16 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE4\room4090\main16.wav Easy... one slip and it's all for nothing.
+  C v0.8.32 ROOM4091 16 NEU    Elza      OK Easy... one slip and it's all for nothing.
+  C v0.8.32 ROOM4091  1 UMTEXT System    OK The enzyme is already in place. I need to operate the machin
+  C v0.8.32 ROOM5050  5 UMTEXT System    OK Registration complete. Access granted: Cell Cultivation Room
+  C v0.8.32 ROOM5051  5 UMTEXT System    OK Registration complete. Access granted: Cell Cultivation Room
+  C v0.8.32 ROOM4080  0 UMTEXT System    OK "Cell Cultivation Room" It's electronically locked. Register
+  C v0.8.32 ROOM4081  0 UMTEXT System    OK "Cell Cultivation Room" It's electronically locked. Register
+  C v0.8.32 ROOM50A0  4 SYS    System    OK The panel accepts the card, but the shutter won't move. It's
+  C v0.8.32 ROOM50A1  4 SYS    System    OK The panel accepts the card, but the shutter won't move. It's
+  C v0.8.32 ROOM6020  1 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE6\room6020\main01.wav Ada! Is Marvin...?
+  C v0.8.32 ROOM6020  2 NEU    Ada       OK He's breathing. The vaccine's doing its job... for now.
+  C v0.8.32 ROOM6020  3 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE6\room6020\main03.wav This whole place is coming apart.
+  C v0.8.32 ROOM6020  4 NEU    Ada       OK The reactor. When it goes, this shelter won't protect anyone
+  C v0.8.32 ROOM6020  5 NEU    Ada       OK There's an emergency train below the hangar. That's our way 
+  C v0.8.32 ROOM6020  6 NEU    Ada       OK I'll take Marvin down. Go through the C-2 corridor. The hang
+  C v0.8.32 ROOM6020  7 NEU    Leon      FEHLER N6 Datei liegt schon: synchro\STAGE6\room6020\main07.wav And you?
+  C v0.8.32 ROOM6020  8 NEU    Ada       OK I'll meet you in the hangar. Go!
+  C v0.8.32 ROOM6021  1 NEU    John      OK Smoke's getting in under the door. This place won't hold for
+  C v0.8.32 ROOM6021  2 NEU    Elza      OK If that core goes, nowhere down here is safe.
+  C v0.8.32 ROOM6021  3 NEU    Sherry    OK There's a train! Under the hangar. Dad's people used it to l
+  C v0.8.32 ROOM6021  4 NEU    Elza      OK Can you get us there?
+  C v0.8.32 ROOM6021  5 NEU    Sherry    OK The hangar gate only opens from the inside. But I know a way
+  C v0.8.32 ROOM6021  6 NEU    John      OK Sherry, wait!
+  C v0.8.32 ROOM6021  7 NEU    Elza      OK John, go after her. I'll meet you at the hangar.
+  C v0.8.32 ROOM5140  0 NEUAUF Annette   OK (keine alte Aufnahme) It's open. Come through, quickly.
+  C v0.8.32 ROOM5140  1 NEU    Leon      OK ...Who's there?
+  C v0.8.32 ROOM5140  2 SYS    System    OK The hangar shutter is sealed. It can only be opened from the
+  C v0.8.32 ROOM5141  0 NEUAUF Sherry    OK (keine alte Aufnahme) It's open! Back here, Elza!
+  C v0.8.32 ROOM5141  2 SYS    System    OK The hangar shutter is sealed. It can only be opened from the
+  C v0.8.32 ROOM50B0 10 NEUAUF Leon      OK (alte Aufnahme liegt) Ada... the reactor's safety system. That's what you "had to 
+  C v0.8.32 ROOM2000 30 SYS    System    OK There's a map on the wall. Will you take it?
+  C v0.8.32 ROOM2000 31 SYS    System    OK You've taken the drainage map.
+  C v0.8.32 ROOM2001 30 SYS    System    OK There's a map on the wall. Will you take it?
+  C v0.8.32 ROOM2001 31 SYS    System    OK You've taken the drainage map.
+  C v0.8.32 ROOM30C1 30 SYS    System    OK There's a map on the wall. Will you take it?
+  C v0.8.32 ROOM30C1 31 SYS    System    OK You've taken the factory map.
+  C v0.8.32 ROOM6010 30 SYS    System    OK There's a map on the wall. Will you take it?
+  C v0.8.32 ROOM6010 31 SYS    System    OK You've taken the subway map.
+  C v0.8.32 ROOM6011 30 SYS    System    OK There's a map on the wall. Will you take it?
+  C v0.8.32 ROOM6011 31 SYS    System    OK You've taken the subway map.
+  A v0.8.31 ROOM5090  2 NEU    Leon      OK (Aufnahme liegt (RE2 Leon VOICE07.XAS[1]_02, a89c8254f)) Game over.
+  A v0.8.31 ROOM5091  2 NEU    Elza      OK (Aufnahme liegt (RE2 Claire VOICE17.XAS[7]_1, a89c8254f)) You lose, big guy!
+  A v0.8.31 ROOM5090  3 NEU    John      FEHLER N6 Datei liegt schon: synchro\STAGE5\room5090\main03.wav Leon, catch! Send him to hell!
+  A v0.8.31 ROOM5091  3 NEU    John      FEHLER N6 Datei liegt schon: synchro\STAGE5\room5091\main03.wav Elza, catch! Let's finish this!
+
+-- Bank-9-Bits --
+  Original (Mod-Baum): 85 belegt; Port: 79 belegt; 40-%-Disc: 15 belegt
+  Bit 118 RE15_R42_BIT_2080_SZENE      B   v0.8.31 OK  Nachgespraech 2080/2081 gesehen (L1/E1)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_2080_SZENE): engine/src/story1_r42.c (Wrapper, RE15_R42_BIT_2080_SZENE), engine/src/story1_r42.c:151, engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_2080_SZENE), engine/src/story2_r42.c:137, engine/src/story2_r42.c:172
+  Bit 119 RE15_R42_BIT_2080_TOR        B   v0.8.31 OK  Tor 2080/2081 mit dem Schluessel geoeffnet (K-01)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_2080_TOR): engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_2080_TOR)
+  Bit 120 RE15_R42_BIT_LEITER          B   v0.8.31 OK  Szene vor der Leiter 11A0/11A1 gesehen (K-07)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_LEITER): engine/src/story1_r42.c (Wrapper, RE15_R42_BIT_LEITER), engine/src/story1_r42.c:151, engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_LEITER)
+  Bit 121 RE15_R42_BIT_TUER_11A        B   v0.8.31 OK  Tuer 11A0/11A1 <-> 2070/2071 von der 11A-Seite geoeffnet (K-02)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_TUER_11A): engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_TUER_11A)
+  Bit 122 RE15_R42_BIT_TUER_2040       B   v0.8.31 OK  Tuer 2040/2041 <-> 2070/2071 aus dem Belohnungsraum geoeffnet (K-03)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_TUER_2040): engine/src/story2_r42.c (Wrapper, RE15_R42_BIT_TUER_2040)
+  Bit 123 RE15_R42_BIT_3020_SCHUESSE   B   v0.8.31 OK  3020: Leon hoert die Schuesse (L5)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_3020_SCHUESSE): engine/src/story3a_r42.c (Wrapper, RE15_R42_BIT_3020_SCHUESSE), engine/src/story3a_r42.c:322
+  Bit 124 RE15_R42_BIT_3060_UEBERGABE  B   v0.8.31 OK  3060: Wiedersehen + Uebergabe, oeffnet Kartentuer 3010 (L5-L7, L-10)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_3060_UEBERGABE): engine/src/story3a_r42.c (Wrapper, RE15_R42_BIT_3060_UEBERGABE), engine/src/story3a_r42.c:426
+  Bit 129 RE15_R42_BIT_FINALE_ENDE     A   v0.8.31 OK  Finale beendet, Abspann frei (T-07)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_FINALE_ENDE): engine/src/aot_common.c:731, engine/src/endvideo_r42.c:107, engine/src/finale_r42.c:148, engine/src/finale_r42.c:491, engine/src/scd_vm.c (Wrapper, RE15_R42_BIT_FINALE_ENDE), engine/src/scd_vm.c:1306, platform/pc/main.c:5426
+  Bit 137 RE15_R42_BIT_WERFER_FINALE   A   v0.8.31 OK  Raketenwerfer aus der Wurfszene 5090/5091 aufgehoben (K-13, Strang finale S5)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_WERFER_FINALE): engine/src/finale_wurf_r42.c:209, engine/src/finale_wurf_r42.c:625, engine/src/item_modal_common.c (Wrapper, RE15_R42_BIT_WERFER_FINALE)
+  Bit 130 RE15_R42_BIT_ZUG_ELZA        C   v0.8.31 OK  Zugstart 6031 gesehen (E9)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_ZUG_ELZA): engine/src/gen/story6_r42_szenen.inc:94, engine/src/story6_r42.c:131, engine/src/story6_r42.c:132
+  Bit 131 RE15_R42_BIT_ALARM           C   v0.8.32 OK  Alarm/Durchsage 5060/5061 (L13/E4)
+  Bit 132 RE15_R42_BIT_IMPFUNG         C   v0.8.32 OK  Begleiter geimpft 4010/5011 (L13/E4)
+  Bit  23 RE15_R42_BIT_SCHUTZRAUM      C   v0.8.32 OK  Schutzraum-Szene 6020/6021 (L18/E5)
+  Bit  24 RE15_R42_BIT_HANGAR          C   v0.8.32 OK  Hangar-Tor 5140/5141 offen (L19/E5)
+  Bit  25 RE15_R42_BIT_IDKARTE         C   v0.8.32 OK  Research Center ID Card genommen (L14/E-11)
+  Bit  26 RE15_R42_BIT_ENZYM_DRIN      C   v0.8.32 OK  Enzym in der Truhe 4090/4091 (L16)
+  Bit  27 RE15_R42_BIT_KARTE_OK        C   v0.8.32 OK  ID-Karte am Tastenfeld 4090/4091 (L16)
+  Bit  28 RE15_R42_BIT_CODE_OK         C   v0.8.32 OK  Code eingegeben 4090/4091 (L16/L17)
+  Bit  29 RE15_R42_BIT_PROBE           C   v0.8.32 OK  Virusprobe genommen 4090/4091 (L16)
+  Bit  30 RE15_R42_BIT_PROBE_DRIN      C   v0.8.32 OK  Probe im Geraet 5060/5061 (L16)
+  Bit  31 RE15_R42_BIT_ZETTEL          C   v0.8.32 OK  Laborzettel 40B0/40B1 genommen (L17)
+  Bit  32 RE15_R42_BIT_DOK_P4          C   v0.8.32 OK  Dokument P-4 Lab Incident Report 5021 (E3)
+  Bit  33 RE15_R42_BIT_DOK_VAKZIN      C   v0.8.32 OK  Dokument Vaccine Synthesis 5011 (E3)
+  Bit  17 RE15_R42_BIT_ENZYM           C   v0.8.32 OK (Disc-Bit, bewusst)  Enzym genommen = Disc-Bit ROOM40A1 @0x00ED0 pc[18] (L16)
+  Bit  34 RE15_R42_BIT_PLAN_KANAL      C   v0.8.32 OK  Lageplan Kanalisation 2000/2001 (6b)
+  Bit  35 RE15_R42_BIT_PLAN_FABRIK     B/C v0.8.31 OK  Lageplan Fabrik: Leon Uebergabe 3060 (L6) oder selbst in 30C0, Elza 30C1
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_PLAN_FABRIK): engine/src/story3a_r42.c (Wrapper, RE15_R42_BIT_PLAN_FABRIK)
+  Bit 139 RE15_R42_BIT_PLAN_MARVIN     B   v0.8.31 OK  Marvin traegt den Fabrikplan aus 30C0 (K-16, Strang fabrikplan; Uebergabe 3060 setzt 35)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_PLAN_MARVIN): engine/src/story3a_r42.c (Wrapper, RE15_R42_BIT_PLAN_MARVIN), engine/src/story3a_r42.c:525
+  Bit  36 RE15_R42_BIT_PLAN_FORSCHUNG  C   v0.8.32 OK  Lageplan Forschungszentrum 4010/4011 (6b)
+          EIGEN (Port nutzt das Vertrags-Bit ueber RE15_R42_BIT_PLAN_FORSCHUNG): engine/src/ungenutzt_r42.c:252, engine/src/ungenutzt_r42.c:254, engine/src/ungenutzt_r42.c:293, engine/src/ungenutzt_r42.c:70, engine/src/ungenutzt_r42.c:71
+  Bit  37 RE15_R42_BIT_PLAN_UBAHN      C   v0.8.32 OK  Lageplan U-Bahn 6010/6011 (6b)
+  danach noch frei (Original, Port, Disc): 67 Bits, Auszug [0, 3, 4, 7, 8, 9, 42, 77, 78, 87, 88, 89, 145, 156, 157, 158, 159, 161, 171, 172, 173, 174, 175, 176]
+
+ERGEBNIS: KOLLISION (185 Zeilen, 29 Bits, 63 Fehler)

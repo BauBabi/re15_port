@@ -21,6 +21,9 @@
  *               NB2 N3: 21 "A keycard..." direkt nach 16 "You've received the Green Keycard."
  *   wiedersehen_rot  NB2 N2/N3: Marvin hat die Red Master Keycard behalten (Wegwerf-Frage abgelehnt): ihr Empfang kommt VOR der Green
  *               Keycard (15 -> Red 20 -> Green 16 -> 21), danach Plan und die weiteren Funde
+ *   Strang fabrikplan (20.11.2026, K-16, BEGRUENDET ANGEPASST): der Plan (17/18) kommt nur noch, wenn Marvin ihn in 30C0 genommen hat
+ *               (Bit RE15_R42_BIT_PLAN_MARVIN). programme/wiedersehen/wiedersehen_rot setzen dieses Bit fuer die bisherigen Faelle
+ *               (Folgen unveraendert) und programme prueft zusaetzlich die Faelle OHNE Plan; Ablauf/Aufnahme: unit_r42_fabrikplan_*
  *   karte3010   Kartentuer 3010 Platz 6: nach Marvins Abschnitt ohne Uebergabe "locked" (msg 0 @0x020B2), nach Bit 124 die Original-Wege
  *   rdttexte    NB1 B1/B5: nach dem ECHTEN Raumaufbau (scd_room_reenter + re15_msg_load_room_block) stehen in 3020 msg 0..2 und 30E0
  *               msg 3 die neuen Texte (Wortlaut), Elzas 3021 behaelt den RDT-Text
@@ -347,6 +350,7 @@ static void teil_programme(void)
         for (int i = 0; i < 5; i++) { s.marvin[i].id = fall[f].ids[i]; s.marvin[i].qty = fall[f].qty[i]; }
         uint8_t blk[RE15_S3A_SPEICHER_BYTES]; memset(blk, 0, sizeof blk); memcpy(blk, &s, sizeof s);
         re15_game_state_init();
+        re15_game_flag_set(9, RE15_R42_BIT_PLAN_MARVIN, 1);   /* Strang fabrikplan: Marvin hat den Plan in 30C0 genommen */
         re15_story3a_r42_import(blk);
         p = re15_story3a_r42_programm(2, &n);
         int k = msg_folge(p, n, ids, 40), b124 = 0, ueb = 0;
@@ -368,6 +372,41 @@ static void teil_programme(void)
                   fall[f].soll_u, u);
         }
         PRUEF(b124 && n >= 2 && p[n - 2] == 0x01 && p[n - 1] == 0x00, "Wiedersehen %s: Set(9,124,1) und Evt_end", fall[f].name);
+    }
+    /* Strang fabrikplan: OHNE Marvins Plan (Bit 139 = 0) entfallen 17/18 und ihr Uebergabe-Schritt; alle anderen Zeilen behalten Id
+     * und Reihenfolge. Ebenso, wenn Leon den Plan schon besitzt (Bit 35, selbst in 30C0 genommen). */
+    static const struct { const char *name; uint8_t ids[5]; uint8_t qty[5]; int b35; const char *soll; int ueb; const char *soll_u; } ohne[] = {
+        { "Keycard ohne Plan",           { 0x03, 0x15, 0x36, 0, 0 },    { 15, 50, 1, 0, 0 }, 0, "12,13,14,15,16,21,22,23,24,25,26,27", 1,
+          "15,U,16,21,22" },
+        { "Keycard + Redhawk ohne Plan", { 0x03, 0x15, 0x36, 0x07, 0 }, { 15, 50, 1, 6, 0 }, 0, "12,13,14,15,16,21,19,20,22,23,24,25,26,27",
+          2, "15,U,16,21,19,U,20,22" },
+        { "ohne Keycard ohne Plan",      { 0x03, 0x15, 0, 0, 0 },       { 15, 50, 0, 0, 0 }, 0, "12,13,14,22,23,24,25,26,27", 0, "14,22" },
+        { "Red behalten ohne Plan",      { 0x03, 0x15, 0x46, 0x36, 0 }, { 15, 50, 1, 1, 0 }, 0, "12,13,14,15,20,16,21,22,23,24,25,26,27", 2,
+          "15,U,20,U,16,21,22" },
+        { "Leon besitzt den Plan schon", { 0x03, 0x15, 0x36, 0, 0 },    { 15, 50, 1, 0, 0 }, 1, "12,13,14,15,16,21,22,23,24,25,26,27", 1,
+          "15,U,16,21,22" },
+    };
+    for (size_t f = 0; f < sizeof ohne / sizeof ohne[0]; f++) {
+        re15_s3a_figur_t s; memset(&s, 0, sizeof s);
+        s.marvin_offen = 1;
+        for (int i = 0; i < 5; i++) { s.marvin[i].id = ohne[f].ids[i]; s.marvin[i].qty = ohne[f].qty[i]; }
+        uint8_t blk[RE15_S3A_SPEICHER_BYTES]; memset(blk, 0, sizeof blk); memcpy(blk, &s, sizeof s);
+        re15_game_state_init();
+        if (ohne[f].b35) { re15_game_flag_set(9, RE15_R42_BIT_PLAN_FABRIK, 1); re15_game_flag_set(9, RE15_R42_BIT_PLAN_MARVIN, 1); }
+        re15_story3a_r42_import(blk);
+        p = re15_story3a_r42_programm(2, &n);
+        int k = msg_folge(p, n, ids, 40), ueb = 0;
+        char u[240] = "";
+        for (int i = 0; i + 3 < n; i++) {
+            if (p[i] == 0x22 && p[i + 1] == 5 && p[i + 2] == RE15_S3A_SIG_UEBERGABE && p[i + 3] == 1) {
+                ueb++; snprintf(u + strlen(u), sizeof u - strlen(u), "%sU", u[0] ? "," : "");
+            }
+            if (p[i] == 0x2b && p[i + 2] == 0x00 && p[i + 3] == 0x00)
+                snprintf(u + strlen(u), sizeof u - strlen(u), "%s%d", u[0] ? "," : "", p[i + 1]);
+        }
+        PRUEF(!strcmp(als_text(ids, k, t, sizeof t), ohne[f].soll), "Wiedersehen %s: Zeilen %s (soll %s)", ohne[f].name, t, ohne[f].soll);
+        PRUEF(ueb == ohne[f].ueb && strstr(u, ohne[f].soll_u) != NULL, "Wiedersehen %s: %d Uebergaben (soll %d), Folge %s enthaelt %s",
+              ohne[f].name, ueb, ohne[f].ueb, u, ohne[f].soll_u);
     }
     re15_story3a_r42_neues_spiel();
 }
@@ -526,6 +565,7 @@ static int wiedersehen_lauf(const uint8_t *ids, const uint8_t *qty, int n, char 
     g_gameflow.character = 0;
     re15_game_flag_set(3, RE15_S3A_A0_BIT, 1); re15_game_flag_set(4, 0xC4, 1); re15_game_flag_set(9, 85, 1);
     re15_game_flag_set(7, 0x50, 1); re15_game_flag_set(7, 0x51, 1); re15_game_flag_set(7, 0x52, 1);
+    re15_game_flag_set(9, RE15_R42_BIT_PLAN_MARVIN, 1);   /* Strang fabrikplan: Marvin hat den Plan in 30C0 genommen (sonst ohne 17/18) */
     re15_s3a_figur_t s; memset(&s, 0, sizeof s);
     s.marvin_offen = 1;
     for (int i = 0; i < n; i++) { s.marvin[i].id = ids[i]; s.marvin[i].qty = qty[i]; }
@@ -595,6 +635,7 @@ static void teil_wiedersehen(void)
     PRUEF(inv_menge(0x03) == 12 && inv_menge(0x15) == 30, "Leon behaelt seine Pistole/Munition; Marvins Browning/Munition bleiben bei Marvin");
     PRUEF(bit9(RE15_R42_BIT_PLAN_FABRIK) && re15_map_owned_page(RE15_S3A_FABRIK_BLATT), "Fabrikplan: Bit %d, Kartenblatt %d im Besitz",
           RE15_R42_BIT_PLAN_FABRIK, RE15_S3A_FABRIK_BLATT);
+    PRUEF(!bit9(RE15_R42_BIT_PLAN_MARVIN), "Strang fabrikplan: Marvin traegt den Plan nicht mehr (Bit %d = 0)", RE15_R42_BIT_PLAN_MARVIN);
     PRUEF(bit9(RE15_R42_BIT_3060_UEBERGABE), "Bit 124 nach %d Bildern", f);
     PRUEF(typ_zahl(RE15_S3A_TYP_MARVIN) == 0, "Marvin ist durch die orange Tuer gegangen");
     PRUEF(!re15_story3a_r42_figur()->marvin_offen, "Uebergabe erledigt (nichts mehr gemerkt)");

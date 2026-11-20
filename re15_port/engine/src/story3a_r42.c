@@ -348,6 +348,13 @@ static int munition_ueber(void)
     return n > RE15_S3A_MUNITION_MENGE ? n - RE15_S3A_MUNITION_MENGE : 0;
 }
 
+/* Strang fabrikplan: Marvin traegt den Fabrikplan = er hat ihn in 30C0 genommen (kartenitems_r36 Zeile 30C0, begleit_bit) und Leon
+ * besitzt ihn noch nicht (Bit 35: Uebergabe schon gelaufen oder Leon nahm ihn selbst in 30C0). */
+static int marvin_traegt_plan(void)
+{
+    return bit9(RE15_R42_BIT_PLAN_MARVIN) && !bit9(RE15_R42_BIT_PLAN_FABRIK);
+}
+
 static void wiedersehen_bauen(void)
 {
     s_pw_n = 0; s_ueb_n = 0; s_ueb_i = 0;
@@ -356,7 +363,11 @@ static void wiedersehen_bauen(void)
      * loading area." (21) folgt DIREKT auf "You've received the Green Keycard." (16) - die Zeile meint diese Karte. Hat Marvin die
      * Red Master Keycard behalten (Wegwerf-Frage am Rechner K8 ROOM3050 abgelehnt; sonst ist sie verbraucht: sub15 msg 5 @0x02608,
      * Konzept 6b), kommt ihr Empfang VOR der Green Keycard: 15 "But I found this." -> Red (20) -> Green (16) -> 21. Dann der
-     * Fabrikplan (17/18), dann alle weiteren Funde (19, 20 je Fund). */
+     * Fabrikplan (17/18), dann alle weiteren Funde (19, 20 je Fund).
+     * Strang fabrikplan (NUTZERWUNSCH 20.11.2026 "Das macht natürlich nur sinn wenn er ihn auch wirklich irgendwo aufnimmt..."):
+     * 17/18 und der Plan-Schritt NUR, wenn Marvin den Wandplan in 30C0 genommen hat (Bit RE15_R42_BIT_PLAN_MARVIN, kartenitems_r36
+     * Zeile 30C0) und Leon ihn nicht schon besitzt (Bit 35). Sonst entfallen 17/18; Ids, Texte und Reihenfolge der uebrigen
+     * Zeilen bleiben (die Aufnahmen synchro/STAGE3/room3060/mainNN.wav haengen an den Ids). */
     int karte = 0;
     if (s_f.marvin_offen && seite_hat(s_f.marvin, RE15_S3A_KEYCARD) >= 0) karte = 1;
     /* Altstand v0.8.30 (gemeinsames Inventar, kein Tausch): Marvin hat die Karte genommen (Taken-Bit 85 @0x014B2), Leon traegt sie
@@ -366,7 +377,8 @@ static void wiedersehen_bauen(void)
     const int rot = s_f.marvin_offen && seite_hat(s_f.marvin, RE15_S3A_ROT) >= 0;
     if (karte && rot) s_ueb[s_ueb_n++] = RE15_S3A_ROT;
     if (karte) s_ueb[s_ueb_n++] = RE15_S3A_KEYCARD;
-    s_ueb[s_ueb_n++] = S3A_PLAN;
+    const int plan = marvin_traegt_plan();
+    if (plan) s_ueb[s_ueb_n++] = S3A_PLAN;
     const int erste_weitere = s_ueb_n;
     if (s_f.marvin_offen) {
         if (!karte && rot) s_ueb[s_ueb_n++] = RE15_S3A_ROT;
@@ -398,7 +410,7 @@ static void wiedersehen_bauen(void)
         if (rot) PW(OP_UEBERGABE, OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 9));                        /* 20 "...Red Master Keycard." */
         PW(OP_UEBERGABE, OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 5), OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 10));   /* 16, 21 */
     }
-    PW(OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 6), OP_UEBERGABE, OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 7));             /* 17, 18 */
+    if (plan) PW(OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 6), OP_UEBERGABE, OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 7));   /* 17, 18 */
     if (s_ueb_n > erste_weitere) {
         PW(OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 8));                                                               /* 19 */
         for (int k = erste_weitere; k < s_ueb_n; k++) PW(OP_UEBERGABE, OP_ZEILE(RE15_R42_MSG_3060_ERSTE + 9));   /* 20 je Fund */
@@ -495,9 +507,12 @@ const uint8_t *re15_story3a_r42_evt_exec(uint16_t room_id, uint8_t sub, const ui
     return s_p3060;
 }
 
+/* Fabrik-Blatt: Leons Besitz (Bit 35 - Uebergabe 3060 oder selbst genommen) ODER, solange Marvin spielt, Marvins Plan (Strang
+ * fabrikplan: seine Karte zeigt Blatt 7 ganz; nach dem Rueckwechsel hat Leon es erst mit der Uebergabe). */
 int re15_story3a_r42_blatt(unsigned page)
 {
-    return page == RE15_S3A_FABRIK_BLATT && bit9(RE15_R42_BIT_PLAN_FABRIK);
+    if (page != RE15_S3A_FABRIK_BLATT) return 0;
+    return bit9(RE15_R42_BIT_PLAN_FABRIK) || (s_f.aktiv && bit9(RE15_R42_BIT_PLAN_MARVIN));
 }
 
 /* ---- Uebergabe eines Fundes: in Leons Inventar; ist es voll, in die Kiste (RE2-Ring, re15_itembox.h), damit nichts verloren
@@ -506,8 +521,11 @@ static void geben(uint8_t id)
 {
     if (id == S3A_PLAN) {
         bit9_setzen(RE15_R42_BIT_PLAN_FABRIK);
+        /* Strang fabrikplan: Marvin traegt ihn nicht mehr (der Plan ist jetzt Leons Besitz, haengt weder in 30C0 noch in 30C1) */
+        re15_game_flag_set(RE15_R42_BANK, RE15_R42_BIT_PLAN_MARVIN, 0);
         g_re15_s3a_zaehler[10]++;
-        S3A_LOG("ROOM3060: Fabrikplan uebergeben -> Bit %d = 1 (Kartenblatt %d)", RE15_R42_BIT_PLAN_FABRIK, RE15_S3A_FABRIK_BLATT);
+        S3A_LOG("ROOM3060: Fabrikplan uebergeben -> Bit %d = 1 (Kartenblatt %d), Marvins Bit %d = 0", RE15_R42_BIT_PLAN_FABRIK,
+                RE15_S3A_FABRIK_BLATT, RE15_R42_BIT_PLAN_MARVIN);
         return;
     }
     uint8_t menge = 1;
@@ -675,8 +693,9 @@ void re15_story3a_r42_tick(void)
         if (starten(s_pw) >= 0) {
             s_szene = SZ_WIEDERSEHEN; s_start_bild = g_engine.frame_count;
             g_re15_s3a_zaehler[7]++;
-            S3A_LOG("ROOM3060: Hunde tot (Zone %u Bits 0x%02X..0x%02X) -> Wiedersehen, %d Uebergaben (Programm %d B)",
-                    (unsigned)re15_em_status_zone(), RE15_S3A_HUND_KILL0, RE15_S3A_HUND_KILL0 + RE15_S3A_HUNDE - 1, s_ueb_n, s_pw_n);
+            S3A_LOG("ROOM3060: Hunde tot (Zone %u Bits 0x%02X..0x%02X) -> Wiedersehen, %d Uebergaben (Programm %d B), Fabrikplan %s",
+                    (unsigned)re15_em_status_zone(), RE15_S3A_HUND_KILL0, RE15_S3A_HUND_KILL0 + RE15_S3A_HUNDE - 1, s_ueb_n, s_pw_n,
+                    marvin_traegt_plan() ? "von Marvin (Zeilen 17/18)" : "nicht bei Marvin (ohne 17/18)");
         }
     }
 }
