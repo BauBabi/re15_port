@@ -31,6 +31,7 @@
 #include "re15_scd.h"
 #include "re15_vab.h"
 #include "re15_spu_gauss.h" /* Strang ton Stufe 5: Pitch-Zaehler + 4-Punkt-Gauss der SPU (psx-spx) */
+#include "re15_spu_adsr.h"  /* Strang ton Stufe 7: Huellkurve (ADSR) der SPU fuer die Geraeusch-Stimmen (psx-spx) */
 #include "re15_room.h"
 #include "re15_esp.h"     /* re15_esp_shell_clink_hook */     /* g_room_rdt — footstep snd0 VAB sliced from the room RDT */
 #include "re2_ems.h"      /* WELLE A: RE2-ENEMSE-Bank-TOC + SE-Map-Dekodierung (PC-only) */
@@ -127,6 +128,9 @@ typedef struct {
     const int16_t *loop_pcm; /* Strang ton Stufe 2: Schleife gilt nur, solange pcm == loop_pcm (eine
                             * Startstelle ohne Schleifen-Angabe kann so keine alte Schleife erben)  */
     int      loop_start;   /* Probe-Index der Wiederhol-Adresse (re15_vag_loop_start), -1 = einmal  */
+    re15_spu_adsr_t huelle; /* Strang ton Stufe 7: ADSR der Stimme (Register aus dem Ton: SpuVmDoAllocate @0x8005638c /
+                            * @0x800563d0, RE2 @0x80081e80 / @0x80081ec4; Ablauf re15_spu_adsr.h)                      */
+    int      huelle_an;    /* 1 = Stimme mit Ton-Kontext (ADSR laeuft); 0 = toter Bring-up-Pfad ohne Ton (immer voll) */
 } active_sample_t;
 
 static int16_t *s_decoded_vag    [RE15_VAB_MAX_SAMPLES];
@@ -165,6 +169,7 @@ typedef struct {
     int      vl_q15, vr_q15;
     int      se_id;        /* +0x02, nur Buchhaltung/Debug (@0x80045510)                 */
     int      loop_start;   /* Strang ton Stufe 2: Schleifenpunkt der Probe, -1 = einmal  */
+    uint16_t adsr1, adsr2; /* Strang ton Stufe 7: ADSR des Tons (VagAtr +0x10 / +0x12), gesetzt beim Key-On der Pumpe */
 } se_pending_t;
 static se_pending_t s_se_pend[RE15_SE_VOICE_COUNT];
 
@@ -455,17 +460,12 @@ static void re15_amb_mix(int16_t *out, int frames);         /* looping rotor amb
 static void re15_bgm_play_room(int stage, int room); /* load+play MAIN+SUB layers */
 static int  re15_bgm_for_room(int stage, int room);   /* stage/room → MAIN slot   */
 
-/* Audio callback — mixes active sample slots into the output buffer.
- * Format: signed 16-bit stereo at the device sample rate. SDL guarantees
- * `len` is a whole number of audio frames (we asked for 1024 samples ×
- * 2 channels × 2 bytes = 4096 bytes per chunk). */
-static void audio_callback(void *userdata, Uint8 *stream, int len)
+/* Mischkette — alle Stimmen, Sprache, Film-Ton, Musik + Hall, Mono-Faltung in `out` (16 Bit Stereo, volle Aussteuerung
+ * wie der Ausgang des Tonchips). Strang ton Stufe 7: bis hierher hiess das audio_callback und schrieb direkt in den
+ * SDL-Puffer; der Lautstaerke-Regler des Nutzers folgt jetzt getrennt in audio_endstufe (unten). */
+static void audio_mischen(int16_t *out, int frames)
 {
-    (void)userdata;
-    SDL_memset(stream, 0, (size_t)len);
-
-    int16_t *out      = (int16_t *)stream;
-    int      frames   = len / 4;                /* 2 ch × 2 bytes = 4 B/frame */
+    SDL_memset(out, 0, (size_t)frames * 4u);
 
     /* For each active sample, mix into both output channels. Volume
      * scaling is Q15. Clip to int16 range.
@@ -500,7 +500,11 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
         const uint32_t pitch = step >> 4;
         for (int f = 0; f < frames; f++) {
             if (s->z.pos >= s->pcm_len) { s->active = 0; break; }
-            const int32_t g = re15_spu_gauss_wert(&s->z, s->pcm);
+            int32_t g = re15_spu_gauss_wert(&s->z, s->pcm);
+            /* Strang ton Stufe 7 (Messbericht U7): Huellkurve wie die SPU - Probe * ADSR-Pegel >> 15, danach die
+             * Stimmen-Lautstaerke (Reihenfolge wie das Referenzmodell spu_ref.py: `v = (s * env) >> 15`, dann * volL/volR).
+             * Vorher spielte der Port jede Geraeusch-Stimme ohne Huellkurve (immer voll). */
+            if (s->huelle_an) g = (g * re15_spu_adsr_takt(&s->huelle)) >> 15;
             /* Stimmen-Lautstaerke (Register * 2, Q15) und danach die Hauptlautstaerke des
              * Tonchips: Register 0x3fff (SsSetMVol(127,127) @0x80043ba8 -> * 129 @0x8005c9c4;
              * im laufenden Original gemessen) = Q15 0x7ffe. Sie ersetzt das fruehere pauschale
@@ -582,11 +586,64 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
         }
     }
 
-    /* Runde 41 Spur D: Lautstaerke-Endstufe — EINE Stelle fuer SE/Stimmen/FMV/BGM/Ambience, nach der Mono-
-     * Faltung; Q15, 100 % = 0x8000 = unveraendert (include/re15_lautstaerke_r41.h). */
-    { extern int re15_lautstaerke_r41_q15(void); const int q = re15_lautstaerke_r41_q15();
-      if (q != 0x8000) for (int i = 0; i < frames * 2; i++) out[i] = (int16_t)(((int32_t)out[i] * q) >> 15); }
-    if (s_audio_cap) fwrite(stream, 1, (size_t)len, s_audio_cap);   /* RE15_AUDIO_CAP verify hook */
+}
+
+/* Runde 41 Spur D: Lautstaerke-Endstufe — EINE Stelle fuer SE/Stimmen/FMV/BGM/Ambience, nach der Mono-
+ * Faltung; Q15, 100 % = 0x8000 = unveraendert (include/re15_lautstaerke_r41.h, NUTZERWUNSCH Nachtrag 34 N-E2:
+ * quadratisch).
+ * Strang ton Stufe 7 (Messbericht U7 "Bei Regler 30 gehen rund 3,5 Bit Aufloesung verloren"): PORT-WAHL - der Regler
+ * wirkt jetzt in 32-Bit-Gleitkomma auf die fertige 16-Bit-Mischung, und das SDL-Geraet bekommt Gleitkomma
+ * (AUDIO_F32SYS). Vorher rechnete der Port mischung * q >> 15 zurueck auf 16 Bit: bei Regler 30 (q = 2949, -21 dB)
+ * fielen die unteren 3,5 Bit weg (Abstand Signal/Rundungsfehler beim Rolltor 48 dB, Musik 42 dB). Ein float hat 24 Bit
+ * Mantisse; q / 2^30 ist exakt darstellbar (q <= 0x8000), mischung * q braucht hoechstens 30 Bit -> relativer Fehler
+ * <= 2^-24, also keine hoerbare Rundung bei keinem Regler. Das Original hat keinen solchen Regler (der Tonchip gibt
+ * 16 Bit aus); bei Regler 100 ist die Ausgabe wertgleich mit der 16-Bit-Mischung (wert / 32768).
+ * Die Mess-Mitschnitte RE15_AUDIO_CAP / RE15_AUDIO_CAP_SYNC bleiben 16 Bit mit der alten Regler-Rechnung (die Werkzeuge
+ * und Riegel lesen S16); RE15_AUDIO_CAP_F32=<datei> schreibt zusaetzlich genau die Gleitkomma-Werte, die das Geraet
+ * bekommt (Messhaken, kein Spielpfad). */
+static FILE *s_audio_cap_f32 = NULL;
+static void audio_endstufe(const int16_t *mix, int frames, float *geraet)
+{
+    extern int re15_lautstaerke_r41_q15(void);
+    const int q = re15_lautstaerke_r41_q15();
+    const float k = (float)q / 1073741824.0f;                   /* q / 2^15 (Regler) / 2^15 (16 Bit -> +-1,0) */
+    static float fbuf[4096];
+    if (geraet || s_audio_cap_f32) {
+        int i0 = 0;
+        while (i0 < frames * 2) {
+            const int n = (frames * 2 - i0) < 4096 ? (frames * 2 - i0) : 4096;
+            float *f = geraet ? geraet + i0 : fbuf;
+            for (int i = 0; i < n; i++) f[i] = (float)mix[i0 + i] * k;
+            if (s_audio_cap_f32) fwrite(f, sizeof(float), (size_t)n, s_audio_cap_f32);
+            i0 += n;
+        }
+    }
+    if (s_audio_cap) {                                            /* RE15_AUDIO_CAP(_SYNC) verify hook, S16 wie bisher */
+        static int16_t sbuf[4096];
+        int i0 = 0;
+        while (i0 < frames * 2) {
+            const int n = (frames * 2 - i0) < 4096 ? (frames * 2 - i0) : 4096;
+            for (int i = 0; i < n; i++)
+                sbuf[i] = (q != 0x8000) ? (int16_t)(((int32_t)mix[i0 + i] * q) >> 15) : mix[i0 + i];
+            fwrite(sbuf, sizeof(int16_t), (size_t)n, s_audio_cap);
+            i0 += n;
+        }
+    }
+}
+
+/* SDL-Geraet (AUDIO_F32SYS, Stereo): Mischkette in Bloecken, dann die Endstufe in Gleitkomma. */
+static void audio_callback(void *userdata, Uint8 *stream, int len)
+{
+    (void)userdata;
+    float *geraet = (float *)stream;
+    int frames = len / 8;                                         /* 2 Kanaele x 4 Byte */
+    static int16_t mix[2048 * 2];
+    while (frames > 0) {
+        const int n = frames > 2048 ? 2048 : frames;
+        audio_mischen(mix, n);
+        audio_endstufe(mix, n, geraet);
+        geraet += n * 2; frames -= n;
+    }
 }
 
 /* Try to load the bundled test VAB from disk. The PC asset path uses
@@ -920,6 +977,8 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
             s_active[slot].step_q16   = (uint32_t)pitch << 4;   /* 0x1000 == 44100 Hz Ausgabe */
             s_active[slot].volume_q15 = vl;
             s_active[slot].vol_r_q15  = vr;
+            re15_spu_adsr_start(&s_active[slot].huelle, t->adsr1, t->adsr2);   /* Strang ton Stufe 7 */
+            s_active[slot].huelle_an  = 1;
             s_active[slot].active     = 1;
             continue;
         }
@@ -935,6 +994,8 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
         s_se_pend[voice].step_q16 = (uint32_t)pitch << 4;      /* 0x1000 == 44100 Hz Ausgabe */
         s_se_pend[voice].vl_q15   = vl;
         s_se_pend[voice].vr_q15   = vr;
+        s_se_pend[voice].adsr1    = t->adsr1;                  /* Strang ton Stufe 7: SpuVmDoAllocate @0x8005638c */
+        s_se_pend[voice].adsr2    = t->adsr2;                  /*                                     @0x800563d0 */
     }
     SDL_UnlockAudioDevice(s_audio_dev);
 }
@@ -983,6 +1044,8 @@ static void se_voice_pump(void)
             s_active[v].step_q16   = s_se_pend[v].step_q16;
             s_active[v].volume_q15 = s_se_pend[v].vl_q15;
             s_active[v].vol_r_q15  = s_se_pend[v].vr_q15;
+            re15_spu_adsr_start(&s_active[v].huelle, s_se_pend[v].adsr1, s_se_pend[v].adsr2);   /* Strang ton Stufe 7 */
+            s_active[v].huelle_an  = 1;
             s_active[v].active     = 1;
             s_se_pend[v].pending   = 0;
         }
@@ -2185,6 +2248,8 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
             s_active[slot].step_q16   = (uint32_t)pitch << 4;
             s_active[slot].volume_q15 = vl;
             s_active[slot].vol_r_q15  = vr;
+            re15_spu_adsr_start(&s_active[slot].huelle, t->adsr1, t->adsr2);   /* Strang ton Stufe 7: RE2 @0x80081e80/ec4 */
+            s_active[slot].huelle_an  = 1;
             s_active[slot].active     = 1;
             continue;
         }
@@ -2196,6 +2261,8 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
         s_re2se_pend[chan].step_q16 = (uint32_t)pitch << 4;
         s_re2se_pend[chan].vl_q15  = vl;
         s_re2se_pend[chan].vr_q15  = vr;
+        s_re2se_pend[chan].adsr1   = t->adsr1;   /* Strang ton Stufe 7: RE2 SpuVmDoAllocate @0x80081e80 */
+        s_re2se_pend[chan].adsr2   = t->adsr2;   /*                                         @0x80081ec4 */
         if (se_dbg)
             fprintf(stderr, "[re2se] se=%d layer=%d bank=%d prog=%d tone=%d vag=%d "
                             "-> Kanal %d (prio %d)\n",
@@ -2229,6 +2296,8 @@ static void re2se_voice_pump(void)
             s_active[slot].step_q16   = s_re2se_pend[c].step_q16;
             s_active[slot].volume_q15 = s_re2se_pend[c].vl_q15;
             s_active[slot].vol_r_q15  = s_re2se_pend[c].vr_q15;
+            re15_spu_adsr_start(&s_active[slot].huelle, s_re2se_pend[c].adsr1, s_re2se_pend[c].adsr2);   /* Strang ton Stufe 7 */
+            s_active[slot].huelle_an  = 1;
             s_active[slot].active     = 1;
             s_re2se_pend[c].pending   = 0;
         }
@@ -2274,6 +2343,7 @@ static void play_sample_pc(int vag_index, int scd_volume)
     s_active[slot].step_q16   = 0;   /* Legacy-Pfad ohne Tone-Kontext -> 0x8000 (Altverhalten) */
     s_active[slot].volume_q15 = vol;
     s_active[slot].vol_r_q15  = vol; /* beide Seiten (Bring-up-Pfad ohne Bank: TEST.VH liegt nicht vor, der Pfad ist tot) */
+    s_active[slot].huelle_an  = 0;   /* Strang ton Stufe 7: kein Ton-Kontext -> keine Huellkurve (Altverhalten) */
     s_active[slot].active     = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
 }
@@ -2322,6 +2392,7 @@ void re15_audio_init(void)
       if (sync && *sync) {
           s_audio_cap = fopen(sync, "wb");
           s_audio_cap_sync = 1;
+          { const char *cf = getenv("RE15_AUDIO_CAP_F32"); if (cf && *cf) s_audio_cap_f32 = fopen(cf, "wb"); }
           { const char *lim = getenv("RE15_AUDIO_CAP_FRAMES");
             if (lim && *lim) s_cap_limit = atol(lim); }
           { const char *vs = getenv("RE15_AUDIO_CAP_VSYNC"); s_cap_vsync = (vs && *vs && *vs != '0') ? 1 : 0; }
@@ -2346,7 +2417,7 @@ void re15_audio_init(void)
     SDL_AudioSpec want, have;
     SDL_memset(&want, 0, sizeof want);
     want.freq     = 44100;       /* matches PSX SPU max sample rate */
-    want.format   = AUDIO_S16SYS;
+    want.format   = AUDIO_F32SYS;   /* Strang ton Stufe 7: Gleitkomma, Regler ohne Rundung (audio_endstufe) */
     want.channels = 2;
     want.samples  = 1024;        /* ~23 ms latency at 44.1 kHz */
     want.callback = audio_callback;
@@ -2361,6 +2432,7 @@ void re15_audio_init(void)
 
     s_dev_freq = (have.freq > 0) ? have.freq : 44100;   /* actual device rate */
     { const char *cap = getenv("RE15_AUDIO_CAP"); if (cap && *cap) s_audio_cap = fopen(cap, "wb"); }
+    { const char *cf = getenv("RE15_AUDIO_CAP_F32"); if (cf && *cf) s_audio_cap_f32 = fopen(cf, "wb"); }
 
     /* Unpause — callback fires immediately. */
     SDL_PauseAudioDevice(s_audio_dev, 0);
@@ -4553,11 +4625,13 @@ void re15_audio_tick(void)
             if (v > 8) v = 8;
             n = RE15_AUDIO_RATE * v / 60;
         }
-        audio_callback(NULL, (Uint8 *)capbuf, n * 2 * (int)sizeof(int16_t));
+        audio_mischen(capbuf, n);             /* Strang ton Stufe 7: Mischkette + Endstufe (ohne Geraet) */
+        audio_endstufe(capbuf, n, NULL);
         s_cap_proben += n;
         s_cap_ticks++;
         if (s_cap_limit > 0 && s_cap_ticks >= s_cap_limit) {
             if (s_audio_cap) { fflush(s_audio_cap); fclose(s_audio_cap); s_audio_cap = NULL; }
+            if (s_audio_cap_f32) { fflush(s_audio_cap_f32); fclose(s_audio_cap_f32); s_audio_cap_f32 = NULL; }
             fprintf(stderr, "[audio] CAP_SYNC: %ld Frames geschrieben -> exit\n", s_cap_ticks);
             fflush(stderr);
             exit(0);
@@ -4716,6 +4790,8 @@ void re15_audio_footstep(int foot, int sound_type)
     s_active[slot].step_q16   = step;
     s_active[slot].volume_q15 = vol;
     s_active[slot].vol_r_q15  = vol_r;   /* Runde 41 Spur A: NPC-Schritt L/R; Strang ton Stufe 1: immer beide Seiten */
+    re15_spu_adsr_start(&s_active[slot].huelle, t->adsr1, t->adsr2);   /* Strang ton Stufe 7 (FUN_80045630 -> SsUtKeyOnV) */
+    s_active[slot].huelle_an  = 1;
     s_active[slot].active     = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
 }
@@ -4861,6 +4937,7 @@ void re15_audio_shutdown(void)
         s_audio_dev = 0;
     }
     if (s_audio_cap) { fflush(s_audio_cap); fclose(s_audio_cap); s_audio_cap = NULL; }
+    if (s_audio_cap_f32) { fflush(s_audio_cap_f32); fclose(s_audio_cap_f32); s_audio_cap_f32 = NULL; }
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
     g_audio.backend_active = 0;
 }

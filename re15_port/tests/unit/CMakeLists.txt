@@ -1545,6 +1545,28 @@ if(TARGET SDL2::SDL2-static)
     set_tests_properties(unit_r42_ton_gauss PROPERTIES TIMEOUT 120)
 endif()
 
+# --- Strang "ton", Stufe 7 (2026-11-20): Huellkurve (ADSR) der Geraeusch-Stimmen nach psx-spx "Envelope Operation", am
+#     Original (DuckStation) gemessen (Shift-10-Fall: Schritt und Zaehler je / 2), und Regler in Gleitkomma (RE15_AUDIO_CAP_F32).
+#     Gegenprobe: audio_pc.c von e46ff64d5 -> (2) und (3) rot; re15_spu_adsr.h fehlt auf aaea5f8c2/71caea668 -> baut nicht.
+if(TARGET re15_engine AND TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_adsr
+        test_r42_ton_adsr.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_adsr PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_adsr PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_adsr PRIVATE
+        RE15_PLATFORM_PC
+        RE15_TON_S1_HAKEN
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_adsr COMMAND test_r42_ton_adsr)
+    set_tests_properties(unit_r42_ton_adsr PROPERTIES TIMEOUT 120)
+endif()
+
 # --- DIAGNOSE (kein ctest): Nutzer-Report "Irons schaut im Original etwas diagonaler".
 #     Misst Irons' (NPC 0x45) Neck-Zustand + die GERENDERTE Kopf-Orientierung in ROOM1150.
 add_executable(probe_irons_neck_1150 probe_irons_neck_1150.c)
