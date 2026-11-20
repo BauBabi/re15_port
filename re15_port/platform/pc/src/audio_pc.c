@@ -379,7 +379,12 @@ typedef struct ss_seq_s {
     int            pending_dt;      /* ticks until the next event fires    */
     double         accum;           /* accumulated ticks (fractional)      */
     int            playing;
-    int            loop;
+    int            loop;            /* Strang ton Stufe 7 Runde 2: = l_count von SsSeqPlay (Sequenz+0x46, Snd_SetPlayMode
+                                     * `sh a3,0x46(t0)` @0x8005ffb0); 0 = endlos (SSPLAY_INFINITY),
+                                     * n = n Durchlaeufe bis Spurende. Alle Spiel-Aufrufe im Original uebergeben 1
+                                     * (`ori a2,zero,0x1` @0x80044748 / @0x80044984 / @0x800449c4 / @0x80044e44). */
+    int            gespielt;        /* Sequenz+0x48: Spurenden bisher (_SsGetMetaEvent `addiu v0,v0,0x1` @0x8005f148,
+                                     * _SsSndStop `sh zero,0x48(s0)` @0x80060374) */
     uint8_t        prog[SS_CHANNELS];
     int            cvol[SS_CHANNELS];      /* CC7 channel volume 0..127 (Sequenz+0x4e+2*Kanal) */
     int            cpan[SS_CHANNELS];      /* CC10 Kanal-Pan 0..127 (Sequenz+0x17+Kanal) = Tasten-Pan der Note
@@ -455,6 +460,7 @@ typedef struct {
 static amb_voice_t s_amb;
 
 static void ss_mix(ss_seq_t *s, int16_t *out, int32_t *hall, int frames);  /* one layer → out (+ Hall-Eingang, additive) */
+static void ss_seq_stop(ss_seq_t *s);   /* SsSeqStop/_SsSndStop; auch Spurende bei erschoepftem l_count (Stufe 7 R2) */
 static void re15_ss_render_bgm(int16_t *out, int frames);   /* both layers + reverb → out */
 static void re15_amb_mix(int16_t *out, int frames);         /* looping rotor ambience → out */
 static void re15_bgm_play_room(int stage, int room); /* load+play MAIN+SUB layers */
@@ -535,7 +541,10 @@ static void audio_mischen(int16_t *out, int frames)
 
     /* Mix the RE2-style XA voice stream into the output (the PC analogue of the
      * SPU CD-input mix). cd_vol_l/r mirror RE2's CD_VOL_L/R (0x3FFF = full, set
-     * by re15_xa_init ≈ CD_initvol). Clips are pre-resampled to the device rate
+     * by re15_xa_init ≈ CD_initvol). Strang ton Stufe 7 Runde 2 (nur Befund): CD_initvol ist nicht der Endwert -
+     * danach setzt SsSetSerialVol(0, 0x7f, 0x7f) das Register 1F801DB0h auf 0x7f*0x81*2 = 0x7ffe (RE2 @0x80059974,
+     * RE1.5 @0x80043be8 mit DAT_800b2244/46 = 127; live im RE1.5-Savestate 32766). Nach psx-spx (-8000h..+7FFFh) sind
+     * das 0,99994 - dasselbe wie hier (smp * 0x3FFF) >> 14. Clips are pre-resampled to the device rate
      * in re15_voice_load_clip (the synchro WAVs mix 32000 + 22050 Hz sources),
      * so playback is 1:1 here — no fixed half-step. */
     if (s_xa.active && s_xa.pcm) {
@@ -3282,10 +3291,25 @@ static void ss_fire_event(ss_seq_t *s) {
                           (s->seq[s->cursor+1] << 8) | s->seq[s->cursor+2]);
         s->cursor += len;
         if (meta == 0x2F) {                          /* end of track */
-            /* whole-file wrap = the fallback only (the in-track CC99 loop is the normal path);
-             * byte-true _SsGetMetaEvent's loop branch restarts WITHOUT keying voices off. */
-            if (s->loop) { s->cursor = SS_SEQ_HDR; s->rstatus = 0; }
-            else s->playing = 0;
+            /* Strang ton Stufe 7 Runde 2 - Spurende wie _SsGetMetaEvent @0x8005f140-0x8005f278 (selbst disassembliert):
+             *   @0x8005f140 `lhu v0,0x48(s0)` / @0x8005f144 `lh v1,0x46(s0)` / @0x8005f148 `addiu v0,v0,0x1` /
+             *   @0x8005f150 `sh v0,0x48(s0)`: Durchlauf zaehlen;
+             *   @0x8005f14c `bne v1,zero` -> l_count == 0: von vorn (endlos);
+             *   @0x8005f174 `slt v0,v0,v1` / @0x8005f178 `beq v0,zero,SEQREAD_OBJ_1BA8`: gespielt < l_count -> von vorn;
+             *   sonst SEQREAD_OBJ_1BA8: Spiel-Bits weg (+0x90 &= ~1/~8/~2 @0x8005f1b4/@0x8005f1d0/@0x8005f1ec), |= 0x200
+             *   @0x8005f208, |= 4 (Stopp) @0x8005f224, SpuVmSeqKeyOff @0x8005f268 (Noten in den Ausklang). Den Stopp
+             *   fuehrt der naechste Takt aus: SsSeqCalledTbyT @0x8006060c `andi v0,v0,0x4` -> `jal _SsSndStop`
+             *   @0x80060618 (Lesezeiger auf den Anfang @0x80060394, Zaehler 0 @0x80060374) -> `sw zero,0x90` @0x8006062c.
+             * Alle Spiel-Aufrufe spielen mit l_count = 1 (s. Feld loop): eine Sequenz OHNE eigene NRPN-Endlosschleife
+             * (CC99 20/30, CC6 127) laeuft im Original genau EINMAL. Vorher wickelte der Port jede Sequenz endlos von
+             * vorn. Gemessen im Original (DuckStation, ROOM1030, Savestates s7r2/orig/o1030): SUB_00 (18,26 s, keine
+             * NRPN-Schleife) klingt 13 s nach dem Raumwechsel noch (seq 1 = vab 6, Stimmen 0xc842..0xe23c = SUB_00),
+             * 69 s danach ist seq 1 aus (+0x90 = 0, Lesezeiger = Anfang), MAIN01 (Endlos-NRPN) laeuft weiter.
+             * Betroffen (Zensus s7r2/seq_zensus.txt): MAIN0F, MAIN10, MAIN12, MAIN37, SUB_00, SUB_06, SUB_0A SEQ#2. */
+            s->gespielt++;
+            if (s->loop == 0 || s->gespielt < s->loop) { s->cursor = SS_SEQ_HDR; s->rstatus = 0; }
+            else ss_seq_stop(s);    /* Key-Off (Ausklang) + Anfang; Port sofort statt einen Takt spaeter (PORT-WAHL,
+                                     * der Key-Off @0x8005f268 kommt auch im Original sofort) */
         }
     } else if (st == 0xF0 || st == 0xF7) {
         s->cursor += ss_vlq(s);                      /* sysex — skip */
@@ -3710,7 +3734,7 @@ static void re15_ss_play(ss_seq_t *s, int loop) {
     s->loop_cursor = -1; s->loop_armed = 0; s->loop_count = 0x7f; s->skip_next_dt = 0;
     s->cursor = SS_SEQ_HDR; s->rstatus = 0; s->accum = 0;
     s->pending_dt = ss_vlq(s);
-    s->loop = loop; s->playing = 1;
+    s->loop = loop; s->gespielt = 0; s->playing = 1;
     SDL_UnlockAudioDevice(s_audio_dev);
 }
 
@@ -3904,6 +3928,8 @@ static void ss_seq_reset_state(ss_seq_t *s) {
     /* Die Sequenz-Lautstaerke (+0x74/+0x76, SpuVmSetSeqVol `sh a1,0x74(v1)` @0x80058d60 / `sh a2,0x76(v1)` @0x80058d74)
      * setzt nur ss_start; _SsSndStop schreibt sie NICHT (es setzt +0x78/+0x7a = 0x7f @0x800603bc-c4, im libsnd-Bereich
      * 0x8005xxxx-0x8006xxxx nur geschrieben, nie per lh gelesen; im Port ohne Gegenstueck). Strang ton Stufe 4 Runde 2. */
+    s->gespielt = 0;                                  /* _SsSndStop `sh zero,0x48(s0)` @0x80060374; Snd_SetPlayMode Fall 1
+                                                       * `sh zero,0x48(t0)` @0x8005ffe8 (Stufe 7 Runde 2) */
     s->loop_cursor = -1; s->loop_armed = 0; s->loop_count = 0x7f; s->skip_next_dt = 0;
     s->cursor = SS_SEQ_HDR; s->rstatus = 0; s->accum = 0;
     if (s->seq_len > 12) {                            /* Tempo aus dem pQES-Kopf (Bytes 10..12, wie re15_ss_load) */
@@ -3913,6 +3939,8 @@ static void ss_seq_reset_state(ss_seq_t *s) {
     s->pending_dt = ss_vlq(s);
 }
 
+/* loop = l_count von SsSeqPlay (Stufe 7 Runde 2): MAIN @0x80044748, SUB SEQ0 @0x80044984, SEQ#2 @0x800449c4 je
+ * `ori a2,zero,0x1` = 1 Durchlauf; die NRPN-Endlosschleife im Stueck (loop_count 0x7f) bleibt davon unberuehrt. */
 static void ss_start(ss_seq_t *s, int loop) {
     if ((!s->vab_ok && !s->tone_src) || !s->seq) { s->playing = 0; return; }
     ss_all_voices_off(s);
@@ -5234,7 +5262,12 @@ int re15_audio_r41_sirene(int an)
         const int rc = re15_bgm_load_track(&s_ss_r41_sirene, "SUB_", 0x34);
         s_r41_alarm_re2 = 0;
         free(s_sub_seq2); s_sub_seq2 = NULL; s_sub_seq2_len = 0;     /* SEQ#2 des Containers ist leer (2 Ereignisse) */
-        if (rc == 0) { s_ss_r41_sirene.vab_id = 6; ss_start(&s_ss_r41_sirene, 1); ok = 1; }
+        if (rc == 0) {
+            s_ss_r41_sirene.vab_id = 6;
+            /* Strang ton Stufe 7 Runde 2: l_count 0 = endlos. Das ist das BISHERIGE Verhalten dieser RE2-Sirene (Runde 41;
+             * vorher hiess 1 "von vorn wickeln"). Der RE2-Aufruf ist nicht Teil dieser Stufe und nicht nachgeprueft (offen). */
+            ss_start(&s_ss_r41_sirene, 0); ok = 1;
+        }
     }
     SDL_UnlockAudioDevice(s_audio_dev);
     return ok;

@@ -1477,6 +1477,27 @@ if(TARGET SDL2::SDL2-static)
     set_tests_properties(unit_r42_ton_seqstop PROPERTIES TIMEOUT 120)
 endif()
 
+# --- Strang "ton", Stufe 7 Runde 2 (2026-11-20): Spurende einer Musik-Sequenz wie _SsGetMetaEvent @0x8005f140-0x8005f278
+#     mit l_count 1 (SsSeqPlay `ori a2,zero,0x1` @0x80044984): SUB_00 (ROOM1030) klingt einmal, MAIN32 (NRPN-Schleife) weiter.
+#     Gegenprobe: audio_pc.c von ffe8ad7d3 -> (2), (3) rot.
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_spurende
+        test_r42_ton_spurende.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_spurende PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_spurende PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_spurende PRIVATE
+        RE15_PLATFORM_PC
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_spurende COMMAND test_r42_ton_spurende)
+    set_tests_properties(unit_r42_ton_spurende PROPERTIES TIMEOUT 180)
+endif()
+
 # --- Strang "ton", Stufe 3 (2026-11-20): Hall je Musik-Stimme nach tone.mode & 4 (SpuVmKeyOnNow @0x80056124 `andi 0x4`),
 #     Tiefe 0x4080 (SsUtSetReverbDepth @0x8005be74), 39-Abgriff-FIR (psx-spx "Reverb Buffer Resampling"). Messbericht U3.
 #     Gegenprobe: audio_pc.c von 71caea668 ohne RE15_TON_S3_HAKEN -> (1) rot (Hall-Fahne des Rotors).

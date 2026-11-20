@@ -30,14 +30,17 @@
  *     Rate != alle Bits -> CounterIncrement mindestens 1; Counter += CounterIncrement, Schritt nur bei Counter.Bit15;
  *     Pegel: zunehmend hoechstens 7FFFh, abnehmend mindestens 0.
  *
- * GEMESSEN am Original (DuckStation, Strang ton Stufe 7, scratchpad ton/s7/adsr_mess.py, adsr_patch.sav): der
+ * GEMESSEN am Original IM EMULATOR DuckStation (nicht an der Hardware; Strang ton Stufe 7, scratchpad ton/s7/adsr_mess.py,
+ * adsr_patch.sav): der
  * Rolltor-Ton (ROOM1130 snd0 Ton 7, VagAtr im RAM @0x80123784) mit ADSR1 0xaaff statt 0x80ff gegen die Aufnahme mit
  * 0x80ff (dieselben Proben, Korrelation 1,000000): Anstieg 10,00 Pegelstufen je Probe bis 0x6000, darueber 2,50 je
  * Probe -> im Fall Shift 10 sind Schritt UND Zaehler zusammen durch 4 geteilt, also JE durch 2 (psx-spx Z. 412-413
  * schreibt je "/= 4"; woertlich genommen waeren es 0,5 je Probe und 427 ms statt 130 ms bis voll: mittlere Abweichung
- * 3600 Pegelstufen gegen 5,9 mit "je / 2"). Der Stopp-Ton (Ton 8) mit 0x80c6/0x0a0c: Abfall exponentiell bis zur
- * Halte-Stufe 0x3800, dann linear zurueck auf 0x7fff - dieses Modell trifft die Aufnahme auf 7,4 Pegelstufen im Mittel
- * (die Halte-Phase beginnt OHNE Abschneiden auf die Halte-Stufe).
+ * 3600 Pegelstufen gegen 0,9 mit "je / 2" und dem Phasenwechsel in jedem Takt, s. unten; vor dieser Aenderung 5,9).
+ * Der Stopp-Ton (Ton 8) mit 0x80c6/0x0a0c: Abfall exponentiell bis zur Halte-Stufe 0x3800, dann linear zurueck auf
+ * 0x7fff - dieses Modell trifft die Aufnahme auf 0,6 Pegelstufen im Mittel (vor dem Phasenwechsel in jedem Takt 7,4;
+ * die Halte-Phase beginnt OHNE Abschneiden auf die Halte-Stufe). Ob die echte Hardware im Fall Shift 10 wie DuckStation
+ * rechnet, ist nicht gemessen (offen); der Port folgt der Messung im Emulator.
  *
  * Reihenfolge je Ausgabeprobe: Probe mit dem aktuellen Pegel, danach ein Huellkurven-Schritt (Key-On: Pegel 0). Ob die
  * Hardware den Schritt vor oder nach der ersten Probe macht, ist nicht gemessen (hoechstens 1 Probe = 23 us; offen).
@@ -83,6 +86,9 @@ static inline int32_t re15_spu_adsr_takt(re15_spu_adsr_t *h)
         shift = (h->adsr2 >> 8) & 0x1f; stepval = (h->adsr2 >> 6) & 3; expo = (h->adsr2 >> 15) & 1;
         ab = (h->adsr2 >> 14) & 1; alle_bits = ((stepval | (shift << 2)) == 0x7f); break;
     default:                  /* Z. 348-351: Mode Bit21, Shift Bit20-16, abnehmend, Step fest -8 */
+        /* "alle Bits" beim Ausklang = Shift 0x1f: psx-spx Z. 441-442 "Using a step value of all-ones causes the volume to
+         * never step ... i.e. 0x7f, or 0x1f for decay/release" (der Ausklang hat kein StepValue-Feld). Derzeit folgenlos:
+         * Geraeusch-Stimmen bekommen im Port kein Key-Off (offen). */
         shift = h->adsr2 & 0x1f; stepval = 0; expo = (h->adsr2 >> 5) & 1; ab = 1; alle_bits = (shift == 0x1f); break;
     }
     /* Z. 401-405 */
