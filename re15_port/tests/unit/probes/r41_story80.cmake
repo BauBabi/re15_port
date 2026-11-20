@@ -6,7 +6,8 @@
 #   unit_r41_story80_texte          jede Zeile der Nutzerliste nach dem Laden: Wortlaut, <= 128 B, <= 3 Zeilen, <= 271 px
 #   unit_r41_story80_ablauf30c1     30C1 (Elza/Marvin): genau msg 1..5, Stimmen 1..5, msg 6..8 nie, Abgang -> Cut 3
 #   unit_r41_story80_ablauf6030     6030 Wagen 13 Zeilen + Sherrys Drehung, Fuehrerstand msg 11,12,25,26,13..19
-#   unit_r41_story80_stimmen        Stimmen-Pfade main<Id>.wav ohne Umleitung (stimmen_r39 / elza_r36)
+#   unit_r41_story80_stimmen        Stimmen-Pfade main<Id>.wav ohne Umleitung (stimmen_r39 / elza_r36); seit 20.11.2026 liegen
+#                                   auch die NB1-Aufnahmen 6030 msg 31/40 vor (Strang fabrikplan Stufe 2)
 #   unit_r41_story80_reihenfolge6030  Nachbesserung 1: 6030 Fuehrerstand vor dem Wagen (msg 11, 31, 13..19 ohne Sherry),
 #                                   Wagen, Nachtrag vorne (msg 40, 25), jede Zeile hoechstens einmal
 #   unit_r41_story80_torweg6030     Integration A2: vorne -> Wagen -> ohne Rueckkehr -> Tor -> Fuehrerstand: Nachtrag 40, 25
@@ -16,7 +17,8 @@ add_executable(test_r41_story80 ${CMAKE_CURRENT_LIST_DIR}/../test_r41_story80.c)
 target_link_libraries(test_r41_story80 PRIVATE re15_engine re15_test_support)
 target_include_directories(test_r41_story80 PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/engine/src)
 target_compile_definitions(test_r41_story80 PRIVATE
-    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+    RE15_SYNCHRO_DIR="${CMAKE_SOURCE_DIR}/../synchro")   # Strang fabrikplan Stufe 2: NB1-Aufnahmen 6030 msg 31/40
 if(NOT WIN32)
     target_link_libraries(test_r41_story80 PRIVATE m)
 endif()

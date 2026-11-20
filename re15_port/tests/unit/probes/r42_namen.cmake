@@ -49,6 +49,10 @@ set_tests_properties(unit_r42_namen_ohne_stimme PROPERTIES ENVIRONMENT "RE15_VOI
 #                                     Untertitel, msg 0/1 sind nirgends zu hoeren, die Stimmen aus 3000 spielen
 #   unit_r42_namen_altlader_ersatz    derselbe Lader aus einer Ersatz-Wurzel (Kopie der Probe + eigenes synchro/ mit vier ersetzten
 #                                     Dateien, tests/unit/r42_namen_altlader_ersatz.cmake): ersetzte Dateien spielen, der Rest stumm
+# Strang fabrikplan Stufe 2 (Nutzer 20.11.2026: "Ok, saemtliche Sprachaufnahmen liegen vor.", Commit ce5ec405f): alle 13 Saetze
+# liegen neu aufgenommen im Bestand. unit_r42_namen_altaufnahme, unit_r42_namen_altlader(_ersatz) und die beiden Bestand-Durchlaeufe
+# verlangen jetzt "neue Aufnahme spielt" (keine Datei mit dem Abdruck des Tags, keine fehlende Datei); 6030 msg 32 und 3020 msg 7/8
+# spielen ihre neue Datei.
 file(GLOB_RECURSE _r42_alt_bestand LIST_DIRECTORIES false RELATIVE "${CMAKE_SOURCE_DIR}/../synchro" "${CMAKE_SOURCE_DIR}/../synchro/*.wav")
 list(SORT _r42_alt_bestand)
 string(REPLACE ";" "\n" _r42_alt_bestand_txt "${_r42_alt_bestand}")

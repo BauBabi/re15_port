@@ -29,22 +29,24 @@ function(re15_altaufnahme_ersatzwurzel _out _exe _wurzel _werkzeug _synchro)
     set(${_out} "${_wurzel}/${_name}" PARENT_SCOPE)
 endfunction()
 
-# re15_altaufnahme_pruefe(<synchro> <Raum 4 Hex> <Nummer>): Zeile einer der 13 Saetze im debug.log des Laufs pruefen, je nach Stand
-# der Datei im Baum (tests/integration/altaufnahmen_r42.cmake re15_altaufnahme_stand):
-#   ALT   -> der Lader meldet "ist noch die alte Aufnahme", KEINE Stimme startet (stumm, Textdauer)
-#   NEU   -> die neue Aufnahme des Nutzers spielt
-#   FEHLT -> "keine Aufnahme" (Untertitel mit Textdauer)
+# re15_altaufnahme_pruefe(<synchro> <Raum 4 Hex> <Nummer>): Zeile einer der 13 Saetze im debug.log des Laufs pruefen
+# (tests/integration/altaufnahmen_r42.cmake re15_altaufnahme_stand).
+# Strang fabrikplan Stufe 2 (20.11.2026): der Nutzer hat alle 13 Saetze neu aufgenommen ("Ok, saemtliche Sprachaufnahmen liegen
+# vor.", Commit ce5ec405f). Gefordert ist deshalb NEU: die Datei im Baum traegt nicht mehr den Abdruck des Tags v0.8.30, der Lader
+# meldet sie nicht als alte Aufnahme und die Stimme startet. ALT (noch die alte Aufnahme, stumm) und FEHLT ("keine Aufnahme") sind
+# jetzt Fehler - vorher waren sie je nach Stand der Datei erlaubt.
 # Benutzt die Makros pruefe / pruefe_re / pruefe_nicht und den Logtext _dbg des Aufrufers.
 macro(re15_altaufnahme_pruefe _ra_synchro _ra_raum _ra_nr)
     re15_altaufnahme_stand(_ra_st "${_ra_synchro}" ${_ra_raum} ${_ra_nr})
-    if(_ra_st STREQUAL "ALT")
-        pruefe_re("Ton: ${_ra_raum} msg ${_ra_nr} traegt noch die alte Aufnahme -> stumm (Strang namen Stufe 6)"
-                  "ROOM${_ra_raum} msg ${_ra_nr}: [^\n]*ist noch die alte Aufnahme")
-        pruefe_nicht("Ton: ${_ra_raum} msg ${_ra_nr} startet keine Stimme" "[voice] Start ROOM${_ra_raum} Id ${_ra_nr} ")
-    elseif(_ra_st STREQUAL "NEU")
-        pruefe("Ton: ${_ra_raum} msg ${_ra_nr} hat eine neue Aufnahme -> spielt" "[voice] Start ROOM${_ra_raum} Id ${_ra_nr} ")
+    if(_ra_st STREQUAL "NEU")
+        pruefe("Ton: ${_ra_raum} msg ${_ra_nr} spielt die neue Aufnahme des Nutzers (20.11.2026)" "[voice] Start ROOM${_ra_raum} Id ${_ra_nr} ")
+        pruefe_nicht("Ton: ${_ra_raum} msg ${_ra_nr} gilt nicht als alte Aufnahme"
+                     "ROOM${_ra_raum} msg ${_ra_nr}: synchro/")
+        pruefe_nicht("Ton: ${_ra_raum} msg ${_ra_nr} nicht 'keine Aufnahme'" "ROOM${_ra_raum} msg ${_ra_nr}: keine Aufnahme")
+    elseif(_ra_st STREQUAL "ALT")
+        fail("Ton: ${_ra_raum} msg ${_ra_nr}: die Datei im Baum traegt noch die alte Aufnahme (Abdruck des Tags v0.8.30) - seit dem 20.11.2026 muss die neue Aufnahme des Nutzers dort liegen")
     elseif(_ra_st STREQUAL "FEHLT")
-        pruefe("Ton: ${_ra_raum} msg ${_ra_nr} ohne Datei -> Untertitel mit Textdauer" "ROOM${_ra_raum} msg ${_ra_nr}: keine Aufnahme")
+        fail("Ton: ${_ra_raum} msg ${_ra_nr}: keine Datei im Baum - seit dem 20.11.2026 muss die neue Aufnahme des Nutzers dort liegen")
     else()
         fail("Ton: ${_ra_raum} msg ${_ra_nr} steht nicht in der Liste der veralteten Aufnahmen")
     endif()

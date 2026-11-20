@@ -16,7 +16,13 @@
 #   3020  msg 2 (main02.wav, "Leon, give me a hand." unter "Leon, give me a hand!") SPIELT, an seinem Untertitel
 #         msg 0, 1 (anderer Satz) sind STUMM; msg 7, 8 haben keine Datei
 #         Negativkontrolle: die Stimmen der Ankunft in ROOM3000 (msg 2..8) spielen
-# Hat der Nutzer eine der Dateien schon ersetzt (anderer Abdruck), verlangt der Test fuer sie "spielt" (re15_altaufnahme_stand).
+# STAND SEIT Strang fabrikplan Stufe 2 (Nutzer 20.11.2026 ~18:30: "Ok, saemtliche Sprachaufnahmen liegen vor.", Commit ce5ec405f;
+# Aufnahmeliste FEHLENDE_AUFNAHMEN_2026-11-20.md Teile A, B, C) - die Erwartung oben ist abgeloest:
+#   6030  msg 2, 3, 22, 4, 5 (Teil A) und 21 (Teil B) tragen die NEUE Aufnahme des Nutzers und SPIELEN an ihrem Untertitel;
+#         msg 32 (Teil C) hat jetzt eine Datei und SPIELT an ihrem Untertitel
+#   3020  msg 0, 1 (Teil A) tragen die neue Aufnahme und SPIELEN; msg 7, 8 (Teil C) haben jetzt eine Datei und SPIELEN;
+#         msg 2 bleibt die Aufnahme des Tags (spricht den neuen Satz schon, keine neue Aufnahme noetig) und spielt
+# Eine Datei mit dem Abdruck des Tags (alte Aufnahme) oder eine fehlende Datei ist bei diesen Saetzen jetzt ein FEHLER.
 #
 # Ton: RE15_AUDIO_CAP_SYNC (audio_pc.c re15_audio_tick: je Spielbild genau 1470 Stereo-Abtastwerte durch dieselbe Mix-Kette wie
 # der Geraete-Callback, bitgleich wiederholbar). Messung: tests/unit/werkzeug_r42_tonmess.c (normierte Kreuzkorrelation jeder
@@ -140,7 +146,11 @@ macro(_fast_woertlich _raum _id)
     else()
         ok("${_raum} msg ${_id} steht nicht in der Tabelle der veralteten Aufnahmen")
     endif()
-    if(_fw STREQUAL "ALT")
+    # Strang fabrikplan Stufe 2: 6030 msg 21 hat der Nutzer neu aufgenommen (Teil B) -> NEU verlangt; 3020 msg 2 spricht den
+    # neuen Satz schon ("keine neue Aufnahme noetig") -> ALT oder NEU, beide spielen
+    if("${_raum}" STREQUAL "6030" AND NOT _fw STREQUAL "NEU")
+        fail("${_raum} msg ${_id}: Stand der Datei '${_fw}' - seit dem 20.11.2026 liegt dort die neue Aufnahme des Nutzers (Teil B)")
+    elseif(_fw STREQUAL "ALT")
         _soll_spielt(${_raum} ${_id} "Bestand: Aufnahme des Tags v0.8.30, fast woertlich")
     elseif(_fw STREQUAL "NEU")
         _soll_spielt(${_raum} ${_id} "Bestand: Datei ersetzt")
@@ -149,19 +159,16 @@ macro(_fast_woertlich _raum _id)
     endif()
     message(STATUS "     r42_namen_bestand[${TEIL}]: Bestand - ${_raum} msg ${_id} ${_fw} (spielt)")
 endmacro()
-# veraltet (anderer Satz): stumm, solange die Datei den Abdruck des Tags traegt
+# veraltet (anderer Satz, Teil A der Aufnahmeliste): seit dem 20.11.2026 liegt die NEUE Aufnahme des Nutzers im Bestand und spielt
+# an ihrem Untertitel; die alte Aufnahme (Abdruck des Tags, stumm) oder eine fehlende Datei ist jetzt ein Fehler
 macro(_veraltet _raum _id)
     re15_altaufnahme_stand(_st "${RE15_SYNCHRO}" ${_raum} ${_id})
-    _datei(_f ${_raum} ${_id})
-    if(_st STREQUAL "ALT")
-        pruefe_re("Log: ${_raum} msg ${_id} traegt noch die alte Aufnahme (anderer Satz) -> stumm"
-                  "ROOM${_raum} msg ${_id}: [^\n]*ist noch die alte Aufnahme")
-        pruefe_nicht("Log: ${_raum} msg ${_id} startet keine Stimme" "[voice] Start ROOM${_raum} Id ${_id} ")
-        list(APPEND _mess "STUMM=${_f}")
-    elseif(_st STREQUAL "NEU")
-        _soll_spielt(${_raum} ${_id} "Bestand: Datei ersetzt")
+    if(_st STREQUAL "NEU")
+        _soll_spielt(${_raum} ${_id} "Bestand: neue Aufnahme des Nutzers 20.11.2026")
+    elseif(_st STREQUAL "ALT")
+        fail("${_raum} msg ${_id}: im Bestand liegt noch die alte Aufnahme (Abdruck des Tags v0.8.30) - seit dem 20.11.2026 muss dort die neue Aufnahme des Nutzers liegen")
     elseif(_st STREQUAL "FEHLT")
-        pruefe("Log: ${_raum} msg ${_id} ohne Datei -> Untertitel mit Textdauer" "ROOM${_raum} msg ${_id}: keine Aufnahme")
+        fail("${_raum} msg ${_id}: keine Datei im Bestand - seit dem 20.11.2026 muss dort die neue Aufnahme des Nutzers liegen")
     else()
         fail("${_raum} msg ${_id} steht nicht in der Tabelle der veralteten Aufnahmen")
     endif()
@@ -205,7 +212,8 @@ ENDE
     foreach(_m 0 1 6 7 23 24 8)                       # Negativkontrolle: die uebrigen Stimmen des Gespraechs
         _soll_spielt(6030 ${_m} "nicht betroffen")
     endforeach()
-    pruefe("Log: msg 32 ohne Aufnahme -> Untertitel mit Textdauer" "ROOM6030 msg 32: keine Aufnahme")
+    _soll_spielt(6030 32 "neue Datei des Nutzers 20.11.2026, Teil C")    # vorher "keine Aufnahme"
+    pruefe_nicht("Log: msg 32 nicht 'keine Aufnahme'" "ROOM6030 msg 32: keine Aufnahme")
 elseif(TEIL STREQUAL "3020")
     # Weg und Vorgaben: tests/integration/test_r42_story3a.cmake (_basis, _weg_vor_30c0), hier MIT Ton und nur bis zum Tausch.
     file(WRITE "${WORKDIR}/plan.txt" "RAUM 3000
@@ -253,8 +261,10 @@ ENDE
     _fast_woertlich(3020 2)
     _veraltet(3020 0)
     _veraltet(3020 1)
-    pruefe("Log: msg 7 ohne Aufnahme -> Untertitel mit Textdauer" "ROOM3020 msg 7: keine Aufnahme")
-    pruefe("Log: msg 8 ohne Aufnahme -> Untertitel mit Textdauer" "ROOM3020 msg 8: keine Aufnahme")
+    foreach(_m 7 8)                                   # vorher "keine Aufnahme" (Untertitel mit Textdauer)
+        _soll_spielt(3020 ${_m} "neue Datei des Nutzers 20.11.2026, Teil C")
+        pruefe_nicht("Log: msg ${_m} nicht 'keine Aufnahme'" "ROOM3020 msg ${_m}: keine Aufnahme")
+    endforeach()
     foreach(_m 2 3 4 5 6 7 8)                         # Negativkontrolle: die Stimmen der Ankunft in ROOM3000
         _soll_spielt(3000 ${_m} "nicht betroffen")
     endforeach()
@@ -275,6 +285,6 @@ message(STATUS "Tonmitschnitt gemessen (${WORKDIR}/tonmess.txt):\n${_tout}")
 if(NOT _trv EQUAL 0)
     fail("Tonmitschnitt: mindestens eine Aufnahme spielt/schweigt nicht wie erwartet (werkzeug_r42_tonmess -> ${_trv})")
 else()
-    ok("Tonmitschnitt: die fast woertliche Aufnahme und die nicht betroffenen Stimmen spielen an ihrem Untertitel, die veralteten Saetze sind nirgends zu hoeren")
+    ok("Tonmitschnitt: die neuen Aufnahmen des Nutzers, die fast woertliche und die nicht betroffenen Stimmen spielen an ihrem Untertitel")
 endif()
 _fertig()
