@@ -223,6 +223,15 @@ void re15_audio_se_pumpe(void);   /* nur die SE-Pumpe (Tuerszene, 60 Hz) */
 int  re15_audio_re2_tuer_laden(const uint8_t *ton, int groesse);
 void re15_audio_re2_tuer_se(int se);
 int  re15_audio_se_stimme_aktiv(int v);   /* Messhaken: SE-Stimme v (0..7) spielt */
+/* Strang ton Stufe 1 - Messhaken (kein Spielpfad, nur PC): SPU-Lautstaerke-Register links/rechts des zuletzt vorbereiteten
+ * Geraeusch-Tons (SpuVmKeyOnNow @0x80055d10, include/re15_svm_vol.h) und seine Lage voll/volr (-1 = Zweig ohne Lage).
+ * Rueckgabe 0, solange noch kein Geraeusch vorbereitet wurde. */
+int  re15_audio_se_mess(int reg[2], int lage[2]);
+/* Strang ton Stufe 1 Runde 2 - Messhaken (kein Spielpfad, nur PC): Faktor Q15, mit dem die Musik-Summe gerade
+ * gerechnet wird (0x8000 = voll; unter einem gesprochenen Satz laeuft er auf (80/127)^2, audio_pc.c
+ * STIMME_MUSIK_SEQ_VOL), und eine fertige Mono-Probe auf dem Sprachkanal starten (sprache 1 = gesprochener Satz). */
+int  re15_audio_musik_stimme_q15(void);
+void re15_audio_stimme_mess(const int16_t *pcm, int n, int sprache);
 
 /* Re-prime the resident weapon SE bank (bank1) to `weapon_id`'s ARMS bank (byte-true FUN_80043d8c:
  * the equip-commit + room-init both re-load the equipped weapon's ARMS bank). Called by the

@@ -27,8 +27,10 @@
 #include "re15_werkstatt11b0_r38.h"
 #include "asset_root_pc.h"             /* re15_pc_read_any */
 
-extern void re15_audio_se_play_bank(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
-                                    const int *decoded_len, int satz);   /* audio_pc.c */
+/* Strang ton Stufe 1: ROOM1171 snd0 ist eine RE1.5-Bank -> Gesetz mit Quadrat (SpuVmKeyOnNow @0x80055d10);
+ * re15_audio_se_play_bank rechnet seither nach dem RE2-Gesetz. */
+extern void re15_audio_se_play_bank_re15(const uint8_t *edt, const re15_vab_t *vab, int16_t *const *decoded,
+                                         const int *decoded_len, int satz);   /* audio_pc.c */
 
 static int        s_state = 0;          /* 0 ungeprueft, 1 geladen, -1 fehlt (ein Versuch) */
 static re15_vab_t s_vab;
@@ -105,7 +107,7 @@ static int ergaenzung(int se_id)
     fprintf(stderr, "[schub-r38] F%u ROOM%04X snd0 Satz %d leer (@0xE4A0 00 00 00 00) -> ROOM%04X snd0 Satz %d "
                     "(Schiebe-Ton, Nr. %u)\n", (unsigned)g_engine.frame_count, (unsigned)g_current_room_id, se_id,
             RE15_W11B0_QUELLE_RAUM, se_id, s_gespielt);
-    re15_audio_se_play_bank(s_edt, &s_vab, s_decoded, s_decoded_len, se_id);
+    re15_audio_se_play_bank_re15(s_edt, &s_vab, s_decoded, s_decoded_len, se_id);
     return 1;
 }
 

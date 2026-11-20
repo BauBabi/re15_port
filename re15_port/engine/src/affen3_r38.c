@@ -9,6 +9,7 @@
  * +0x1e2 roach_beh2, +0x1d6 sca_wall_hit (Rueckgabe der Wandklemme FUN_8003b0a4, `sh v0,470` @0x80110bcc).
  */
 #include "re15_affen3_r38.h"
+#include "re15_svm_vol.h"   /* Strang ton Stufe 6 Runde 2: re15_svm_core_se_spieler = FUN_80045024(0x04ss0001, &DAT_800aca88) */
 #include "re15_affen.h"         /* Pool/Zeichenstand/Fuss-Sperre/Trefferpunkt der Affen-Familie (affen_11c0.c) */
 #include "re15_enemy.h"
 #include "re15_enemy_ai.h"      /* re15_player_stagger_cmd2, re15_player_knockdown_begin, re15_player_victim_devour,
@@ -818,7 +819,7 @@ void re15_affen3_opfer_tick(re15_actor_t *pl, const re15_enemy_bank_t *vb)
         s_opfer_ph = 1;                                               /* aca5a = 1 @0x80115dc4 */
         pl->motion = 1; pl->anim_frame = 0; pl->anim_frac = 7;        /* acae8 1 / acae9 0 / acae3 7 @0x80115dcc-de0 */
         pl->anim_flags &= (uint16_t)~0x80u;
-        re15_audio_core_se(0);                                        /* FUN_80045024(0x04000001, &Spieler+0x34) @0x80115de4 */
+        re15_svm_core_se_spieler(0);                                        /* FUN_80045024(0x04000001, &Spieler+0x34) @0x80115de4 */
         /* aca3c |= 0xc0 @0x80115df8-e00: im Port ohne Gegenstueck (Anzeige-Bits, wie beim Gorilla-Finisher) */
         vfc = (vb && 1 < vb->anim_victim.clip_count) ? vb->anim_victim.clips[1].frame_count : 1;
         /* faellt in [1] (@0x80115e04) */
@@ -840,7 +841,7 @@ void re15_affen3_opfer_tick(re15_actor_t *pl, const re15_enemy_bank_t *vb)
         re15_esp_fx_spawn_ex(re15_esp_room_bank(), 0, 0, 0x1500, k[0], k[1], k[2], (int16_t)pl->rot_y);   /* @0x80115ee8 */
         return; }
     case 5:                                                           /* @0x80115ef8 */
-        if (pl->anim_frame == 0x1d) re15_audio_core_se(0);           /* acae9 == 0x1d -> FUN_80045024(0x04000001) @0x80115f00-1c */
+        if (pl->anim_frame == 0x1d) re15_svm_core_se_spieler(0);           /* acae9 == 0x1d -> FUN_80045024(0x04000001) @0x80115f00-1c */
         if (vb) re15_clip_root_motion_abs_pub(pl, &vb->skel_victim, &vb->anim_victim, (int)pl->motion, (int)pl->anim_frame);   /* @0x80115f34 */
         if (opfer_anim(pl, vfc)) {                                    /* @0x80115f50-58 */
             s_opfer_ph = 6;                                           /* @0x80115f60-64 */

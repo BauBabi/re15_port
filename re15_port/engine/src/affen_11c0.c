@@ -3,6 +3,7 @@
  * Belege und Messungen: include/re15_affen.h (Kopf) und analysis/befunde_runde35/J_affen.md.
  */
 #include "re15_affen.h"
+#include "re15_svm_vol.h"   /* Strang ton Stufe 6 Runde 2: re15_svm_core_se_spieler = FUN_80045024(0x04ss0001, &DAT_800aca88) */
 #include "re15_affen3_r38.h"   /* Runde 38 Spur S: re15_affen3_griff_paar */
 #include "re15_collision.h"     /* re15_collision_floor_typeword = FUN_8003b7f0 */
 #include "re15_enemy.h"         /* re15_enemy_find (Bank: re2_rig, Skelett/Clips des Gorillas) */
@@ -513,7 +514,7 @@ void re15_affen_finisher_tick(re15_actor_t *pl, const re15_enemy_bank_t *vb)
         pl->motion = 0;                                          /* Clip acae8 := 0 @0x8011c490 (Opfer-Bank acbcc/acbd0) */
         pl->anim_frame = 0;                                      /* Bild acae9 := 0 @0x8011c498 */
         affen_fin_blut(pl);                                      /* jal 0x80019700 @0x8011c4a0 */
-        re15_audio_core_se(3);                                   /* Se_on(0x04030001) @0x8011c4a8-b8 = CORE 3 */
+        re15_svm_core_se_spieler(3);                                   /* Se_on(0x04030001) @0x8011c4a8-b8 = CORE 3 */
         affen_fin_ereignis(RE15_AFFEN_FIN_EINTRITT);
         /* aca3c |= 0xc0 @0x8011c4c0-d4: im Port ohne Gegenstueck (nur PSX-Anzeige, s. Hunde-Kommentar). Kein
          * `bne` zwischen @0x8011c4d4 und @0x8011c4d8: dasselbe Bild laeuft in den Zweig aca5a = 1. */

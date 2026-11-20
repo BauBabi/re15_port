@@ -8,6 +8,13 @@
 #         Pegelfaktor-Median >= 6 (vorher 3,9..4,1 = alter 4x-Deckel; Zensus 7,4..12,6), Stimme/Rest >= 0,45 (vorher
 #         0,25..0,31 = -10..-12 dB unter der BGM MAIN1E, nachher >= 0,55 - Schwelle = Mitte, A_abnahme_0.md §4.2 /
 #         Dossier §9.3), Leons Zeilen Median <= 2,1 (unveraendert), kein geklemmter Abtastwert in keinem Zeilenfenster
+#         Strang "ton" Stufe 1 (2026-11-19): die Musik laeuft mit dem Pegel des Originals (SpuVmKeyOnNow @0x80055d10 mit
+#         Quadrat) und liegt in dieser Szene 4,8 bis 9,2 dB hoeher als am Tag der Abnahme. Ohne Gegenmittel mass die
+#         Szene Stimme/Rest 0,38 / 0,34 / 0,22 und 23 Werte am Anschlag (Runde 1, a321341c4; dort waren die Schwellen
+#         auf 0,18 / 64 gelockert). Seit Runde 2 gelten wieder die Schwellen der Runde 39 (0,45 / 0): solange ein
+#         gesprochener Satz laeuft, tritt die Musik zurueck (audio_pc.c STIMME_MUSIK_SEQ_VOL = Sequenz-Lautstaerke 80
+#         statt 127 -> (80/127)^2 = -8,03 dB). Gemessen: 0,97 / 0,86 / 0,56 / 7,67 (Stimme/Rest 1640/1688, 1228/1423,
+#         1098/1972, 1734/226), kein Wert am Anschlag. Gegenprobe mit der exe von a321341c4: rot (38 % < 45 %).
 #   11b0  Punkt 3: Spielstand (probe_r36_elza_karte 11c0 ...) + CONTINUE in ROOM11C0, Tuer Slot 0 -> ROOM11B0, Szene
 #         bis ROOM1260: msg 20/21 laden main13/14.wav (im Ton), msg 1..12 weiter main01..12 (Regel), keine Sperrzeile
 #   1171  Punkt 4: Elza (Karte Figur 4), Spielstand ROOM1131 + CONTINUE, Tuer -> ROOM1171, Dachszene bis ROOM10B1 (Weg

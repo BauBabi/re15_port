@@ -201,6 +201,7 @@ void re15_pc_licht_latch_zurueck(re15_light_set_t *ls)
 /* ===== C4 — Ton-Weiche und Haken-Bindung ==================================================== */
 
 #include "re15_audio.h"
+#include "re15_svm_vol.h"     /* Strang ton Stufe 6: param_2 der ESP-Rufe (re15_svm_sender_lage) */
 #include "re15_damage.h"     /* re15_re2_gl_apply (V2b) */
 #include "re15_granate_r35.h" /* Runde 35 Spur A: re15_granate_r35_explosion (FORCE_EXPLOSION) */
 #include <stdio.h>
@@ -233,7 +234,10 @@ int re15_pc_re2fx_se_weiche(uint32_t code, int *arms_id, int *satz)
 
 void re15_pc_esp_se(uint32_t code, const int32_t pos[3])
 {
-    (void)pos;   /* Lage-Flag Byte0: positionaler Zweig FUN_80045a64 nicht portiert (BAUPLAN O5) */
+    /* Strang ton Stufe 6: Lage-Flag Byte0 (FUN_80045024 `(param_1 & 0xff) == 0` -> ohne Lage) - mit Lage nimmt
+     * FUN_80045024 die Weltposition param_2 (@0x800451c0-cc); alle ESP-Rufe uebergeben `addiu a1,sp,16` mit der Lage
+     * des Platzes (z. B. @0x80018068, @0x8001835c, @0x800185f0). Gilt fuer jede Bank-Weiche unten. */
+    re15_svm_sender_lage(((code & 0xffu) != 0u) ? pos : NULL);
     int satz = 0;
     int k = re15_pc_esp_se_weiche(code, &satz);
     {   FILE *wl = re15_waffen_log();
@@ -248,6 +252,7 @@ void re15_pc_esp_se(uint32_t code, const int32_t pos[3])
         case RE15_SE_BANK_CORE:   re15_audio_core_se(satz);      break;
         default: break;
     }
+    re15_svm_sender_lage(NULL);
 }
 
 void re15_pc_re2fx_se(uint32_t code, const int32_t pos[3])

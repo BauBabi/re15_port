@@ -130,6 +130,7 @@ int re15_vab_parse(const uint8_t *vh_data, size_t vh_size, re15_vab_t *out)
             int off = tone_base + p * tone_segment_size + t * RE15_VAB_TONE_ENTRY_SIZE;
             if ((size_t)(off + RE15_VAB_TONE_ENTRY_SIZE) > vh_size) break;
             re15_vab_tone_t *tn = &out->tones[p * RE15_VAB_TONES_PER_PROGRAM + t];
+            tn->mode        = vh_data[off + 1];   /* VagAtr.mode, Bit 2 = Hall (Strang ton Stufe 3) */
             tn->vol         = vh_data[off + 2];   /* +1 is `mode`; vol is +2 (SsUtGetVagAtr.c) */
             tn->pan         = vh_data[off + 3];
             tn->center_note = vh_data[off + 4];
@@ -465,4 +466,18 @@ int re15_vag_adpcm_decode(const uint8_t *adpcm_data, size_t adpcm_size,
     }
 
     return (int)pcm_pos;
+}
+
+/* Strang ton Stufe 2 - Kopf in re15_vab.h. Dieselbe Regel stand bisher nur im Musik-Synth (ss_decode_vab,
+ * audit wf_1db9c802 AUD-ADPCM-END-FLAG); jetzt eine Stelle fuer Musik und Geraeusche. */
+int re15_vag_loop_start(const uint8_t *adpcm_data, size_t adpcm_size)
+{
+    if (adpcm_data == NULL) return -1;
+    int loop_start = 0;
+    for (size_t b = 0; b + 16 <= adpcm_size; b += 16) {
+        uint8_t fl = adpcm_data[b + 1];
+        if (fl & 0x04) loop_start = (int)(b / 16) * 28;    /* Loop Start: Adresse merken */
+        if (fl & 0x01) return (fl & 0x02) ? loop_start : -1; /* der Ende-Block entscheidet */
+    }
+    return -1;   /* kein Ende-Block im Umfang: der Dekoder spielt bis zum Ende des Umfangs, keine Schleife */
 }

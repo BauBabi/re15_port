@@ -174,9 +174,10 @@ const uint8_t *re15_wassersprung_r41_lage_tabelle(void);
 /* Fuer den Schritt-Ton (audio_pc.c re15_audio_footstep, Haken Runde 41 Spur A): die Lage des GERADE gespielten NPC-Schritts
  * abholen (1 = vorhanden; danach geloescht). Spieler-Schritte haben keine (OFFEN, Dossier N2.2). */
 int re15_wassersprung_r41_lage_nehmen(int lage[2]);
-/* Pegel nach SsUtKeyOnV/SpuVmKeyOnNow (Kopf (f)): *vol = Ton-Pegel des Ports bei Tastenpegel 0x7f (Q15) -> links; Rueckgabe
- * rechts (>= 1, 0 hiesse im Mischer "Mono"). diag != 0: Messzeile "[foot] NPC-Lage ..." auf stderr. */
-int re15_wassersprung_r41_lage_pegel(int *vol, const int lage[2], int diag);
+/* Messwerte des NPC-Schritts merken: lage = voll/volr, l_q15/r_q15 = Mischer-Pegel (SPU-Register * 2). Gerechnet wird seit
+ * Strang ton Stufe 1 in svm_vol_common.c (SsUtKeyOnV @0x80059e08-bc + SpuVmKeyOnNow @0x80055d10 mit Quadrat); die fruehere
+ * lineare Rechnung an dieser Stelle ist entfallen. diag != 0: Messzeile "[foot] NPC-Lage ..." auf stderr. */
+void re15_wassersprung_r41_lage_pegel(const int lage[2], int l_q15, int r_q15, int diag);
 void re15_wassersprung_r41_reset(void);
 
 #endif /* RE15_WASSERSPRUNG_R41_H */

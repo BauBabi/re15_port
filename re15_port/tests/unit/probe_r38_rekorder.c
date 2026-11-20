@@ -22,9 +22,13 @@
  *             C Elza ROOM1101 schnell: dasselbe.
  *             D Gegenprobe ohne Haken (= Stand vorher): keine Aufnahme, Piep erst an Message_on 2.
  *             E ohne Ton (Plattform meldet nichts): kein Haenger.
+ *   piepmass  das Piep-Mass des Werkzeugs cap an einem kuenstlichen Mitschnitt: Key-On bei zehn Musikpegeln im selben
+ *           Tick, Gegenprobe mit dem frueheren Mass (Strang ton Stufe 1 Runde 3)
  *   Werkzeug (fuer integration_r38_rekorder):
  *     cap  <cap.raw> <wav> [von bis]   Aufnahme im RE15_AUDIO_CAP_SYNC-Mitschnitt finden (Anfang/Ende in Ticks),
- *                                      Piep-Ticks (1350..1550 Hz > 0,3 wie tools/tueren/r36_cap_ticks.py)
+ *                                      Key-On des Pieps per Kreuzkorrelation mit dem Satz der Mini-Bank
+ *                                      (Strang ton Stufe 1 Runde 3; vorher Bandanteil 1350..1550 Hz > 0,3 - das
+ *                                      hing vom Pegel der Musik darunter ab, s. Kopf ueber piep_bezug_t)
  *     bild <ppm> <ROOM110.BSS>          naechster Panel-Cut (8 SAY HELLO / 11 ACCEPTED / 12 leer) im Anzeigefeld
  */
 #include "re15_rdt.h"
@@ -46,6 +50,9 @@
 #include "re15_aufschliessen_r36.h"
 #include "re15_rekorder_r38.h"
 #include "re15_keyitems_r41.h"    /* Runde 41 Spur O: das Panel startet per USE des Minidisc-Spielers */
+#include "re15_vab.h"             /* Strang ton Stufe 1 Runde 3: Piep-Bezug aus der Mini-Bank (Werkzeug cap, Teil piepmass) */
+#include "re15_svm_vol.h"
+#include "gen/re2_karten_bank.inc"
 
 #include <math.h>
 #include <stdint.h>
@@ -574,6 +581,184 @@ static void teil_ablauf(void)
 
 /* ==================== Werkzeug cap ======================================================================= */
 #define T_TICK 1470
+
+/* Bester Versatz eines Bezugs w (wl Werte) im Mono-Mitschnitt m, Versatz lo..hi: grob im Raster D (Versatz UND Summe),
+ * dann fein +-2*D mit allen Werten. Rueckgabe -1, wenn der Bereich leer ist. */
+static long versatz_suchen(const float *m, long lo, long hi, const float *w, long wl, int D, double *best_out)
+{
+    double best = -1e300; long bk = -1;
+    if (hi < lo) return -1;
+    for (long k = lo; k <= hi; k += D) {
+        double s = 0;
+        for (long j = 0; j < wl; j += D) s += (double)m[k + j] * w[j];
+        if (s > best) { best = s; bk = k; }
+    }
+    long k0 = bk - 2 * D < lo ? lo : bk - 2 * D, k1 = bk + 2 * D > hi ? hi : bk + 2 * D;
+    best = -1e300;
+    for (long k = k0; k <= k1; k++) {
+        double s = 0;
+        for (long j = 0; j < wl; j++) s += (double)m[k + j] * w[j];
+        if (s > best) { best = s; bk = k; }
+    }
+    if (best_out) *best_out = best;
+    return bk;
+}
+
+/* ---- Piep: Bezug aus der Bank, Suche per Kreuzkorrelation -------------------------------------------------------
+ * Strang ton Stufe 1 Runde 3 (Pruefung Runde 2, R1): bis dahin galt als Piep-Einsatz der erste Tick, in dem das Band
+ * 1380..1530 Hz mehr als 0,3 der Tick-Energie traegt (band_erster_tick unten). Das ist ein VERHAELTNIS zum Rest des
+ * Ticks - also zur Musik darunter - und kippte, als die Musik unter gesprochenen Saetzen 8 dB leiser wurde: im Lauf S
+ * (Piep 5 Spielbilder nach dem Ende der Aufnahme, Musik noch abgesenkt) Bandanteil im Key-On-Tick 0,308 statt knapp
+ * unter 0,3 -> Tick 708 statt 709, obwohl der Piep auf demselben Abtastwert beginnt (Mitschnitt des Pruefers:
+ * Bandenergie Tick 708 = 3,97e12, Folgeticks 3,0e12 .. 4,3e12; der Rest in Tick 708 ist der breitbandige Einsatz des
+ * Tons selbst, 8,9e12).
+ * Jetzt: der Piep wird als DAS gesucht, was er ist - Satz RE2_KARTE_SE_PIEP der Mini-Bank shared_assets/RE2/KARTSE.VBS
+ * (gen/re2_karten_bank.inc: RE2 ROOM2110 Satz 0x0D, Satz der Mini-Bank `00 00 13 01`), gerendert wie der Mischer
+ * (audio_pc.c audio_callback: Schritt = Tonhoehe << 4 in Q16, naechster Wert; Tonhoehe re15_vab_note2pitch2 wie
+ * se_play_layers) - und zwar per Kreuzkorrelation. Deren groesster Wert haengt nicht davon ab, wie laut etwas anderes
+ * daneben laeuft; er liefert den Abtastwert des Key-On. Ob wirklich der Piep dort liegt, sagt die gemessene
+ * Verstaerkung (Skalarprodukt / Energie des Bezugs): sie muss zu der Lautstaerke passen, die der Mischer fuer diesen Ton
+ * rechnet - RE2-Gesetz ohne Quadrat (re15_svm_keyon_reg_re2: `beq v1,v0,0x80083a98` @0x80083a38 ueberspringt
+ * `mult a2,a2` @0x80083a40), Tastenstaerke = Ton-vol (RE2 FUN_8005bd6c), Register * 2 (psx-spx Z. 357-364), mal
+ * Hauptlautstaerke 0x3fff * 2 (SsSetMVol(127,127) @0x80043ba8). */
+typedef struct {
+    float *x; long n;              /* Bezug bei 44100 Hz, Rohwerte der Tonprobe (ohne Lautstaerke) */
+    double soll;                   /* Verstaerkung, die der Mischer rechnet (Mittel links/rechts) */
+    int vag, pitch, reg_l, reg_r;
+    long pcm_n;
+    uint8_t satz[4];
+} piep_bezug_t;
+
+static int piep_bezug_laden(piep_bezug_t *b)
+{
+    static re15_vab_t vab;
+    memset(b, 0, sizeof *b);
+    re15_karte_bank_rec_t rec;
+    re15_karte_bank_rec(&rec);
+    size_t nv = 0;
+    uint8_t *vbs = slurp(RE15_ASSET_PSX_DIR "/../RE2/KARTSE.VBS", &nv);
+    if (!vbs || nv < (size_t)rec.vbd_off + rec.vbd_size || rec.edt_size < 12) { free(vbs); return 0; }
+    const uint8_t *edt = vbs + rec.edt_off;
+    /* wie load_re2_karte_se_pc (audio_pc.c): u32 vh_off @edt_size-8, dahinter die VH */
+    uint32_t vh_off = (uint32_t)edt[rec.edt_size - 8] | ((uint32_t)edt[rec.edt_size - 7] << 8) |
+                      ((uint32_t)edt[rec.edt_size - 6] << 16) | ((uint32_t)edt[rec.edt_size - 5] << 24);
+    if (vh_off + 0x20u > rec.edt_size || re15_vab_parse(edt + vh_off, (size_t)rec.edt_size - vh_off, &vab) != 0) {
+        free(vbs); return 0;
+    }
+    int vags[8], tones[8];
+    int n = re15_edt_resolve_layers_ex(edt, &vab, RE2_KARTE_SE_PIEP, vags, tones, 8);
+    if (n != 1 || vags[0] < 0 || vags[0] >= vab.vag_count) { free(vbs); return 0; }     /* der Piep hat eine Schicht */
+    memcpy(b->satz, edt + RE2_KARTE_SE_PIEP * 4, 4);
+    const re15_vab_tone_t *t = &vab.tones[tones[0]];
+    const uint32_t off = vab.samples[vags[0]].offset, vsz = vab.samples[vags[0]].size;
+    if (off + vsz > rec.vbd_size) { free(vbs); return 0; }
+    const size_t cap = (vsz / 16) * 28;
+    int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
+    if (!pcm) { free(vbs); return 0; }
+    const int pn = re15_vag_adpcm_decode(vbs + rec.vbd_off + off, vsz, pcm, cap);
+    b->vag = vags[0]; b->pcm_n = pn;
+    b->pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift, t->center_note, t->pitch_shift);
+    /* Mischer: s->pos_frac += step; s->pos += pos_frac >> 16 (audio_pc.c audio_callback), step = pitch << 4 */
+    const uint32_t step = (uint32_t)b->pitch << 4;
+    long nout = 0;
+    if (pn > 0 && step) nout = (long)(((uint64_t)pn << 16) / step) + 2;
+    b->x = (float *)malloc((size_t)(nout > 0 ? nout : 1) * sizeof(float));
+    if (!b->x || pn <= 0 || !step) { free(pcm); free(vbs); return 0; }
+    uint32_t frac = 0; long pos = 0, i = 0;
+    while (pos < pn && i < nout) {
+        b->x[i++] = (float)pcm[pos];
+        frac += step; pos += (long)(frac >> 16); frac &= 0xffffu;
+    }
+    b->n = i;
+    /* Lautstaerke wie se_stimme_q15 (audio_pc.c) fuer eine RE2-Bank ohne Lage */
+    const int prog = (tones[0] / RE15_VAB_TONES_PER_PROGRAM) & (RE15_VAB_PROGRAM_COUNT - 1);
+    re15_svm_vol_t in;
+    memset(&in, 0, sizeof in);
+    in.vab_mvol = vab.master_volume; in.prog_mvol = vab.prog_mvol[prog]; in.prog_pan = vab.prog_mpan[prog];
+    in.tone_vol = t->vol; in.tone_pan = t->pan; in.key = t->vol; in.key_pan = RE15_SVM_PAN_MITTE;
+    re15_svm_keyon_reg_re2(&in, &b->reg_l, &b->reg_r);
+    b->soll = 0.5 * ((double)RE15_SPU_REG_Q15(b->reg_l) + (double)RE15_SPU_REG_Q15(b->reg_r)) / 32768.0 *
+              ((double)RE15_SPU_MVOL_Q15 / 32768.0);
+    free(pcm); free(vbs);
+    return b->n > 4 * T_TICK;
+}
+
+/* Key-On des Pieps im Mono-Mitschnitt m ab Abtastwert lo (Bezug muss ganz hineinpassen: letzter Versatz hi).
+ * Grob: beide Signale auf ein Achtel der Rate (Mittel ueber PIEP_D = 8 Werte; der Ton liegt bei 1,4 kHz, die neue
+ * Nyquist-Grenze bei 2,7 kHz) und JEDER Versatz im Achtel-Raster - das sind knapp vier Stuetzstellen je Periode des
+ * Tons (30 Abtastwerte); ein Raster von 16 wie bei der Aufnahme wuerde die Periode ueberspringen. Fein: +-96
+ * Abtastwerte mit allen Werten. Rueckgabe Versatz oder -1; *korr = normierte Korrelation (haengt von der Musik ab,
+ * nur zur Anzeige), *g = Verstaerkung. */
+#define PIEP_D 8
+static long piep_suchen(const float *m, long lo, long hi, const piep_bezug_t *b, double *korr, double *g)
+{
+    if (hi < lo || b->n < 2 * PIEP_D) return -1;
+    const long nd = (hi + b->n - lo) / PIEP_D, rd = b->n / PIEP_D;
+    float *md = (float *)malloc((size_t)(nd > 0 ? nd : 1) * sizeof(float));
+    float *xd = (float *)malloc((size_t)(rd > 0 ? rd : 1) * sizeof(float));
+    if (!md || !xd || nd <= rd) { free(md); free(xd); return -1; }
+    for (long i = 0; i < nd; i++) { float a = 0; for (int q = 0; q < PIEP_D; q++) a += m[lo + PIEP_D * i + q]; md[i] = a / PIEP_D; }
+    for (long i = 0; i < rd; i++) { float a = 0; for (int q = 0; q < PIEP_D; q++) a += b->x[PIEP_D * i + q]; xd[i] = a / PIEP_D; }
+    double best = -1e300; long bk = -1;
+    for (long k = 0; k + rd <= nd; k++) {
+        float s = 0;
+        for (long j = 0; j < rd; j++) s += md[k + j] * xd[j];
+        if ((double)s > best) { best = (double)s; bk = k; }
+    }
+    free(md); free(xd);
+    if (bk < 0) return -1;
+    long k0 = lo + PIEP_D * bk - 96, k1 = lo + PIEP_D * bk + 96;
+    if (k0 < lo) k0 = lo;
+    if (k1 > hi) k1 = hi;
+    best = -1e300; bk = -1;
+    for (long k = k0; k <= k1; k++) {
+        double s = 0;
+        for (long j = 0; j < b->n; j++) s += (double)m[k + j] * b->x[j];
+        if (s > best) { best = s; bk = k; }
+    }
+    double ww = 0, mm = 0;
+    for (long j = 0; j < b->n; j++) { ww += (double)b->x[j] * b->x[j]; mm += (double)m[bk + j] * m[bk + j]; }
+    if (korr) *korr = best / sqrt(ww * mm + 1e-9);
+    if (g)    *g    = best / (ww + 1e-9);
+    return bk;
+}
+
+/* Das FRUEHERE Mass (bis Runde 2): erster Tick ab `von`, in dem das Band 1380..1530 Hz mehr als 0,3 der Tick-Energie
+ * traegt (Hann-Fenster, Bins wie rfft(1470); wie tools/tueren/r36_cap_ticks.py). Bleibt nur fuer die Gegenprobe im
+ * Teil "piepmass" und als Zusatzzeile des Werkzeugs stehen - es haengt vom Pegel der Musik darunter ab. */
+static long band_erster_tick(const float *m, long von, long bis, long *letzter_out, long *anzahl_out)
+{
+    long erster = -1, letzter = -1, anzahl = 0;
+    static float x[T_TICK];
+    for (long t = von; t < bis; t++) {
+        double e = 0;
+        for (int i = 0; i < T_TICK; i++) {
+            double h = 0.5 - 0.5 * cos(2.0 * M_PI * i / (T_TICK - 1));
+            x[i] = (float)(m[t * T_TICK + i] * h); e += (double)x[i] * x[i];
+        }
+        double re0 = 0; for (int i = 0; i < T_TICK; i++) re0 += x[i];
+        double tot = ((double)T_TICK * e - re0 * re0) / 2.0 + 1e-9, band = 0;
+        for (int k = 46; k <= 51; k++) {           /* 30 Hz je Bin: 1380..1530 Hz (> 1350 und < 1550) */
+            double re = 0, im = 0;
+            for (int i = 0; i < T_TICK; i++) { double ph = 2.0 * M_PI * k * i / T_TICK; re += x[i] * cos(ph); im -= x[i] * sin(ph); }
+            band += re * re + im * im;
+        }
+        if (band / tot > 0.3) { if (erster < 0) erster = t; letzter = t; anzahl++; }
+    }
+    if (letzter_out) *letzter_out = letzter;
+    if (anzahl_out)  *anzahl_out  = anzahl;
+    return erster;
+}
+
+/* Grenzen der Verstaerkung, in denen der gefundene Ton als DER Piep gilt: Soll +-20 % (+1,6 / -1,9 dB). Gemessen am
+ * echten Spiel (integration_r38_rekorder, Laeufe L / S / E): 0,992 / 0,997 / 0,997 des Solls mit abgesenkter Musik,
+ * 0,992 / 0,993 / 0,997 mit voller Musik (Gegenprobe-exe ohne Absenkung); im Teil piepmass 0,988 .. 0,999 ueber zehn
+ * Musikpegel. Gegenproben: die Mini-Bank mit dem RE1.5-Quadrat gespielt -> 0,391 des Solls; der Stand vor Stufe 1
+ * (r42/story 9426267fa: Ton-vol linear und pauschal halbiert) -> 0,393; kein Piep -> 0,02; ein Piep mit halber
+ * Lautstaerke -> 0,50. */
+#define PIEP_G_MIN 0.80
+#define PIEP_G_MAX 1.20
+
 static int werkzeug_cap(int argc, char **argv)
 {
     if (argc < 4) { printf("Aufruf: cap <cap.raw> <wav> [von bis]\n"); return 2; }
@@ -591,51 +776,123 @@ static int werkzeug_cap(int argc, char **argv)
     long ticks = ns / T_TICK;
     long von = argc > 5 ? atol(argv[4]) : 0, bis = argc > 5 ? atol(argv[5]) : ticks;
     if (bis > ticks) bis = ticks;
-    /* Grob: Dezimation 16, dann fein +-32 */
-    const int D = 16;
-    long lo = von * T_TICK, hi = bis * T_TICK - wl;
-    double best = -1e300; long bk = -1;
-    for (long k = lo; k <= hi; k += D) {
-        double s = 0;
-        for (long j = 0; j < wl; j += D) s += (double)m[k + j] * wv[j];
-        if (s > best) { best = s; bk = k; }
-    }
-    long k0 = bk - 2 * D < lo ? lo : bk - 2 * D, k1 = bk + 2 * D > hi ? hi : bk + 2 * D;
-    best = -1e300;
-    for (long k = k0; k <= k1; k++) {
-        double s = 0;
-        for (long j = 0; j < wl; j++) s += (double)m[k + j] * wv[j];
-        if (s > best) { best = s; bk = k; }
-    }
+    /* Aufnahme: grob Dezimation 16, dann fein +-32 */
+    double best = 0;
+    long bk = versatz_suchen(m, von * T_TICK, bis * T_TICK - wl, wv, wl, 16, &best);
+    if (bk < 0) { printf("FEHLER: Mitschnitt kuerzer als die Aufnahme\n"); return 2; }
     double ww = 0, mm = 0;
     for (long j = 0; j < wl; j++) { ww += (double)wv[j] * wv[j]; mm += (double)m[bk + j] * m[bk + j]; }
     double korr = best / sqrt(ww * mm + 1e-9), g = best / (ww + 1e-9);
     long ende = bk + wl;
     printf("WAV %ld Samples = %.2f Ticks | Korrelation %.3f Verstaerkung %.3f\n", wl, (double)wl / T_TICK, korr, g);
     printf("WAV ANFANG Tick %ld (+%ld) ENDE letzter Tick %ld\n", bk / T_TICK, bk % T_TICK, (ende - 1) / T_TICK);
-    /* Piep-Anteil je Tick: 1350..1550 Hz gegen alles ab Bin 1 (Hann-Fenster, Bins wie rfft(1470)). Gesucht ab dem
-     * Anfang der Aufnahme (ein Piep WAEHREND der Aufnahme waere der Befund; Menue-Toene von Titel/Spielerwahl davor
-     * zaehlen nicht). */
-    long erster = -1, letzter = -1, anzahl = 0;
-    static float x[T_TICK];
-    for (long t = bk / T_TICK; t < bis; t++) {
-        double e = 0;
-        for (int i = 0; i < T_TICK; i++) {
-            double h = 0.5 - 0.5 * cos(2.0 * M_PI * i / (T_TICK - 1));
-            x[i] = (float)(m[t * T_TICK + i] * h); e += (double)x[i] * x[i];
-        }
-        double re0 = 0; for (int i = 0; i < T_TICK; i++) re0 += x[i];
-        double tot = ((double)T_TICK * e - re0 * re0) / 2.0 + 1e-9, band = 0;
-        for (int k = 46; k <= 51; k++) {           /* 30 Hz je Bin: 1380..1530 Hz (> 1350 und < 1550) */
-            double re = 0, im = 0;
-            for (int i = 0; i < T_TICK; i++) { double ph = 2.0 * M_PI * k * i / T_TICK; re += x[i] * cos(ph); im -= x[i] * sin(ph); }
-            band += re * re + im * im;
-        }
-        if (band / tot > 0.3) { if (erster < 0) erster = t; letzter = t; anzahl++; }
+    /* Piep: Key-On per Kreuzkorrelation mit dem Bezug aus der Bank (Kopf ueber piep_bezug_t). Gesucht ab dem Anfang
+     * der Aufnahme (ein Piep WAEHREND der Aufnahme waere der Befund; Menue-Toene von Titel/Spielerwahl davor zaehlen
+     * nicht). Tick = der naechstliegende Tick-Anfang, Rest mit Vorzeichen. */
+    piep_bezug_t pb;
+    if (!piep_bezug_laden(&pb)) { printf("FEHLER: Piep-Bezug (shared_assets/RE2/KARTSE.VBS)\n"); return 2; }
+    double pk = 0, pg = 0;
+    long kp = piep_suchen(m, bk, bis * T_TICK - pb.n, &pb, &pk, &pg);
+    printf("PIEP BEZUG Satz %02x %02x %02x %02x VAG %d Tonhoehe 0x%03x %ld Samples = %.2f Ticks Register %d/%d Soll-Verstaerkung %.4f\n",
+           pb.satz[0], pb.satz[1], pb.satz[2], pb.satz[3], pb.vag, pb.pitch, pb.n, (double)pb.n / T_TICK,
+           pb.reg_l, pb.reg_r, pb.soll);
+    if (kp < 0) {
+        printf("PIEP KEYON fehlt (Mitschnitt nach der Aufnahme kuerzer als der Piep)\n");
+    } else {
+        const long tick = (kp + T_TICK / 2) / T_TICK, rest = kp - tick * T_TICK;
+        const double q = pg / pb.soll;
+        printf("PIEP KEYON Tick %ld (%+ld) Korrelation %.3f Verstaerkung %.4f = %.3f des Solls -> %s\n", tick, rest, pk, pg, q,
+               (q >= PIEP_G_MIN && q <= PIEP_G_MAX) ? "PEGEL-OK" : "PEGEL-FALSCH");
     }
-    printf("PIEP erster Tick %ld letzter %ld Anzahl %ld\n", erster, letzter, anzahl);
-    free(cb); free(wb); free(wv); free(m);
+    {   long letzter = -1, anzahl = 0;
+        long erster = band_erster_tick(m, bk / T_TICK, bis, &letzter, &anzahl);
+        printf("BAND 1380..1530 Hz > 0,3 (frueheres Mass, haengt vom Musikpegel ab): erster Tick %ld letzter %ld Anzahl %ld\n",
+               erster, letzter, anzahl); }
+    free(cb); free(wb); free(wv); free(m); free(pb.x);
     return 0;
+}
+
+/* ==================== Teil piepmass (Strang ton Stufe 1 Runde 3) ========================================
+ * Riegel fuer das Mass selbst, ohne Spiel und ohne Tondatei im Repo: ein kuenstlicher Mitschnitt aus
+ *   - "Musik": weisses Rauschen (fester Zufallsgenerator), einmal geglaettet, in ZEHN Pegeln im Abstand von 2 dB
+ *     (Effektivwert 500 .. 3972),
+ *   - dem Piep aus der Bank mit der Verstaerkung, die der Mischer rechnet, Key-On auf einem Tick-Anfang.
+ * MUSS: das neue Mass findet den Key-On bei JEDEM Pegel im selben Tick (Rest hoechstens eine Periode des Tons,
+ * 30 Abtastwerte) und die Verstaerkung innerhalb der Grenzen; ohne Piep meldet es PEGEL-FALSCH.
+ * GEGENPROBE im selben Lauf: das fruehere Mass (band_erster_tick) nennt ueber dieselben zehn Pegel NICHT ueberall
+ * denselben Tick - genau der Fehler, an dem integration_r38_rekorder in Runde 2 rot wurde. */
+static uint32_t s_pm_lcg;
+static float pm_rausch(void)
+{
+    s_pm_lcg = s_pm_lcg * 1664525u + 1013904223u;
+    return (float)((int32_t)(s_pm_lcg >> 8) & 0xffff) / 32768.0f - 1.0f;      /* -1 .. +1 */
+}
+
+static void teil_piepmass(void)
+{
+    printf("== piepmass: Piep-Key-On unabhaengig vom Musikpegel ==\n");
+    piep_bezug_t pb;
+    int ok = piep_bezug_laden(&pb);
+    CHECK("Bezug: KARTSE.VBS Satz 1 (PIEP) = `00 00 13 01` (Direkt-Zweig: byte3 & 0x1f = 1 < 0x10), eine Schicht, "
+          "14 .. 16 Ticks lang", ok && pb.satz[0] == 0x00 && pb.satz[1] == 0x00 && pb.satz[2] == 0x13 && pb.satz[3] == 0x01 &&
+          pb.n >= 14 * T_TICK && pb.n <= 16 * T_TICK);
+    if (!ok) return;
+    printf("  Bezug: VAG %d, %ld Proben-Werte, Tonhoehe 0x%03x, %ld Samples, Register %d/%d, Soll-Verstaerkung %.4f\n",
+           pb.vag, pb.pcm_n, pb.pitch, pb.n, pb.reg_l, pb.reg_r, pb.soll);
+    /* RE2-Gesetz ohne Quadrat (re15_svm_keyon_reg_re2, RE2 @0x8008376c-0x80083804 und `beq` @0x80083a38): die Mini-Bank
+     * hat Bank-Lautstaerke 127 (VH+0x18), Programm 0 Lautstaerke 127 / Pan 64 (VH+0x21 / +0x24), Ton 1 Lautstaerke 80 /
+     * Pan 64 (VH+0x820+32+2 / +3); Tastenstaerke = Ton-vol = 80 (RE2 FUN_8005bd6c). Register = 0x3fff * 80 * 80 /
+     * 127^2 = 6500 je Seite. Mit dem RE1.5-Quadrat waeren es 6500^2 / 0x3fff = 2578 (-8,0 dB). */
+    CHECK("Soll-Lautstaerke des Pieps nach dem RE2-Gesetz (ohne Quadrat): Register 6500/6500 = 0x3fff * 80 * 80 / 127^2",
+          pb.reg_l == 6500 && pb.reg_r == 6500);
+
+    enum { TICKS = 60, KEYON = 20, PEGEL = 10 };
+    const long ns = (long)TICKS * T_TICK;
+    float *rau = (float *)malloc((size_t)ns * sizeof(float)), *m = (float *)malloc((size_t)ns * sizeof(float));
+    if (!rau || !m) { CHECK("Speicher", 0); free(rau); free(m); free(pb.x); return; }
+    s_pm_lcg = 0x52453135u;                                    /* "RE15" */
+    {   float alt = 0; double e = 0;
+        for (long i = 0; i < ns; i++) { float r = pm_rausch(); rau[i] = 0.5f * (r + alt); alt = r; e += (double)rau[i] * rau[i]; }
+        const float norm = (float)(1.0 / sqrt(e / (double)ns));
+        for (long i = 0; i < ns; i++) rau[i] *= norm; }         /* Effektivwert 1 */
+    long neu_tick[PEGEL], neu_rest[PEGEL], alt_tick[PEGEL];
+    int neu_gleich = 1, neu_pegel = 1, alt_verschieden = 0;
+    double qmin = 1e9, qmax = -1e9;
+    for (int p = 0; p < PEGEL; p++) {
+        const double rms = 500.0 * pow(10.0, 2.0 * p / 20.0);
+        for (long i = 0; i < ns; i++) m[i] = (float)(rms * rau[i]);
+        for (long j = 0; j < pb.n; j++) m[(long)KEYON * T_TICK + j] += (float)(pb.soll * pb.x[j]);
+        double k = 0, g = 0;
+        const long kp = piep_suchen(m, 0, ns - pb.n, &pb, &k, &g);
+        neu_tick[p] = (kp + T_TICK / 2) / T_TICK; neu_rest[p] = kp - neu_tick[p] * T_TICK;
+        alt_tick[p] = band_erster_tick(m, 0, TICKS, NULL, NULL);
+        const double q = g / pb.soll;
+        if (q < qmin) qmin = q;
+        if (q > qmax) qmax = q;
+        printf("  Musik-Effektivwert %6.0f: neu Tick %ld (%+ld) Korrelation %.3f Verstaerkung %.3f des Solls | frueher Tick %ld\n",
+               rms, neu_tick[p], neu_rest[p], k, q, alt_tick[p]);
+        if (neu_tick[p] != KEYON || labs(neu_rest[p]) > 30) neu_gleich = 0;
+        if (q < PIEP_G_MIN || q > PIEP_G_MAX) neu_pegel = 0;
+        if (alt_tick[p] != alt_tick[0]) alt_verschieden = 1;
+    }
+    CHECK("neues Mass: Key-On bei allen zehn Musikpegeln im Tick des Key-On (Rest hoechstens 30 Abtastwerte)", neu_gleich);
+    printf("  Verstaerkung ueber alle Pegel: %.3f .. %.3f des Solls\n", qmin, qmax);
+    CHECK("neues Mass: Verstaerkung bei allen zehn Musikpegeln innerhalb 0,80 .. 1,20 des Solls", neu_pegel);
+    CHECK("GEGENPROBE: das fruehere Mass (Bandanteil > 0,3) nennt ueber dieselben Pegel NICHT ueberall denselben Tick",
+          alt_verschieden);
+    /* ohne Piep: nur Musik (mittlerer Pegel) -> irgendein Versatz, aber die Verstaerkung passt nicht */
+    {   const double rms = 500.0 * pow(10.0, 2.0 * 5 / 20.0);
+        for (long i = 0; i < ns; i++) m[i] = (float)(rms * rau[i]);
+        double k = 0, g = 0;
+        (void)piep_suchen(m, 0, ns - pb.n, &pb, &k, &g);
+        printf("  ohne Piep: Verstaerkung %.3f des Solls, Korrelation %.3f\n", g / pb.soll, k);
+        CHECK("ohne Piep: Verstaerkung ausserhalb 0,80 .. 1,20 des Solls (PEGEL-FALSCH)", g / pb.soll < PIEP_G_MIN);
+        /* Piep mit halber Lautstaerke (6 dB zu leise) -> ebenfalls ausserhalb */
+        for (long j = 0; j < pb.n; j++) m[(long)KEYON * T_TICK + j] += (float)(0.5 * pb.soll * pb.x[j]);
+        (void)piep_suchen(m, 0, ns - pb.n, &pb, &k, &g);
+        printf("  Piep mit halber Lautstaerke: Verstaerkung %.3f des Solls\n", g / pb.soll);
+        CHECK("Piep 6 dB zu leise: Verstaerkung ausserhalb 0,80 .. 1,20 des Solls (PEGEL-FALSCH)", g / pb.soll < PIEP_G_MIN); }
+    free(rau); free(m); free(pb.x);
 }
 
 /* ==================== Werkzeug bild ====================================================================== */
@@ -702,6 +959,7 @@ int main(int argc, char **argv)
     if (alle || !strcmp(teil, "anker"))  teil_anker();
     if (alle || !strcmp(teil, "datei"))  teil_datei();
     if (alle || !strcmp(teil, "ablauf")) teil_ablauf();
+    if (alle || !strcmp(teil, "piepmass")) teil_piepmass();
     printf("\n%s: %d Fehler\n", g_fail ? "FAIL" : "PASS", g_fail);
     return g_fail ? 1 : 0;
 }

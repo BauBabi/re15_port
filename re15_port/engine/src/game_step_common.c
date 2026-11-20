@@ -6,6 +6,7 @@
  * which stays in each main.c.
  */
 #include "re15_birkin_formen.h"
+#include "re15_svm_vol.h"   /* Strang ton Stufe 6 Runde 2: re15_svm_core_se_spieler = FUN_80045024(0x04ss0001, &DAT_800aca88) */
 #include "re15_finale_r42.h"   /* Runde 42 Strang finale: Abschuss-Ausloeser vor dem Spieler */
 #include <stdio.h>              /* fprintf — the dropped-event diagnostic below */
 #include <stdlib.h>             /* getenv — RE15_STAIR_DEMO */
@@ -244,7 +245,7 @@ static void re15_player_death_cmd3_tick(const re15_game_ctx_t *c)
         pl->hit_react      |= 1u;                    /* +0x93 |= 1   @0x800367a4 */
         re15_player_react_pose_arm(7);               /* Ph1 posiert @0x800367d0/@0x800367d8 aus
                                                       * DAT_800acad8/DAT_800acbc0 = COMMON */
-        re15_audio_core_se(3);                       /* Se_on(0x04030001) @0x800367a8 — CORE
+        re15_svm_core_se_spieler(3);                       /* Se_on(0x04030001) @0x800367a8 — CORE
                                                       * Record 3, derselbe Todes-SE wie im
                                                       * Fress-Kollaps (Bank-Dekodierung
                                                       * @0x80045028/@0x8004507c, Dispatch
@@ -367,8 +368,8 @@ void re15_player_stagger_cmd2(uint8_t clip)
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
     if (s_hit_flinch > 0 || s_knockdown != 0) return;   /* laufende Reaktion behaelt Vorrang */
     re15_player_aim_interrupt();             /* cmd-2 ersetzt den Aim-Zustand (@0x80031c88) */
-    if (clip == 0x08) re15_audio_core_se(1); /* Se_on(0x04010001) @0x80035e0c/e2c/e80 */
-    else if (clip == 0x09) re15_audio_core_se(2);   /* Se_on(0x04020001) @0x80035f90/@0x80036004 */
+    if (clip == 0x08) re15_svm_core_se_spieler(1); /* Se_on(0x04010001) @0x80035e0c/e2c/e80 */
+    else if (clip == 0x09) re15_svm_core_se_spieler(2);   /* Se_on(0x04020001) @0x80035f90/@0x80036004 */
     s_hit_flinch = (clip == 0x0a) ? 20 : 22; /* Playout = PL00.EDD frame_count (8/9 = 22, 0xa = 20) */
     s_hit_kb     = 0xc8;                     /* DAT_800acae0 = 200 (@0x80035e44) */
     pl->motion = clip; pl->anim_frame = 0;
@@ -745,7 +746,7 @@ static void re15_player_knockdown_tick(const re15_game_ctx_t *c, re15_actor_t *p
                                                    * +0x95 = 0 @0x80036164 */
             s_kd_speed = 1000;                    /* +0x8c = 0x3e8 `ori v0,zero,0x3e8` @0x8003615c / `sh` @0x8003616c */
             pl->hit_react |= 1;                   /* i-Frames @0x80036178-80 */
-            re15_audio_core_se(1);                /* SE 0x04010001 (`lui a0,0x401` @0x80036124 / `ori` @0x80036188),
+            re15_svm_core_se_spieler(1);                /* SE 0x04010001 (`lui a0,0x401` @0x80036124 / `ori` @0x80036188),
                                                    * `jal 0x80045024` @0x80036184 */
             s_kd_phase = 1;                       /* aca5a = 1 @0x80036134-38 */
             /* faellt durch: Ph0 endet @0x800361a0, Ph1 beginnt @0x800361a4 */
@@ -761,7 +762,7 @@ static void re15_player_knockdown_tick(const re15_game_ctx_t *c, re15_actor_t *p
             break; }
         case 2:                                   /* Ph2 0x8003623c */
             kd_clip(pl, 0x0e, 0);                 /* +0x94 = 0xe @0x80036254-5c, +0x95 0 / +0x8f 7 @0x80036260-70 */
-            re15_audio_core_se(1);                /* SE 0x04010001 (a0 @0x8003623c-40), `jal 0x80045024` @0x80036274 */
+            re15_svm_core_se_spieler(1);                /* SE 0x04010001 (a0 @0x8003623c-40), `jal 0x80045024` @0x80036274 */
             s_kd_phase = 3;                       /* aca5a = 3 @0x8003624c-50 */
             /* faellt durch in Ph3 @0x8003627c */
         case 3:                                   /* Ph3 0x8003627c — am Boden */
@@ -774,7 +775,7 @@ static void re15_player_knockdown_tick(const re15_game_ctx_t *c, re15_actor_t *p
         case 5:                                   /* Ph5 0x80036308 — Wand-Slam */
             kd_clip(pl, 0x0f, 0);                 /* +0x94 = 0xf @0x80036320-28, +0x95 0 / +0x8f 7 @0x8003632c-3c
                                                    * (aca3c |= 0x80 @0x80036348-5c dokumentiert, Leser OFFEN KD-11) */
-            re15_audio_core_se(1);                /* SE 0x04010001 (a0 @0x80036308-0c), `jal 0x80045024` @0x80036340 */
+            re15_svm_core_se_spieler(1);                /* SE 0x04010001 (a0 @0x80036308-0c), `jal 0x80045024` @0x80036340 */
             s_kd_phase = 6;                       /* aca5a = 6 @0x80036318-1c */
             /* faellt durch in den Anim-Schwanz (`j 0x800363cc` @0x80036360) */
         case 6:
@@ -807,7 +808,7 @@ static void re15_player_knockdown_tick(const re15_game_ctx_t *c, re15_actor_t *p
             s_kd_speed = 500;                     /* +0x8c = 0x1f4 `ori v0,zero,0x1f4` @0x800364c0 / `sh` @0x800364d0 */
             s_kd_t = 0;                           /* +0x9f = 0 @0x800364dc-e0 */
             pl->hit_react |= 1;                   /* i-Frames @0x800364e4-ec */
-            re15_audio_core_se(1);                /* SE 0x04010001 (a0 @0x80036488 / `ori` @0x800364f4), `jal 0x80045024`
+            re15_svm_core_se_spieler(1);                /* SE 0x04010001 (a0 @0x80036488 / `ori` @0x800364f4), `jal 0x80045024`
                                                    * @0x800364f0 */
             s_kd_phase = 1;                       /* aca5a = 1 @0x80036498-9c */
             /* faellt durch: Ph0 endet @0x8003650c, Ph1 beginnt @0x80036510 */

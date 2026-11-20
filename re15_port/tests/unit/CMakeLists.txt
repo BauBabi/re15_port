@@ -1398,6 +1398,196 @@ if(TARGET SDL2::SDL2-static)
     set_tests_properties(unit_rotor_bgm_pin PROPERTIES TIMEOUT 120)
 endif()
 
+# --- Strang "ton", Stufe 1 (2026-11-19): Lautstaerke-Gesetz der libsnd (Nutzer: "Bei der PC Version klingen die
+#     Sounds irgendwie dumpfer/anders als in der PSX Version"; Messbericht U1). SpuVmKeyOnNow @0x80055d10-0x80056070:
+#     Produkt Tastenstaerke * Bank * Programm * Ton, drei Pan-Stufen, QUADRAT / 0x3fff; RE2 _SsVmKeyOnNow @0x80083760
+#     ohne Quadrat fuer Geraeusche (@0x80083a38). unit_r42_ton_gesetz rechnet mit den Bankdaten gegen die im laufenden
+#     Original gemessenen SPU-Register; unit_r42_ton_mischer misst die Spitzen am echten audio_pc.c
+#     (RE15_AUDIO_CAP_SYNC). Gegenprobe: der Mischer-Riegel mit dem audio_pc.c von 71caea668 faellt in allen 5 Punkten.
+add_executable(test_r42_ton_gesetz test_r42_ton_gesetz.c)
+target_link_libraries(test_r42_ton_gesetz PRIVATE re15_engine re15_test_support)
+target_include_directories(test_r42_ton_gesetz PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_compile_definitions(test_r42_ton_gesetz PRIVATE
+    RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+add_test(NAME unit_r42_ton_gesetz COMMAND test_r42_ton_gesetz)
+set_tests_properties(unit_r42_ton_gesetz PROPERTIES TIMEOUT 30)
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_mischer
+        test_r42_ton_mischer.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_mischer PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_mischer PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_mischer PRIVATE
+        RE15_PLATFORM_PC
+        RE15_TON_S1_HAKEN
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_mischer COMMAND test_r42_ton_mischer)
+    set_tests_properties(unit_r42_ton_mischer PROPERTIES TIMEOUT 120)
+endif()
+
+# --- Strang "ton", Stufe 2 (2026-11-19): Schleifen-Geraeusche (Nutzer: "Zum Beispiel beim öffnen des Rolltors im Flur.
+#     Klingt ganz leicht anders."; Messbericht U2: Original 6,52 s Rumpeln, Port 2,29 s). Schleifenpunkt aus den
+#     VAG-Flag-Bytes (psx-spx "SPU ADPCM Samples"), Ende durch Key-On auf derselben Stimme (FUN_800458d4) oder Key-Off beim
+#     Raumwechsel (FUN_800443ec @0x800443f4-0x8004442c). Gegenprobe: audio_pc.c von 71caea668 ohne RE15_TON_S2_HAKEN -> (2) rot.
+#     Runde 2: (7) Speisesaal 1140/1141 ueber Port-Bank 0x3B (dining_r38_pc.c mitgelinkt); Gegenprobe Stand 85f530937 -> (7) rot.
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_schleife
+        test_r42_ton_schleife.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/dining_r38_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_schleife PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_schleife PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_schleife PRIVATE
+        RE15_PLATFORM_PC
+        RE15_TON_S1_HAKEN
+        RE15_TON_S2_HAKEN
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_schleife COMMAND test_r42_ton_schleife)
+    set_tests_properties(unit_r42_ton_schleife PROPERTIES TIMEOUT 120)
+endif()
+
+# --- Strang "ton", Stufe 4 (2026-11-20): Musik-Ebenen stoppen/starten wie SsSeqStop @0x80044e64 (Key-Off -> Ausklang,
+#     Lesezeiger auf den Anfang) und SsSeqSetVol+SsSeqPlay @0x80044e24/@0x80044e40 (Einsatz nach der Huellkurve). Messbericht U4.
+#     Gegenprobe: audio_pc.c von 71caea668 -> (1), (2), (3) rot.
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_seqstop
+        test_r42_ton_seqstop.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_seqstop PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_seqstop PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_seqstop PRIVATE
+        RE15_PLATFORM_PC
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_seqstop COMMAND test_r42_ton_seqstop)
+    set_tests_properties(unit_r42_ton_seqstop PROPERTIES TIMEOUT 120)
+endif()
+
+# --- Strang "ton", Stufe 7 Runde 2 (2026-11-20): Spurende einer Musik-Sequenz wie _SsGetMetaEvent @0x8005f140-0x8005f278
+#     mit l_count 1 (SsSeqPlay `ori a2,zero,0x1` @0x80044984): SUB_00 (ROOM1030) klingt einmal, MAIN32 (NRPN-Schleife) weiter.
+#     Gegenprobe: audio_pc.c von ffe8ad7d3 -> (2), (3) rot.
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_spurende
+        test_r42_ton_spurende.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_spurende PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_spurende PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_spurende PRIVATE
+        RE15_PLATFORM_PC
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_spurende COMMAND test_r42_ton_spurende)
+    set_tests_properties(unit_r42_ton_spurende PROPERTIES TIMEOUT 180)
+endif()
+
+# --- Strang "ton", Stufe 3 (2026-11-20): Hall je Musik-Stimme nach tone.mode & 4 (SpuVmKeyOnNow @0x80056124 `andi 0x4`),
+#     Tiefe 0x4080 (SsUtSetReverbDepth @0x8005be74), 39-Abgriff-FIR (psx-spx "Reverb Buffer Resampling"). Messbericht U3.
+#     Gegenprobe: audio_pc.c von 71caea668 ohne RE15_TON_S3_HAKEN -> (1) rot (Hall-Fahne des Rotors).
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_hall
+        test_r42_ton_hall.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_hall PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_hall PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_hall PRIVATE
+        RE15_PLATFORM_PC
+        RE15_TON_S3_HAKEN
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_hall COMMAND test_r42_ton_hall)
+    set_tests_properties(unit_r42_ton_hall PROPERTIES TIMEOUT 120)
+endif()
+
+# --- Strang "ton", Stufe 6 (2026-11-20): Lage der Geraeusche (Messbericht U6). FUN_80045a64 mit dem Sender des Originals
+#     (FUN_800453d0: laufende Entity DAT_800ac784+0x34 @0x800454e0-ec; FUN_80045024: param_2 @0x800451c0-cc, Schuss =
+#     Weltlage des Effekt-Platzes @0x80017664-84), links/rechts getrennt. Original-Savestate ROOM1140: Entity 4 -> 102/65 ->
+#     Register 10567/4259. Gegenprobe: audio_pc.c von bf6827892 -> 6 von 8 rot ((1)(2) Mischer, (3), (4) Knall, (5)).
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_lage
+        test_r42_ton_lage.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_lage PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_lage PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_lage PRIVATE
+        RE15_PLATFORM_PC
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_lage COMMAND test_r42_ton_lage)
+    set_tests_properties(unit_r42_ton_lage PROPERTIES TIMEOUT 120)
+endif()
+
+# --- Strang "ton", Stufe 5 (2026-11-20): Pitch-Zaehler + 4-Punkt-Gauss der SPU fuer Geraeusch- und Musik-Stimmen
+#     (psx-spx soundprocessingunitspu.md "Pitch Counter" / "4-Point Gaussian Interpolation"; Messbericht U5). Der Riegel
+#     liest die Gauss-Tabelle selbst aus der Hardware-Beschreibung und rechnet Rolltor-Rumpeln/-Stopp Wert fuer Wert nach.
+#     Gegenprobe: audio_pc.c von 71caea668 ohne RE15_TON_S5_HAKEN -> (1) und (2) rot ("naechster Wert").
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_gauss
+        test_r42_ton_gauss.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_gauss PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_gauss PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_gauss PRIVATE
+        RE15_PLATFORM_PC
+        RE15_TON_S5_HAKEN
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_PSXSPX_SPU_MD="${CMAKE_SOURCE_DIR}/../info/Resident_Evil_und_Playstation_Information/psx-spx.github.io-master/docs/soundprocessingunitspu.md")
+    add_test(NAME unit_r42_ton_gauss COMMAND test_r42_ton_gauss)
+    set_tests_properties(unit_r42_ton_gauss PROPERTIES TIMEOUT 120)
+endif()
+
+# --- Strang "ton", Stufe 7 (2026-11-20): Huellkurve (ADSR) der Geraeusch-Stimmen nach psx-spx "Envelope Operation", am
+#     Original (DuckStation) gemessen (Shift-10-Fall: Schritt und Zaehler je / 2), und Regler in Gleitkomma (RE15_AUDIO_CAP_F32).
+#     Gegenprobe: audio_pc.c von e46ff64d5 -> (2) und (3) rot; re15_spu_adsr.h fehlt auf aaea5f8c2/71caea668 -> baut nicht.
+if(TARGET re15_engine AND TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_adsr
+        test_r42_ton_adsr.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_adsr PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_adsr PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_adsr PRIVATE
+        RE15_PLATFORM_PC
+        RE15_TON_S1_HAKEN
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX")
+    add_test(NAME unit_r42_ton_adsr COMMAND test_r42_ton_adsr)
+    set_tests_properties(unit_r42_ton_adsr PROPERTIES TIMEOUT 120)
+endif()
+
 # --- DIAGNOSE (kein ctest): Nutzer-Report "Irons schaut im Original etwas diagonaler".
 #     Misst Irons' (NPC 0x45) Neck-Zustand + die GERENDERTE Kopf-Orientierung in ROOM1150.
 add_executable(probe_irons_neck_1150 probe_irons_neck_1150.c)

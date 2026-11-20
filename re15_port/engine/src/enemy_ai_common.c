@@ -59,6 +59,7 @@
 #include "re15_spinnen_r38.h" /* Runde 38 Spur R: Schacht-Ausstieg + Gift der Stage-2-Spinne */
 #include "re15_spinnenanim_r41.h"  /* Runde 41 Spur L: Zeichnen der Adultspinne */
 #include "re15_spinnenlache_r41.h" /* Runde 41 Spur S, Nachbesserung 2: Lache der Spinnenleiche */
+#include "re15_svm_vol.h"   /* Strang ton Stufe 6: Sender der Raum-Geraeusche (DAT_800ac784) */
 #include "re15_kleidung_r36.h" /* Runde 36 Spur B: Phase-4-Wundstempel der Opfer-FSM (@0x8010a4e8) */
 #include "re15_szenenleon_r36.h" /* Runde 36 Spur J: Schub-Sub 0x13 (NPC) + Kanal-Auskunft */
 #include "re15_zombieki_r36.h" /* Runde 36 Spur F: Gorilla-Schattenrecord + Blutlache der Leiche */
@@ -1028,7 +1029,13 @@ static void re15_player_victim_latch_ex(const re15_actor_t *zombie, re15_actor_t
     if (zombie->type != 0x21 && zombie->type != 0x20 &&
         (g_player_victim == 0 || g_player_victim == 3)) {
         int re2 = re15_ai_re2_for_type(zombie->type) && re15_re2z_owns_type(zombie->type);
-        re15_audio_core_se(re15_victim_grab_core_se(re2, (int)g_player_victim_variant));
+        /* Strang ton Stufe 6 Runde 2: RE1.5-Opfer-P0 FUN_8010a2cc ruft FUN_80045024(0x04000001, DAT_800ac784 + 0x34)
+         * @0x8010a3e4 im Spieler-FSM (DAT_800ac784 = Spieler, re15_svm_vol.h (c)) -> Lage des Spielers, auch wenn der Port
+         * diesen Einstieg im Griff des Zombies (also mit dessen Sender) erreicht. Der RE2-Zweig bleibt ohne Lage (RE2-Rechnung
+         * FUN_8005c970 nicht belegt, Bericht s6_r1 Offen 1). */
+        const int grunt = re15_victim_grab_core_se(re2, (int)g_player_victim_variant);
+        if (!re2) re15_svm_core_se_spieler(grunt);
+        else      re15_audio_core_se(grunt);
     }
     if (g_player_victim == 0 || g_player_victim == 3) { /* enter (or re-enter from the release finish) */
         g_player_victim = 1;
@@ -1355,7 +1362,7 @@ static void re15_victim_death_groan(void)
 {
     if (s_victim_groan_done) return;
     s_victim_groan_done = 1;
-    re15_audio_core_se(3);                /* Se_on(0x04030001) @0x8010a864 / @0x80111df4 */
+    re15_svm_core_se_spieler(3);                /* Se_on(0x04030001) @0x8010a864 / @0x80111df4 */
 }
 
 /* The zombie's THROW-OFF [4] starts the player's release finish in lockstep (byte-true: the grab's
@@ -1424,7 +1431,7 @@ void re15_player_victim_devour(const re15_actor_t *zombie)
          * 0x29/0x3a/0x4f (re15_player_victim_tick). */
         player->anim_frac = 0;
     } else {
-        re15_audio_core_se(1);                          /* collapse-entry SE: Se_on(0x4010001) = CORE
+        re15_svm_core_se_spieler(1);                          /* collapse-entry SE: Se_on(0x4010001) = CORE
                                                          * bank4 record 1 (FUN_8010a6f8 init) */
         /* Devour-ENTRY-Blut (FUN_8010a6f8: a0=0x1500 @0x8010a770, Anker Spieler-Bone 8
          * @0x8010a7a0/a4 = +0x5A0; bite_blood_fx.md D4a, CONFIRMED). */
@@ -15638,6 +15645,9 @@ void re15_enemy_ai_run_all(int combat_active)
     for (int s = RE15_ACTOR_SLOT_PLAYER + 1; s < RE15_ACTOR_MAX; s++) {
         re15_actor_t *e = &g_actors[s];
         if (!e->active) continue;
+        /* Strang ton Stufe 6: DAT_800ac784 = die laufende Entity (FUN_8001a50c `sw v0,0(s2)` @0x8001a5ac, Handler
+         * `jalr v0` @0x8001a588) -> Raum-Geraeusche (FUN_800453d0) dieses Handlers tragen ihre Lage (re15_svm_vol.h). */
+        re15_svm_sender_entity(e);
         re15_szenenschutz_gegner(s);        /* Runde 38 Spur B: Sicht je Gegner (re15_szenenschutz_r38.h) */
         if (re15_bf_szene_besitzt(s)) continue;   /* von der Hangar-Szene gefuehrt (birkin_formen.c) */
         if (re15_annette_r41_besitzt(s)) continue;   /* Runde 41 Spur AN: von der 5090-Szene gefuehrt (annette_r41.c) */
@@ -16016,6 +16026,9 @@ void re15_enemy_ai_run_all(int combat_active)
          * inert (its only real code is the shared cutscene model-draw aux, which the port's renderer already
          * covers). */
     }
+    /* Strang ton Stufe 6: nach der Schleife wieder der Spieler (Hauptlauf: `jal 0x8001a50c` @0x8001ce04, dann der
+     * Spieler-FSM `jal 0x80031c44` @0x8001ce0c mit `sw s0=>DAT_800aca54` @0x80031c6c). */
+    re15_svm_sender_entity(NULL);
     re15_szenenschutz_durchlauf_ende();     /* Runde 38 Spur B */
     re15_schuss_r36_nachfuehren_alle();  /* Runde 36 Spur C N3: Blut-Spawns dieses Bilds um Schub+Klemme nachfuehren */
 }

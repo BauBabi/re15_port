@@ -45,6 +45,7 @@ typedef struct {
 /* BO-round 2026-05-29: per-tone attributes from the 32-byte VH tone entry.
  * Source of canonical pitch + ADSR (replaces audio_psx.c's 22050/dummy hacks). */
 typedef struct {
+    uint8_t  mode;         /* +1  VagAtr.mode; Bit 2 = Hall an (SpuVmKeyOnNow @0x8005611c `lbu` / @0x80056124 `andi 0x4`) */
     uint8_t  vol;          /* +2  tone volume 0..127 (SsUtGetVagAtr.c; +1 is `mode`) */
     uint8_t  pan;          /* +3  tone pan 0..127 (64=center)   */
     uint8_t  center_note;  /* +4  MIDI note of the recorded pitch */
@@ -223,5 +224,17 @@ int re15_vab_parse(const uint8_t *vh_data, size_t vh_size, re15_vab_t *out);
  * — byte-equivalent to the Java reference. */
 int re15_vag_adpcm_decode(const uint8_t *adpcm_data, size_t adpcm_size,
                           int16_t *pcm_out, size_t pcm_capacity);
+
+/* Strang ton Stufe 2: Schleifenpunkt einer VAG-Probe aus den Flag-Bytes (Byte 1 jedes 16-Byte-Blocks),
+ * Hardware-Regel psx-spx soundprocessingunitspu.md "SPU ADPCM Samples" Z. 103-141:
+ *   Bit 0x04 (Loop Start) kopiert die aktuelle Adresse ins Wiederhol-Register (der LETZTE solche Block
+ *   vor dem Ende gilt; ohne einen gilt die Startadresse = Block 0, weil der Key-On das Register setzt),
+ *   Bit 0x01 (Loop End) beendet die Probe NACH diesem Block; mit Bit 0x02 (Loop Repeat) springt die
+ *   Stimme zur Wiederhol-Adresse und laeuft weiter, ohne Bit 0x02 verstummt sie (Code 1 = End+Mute).
+ * Entscheidend ist der ERSTE Block mit Bit 0x01 (re15_vag_adpcm_decode haelt dort an).
+ * Rueckgabe: Probe-Index (28 Proben je Block) des Schleifenstarts, oder -1 = keine Schleife.
+ * Beleg am Original: ROOM1130.RDT snd0 VAG 4 (Datei @0x4644): Block 127 Flags 0x06, Block 369 Flags 0x03
+ * -> 3556; im laufenden Original Wiederhol-Adresse 0x6252 = Start 0x6154 + 127 Bloecke (Messbericht U2). */
+int re15_vag_loop_start(const uint8_t *adpcm_data, size_t adpcm_size);
 
 #endif /* RE15_VAB_H */

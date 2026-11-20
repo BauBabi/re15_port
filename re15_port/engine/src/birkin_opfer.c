@@ -15,6 +15,7 @@
  * wird verworfen); acc0c bleibt ungebaut.
  */
 #include "re15_birkin_opfer.h"
+#include "re15_svm_vol.h"   /* Strang ton Stufe 6 Runde 2: re15_svm_core_se_spieler = FUN_80045024(0x04ss0001, &DAT_800aca88) */
 #include "re15_skeleton.h"   /* re15_sin_q12 / re15_cos_q12 */
 #include "re15_audio.h"         /* re15_audio_core_se = FUN_80045024(0x04ss0001, &Spieler+0x34) */
 #include "re15_ai_flavor.h"     /* re15_re2z_mash = FUN_80037024 */
@@ -127,7 +128,7 @@ static void haken_vorn(re15_actor_t *pl, const re15_enemy_bank_t *vb)
         pl->motion = 0x0d; pl->anim_frame = 6; pl->anim_frac = 3;      /* acae8 0xd / acae9 6 / acae3 3 @0x8011b06c-8c */
         s_tempo = 0x4b0;                                               /* acae0 = 0x4b0 @0x8011b090-98 */
         pl->hit_react |= 1;                                            /* @0x8011b0b0-c8 */
-        re15_audio_core_se(1);                                         /* a0 = 0x04010001 @0x8011b054/@0x8011b0d0, jal @0x8011b0cc */
+        re15_svm_core_se_spieler(1);                                         /* a0 = 0x04010001 @0x8011b054/@0x8011b0d0, jal @0x8011b0cc */
         /* faellt in [1] @0x8011b0d4 */
     case 1:
         s_ph = (uint8_t)(s_ph + anim(pl, vb, 1, 0, 0x400));            /* anim_set(acad8, acbc0, 0, 0x400) @0x8011b0e8, += @0x8011b100 */
@@ -147,8 +148,8 @@ static void haken_vorn(re15_actor_t *pl, const re15_enemy_bank_t *vb)
     case 5:                                                            /* @0x8011b214 — gegen die Wand */
         s_ph = 6; pl->motion = 0x0f; pl->anim_frame = 0; pl->anim_frac = 0;   /* @0x8011b228-248 */
         s_tempo = 0;                                                   /* sh zero acae0 @0x8011b24c-50 */
-        re15_audio_core_se(7);                                         /* 0x04070001 @0x8011b214-18, jal @0x8011b254 */
-        re15_audio_core_se(2);                                         /* 0x04020001 @0x8011b25c-60, jal @0x8011b264 */
+        re15_svm_core_se_spieler(7);                                         /* 0x04070001 @0x8011b214-18, jal @0x8011b254 */
+        re15_svm_core_se_spieler(2);                                         /* 0x04020001 @0x8011b25c-60, jal @0x8011b264 */
         /* j 0x8011b378 (a2 = 0) @0x8011b26c */
     case 6:
         s_ph = (uint8_t)(s_ph + anim(pl, vb, 1, 0, 0x400));            /* @0x8011b388, += @0x8011b39c */
@@ -193,10 +194,10 @@ static void haken_hinten(re15_actor_t *pl, const re15_enemy_bank_t *vb)
         s_tempo = 0x190;                                               /* @0x8011b470-478 */
         pl->anim_frame = 0;                                            /* acae9 0 @0x8011b49c */
         pl->hit_react |= 1;                                            /* @0x8011b490-4b4 */
-        re15_audio_core_se(2);                                         /* 0x04020001 @0x8011b484/@0x8011b4bc, jal @0x8011b4b8 */
+        re15_svm_core_se_spieler(2);                                         /* 0x04020001 @0x8011b484/@0x8011b4bc, jal @0x8011b4b8 */
         /* faellt in [1] @0x8011b4c0 */
     case 1:
-        if (pl->anim_frac == 1) re15_audio_core_se(7);                 /* acae3 == 1 -> 0x04070001 @0x8011b4c8-4e0 */
+        if (pl->anim_frac == 1) re15_svm_core_se_spieler(7);                 /* acae3 == 1 -> 0x04070001 @0x8011b4c8-4e0 */
         s_ph = (uint8_t)(s_ph + anim(pl, vb, 1, 0, 0x400));            /* @0x8011b4fc, += @0x8011b514 */
         s_tempo = (int16_t)(s_tempo - 40);                             /* @0x8011b518 */
         if (s_tempo < 0) s_tempo = 0;                                  /* @0x8011b530-53c */
@@ -242,7 +243,7 @@ static void haken_biss(re15_actor_t *pl, const re15_enemy_bank_t *vb)
         s_biss = 2;                                                    /* acaf2 = 2 @0x8011b754 */
         pl->anim_frame = 0;                                            /* @0x8011b764 */
         pl->hit_react |= 1;                                            /* @0x8011b758-784 */
-        re15_audio_core_se(0);                                         /* 0x04000001 @0x8011b718/@0x8011b78c, jal @0x8011b788 */
+        re15_svm_core_se_spieler(0);                                         /* 0x04000001 @0x8011b718/@0x8011b78c, jal @0x8011b788 */
         /* faellt in [1] @0x8011b790 */
     case 1:
         s_biss = (uint8_t)(s_biss - anim(pl, vb, 0, 0, 0x400));        /* anim_set(acbcc, acbd0, 0, 0x400) @0x8011b7a4, -= @0x8011b7b8 */
@@ -295,7 +296,7 @@ static void haken_wurf3(re15_actor_t *pl, const re15_enemy_bank_t *vb)
         s_ph = 1; pl->anim_frac = 3; pl->motion = 1;
         pl->anim_frame = 0; s_tempo = 0;
         pl->hit_react |= 1;
-        re15_audio_core_se(3);
+        re15_svm_core_se_spieler(3);   /* 0x04030001, a1 = 0x800aca5a + 46 (`addiu a1,a2,46` @0x8011b2a0), jal @0x8011b29c STAGE3 */
         /* Abriss-Pruefung @0x8011b2a4-554: Spieler-Teil k (Translation +0x54/+0x5c im Raster 0xac) gegen den
          * Trefferpunkt acc1c/acc1e der Angriffsbox; SquareRoot0 >= 301 (`slti v0,v0,301` / bne) -> Blut
          * FUN_80019700 am Teil (a1 = 0, a3 = Versatz @0x80100068 = 0). Die Teil-Woerter |= 0x2000|0x80 und die
