@@ -3325,6 +3325,15 @@ static void ss_advance(ss_seq_t *s, int frames) {
     while (s->playing && s->accum >= (double)s->pending_dt && guard-- > 0) {
         s->accum -= (double)s->pending_dt;
         ss_fire_event(s);
+        /* Strang ton Stufe 7 Runde 3: hat das Ereignis die Sequenz angehalten (Spurende mit erschoepftem l_count ->
+         * ss_seq_stop -> ss_seq_reset_state), steht der Lesezeiger schon HINTER der ersten Zeitangabe. Keine zweite lesen:
+         * _SsSndStop setzt den Lesezeiger auf den Anfang (`sw a1,0x4(s0)` @0x80060394, a1 aus `lw a1,0x8(s0)` @0x80060340),
+         * und SsSeqPlay -> Snd_SetPlayMode Fall 1 (@0x8005ffd4 / @0x8005ffe8) fasst ihn nicht an -> ein zweites
+         * Sce_bgm_control(Slot, 1) spielt im Original von vorn. Gemessen im Savestate r1030_spaet (SUB_00 zu Ende):
+         * Lesezeiger 0x801eed10 = Anfang + 16 = Kopf (15) + erste Zeitangabe (1 Byte), wie hier nach ss_seq_reset_state.
+         * Vorher las diese Zeile `c0 00` (8192) aus dem ersten Ereignis als Zeitangabe -> Lesezeiger 18, das Stueck blieb
+         * nach dem Neustart stumm (Pruefbericht Stufe 7 Runde 2, ROOM4000 cut 5 / MAIN12). */
+        if (!s->playing) break;
         s->pending_dt = ss_vlq(s);
         if (s->skip_next_dt) { s->pending_dt = 0; s->skip_next_dt = 0; }   /* post-loop-jump delta 0 */
     }
