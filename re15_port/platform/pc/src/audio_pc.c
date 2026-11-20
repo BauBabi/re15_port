@@ -3764,9 +3764,11 @@ static int re15_bgm_load_track(ss_seq_t *s, const char *name, int slot) {
 
 /* Init the play state for a loaded instance (no SDL lock — caller holds it / offline).
  * An instance with tone_src (SUB SEQ1) has no own VAB — the source's counts. */
-static void ss_start(ss_seq_t *s, int loop) {
-    if ((!s->vab_ok && !s->tone_src) || !s->seq) { s->playing = 0; return; }
-    ss_all_voices_off(s);
+/* Lese- und Kanalzustand auf den Sequenzanfang (ohne die Stimmen anzufassen). Gemeinsamer Teil von ss_start
+ * (_SsInitSoundSeq) und ss_seq_stop (_SsSndStop: Lesezeiger `lw a1,0x8(s0)` @0x80060340 -> `sw a1,0x4(s0)` @0x80060394
+ * und `sw a2,0xc(s0)` @0x80060398, Kanal-Pan 0x40 @0x800603a4, Kanal-Lautstaerke 0x7f @0x800603a8, Tempo
+ * `lhu a0,0x72(s0)` @0x8006033c -> `sh a0,0x70(s0)` @0x80060390 = Tempo aus dem Kopf). Strang ton Stufe 4. */
+static void ss_seq_reset_state(ss_seq_t *s) {
     for (int i = 0; i < SS_CHANNELS; i++) {
         s->prog[i] = 0;
         s->cvol[i] = 0x7f;                            /* _SsInitSoundSeq `sh a2,0x4e(a0)` @0x8005d2a4, a2 = 0x7f @0x8005d220
@@ -3778,8 +3780,33 @@ static void ss_start(ss_seq_t *s, int loop) {
     s->seq_vol_l = s->seq_vol_r = SS_SEQ_VOL;         /* SsSeqSetVol mit dem Slot-Halbwort (127) */
     s->loop_cursor = -1; s->loop_armed = 0; s->loop_count = 0x7f; s->skip_next_dt = 0;
     s->cursor = SS_SEQ_HDR; s->rstatus = 0; s->accum = 0;
+    if (s->seq_len > 12) {                            /* Tempo aus dem pQES-Kopf (Bytes 10..12, wie re15_ss_load) */
+        uint32_t t = (uint32_t)((s->seq[10] << 16) | (s->seq[11] << 8) | s->seq[12]);
+        s->tempo_us = t ? t : 500000;
+    }
     s->pending_dt = ss_vlq(s);
+}
+
+static void ss_start(ss_seq_t *s, int loop) {
+    if ((!s->vab_ok && !s->tone_src) || !s->seq) { s->playing = 0; return; }
+    ss_all_voices_off(s);
+    ss_seq_reset_state(s);
     s->loop = loop; s->playing = 1;
+}
+
+/* == SsSeqStop @0x800603dc -> _SsSndStop @0x80060270 (Sce_bgm_control Fall 2, FUN_80044da4 `jal SsSeqStop` @0x80044e64).
+ * Strang ton Stufe 4 (U4). Was _SsSndStop tut (selbst disassembliert):
+ *   - Spiel-Bits loeschen, Stopp-Bit setzen: +0x90 &= ~1 @0x800602c8, &= ~2 @0x800602e4, &= ~8 @0x80060300, |= 4 @0x8006031c;
+ *   - SpuVmSeqKeyOff(Sequenz) @0x80060320: fuer jede Stimme, deren Besitzer (DAT_8008f852 je Stimme, @0x80058fe0) diese
+ *     Sequenz ist, wird das Key-Off-Bit gesetzt (DAT_800bee78/ee80 `or` @0x80059078-80) und ein noch wartendes Key-On
+ *     geloescht (DAT_8008ff84 `and` @0x80059088) -> die Noten gehen in den AUSKLANG ihrer eigenen Huellkurve (ADSR-Release,
+ *     psx-spx soundprocessingunitspu.md "Key Off ... Release"), sie werden NICHT abgeschnitten;
+ *   - Lesezeiger und Kanalzustand auf den Anfang (ss_seq_reset_state).
+ * Die Lautstaerke der Ebene bleibt stehen (_SsSndStop schreibt +0x74/+0x76 nicht), damit der Ausklang hoerbar ist. */
+static void ss_seq_stop(ss_seq_t *s) {
+    s->playing = 0;
+    ss_all_voices_release(s);
+    if (s->seq) ss_seq_reset_state(s);
 }
 
 /* Load the helicopter rotor into the looping ambient voice.
@@ -3958,11 +3985,18 @@ static int re15_bgm_load_main(uint8_t main_b) {
     /* FUN_800444b0 @0x800444b0 spielt einen Slot NUR, wenn sein Flag == 0 ist (DAT_800b52ad).
      * FUN_80044210 setzt das Flag auf main_b>>6 (@0x800442D0). Flag != 0 = geladen, aber stumm,
      * bis das Skript ihn per Sce_bgm_control (0x54) aufdreht. */
-    if ((main_b >> 6) != 0) s_ss_main.mvol = s_ss_main.mvol_l = s_ss_main.mvol_r = 0;
-    if (s_bgm_slot_status[0] == 1)                       /* Skript-Status op1/op3 (FUN_80044da4
+    /* Strang ton Stufe 4: Flag != 0 = im Original GEOEFFNET UND ANGEHALTEN am Sequenzanfang -
+     * SsSeqPlay(Handle, 0 = SSPLAY_PAUSE, 1) `clear a1` @0x80044740 (MAIN) / @0x8004497c (SUB SEQ0) / @0x800449bc (SEQ#2),
+     * Snd_SetPlayMode Fall 0: +0x90 |= 2 @0x80060018; nur Flag == 0 laesst FUN_800444b0 per SsSeqReplay weiterlaufen.
+     * Vorher lief die Sequenz im Port stumm weiter, und Sce_bgm_control Fall 1 drehte mitten in eine klingende Note auf
+     * (Rotor: "sofort voll" statt Einsatz nach der Huellkurve). */
+    if ((main_b >> 6) != 0) { s_ss_main.mvol = s_ss_main.mvol_l = s_ss_main.mvol_r = 0; s_ss_main.playing = 0; }
+    if (s_bgm_slot_status[0] == 1) {                     /* Skript-Status op1/op3 (FUN_80044da4
                                                           * case 1: SsSeqSetVol+SsSeqPlay) ueber-
                                                           * lebt den aufgeschobenen Load */
         s_ss_main.mvol = s_ss_main.mvol_l = s_ss_main.mvol_r = SS_BASE_MVOL;
+        s_ss_main.playing = (s_ss_main.seq != NULL);
+    }
     re15_bgm_vabw_apply(0, &s_ss_main.vab);              /* Skript-VAB-Writes re-applizieren */
     return 0;
 }
@@ -3978,9 +4012,11 @@ static int re15_bgm_load_sub(uint8_t sub_b) {
     if (re15_bgm_load_track(&s_ss_sub, "SUB_", sub_b & 0x3f) != 0) return -1;
     s_ss_sub.vab_id = 6;                                 /* SsVabOpenHeadSticky(.., 6, ..+DAT_800bbdec) */
     ss_start(&s_ss_sub, 1);
-    if (((sub_b >> 6) & 1) != 0) s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = 0;
-    if (s_bgm_slot_status[1] == 1)                       /* gelatchter Skript-Status, s.o. */
+    if (((sub_b >> 6) & 1) != 0) { s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = 0; s_ss_sub.playing = 0; } /* angehalten, s. MAIN */
+    if (s_bgm_slot_status[1] == 1) {                     /* gelatchter Skript-Status, s.o. */
         s_ss_sub.mvol = s_ss_sub.mvol_l = s_ss_sub.mvol_r = s_ss_sub_base_mvol;
+        s_ss_sub.playing = (s_ss_sub.seq != NULL);
+    }
     re15_bgm_vabw_apply(1, &s_ss_sub.vab);               /* Skript-VAB-Writes re-applizieren
                                                           * (SEQ2 teilt die SUB-VAB via tone_src) */
 
@@ -4034,9 +4070,11 @@ static int re15_bgm_load_sub(uint8_t sub_b) {
              * vol 127) und gilt fuer JEDEN SUB-Container — es macht aber SUB_15 nicht hoerbar. */
             s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = SS_BASE_MVOL;  /* @0x800449a0-b4 */
             ss_start(&s_ss_sub2, 1);
-            if ((sub_b >> 7) != 0) s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = 0;
-            if (s_bgm_slot_status[2] == 1)               /* gelatchter Skript-Status, s.o. */
+            if ((sub_b >> 7) != 0) { s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = 0; s_ss_sub2.playing = 0; } /* angehalten, s. MAIN */
+            if (s_bgm_slot_status[2] == 1) {             /* gelatchter Skript-Status, s.o. */
                 s_ss_sub2.mvol = s_ss_sub2.mvol_l = s_ss_sub2.mvol_r = SS_BASE_MVOL;
+                s_ss_sub2.playing = 1;
+            }
         }
     }
     return 0;
@@ -4338,11 +4376,24 @@ static void ss_seq_ctl_ex(int slot, int op, int part, int vol, int pan)
                            * FUN_80044210 @0x8004429c-@0x800442b0 auf das Ende der Ausblendung, laedt @0x800442b8, und erst danach
                            * startet FUN_800396fc @0x80039a00 das Raum-Skript: dessen Sce_bgm_control trifft nie den alten Track */
     switch (op) {
-        case 1:   /* SsSeqSetVol + SsSeqPlay (loop) → audible */
+        case 1:   /* SsSeqSetVol @0x80044e24 + SsSeqPlay(Handle, 1 = SSPLAY_PLAY, 1) @0x80044e40 (`ori a1,zero,0x1` @0x80044e2c).
+                   * Strang ton Stufe 4: SsSeqPlay -> Snd_SetPlayMode @0x8005ff30 setzt nur das Spiel-Bit (+0x90 |= 1 @0x8005ffd4,
+                   * Stopp-Bit weg @0x8005ffa0) und die Sequenz-Lautstaerke (SpuVmSetSeqVol @0x8005ffec); den Lesezeiger (+0x4)
+                   * fasst es NICHT an. Die Sequenz laeuft also dort weiter, wo sie steht: nach dem Laden mit Flag oder nach
+                   * Fall 2 ist das der Anfang -> die erste Note setzt mit dem Anstieg ihrer Huellkurve ein (Rotor SUB_15:
+                   * ADSR1 0xafee = exponentieller Anstieg Shift 11). Laeuft sie schon, aendert sich nur die Lautstaerke. */
+            s->mvol = s->mvol_l = s->mvol_r = base;
+            if (s->seq && (s->vab_ok || s->tone_src)) s->playing = 1;
+            break;
         case 3:   /* SsSeqReplay → audible (restart-from-top; mute-toggle ok for drone) */
             s->mvol = s->mvol_l = s->mvol_r = base;
+            if (s->seq && (s->vab_ok || s->tone_src)) s->playing = 1;   /* Stufe 4: eine nach dem Laden angehaltene Sequenz
+                                                                         * (s.o.) laeuft mit SsSeqReplay weiter (FUN_800444b0) */
             break;
-        case 2:   /* SsSeqStop → silent */
+        case 2:   /* SsSeqStop @0x80044e64 (Strang ton Stufe 4): Noten in den Ausklang, Lesezeiger auf den Anfang; die
+                   * Lautstaerke bleibt, damit der Ausklang klingt (s. ss_seq_stop). Vorher: mvol = 0 = harter Schnitt. */
+            ss_seq_stop(s);
+            break;
         case 4:   /* SsSeqPause → silent */
         case 5:   /* SsSeqSetDecrescendo → fade to silent (we cut for now) */
             s->mvol = s->mvol_l = s->mvol_r = 0;

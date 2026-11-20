@@ -158,7 +158,9 @@ static int16_t *slurp16(const char *path, long *out_frames)
 
 #define W_PRE  90       /* Fenster VOR dem Skript-Key (SUB-Flag-A-Mute @0x800443A4)  */
 #define W_ON  300       /* Fenster nach Sce_bgm_control(1,1)                         */
-#define W_SET  30       /* Ausklingen der bereits klingenden Stimmen + Reverb nach op2 */
+#define W_SET  60       /* Ausklingen nach op2: SsSeqStop @0x80044e64 = Key-Off (SpuVmSeqKeyOff @0x80060320), der Rotor
+                         * klingt nach ADSR2 0xdced (exp. Shift 13) aus; im Port still nach 1,34 s (Strang ton Stufe 4,
+                         * test_r42_ton_seqstop) -> 2 s Abstand statt 1 s */
 #define W_OFF 150       /* gemessenes Fenster danach                                  */
 
 int main(void)
