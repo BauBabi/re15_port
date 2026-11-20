@@ -30,6 +30,7 @@
 #include "re15_engine.h"     /* g_engine.frame_count (Rohr-Zeile im RE15_WAFFEN_LOG) */
 #include "re15_scd.h"
 #include "re15_vab.h"
+#include "re15_spu_gauss.h" /* Strang ton Stufe 5: Pitch-Zaehler + 4-Punkt-Gauss der SPU (psx-spx) */
 #include "re15_room.h"
 #include "re15_esp.h"     /* re15_esp_shell_clink_hook */     /* g_room_rdt — footstep snd0 VAB sliced from the room RDT */
 #include "re2_ems.h"      /* WELLE A: RE2-ENEMSE-Bank-TOC + SE-Map-Dekodierung (PC-only) */
@@ -99,7 +100,8 @@ static SDL_AudioDeviceID s_audio_dev = 0;
 /* Output device rate (Hz). Voice clips are resampled to this at load. */
 #define RE15_AUDIO_RATE 44100
 
-/* Linear fade-out length applied at the tail of every sample to suppress
+/* Strang ton Stufe 5: gilt nur noch fuer den Sprach-/XA-Kanal; SPU-Stimmen enden wie die Hardware (audio_callback).
+ * Linear fade-out length applied at the tail of every sample to suppress
  * the discontinuity click that occurs when the last decoded PCM value
  * (often non-zero) is followed by silence. 32 samples at 44.1 kHz =
  * 0.73 ms — imperceptible as a fade but kills the click. */
@@ -108,12 +110,11 @@ static SDL_AudioDeviceID s_audio_dev = 0;
 typedef struct {
     int16_t *pcm;          /* points into s_decoded_vag[]                */
     int      pcm_len;      /* total int16 mono samples                   */
-    int      pos;          /* current playback cursor (whole samples)    */
+    re15_spu_zaehler_t z;  /* Strang ton Stufe 5: SPU-Pitch-Zaehler + Gauss-Verlauf (re15_spu_gauss.h); z.pos = Probe "new" */
     int      subpos;       /* 0/1 — frame-half counter for 2× downsample */
     uint32_t step_q16;     /* Q16 Abspielschritt pro 44100-Hz-Ausgabeframe: PSX-Pitch<<4
                             * (SPU-Pitch 0x1000 == 44100 Hz; note2pitch2 @SsUtKeyOnV
                             * @0x8004522c). 0 = Altverhalten 0x8000 (= konstant -12 HT). */
-    uint32_t pos_frac;     /* Q16-Restakkumulator des Cursors                            */
     int      active;       /* 1 = playing, 0 = free slot                 */
     int      volume_q15;   /* Lautstaerke LINKS als Q15 = SPU-Register * 2 (0..0x7ffe):
                             * RE15_SPU_REG_Q15, psx-spx soundprocessingunitspu.md Z. 364
@@ -332,7 +333,7 @@ typedef struct {
     const int16_t  *pcm;
     int             pcm_len;
     int             loop_start;     /* sample index to wrap to, or -1 = one-shot */
-    uint32_t        phase;          /* Q16 resample cursor */
+    re15_spu_zaehler_t z;           /* Strang ton Stufe 5: SPU-Pitch-Zaehler + Gauss-Verlauf (re15_spu_gauss.h) */
     uint32_t        step;           /* Q16 step per output frame (= pitch<<4) */
     int             vol_l, vol_r;   /* Q15 = SPU-Register * 2 (SpuVmKeyOnNow @0x80055d10, re15_svm_vol.h) */
     /* Strang ton Stufe 1: was libsnd je Stimme merkt und SpuVmSetVol @0x8005926c wieder liest:
@@ -488,38 +489,35 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
          * gerufen aus dem Raumlader @0x80039790) sie beendet. */
         const int schleife = (s->loop_pcm == s->pcm && s->loop_start >= 0 && s->loop_start < s->pcm_len);
 
+        /* Strang ton Stufe 5 (Messbericht U5): Pitch-Zaehler + 4-Punkt-Gauss wie die SPU (re15_spu_gauss.h, psx-spx
+         * soundprocessingunitspu.md "Pitch Counter" Z. 187-201, "4-Point Gaussian Interpolation" Z. 215-290). Vorher nahm der
+         * Port hier den naechsten Wert (pcm[pos]) - Treppenstufen, oberhalb 3 kHz bis 20 dB (Rolltor), 40-50 dB (Schritte)
+         * mehr Stoeranteile als das Original. step_q16 = pitch << 4 (Key-On oben), also VxPitch = step >> 4.
+         * Gilt fuer alle Stimmen dieser Schleife: RE1.5-Geraeusche (SpuVmKeyOnNow legt VxPitch ab, `sh t0,-2384(at)`
+         * @0x80056048 -> 0x8008f6b0 + Stimme*16) und die RE2-Baenke des Ports (RE2 _SsVmKeyOnNow @0x80083760 gleich:
+         * `addu t0,a1,zero` @0x800837e4, `sh t0,-13132(at)` @0x80083abc -> 0x800dccb4 + Stimme*16) - die Glaettung selbst
+         * macht der Tonchip, nicht die Software. */
+        const uint32_t pitch = step >> 4;
         for (int f = 0; f < frames; f++) {
-            if (s->pos >= s->pcm_len) {
-                if (schleife) {
-                    s->pos = s->loop_start + (s->pos - s->pcm_len);   /* Ueberhang behalten */
-                    if (s->pos >= s->pcm_len) s->pos = s->loop_start;
-                } else {
-                    s->active = 0;
-                    break;
-                }
-            }
+            if (s->z.pos >= s->pcm_len) { s->active = 0; break; }
+            const int32_t g = re15_spu_gauss_wert(&s->z, s->pcm);
             /* Stimmen-Lautstaerke (Register * 2, Q15) und danach die Hauptlautstaerke des
              * Tonchips: Register 0x3fff (SsSetMVol(127,127) @0x80043ba8 -> * 129 @0x8005c9c4;
              * im laufenden Original gemessen) = Q15 0x7ffe. Sie ersetzt das fruehere pauschale
              * ">> 1" (Messbericht U1). psx-spx Z. 357-364. */
-            int32_t vl = ((int32_t)s->pcm[s->pos] * s->volume_q15) >> 15;
-            int32_t vr = ((int32_t)s->pcm[s->pos] * s->vol_r_q15) >> 15;
+            int32_t vl = (g * s->volume_q15) >> 15;
+            int32_t vr = (g * s->vol_r_q15) >> 15;
             vl = (vl * RE15_SPU_MVOL_Q15) >> 15;
             vr = (vr * RE15_SPU_MVOL_Q15) >> 15;
 
-            /* Tail fade-out: ramp the last MIXER_TAIL_FADE_SAMPLES PCM
-             * samples to zero. Otherwise the abrupt amplitude drop at
-             * sample end produces an audible click ("klopfen" with
-             * multiple overlapping voices each ending periodically). */
-            int rem = s->pcm_len - s->pos;
-            if (!schleife && rem < MIXER_TAIL_FADE_SAMPLES) {   /* Schleife: kein Ende, kein Abblenden */
-                vl = (vl * rem) / MIXER_TAIL_FADE_SAMPLES;
-                vr = (vr * rem) / MIXER_TAIL_FADE_SAMPLES;
-            }
-
-            s->pos_frac += step;
-            s->pos      += (int)(s->pos_frac >> 16);
-            s->pos_frac &= 0xffffu;
+            /* Ende: die Hardware schaltet eine Einmal-Probe in dem Augenblick stumm, in dem der Zaehler ueber ihre letzte
+             * Probe laeuft (psx-spx Z. 131 "Force Release and set ADSR Level to Zero"); die Schleifen-Probe springt zur
+             * Wiederhol-Adresse (Stufe 2). Das fruehere Port-Ausblenden der letzten 32 Proben (MIXER_TAIL_FADE_SAMPLES,
+             * gegen Knacken) entfaellt fuer SPU-Stimmen: Zensus aller 4143 Einmal-Proben (Raumbaenke, SOUND/*.EDH) - die
+             * letzten 4 Proben liegen bei 69,0 % bei 0, bei 99,4 % unter 256 (-42 dB); die Gauss-Mitte steht beim Abschalten
+             * auf pcm[n-3..n-2] (scratchpad ton/s5/zensus_ende.py). */
+            const int weiter = re15_spu_zaehler_weiter(&s->z, s->pcm, s->pcm_len, schleife ? s->loop_start : -1, pitch);
+            if (!weiter) s->active = 0;
 
             int32_t L = (int32_t)out[f * 2 + 0] + vl;
             int32_t R = (int32_t)out[f * 2 + 1] + vr;
@@ -527,6 +525,7 @@ static void audio_callback(void *userdata, Uint8 *stream, int len)
             if (R >  32767) R =  32767; else if (R < -32768) R = -32768;
             out[f * 2 + 0] = (int16_t)L;
             out[f * 2 + 1] = (int16_t)R;
+            if (!s->active) break;                 /* Strang ton Stufe 5: letzte Probe gespielt, Stimme aus */
         }
     }
 
@@ -898,10 +897,9 @@ static void se_play_layers(const uint8_t *edt, const re15_vab_t *vab,
             s_active[slot].loop_pcm   = decoded[vag];
             s_active[slot].loop_start = s_se_schleifen ? s_se_schleifen[vag] : -1;   /* Strang ton Stufe 2 */
             s_active[slot].pcm_len    = decoded_len[vag];
-            s_active[slot].pos        = 0;
+            re15_spu_zaehler_start(&s_active[slot].z);   /* Strang ton Stufe 5: Key-On, re15_spu_gauss.h */
             s_active[slot].subpos     = 0;
             s_active[slot].step_q16   = (uint32_t)pitch << 4;   /* 0x1000 == 44100 Hz Ausgabe */
-            s_active[slot].pos_frac   = 0;
             s_active[slot].volume_q15 = vl;
             s_active[slot].vol_r_q15  = vr;
             s_active[slot].active     = 1;
@@ -961,10 +959,9 @@ static void se_voice_pump(void)
             s_active[v].loop_pcm   = s_se_pend[v].pcm;          /* Strang ton Stufe 2 */
             s_active[v].loop_start = s_se_pend[v].loop_start;
             s_active[v].pcm_len    = s_se_pend[v].pcm_len;
-            s_active[v].pos        = 0;
+            re15_spu_zaehler_start(&s_active[v].z);   /* Strang ton Stufe 5: Key-On, re15_spu_gauss.h */
             s_active[v].subpos     = 0;
             s_active[v].step_q16   = s_se_pend[v].step_q16;
-            s_active[v].pos_frac   = 0;
             s_active[v].volume_q15 = s_se_pend[v].vl_q15;
             s_active[v].vol_r_q15  = s_se_pend[v].vr_q15;
             s_active[v].active     = 1;
@@ -2159,10 +2156,9 @@ void re15_audio_re2_enemy_se(int se_id, int flag2000)
             s_active[slot].pcm        = cb->decoded[vag];
             s_active[slot].loop_pcm   = NULL;                /* Strang ton Stufe 2: einmal */
             s_active[slot].pcm_len    = cb->decoded_len[vag];
-            s_active[slot].pos        = 0;
+            re15_spu_zaehler_start(&s_active[slot].z);   /* Strang ton Stufe 5: Key-On, re15_spu_gauss.h */
             s_active[slot].subpos     = 0;
             s_active[slot].step_q16   = (uint32_t)pitch << 4;
-            s_active[slot].pos_frac   = 0;
             s_active[slot].volume_q15 = vl;
             s_active[slot].vol_r_q15  = vr;
             s_active[slot].active     = 1;
@@ -2204,10 +2200,9 @@ static void re2se_voice_pump(void)
             s_active[slot].pcm        = s_re2se_pend[c].pcm;
             s_active[slot].loop_pcm   = NULL;                /* Strang ton Stufe 2: einmal */
             s_active[slot].pcm_len    = s_re2se_pend[c].pcm_len;
-            s_active[slot].pos        = 0;
+            re15_spu_zaehler_start(&s_active[slot].z);   /* Strang ton Stufe 5: Key-On, re15_spu_gauss.h */
             s_active[slot].subpos     = 0;
             s_active[slot].step_q16   = s_re2se_pend[c].step_q16;
-            s_active[slot].pos_frac   = 0;
             s_active[slot].volume_q15 = s_re2se_pend[c].vl_q15;
             s_active[slot].vol_r_q15  = s_re2se_pend[c].vr_q15;
             s_active[slot].active     = 1;
@@ -2250,10 +2245,9 @@ static void play_sample_pc(int vag_index, int scd_volume)
     s_active[slot].pcm        = s_decoded_vag[vag_index];
     s_active[slot].loop_pcm   = NULL;                /* Strang ton Stufe 2: einmal */
     s_active[slot].pcm_len    = s_decoded_vag_len[vag_index];
-    s_active[slot].pos        = 0;
+    re15_spu_zaehler_start(&s_active[slot].z);   /* Strang ton Stufe 5: Key-On, re15_spu_gauss.h */
     s_active[slot].subpos     = 0;
     s_active[slot].step_q16   = 0;   /* Legacy-Pfad ohne Tone-Kontext -> 0x8000 (Altverhalten) */
-    s_active[slot].pos_frac   = 0;
     s_active[slot].volume_q15 = vol;
     s_active[slot].vol_r_q15  = vol; /* beide Seiten (Bring-up-Pfad ohne Bank: TEST.VH liegt nicht vor, der Pfad ist tot) */
     s_active[slot].active     = 1;
@@ -3084,7 +3078,7 @@ static void ss_note_on(ss_seq_t *s, int chan, int note, int vel)
         }
         ss_voice_t *v = &s->voice[slot];
         v->pcm = src->vag_pcm[vi]; v->pcm_len = src->vag_len[vi]; v->loop_start = src->vag_loop[vi];
-        v->phase = 0;
+        re15_spu_zaehler_start(&v->z);              /* Strang ton Stufe 5: Key-On (re15_spu_gauss.h) */
         uint16_t pitch = re15_vab_note2pitch(note, t->center_note, t->pitch_shift);
         v->step = (uint32_t)pitch << 4;             /* Q16: pitch 0x1000 = 1.0 */
         /* volume chain incl. the RUNTIME-writable program mvol + VAB master vol (the 0x54
@@ -3255,25 +3249,22 @@ static void ss_mix(ss_seq_t *s, int16_t *out, int32_t *hall, int frames) {
          * scaled by each voice's own tone pbmin/pbmax (SpuVmPBVoice). */
         uint32_t eff_step = (uint32_t)(((uint64_t)v->step *
                               (uint32_t)(v->bend_q16 ? v->bend_q16 : 0x10000)) >> 16);
+        /* Strang ton Stufe 5 (Messbericht U5): Pitch-Zaehler + 4-Punkt-Gauss wie die SPU (re15_spu_gauss.h, psx-spx
+         * soundprocessingunitspu.md "Pitch Counter" Z. 187-201, "4-Point Gaussian Interpolation" Z. 215-290) statt der
+         * frueheren geraden Linie zwischen zwei Proben. Musik-Stimmen laufen im Original durch dieselbe SPU wie die
+         * Geraeusche: SpuVmKeyOnNow @0x80055d10 legt die Tonhoehe (a1, `addu t0,a1,zero` @0x80055d94) mit `sh t0,-2384(at)`
+         * @0x80056048 in den Register-Schatten 0x8008f6b0 + Stimme*16 = VxPitch (Lautstaerke L/R davor @0x80056058/70). VxPitch = eff_step >> 4: ohne Tonhoehen-Biegung exakt
+         * der Key-On-Wert (step = pitch << 4); mit Biegung schneidet die Ganzzahl den Port-Bruchteil ab, weil das Register
+         * 16 Bit ganzzahlig ist (PORT-WAHL; die Biegungsrechnung ss_bend_q16 selbst ist nicht Teil dieser Stufe). */
+        const uint32_t pitch = eff_step >> 4;
         for (int f = 0; f < frames; f++) {
-            int idx = (int)(v->phase >> 16);
-            if (idx >= v->pcm_len) {
-                if (v->loop_start >= 0 && v->loop_start < v->pcm_len) {
-                    v->phase = ((uint32_t)v->loop_start << 16) | (v->phase & 0xffff);
-                    idx = (int)(v->phase >> 16);
-                } else { v->active = 0; break; }
-            }
+            if (v->z.pos >= v->pcm_len) { v->active = 0; break; }
             int env = ss_env_update(v);             /* real PSX SPU ADSR */
             if (!v->active) break;                  /* release reached 0 */
-            /* linear interpolation (kills the nearest-neighbour aliasing/"blechern"). */
-            int frac = (int)(v->phase & 0xffff);
-            int nxt = idx + 1;
-            if (nxt >= v->pcm_len)
-                nxt = (v->loop_start >= 0 && v->loop_start < v->pcm_len) ? v->loop_start : idx;
-            int32_t s0 = v->pcm[idx], s1 = v->pcm[nxt];
-            int32_t smp = s0 + (((s1 - s0) * frac) >> 16);
+            int32_t smp = re15_spu_gauss_wert(&v->z, v->pcm);
             smp = (smp * env) >> 15;
-            v->phase += eff_step;
+            /* Ende einer Einmal-Probe: Stimme stumm (psx-spx Z. 131); Schleife: weiter ab loop_start (Flag-Bits). */
+            if (!re15_spu_zaehler_weiter(&v->z, v->pcm, v->pcm_len, v->loop_start, pitch)) v->active = 0;
             /* per-layer L/R master (rotor pan via re15_audio_rotor_update; =mvol for MAIN). */
             int32_t sl = (smp * s->mvol_l) >> 15;
             int32_t sr = (smp * s->mvol_r) >> 15;
@@ -3288,9 +3279,37 @@ static void ss_mix(ss_seq_t *s, int16_t *out, int32_t *hall, int frames) {
             if (L >  32767) L =  32767; else if (L < -32768) L = -32768;
             if (R >  32767) R =  32767; else if (R < -32768) R = -32768;
             out[f*2+0] = (int16_t)L; out[f*2+1] = (int16_t)R;
+            if (!v->active) break;                  /* Strang ton Stufe 5: letzte Probe gespielt */
         }
     }
 }
+
+#ifdef RE15_TON_S5_HAKEN
+/* Strang ton Stufe 5, Messhaken (nur Riegel test_r42_ton_gauss, kein Spielpfad): EINE Musik-Stimme durch den echten
+ * ss_mix-Pfad schicken - Huellkurve fest auf Halten 0x7fff (Sustain-Shift 0 = "static hold" in ss_env_update), Stimmen-
+ * und Ebenen-Lautstaerke 0x7ffe (Register 0x3fff), keine Biegung, kein Hall. Der Riegel rechnet dieselbe Stimme mit der
+ * psx-spx-Formel nach. Rueckgabe: 1 = Stimme klingt noch, 0 = Probe zu Ende. */
+int re15_ton_s5_musik_stimme(const int16_t *pcm, int len, int loop_start, uint32_t pitch, int16_t *out, int frames, int neu)
+{
+    static ss_seq_t s;
+    static const uint8_t leer[4] = { 0, 0, 0, 0 };
+    if (neu) {
+        memset(&s, 0, sizeof s);
+        s.vab_ok = 1; s.seq = leer; s.seq_len = 0; s.playing = 0;     /* ss_advance kehrt sofort um */
+        s.mvol_l = s.mvol_r = RE15_SPU_MVOL_Q15;
+        ss_voice_t *v = &s.voice[0];
+        v->pcm = pcm; v->pcm_len = len; v->loop_start = loop_start;
+        re15_spu_zaehler_start(&v->z);
+        v->step = pitch << 4; v->bend_q16 = 0x10000;
+        v->vol_l = v->vol_r = RE15_SPU_MVOL_Q15;
+        v->env_phase = 2; v->env_level = 0x7fff; v->adsr2 = 0;       /* Halten, Shift 0 */
+        v->active = 1;
+    }
+    memset(out, 0, (size_t)frames * 4);
+    ss_mix(&s, out, NULL, frames);
+    return s.voice[0].active;
+}
+#endif
 
 /* ── PSX SPU hardware reverb (the REAL one — replaces the old Schroeder hack) ─
  * RE: ROOM1170 BGM enables SPU reverb via FUN_800438c8 → SsUtSetReverbType(3)
@@ -4658,10 +4677,9 @@ void re15_audio_footstep(int foot, int sound_type)
     s_active[slot].pcm        = s_foot_decoded[vag];
     s_active[slot].loop_pcm   = NULL;                /* Strang ton Stufe 2: einmal */
     s_active[slot].pcm_len    = s_foot_decoded_len[vag];
-    s_active[slot].pos        = 0;
+    re15_spu_zaehler_start(&s_active[slot].z);   /* Strang ton Stufe 5: Key-On, re15_spu_gauss.h */
     s_active[slot].subpos     = 0;
     s_active[slot].step_q16   = step;
-    s_active[slot].pos_frac   = 0;
     s_active[slot].volume_q15 = vol;
     s_active[slot].vol_r_q15  = vol_r;   /* Runde 41 Spur A: NPC-Schritt L/R; Strang ton Stufe 1: immer beide Seiten */
     s_active[slot].active     = 1;

@@ -8,6 +8,7 @@
  * Der Riegel linkt das echte audio_pc.c, rendert deterministisch (RE15_AUDIO_CAP_SYNC: 1470 Stereo-Bilder je
  * re15_audio_tick, kein Tongeraet, Regler 100) und vergleicht die SPITZE jedes Geraeuschs mit
  *     Spitze der dekodierten Tonprobe * SPU-Register * 2 / 0x8000 * Hauptlautstaerke 0x7ffe / 0x8000,
+ * (seit Stufe 5: Spitze der wie in der SPU GEGLAETTETEN Tonprobe bei der Tonhoehe des Tons, s. probe_spitze)
  * das Register aus der belegten Rechnung SpuVmKeyOnNow @0x80055d10-0x80056070 (re15_svm_vol.h) bzw. so, wie es im
  * laufenden Original gemessen wurde:
  *   (1) Rolltor-Rumpeln ROOM1130 snd0 Satz 10: 16383/16383      (alt: Q15 8192 = Register 4096 -> -12,0 dB)
@@ -47,6 +48,7 @@
 #include "re15_audio.h"
 #include "re15_engine.h"
 #include "re15_vab.h"
+#include "re15_spu_gauss.h"   /* Strang ton Stufe 5: Spitze der geglaetteten Probe (probe_spitze) */
 #include "re15_rdt.h"
 #include "re15_room.h"
 #include "re15_actor.h"
@@ -91,17 +93,32 @@ static int fails = 0, checks = 0;
 static uint32_t rd32(const uint8_t *p) { return (uint32_t)p[0] | ((uint32_t)p[1] << 8) | ((uint32_t)p[2] << 16) | ((uint32_t)p[3] << 24); }
 static re15_vab_t s_vab;
 
-/* Spitze (Betrag) der dekodierten Tonprobe `vag0` (ab 0) einer Bank VH/VB. */
-static int probe_spitze(const uint8_t *vh, size_t vh_n, const uint8_t *vb, size_t vb_n, int vag0)
+/* Spitze (Betrag) der Tonprobe `vag0` (ab 0) einer Bank VH/VB, so wie die SPU sie ausgibt.
+ * Strang ton Stufe 5: seit der Mischer wie die SPU glaettet (Pitch-Zaehler + 4-Punkt-Gauss, re15_spu_gauss.h, psx-spx
+ * soundprocessingunitspu.md "4-Point Gaussian Interpolation"), ist der hoechste Ausgabewert der Stimme die Spitze der
+ * GEGLAETTETEN Probe bei der Tonhoehe des Tons (prog 0, `tone`: note2pitch2(min, shift, center, shift) wie se_play),
+ * nicht mehr die Spitze der Rohprobe - die Gauss-Tabelle summiert je Index auf 0x7f7f..0x7f81 (psx-spx Z. 296-300) und
+ * rundet Spitzen zwischen den Abtastwerten ab. Laenge: `n_aus` Ausgabeproben, Schleife aus den Flag-Bytes. */
+static int probe_spitze(const uint8_t *vh, size_t vh_n, const uint8_t *vb, size_t vb_n, int vag0, int tone, long n_aus)
 {
     if (re15_vab_parse(vh, vh_n, &s_vab) != 0 || vag0 >= s_vab.vag_count) return -1;
     const uint32_t off = s_vab.samples[vag0].offset, sz = s_vab.samples[vag0].size;
     if (off + sz > vb_n) return -1;
+    const re15_vab_tone_t *t = &s_vab.tones[tone];
+    const uint32_t pitch = re15_vab_note2pitch2(t->min_note, t->pitch_shift, t->center_note, t->pitch_shift);
+    const int schleife = re15_vag_loop_start(vb + off, sz);
     const size_t cap = (sz / 16) * 28;
     int16_t *pcm = (int16_t *)malloc(cap * sizeof(int16_t));
     const int n = re15_vag_adpcm_decode(vb + off, sz, pcm, cap);
     int pk = 0;
-    for (int i = 0; i < n; i++) { const int a = pcm[i] < 0 ? -pcm[i] : pcm[i]; if (a > pk) pk = a; }
+    re15_spu_zaehler_t z;
+    re15_spu_zaehler_start(&z);
+    for (long k = 0; k < n_aus && n > 0; k++) {
+        const int32_t g = re15_spu_gauss_wert(&z, pcm);
+        const int a = g < 0 ? -g : g;
+        if (a > pk) pk = a;
+        if (!re15_spu_zaehler_weiter(&z, pcm, n, schleife, pitch)) break;
+    }
     free(pcm);
     return pk;
 }
@@ -210,9 +227,9 @@ int main(void)
     if (rdt) {
         const uint8_t *vh = rdt + rd32(rdt + 0x0c), *vb = rdt + rd32(rdt + 0x10);
         const size_t vh_n = rd32(rdt + 0x10) - rd32(rdt + 0x0c), vb_n = (size_t)n - rd32(rdt + 0x10);
-        p_rumpeln = probe_spitze(vh, vh_n, vb, vb_n, 3);         /* Ton 7 -> VAG 4 */
-        p_stopp   = probe_spitze(vh, vh_n, vb, vb_n, 4);         /* Ton 8 -> VAG 5 */
-        p_schritt = probe_spitze(vh, vh_n, vb, vb_n, 1);         /* Ton 1 -> VAG 2 */
+        p_rumpeln = probe_spitze(vh, vh_n, vb, vb_n, 3, 7, (long)N_RUMPELN * PER_TICK);   /* Ton 7 -> VAG 4, Pitch 0x1a5 */
+        p_stopp   = probe_spitze(vh, vh_n, vb, vb_n, 4, 8, (long)N_STOPP * PER_TICK);     /* Ton 8 -> VAG 5, Pitch 0x196 */
+        p_schritt = probe_spitze(vh, vh_n, vb, vb_n, 1, 1, (long)N_SCHRITT * PER_TICK);   /* Ton 1 -> VAG 2, Pitch 0x200 */
         (void)laufen(4);
         re15_audio_room_se_snd0(10);  t_rumpeln = laufen(N_RUMPELN);   /* 2,29 s Probe + Vormerk-Takt */
         re15_audio_room_se_snd0(11);  t_stopp   = laufen(N_STOPP);
@@ -233,7 +250,7 @@ int main(void)
         uint8_t *vb  = re15_asset_read_file("SOUND/ARMS03.VB", &bn);
         if (edh && vb) {
             const uint32_t vho = rd32(edh + en - 8);
-            p_schuss = probe_spitze(edh + vho, (size_t)en - 8 - vho, vb, (size_t)bn, 1);   /* Ton 1 und 2 -> VAG 2 */
+            p_schuss = probe_spitze(edh + vho, (size_t)en - 8 - vho, vb, (size_t)bn, 1, 1, (long)N_SCHUSS * PER_TICK);   /* Ton 1 und 2 -> VAG 2, beide Pitch 0xbe6 */
             re15_audio_prime_weapon(3);                          /* ARMS03 */
             (void)laufen(2);
             re15_audio_weapon_se(0);  t_schuss = laufen(N_SCHUSS);

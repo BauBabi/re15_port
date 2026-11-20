@@ -1499,6 +1499,30 @@ if(TARGET SDL2::SDL2-static)
     set_tests_properties(unit_r42_ton_hall PROPERTIES TIMEOUT 120)
 endif()
 
+# --- Strang "ton", Stufe 5 (2026-11-20): Pitch-Zaehler + 4-Punkt-Gauss der SPU fuer Geraeusch- und Musik-Stimmen
+#     (psx-spx soundprocessingunitspu.md "Pitch Counter" / "4-Point Gaussian Interpolation"; Messbericht U5). Der Riegel
+#     liest die Gauss-Tabelle selbst aus der Hardware-Beschreibung und rechnet Rolltor-Rumpeln/-Stopp Wert fuer Wert nach.
+#     Gegenprobe: audio_pc.c von 71caea668 ohne RE15_TON_S5_HAKEN -> (1) und (2) rot ("naechster Wert").
+if(TARGET SDL2::SDL2-static)
+    add_executable(test_r42_ton_gauss
+        test_r42_ton_gauss.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/audio_pc.c
+        ${CMAKE_SOURCE_DIR}/platform/pc/src/asset_root_pc.c)
+    target_link_libraries(test_r42_ton_gauss PRIVATE re15_engine SDL2::SDL2-static)
+    target_include_directories(test_r42_ton_gauss PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/platform/pc/src)
+    target_compile_definitions(test_r42_ton_gauss PRIVATE
+        RE15_PLATFORM_PC
+        RE15_TON_S5_HAKEN
+        RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
+        RE15_PSXSPX_SPU_MD="${CMAKE_SOURCE_DIR}/../info/Resident_Evil_und_Playstation_Information/psx-spx.github.io-master/docs/soundprocessingunitspu.md")
+    add_test(NAME unit_r42_ton_gauss COMMAND test_r42_ton_gauss)
+    set_tests_properties(unit_r42_ton_gauss PROPERTIES TIMEOUT 120)
+endif()
+
 # --- DIAGNOSE (kein ctest): Nutzer-Report "Irons schaut im Original etwas diagonaler".
 #     Misst Irons' (NPC 0x45) Neck-Zustand + die GERENDERTE Kopf-Orientierung in ROOM1150.
 add_executable(probe_irons_neck_1150 probe_irons_neck_1150.c)
