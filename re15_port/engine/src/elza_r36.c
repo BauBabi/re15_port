@@ -156,8 +156,10 @@ void re15_elza_r36_raum_scan(const unsigned char *raw, int raw_size, unsigned ro
         logf_("[elza] ROOM%04X: %u Anker armiert %u %u", room_id, (unsigned)g_re15_elza_anker_n, 0, 0);
 }
 
-/* sender = Arbeitsziel des SCD-Fadens beim ANKER (g_scd.work_slot), nicht beim verzoegerten Ausfuehren: dazwischen laufen
- * andere Faeden mit eigenem Work_set (Strang ton Stufe 6 Runde 2). */
+/* sender = g_scd.work_slot beim ANKER, nicht beim verzoegerten Ausfuehren: dazwischen laufen andere Faeden mit eigenem
+ * Work_set (Strang ton Stufe 6 Runde 2). g_scd.work_slot ist der GLOBALE Spiegel des zuletzt ausgefuehrten Work_set
+ * (scd_vm.c scd_work_bind), nicht t->work_slot des eigenen Fadens. Hier ist das gleich, weil Work_set(2,1) `2e 02 01`
+ * im selben Faden unmittelbar vor dem Anker steht (ROOM1021.RDT @0x020DA bzw. @0x020AE, Pruefbericht pruef_s6_r2 gelb 2). */
 static void aktion_ausfuehren(int aktion, unsigned anker_off, int sender)
 {
     switch (aktion) {
@@ -170,8 +172,8 @@ static void aktion_ausfuehren(int aktion, unsigned anker_off, int sender)
     case RE15_ELZA_AKT_ROY_TOD:
         /* @0x80106da8 `ori a0,zero,0x5` / @0x80106dac jal 0x800453d0. Strang ton Stufe 6 Runde 2: FUN_80106c18 ist ein Zustand
          * des Zombie-Handlers (Zeiger in den STAGE1-Zustandstafeln, z. B. @0x8011fecc) und liest DAT_800ac784 (Decompilat
-         * RE_15_Quellcode_Overlays/STAGE1_full/FUN_80106c18.c) -> Sender = die Entity, deren Code laeuft = Roy. Port: das
-         * Arbeitsziel des SCD-Fadens beim Anker (Verzug 1, s. offen_t.sender); unmittelbar vor diesem Anker steht Work_set(2,1) `2e 02 01` @0x020DA (ROOM1021.RDT)
+         * RE_15_Quellcode_Overlays/STAGE1_full/FUN_80106c18.c) -> Sender = die Entity, deren Code laeuft = Roy. Port: der
+         * globale Work_set-Spiegel g_scd.work_slot beim Anker (Verzug 1, s. offen_t.sender und den Kopf von aktion_ausfuehren); unmittelbar vor diesem Anker steht Work_set(2,1) `2e 02 01` @0x020DA (ROOM1021.RDT)
          * = Gegner 1 = Slot 2 (scd_work_bind, slot = idx + 1). */
         re15_svm_raum_se_von(sender, RE15_ELZA_ROY_SE);
         break;

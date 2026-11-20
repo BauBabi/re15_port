@@ -74,6 +74,24 @@ int main(void)
         CHECK("no OOB / all results in the expected band across 2^0..2^30", ok);
     }
 
+    /* --- Bit 31 (Strang ton Stufe 6 Runde 3): signed argument, LZCS counts leading ONES, `srav` @0x80065fb0, index
+     *     t4-64 in [-320,-129], `lh` @0x80065fc4 reads the zero bytes 0x8007d704..0x8007d883 (PSX.EXE file
+     *     0x6df04..0x6e083) -> 0. The old port shifted logically: 0x80000000 -> 46336, above 3*2^30 it read past the
+     *     192-entry table. Exhaustive 2^32 check vs an instruction model: scratchpad ton/s6r3/sqrt_voll.c. --- */
+    printf("--- Bit 31 ---\n");
+    CHECK("SquareRoot0(0x7fffffff) == 46152 (largest positive)", re15_squareroot0(0x7fffffffu) == 46152);
+    CHECK("SquareRoot0(0x80000000) == 0 (NOT 46336)", re15_squareroot0(0x80000000u) == 0);
+    CHECK("SquareRoot0(0xa6719910) == 0 (ROOM3091 cut 6 @0x01A62)", re15_squareroot0(0xa6719910u) == 0);
+    CHECK("SquareRoot0(0xe5bb09a4) == 0 (ROOM3091 cut 7 @0x01A62)", re15_squareroot0(0xe5bb09a4u) == 0);
+    CHECK("SquareRoot0(0xfffffffe) == 0", re15_squareroot0(0xfffffffeu) == 0);
+    CHECK("SquareRoot0(0xffffffff) == 0 (LZCR 32 exit @0x80065f74)", re15_squareroot0(0xffffffffu) == 0);
+    {
+        int ok = 1;
+        for (uint64_t v = 0x80000000ull; v <= 0xffffffffull; v += 0x10001ull)
+            if (re15_squareroot0((uint32_t)v) != 0) { ok = 0; printf("  FAIL: SquareRoot0(%08x) != 0\n", (unsigned)v); break; }
+        CHECK("every argument with bit 31 set gives 0 (32768 probes)", ok);
+    }
+
     /* --- byte-true BIOS trig (rsin/rcos/ratan2), values verified vs the disassembled cores --- */
     printf("--- BIOS trig ---\n");
     CHECK("rsin(0) == 0",          re15_rsin(0) == 0);

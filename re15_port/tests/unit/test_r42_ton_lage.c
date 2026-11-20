@@ -36,6 +36,15 @@
  *   (9) CORE-Ruf eines Spieler-Zustands (re15_player_stagger_cmd2 Clip 8 -> 0x04010001 @0x80035e80, a1 = 0x800aca5a + 46):
  *       Lage des Spielers, auch wenn gerade eine Entity laeuft; ein Menue-Ton 0x0405 (kein Lage-Bit) bleibt ohne Lage.
  *
+ * Runde 3 (Pruefbericht pruef_s6_r2 rot: SquareRoot0 bei Bit 31):
+ *  (10) FUN_80045a64 fuer ALLE 16 Kameras von ROOM3091 an den drei Orten (Disc @0x01A62 41030/0/1500, Disc @0x01620
+ *       42458/61036/61028, Ort aus r42/rest 3e1a14809 38741/0/64516, alle null-erweitert wie `lhu` @0x800416ec ff.):
+ *       Entfernung di und Lage L/R gegen Soll-Werte, die UNABHAENGIG vom Port-Code gerechnet sind (scratchpad
+ *       ton/s6r3/soll_3091.py: SquareRoot0 @0x80065f60 als Instruktions-Modell mit `srav` @0x80065fb0 und `lh` aus den
+ *       PSX.EXE-Bytes VOR der Tafel 0x8007d984 = Datei 0x6df04..0x6e083 = null; catan/W @0x80078c90, Pan @0x80074728,
+ *       Entfernung @0x800747a8 aus der EXE). Bei 15 der 48 Faelle ist |dx|^2+|dz|^2 >= 2^31 - dort wurzelt das Original
+ *       zu 0. Dazu der echte Se_on-Weg (audio_pc.c) in Cut 6: Lage 107/97 (Entfernung 34), nicht stumm.
+ *
  * GEGENPROBE (scratchpad ton/s6/gegen/gegen.sh): derselbe Quelltext mit dem audio_pc.c von bf6827892 (Stufe 5) faellt in
  * (1) Register und Mischer, (2) Mischer, (3), (4) Knall und (5) - 6 von 8 rot; gruen bleiben nur der Spieler-Ruf (4) und die
  * Register des Schritts (2), die Stufe 1 schon hatte. Auf r42/story 71caea668 / aaea5f8c2 gibt es re15_svm_vol.h nicht
@@ -378,6 +387,56 @@ int main(void)
         da = re15_audio_se_mess(reg, lage);
         CHECK(da && lage[0] == -1 && lage[1] == -1,
               "(8) Se_on ohne Lage-Bit: ohne Lage (Messhaken %d/%d = -1/-1), Register %d/%d", lage[0], lage[1], reg[0], reg[1]);
+    }
+
+    /* ---- (10) ROOM3091: alle Kameras, Entfernung bei |dx|^2+|dz|^2 >= 2^31 (SquareRoot0 Bit 31) -------------------- */
+    if (rdt4) {
+        /* Soll {di, L, R} je Cut 0..15 aus scratchpad ton/s6r3/soll_3091.py (Ausgabe soll_3091.txt), NICHT mit Port-Code gerechnet */
+        static const int32_t orte[3][3] = { { 41030, 0, 1500 }, { 42458, 61036, 61028 }, { 38741, 0, 64516 } };
+        static const char *const ortname[3] = { "Disc @0x01A62", "Disc @0x01620", "r42/rest-Ort" };
+        static const int soll[3][16][3] = {
+            { {69,37,90}, {84,35,82}, {73,88,28}, {93,78,32}, {98,75,126}, {118,63,119}, {34,107,97}, {35,107,84},
+              {69,37,90}, {84,35,82}, {73,88,28}, {93,78,32}, {98,75,126}, {118,63,119}, {34,107,97}, {55,48,97} },
+            { {127,31,54}, {127,33,54}, {105,72,24}, {127,54,112}, {0,9,99}, {111,69,20}, {95,45,77}, {127,54,3},
+              {127,31,54}, {127,33,54}, {105,72,24}, {127,54,112}, {0,9,99}, {111,69,20}, {95,45,77}, {0,116,9} },
+            { {85,61,82}, {127,34,54}, {38,105,60}, {127,54,116}, {127,54,18}, {40,104,58}, {34,73,107}, {93,78,22},
+              {85,61,82}, {127,34,54}, {38,105,60}, {127,54,116}, {127,54,18}, {40,104,58}, {34,73,107}, {53,79,98} } };
+        CHECK(g_room_rdt.cut_count == 16, "(10) ROOM3091 hat 16 Kameras (RDT-Kopf +1), gelesen %d", (int)g_room_rdt.cut_count);
+        int ok = 0, gross = 0;
+        for (int o = 0; o < 3; o++) {
+            for (int c = 0; c < 16 && c < (int)g_room_rdt.cut_count; c++) {
+                g_scd.work_vars[0x0A] = (int16_t)c;
+                const re15_camera_cut_t *k = &g_room_rdt.cuts[c];
+                int32_t dx = k->pos_x - orte[o][0], dz = k->pos_z - orte[o][2];
+                if (dx < 0) dx = -dx;
+                if (dz < 0) dz = -dz;
+                if (((uint32_t)dx * (uint32_t)dx + (uint32_t)dz * (uint32_t)dz) & 0x80000000u) gross++;
+                int l[2] = { -1, -1 }, di = -1;
+                (void)re15_wassersprung_r41_lage(&g_room_rdt, orte[o], l, &di);
+                if (di == soll[o][c][0] && l[0] == soll[o][c][1] && l[1] == soll[o][c][2]) ok++;
+                else printf("FAIL: (10) %s Cut %d: Entfernung %d Lage %d/%d, Soll %d %d/%d\n", ortname[o], c, di, l[0], l[1],
+                            soll[o][c][0], soll[o][c][1], soll[o][c][2]);
+            }
+        }
+        CHECK(ok == 48 && gross == 15, "(10) ROOM3091 alle 16 Kameras x 3 Orte: %d von 48 gleich dem Original-Modell "
+              "(davon %d mit |dx|^2+|dz|^2 >= 2^31, SquareRoot0 -> 0 wie `srav` @0x80065fb0)", ok, gross);
+        /* der echte Se_on-Weg in Cut 6: Original Entfernung 34 (Bit 31 gesetzt), alter Port 127 = stumm */
+        g_scd.work_vars[0x0A] = 6;
+        static const uint8_t op[12] = { 0x36, 0x02, 0x0d, 0x01, 0x00, 0x00, 0x46, 0xa0, 0x00, 0x00, 0xdc, 0x05 };
+        (void)laufen(60);
+        scd_audio_event_t ev;
+        memset(&ev, 0, sizeof ev);
+        ev.kind = (uint8_t)SCD_AUDIO_SE_ON; ev.bank = op[1]; ev.sample_id = op[2];
+        ev.raw_w0 = (uint16_t)((op[3] << 8) | op[4]); ev.raw_w1 = op[5];
+        ev.pos_x = (int16_t)(op[6] | (op[7] << 8)); ev.pos_y = (int16_t)(op[8] | (op[9] << 8)); ev.pos_z = (int16_t)(op[10] | (op[11] << 8));
+        scd_audio_queue_push(&ev);
+        (void)laufen(1);
+        int reg[2], lage[2];
+        const int da = re15_audio_se_mess(reg, lage);
+        CHECK(da && lage[0] == 107 && lage[1] == 97 && reg[0] > 0 && reg[1] > 0,
+              "(10) Se_on @0x01A62 in Cut 6 ueber audio_pc.c: Lage %d/%d, Soll 107/97 (Entfernung 34), Register %d/%d", lage[0],
+              lage[1], reg[0], reg[1]);
+        g_scd.work_vars[0x0A] = 0;
     }
 
     /* ---- (9) CORE-Ruf eines Spieler-Zustands: Lage des Spielers --------------------------------------------------- */

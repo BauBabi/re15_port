@@ -103,7 +103,9 @@ static void ausfuehren(int aktion, unsigned off)
     case RE15_ELZATOENE_AKT_ROY_STOEHNEN:
         /* @0x80102298 `ori a0,zero,0x4` + @0x8010229c jal 0x800453d0. Strang ton Stufe 6 Runde 2: FUN_801021f8 (Zustand des
          * Zombie-Handlers, Zeiger @0x8011f898 / @0x801202b0) liest DAT_800ac784 (Decompilat STAGE1_full/FUN_801021f8.c) ->
-         * Sender = Roy. Port: Arbeitsziel des SCD-Fadens, Work_set(2,1) `2e 02 01` @0x020AE direkt vor dem Anker = Slot 2. */
+         * Sender = Roy. Port: g_scd.work_slot = globaler Spiegel des zuletzt ausgefuehrten
+         * Work_set (nicht t->work_slot des eigenen Fadens); gleich, weil Work_set(2,1) `2e 02 01` @0x020AE im selben Faden direkt
+         * vor dem Anker steht = Slot 2. */
         re15_svm_raum_se_von((int)g_scd.work_slot, RE15_ELZATOENE_ROY_STOEHN_SE);
         break;
     default: return;

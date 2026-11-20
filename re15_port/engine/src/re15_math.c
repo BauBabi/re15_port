@@ -13,6 +13,19 @@
  *   t5 = table[t4 - 64] << t1           ; lh @0x8007d984, sllv
  *   v0 = t5 >> 12                       ; srl  (table is Q12: table[i] = round(sqrt(64+i) * 512))
  *
+ * BIT 31 (Strang ton Stufe 6 Runde 3, 2026-11-20; Pruefbericht pruef_s6_r2 rot): the argument is a SIGNED long.
+ * `gte_ldLZCS a` / `gte_stLZCR v0` @0x80065f60/6c count the leading bits EQUAL to bit 31 (leading ONES when bit 31
+ * is set, psx-spx gte "LZCS/LZCR"), and the right shift is ARITHMETIC: word 0x016a5822 `sub t3,t3,t2` @0x80065fac,
+ * word 0x01646007 `srav t4,a,t3` @0x80065fb0 (Ghidra shows both as raw bytes). For a0 >= 2^31 (unsigned) t4 then has
+ * 24 or 25 leading ones followed by a zero, so t4 in [-256,-65] and the index t4-64 in [-320,-129] on BOTH branches
+ * (the `sllv` branch @0x80065fa0 keeps >= 24 leading ones as well). `lh` @0x80065fc4 reads 0x8007d704..0x8007d883,
+ * which are all zero: PSX.EXE file offsets 0x6df04..0x6e083 (t_addr 0x80010000 at file 0x800), and identical in the
+ * RAM of 108 clean DuckStation savestates (scratchpad ton/s6r3/ram_vor_tafel.py). So t5 = 0 and v0 = 0 for every
+ * argument with bit 31 set; 0xffffffff takes the `beq v0,at` @0x80065f74 exit (`li v0,0` @0x80065fe0), also 0.
+ * The old port shifted LOGICALLY: [2^31, 3*2^30) gave a plausible root, above that it read past re15_sqrt0_tab
+ * (index up to 854, undefined behaviour). Exhaustively checked against an instruction-level model reading the
+ * EXE bytes for all 2^32 arguments (scratchpad ton/s6r3/sqrt_voll.c).
+ *
  * The 192-entry table @0x8007d984 (PSX.EXE) — extracted verbatim. table[0]=4096=sqrt(64)*512,
  * table[64]=5792=sqrt(128)*512, table[191]=8175=sqrt(255)*512.
  */
@@ -39,8 +52,7 @@ static const uint16_t re15_sqrt0_tab[192] = {
 };
 
 /* GTE LZCR: count of leading bits equal to bit31 (leading zeros for a positive
- * value, leading ones for a negative one). Squared distances are always >= 0 and
- * < 2^31 in reach, so this is a plain leading-zero count there. */
+ * value, leading ones for a negative one; `gte_ldLZCS` @0x80065f60). */
 static int re15_lzcr(uint32_t x)
 {
     uint32_t y = (x & 0x80000000u) ? ~x : x;
@@ -54,14 +66,17 @@ uint32_t re15_squareroot0(uint32_t x)
 {
     if (x == 0) return 0;
     int v0 = re15_lzcr(x);
-    if (v0 == 32) return 0;                         /* x == 0 (or all-ones) */
-    int t2 = v0 & ~1;                               /* even leading-zero count */
-    int t1 = (31 - t2) >> 1;                        /* denormalize shift, in [0,15] */
-    uint32_t t4 = (t2 >= 24) ? (x << (t2 - 24))     /* normalize into [64,256) */
-                             : (x >> (24 - t2));
-    uint32_t idx = t4 - 64;                         /* table index, guaranteed [0,191] */
+    if (v0 == 32) return 0;                         /* x == 0 or 0xffffffff: `beq v0,at` @0x80065f74 -> `li v0,0` @0x80065fe0 */
+    /* Bit 31 set: leading ONES counted, `srav` @0x80065fb0 keeps the sign, index t4-64 in [-320,-129], `lh` @0x80065fc4
+     * reads the zero bytes 0x8007d704..0x8007d883 (PSX.EXE file 0x6df04..0x6e083) -> t5 = 0 -> 0 (see header). */
+    if (x & 0x80000000u) return 0;
+    int t2 = v0 & ~1;                               /* even leading-zero count (`and t2,v0,-2` @0x80065f84) */
+    int t1 = (31 - t2) >> 1;                        /* denormalize shift, in [0,15] (@0x80065f88-90) */
+    uint32_t t4 = (t2 >= 24) ? (x << (t2 - 24))     /* normalize into [64,256) (`sllv` @0x80065fa0 / `srav` @0x80065fb0; */
+                             : (x >> (24 - t2));    /*  bit 31 clear here, so arithmetic == logical) */
+    uint32_t idx = t4 - 64;                         /* table index, [0,191] for bit 31 clear (`addi t4,t4,-0x40` @0x80065fb4) */
     uint32_t t5 = (uint32_t)re15_sqrt0_tab[idx] << t1;
-    return t5 >> 12;
+    return t5 >> 12;                                /* `srl v0,t5,0xc` @0x80065fd0 */
 }
 
 /* Q0 quarter-wave sine table, BIOS rsin/rcos @0x8007db04 (PSX.EXE). Q12; sin[i]=round(4096*sin(i*2pi/4096)), i in [0,0x400]. */

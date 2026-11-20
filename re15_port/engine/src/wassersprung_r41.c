@@ -422,6 +422,8 @@ int re15_wassersprung_r41_lage(const void *rdt_v, const int32_t pos[3], int lage
     int32_t dz = c->pos_z - pos[2]; if (dz < 0) dz = -dz;                               /* @0x80045acc-d8 */
     const uint32_t sxz = (uint32_t)dx * (uint32_t)dx + (uint32_t)dz * (uint32_t)dz;     /* @0x80045abc-e8 */
     int32_t dy = c->pos_y - pos[1]; if (dy < 0) dy = -dy;                               /* @0x80045af4-b00 */
+    /* sxz und das zweite Argument koennen >= 2^31 werden (ROOM3091-Se_on mit null-erweitertem Versatz): SquareRoot0 gibt dann 0
+     * wie das Original (`srav` @0x80065fb0, Nullbytes vor der Tafel, re15_math.c; Riegel unit_r42_ton_lage (10)). */
     const uint32_t r1 = re15_squareroot0(sxz), r2 = re15_squareroot0(sxz);              /* @0x80045b04 / @0x80045b10 */
     const int32_t dyt = c->pos_y - dy;                                                  /* `subu v1,v1,s0` @0x80045b20 */
     const uint32_t r = re15_squareroot0((uint32_t)dyt * (uint32_t)dyt + r1 * r2);      /* @0x80045b24-38 */
