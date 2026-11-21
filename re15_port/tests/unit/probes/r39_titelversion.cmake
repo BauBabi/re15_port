@@ -35,8 +35,16 @@ foreach(_teil glyphen text layout maske anwenden version)
     set_tests_properties(unit_r39_titelversion_${_teil} PROPERTIES TIMEOUT 120)
 endforeach()
 
+# Strang riegel 21.11.2026: git kommt aus dem Configure (GIT_EXECUTABLE im Cache), nicht aus dem PATH des ctest-Prozesses.
+# Im Skriptmodus (cmake -P) sucht FindGit nur im PATH; der Bau-PATH von local_build.sh (CLEAN_PATH) enthaelt kein git ->
+# der Riegel war dort "git fehlt" rot, waehrend der Configure git fand. Geprueft wird weiter dasselbe (git describe + " dev").
+find_package(Git QUIET)
+set(_r39t_git_arg "")
+if(GIT_EXECUTABLE)
+    set(_r39t_git_arg "-DGIT_EXECUTABLE=${GIT_EXECUTABLE}")
+endif()
 add_test(NAME unit_r39_titelversion_cmake
-         COMMAND "${CMAKE_COMMAND}" -DMODUL=${CMAKE_SOURCE_DIR}/cmake/re15_version_r39.cmake
+         COMMAND "${CMAKE_COMMAND}" ${_r39t_git_arg} -DMODUL=${CMAKE_SOURCE_DIR}/cmake/re15_version_r39.cmake
                  -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/r39_titelversion_cmake_wd
                  -P ${CMAKE_CURRENT_LIST_DIR}/../r39_titelversion/test_r39_titelversion_cmake.cmake)
 set_tests_properties(unit_r39_titelversion_cmake PROPERTIES TIMEOUT 120)
