@@ -12,8 +12,9 @@
 # namen Stufe 6) und die ganz neuen Saetze (6030 msg 32, 6031 msg 12..17; vorher "keine Aufnahme", Untertitel mit Textdauer)
 # SPIELEN jetzt die Datei des Nutzers. Beide Teile laufen aus dem unveraenderten Bestand (vorher lief Leon aus einer Ersatz-Wurzel
 # mit einer ersetzten room6030/main02.wav). Die uebrigen Stimmen spielen weiter (Negativkontrolle).
-# Hinweis 6031 msg 1/12: die Aufnahme spricht schon den Wortlaut K-17 ("A woman ..."/"She said ..."), der Untertitel kommt erst in
-# Stufe 3 dazu - hier geprueft wird nur, dass die Datei spielt.
+# Strang fabrikplan Stufe 3 (NUTZERWUNSCH 20.11.2026 "Ada bringt Marvin", Konzept K-17): 6031 msg 1/12 zeigen jetzt den Wortlaut
+# der Aufnahmen ("A woman ... she" / "She said ... her"); kein "A policeman"/"He said" mehr. Dass beide Dateien an IHREM Untertitel
+# spielen, misst integration_r42_namen_6031_bestand (test_r42_namen_bestand.cmake TEIL 6031, Tonmitschnitt).
 # Stufe 7 (Entscheid 19.11.2026): 6030 msg 21 spricht den neuen Satz bis auf ein Wort ("made it down here" / "came down here"),
 # steht nicht mehr in der Tabelle und SPIELT. Den Durchlauf mit unveraendertem Bestand und Messung am Tonmitschnitt macht
 # tests/integration/test_r42_namen_bestand.cmake (integration_r42_namen_6030_bestand).
@@ -179,12 +180,15 @@ ENDE
     pruefe_re("E6: Zeilen 0, 1, 2, 12, 13 in dieser Folge"
         "msgtext] room=6031 id=0 .*msgtext] room=6031 id=1 .*msgtext] room=6031 id=2 .*msgtext] room=6031 id=12 .*msgtext] room=6031 id=13 ")
     pruefe("E6: msg 0 bleibt" "[msgtext] room=6031 id=0 \"Elza: Sherry! Is anyone else here?\"")
-    pruefe("E6: msg 1" "[msgtext] room=6031 id=1 \"Sherry: A policeman brought Marvin down here.Sherry: Then he went back into the fire.\"")
+    pruefe("E6: msg 1" "[msgtext] room=6031 id=1 \"Sherry: A woman brought Marvin down here.Sherry: Then she went back into the fire.\"")
     pruefe("E6: msg 2" "[msgtext] room=6031 id=2 \"Elza: Back? Why?\"")
-    pruefe("E6: msg 12" "[msgtext] room=6031 id=12 \"Sherry: He said he had to find someone. He told us not to wait for him.\"")
+    pruefe("E6: msg 12" "[msgtext] room=6031 id=12 \"Sherry: She said she had to find someone. She told us not to wait for her.\"")
     pruefe("E6: msg 13" "[msgtext] room=6031 id=13 \"Elza: ...Then we won't. If that core goes, no one gets out.Elza: Let's get this train moving.\"")
     pruefe_nicht("E6: kein alter Satz 'fighting off monsters'" "fighting off monsters")
     pruefe_nicht("E6: kein alter Satz 'I'll do it!'" "Elza: I'll do it!")
+    # Strang fabrikplan Stufe 3: kein Polizist bringt Marvin mehr (Ada, ROOM50B0 msg 0 @0x0B86 "I left Marvin with her")
+    pruefe_nicht("E6: kein 'A policeman' mehr (Stufe 3)" "Sherry: A policeman")
+    pruefe_nicht("E6: kein 'He said he had to find someone' mehr (Stufe 3)" "Sherry: He said he had to find someone")
     # Stimmen (Strang fabrikplan Stufe 2, Aufnahmen 20.11.2026): msg 1/2 spielen die neue Aufnahme des Nutzers (vorher stumm),
     # msg 12..17 die neuen Dateien (vorher "keine Aufnahme"); msg 0 spielt weiter (Negativkontrolle)
     re15_altaufnahme_pruefe("${RE15_SYNCHRO}" 6031 1)

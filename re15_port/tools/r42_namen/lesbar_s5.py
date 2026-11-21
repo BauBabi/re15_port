@@ -118,7 +118,7 @@ def bauen(kopf, seiten_, schwanz, n, leer=LEER):
 # Strang fabrikplan Stufe 2 Runde 2 (Pruefbericht s2_r1 ROT): mit den Nutzer-Aufnahmen vom 20.11.2026 (master ce5ec405f) sind 3060 24,
 # 2081 50 und 6031 13 nicht mehr "keine Aufnahme" und 30E0 11/13 sprechen den neuen Satz -> Art 'pause' an der Pause der NEUEN Datei
 # (pausen5.py wie oben, Whisper medium.en auf [0, Pausenmitte] wie asr_pausen.py; die '|'-Stelle im Text liegt an der gewaehlten Pause,
-# Wortlaut unveraendert). 6031 msg 1 bekommt mit dem neuen Wortlaut erst in Stufe 3 sein neues N.
+# Wortlaut unveraendert). Stufe 3: 6031 msg 1 mit dem neuen Wortlaut ("A woman ...") an der Pause seiner neuen Datei.
 PORT_SEITEN = {
     (0x3060, 24): (82, 'synchro/STAGE3/room3060/main24.wav (Nutzer 20.11.2026, ce5ec405f) Pause 2.17-2.72 (VOR: "I\'ll make it back to the '
                        'lobby."; Pausen 1.20-1.38 nach "back" / 4.29-4.58 nach "in,": kuerzere Seite 1,38 / 2,06 s gegen 2,72 s)'),
@@ -126,8 +126,8 @@ PORT_SEITEN = {
                        'lobby\'s gone!")'),
     (0x30E0, 13): (71, 'synchro/STAGE3/room30E0/main13.wav (Nutzer 20.11.2026, ce5ec405f, neuer Satz) Pause 1.58-2.38 (VOR: "There\'s '
                        'more of them than I thought."; Pause 3.50-3.99 nach "far...": kuerzere Seite 1,00 s gegen 2,38 s)'),
-    (0x6031, 1): (100, 'synchro/STAGE6/room6031/main01.wav Pause 2.87-3.33 (VOR: "A policeman! He\'s fighting off monsters!" - alter '
-                       'Mod-Satz; von zwei Pausen die, an der die kuerzere Seite am laengsten steht: 3,18/1,58 s gegen 1,24/3,52 s)'),
+    (0x6031, 1): (87, 'synchro/STAGE6/room6031/main01.wav (Nutzer 20.11.2026, ce5ec405f, neuer Wortlaut Strang fabrikplan Stufe 3) '
+                      'Pause 2.09-2.90 (VOR: "A woman brought Marvin down here."; einzige Pause)'),
     (0x6031, 13): (128, 'synchro/STAGE6/room6031/main13.wav (Nutzer 20.11.2026, ce5ec405f) Pause 3.85-4.26 (VOR: "Then we won\'t. '
                         'If that core goes, no one gets out."; Pause 0.92-1.31 nach "won\'t.": kuerzere Seite 1,31 s gegen 1,49 s)'),
     (0x2081, 50): (68, 'synchro/STAGE2/room2081/main50.wav (Nutzer 20.11.2026, ce5ec405f) Pause 1.82-2.26 (VOR: "Elza, go on '

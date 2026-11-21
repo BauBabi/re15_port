@@ -35,7 +35,7 @@
     { 0x6030u, 22, 1, 141794u, 0x3A0396F373171061ull, "She said she'd catch up with us.",
       "Elza's still out there...!" },
     { 0x6031u,  1, 1, 333498u, 0xBF08F12E5193E96Full, "A policeman. He's fighting off monsters. He wants us to start the train.",
-      "A policeman brought Marvin down here. Then he went back into the fire." },
+      "A woman brought Marvin down here. Then she went back into the fire." },
     { 0x6031u,  2, 1,  61546u, 0x57DE620ADD17F96Cull, "I'll do it.",
       "Back? Why?" },
 #endif

@@ -76,7 +76,7 @@ SAETZE = (
      'Sherry', "Elza's still out there...!"),
     (0x6031, 1, 'Sherry', "A policeman! He's fighting off monsters. He wants us to start the train.",
      "A policeman. He's fighting off monsters. He wants us to start the train.",
-     'Sherry', 'A policeman brought Marvin down here. Then he went back into the fire.'),
+     'Sherry', 'A woman brought Marvin down here. Then she went back into the fire.'),   # Strang fabrikplan Stufe 3 (K-17)
     (0x6031, 2, 'Elza', "I'll do it!", "I'll do it.", 'Elza', 'Back? Why?'),
 )
 

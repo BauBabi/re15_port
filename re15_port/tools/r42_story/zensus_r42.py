@@ -161,9 +161,9 @@ ZEILEN = [
     ("C", V31, 0x6030, 4, "NEUAUF", "Leon", "If she's as tough as you say, she'll find another way out. But we can't wait. When that reactor goes, nobody gets out.", "Leon: Why aren't you out there?", "fest, troestend und hart zugleich", "L21"),
     ("C", V31, 0x6030, 5, "NEUAUF", "John", "Then I'm staying with the kid. And I'll keep an eye on your friend here.", "John: She told me to stay with the kid... and look after your friend here.", "entschlossen", "L21"),
     # ---- Block C, Texte (v0.8.31): 6031 Elza (E6, E9) ----
-    ("C", V31, 0x6031, 1, "NEUAUF", "Sherry", "A policeman brought Marvin down here. Then he went back into the fire.", "Sherry: A policeman! He's fighting off monsters. He wants us to start the train.", "aufgeregt, erzaehlt schnell", "E6"),
+    ("C", V31, 0x6031, 1, "NEUAUF", "Sherry", "A woman brought Marvin down here. Then she went back into the fire.", "Sherry: A policeman! He's fighting off monsters. He wants us to start the train.", "aufgeregt, erzaehlt schnell", "E6"),
     ("C", V31, 0x6031, 2, "NEUAUF", "Elza", "Back? Why?", "Elza: I'll do it!", "verwundert", "E6"),
-    ("C", V31, 0x6031, 12, "NEU", "Sherry", "He said he had to find someone. He told us not to wait for him.", "", "leiser, ernst", "E6"),
+    ("C", V31, 0x6031, 12, "NEU", "Sherry", "She said she had to find someone. She told us not to wait for her.", "", "leiser, ernst", "E6"),
     ("C", V31, 0x6031, 13, "NEU", "Elza", "...Then we won't. If that core goes, no one gets out. Let's get this train moving.", "", "kurze Pause, dann entschlossen", "E6"),
     ("C", V31, 0x6031, 14, "NEU", "Sherry", "It's moving! Elza, we did it!", "", "jubelnd; der Zug ruckt an", "E9"),
     ("C", V31, 0x6031, 15, "NEU", "John", "What the hell was that? It came from the back car!", "", "erschrocken, nach dem Krachen", "E9"),

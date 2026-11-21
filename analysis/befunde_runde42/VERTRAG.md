@@ -302,9 +302,9 @@ Block A (Finale, T-03..T-09) hat keine neuen Zeilen; Finale-Texte folgen nach F-
 | 6030 | 5 | NEUAUF | John | Then I'm staying with the kid. And I'll keep an eye on your friend here. | C | v0.8.31 | L21 |
 | 6030 | 21 | NEUAUF | John | Name's John. This is Sherry. We came down here with a girl named Elza. | C | v0.8.31 | L21 |
 | 6030 | 22 | NEUAUF | Sherry | Elza's still out there...! | C | v0.8.31 | L21 |
-| 6031 | 1 | NEUAUF | Sherry | A policeman brought Marvin down here. Then he went back into the fire. | C | v0.8.31 | E6 |
+| 6031 | 1 | NEUAUF | Sherry | A woman brought Marvin down here. Then she went back into the fire. | C | v0.8.31 | E6 |
 | 6031 | 2 | NEUAUF | Elza | Back? Why? | C | v0.8.31 | E6 |
-| 6031 | 12 | NEU | Sherry | He said he had to find someone. He told us not to wait for him. | C | v0.8.31 | E6 |
+| 6031 | 12 | NEU | Sherry | She said she had to find someone. She told us not to wait for her. | C | v0.8.31 | E6 |
 | 6031 | 13 | NEU | Elza | ...Then we won't. If that core goes, no one gets out. Let's get this train moving. | C | v0.8.31 | E6 |
 | 6031 | 14 | NEU | Sherry | It's moving! Elza, we did it! | C | v0.8.31 | E9 |
 | 6031 | 15 | NEU | John | What the hell was that? It came from the back car! | C | v0.8.31 | E9 |

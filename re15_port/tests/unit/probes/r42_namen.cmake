@@ -71,7 +71,7 @@ if(NOT WIN32)
     target_link_libraries(werkzeug_r42_tonmess PRIVATE m)
 endif()
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_namen_bestand.cmake)
-    foreach(_teil 6030 3020)
+    foreach(_teil 6030 3020 6031)   # 6031: Strang fabrikplan Stufe 3 (Elza E6, msg 1/12 neuer Wortlaut)
         add_test(NAME integration_r42_namen_${_teil}_bestand
                  COMMAND ${CMAKE_COMMAND} -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                          -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/r42_namen_${_teil}_bestand -DTEIL=${_teil}

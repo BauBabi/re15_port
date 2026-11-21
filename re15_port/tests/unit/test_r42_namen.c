@@ -334,6 +334,9 @@ static void teil_seitenwechsel(void)
         { 0x2081, 50, 68, "main50.wav (neu) Pause 1.82-2.26 s" },
         { 0x3060, 24, 82, "main24.wav (neu) Pause 2.17-2.72 s" },
         { 0x6031, 13, 128, "main13.wav (neu) Pause 3.85-4.26 s" },
+        /* Strang fabrikplan Stufe 3: neuer Wortlaut "A woman brought Marvin down here. | Then she went back into the fire." an der
+         * einzigen Pause der Nutzer-Datei (Whisper VOR: "A woman brought Marvin down here."); vorher 100 aus der alten Mod-Aufnahme */
+        { 0x6031,  1, 87, "main01.wav (neu) Pause 2.09-2.90 s" },
     };
     for (unsigned k = 0; k < sizeof k_w / sizeof k_w[0]; k++) {
         if (raum_laden(k_w[k].raum) != 0) { PRUEF(0, "ROOM%04X ladbar", k_w[k].raum); continue; }

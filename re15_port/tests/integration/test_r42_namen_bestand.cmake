@@ -3,6 +3,8 @@
 # TONMITSCHNITT:
 #   TEIL 6030  Leon, Zug ROOM6030, Wagen-Gespraech (msg 0, 1, 21, 2, 3, 22, 4, 32, 5, 6, 7, 23, 24, 8)
 #   TEIL 3020  Leon, 3000 -> 3010 -> ROOM3020 Fensterszene (msg 0, 1, 2, 7, 8) bis zum Tausch nach 30C0
+#   TEIL 6031  Elza, Zug ROOM6031, Wagen-Szene E6 (msg 0, 1, 2, 12, 13) - Strang fabrikplan Stufe 3: msg 1/12 mit dem neuen Wortlaut
+#              ("A woman ..."/"She said ...") spielen die Aufnahmen des Nutzers vom 20.11.2026 an ihrem neuen Untertitel
 #
 # Luecke aus dem Pruefbericht der Stufe 6 (gelb 3 und 4): integration_r42_story6_leon und _story3b_leon laufen aus einer Ersatz-Wurzel
 # mit je einer ersetzten Datei, integration_r42_story3a_* laeuft ohne Ton; den Auslieferungsstand deckte kein Durchlauf ab. Hier
@@ -29,7 +31,7 @@
 # Aufnahme gegen den ganzen Mitschnitt; "spielt" = Spitze >= 0,25 und Abstand >= 4; Lage = capTick aus "[voice] Start").
 # Wege und Vorgaben wie tests/integration/test_r42_story6.cmake TEIL leon bzw. test_r42_story3a.cmake TEIL kette (dort begruendet),
 # Ende nach der Szene.
-# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<6030|3020> -DRE15_SYNCHRO=<Repo>/synchro
+# Aufruf: cmake -DRE15_PC_EXE=<exe> -DWORKDIR=<dir> -DTEIL=<6030|3020|6031> -DRE15_SYNCHRO=<Repo>/synchro
 #               -DRE15_TONMESS=<werkzeug_r42_tonmess> -P test_r42_namen_bestand.cmake
 # =============================================================================
 cmake_minimum_required(VERSION 3.21)
@@ -267,6 +269,53 @@ ENDE
     endforeach()
     foreach(_m 2 3 4 5 6 7 8)                         # Negativkontrolle: die Stimmen der Ankunft in ROOM3000
         _soll_spielt(3000 ${_m} "nicht betroffen")
+    endforeach()
+elseif(TEIL STREQUAL "6031")
+    # Strang fabrikplan Stufe 3 (NUTZERWUNSCH 20.11.2026, gewaehlt "Ada bringt Marvin"; Konzept K-17): Elzas Wagen-Szene E6 mit den
+    # NEUEN Untertiteln msg 1 "A woman ... she" / msg 12 "She said ... her" - die Aufnahmen des Nutzers vom 20.11.2026 (ce5ec405f,
+    # Whisper: genau dieser Wortlaut) SPIELEN an IHREM Untertitel. Weg und Vorgaben wie test_r42_story6.cmake TEIL elza (dort
+    # begruendet), Ende nach der Szene (msg 13 startet dort um Raumbild 870 und steht 5,95 s).
+    file(WRITE "${WORKDIR}/plan.txt" "RAUM 6001
+WARTE 30
+GEHE 1700 -10100 150
+BLICK 1024
+AKTION
+RAUM 6031
+WARTE 40
+GEHE -21000 -21000 250
+GEHE -24300 -21200 250
+WARTE 1500
+ENDE
+")
+    re15_start_spiel(_rv 1200 RE15_NO_INTRO=1 RE15_WINDOW_SCALE=1 RE15_MSG_LOG=1 RE15_TITLE_CONFIRM_MS=1500 RE15_PSELECT_AUTO=1
+        RE15_PSELECT_AUTO_SWITCH=1 RE15_STIMME_LOG=1 RE15_SE_DEBUG=1 RE15_WEGPLAN_LOG=wegplan.txt RE15_STATE_LOG=state.log
+        "RE15_PLAYER_POS=1693,-9900,1024,2" "RE15_AUDIO_CAP_SYNC=${WORKDIR}/ton.raw" RE15_DEBUG_JUMP=6001@250
+        "RE15_SET_FLAG=3:48,3:49" "RE15_WEGPLAN=${WORKDIR}/plan.txt" "RE15_EXIT_AT=1400#6031" "${_exe_kopie}")
+    if(NOT EXISTS "${WORKDIR}/debug.log")
+        fail("kein debug.log (exit=${_rv})")
+        _fertig()
+    endif()
+    file(READ "${WORKDIR}/debug.log" _dbg)
+    pruefe("Ton: bildgenauer Mitschnitt des Mischers" "[audio] RE15_AUDIO_CAP_SYNC -> ")
+    pruefe("exe-Kopie liegt neben der gebauten exe (Bestand aus dem Repo)" "[asset] exe-dir: ${_exe_dir}")
+    pruefe("E6: Wagen-Programm" "ROOM6031 Evt_exec sub02 -> Programm (270 B): Wagen-Szene E6")
+    pruefe_re("E6: Zeilen 0, 1, 2, 12, 13 in dieser Folge"
+        "msgtext] room=6031 id=0 .*msgtext] room=6031 id=1 .*msgtext] room=6031 id=2 .*msgtext] room=6031 id=12 .*msgtext] room=6031 id=13 ")
+    # der NEUE Untertitel, und die Stimme startet an genau diesem Untertitel (hoechstens drei Logzeilen danach). Klammern als [[] / []],
+    # nicht mit Backslash: pruefe_re ist ein Makro, CMake wertet die Escapes beim Einsetzen ein zweites Mal aus.
+    pruefe_re("msg 1: neuer Untertitel, Stimme startet an ihm"
+        "msgtext[]] room=6031 id=1 \"Sherry: A woman brought Marvin down here[.]Sherry: Then she went back into the fire[.]\"\n([^\n]*\n)?([^\n]*\n)?([^\n]*\n)?[[]voice[]] Start ROOM6031 Id 1 ")
+    pruefe_re("msg 12: neuer Untertitel, Stimme startet an ihm"
+        "msgtext[]] room=6031 id=12 \"Sherry: She said she had to find someone[.] She told us not to wait for her[.]\"\n([^\n]*\n)?([^\n]*\n)?([^\n]*\n)?[[]voice[]] Start ROOM6031 Id 12 ")
+    pruefe_nicht("kein 'A policeman' mehr" "Sherry: A policeman")
+    pruefe_nicht("kein 'He said he had to find someone' mehr" "Sherry: He said")
+    pruefe_re("Ende nach der Szene" "EXIT_AT: Bild 1400 in Raum 6031")
+    _veraltet(6031 1)                                 # Teil A: neue Aufnahme des Nutzers, kein Abdruck des Tags
+    _soll_spielt(6031 12 "neue Datei des Nutzers 20.11.2026, Teil C")
+    pruefe_nicht("Log: msg 12 nicht 'keine Aufnahme'" "ROOM6031 msg 12: keine Aufnahme")
+    _veraltet(6031 2)                                 # Teil A wie msg 1 (Wortlaut unveraendert "Back? Why?")
+    foreach(_m 0 13)                                  # Negativkontrolle: die uebrigen Stimmen der Szene
+        _soll_spielt(6031 ${_m} "nicht betroffen")
     endforeach()
 else()
     fail("unbekannter TEIL ${TEIL}")
