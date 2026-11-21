@@ -307,7 +307,7 @@ BITS = [  # (makro, bit, block, gebaut, zweck)
     ("RE15_R42_BIT_DOK_VAKZIN", 33, "C", V32, "Dokument Vaccine Synthesis 5011 (E3)"),
     ("RE15_R42_BIT_ENZYM", 17, "C", V32, "Enzym genommen = Disc-Bit ROOM40A1 @0x00ED0 pc[18] (L16)"),
     ("RE15_R42_BIT_PLAN_KANAL", 34, "C", V32, "Lageplan Kanalisation 2000/2001 (6b)"),
-    ("RE15_R42_BIT_PLAN_FABRIK", 35, "B/C", V31, "Lageplan Fabrik: Leon Uebergabe 3060 (L6) oder selbst in 30C0, Elza 30C1"),
+    ("RE15_R42_BIT_PLAN_FABRIK", 35, "B/C", V31, "Lageplan Fabrik: Leon Uebergabe 3060 (L6) oder selbst in 30C0/30D0 (Stufe 4), Elza 30C1"),
     ("RE15_R42_BIT_PLAN_MARVIN", 139, "B", V31, "Marvin traegt den Fabrikplan aus 30C0 (K-16, Strang fabrikplan; Uebergabe 3060 setzt 35)"),
     ("RE15_R42_BIT_PLAN_FORSCHUNG", 36, "C", V32, "Lageplan Forschungszentrum 4010/4011 (6b)"),
     ("RE15_R42_BIT_PLAN_UBAHN", 37, "C", V32, "Lageplan U-Bahn 6010/6011 (6b)"),

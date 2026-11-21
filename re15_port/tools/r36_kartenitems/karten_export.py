@@ -112,6 +112,8 @@ VIEWS2 = {
     0x1200: (0, (-3928, 0, 1202, 279, 3978, 914, -1168, 954, -3815), (-13690, 8523, -21707), 231),
     0x2000: (11, (3258, 0, -2484, 531, 4007, 696, 2430, -876, 3187), (-13607, 6361, 18908), 208),
     0x30C0: (1, (3923, 0, 1210, 49, 4085, -160, -1207, 167, 3912), (9505, 2234, 7886), 208),
+    # Strang fabrikplan Stufe 4: ROOM30D0 Cut 8 = dieselbe Kamera wie 30C0 Cut 1 (RDT-Kamera @0x0160, pos -6768 -2560 -10236)
+    0x30D0: (8, (3923, 0, 1210, 49, 4085, -160, -1207, 167, 3912), (9505, 2234, 7886), 208),
     0x6000: (0, (1581, 0, 3796, 872, 3988, -364, -3696, 941, 1539), (-2778, 3515, 11446), 208),
 }
 PLAENE2 = [
@@ -190,6 +192,17 @@ PLAENE2 = [
     # Hangar-Tuer Slot 0 erst ab z 2200), Boden -3600 (50B0 Slot 1 @0x004AE next_y `f0 f1`).
     dict(raum=0x6000, name="subway map", rahmen="room4040", gruppe=[(12, 37, "U-Bahn")], slot=20, verdr=0xFF,
          variante=0, n=(1.0, 0.0, 0.0), boden=-3600, mitte=(2025.0, -3600.0 - 2000.0, -400.0)),
+    # Fabrik Leon nach der Lobby-Szene (30D0, Strang fabrikplan Stufe 4, ENTSCHEID des Orchestrators zu K-16). Ab Set(3,0x47)
+    # @0x00CB8 (ROOM30E0 sub02) fuehren 3090 Slot 0 (@0x0134E), 3030 Slot 1 (@0x0021E) und 3010 Slot 3 (@0x0205E) nach 30D0 statt
+    # 30C0/3020. 30D0 = 3020 + 30C0 in einem RDT (re15_map_zones.h): SCA-Zelle 24 @0x00A88 x[-27200..-5300] z[1100..1600] = 30C0
+    # Zelle 1 @0x007F8 (dieselbe Nordwand), Zellen 25..34 @0x00A94..@0x00B00 = 30C0 Zellen 4..13; Kameras 7..14 (@0x0140..@0x0220)
+    # = 30C0 Kameras 0..7. Boden 0 (3010 Slot 3 @0x0205E / 3090 Slot 0 @0x0134E next_y 0). Derselbe Plan an derselben Stelle wie
+    # 30C0 (Groesse, Hoehe, Texte); Slot 20 / Ereignis 28 frei (RDT-Saetze Slots 0..7 @0x01246..@0x012F6, Subs 0..1 nur Evt_end
+    # @0x013B0/@0x013B2). begleit=139: mit Marvins Bit haengt nichts (Marvin traegt ihn). Hier als LETZTE Zeile, damit die
+    # Indizes der uebrigen Zeilen (Blobs k_r36k_md1_N usw.) bleiben. Sicht + Verdeckung: unit_r42_fabrikplan_d0sicht und
+    # BERICHT_s4_r1.md (Bilddifferenz mit/ohne Plan an der echten exe).
+    dict(raum=0x30D0, name="factory map", rahmen="room4040", gruppe=[(7, 35, "Fabrik")], slot=20, verdr=0xFF,
+         variante=1, n=(0.0, 0.0, -1.0), boden=0, mitte=(-7600.0, 0.0 - 2000.0, 1100.0), s=2.0, begleit=139),
 ]
 S2 = 1.0   # RE2-Originalgroesse
 
@@ -418,7 +431,7 @@ def main():
          " * Runde 36 Spur N (Dossier analysis/befunde_runde36/N_kartenitems.md Abschnitt 3); Runde 42 Strang lageplaene:",
          " * EIN Revierplan (ROOM1030) + EIN Kellerplan (ROOM1200) wie RE2 room20B0 Set(33,2..4) @0x037DA-E2; Stufe 2: je Gebiet",
          " * ein Plan wie RE2 room4040/5040 - Kanalisation ROOM2000, Fabrik ROOM30C1 (Elza) + ROOM30C0 (Leon/Marvin, Strang",
-         " * fabrikplan), U-Bahn ROOM6000 (s = 1).",
+         " * fabrikplan) + ROOM30D0 (Leon nach der Lobby-Szene, Strang fabrikplan Stufe 4), U-Bahn ROOM6000 (s = 1).",
          " * RE2-Lageplan karte01: info/re2leon/PL0/RDT/ROOM3060.RDT MD1 @0x%06X (%d B, md5 %s)," % (MD1_OFF, MD1_LEN, MD1_MD5),
          " *                       TIM @0x%06X (%d B, md5 %s) - TIM UNVERAENDERT." % (TIM_OFF, TIM_LEN, TIM_MD5),
          " * Je Raum EIN MD1: dieselben Bytes, nur die 5 Ecken @0x44 gleichmaessig um s skaliert (PORT-WAHL:",

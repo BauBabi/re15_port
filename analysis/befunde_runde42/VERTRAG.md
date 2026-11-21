@@ -71,7 +71,7 @@ Frei in allen Quellen (Auszug): 118..124, 129..132, 23..51. Die VERTRAG-R41-Rese
 | 33 | RE15_R42_BIT_DOK_VAKZIN | C | v0.8.32 | Dokument Vaccine Synthesis 5011 (E3) |
 | 17 | RE15_R42_BIT_ENZYM | C | v0.8.32 | Enzym genommen = Disc-Bit ROOM40A1 @0x00ED0 pc[18] (L16) |
 | 34 | RE15_R42_BIT_PLAN_KANAL | C | v0.8.32 | Lageplan Kanalisation 2000/2001 (6b) |
-| 35 | RE15_R42_BIT_PLAN_FABRIK | B/C | v0.8.31 | Lageplan Fabrik: Leon Uebergabe 3060 (L6) oder selbst genommen in 30C0, Elza 30C1 |
+| 35 | RE15_R42_BIT_PLAN_FABRIK | B/C | v0.8.31 | Lageplan Fabrik: Leon Uebergabe 3060 (L6) oder selbst genommen in 30C0/30D0, Elza 30C1 |
 | 139 | RE15_R42_BIT_PLAN_MARVIN | B | v0.8.31 | Marvin traegt den Fabrikplan aus 30C0 (K-16, Strang fabrikplan 20.11.; Uebergabe 3060 setzt 35 und loescht 139) |
 | 36 | RE15_R42_BIT_PLAN_FORSCHUNG | C | v0.8.32 | Lageplan Forschungszentrum 4010/4011 (6b) |
 | 37 | RE15_R42_BIT_PLAN_UBAHN | C | v0.8.32 | Lageplan U-Bahn 6010/6011 (6b) |
@@ -372,6 +372,8 @@ Besonderheiten:
   Plan entfallen 17/18, alle anderen Ids/Texte/Reihenfolgen bleiben. Leon kann den Plan in 30C0 selbst nehmen (Bit 35),
   solange (3,0x47) = 0 (3090 @0x01326, 3030 @0x001F6; danach fuehren die Tueren nach 30D0). Belege: Kopf
   `re15_kartenitems_r36.h` (STRANG FABRIKPLAN). Zensus 20.11.: 139 frei in Original/Port/Disc und in allen Zweigen.
+  Stufe 4 (21.11.2026, Entscheid zu K-16): derselbe Plan haengt auch in 30D0 (dieselbe Halle nach dem Einbruch, SCA-Zelle 24
+  @0x00A88 = 30C0 Zelle 1), solange weder 35 noch 139 steht; Leon nimmt ihn -> 35. Kein neues Bit.
 
 ### 4.3 Gemessen und gebaut (Stufe STAGE3b, 2026-11-15; Belege im Kopf von `re15_port/include/re15_story3b_r42.h`)
 - L8-L10: 30E0 in EINEM Besuch = Programm aus den Original-Bytes sub02 [@0x00CB0,@0x00E54) + Uebergang + sub03 [@0x00E62,@0x00F86)

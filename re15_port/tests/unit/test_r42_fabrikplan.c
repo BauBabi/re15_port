@@ -27,6 +27,14 @@
  *           Plakat ganz im Bild (alle vier Ecken der Flaeche 2160 x 1440 im 320 x 240-Bild) und seine Groesse in Bildpunkten. Soll: auf
  *           BEIDEN Gaengen ist das Plakat in einem Teil der Bilder ganz und mindestens 30 Bildpunkte breit zu sehen.
  * Gegenprobe: auf 9426267fa sind marvin, mit, ohne, alt und sicht rot (kein Plan in 30C0; 17/18 immer; Bit 139 nie gesetzt/geloescht).
+ * STUFE 4 (21.11.2026, ENTSCHEID des Orchestrators zu K-16, Pruefer Stufe 1 gelb 2): nach der Lobby-Szene (Set(3,0x47) @0x00CB8 in
+ * ROOM30E0 sub02) fuehren 3010/3090/3030 nach 30D0 - dort haengt derselbe Plan, solange weder Bit 35 noch 139 steht:
+ *   d0       Plan haengt in 30D0 (mit Zombies), gleiche Zeile/Texte/Modell wie 30C0, keine Zeile fuer Elzas 30D1; nicht mit Bit 35, nicht
+ *            mit Bit 139; Leon nimmt ihn (echter Aktionsdruck + Ja) -> Bit 35, Blatt 7, danach weder in 30D0 noch 30C0; alter Stand nach
+ *            der Szene ohne beide Bits -> Plan haengt, Leon nimmt ihn.
+ *   d0sicht  GEMESSEN auf Leons Wegen durch 30D0 (alle drei Tueren, Treppe/Galerie): je Weg das Plakat ganz im Bild (Verdeckung:
+ *            integration_r42_fabrikplan_d0_bild an der exe).
+ * Gegenprobe Stufe 4: auf 974e4b9b3 (Stand vor Stufe 4) sind d0 und d0sicht rot (keine Zeile fuer 30D0).
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
 #define _DEFAULT_SOURCE 1
@@ -320,12 +328,21 @@ static int plakat_bild(const re15_kartenitem_r36_t *z, const re15_camera_view_t 
 
 /* Spieler entlang der Wegpunkte schieben (60 Einheiten je Bild, knapp das Gehtempo ~72 aus integration_r42_lageplaene2_weg),
  * Kamerawechsel ueber das echte Spielbild; je Bild Kamera + Sichtbarkeit zaehlen. */
+/* Stufe 4: Raum und Hoehe je Wegpunkt (wy = NULL: Boden 0). Auf Galerie/Treppe wird y zwischen den Wegpunkten gleitend gesetzt und
+ * das Kollisionsband wie room_boot daraus bestimmt (re15_collision.c:186 -(y/0x708)). */
+static void gang_y(uint16_t raum, const char *name, const int32_t (*wp)[2], const int32_t *wy, int n, uint8_t cut0, int *bilder,
+                   int *sichtbar, double *breite_max);
 static void gang(const char *name, const int32_t (*wp)[2], int n, uint8_t cut0, int *bilder, int *sichtbar, double *breite_max)
 {
-    const re15_kartenitem_r36_t *z = re15_kartenitems_r36_des_raums(0x30C0);
+    gang_y(0x30C0, name, wp, NULL, n, cut0, bilder, sichtbar, breite_max);
+}
+static void gang_y(uint16_t raum, const char *name, const int32_t (*wp)[2], const int32_t *wy, int n, uint8_t cut0, int *bilder,
+                   int *sichtbar, double *breite_max)
+{
+    const re15_kartenitem_r36_t *z = re15_kartenitems_r36_des_raums(raum);
     *bilder = 0; *sichtbar = 0; *breite_max = 0;
-    if (!z) { PRUEF(0, "%s: keine Zeile fuer ROOM30C0", name); return; }
-    if (room_boot(0x30C0, wp[0][0], 0, wp[0][1], 0, cut0) != 0) return;
+    if (!z) { PRUEF(0, "%s: keine Zeile fuer ROOM%04X", name, (unsigned)raum); return; }
+    if (room_boot(raum, wp[0][0], wy ? wy[0] : 0, wp[0][1], 0, cut0) != 0) return;
     int kam_bilder[32] = { 0 }, kam_sicht[32] = { 0 };
     double kam_breite[32] = { 0 };
     re15_actor_t *pl = &g_actors[RE15_ACTOR_SLOT_PLAYER];
@@ -335,6 +352,10 @@ static void gang(const char *name, const int32_t (*wp)[2], int n, uint8_t cut0, 
         for (int k = 0; k <= schritte; k++) {
             pl->x = (int32_t)lround(wp[i][0] + dx * k / schritte);
             pl->z = (int32_t)lround(wp[i][1] + dz * k / schritte);
+            if (wy) {
+                pl->y = (int32_t)lround(wy[i] + (double)(wy[i + 1] - wy[i]) * k / schritte);
+                re15_collision_set_band((uint8_t)(pl->y < 0 ? (-pl->y) / 1800 : 0));
+            }
             frame(0, 0);
             const int cam = (int)g_scd.cam_id;
             re15_camera_view_t v;
@@ -569,6 +590,130 @@ static void teil_alt(void)
     re15_story3a_r42_neues_spiel();
 }
 
+/* ---- Stufe 4: 30D0 (Eingangshalle nach der Lobby-Szene) ------------------------------------------------------------------ */
+/* (3,0x47) = Lobby-Szene gelaufen: Set(3,0x47,1) ROOM30E0 sub02 @0x00CB8; ab dann fuehren 3010 Slot 3 (@0x0205E), 3090 Slot 0
+ * (@0x0134E) und 3030 Slot 1 (@0x0021E) nach 30D0. */
+#define LOBBY_BANK 3
+#define LOBBY_BIT  0x47
+/* Die acht Zombies der Halle (ROOM30D0 main00 Sce_em_set @0x0130A..@0x01396, Kill-Flag-Index pc[7] = 0x92..0x99, Gate
+ * FUN_800420a0 @0x80042120-38, Bank 7 = re15_em_status_zone() fuer STAGE3) gelten im Test als erledigt, damit kein Biss den
+ * Aktionsdruck / die Kamerafahrt stoert (TEST-AUFBAU, kein Spielverhalten; mit Zombies haengt der Plan genauso - Teil d0 prueft das). */
+static void zombies_30d0_erledigt(void)
+{
+    for (int b = 0x92; b <= 0x99; b++) re15_game_flag_set(7, (uint8_t)b, 1);
+}
+static void nach_der_szene(void)
+{
+    re15_game_state_init(); re15_story3a_r42_neues_spiel();
+    g_gameflow.character = 0;
+    leon_inventar();
+    re15_game_flag_set(3, RE15_S3A_A0_BIT, 1); re15_game_flag_set(4, 0xC4, 1); re15_game_flag_set(9, 85, 1);
+    re15_game_flag_set(9, RE15_R42_BIT_3060_UEBERGABE, 1);
+    re15_game_flag_set(LOBBY_BANK, LOBBY_BIT, 1);
+}
+
+static void teil_d0(void)
+{
+    printf("== d0: der Fabrikplan haengt auch in 30D0 (nach der Lobby-Szene), solange weder Bit 35 noch Bit 139 steht ==\n");
+    nach_der_szene();
+    PRUEF(haengt_in(0x30D0) == 1, "ROOM30D0 nach der Lobby-Szene, ohne Bit 35/139 (Zombies da): der Plan haengt (Prop obj %d + Zone "
+          "Ereignis %d)", RE15_R36K_OBJ, RE15_R36K_EREIGNIS);
+    {
+        const re15_kartenitem_r36_t *zd = re15_kartenitems_r36_des_raums(0x30D0), *zc = re15_kartenitems_r36_des_raums(0x30C0);
+        PRUEF(zd && zc && zd != zc && zd->raum == 0x30D0 && zd->x == zc->x && zd->y == zc->y && zd->z == zc->z &&
+              zd->rot_y == zc->rot_y && zd->rect_x == zc->rect_x && zd->rect_z == zc->rect_z && zd->aot_slot == zc->aot_slot &&
+              zd->blatt == BLATT7 && zd->bit == BIT35 && zd->begleit_bit == BIT139,
+              "Zeile 30D0: dieselbe Stelle/Hoehe/Zone/Slot wie 30C0, Blatt %d Bit %d, begleit_bit %d", BLATT7, BIT35, BIT139);
+        int la = 0, lb = 0, fa = 0, fb = 0, msz = 0, msz2 = 0;
+        const uint8_t *ga = re15_kartenitems_r36_meldung(0x30D0, 0, &la), *gb = re15_kartenitems_r36_meldung(0x30C0, 0, &lb);
+        const uint8_t *ma = re15_kartenitems_r36_meldung(0x30D0, 1, &fa), *mb = re15_kartenitems_r36_meldung(0x30C0, 1, &fb);
+        const uint8_t *m1 = re15_kartenitems_r36_md1_bytes(0x30D0, &msz), *m2 = re15_kartenitems_r36_md1_bytes(0x30C0, &msz2);
+        PRUEF(ga && gb && la == lb && !memcmp(ga, gb, (size_t)la) && ma && mb && fa == fb && !memcmp(ma, mb, (size_t)fa) &&
+              m1 && m2 && msz == msz2 && !memcmp(m1, m2, (size_t)msz),
+              "30D0: dieselben Texte (Frage %d B, Meldung %d B) und dasselbe Modell (Groesse s = 2) wie 30C0", la, fa);
+        PRUEF(re15_kartenitems_r36_des_raums(0x30D1) == NULL, "ROOM30D1 (Elzas Fassung): keine Zeile - Elza unveraendert");
+    }
+    nach_der_szene(); re15_game_flag_set(9, BIT35, 1);
+    PRUEF(haengt_in(0x30D0) == 0, "ROOM30D0 mit Bit 35 (Leon besitzt den Plan): kein Plan");
+    nach_der_szene(); re15_game_flag_set(9, BIT139, 1);
+    PRUEF(haengt_in(0x30D0) == 0, "ROOM30D0 mit Bit 139 (Marvin traegt den Plan): kein Plan");
+    nach_der_szene(); zombies_30d0_erledigt();
+    PRUEF(!re15_map_owned_page(BLATT7), "vorher: Leons Karte ohne Blatt %d", BLATT7);
+    PRUEF(nehmen_in(0x30D0) == 1, "ROOM30D0: Leon - Aktionsdruck vor der Wand -> Frage -> Ja -> \"You've taken the factory map.\"");
+    {
+        int weg = 1;
+        for (int k = 0; k < (int)g_scd.prop_count; k++)
+            if (g_scd.props[k].active && g_scd.props[k].obj_id == RE15_R36K_OBJ && g_scd.props[k].x != 20000) weg = 0;
+        PRUEF(weg, "ROOM30D0: das Plakat ist im selben Raumbesuch weg (Pos_set 20000 wie RE2 @0x037F6)");
+    }
+    PRUEF(bit9(BIT35) && !bit9(BIT139), "Leon: Bit %d = 1, Bit %d = 0", BIT35, BIT139);
+    PRUEF(re15_map_owned_page(BLATT7) && re15_map_blatt_waehlbar(BLATT7), "Leons Karte: Blatt %d im Besitz und waehlbar", BLATT7);
+    PRUEF(haengt_in(0x30D0) == 0 && haengt_in(0x30C0) == 0, "danach: weder in 30D0 noch in 30C0 ein Plan");
+    /* Alter Spielstand: nach der Lobby-Szene gespeichert, weder Bit 35 noch Bit 139 */
+    {
+        static re15_savedata_t sd;
+        uint16_t raum = 0;
+        nach_der_szene();
+        g_current_room_id = 0x3070;
+        re15_savedata_capture(&sd, 2000, 4);
+        re15_game_state_init(); re15_story3a_r42_neues_spiel();
+        PRUEF(re15_savedata_restore(&sd, &raum) == 0 && re15_game_flag_get(LOBBY_BANK, LOBBY_BIT) && !bit9(BIT35) && !bit9(BIT139),
+              "alter Stand nach der Szene (Raum %04X) ohne Bit 35/139 geladen", raum);
+        PRUEF(haengt_in(0x30D0) == 1, "alter Stand: der Plan haengt in 30D0");
+        zombies_30d0_erledigt();
+        PRUEF(nehmen_in(0x30D0) == 1 && bit9(BIT35) && !bit9(BIT139) && re15_map_owned_page(BLATT7),
+              "alter Stand: Leon nimmt ihn -> Bit 35, Blatt %d", BLATT7);
+    }
+    re15_story3a_r42_neues_spiel();
+}
+
+static void teil_d0sicht(void)
+{
+    printf("== d0sicht: das Plakat auf Leons Wegen durch 30D0 nach der Lobby-Szene ==\n");
+    /* Wegpunkte (x, z) durch die freien Flaechen der SCA ROOM30D0 @0x00950; Ankuenfte = next-Punkte der Tueren in den Nachbarraeumen:
+     *   3010 Slot 3 @0x0205E -> (-26300,0,-22550) Cut 15; 3090 Slot 0 @0x0134E -> (-6400,0,-400) Cut 6;
+     *   3030 Slot 1 @0x0021E -> (-11850,-7200,450) Cut 13 (Galerie, Band 4).
+     * Ausgaenge = Tuer-Rechtecke in 30D0 main00: Slot 0 @0x01246 x -27050..-26450 z -23450..-21550 (-> 3010), Slot 1 @0x01266
+     * x -6100..-5400 z -1200..600 (-> 3090), Slot 2 @0x01286 x -12700..-10900 z 700..1400, Band 4 (-> 3030).
+     * Treppe: Aot_set Slot 3 @0x012A6 (sce 0x0C, unten, x -21250..-20450) und Slot 4 @0x012BA (sce 0x0C, Band 4, x -14550..-13750);
+     * dazwischen wird y gleitend gesetzt. Durchgang Nord/Sued: Luecke der Wand Zelle 9 @0x009D4 / Zelle 10 @0x009E0 bei x -10175..-8250. */
+    static const int32_t t1[][2] = { { -26300, -22550 }, { -16000, -19000 }, { -15000, -15000 }, { -9200, -14500 }, { -9200, -9000 },
+                                     { -8000, -1200 }, { -5750, -300 } };
+    static const int32_t t2[][2] = { { -6400, -400 }, { -8000, -1200 }, { -9200, -9000 }, { -9200, -14500 }, { -15000, -15000 },
+                                     { -16000, -19000 }, { -26000, -22500 } };
+    static const int32_t t3[][2] = { { -6400, -400 }, { -19550, -3200 }, { -21650, -1100 }, { -21700, 300 }, { -20850, 300 },
+                                     { -14150, 300 }, { -11800, 900 } };
+    static const int32_t y3[]    = { 0, 0, 0, 0, 0, -7200, -7200 };
+    static const int32_t t4[][2] = { { -11850, 450 }, { -14150, 300 }, { -20850, 300 }, { -21700, 300 }, { -21650, -1100 },
+                                     { -19550, -3200 }, { -8000, -1200 }, { -5750, -300 } };
+    static const int32_t y4[]    = { -7200, -7200, 0, 0, 0, 0, 0, 0 };
+    static const int32_t t5[][2] = { { -26300, -22550 }, { -16000, -19000 }, { -15000, -15000 }, { -9200, -14500 }, { -9200, -9000 },
+                                     { -16000, -7500 }, { -16000, -3000 }, { -21650, -2000 }, { -21700, 300 }, { -20850, 300 },
+                                     { -14150, 300 }, { -11800, 900 } };
+    static const int32_t y5[]    = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -7200, -7200 };
+    /* Soll je Gang: das Plakat ist in einem Teil der Bilder ganz im Bild, mindestens min_px breit. T1..T4 fuehren an der Osttuer
+     * vorbei (Kamera 6 bis 107, Kamera 8 bis 42 Bildpunkte) - Soll 30 wie Stufe 1 in 30C0. T5 (3010 -> Treppe -> 3030) bleibt auf der
+     * Westseite; dort zeigt die Treppenkamera 10 (= 30C0 Kamera 3) das Plakat bis 29 Bildpunkte breit - wie in Stufe 1 auf Marvins
+     * Gang 2 in 30C0 (dort Kamera 3 bis 29). Soll 29 = dieselbe Kamera, gemessen 2026-11-21, keine eigene Schwelle.
+     * Ob das Plakat dort auch NICHT VERDECKT ist, prueft integration_r42_fabrikplan_d0_bild an der exe (Kameras 1/2/6/8/10/11/13). */
+    struct { const char *name; const int32_t (*wp)[2]; const int32_t *wy; int n; uint8_t cut; double min_px; } g[] = {
+        { "T1 Ankunft aus 3010 (Cut 15) -> Tuer 3090", t1, NULL, 7, 15, 30.0 },
+        { "T2 Ankunft aus 3090 (Cut 6) -> Tuer 3010", t2, NULL, 7, 6, 30.0 },
+        { "T3 Ankunft aus 3090 (Cut 6) -> Treppe -> Tuer 3030", t3, y3, 7, 6, 30.0 },
+        { "T4 Ankunft aus 3030 (Cut 13) -> Treppe -> Tuer 3090", t4, y4, 8, 13, 30.0 },
+        { "T5 Ankunft aus 3010 (Cut 15) -> Treppe -> Tuer 3030", t5, y5, 12, 15, 29.0 },
+    };
+    for (int i = 0; i < (int)(sizeof g / sizeof g[0]); i++) {
+        nach_der_szene(); zombies_30d0_erledigt();
+        int b = 0, sb = 0;
+        double w = 0;
+        gang_y(0x30D0, g[i].name, g[i].wp, g[i].wy, g[i].n, g[i].cut, &b, &sb, &w);
+        PRUEF(sb > 0 && w >= g[i].min_px - 0.5, "%s: Plakat in %d von %d Bildern ganz im Bild, bis %.0f Bildpunkte breit "
+              "(Soll > 0, >= %.0f)", g[i].name, sb, b, w, g[i].min_px);
+    }
+    re15_story3a_r42_neues_spiel();
+}
+
 int main(int argc, char **argv)
 {
     const char *t = argc > 1 ? argv[1] : "";
@@ -577,7 +722,9 @@ int main(int argc, char **argv)
     else if (!strcmp(t, "ohne")) teil_ohne();
     else if (!strcmp(t, "alt")) teil_alt();
     else if (!strcmp(t, "sicht")) teil_sicht();
-    else { printf("Teil unbekannt: '%s' (marvin | mit | ohne | alt | sicht)\n", t); return 2; }
+    else if (!strcmp(t, "d0")) teil_d0();
+    else if (!strcmp(t, "d0sicht")) teil_d0sicht();
+    else { printf("Teil unbekannt: '%s' (marvin | mit | ohne | alt | sicht | d0 | d0sicht)\n", t); return 2; }
     free(s_raw);
     printf(g_fail ? "FEHLER: %d\n" : "OK\n", g_fail);
     return g_fail ? 1 : 0;

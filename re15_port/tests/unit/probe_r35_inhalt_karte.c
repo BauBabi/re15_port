@@ -5,6 +5,7 @@
  *
  * Aufruf: probe_r35_inhalt_karte <kartendatei> <raum-hex> <x> <z> <rot> [bit:<n>]...
  *   bit:<n>  setzt Bank-9-Bit n (z.B. bit:80 = Memory Card ROOM1010 genommen)
+ *   flag:<bank>:<bit>  setzt ein Bit einer beliebigen Bank (Strang fabrikplan Stufe 4, z.B. flag:3:71, flag:7:146)
  * Inventar = Einsatzausruestung (re15_inv_load_briefing).
  */
 #include "re15_actor.h"
@@ -39,6 +40,10 @@ int main(int argc, char **argv)
     for (int a = 6; a < argc; a++) {
         if (strncmp(argv[a], "bit:", 4) == 0) re15_game_flag_set(9, atoi(argv[a] + 4), 1);
         if (strncmp(argv[a], "y:", 2) == 0) pl->y = atoi(argv[a] + 2);   /* Etage (z.B. 1090 Dach -9000) */
+        if (strncmp(argv[a], "flag:", 5) == 0) {   /* Strang fabrikplan Stufe 4: flag:<bank>:<bit> (z.B. flag:3:71 Lobby-Szene) */
+            int bank = 0, bit = 0;
+            if (sscanf(argv[a] + 5, "%d:%d", &bank, &bit) == 2) re15_game_flag_set((uint8_t)bank, (uint8_t)bit, 1);
+        }
     }
 
     re15_savedata_t sd;

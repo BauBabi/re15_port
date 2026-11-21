@@ -164,8 +164,18 @@
  *   LEON NACH DEM WIEDERSEHEN IN 30C0 (Plan nicht von Marvin genommen): 3060 Slot 1 -> 3090 ist nach Marvins Szene offen (sub00
  *     Ck(3,0xA0)/Ck(3,0xA1) @0x00F28/@0x00F3E -> sub02 @0x01034 "door isn't locked anymore", Set(3,0xA1) @0x0103A), 3090 Slot 0 ->
  *     30C0 (Ck(3,0x47)==0 @0x01326); ebenso 3030 Slot 1 -> 30C0 (Ck(3,0x47)==0 @0x001F6). Ab (3,0x47) (Set @0x00CB8 in ROOM30E0 sub02,
- *     der Lobby-Szene L-12) fuehren beide Tueren nach 30D0 (@0x0134E / @0x0021E) - 30C0 ist dann nicht mehr erreichbar. 30D0 hat
- *     dieselbe Wand (Zelle 24 @0x00A88 x[-27200..-5300] z[1100..1600]) - OFFEN beim Orchestrator, ob der Plan dort weiterhaengen soll.
+ *     der Lobby-Szene L-12) fuehren beide Tueren nach 30D0 (@0x0134E / @0x0021E) - 30C0 ist dann nicht mehr erreichbar.
+ *   STUFE 4 - DER PLAN HAENGT AUCH IN 30D0 (ENTSCHEID des Orchestrators zu K-16; Pruefer Stufe 1 gelb 2: ohne ihn bekam Leon Blatt 7
+ *     nie, wenn vor Set(3,0x47) niemand den Plan nahm). 30D0 ist dieselbe Eingangshalle nach dem Einbruch: 3020 + 30C0 in EINEM RDT
+ *     (re15_map_zones.h); SCA ROOM30D0 @0x00950 (5 x 35): Zelle 24 @0x00A88 x[-27200..-5300] z[1100..1600] = 30C0 Zelle 1 @0x007F8,
+ *     Zellen 25..34 @0x00A94..@0x00B00 = 30C0 Zellen 4..13 (Baenke, Treppe, Galerie); Kameras 7..14 (RDT @0x0140..@0x0220) = 30C0
+ *     Kameras 0..7 (gleiche pos/tgt). Wer 30D0 betritt: nur nach (3,0x47) - 3010 Slot 3 Else-Zweig @0x0205E (Ck(3,0x47,0) @0x02036,
+ *     sonst nach 3020 @0x0203A) -> (-26300,0,-22550) Cut 15; 3090 Slot 0 @0x0134E -> (-6400,0,-400) Cut 6; 3030 Slot 1 @0x0021E ->
+ *     Galerie (-11850,-7200,450) Cut 13. Elza kommt in ihre Fassung 30D1 - die Zeile 30D0 gilt nur fuer Leon (variante 1).
+ *     Zeile 30D0: dieselbe Lage, Groesse, Hoehe, Texte und Slot 20 / Ereignis 28 wie 30C0 (in 30D0 frei: RDT-Saetze Slots 0..7
+ *     @0x01246..@0x012F6, Subs 0..1 nur Evt_end @0x013B0/@0x013B2), begleit_bit 139: der Plan haengt, solange weder 35 noch 139
+ *     steht; Leon nimmt ihn -> Bit 35. Sicht auf Leons Wegen durch 30D0 mit Verdeckung: unit_r42_fabrikplan_d0sicht + Bilddifferenz
+ *     an der exe (Bericht s4).
  *
  * NUTZER-VORGABE (AUFTRAG.md Z. 73-77, woertlich): "Extrahiere mir Karte01 oder Karte02 ... Haenge sie
  *   mir beispielhaft an die Stelle von map3F.bmp, und schalte damit die Map fuer Etage 3F frei, wie das

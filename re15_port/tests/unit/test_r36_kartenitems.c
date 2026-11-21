@@ -142,9 +142,10 @@ static void teil_t(void)
     static const char    *name[2]   = { "police station map", "police basement map" };
     static const char    *art[2]    = { "You've taken a", "You've taken the" };   /* RE2 room20B0 @0x3DB8 / room2130 @0x1D57 */
     /* Strang fabrikplan: + Zeile Fabrik 30C0 (Leon/Marvin, dieselbe Stelle wie Elzas 30C1; prueft unit_r42_fabrikplan_*) */
-    CHECK("6 Zeilen (Runde 42: Revier + Keller, Stufe 2 Kanalisation/Fabrik 30C1/U-Bahn - prueft unit_r42_lageplaene2; Strang "
-          "fabrikplan Fabrik 30C0 - prueft unit_r42_fabrikplan)",
-          re15_kartenitems_r36_anzahl() == 6);
+    /* Strang fabrikplan Stufe 4 (BEGRUENDET ANGEPASST, 6 -> 7): + Zeile Fabrik 30D0 (Halle nach der Lobby-Szene, dieselbe Stelle) */
+    CHECK("7 Zeilen (Runde 42: Revier + Keller, Stufe 2 Kanalisation/Fabrik 30C1/U-Bahn - prueft unit_r42_lageplaene2; Strang "
+          "fabrikplan Fabrik 30C0 + 30D0 - prueft unit_r42_fabrikplan)",
+          re15_kartenitems_r36_anzahl() == 7);
     for (int i = 0; i < 2 && i < re15_kartenitems_r36_anzahl(); i++) {
         const re15_kartenitem_r36_t *z = re15_kartenitems_r36_zeile(i);
         char nm[160];
