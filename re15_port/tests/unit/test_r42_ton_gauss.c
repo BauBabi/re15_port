@@ -8,7 +8,9 @@
  * Interpolation" Z. 215-290).
  *
  * Der Riegel rechnet gegen die Bankdaten und gegen die psx-spx-Formel, die er SELBST aus der Hardware-Beschreibung liest
- * (Tabelle aus der Datei RE15_PSXSPX_SPU_MD, nicht aus dem Port-Kopf re15_spu_gauss.h):
+ * (Tabelle aus der Datei RE15_PSXSPX_SPU_MD, nicht aus dem Port-Kopf re15_spu_gauss.h). Seit Strang riegel 21.11.2026 ist
+ * das der woertliche Auszug tests/unit/daten/psxspx_spu_gauss_auszug.md (psx-spx Z. 225-292, Quelle + SHA-256 im Kopf,
+ * tools/r42_ton/gauss_auszug_psxspx.py); der Riegel haengt damit nicht mehr an info/ ausserhalb von re15_port:
  *   (1) Rolltor-Rumpeln ROOM1130 snd0 Satz 10 (Ton 7, VAG 4, Pitch 0x1a5 = note2pitch2(66, 105, 107, 105), Schleife ab
  *       Probe 3556) am ECHTEN Mischer (audio_pc.c, RE15_AUDIO_CAP_SYNC, Regler 100), 190 Spielbilder = 6,3 s, also ueber
  *       zwei Schleifen-Spruenge hinweg: jeder Abtastwert = Gauss(psx-spx) * Register 16383 (Q15 0x7ffe) * Haupt-

@@ -1561,7 +1561,9 @@ if(TARGET SDL2::SDL2-static)
         RE15_ASSET_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
         RE15_CD_ROOT_DEFAULT="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
         RE15_ASSET_PSX_DIR="${CMAKE_SOURCE_DIR}/shared_assets/PSX"
-        RE15_PSXSPX_SPU_MD="${CMAKE_SOURCE_DIR}/../info/Resident_Evil_und_Playstation_Information/psx-spx.github.io-master/docs/soundprocessingunitspu.md")
+        # Strang riegel 21.11.2026: woertlicher Auszug der psx-spx-Gauss-Tabelle IM Repo (Quelle + SHA-256 im Kopf, erzeugt von
+        # tools/r42_ton/gauss_auszug_psxspx.py). Vorher las der Riegel ../info/... und war in Arbeitsbaeumen ohne info/ rot.
+        RE15_PSXSPX_SPU_MD="${CMAKE_CURRENT_SOURCE_DIR}/daten/psxspx_spu_gauss_auszug.md")
     add_test(NAME unit_r42_ton_gauss COMMAND test_r42_ton_gauss)
     set_tests_properties(unit_r42_ton_gauss PROPERTIES TIMEOUT 120)
 endif()
