@@ -54,10 +54,27 @@ get_filename_component(_exe_ext "${RE15_PC_EXE}" EXT)
 set(_exe "${_exe_dir}/re15_pc_r39t_${_lauf_id}${_exe_ext}")
 file(COPY_FILE "${RE15_PC_EXE}" "${_exe}")
 
-re15_start_spiel(_rv 180
-    RE15_NO_INTRO=1 RE15_NOAUDIO=1 SDL_AUDIODRIVER=dummy RE15_WINDOW_SCALE=1
-    RE15_TITLE_SHOT=titel.bmp RE15_TITLE_SHOT_AF=600 RE15_INV_SHOT=ende34.bmp
-    "${_exe}")
+# Strang riegel 21.11.2026: Abzug erst nach der Einblende (Messhaken RE15_TITLE_SHOT_NACH_EINBLENDE in main.c: Durchgang >= 600
+# UND Pegel 0 der Titel-Uhr). Vorher allein Durchgang 600: in der vollen Suite (21.11., 6 parallel) liefen die 600 Durchgaenge
+# in unter 1,07 s, der Abzug lag in der Einblende (23325 Abweichungen ausserhalb des Kastens - dieselbe Zahl wie der
+# Container-Fall ohne GPU oben). Die Bildpruefung selbst ist unveraendert.
+# Ein Lauf ohne Titelabzug (Absturz der exe) wird EINMAL wiederholt; der erste debug.log bleibt als debug_lauf1.log liegen.
+# Gemessen 21.11. (Einzelwiederholung der Suite): Zugriffsverletzung im Direct3D-Zeichner von SDL (Ziel 0), parallel meldeten
+# andere Laeufe "GetRenderTargetData(): DEVICELOST" - das Grafikgeraet ging unter Last verloren. Ein Fehler der exe, der
+# jedes Mal auftritt, bleibt rot (beide Laeufe ohne Abzug).
+foreach(_versuch 1 2)
+    re15_start_spiel(_rv 180
+        RE15_NO_INTRO=1 RE15_NOAUDIO=1 SDL_AUDIODRIVER=dummy RE15_WINDOW_SCALE=1
+        RE15_TITLE_SHOT=titel.bmp RE15_TITLE_SHOT_AF=600 RE15_TITLE_SHOT_NACH_EINBLENDE=1 RE15_INV_SHOT=ende34.bmp
+        "${_exe}")
+    if(EXISTS "${WORKDIR}/titel.bmp")
+        break()
+    endif()
+    message(STATUS "${_tag}: Lauf ${_versuch} ohne Titelabzug (exit=${_rv}) -> Wiederholung")
+    if(EXISTS "${WORKDIR}/debug.log")
+        file(RENAME "${WORKDIR}/debug.log" "${WORKDIR}/debug_lauf${_versuch}.log")
+    endif()
+endforeach()
 file(REMOVE "${_exe}")
 if(NOT EXISTS "${WORKDIR}/titel.bmp")
     message(FATAL_ERROR "${_tag}: kein Titelabzug (exit=${_rv}, ${WORKDIR})")

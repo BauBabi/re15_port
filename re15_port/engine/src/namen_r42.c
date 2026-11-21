@@ -5,6 +5,7 @@
  */
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "re15_namen_r42.h"
 #include "re15_msg.h"
@@ -43,8 +44,14 @@ void re15_namen_r42_texte(uint16_t room_id)
                    (unsigned)g_engine.frame_count, (unsigned)room_id, n);
     /* Stufe 5: jede Seite hoechstens zwei Zeilen wie die echte 40%-Disc (Zeilenwechsel y = 180 + 16 fest @0x800289a0/@0x800289ac,
      * 0 von 700 Seiten mit drei Zeilen; Letterbox-Balken ab y 216 @0x80072f06). Dieselbe Form wie oben: Text + Dauer. */
+    /* MESSHAKEN RE15_R42_NAMEN_S5_AUS (env, KEIN Spielverhalten; Strang riegel 21.11.2026): die Stufe-5-Seitenteilung nicht
+     * einsetzen, die RDT-Seite bleibt wie ausgeliefert. Nur fuer Riegel, die eine Szene Bild fuer Bild gegen einen
+     * Original-Mitschnitt (DuckStation-GDB) vergleichen: die zweite Seite verlaengert die Szene (ROOM3091 msg 16/18:
+     * Sherrys Clip-13-Abschnitt 2 504 -> 638 Bilder, integration_r41_stage3szenen_b_3091). Gemessen 21.11. mit dem Haken:
+     * wieder 779/504/233/160/416/164 wie das Original. */
+    const int s5_aus = getenv("RE15_R42_NAMEN_S5_AUS") != NULL;
     int z = 0;
-    for (int i = 0; i < ZZ_TEXTE_N; i++)
+    for (int i = 0; i < ZZ_TEXTE_N && !s5_aus; i++)
         if (k_zz_texte[i].raum == room_id) {
             re15_msg_install_text(k_zz_texte[i].id, k_zz_texte[i].b, (size_t)k_zz_texte[i].n);
             const int d = re15_msg_compute_duration(k_zz_texte[i].b, k_zz_texte[i].n, 0);

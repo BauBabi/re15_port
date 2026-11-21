@@ -47,3 +47,5 @@ re15_port/shared_assets/PSX/DISC40/** -text
 analysis/befunde_runde41/form/varianten/K5/generator/k5g3_*.json -text
 # R9-Einbau (2026-11-15): sha256-gepruefte Eingaben des K5g3-Generators (bau.json haelt ihre sha) - nie Zeilenenden umschreiben
 analysis/befunde_runde41/form/varianten/K5/generator/krallen_posen.json -text
+# Strang riegel 21.11.2026: woertliche Auszuege aus Referenzdaten fuer Riegel (Pruefsumme im Kopf) - nie normalisieren.
+re15_port/tests/unit/daten/** -text

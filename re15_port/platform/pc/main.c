@@ -4052,8 +4052,23 @@ re_title:;
               /* Runde 36 Spur A: RE15_TITLE_SHOT_CHAR=1 startet den Messlauf als Elza — derselbe
                * Aufruf wie das Player-Select-Ende (re15_gameflow_new_game(ch), ch = DAT_800aca5c>>2). */
               const char *tch = getenv("RE15_TITLE_SHOT_CHAR");
-              if (t_shot && tblink == t_af) { re15_render_pc_screenshot(t_shot);
-                                              re15_gameflow_new_game(tch ? (atoi(tch) & 1) : 0); } }
+              /* MESSHAKEN RE15_TITLE_SHOT_NACH_EINBLENDE (Strang riegel 21.11.2026, kein Spielverhalten): Abzug erst, wenn
+               * mindestens RE15_TITLE_SHOT_AF Durchgaenge gelaufen sind UND die Einblende fertig ist (Pegel 0 nach 32 Ticks der
+               * Titel-Uhr, re15_title_fadein_level: 0x7fff @0x80021718 + n * -0x400 @0x80102058). Die Durchgangszahl allein
+               * haengt an der Bildrate: ohne Vsync-Bremse liefen 600 Durchgaenge in unter 1,07 s, der Abzug lag in der
+               * Einblende (integration_r39_titelversion_titel, volle Suite 21.11.: 23325 Abweichungen, Lauf 2,7 s). */
+              /* Gezaehlt werden Durchgaenge mit Pegel 0 IN FOLGE: der Abzug liest nach re15_render_end_frame (Present) den
+               * Hinterpuffer, der bei Direct3D noch ein frueheres Bild tragen kann (gemessen 21.11. mit AF=10: Abzug im ersten
+               * Durchgang mit Pegel 0 zeigte noch die Einblende, 23325 Abweichungen). Die 4 ist PORT-WAHL des Messhakens
+               * (Abstand zum Puffer-Nachlauf), kein Original-Wert; mit 4 bei AF=10 drei von drei Laeufen gruen. */
+              static int s_tshot_fertig = 0, s_tshot_null = 0;
+              s_tshot_null = (re15_title_fadein_level(tfade_tick) == 0) ? s_tshot_null + 1 : 0;
+              const int t_bereit = getenv("RE15_TITLE_SHOT_NACH_EINBLENDE")
+                  ? (!s_tshot_fertig && tblink >= t_af && s_tshot_null >= 4)
+                  : (tblink == t_af);
+              if (t_shot && t_bereit) { s_tshot_fertig = 1;
+                                        re15_render_pc_screenshot(t_shot);
+                                        re15_gameflow_new_game(tch ? (atoi(tch) & 1) : 0); } }
             tblink++;
         }
         re15_render_pc_hide_title();

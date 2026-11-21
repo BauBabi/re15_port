@@ -57,6 +57,11 @@ foreach(_versuch 1 2)
         "RE15_EQUIP=3" "RE15_R39_GIFT_AT=100"
         "RE15_PLAYER_POS=-24665,1000,3072"
         "RE15_U42_ORIGINAL=1"   # Runde 42 rest Stufe 3: die Mod-Szene ohne U-01 (Vergleich mit dem GDB-Lauf), re15_ungenutzt_r42.h
+        # Strang riegel 21.11.2026: namen Stufe 5 (6f1a719f0, Entscheid "hoechstens zwei Zeilen je Seite", Disc 0 von 700 Seiten
+        # mit drei Zeilen @0x8002899c-ac) teilt msg 16/18 in zwei Seiten -> Clip-13-Abschnitt 2 638 statt 504 Bilder. Der
+        # Original-Vergleich laeuft deshalb mit den ausgelieferten RDT-Seiten (Messhaken namen_r42.c); die Seitenteilung selbst
+        # pruefen unit_r42_namen_alle_zeilen / _quellen_zeilen.
+        "RE15_R42_NAMEN_S5_AUS=1"
         "RE15_PAD_AT=${_pad}" RE15_ANIM_TRACE=anim.txt
         "RE15_EXIT_AT=30#30C1"
         "${_exe}")
