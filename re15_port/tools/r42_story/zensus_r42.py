@@ -161,9 +161,9 @@ ZEILEN = [
     ("C", V31, 0x6030, 4, "NEUAUF", "Leon", "If she's as tough as you say, she'll find another way out. But we can't wait. When that reactor goes, nobody gets out.", "Leon: Why aren't you out there?", "fest, troestend und hart zugleich", "L21"),
     ("C", V31, 0x6030, 5, "NEUAUF", "John", "Then I'm staying with the kid. And I'll keep an eye on your friend here.", "John: She told me to stay with the kid... and look after your friend here.", "entschlossen", "L21"),
     # ---- Block C, Texte (v0.8.31): 6031 Elza (E6, E9) ----
-    ("C", V31, 0x6031, 1, "NEUAUF", "Sherry", "A policeman brought Marvin down here. Then he went back into the fire.", "Sherry: A policeman! He's fighting off monsters. He wants us to start the train.", "aufgeregt, erzaehlt schnell", "E6"),
+    ("C", V31, 0x6031, 1, "NEUAUF", "Sherry", "A woman brought Marvin down here. Then she went back into the fire.", "Sherry: A policeman! He's fighting off monsters. He wants us to start the train.", "aufgeregt, erzaehlt schnell", "E6"),
     ("C", V31, 0x6031, 2, "NEUAUF", "Elza", "Back? Why?", "Elza: I'll do it!", "verwundert", "E6"),
-    ("C", V31, 0x6031, 12, "NEU", "Sherry", "He said he had to find someone. He told us not to wait for him.", "", "leiser, ernst", "E6"),
+    ("C", V31, 0x6031, 12, "NEU", "Sherry", "She said she had to find someone. She told us not to wait for her.", "", "leiser, ernst", "E6"),
     ("C", V31, 0x6031, 13, "NEU", "Elza", "...Then we won't. If that core goes, no one gets out. Let's get this train moving.", "", "kurze Pause, dann entschlossen", "E6"),
     ("C", V31, 0x6031, 14, "NEU", "Sherry", "It's moving! Elza, we did it!", "", "jubelnd; der Zug ruckt an", "E9"),
     ("C", V31, 0x6031, 15, "NEU", "John", "What the hell was that? It came from the back car!", "", "erschrocken, nach dem Krachen", "E9"),
@@ -307,7 +307,8 @@ BITS = [  # (makro, bit, block, gebaut, zweck)
     ("RE15_R42_BIT_DOK_VAKZIN", 33, "C", V32, "Dokument Vaccine Synthesis 5011 (E3)"),
     ("RE15_R42_BIT_ENZYM", 17, "C", V32, "Enzym genommen = Disc-Bit ROOM40A1 @0x00ED0 pc[18] (L16)"),
     ("RE15_R42_BIT_PLAN_KANAL", 34, "C", V32, "Lageplan Kanalisation 2000/2001 (6b)"),
-    ("RE15_R42_BIT_PLAN_FABRIK", 35, "B/C", V31, "Lageplan Fabrik: Leon Uebergabe 3060 (L6, v0.8.31), Elza 30C1 (v0.8.32)"),
+    ("RE15_R42_BIT_PLAN_FABRIK", 35, "B/C", V31, "Lageplan Fabrik: Leon Uebergabe 3060 (L6) oder selbst in 30C0/30D0 (Stufe 4), Elza 30C1"),
+    ("RE15_R42_BIT_PLAN_MARVIN", 139, "B", V31, "Marvin traegt den Fabrikplan aus 30C0 (K-16, Strang fabrikplan; Uebergabe 3060 setzt 35)"),
     ("RE15_R42_BIT_PLAN_FORSCHUNG", 36, "C", V32, "Lageplan Forschungszentrum 4010/4011 (6b)"),
     ("RE15_R42_BIT_PLAN_UBAHN", 37, "C", V32, "Lageplan U-Bahn 6010/6011 (6b)"),
 ]

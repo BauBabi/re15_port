@@ -80,6 +80,7 @@
 #include "re15_msg.h"
 #include "re15_aot.h"
 #include "re15_room.h"
+#include "re15_story2_r42.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -326,11 +327,31 @@ static void teil_seitenwechsel(void)
         { 0x10D0, 26, 98, "main26.wav Pause 2.98-3.28 s" },
         { 0x1150,  9, 96, "main09.wav Pause 2.45-3.19 s" },
         { 0x30E1, 12, 61, "main12.wav Pause 1.63-2.04 s (Elza)" },
+        /* Port-Texte mit '|' (tools/r42_namen/lesbar_s5.py PORT_SEITEN), seit den Nutzer-Aufnahmen vom 20.11.2026 (ce5ec405f) Art
+         * 'pause' an der Pause der NEUEN Datei (pausen5: RMS 10 ms, >= 120 ms unter -40 dB); vorher 'ohne' bzw. alte Aufnahme */
+        { 0x30E0, 11, 54, "main11.wav (neu) Pause 1.16-1.79 s" },
+        { 0x30E0, 13, 71, "main13.wav (neu) Pause 1.58-2.38 s" },
+        { 0x2081, 50, 68, "main50.wav (neu) Pause 1.82-2.26 s" },
+        { 0x3060, 24, 82, "main24.wav (neu) Pause 2.17-2.72 s" },
+        { 0x6031, 13, 128, "main13.wav (neu) Pause 3.85-4.26 s" },
+        /* Strang fabrikplan Stufe 3: neuer Wortlaut "A woman brought Marvin down here. | Then she went back into the fire." an der
+         * einzigen Pause der Nutzer-Datei (Whisper VOR: "A woman brought Marvin down here."); vorher 100 aus der alten Mod-Aufnahme */
+        { 0x6031,  1, 87, "main01.wav (neu) Pause 2.09-2.90 s" },
     };
     for (unsigned k = 0; k < sizeof k_w / sizeof k_w[0]; k++) {
         if (raum_laden(k_w[k].raum) != 0) { PRUEF(0, "ROOM%04X ladbar", k_w[k].raum); continue; }
         scd_vm_init(); re15_aot_init();
         raum_laden(k_w[k].raum);
+        {   /* STAGE2-Story-Texte setzt erst der Raumaufbau ein (scd_room_setup.c -> re15_story2_r42_install -> texte_einsetzen,
+             * story2_r42.c): dieselben Bytes hier wie dort ablegen (Text + Dauer), sonst fehlt z. B. ROOM2081 msg 50 */
+            int l0 = 0, l2 = 0;
+            const uint8_t *t2 = re15_msg_get_raw(k_w[k].id, &l0) ? NULL : re15_story2_r42_text((uint16_t)k_w[k].raum, (uint8_t)k_w[k].id, &l2);
+            if (t2 && l2 > 0) {
+                re15_msg_install_text((unsigned char)k_w[k].id, t2, (size_t)l2);
+                const int d = re15_msg_compute_duration(t2, (size_t)l2, 0);
+                if (d > 0 && d < 65535) re15_msg_install_durations((unsigned char)k_w[k].id, d);
+            }
+        }
         int s2, zu, kopf2;
         schreibmaschine_messen(k_w[k].id, &s2, &zu, &kopf2);
         /* Takt 1 = erstes Bild mit Seite 1 (Message_on im Spiel-Takt, die Schreibmaschine laeuft im naechsten Bild: platform/pc/main.c
@@ -1100,6 +1121,7 @@ static void teil_altaufnahme(void)
     if (!lf) return;
     int dateien = 0, alt_noch = 0, alt_ersetzt = 0, fremd_alt = 0, doppel = 0, gesehen[N_STUMM] = { 0 }, unlesbar = 0;
     int fastw_da = 0, fastw_abdruck = 0, fastw_alt = 0;    /* Stufe 7: 3020 main02 / 6030 main21 */
+    int archiv = 0;          /* Strang fabrikplan Stufe 2: alte Aufnahmen, die der Nutzer nach synchro/unused/ gelegt hat */
     uint8_t *muster = NULL; size_t muster_n = 0; char muster_pfad[200] = "";
     char zeile[700];
     while (fgets(zeile, sizeof zeile, lf)) {
@@ -1120,11 +1142,22 @@ static void teil_altaufnahme(void)
         const int ist = re15_altaufnahme_r42_ist(rel, b, bn);
         const uint64_t h = re15_altaufnahme_r42_summe(b, bn);
         int k = -1;
+        /* Strang fabrikplan Stufe 2 (Commit ce5ec405f): der Nutzer hat die 13 alten Aufnahmen nach synchro/unused/ gelegt. Diesen
+         * Ordner liest kein Codepfad (audio_pc.c baut nur synchro/STAGEn/roomXXXX/...; release/make_package.sh, apk_asset_gate.py
+         * und build.gradle nehmen nur synchro/STAGE*) - eine Kopie dort ist keine spielbare Doppelung. Sie liefert stattdessen das
+         * Muster fuer den Abdruck-Teil (5), der sonst ohne Datei mit dem Abdruck des Tags entfiele. */
+        const int unbenutzt = !strncmp(klein, "synchro/unused/", 15);
         for (int i = 0; i < n; i++) {
             const re15_altaufnahme_r42_t *e = re15_altaufnahme_r42_eintrag(i);
             if (!strcmp(klein, e->pfad)) k = i;
+            else if (e->groesse == bn && e->fnv == h && unbenutzt) {
+                archiv++;
+                printf("        ARCHIV: %s hat den Inhalt von %s (synchro/unused, liest kein Codepfad)\n", rel, e->pfad);
+                if (!muster) { muster = b; muster_n = bn; snprintf(muster_pfad, sizeof muster_pfad, "%s", e->pfad); b = NULL; }
+            }
             else if (e->groesse == bn && e->fnv == h) { doppel++; printf("        DOPPEL: %s hat den Inhalt von %s\n", rel, e->pfad); }
         }
+        if (!b) continue;                                   /* Muster aus synchro/unused uebernommen (Teil 5) */
         if (k < 0) {
             if (ist) { fremd_alt++; printf("        FREMD: %s gilt als alt\n", rel); }
             /* Stufe 7: die zwei fast woertlichen Aufnahmen - Datei mit dem Abdruck des Tags gilt NICHT als alt */
@@ -1161,9 +1194,14 @@ static void teil_altaufnahme(void)
           "%d tragen noch den Abdruck des Tags)", fastw_alt, fastw_da, fastw_abdruck);
     PRUEF(dateien >= 400 && unlesbar == 0, "Bestand synchro/ gelesen: %d Dateien", dateien);
     PRUEF(fremd_alt == 0, "NEGATIVKONTROLLE: keine der uebrigen %d Dateien gilt als alt (%d Verstoesse)", dateien - da, fremd_alt);
-    PRUEF(doppel == 0, "keine andere Datei traegt den Inhalt einer der 13 alten Aufnahmen (Spiegelraum-Kopien: %d)", doppel);
+    PRUEF(doppel == 0, "keine andere spielbare Datei (synchro/STAGE*) traegt den Inhalt einer der 13 alten Aufnahmen (Spiegelraum-Kopien: "
+          "%d; in synchro/unused abgelegt: %d)", doppel, archiv);
     PRUEF(alt_noch + alt_ersetzt == da, "jede vorhandene der 13 Dateien ist entweder alt (Abdruck) oder ersetzt: %d + %d = %d", alt_noch,
           alt_ersetzt, da);
+    /* Strang fabrikplan Stufe 2 (Nutzer 20.11.2026 ~18:30: "Ok, saemtliche Sprachaufnahmen liegen vor.", Commit ce5ec405f): alle 13
+     * liegen neu aufgenommen im Bestand - keine traegt mehr den Abdruck des Tags, keine fehlt. Gegenprobe: rot auf 1e5ab9f22. */
+    PRUEF(alt_noch == 0 && alt_ersetzt == N_STUMM && da == N_STUMM,
+          "Bestand 20.11.2026: alle %d Saetze neu aufgenommen (%d noch alt, %d ersetzt, %d vorhanden)", N_STUMM, alt_noch, alt_ersetzt, da);
 
     /* (5) Abdruck ist scharf: ein Byte anders / mehr / weniger, anderer Name -> nicht alt; Schreibweise des Pfads egal */
     if (muster) {

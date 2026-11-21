@@ -71,7 +71,8 @@ Frei in allen Quellen (Auszug): 118..124, 129..132, 23..51. Die VERTRAG-R41-Rese
 | 33 | RE15_R42_BIT_DOK_VAKZIN | C | v0.8.32 | Dokument Vaccine Synthesis 5011 (E3) |
 | 17 | RE15_R42_BIT_ENZYM | C | v0.8.32 | Enzym genommen = Disc-Bit ROOM40A1 @0x00ED0 pc[18] (L16) |
 | 34 | RE15_R42_BIT_PLAN_KANAL | C | v0.8.32 | Lageplan Kanalisation 2000/2001 (6b) |
-| 35 | RE15_R42_BIT_PLAN_FABRIK | B/C | v0.8.31 | Lageplan Fabrik: Leon Uebergabe 3060 (L6, v0.8.31), Elza 30C1 (v0.8.32) |
+| 35 | RE15_R42_BIT_PLAN_FABRIK | B/C | v0.8.31 | Lageplan Fabrik: Leon Uebergabe 3060 (L6) oder selbst genommen in 30C0/30D0, Elza 30C1 |
+| 139 | RE15_R42_BIT_PLAN_MARVIN | B | v0.8.31 | Marvin traegt den Fabrikplan aus 30C0 (K-16, Strang fabrikplan 20.11.; Uebergabe 3060 setzt 35 und loescht 139) |
 | 36 | RE15_R42_BIT_PLAN_FORSCHUNG | C | v0.8.32 | Lageplan Forschungszentrum 4010/4011 (6b) |
 | 37 | RE15_R42_BIT_PLAN_UBAHN | C | v0.8.32 | Lageplan U-Bahn 6010/6011 (6b) |
 
@@ -301,9 +302,9 @@ Block A (Finale, T-03..T-09) hat keine neuen Zeilen; Finale-Texte folgen nach F-
 | 6030 | 5 | NEUAUF | John | Then I'm staying with the kid. And I'll keep an eye on your friend here. | C | v0.8.31 | L21 |
 | 6030 | 21 | NEUAUF | John | Name's John. This is Sherry. We came down here with a girl named Elza. | C | v0.8.31 | L21 |
 | 6030 | 22 | NEUAUF | Sherry | Elza's still out there...! | C | v0.8.31 | L21 |
-| 6031 | 1 | NEUAUF | Sherry | A policeman brought Marvin down here. Then he went back into the fire. | C | v0.8.31 | E6 |
+| 6031 | 1 | NEUAUF | Sherry | A woman brought Marvin down here. Then she went back into the fire. | C | v0.8.31 | E6 |
 | 6031 | 2 | NEUAUF | Elza | Back? Why? | C | v0.8.31 | E6 |
-| 6031 | 12 | NEU | Sherry | He said he had to find someone. He told us not to wait for him. | C | v0.8.31 | E6 |
+| 6031 | 12 | NEU | Sherry | She said she had to find someone. She told us not to wait for her. | C | v0.8.31 | E6 |
 | 6031 | 13 | NEU | Elza | ...Then we won't. If that core goes, no one gets out. Let's get this train moving. | C | v0.8.31 | E6 |
 | 6031 | 14 | NEU | Sherry | It's moving! Elza, we did it! | C | v0.8.31 | E9 |
 | 6031 | 15 | NEU | John | What the hell was that? It came from the back car! | C | v0.8.31 | E9 |
@@ -364,6 +365,15 @@ Besonderheiten:
   Altstand nur vor der Kartentuer (B6); Rueckwechsel gibt Leon Vor-Platz, Leben und Gift zurueck (RE2 FUN_80049e48
   @0x8004a000-@0x8004a07c), H. Gun Bullets ueber Marvins 50 eigenen sind ein Fund (B8).
 - Bank 5 Signale 0x14..0x1A und Ankunftsbits 0x20/0x21 in 3020/3060 (3020-Skripte nutzen nur 5:0/5:1, 3060 keine).
+- Strang fabrikplan (20.11.2026, K-16; NUTZERWUNSCH "Im Story Zweig - room 3060 übergibt Marvin ein plan of the plant. Das macht
+  natürlich nur sinn wenn er ihn auch wirklich irgendwo aufnimmt..."): derselbe Wandplan wie 30C1 haengt in Leons 30C0 (SCA
+  bytegleich, Zelle 1 @0x007F8). Marvin nimmt ihn -> Bit 139 (nicht 35); seine Karte zeigt Blatt 7, Leons erst nach der
+  Uebergabe. 3060 msg 17/18 nur mit 139 (story3a_r42.c wiedersehen_bauen), die Uebergabe setzt 35 und loescht 139; ohne
+  Plan entfallen 17/18, alle anderen Ids/Texte/Reihenfolgen bleiben. Leon kann den Plan in 30C0 selbst nehmen (Bit 35),
+  solange (3,0x47) = 0 (3090 @0x01326, 3030 @0x001F6; danach fuehren die Tueren nach 30D0). Belege: Kopf
+  `re15_kartenitems_r36.h` (STRANG FABRIKPLAN). Zensus 20.11.: 139 frei in Original/Port/Disc und in allen Zweigen.
+  Stufe 4 (21.11.2026, Entscheid zu K-16): derselbe Plan haengt auch in 30D0 (dieselbe Halle nach dem Einbruch, SCA-Zelle 24
+  @0x00A88 = 30C0 Zelle 1), solange weder 35 noch 139 steht; Leon nimmt ihn -> 35. Kein neues Bit.
 
 ### 4.3 Gemessen und gebaut (Stufe STAGE3b, 2026-11-15; Belege im Kopf von `re15_port/include/re15_story3b_r42.h`)
 - L8-L10: 30E0 in EINEM Besuch = Programm aus den Original-Bytes sub02 [@0x00CB0,@0x00E54) + Uebergang + sub03 [@0x00E62,@0x00F86)

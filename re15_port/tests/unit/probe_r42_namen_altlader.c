@@ -21,6 +21,10 @@
  * die Datei, die der Lader wirklich liest: ersetzte Dateien spielen, die uebrigen der 15 bleiben stumm.
  * Gegenprobe: rot auf dem Stand vor Stufe 6 (audio_pc.c ohne den Haken) - die alten Aufnahmen spielen dort (Teil A).
  * Gegenprobe Stufe 7: rot auf e9ddc6b7a (Tabelle mit 15 Eintraegen) - 3020 main02 und 6030 main21 sind dort stumm (Teil C).
+ * Strang fabrikplan Stufe 2 (Nutzer 20.11.2026 ~18:30: "Ok, saemtliche Sprachaufnahmen liegen vor.", Commit ce5ec405f): alle 13
+ * Saetze sind neu aufgenommen. Gefordert ist jetzt, dass KEINE der 13 Dateien, die der Lader liest, noch den Abdruck des Tags
+ * traegt und alle 13 SPIELEN (Pruefung "Bestand 20.11.2026"); vorher war "alt -> stumm" je nach Stand der Datei erlaubt.
+ * Gegenprobe: rot auf 1e5ab9f22 (vor dem Merge von master) - dort tragen alle 13 noch den Abdruck.
  */
 #if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
 #define _DEFAULT_SOURCE 1
@@ -288,6 +292,13 @@ int main(int argc, char **argv)
     CHECK(nr++, n_fastw == 2 && n_fastw_spielt == 2,
           "Stufe 7: 3020 main02 und 6030 main21 (fast woertlich) gemessen und beide SPIELEN (%d von %d)", n_fastw_spielt, n_fastw);
     CHECK(nr++, n_andere >= 30, "Negativkontrolle: %d andere Dateien in 3020/30E0/6030/6031 gemessen", n_andere);
+    /* Ersatz-Lauf: argv[4] = Zahl der Dateien, die die Ersatz-Wurzel ABSICHTLICH mit dem Abdruck des Tags belegt (die alte Aufnahme
+     * aus synchro/unused, r42_namen_altlader_ersatz.cmake) - die muessen stumm bleiben; alle uebrigen spielen. */
+    const int soll_alt = (ersatz && argc > 4) ? atoi(argv[4]) : 0;
+    CHECK(nr++, n_alt == soll_alt && n_neu == N_STUMM - soll_alt,
+          "Bestand 20.11.2026 (Commit ce5ec405f): alle %d Saetze neu aufgenommen - %d tragen den Abdruck des Tags und sind stumm "
+          "(Soll %d%s), %d spielen die neue Aufnahme", N_STUMM, n_alt, soll_alt, soll_alt ? ", alte Aufnahme in der Ersatz-Wurzel" : "",
+          n_neu);
     if (ersatz) {
         int soll = argc > 3 ? atoi(argv[3]) : 1;
         CHECK(nr++, n_lokal == soll && n_neu >= soll, "Ersatz-Lauf: %d ersetzte Dateien aus der Ersatz-Wurzel gespielt (Soll %d)", n_lokal, soll);

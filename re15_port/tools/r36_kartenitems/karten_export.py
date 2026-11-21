@@ -106,12 +106,14 @@ PLAENE = [  # (raum, name, artikel, rahmen, [(blatt, bit, etage)], aot_slot, ver
 # s = 1 (RE2-karte01 unskaliert = "wie ein Plakat", PORT-WAHL), Mitte 2000 ueber dem Boden des Standorts (PORT-WAHL).
 # Kamera = die Ankunfts-/Pflichtkamera (Kopf include/re15_kartenitems_r36.h, RUNDE 42 STUFE 2); die VIEW-Zeilen stammen von
 # `probe_r34n_e_dokumente kamera RAUM` und dienen nur der Kontrollausgabe (Plakat im Bild).
-# Variante: 0 = beide Fassungen, 2 = nur Elza (re15_kartenitems_r36.h RE15_R36K_VARIANTE_ELZA).
+# Variante: 0 = beide Fassungen, 1 = nur Leon, 2 = nur Elza (re15_kartenitems_r36.h RE15_R36K_VARIANTE_*).
 VIEWS2 = {
     0x1030: (2, (-1520, 0, -3823, -718, 4027, 285, 3758, 769, -1495), (-13985, 2547, 3264), 208),
     0x1200: (0, (-3928, 0, 1202, 279, 3978, 914, -1168, 954, -3815), (-13690, 8523, -21707), 231),
     0x2000: (11, (3258, 0, -2484, 531, 4007, 696, 2430, -876, 3187), (-13607, 6361, 18908), 208),
     0x30C0: (1, (3923, 0, 1210, 49, 4085, -160, -1207, 167, 3912), (9505, 2234, 7886), 208),
+    # Strang fabrikplan Stufe 4: ROOM30D0 Cut 8 = dieselbe Kamera wie 30C0 Cut 1 (RDT-Kamera @0x0160, pos -6768 -2560 -10236)
+    0x30D0: (8, (3923, 0, 1210, 49, 4085, -160, -1207, 167, 3912), (9505, 2234, 7886), 208),
     0x6000: (0, (1581, 0, 3796, 872, 3988, -364, -3696, 941, 1539), (-2778, 3515, 11446), 208),
 }
 PLAENE2 = [
@@ -177,11 +179,30 @@ PLAENE2 = [
     # 320er Bild). Die Wand x -9400..-5800 traegt die 2160 Breite (Plakat x -8680..-6520).
     dict(raum=0x30C0, name="factory map", rahmen="room4040", gruppe=[(7, 35, "Fabrik")], slot=20, verdr=0xFF,
          variante=2, n=(0.0, 0.0, -1.0), boden=0, mitte=(-7600.0, 0.0 - 2000.0, 1100.0), s=2.0),
+    # Fabrik Leon/Marvin (30C0, Strang fabrikplan 20.11.2026, Konzept K-16). NUTZERWUNSCH woertlich: "Im Story Zweig - room 3060
+    # übergibt Marvin ein plan of the plant. Das macht natürlich nur sinn wenn er ihn auch wirklich irgendwo aufnimmt...".
+    # Derselbe Plan wie 30C1 (gleiche Stelle, Groesse, Hoehe, Texte): die SCA von ROOM30C0 ist bytegleich mit ROOM30C1 (Block
+    # @0x007D4; Zelle 1 @0x007F8 x[-27200..-5300] z[1100..1600]); Boden 0 aus 3020 Slot 2 @0x00B6E next_y 0 und 3090 Slot 0
+    # @0x0132A next_y 0. Slot 20 / Ereignis 28 frei in 30C0 (RDT-Saetze Slots 0..4 @0x00B5A..@0x00BC2, Subs 0..1).
+    # begleit=139 (RE15_R42_BIT_PLAN_MARVIN): spielt Marvin, setzt die Aufnahme nur dieses Bit; spielt Leon, Bit 35.
+    dict(raum=0x30C0, name="factory map", rahmen="room4040", gruppe=[(7, 35, "Fabrik")], slot=20, verdr=0xFF,
+         variante=1, n=(0.0, 0.0, -1.0), boden=0, mitte=(-7600.0, 0.0 - 2000.0, 1100.0), s=2.0, begleit=139),
     # U-Bahn: Name "subway map" = PORT-WAHL im Rahmen room4040; Wand x = 2025 (ROOM6000 SCA-Zelle 17 @0x00828
     # x[25..2025] z[-2400..3725], n = +x), Mitte z -400 auf der linken Tafel der Rueckwand (Bild-x 80..115 = z -1000..272;
     # Hangar-Tuer Slot 0 erst ab z 2200), Boden -3600 (50B0 Slot 1 @0x004AE next_y `f0 f1`).
     dict(raum=0x6000, name="subway map", rahmen="room4040", gruppe=[(12, 37, "U-Bahn")], slot=20, verdr=0xFF,
          variante=0, n=(1.0, 0.0, 0.0), boden=-3600, mitte=(2025.0, -3600.0 - 2000.0, -400.0)),
+    # Fabrik Leon nach der Lobby-Szene (30D0, Strang fabrikplan Stufe 4, ENTSCHEID des Orchestrators zu K-16). Ab Set(3,0x47)
+    # @0x00CB8 (ROOM30E0 sub02) fuehren 3090 Slot 0 (@0x0134E), 3030 Slot 1 (@0x0021E) und 3010 Slot 3 (@0x0205E) nach 30D0 statt
+    # 30C0/3020. 30D0 = 3020 + 30C0 in einem RDT (re15_map_zones.h): SCA-Zelle 24 @0x00A88 x[-27200..-5300] z[1100..1600] = 30C0
+    # Zelle 1 @0x007F8 (dieselbe Nordwand), Zellen 25..34 @0x00A94..@0x00B00 = 30C0 Zellen 4..13; Kameras 7..14 (@0x0140..@0x0220)
+    # = 30C0 Kameras 0..7. Boden 0 (3010 Slot 3 @0x0205E / 3090 Slot 0 @0x0134E next_y 0). Derselbe Plan an derselben Stelle wie
+    # 30C0 (Groesse, Hoehe, Texte); Slot 20 / Ereignis 28 frei (RDT-Saetze Slots 0..7 @0x01246..@0x012F6, Subs 0..1 nur Evt_end
+    # @0x013B0/@0x013B2). begleit=139: mit Marvins Bit haengt nichts (Marvin traegt ihn). Hier als LETZTE Zeile, damit die
+    # Indizes der uebrigen Zeilen (Blobs k_r36k_md1_N usw.) bleiben. Sicht + Verdeckung: unit_r42_fabrikplan_d0sicht und
+    # BERICHT_s4_r1.md (Bilddifferenz mit/ohne Plan an der echten exe).
+    dict(raum=0x30D0, name="factory map", rahmen="room4040", gruppe=[(7, 35, "Fabrik")], slot=20, verdr=0xFF,
+         variante=1, n=(0.0, 0.0, -1.0), boden=0, mitte=(-7600.0, 0.0 - 2000.0, 1100.0), s=2.0, begleit=139),
 ]
 S2 = 1.0   # RE2-Originalgroesse
 
@@ -344,6 +365,7 @@ def main():
                  zeilen[-1]["rz"], zeilen[-1]["rx0"], zeilen[-1]["rz0"], slot))
         zeilen[-1]["variante"] = 0
         zeilen[-1]["band"] = 0   # Aot_set pc[4] = 0 wie ROOM5030 sub00 @0x0108A
+        zeilen[-1]["begleit"] = 0
     # ---- Runde 42 Stufe 2: Plaene STAGE2..6 mit direkter Lage (Wand aus der SCA-Zelle, s = 1) -----------------------
     for p in PLAENE2:
         raum = p["raum"]
@@ -383,7 +405,8 @@ def main():
                            rx=q12(rx), ry=q12(ry), rz=q12(rz),
                            rx0=int(round(rmitte[0])) - 500, rz0=int(round(rmitte[2])) - 500,
                            s=s, breite=1080.0 * s, hoehe=720.0 * s, mitte=mitte, variante=p["variante"],
-                           band=int(-(int(p["boden"]) / 0x708))))   # re15_collision.c:186 -(y/0x708), C-Division
+                           band=int(-(int(p["boden"]) / 0x708)),     # re15_collision.c:186 -(y/0x708), C-Division
+                           begleit=p.get("begleit", 0)))             # Strang fabrikplan: Marvins Bit (0 = keins)
         print("ROOM%04X %s Blatt %d Bit %d Variante %d | Mitte (%d,%d,%d) s %.2f | Ursprung (%d,%d,%d) rot (%d,%d,%d) | "
               "Rechteck (%d,%d) Slot %d | Cut %d Bild x %.0f..%.0f y %.0f..%.0f"
               % (raum, p["name"], blatt, bit, p["variante"], mitte[0], mitte[1], mitte[2], s,
@@ -407,7 +430,8 @@ def main():
     L = ["/* AUTOMATISCH ERZEUGT von re15_port/tools/r36_kartenitems/karten_export.py --schreiben - nicht von Hand.",
          " * Runde 36 Spur N (Dossier analysis/befunde_runde36/N_kartenitems.md Abschnitt 3); Runde 42 Strang lageplaene:",
          " * EIN Revierplan (ROOM1030) + EIN Kellerplan (ROOM1200) wie RE2 room20B0 Set(33,2..4) @0x037DA-E2; Stufe 2: je Gebiet",
-         " * ein Plan wie RE2 room4040/5040 - Kanalisation ROOM2000, Fabrik ROOM30C1 (nur Elza), U-Bahn ROOM6000 (s = 1).",
+         " * ein Plan wie RE2 room4040/5040 - Kanalisation ROOM2000, Fabrik ROOM30C1 (Elza) + ROOM30C0 (Leon/Marvin, Strang",
+         " * fabrikplan) + ROOM30D0 (Leon nach der Lobby-Szene, Strang fabrikplan Stufe 4), U-Bahn ROOM6000 (s = 1).",
          " * RE2-Lageplan karte01: info/re2leon/PL0/RDT/ROOM3060.RDT MD1 @0x%06X (%d B, md5 %s)," % (MD1_OFF, MD1_LEN, MD1_MD5),
          " *                       TIM @0x%06X (%d B, md5 %s) - TIM UNVERAENDERT." % (TIM_OFF, TIM_LEN, TIM_MD5),
          " * Je Raum EIN MD1: dieselben Bytes, nur die 5 Ecken @0x44 gleichmaessig um s skaliert (PORT-WAHL:",
@@ -443,17 +467,18 @@ def main():
     L.append("")
     L.append("/* raum, blatt, bit, aot_slot, verdraengt_nach, x, y, z, rot_x, rot_y, rot_z, rect_x, rect_z (1000x1000),")
     L.append(" * n_blaetter, blaetter[], bits[] (Runde 42: alle Blaetter des Plans; [0] = blatt/bit der Fundstelle),")
-    L.append(" * variante (Runde 42 Stufe 2: 0 = beide Fassungen, 2 = nur Elza / raum|1), band (Aot_set pc[4] der Zone).")
+    L.append(" * variante (Runde 42 Stufe 2: 0 = beide Fassungen, 1 = nur Leon / raum, 2 = nur Elza / raum|1), band (Aot_set pc[4] der")
+    L.append(" * Zone), begleit_bit (Strang fabrikplan: Bit der Aufnahme durch Marvin, 0 = keins).")
     L.append(" * Licht: Flach-Attribut RE15_R36K_PROP_ATTR im Installer, keine Spalte (Nachbesserung 1). */")
     L.append("static const re15_kartenitem_r36_t k_r36k_lage[%d] = {" % len(zeilen))
     for z in zeilen:
         gb = [g[0] for g in z["gruppe"]] + [0] * (RE15_R36K_MAX_BLAETTER - len(z["gruppe"]))
         gt = [g[1] for g in z["gruppe"]] + [0] * (RE15_R36K_MAX_BLAETTER - len(z["gruppe"]))
-        L.append("    { 0x%04X, %d, %d, %d, 0x%02X, %d, %d, %d, %d, %d, %d, %d, %d, %d, { %s }, { %s }, %d, %d },"
+        L.append("    { 0x%04X, %d, %d, %d, 0x%02X, %d, %d, %d, %d, %d, %d, %d, %d, %d, { %s }, { %s }, %d, %d, %d },"
                  "   /* %s %s Mitte (%d,%d,%d) */"
                  % (z["raum"], z["blatt"], z["bit"], z["slot"], z["verdr"], z["x"], z["y"], z["z"],
                     z["rx"], z["ry"], z["rz"], z["rx0"], z["rz0"], len(z["gruppe"]),
-                    ", ".join(str(v) for v in gb), ", ".join(str(v) for v in gt), z["variante"], z["band"],
+                    ", ".join(str(v) for v in gb), ", ".join(str(v) for v in gt), z["variante"], z["band"], z["begleit"],
                     z["name"], "/".join(g[2] for g in z["gruppe"]),
                     round(z["mitte"][0]), round(z["mitte"][1]), round(z["mitte"][2])))
     L.append("};")

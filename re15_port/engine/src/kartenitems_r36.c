@@ -15,6 +15,7 @@
 #include "re15_scd.h"
 #include "re15_aot.h"
 #include "re15_msg.h"
+#include "re15_story3a_r42.h"   /* Strang fabrikplan: re15_story3a_r42_marvin_spielt (begleit_bit der Zeile 30C0) */
 #ifdef RE15_PLATFORM_PC
 #include <stdio.h>
 #endif
@@ -23,7 +24,8 @@
 
 #define N_ZEILEN ((int)(sizeof k_r36k_lage / sizeof k_r36k_lage[0]))
 
-/* Runde 42 Stufe 2: eine Zeile gilt nur in ihrer Fassung des Raums (variante; Fabrikplan nur Elzas 30C1). */
+/* Runde 42 Stufe 2: eine Zeile gilt nur in ihrer Fassung des Raums (variante; Fabrikplan: Elzas 30C1 und - Strang fabrikplan -
+ * Leons 30C0, in dem Marvin spielt). */
 static int fassung_passt(const re15_kartenitem_r36_t *z, uint16_t room_id)
 {
     if (z->variante == RE15_R36K_VARIANTE_LEON) return (room_id & 1u) == 0;
@@ -62,9 +64,18 @@ static int n_von(const re15_kartenitem_r36_t *z)
 static uint8_t bit_von(const re15_kartenitem_r36_t *z, int i)   { return z->n_blaetter < 1 ? z->bit : z->bits[i]; }
 static uint8_t blatt_von(const re15_kartenitem_r36_t *z, int i) { return z->n_blaetter < 1 ? z->blatt : z->blaetter[i]; }
 
+/* Strang fabrikplan (Kopf re15_kartenitems_r36.h STRANG FABRIKPLAN): die Begleitfigur (Marvin in 30C0) nimmt den Plan in IHR Bit
+ * (begleit_bit, Marvins Seite) statt in die Besitz-Bits; spielt sie gerade, setzt die Aufnahme nur dieses Bit. */
+static int begleit_spielt(const re15_kartenitem_r36_t *z)
+{
+    return z->begleit_bit != 0 && re15_story3a_r42_marvin_spielt();
+}
+
 int re15_kartenitems_r36_genommen(const re15_kartenitem_r36_t *z)
 {
     if (!z) return 0;
+    /* Strang fabrikplan: der Plan haengt, solange weder sein begleit_bit (Marvin traegt ihn) noch alle Besitz-Bits stehen */
+    if (z->begleit_bit && re15_game_flag_get(RE15_R36K_BANK, z->begleit_bit)) return 1;
     for (int i = 0; i < n_von(z); i++)
         if (!re15_game_flag_get(RE15_R36K_BANK, bit_von(z, i))) return 0;
     return 1;
@@ -165,8 +176,10 @@ void re15_kartenitems_r36_install(uint16_t room_id)
         char umzug[48] = "";
         if (g->verdraengt_nach < RE15_AOT_MAX)
             snprintf(umzug, sizeof umzug, " (verdraengter Satz -> Slot %d)", (int)g->verdraengt_nach);
-        fprintf(stderr, "[kartenitems] ROOM%04X: Karte Blatt %d (Bit 9,%d) Prop obj %d bei (%ld,%ld,%ld), "
-                        "Zone Slot %d%s\n", (unsigned)room_id, g->blatt, g->bit, RE15_R36K_OBJ,
+        char begleit[40] = "";
+        if (g->begleit_bit) snprintf(begleit, sizeof begleit, ", Marvin: Bit 9,%d", (int)g->begleit_bit);
+        fprintf(stderr, "[kartenitems] ROOM%04X: Karte Blatt %d (Bit 9,%d%s) Prop obj %d bei (%ld,%ld,%ld), "
+                        "Zone Slot %d%s\n", (unsigned)room_id, g->blatt, g->bit, begleit, RE15_R36K_OBJ,
                 (long)g->x, (long)g->y, (long)g->z, g->aot_slot, umzug);
     }
 #endif
@@ -212,12 +225,15 @@ const uint8_t *re15_kartenitems_r36_programm(uint16_t room_id, int *out_len)
     if (out_len) *out_len = 0;
     if (k < 0) return NULL;
     const re15_kartenitem_r36_t *z = &k_r36k_lage[k];
-    int n = n_von(z);
+    /* Strang fabrikplan: spielt die Begleitfigur (Marvin in 30C0), setzt das Programm EIN Set auf ihr begleit_bit - der Plan ist
+     * dann in Marvins Seite, nicht in Leons Besitz (Bit 35 erst mit der Uebergabe 3060, story3a_r42.c geben). */
+    const int begleit = begleit_spielt(z);
+    int n = begleit ? 1 : n_von(z);
     int extra = 4 * (n - 1);
     /* Kopf bis einschliesslich erstem Set, dann die weiteren Sets, dann der Rest der Vorlage. */
     memcpy(s_programm, k_programm, PRG_SET + 4);
     s_programm[PRG_SLOT] = z->aot_slot;
-    s_programm[PRG_BIT]  = bit_von(z, 0);
+    s_programm[PRG_BIT]  = begleit ? z->begleit_bit : bit_von(z, 0);
     for (int i = 1; i < n; i++) {
         uint8_t *q = s_programm + PRG_SET + 4 * i;
         q[0] = 0x22; q[1] = RE15_R36K_BANK; q[2] = bit_von(z, i); q[3] = 0x01;   /* Set(9,Bit,1) = RE2 @0x037DE/@0x037E2 */
@@ -255,8 +271,9 @@ const uint8_t *re15_kartenitems_r36_ereignis(uint16_t room_id, uint8_t event_id)
     text_einsetzen(RE15_R36K_MSG_FRAGE, k_r36k_frage[k], k_r36k_frage_len[k]);
     text_einsetzen(RE15_R36K_MSG_GENOMMEN, k_r36k_genommen[k], k_r36k_genommen_len[k]);
 #ifdef RE15_PLATFORM_PC
-    fprintf(stderr, "[kartenitems] ROOM%04X Ereignis %u -> Port-Programm Karte Blatt %d\n",
-            (unsigned)room_id, (unsigned)event_id, k_r36k_lage[k].blatt);
+    fprintf(stderr, "[kartenitems] ROOM%04X Ereignis %u -> Port-Programm Karte Blatt %d%s\n",
+            (unsigned)room_id, (unsigned)event_id, k_r36k_lage[k].blatt,
+            begleit_spielt(&k_r36k_lage[k]) ? " (Marvin nimmt den Plan: nur sein Bit, kein Blattbesitz Leons)" : "");
 #endif
     return re15_kartenitems_r36_programm(room_id, NULL);
 }
@@ -284,7 +301,8 @@ const uint8_t *re15_kartenitems_r36_tim_bytes(uint16_t room_id, int *out_size)
 }
 
 /* Runde 42: Besitz je BLATT aus seinem eigenen Bit (blaetter[i] <-> bits[i] aller Plaene) — damit zaehlen auch
- * die Einzelbits alter Spielstaende (Runde 36: 3F-Plan 1140 = Bit 87 usw.) unveraendert. */
+ * die Einzelbits alter Spielstaende (Runde 36: 3F-Plan 1140 = Bit 87 usw.) unveraendert. Das begleit_bit (Marvin) zaehlt hier
+ * NICHT: Marvins Blatt 7 zeigt re15_story3a_r42_blatt nur, solange er spielt (Strang fabrikplan). */
 int re15_kartenitems_r36_blatt_besitz(unsigned page)
 {
     for (int k = 0; k < N_ZEILEN; k++)

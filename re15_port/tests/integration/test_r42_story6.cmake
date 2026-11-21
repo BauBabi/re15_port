@@ -6,12 +6,15 @@
 # Weg je Szenario: Bahnsteig an der Zugtuer -> Wagen (Szene L21 bzw. E6) -> Treppe -> Fuehrerstand (Annette bzw. Sherry: "not enough
 # power", Original) -> zurueck auf den Bahnsteig -> Torschalter -> Wagen (vor dem Zugstart: Tuer nach hinten zu) -> Treppe ->
 # Fuehrerstand (Zugstart: Leon mit Annette, Elza E9 mit Sherry/John) -> Wagen -> Tuer nach hinten -> 5090/5091.
-# Mit Ton (SDL_AUDIODRIVER=dummy): vorhandene Aufnahmen spielen, fehlende -> Untertitel mit der Textdauer ("keine Aufnahme").
-# Strang namen Stufe 6 (include/re15_altaufnahme_r42.h): die veralteten Aufnahmen unter Neutext (6030 msg 2/3/22/4/5, 6031 msg
-# 1/2, AUFNAHMELISTE "zuerst") bleiben STUMM, solange die Datei im Baum noch den Abdruck des Tags v0.8.30 traegt; eine ersetzte
-# Datei spielt. TEIL leon laeuft dazu aus einer Ersatz-Wurzel (altaufnahme_ersatz_r42.cmake) mit EINER ersetzten Datei
-# (room6030/main02.wav, gleicher Ton, anderer Abdruck): msg 2 spricht, die vier anderen bleiben stumm, alle uebrigen Stimmen
-# des Raums spielen (Negativkontrolle).
+# Mit Ton (SDL_AUDIODRIVER=dummy): die Aufnahmen spielen.
+# Strang fabrikplan Stufe 2 (Nutzer 20.11.2026 ~18:30: "Ok, saemtliche Sprachaufnahmen liegen vor.", Commit ce5ec405f): die Saetze
+# mit neuem Text (6030 msg 2/3/22/4/5, 6031 msg 1/2; vorher stumm, solange die Datei den Abdruck des Tags v0.8.30 trug, Strang
+# namen Stufe 6) und die ganz neuen Saetze (6030 msg 32, 6031 msg 12..17; vorher "keine Aufnahme", Untertitel mit Textdauer)
+# SPIELEN jetzt die Datei des Nutzers. Beide Teile laufen aus dem unveraenderten Bestand (vorher lief Leon aus einer Ersatz-Wurzel
+# mit einer ersetzten room6030/main02.wav). Die uebrigen Stimmen spielen weiter (Negativkontrolle).
+# Strang fabrikplan Stufe 3 (NUTZERWUNSCH 20.11.2026 "Ada bringt Marvin", Konzept K-17): 6031 msg 1/12 zeigen jetzt den Wortlaut
+# der Aufnahmen ("A woman ... she" / "She said ... her"); kein "A policeman"/"He said" mehr. Dass beide Dateien an IHREM Untertitel
+# spielen, misst integration_r42_namen_6031_bestand (test_r42_namen_bestand.cmake TEIL 6031, Tonmitschnitt).
 # Stufe 7 (Entscheid 19.11.2026): 6030 msg 21 spricht den neuen Satz bis auf ein Wort ("made it down here" / "came down here"),
 # steht nicht mehr in der Tabelle und SPIELT. Den Durchlauf mit unveraendertem Bestand und Messung am Tonmitschnitt macht
 # tests/integration/test_r42_namen_bestand.cmake (integration_r42_namen_6030_bestand).
@@ -56,13 +59,11 @@ if(_exe_name MATCHES "\\.exe$")
 else()
     set(_exe_kopie "${_exe_dir}/re15_pc_r42s6_${_lauf_id}")
 endif()
-if(TEIL STREQUAL "leon")
-    # Strang namen Stufe 6: Leon laeuft aus einer Ersatz-Wurzel mit EINER ersetzten Aufnahme (room6030/main02.wav)
-    re15_altaufnahme_ersatzwurzel(_exe_kopie "${RE15_PC_EXE}" "${WORKDIR}/ersatz" "${RE15_ALT_WERKZEUG}" "${RE15_SYNCHRO}"
-        "STAGE6/room6030/main02.wav")
-else()
-    file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
+# Strang fabrikplan Stufe 2: beide Teile aus dem unveraenderten Bestand; neben der exe darf kein eigenes synchro/ liegen.
+if(EXISTS "${_exe_dir}/synchro")
+    message(FATAL_ERROR "r42_story6: neben der exe liegt ein eigenes synchro/ (${_exe_dir}/synchro) - das waere nicht der Bestand")
 endif()
+file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 set(_fehler "")
 macro(fail _t)
@@ -179,19 +180,23 @@ ENDE
     pruefe_re("E6: Zeilen 0, 1, 2, 12, 13 in dieser Folge"
         "msgtext] room=6031 id=0 .*msgtext] room=6031 id=1 .*msgtext] room=6031 id=2 .*msgtext] room=6031 id=12 .*msgtext] room=6031 id=13 ")
     pruefe("E6: msg 0 bleibt" "[msgtext] room=6031 id=0 \"Elza: Sherry! Is anyone else here?\"")
-    pruefe("E6: msg 1" "[msgtext] room=6031 id=1 \"Sherry: A policeman brought Marvin down here.Sherry: Then he went back into the fire.\"")
+    pruefe("E6: msg 1" "[msgtext] room=6031 id=1 \"Sherry: A woman brought Marvin down here.Sherry: Then she went back into the fire.\"")
     pruefe("E6: msg 2" "[msgtext] room=6031 id=2 \"Elza: Back? Why?\"")
-    pruefe("E6: msg 12" "[msgtext] room=6031 id=12 \"Sherry: He said he had to find someone. He told us not to wait for him.\"")
+    pruefe("E6: msg 12" "[msgtext] room=6031 id=12 \"Sherry: She said she had to find someone. She told us not to wait for her.\"")
     pruefe("E6: msg 13" "[msgtext] room=6031 id=13 \"Elza: ...Then we won't. If that core goes, no one gets out.Elza: Let's get this train moving.\"")
     pruefe_nicht("E6: kein alter Satz 'fighting off monsters'" "fighting off monsters")
     pruefe_nicht("E6: kein alter Satz 'I'll do it!'" "Elza: I'll do it!")
-    # Stimmen: msg 1/2 = veraltete Aufnahme unter Neutext -> stumm bis zur neuen Aufnahme (Strang namen Stufe 6); msg 0 spielt
-    # (Negativkontrolle), 12/13 ohne Aufnahme -> Textdauer
+    # Strang fabrikplan Stufe 3: kein Polizist bringt Marvin mehr (Ada, ROOM50B0 msg 0 @0x0B86 "I left Marvin with her")
+    pruefe_nicht("E6: kein 'A policeman' mehr (Stufe 3)" "Sherry: A policeman")
+    pruefe_nicht("E6: kein 'He said he had to find someone' mehr (Stufe 3)" "Sherry: He said he had to find someone")
+    # Stimmen (Strang fabrikplan Stufe 2, Aufnahmen 20.11.2026): msg 1/2 spielen die neue Aufnahme des Nutzers (vorher stumm),
+    # msg 12..17 die neuen Dateien (vorher "keine Aufnahme"); msg 0 spielt weiter (Negativkontrolle)
     re15_altaufnahme_pruefe("${RE15_SYNCHRO}" 6031 1)
     re15_altaufnahme_pruefe("${RE15_SYNCHRO}" 6031 2)
     pruefe("Ton: msg 0 (nicht in der Liste) spielt weiter" "[voice] Start ROOM6031 Id 0 ")
     foreach(_m 12 13 14 15 16 17)
-        pruefe("Ton: msg ${_m} ohne Aufnahme -> Untertitel mit Textdauer" "ROOM6031 msg ${_m}: keine Aufnahme")
+        pruefe("Ton: msg ${_m} spielt die Aufnahme des Nutzers (20.11.2026)" "[voice] Start ROOM6031 Id ${_m} ")
+        pruefe_nicht("Ton: msg ${_m} nicht 'keine Aufnahme'" "ROOM6031 msg ${_m}: keine Aufnahme")
     endforeach()
     # Fuehrerstand vor dem Tor: Original sub08
     pruefe("Fuehrerstand vor dem Tor: Original sub08 (msg 10)" "[msgtext] room=6031 id=10 ")
@@ -265,12 +270,18 @@ ENDE
     pruefe("L21: msg 5" "[msgtext] room=6030 id=5 \"John: Then I'm staying with the kid. And I'll keep an eye on your friend here.\"")
     pruefe_nicht("L21: kein 'fighting the monsters'" "fighting the monsters")
     pruefe_nicht("L21: kein 'catch up'" "catch up")
-    # Stimmen (Strang namen Stufe 6): 3/22/4/5 = veraltete Aufnahme unter Neutext -> stumm bis zur neuen Aufnahme; msg 2 kommt
-    # aus der Ersatz-Wurzel (ersetzte Datei, anderer Abdruck) -> spielt; msg 32 hat keine Datei; die uebrigen Stimmen des Wagen-
-    # Gespraechs spielen weiter (Negativkontrolle). Stufe 7: msg 21 (fast woertlich) steht nicht mehr in der Tabelle -> spielt.
-    foreach(_m 3 22 4 5)
+    # Stimmen (Strang fabrikplan Stufe 2, Aufnahmen 20.11.2026): 2/3/22/4/5 spielen die neue Aufnahme des Nutzers (vorher stumm,
+    # Strang namen Stufe 6), msg 32 die neue Datei (vorher "keine Aufnahme"); die uebrigen Stimmen des Wagen-Gespraechs spielen
+    # weiter (Negativkontrolle). Stufe 7: msg 21 steht nicht in der Tabelle; seit 20.11. liegt dort die neue Aufnahme (Teil B).
+    foreach(_m 2 3 22 4 5)
         re15_altaufnahme_pruefe("${RE15_SYNCHRO}" 6030 ${_m})
     endforeach()
+    re15_altaufnahme_fastwoertlich_stand(_fw21 "${RE15_SYNCHRO}" 6030 21)
+    if(_fw21 STREQUAL "NEU")
+        ok("msg 21: im Bestand liegt die neue Aufnahme des Nutzers (Teil B, 20.11.2026)")
+    else()
+        fail("msg 21: Stand der Datei '${_fw21}' (erwartet NEU = neue Aufnahme des Nutzers, Teil B)")
+    endif()
     re15_altaufnahme_stand(_st21 "${RE15_SYNCHRO}" 6030 21)
     if(_st21 STREQUAL "KEINE")
         ok("Stufe 7: msg 21 steht nicht in der Tabelle der veralteten Aufnahmen")
@@ -279,9 +290,8 @@ ENDE
     endif()
     pruefe("Ton: msg 21 (fast woertlich, Stufe 7) spielt" "[voice] Start ROOM6030 Id 21 ")
     pruefe_nicht("Ton: msg 21 gilt nicht als alte Aufnahme" "ROOM6030 msg 21: synchro/STAGE6/room6030/main21.wav ist noch die alte Aufnahme")
-    pruefe("Ton: msg 2 = ersetzte Datei (Ersatz-Wurzel) spielt" "[voice] Start ROOM6030 Id 2 ")
-    pruefe_nicht("Ton: msg 2 gilt nicht als alte Aufnahme" "ROOM6030 msg 2: synchro/STAGE6/room6030/main02.wav ist noch die alte Aufnahme")
-    pruefe("Ton: msg 32 ohne Aufnahme -> Untertitel mit Textdauer" "ROOM6030 msg 32: keine Aufnahme")
+    pruefe("Ton: msg 32 spielt die Aufnahme des Nutzers (20.11.2026)" "[voice] Start ROOM6030 Id 32 ")
+    pruefe_nicht("Ton: msg 32 nicht 'keine Aufnahme'" "ROOM6030 msg 32: keine Aufnahme")
     foreach(_m 0 1 6 7 23 24 8)
         pruefe("Ton: msg ${_m} (nicht in der Liste) spielt weiter" "[voice] Start ROOM6030 Id ${_m} ")
     endforeach()

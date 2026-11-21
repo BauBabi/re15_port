@@ -8,13 +8,14 @@
 #             Green Keycard/Super Redhawk/Red Master Keycard im Inventar). Weg 3060 -> 3010 -> Kartentuer -> 30E0 (West-Ring) -> 3070
 #             (Birkin-Auftritt, Kampf) -> Zeile msg 6 -> 30E0 (EIN Besuch: Ada, Glasbruch, msg 16/17, Marvin tritt ein, msg 9..13, Ende
 #             erst nach Untertitel UND Stimme) -> 3070 (Aufzug mit Ada und Marvin) -> 3080 (Birkins Hand, zwei Stoesse) -> 4000.
-#             Mit Ton (SDL_AUDIODRIVER=dummy): die Aufnahmen synchro/STAGE3/room30E0/main*.wav laufen, msg 16/17 und 3070 msg 6 haben
-#             keine Aufnahme (Untertitel mit Textdauer). main03/10/11/13 sind NEUAUF (VERTRAG 2.3). Strang namen Stufe 6 (Entscheid
-#             19.11.2026, include/re15_altaufnahme_r42.h; loest Nachbesserung 2 R2-1 ab): eine Datei, die noch die alte Aufnahme ist
-#             (Abdruck des Tags v0.8.30), bleibt stumm, bis die neue da ist - msg 3/10/11 werden je nach Stand der Datei geprueft.
-#             Der Nachweis fuer den Befund 15.11. (R2-3) bleibt streng: der Lauf kommt aus einer Ersatz-Wurzel mit einer ERSETZTEN
-#             main13.wav (gleicher Ton, ca. 270 Bilder, anderer Abdruck - altaufnahme_ersatz_r42.cmake); die letzte Marvin-Szene wartet
-#             nach der Sleep-Kette (152 Bilder) auf Untertitel UND Stimme und endet erst danach.
+#             Mit Ton (SDL_AUDIODRIVER=dummy): die Aufnahmen synchro/STAGE3/room30E0/main*.wav laufen. main03/10/11/13 sind NEUAUF
+#             (VERTRAG 2.3). Strang fabrikplan Stufe 2 (Nutzer 20.11.2026 ~18:30: "Ok, saemtliche Sprachaufnahmen liegen vor.",
+#             Commit ce5ec405f): msg 3/10/11/13 tragen die NEUE Aufnahme des Nutzers und spielen (vorher je nach Stand der Datei stumm,
+#             Strang namen Stufe 6), msg 16/17 und 3070 msg 6 haben jetzt eine Aufnahme und spielen (vorher "keine Aufnahme",
+#             Untertitel mit Textdauer). Der Lauf kommt aus dem unveraenderten Bestand (vorher Ersatz-Wurzel mit einer ersetzten
+#             main13.wav). Der Nachweis fuer den Befund 15.11. (R2-3) bleibt streng: die letzte Marvin-Szene wartet nach der
+#             Sleep-Kette (152 Bilder) auf Untertitel UND Stimme (main13.wav des Nutzers) und endet erst danach - gemessen in
+#             Spielbildern gegen die Laenge der Aufnahme (Herleitung beim Abschnitt R2-3 unten).
 #             Vor 3070 msg 6 poltert es viermal im Lager (B3); nach dem Auftritt
 #             kaempft Birkin ohne Szenen-Staerke, der Tod beginnt mit a3 0x200 = Gewicht 3584 (B1).
 # TEIL elza   30E1 -> 3071 (Birkin-Auftritt Sub 10, Kampf, Flucht sub17) -> 30E1 (John und Sherry, Original) -> 3071 (Aufzug) -> 3081
@@ -57,13 +58,12 @@ if(_exe_name MATCHES "\\.exe$")
 else()
     set(_exe_kopie "${_exe_dir}/re15_pc_r42s3b_${_lauf_id}")
 endif()
-if(TEIL STREQUAL "leon")
-    # Strang namen Stufe 6: Leon laeuft aus einer Ersatz-Wurzel mit einer ERSETZTEN main13.wav (R2-3 braucht Marvins Stimme)
-    re15_altaufnahme_ersatzwurzel(_exe_kopie "${RE15_PC_EXE}" "${WORKDIR}/ersatz" "${RE15_ALT_WERKZEUG}" "${RE15_SYNCHRO}"
-        "STAGE3/room30E0/main13.wav")
-else()
-    file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
+# Strang fabrikplan Stufe 2: beide Teile laufen aus dem unveraenderten Bestand (die Aufnahmen des Nutzers liegen seit 20.11.2026
+# vor; vorher lief Leon aus einer Ersatz-Wurzel mit einer ersetzten main13.wav). Neben der exe darf kein eigenes synchro/ liegen.
+if(EXISTS "${_exe_dir}/synchro")
+    message(FATAL_ERROR "r42_story3b: neben der exe liegt ein eigenes synchro/ (${_exe_dir}/synchro) - das waere nicht der Bestand")
 endif()
+file(COPY_FILE "${RE15_PC_EXE}" "${_exe_kopie}")
 
 set(_fehler "")
 macro(fail _t)
@@ -229,6 +229,9 @@ ENDE
     # L-11 / F-08
     pruefe("F-08: 3070 nach Birkins Tod msg 6" "ROOM3070: (4,194) im Besuch gesetzt (sub01 @0x03496, Birkins Tod) -> msg 6")
     pruefe("F-08: Wortlaut msg 6" "[msgtext] room=3070 id=6 \"Leon: That came from the storage room... Ada?\"")
+    # Strang fabrikplan Stufe 2 (Aufnahmen 20.11.2026, Teil C): msg 6 spielt die Datei des Nutzers (vorher "keine Aufnahme")
+    pruefe("Ton: 3070 msg 6 spielt die Aufnahme des Nutzers (20.11.2026)" "[voice] Start ROOM3070 Id 6 ")
+    pruefe_nicht("Ton: 3070 msg 6 nicht 'keine Aufnahme'" "ROOM3070 msg 6: keine Aufnahme")
     # NB1 B3: vier Holzschlaege (Port-Bank 0x3E Satz 0) zwischen dem Start der Zeile und msg 6
     string(FIND "${_dbg}" "ROOM3070: (4,194) im Besuch gesetzt" _p0)
     string(FIND "${_dbg}" "[msgtext] room=3070 id=6 " _p6)
@@ -255,29 +258,69 @@ ENDE
     pruefe("L8: msg 11 Neutext" "[msgtext] room=30e0 id=11 \"Marvin: The lobby's gone...!Marvin: They smashed through the front glass and got inside!\"")
     pruefe("L8: msg 13 Neutext" "[msgtext] room=30e0 id=13 \"Marvin: There's more of them than I thought...Marvin: If they've come this far, the city's finished.\"")
     pruefe("L7: msg 3 (Stufe STAGE3a)" "[msgtext] room=30e0 id=3 \"Leon: He's back in the lobby. Some dogs got his leg... he can barely walk.\"")
-    pruefe("Ton: msg 16 ohne Aufnahme -> Untertitel mit Textdauer" "ROOM30E0 msg 16: keine Aufnahme")
-    # Strang namen Stufe 6 (loest R2-1 ab): veraltete Aufnahmen unter Neutext bleiben stumm, bis die neue da ist - je nach Stand
-    # der Datei im Baum; msg 13 kommt aus der Ersatz-Wurzel (ersetzte Datei) und spielt; die uebrigen Stimmen des Raums spielen
-    foreach(_m 3 10 11)
+    # Strang fabrikplan Stufe 2 (Aufnahmen 20.11.2026): msg 16/17 (Teil C der Aufnahmeliste) spielen jetzt die Datei des Nutzers
+    # (vorher "keine Aufnahme" -> Untertitel mit Textdauer)
+    foreach(_m 16 17)
+        pruefe("Ton: msg ${_m} spielt die Aufnahme des Nutzers (20.11.2026)" "[voice] Start ROOM30E0 Id ${_m} ")
+        pruefe_nicht("Ton: msg ${_m} nicht 'keine Aufnahme'" "ROOM30E0 msg ${_m}: keine Aufnahme")
+    endforeach()
+    # msg 3/10/11/13 (Teil A, vorher stumm geschaltete alte Aufnahme): die neue Aufnahme des Nutzers liegt im Bestand und spielt
+    foreach(_m 3 10 11 13)
         re15_altaufnahme_pruefe("${RE15_SYNCHRO}" 30E0 ${_m})
     endforeach()
-    pruefe("Stufe 6: msg 13 = ersetzte Datei (Ersatz-Wurzel) spielt" "[voice] Start ROOM30E0 Id 13 ")
-    pruefe_nicht("Stufe 6: msg 13 gilt nicht als alte Aufnahme" "ROOM30E0 msg 13: synchro/STAGE3/room30E0/main13.wav ist noch die alte Aufnahme")
-    pruefe("Stufe 6: main13.wav geladen" "[voice] clip loaded: main13.wav")
+    pruefe("main13.wav geladen" "[voice] clip loaded: main13.wav")
     foreach(_m 9 12)
         pruefe("Stufe 6: msg ${_m} (nicht in der Liste) spielt weiter" "[voice] Start ROOM30E0 Id ${_m} ")
     endforeach()
-    # Nutzerbefund 15.11. / R2-3 (streng): nach der Sleep-Kette von msg 13 laeuft main13.wav noch; die Szene wartet (> 0 Bilder),
-    # das Warten endet erst mit Zeile UND Stimme, das Szenenende (Riegel (2,7) los) kommt danach.
-    set(_r_kette "ROOM30E0: Sleep-Kette nach msg 13 durch [(]Bild ([0-9]+) der Szene[)] - Zeile aktiv [01], Stimme 1 [(]Rest ([1-9][0-9]*) Bilder[)]")
+    # Nutzerbefund 15.11. / R2-3 (streng): die letzte Marvin-Szene endet NICHT vor dem Ende von Untertitel UND Stimme von msg 13.
+    # Strang fabrikplan Stufe 2: seit 20.11.2026 spielt die Aufnahme des Nutzers (main13.wav, gemessen 230400 Abtastwerte @44100 Hz
+    # = 157 Bilder). Die Ersatz-Datei der Stufe 6 war die alte Aufnahme (ca. 270 Bilder) und lief nach der Sleep-Kette (152 Bilder)
+    # sicher noch; die neue ist fast genau so lang wie die Sleep-Kette - ob ihr Rest dort > 0 ist, haengt beim Tontreiber "dummy"
+    # an der Wanduhr (Lauf f336b488: "Stimme 0 (Rest 0 Bilder)", Zeile aktiv 1, 91 Bilder gewartet). Gemessen wird deshalb das, was
+    # der Befund verlangt, in Spielbildern: Szenenende (F) >= Start von msg 13 (stimme.log bild=F) + Laenge der Aufnahme in Bildern.
+    # Das Warten auf eine noch laufende Stimme (Rest > 0) prueft unit_r42_story3b_besuch mit nachgebildeten 270 Bildern.
+    set(_r_kette "ROOM30E0: Sleep-Kette nach msg 13 durch [(]Bild ([0-9]+) der Szene[)] - Zeile aktiv ([01]), Stimme ([01]) [(]Rest ([0-9]+) Bilder[)]")
     set(_r_ende  "ROOM30E0: Zeile und Stimme zu Ende [(]Bild ([0-9]+) der Szene, ([1-9][0-9]*) Bilder gewartet[)]")
     set(_r_fertig "ROOM30E0: Szene fertig nach ([0-9]+) Bildern [(]Riegel [(]2,7[)] los[)], davon ([1-9][0-9]*) Bilder auf Zeile/Stimme gewartet")
     if(_dbg MATCHES "${_r_kette}")
         set(_k_bild ${CMAKE_MATCH_1})
-        set(_k_rest ${CMAKE_MATCH_2})
-        ok("R2-3: nach der Sleep-Kette (Szenenbild ${_k_bild}) laeuft main13.wav noch (Rest ${_k_rest} Bilder)")
+        ok("R2-3: Sleep-Kette nach msg 13 durch (Szenenbild ${_k_bild}): Zeile aktiv ${CMAKE_MATCH_2}, Stimme ${CMAKE_MATCH_3} (Rest ${CMAKE_MATCH_4} Bilder)")
+        if(CMAKE_MATCH_2 EQUAL 0 AND CMAKE_MATCH_3 EQUAL 0)
+            fail("R2-3: nach der Sleep-Kette laufen weder Zeile noch Stimme - die Szene haette nichts abzuwarten")
+        endif()
     else()
-        fail("R2-3: Sleep-Kette nach msg 13 mit laufender Stimme (Rest > 0) fehlt (/${_r_kette}/)")
+        fail("R2-3: Sleep-Kette nach msg 13 fehlt (/${_r_kette}/)")
+    endif()
+    # Szenenende nach dem Ende der Aufnahme (Spielbilder): Start von msg 13 aus stimme.log, Laenge aus "clip loaded: main13.wav"
+    # nach dem Untertitel von msg 13, Szenenende aus "[story3b] F<n> ROOM30E0: Szene fertig"
+    set(_f13 "")
+    if(EXISTS "${WORKDIR}/stimme.log")
+        file(STRINGS "${WORKDIR}/stimme.log" _s13 REGEX "^raum=30e0 nachricht=13 .* bild=[0-9]+")
+        if(_s13 MATCHES "bild=([0-9]+)")
+            set(_f13 ${CMAKE_MATCH_1})
+        endif()
+    endif()
+    set(_n13 "")
+    string(FIND "${_dbg}" "[msgtext] room=30e0 id=13 " _p13)
+    if(_p13 GREATER -1)
+        string(SUBSTRING "${_dbg}" ${_p13} 3000 _nach13)
+        if(_nach13 MATCHES "clip loaded: main13[.]wav [(][^)]* ([0-9]+) @([0-9]+) Hz[)]")
+            math(EXPR _n13 "(${CMAKE_MATCH_1} * 30 + ${CMAKE_MATCH_2} - 1) / ${CMAKE_MATCH_2}")
+        endif()
+    endif()
+    set(_fe "")
+    if(_dbg MATCHES "\\[story3b\\] F([0-9]+) ROOM30E0: Szene fertig")
+        set(_fe ${CMAKE_MATCH_1})
+    endif()
+    if(_f13 STREQUAL "" OR _n13 STREQUAL "" OR _fe STREQUAL "")
+        fail("R2-3: Start von msg 13 (stimme.log '${_f13}'), Laenge von main13.wav ('${_n13}' Bilder) oder Szenenende ('${_fe}') nicht messbar")
+    else()
+        math(EXPR _stimm_ende "${_f13} + ${_n13}")
+        if(_fe GREATER_EQUAL _stimm_ende)
+            ok("R2-3: Szenenende F${_fe} >= Ende der Aufnahme F${_stimm_ende} (msg 13 ab F${_f13}, main13.wav ${_n13} Bilder)")
+        else()
+            fail("R2-3: Szenenende F${_fe} VOR dem Ende der Aufnahme F${_stimm_ende} (msg 13 ab F${_f13}, main13.wav ${_n13} Bilder)")
+        endif()
     endif()
     if(_dbg MATCHES "${_r_ende}")
         set(_e_bild ${CMAKE_MATCH_1})
@@ -295,7 +338,7 @@ ENDE
     endif()
     if(DEFINED _k_bild AND DEFINED _e_bild AND DEFINED _f_bild)
         if(_e_bild GREATER _k_bild AND _f_bild GREATER _e_bild AND _f_gew EQUAL _e_gew)
-            ok("R2-3: Reihenfolge Sleep-Kette ${_k_bild} < Stimmende ${_e_bild} < Szenenende ${_f_bild}")
+            ok("R2-3: Reihenfolge Sleep-Kette ${_k_bild} < Ende Zeile/Stimme ${_e_bild} < Szenenende ${_f_bild}")
         else()
             fail("R2-3: Reihenfolge falsch (Sleep-Kette ${_k_bild}, Stimmende ${_e_bild}, Szenenende ${_f_bild}, gewartet ${_e_gew}/${_f_gew})")
         endif()

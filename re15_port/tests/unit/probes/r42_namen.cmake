@@ -5,6 +5,7 @@
 #   unit_r42_namen_texte  6000/6030 wie im Spiel geladen: jede Seite einer Nachricht mit Namenskopf traegt den Kopf
 #   unit_r42_namen_zeilen  Stufe 4: neue/geaenderte Untertitel je Seite <= 2 Zeilen, keine Ein-Wort-Zeile, <= 271 px, mit Namen
 #   unit_r42_namen_seitenwechsel  Stufe 4: Seite 2 zweiseitiger Saetze (6000 48/49/50, 10D0 18/24/25) beim ersten Wort der Aufnahme
+#                                 fabrikplan s2: dazu 30E0 11/13, 2081 50, 3060 24, 6031 13 an der Pause der Nutzer-Aufnahme vom 20.11.
 #   unit_r42_namen_standzeit  Stufe 4: 6030 msg 4 und msg 32 stehen im Wagen-Programm so lange wie die Original-Zeile msg 0
 #   unit_r42_namen_alle_zeilen  Stufe 5: jede Nachricht jedes Raums wie im Spiel geladen (RDT + Port-Texte des Raumaufbaus) - je
 #                         Seite hoechstens 2 Zeilen (tools/r42_namen/zweizeilig_s5.py, lesbar_s5.py)
@@ -49,6 +50,10 @@ set_tests_properties(unit_r42_namen_ohne_stimme PROPERTIES ENVIRONMENT "RE15_VOI
 #                                     Untertitel, msg 0/1 sind nirgends zu hoeren, die Stimmen aus 3000 spielen
 #   unit_r42_namen_altlader_ersatz    derselbe Lader aus einer Ersatz-Wurzel (Kopie der Probe + eigenes synchro/ mit vier ersetzten
 #                                     Dateien, tests/unit/r42_namen_altlader_ersatz.cmake): ersetzte Dateien spielen, der Rest stumm
+# Strang fabrikplan Stufe 2 (Nutzer 20.11.2026: "Ok, saemtliche Sprachaufnahmen liegen vor.", Commit ce5ec405f): alle 13 Saetze
+# liegen neu aufgenommen im Bestand. unit_r42_namen_altaufnahme, unit_r42_namen_altlader(_ersatz) und die beiden Bestand-Durchlaeufe
+# verlangen jetzt "neue Aufnahme spielt" (keine Datei mit dem Abdruck des Tags, keine fehlende Datei); 6030 msg 32 und 3020 msg 7/8
+# spielen ihre neue Datei.
 file(GLOB_RECURSE _r42_alt_bestand LIST_DIRECTORIES false RELATIVE "${CMAKE_SOURCE_DIR}/../synchro" "${CMAKE_SOURCE_DIR}/../synchro/*.wav")
 list(SORT _r42_alt_bestand)
 string(REPLACE ";" "\n" _r42_alt_bestand_txt "${_r42_alt_bestand}")
@@ -66,7 +71,7 @@ if(NOT WIN32)
     target_link_libraries(werkzeug_r42_tonmess PRIVATE m)
 endif()
 if(TARGET re15_pc AND EXISTS ${CMAKE_SOURCE_DIR}/tests/integration/test_r42_namen_bestand.cmake)
-    foreach(_teil 6030 3020)
+    foreach(_teil 6030 3020 6031)   # 6031: Strang fabrikplan Stufe 3 (Elza E6, msg 1/12 neuer Wortlaut)
         add_test(NAME integration_r42_namen_${_teil}_bestand
                  COMMAND ${CMAKE_COMMAND} -DRE15_PC_EXE=$<TARGET_FILE:re15_pc>
                          -DWORKDIR=${CMAKE_CURRENT_BINARY_DIR}/r42_namen_${_teil}_bestand -DTEIL=${_teil}

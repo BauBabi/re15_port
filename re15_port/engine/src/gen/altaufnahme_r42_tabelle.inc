@@ -47,8 +47,8 @@
  *   gehoert: "She said she'd catch up with us." - 4 von 4 Woertern des Untertitels werden nicht gesprochen
  *   git-Blob 74efca2db2ae7e5eca08d1733c97f7791da6e1fa, SHA-256 acd07c2ff8d6381103f6b8fb6c6dcece451fedb94bfde8e92f2c7f2b676c7503 */
     { 0x6030u, 22, 141794u, 0x3A0396F373171061ull, "synchro/stage6/room6030/main22.wav" },
-/* ROOM6031 msg 1: Aufnahme = Sherry: "A policeman! He's fighting off monsters. He wants us to start the train."  ->  Untertitel v0.8.31 = Sherry: "A policeman brought Marvin down here. Then he went back into the fire."
- *   gehoert: "A policeman. He's fighting off monsters. He wants us to start the train." - 9 von 13 Woertern des Untertitels werden nicht gesprochen
+/* ROOM6031 msg 1: Aufnahme = Sherry: "A policeman! He's fighting off monsters. He wants us to start the train."  ->  Untertitel v0.8.31 = Sherry: "A woman brought Marvin down here. Then she went back into the fire."
+ *   gehoert: "A policeman. He's fighting off monsters. He wants us to start the train." - 11 von 13 Woertern des Untertitels werden nicht gesprochen
  *   git-Blob 71a6317fb4593148027460de1573add03e979ed0, SHA-256 9877a43effbb197eac07ede8ec05b859cac3b8b09c0e4fe8d8b2c6f0f11c4bf4 */
     { 0x6031u,  1, 333498u, 0xBF08F12E5193E96Full, "synchro/stage6/room6031/main01.wav" },
 /* ROOM6031 msg 2: Aufnahme = Elza: "I'll do it!"  ->  Untertitel v0.8.31 = Elza: "Back? Why?"

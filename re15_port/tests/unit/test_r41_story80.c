@@ -689,12 +689,25 @@ static void teil_stimmen(void)
         char st[24] = "";
         const int r = re15_stimmen_r39_stamm(k_liste[i].raum, k_liste[i].id, st, sizeof st);
         const char *sd = re15_elza_stimme_datei(k_liste[i].raum, k_liste[i].id);
-        const int stumm = k_liste[i].raum == 0x6030 &&
-                          (k_liste[i].id == RE15_S80_ID_VORNE || k_liste[i].id == RE15_S80_ID_NACHTRAG);
+        const int nb1 = k_liste[i].raum == 0x6030 &&
+                        (k_liste[i].id == RE15_S80_ID_VORNE || k_liste[i].id == RE15_S80_ID_NACHTRAG);
         PRUEF(r == 0 && sd == NULL && k_liste[i].id < 64,
               "synchro/STAGE%u/room%04X/main%02d.wav (keine Umleitung, Id < VOICE_MAX_MSG 64)%s",
               (unsigned)(k_liste[i].raum >> 12), k_liste[i].raum, k_liste[i].id,
-              stumm ? " - keine Aufnahme geliefert, Zeile bleibt stumm (NB1)" : "");
+              nb1 ? " - NB1-Zeile (bis 20.11.2026 ohne Aufnahme)" : "");
+        /* Strang fabrikplan Stufe 2 (Nutzer 20.11.2026 ~18:30: "Ok, saemtliche Sprachaufnahmen liegen vor.", Commit ce5ec405f;
+         * Aufnahmeliste Teil C): die beiden NB1-Zeilen 6030 msg 31/40 waren stumm (keine Datei) und haben jetzt ihre Aufnahme.
+         * Gegenprobe: rot auf 1e5ab9f22 (vor dem Merge von master). */
+        if (nb1) {
+            char p[512];
+            snprintf(p, sizeof p, "%s/STAGE%u/room%04X/main%02d.wav", RE15_SYNCHRO_DIR, (unsigned)(k_liste[i].raum >> 12),
+                     k_liste[i].raum, k_liste[i].id);
+            FILE *f = fopen(p, "rb");
+            long n = 0;
+            if (f) { fseek(f, 0, SEEK_END); n = ftell(f); fclose(f); }
+            PRUEF(n > 44, "NB1 ROOM%04X msg %d: Aufnahme des Nutzers liegt vor (%s, %ld Byte) - die Zeile spielt",
+                  k_liste[i].raum, k_liste[i].id, p, n);
+        }
     }
 }
 

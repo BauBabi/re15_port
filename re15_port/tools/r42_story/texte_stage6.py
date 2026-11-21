@@ -70,9 +70,12 @@ UNTERTITEL = (
     (0x6030, 5,  JOHN,   "Then I'm staying with the kid. And I'll keep an eye on your friend here."),
     # E6 (6031 Wagen, Elza): msg 0 bleibt (story_r36), dann 1, 2, 12, 13
     # Runde 42 namen Stufe 5: '|' = Seitenwechsel (drei Zeilen -> zwei Seiten, tools/r42_namen/lesbar_s5.py PORT_SEITEN)
-    (0x6031, 1,  SHERRY, "A policeman brought Marvin down here. | Then he went back into the fire."),
+    # Strang fabrikplan Stufe 3 (NUTZERWUNSCH 20.11.2026 zu msg 12: "sie ist ja tot bei Leon, warum sollte er noch mal nach ihr
+    # suchen?", gewaehlt "Ada bringt Marvin"): msg 1/12 sprechen von einer Frau (Ada, ohne Namen; ROOM50B0 msg 0 @0x0B86 "I left
+    # Marvin with her"); "someone" = Leon, ohne Namen. Aufnahmen des Nutzers 20.11.2026 sprechen genau diesen Wortlaut (Whisper).
+    (0x6031, 1,  SHERRY, "A woman brought Marvin down here. | Then she went back into the fire."),
     (0x6031, 2,  ELZA,   "Back? Why?"),
-    (0x6031, 12, SHERRY, "He said he had to find someone. He told us not to wait for him."),
+    (0x6031, 12, SHERRY, "She said she had to find someone. She told us not to wait for her."),
     (0x6031, 13, ELZA,   "...Then we won't. If that core goes, no one gets out. | Let's get this train moving."),
     # E9 (6031 Fuehrerstand, Elza): Zugstart
     (0x6031, 14, SHERRY, "It's moving! Elza, we did it!"),

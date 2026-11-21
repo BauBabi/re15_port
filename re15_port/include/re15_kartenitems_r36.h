@@ -40,7 +40,7 @@
  *     Westgang (2001 sub02 Pos_set @0x0188E, Cut 4), muss aber fuer John (sub00 Slot 7 @0x017EA x 2200..6100 -> sub04
  *     Cut_chg 11 @0x01966) und Sherry (sub05 Cut_chg 11 @0x01A9E, Pos_set @0x01AA4 (597,-1800,-20962)) an diese Wand.
  *     Nur das Ostende ist fuer BEIDE sicher frueh; Cut 11 ist dort die Szenenkamera beider.
- *   Fabrik NUR ROOM30C1 (Elza), Blatt 7, Bit 35 (dasselbe Bit wie Leons Uebergabe in 3060, RE15_R42_BIT_PLAN_FABRIK),
+ *   Fabrik ROOM30C1 (Elza; seit Strang fabrikplan auch Leons 30C0, s. u.), Blatt 7, Bit 35 (RE15_R42_BIT_PLAN_FABRIK),
  *     Kamera 1 = Ankunft aus 3091 (Slot 0 @0x01332 -> Cut 1; Pflicht: Marvin-Szene E31 30C1 sub00 @0x00BEE): Nordwand
  *     z = 1100 (SCA-Zelle 1 @0x007F8 x[-27200..-5300] z[1100..1600]) zwischen Treppenfuss (Zelle 10..13 x <= -9400)
  *     und Ostwand (Zelle 0 x = -5800). Konzept 6b woertlich: "Elza: an der Wand im Tresenbereich 30C1".
@@ -145,6 +145,38 @@
  *     KLETTERSPERRE unveraendert: Band 0 (Boden 0) -> Prop-Band 1 (Objekt-Test FUN_8002d2c0 @0x8002d364-70 laesst nur
  *     Objekt-Band == Spieler-Band zu); Klettersonde an 5 Standorten je 0 (unit_r42_kellerplan_druck).
  *
+ * STRANG FABRIKPLAN (20.11.2026, Konzept K-16) - DER FABRIKPLAN HAENGT AUCH IN LEONS 30C0, MARVIN NIMMT IHN:
+ *   NUTZERWUNSCH 20.11.2026 woertlich: "Im Story Zweig - room 3060 übergibt Marvin ein plan of the plant. Das macht natürlich nur
+ *     sinn wenn er ihn auch wirklich irgendwo aufnimmt..." (Stand 9426267fa: story3a_r42.c wiedersehen_bauen haengte den Plan
+ *     IMMER an, aufgenommen wurde er nirgends). ENTSCHEID des Orchestrators: derselbe Wandplan wie in Elzas 30C1 haengt in 30C0.
+ *   ORT = 30C1 (gleiche Stelle, Groesse s = 2, Hoehe Boden - 2000, Texte RE2 room5040 "factory map"), weil 30C0 dieselbe Wand hat:
+ *     die SCA von ROOM30C0 ist BYTEGLEICH mit ROOM30C1 (Block @0x007D4, 5 x 14 Eintraege; Zelle 1 @0x007F8 x[-27200..-5300]
+ *     z[1100..1600] in beiden Dateien). Marvins Pflichtweg fuehrt daran vorbei: Ankunft aus 3020 (Door_aot_set Slot 2 @0x00B6E ->
+ *     (-11250,0,-10900) Cut 0, aktiviert durch Aot_on 2 @0x00D7E) -> Osttuer nach 3090 (30C0 main00 Slot 0 @0x00B5A, Rechteck
+ *     x -6100..-5400 z -1200..600) -> 30A0 (Red Master Keycard) -> zurueck aus 3090 (Slot 0 @0x0132A -> (-6400,0,-400) Cut 1 = die
+ *     Kamera, in der das Plakat ganz im Bild liegt, VIEWS2 karten_export.py) -> Treppe -> Tuer nach 3030 (Slot 1 @0x00B7A). Beide
+ *     Durchgaenge an der Osttuer liegen 2..3000 vor dem Plakat (Wegpunkte integration_r42_story3a: (-7550,-1250), (-6350,-350)).
+ *   WER NIMMT: die Zeile 30C0 (variante Leon) traegt begleit_bit = RE15_R42_BIT_PLAN_MARVIN (139). Spielt Marvin
+ *     (re15_story3a_r42_marvin_spielt), setzt die Aufnahme NUR dieses Bit (Marvins Seite; seine Karte zeigt Blatt 7 ueber
+ *     re15_story3a_r42_blatt); spielt Leon, setzt sie wie in 30C1 Bit 35 (Leons Besitz). Der Plan haengt, solange weder 35 noch
+ *     139 steht. Die Uebergabe 3060 (Zeilen 17/18) gibt es nur mit 139 (story3a_r42.c wiedersehen_bauen), sie setzt 35 und
+ *     loescht 139.
+ *   LEON NACH DEM WIEDERSEHEN IN 30C0 (Plan nicht von Marvin genommen): 3060 Slot 1 -> 3090 ist nach Marvins Szene offen (sub00
+ *     Ck(3,0xA0)/Ck(3,0xA1) @0x00F28/@0x00F3E -> sub02 @0x01034 "door isn't locked anymore", Set(3,0xA1) @0x0103A), 3090 Slot 0 ->
+ *     30C0 (Ck(3,0x47)==0 @0x01326); ebenso 3030 Slot 1 -> 30C0 (Ck(3,0x47)==0 @0x001F6). Ab (3,0x47) (Set @0x00CB8 in ROOM30E0 sub02,
+ *     der Lobby-Szene L-12) fuehren beide Tueren nach 30D0 (@0x0134E / @0x0021E) - 30C0 ist dann nicht mehr erreichbar.
+ *   STUFE 4 - DER PLAN HAENGT AUCH IN 30D0 (ENTSCHEID des Orchestrators zu K-16; Pruefer Stufe 1 gelb 2: ohne ihn bekam Leon Blatt 7
+ *     nie, wenn vor Set(3,0x47) niemand den Plan nahm). 30D0 ist dieselbe Eingangshalle nach dem Einbruch: 3020 + 30C0 in EINEM RDT
+ *     (re15_map_zones.h); SCA ROOM30D0 @0x00950 (5 x 35): Zelle 24 @0x00A88 x[-27200..-5300] z[1100..1600] = 30C0 Zelle 1 @0x007F8,
+ *     Zellen 25..34 @0x00A94..@0x00B00 = 30C0 Zellen 4..13 (Baenke, Treppe, Galerie); Kameras 7..14 (RDT @0x0140..@0x0220) = 30C0
+ *     Kameras 0..7 (gleiche pos/tgt). Wer 30D0 betritt: nur nach (3,0x47) - 3010 Slot 3 Else-Zweig @0x0205E (Ck(3,0x47,0) @0x02036,
+ *     sonst nach 3020 @0x0203A) -> (-26300,0,-22550) Cut 15; 3090 Slot 0 @0x0134E -> (-6400,0,-400) Cut 6; 3030 Slot 1 @0x0021E ->
+ *     Galerie (-11850,-7200,450) Cut 13. Elza kommt in ihre Fassung 30D1 - die Zeile 30D0 gilt nur fuer Leon (variante 1).
+ *     Zeile 30D0: dieselbe Lage, Groesse, Hoehe, Texte und Slot 20 / Ereignis 28 wie 30C0 (in 30D0 frei: RDT-Saetze Slots 0..7
+ *     @0x01246..@0x012F6, Subs 0..1 nur Evt_end @0x013B0/@0x013B2), begleit_bit 139: der Plan haengt, solange weder 35 noch 139
+ *     steht; Leon nimmt ihn -> Bit 35. Sicht auf Leons Wegen durch 30D0 mit Verdeckung: unit_r42_fabrikplan_d0sicht + Bilddifferenz
+ *     an der exe (Bericht s4).
+ *
  * NUTZER-VORGABE (AUFTRAG.md Z. 73-77, woertlich): "Extrahiere mir Karte01 oder Karte02 ... Haenge sie
  *   mir beispielhaft an die Stelle von map3F.bmp, und schalte damit die Map fuer Etage 3F frei, wie das
  *   Kartensystem in Resident Evil 2 auch funktioniert. Auch mit den Text." + 2F ROOM10D0 (map2F.bmp),
@@ -220,16 +252,20 @@ typedef struct {
     uint8_t  variante;         /* Runde 42 Stufe 2: RE15_R36K_VARIANTE_* (0 = beide Fassungen des Raums)  */
     uint8_t  band;             /* Runde 42 Stufe 2: Aot_set pc[4] der Zone = Boden-Band des Standorts -(y/0x708)
                                 * (re15_collision.c:186; Scan-Gatter @0x80042cac); Stufe 1: 0 wie ROOM5030       */
+    uint8_t  begleit_bit;      /* Strang fabrikplan: 0 = keins; sonst das Bank-9-Bit, das die Aufnahme setzt, wenn die Begleitfigur
+                                * spielt (Marvin in 30C0: RE15_R42_BIT_PLAN_MARVIN) - statt bits[]. Der Plan haengt nicht mehr,
+                                * sobald dieses Bit ODER alle bits[] stehen. Kein Blattbesitz (re15_kartenitems_r36_blatt_besitz). */
 } re15_kartenitem_r36_t;
 
-/* Runde 42 Stufe 2: Fassung des Raums, in der der Plan haengt. Der Fabrikplan haengt NUR in Elzas 30C1: Leon spielt 30C0
- * als Marvin (Konzept L-06) und bekommt den Plan erst danach in 3060 von Marvin (L-09, story3a_r42.c, Bit 35). */
+/* Runde 42 Stufe 2: Fassung des Raums, in der der Plan haengt. Der Fabrikplan hat ZWEI Zeilen (Strang fabrikplan): Elzas 30C1
+ * (Bit 35) und Leons 30C0 (Bit 35, begleit_bit 139 fuer Marvin, der 30C0 nach dem Figurwechsel spielt, Konzept L-06/K-16). */
 #define RE15_R36K_VARIANTE_BEIDE 0   /* raum und raum|1                                                            */
 #define RE15_R36K_VARIANTE_LEON  1   /* nur raum (gerade Id)                                                       */
 #define RE15_R36K_VARIANTE_ELZA  2   /* nur raum|1 (ungerade Id)                                                   */
 
-#define RE15_R36K_ANZAHL       5   /* Runde 42: Revierplan 1030, Kellerplan 1200 (Stufe 1); Kanalisation 2000, Fabrik 30C1 (Elza),
-                                    * U-Bahn 6000 (Stufe 2). Forschungszentrum 4020 baut r42/rest, Labor 5030 ist Original. */
+#define RE15_R36K_ANZAHL       6   /* Runde 42: Revierplan 1030, Kellerplan 1200 (Stufe 1); Kanalisation 2000, Fabrik 30C1 (Elza),
+                                    * U-Bahn 6000 (Stufe 2); Fabrik 30C0 (Leon/Marvin, Strang fabrikplan). Forschungszentrum 4020
+                                    * baut r42/rest, Labor 5030 ist Original. */
 #define RE15_R36K_BANK         9         /* Bank-9-Bits (gespeichert mit g_game.flags)                   */
 #define RE15_R36K_EREIGNIS     28        /* VERTRAG.md 1.3 Spur N                                       */
 #define RE15_R36K_OBJ          15        /* Prop-Pool-Id; TIM-Slot RE15_TIM_SLOT_PROP(15) = 35; kein Raum
@@ -273,7 +309,7 @@ const re15_kartenitem_r36_t *re15_kartenitems_r36_zeile(int i);
 const re15_kartenitem_r36_t *re15_kartenitems_r36_des_raums(uint16_t room_id);
 const uint8_t *re15_kartenitems_r36_programm(uint16_t room_id, int *out_len);
 /* welche: 0 = Frage (Nachricht 30), 1 = "You've taken ..." (31). */
-/* Runde 42: 1 = alle Bits des Plans gesetzt (dann haengt er nicht mehr). */
+/* Runde 42: 1 = alle Bits des Plans gesetzt (dann haengt er nicht mehr); Strang fabrikplan: oder das begleit_bit. */
 int re15_kartenitems_r36_genommen(const re15_kartenitem_r36_t *z);
 const uint8_t *re15_kartenitems_r36_meldung(uint16_t room_id, int welche, int *out_len);
 

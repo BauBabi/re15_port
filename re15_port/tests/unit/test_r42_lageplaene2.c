@@ -13,8 +13,10 @@
  *            Zonen-Blatt; keine Zeile fuer 4020/4021 (r42/rest) und 5030/5031 (Original-Laborplan)
  *   kanal    2000 UND 2001: Plan haengt; ECHTER Aktionsdruck vor der Wand (re15_aot_scan, Band des Gehwegs) loest
  *            Ereignis 28 aus; Ja -> Bit 34, Blatt 6 im Besitz und waehlbar, kein anderes Plan-Bit; danach haengt er nicht
- *   fabrik   30C1 (Elza): wie kanal mit Bit 35 / Blatt 7. 30C0 (Leon spielt dort Marvin, Konzept L-06): kein Prop, keine
- *            Zone, kein Programm. Mit Leons Uebergabe-Bit 35 (3060, story3a_r42.c) haengt auch in 30C1 nichts
+ *   fabrik   30C1 (Elza): wie kanal mit Bit 35 / Blatt 7. Mit Leons Uebergabe-Bit 35 (3060, story3a_r42.c) haengt auch in 30C1
+ *            nichts. Strang fabrikplan (20.11.2026, K-16, BEGRUENDET ANGEPASST): 30C0 hat jetzt die Leon-Zeile (Marvin nimmt den
+ *            Plan dort); vorher hiess es hier "30C0: kein Prop, keine Zone, kein Programm". Marvin/Uebergabe prueft
+ *            unit_r42_fabrikplan_*; hier nur: 30C0 haengt bei frischem Stand, mit Bit 35 nicht.
  *   ubahn    6000 UND 6001 (Band des Treppenabsatzes): Bit 37, Blatt 12
  *   texte    RE2-Wortlaut "There's a <Plan>. / Will you take it?" und "You've taken / the <Plan>."
  *   sicht    die Plakatflaeche liegt auf der SCA-Wand (Bytes aus dem RDT an der zitierten Stelle) und ganz im Bild der
@@ -251,8 +253,12 @@ static void teil_tabelle(void)
                    (unsigned)raum, z ? z->blatt : -1, bz);
         }
     }
-    PRUEFE(re15_kartenitems_r36_des_raums(0x30C0) == NULL,
-           "ROOM30C0 (Leon spielt Marvin, Konzept L-06; Plan erst in 3060 von Marvin): keine Zeile");
+    {   /* Strang fabrikplan (K-16): 30C0 hat eine EIGENE Zeile (Fassung Leon) an derselben Stelle wie Elzas 30C1 */
+        const re15_kartenitem_r36_t *zl = re15_kartenitems_r36_des_raums(0x30C0), *ze = re15_kartenitems_r36_des_raums(0x30C1);
+        PRUEFE(zl && ze && zl != ze && zl->blatt == 7 && zl->bit == 35 && zl->x == ze->x && zl->y == ze->y && zl->z == ze->z &&
+               zl->rect_x == ze->rect_x && zl->rect_z == ze->rect_z && zl->aot_slot == ze->aot_slot,
+               "ROOM30C0 (Leon/Marvin, Strang fabrikplan): eigene Zeile, Blatt 7 Bit 35, Lage/Zone wie 30C1");
+    }
     static const uint16_t nicht[4] = { 0x4020, 0x4021, 0x5030, 0x5031 };
     for (int i = 0; i < 4; i++)
         PRUEFE(re15_kartenitems_r36_des_raums(nicht[i]) == NULL,
@@ -292,17 +298,11 @@ static void teil_fabrik(void)
     printf("=== fabrik: Fabrikplan nur fuer Elza (30C1), Leon bekommt ihn von Marvin ===\n");
     nehmen(&k_soll[1], 0x30C1);
     re15_game_state_init();
-    raum_t r;
-    if (raum_laden(&r, 0x30C0) == 0) {
-        raum_start(&r, -7600, 0, 500);
-        PRUEFE(prop_slot(RE15_R36K_OBJ) < 0 && karten_zone() < 0, "ROOM30C0 (Leon/Marvin): kein Plakat, keine Zone");
-        free(r.buf);
-    }
-    PRUEFE(re15_kartenitems_r36_ereignis(0x30C0, RE15_R36K_EREIGNIS) == NULL && re15_kartenitems_r36_obj_id(0x30C0) < 0,
-           "ROOM30C0: kein Programm, kein Modell");
+    PRUEFE(haengt(0x30C0, 0) == 1, "ROOM30C0 (Leon, Strang fabrikplan): frischer Stand -> Plakat + Zone");
     re15_game_state_init();
     re15_game_flag_set(BANK9, 35, 1);   /* Leons Uebergabe 3060 setzt dasselbe Bit (story3a_r42.c) */
-    PRUEFE(haengt(0x30C1, 0) == 0 && re15_map_owned_page(7), "Bit 35 schon gesetzt: in 30C1 haengt nichts, Blatt 7 im Besitz");
+    PRUEFE(haengt(0x30C1, 0) == 0 && haengt(0x30C0, 0) == 0 && re15_map_owned_page(7),
+           "Bit 35 schon gesetzt: in 30C1 und 30C0 haengt nichts, Blatt 7 im Besitz");
 }
 
 static void teil_ubahn(void)

@@ -93,6 +93,9 @@ extern re15_aot_state_t g_aot;
 extern unsigned         g_current_room_id;
 extern uint16_t         g_scd_pad_edge, g_scd_pad_held;
 
+/* Strang fabrikplan Stufe 4: Eingangshalle der Fabrik vor (30C0) und nach dem Einbruch (30D0) */
+static int halle_30c0_30d0(uint16_t raum) { return raum == 0x30C0 || raum == 0x30D0; }
+
 static int g_fail = 0;
 #define PRUEFE(cond, ...) do { if (!(cond)) { printf("  FAIL: " __VA_ARGS__); printf("\n"); g_fail = 1; } \
                                else { printf("  ok:   " __VA_ARGS__); printf("\n"); } } while (0)
@@ -582,6 +585,7 @@ static const port_bit_t k_port[] = {
     { RE15_R42_BANK, RE15_R42_BIT_3020_SCHUESSE, "RE15_R42_BIT_3020_SCHUESSE", "3020 Leon hoert die Schuesse, gesehen (Runde 42 Story, L5)" },
     { RE15_R42_BANK, RE15_R42_BIT_3060_UEBERGABE, "RE15_R42_BIT_3060_UEBERGABE", "Wiedersehen 3060 mit Uebergabe gesehen (Runde 42 Story, L5-L7)" },
     { RE15_R42_BANK, RE15_R42_BIT_PLAN_FABRIK, "RE15_R42_BIT_PLAN_FABRIK", "Fabrikplan aus Marvins Uebergabe 3060, story3a_r42.c geben (Runde 42 Story STAGE3a, L6/F-05)" },
+    { RE15_R42_BANK, RE15_R42_BIT_PLAN_MARVIN, "RE15_R42_BIT_PLAN_MARVIN", "Marvin traegt den Fabrikplan aus 30C0, begleit_bit k_r36k_lage (Runde 42 Strang fabrikplan, K-16)" },
     { RE15_R42_BANK, RE15_R42_BIT_PLAN_FORSCHUNG, "RE15_R42_BIT_PLAN_FORSCHUNG", "Laborplan Blatt 8 am Wandplan 4020/4021, ungenutzt_r42.c k_plan (Runde 42 rest Stufe 3, U-11)" },
     { RE15_R42_BANK, RE15_R42_BIT_FINALE_ENDE, "RE15_R42_BIT_FINALE_ENDE", "Finale beendet, Abspann frei (Runde 42 Story, T-07)" },
     { RE15_R42_BANK, RE15_R42_BIT_WERFER_FINALE, "RE15_R42_BIT_WERFER_FINALE", "Raketenwerfer der Wurfszene 5090/5091 genommen (Runde 42 finale S5)" },
@@ -663,10 +667,18 @@ static void teil_p(void)
              * zweites Bit - Bit 35 setzen Leons Uebergabe 3060 (story3a_r42.c) und Elzas Wandplan 30C1 (k_r36k_lage). */
             for (int i = 0; i < N_PORT; i++)
                 if (k_port[i].bit == bit && strncmp(k_port[i].makro, "RE15_R42_BIT_PLAN_", 18) != 0) doppelt = 1;
+            /* Strang fabrikplan Stufe 4: 30C0 und 30D0 sind DIESELBE Eingangshalle vor/nach dem Einbruch (30D0 = 3020 + 30C0 in
+             * einem RDT, re15_map_zones.h; SCA 30D0 Zelle 24 @0x00A88 = 30C0 Zelle 1 @0x007F8) - derselbe Wandplan, dasselbe Bit 35,
+             * wie dasselbe Taken-Bit in zwei Fassungen eines Raums. Nur dieses Paar; jeder andere Raum mit Bit 35 bleibt doppelt. */
+            /* Strang fabrikplan: DERSELBE Plan in beiden Fassungen eines Raums (Fabrik: Zeile 30C0/Elza = 30C1 und Zeile 30C0/Leon,
+             * gleicher raum, verschiedene variante) traegt dasselbe Bit 35 - wie die Original-Raumpaare ROOM2090/2091 dasselbe
+             * Taken-Bit 90 (@0x00A12). Doppelt ist ein Bit nur in einem ANDEREN Raum. */
             for (int j = 0; j < n_plaene; j++) {
                 const re15_kartenitem_r36_t *y = re15_kartenitems_r36_zeile(j);
                 for (int bj = 0; bj < plan_n(y); bj++)
-                    if ((j != k || bj != bi) && plan_bit(y, bj) == bit) doppelt = 1;
+                    if ((j != k || bj != bi) && plan_bit(y, bj) == bit && !(j != k && y->raum == z->raum && y->variante != z->variante) &&
+                        !(j != k && halle_30c0_30d0(y->raum) && halle_30c0_30d0(z->raum)))
+                        doppelt = 1;
             }
             PRUEFE(!doppelt, "Lageplan-Bit %u ist kein anderes Port-Bit", bit);
             alle[n++] = bit;
