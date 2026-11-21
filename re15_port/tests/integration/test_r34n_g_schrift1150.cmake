@@ -59,19 +59,43 @@ function(schrift_lauf _name _raum _out_dir)
     if(NOT _rvk EQUAL 0 OR NOT EXISTS "${WORKDIR}/re15_card.mcr")
         message(FATAL_ERROR "schrift1150[${_name}]: Kartenwerkzeug exit=${_rvk}\n${_outk}")
     endif()
-    re15_start_spiel(_rv 240
-        RE15_NO_INTRO=1
-        RE15_NOAUDIO=1
-        RE15_CONTINUE_TEST=1
-        RE15_CARD_AUTO=1
-        RE15_CARD_SLOT=0
-        RE15_WINDOW_SCALE=3
-        RE15_MG_LOG=mg.log
-        ${ARGS_EXTRA}
-        "${RE15_PC_EXE}")
-    if(NOT EXISTS "${WORKDIR}/debug.log")
-        message(FATAL_ERROR "schrift1150[${_name}]: kein debug.log (exit=${_rv})")
-    endif()
+    # Strang riegel 21.11.2026: verliert Direct3D unter Last das Grafikgeraet, schreibt die exe statt der Bilder nur
+    # "[framedump] SDL_RenderReadPixels failed: GetRenderTargetData(): DEVICELOST" (gemessen 21.11., Lauf inv1150: 161 solche
+    # Zeilen, kein einziges f*.ppm -> "f000100.ppm nicht lesbar"; volle Suite: "kein Referenzbild ref.ppm"). Dann ist der
+    # MESSLAUF ungueltig, nicht das Blinken falsch -> bis zu drei Laeufe; der Auswerter und seine Bedingungen bleiben gleich.
+    # Ein Lauf ohne diese Zeile wird nie wiederholt.
+    foreach(_versuch 1 2 3)
+        file(GLOB _alt_ppm "${WORKDIR}/*.ppm")
+        if(_alt_ppm)
+            file(REMOVE ${_alt_ppm})
+        endif()
+        re15_start_spiel(_rv 240
+            RE15_NO_INTRO=1
+            RE15_NOAUDIO=1
+            RE15_CONTINUE_TEST=1
+            RE15_CARD_AUTO=1
+            RE15_CARD_SLOT=0
+            RE15_WINDOW_SCALE=3
+            RE15_MG_LOG=mg.log
+            ${ARGS_EXTRA}
+            "${RE15_PC_EXE}")
+        if(NOT EXISTS "${WORKDIR}/debug.log")
+            message(FATAL_ERROR "schrift1150[${_name}]: kein debug.log (exit=${_rv})")
+        endif()
+        file(STRINGS "${WORKDIR}/debug.log" _geraet REGEX "DEVICELOST")
+        if(NOT _geraet)
+            break()
+        endif()
+        list(LENGTH _geraet _n_geraet)
+        message(STATUS "schrift1150[${_name}]: Lauf ${_versuch} ungueltig - Grafikgeraet verloren (${_n_geraet} x DEVICELOST)")
+        file(RENAME "${WORKDIR}/debug.log" "${WORKDIR}/debug_geraet_verloren_${_versuch}.log")
+        if(EXISTS "${WORKDIR}/mg.log")   # masken_gruppen.c oeffnet mg.log mit "ab" -> sonst zaehlte der Auswerter doppelt
+            file(RENAME "${WORKDIR}/mg.log" "${WORKDIR}/mg_geraet_verloren_${_versuch}.log")
+        endif()
+        if(_versuch EQUAL 3)
+            message(FATAL_ERROR "schrift1150[${_name}]: drei Laeufe ohne Grafikgeraet (DEVICELOST) - keine Messung moeglich")
+        endif()
+    endforeach()
     file(READ "${WORKDIR}/debug.log" _log)
     string(FIND "${_log}" "CONTINUE: resumed in room ${_raum}" _p)
     if(_p LESS 0)
