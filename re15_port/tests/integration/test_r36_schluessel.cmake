@@ -89,6 +89,10 @@ endfunction()
 # "Elza: John. Wait!" (@0x0226A) auf F1771, zu F1870 -> im selben Bild die Wegwerf-Abfrage fuer 0x42
 # (RE2 @0x800517f4/@0x80051834), Text fertig F1957; Viereck F1980 = Ja -> weg; Szenenende F1983
 # (Set(2,7)=0 @0x0229A). Gemessen in Dossier N1.4 (Laeufe N_Z3_mess / N_Z3_ja).
+# Strang riegel 21.11.2026: seit namen Stufe 5 (6f1a719f0, Entscheid "hoechstens zwei Zeilen je Seite", Disc 0 von 700
+# Seiten mit drei Zeilen @0x8002899c-ac) hat ROOM1211 msg 5 zwei Seiten -> die Szene ist 51 Bilder laenger: Abfrage F1921,
+# Text fertig F2008, Viereck F2031, Ende-Zeile F2046 (gemessen 21.11. auf faa27a6ce; mit dem Messhaken
+# RE15_R42_NAMEN_S5_AUS wieder F1870 / Viereck 1980 gruen). Alle Bildnummern unten = alter Wert + 51.
 if(NUR STREQUAL "befreiung")
     set(_pad "")
     foreach(_f RANGE 40 100)
@@ -97,10 +101,10 @@ if(NUR STREQUAL "befreiung")
     # ~2000 Spielbilder in Echtzeit (gemessen 75 s, unter Last 83 s) -> eigener Zeitdeckel fuer diesen Lauf
     set(LAUF_TIMEOUT 480)
     lauf(befreiung "1211;-19355;-17300;1024;elza;flag:3:0x8B;flag:4:0x24;flag:4:0xEC;flag:9:83;leer;give:0x42:1"
-         "RE15_PAD_AT=${_pad}1980:A;RE15_EXIT_AT=1995#1211;RE15_MSG_LOG=1;RE15_DISCARD_LOG=discard.log" _lh)
+         "RE15_PAD_AT=${_pad}2031:A;RE15_EXIT_AT=2046#1211;RE15_MSG_LOG=1;RE15_DISCARD_LOG=discard.log" _lh)
     muss(befreiung "${_lh}" "CONTINUE: resumed in room 1211")
     muss(befreiung "${_lh}" "[msg] room=1211 id=9")
-    muss(befreiung "${_lh}" "EXIT_AT: Bild 1995 in Raum 1211")
+    muss(befreiung "${_lh}" "EXIT_AT: Bild 2046 in Raum 1211")
     set(_dl "${_basis}_befreiung/discard.log")
     if(NOT EXISTS "${_dl}")
         message(FATAL_ERROR "r36_schluessel[befreiung]: kein discard.log (${_dl})")
@@ -117,10 +121,10 @@ if(NUR STREQUAL "befreiung")
     string(REGEX MATCH "F[0-9]+ raum=1211 msg_aktiv=0[^\n]*frage=8 gegenstand=0x42" _bild "${_d}")
     string(REGEX MATCH "^F[0-9]+" _bild "${_bild}")
     string(FIND "${_d}" "weg=1" _p_weg)
-    string(REGEX MATCH "F1995 raum=1211[^\n]*weg=1[^\n]*pausepad=0" _ende "${_d}")
+    string(REGEX MATCH "F2046 raum=1211[^\n]*weg=1[^\n]*pausepad=0" _ende "${_d}")
     if(_p_weg LESS 0 OR NOT _ende)
         message(FATAL_ERROR "r36_schluessel[befreiung]: Ja hat den Prison Key nicht weggeworfen oder die Szene "
-                            "ist nicht zu Ende (weg=1 / pausepad=0 in F1995 fehlt, ${_dl})")
+                            "ist nicht zu Ende (weg=1 / pausepad=0 in F2046 fehlt, ${_dl})")
     endif()
     message(STATUS "r36_schluessel[befreiung] OK: Abfrage fuer 0x42 nach msg 9 (${_bild}), Ja -> weggeworfen, "
                    "Szene zu Ende")
