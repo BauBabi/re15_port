@@ -80,6 +80,7 @@
 #include "re15_msg.h"
 #include "re15_aot.h"
 #include "re15_room.h"
+#include "re15_story2_r42.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -326,11 +327,28 @@ static void teil_seitenwechsel(void)
         { 0x10D0, 26, 98, "main26.wav Pause 2.98-3.28 s" },
         { 0x1150,  9, 96, "main09.wav Pause 2.45-3.19 s" },
         { 0x30E1, 12, 61, "main12.wav Pause 1.63-2.04 s (Elza)" },
+        /* Port-Texte mit '|' (tools/r42_namen/lesbar_s5.py PORT_SEITEN), seit den Nutzer-Aufnahmen vom 20.11.2026 (ce5ec405f) Art
+         * 'pause' an der Pause der NEUEN Datei (pausen5: RMS 10 ms, >= 120 ms unter -40 dB); vorher 'ohne' bzw. alte Aufnahme */
+        { 0x30E0, 11, 54, "main11.wav (neu) Pause 1.16-1.79 s" },
+        { 0x30E0, 13, 71, "main13.wav (neu) Pause 1.58-2.38 s" },
+        { 0x2081, 50, 68, "main50.wav (neu) Pause 1.82-2.26 s" },
+        { 0x3060, 24, 82, "main24.wav (neu) Pause 2.17-2.72 s" },
+        { 0x6031, 13, 128, "main13.wav (neu) Pause 3.85-4.26 s" },
     };
     for (unsigned k = 0; k < sizeof k_w / sizeof k_w[0]; k++) {
         if (raum_laden(k_w[k].raum) != 0) { PRUEF(0, "ROOM%04X ladbar", k_w[k].raum); continue; }
         scd_vm_init(); re15_aot_init();
         raum_laden(k_w[k].raum);
+        {   /* STAGE2-Story-Texte setzt erst der Raumaufbau ein (scd_room_setup.c -> re15_story2_r42_install -> texte_einsetzen,
+             * story2_r42.c): dieselben Bytes hier wie dort ablegen (Text + Dauer), sonst fehlt z. B. ROOM2081 msg 50 */
+            int l0 = 0, l2 = 0;
+            const uint8_t *t2 = re15_msg_get_raw(k_w[k].id, &l0) ? NULL : re15_story2_r42_text((uint16_t)k_w[k].raum, (uint8_t)k_w[k].id, &l2);
+            if (t2 && l2 > 0) {
+                re15_msg_install_text((unsigned char)k_w[k].id, t2, (size_t)l2);
+                const int d = re15_msg_compute_duration(t2, (size_t)l2, 0);
+                if (d > 0 && d < 65535) re15_msg_install_durations((unsigned char)k_w[k].id, d);
+            }
+        }
         int s2, zu, kopf2;
         schreibmaschine_messen(k_w[k].id, &s2, &zu, &kopf2);
         /* Takt 1 = erstes Bild mit Seite 1 (Message_on im Spiel-Takt, die Schreibmaschine laeuft im naechsten Bild: platform/pc/main.c

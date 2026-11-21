@@ -5,6 +5,7 @@
 #   unit_r42_namen_texte  6000/6030 wie im Spiel geladen: jede Seite einer Nachricht mit Namenskopf traegt den Kopf
 #   unit_r42_namen_zeilen  Stufe 4: neue/geaenderte Untertitel je Seite <= 2 Zeilen, keine Ein-Wort-Zeile, <= 271 px, mit Namen
 #   unit_r42_namen_seitenwechsel  Stufe 4: Seite 2 zweiseitiger Saetze (6000 48/49/50, 10D0 18/24/25) beim ersten Wort der Aufnahme
+#                                 fabrikplan s2: dazu 30E0 11/13, 2081 50, 3060 24, 6031 13 an der Pause der Nutzer-Aufnahme vom 20.11.
 #   unit_r42_namen_standzeit  Stufe 4: 6030 msg 4 und msg 32 stehen im Wagen-Programm so lange wie die Original-Zeile msg 0
 #   unit_r42_namen_alle_zeilen  Stufe 5: jede Nachricht jedes Raums wie im Spiel geladen (RDT + Port-Texte des Raumaufbaus) - je
 #                         Seite hoechstens 2 Zeilen (tools/r42_namen/zweizeilig_s5.py, lesbar_s5.py)
