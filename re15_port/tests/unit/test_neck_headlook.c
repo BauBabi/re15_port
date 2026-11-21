@@ -5,8 +5,10 @@
  * selbst nachdisassemblierten Instruktionen der PSX.EXE (Adressen je Assertion zitiert):
  *
  *  (a) Auto-Look-Scan vergleicht die WURZEL gegen den Radius (@0x800370f8 jal SquareRoot0,
- *      @0x8003715c sltu) — der alte Quadrat-Vergleich lief bei ~50 000 Units in den
- *      int32-Ueberlauf und trackte den ROOM1170-Rest-NPC.
+ *      @0x8003715c sltu). Die Summe dx*dx+dz*dz ist ein u32 (`mult`/`mflo`/`addu` @0x800370d8-fc);
+ *      ab 2^31 liefert SquareRoot0 0 (Strang ton e46ff64d5, `gte_ldLZCS`/`srav` @0x80065f60-b0,
+ *      Tafel davor Null @0x8007d704-883) -> ein so ferner Kandidat gilt im Original als NAH.
+ *      Den ROOM1170-Rest-NPC schliesst das Original ueber +0x9 & 0x60 aus (b), nicht ueber den Radius.
  *  (b) Drei Klassen ueber +0x9a/+0x9 mit Prioritaet K1 > K2 > K3 (@0x80037118-70,
  *      @0x80037190-a4) und Ausschluss +0x9 & 0x60 (@0x8003710c).
  *  (c) Die Part-Klemme sitzt auf dem KOERPER-Residual OHNE Kopf-Keyframe
@@ -53,16 +55,29 @@ static void put(int slot, uint8_t type, int16_t hp, uint8_t grid, int32_t dx, in
 static void test_scan(void)
 {
     printf("== (a) Radius-Gate: WURZEL statt Quadrat (@0x800370f8 / @0x8003715c)\n");
-    /* Gemessene ROOM1170-Post-Intro-Lage (lane17_NECK.md 7.1): Spieler (2664,-7336),
-     * Rest-NPC Typ 0x47 @(-31000,29500) -> dx=-33664, dz=36836, dist ~49900.
-     * dx*dx+dz*dz = 2 490 155 792 -> als int32 NEGATIV -> das alte `d2 < 4000*4000`
-     * war WAHR und Leons Kopf hing dauerhaft an der Klemme. */
+    /* Strang riegel 21.11.2026 (umgestellt, Ursache e46ff64d5 "SquareRoot0 bei gesetztem Bit 31 wie das Original (0)"):
+     * Die Lage aus lane17_NECK.md 7.1 (Spieler (2664,-7336), NPC dx=-33664 dz=36836, ~49 900 Units) ergibt die u32-Summe
+     * 2 490 155 792 = 0x946CC310 >= 2^31. Original: `mult v0,v0` / `mflo a1` @0x800370d8/e4, `mult` / `mflo a0` @0x800370ec/f4,
+     * `addu a0,a1,a0` @0x800370fc (Verzoegerungsplatz von `jal 0x80065f60` @0x800370f8). SquareRoot0: LZCR zaehlt bei Bit 31 die
+     * fuehrenden EINSEN (`mtc2 a0,$30` / `mfc2 v0,$31` = Worte 0x4884f000 / 0x4802f800 @0x80065f60/6c), `srav t4,a0,t3`
+     * (Wort 0x01646007 @0x80065fb0) schiebt arithmetisch -> Index t4-64 < 0 -> `lh t5,-0x267c(t5)` @0x80065fc4 liest
+     * 0x8007d704..0x8007d883 = Null (PSX.EXE selbst gelesen) -> Wurzel 0 -> `sltu` 0 < 0xfa0 WAHR -> K3 (hp<0) -> rv 2.
+     * Der Riegel pinnte vorher 49 824 > 4000 aus der alten (logisch schiebenden) Port-SquareRoot0 - das war nicht das Original.
+     * Der gemeldete Fehler (Leons Kopf hing nach dem Intro am Rest-NPC) bleibt behoben: im echten Lauf ROOM1170 (Sprung @240,
+     * bis Bild 2400, RE15_NECK_TRACE, 21.11.) steht Leons Kopf-Zustand nie auf Tracking (fl 0x12 / 0xd8, nie 0x00 nach Bild 0). */
     reset_actors();
     g_actors[RE15_ACTOR_SLOT_PLAYER].x = 2664;
     g_actors[RE15_ACTOR_SLOT_PLAYER].z = -7336;
     put(1, 0x47, -1, 0x00, -33664, 36836);
     int rv = re15_autolook_scan(&g_actors[RE15_ACTOR_SLOT_PLAYER], 0xfa0);
-    CHECK(rv == 0, "ferner NPC (~49900 Units) wird NICHT getrackt (rv=%d, erwartet 0)", rv);
+    CHECK(rv == 2 && g_actors[RE15_ACTOR_SLOT_PLAYER].neck_target_slot == 1,
+          "Summe >= 2^31 (~49 900 Units): SquareRoot0 = 0 -> wie im Original NAH, K3 getrackt (rv=%d, erwartet 2)", rv);
+
+    /* Unter 2^31 greift das Radius-Gate: dx = 46000 -> Summe 2 116 000 000 < 2^31 -> Wurzel > 4000 -> nichts. */
+    reset_actors();
+    put(1, 0x47, -1, 0x00, 46000, 0);
+    rv = re15_autolook_scan(&g_actors[RE15_ACTOR_SLOT_PLAYER], 0xfa0);
+    CHECK(rv == 0, "ferner NPC (46 000 Units, Summe < 2^31) wird NICHT getrackt (rv=%d, erwartet 0)", rv);
     CHECK(g_actors[RE15_ACTOR_SLOT_PLAYER].neck_target_slot == 1,
           "Fehlschlag schreibt trotzdem +0x1a8 = Entity-Slot 0 (@0x800371d8-dc)");
 
