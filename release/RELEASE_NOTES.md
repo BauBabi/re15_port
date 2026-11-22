@@ -1,3 +1,814 @@
+# v0.8.31 - 2026-11-22
+
+Ihre Auftraege fuer diese Fassung: die Story nach Ihrem freigegebenen Konzept (8.11.: "Ja, rein story technisch inst der
+Rest fantastisch."; Konzept mit Ihren Korrekturen K-01 bis K-15:
+C:/workspace/git/reAi_v2_entscheidung_2026-11-06/11_story_v0831/KONZEPT.md), am 14.11. der Auftrag, damit parallel zu
+beginnen, "damit ich danach die letzten Voiceovers aufnehmen kann" (beide Zitate: Memory reai-v2-runde41-laufend.md);
+Ihr Wort vom 7.11. zum Finale ohne G5; Ihre Rangfolge vom 16.11. fuer Gore und Schaden; Ihre Entscheide vom 16. bis
+18.11. zu Gegenstaenden, ungenutzten Inhalten und unbenutzten Hintergruenden; und Ihre Wuensche vom 18.11.: Lageplaene
+wie in Resident Evil 2, die Karte fuer STAGE2 bis 6, Leichenhalle und Gefaengnis wie im Original, der RE2-Film zu
+Birkins Mutation, die Sprechernamen und das Ende ohne "THANK YOU FOR PLAYING". Der Wortlaut steht je Abschnitt.
+
+Die Fassung enthaelt zehn Gruppen: (1) Story Teil 1 bis 3 (in v0.8.30 als Vorschau angekuendigt) mit der
+Spider-Man-Szene "von aussen" und der Option VOICE ON/OFF, (2) Gegenstaende, (3) Gore und Schaden, (4) ungenutzte
+Inhalte und Restpunkte, (5) den RE2-Film "Birkins Mutation", (6) Lageplaene wie in RE2, (7) Leichenhalle und Gefaengnis,
+(8) das Finale nach dem RE2-Ende, (9) Sprechernamen und Untertitel, (10) die Karte fuer STAGE2 bis 6. Alle zehn Gruppen
+samt den Nachtraegen zum Finale und zu den Untertiteln sind im Sammelzweig r42/story zusammengefuehrt (19.11.). Dazu
+kamen am 20. und 21.11.: (11) Ton wie auf der PlayStation (sieben Stufen), (12) der Fabrikplan, den Marvin selbst von
+der Wand nimmt, und die Zug-Szene 6031 mit Ada, (13) Ihre Sprachaufnahmen vom 20.11. und (14) die Klaerung von neun
+roten Tests vor der Freigabe.
+
+**So wurde gearbeitet.** Jede Gruppe lief auf einem eigenen Zweig und in Stufen: Ein Bauer baut, danach misst ein
+zweiter Agent unabhaengig nach - mit eigenem Bau, eigenen Laeufen im echten Spielfenster und einer Gegenprobe (derselbe
+Test muss auf dem alten Stand durchfallen). Faellt eine Runde durch, wird nachgebessert und neu geprueft. Die meisten
+Runden brauchten das Gefaengnis und die Karten-Tafeln (je acht), der Kern des Finales (fuenf) und der Wurf (vier); die
+Zahlen stehen je Abschnitt.
+
+**Nicht in dieser Fassung.** Fuer v0.8.32 vorgesehen: die Laborkette des Konzepts (Strom, ID-Karte, Enzym, Probe,
+Impfstoff) mit Alarm, Durchsage, Feuer, Schutzraum-Szenen und Hangar-Tor; das Feuerschott 514 (Ihr "ja, find ich gut"
+vom 18.11.); Marvin als Werfer im Finale. Nicht gebaut und ohne Termin: das U-Bahn-Kartenblatt. Ihre Modelle fuer alle
+Zwischensequenzen sind am 19.11. angekommen; Leon- und Elza-Intro, der Vorspann vor dem Titel, die Endvideos und der
+Abspann im Stil von Resident Evil 1 entstehen fuer v0.8.32 (der Platz fuer das Endvideo ist im Spiel schon da).
+
+**Pruefstand.** Der Ausgangsstand (v0.8.30 mit Story Teil 1 bis 3, Hangar-Szene und VOICE) wurde zweimal geprueft:
+zuerst ein roter Punkt (der Naht-Test der Hangar-Szene zaehlte 35 statt 0 Punkte - Ursache war der Grafikadapter der
+Fernsitzung, die Szene ist bitgleich), dann "BESTANDEN (kein roter Punkt)", 206 von 206 Tests gruen. Nach den
+Zusammenfuehrungen vom 18.11. (Gegenstaende, Gore, Restpunkte, Birkin-Film, Lageplaene) endete die Teilsuite mit 468 von
+474 gruen; fuenf Fenster-Tests liefen einzeln wiederholt gruen, einer war echt rot und ist angepasst (er erwartete in
+3010 die Schrotpatronen beim ersten Druck, dort liegt jetzt zuerst der Zuender; d7285c8de), ebenso zwei Schubladen-Tests
+im Kesselraum, wo jetzt zuerst das Rohr kommt (93821acef). Am 19.11. folgten Leichenhalle und Gefaengnis (Teilsuite 76
+von 76 gruen), der Kellerplan und das Finale Stufe 1 bis 5 (im Probe-Baum 155 von 155 gruen). Volle Suite ohne parallele
+Laeufe und Abnahme nach dem letzten Code-Commit: siehe "Abnahme des Endstands" unten; Linux-Suite im Container und
+Release-Bau: siehe "Technisch".
+
+**Abnahme des Endstands (22.11.).** Nach dem Zusammenfuehren von Ton, Fabrikplan, Ihren Aufnahmen und der Test-Klaerung
+lief die volle Testsuite auf dem letzten Stand 4b9d26f34 ohne parallel laufende Agenten: 1774 von 1774 Tests gruen
+(17008 s). Der Lauf davor auf faa27a6ce hatte 9 rote Tests (1765 von 1774); keiner davon war ein Spielfehler (siehe "Vor
+der Freigabe: neun rote Tests geklaert").
+
+## Was Sie merken
+
+### Story Teil 1 bis 3: Kanalisation, Leiter, Fabrik und Zug (STAGE2, STAGE1, STAGE3, STAGE6)
+
+Ihr Wortlaut vom 8.11. (Korrektur K-01): "3.2 L1 - nein, ich würde sagen, wenn man das Wasser ablässt um zu ROOM 2080 zu
+gehen steht dann noch ein Text da wie - Neben dem Computer ist noch ein Schlüsselloch (Auf englisch natürlich). Mit den
+Schlüssel muss man hoch gehen zu ROOM 2080 um das Tor zu öffnen. Dabei spielt die Cutscene automatisch ab mit dem Marvin
+Dialog.", berichtigt: "Die Reihenfolge stimmt bei dir nicht. man muss in 2080 das Wasser ablassen um überhaupt zum
+Aligator nach 2090 zu kommen. Dabei kann der Hinweis auf das Schlüsselloch kommen". Zum Weg mit der Zeitbombe (K-02):
+"die finale Tür die ist verschlossen und kann nur von der anderen Seite aus geöffnet werden, also von den Raum aus, der
+aus STAGE2 heraus führt." (Memory reai-v2-runde41-laufend.md). Ihre Korrektur K-07 vom 11.11. steht im Konzept: Die
+Dialoge in 3000 bleiben, die Begleiter warten in 2080/2081 und holen vor der Leiter auf.
+
+**Kanalisation (2080/2081, 2090/2091).** Beim Ablassen des Wassers erscheint der Hinweis "Next to the computer...
+there's a keyhole.". Nach dem Alligator liegt neben dem Water Key noch etwas ("There's something else lying next to
+it..."): Sherrys Taschenuhr mit der Gravur "For Sherry. Love, Mom.". Zurueck in 2080 oeffnet der Schluessel das Tor, und
+dabei laeuft genau einmal das Nachgespraech. Bei Leon kommt Marvin und bleibt zurueck ("Go on ahead, Leon. I'll wait
+here and watch your back."); bei Elza kommt John, dann Sherry die Treppe herauf ("So you're Sherry. Stick close, kid."),
+und John wartet mit ihr. Der Weg mit der Zeitbombe umgeht den Alligator nicht mehr: Die Tuer im Korridor 2070/2071 nach
+11A0/11A1 ist "locked from the other side" und geht nur von der 11A-Seite auf, die Tuer zum Belohnungsraum 2040/2041 nur
+von innen; danach sind beide als Abkuerzung offen.
+
+**Vor der Leiter (11A0/11A1).** Im schmalen Abschnitt vor der Leiter kommen die Begleiter angelaufen: bei Leon Marvin
+("Leon, wait up!"), bei Elza John und Sherry ("Elza! Wait for us!"). Hat Elza die Uhr mitgenommen, kniet sie sich hin
+und gibt sie Sherry zurueck ("Sherry, wait. I think this is yours."); ohne Uhr entfaellt dieser Teil. Die Szene laeuft
+einmal; die Dialoge in 3000/3001 sind unveraendert.
+
+**Fabrik, Leon (3020 bis 3070).** Marvins Abschnitt folgt dem RE2-Muster eines Figurwechsels: Marvin hat eigene
+Gegenstaende, und Leon ist nach dem Rueckwechsel nicht geheilt. In der Fensterszene von 3020 geht Marvin allein weiter
+("Wait here. I'll find a way to open this from the inside."). Sein Abschnitt endet in 3060, wenn die Hunde ihn angreifen
+(Schwarzbild, drei Schuesse); Leon hoert sie in 3020 ("Gunshots...? Marvin!"). Spaeter kaempft Leon in 3060 selbst gegen
+die Hunde und findet Marvin am Bein verletzt; Marvin uebergibt die Green Keycard, den Fabrikplan und die Redhawk und
+bleibt zurueck. Erst diese Uebergabe oeffnet die Kartentuer in 3010. Im Lagerraum 30E0 laeuft die Szene mit Ada und
+Marvin in einem Besuch statt in zweien (das Glas bricht, "That came from the lobby... Marvin!", Ada: "Someone's
+coming.") und endet erst nach der letzten Zeile samt Aufnahme. In 3070 kommt, wenn Birkin zusammenbricht, die neue Zeile
+"That came from the storage room... Ada?"; Birkin richtet sich bei seinem Auftritt nur noch einmal auf, und im Aufzug
+3080 springt der Arm zwischen den zwei Stoessen nicht mehr zurueck. Bei Elza aendert sich in diesen Raeumen nichts.
+
+**Zug (6030/6031).** Leon: Das Gespraech im Wagen hat die neuen Zeilen des Konzepts (John: "We got split up in the fire.
+One second she was right behind us..."); der alte Satz, Elza kaempfe draussen und komme nach, ist weg. Elza: Sherry
+erklaert, warum Leon nicht mitkommt ("A policeman brought Marvin down here. Then he went back into the fire."), und der
+Zug faehrt jetzt auch bei ihr an ("It's moving! Elza, we did it!", dann das Krachen von hinten). Marvin auf der Liege
+wird nicht mehr von einem viereckigen Ausschnitt verdeckt. Dazu drei Kleinigkeiten: Ada steht nach ihrem Tod nicht mehr
+lebend im Schutzraum 6020, die Blue Master Keycard nennt in der Beschreibung ihren Besitzer Michael, und
+Anfuehrungszeichen in Inventartexten werden richtig gezeichnet.
+
+**Wie geprueft.** Je Stufe ein unabhaengiger Pruefer mit eigenen Durchlaeufen im echten Fenster, Leon und Elza:
+Kanalisation zwei Runden (mit echtem Alligator-Kampf), Leiter zwei, Marvin drei (beide Faelle der Wegwerf-Frage an der
+Red Master Keycard), Lagerraum und Birkin drei, Zug eine, Kleinigkeiten zwei - jeweils zuletzt "bestanden".
+
+**Offen.** Die neuen Zeilen haben noch keine Aufnahmen (siehe "Fuer Sie zum Aufnehmen"). Die Zug-Zeilen sprechen schon
+vom Feuer und vom Reaktor, obwohl beides erst mit der Laborkette in v0.8.32 kommt. Der Glasbruch in Elzas Lauf (Frage
+F-07 des Konzepts) ist nicht gebaut. In 11A0/11A1 streift der Begleiter in einer Kamera optisch die Wand.
+
+### STAGE5: Spider-Man-Szene "von aussen" - nur aus dem Monitorraum, kein Kampf im Gang (50A0/50A1)
+
+Ihr Wort vom 16.11.: "Bei Szene aussen muss das aber vom Monitor Raum aus erfolgen, wenn man zurueck laeuft, sonst fragt
+man sich - wenn er Richtung Kamera zum anderen Ausgang hin geht wo er denn hin ist..." (Memory
+reai-v2-hangar-szene-monitorbild.md).
+
+**Was jetzt anders ist.** Die Szene laeuft nur noch, wenn man aus dem Monitorraum 5030/5031 durch die Nordtuer in den
+Gang zurueckgeht. Sie ist sofort im Bild, die eigene Figur ist nicht zu sehen; der Inhalt ist Bild fuer Bild die
+abgenommene Szene. Danach steht man an der Nordtuer, Birkin ist fort, es gibt keinen Kampf; der Spider-Man liegt tot im
+suedlichen Teil der Halle und richtet keinen Schaden an. Wer von Westen (4070) kommt, findet einen leeren Gang, ebenso
+beim Wiederkommen und nach dem Laden. Wer Birkin vorher im Kraftraum besiegt hat, bekommt keine Szene. Der Kampf im Gang
+und das "bleibt liegen" aus v0.8.30 entfallen damit.
+
+**Wie geprueft.** Eine Runde: "Bestanden, kein roter Punkt." Die Videos hat der Pruefer selbst im echten Fenster
+aufgenommen (die zwei Affen des Gangs sind fuer die Aufnahme ausgeschaltet).
+* Leon: F:/Resident Evil
+  1.5-Project/Entscheidungen/reAi_v2_entscheidung_2026-11-06/39_hangar_szene_von_aussen/1_leon.mp4
+* Elza: F:/Resident Evil
+  1.5-Project/Entscheidungen/reAi_v2_entscheidung_2026-11-06/39_hangar_szene_von_aussen/2_elza.mp4
+
+### Optionen: VOICE ON/OFF
+
+Ihr Wunsch vom 17.11.: eine Option, die Voiceovers an- und auszuschalten (ein woertliches Zitat steht in den Protokollen
+nicht).
+
+**Was jetzt anders ist.** Im Optionsschirm gibt es unten rechts die Zeile "VOICE ON", ab Werk an; die Wahl wird sofort
+gespeichert. Bei OFF sind alle gesprochenen Dialogzeilen stumm; die Untertitel bleiben, und jede Szene laeuft mit der
+Lesedauer ihres Textes - nichts haengt, keine Zeile faellt weg. Musik, Geraeusche und Filmton bleiben. Laute ohne
+Untertitel bleiben ebenfalls hoerbar (Johns Hilferufe, Annettes Schrei in 5090, Elzas Stoehnen), weil der Spieler dort
+sonst keinen Hinweis mehr bekaeme - ein Entscheid waehrend der Runde. Bei ON ist alles wie vorher.
+
+**Wie geprueft.** Runde 1 unabhaengig: "Bestanden, ohne roten Punkt." Der Pruefer hat jede Sprachdatei im Tonmitschnitt
+gesucht (bei ON alle gefunden, bei OFF keine), der Ton bei ON ist bitgleich mit dem alten Stand, 28 von 28 Tests gruen.
+Die Regel fuer Laute ohne Untertitel kam danach dazu; sie hat einen Test mit Gegenprobe, aber keinen eigenen
+Pruefbericht. Offen: Auf dem Stand der Untertitel-Stufe 5 verschwinden bei OFF einzelne zweite Seiten (siehe
+"Untertitel").
+* Menue und Vorspann mit VOICE OFF: F:/Resident Evil
+  1.5-Project/Entscheidungen/reAi_v2_entscheidung_2026-11-06/47_option_voice/1b_menue_off.png und F:/Resident Evil
+  1.5-Project/Entscheidungen/reAi_v2_entscheidung_2026-11-06/47_option_voice/2_szene_off.mp4
+
+### Ton wie auf der PlayStation (Strang ton, sieben Stufen)
+
+Ihr Befund vom 19.11.: Der Ton klang im Port "dumpfer" und anders als auf der PlayStation. Der Grund waren fehlende
+Teile der Sony-Tonbibliothek. Jede Stufe wurde am Original-Code und an Aufnahmen aus DuckStation gemessen, und ein
+zweiter Agent hat jede Stufe unabhaengig nachgemessen.
+* **Lautstaerke je Stimme wie im Original:** Der Port rechnet die Lautstaerke jetzt wie die Tonbibliothek der
+  PlayStation (Produkt und Quadrat, SpuVmKeyOnNow @0x80055d10). Geraeusche liegen jetzt auf etwa 1 dB am Original,
+  vorher bis zu 11 dB zu leise. Musik ist dadurch 8 bis 10 dB lauter als in v0.8.30, Ihre Sprachaufnahmen sind
+  unveraendert.
+* **Schleifen:** Geraeusche, die im Original in Schleife laufen (z. B. der Rolladen im Speisesaal), laufen jetzt auch im
+  Port so lange wie dort.
+* **Hall je Musikstimme:** Der Hall liegt jetzt auf den Stimmen, die ihn im Original haben.
+* **Ausklang:** Der Rotor am Hubschrauberplatz klingt so schnell aus wie im Original.
+* **Glaettung:** Der Port glaettet die Toene wie der Tonchip der PlayStation (4-Punkt-Gauss). Dadurch klingt es weniger
+  hart.
+* **Lage der Geraeusche:** Links, rechts und Entfernung werden wie im Original gerechnet, auch bei sehr grossen
+  Entfernungen (die Wurzel-Funktion des Spiels rechnet dort anders, das ist jetzt nachgebaut).
+* **Huellkurven, Regler, Musikstuecke:** Die Geraeusche schwellen an und klingen ab wie im Original, der
+  Lautstaerkeregler rundet nicht mehr. Musikstuecke ohne Wiederholmarke spielen einmal und beginnen wieder von vorn,
+  wenn das Spiel sie erneut startet. In der Eingangshalle wird das kurze Zusatzstueck nicht mehr alle 18 Sekunden neu
+  gestartet.
+* Hoerbeispiele (erst Original, Piepton, dann Port): C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/ton/hoerbeispiele/
+
+### Fabrik: Marvin nimmt den Fabrikplan selbst (3060, 30C0, 30D0)
+
+Ihr Befund vom 20.11.: "Im Story Zweig - room 3060 übergibt Marvin ein plan of the plant. Das macht natürlich nur sinn
+wenn er ihn auch wirklich irgendwo aufnimmt..."
+* Der Fabrikplan haengt jetzt auch in Leons Eingangshalle 30C0, an derselben Wand wie bei Elza in 30C1. Marvin kommt
+  durchs Fenster genau dort an und kann ihn als Spielfigur von der Wand nehmen.
+* Nur dann uebergibt er ihn beim Wiedersehen in 3060 ("And this. A floor plan of the plant."). Ohne Plan fallen genau
+  diese zwei Zeilen weg, alle anderen Saetze bleiben, Ihre Aufnahmen passen also weiter.
+* Hat Marvin den Plan nicht genommen, haengt er weiter, und Leon kann ihn selbst holen - auch in der Halle 30D0 nach der
+  Szene in 30E0. Der Plan ist freiwillig wie jeder Plan in RE2: Wer weder Marvin noch Leon den Plan nehmen laesst,
+  bekommt ihn nicht.
+
+### Zug 6031 (Elza): Ada bringt Marvin zum Zug
+
+Ihre Frage vom 20.11.: "Auf wen soll Leon denn suchen?" und "sie ist ja tot bei Leon, warum sollte er noch mal nach ihr
+suchen?" - Ihre Wahl: "Ada bringt Marvin".
+* Sherry sagt jetzt "A woman brought Marvin down here. Then she went back into the fire." und "She said she had to find
+  someone. She told us not to wait for her." Mit "someone" ist Leon gemeint. Das passt zu Leons Fassung, in der Ada
+  Marvin zum Zug bringt (50B0: "I left Marvin with her.").
+
+### Vor der Freigabe: neun rote Tests geklaert (Strang riegel)
+
+Ihr Wunsch vom 21.11.: "Kannst du tests die rot sind stabilisieren, oder tests die sowies nicht mehr gelten gleich ganz
+entfernen?" Keiner der neun roten Tests zeigte einen Spielfehler, geloescht wurde keiner.
+* Vier prueften einen bewusst geaenderten Stand und sind umgestellt: Gore nach Ihrer Rangfolge vom 16.11., Untertitel
+  mit hoechstens zwei Zeilen je Seite, eine Wurzelrechnung wie im Original.
+* Drei wackelten nur, wenn nebenher Blender die Grafikkarte belegte. Sie warten jetzt auf den richtigen Zustand und
+  pruefen dasselbe wie vorher.
+* Zwei hingen an der Umgebung (eine Datei ausserhalb des Projekts, das Programm git) und sind davon jetzt unabhaengig.
+
+### Bekannt, nicht behoben
+
+* Wenn Windows der Grafikkarte kurz den Zugriff entzieht (gesehen nur unter starker Last, etwa wenn nebenher Blender
+  rendert), kann das Spiel abstuerzen. Sie haben das beim Spielen noch nie erlebt; die Behebung ist fuer die naechste
+  Runde eingeplant (Liste 29_naechste_punkte, Punkt 14).
+
+### Gegenstaende: jeder bekommt Fundort und Verwendung (Story Teil 4)
+
+Ihr Wortlaut vom 16.11.: "Aktuell haben wir auch noch quest Items, wie zum Beispiel eine Mutter in den Menu, die wir
+nicht verwenden. Wir sollten überlegen wo alle items die wir haben Verwendung finden, wenn noch nicht drin." und zu den
+Handgranaten: "man findet halt die Handgranate in Irons office. Wenn man noch die Munitionsteile findet, kann man noch
+eine bauen, aber Handgranaten sollte es nicht zu viele geben, wenn sie so stark sind." (strang.js, Memory
+reai-v2-gegenstaende-verwendung.md). Zu den Rechner-Vollbildern am 17.11.: "Ja, einbauen".
+
+**Was wo liegt (Leon und Elza, wo nichts anderes steht).**
+* **Mutter:** im Pausenraum 2010/2011 beim Erste-Hilfe-Spray. Am Bruecken-Pult in 2030/2031 wird sie ueber das Inventar
+  eingesetzt, danach laeuft das Brueckenraetsel wie bisher (das "Ventil 13" aus dem Plan gibt es seit Ihrem
+  Druck-Raetsel nicht mehr). Sie heilt nicht mehr - im Original-Code zaehlte sie als Heilmittel.
+* **Colt Python:** im Belohnungsraum 2040/2041 an der Stelle des Head of Akuma, 6 Schuss.
+* **Glock 18 (Leon):** beim toten Polizisten in 1050, 15 Schuss, mit dem bisher nie gezeigten Nahbild der Leiche
+  ("Sorry, I'll just borrow this..."). Sie bleibt beim Nachladen eine Glock (im Original-Code wurde sie zur SIG).
+* **Rohr:** am Schrank im Kesselraum 11F0/11F1.
+* **Granatwerfer (Elza):** in einem Spind in 1071 ("One of the lockers isn't locked. There's a grenade launcher
+  inside."), 6 Schuss.
+* **Granaten-Bausatz der 40%-Disc:** leere Granathuelsen (Elza: Waffenkammer 1191 und 30E1), Kapseln (Nitro: Leon 30E0,
+  Elza 30E1; Saeure: Elza 40B1 und Spind 4051; Brand: Elza 5021) und genau ein Zuender (im Laster 3010/3011: "Something
+  is lying next to the crates. It's a detonator."). Huelsen und Kapsel ergeben Granatwerfer-Munition, Zuender und Kapsel
+  eine Handgranate - nach Capcoms eigener Kombi-Tabelle. Elza kann so bis zu 6 Schuss und eine Granate bauen, Leon die
+  eine Granate.
+* **Flammenwerfer-Brennstoff (Leon):** im ersten Spind in 4050.
+* **Handgranaten:** je Figur hoechstens zwei im ganzen Spiel - die fertige in Irons' Buero und eine aus dem einzigen
+  Zuender.
+
+Die neuen Gegenstaende haben kein eigenes Modell in der Welt. Sie liegen deshalb an Stellen, an denen schon etwas
+Sichtbares ist: Beim Druecken kommt zuerst der neue Gegenstand, danach wie bisher der alte. Der Raketenwerfer bleibt
+Ausstellungsstueck in 1110; im Finale bringt John ihn mit.
+
+**Bilder, Texte, Rechner.** Die Kapseln haben ein eigenes Bild statt Capcoms Platzhalter-Karte, der Zuender heisst
+"Detonator", die Python hat ihre eigene Beschreibung. Auf der Blue Master Keycard steht "MICHAEL" statt "GORO MACIDA",
+passend zum Text (geaendert sind nur die 221 Bildpunkte des Namens; die Schrift ist so winzig wie vorher). Die Rechner
+zeigen beim Benutzen ihr Vollbild: in 3050/3051 zu "The system has been successfully restored.", in 5050/5051 zu
+"Commencing with temporary registration." und zu "Registration complete.", in 2080/2081 nach dem "Yes" fuer etwa 0,7
+Sekunden.
+
+**Wie geprueft.** Drei Pruefungen (Stufe 1, Stufe 2, Nacharbeit der gelben Punkte), alle "bestanden". Der Pruefer hat
+jede Fundstelle an den Bytes der Raumdateien nachgelesen und die Handgranaten selbst nachgezaehlt (alle 240 Raumdateien
+und der Quelltext); zuletzt 694 von 695 verwandten Einzeltests im ersten Lauf gruen (der eine nur, weil im Prueflauf git
+im Pfad fehlte) und 31 von 31 Laeufe mit dem echten Spiel.
+* Leon nimmt die Glock und baut die Handgranate: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/gegenstaende_nach/video/ERGEBNIS_leon_glock_granate/ERGEBNIS_leon_glock_granate.mp4
+* Elza nimmt den Werfer am Spind und baut Saeure-Munition: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/gegenstaende_nach/video/ERGEBNIS_elza_werfer_saeure/ERGEBNIS_elza_werfer_saeure.mp4
+* Kartenbild Michael: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/gegenstaende/s2/bilder/ERGEBNIS_karte_michael.png
+* Rechner 2080 mit dem kurzen Vollbild: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/gegenstaende/s2/bilder/ERGEBNIS_2080_rechner.mp4
+
+**Offen.** Die Videos starten per Sprung in den Raum; die Bausatzteile kamen dort per Hilfsschalter, und in Elzas Video
+sind die Zombies ausgeschaltet. Im echten 1071 liegt gut einen Meter vor dem Spind ein Zombie, der auf dem Weg dorthin
+aufsteht. Dass der gruene Zielkreis des Fingerabdruck-Spiels in 505 nicht mehr auf dem Vollbild liegt, hat kein Pruefer
+im echten Fenster gesehen (nur per Test mit Gegenprobe belegt). Das Bild in 2080 steht nur 0,7 Sekunden, weil dort keine
+Original-Meldung steht, an die es sich binden liesse (siehe "Zu entscheiden"). Auf der PSX gibt es die Vollbilder ohne
+Kamera und die Gegenstandsbilder nicht.
+
+### Im ganzen Spiel: Gore und Schaden nach Ihrer Rangfolge (80 % vor 40 % vor RE2)
+
+Ihr Wortlaut vom 16.11.: "Gore und Schaden - ganz klar - wenn ich früher was anderes behauptet habe, falsch - 80% build
+ist ausschlaggebend, dann 40% build und wenn äquivalente Gore Effekte bei 40% build und wenn dort Dinge noch fehlen dann
+kommt Resident Evil 2 zum Einsatz." Ihre Ausnahme: "Allerdings sollen Zombies nicht - wie in der Mod Version alle 2
+Schuss umfallen, dann wieder aufstehen dann wieder umfallen und das 100x bis si wirklich tot sind. ... In dem Fall dann
+doch eher Resident Evil 2". Zur Handgranate: "wenn weniger reicht um die zombies zu töten, gib der handgranate weniger.
+Nur genau so viel wie benötigt." (strang.js).
+
+**Zombies.** Der Granatwerfer zerteilt keinen Zombie mehr, er trennt den Oberkoerper ab. Steht der Zombie, bleiben die
+Hosenbeine knapp eine Sekunde stehen, kippen um und bleiben liegen; der Oberkoerper faellt und kriecht weiter. Liegt er
+oder kriecht er noch mit Beinen, bleiben die Beine liegen, wie sie lagen. Die Handgranate zerteilt jeden Zombie in ihrem
+Wirkbereich; ihr Schaden war schon "genau so viel wie benoetigt" (ein Punkt ueber dem zaehesten Zombie mit 250
+Lebenspunkten) und ist unveraendert. Reisst die Schrotflinte aus der Naehe den Oberkoerper ab, bleiben die Beine an
+ihrem Platz (bisher rutschten sie gut zwei Meter weg). Abgetrennte Beine drehen sich nicht mehr mit dem kriechenden
+Oberkoerper mit und klappen nicht mehr in einem Bild herum - ein Fehler, der erst beim Filmen auffiel. Zaehigkeit und
+Umfallen der Zombies bleiben nach Ihrer Ausnahme wie in RE2.
+
+**Tiere und Bosse.** Die Kraehe zerfaellt bei Pistole, Schrotflinte und SPAS in schwarze Fetzen, die nach knapp einer
+Sekunde weg sind. Platzt die Spinne, fliegt der Koerper in Brocken, die Beine bleiben gespreizt am Boden, und der
+Kadaver liegt still - sie dreht sich nicht mehr auf den Ruecken. Der Hund wird von der Handgranate zerrissen, beim
+Granatwerfer stirbt er ganz (beides wie RE2). Birkin in Menschform hat 300 statt 600 Lebenspunkte (21 statt 41
+Pistolenschuesse), der Gorilla 180 statt 360 (16 statt 31): Das sind die Werte der Disc; die doppelten Werte hat Ihre
+Rangfolge aufgehoben. Die Riesenform nimmt ausserhalb des Finales den Schaden des RE2-G4 (praktisch auf dem Bahnsteig
+5080). Ein Feuerstoss von Beretta oder Glock zaehlt gegen Gorilla, kleinen Affen, Tyrant und Birkin in Menschform als
+ein Treffer wie auf der Disc; gegen Zombies, Hunde, Kraehen und Spinnen trifft weiter jede Kugel. Im Gefaengnis gehen
+Schuesse und Messer wieder durch die Gitterarme, Explosionen treffen sie weiter. Der Alligator ist unveraendert, er
+stirbt nur durch den Kanister.
+
+**Wie geprueft.** Zombies und Granaten drei Runden: Die ersten beiden fielen durch, weil der Granatwerfer zunaechst nur
+stehende Zombies trennte und die Videos die Beine nicht zeigten; die dritte "Bestanden", 218 von 218 Tests gruen,
+darunter ein Test, der das echte Spiel startet und mitliest, wo die Beine gezeichnet werden. Tiere und Bosse zwei
+Runden: Die erste fiel an der Spinne durch (acht Beine standen senkrecht hoch und zappelten), die zweite "bestanden",
+404 Einzeltests und 26 Laeufe mit dem echten Spiel gruen (zwei davon erst in der Einzelwiederholung). Zu jedem Video
+liegt im selben Ordner eine Zeitlupe.
+* Granatwerfer: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/gore_bau/videos_r3/granatwerfer_ganz.mp4
+* Handgranate: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/gore_bau/videos_r3/handgranate_ganz.mp4
+* Spinne: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/gore_bau/s2r2/videos/spinne_platzt_ganz.mp4
+
+**Offen.** Im Granatwerfer-Video sitzt der Oberkoerper noch etwa 0,6 Sekunden auf den stehenden Beinen und faellt dann
+herunter; im 80%-Video fliegt er als Blutsaeule weg - die Abfolge Ihres Wortlauts stimmt, das Bild weicht ab. Die
+Handgranate im Video ist per Testschalter am Zombie gezuendet, nicht geworfen. Die neue Blutlache unter einem Zombie,
+der eine Granate am Boden ueberlebt, kommt fast nie vor, weil ein stehender Zombie nach der RE2-Regel dabei nicht
+umfaellt. Von der geplatzten Spinne bleiben nur die Beine als Boegen, kein Rumpf (so die Disc; im 80%-Video nicht zu
+entscheiden), und beim Magnum-Treffer schluepfen weiter kleine Spinnen (RE2-Regel). Platzt eine Spinne an Wand oder
+Decke, bleibt der alte Sturz auf den Ruecken; gesehen hat den Fall niemand. Das Kraehen-Video stufte der Pruefer als
+nicht vorlegbar ein, ein neues fehlt; ebenso fehlen Bilder vom Hund an der Granate, von der Riesenform und von den
+Gitterarmen.
+
+### Ungenutzte Inhalte, nie gezeigte Kameras und Restpunkte (STAGE1 bis 6)
+
+Ihr Wortlaut vom 17.11.: "Gibt es noch anderen ungenutzten Code, Dialoge oder rätsel in stage 2-6 die mit rein können in
+den story strang?" (Memory reai-v2-ungenutztes-stage2-6.md). Ihre Antworten vom 18.11.: zur Tuer 401 fuer Elza "ja,
+warum nicht?", zu Leons Zug "Ja, na klar, wenn du die ruckeln lassen kannst während der Zug fährt lass sie auch
+ruckeln.", zu Zombies im Gang 11A "nein, da ist kein Zombie sichtbar", zur Szene in 3091 "Zu deiner Frage - passt, aber
+warum zielen sie denn jetzt auf die falsche Tür?" und zu den Masken "Die PRIs in Stage 4 habe ich dich gefragt, ob du
+die großteils von Resident Evil 2 übernehmen kannst." (strang.js, INTEGRATION_NOTIZEN.md).
+
+**Nie gezeigte Kamerabilder.** Funkraum 10F0/10F1: Wer die Funkanlage untersucht, sieht sie in Nahaufnahme zum Satz
+"It's out of commission". Verhoerraum 1010/1011: Beim Nehmen der Memory Card zeigt das Spiel die Ecke mit dem Regal. Zug
+6031: Elzas Gespraech beginnt wie bei Leon mit dem Gruppenbild. Hof 1090 (Leon): Wer den Feuerloescher benutzt, sieht
+zuerst kurz den Transporter im Feuer. Alles mit Original-Befehlen; die Raumdateien sind unveraendert.
+
+**Ungenutzte Capcom-Inhalte.**
+* **3091:** Nach den vier Schlaegen sagen John ("Hey, let's get going. If we stay here, they'll come swarming back.")
+  und Elza ("Hey... you'll be all right, won't you?") zwei Saetze von der Capcom-Disc, John antwortet "Leave it to me!".
+  Blicke, Zielhaltung und Pochen gehen jetzt auf die Lobby-Tuer, durch die Elza danach geht.
+* **309:** Sherry sagt am Sicherungskasten zuerst "There's a power supply." (Satz aus dem 80%-Video; nach Ihrem
+  Entscheid ein Systemtext ohne Namen), dann wie bisher "I can't reach the breaker switch...".
+* **501:** Vor dem Speichern am Rechner kommt Capcoms Satz "It looks like this was used a little while ago.".
+* **6031:** Elza schaut vor dem Gespraech erst zu Marvin auf der Liege - so hat Capcom es gebaut, aber nie benutzt.
+* **402:** Der Wandplan gibt das Kartenblatt des Labors ("You've taken the laboratory map.").
+* **2011:** Sherry steht nicht mehr doppelt; sie verschwindet aus dem Pausenraum, sobald sie in 2081 auftaucht.
+* **401 (Elza):** Die Tuer aus der Halle 4001 in den Sicherheitsraum oeffnet wie auf der Capcom-Disc (die Mod hatte sie
+  mit einem einzigen Byte totgestellt). Elza findet dort die Kiste, den Speicherpunkt, ein Erste-Hilfe-Spray und
+  Schrotpatronen; keine Gegner, keine Szene.
+
+**Zug, Masken, Kleineres.** Elzas und Leons Fahrt (6031, 6030) ruckeln, solange der Zug faehrt: Das Bild springt nach
+dem RE2-Muster kurz um einen Bildpunkt und zurueck; sonst ist Leons Szene Byte fuer Byte unveraendert. In vier Kameras,
+deren Hintergrund in RE2 derselbe ist, verdeckt der Vordergrund die Figur jetzt richtig (4090 Kamera 2, 50D0 Kamera 10,
+5100 Kamera 7, 6000 Kamera 1; Leon und Elza, 203 Masken aus RE2 umgerechnet). Mehr gibt RE2 nicht her: In STAGE4 kam nur
+eine Kamera dazu, Ihr "großteils" ist dort also nicht erfuellt; die 38 Kameras, die Sie selbst freistellen muessten,
+stehen in der Bestandsaufnahme vom 18.11. Der lange Aushang in 2040 bricht nicht mehr nach 192 Zeichen mitten im Satz
+ab, und in 3070 steht Birkin zwischen Auftritt und Kampf nur noch 3 statt 12 Bilder still.
+
+**Wie geprueft.** Sieben Stufen, jede unabhaengig geprueft und zuletzt "bestanden". Zwei brauchten eine zweite Runde:
+Bei den Kamerabildern hatte der Bauer das Feuerbild im Hof zu Unrecht als widerlegt gemeldet, bei den Capcom-Inhalten
+war ein alter Zug-Test rot, und ein Video zeigte nicht, was behauptet war. Die Masken hat der Pruefer selbst aus RE2
+gelesen (0 Abweichungen) und im laufenden Spiel nachgemessen.
+* 3091, Pochen und Blicke: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/rest/s7/vid/S7_3091_Pochen_Lobbytuer_mit_Ton.mp4
+* Tuer 401 (Elza): C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/rest/s5/video/Elza_401_Tuer_Kiste_Telefon.mp4
+* Leons Zug ruckelt: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/rest/s4/Leon_6030_Zugstart_ruckeln.mp4
+* Feuerbild im Hof: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/rest/s2r2/vid/A3_1090_Leon_Cut14_Loeschen.mp4
+* Masken vorher/nachher, Beispiel 4090: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/rest/pri/vorher_nachher_4090.png
+
+**Offen.** Nicht gebaut sind das U-Bahn-Kartenblatt mit den Wagenkacheln, Leons Blick im Zugwagen (in der Mod stehen die
+Figuren anders als bei Capcom), der Gitter-Schreck in 400 fuer Leon (braucht eine zweite Tonbank), fuenf Laute aus den
+Zugraeumen (kein eindeutiges Zuggeraeusch), die Glasfront in 30C und der leere Schrank in 30E. Das Feuerbild im Hof
+steht nur etwa eine Drittelsekunde (siehe "Zu entscheiden"). Die neuen Kamerabilder haben keine Verdeckungsmasken. Den
+Ort des Pochens in 3091 hoert man nicht, weil der PC-Port Geraeusche ohne Richtung abspielt; ob man die leisen Schlaege
+als Klopfen erkennt, muss ein Mensch hoeren. John sagt dort kurz hintereinander "Will do!" und "Leave it to me!" (Ihr
+"passt" vom 18.11.). Das Ruckeln ist mit blossem Auge kaum zu sehen. Auf der Capcom-Disc liegt in 401 ein dritter Fund,
+den die Mod entfernt hat; er ist nicht eingebaut.
+
+### STAGE5/6: RE2-Film "Birkins Mutation" (Leon in 6000, Elza in 5011)
+
+Ihr Wortlaut vom 18.11.: "Zusätzlich möchte ich das du die Birkin Mutation Erklärungscutscene aus Resident Evil 2
+irgendwo sinnvoll mit einbaust." (strang.js). Den Ort haben Sie freigestellt.
+
+**Was jetzt anders ist.** Leon sieht den Film bei seinem ersten Treffen mit Annette in 6000, nach "Where's Ada?" und "I
+see...". Annette stellt sich mit Saetzen aus RE2 vor, gesprochen von der RE2-Stimme ("Annette Birkin. My husband is the
+man responsible for the creation of the T-virus. William Birkin." - "And it's all Umbrella's fault. ..."). Dann wird das
+Bild in gut 2 Sekunden dunkel, der Film laeuft (rund 131 Sekunden, englische Originalstimmen, keine Untertitel, mit dem
+Rand oben wie in RE2), das Bild wird wieder hell, und Annette schliesst mit "As a result of his virus-induced
+transmutation, William should have lost any prior memories he had as a human by now."; danach geht die Szene weiter wie
+bisher. Elza sieht den Film im Monitorraum 5011 zwischen "John. I read some files ... terrifying things." und "She's
+been infected by what they were working on here.", ohne neue Saetze. Der Film kommt einmal je Spielstand;
+herausgeschnitten ist nur der 12-Sekunden-Einschub mit Annette in der Gegenwart.
+
+**Wie geprueft.** Leon zwei Runden (die erste fiel nur am Video durch, das zu langsam lief), dann "bestanden"; Elza:
+"Bestanden." Der Pruefer hat den Filmton aus der Datei ausgepackt und im Video wiedergefunden (hoechstens 2 ms
+Abweichung ueber den ganzen Film).
+* Leon: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/birkinfilm/Leon_6000_Birkinfilm_s1r2.mp4
+* Elza: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/birkinfilm/Elza_5011_Birkinfilm_s2r1.mp4
+
+**Offen.** Zwischen Abdunkeln und Film bleibt das Bild etwa 0,4 Sekunden schwarz (Ladezeit). Elzas Video und Test
+starten per Sprung in den Raum; ihre Ankunft ueber 5021 und 5000 ist nicht durchgespielt. In Leons Video stehen Annettes
+zweite Satzhaelften noch ohne Namen (siehe "Untertitel"). Auf der PSX gibt es keinen Filmspieler.
+
+### Lageplaene wie in Resident Evil 2: ein Plan je Gebiet
+
+Ihr Wortlaut vom 18.11.: "Ich habe für STAGE1 entschieden das jede Etage ihre eigene Map zu finden hat. Jetzt bin ich
+mir nicht mehr sicher wie das im Original Resident Evil 2 war. War das auch eine Map pro Etage, oder hat man mit einer
+Map beispielsweise das ganze RPD zusammen gefunden?" - und nach der Antwort (RE2 hat eine "police station map", eine
+eigene Keller-Karte und je Gebiet eine): "Dann will ich das nicht so. Ich will das es mehr funktioniert wie in Resident
+Evil 2.", "Überlege dir auch gleich mit für die anderen STAGES wo die Map noch fehlt, und wo wir sie am besten sichtbar
+platzieren sollten." und "nicht benötigte maps kommen weg." Zur ersten neuen Stelle des Revierplans: "Bei 1030 und 1031
+passt das nicht. Das der Revierplan so weit über den Spieler hängt, das geht so nicht." (strang.js, Memory
+reai-v2-karten-wie-re2.md).
+
+**Was jetzt anders ist.**
+* **Revier:** Ein einziger Revierplan in der Eingangshalle 1030/1031 schaltet 1F, 2F, 3F und das Dach frei (Text wie in
+  RE2: "police station map"). Er haengt links neben der Ausgangstuer auf Kopfhoehe der Figuren, so hoch wie die
+  WANTED-Plakate.
+* **Keller:** Ein einziger Kellerplan in der Leichenhalle 1200/1201 schaltet B1 und B2 frei ("police basement map"). Er
+  ist doppelt so gross wie bisher und haengt auf Kopfhoehe an der Wand neben der Eingangstuer; an Ihrer frueheren Marke
+  neben der Vitrine ist dafuer kein Platz (siehe "Zu entscheiden").
+* **Weg sind** die Etagenplaene im Besprechungsraum 1140, im Flur 10D0 und im Keller 11D0; die Waende sehen dort wieder
+  aus wie im Original. Alte Spielstaende gelten weiter.
+* **Kanalisation:** Plan an der Wand links neben der Leiter am Ostende von 2000/2001 ("There's a sewer map. Will you
+  take it?"). **Fabrik:** Elza findet ihn in der Eingangshalle 30C1 rechts der Treppe, Leon bekommt ihn von Marvin.
+  **U-Bahn:** in 6000/6001 gleich nach der Ankunft, an der Wand oben an der Treppe. **Forschungszentrum:** der Wandplan
+  in 402 (siehe "Ungenutzte Inhalte").
+
+Zu den Orten in Kanalisation und U-Bahn sagten Sie am 18.11. "ja" (INTEGRATION_NOTIZEN.md). Nach dem Nehmen zeigt die
+Karte das ganze Gebiet, auch die noch nicht betretenen Raeume.
+
+**Wie geprueft.** Fuenf Pruefungen (Revier und Keller; Gebietsplaene; Sichtbarkeit und Dach; Augenhoehe; Kellerplan),
+jede in der ersten Runde "bestanden". Die Texte stimmen Byte fuer Byte mit RE2 ueberein; 143 verwandte Tests gruen bei
+den Gebietsplaenen, 127 von 127 beim Kellerplan. Beim Bauen gefunden und behoben: Leon kletterte beim Druecken auf das
+Plakat, statt die Frage zu bekommen.
+* Revierplan mit Leon und Elza daneben: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/lageplaene_nach2/tafeln/MESSBILD_Leon_Elza_am_Revierplan.png
+* Revierplan, Video Leon: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/lageplaene_nach2/video/leon_revier/leon_revier.mp4
+* Kellerplan mit Leon und Elza daneben: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/kellerplan/messbild_leon_elza.png
+* Kellerplan, Video Leon: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/kellerplan/video_leon_1200.mp4
+
+**Offen.** Die Plaene in Kanalisation, Fabrik und U-Bahn haengen etwa auf Brusthoehe, tiefer als der Revierplan. Im
+Ankunftsbild der Leichenhalle ist der Kellerplan 35 x 26 Bildpunkte gross, richtig gross erst in der Kamera direkt
+davor. Am U-Bahn-Plan steht bei Leons erstem Betreten Annette dicht davor (Szene der Disc). Die Videos starten ueber
+einen Spielstand vor dem Plan, nicht aus einem Durchlauf.
+
+### STAGE1: Leichenhalle 1200/1201 - das Kuehlfach klappert wieder, der Zombie kriecht heraus
+
+Ihr Wortlaut vom 18.11.: "Wo du gerade in der Vorschau in dem Raum bist. Im Original unmodifzierten 40% build klappert
+dort noch die eine Tür in der Leichenhalle und der Zombie kriecht dann raus. Das ist in der Mod Version aus irgendeinen
+Grund nicht mehr so.... Das soll wieder rein!" (strang.js, Memory reai-v2-leichenhalle-zellenarme.md).
+
+**Was jetzt anders ist.** Tritt Leon oder Elza vor die Kuehlfaecher, wackelt die eine Fachtuer hin und her und schwingt
+auf; der Zombie im Fach wacht auf, faellt heraus, kriecht und greift an - Befehl fuer Befehl der Ablauf der echten
+40%-Disc. Gefehlt hat er, weil die Mod den Ausloeser am Boden und das Klappern weggeschnitten und das Oeffnen an das
+Aufheben des Minidisc-Players gehaengt hatte. Der Player, die Musik und der Hinterhalt der Mod bleiben (drei Zombies
+liegen still und stehen auf, wenn man den Player nimmt): Wer das Klappern ausloest, den Player liegen laesst und
+wiederkommt, findet die drei weiter liegend und den Kriecher am Boden. Wer zuerst den Player nimmt, bekommt das Oeffnen
+der Mod, und der Disc-Ablauf startet nicht noch einmal. Einen eigenen Ton hat das Klappern auf der Disc nicht (im
+Raumskript steht kein Tonbefehl); zu hoeren ist der Zombie.
+
+**Wie geprueft.** Drei Runden: Die erste fiel am Wiederbetreten durch (der Hinterhalt der Mod war weg), die zweite an
+der Reihenfolge "Player zuerst" (die Tuer klapperte ein zweites Mal und drehte sich fast einmal ganz herum), die dritte
+"bestanden", 126 von 126 verwandten Tests gruen.
+* Leon, Klappern und Kriecher: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/original/leon_1200_r3_mit_ton.mp4
+* Elza: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/original/elza_1201_r3_mit_ton.mp4
+* Wiederbetreten: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/original/leon_1200_wiederbetreten_mit_ton.mp4
+
+**Offen.** Mit der Standard-KI (RE2) beisst der Kriecher einmal zu und bleibt dann liegen. Dass das Klappern stumm ist,
+ist am Skript der Disc belegt, nicht am laufenden Original angehoert. Die Videos beginnen mit einem Sprung in den Raum.
+
+### STAGE1: Gefaengnis 1210/1211 - RE1.5-Zombies hinter den Gittern, Griff wie in RE2
+
+Ihr Wortlaut vom 18.11.: "Und unten in den Gefängnis in STAGE1 hast du die Arme aus Resident Evil 2 übernommen. Aber du
+solltest EIGENTLICH NUR die funktionalität aus Resident Evil 2 übernehmen, nicht das Modell. Das Modell darf schon noch
+das aus Resident Evil 1.5 sein...." (strang.js, Memory reai-v2-leichenhalle-zellenarme.md).
+
+**Was jetzt anders ist.** Hinter den Zellengittern stehen wieder die Zombies aus RE1.5 statt der Arme aus RE2. Sie
+kommen ans Gitter und wiegen sich, und ihre Arme wachsen durch das Fenster in den Flur - genau wie im Original, das die
+Arme selbst streckt (laut Code bis zum 2,04-Fachen). Aus RE2 kommt nur die Funktion: Kommt die Figur der gezeichneten
+Hand nahe genug, packt der Arm zu und haelt sie fest. Danach sinkt der Arm, wartet unten und kommt langsam wieder hoch,
+wie es im Original-Code steht. Ein Griff kostet keine Lebenspunkte, und jeder Arm greift nur einmal. Schuesse und Messer
+gehen durch die Arme, Explosionen treffen sie (siehe Gore).
+
+**Wie geprueft.** Acht Runden. Die frueheren scheiterten unter anderem an ueberstreckten Armen (bis zum 2,38-Fachen), an
+einer falschen Vorgabe des Orchestrators ("keine Streckung" - dabei laesst das Original die Arme selbst wachsen), an
+einem Standbild von 1,3 Sekunden beim Zugriff und an einem Sprung nach dem Absinken. Runde 8: "BESTANDEN", 75 von 75
+verwandten Tests gruen; der Pruefer ist dreimal selbst an der Wand entlang gelaufen (zweimal Leon, einmal Elza), und
+jedes Mal griff der Arm.
+* Leon: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/original/s2r8/video/leon_mit_ton.mp4
+* Elza: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/original/s2r8/video/elza_mit_ton.mp4
+
+**Offen (bitte am Video ansehen, siehe "Zu entscheiden").** Nach seinem Griff greift ein Arm nicht noch einmal. Der
+Zombie wiegt sich aber weiter, sein Arm waechst wieder und schiebt die Figur dabei in etwa 8 Sekunden um rund 300
+Einheiten zur Seite - das tun weder RE1.5 noch RE2. Beim Griff wird die Figur in einem einzigen Bild an die Hand
+gesetzt, ein Sprung bis etwa 500 Einheiten; RE2 macht es genauso, man sieht es aber. Wer nur vor dem Fenster stehen
+bleibt, wird nicht immer gegriffen: In 20 Laeufen griff der Arm zehnmal, sonst griff er sichtbar daneben, weil der
+RE1.5-Arm weniger weit reicht als der RE2-Arm.
+
+### STAGE5/6: Finale wie in Resident Evil 2 - Raketenwerfer statt G5 (Zug 6030/6031, Wagen 5090/5091)
+
+Ihr Wortlaut vom 7.11.: "Für Die Version 31 möchte ich dann, das du die Form Birkin G5 aus dem Finale wieder entfernst.
+Die passt nicht... Stattdessen, machen wir ein finale wie beim Golem am Ende von Resident Evil 2. Das jemand Leon den
+Raketenwerfer zuwirft, und man dann damit episch von mehreren Wiederholungen sieht, wie die Rakete angeflogen kommen und
+den Gegner zersprengt." Vom 17.11.: "Beim erschießen des endgegners mit dem raketenwerfer möchte ich das du das game
+over voiceover von Leon übernimmst und das voiceover von Claire.", zum Werfer "Aber ein Spruch wäre schon gut beim
+zuwerfen, so etwas wie: Leon, send him to hell, oder Leon, let's finish this oder sowas." und zum Zugfilm "Ja, die
+Zugfahrt ist große Klasse!". Vom 18.11. zum Wurf: "Die Wurf Animation ist aktuell noch Schrott. - zumindest in der
+Vorschau. Orientiere dich da mehr an Resident Evil 2.", "Außerdem würde ich John eher am Eingang stehen lassen, als das
+er kurz da ist und dann mitten im Gang plötzlich verschwindet." und "John kann danach gerne wieder raus laufen. Sollte
+er auch, aber das geht schneller vom Eingang aus."; zum Ende: "Passt nicht - das thank you for Playing fliegt
+vollständig raus, und es kommt ein richtiges Endvideo. Der Rest klingt erst einmal gut." (strang.js, Memory
+reai-v2-story-ende-annette-g5.md und reai-v2-zugfilm-600.md). Zum ersten Video des Abschusses sagten Sie am 18.11.: "Na,
+ist doch erst mal super! Endcutscene kommt dann später noch." (INTEGRATION_NOTIZEN.md).
+
+**Der Ablauf jetzt.**
+* **Abfahrt.** Nach dem Fahrpult laeuft im Fuehrerstand Ihr Zugfilm (405 Bilder), bei Leon und bei Elza; danach wird aus
+  Schwarz eingeblendet, und erst dann kommt "There! The train's moving." bzw. "It's moving! Elza, we did it!". Unter dem
+  Film schweigt die Raummusik, der "Zug an"-Ton kommt nur noch einmal. Kurz nach der Abfahrt kracht es hinten, und im
+  Fuehrerstand blinkt dreimal das rote WARNING.
+* **Kampf.** Im hinteren Wagen stirbt die Riesenform an keiner normalen Waffe mehr (die Regel des RE2-Finales: 20200
+  Lebenspunkte, nie unter 10000). Den G5 gibt es im Finale nicht mehr.
+* **Wurf.** Nach der RE2-Regel (genug Schaden oder 60 Sekunden; die Form geht und ist weit genug entfernt) erscheint
+  John am Eingang von Wagen C, ruft "Leon, catch! Send him to hell!" bzw. "Elza, catch! Let's finish this!", wirft den
+  Raketenwerfer im Stehen und geht durch die Tuer hinter sich hinaus. Der Werfer landet neben der Figur; aufgehoben
+  liegt er mit 2 Raketen im Inventar und wird dort ausgeruestet.
+* **Abschuss.** Wer mit dem Werfer auf die Form zielt und feuert, loest den Schluss aus: Schnitt auf die Figur, etwa
+  eine halbe Sekunde spaeter die Schlusszeile "Leon: Game over." bzw. "Elza: You lose, big guy!" (Claires Stimme aus
+  RE2), dann drei Wiederholungen der anfliegenden Rakete aus drei Abstaenden, Zeitlupe, Explosion und Todesschrei. In
+  den ersten beiden Wiederholungen friert die Rakete wie in RE2 je gut eine Sekunde ein. Nach der Explosion steht das
+  Bild etwa 4 Sekunden still: Das Spiel wartet wie RE2, bis der Schrei ausgeklungen ist - es haengt nicht.
+* **Ende.** "THANK YOU FOR PLAYING !!!" ist weg. Das Bild wird in gut 2 Sekunden schwarz; dann ist Platz fuer Ihr
+  Endvideo (MOVIE/ENDE5090.STR fuer Leon, MOVIE/ENDE5091.STR fuer Elza - solange die Datei fehlt, geht es direkt
+  weiter), danach folgen Abspann und Titelbild. Nach dem Kampf sitzt man nicht mehr fest.
+
+**Loch in Wagen B: gebaut und wieder herausgenommen.** Nach Ihrem "Loch ist einfach da" vom 17.11. zeigte Wagen B nach
+der Abfahrt zuerst das Bild mit dem aufgerissenen Boden. Gemessen: Das Loch reicht fast von Wand zu Wand (daneben
+bleiben 58 bzw. 83 cm, die Figur braucht 90 cm), Wagen B ist der einzige Weg zum Finale in Wagen C, und eine Sperre
+laesst sich mit den Original-Befehlen des Raums nicht anlegen. Ihr Wort vom 18.11.: "Aber natürlich soll man nicht
+einfach über das Loch laufen können. Wenn das Loch so groß war, das man da nicht drüber laufen kann, war dort
+offensichtlich was anderes geplant...." und "Ja, man muss irgendwie vor und zurück kommen. Zurück evtl. auch später über
+die Cutscene ... Aber irgendwo muss das Loch her kommen. Finden wir keinen Weg, muss es halt raus..." (Memory
+reai-v2-story-ende-annette-g5.md). Deshalb ist das Loch wieder draussen: Wagen B zeigt den heilen Boden, das Krachen mit
+dem WARNING bleibt.
+
+**Wie geprueft.** Fuenf Stufen, jede zuletzt "bestanden": der Kern mit Leon in Runde 5 (317 von 317 Einzeltests, 36 von
+36 Laeufen mit dem echten Spiel), die Abfahrt in Runde 2 (230 von 230 und 15 von 15), der Wurf in Runde 4, Elza und die
+Durchlaeufe in Runde 3 (223 von 223 im ersten Lauf), das Ende in Runde 1 (87 Einzeltests und 12 Laeufe gruen). Der
+Pruefer hat die RE2-Werte an den Original-Bytes nachgelesen und beide Schlusszeilen im fertigen Video wiedergefunden.
+Ein Test probiert jede freie Stelle von Wagen C durch (43.376 Faelle je Raum): Die Landestelle des Werfers ist immer im
+Bild. Die frueheren Runden scheiterten unter anderem an einem sichtbaren Sprung der Figur beim Abdruecken, am Wurfbild,
+an einer Form, die zu Szenenbeginn verschwand, und an einem Werfer, der bei Elza im Flug nicht im Bild war.
+* Abfahrt mit Zugfilm und WARNING (Leon): C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/finale/s2r2/video_leon/zug_s2r2_leon_mit_ton.mp4
+* Durchlauf vom Fuehrerstand bis zum Titel, Leon (vor der letzten Stufe aufgenommen, am Ende noch mit "THANK YOU FOR
+  PLAYING !!!"): C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/finale/video/finale_s4r3_leon_durchlauf_mit_ton.mp4
+* Durchlauf Elza (ebenso): C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/finale/video/finale_s4r3_elza_durchlauf_mit_ton.mp4
+* Ende ab dem Abdruecken, so wie es ohne Ihr Endvideo ausgeliefert wuerde (Bildabzug des Spiels, keine Fensteraufnahme): C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/finale/s5r1/video/ende_s5r1_leon_ohne_mit_ton.mp4
+* Ende mit einem Platzhalter-Film an der Stelle des Endvideos (Bildabzug): C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/finale/s5r1/video/ende_s5r1_leon_platzhalter_mit_ton.mp4
+
+**Offen.**
+* Johns Zuruf hat noch keine Aufnahme, er steht nur als Untertitel da (siehe "Fuer Sie zum Aufnehmen").
+* Das Wurfbild ist ein einhaendiger Wurf wie bei einer Handgranate. Waehrend der Wurfszene steht die Form still; bei
+  Leon sieht man das etwa 1,3 Sekunden lang (RE2 haelt den Gegner dort ebenfalls an, zeigt ihn aber in keiner Kamera).
+  Beides ist Ihr Urteil am Video (siehe "Zu entscheiden").
+* Bei Elza verdeckt die Form in Johns Kamera die linke Bildhaelfte; John und der Werfer sind klein rechts im Bild. Fuer
+  ihr Video bekam Elza Waffe und Munition per Hilfsschalter: Ohne Waffe toetet die Form sie, bevor die 60 Sekunden um
+  sind. Beide Durchlaeufe starten per Sprung kurz vor dem Fahrpult.
+* Die erste und die dritte Wiederholung teilen sich eine Kamera, die dritte ist klein, die zweite dunkel (Ihr "erst mal
+  super").
+* "Musik anhalten" ist im Port ein Stummschalten: Nach dem Zugfilm setzt die Musik etwa 13,5 Sekunden spaeter im Stueck
+  wieder ein. Claires Todesschrei bei Elzas Explosion hat kein Pruefer angehoert. Ob das Bild in RE2 nach der Explosion
+  ebenfalls stillsteht, ist nicht gemessen.
+
+### Finale, Nachtrag: Annette steht beim Ausholen am Boden, faellt mit dem Hieb und bleibt liegen (Leon, 5090)
+
+Ihr Wortlaut vom 18.11.: "Wenn Anette am Ende von den 4 beinigen Birkin nieder geschlagen wird darf sie in der Animation
+nicht noch mal aufstehen. Sondern mit den Schlag direkt liegen bleiben." Und am 19.11. zum Video dieser Stufe: "Beim
+zurückweichen fliegt Anette irgendwie komisch in der Luft." (strang.js, Memory reai-v2-story-ende-annette-g5.md).
+
+**Was jetzt anders ist.** Solange die Riesenform ausholt, steht Annette ruhig am Boden (etwa 1,4 Sekunden); mit dem Hieb
+geht sie zu Boden und bleibt bis nach dem Abschuss liegen - kein Aufstehen, keine Zwischenhaltung, kein Sprung an eine
+andere Stelle. Sie liegt jetzt dort, wo sie getroffen wird, leicht gedreht, damit sie weder in einem Bodenfeuer noch in
+der Wand liegt; die fruehere Liegestelle ist damit ersetzt. Den Sturz selbst verdeckt die Blutwolke wie in RE2.
+
+**Die Ursachen.** Zum Aufstehen: Annettes Bewegung wurde doppelt weitergeschaltet (einmal von der Szene, einmal vom
+allgemeinen Weiterschalter), dadurch lief die Bewegung "Hinfallen und Aufstehen" bis zum Ende durch, und beim
+Kameraschnitt sprang sie gut einen Meter an die alte Liegestelle. Zum Schweben: Die Bewegung, die bisher als
+"Zurueckweichen" lief, ist im Original die Flugphase eines Sprungs nach unten; den Fall dazu rechnet dort der Code. Ohne
+ihn hing sie 10 bis 15 cm ueber dem Boden, ein Bein hochgezogen, und fror so ein, bis der Hieb kam. RE2 laesst Annette
+an dieser Stelle ihre normale Steh-Bewegung spielen (derselbe Befehl laeuft jetzt im Port); dort ist sie in diesem
+Moment nicht im Bild, bei uns sieht man sie von hinten.
+
+**Wie geprueft.** Zwei Stufen, jede in der ersten Runde "bestanden". Die Pruefer haben die Videos Bild fuer Bild
+angesehen und die Hoehe von Becken, Kopf und Fuessen je Bild nachgemessen: beim Ausholen steht der tiefste Knochen auf
+Standhoehe, nach dem Treffer steigt nichts wieder an. Die Tests schlagen auf dem alten Stand an. Zum Video der zweiten
+Stufe sagten Sie am 19.11.: "passt".
+* Annette vom Satz vor dem Hieb bis nach dem Abschuss: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/finale/s8r1/rec/video/annette_s8r1_leon_mit_ton.mp4
+
+**Offen.** In den fuenf Uebergangsbildern nach dem Treffer taucht ein Fuss kurz unter den Boden; das liegt unter der
+Blutwolke und ist im Video nicht zu sehen.
+
+### Abspann, Nachtrag: Tafel "Thank you for playing this reconstruction" ist raus
+
+Ihr Wort vom 18.11.: "das thank you for Playing fliegt vollständig raus, und es kommt ein richtiges Endvideo." Das
+betrifft nach dem Entscheid des Orchestrators auch die erste Tafel der Abspann-Diashow. Sie sagte "Thank you for playing
+this reconstruction of Resident Evil 1.5 ..." und behauptete ausserdem, Alligatoren und spaetere Birkin-Formen fehlten -
+das stimmt im Port nicht mehr.
+
+**Was jetzt anders ist.** Diese eine Tafel kommt bei Leon und Elza nicht mehr; alle uebrigen sieben Tafeln stehen in
+derselben Reihenfolge und gleich lange, danach folgt das Titelbild. Der Abspann ist dadurch 25 Sekunden kuerzer. Die
+Bilddatei und die Raumdateien sind unveraendert, es fehlt nur der eine Aufruf.
+
+**Wie geprueft.** Eine Runde: "bestanden". Der Pruefer hat die Original-Befehle der Diashow an den Bytes nachgelesen;
+der neue Test schlaegt auf dem alten Stand an.
+* Ende und Abspann bis zum Titel, Leon: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/finale/s7r1/video/abspann_s7r1_leon_mit_ton.mp4
+* Elza: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/finale/s7r1/video/abspann_s7r1_elza_mit_ton.mp4
+
+**Offen.** Die letzte Tafel sagt "Thank you everyone! (MartinBiohazard)" mit dem Capcom-Hinweis darunter. Das ist der
+Dank des Mod-Autors an seine Helfer; sie bleibt (siehe "Zu entscheiden").
+
+### Untertitel: jeder gesprochene Satz mit Sprechernamen, Lesezeit, hoechstens zwei Zeilen
+
+Ihr Wortlaut vom 18.11.: "Du hast bei den übernommenen Sätzen aus Resident Evil 2 nicht den Namen in den Dialog mit
+davor geschrieben wie bei den rest auch....", auf Nachfrage "Ich meinte bei Anette. kann aber auch sein das es nur so
+aussah." und zu Sherrys Satz am Sicherungskasten "Nein - das theres a power supply ist ohne Name ein Systemtext"
+(strang.js, Memory reai-v2-sprechername-vor-satz.md). Dieser Abschnitt liegt auf dem Zweig r42/namen und war beim
+Schreiben noch nicht im Sammelzweig.
+
+**Was gefunden wurde.** Eine Zaehlung aller Untertitel ergab: Annette traegt auf jeder ersten Seite ihren Namen. Im
+neuen Birkin-Film waren aber je zwei RE2-Saetze zu einer Nachricht mit Seitenwechsel zusammengelegt; die zweite Seite
+erschien ohne Namen, waehrend Annette weitersprach - das sah aus wie ein Satz ohne Namen. Dazu kamen fuenf Zeilen der
+Mod (in 10D0, 1150 und 2000), bei denen ein Satz mittendrin auf zwei Untertitel verteilt war und nur der erste den Namen
+trug. 472 gesprochene Untertitel trugen den Namen schon; der Erzaehler im Vorspann bleibt wie in RE2 ohne.
+
+**Was jetzt anders ist (Stufen 1, 2 und 4).** Im Birkin-Film beginnt jede Seite, die Annette spricht, mit "Annette:";
+ebenso beginnt Leons zweiter Satz im Zugwagen 6030 mit "Leon:". Die fuenf Mod-Zeilen (Marvin und Leon in 10D0, Irons in
+1150, Leon und Ada in 2000) sind am Satzende der jeweiligen Aufnahme geteilt: Jeder Untertitel zeigt genau den Satz, den
+man hoert, und beginnt mit dem Namen; der Wortlaut ist gleich, nur steht an der Trennstelle ein Punkt statt eines
+Kommas. Leons zweiter Satz in 6030 steht jetzt gut 3 Sekunden wie die Original-Zeilen des Raums (vorher 20 Bilder).
+Annettes lange Saetze haben je zwei Seiten zu hoechstens zwei Zeilen, keine Zeile steht mehr auf dem schwarzen Balken
+unten. Die Regel stammt von der echten Disc: Dort hat keine von 700 Seiten drei Zeilen.
+
+**Lesbarkeit (Stufe 3, nichts geaendert).** In 5090 ist der orange Name "Annette:" vor dem Feuer schlecht zu lesen. Die
+Untersuchung ergab: Das Original zeichnet Untertitel ohne Schatten und ohne Kasten, nur mit einem dunklen Rand von einem
+Bildpunkt, und der Port zeichnet genau so (im Bild von 5090 stimmen 1525 von 1525 Schriftpunkten). Deshalb bleibt es wie
+im Original - ein Entscheid des Orchestrators; diese Stufe hat keinen Commit und keinen eigenen Pruefbericht.
+
+**Wie geprueft.** Stufe 1 zwei Runden (die erste fiel nur am fehlenden Video durch), Stufe 2 und Stufe 4 je eine, alle
+"bestanden". Der Pruefer der Stufe 2 hat die zehn Sprachdateien mit einem zweiten Spracherkenner abgehoert; in Stufe 4
+waren 153 von 153 Einzeltests gruen und die Tests auf den alten Staenden rot.
+* Annette im Birkin-Film: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/namen/video/s4_6000/video.mp4
+* Marvin und Leon in 10D0: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/namen/video/s4_10d0/video.mp4
+* Leon und Ada in 2000: C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/namen/video/s4_2000/video.mp4
+
+**Hoechstens zwei Zeilen je Seite im ganzen Spiel (Stufe 5).** Die Disc-Regel gilt jetzt fuer alle Untertitel, auch fuer
+alte Mod-Szenen, bei denen die dritte Zeile auf dem schwarzen Balken stand (Entscheid des Orchestrators). Eine Zaehlung
+ueber alle Raeume fand zuerst 44 Seiten mit drei Zeilen (35 Raumtexte der Mod, 9 Port-Texte), die zweite Runde vier
+weitere Port-Texte; alle sind auf hoechstens zwei Zeilen bzw. zwei Seiten verteilt, der Wortlaut ist gleich, und
+gesprochene Zeilen tragen auf jeder Seite den Namen. Der Seitenwechsel liegt bei gesprochenen Zeilen an einer gemessenen
+Sprechpause der Aufnahme. Der Vorspann des Erzaehlers (1240/1241) zeigt seine Texte jetzt Seite fuer Seite. Systemtexte
+bleiben ohne Namen; drei von ihnen brauchen einen Tastendruck mehr (die Warnung in 2030, die Fussspuren in 5060, das
+Pult ohne Mutter). Geprueft in zwei Runden: Die erste fiel durch (der Vorspann zeigte verklebte Woerter, vier Texte
+fehlten in der Zaehlung, und bei VOICE OFF verschwanden einzelne zweite Seiten), die zweite "bestanden", 336 von 336
+Einzeltests und 33 von 33 Laeufe mit dem echten Spiel gruen. Offen: Bei VOICE OFF wartet der naechste Satz, bis ein
+geteilter Satz ganz ausgelaufen ist; solche Stellen dauern dann bis zu 5 Sekunden laenger als mit Stimme.
+
+**Veraltete Aufnahmen bleiben stumm (Stufen 6 und 7).** 15 Saetze haben seit der Story v0.8.31 einen neuen Untertitel,
+ihre Datei in synchro/ war aber noch die alte Aufnahme - in 6030 sogar mit anderem Sprecher (Sherrys alte Stimme unter
+Leons "Where is she now?", Johns alte unter Sherrys "Elza's still out there...!"). Das Spiel erkennt diese Dateien jetzt
+an ihrem Inhalt (Fingerabdruck aus dem Stand v0.8.30) und behandelt sie wie eine fehlende Aufnahme: Der Untertitel steht
+mit seiner Lesezeit, ohne Stimme. Sobald Sie eine Datei durch Ihre neue Aufnahme ersetzen, spielt sie von selbst. Zwei
+der 15 sprechen den neuen Satz praktisch woertlich und spielen deshalb weiter: Marvins "Leon, give me a hand" in 3020
+(wortgleich) und Johns Vorstellung in 6030 ("We made it down here" unter dem Text "We came down here"). Stumm sind damit
+13 Saetze in 3020, 30E0, 6030 und 6031 (Entscheid des Orchestrators, siehe "Zu entscheiden"). Geprueft: Stufe 6 und 7 je
+eine Runde "bestanden". Die Pruefer haben alle 15 Dateien mit mehreren Spracherkennern abgehoert, im echten Spiel mit
+Tonmitschnitt gemessen (die 13 sind nicht zu hoeren, alle anderen Stimmen spielen, eine ersetzte Datei spielt) und den
+Fingerabdruck aus dem Stand v0.8.30 nachgerechnet; zwei neue Durchlauf-Tests pruefen den unveraenderten Bestand in 6030
+und 3020.
+* Leon 6030, Gespraech im Wagen (Johns Vorstellung spricht, die veralteten Saetze sind stumm): C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/namen/video/s7_6030_d/s7_6030_wagen.mp4
+
+### Karte: STAGE2 bis 6 so sauber wie STAGE1 - jeder Raum mit Kartenstueck und Positionspunkt
+
+Ihr Wortlaut vom 18.11.: "Parallel kannst du dich auch mit der Map auseinander setzen, das die für STAGE2-6 genauso
+sauber funktioniert wir bei STAGE1. Das ist aktuell noch nicht der Fall. Inklusive dem - wo befindet sich Leon -
+Marker." Und auf die Frage, ob zwei Raeume ohne Original-Kartenstueck leer bleiben sollen: "selbstverständlich sollen
+alle Räume auch eIn stück karte mit navigationspunkt haben." (strang.js, Memory reai-v2-karten-wie-re2.md). Der
+Abschnitt liegt auf dem Zweig r42/karte; er war beim Schreiben fertig geprueft, aber noch nicht im Sammelzweig.
+
+**Was jetzt anders ist.** In STAGE2 bis STAGE6 liegt jeder Raum auf seinem eigenen gemalten Feld, und der Positionspunkt
+laeuft mit der Figur mit. Er laeuft in keinem Raum mehr seitenverkehrt (gemessen zum Beispiel in 30A0, 3050 und 20A0),
+die Treppen- und Tuerzeichen sitzen auf den gemalten Symbolen, und der T-foermige Gang 5070 (spaeter 5130) ist wieder
+als Raum zu sehen. Jeder Raum, in dem die Karte aufgeht, zeigt ein Stueck Karte mit Punkt: 200 von 200, fuer Leon und
+Elza. Wo das Original nichts hat (zum Beispiel 10B0, 1260, 20B0, das Labyrinth 4050 und der Gang in 6000), zeichnet der
+Port einen Grundriss aus der Kollision im Stil der Karte - eine Port-Ergaenzung nach Ihrem Wort, wie schon in STAGE1. Im
+schmalen Schraeggang von 4080/4081, der auf der Karte genau so breit ist wie der Punkt, steht der Punkt jetzt im Gang
+(nie auf einer Wandlinie, nie ueber dem blauen Grund) und wechselt in der Gangmitte auf seine zweite Lage.
+
+**Wie geprueft.** Drei Stufen: STAGE2 und 3 in zwei Runden, STAGE4 bis 6 in zwei, der Durchlauf aller Bereiche mit den
+Bildtafeln in acht. Durchgefallen sind fruehere Runden unter anderem an gespiegelten Achsen in vier Raeumen, an
+Restfehlern im Schraeggang und an einer Korrektur, die den Punkt in 48 Raeumen springen liess (zurueckgenommen). Runde
+8: "Bestanden, mit einer Bedingung fuer den Orchestrator", 66 von 66 Kartentests und 22 von 22 Laeufe mit dem echten
+Spiel gruen; der Kartenlauf deckt 645 Lagen ab. Die Bedingung betraf den Schraeggang: An einigen Stellen lag in v0.8.30
+mehr Rot um den Punkt - dort stand der alte Punkt aber jedes Mal auf einer Wandlinie und 6 bis 10 Bildpunkte neben der
+Figur. Der Orchestrator wertet das nicht als Verschlechterung und hat den Stand angenommen, wie vom Pruefer empfohlen.
+* 52 Bildtafeln, je Kartenblatt fuer Leon und Elza: Ordner
+  C:/workspace/git/reAi_v2/.claude/worktrees/r42_karte/analysis/karte_r42/s3r7/tafeln
+* Schraeggang, v0.8.30 gegen jetzt (Leon):
+  C:/workspace/git/reAi_v2/.claude/worktrees/r42_karte/analysis/karte_r42/s3r8/gang_4080_leon.png
+* Vier Aufnahmen aus dem echten Fenster:
+  C:/workspace/git/reAi_v2/.claude/worktrees/r42_karte/analysis/karte_r42/s3r8/fenster_echt.png
+
+**Offen.** Im Zug 5090/5091 liegen drei Lagen ausserhalb der gemalten Flaeche, und wer im Zug war, sieht danach im
+T-Gang Striche, die zum Zug gehoeren - beides verschwindet erst mit dem U-Bahn-Kartenblatt, das nicht gebaut ist. 20A0
+erscheint auf seinem Blatt zweimal rot. Die neuen Kartenstuecke haben keine Tuermarken. Im Schraeggang eilt der Punkt
+der Figur bis etwa 5 Bildpunkte voraus. Fuer einen Teil des Gangs 30E0 nimmt der Port bewusst nicht die Umrechnung des
+Originals, weil sich dort zwei Original-Werte widersprechen (Pruefung der ersten Stufe).
+
+## Zu entscheiden
+
+So ist es jetzt gebaut; ein Wort von Ihnen genuegt, um etwas zu aendern. Die Bilder und Videos stehen im jeweiligen
+Abschnitt.
+
+* **Ton: RE2-Geraeusche lauter.** Tueren, Hunde, Kraehen und Spinnen aus den RE2-Tonbaenken sind jetzt 8 bis 12 dB
+  lauter als in v0.8.30, so wie der RE2-Code sie rechnet. Ein Hundelaut ist damit etwa 3 dB lauter als ein
+  Pistolenschuss. Passt das so? Hoerbeispiele (erst vorher, Piepton, dann neu): C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/ton/hoerbeispiele/S1_10_RE2_Gegnerlaute_Schuss_Hund_Hund_Kraehe_Kraehe_Spinne_Spinne_Schuss__erst_PORT_VORHER_Piepton_dann_PORT_NEU.wav
+  und C:/Users/MJOEDI~1/AppData/Local/Temp/claude/1ad3836299811990/c41eae99-e724-4cb3-afb9-119709f20a9d/scratchpad/ton/hoerbeispiele/S1_11_RE2_Tuer_auf_Tuer_zu_Verschlossen_Verschlossen_Fahrstuhl_Kartenhinweis__erst_PORT_VORHER_Piepton_dann_PORT_NEU.wav
+* **Ton: Eingangshalle.** Die Musik stoesst dort kurz vor dem Schlussakkord noch etwas oefter an die
+  Lautstaerke-Obergrenze als im Original (1 bis 2 dB hoehere Spitzen). Die Ursache ist noch offen und kommt in die
+  naechste Runde.
+* **Kellerplan in der Leichenhalle: neue Stelle.** Der Plan haengt doppelt so gross an der Wand neben der Eingangstuer,
+  nicht mehr an Ihrer Marke neben der Vitrine: Dort sind nur etwa 1000 Einheiten frei, der grosse Plan ist 1490 breit.
+  So lassen heisst: gross und beim Hereinkommen sofort zu sehen. Aendern heisst: zurueck an Ihre Marke, dann nur in der
+  alten, kleinen Groesse.
+* **Revierplan: Hoehe.** Er haengt jetzt auf Kopfhoehe links neben der Ausgangstuer der Eingangshalle. Passt das so? Und
+  sollen die Plaene in Kanalisation, Fabrik und U-Bahn, die etwa auf Brusthoehe haengen, ebenfalls hoeher?
+* **Gefaengnis: der Arm nach dem Griff.** Nach seinem einen Griff schiebt der weiterwachsende Arm die Figur zur Seite;
+  dazu kommen der sichtbare Sprung an die Hand und die Fehlgriffe, wenn man nur vor dem Fenster steht. So lassen heisst:
+  RE1.5-Aussehen mit dem RE2-Griff und diesen drei Eigenheiten. Aendern heisst: Sie sagen, was davon stoert, dann wird
+  genau das in einer eigenen Runde angegangen.
+* **Finale: Johns Wurf.** Der Wurf ist jetzt ein einhaendiger Wurf im Stehen vom Eingang aus, und die Form steht
+  waehrend der Szene sichtbar still. Zweimal haben Sie die Wurfbewegung zurueckgewiesen; die jetzige hat der Pruefer
+  durchgelassen, das Urteil aber ausdruecklich Ihnen ueberlassen. Bitte am Durchlauf-Video ansehen.
+* **Veraltete Aufnahmen stumm.** 13 Saetze, deren Aufnahme noch den alten Text spricht, laufen bis zu Ihrer neuen
+  Aufnahme ohne Stimme (Entscheid vom 19.11.; am 16.11. war eine aehnliche Stummschaltung zurueckgenommen worden, weil
+  Sie nicht gefragt waren). So lassen heisst: kein falscher Satz mehr unter einem Untertitel, dafuer an diesen Stellen
+  Stille. Aendern heisst: Die alten Stimmen sind wieder zu hoeren - der Rueckbau ist klein. Johns Vorstellung in 6030
+  spielt weiter, obwohl sie "made it" statt "came" sagt.
+* **Zwei sehr kurze Bilder.** Das Rechner-Vollbild in 2080 steht etwa 0,7 Sekunden, das Feuerbild im Hof 1090 etwa eine
+  Drittelsekunde. Beide Zeiten kommen aus dem Skript des Raums an dieser Stelle; laenger waere eine eigene Zahl des
+  Ports. So lassen, oder sollen sie laenger stehen - und wie lange?
+
+Waehrend der Runde entschieden (Orchestrator; Sie koennen widersprechen):
+* **Finale:** Das Loch in Wagen B ist raus (nach Ihrem "muss es halt raus"). Die Tafel "Thank you for playing this
+  reconstruction" ist aus dem Abspann raus; die letzte Tafel "Thank you everyone! (MartinBiohazard)" bleibt.
+* **Gore:** Die Handgranate bleibt bei 251 Schaden; damit faellt die Riesenform ausserhalb des Finales nach 4 Wuerfen
+  statt der angekuendigten 12 (es gibt aber nur zwei Granaten im Spiel). Ein Zombie, der eine Granate ueberlebt, faellt
+  nicht um (RE2), deshalb ist die neue Blutlache selten. Die abgetrennten Beine stehen knapp eine Sekunde, im 80%-Video
+  etwa eine halbe allein - sagen Sie, wenn es kuerzer sein soll.
+* **Gegenstaende:** Die Mutter gehoert ans Bruecken-Pult. Leon bekommt nur die Nitro-Kapsel, Saeure und Brand nur Elza.
+  Der Werfer liegt im Spind und der Zuender im Laster, weil an den geplanten Stellen Zombies liegen, die aufstehen.
+* **Lageplaene und Birkin-Film:** der Name "police basement map", der Fabrikplan fuer Elza an der Wand in 30C1, das Dach
+  beim Revierplan; beim Film die Orte (Leon 6000, Elza 5011), der herausgeschnittene Einschub und keine Untertitel.
+* **VOICE OFF und Gefaengnis:** Laute ohne Untertitel bleiben hoerbar. Die Arme im Gefaengnis wachsen wie im Original,
+  und Schuesse gehen durch sie hindurch, weil Ihre Rangfolge die anschiessbaren Gitterhaende aufhebt.
+* **Untertitel und Karte:** Die Schrift bleibt wie im Original (kein Schatten, kein Kasten); die Disc-Regel "hoechstens
+  zwei Zeilen" gilt fuer alle Untertitel. Der Schraeggang 4080/4081 gilt als nicht schlechter als v0.8.30. Den frueheren
+  Entscheid, zwei Raeume wie im Original ohne Kartenstueck zu lassen, haben Sie am 18.11. verworfen; er ist
+  zurueckgenommen.
+
+## Fuer Sie zum Aufnehmen
+
+Fuer v0.8.31 ist nichts mehr offen. Ihre Aufnahmen vom 20.11. sind alle im Spiel: die 75 Saetze der Teile A bis C aus
+C:/workspace/git/reAi_v2_entscheidung_2026-11-06/11_story_v0831/FEHLENDE_AUFNAHMEN_2026-11-20.md. Die Saetze fuer
+v0.8.32 (Teile D, E, F) liegen schon bereit. Am 20.11. um 18:34 geprueft: Jede Datei liegt unter ihrem Namen, im Format
+WAV, 16 Bit, Mono, 32000 Hz. Keine alte Aufnahme mit falschem Text liegt mehr unter ihrem Namen. Die 13 Saetze, die bis
+dahin stumm liefen, sprechen jetzt.
+* **Irons in Elzas Buero (1151):** Der Satz "I'll be fine. Just worry about yourself for now." braucht keine Aufnahme.
+  Das Spiel zeigt ihn bei Elza nicht, denn dort steht seit Runde 38 auf Ihren Wunsch "He has already passed...".
+* **Saetze fuer v0.8.32 (Teil D):** Die 35 Dateien liegen schon unter synchro/ und kommen deshalb mit ins Paket, das
+  Spiel ruft sie in v0.8.31 aber nicht auf.
+* **Zug 6031 (Elza):** Die neuen Saetze "A woman brought Marvin down here..." und "She said she had to find someone..."
+  haben Sie schon mit dem neuen Text aufgenommen.
+* **Schon im Spiel:** synchro/STAGE5/room5090/main02.wav - Leon: "Game over." und synchro/STAGE5/room5091/main02.wav -
+  Claire fuer Elza: "You lose, big guy!", nach Ihrer Freigabe vom 18.11. ("selbstverständlich! Sollst du sogar!") aus
+  Ihren RE2-Stimmen. Annettes Saetze im Birkin-Film spricht die RE2-Stimme.
+* Fund- und Systemtexte ("There's a power supply.", die Plaene, die neuen Gegenstaende) brauchen keine Aufnahme.
+
+## Technisch
+
+* **Stand v0.8.31 (Entwurf):** Sammelzweig r42/story, HEAD b2d4296bc (19.11.), auf v0.8.30 (f3c0a7e70, eingemischt mit
+  3bf780233). Ausgangsstand aller Straenge: aaea5f8c2 = v0.8.30 mit Story Teil 1 bis 3 (afc9b3797 bis 2e430ade5, Test
+  ddf245147) und den Zusammenfuehrungen vom 17.11.: cdde4804e (r41/release_0830, 44cc5b7d5), 0bc4a44cc
+  (r42/hangar_aussen, fe5436f55), ac2c93f5b (r41/stimmen, 73aee131a), dazu ecaf85b1a und 9d808d948.
+* **Zusammenfuehrungen vom 18./19.11. in dieser Reihenfolge:** 6d7b19166 r42/gegenstaende (5515f2601), 102feb2fb
+  r42/gore (b8b879d54), d8a5b378a r42/rest (3e1a14809), 0d5ba0cfe r42/birkinfilm (b5bb0edd0), b3193d2b8 r42/lageplaene
+  (c35ab51a5), 8db089f5d (Kommentar), d7285c8de und 93821acef (zwei Testanpassungen), 364bf10a9 r42/original
+  (115ec88e6), 9cf52876f r42/kellerplan (2a2d45a1a), b2d4296bc r42/finale (35965debe, Stufen 1 bis 5; sechs Konflikte
+  geloest, der G5-Code faellt weg, Gore- und Gefaengnis-Teile bleiben).
+* **Im Sammelzweig (Stand 22.11.):** alle r42-Zweige. Nach dem 19.11. kamen dazu: r42/karte, r42/namen (Stufen 1 bis 7),
+  Finale Stufe 6 und 7, r42/ton (Merge bcd81b1ae; einziger Konflikt die Include-Zeilen in audio_pc.c, beide behalten),
+  r42/fabrikplan (Merge faa27a6ce, konfliktfrei; enthaelt Ihre Aufnahmen, Commit ce5ec405f) und r42/riegel (Merge
+  4b9d26f34). master steht auf 4b9d26f34.
+* **Geprueft im Sammelzweig:** die Zahlen unter "Pruefstand" (206 von 206; 468 von 474 mit fuenf Einzelwiederholungen
+  und der Anpassung von integration_r37_itemband; integration_r39_toene_schublade und _elza angepasst; 76 von 76; 155
+  von 155). Volle Suite auf dem Endstand 4b9d26f34 ohne parallele Agenten: 1774 von 1774 (17008 s), das ist zugleich die
+  Abnahme nach dem letzten Code-Commit. Linux-Suite im Container und Release-Bau fuer Windows, Linux/Steam Deck und
+  Android laufen mit release_alles.sh; ihr Ergebnis steht im Release-Commit.
+* **Neue Dateien im Paket:** MOVIE/R600ZUG.STR (Zugfilm) und MOVIE/R409BIRK.STR (Birkin-Film), je mit Herkunftstext;
+  MASKS/ROOM4090, 4091, 50D0, 50D1, 5100, 5101, 6000 und 6001 je _RE2.MSK mit Bild; RE2/R409_XA09.XAS, R409_XA11.XAS und
+  R409_XA14.XAS (Annettes RE2-Stimme); RE2/JOHN_49_WURF.EMD; RE2/R702.ESP, R702.EDT, R702.VH, R702.VB, vier R702-Bilder,
+  R702_WERFER.MD1/.TIM, R702_XA03_LEON.XAS und R702_XA03_CLAIRE.XAS (Finale); synchro/STAGE5/room5090/main02.wav und
+  room5091/main02.wav. Geaendert: MASKS/ROOM6030.MSK und ROOM6031.MSK (Tiefe der Maske ueber Marvins Liege). Entfernt:
+  die R704-Dateien des G5-Auftritts. Erwartet, aber noch nicht vorhanden: MOVIE/ENDE5090.STR und MOVIE/ENDE5091.STR (Ihr
+  Endvideo).
+* **Speicher-Bits:** Bank 9 (alle im Original frei, Zensus und vollstaendige Liste in
+  analysis/befunde_runde42/VERTRAG.md), unter anderem: Story und Finale 118 bis 124, 129, 130, 137; Plaene 34, 35, 37,
+  Laborblatt 36, Dach 42; Gegenstaende 40, 41, 43 bis 51, 170. Der Birkin-Film haengt an Bits, die die Raumskripte schon
+  fuehren ((3,100) bei Leon, (4,237) bei Elza). Die Optionsdatei re15_options.cfg bekommt bei VOICE OFF die Zeile
+  voice=off.
+* **PSX:** nicht gebaut und nicht geprueft. Dort gibt es keinen Filmspieler (Zugfilm, Birkin-Film, Endvideo),
+  Nachrichten mit Nummern ab 32 werden nicht angezeigt, Texte ueber 128 Zeichen bleiben abgeschnitten (2040, 6030), und
+  es fehlen die Vollbild-Standbilder, die Gegenstandsbilder und die vier RE2-Masken.
+* **Titelbild:** Die Videos dieser Runde zeigen im Titel "Ver.0.8.29 dev" (Stand der Zweige). Nach dem Release-Bau
+  pruefen, dass "Ver.0.8.31" dasteht.
+* **Messhaken (nur Diagnose, kein Spielweg):** RE15_VOICE=0, RE15_FINALE_WERFER (Werfer ohne Wurfszene),
+  RE15_U42_ORIGINAL (3091 wie in der Mod, fuer einen alten Test), RE15_GORE_ZEICHEN_LOG, RE15_FRAMEDUMP_TAKT,
+  RE15_AUDIO_CAP_SYNC und RE15_AUDIO_CAP_VSYNC (Bildabzug und Ton im Spieltakt fuer Videos bei getrennter Sitzung).
+* **Grenzen der Pruefung:** Viele Laeufe und Videos beginnen mit einem Sprung in den Raum und gesetzten Spielstand-Bits
+  (je Abschnitt genannt). Mehrere Videos entstanden bei getrennter Windows-Sitzung als Bildabzug statt als
+  Fensteraufnahme (Finale Stufe 3 und 5). Unter Last flattern Fenster-Tests; rot gilt erst nach der Einzelwiederholung.
+
 # v0.8.30 - 2026-11-17
 
 Ihr Auftrag vom 30.10. (Nachtrag 34, nach v0.8.29): "Ok, ziehe die neuen branches mit rein, und schliesse den Rest ab."
