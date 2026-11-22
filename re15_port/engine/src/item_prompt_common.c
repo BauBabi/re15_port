@@ -38,6 +38,7 @@
  * Die acht u16 ab 0x800c4fc6 sind 0x10,0x2f,0x50,0x6b,0x8b,0xa9,0xc5,0xf8; der kleinste
  * (0x10) ist zugleich das Ende der Tabelle selbst = 8 Eintraege.
  */
+#include <stddef.h>           /* NULL - unter Linux (glibc) nicht ueber die Projekt-Koepfe verfuegbar (Release-Bau v0.8.31) */
 #include "re15_item_prompt.h"
 #include "re15_files.h"       /* Runde 30: Dokument-Namen ab Item-Id 0x48 (Dokument-Tabelle) */
 #include "re15_schluessel_r36.h" /* Runde 36 Spur Q: Namen der Ids 0x42/0x45 (Prison/Parking Lot Key) */
