@@ -39,6 +39,9 @@
  * streckt der Port den Arm zur RE2-Hand, auf 23815a1f7 (Runde 5) zeichnet er Faktor 1 in B[3], tritt beim Zugriff vor und
  * friert beim Zugriff bis 3 s ein -> rot.
  */
+#if !defined(_WIN32) && !defined(_DEFAULT_SOURCE)
+#define _DEFAULT_SOURCE 1   /* clock_gettime/CLOCK_MONOTONIC unter glibc (wie gator_zeit_r41.c; Linux-Release-Bau v0.8.31) */
+#endif
 #include "re15_rdt.h"
 #include "re15_scd.h"
 #include "re15_actor.h"
